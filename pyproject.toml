@@ -14,3 +14,26 @@ exclude = '''
   | dist
 )/
 '''
+
+[tool.pyright]
+include = ["src",
+    "app"
+]
+exclude = ["**/node_modules",
+    "**/__pycache__",
+    "src/experimental"
+]
+ignore = ["src/oldstuff"]
+defineConstant = { DEBUG = true }
+include = ["."]
+typeCheckingMode = "strict"
+
+# strict disabled checks
+reportUnknownParameterType = false
+reportMissingParameterType = false
+reportUnknownMemberType = false
+reportUnknownArgumentType = false
+reportMissingTypeStubs = false
+
+pythonVersion = "3.11"
+pythonPlatform = "all"
