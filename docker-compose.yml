@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  bot_env:
+    image: python:3.11-slim
+    container_name: atl-discordbot-python-env
+    environment:
+      - BOT_TOKEN=/run/secrets/BOT_TOKEN_FILE
+    volumes:
+      - ./src:/src
+    working_dir: /src
+    command: sh -c "pip install -r requirements.txt && python main.py"
+    depends_on:
+      - postgres
+    networks:
+      - bot-network
+    secrets:
+      - BOT_TOKEN_FILE
+    restart: unless-stopped
+    labels:
+      - "atl.role=discordbot"
+
+  postgres:
+    image: postgres:latest
+    container_name: atl-discordbot-postgres-env
+    environment:
+      - POSTGRES_DB=mydatabase
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=/run/secrets/POSTGRES_PASSWORD_FILE
+      - TZ=UTC  # Set timezone to UTC
+      # - POSTGRES_HOST_AUTH_METHOD=trust # comment this out if you do not want to connect with a password
+    ports:
+      - "5432:5432"
+    volumes:
+      - /opt/atl-discord-bot-data/dir:/var/lib/postgresql/data
+    networks:
+      - bot-network
+    secrets:
+      - POSTGRES_PASSWORD_FILE
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    labels:
+      - "atl.role=discordbot_database"
+
+networks:
+  bot-network:
+    driver: bridge
+
+secrets:
+  BOT_TOKEN_FILE:
+    file: ./docker_secrets/bot_token.txt
+  POSTGRES_PASSWORD_FILE:
+    file: ./docker_secrets/postgres_password.txt
