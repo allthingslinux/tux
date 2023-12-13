@@ -15,6 +15,7 @@ class EventHandler(commands.Cog):
         self.bot = bot
         self.debug = debug
         self._setup_logging()
+        self.ignore_cogs = []
 
     def _setup_logging(self):
         """
@@ -41,7 +42,8 @@ class EventHandler(commands.Cog):
             event_name = filename[:-3]
             module = f'tux_events.events.{event_name}'
 
-            if not filename.endswith('.py') or filename.startswith('__'):
+            if not filename.endswith('.py') or event_name in self.ignore_cogs \
+                    or filename.startswith('__'):
                 logging.info(f"Skipping {module}.")
                 continue
 
