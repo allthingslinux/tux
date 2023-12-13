@@ -14,7 +14,7 @@ async def setup():
     bot = commands.Bot(command_prefix=bot_prefix, intents=intents)
     async with bot:
         await event_handler.setup(bot, True)
-        await bot.start('MTE4MjE5NDU4NTY5OTYzMTEzNA.G_Q2Uo.KLpJRlR868eGI6mgriudpTRR1OdtcObF_0I5c4',
+        await bot.start('TOKEN',
                         reconnect=True)
 
 
