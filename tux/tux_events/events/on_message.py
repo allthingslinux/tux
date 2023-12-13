@@ -14,5 +14,5 @@ class OnMessage(commands.Cog):
             await message.channel.send('Hello!')
 
 
-def setup(bot):
-    bot.add_cog(OnMessage(bot))
+async def setup(bot):
+    await bot.add_cog(OnMessage(bot))
