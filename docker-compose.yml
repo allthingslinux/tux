@@ -4,8 +4,8 @@ services:
   bot_env:
     image: python:3.11-slim
     container_name: atl-discordbot-python-env
-    environment:
-      - BOT_TOKEN=/run/secrets/BOT_TOKEN_FILE
+    env_file:
+      - .env
     volumes:
       - ./src:/src
     working_dir: /src
@@ -14,8 +14,6 @@ services:
       - postgres
     networks:
       - bot-network
-    secrets:
-      - BOT_TOKEN_FILE
     restart: unless-stopped
     labels:
       - "atl.role=discordbot"
@@ -23,11 +21,9 @@ services:
   postgres:
     image: postgres:latest
     container_name: atl-discordbot-postgres-env
+    env_file:
+      - .env
     environment:
-      - POSTGRES_DB=mydatabase
-      - POSTGRES_USER=myuser
-      - POSTGRES_PASSWORD=/run/secrets/POSTGRES_PASSWORD_FILE
-      - TZ=UTC  # Set timezone to UTC
       # - POSTGRES_HOST_AUTH_METHOD=trust # comment this out if you do not want to connect with a password
     ports:
       - "5432:5432"
@@ -35,8 +31,6 @@ services:
       - /opt/atl-discord-bot-data/dir:/var/lib/postgresql/data
     networks:
       - bot-network
-    secrets:
-      - POSTGRES_PASSWORD_FILE
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
       interval: 30s
@@ -49,9 +43,3 @@ services:
 networks:
   bot-network:
     driver: bridge
-
-secrets:
-  BOT_TOKEN_FILE:
-    file: ./docker_secrets/bot_token.txt
-  POSTGRES_PASSWORD_FILE:
-    file: ./docker_secrets/postgres_password.txt
