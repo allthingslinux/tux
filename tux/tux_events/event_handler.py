@@ -38,17 +38,13 @@ class EventHandler(commands.Cog):
 
         for filename in os.listdir(events_dir):
             if filename.endswith('.py') and not filename.startswith('__'):
-                # Remove the '.py' extension to get the event name
                 event_name = filename[:-3]
-                # Construct the full module path
                 module = f'src.events.{event_name}'
 
                 try:
-                    # Load the event module
                     self.bot.load_extension(module)
                     logging.debug(f'Successfully loaded event: {module}')
                 except Exception as e:
-                    # Log an error message if loading fails
                     logging.error(f'Failed to load event {module}. Error: {e}')
 
     @commands.Cog.listener()
