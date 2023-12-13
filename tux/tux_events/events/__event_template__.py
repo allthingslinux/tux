@@ -8,15 +8,15 @@ class CogTemplate(commands.Cog):
     @commands.command(name='hello', help='Responds with a greeting.')
     async def hello(self, ctx):
         """
-        An example command that responds with a greeting.
-
+        An example hello world command.
+        
         Parameters:
         - ctx (commands.Context): The context of the command.
 
         Example usage:
         !hello
         """
-        await ctx.send('World!')
+        await ctx.send('world!')
 
     @commands.Cog.listener()
     async def on_message(self, message):
