@@ -17,7 +17,8 @@ exclude = '''
 
 [tool.pyright]
 include = ["src",
-    "app"
+    "app",
+    "tux"
 ]
 exclude = ["**/node_modules",
     "**/__pycache__",
