@@ -46,15 +46,6 @@ class EventHandler(commands.Cog):
             except Exception as e:
                 logger.error(f'Failed to load event {module}. Error: {e}', __name__)
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        """
-        Event handler for the bot being ready.
-
-        This function is called when the bot successfully connects to Discord.
-        """
-        logger.info(f'{self.bot.user} has connected to Discord!', __name__)
-
     @classmethod
     async def setup(cls, bot, debug=False):
         """

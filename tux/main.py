@@ -11,23 +11,26 @@ bot_prefix = '!'
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix=bot_prefix, intents=intents)
 
-# Call the setup function once
 asyncio.run(setup(bot, project_logging_level=logging.DEBUG, discord_logging_level=logging.WARNING))
 event_handler = EventHandler(bot, True)
 
 
 async def main():
     async with bot:
-        # Add debugging statements
-        print("Setting up event handler...")
+        logger.debug("Setting up event handler...")
         await event_handler.setup(bot, True)
-        print("Event handler setup completed.")
+        logger.debug("Event handler setup completed.")
 
         await bot.start(
-            'TOKEN',
+            'MTE4MjE5NDU4NTY5OTYzMTEzNA.GUaYP5.qbUQSLvBYzZ6TsXP_P3Qx1RZiobPrCDgF3NWpQ',
             reconnect=True
         )
 
-# Only run asyncio.run(main()) once, as it's the entry point for the application
-asyncio.run(main())
+    @commands.Cog.listener()
+    async def on_ready(self):
+        """
+        This function is called when the bot successfully connects to Discord.
+        """
+        logger.info(f'{self.bot.user} has connected to Discord!', __name__)
 
+asyncio.run(main())
