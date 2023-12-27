@@ -7,9 +7,9 @@ services:
     env_file:
       - .env
     volumes:
-      - ./src:/src
-    working_dir: /src
-    command: sh -c "pip install -r requirements.txt && python main.py"
+      - .:/tux
+    working_dir: /tux
+    command: sh -c "pip install poetry && poetry install && cd tux && poetry run python main.py"
     depends_on:
       - postgres
     networks:
