@@ -8,21 +8,16 @@ logger = TuxLogger(__name__)
 
 
 class CogLoader(commands.Cog):
-    def __init__(self, bot, debug=False):
+    def __init__(self, bot: commands.Bot, debug: bool=False):
         """
         Constructor for the CogLoader Cog.
-
-        Parameters:
-            bot (commands.Bot): The instance of the Discord bot.
-            debug (bool): A flag indicating whether debug mode is enabled.
         """
         self.bot = bot
         self.debug = debug
         self.ignore_cogs = []
-        if debug:
-            logger.setLevel(logging.DEBUG)
+        if debug: logger.setLevel(logging.DEBUG)
 
-    async def _load_cogs_from_folder(self, folder_name):
+    async def load_cogs_from_folder(self, folder_name):
         """
         Dynamically loads cogs from the specified subdirectory.
 
@@ -48,18 +43,6 @@ class CogLoader(commands.Cog):
                 logger.error(f'Failed to load cog {module}. Error: {e}', __name__)
                 logger.error(traceback.format_exc())
 
-    async def load_events(self):
-        """Load cogs from the 'events' folder."""
-        await self._load_cogs_from_folder('events')
-
-    async def load_utils(self):
-        """Load cogs from the 'utils' folder."""
-        await self._load_cogs_from_folder('utils')
-
-    async def load_commands(self):
-        """Load cogs from the 'commands' folder."""
-        await self._load_cogs_from_folder('commands')
-
     @classmethod
     async def setup(cls, bot, debug=False):
         """
@@ -70,7 +53,7 @@ class CogLoader(commands.Cog):
             debug (bool): A flag indicating whether debug mode is enabled.
         """
         cog = cls(bot, debug)
-        await cog.load_events()
-        await cog.load_utils()
-        await cog.load_commands()
+        # await cog.load_cogs_from_folder('events')
+        await cog.load_cogs_from_folder('utils')
+        await cog.load_cogs_from_folder('commands')
         await bot.add_cog(cog)
