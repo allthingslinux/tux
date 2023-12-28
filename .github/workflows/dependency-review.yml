@@ -16,37 +16,16 @@ jobs:
       - name: 'Checkout Repository'
         uses: actions/checkout@v3
 
-      # Install pyenv and Python 3.11
-      - name: 'Set up Python 3.11 and pyenv'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
-                                  libbz2-dev libreadline-dev libsqlite3-dev wget \
-                                  curl llvm libncurses5-dev libncursesw5-dev \
-                                  xz-utils tk-dev libffi-dev liblzma-dev \
-                                  python3-openssl git
-
-          curl https://pyenv.run | bash
-          echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> $HOME/.bashrc
-          echo 'eval "$(pyenv init --path)"' >> $HOME/.bashrc
-          echo 'eval "$(pyenv virtualenv-init -)"' >> $HOME/.bashrc
-          exec "$SHELL"
-
-          pyenv install 3.11.0
-          pyenv global 3.11.0
-
-          # Ensure the changes to PATH are available in the current shell
-          export PATH="$HOME/.pyenv/bin:$PATH"
-          eval "$(pyenv init --path)"
-          eval "$(pyenv virtualenv-init -)"
+      # Install Python
+      - name: Setup Python
+        uses: actions/setup-python@v5.0.0
+        with:
+          python-version: 3.11
 
       # Install Poetry
-      - name: 'Install Poetry'
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
+      - name: Poetry Install
+        uses: knowsuchagency/poetry-install@v2
 
       # Run Poetry commands
-      - name: 'Run Poetry Update'
-        run: |
-          poetry --version
-          poetry update
+      - name: Update Python Poetry package
+        uses: dishapatel010/action-poetry-package-update@V2.0.1
