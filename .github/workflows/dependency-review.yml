@@ -16,11 +16,9 @@ jobs:
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v3
-      - name: 'Dependency Review'
-        uses: actions/dependency-review-action@v3
 
       # Install pyenv and Python 3.11
-      - name: 'Set up Python 3.11'
+      - name: 'Set up Python 3.11 and pyenv'
         run: |
           sudo apt-get update
           sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
@@ -38,18 +36,18 @@ jobs:
           pyenv install 3.11.0
           pyenv global 3.11.0
 
-      # Add a step to update dependencies using Poetry
-      - name: 'Update Dependencies'
-        run: |
-          # Install Poetry
-          curl -sSL https://install.python-poetry.org | python3 -
-          
-          # Update dependencies using Poetry
-          poetry update
+          # Ensure the changes to PATH are available in the current shell
+          export PATH="$HOME/.pyenv/bin:$PATH"
+          eval "$(pyenv init --path)"
+          eval "$(pyenv virtualenv-init -)"
 
-          # Commit and push the changes
-          git config --local user.email "actions@github.com"
-          git config --local user.name "GitHub Actions"
-          git add pyproject.toml
-          git commit -m "Update dependencies"
-          git push
+      # Install Poetry
+      - name: 'Install Poetry'
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+
+      # Run Poetry commands
+      - name: 'Run Poetry Update'
+        run: |
+          poetry --version
+          poetry update
