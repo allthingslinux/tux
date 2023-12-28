@@ -9,7 +9,9 @@ from discord.ext import commands
 # Hey contributor, Ty here! To use the logger in your cog files, please follow these steps:
 
 # 1. Import the logger by adding the following line at the top of your main bot file:
-#    from your_module_name import logger
+#    from utils._tux_logger import TuxLogger
+# 
+#    logger = TuxLogger(__name__)
 
 # 2. Once imported, you can use the logger to log messages in your code. For example:
 #    logger.info("This is an information message.")
