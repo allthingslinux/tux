@@ -7,4 +7,3 @@ repos:
     rev: v1.1.343
     hooks:
     - id: pyright
-    
