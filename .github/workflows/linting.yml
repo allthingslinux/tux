@@ -1,0 +1,32 @@
+name: 'Linting'
+on: [push, pull_request]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  Linting:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v3
+
+      # Install Python
+      - name: Setup Python
+        uses: actions/setup-python@v5.0.0
+        with:
+          python-version: 3.11
+
+      # Install Poetry
+      - name: Poetry Install
+        uses: knowsuchagency/poetry-install@v2
+    # Use Ruff for linting
+      - name: Ruff Linting
+        uses: chartboost/ruff-action@v1
+        with:
+          args: --check . --config pyproject.toml --fix
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: 'style fixes by ruff'
