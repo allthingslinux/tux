@@ -1,8 +1,9 @@
-from discord.ext import commands
-import os
-from utils._tux_logger import TuxLogger
 import logging
+import os
 import traceback
+
+from discord.ext import commands
+from utils._tux_logger import TuxLogger
 
 logger = TuxLogger(__name__)
 
@@ -15,7 +16,8 @@ class CogLoader(commands.Cog):
         self.bot = bot
         self.debug = debug
         self.ignore_cogs = []
-        if debug: logger.setLevel(logging.DEBUG)
+        if debug: 
+            logger.setLevel(logging.DEBUG)
 
     async def load_cogs_from_folder(self, folder_name):
         """

@@ -1,4 +1,5 @@
 import logging
+
 from discord.ext import commands
 from utils._tux_logger import TuxLogger
 
@@ -18,5 +19,6 @@ class Ping(commands.Cog):
 
 
 async def setup(bot, debug=False):
-    if debug: logger.setLevel(logging.DEBUG)
+    if debug: 
+        logger.setLevel(logging.DEBUG)
     await bot.add_cog(Ping(bot))
