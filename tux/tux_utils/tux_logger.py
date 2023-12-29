@@ -7,7 +7,6 @@ from discord.ext import commands
 
 class TuxLogger(logging.Logger):
     def __init__(self, name, project_logging_level=logging.INFO):
-
         super().__init__(name, level=project_logging_level)
         self._setup_logging()
 
@@ -60,7 +59,6 @@ class TuxLogger(logging.Logger):
 
 class LoggingCog(commands.Cog):
     def __init__(self, bot, discord_logging_level=logging.WARNING):
-
         self.bot = bot
         self.discord_logging_level = discord_logging_level
 
@@ -76,7 +74,6 @@ async def setup(
     project_logging_level=logging.DEBUG,
     discord_logging_level=logging.WARNING,
 ):
-
     global logger
     log_cog = LoggingCog(bot, discord_logging_level)
     logger.setLevel(project_logging_level)
