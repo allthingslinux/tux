@@ -26,7 +26,7 @@ jobs:
       - name: Ruff Linting
         uses: chartboost/ruff-action@v1
         with:
-          args: --check . --config pyproject.toml --fix
+          args: -- --check . --config pyproject.toml --fix
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: 'style fixes by ruff'
