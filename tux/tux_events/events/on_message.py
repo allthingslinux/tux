@@ -10,8 +10,8 @@ class OnMessage(commands.Cog):
         if message.author == self.bot.user:
             return
 
-        if message.content.startswith('!hello'):
-            await message.channel.send('Hello!')
+        if message.content.startswith("!hello"):
+            await message.channel.send("Hello!")
 
 
 async def setup(bot):

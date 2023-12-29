@@ -5,30 +5,31 @@ class CogTemplate(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='hello', help='Responds with a greeting.')
+    @commands.command(name="hello", help="Responds with a greeting.")
     async def hello(self, ctx):
-        """
-        An example hello world command.
-        
-        Parameters:
+        """An example hello world command.
+
+        Parameters
+        ----------
         - ctx (commands.Context): The context of the command.
 
         Example usage:
         !hello
         """
-        await ctx.send('world!')
+        await ctx.send("world!")
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        """
-        An event listener that triggers when a message is sent. You can find a
+        """An event listener that triggers when a message is sent. You can find a
         list of these at
         https://discordpy.readthedocs.io/en/latest/api.html#event-reference
 
-        Parameters:
+        Parameters
+        ----------
         - message (discord.Message): The message object.
 
-        Notes:
+        Notes
+        -----
         - This example function will be called every time a message is sent in
         any channel.
         """
@@ -37,8 +38,8 @@ class CogTemplate(commands.Cog):
             return
 
         # Respond to a specific message content
-        if message.content.lower() == 'ping':
-            await message.channel.send('Pong!')
+        if message.content.lower() == "ping":
+            await message.channel.send("Pong!")
 
 
 # Define the setup function that will be called when loading the cog
