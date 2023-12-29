@@ -22,6 +22,12 @@ jobs:
       # Install Poetry
       - name: Poetry Install
         uses: knowsuchagency/poetry-install@v2
+    # Use Ruff for formatting
+      - name: Ruff formatting
+        uses: chartboost/ruff-action@v1
+        with:
+          src: "."
+          args: format --config=pyproject.toml --fix
     # Use Ruff for linting
       - name: Ruff Linting
         uses: chartboost/ruff-action@v1
