@@ -9,14 +9,14 @@ logger = TuxLogger(__name__)
 
 
 class CogLoader(commands.Cog):
-    def __init__(self, bot: commands.Bot, debug: bool=False):
+    def __init__(self, bot: commands.Bot, debug: bool = False):
         """
         Constructor for the CogLoader Cog.
         """
         self.bot = bot
         self.debug = debug
         self.ignore_cogs = []
-        if debug: 
+        if debug:
             logger.setLevel(logging.DEBUG)
 
     async def load_cogs_from_folder(self, folder_name):
@@ -30,19 +30,21 @@ class CogLoader(commands.Cog):
 
         for filename in os.listdir(cog_dir):
             cog_name = filename[:-3]
-            module = f'{folder_name}.{cog_name}'
+            module = f"{folder_name}.{cog_name}"
 
-            if not filename.endswith('.py') or\
-                    cog_name in self.ignore_cogs or\
-                    filename.startswith('_'):
+            if (
+                not filename.endswith(".py")
+                or cog_name in self.ignore_cogs
+                or filename.startswith("_")
+            ):
                 logger.info(f"Skipping {module}.", __name__)
                 continue
 
             try:
                 await self.bot.load_extension(module)
-                logger.debug(f'Successfully loaded cog: {module}', __name__)
+                logger.debug(f"Successfully loaded cog: {module}", __name__)
             except Exception as e:
-                logger.error(f'Failed to load cog {module}. Error: {e}', __name__)
+                logger.error(f"Failed to load cog {module}. Error: {e}", __name__)
                 logger.error(traceback.format_exc())
 
     @classmethod
@@ -56,6 +58,6 @@ class CogLoader(commands.Cog):
         """
         cog = cls(bot, debug)
         # await cog.load_cogs_from_folder('events')
-        await cog.load_cogs_from_folder('utils')
-        await cog.load_cogs_from_folder('commands')
+        await cog.load_cogs_from_folder("utils")
+        await cog.load_cogs_from_folder("commands")
         await bot.add_cog(cog)
