@@ -12,10 +12,13 @@ class BanCog(commands.Cog):
 
     @commands.command(name="tban")
     async def temp_ban(
-        self, ctx, user: commands.MemberConverter, duration: int, reason: str
+        self,
+        ctx,
+        user: commands.MemberConverter,
+        duration: int,
+        reason: str,
     ):
-        """
-        Temporarily ban a user.
+        """Temporarily ban a user.
         Example: !tban @user 7 Violating rules
         """
         await ctx.guild.ban(user, reason=reason)
@@ -23,8 +26,7 @@ class BanCog(commands.Cog):
 
     @commands.command(name="qban")
     async def quick_ban(self, ctx, user: commands.MemberConverter):
-        """
-        Quickly ban a user.
+        """Quickly ban a user.
         Example: !qban @user
         """
         await ctx.guild.ban(user)
@@ -32,8 +34,7 @@ class BanCog(commands.Cog):
 
     @commands.command(name="ban")
     async def perm_ban(self, ctx, user: commands.MemberConverter, reason: str):
-        """
-        Permanently ban a user.
+        """Permanently ban a user.
         Example: !ban @user Violating rules
         """
         await ctx.guild.ban(user, reason=reason, delete_message_days=0)

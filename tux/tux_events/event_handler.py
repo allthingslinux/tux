@@ -9,10 +9,10 @@ logger = TuxLogger(__name__)
 
 class EventHandler(commands.Cog):
     def __init__(self, bot, debug=False):
-        """
-        Constructor for the EventHandler Cog.
+        """Constructor for the EventHandler Cog.
 
-        Parameters:
+        Parameters
+        ----------
             bot (commands.Bot): The instance of the Discord bot.
             debug (bool): A flag indicating whether debug mode is enabled.
         """
@@ -23,8 +23,7 @@ class EventHandler(commands.Cog):
             logger.setLevel(logging.DEBUG)
 
     async def _load_events(self):
-        """
-        Dynamically loads event modules from the 'events' directory.
+        """Dynamically loads event modules from the 'events' directory.
 
         Each event module should be a Python file in the 'events' directory.
         The file name (excluding extension) is considered the event name.
@@ -51,10 +50,10 @@ class EventHandler(commands.Cog):
 
     @classmethod
     async def setup(cls, bot, debug=False):
-        """
-        Sets up the EventHandler Cog and adds it to the bot.
+        """Sets up the EventHandler Cog and adds it to the bot.
 
-        Parameters:
+        Parameters
+        ----------
             bot (commands.Bot): The instance of the Discord bot.
             debug (bool): A flag indicating whether debug mode is enabled.
         """

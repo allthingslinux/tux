@@ -14,8 +14,10 @@ bot = commands.Bot(command_prefix=bot_prefix, intents=intents)
 
 asyncio.run(
     setup(
-        bot, project_logging_level=logging.DEBUG, discord_logging_level=logging.WARNING
-    )
+        bot,
+        project_logging_level=logging.DEBUG,
+        discord_logging_level=logging.WARNING,
+    ),
 )
 event_handler = EventHandler(bot, True)
 
@@ -33,9 +35,7 @@ async def main():
 
     @commands.Cog.listener()
     async def on_ready(self):
-        """
-        This function is called when the bot successfully connects to Discord.
-        """
+        """This function is called when the bot successfully connects to Discord."""
         logger.info(f"{self.bot.user} has connected to Discord!", __name__)
 
 

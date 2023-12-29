@@ -7,10 +7,10 @@ class CogTemplate(commands.Cog):
 
     @commands.command(name="hello", help="Responds with a greeting.")
     async def hello(self, ctx):
-        """
-        An example hello world command.
+        """An example hello world command.
 
-        Parameters:
+        Parameters
+        ----------
         - ctx (commands.Context): The context of the command.
 
         Example usage:
@@ -20,15 +20,16 @@ class CogTemplate(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        """
-        An event listener that triggers when a message is sent. You can find a
+        """An event listener that triggers when a message is sent. You can find a
         list of these at
         https://discordpy.readthedocs.io/en/latest/api.html#event-reference
 
-        Parameters:
+        Parameters
+        ----------
         - message (discord.Message): The message object.
 
-        Notes:
+        Notes
+        -----
         - This example function will be called every time a message is sent in
         any channel.
         """

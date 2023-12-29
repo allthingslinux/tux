@@ -23,13 +23,14 @@ class TestEventHandler(unittest.TestCase):
     def test_load_events(self):
         # Mock the os.listdir function to return a list of mock file names
         with unittest.mock.patch(
-            "os.listdir", return_value=["on_leave.py", "on_join.py"]
+            "os.listdir",
+            return_value=["on_leave.py", "on_join.py"],
         ):
             self.assertEqual(self.event_handler.load_events(), None)
 
         # Ensure that self.bot.load_extension is called for each event module
         self.mock_bot.load_extension.assert_called_with(
-            "tux.tux_events.events.on_leave"
+            "tux.tux_events.events.on_leave",
         )
         self.mock_bot.load_extension.assert_called_with("tux.tux_events.events.on_join")
 
@@ -37,7 +38,8 @@ class TestEventHandler(unittest.TestCase):
         # Mock the logging.info function to track its calls
         with unittest.mock.patch("logging.info") as mock_info:
             self.assertEqual(
-                self.event_handler.on_ready(), None
+                self.event_handler.on_ready(),
+                None,
             )  # It should return None
 
         # Ensure that logging.info is called with the correct message

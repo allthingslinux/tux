@@ -26,10 +26,10 @@ from discord.ext import commands
 
 class TuxLogger(logging.Logger):
     def __init__(self, name, project_logging_level=logging.INFO):
-        """
-        Constructor for the custom logger class.
+        """Constructor for the custom logger class.
 
-        Parameters:
+        Parameters
+        ----------
         - name: The name of the logger.
         - project_logging_level: The logging level for the project (default is INFO).
         """
@@ -37,9 +37,7 @@ class TuxLogger(logging.Logger):
         self._setup_logging()
 
     def _setup_logging(self):
-        """
-        Set up the logging configuration for the custom logger.
-        """
+        """Set up the logging configuration for the custom logger."""
         log_format = (
             "%(asctime)s [%(log_color)s%(levelname)s%(reset)s] [%(name)s]: %(message)s"
         )
@@ -52,27 +50,27 @@ class TuxLogger(logging.Logger):
 
         file_handler = logging.FileHandler(os.path.join(log_dir, "bot.log"), mode="a")
         file_handler.setFormatter(
-            logging.Formatter("%(asctime)s [%(levelname)s] [%(name)s]: %(message)s")
+            logging.Formatter("%(asctime)s [%(levelname)s] [%(name)s]: %(message)s"),
         )
         self.addHandler(file_handler)
 
     def _log_to_file(self, level, message, caller_module):
-        """
-        Log a message to a specific file.
+        """Log a message to a specific file.
 
-        Parameters:
+        Parameters
+        ----------
         - level: The logging level (e.g., logging.DEBUG, logging.INFO, etc.).
         - message: The log message.
         - filename: The name of the file to log to.
         """
-
         file_handler = logging.FileHandler(
-            os.path.join("logs", f"{caller_module}.log"), mode="a"
+            os.path.join("logs", f"{caller_module}.log"),
+            mode="a",
         )
         file_handler.setFormatter(
             logging.Formatter(
-                f"%(asctime)s [%(levelname)s] [{caller_module}]: %(message)s"
-            )
+                f"%(asctime)s [%(levelname)s] [{caller_module}]: %(message)s",
+            ),
         )
         self.addHandler(file_handler)
         self.log(level, message)
@@ -96,10 +94,10 @@ class TuxLogger(logging.Logger):
 
 class LoggingCog(commands.Cog):
     def __init__(self, bot, discord_logging_level=logging.WARNING):
-        """
-        Constructor for the LoggingCog class.
+        """Constructor for the LoggingCog class.
 
-        Parameters:
+        Parameters
+        ----------
         - bot: The Discord bot instance.
         - discord_logging_level: The logging level for the Discord library (default is WARNING).
         """
@@ -114,12 +112,14 @@ logger = TuxLogger(__name__)
 
 
 async def setup(
-    bot, project_logging_level=logging.DEBUG, discord_logging_level=logging.WARNING
+    bot,
+    project_logging_level=logging.DEBUG,
+    discord_logging_level=logging.WARNING,
 ):
-    """
-    Asynchronous function to set up the LoggingCog and add it to the Discord bot.
+    """Asynchronous function to set up the LoggingCog and add it to the Discord bot.
 
-    Parameters:
+    Parameters
+    ----------
     - bot: The Discord bot instance.
     - project_logging_level: The logging level for the project (default is DEBUG).
     - discord_logging_level: The logging level for the Discord library (default is WARNING).
