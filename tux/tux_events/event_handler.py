@@ -29,22 +29,25 @@ class EventHandler(commands.Cog):
         Each event module should be a Python file in the 'events' directory.
         The file name (excluding extension) is considered the event name.
         """
-        events_dir = os.path.join(os.path.dirname(__file__), 'events')
+        events_dir = os.path.join(os.path.dirname(__file__), "events")
 
         for filename in os.listdir(events_dir):
             event_name = filename[:-3]
-            module = f'tux_events.events.{event_name}'
+            module = f"tux_events.events.{event_name}"
 
-            if not filename.endswith('.py') or event_name in self.ignore_cogs \
-                    or filename.startswith('__'):
+            if (
+                not filename.endswith(".py")
+                or event_name in self.ignore_cogs
+                or filename.startswith("__")
+            ):
                 logger.info(f"Skipping {module}.", __name__)
                 continue
 
             try:
                 await self.bot.load_extension(module)
-                logger.debug(f'Successfully loaded event: {module}', __name__)
+                logger.debug(f"Successfully loaded event: {module}", __name__)
             except Exception as e:
-                logger.error(f'Failed to load event {module}. Error: {e}', __name__)
+                logger.error(f"Failed to load event {module}. Error: {e}", __name__)
 
     @classmethod
     async def setup(cls, bot, debug=False):

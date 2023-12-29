@@ -24,9 +24,7 @@ from discord.ext import commands
 
 
 class TuxLogger(logging.Logger):
-    def __init__(self,
-                 name,
-                 project_logging_level=logging.INFO):
+    def __init__(self, name, project_logging_level=logging.INFO):
         """
         Constructor for the custom logger class.
 
@@ -41,20 +39,20 @@ class TuxLogger(logging.Logger):
         """
         Set up the logging configuration for the custom logger.
         """
-        log_format = '%(asctime)s [%(log_color)s%(levelname)s%(reset)s] [%(name)s]: %(message)s'
-        log_dir = 'logs'
+        log_format = (
+            "%(asctime)s [%(log_color)s%(levelname)s%(reset)s] [%(name)s]: %(message)s"
+        )
+        log_dir = "logs"
         os.makedirs(log_dir, exist_ok=True)
 
         handler = colorlog.StreamHandler()
         handler.setFormatter(colorlog.ColoredFormatter(log_format))
         self.addHandler(handler)
 
-        file_handler = logging.FileHandler(
-            os.path.join(log_dir, 'bot.log'),
-            mode='a'
+        file_handler = logging.FileHandler(os.path.join(log_dir, "bot.log"), mode="a")
+        file_handler.setFormatter(
+            logging.Formatter("%(asctime)s [%(levelname)s] [%(name)s]: %(message)s")
         )
-        file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s [%(levelname)s] [%(name)s]: %(message)s'))
         self.addHandler(file_handler)
 
     def _log_to_file(self, level, message, caller_module):
@@ -68,12 +66,11 @@ class TuxLogger(logging.Logger):
         """
 
         file_handler = logging.FileHandler(
-            os.path.join('logs', f"{caller_module}.log"),
-            mode='a'
+            os.path.join("logs", f"{caller_module}.log"), mode="a"
         )
         file_handler.setFormatter(
             logging.Formatter(
-                f'%(asctime)s [%(levelname)s] [{caller_module}]: %(message)s'
+                f"%(asctime)s [%(levelname)s] [{caller_module}]: %(message)s"
             )
         )
         self.addHandler(file_handler)
@@ -97,9 +94,7 @@ class TuxLogger(logging.Logger):
 
 
 class LoggingCog(commands.Cog):
-    def __init__(self,
-                 bot,
-                 discord_logging_level=logging.WARNING):
+    def __init__(self, bot, discord_logging_level=logging.WARNING):
         """
         Constructor for the LoggingCog class.
 
@@ -110,16 +105,16 @@ class LoggingCog(commands.Cog):
         self.bot = bot
         self.discord_logging_level = discord_logging_level
 
-        discord_logger = logging.getLogger('discord')
+        discord_logger = logging.getLogger("discord")
         discord_logger.setLevel(self.discord_logging_level)
 
 
 logger = TuxLogger(__name__)
 
 
-async def setup(bot,
-                project_logging_level=logging.DEBUG,
-                discord_logging_level=logging.WARNING):
+async def setup(
+    bot, project_logging_level=logging.DEBUG, discord_logging_level=logging.WARNING
+):
     """
     Asynchronous function to set up the LoggingCog and add it to the Discord bot.
 
@@ -129,9 +124,6 @@ async def setup(bot,
     - discord_logging_level: The logging level for the Discord library (default is WARNING).
     """
     global logger
-    log_cog = LoggingCog(
-        bot,
-        discord_logging_level
-    )
+    log_cog = LoggingCog(bot, discord_logging_level)
     logger.setLevel(project_logging_level)
     await bot.add_cog(log_cog)

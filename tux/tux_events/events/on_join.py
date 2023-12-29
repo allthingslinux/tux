@@ -8,7 +8,7 @@ class OnJoin(commands.Cog):
     @commands.Cog.listener()
     async def on_member_join(self, member):
         # Your on_join logic goes here
-        print(f'{member} has joined the server.')
+        print(f"{member} has joined the server.")
 
 
 async def setup(bot):

@@ -5,18 +5,18 @@ class CogTemplate(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='hello', help='Responds with a greeting.')
+    @commands.command(name="hello", help="Responds with a greeting.")
     async def hello(self, ctx):
         """
         An example hello world command.
-        
+
         Parameters:
         - ctx (commands.Context): The context of the command.
 
         Example usage:
         !hello
         """
-        await ctx.send('world!')
+        await ctx.send("world!")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -37,8 +37,8 @@ class CogTemplate(commands.Cog):
             return
 
         # Respond to a specific message content
-        if message.content.lower() == 'ping':
-            await message.channel.send('Pong!')
+        if message.content.lower() == "ping":
+            await message.channel.send("Pong!")
 
 
 # Define the setup function that will be called when loading the cog
