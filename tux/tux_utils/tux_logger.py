@@ -1,5 +1,6 @@
-import os
 import logging
+import os
+
 import colorlog
 from discord.ext import commands
 

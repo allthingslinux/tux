@@ -1,7 +1,6 @@
 import configparser
 import logging
 
-
 config = configparser.ConfigParser()
 config.read("config/settings.ini")
 feature_permissions_section = config["Feature_Permissions"]

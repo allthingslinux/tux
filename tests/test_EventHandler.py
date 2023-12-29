@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import MagicMock
+
 from tux.tux_events.event_handler import EventHandler
 
 

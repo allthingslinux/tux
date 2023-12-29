@@ -1,9 +1,10 @@
+import asyncio
+import logging
+
 import discord
 from discord.ext import commands
 from tux_events.event_handler import EventHandler
-import asyncio
-import logging
-from tux_utils.tux_logger import setup, TuxLogger
+from tux_utils.tux_logger import TuxLogger, setup
 
 logger = TuxLogger(__name__)
 
