@@ -26,6 +26,17 @@ build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core"]
 
 ################################################################
+# Black Configuration
+# https://docs.astral.sh/ruff/configuration/
+################################################################
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+
+
+################################################################
 # Ruff Configuration
 # https://docs.astral.sh/ruff/configuration/
 ################################################################
