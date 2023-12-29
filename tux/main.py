@@ -1,42 +1,56 @@
-import asyncio
-import logging
-
+import os
 import discord
 from discord.ext import commands
-from tux_events.event_handler import EventHandler
-from tux_utils.tux_logger import TuxLogger, setup
+from cog_loader import CogLoader
+from utils._tux_logger import TuxLogger
+from dotenv import load_dotenv
 
 logger = TuxLogger(__name__)
+load_dotenv()
 
-bot_prefix = "!"
-intents = discord.Intents.all()
-bot = commands.Bot(command_prefix=bot_prefix, intents=intents)
 
-asyncio.run(
-    setup(
-        bot,
-        project_logging_level=logging.DEBUG,
-        discord_logging_level=logging.WARNING,
-    ),
-)
-event_handler = EventHandler(bot, True)
+async def setup(bot: commands.Bot, debug: bool=False):
+    """
+    Set up the bot including loading cogs and other necessary setup tasks.
+    """
+    await CogLoader.setup(bot, debug)
+    logger.debug("Event handler setup completed.")
 
 
 async def main():
-    async with bot:
-        logger.debug("Setting up event handler...")
-        await event_handler.setup(bot, True)
-        logger.debug("Event handler setup completed.")
-
-        await bot.start(
-            "MTE4MjE5NDU4NTY5OTYzMTEzNA.GUaYP5.qbUQSLvBYzZ6TsXP_P3Qx1RZiobPrCDgF3NWpQ",
-            reconnect=True,
-        )
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        """This function is called when the bot successfully connects to Discord."""
-        logger.info(f"{self.bot.user} has connected to Discord!", __name__)
+    bot_prefix = '!'
+    intents = discord.Intents.all()
+    bot = commands.Bot(command_prefix=bot_prefix, intents=intents)
 
 
-asyncio.run(main())
+    await setup(bot, debug=True)
+
+    @bot.command(name='sync')
+    @commands.has_permissions(administrator=True)
+    async def sync(ctx: commands.Context):
+        if ctx.guild:
+            bot.tree.copy_global_to(guild=ctx.guild)
+        await bot.tree.sync(guild=ctx.guild)
+        logger.info(f'{ctx.author} synced the slash command tree.')
+
+    @bot.command(name='clear')
+    @commands.has_permissions(administrator=True)
+    async def clear(ctx: commands.Context):
+        bot.tree.clear_commands(guild=ctx.guild)
+        if ctx.guild:
+            bot.tree.copy_global_to(guild=ctx.guild)
+        await bot.tree.sync(guild=ctx.guild)
+        logger.info(f'{ctx.author} cleared the slash command tree.')
+
+    @bot.event
+    async def on_ready():
+        logger.info(f'{bot.user} has connected to Discord!', __name__)
+
+    await bot.start(os.getenv('TOKEN') or '', reconnect=True)
+
+
+if __name__ == '__main__':
+    import asyncio
+
+    # Run the main function
+    asyncio.run(main())
