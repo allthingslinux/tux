@@ -98,9 +98,6 @@ line-ending = "auto"
 docstring-code-format = false
 docstring-code-line-length = "dynamic"
 
-# Specify the maximum line length (default is 88).
-max-line-length = 88
-
 # Configure how to handle imports sorting and grouping.
 [tool.ruff.format.imports]
 # Sort imports in sections: "standard", "thirdparty", and "local".
