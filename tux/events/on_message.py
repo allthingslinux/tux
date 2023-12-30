@@ -1,5 +1,10 @@
-from discord.ext import commands
+# from discord.ext import commands
 
+import logging
+from discord.ext import commands
+from utils._tux_logger import TuxLogger
+
+logger = TuxLogger(__name__)
 
 class OnMessage(commands.Cog):
     def __init__(self, bot):
@@ -15,4 +20,6 @@ class OnMessage(commands.Cog):
 
 
 async def setup(bot):
+    # cog = OnMessage(bot)
+    # logger.info(f"Setting up {cog.__class__.__name__}...")
     await bot.add_cog(OnMessage(bot))
