@@ -30,7 +30,7 @@ replace this block comment with a description of what your particular event is m
 Happy Coding!
 
 P.S - For avoiding too long line linter errors, you can use the following syntax:
-""" # noqa: E501
+"""  # noqa: E501
 
 from discord.ext import commands
 from utils._tux_logger import TuxLogger
