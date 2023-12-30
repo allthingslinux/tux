@@ -28,13 +28,15 @@ After defining the event handler functions in the EventName class and the setup 
 replace this block comment with a description of what your particular event is meant to do.
 
 Happy Coding!
-"""
 
-import logging
+P.S - For avoiding too long line linter errors, you can use the following syntax:
+""" # noqa: E501
+
 from discord.ext import commands
 from utils._tux_logger import TuxLogger
 
 logger = TuxLogger(__name__)
+
 
 class EventName(commands.Cog):
     def __init__(self, bot):
@@ -43,7 +45,7 @@ class EventName(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         """
-        An event listener that triggers when a message is sent. 
+        An event listener that triggers when a message is sent.
         Parameters:
         - message (discord.Message): The message object.
         Notes:
@@ -52,11 +54,12 @@ class EventName(commands.Cog):
         """
         if message.author == self.bot.user:
             return
-        
-        if message.content.lower() == 'ping':
+
+        if message.content.lower() == "ping":
             logger.debug("Ping message detected.")
-            await message.channel.send('Pong!')
+            await message.channel.send("Pong!")
             logger.info("Pong message sent.")
+
 
 # The setup function that'll be called when loading the cog
 async def setup(bot):

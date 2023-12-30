@@ -1,10 +1,10 @@
 # from discord.ext import commands
 
-import logging
 from discord.ext import commands
 from utils._tux_logger import TuxLogger
 
 logger = TuxLogger(__name__)
+
 
 class OnMessage(commands.Cog):
     def __init__(self, bot):
