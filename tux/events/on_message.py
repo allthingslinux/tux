@@ -1,5 +1,3 @@
-# from discord.ext import commands
-
 from discord.ext import commands
 from utils._tux_logger import TuxLogger
 
@@ -12,6 +10,11 @@ class OnMessage(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        """This event is triggered whenever a message is sent in a channel.
+
+        Args:
+            message (discord.Message): Represents a Discord message.
+        """  # noqa E501
         if message.author == self.bot.user:
             return
 
@@ -20,6 +23,4 @@ class OnMessage(commands.Cog):
 
 
 async def setup(bot):
-    # cog = OnMessage(bot)
-    # logger.info(f"Setting up {cog.__class__.__name__}...")
     await bot.add_cog(OnMessage(bot))

@@ -20,12 +20,13 @@ class CogLoader(commands.Cog):
             logger.setLevel(logging.DEBUG)
 
     async def load_cogs_from_folder(self, folder_name):
-        """
-        Dynamically loads cogs from the specified subdirectory.
-
+        """Dynamically loads all cogs from a folder.
         Each cog module should be a Python file in the specified directory.
         The file name (excluding extension) is considered the cog name.
-        """
+
+        Args:
+            folder_name (str): The name of the folder containing the cogs.
+        """  # noqa E501
         cog_dir = os.path.join(os.path.dirname(__file__), folder_name)
 
         for filename in os.listdir(cog_dir):
@@ -49,10 +50,9 @@ class CogLoader(commands.Cog):
 
     @classmethod
     async def setup(cls, bot, debug=False):
-        """
-        Sets up the CogLoader Cog and adds it to the bot.
+        """Sets up the CogLoader Cog and adds it to the bot.
 
-        Parameters:
+        Args:
             bot (commands.Bot): The instance of the Discord bot.
             debug (bool): A flag indicating whether debug mode is enabled.
         """

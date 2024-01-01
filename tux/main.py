@@ -28,6 +28,12 @@ async def main():
     @bot.command(name="sync")
     @commands.has_permissions(administrator=True)
     async def sync(ctx: commands.Context):
+        """Syncs the slash command tree. This command is only available to administrators.
+
+        Args:
+            ctx (commands.Context): The invocation context sent by the Discord API which contains information
+            about the command and from where it was called.
+        """  # noqa E501
         if ctx.guild:
             bot.tree.copy_global_to(guild=ctx.guild)
         await bot.tree.sync(guild=ctx.guild)
@@ -36,6 +42,13 @@ async def main():
     @bot.command(name="clear")
     @commands.has_permissions(administrator=True)
     async def clear(ctx: commands.Context):
+        """Clears the slash command tree. This command is only available to administrators.
+
+        Args:
+            ctx (commands.Context): The invocation context sent by the Discord API which contains information
+            about the command and from where it was called.
+        """  # noqa E501
+
         bot.tree.clear_commands(guild=ctx.guild)
         if ctx.guild:
             bot.tree.copy_global_to(guild=ctx.guild)
@@ -43,7 +56,42 @@ async def main():
         logger.info(f"{ctx.author} cleared the slash command tree.")
 
     @bot.event
+    async def on_command_error(ctx: commands.Context, error):
+        """Handles the event when a command has been invoked but an error has occurred.
+
+        Args:
+            ctx (commands.Context): The invocation context sent by the Discord API which contains information
+            about the command and from where it was called.
+
+            error (Exception): The error that occurred.
+        """  # noqa E501
+
+        if isinstance(error, commands.CommandNotFound):
+            await ctx.send("Invalid command used.")
+        elif isinstance(error, commands.MissingPermissions):
+            await ctx.send("You do not have permission to use this command.")
+        elif isinstance(error, commands.BotMissingPermissions):
+            await ctx.send("I do not have permission to execute this command.")
+        else:
+            # For other errors you probably want to log them somewhere for review
+            logger.error(error)
+
+    @bot.event
+    async def on_command_completion(ctx: commands.Context):
+        """Handles the event when a command has been completed its invocation. This event is called only if the command succeeded, i.e. all checks have passed and the user input it correctly.
+
+        Args:
+            ctx (commands.Context): The invocation context sent by the Discord API which contains information
+            about the command and from where it was called.
+        """  # noqa E501
+        await ctx.message.add_reaction("✅")
+
+    @bot.event
     async def on_ready():
+        """
+        Called when the client is done preparing the data received from Discord.
+        Usually after login is successful and the Client.guilds and co. are filled up.
+        """
         logger.info(f"{bot.user} has connected to Discord!", __name__)
 
     await bot.start(os.getenv("TOKEN") or "", reconnect=True)
