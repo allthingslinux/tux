@@ -19,7 +19,7 @@ async def setup(bot: commands.Bot, debug: bool = False):
 
 
 async def main():
-    bot_prefix = "!"
+    bot_prefix = ">"
     intents = discord.Intents.all()
     bot = commands.Bot(command_prefix=bot_prefix, intents=intents)
 
