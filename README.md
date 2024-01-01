@@ -9,10 +9,11 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec euismod, nisl ege
 - Docker (optional)
 
 ## Development Setup
-- Clone the repository
-- Install dependencies with `poetry install`
+- Clone the repository and `cd tux`
+- Install dependencies with `poetry install` - https://python-poetry.org/docs/basic-usage/#installing-with-poetrylock
 - Create a `.env` file based on the `.env.example` file
-- Run the application with `poetry run python tux/main.py`
+- Run the application with `poetry run python tux/main.py` - https://python-poetry.org/docs/basic-usage/#using-poetry-run
+- For setting up a virtual environment, please refer to: https://python-poetry.org/docs/basic-usage/#activating-the-virtual-environment
 
 ## Docker Setup
 - Clone the repository
@@ -33,8 +34,8 @@ Tux is built using the [discord.py]() library. It is a Python wrapper for the Di
 ## Key Files
 - [main.py](tux/main.py): The main execution file for the application
 - [cog_loader.py](tux/cog_loader.py): The file for loading cogs/modules (commands, events, utils)
-- [permissions.py](tux/utils/permissions.py): The file for managing user permissions
-- [tux_logger.py](tux/utils/tux_logger.py): The application's logger file
+- [permissions.py](tux/permissions.py): The file for managing user permissions
+- [_tux_logger.py](tux/utils/_tux_logger.py): The application's logger file
 
 ## Project Structure
 
