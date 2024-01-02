@@ -11,4 +11,4 @@ class Clear(discord.Cog):
     @bridge.has_permissions(administrator=True)
     async def clear(self, ctx: bridge.BridgeContext | discord.ApplicationContext, amount: int = 100):
         await ctx.channel.purge(limit=amount)
-        logger.info(f"{ctx.author} cleared the channel {ctx.channel}.")
+        return logger.info(f"{ctx.author} cleared the channel {ctx.channel}.")
