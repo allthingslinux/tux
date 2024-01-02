@@ -11,3 +11,7 @@ class OnReady(discord.Cog):
     @discord.Cog.listener()
     async def on_ready(self):
         return logger.info(f"{self.bot.user} has connected to Discord!")
+
+
+def setup(bot: bridge.Bot):
+    bot.add_cog(OnReady(bot))

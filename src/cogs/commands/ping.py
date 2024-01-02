@@ -10,3 +10,7 @@ class Ping(discord.Cog):
     async def ping(self, ctx: bridge.BridgeContext | discord.ApplicationContext):
         """Checks the latency of the bot."""
         await ctx.respond(f"Pong!\nLatency: {round(self.bot.latency * 1000)}ms")
+
+
+def setup(bot: bridge.Bot):
+    bot.add_cog(Ping(bot))

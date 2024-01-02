@@ -15,3 +15,7 @@ class Clear(discord.Cog):
     ):
         await ctx.channel.purge(limit=amount)
         return logger.info(f"{ctx.author} cleared the channel {ctx.channel}.")
+
+
+def setup(bot: bridge.Bot):
+    bot.add_cog(Clear(bot))
