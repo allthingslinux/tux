@@ -1,6 +1,7 @@
 import discord
 from discord.ext import bridge
 
+
 class Ping(discord.Cog):
     def __init__(self, bot):
         self.bot: bridge.Bot = bot
