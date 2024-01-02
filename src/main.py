@@ -14,4 +14,5 @@ def load_cogs():
     ]
     return
 
-bot.run("")
+load_cogs()
+bot.run(os.environ.get("TOKEN"))
