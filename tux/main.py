@@ -34,6 +34,7 @@ async def main():
             ctx (commands.Context): The invocation context sent by the Discord API which contains information
             about the command and from where it was called.
         """  # noqa E501
+
         if ctx.guild:
             bot.tree.copy_global_to(guild=ctx.guild)
         await bot.tree.sync(guild=ctx.guild)
@@ -85,6 +86,7 @@ async def main():
             about the command and from where it was called.
         """  # noqa E501
         await ctx.message.add_reaction("✅")
+        logger.info(f"{ctx.author} successfully executed {ctx.command}.")
 
     @bot.event
     async def on_ready():

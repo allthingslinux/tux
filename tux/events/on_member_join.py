@@ -1,3 +1,4 @@
+import discord
 from discord.ext import commands
 from utils._tux_logger import TuxLogger
 
@@ -9,11 +10,19 @@ class OnMemberJoin(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_member_join(self, member):
-        """This event is triggered whenever a member joins a guild.
+    async def on_member_join(self, member: discord.Member):
+        """
+        Handles the event when a member joins a Discord Guild.
+
+        This function is called when a new member joins a Discord Guild.
+
+        Note:
+            This function requires the `Intents.members` to be enabled.
 
         Args:
-            member (discord.Member): Represents a Discord member who joined the Guild.
+            member (discord.Member): The member who has joined the guild.
+
+        https://discordpy.readthedocs.io/en/stable/api.html#discord.on_member_join
         """  # noqa E501
 
         # Your on_join logic goes here

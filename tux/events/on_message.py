@@ -1,3 +1,4 @@
+import discord
 from discord.ext import commands
 from utils._tux_logger import TuxLogger
 
@@ -9,7 +10,7 @@ class OnMessage(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_message(self, message):
+    async def on_message(self, message: discord.Message):
         """This event is triggered whenever a message is sent in a channel.
 
         Args:
