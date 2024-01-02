@@ -9,4 +9,4 @@ class OnReady(discord.Cog):
 
     @discord.Cog.listener()
     async def on_ready(self):
-        logger.info(f"{self.bot.user} has connected to Discord!")
+        return logger.info(f"{self.bot.user} has connected to Discord!")
