@@ -1,6 +1,5 @@
 import discord
 from discord.ext import bridge
-from discord.ext import commands
 from loguru import logger
 import os
 
