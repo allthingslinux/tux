@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 import discord
 from discord.ext import commands
