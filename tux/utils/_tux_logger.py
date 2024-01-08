@@ -1,5 +1,6 @@
 import logging
 import os
+
 import colorlog
 from discord.ext import commands
 
@@ -30,8 +31,7 @@ class TuxLogger(logging.Logger):
     def create_file_handler(self, filename):
         file_handler = logging.FileHandler(filename, mode="a")
         file_handler.setFormatter(
-            logging.Formatter(
-                "%(asctime)s [%(levelname)s] [%(name)s]: %(message)s")
+            logging.Formatter("%(asctime)s [%(levelname)s] [%(name)s]: %(message)s")
         )
         return file_handler
 
@@ -68,8 +68,9 @@ class LoggingCog(commands.Cog):
 logger = TuxLogger(__name__)
 
 
-async def setup(bot, project_logging_level=logging.DEBUG,
-                discord_logging_level=logging.WARNING):
+async def setup(
+    bot, project_logging_level=logging.DEBUG, discord_logging_level=logging.WARNING
+):
     global logger
     log_cog = LoggingCog(bot, discord_logging_level)
     logger.setLevel(project_logging_level)
