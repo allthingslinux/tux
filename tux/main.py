@@ -1,3 +1,4 @@
+# main.py
 import os
 
 import discord
@@ -8,6 +9,9 @@ from utils._tux_logger import TuxLogger
 
 logger = TuxLogger(__name__)
 load_dotenv()
+
+from discord.ext import commands
+from error_handler import ErrorHandler
 
 
 async def setup(bot: commands.Bot, debug: bool = False):
@@ -66,16 +70,14 @@ async def main():
 
             error (Exception): The error that occurred.
         """  # noqa E501
-
         if isinstance(error, commands.CommandNotFound):
-            await ctx.send("Invalid command used.")
+            await ErrorHandler.handle_command_not_found(ctx, error)
         elif isinstance(error, commands.MissingPermissions):
-            await ctx.send("You do not have permission to use this command.")
+            await ErrorHandler.handle_missing_permissions(ctx, error)
         elif isinstance(error, commands.BotMissingPermissions):
-            await ctx.send("I do not have permission to execute this command.")
+            await ErrorHandler.handle_bot_missing_permissions(ctx, error)
         else:
-            # For other errors you probably want to log them somewhere for review
-            logger.error(error)
+            await ErrorHandler.handle_other_errors(ctx, error)
 
     @bot.event
     async def on_command_completion(ctx: commands.Context):
