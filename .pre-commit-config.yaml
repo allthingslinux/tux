@@ -1,10 +1,11 @@
 repos:
-  - repo: 'https://github.com/psf/black'
-    rev: stable
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.1.9
     hooks:
-      - id: black
-    language_version: python3.11
-  - repo: 'https://github.com/RobertCraigie/pyright-python'
-    rev: main
+      - id: ruff
+        args: [ --fix ]
+      - id: ruff-format
+  - repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.343
     hooks:
-      - id: pyright
+    - id: pyright
