@@ -11,29 +11,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout Repository'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Install Python
       - name: Setup Python
-        uses: actions/setup-python@v5.0.0
+        uses: actions/setup-python@v4
         with:
           python-version: 3.11
 
       # Install Poetry
       - name: Poetry Install
-        uses: knowsuchagency/poetry-install@v2
-    # Use Ruff for formatting
-      - name: Ruff formatting
-        uses: chartboost/ruff-action@v1
+        uses: snok/install-poetry@v1.3.4
+
+      # Cache dependencies
+      - name: Cache dependencies
+        uses: actions/cache@v3
         with:
-          src: "."
-          args: format --config=pyproject.toml --check
-    # Use Ruff for linting
-      - name: Ruff Linting
-        uses: chartboost/ruff-action@v1
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      # Use Lint Action for linting and formatting
+      - name: Run linters
+        uses: wearerequired/lint-action@v2.3.0
         with:
-          src: "."
-          args: --config=pyproject.toml --fix
+          github_token: ${{ secrets.github_token }}
+          auto_fix: true
+
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: 'style fixes by ruff'
+          commit_message: 'style fixes by linter'

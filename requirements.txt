@@ -4,3 +4,5 @@ colorlog>=6.8.0
 discord.py>=2.3.2
 pre-commit>=3.6.0
 python-dotenv>=1.0.0
+discord~=2.3.2
+tux~=0.1.0

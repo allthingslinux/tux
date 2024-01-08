@@ -1,10 +1,10 @@
-# Dependency Review Action
-#
-# This Action will scan dependency manifest files that change as part of a Pull Request, surfacing known-vulnerable versions of the packages declared or updated in the PR. Once installed, if the workflow run is marked as required, PRs introducing known-vulnerable packages will be blocked from merging.
-#
-# Source repository: https://github.com/actions/dependency-review-action
 name: 'Dependency Review'
-on: [pull_request]
+
+# Trigger on pull requests and a scheduled weekly run
+on:
+  pull_request:
+  schedule:
+    - cron: '0 0 * * 0'  # Runs every week at midnight on Sunday
 
 permissions:
   contents: write
@@ -12,7 +12,9 @@ permissions:
   pull-requests: write
 
 jobs:
-  dependency-review:
+  # Job for pull request event
+  dependency-review-pr:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout Repository'
@@ -31,3 +33,14 @@ jobs:
       # Run Poetry commands
       - name: Update Python Poetry package
         uses: dishapatel010/action-poetry-package-update@V2.0.1
+
+  # Job for scheduled event
+  dependency-review-scheduled:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v3
