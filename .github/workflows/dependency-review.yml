@@ -34,6 +34,10 @@ jobs:
       - name: Update Python Poetry package
         uses: dishapatel010/action-poetry-package-update@V2.0.1
 
+      # Export requirements.txt from pyproject.toml
+      - name: Export requirements.txt
+        uses: Divkix/poetry-export-requirements-action@v1.4.0
+
   # Job for scheduled event
   dependency-review-scheduled:
     if: github.event_name == 'schedule'
