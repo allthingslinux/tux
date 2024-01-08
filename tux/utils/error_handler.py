@@ -1,5 +1,5 @@
 from discord.ext import commands
-from utils.tux_logger import TuxLogger
+from tux_logger import TuxLogger
 
 # Initialize logger
 logger = TuxLogger(__name__)
@@ -54,4 +54,6 @@ class ErrorHandler:
         ctx (commands.Context): The context in which a command is called.
         error (Exception): The error raised.
         """
+        # Print the error message to the console
+        print(error)
         logger.error(error)

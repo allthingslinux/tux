@@ -11,7 +11,7 @@ logger = TuxLogger(__name__)
 load_dotenv()
 
 from discord.ext import commands
-from error_handler import ErrorHandler
+from utils.error_handler import ErrorHandler
 
 
 async def setup(bot: commands.Bot, debug: bool = False):
