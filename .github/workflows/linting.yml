@@ -1,5 +1,5 @@
 name: 'Linting'
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 permissions:
   contents: write
@@ -22,18 +22,21 @@ jobs:
       # Install Poetry
       - name: Poetry Install
         uses: knowsuchagency/poetry-install@v2
-    # Use Ruff for formatting
+
+      # Use Ruff for formatting
       - name: Ruff formatting
         uses: chartboost/ruff-action@v1
         with:
           src: "."
-          args: format --config=pyproject.toml --check
-    # Use Ruff for linting
+          args: format --config=pyproject.toml --fix
+
+      # Use Ruff for linting
       - name: Ruff Linting
         uses: chartboost/ruff-action@v1
         with:
           src: "."
-          args: --config=pyproject.toml --fix
+          args: lint --config=pyproject.toml --fix
+
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: 'style fixes by ruff'
