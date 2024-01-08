@@ -4,7 +4,7 @@ import os
 import traceback
 
 from discord.ext import commands
-from utils._tux_logger import TuxLogger
+from utils.tux_logger import TuxLogger
 
 logger = TuxLogger(__name__)
 

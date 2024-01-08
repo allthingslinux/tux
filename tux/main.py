@@ -5,7 +5,7 @@ import discord
 from cog_loader import CogLoader
 from discord.ext import commands
 from dotenv import load_dotenv
-from utils._tux_logger import TuxLogger
+from utils.tux_logger import TuxLogger
 
 logger = TuxLogger(__name__)
 load_dotenv()
