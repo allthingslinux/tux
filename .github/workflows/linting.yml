@@ -28,7 +28,7 @@ jobs:
         uses: chartboost/ruff-action@v1
         with:
           src: "."
-          args: format --config=pyproject.toml --fix
+          args: format --config=pyproject.toml
 
       # Use Ruff for linting
       - name: Ruff Linting
