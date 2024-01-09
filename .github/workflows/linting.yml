@@ -24,9 +24,8 @@ jobs:
         run: sudo snap install ruff
 
       # Run Ruff linter
-      - name: Run Ruff linter
-        run: ruff check . && ruff fix .
-
+      - name: Run Ruff format
+        run: ruff format && ruff check . --fix
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: 'style fixes by ruff'

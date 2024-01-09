@@ -3,7 +3,6 @@ import os
 
 import discord
 from cog_loader import CogLoader
-from discord.ext import commands
 from dotenv import load_dotenv
 from utils.tux_logger import TuxLogger
 
