@@ -3,14 +3,13 @@ import os
 
 import discord
 from cog_loader import CogLoader
+from discord.ext import commands
 from dotenv import load_dotenv
+from utils.error_handler import ErrorHandler
 from utils.tux_logger import TuxLogger
 
 logger = TuxLogger(__name__)
 load_dotenv()
-
-from discord.ext import commands
-from utils.error_handler import ErrorHandler
 
 
 async def setup(bot: commands.Bot, debug: bool = False):
@@ -99,7 +98,7 @@ async def main():
             logger.info(f"{bot.user} has connected to Discord!", __name__)
 
         await bot.start(os.getenv("TOKEN") or "", reconnect=True)
-    except Exception as e:
+    except Exception:
         logger.error("An error occurred:", exc_info=True)
 
 

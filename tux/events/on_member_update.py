@@ -1,6 +1,7 @@
 # Import the necessary modules
 import discord
 from discord.ext import commands
+
 from tux.utils.tux_logger import TuxLogger
 
 # Initialize the logger
@@ -72,7 +73,7 @@ class OnMemberUpdate(commands.Cog):
         The channel ID needs to be replaced with the actual ID of the channel you want to send the embed to.
         """
         some_channel = self.bot.get_channel(
-            channel_id
+            "1191472088695980083"
         )  # Replace 'channel_id' with the actual ID
         await some_channel.send(embed=embed)
 
