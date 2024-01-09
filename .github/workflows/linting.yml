@@ -1,5 +1,5 @@
 name: 'Linting'
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 permissions:
   contents: write
@@ -32,13 +32,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-poetry-
 
-      # Use Lint Action for linting and formatting
-      - name: Run linters
-        uses: wearerequired/lint-action@v2.3.0
+      # Use Ruff Action for linting
+      - name: Run Ruff
+        uses: chartboost/ruff-action@v1
         with:
-          github_token: ${{ secrets.github_token }}
-          auto_fix: true
+          version: 'latest' # Use the latest version of Ruff
+          args: '--check .' # Replace with any arguments you want to pass to Ruff
 
-      - uses: stefanzweifel/git-auto-commit-action@v4
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: 'style fixes by linter'
+          commit_message: 'style fixes by ruff'
