@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   Linting:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v4
@@ -19,27 +19,14 @@ jobs:
         with:
           python-version: 3.11
 
-      # Install Poetry
-      - name: Poetry Install
-        uses: snok/install-poetry@v1.3.4
+      # Install Ruff
+      - name: Install Ruff
+        run: sudo snap install ruff
 
-      # Cache dependencies
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pypoetry
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-poetry-
+      # Run Ruff linter
+      - name: Run Ruff linter
+        run: ruff check . && ruff fix .
 
-      # Use Ruff Action for linting
-      - name: Run Ruff
-        uses: chartboost/ruff-action@v1
-        with:
-          version: 'latest' # Use the latest version of Ruff
-          args: '--check .' # Replace with any arguments you want to pass to Ruff
-
-      - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v4
+      - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: 'style fixes by ruff'

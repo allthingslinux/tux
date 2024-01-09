@@ -189,8 +189,5 @@ reportUnknownParameterType = false
 
 pythonPlatform = "all"
 pythonVersion = "3.11"
-
-# Unsure?
-#
-# venv = ".venv"
-# venvPath = "."
+venv = ".venv"
+venvPath = "."
