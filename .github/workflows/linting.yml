@@ -1,5 +1,5 @@
 name: 'Linting'
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 permissions:
   contents: write
@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   Linting:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v4
@@ -19,26 +19,13 @@ jobs:
         with:
           python-version: 3.11
 
-      # Install Poetry
-      - name: Poetry Install
-        uses: snok/install-poetry@v1.3.4
+      # Install Ruff
+      - name: Install Ruff
+        run: sudo snap install ruff
 
-      # Cache dependencies
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pypoetry
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-poetry-
-
-      # Use Lint Action for linting and formatting
-      - name: Run linters
-        uses: wearerequired/lint-action@v2.3.0
-        with:
-          github_token: ${{ secrets.github_token }}
-          auto_fix: true
-
+      # Run Ruff linter
+      - name: Run Ruff format
+        run: ruff format && ruff check . --fix
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: 'style fixes by linter'
+          commit_message: 'style fixes by ruff'
