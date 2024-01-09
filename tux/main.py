@@ -34,7 +34,7 @@ async def main():
         @commands.has_permissions(administrator=True)
         async def sync(ctx: commands.Context):
             """Syncs the slash command tree. This command is only available to administrators.
-    
+
             Args:
                 ctx (commands.Context): The invocation context sent by the Discord API which contains information
                 about the command and from where it was called.
@@ -49,7 +49,7 @@ async def main():
         @commands.has_permissions(administrator=True)
         async def clear(ctx: commands.Context):
             """Clears the slash command tree. This command is only available to administrators.
-    
+
             Args:
                 ctx (commands.Context): The invocation context sent by the Discord API which contains information
                 about the command and from where it was called.
@@ -64,11 +64,11 @@ async def main():
         @bot.event
         async def on_command_error(ctx: commands.Context, error):
             """Handles the event when a command has been invoked but an error has occurred.
-    
+
             Args:
                 ctx (commands.Context): The invocation context sent by the Discord API which contains information
                 about the command and from where it was called.
-    
+
                 error (Exception): The error that occurred.
             """  # noqa E501
             if isinstance(error, commands.CommandNotFound):
@@ -83,7 +83,7 @@ async def main():
         @bot.event
         async def on_command_completion(ctx: commands.Context):
             """Handles the event when a command has been completed its invocation. This event is called only if the command succeeded, i.e. all checks have passed and the user input it correctly.
-    
+
             Args:
                 ctx (commands.Context): The invocation context sent by the Discord API which contains information
                 about the command and from where it was called.
