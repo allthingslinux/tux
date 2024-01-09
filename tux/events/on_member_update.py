@@ -18,9 +18,10 @@ class OnMemberUpdate(commands.Cog):
     @commands.Cog.listener("on_member_update")
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         """
-        This function is triggered when a member's profile is updated.
-        It compares the before and after states of the member, logs any changes,
-        creates an embed for the changes, and sends the embed to a specified channel.
+        This function is triggered when a member's profile is updated. It
+        compares the before and after states of the member, logs any changes,
+        creates an embed for the changes, and sends the embed to a specified
+        channel.
         """
         try:
             # Compare the before and after states of the member
