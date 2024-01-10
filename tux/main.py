@@ -5,7 +5,6 @@ import discord
 from cog_loader import CogLoader
 from discord.ext import commands
 from dotenv import load_dotenv
-from utils.error_handler import ErrorHandler
 from utils.tux_logger import TuxLogger
 
 logger = TuxLogger(__name__)
@@ -60,25 +59,6 @@ async def main():
             logger.info(f"{ctx.author} cleared the slash command tree.")
 
         @bot.event
-        async def on_command_error(ctx: commands.Context, error):
-            """Handles the event when a command has been invoked but an error has occurred.
-
-            Args:
-                ctx (commands.Context): The invocation context sent by the Discord API which contains information
-                about the command and from where it was called.
-
-                error (Exception): The error that occurred.
-            """  # noqa E501
-            if isinstance(error, commands.CommandNotFound):
-                await ErrorHandler.handle_command_not_found(ctx, error)
-            elif isinstance(error, commands.MissingPermissions):
-                await ErrorHandler.handle_missing_permissions(ctx, error)
-            elif isinstance(error, commands.BotMissingPermissions):
-                await ErrorHandler.handle_bot_missing_permissions(ctx, error)
-            else:
-                await ErrorHandler.handle_other_errors(ctx, error)
-
-        @bot.event
         async def on_command_completion(ctx: commands.Context):
             """Handles the event when a command has been completed its invocation. This event is called only if the command succeeded, i.e. all checks have passed and the user input it correctly.
 
@@ -98,8 +78,8 @@ async def main():
             logger.info(f"{bot.user} has connected to Discord!", __name__)
 
         await bot.start(os.getenv("TOKEN") or "", reconnect=True)
-    except Exception:
-        logger.error("An error occurred:", exc_info=True)
+    except Exception as e:
+        logger.error(f"An error occurred while running the bot: {e}")
 
 
 if __name__ == "__main__":
