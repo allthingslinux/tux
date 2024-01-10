@@ -1,11 +1,14 @@
 from discord.ext import commands
-from tux_logger import TuxLogger
+from utils.tux_logger import TuxLogger
 
 # Initialize logger
 logger = TuxLogger(__name__)
 
 
-class ErrorHandler:
+class ErrorHandler(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
     """
     ErrorHandler class to handle different types of errors in discord commands.
     """
@@ -57,3 +60,13 @@ class ErrorHandler:
         # Print the error message to the console
         print(error)
         logger.error(error)
+
+
+async def setup(bot):
+    """
+    Adds the ErrorHandler cog to the bot.
+
+    Parameters:
+    bot (commands.Bot): The bot to which the ErrorHandler cog is to be added.
+    """
+    await bot.add_cog(ErrorHandler(bot))
