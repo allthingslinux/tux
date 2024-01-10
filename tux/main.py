@@ -59,23 +59,35 @@ async def main():
             logger.info(f"{ctx.author} cleared the slash command tree.")
 
         @bot.event
-        async def on_command_completion(ctx: commands.Context):
-            """Handles the event when a command has been completed its invocation. This event is called only if the command succeeded, i.e. all checks have passed and the user input it correctly.
+        async def on_app_command_completion(ctx: commands.Context):
+            """Handles the event when a slash command has been completed its invocation. This event is called only if the command succeeded, i.e. all checks have passed and the user input it correctly.
 
             Args:
-                ctx (commands.Context): The invocation context sent by the Discord API which contains information
-                about the command and from where it was called.
-            """  # noqa E501
+                interaction (Interaction) – The interaction of the command.
+                command (Union[app_commands.Command, app_commands.ContextMenu]) – The command that completed successfully
+            """
+
             await ctx.message.add_reaction("✅")
             logger.info(f"{ctx.author} successfully executed {ctx.command}.")
 
         @bot.event
         async def on_ready():
-            """
-            Called when the client is done preparing the data received from Discord.
-            Usually after login is successful and the Client.guilds and co. are filled up.
-            """
+            """Called when the client is done preparing the data received from Discord. Usually after login is successful and the Client.guilds and co. are filled up.
+
+            Note:
+                This function is not guaranteed to be the first event called. Likewise, this function is not guaranteed to only be called once. This library implements reconnection logic and thus will end up calling this event whenever a RESUME request fails.
+
+            https://discordpy.readthedocs.io/en/stable/api.html#discord.on_ready
+            """  # noqa E501
             logger.info(f"{bot.user} has connected to Discord!", __name__)
+
+            # Set the bot's status
+            await bot.change_presence(
+                activity=discord.Activity(
+                    type=discord.ActivityType.watching,
+                    name="All Things Linux",
+                )
+            )
 
         await bot.start(os.getenv("TOKEN") or "", reconnect=True)
     except Exception as e:
