@@ -59,18 +59,6 @@ async def main():
             logger.info(f"{ctx.author} cleared the slash command tree.")
 
         @bot.event
-        async def on_app_command_completion(ctx: commands.Context):
-            """Handles the event when a slash command has been completed its invocation. This event is called only if the command succeeded, i.e. all checks have passed and the user input it correctly.
-
-            Args:
-                interaction (Interaction) – The interaction of the command.
-                command (Union[app_commands.Command, app_commands.ContextMenu]) – The command that completed successfully
-            """
-
-            await ctx.message.add_reaction("✅")
-            logger.info(f"{ctx.author} successfully executed {ctx.command}.")
-
-        @bot.event
         async def on_ready():
             """Called when the client is done preparing the data received from Discord. Usually after login is successful and the Client.guilds and co. are filled up.
 
