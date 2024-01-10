@@ -22,7 +22,7 @@ class OnMemberUpdate(commands.Cog):
         compares the before and after states of the member, logs any changes,
         creates an embed for the changes, and sends the embed to a specified
         channel.
-        """
+        """  # noqa E501
         try:
             # Compare the before and after states of the member
             changes = self.compare_member_changes(before, after)
