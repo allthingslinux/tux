@@ -11,14 +11,14 @@ class Ping(commands.Cog):
         self.bot = bot
 
     @commands.hybrid_command(name="ping")
-    async def ping(self, ctx: commands.Context):
+    async def ping(self, ctx: commands.Context) -> None:
         """
         Pong!
         """
         await ctx.send("Pong!")
 
 
-async def setup(bot, debug=False):
+async def setup(bot: commands.Bot, debug=False) -> None:
     if debug:
         logger.setLevel(DEBUG)
     await bot.add_cog(Ping(bot))
