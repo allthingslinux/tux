@@ -1,4 +1,4 @@
-# sync_command.py
+# commands/sync.py
 from discord.ext import commands
 
 from tux.utils.tux_logger import TuxLogger
