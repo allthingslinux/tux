@@ -13,7 +13,7 @@ class Ping(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="ping")
+    @commands.hybrid_command(name="ping")
     async def ping(self, ctx: commands.Context):
         """
         Checks the bot's latency.
@@ -35,6 +35,8 @@ class Ping(commands.Cog):
         await message.edit(
             content=f"Pong! 🏓\nDiscord API latency: {discord_ping}ms\nMessage latency: {message_ping}ms"
         )
+
+        logger.info(f"{ctx.author} used {ctx.command} in {ctx.channel}.")
 
 
 async def setup(bot: commands.Bot):
