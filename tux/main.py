@@ -27,37 +27,6 @@ async def main():
 
         await setup(bot, debug=True)
 
-        @bot.command(name="sync")
-        @commands.has_permissions(administrator=True)
-        async def sync(ctx: commands.Context):
-            """Syncs the slash command tree. This command is only available to administrators.
-
-            Args:
-                ctx (commands.Context): The invocation context sent by the Discord API which contains information
-                about the command and from where it was called.
-            """  # noqa E501
-
-            if ctx.guild:
-                bot.tree.copy_global_to(guild=ctx.guild)
-            await bot.tree.sync(guild=ctx.guild)
-            logger.info(f"{ctx.author} synced the slash command tree.")
-
-        @bot.command(name="clear")
-        @commands.has_permissions(administrator=True)
-        async def clear(ctx: commands.Context):
-            """Clears the slash command tree. This command is only available to administrators.
-
-            Args:
-                ctx (commands.Context): The invocation context sent by the Discord API which contains information
-                about the command and from where it was called.
-            """  # noqa E501
-
-            bot.tree.clear_commands(guild=ctx.guild)
-            if ctx.guild:
-                bot.tree.copy_global_to(guild=ctx.guild)
-            await bot.tree.sync(guild=ctx.guild)
-            logger.info(f"{ctx.author} cleared the slash command tree.")
-
         @bot.event
         async def on_ready():
             """Called when the client is done preparing the data received from Discord. Usually after login is successful and the Client.guilds and co. are filled up.
