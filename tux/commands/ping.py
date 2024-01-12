@@ -1,6 +1,5 @@
 # commands/ping.py
 
-import time
 
 from discord.ext import commands
 
@@ -19,24 +18,16 @@ class Ping(commands.Cog):
         """
         Checks the bot's latency.
         """
-        # We record the time before we send a message
-        start = time.time()
 
         message = await ctx.send("Pinging...")
-
-        # The time after the message was sent
-        end = time.time()
 
         # Discord Python calculates the latency and records it in the bot instance
         # It's done every minute so this won't hurt performance
         discord_ping = round(self.bot.latency * 1000)
 
         # The time it takes for the message to be sent
-        message_ping = round((end - start) * 1000)
 
-        await message.edit(
-            content=f"Pong! 🏓\nDiscord API latency: {discord_ping}ms\nMessage latency: {message_ping}ms"
-        )
+        await message.edit(content=f"Pong! 🏓\nDiscord API latency: {discord_ping}ms")
 
         logger.info(f"{ctx.author} used {ctx.command} in {ctx.channel}.")
 
