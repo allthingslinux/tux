@@ -7,6 +7,8 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from utils.tux_logger import TuxLogger
 
+# from tux.utils.__audit_logger import AuditLogger
+
 logger = TuxLogger(__name__)
 load_dotenv()
 

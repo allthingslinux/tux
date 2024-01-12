@@ -1,8 +1,10 @@
-# utils/_tux_loader.py
+# utils/tux_logger.py
+
 import logging
 import os
 
 import colorlog
+import discord
 from discord.ext import commands
 
 
@@ -57,6 +59,51 @@ class TuxLogger(logging.Logger):
 
     def critical(self, message, filename="unknown"):
         self.log_to_file(logging.CRITICAL, message, filename)
+
+    def audit(
+        self,
+        bot: commands.Bot,
+        title: str,
+        description: str,
+        color: int | discord.Colour = 0x7289DA,
+        fields: list[tuple[str, str, bool]] | None = None,
+        thumbnail_url: str | None = None,
+        image_url: str | None = None,
+        author_name: str | None = None,
+        author_url: str | None = None,
+        author_icon_url: str | None = None,
+        footer_text: str | None = None,
+        footer_icon_url: str | None = None,
+    ):
+        audit_log_channel_id = 1191472088695980083
+        channel = bot.get_channel(audit_log_channel_id)
+        if not isinstance(channel, discord.TextChannel):
+            self.error(
+                f"Failed to send audit message: Channel '{channel}' is not a text channel."
+            )
+            return
+        embed = discord.Embed(title=title, description=description, color=color)
+
+        # Add fields to embed
+        if fields:
+            for name, value, inline in fields:
+                embed.add_field(name=name, value=value, inline=inline)
+
+        # Set thumbnail and image
+        if thumbnail_url:
+            embed.set_thumbnail(url=thumbnail_url)
+        if image_url:
+            embed.set_image(url=image_url)
+
+        # Set author details
+        if author_name:
+            embed.set_author(name=author_name, url=author_url, icon_url=author_icon_url)
+
+        # Set footer details
+        if footer_text:
+            embed.set_footer(text=footer_text, icon_url=footer_icon_url)
+
+        bot.loop.create_task(channel.send(embed=embed))
 
 
 class LoggingCog(commands.Cog):

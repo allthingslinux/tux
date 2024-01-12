@@ -1,3 +1,5 @@
+# utils/error_handler.py
+
 from collections.abc import Callable, Coroutine
 
 from discord.ext import commands

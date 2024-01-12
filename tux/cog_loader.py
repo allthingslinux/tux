@@ -1,10 +1,11 @@
-# cog_loader.py
+# tux/cog_loader.py
 import logging
 import os
 import traceback
 
 from discord.ext import commands
-from utils.tux_logger import TuxLogger
+
+from tux.utils.tux_logger import TuxLogger
 
 logger = TuxLogger(__name__)
 
@@ -58,7 +59,7 @@ class CogLoader(commands.Cog):
             debug (bool): A flag indicating whether debug mode is enabled.
         """
         cog = cls(bot, debug)
-        await cog.load_cogs_from_folder("events")
         await cog.load_cogs_from_folder("utils")
+        await cog.load_cogs_from_folder("events")
         await cog.load_cogs_from_folder("commands")
         await bot.add_cog(cog)
