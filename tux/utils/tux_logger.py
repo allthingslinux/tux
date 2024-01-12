@@ -47,56 +47,80 @@ from discord.ext import commands
 
 
 class TuxLogger(logging.Logger):
-    def __init__(self, name, project_logging_level=logging.INFO):
+    LOG_DIR = "logs"
+
+    def __init__(self, name: str, project_logging_level: int = logging.INFO):
         super().__init__(name, level=project_logging_level)
         self.setup_logging()
 
     def setup_logging(self):
+        """
+        Setup logging configuration.
+        """
         log_format = (
             "%(asctime)s [%(log_color)s%(levelname)s%(reset)s] [%(name)s]: %("
             "message)s"
         )
-        log_dir = "logs"
-        os.makedirs(log_dir, exist_ok=True)
+
+        os.makedirs(self.LOG_DIR, exist_ok=True)
 
         # Stream handler with color formatting
         handler = colorlog.StreamHandler()
         handler.setFormatter(colorlog.ColoredFormatter(log_format))
-        self.addHandler(handler)
 
         # File handler for general logs
-        file_name = os.path.join(log_dir, "bot.log")
-        file_handler = self.create_file_handler(file_name)
+        file_name = os.path.join(self.LOG_DIR, "bot.log")
+        file_handler = self._create_file_handler(file_name)
+
+        self.addHandler(handler)
         self.addHandler(file_handler)
 
-    def create_file_handler(self, filename):
+    def _create_file_handler(self, filename: str) -> logging.FileHandler:
+        """
+        Create a file handler.
+
+        Args:
+            filename (str): Filename for the log file.
+
+        Returns:
+            logging.FileHandler: A file handler object.
+        """
         file_handler = logging.FileHandler(filename, mode="a")
         file_handler.setFormatter(
             logging.Formatter("%(asctime)s [%(levelname)s] [%(name)s]: %(message)s")
         )
         return file_handler
 
-    def log_to_file(self, level, message, caller_module):
-        file_name = os.path.join("logs", f"{caller_module}.log")
-        file_handler = self.create_file_handler(file_name)
+    def _log_to_file(self, level: int, message: str, caller_module: str):
+        """
+        Log to a file.
+
+        Args:
+            level (int): Level of the log.
+            message (str): Log message.
+            caller_module (str): Module where the log was triggered.
+        """
+        file_name = os.path.join(self.LOG_DIR, f"{caller_module}.log")
+        file_handler = self._create_file_handler(file_name)
+
         self.addHandler(file_handler)
         self.log(level, message)
         self.removeHandler(file_handler)
 
     def debug(self, message, filename="unknown"):
-        self.log_to_file(logging.DEBUG, message, filename)
+        self._log_to_file(logging.DEBUG, message, filename)
 
     def info(self, message, filename="unknown"):
-        self.log_to_file(logging.INFO, message, filename)
+        self._log_to_file(logging.INFO, message, filename)
 
     def warning(self, message, filename="unknown"):
-        self.log_to_file(logging.WARNING, message, filename)
+        self._log_to_file(logging.WARNING, message, filename)
 
     def error(self, message, filename="unknown"):
-        self.log_to_file(logging.ERROR, message, filename)
+        self._log_to_file(logging.ERROR, message, filename)
 
     def critical(self, message, filename="unknown"):
-        self.log_to_file(logging.CRITICAL, message, filename)
+        self._log_to_file(logging.CRITICAL, message, filename)
 
     def audit(
         self,
