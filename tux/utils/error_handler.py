@@ -23,61 +23,79 @@ class ErrorHandler(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def handle_command_not_found(self, ctx: commands.Context, error):
+    async def send_message_log_error(self, ctx, msg, error, error_type):
+        """
+        Send a message to the context and log the error.
+        """
+        await ctx.send(msg)
+        logger.error(f"{error_type}: {error}")
+
+    async def handle_command_not_found(self, ctx: Context, error):
         """
         Handles the case when an invalid command is used.
         """
-        await ctx.send(
-            f"I'm sorry, but I couldn't find the command: {ctx.message.content}. Please check your command and try again."
+        await self.send_message_log_error(
+            ctx,
+            f"I'm sorry, but I couldn't find the command: {ctx.message.content}. Please check your command and try again.",
+            error,
+            "CommandNotFound",
         )
-        logger.error(f"CommandNotFound: {error}")
 
-    async def handle_missing_permissions(self, ctx: commands.Context, error):
+    async def handle_missing_permissions(self, ctx: Context, error):
         """
         Handles the case when a user does not have the necessary permissions
         to use a command.
         """
-        await ctx.send(
-            "It seems you're missing the necessary permissions to perform this command."
+        await self.send_message_log_error(
+            ctx,
+            "It seems you're missing the necessary permissions to perform this command.",
+            error,
+            "MissingPermissions",
         )
-        logger.error(f"MissingPermissions: {error}")
 
-    async def handle_bot_missing_permissions(self, ctx: commands.Context, error):
+    async def handle_bot_missing_permissions(self, ctx: Context, error):
         """
         Handles the case when the bot does not have the necessary permissions
         to execute a command.
         """
-        await ctx.send(
-            "I'm sorry, but I don't have enough permissions to perform this command."
+        await self.send_message_log_error(
+            ctx,
+            "I'm sorry, but I don't have enough permissions to perform this command.",
+            error,
+            "BotMissingPermissions",
         )
-        logger.error(f"BotMissingPermissions: {error}")
 
-    async def handle_command_on_cooldown(self, ctx: commands.Context, error):
+    async def handle_command_on_cooldown(self, ctx: Context, error):
         """
         Handles the case when a user is on cooldown.
         """
-        await ctx.send(
-            "You're on cooldown. Please wait a bit before using this command again."
+        await self.send_message_log_error(
+            ctx,
+            "You're on cooldown. Please wait a bit before using this command again.",
+            error,
+            "Cooldown",
         )
-        logger.error(f"Cooldown: {error}")
 
-    async def handle_missing_required_argument(self, ctx: commands.Context, error):
+    async def handle_missing_required_argument(self, ctx: Context, error):
         """
         Handles the case when a user is missing a required argument.
         """
-        await ctx.send(
-            "You're missing a required argument. Please check your command and try again."
+        await self.send_message_log_error(
+            ctx,
+            "You're missing a required argument. Please check your command and try again.",
+            error,
+            "MissingRequiredArgument",
         )
-        logger.error(f"MissingRequiredArgument: {error}")
 
-    async def handle_not_owner(self, ctx: commands.Context, error):
+    async def handle_not_owner(self, ctx: Context, error):
         """
         Handles the case when a user is not the owner of the bot.
         """
-        await ctx.send("You're not the owner of this bot.")
-        logger.error(f"NotOwner: {error}")
+        await self.send_message_log_error(
+            ctx, "You're not the owner of this bot.", error, "NotOwner"
+        )
 
-    async def handle_other_errors(self, ctx: commands.Context, error):
+    async def handle_other_errors(self, ctx: Context, error):
         """
         Handles all other types of errors.
         """
@@ -88,8 +106,7 @@ class ErrorHandler(commands.Cog):
         """Called when an error is raised while invoking a command.
 
         Args:
-            ctx (Context): The invocation context sent by the Discord API which contains information
-            about the command and from where it was called.
+            ctx (Context): The invocation context.
             error (Exception): The error that was raised.
 
         Note:
@@ -106,6 +123,7 @@ class ErrorHandler(commands.Cog):
             MissingRequiredArgument: self.handle_missing_required_argument,
             NotOwner: self.handle_not_owner,
         }
+
         handler = error_handlers.get(type(error), self.handle_other_errors)
         await handler(ctx, error)
 
