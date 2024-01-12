@@ -1,4 +1,4 @@
-# tux/utils.py
+# tux/_utils.py
 
 from collections.abc import Callable
 from datetime import UTC, datetime
