@@ -1,53 +1,82 @@
-# main.py
+import asyncio
 import os
 
 import discord
-from cog_loader import CogLoader
 from discord.ext import commands
 from dotenv import load_dotenv
 
+from tux.cog_loader import CogLoader
 from tux.utils.tux_logger import TuxLogger
 
-# from tux.utils.__audit_logger import AuditLogger
-
-logger = TuxLogger(__name__)
 load_dotenv()
 
+logger = TuxLogger(__name__)
 
-async def setup(bot: commands.Bot, debug: bool = False):
+
+class TuxBot(commands.Bot):
     """
-    Set up the bot including loading cogs and other necessary setup tasks.
+    TuxBot is a custom bot class that extends commands.Bot from discord.ext.
+
+    Parameters:
+    - command_prefix (str): The prefix that triggers bot commands.
+    - intents (discord.Intents): The intents to enable for the bot.
+
+    Attributes:
+    - command_prefix (str): The prefix used for bot commands.
+    - intents (discord.Intents): The intents enabled for the bot.
     """
-    await CogLoader.setup(bot, debug)
-    logger.debug("Event handler setup completed.")
 
+    def __init__(self, intents, command_prefix="/", **options):
+        """
+        Constructor for the TuxBot class.
 
-async def main():
-    try:
-        bot_prefix = ">"
-        intents = discord.Intents.all()
-        bot = commands.Bot(command_prefix=bot_prefix, intents=intents)
+        Args:
+        - command_prefix (str): The prefix that triggers bot commands.
+        - intents (discord.Intents): The intents to enable for the bot.
+        """
+        super().__init__(command_prefix=command_prefix, intents=intents, **options)
+        asyncio.create_task(self.setup())
 
-        await setup(bot, debug=True)
+    async def setup(self):
+        """
+        Additional setup for the bot, including loading cogs and setting up event handlers.
+        """
+        await self.load_cogs()
+        await self.add_event_handler()
 
-        @bot.event
+    async def load_cogs(self):
+        """
+        Load cogs for the bot.
+        """
+        await CogLoader.setup(self, debug=True)
+        logger.debug("Cog loader setup completed.")
+
+    async def add_event_handler(self):
+        """
+        Add event handlers for the bot.
+        """
+
+        @self.event
         async def on_ready():
-            """Called when the client is done preparing the data received from Discord. Usually after login is successful and the Client.guilds and co. are filled up.
-
-            Note:
-                This function is not guaranteed to be the first event called. Likewise, this function is not guaranteed to only be called once. This library implements reconnection logic and thus will end up calling this event whenever a RESUME request fails.
-
-            https://discordpy.readthedocs.io/en/stable/api.html#discord.on_ready
-            """  # noqa E501
-            logger.info(f"{bot.user} has connected to Discord!", __name__)
+            """
+            Event triggered when the bot is ready.
+            """
+            logger.info(f"{self.user} has connected to Discord!", __name__)
 
             # Set the bot's status
-            await bot.change_presence(
+            await self.change_presence(
                 activity=discord.Activity(
                     type=discord.ActivityType.watching,
                     name="All Things Linux",
                 )
             )
+
+
+async def main():
+    try:
+        bot_prefix = "><>"
+        intents = discord.Intents.all()
+        bot = TuxBot(intents, command_prefix=bot_prefix)
 
         await bot.start(os.getenv("TOKEN") or "", reconnect=True)
     except Exception as e:
@@ -55,7 +84,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    import asyncio
-
-    # Run the main function
     asyncio.run(main())
