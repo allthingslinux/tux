@@ -1,18 +1,16 @@
-# commands/load.py
-
 from discord.ext import commands
 
+from tux.command_cog import CommandCog
 from tux.utils.tux_logger import TuxLogger
 
 logger = TuxLogger(__name__)
 
 
-class Load(commands.Cog):
+class Load(CommandCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
 
     @commands.command(name="load")
-    @commands.is_owner()
     async def load(self, ctx: commands.Context, *, cog: str):
         """
         Loads a cog into the bot.
@@ -23,7 +21,6 @@ class Load(commands.Cog):
         Example:
             >load commands.load
         """
-
         try:
             await self.bot.load_extension(cog)
         except Exception as e:

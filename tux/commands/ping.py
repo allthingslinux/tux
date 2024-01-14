@@ -1,16 +1,13 @@
-# commands/ping.py
-
-
 import discord
 from discord.ext import commands
 
-# from tux.utils.__audit_logger import AuditLogger
+from tux.command_cog import CommandCog
 from tux.utils.tux_logger import TuxLogger
 
 logger = TuxLogger(__name__)
 
 
-class Ping(commands.Cog):
+class Ping(CommandCog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 

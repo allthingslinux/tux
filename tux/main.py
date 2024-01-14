@@ -6,6 +6,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 from tux.cog_loader import CogLoader
+from tux.permissions import Permissions
 from tux.utils.tux_logger import TuxLogger
 
 load_dotenv()
@@ -34,7 +35,10 @@ class TuxBot(commands.Bot):
         - command_prefix (str): The prefix that triggers bot commands.
         - intents (discord.Intents): The intents to enable for the bot.
         """
-        super().__init__(command_prefix=command_prefix, intents=intents, **options)
+        self.permissions = Permissions()
+        super(commands.Bot, self).__init__(
+            command_prefix=command_prefix, intents=intents, **options
+        )
         asyncio.create_task(self.setup())
 
     async def setup(self):

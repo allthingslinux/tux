@@ -1,18 +1,13 @@
-# commands/reload.py
-
 from discord.ext import commands
 
+from tux.command_cog import CommandCog
 from tux.utils.tux_logger import TuxLogger
 
 logger = TuxLogger(__name__)
 
 
-class Reload(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
+class Reload(CommandCog):
     @commands.command(name="reload")
-    @commands.is_owner()
     async def reload(self, ctx: commands.Context, *, cog: str):
         """
         Reloads a cog in the bot.
@@ -23,9 +18,12 @@ class Reload(commands.Cog):
         Example:
             >reload commands.reload
         """
+        if cog == "config":
+            self.bot.permissions.reload_ini_file("config/settings.ini")
+            return
 
         try:
-            await self.bot.reload_extension(cog)
+            await self.bot.permissions.reload_extension(cog)
         except Exception as e:
             logger.error(f"Failed to reload cog {cog}: {e}")
             await ctx.send(f"Failed to reload cog {cog}: {e}")
