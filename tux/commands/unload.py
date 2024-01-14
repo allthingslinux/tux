@@ -12,7 +12,6 @@ class Unload(CommandCog):
         self.bot = bot
 
     @commands.command(name="unload")
-    @commands.is_owner()
     async def unload(self, ctx: commands.Context, *, cog: str):
         """
         Unloads a cog from the bot.
