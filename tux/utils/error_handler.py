@@ -49,7 +49,7 @@ class ErrorHandler(commands.Cog):
         await self.send_message_log_error(
             ctx,
             "It seems you're missing the necessary permissions to perform this command.",
-            error,
+            f"User '{ctx.author.name}' lacks permission to use this command.",
             "MissingPermissions",
         )
 

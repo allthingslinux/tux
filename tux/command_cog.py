@@ -1,4 +1,4 @@
-from discord import Member
+from discord import Member, User
 from discord.ext import commands
 from discord.ext.commands import MissingPermissions
 
@@ -33,13 +33,16 @@ class CommandCog(commands.Cog):
             missing_permissions = self.bot.permissions.missing_permissions(
                 author_roles, command_name
             )
+
+            logger.info(
+                f"User '{ctx.author.name}' has attempted to use {command_name}."
+            )
             if missing_permissions is None:
-                logger.info(
+                logger.debug(
                     f"User '{ctx.author.name}' has permission to use {command_name}."
                 )
                 return True
             else:
                 raise MissingPermissions(missing_permissions)
-        else:
-            logger.warning(f"Command used by User '{ctx.author.name}' without roles.")
+        elif isinstance(ctx.author, User):
             return False
