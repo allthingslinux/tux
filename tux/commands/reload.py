@@ -23,7 +23,8 @@ class Reload(CommandCog):
             return
 
         try:
-            await self.bot.permissions.reload_extension(cog)
+            await self.bot.unload_extension(cog)
+            await self.bot.load_extension(cog)
         except Exception as e:
             logger.error(f"Failed to reload cog {cog}: {e}")
             await ctx.send(f"Failed to reload cog {cog}: {e}")
