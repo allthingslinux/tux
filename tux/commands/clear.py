@@ -1,15 +1,13 @@
 # commands/clear.py
 from discord.ext import commands
 
+from tux.command_cog import CommandCog
 from tux.utils.tux_logger import TuxLogger
 
 logger = TuxLogger(__name__)
 
 
-class Clear(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
+class Clear(CommandCog):
     @commands.command(name="clear")
     @commands.has_guild_permissions(administrator=True)
     async def clear(self, ctx: commands.Context):
