@@ -1,20 +1,51 @@
 # tux/constants.py
+import os
 
-# Branding
-BOT_NAME = "Tux"
-BOT_SERVER = "All Things Linux"
 
-# Colors
-C_MAIN = 0xFF006A  # Everything Bot Related
-C_GREEN = 0x15FF00  # Success
-C_RED = 0xFF0000  # Error
-C_ORANGE = 0xFF4400  # Warning
-C_BLUE = 0x00AEFF  # Showing data
-C_TEAL = 0x00EEFF  # Everything else
+class Constants:
+    # Bot-related constants
+    BOT_VERSION = "1.0.0"
+    BOT_NAME = "Tux"
+    BOT_SOURCE = "https://github.com/allthingslinux/tux"
 
-# Emojis
-E_TUX = "<:tux:1172344387276124251>"
+    # Discord-related constants
+    DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+    DISCORD_GUILD = os.getenv("DISCORD_GUILD")
 
-# Roles
-R_MODERATOR = 1172333934051336264
-R_ADMIN = 1182064847052091484
+    # Command constants
+    PREFIX = "!"
+
+    # Channel constants
+    CHANNELS = {
+        "audit": 1234567890,
+        "mod": 1234567890,
+        "general": 1234567890,
+        "bot": 1234567890,
+    }
+
+    # Color constants
+
+    COLORS = {
+        "default": 0xF2B033,
+        "info": 0x00BFFF,
+        "warning": 0xFFA500,
+        "error": 0xFF0000,
+        "success": 0x00FF00,
+        "debug": 0x800080,
+        "black": 0x000000,
+        "white": 0xFFFFFF,
+    }
+
+
+"""
+Constants for the bot.
+
+Example:
+
+from tux.constants import C
+print(C.BOT_NAME)
+print(C.COLORS.info)
+print(C.CHANNELS.audit)
+"""
+
+C = Constants()
