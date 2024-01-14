@@ -35,7 +35,7 @@ class OnCommandCompletion(commands.Cog):
 
         # Log the successful command execution details.
         logger.info(
-            f"'{ctx.command}' command was used by {ctx.author} in {ctx.channel}."
+            f"'{ctx.command}' command was successfully used by {ctx.author} in {ctx.channel}."
         )
 
 

@@ -17,7 +17,7 @@ class Constants:
 
     # Channel constants
     CHANNELS = {
-        "audit": 1234567890,
+        "audit": 1191472088695980083,
         "mod": 1234567890,
         "general": 1234567890,
         "bot": 1234567890,
