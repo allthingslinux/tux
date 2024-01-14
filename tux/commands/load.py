@@ -7,9 +7,6 @@ logger = TuxLogger(__name__)
 
 
 class Load(CommandCog):
-    def __init__(self, bot):
-        super().__init__(bot)
-
     @commands.command(name="load")
     async def load(self, ctx: commands.Context, *, cog: str):
         """

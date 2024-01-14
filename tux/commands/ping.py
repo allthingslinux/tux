@@ -8,9 +8,6 @@ logger = TuxLogger(__name__)
 
 
 class Ping(CommandCog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
     @commands.hybrid_command(name="ping")
     async def ping(self, ctx: commands.Context):
         """
