@@ -33,7 +33,6 @@ class Embed:
         attributes["color"] = attributes.get("color", C.COLORS["default"])
 
         embed = self.create_embed(attributes)
-
         return await channel.send(embed=embed)
 
     async def send_audit_embed(self, channel_id: int | None = None, **embed_attr):

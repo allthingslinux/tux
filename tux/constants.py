@@ -1,5 +1,6 @@
 # tux/constants.py
 import os
+from typing import Final
 
 
 class Constants:
@@ -13,10 +14,10 @@ class Constants:
     DISCORD_GUILD = os.getenv("DISCORD_GUILD")
 
     # Command constants
-    PREFIX = "!"
+    PREFIX: Final[str] = ">"
 
     # Channel constants
-    CHANNELS = {
+    CHANNELS: Final[dict[str, int]] = {
         "audit": 1191472088695980083,
         "mod": 1234567890,
         "general": 1234567890,
@@ -24,8 +25,7 @@ class Constants:
     }
 
     # Color constants
-
-    COLORS = {
+    COLORS: Final[dict[str, int]] = {
         "default": 0xF2B033,
         "info": 0x00BFFF,
         "warning": 0xFFA500,
