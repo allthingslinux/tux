@@ -1,5 +1,7 @@
 # Tux
 
+![Banner](https://i.imgur.com/GtT8f8g.png)
+
 ## About
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec euismod, nisl eget ultricies ultricies, nunc nisl ultricies nunc, quis aliquam nisl nunc eu nisl. Donec euismod, nisl eget ultricies ultricies, nunc nisl ultricies nunc, quis aliquam nisl nunc eu nisl. Donec euismod, nisl eget ultricies ultricies, nunc nisl ultricies nunc, quis aliquam nisl nunc eu nisl. Donec euismod, nisl eget ultricies ultricies, nunc nisl ultricies nunc, quis aliquam nisl nunc eu nisl. Donec euismod, nisl eget ultricies ultricies, nunc nisl ultricies nunc, quis aliquam nisl nunc eu nisl.
 
