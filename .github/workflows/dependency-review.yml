@@ -38,6 +38,12 @@ jobs:
       - name: Export requirements.txt
         uses: Divkix/poetry-export-requirements-action@v1.4.0
 
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v3
+        with:
+          base-ref: ${{ github.event.pull_request.base.sha || 'main' }}
+          head-ref: ${{ github.event.pull_request.head.sha || github.ref }}
+
   # Job for scheduled event
   dependency-review-scheduled:
     if: github.event_name == 'schedule'
@@ -48,3 +54,6 @@ jobs:
 
       - name: Dependency Review
         uses: actions/dependency-review-action@v3
+        with:
+          base-ref: 'main'
+          head-ref: ${{ github.ref }}
