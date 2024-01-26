@@ -13,9 +13,9 @@ logger = TuxLogger(__name__)
 class TempVC(CommandCog):
     @commands.Cog.listener()
     async def on_voice_state_update(self, _: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-        if before.channel == None: return
+        if before.channel is None: return
         category = discord.utils.get(before.channel.guild.categories, id=int(C.TEMPVC_CATEGORY or "0") or 0)
-        if category == None: return
+        if category is None: return
         if before.channel.category_id != category.id: return
         if before.channel == after.channel: return
         await before.channel.delete()
@@ -27,10 +27,10 @@ class TempVC(CommandCog):
             await ctx.reply(reason)
 
         guild = ctx.guild
-        if guild == None: return await err('Invalid guild. Stop DMing this bot.')
+        if guild is None: return await err('Invalid guild. Stop DMing this bot.')
         category = discord.utils.get(guild.categories, id=int(C.TEMPVC_CATEGORY or "0") or 0)
         logger.info(f'{C.TEMPVC_CATEGORY} - {list(map(lambda c: c.id, guild.categories))}')
-        if category == None: return await err('Invalid category. This is the bot owner\'s fault.')
+        if category is None: return await err('Invalid category. This is the bot owner\'s fault.')
 
         vcmax = int(C.TEMPVC_MAX or "0") or 0
 
