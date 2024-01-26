@@ -1,4 +1,3 @@
-# tux/constants.py
 import os
 from typing import Final
 
