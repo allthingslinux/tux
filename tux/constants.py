@@ -2,6 +2,10 @@
 import os
 from typing import Final
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 class Constants:
     # Bot-related constants
@@ -10,8 +14,9 @@ class Constants:
     BOT_SOURCE = "https://github.com/allthingslinux/tux"
 
     # Discord-related constants
-    DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
     DISCORD_GUILD = os.getenv("DISCORD_GUILD")
+    TEMPVC_CATEGORY = os.getenv("TEMPVC_CATEGORY")
+    TEMPVC_MAX = os.getenv("TEMPVC_MAX")
 
     # Command constants
     PREFIX: Final[str] = ">"
