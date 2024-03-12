@@ -1,18 +1,17 @@
 # commands/unload.py
+
 from discord.ext import commands
 
 from tux.command_cog import CommandCog
+from tux.main import TuxBot
 from tux.utils.tux_logger import TuxLogger
 
 logger = TuxLogger(__name__)
 
 
 class Unload(CommandCog):
-    def __init__(self, bot):
-        self.bot = bot
-
-    @commands.command(name="unload")
-    async def unload(self, ctx: commands.Context, *, cog: str):
+    @commands.hybrid_command(name="unload", description="Unloads a cog from the bot.")
+    async def unload(self, ctx: commands.Context, *, cog: str) -> None:
         """
         Unloads a cog from the bot.
 
@@ -42,5 +41,5 @@ class Unload(CommandCog):
             logger.error(f"Error unloading cog: {error}")
 
 
-async def setup(bot: commands.Bot):
+async def setup(bot: TuxBot) -> None:
     await bot.add_cog(Unload(bot))

@@ -1,14 +1,15 @@
 from discord.ext import commands
 
 from tux.command_cog import CommandCog
+from tux.main import TuxBot
 from tux.utils.tux_logger import TuxLogger
 
 logger = TuxLogger(__name__)
 
 
 class Reload(CommandCog):
-    @commands.command(name="reload")
-    async def reload(self, ctx: commands.Context, *, cog: str):
+    @commands.hybrid_command(name="reload", description="Reloads a cog in the bot.")
+    async def reload(self, ctx: commands.Context, *, cog: str) -> None:
         """
         Reloads a cog in the bot.
 
@@ -42,5 +43,5 @@ class Reload(CommandCog):
             logger.error(f"Error reloading cog: {error}")
 
 
-async def setup(bot: commands.Bot):
+async def setup(bot: TuxBot) -> None:
     await bot.add_cog(Reload(bot))

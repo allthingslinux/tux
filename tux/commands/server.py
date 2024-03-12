@@ -4,18 +4,17 @@ import discord
 from discord.ext import commands
 
 from tux.command_cog import CommandCog
+from tux.main import TuxBot
 from tux.utils.tux_logger import TuxLogger
 
 logger = TuxLogger(__name__)
 
 
 class Server(CommandCog):
-    def __init__(self, bot):
-        self.bot = bot
-
-    @commands.guild_only()
-    @commands.hybrid_command(name="server")
-    async def server(self, ctx: commands.Context):
+    @commands.hybrid_command(
+        name="server", description="Sends information about the current Discord Guild."
+    )
+    async def server(self, ctx: commands.Context) -> None:
         """
         Sends information about the current Discord Guild.
 
@@ -49,5 +48,5 @@ class Server(CommandCog):
             logger.error("Failed to send message: Guild not found.")
 
 
-async def setup(bot):
+async def setup(bot: TuxBot) -> None:
     await bot.add_cog(Server(bot))
