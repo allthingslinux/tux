@@ -2,6 +2,7 @@ import asyncio
 import os
 
 import discord
+from discord import Intents
 from discord.ext import commands
 from dotenv import load_dotenv
 
@@ -18,17 +19,9 @@ logger = TuxLogger(__name__)
 class TuxBot(commands.Bot):
     """
     TuxBot is a custom bot class that extends commands.Bot from discord.ext.
-
-    Parameters:
-    - command_prefix (str): The prefix that triggers bot commands.
-    - intents (discord.Intents): The intents to enable for the bot.
-
-    Attributes:
-    - command_prefix (str): The prefix used for bot commands.
-    - intents (discord.Intents): The intents enabled for the bot.
     """
 
-    def __init__(self, intents, command_prefix="/", **options):
+    def __init__(self, intents, command_prefix="/", **options) -> None:
         """
         Constructor for the TuxBot class.
 
@@ -37,12 +30,10 @@ class TuxBot(commands.Bot):
         - intents (discord.Intents): The intents to enable for the bot.
         """
         self.permissions = Permissions()
-        super(commands.Bot, self).__init__(
-            command_prefix=command_prefix, intents=intents, **options
-        )
+        super().__init__(command_prefix=command_prefix, intents=intents, **options)
         asyncio.create_task(self.setup())
 
-    async def setup(self):
+    async def setup(self) -> None:
         """
         Additional setup for the bot, including loading cogs and setting up event handlers.
         """
@@ -50,20 +41,20 @@ class TuxBot(commands.Bot):
         await self.load_cogs()
         await self.add_event_handler()
 
-    async def load_cogs(self):
+    async def load_cogs(self) -> None:
         """
-        Load cogs for the bot.
+        Load cogs for the bot via cog_loader.py
         """
         await CogLoader.setup(self, debug=True)
         logger.debug("Cog loader setup completed.")
 
-    async def add_event_handler(self):
+    async def add_event_handler(self) -> None:
         """
         Add event handlers for the bot.
         """
 
         @self.event
-        async def on_ready():
+        async def on_ready() -> None:
             """
             Event triggered when the bot is ready.
             """
@@ -77,17 +68,25 @@ class TuxBot(commands.Bot):
                 )
             )
 
+        @self.event
+        async def on_disconnect() -> None:
+            """
+            Event triggered when the bot is disconnected.
+            """
+            logger.info(f"{self.user} has disconnected from Discord!", __name__)
 
-async def main():
+
+async def main() -> None:
     try:
         bot_prefix = ">"
-        intents = discord.Intents.all()
-        bot = TuxBot(intents, command_prefix=bot_prefix)
-
-        await bot.start(os.getenv("TOKEN") or "", reconnect=True)
+        intents: Intents = discord.Intents.all()
+        bot = TuxBot(intents=intents, command_prefix=bot_prefix)
+        await bot.start(token=os.getenv("TOKEN") or "", reconnect=True)
     except Exception as e:
         logger.error(f"An error occurred while running the bot: {e}")
 
 
 if __name__ == "__main__":
+    # loop = asyncio.get_event_loop()
+    # loop.run_until_complete(main())
     asyncio.run(main())
