@@ -37,7 +37,6 @@ Hey contributor, Ty here! To use the logger in your cog files, please follow the
 I love you all and thank you for contributing <3
 """  # noqa E501
 
-
 import logging
 import os
 
