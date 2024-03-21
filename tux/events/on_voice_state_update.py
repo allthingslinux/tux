@@ -58,15 +58,15 @@ class OnVoiceStateUpdate(commands.Cog):
             # if the category is not found, return
             if category is None:
                 return
-            
+
             # paranoia check
             if before.channel.category_id != category.id:
                 return
-            
+
             # if these are the same, the user is just deafening or muting
             if before.channel == after.channel:
                 return
-            
+
             # if the id of the channel is the same as the temporary channel, return
             # just incase they decide to name the channel starting with [TEMP]
             if before.channel.id == int(C.TEMPVC_CHANNEL or "0"):
@@ -75,7 +75,7 @@ class OnVoiceStateUpdate(commands.Cog):
             # TODO: Replace this with a database so the user can change the name of the channel
             if not before.channel.name.startswith("[TEMP]"):
                 return
-            
+
             # get the number of members in the channel
             if len(before.channel.members) == 0:
                 await before.channel.delete()
