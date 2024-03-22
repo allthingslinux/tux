@@ -1,5 +1,3 @@
-# commands/load.py
-
 from discord.ext import commands
 
 from tux.command_cog import CommandCog
@@ -21,6 +19,7 @@ class Load(CommandCog):
         Example:
             >load commands.load
         """
+
         try:
             await self.bot.load_extension(cog)
         except Exception as e:

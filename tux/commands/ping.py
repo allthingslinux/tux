@@ -1,4 +1,5 @@
-from discord.ext import commands
+import discord
+from discord import app_commands
 
 from tux.command_cog import CommandCog
 from tux.main import TuxBot
@@ -8,20 +9,20 @@ logger = TuxLogger(__name__)
 
 
 class Ping(CommandCog):
-    @commands.hybrid_command(name="ping", description="Checks the bot's latency.")
-    async def ping(self, ctx: commands.Context) -> None:
+    @app_commands.command(name="ping", description="Checks the bot's latency.")
+    async def ping(self, interaction: discord.Interaction) -> None:
         """
         Checks the bot's latency.
         """
         discord_ping = round(self.bot.latency * 1000)
 
-        await self.bot.embed.send_embed(
-            ctx.channel.id,
+        embed = discord.Embed(
             title="Pong!",
-            description=f"Discord ping: {discord_ping}ms",
+            description=f"{discord_ping}ms",
+            color=discord.Color.green(),
         )
 
-        logger.info(f"{ctx.author} used {ctx.command} in {ctx.channel}.")
+        await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot: TuxBot) -> None:

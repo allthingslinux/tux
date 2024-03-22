@@ -1,7 +1,5 @@
-# commands/server.py
-
 import discord
-from discord.ext import commands
+from discord import app_commands
 
 from tux.command_cog import CommandCog
 from tux.main import TuxBot
@@ -11,41 +9,36 @@ logger = TuxLogger(__name__)
 
 
 class Server(CommandCog):
-    @commands.hybrid_command(
-        name="server", description="Sends information about the current Discord Guild."
+    @app_commands.command(
+        name="server", description="Shows information about the server."
     )
-    async def server(self, ctx: commands.Context) -> None:
+    async def server(self, interaction: discord.Interaction) -> None:
         """
-        Sends information about the current Discord Guild.
+        Shows information about the server.
+        """
+        guild = interaction.guild
 
-        Args:
-            ctx (commands.Context): The context of where the command was sent.
-        """
-        if ctx.guild:
-            find_bots = sum(1 for member in ctx.guild.members if member.bot)
+        if guild:
+            find_bots = sum(1 for member in guild.members if member.bot)
 
             embed = discord.Embed()
 
-            if ctx.guild.icon:
-                embed.set_thumbnail(url=ctx.guild.icon)
-            if ctx.guild.banner:
-                embed.set_image(url=ctx.guild.banner.with_format("png").with_size(1024))
+            if guild.icon:
+                embed.set_thumbnail(url=guild.icon)
+            if guild.banner:
+                embed.set_image(url=guild.banner.with_format("png").with_size(1024))
 
-            embed.title = ctx.guild.name
-            embed.add_field(name="Members", value=ctx.guild.member_count)
+            embed.title = guild.name
+            embed.add_field(name="Members", value=guild.member_count)
             embed.add_field(name="Bots", value=find_bots)
-            embed.add_field(name="Boosts", value=ctx.guild.premium_subscription_count)
-            embed.add_field(name="Vanity URL", value=ctx.guild.vanity_url_code)
-            embed.add_field(name="Owner", value=ctx.guild.owner)
-            embed.add_field(
-                name="Created", value=ctx.guild.created_at.strftime("%d/%m/%Y")
-            )
+            embed.add_field(name="Boosts", value=guild.premium_subscription_count)
+            embed.add_field(name="Vanity URL", value=guild.vanity_url_code)
+            embed.add_field(name="Owner", value=guild.owner)
+            embed.add_field(name="Created", value=guild.created_at.strftime("%d/%m/%Y"))
 
-            embed.set_footer(text=f"Server ID: {ctx.guild.id}")
+            embed.set_footer(text=f"Server ID: {guild.id}")
 
-            await ctx.send(embed=embed)
-        else:
-            logger.error("Failed to send message: Guild not found.")
+            await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot: TuxBot) -> None:
