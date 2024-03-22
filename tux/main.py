@@ -2,15 +2,19 @@ import asyncio
 import os
 
 import discord
+import sentry_sdk
 from discord import Intents
 from discord.ext import commands
 from dotenv import load_dotenv
+from sentry_sdk.integrations.aiohttp import AioHttpIntegration
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
 
 from tux.cog_loader import CogLoader
 from tux.permissions import Permissions
 from tux.utils.tux_logger import TuxLogger
 
 load_dotenv()
+
 
 logger = TuxLogger(__name__)
 
@@ -75,11 +79,23 @@ class TuxBot(commands.Bot):
 
 
 async def main() -> None:
+    sentry_sdk.init(
+        dsn="https://b7ef0082e50eff6e166e78807498914d@o4506955434885120.ingest.us.sentry.io/4506955438227457",
+        traces_sample_rate=1.0,
+        profiles_sample_rate=1.0,
+        integrations=[
+            AsyncioIntegration(),
+            AioHttpIntegration(),
+        ],
+        enable_tracing=True,
+    )
+
     try:
         bot_prefix = ">"
         intents: Intents = discord.Intents.all()
         bot = TuxBot(intents=intents, command_prefix=bot_prefix)
         await bot.start(token=os.getenv("TOKEN") or "", reconnect=True)
+
     except Exception as e:
         logger.error(f"An error occurred while running the bot: {e}")
 
