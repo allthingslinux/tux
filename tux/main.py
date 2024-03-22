@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 
 from tux.cog_loader import CogLoader
 from tux.permissions import Permissions
-from tux.utils._embed import Embed
 from tux.utils.tux_logger import TuxLogger
 
 load_dotenv()
@@ -37,7 +36,6 @@ class TuxBot(commands.Bot):
         """
         Additional setup for the bot, including loading cogs and setting up event handlers.
         """
-        self.embed = Embed(self)
         await self.load_cogs()
         await self.add_event_handler()
 
@@ -87,6 +85,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    # loop = asyncio.get_event_loop()
-    # loop.run_until_complete(main())
     asyncio.run(main())

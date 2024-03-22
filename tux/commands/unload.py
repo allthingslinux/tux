@@ -1,5 +1,3 @@
-# commands/unload.py
-
 from discord.ext import commands
 
 from tux.command_cog import CommandCog

@@ -1,7 +1,5 @@
-# commands/ban.py
-
 import discord
-from discord.ext import commands
+from discord import app_commands
 
 from tux.command_cog import CommandCog
 from tux.main import TuxBot
@@ -11,31 +9,12 @@ logger = TuxLogger(__name__)
 
 
 class Ban(CommandCog):
-    @commands.hybrid_command(
-        name="ban",
-        description="Bans a user from the server.",
-        usage="ban <user> [reason]",
-    )
-    async def ban(
-        self,
-        ctx: commands.Context,
-        member: discord.Member,
-        *,
-        reason: str = "No reason provided.",
-    ) -> None:
+    @app_commands.command(name="ban", description="Bans a user from the server.")
+    async def ban(self, interaction: discord.Interaction) -> None:
         """
         Bans a user from the server.
-
-        Args:
-            ctx (commands.Context): The invocation context sent by the Discord API which contains information
-            about the command and from where it was called.
-            member (discord.Member): The member to ban.
-            reason (str): The reason for the ban.
         """
-
-        await member.ban(reason=reason)
-        await ctx.send(f"Banned {member} for {reason}.")
-        logger.info(f"{ctx.author} banned {member} for {reason}.")
+        await interaction.response.send_message("Ban command is not implemented yet.")
 
 
 async def setup(bot: TuxBot) -> None:

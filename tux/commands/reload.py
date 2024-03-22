@@ -19,6 +19,7 @@ class Reload(CommandCog):
         Example:
             >reload commands.reload
         """
+
         if cog == "config":
             self.bot.permissions.reload_ini_file("config/settings.ini")
             return
