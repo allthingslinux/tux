@@ -8,7 +8,12 @@ from tux.utils.tux_logger import TuxLogger
 logger = TuxLogger(__name__)
 
 
-# Define the OnMemberUpdate class, which is a subclass of commands.Cog
+# TODO:
+# Properly account for all important changes
+# Ensure that some changes are not using fields (e.g. roles, permissions, etc.)...
+# this is because fields are limited in character count
+
+
 class OnMemberUpdate(commands.Cog):
     # Initialize the class with the bot as an argument
     def __init__(self, bot):
@@ -22,7 +27,8 @@ class OnMemberUpdate(commands.Cog):
         compares the before and after states of the member, logs any changes,
         creates an embed for the changes, and sends the embed to a specified
         channel.
-        """
+        """  # noqa E501
+
         try:
             # Compare the before and after states of the member
             changes = self.compare_member_changes(before, after)
@@ -43,8 +49,10 @@ class OnMemberUpdate(commands.Cog):
         It currently only checks for changes in nickname, but more comparisons can be added as needed.
         """
         changes = {}
+        logger.info(f"Comparing {before} to {after}.")
         if before.nick != after.nick:
             changes["nickname"] = {"before": before.nick, "after": after.nick}
+
         return changes
 
     def log_member_changes(self, changes):
@@ -66,17 +74,15 @@ class OnMemberUpdate(commands.Cog):
         for change, values in changes.items():
             embed.add_field(name=f"Old {change}", value=values["before"], inline=False)
             embed.add_field(name=f"New {change}", value=values["after"], inline=False)
+
+        logger.info("Embed created.")
         return embed
 
     async def send_embed(self, embed):
-        """
-        This function sends the embed to a specified channel.
-        The channel ID needs to be replaced with the actual ID of the channel you want to send the embed to.
-        """
-        some_channel = self.bot.get_channel(
-            "1191472088695980083"
-        )  # Replace 'channel_id' with the actual ID
-        await some_channel.send(embed=embed)
+        channel_id = 1191472088695980083
+        channel = self.bot.get_channel(channel_id)
+        await channel.send(embed=embed)
+        logger.info(f"Embed sent to channel {channel_id}.")
 
 
 # Define an asynchronous setup function that adds the OnMemberUpdate cog to the bot

@@ -29,7 +29,7 @@ class OnMemberBan(commands.Cog):
         https://discordpy.readthedocs.io/en/stable/api.html#discord.on_member_ban
         """  # noqa E501
 
-        print(f"{user} has been banned from the server.")
+        logger.info(f"{user} has been banned from the server.")
 
 
 async def setup(bot):

@@ -29,7 +29,7 @@ class OnMemberRemove(commands.Cog):
         https://discordpy.readthedocs.io/en/stable/api.html#discord.on_member_remove
         """  # noqa E501
 
-        print(f"{member} has left the server.")
+        logger.info(f"{member} has left the server.")
 
 
 async def setup(bot):
