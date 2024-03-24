@@ -28,4 +28,4 @@ jobs:
         run: ruff format && ruff check . --fix
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: 'style fixes by ruff'
+          commit_message: '[Fix] Linting and formatting via Ruff'
