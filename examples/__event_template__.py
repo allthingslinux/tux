@@ -1,23 +1,23 @@
 """
 Discord Bot Event Handler Template
 
-This example contains a template for creating new event handlers for Tux. It is designed to be have a 
+This example contains a template for creating new event handlers for Tux. It is designed to be have a
 familiar and straightforward command structure, with each event being able to have its own function.
 
 Link to discord.py event reference:
 https://discordpy.readthedocs.io/en/latest/api.html#event-reference
 
-To use this template, replace `EventName` with the name of your event handler class. 
+To use this template, replace `EventName` with the name of your event handler class.
 Replace `@commands.command` sections and their respective functions with the commands you
 wish to create. Refer to the given 'hello' command as an example.
 
 For each command, ensure that you have:
-1. A name parameter that defines the command's call sign (i.e., the string that must be typed 
+1. A name parameter that defines the command's call sign (i.e., the string that must be typed
    out to call the command).
-2. A help parameter that succinctly but clearly describes what the command does. This 
+2. A help parameter that succinctly but clearly describes what the command does. This
    description will be displayed in the bot's help command.
 3. Refer to the given 'on_message' listener as an example for creating event listeners.
-4. Remember to properly use the TuxLogger for outputting events to console and files. For 
+4. Remember to properly use the TuxLogger for outputting events to console and files. For
    example:
     - logger.info("This is an information message.")
     - logger.warning("This is a warning message.")
