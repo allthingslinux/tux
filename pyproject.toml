@@ -14,15 +14,13 @@ python = "^3.11"
 supabase = "^2.4.0"
 sentry-sdk = "^1.43.0"
 loguru = "^0.7.2"
-
-[tool.poetry.group.dev.dependencies]
 aiohttp = "3.9.1"
 colorlog = ">=6.8.0"
 discord-py = "^2.3.2"
 pre-commit = "^3.6.0"
 pyright = "^1.1.343"
 python-dotenv = ">=1.0.0"
-ruff = "^0.1.9"
+ruff = "^0.3.4"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
