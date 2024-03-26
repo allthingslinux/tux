@@ -1,48 +1,42 @@
-################################################################
 # Poetry Configuration
-################################################################
-
 [tool.poetry]
 authors = ["kaizen <admin@kaizen.wtf>"]
 description = "All Things Linux Discord Bot"
 name = "tux"
 readme = "README.md"
+repository = "https://github.com/allthingslinux/tux"
 version = "0.1.0"
 
 [tool.poetry.dependencies]
-python = "^3.11"
-supabase = "^2.4.0"
-sentry-sdk = "^1.43.0"
-loguru = "^0.7.2"
 aiohttp = "3.9.1"
 colorlog = ">=6.8.0"
 discord-py = "^2.3.2"
+loguru = "^0.7.2"
+mypy = "^1.9.0"
 pre-commit = "^3.6.0"
+prisma = "^0.13.1"
 pyright = "^1.1.343"
+python = "^3.11"
 python-dotenv = ">=1.0.0"
 ruff = "^0.3.4"
+sentry-sdk = "^1.43.0"
+supabase = "^2.4.0"
+
+[tool.poetry.scripts]
+pyright = "pyright:run"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core"]
 
-################################################################
 # Black Configuration
-# https://docs.astral.sh/ruff/configuration/
-################################################################
-
 [tool.black]
 include = '\.pyi?$'
 line-length = 88
 target-version = ['py311']
 
-################################################################
 # Ruff Configuration
-# https://docs.astral.sh/ruff/configuration/
-################################################################
-
 [tool.ruff]
-# Exclude a variety of commonly ignored directories.
 exclude = [
   ".bzr",
   ".direnv",
@@ -72,79 +66,37 @@ exclude = [
   "venv",
   "examples",
 ]
-
-# Same as Black.
 indent-width = 4
 line-length = 88
-
-# Assume Python 3.11
 target-version = "py311"
 
-################################################################
 # Ruff Linting Configuration
-################################################################
-
 [tool.ruff.lint]
-# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
-# Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
-# McCabe complexity (`C901`) by default.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+fixable = ["ALL"]
 ignore = ["E501"]
 select = [
-  # pycodestyle
-  "E", # Pyflakes
-  "F", # pyupgrade
-  "UP", # flake8-bugbear
-  "B", # flake8-simplify
-  "SIM", # isort
+  "E",
+  "F",
+  "UP",
+  "B",
+  "SIM",
   "I",
 ]
-
-# Allow fix for all enabled rules (when `--fix`) is provided.
-fixable = ["ALL"]
 unfixable = []
 
-# Allow unused variables when underscore-prefixed.
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-
-################################################################
 # Ruff Formatting Configuration
-################################################################
-
 [tool.ruff.format]
-# Like Black, use double quotes for strings.
-quote-style = "double"
-
-# Like Black, indent with spaces, rather than tabs.
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
 indent-style = "space"
-
-# Like Black, respect magic trailing commas.
+line-ending = "auto"
+quote-style = "double"
 skip-magic-trailing-comma = false
 
-# Like Black, automatically detect the appropriate line ending.
-line-ending = "auto"
-
-# Enable auto-formatting of code examples in docstrings. Markdown,
-# reStructuredText code/literal blocks and doctests are all supported.
-#
-# This is currently disabled by default, but it is planned for this
-# to be opt-out in the future.
-docstring-code-format = false
-
-# Set the line length limit used when formatting code snippets in
-# docstrings.
-#
-# This only has an effect when the `docstring-code-format` setting is
-# enabled.
-docstring-code-line-length = "dynamic"
-
-################################################################
 # Pyright Configuration
-# https://microsoft.github.io/pyright/#/configuration
-################################################################
-
 [tool.pyright]
 defineConstant = {DEBUG = true}
-
 exclude = [
   ".direnv",
   ".eggs",
@@ -172,22 +124,22 @@ exclude = [
   "examples",
   "tests",
 ]
-
 include = ["tux"]
-
-typeCheckingMode = "basic"
-
-# Rules
-# https://microsoft.github.io/pyright/#/configuration?id=diagnostic-rule-defaults
-
-reportMissingImports = true
-reportMissingParameterType = false
-reportMissingTypeStubs = false
-reportUnknownArgumentType = false
-reportUnknownMemberType = false
-reportUnknownParameterType = false
-
 pythonPlatform = "Linux"
 pythonVersion = "3.11"
+typeCheckingMode = "strict"
 venv = ".venv"
 venvPath = "."
+# reportMissingImports = true
+# reportMissingParameterType = false
+# reportMissingTypeStubs = false
+# reportUnknownArgumentType = false
+# reportUnknownMemberType = false
+# reportUnknownParameterType = false
+
+[tool.prisma]
+binary_cache_dir = '.binaries'
+
+[tool.mypy]
+plugins = ["prisma.mypy"]
+python_version = "3.11"
