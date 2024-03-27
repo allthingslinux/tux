@@ -1,84 +1,48 @@
-# tux/cog_loader.py
-import logging
-import os
 import traceback
 
+from aiopath import AsyncPath  # type: ignore
 from discord.ext import commands
-
-from tux.utils.tux_logger import TuxLogger
-
-logger = TuxLogger(__name__)
+from loguru import logger
 
 
 class CogLoader(commands.Cog):
-    def __init__(self, bot: commands.Bot, debug: bool = False):
-        """
-        Constructor for the CogLoader Cog.
-        """
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.debug = debug
-        self.ignore_cogs = []
-        if debug:
-            logger.setLevel(logging.DEBUG)
+        self.ignore_cogs: set[str] = set()
 
-    def check_cog_eligibility(self, filename, cog_name):
-        """
-        Check if a cog module is eligible to be loaded.
-        A cog module is eligible if it ends with '.py', it's not in the
-        list of ignored cogs and doesn't start with an underscore.
-
-        Args:
-            filename: Name of the file.
-            cog_name: Name of the cog.
-        Returns:
-            bool: True if the cog module is eligible, False otherwise.
-        """
+    async def is_cog_eligible(self, filepath: AsyncPath) -> bool:
+        cog_name = filepath.stem
 
         return (
-            filename.endswith(".py")
+            filepath.suffix == ".py"
             and cog_name not in self.ignore_cogs
-            and not filename.startswith("_")
+            and not filepath.name.startswith("_")
+            and await filepath.is_file()
         )
 
-    async def load_cogs_from_folder(self, folder_name):
-        """
-        Dynamically loads all cogs from a folder.
-        Each cog module should be a Python file in the specified directory.
-        The file name (excluding extension) is considered the cog name.
+    async def load_cogs(self, apath: AsyncPath) -> None:
+        if await apath.is_dir():
+            async for item in apath.iterdir():
+                await self.load_cogs(item)
+        elif await self.is_cog_eligible(apath):
+            relative_path = apath.relative_to(AsyncPath(__file__).parent)
 
-        Args:
-            folder_name (str): The name of the folder containing the cogs.
-        """
-        cog_dir = os.path.join(os.path.dirname(__file__), folder_name)
-
-        for filename in os.listdir(cog_dir):
-            cog_name = filename[:-3]
-            module = f"{folder_name}.{cog_name}"
-
-            if not self.check_cog_eligibility(filename, cog_name):
-                logger.info(f"Skipping {module}.", __name__)
-                continue
+            module = str(relative_path).replace("/", ".").replace("\\", ".")[:-3]
 
             try:
                 await self.bot.load_extension(module)
-                logger.debug(f"Successfully loaded cog: {module}", __name__)
+                logger.debug(f"Successfully loaded cog: {module}")
             except Exception as e:
-                logger.error(f"Failed to load cog {module}. Error: {e}", __name__)
-                logger.error(traceback.format_exc())
+                logger.error(f"Failed to load cog {module}. Error: {e}\n{traceback.format_exc()}")
+
+    async def load_cogs_from_folder(self, folder_name: str) -> None:
+        cog_path = AsyncPath(__file__).parent / folder_name
+
+        await self.load_cogs(cog_path)
 
     @classmethod
-    async def setup(cls, bot, debug=False):
-        """
-        Sets up the CogLoader Cog and adds it to the bot.
+    async def setup(cls, bot: commands.Bot) -> None:
+        cog_loader = cls(bot)
 
-        Args:
-            bot (commands.Bot): The instance of the Discord bot.
-            debug (bool): A flag indicating whether debug mode is enabled.
-        """
-
-        cog = cls(bot, debug)
-
-        for folder in ["utils", "events", "commands"]:
-            await cog.load_cogs_from_folder(folder)
-
-        await bot.add_cog(cog)
+        await cog_loader.load_cogs_from_folder("cogs")
+        await bot.add_cog(cog_loader)

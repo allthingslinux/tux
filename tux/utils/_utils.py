@@ -1,5 +1,3 @@
-# tux/_utils.py
-
 from collections.abc import Callable
 from datetime import UTC, datetime
 
@@ -42,16 +40,12 @@ def truncate(text: str, max_len: int = 1024) -> str:
         The truncated paragraph.
     """
     etc = "\n[…]"
-    return (
-        f"{text[:max_len - len(etc)]}{etc}" if len(text) > max_len - len(etc) else text
-    )
+    return f"{text[:max_len - len(etc)]}{etc}" if len(text) > max_len - len(etc) else text
 
 
-def ordinal(n):
+def ordinal(n: int) -> str:
     """Return number with ordinal suffix eg. 1st, 2nd, 3rd, 4th..."""
-    return str(n) + {1: "st", 2: "nd", 3: "rd"}.get(
-        4 if 10 <= n % 100 < 20 else n % 10, "th"
-    )
+    return str(n) + {1: "st", 2: "nd", 3: "rd"}.get(4 if 10 <= n % 100 < 20 else n % 10, "th")
 
 
 def is_convertible_to_type(string: str, type_func: Callable[..., object]) -> bool:
@@ -71,19 +65,9 @@ def is_convertible_to_type(string: str, type_func: Callable[..., object]) -> boo
         return False
 
 
-def is_integer(string):
+def is_integer(string: str):
     return is_convertible_to_type(string, int)
 
 
-def is_float(string):
+def is_float(string: str):
     return is_convertible_to_type(string, float)
-
-
-class DummyParam:
-    """
-    A dummy parameter that can be used for MissingRequiredArgument.
-    """
-
-    def __init__(self, name):
-        self.name = name
-        self.displayed_name = name

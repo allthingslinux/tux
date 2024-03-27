@@ -1,0 +1,161 @@
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL")
+// }
+
+datasource db {
+  // SQLite provider
+  provider = "sqlite"
+  // Database local file
+  url      = "file:database.db"
+}
+
+generator client {
+  // Prisma Python client provider
+  provider             = "prisma-client-py"
+  // Asynchronous interface to use
+  interface            = "asyncio"
+  // Recursive type depth not limited (-1)
+  recursive_type_depth = -1
+}
+
+// Table representing roles in the system
+model roles {
+  // Role identifier
+  role_id    BigInt       @id
+  // Name of the role
+  role_name  String
+  // Link to users associated with this role
+  user_roles user_roles[]
+  // Link to moderators associated with this role
+  moderators moderators[]
+}
+
+// General settings for the system
+model settings {
+  // Key of the setting
+  setting_key         String  @id
+  // Value of the setting
+  setting_value       String
+  // Optional description of what the setting does
+  setting_description String?
+}
+
+// Table representing users in the system
+model users {
+  // User identifier (Discord ID)
+  user_id          BigInt        @id
+  // Indicator if the user is a bot
+  user_is_bot      Boolean?
+  // Optional User's username
+  user_username    String?
+  // Optional User's global name
+  user_global_name String?
+  // Timestamp when user was created
+  user_created_at  DateTime
+  // Link to roles associated with this user
+  user_roles       user_roles[]
+  // Link to notes associated with this user
+  notes            notes[]
+  // Link to infractions associated with this user
+  infractions      infractions[]
+}
+
+// Table representing moderators in the system
+model moderators {
+  // Moderator identifier (Discord ID)
+  moderator_id BigInt        @id
+  // Associated role identifier
+  role_id      BigInt?
+  // Link to role associated with this moderator
+  role         roles?        @relation(fields: [role_id], references: [role_id])
+  // Link to notes created by this moderator
+  notes        notes[]
+  // Link to infractions created by this moderator
+  infractions  infractions[]
+}
+
+// Table for storing logs
+model logs {
+  // Unique log identifier
+  log_id         String   @id @default(uuid())
+  // Timestamp when log was created
+  log_created_at DateTime @default(now())
+  // Level of the log
+  log_level      String?
+  // Content/text of the log
+  log_content    String?
+}
+
+// Relationship table between a user and their roles
+model user_roles {
+  // User identifier
+  user_id BigInt
+  // Role identifier
+  role_id BigInt
+  // Link to the user
+  users   users  @relation(fields: [user_id], references: [user_id])
+  // Link to the role
+  roles   roles  @relation(fields: [role_id], references: [role_id])
+
+  // Composite primary key consisting of user_id and role_id
+  @@id([user_id, role_id])
+}
+
+// Table for storing notes/moderator reports on users
+model notes {
+  // Unique identifier for the note
+  note_id         String      @id @default(uuid())
+  // Content of the note
+  note_content    String
+  // Moderator who created the note
+  moderator_id    BigInt?
+  // User who the note is about
+  user_id         BigInt?
+  // When the note was created
+  note_created_at DateTime    @default(now())
+  // Link to the moderator 
+  moderator       moderators? @relation(fields: [moderator_id], references: [moderator_id])
+  // Link to the user 
+  user            users?      @relation(fields: [user_id], references: [user_id])
+}
+
+// Table for storing one-to-many snippets of text
+model snippets {
+  // Name of the snippet
+  snippet_name    String @id
+  // Content of the snippet
+  snippet_content String
+}
+
+// Table representing guilds/servers in the system
+model guilds {
+  // Unique identifier for the guild (Discord ID)
+  guild_id       BigInt @id
+  // Name of the guild
+  guild_name     String
+  // ID of the owner of the guild
+  guild_owner_id BigInt
+}
+
+// Table representing infractions/punishments on users
+model infractions {
+  // Unique identifier for the infraction
+  infraction_id         String      @id @default(uuid())
+  // ID of the moderator who gave the infraction
+  moderator_id          BigInt?
+  // ID of the user who received the infraction
+  user_id               BigInt?
+  // Type of the infraction (ban, mute, etc)
+  infraction_type       String
+  // Optional reason for the infraction
+  infraction_reason     String?
+  // When the infraction was given
+  infraction_created_at DateTime    @default(now())
+  // When the infraction expires, if applicable
+  infraction_expires_at DateTime?
+  // Link to the moderator who gave the infraction
+  moderator             moderators? @relation(fields: [moderator_id], references: [moderator_id])
+  // Link to the user who received the infraction
+  user                  users?      @relation(fields: [user_id], references: [user_id])
+}

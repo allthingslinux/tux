@@ -1,0 +1,28 @@
+import discord
+from discord.ext import commands
+from loguru import logger
+
+
+class MessageEventsCog(commands.Cog, name="Message Events Handler"):
+    def __init__(self, bot: commands.Bot) -> None:
+        self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_bulk_message_delete(self, messages: list[discord.Message]) -> None:
+        logger.info(f"Messages deleted: {messages}")
+
+    @commands.Cog.listener()
+    async def on_message_delete(self, message: discord.Message) -> None:
+        logger.info(f"Message deleted: {message}")
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
+        logger.info(f"Message edited: {before} -> {after}")
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message) -> None:
+        logger.info(f"Message received: {message}")
+
+
+async def setup(bot: commands.Bot) -> None:
+    await bot.add_cog(MessageEventsCog(bot))

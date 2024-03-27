@@ -1,99 +1,65 @@
 import asyncio
 import os
+from typing import Any
 
 import discord
 import sentry_sdk
-from discord import Intents
 from discord.ext import commands
 from dotenv import load_dotenv
+from loguru import logger
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
+from sentry_sdk.integrations.loguru import LoguruIntegration
 
 from tux.cog_loader import CogLoader
-from tux.permissions import Permissions
-from tux.utils.tux_logger import TuxLogger
 
 load_dotenv()
 
 
-logger = TuxLogger(__name__)
-
-
 class TuxBot(commands.Bot):
-    """
-    TuxBot is a custom bot class that extends commands.Bot from discord.ext.
-    """
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
 
-    def __init__(self, intents, command_prefix="/", **options) -> None:
-        """
-        Constructor for the TuxBot class.
-
-        Args:
-        - command_prefix (str): The prefix that triggers bot commands.
-        - intents (discord.Intents): The intents to enable for the bot.
-        """
-        self.permissions = Permissions()
-        super().__init__(command_prefix=command_prefix, intents=intents, **options)
         asyncio.create_task(self.setup())
 
     async def setup(self) -> None:
-        """
-        Additional setup for the bot, including loading cogs and setting up event handlers.
-        """
         await self.load_cogs()
-        await self.add_event_handler()
 
     async def load_cogs(self) -> None:
-        """
-        Load cogs for the bot via cog_loader.py
-        """
-        await CogLoader.setup(self, debug=True)
-        logger.debug("Cog loader setup completed.")
+        await CogLoader.setup(self)
 
-    async def add_event_handler(self) -> None:
-        """
-        Add event handlers for the bot.
-        """
+    @commands.Cog.listener()
+    async def on_ready(self) -> None:
+        logger.info(f"{self.user} has connected to Discord!")
 
-        @self.event
-        async def on_ready() -> None:
-            """
-            Event triggered when the bot is ready.
-            """
-            logger.info(f"{self.user} has connected to Discord!", __name__)
-
-            # Set the bot's status
-            await self.change_presence(
-                activity=discord.Activity(
-                    type=discord.ActivityType.watching,
-                    name="All Things Linux",
-                )
+        await self.change_presence(
+            activity=discord.Activity(
+                type=discord.ActivityType.watching,
+                name="All Things Linux",
             )
+        )
 
-        @self.event
-        async def on_disconnect() -> None:
-            """
-            Event triggered when the bot is disconnected.
-            """
-            logger.info(f"{self.user} has disconnected from Discord!", __name__)
+    @commands.Cog.listener()
+    async def on_disconnect(self) -> None:
+        logger.warning("Bot has disconnected from Discord.")
 
 
 async def main() -> None:
-    sentry_sdk.init(
-        dsn="https://b7ef0082e50eff6e166e78807498914d@o4506955434885120.ingest.us.sentry.io/4506955438227457",
-        traces_sample_rate=1.0,
-        profiles_sample_rate=1.0,
-        integrations=[
-            AsyncioIntegration(),
-            AioHttpIntegration(),
-        ],
-        enable_tracing=True,
-    )
-
     try:
-        bot_prefix = ">"
-        intents: Intents = discord.Intents.all()
-        bot = TuxBot(intents=intents, command_prefix=bot_prefix)
+        sentry_sdk.init(
+            dsn="https://b7ef0082e50eff6e166e78807498914d@o4506955434885120.ingest.us.sentry.io/4506955438227457",
+            traces_sample_rate=1.0,
+            profiles_sample_rate=1.0,
+            enable_tracing=True,
+            integrations=[
+                AsyncioIntegration(),
+                AioHttpIntegration(),
+                LoguruIntegration(),
+            ],
+        )
+
+        bot = TuxBot(command_prefix=">", intents=discord.Intents.all())
+
         await bot.start(token=os.getenv("TOKEN") or "", reconnect=True)
 
     except Exception as e:
