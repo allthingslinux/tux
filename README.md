@@ -1,6 +1,23 @@
-# Tux
+<div align="center">
+    <img src="docs/resources/tux.gif" width=128 height=128></img>
+    <h1>Tux</h1>
+    <h3><b>A Discord bot for the ATL Discord server</b></h3>
+</div>
 
-![Banner](https://i.imgur.com/GtT8f8g.png)
+<div align="center">
+    <p align="center">
+        <a href="https://github.com/allthingslinux/tux/forks">
+            <img alt="Forks" src="https://img.shields.io/github/commit-activity/m/allthingslinux/tux?style=for-the-badge&logo=git&color=EBA0AC&logoColor=EBA0AC&labelColor=302D41"></a>
+        <a href="https://github.com/allthingslinux/tux">
+            <img alt="Repo size" src="https://img.shields.io/github/repo-size/allthingslinux/tux?style=for-the-badge&logo=github&color=FAB387&logoColor=FAB387&labelColor=302D41"/></a>
+        <a href="https://github.com/allthingslinux/tux/issues">
+            <img alt="Issues" src="https://img.shields.io/github/issues/allthingslinux/tux?style=for-the-badge&logo=githubactions&color=F9E2AF&logoColor=F9E2AF&labelColor=302D41"></a>
+        <a href="https://opensource.org/license/unlicense/">
+            <img alt="License" src="https://img.shields.io/github/license/allthingslinux/tux?style=for-the-badge&logo=gitbook&color=A6E3A1&logoColor=A6E3A1&labelColor=302D41"></a>
+        <a href="https://discord.gg/linux">
+            <img alt="Discord" src="https://img.shields.io/discord/1172245377395728464?style=for-the-badge&logo=discord&color=B4BEFE&logoColor=B4BEFE&labelColor=302D41"></a>
+    </p>
+</div>
 
 ## About
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec euismod, nisl eget ultricies ultricies, nunc nisl ultricies nunc, quis aliquam nisl nunc eu nisl. Donec euismod, nisl eget ultricies ultricies, nunc nisl ultricies nunc, quis aliquam nisl nunc eu nisl. Donec euismod, nisl eget ultricies ultricies, nunc nisl ultricies nunc, quis aliquam nisl nunc eu nisl. Donec euismod, nisl eget ultricies ultricies, nunc nisl ultricies nunc, quis aliquam nisl nunc eu nisl. Donec euismod, nisl eget ultricies ultricies, nunc nisl ultricies nunc, quis aliquam nisl nunc eu nisl.
@@ -31,7 +48,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec euismod, nisl ege
 - Run `poetry run pre-commit run <hook_id>` to run a specific pre-commit hook
 
 ## Architecture
-Tux is built using the [discord.py]() library. It is a Python wrapper for the Discord API. The application is built using the [Command Pattern](https://en.wikipedia.org/wiki/Command_pattern) and [Event Driven Architecture](https://en.wikipedia.org/wiki/Event-driven_architecture). The application is split into two main parts: commands and events. Commands are used to execute actions in the application, while events are used to react to actions in the application. The application is also split into modules, which are used to group related commands and events together. The application is also split into cogs, which are used to group related modules together. The application is also split into utils, which are used to group related utility functions together.
+Tux is built using the [discord.py](https://github.com/Rapptz/discord.py) library. It is a Python wrapper for the Discord API. The application is built using the [Command Pattern](https://en.wikipedia.org/wiki/Command_pattern) and [Event Driven Architecture](https://en.wikipedia.org/wiki/Event-driven_architecture). The application is split into two main parts: commands and events. Commands are used to execute actions in the application, while events are used to react to actions in the application. The application is also split into modules, which are used to group related commands and events together. The application is also split into cogs, which are used to group related modules together. The application is also split into utils, which are used to group related utility functions together.
 
 ## Key Files
 - [main.py](tux/main.py): The main execution file for the application
