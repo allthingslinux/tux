@@ -4,10 +4,11 @@ from loguru import logger
 
 
 class Sync(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @commands.hybrid_command(name="sync", description="Syncs the application commands to Discord.")
+    @commands.has_guild_permissions(administrator=True)
+    @commands.command(name="sync", description="Syncs the application commands to Discord.")
     async def sync(self, ctx: commands.Context[commands.Bot], guild: discord.Guild) -> None:
         if ctx.guild:
             self.bot.tree.copy_global_to(guild=ctx.guild)

@@ -159,3 +159,9 @@ model infractions {
   // Link to the user who received the infraction
   user                  users?      @relation(fields: [user_id], references: [user_id])
 }
+
+model messages {
+  message_id   BigInt   @id
+  message_text String
+  message_time DateTime
+}

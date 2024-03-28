@@ -12,6 +12,7 @@ class Server(commands.Cog):
     async def server(self, interaction: discord.Interaction) -> None:
         if not (guild := interaction.guild):
             return
+
         embed = discord.Embed()
 
         find_bots = sum(bool(member.bot) for member in guild.members)

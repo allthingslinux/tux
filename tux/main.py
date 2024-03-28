@@ -12,6 +12,7 @@ from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.integrations.loguru import LoguruIntegration
 
 from tux.cog_loader import CogLoader
+from tux.database.client import db
 
 load_dotenv()
 
@@ -39,9 +40,13 @@ class TuxBot(commands.Bot):
             )
         )
 
+        await db.connect()
+
     @commands.Cog.listener()
     async def on_disconnect(self) -> None:
         logger.warning("Bot has disconnected from Discord.")
+
+        await db.disconnect()
 
 
 async def main() -> None:

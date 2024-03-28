@@ -147,3 +147,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Local dev database
+prisma/database.db

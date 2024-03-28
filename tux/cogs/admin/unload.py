@@ -3,10 +3,11 @@ from loguru import logger
 
 
 class Unload(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @commands.hybrid_command(name="unload", description="Unloads a cog from the bot.")
+    @commands.has_guild_permissions(administrator=True)
+    @commands.command(name="unload", description="Unloads a cog from the bot.")
     async def unload(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
         try:
             await self.bot.unload_extension(cog)

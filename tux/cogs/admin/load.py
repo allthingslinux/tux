@@ -3,10 +3,11 @@ from loguru import logger
 
 
 class Load(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @commands.hybrid_command(name="load", description="Loads a cog into the bot.")
+    @commands.has_guild_permissions(administrator=True)
+    @commands.command(name="load", description="Loads a cog into the bot.")
     async def load(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
         try:
             await self.bot.load_extension(cog)

@@ -3,10 +3,11 @@ from loguru import logger
 
 
 class Clear(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @commands.hybrid_command(name="clear", description="Clears the slash command tree.")
+    @commands.has_guild_permissions(administrator=True)
+    @commands.command(name="clear", description="Clears the slash command tree.")
     async def clear(self, ctx: commands.Context[commands.Bot]) -> None:
         self.bot.tree.clear_commands(guild=ctx.guild)
 

@@ -7,7 +7,7 @@ from tux.utils.constants import Constants as C
 
 
 class OnVoiceStateUpdate(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
     @commands.Cog.listener()
@@ -17,26 +17,8 @@ class OnVoiceStateUpdate(commands.Cog):
         before: discord.VoiceState,
         after: discord.VoiceState,
     ) -> None:
-        """
-        Handles the event when a user's voice state is updated in a Discord Guild.
-
-        Called whenever a user changes their voice state. This is applicable to things like joining/leaving a voice channel, muting/unmuting, and deafening/undeafening.
-
-        Note:
-            This function requires `Intents.voice_states` to be enabled.
-
-        Args:
-            member (Member): The member whose voice states changed.
-            before (VoiceState): The voice state prior to the changes.
-            after (VoiceState): The voice state after the changes.
-
-        This event is currently used to handle the creation and deletion of temporary voice channels.
-
-        https://discordpy.readthedocs.io/en/stable/api.html#discord.on_voice_state_update
-        """
-
-        logger.info(f"Voice state update: {member.name} {before.channel} -> {after.channel}")
-        logger.info(f"Constants: {C.TEMPVC_CATEGORY} {C.TEMPVC_CHANNEL}")
+        logger.trace(f"Voice state update: {member.name} {before.channel} -> {after.channel}")
+        logger.trace(f"Constants: {C.TEMPVC_CATEGORY} {C.TEMPVC_CHANNEL}")
 
         if (
             before.channel is None

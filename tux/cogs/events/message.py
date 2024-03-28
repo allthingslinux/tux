@@ -9,19 +9,19 @@ class MessageEventsCog(commands.Cog, name="Message Events Handler"):
 
     @commands.Cog.listener()
     async def on_bulk_message_delete(self, messages: list[discord.Message]) -> None:
-        logger.info(f"Messages deleted: {messages}")
+        logger.trace(f"Messages deleted: {messages}")
 
     @commands.Cog.listener()
     async def on_message_delete(self, message: discord.Message) -> None:
-        logger.info(f"Message deleted: {message}")
+        logger.trace(f"Message deleted: {message}")
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
-        logger.info(f"Message edited: {before} -> {after}")
+        logger.trace(f"Message edited: {before} -> {after}")
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
-        logger.info(f"Message received: {message}")
+        logger.trace(f"Message received: {message}")
 
 
 async def setup(bot: commands.Bot) -> None:
