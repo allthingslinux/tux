@@ -19,5 +19,42 @@
     </p>
 </div>
 
+## About
+
+Tux is a Discord bot for the All Things Linux Discord server. It is designed to provide a variety of features to the server, including moderation, support, utility, and various fun commands. The bot is written in Python using the discord.py library.
+
+
+## Installation
+
+### Prerequisites
+- Python 3.11 
+- [Poetry](https://python-poetry.org/docs/)
+
+### Steps
+1. Clone the repository
+   
+   ```bash
+   git clone https://github.com/allthingslinux/tux && cd tux
+   ```
+
+2. Install the dependencies
+    ```bash
+    poetry install
+    ```
+3. Activate the virtual environment
+    ```bash
+    poetry shell
+    ```
+4. Install the pre-commit hooks
+    ```bash
+    pre-commit install
+    ```
+5. Copy the `.env.example` file to `.env` and fill in the required values
+    ```bash
+    cp .env.example .env
+    ```
+6. Review all useful CLI commands by visiting the [useful CLI commands](docs/CLI.md) file.
+
+
 ## License
 This project is licensed under the terms of the The Unlicense license. See the [LICENSE](LICENSE.md) file for details.

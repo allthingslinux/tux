@@ -1,7 +1,9 @@
 ## Installation
 `poetry install`                           # Install dependencies with Poetry.
 
-`poetry run pre-commit install`            # Install pre-commit hooks.
+`poetry shell`                             # Activate the virtual environment.
+
+`poetry pre-commit install`                # Install pre-commit hooks.
 
 ## Development
 `poetry run python tux/main.py`            # Run the application with Poetry.
