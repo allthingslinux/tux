@@ -8,7 +8,7 @@ from tux.utils.constants import Constants as C
 class TempVc(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.base_vc_name = "/tmp/"
+        self.base_vc_name: str = "/tmp/"
 
     @commands.Cog.listener()
     async def on_voice_state_update(
