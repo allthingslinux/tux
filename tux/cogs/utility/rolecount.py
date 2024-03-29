@@ -139,16 +139,16 @@ class RoleCount(commands.Cog):
             app_commands.Choice(name="Vanity", value="vanity"),
         ]
     )
-    async def role_count(
+    async def rolecount(
         self, interaction: discord.Interaction, which: discord.app_commands.Choice[str]
     ) -> None:
-        data_embed: discord.Embed = discord.Embed(
+        embed: discord.Embed = discord.Embed(
             title=f"All Things Linux stats for {which.name}",
             color=discord.Color.random(),
             timestamp=interaction.created_at,
         )
 
-        data_embed.set_footer(
+        embed.set_footer(
             text=f"Requested by {interaction.user.display_name}",
             icon_url=interaction.user.display_avatar,
         )
@@ -176,10 +176,15 @@ class RoleCount(commands.Cog):
             for role_emoji in roles_emojis:
                 role_id = int(role_emoji[0])
                 role = interaction.guild.get_role(role_id)
-                emoji = discord.utils.get(self.bot.emojis, name=role_emoji[1])
+                emoji = None
+
+                if role:
+                    emoji = role.unicode_emoji or discord.utils.get(
+                        self.bot.emojis, name=role_emoji[1]
+                    )
 
                 if role and emoji:
-                    data_embed.add_field(
+                    embed.add_field(
                         name=f"{str(emoji)} {role.name}",
                         value=f"{len(role.members)} users",
                         inline=True,
@@ -190,7 +195,7 @@ class RoleCount(commands.Cog):
                         f"Cannot find {missing} with ID {role_emoji[0]} or name {role_emoji[1]}"
                     )
 
-        await interaction.response.send_message(embed=data_embed)
+        await interaction.response.send_message(embed=embed)
         logger.info(f"{interaction.user} requested role count for {which.name}.")
 
 
