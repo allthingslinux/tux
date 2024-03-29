@@ -21,7 +21,9 @@ class MessageEventsCog(commands.Cog, name="Message Events Handler"):
 
         # check if message has a ping (role, user, etc.)
         if message.mentions or message.role_mentions:
-            embed = discord.Embed(title="Ghost Ping!", color=discord.Color.red())
+            embed = discord.Embed(
+                title="Ghost Ping!", color=discord.Color.red(), timestamp=message.created_at
+            )
             embed.add_field(name="Sender", value=message.author.mention, inline=True)
             # if mentions add mentions field, if role_mentions add role_mentions field
             if message.mentions:
@@ -41,6 +43,7 @@ class MessageEventsCog(commands.Cog, name="Message Events Handler"):
                 embed.add_field(
                     name="whgar?", value="something is wrong here, no mentions found", inline=True
                 )
+
             await message.channel.send(embed=embed)
 
     @commands.Cog.listener()
