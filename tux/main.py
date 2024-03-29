@@ -64,7 +64,7 @@ async def main() -> None:
         )
 
         # send test profiling data
-        sentry_sdk.set_measurement('memory_used', 123, 'byte')
+        sentry_sdk.set_measurement("memory_used", 123, "byte")
 
         bot = TuxBot(command_prefix=">", intents=discord.Intents.all())
 
