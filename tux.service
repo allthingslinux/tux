@@ -1,0 +1,12 @@
+[Unit]
+Description=Tux application
+After=network.target
+
+[Service]
+User=tux
+WorkingDirectory=/home/tux/tux
+ExecStart=poetry run python tux/main.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
