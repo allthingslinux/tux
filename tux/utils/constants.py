@@ -18,8 +18,8 @@ class Constants:
     DISCORD_GUILD = os.getenv("DISCORD_GUILD")
 
     # tempvc
-    TEMPVC_CATEGORY = os.getenv("TEMPVC_CATEGORY")
-    TEMPVC_CHANNEL = os.getenv("TEMPVC_CHANNEL")
+    TEMPVC_CATEGORY_ID = os.getenv("TEMPVC_CATEGORY_ID")
+    TEMPVC_CHANNEL_ID = os.getenv("TEMPVC_CHANNEL_ID")
 
     # Command constants
     PREFIX: Final[str] = ">"
