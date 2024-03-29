@@ -8,6 +8,7 @@ from tux.utils.constants import Constants as C
 class TempVc(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
+        self.base_vc_name = "/tmp/"
 
     @commands.Cog.listener()
     async def on_voice_state_update(
@@ -17,7 +18,7 @@ class TempVc(commands.Cog):
         after: discord.VoiceState,
     ) -> None:
         if after.channel and after.channel.id == int(C.TEMPVC_CHANNEL_ID or "0"):
-            new_channel = await after.channel.clone(name=f"/tmp/{member.name}")
+            new_channel = await after.channel.clone(name=self.base_vc_name + member.name)
             await member.move_to(new_channel)
             logger.info(f"Created temporary channel for {member.name}.")
             return
@@ -32,7 +33,7 @@ class TempVc(commands.Cog):
                 or before.channel.category_id != category.id
                 or before.channel == after.channel
                 or before.channel.id == int(C.TEMPVC_CHANNEL_ID or "0")
-                or not before.channel.name.startswith("/tmp/")
+                or not before.channel.name.startswith(self.base_vc_name)
             ):
                 return
 
