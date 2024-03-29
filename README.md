@@ -36,7 +36,6 @@ Tux is a Discord bot for the All Things Linux Discord server. It is designed to 
    ```bash
    git clone https://github.com/allthingslinux/tux && cd tux
    ```
-
 2. Install the dependencies
     ```bash
     poetry install
@@ -49,11 +48,15 @@ Tux is a Discord bot for the All Things Linux Discord server. It is designed to 
     ```bash
     pre-commit install
     ```
-5. Copy the `.env.example` file to `.env` and fill in the required values
+5. Generate the prisma client
+    ```bash
+    prisma generate
+    ```
+6. Copy the `.env.example` file to `.env` and fill in the required values
     ```bash
     cp .env.example .env
     ```
-6. Review all useful CLI commands by visiting the [useful CLI commands](docs/CLI.md) file.
+7. Review all useful CLI commands by visiting the [useful CLI commands](docs/CLI.md) file.
 
 
 ## License
