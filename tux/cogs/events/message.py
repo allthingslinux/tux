@@ -14,26 +14,33 @@ class MessageEventsCog(commands.Cog, name="Message Events Handler"):
     @commands.Cog.listener()
     async def on_message_delete(self, message: discord.Message) -> None:
         logger.trace(f"Message deleted: {message}")
-        
+
         # if sender is a bot, ignore, some bots delete their own messages
         if message.author.bot:
             return
 
         # check if message has a ping (role, user, etc.)
         if message.mentions or message.role_mentions:
-            embed = discord.Embed(
-                title="Ghost Ping!",
-                color=discord.Color.red()
-            )
+            embed = discord.Embed(title="Ghost Ping!", color=discord.Color.red())
             embed.add_field(name="Sender", value=message.author.mention, inline=True)
             # if mentions add mentions field, if role_mentions add role_mentions field
             if message.mentions:
-                embed.add_field(name="Mentions", value=", ".join([mention.mention for mention in message.mentions]), inline=True)
+                embed.add_field(
+                    name="Mentions",
+                    value=", ".join([mention.mention for mention in message.mentions]),
+                    inline=True,
+                )
             if message.role_mentions:
-                embed.add_field(name="Role Mentions", value=", ".join([role.mention for role in message.role_mentions]), inline=True)
+                embed.add_field(
+                    name="Role Mentions",
+                    value=", ".join([role.mention for role in message.role_mentions]),
+                    inline=True,
+                )
             elif not message.mentions and not message.role_mentions:
                 # this will (probably) never happen, but just in case
-                embed.add_field(name="whgar?", value="something is wrong here, no mentions found", inline=True)
+                embed.add_field(
+                    name="whgar?", value="something is wrong here, no mentions found", inline=True
+                )
             await message.channel.send(embed=embed)
 
     @commands.Cog.listener()
