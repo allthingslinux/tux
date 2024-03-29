@@ -4,18 +4,20 @@ from aiopath import AsyncPath  # type: ignore
 from discord.ext import commands
 from loguru import logger
 
+from tux.utils.constants import Constants as C
+
 
 class CogLoader(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.ignore_cogs: set[str] = set()
+        self.cog_ignore_list = C.COG_IGNORE_LIST
 
     async def is_cog_eligible(self, filepath: AsyncPath) -> bool:
         cog_name = filepath.stem
 
         return (
             filepath.suffix == ".py"
-            and cog_name not in self.ignore_cogs
+            and cog_name not in self.cog_ignore_list
             and not filepath.name.startswith("_")
             and await filepath.is_file()
         )

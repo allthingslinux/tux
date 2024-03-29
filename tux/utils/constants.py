@@ -17,10 +17,6 @@ class Constants:
     DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
     DISCORD_GUILD = os.getenv("DISCORD_GUILD")
 
-    # tempvc
-    TEMPVC_CATEGORY_ID = os.getenv("TEMPVC_CATEGORY_ID")
-    TEMPVC_CHANNEL_ID = os.getenv("TEMPVC_CHANNEL_ID")
-
     # Command constants
     PREFIX: Final[str] = ">"
 
@@ -43,6 +39,13 @@ class Constants:
         "black": 0x000000,
         "white": 0xFFFFFF,
     }
+
+    # Cog related constants
+    COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("COG_IGNORE_LIST", "").split(","))
+
+    # Temp VC constants
+    TEMPVC_CATEGORY_ID = os.getenv("TEMPVC_CATEGORY_ID")
+    TEMPVC_CHANNEL_ID = os.getenv("TEMPVC_CHANNEL_ID")
 
 
 """
