@@ -2,10 +2,13 @@ repos:
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.3.4
     hooks:
+      # Run the linter.
       - id: ruff
-        args: [ --fix ]
+        args: [--fix]
+      # Run the formatter.
       - id: ruff-format
+
   # - repo: https://github.com/RobertCraigie/pyright-python
-    # rev: v1.1.355
-    # hooks:
-    # - id: pyright
+  # rev: v1.1.355
+  # hooks:
+  # - id: pyright
