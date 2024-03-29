@@ -52,7 +52,7 @@ class TuxBot(commands.Bot):
 async def main() -> None:
     try:
         sentry_sdk.init(
-            dsn="https://b7ef0082e50eff6e166e78807498914d@o4506955434885120.ingest.us.sentry.io/4506955438227457",
+            dsn=os.getenv("SENTRY_URL"),
             traces_sample_rate=1.0,
             profiles_sample_rate=1.0,
             enable_tracing=True,
@@ -62,6 +62,9 @@ async def main() -> None:
                 LoguruIntegration(),
             ],
         )
+
+        # send test profiling data
+        sentry_sdk.set_measurement('memory_used', 123, 'byte')
 
         bot = TuxBot(command_prefix=">", intents=discord.Intents.all())
 
