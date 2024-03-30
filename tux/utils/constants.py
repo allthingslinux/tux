@@ -7,9 +7,6 @@ load_dotenv()
 
 
 class Constants:
-    def __init__(self) -> None:
-        pass
-
     # Bot-related constants
     BOT_VERSION = "1.0.0"
     BOT_NAME = "Tux"
