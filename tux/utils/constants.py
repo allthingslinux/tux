@@ -1,4 +1,3 @@
-# tux/constants.py
 import os
 from typing import Final
 
@@ -8,17 +7,24 @@ load_dotenv()
 
 
 class Constants:
+    def __init__(self) -> None:
+        pass
+
     # Bot-related constants
     BOT_VERSION = "1.0.0"
     BOT_NAME = "Tux"
     BOT_SOURCE = "https://github.com/allthingslinux/tux"
 
     # Discord-related constants
-    DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-    DISCORD_GUILD = os.getenv("DISCORD_GUILD")
+    PROD_TOKEN: Final[str] = os.getenv("PROD_TOKEN", "")
+    STAGING_TOKEN: Final[str] = os.getenv("STAGING_TOKEN", "")
+
+    # Sentry-related constants
+    SENTRY_URL: Final[str] = os.getenv("SENTRY_URL", "")
 
     # Command constants
-    PREFIX: Final[str] = ">"
+    PROD_PREFIX: Final[str] = os.getenv("PREFIX", "t!")
+    STAGING_PREFIX: Final[str] = os.getenv("STAGING_PREFIX", "ts!")
 
     # Channel constants
     CHANNELS: Final[dict[str, int]] = {
@@ -41,7 +47,11 @@ class Constants:
     }
 
     # Cog related constants
-    COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("COG_IGNORE_LIST", "").split(","))
+    PROD_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("PROD_COG_IGNORE_LIST", "").split(","))
+
+    STAGING_COG_IGNORE_LIST: Final[set[str]] = set(
+        os.getenv("STAGING_COG_IGNORE_LIST", "").split(",")
+    )
 
     # Temp VC constants
     TEMPVC_CATEGORY_ID = os.getenv("TEMPVC_CATEGORY_ID")
