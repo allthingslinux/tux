@@ -14,13 +14,13 @@ class Constants:
 
     # Production constants
     PROD_TOKEN: Final[str] = os.getenv("PROD_TOKEN", "")
-    PROD_PREFIX: Final[str] = os.getenv("PREFIX", "")
+    PROD_PREFIX: Final[str] = os.getenv("PROD_PREFIX", "$")
     PROD_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("PROD_COG_IGNORE_LIST", "").split(","))
 
     # Staging constants
     STAGING = os.getenv("STAGING")
     STAGING_TOKEN: Final[str] = os.getenv("STAGING_TOKEN", "")
-    STAGING_PREFIX: Final[str] = os.getenv("STAGING_PREFIX", "")
+    STAGING_PREFIX: Final[str] = os.getenv("STAGING_PREFIX", ">")
     STAGING_COG_IGNORE_LIST: Final[set[str]] = set(
         os.getenv("STAGING_COG_IGNORE_LIST", "").split(",")
     )
