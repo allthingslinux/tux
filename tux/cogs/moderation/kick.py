@@ -11,7 +11,7 @@ class Kick(commands.Cog):
     @app_commands.command(name="kick", description="Kicks a user from the server.")
     @app_commands.describe(member="Which member to kick", reason="Reason to kick member")
     async def kick(
-        self, interaction: discord.Interaction, member: discord.Member, reason: str
+        self, interaction: discord.Interaction, member: discord.Member, reason: str | None = None
     ) -> None:
         logger.info(
             f"{interaction.user} used the kick command in {interaction.channel} to kick user {member.display_name}."
