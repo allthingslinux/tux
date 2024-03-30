@@ -22,7 +22,7 @@ jobs:
           fetch-depth: 0
       - uses: di-sukharev/opencommit@github-action-v1.0.4
         with:
-          REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
 
         env:
           # set openAI api key in repo actions secrets,
