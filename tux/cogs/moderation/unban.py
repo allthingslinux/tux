@@ -71,6 +71,20 @@ class unban(commands.Cog):
                     icon_url=interaction.user.display_avatar,
                 )
                 await interaction.response.send_message(embed=embed_error)
+
+            # user_to_unban does not exist
+            except discord.errors.NotFound as e:
+                embed_error = discord.Embed(
+                    colour=discord.Colour.red(),
+                    title=f"Failed to unban {user_to_unban.display_name}",
+                    description=f"tldr: No banned user matches the provided username\n`Error info: {e}`",
+                    timestamp=interaction.created_at,
+                )
+                embed_error.set_footer(
+                    text=f"Requested by {interaction.user.display_name}",
+                    icon_url=interaction.user.display_avatar,
+                )
+                await interaction.response.send_message(embed=embed_error)
                 return
 
         return
