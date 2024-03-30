@@ -12,16 +12,21 @@ class Constants:
     BOT_NAME = "Tux"
     BOT_SOURCE = "https://github.com/allthingslinux/tux"
 
-    # Discord-related constants
+    # Production constants
     PROD_TOKEN: Final[str] = os.getenv("PROD_TOKEN", "")
+    PROD_PREFIX: Final[str] = os.getenv("PREFIX", "")
+    PROD_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("PROD_COG_IGNORE_LIST", "").split(","))
+
+    # Staging constants
+    STAGING = os.getenv("STAGING")
     STAGING_TOKEN: Final[str] = os.getenv("STAGING_TOKEN", "")
+    STAGING_PREFIX: Final[str] = os.getenv("STAGING_PREFIX", "")
+    STAGING_COG_IGNORE_LIST: Final[set[str]] = set(
+        os.getenv("STAGING_COG_IGNORE_LIST", "").split(",")
+    )
 
     # Sentry-related constants
     SENTRY_URL: Final[str] = os.getenv("SENTRY_URL", "")
-
-    # Command constants
-    PROD_PREFIX: Final[str] = os.getenv("PREFIX", "t!")
-    STAGING_PREFIX: Final[str] = os.getenv("STAGING_PREFIX", "ts!")
 
     # Channel constants
     CHANNELS: Final[dict[str, int]] = {
@@ -42,13 +47,6 @@ class Constants:
         "black": 0x000000,
         "white": 0xFFFFFF,
     }
-
-    # Cog related constants
-    PROD_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("PROD_COG_IGNORE_LIST", "").split(","))
-
-    STAGING_COG_IGNORE_LIST: Final[set[str]] = set(
-        os.getenv("STAGING_COG_IGNORE_LIST", "").split(",")
-    )
 
     # Temp VC constants
     TEMPVC_CATEGORY_ID = os.getenv("TEMPVC_CATEGORY_ID")

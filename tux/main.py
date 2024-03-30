@@ -62,8 +62,10 @@ async def main() -> None:
         )
 
         intents = discord.Intents.all()
-        prefix = C.STAGING_PREFIX or C.PROD_PREFIX
-        token = C.STAGING_TOKEN or C.PROD_TOKEN
+
+        prefix = C.STAGING_PREFIX if C.STAGING == "True" else C.PROD_PREFIX
+        token = C.STAGING_TOKEN if C.STAGING == "True" else C.PROD_TOKEN
+
         bot = TuxBot(command_prefix=prefix, intents=intents)
 
         await bot.start(token=token, reconnect=True)
