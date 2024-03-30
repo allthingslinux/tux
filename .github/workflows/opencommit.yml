@@ -20,6 +20,8 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          ref: main
+          token: ${{ secrets.REPO_TOKEN }}
       - uses: di-sukharev/opencommit@github-action-v1.0.4
         with:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
