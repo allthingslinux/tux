@@ -35,7 +35,7 @@ class Constants:
     COLORS: Final[dict[str, int]] = {
         "default": 0xF2B033,
         "info": 0x00BFFF,
-        "warning": 0xFFA500,
+        "warning": 0xF67402,
         "error": 0xFF0000,
         "success": 0x00FF00,
         "debug": 0x800080,
