@@ -5,7 +5,6 @@ from typing import Any
 import discord
 import sentry_sdk
 from discord.ext import commands
-from dotenv import load_dotenv
 from loguru import logger
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
@@ -13,8 +12,7 @@ from sentry_sdk.integrations.loguru import LoguruIntegration
 
 from tux.cog_loader import CogLoader
 from tux.database.client import db
-
-load_dotenv()
+from tux.utils.constants import Constants as C
 
 
 class TuxBot(commands.Bot):
@@ -63,9 +61,14 @@ async def main() -> None:
             ],
         )
 
-        bot = TuxBot(command_prefix=">", intents=discord.Intents.all())
+        intents = discord.Intents.all()
 
-        await bot.start(token=os.getenv("TOKEN") or "", reconnect=True)
+        prefix = C.STAGING_PREFIX if C.STAGING == "True" else C.PROD_PREFIX
+        token = C.STAGING_TOKEN if C.STAGING == "True" else C.PROD_TOKEN
+
+        bot = TuxBot(command_prefix=prefix, intents=intents)
+
+        await bot.start(token=token, reconnect=True)
 
     except Exception as e:
         logger.error(f"An error occurred while running the bot: {e}")

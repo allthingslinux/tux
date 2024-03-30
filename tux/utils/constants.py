@@ -1,4 +1,3 @@
-# tux/constants.py
 import os
 from typing import Final
 
@@ -13,12 +12,21 @@ class Constants:
     BOT_NAME = "Tux"
     BOT_SOURCE = "https://github.com/allthingslinux/tux"
 
-    # Discord-related constants
-    DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-    DISCORD_GUILD = os.getenv("DISCORD_GUILD")
+    # Production constants
+    PROD_TOKEN: Final[str] = os.getenv("PROD_TOKEN", "")
+    PROD_PREFIX: Final[str] = os.getenv("PROD_PREFIX", "$")
+    PROD_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("PROD_COG_IGNORE_LIST", "").split(","))
 
-    # Command constants
-    PREFIX: Final[str] = ">"
+    # Staging constants
+    STAGING = os.getenv("STAGING")
+    STAGING_TOKEN: Final[str] = os.getenv("STAGING_TOKEN", "")
+    STAGING_PREFIX: Final[str] = os.getenv("STAGING_PREFIX", ">")
+    STAGING_COG_IGNORE_LIST: Final[set[str]] = set(
+        os.getenv("STAGING_COG_IGNORE_LIST", "").split(",")
+    )
+
+    # Sentry-related constants
+    SENTRY_URL: Final[str] = os.getenv("SENTRY_URL", "")
 
     # Channel constants
     CHANNELS: Final[dict[str, int]] = {
@@ -32,16 +40,13 @@ class Constants:
     COLORS: Final[dict[str, int]] = {
         "default": 0xF2B033,
         "info": 0x00BFFF,
-        "warning": 0xFFA500,
+        "warning": 0xF67402,
         "error": 0xFF0000,
         "success": 0x00FF00,
         "debug": 0x800080,
         "black": 0x000000,
         "white": 0xFFFFFF,
     }
-
-    # Cog related constants
-    COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("COG_IGNORE_LIST", "").split(","))
 
     # Temp VC constants
     TEMPVC_CATEGORY_ID = os.getenv("TEMPVC_CATEGORY_ID")
