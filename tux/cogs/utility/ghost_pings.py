@@ -17,9 +17,7 @@ class GhostPings(commands.Cog):
 
         # check if message has a ping (role, user, etc.)
         if message.mentions or message.role_mentions:
-            if len(message.mentions) == 1 and message.mentions[0] == message.author:
-                return
-            if len(message.mentions) == 1 and message.mentions[0].bot:
+            if len(message.mentions) == 1 and (message.mentions[0] == message.author) or (message.mentions[0].bot):
                 return
 
             embed = discord.Embed(
