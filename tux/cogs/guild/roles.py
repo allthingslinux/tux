@@ -22,7 +22,7 @@ class Roles(commands.Cog):
         await role.delete()
         await interaction.response.send_message(f"Deleted role {role.name}.")
         logger.info(f"{interaction.user} deleted role {role.name}.")
-        
+
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Roles(bot))
