@@ -11,7 +11,7 @@ class Unban(commands.Cog):
     @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod", "Jr. Mod")
     @app_commands.command(name="unban", description="Unbans a member from the server.")
     @app_commands.describe(
-        username="The username of the member to unban", reason="Reason for unban"
+        username_or_id="The username of the member to unban", reason="Reason for unban"
     )
     async def unban(
         self, interaction: discord.Interaction, username_or_id: str, reason: str | None = None
