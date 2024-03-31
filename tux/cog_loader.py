@@ -4,14 +4,16 @@ from aiopath import AsyncPath  # type: ignore
 from discord.ext import commands
 from loguru import logger
 
-from tux.utils.constants import Constants as C
+from tux.utils.constants import Constants as CONST
 
 
 class CogLoader(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
         self.cog_ignore_list = (
-            C.PROD_COG_IGNORE_LIST if C.STAGING == "False" else C.STAGING_COG_IGNORE_LIST
+            CONST.PROD_COG_IGNORE_LIST
+            if CONST.STAGING == "False"
+            else CONST.STAGING_COG_IGNORE_LIST
         )
 
     async def is_cog_eligible(self, filepath: AsyncPath) -> bool:

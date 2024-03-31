@@ -52,17 +52,18 @@ def is_convertible_to_type(string: str, type_func: Callable[..., object]) -> boo
     """Checks if the string can be converted to a specific type
 
     Args:
-      string (str): The string to check
-      type_func (callable): The function to use for conversion
+        string (str): The string to check
+        type_func (callable): The function to use for conversion
 
     Returns:
-      Boolean: Whether the string could be converted to the specified type or not
+        Boolean: Whether the string could be converted to the specified type or not
     """
     try:
         type_func(string)
-        return True
     except ValueError:
         return False
+    else:
+        return True
 
 
 def is_integer(string: str):

@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.utils.constants import Constants as C
+from tux.utils.constants import Constants as CONST
 
 
 class TempVc(commands.Cog):
@@ -17,7 +17,7 @@ class TempVc(commands.Cog):
         before: discord.VoiceState,
         after: discord.VoiceState,
     ) -> None:
-        if after.channel and after.channel.id == int(C.TEMPVC_CHANNEL_ID or "0"):
+        if after.channel and after.channel.id == int(CONST.TEMPVC_CHANNEL_ID or "0"):
             new_channel = await after.channel.clone(name=self.base_vc_name + member.name)
             await member.move_to(new_channel)
             logger.info(f"Created temporary channel for {member.name}.")
@@ -25,14 +25,14 @@ class TempVc(commands.Cog):
 
         if before.channel is not None:
             category = discord.utils.get(
-                before.channel.guild.categories, id=int(C.TEMPVC_CATEGORY_ID or "0")
+                before.channel.guild.categories, id=int(CONST.TEMPVC_CATEGORY_ID or "0")
             )
 
             if (
                 not category
                 or before.channel.category_id != category.id
                 or before.channel == after.channel
-                or before.channel.id == int(C.TEMPVC_CHANNEL_ID or "0")
+                or before.channel.id == int(CONST.TEMPVC_CHANNEL_ID or "0")
                 or not before.channel.name.startswith(self.base_vc_name)
             ):
                 return

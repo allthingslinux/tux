@@ -185,7 +185,7 @@ class RoleCount(commands.Cog):
 
                 if role and emoji:
                     embed.add_field(
-                        name=f"{str(emoji)} {role.name}",
+                        name=f"{emoji!s} {role.name}",
                         value=f"{len(role.members)} users",
                         inline=True,
                     )

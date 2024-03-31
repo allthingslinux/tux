@@ -34,7 +34,7 @@ class Slowmode(commands.Cog):
     @app_commands.describe(delay="The slowmode time in seconds, max is 21600, default is 5")
     async def set_slowmode(self, interaction: discord.Interaction, delay: int = 5) -> None:
         if not interaction.channel or interaction.channel.type != discord.ChannelType.text:
-            return
+            return None
 
         if delay < 0 or delay > 21600:
             return await self.send_embed(

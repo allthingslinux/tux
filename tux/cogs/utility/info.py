@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from tux.utils.constants import Constants as C
+from tux.utils.constants import Constants as CONST
 
 
 class Info(commands.Cog):
@@ -13,7 +13,7 @@ class Info(commands.Cog):
 
     @staticmethod
     def create_embed(
-        title: str = "", description: str = "", color: int = C.COLORS["info"]
+        title: str = "", description: str = "", color: int = CONST.COLORS["INFO"]
     ) -> discord.Embed:
         """Utility method for creating a basic embed structure."""
         embed = discord.Embed(title=title, description=description, color=color)

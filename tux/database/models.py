@@ -31,22 +31,25 @@ async def add_moderator(moderator_id: int, role_id: int):
 
 
 async def add_infraction(
-    moderator_id: int, user_id: int, type: str, reason: str, expires_at: datetime
+    moderator_id: int,
+    user_id: int,
+    infraction_type: str,
+    infraction_reason: str,
+    expires_at: datetime,
 ):
     return await db.infractions.create(
         {
             "moderator_id": moderator_id,
             "user_id": user_id,
-            "infraction_type": type,
-            "infraction_reason": reason,
+            "infraction_type": infraction_type,
+            "infraction_reason": infraction_reason,
             "infraction_expires_at": expires_at,
         }
     )
 
 
 async def get_infractions(user_id: int):
-    infractions = await db.infractions.find_many(where={"user_id": user_id})
-    return infractions
+    return await db.infractions.find_many(where={"user_id": user_id})
 
 
 async def add_role(role_id: int, role_name: str):

@@ -30,22 +30,22 @@ class Constants:
 
     # Channel constants
     CHANNELS: Final[dict[str, int]] = {
-        "audit": 1191472088695980083,
-        "mod": 1234567890,
-        "general": 1234567890,
-        "bot": 1234567890,
+        "AUDIT": 1191472088695980083,
+        "MOD": 1234567890,
+        "GENERAL": 1234567890,
+        "BOT": 1234567890,
     }
 
     # Color constants
     COLORS: Final[dict[str, int]] = {
-        "default": 0xF2B033,
-        "info": 0x00BFFF,
-        "warning": 0xF67402,
-        "error": 0xFF0000,
-        "success": 0x00FF00,
-        "debug": 0x800080,
-        "black": 0x000000,
-        "white": 0xFFFFFF,
+        "DEFAULT": 0xF2B033,
+        "INFO": 0x00BFFF,
+        "WARNING": 0xF67402,
+        "ERROR": 0xFF0000,
+        "SUCCESS": 0x00FF00,
+        "DEBUG": 0x800080,
+        "BLACK": 0x000000,
+        "WHITE": 0xFFFFFF,
     }
 
     # Temp VC constants
@@ -58,10 +58,10 @@ Constants for the bot.
 
 Example:
 
-from tux.constants import C
-print(C.BOT_NAME)
-print(C.COLORS.info)
-print(C.CHANNELS.audit)
+from tux.utils.constants import Constants as CONST
+print(CONST.BOT_NAME)
+print(CONST.COLORS.INFO)
+print(CONST.CHANNELS.AUDIT)
 """
 
-C = Constants()
+CONST = Constants()

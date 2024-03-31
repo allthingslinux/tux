@@ -37,7 +37,7 @@ class TtyRoles(commands.Cog):
         try:
             role = await member.guild.create_role(name=role_name)
             logger.trace(f"Created new role {role_name}")
-            return role
+            return role  # noqa: TRY300
         except discord.Forbidden:
             logger.error("I don't have the permissions to create a tty role.")
         except discord.HTTPException:
