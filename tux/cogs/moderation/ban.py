@@ -8,56 +8,44 @@ class Ban(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @app_commands.command(name="ban", description="Bans a user from the server.")
-    @app_commands.describe(member="Which member to ban", reason="Reason to ban member")
+    @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod")
+    @app_commands.command(name="ban", description="Bans a member from the server.")
+    @app_commands.describe(member="Which member to ban", reason="Reason for ban")
     async def ban(
         self, interaction: discord.Interaction, member: discord.Member, reason: str | None = None
     ) -> None:
-        logger.info(
-            f"{interaction.user} used the ban command in {interaction.channel} to ban user {member.display_name}."
-        )
+        logger.info(f"{interaction.user} banned {member.display_name} in {interaction.channel}")
 
+        response = await self.execute_ban(interaction, member, reason)
+
+        await interaction.response.send_message(embed=response)
+
+    async def execute_ban(
+        self, interaction: discord.Interaction, member: discord.Member, reason: str | None = None
+    ) -> discord.Embed:
         try:
             await member.ban(reason=reason)
-            embed: discord.Embed = discord.Embed(
+            embed = discord.Embed(
                 title=f"Banned {member.display_name}!",
                 color=discord.Colour.red(),
-                timestamp=interaction.created_at,
-                type="rich",
+                description=f"Reason: `{reason or 'None provided'}`",
             )
-
-            embed.add_field(
-                name="Reason",
-                value="`none provided`" if not reason else f"`{reason}`",
-                inline=True,
-            )
-            embed.add_field(
-                name="User",
-                value=f"<@{member.id}>",
-                inline=True,
-            )
-
             embed.set_footer(
-                text=f"Requested by {interaction.user.display_name}",
-                icon_url=interaction.user.display_avatar,
+                text=f"Banned by {interaction.user.display_name}",
+                icon_url=interaction.user.display_avatar.url,
             )
 
-            await interaction.response.send_message(embed=embed)
+            logger.info(f"Successfully banned {member.display_name}.")
 
-        # You don't have permission
-        except discord.errors.Forbidden as e:
-            embed_error = discord.Embed(
-                colour=discord.Colour.red(),
+        except discord.errors.Forbidden as error:
+            embed = discord.Embed(
                 title=f"Failed to ban {member.display_name}",
-                description=f"tldr: You don't have permission\n`Error info: {e}`",
-                timestamp=interaction.created_at,
+                color=discord.Colour.red(),
+                description=f"Insufficient permissions. Error Info: `{error}`",
             )
-            embed_error.set_footer(
-                text=f"Requested by {interaction.user.display_name}",
-                icon_url=interaction.user.display_avatar,
-            )
-            await interaction.response.send_message(embed=embed_error)
-            return
+            logger.error(f"Failed to ban {member.display_name}. Error: {error}")
+
+        return embed
 
 
 async def setup(bot: commands.Bot) -> None:

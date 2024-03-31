@@ -4,104 +4,80 @@ from discord.ext import commands
 from loguru import logger
 
 
-class unban(commands.Cog):
+class Unban(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @app_commands.command(name="unban", description="unbans a user from the server.")
-    @app_commands.guild_only()
-    @app_commands.describe(username="Memeber's username to unban", reason="Reason to unban member")
+    @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod", "Jr. Mod")
+    @app_commands.command(name="unban", description="Unbans a member from the server.")
+    @app_commands.describe(
+        username="The username of the member to unban", reason="Reason for unban"
+    )
     async def unban(
-        self,
-        interaction: discord.Interaction,
-        username: str,
-        reason: str | None = None,
+        self, interaction: discord.Interaction, username_or_id: str, reason: str | None = None
     ) -> None:
-        # get a list  of banned users in the server
-        banned_users: list[discord.User] = []
-        user_to_unban: discord.User | None = None
-        if interaction.guild:
-            # the list is asyncIterator so I converted it to a normal list
-            banned_users = [ban.user async for ban in interaction.guild.bans()]
-
-        # now check if the provided username *exactly* matches a username in the list
-        for banned_user in banned_users:
-            user_to_unban = banned_user if username == banned_user.name else None
-
-        if interaction.guild and user_to_unban:
-            logger.info(
-                f"{interaction.user} used the unban command in {interaction.channel} to unban user {user_to_unban.display_name}."
-            )
-            try:
-                await interaction.guild.unban(user_to_unban, reason=reason)
-                embed: discord.Embed = discord.Embed(
-                    title=f"unbanned {user_to_unban.display_name}!",
-                    color=discord.Colour.red(),
-                    timestamp=interaction.created_at,
-                    type="rich",
-                )
-
-                embed.add_field(
-                    name="Reason",
-                    value="`none provided`" if not reason else f"`{reason}`",
-                    inline=True,
-                )
-                embed.add_field(
-                    name="User",
-                    value=f"<@{user_to_unban.id}>",
-                    inline=True,
-                )
-
-                embed.set_footer(
-                    text=f"Requested by {interaction.user.display_name}",
-                    icon_url=interaction.user.display_avatar,
-                )
-                await interaction.response.send_message(embed=embed)
-
-            # You don't have permission
-            except discord.errors.Forbidden as e:
-                embed_error = discord.Embed(
-                    colour=discord.Colour.red(),
-                    title=f"Failed to unban {user_to_unban.display_name}",
-                    description=f"tldr: You don't have permission\n`Error info: {e}`",
-                    timestamp=interaction.created_at,
-                )
-                embed_error.set_footer(
-                    text=f"Requested by {interaction.user.display_name}",
-                    icon_url=interaction.user.display_avatar,
-                )
-                await interaction.response.send_message(embed=embed_error)
-
-            # user_to_unban does not exist
-            except discord.errors.NotFound as e:
-                embed_error = discord.Embed(
-                    colour=discord.Colour.red(),
-                    title=f"Failed to unban {user_to_unban.display_name}",
-                    description=f"tldr: No banned user matches the provided username\n`Error info: {e}`",
-                    timestamp=interaction.created_at,
-                )
-                embed_error.set_footer(
-                    text=f"Requested by {interaction.user.display_name}",
-                    icon_url=interaction.user.display_avatar,
-                )
-                await interaction.response.send_message(embed=embed_error)
-                return
-        elif user_to_unban is None:
-            embed_error = discord.Embed(
-                colour=discord.Colour.red(),
-                title=f"Failed to unban {username}",
-                description="No banned user matches the provided username",
-                timestamp=interaction.created_at,
-            )
-            embed_error.set_footer(
-                text=f"Requested by {interaction.user.display_name}",
-                icon_url=interaction.user.display_avatar,
-            )
-            await interaction.response.send_message(embed=embed_error)
+        if interaction.guild is None:
             return
 
-        return
+        banned_users = [ban.user async for ban in interaction.guild.bans()]
+
+        try:
+            user_id = int(username_or_id)
+            user_to_unban = discord.utils.get(banned_users, id=user_id)
+        except ValueError:
+            user_to_unban = discord.utils.find(lambda u: u.name == username_or_id, banned_users)
+
+        if user_to_unban is None:
+            await self.send_error_message(
+                interaction, "No banned user matches the provided username/ID"
+            )
+            return
+
+        logger.info(
+            f"{interaction.user} used the unban command in {interaction.channel} to unban user {user_to_unban.display_name}."
+        )
+
+        try:
+            await interaction.guild.unban(user_to_unban, reason=reason)
+            await interaction.response.send_message(
+                embed=self.create_success_embed(interaction, user_to_unban, reason)
+            )
+        except discord.HTTPException as e:
+            await self.send_error_message(
+                interaction, f"Failed to unban {user_to_unban.display_name}. Error info: {e}"
+            )
+
+    def create_success_embed(
+        self, interaction: discord.Interaction, user_to_unban: discord.User, reason: str | None
+    ) -> discord.Embed:
+        embed = discord.Embed(
+            title=f"Unbanned {user_to_unban.display_name}!",
+            color=discord.Color.red(),
+            timestamp=interaction.created_at,
+        )
+        embed.add_field(
+            name="Reason", value=f"`{reason}`" if reason else "`None provided`", inline=True
+        )
+        embed.add_field(name="Member", value=f"<@{user_to_unban.id}>", inline=True)
+        embed.set_footer(
+            text=f"Requested by {interaction.user.display_name}",
+            icon_url=interaction.user.display_avatar,
+        )
+        return embed
+
+    async def send_error_message(self, interaction: discord.Interaction, error_msg: str):
+        embed = discord.Embed(
+            color=discord.Color.red(),
+            title="Error",
+            description=error_msg,
+            timestamp=interaction.created_at,
+        )
+        embed.set_footer(
+            text=f"Requested by {interaction.user.display_name}",
+            icon_url=interaction.user.display_avatar,
+        )
+        await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(unban(bot))
+    await bot.add_cog(Unban(bot))

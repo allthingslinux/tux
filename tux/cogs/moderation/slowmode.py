@@ -3,83 +3,64 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+# TODO: Add a channel argument to allow setting slowmode for other channels.
 
-class setSlowmode(commands.Cog):
+
+class Slowmode(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @app_commands.guild_only()
-    @app_commands.command(
-        name="set_slowmode", description="sets the slowmode for a channel in the server."
-    )
+    async def send_embed(
+        self,
+        interaction: discord.Interaction,
+        title: str,
+        description: str,
+        color: discord.Colour,
+        error_info: str | None = None,
+    ) -> None:
+        embed = discord.Embed(
+            title=title, description=description, color=color, timestamp=interaction.created_at
+        )
+        if error_info:
+            embed.add_field(name="Error Details", value=f"`{error_info}`", inline=False)
+        embed.set_footer(
+            text=f"Requested by {interaction.user.display_name}",
+            icon_url=interaction.user.display_avatar.url,
+        )
+        await interaction.response.send_message(embed=embed)
+
+    @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod", "Jr. Mod")
+    @app_commands.command(name="slowmode", description="Sets slowmode for the current channel.")
     @app_commands.describe(delay="The slowmode time in seconds, max is 21600, default is 5")
     async def set_slowmode(self, interaction: discord.Interaction, delay: int = 5) -> None:
-        # make a variable for the channel after null-checking and type-checking so the linter won't blow on me
-        if interaction.channel and interaction.channel.type == discord.ChannelType.text:
-            # global channel
-            channel: discord.TextChannel = interaction.channel
+        if not interaction.channel or interaction.channel.type != discord.ChannelType.text:
+            return
 
-            logger.info(
-                f"{interaction.user} used the set_slowmode command in {channel.name} to change slowmode for channel."
+        if delay < 0 or delay > 21600:
+            return await self.send_embed(
+                interaction,
+                "Error",
+                "The slowmode delay must be between 0 and 21600 seconds.",
+                discord.Colour.red(),
             )
 
-            # discord supports slowmode delay to be no more than 21600 and no less than 0 (disables slowmode)
-            if delay > 21600:
-                embed = discord.Embed(
-                    color=discord.Colour.red(),
-                    title="Error",
-                    description="The slowmode delay cant be more than 21600 or less than 0",
-                    timestamp=interaction.created_at,
-                )
-                embed.set_footer(
-                    text=f"Requested by {interaction.user.display_name}",
-                    icon_url=interaction.user.display_avatar,
-                )
-                await interaction.response.send_message(embed=embed)
-                return
-
-            try:
-                await channel.edit(slowmode_delay=delay)
-                if delay > 0:
-                    embed = discord.Embed(
-                        color=discord.Colour.green(),
-                        title="Success!",
-                        description=f"slowmode delay has been set to {delay} for <#{channel.id}>",
-                        timestamp=interaction.created_at,
-                    )
-                    embed.set_footer(
-                        text=f"Requested by {interaction.user.display_name}",
-                        icon_url=interaction.user.display_avatar,
-                    )
-                    await interaction.response.send_message(embed=embed)
-                else:
-                    embed = discord.Embed(
-                        color=discord.Colour.green(),
-                        title="Success!",
-                        description=f"slowmode delay has disabled for <#{channel.id}> successfully",
-                        timestamp=interaction.created_at,
-                    )
-                    embed.set_footer(
-                        text=f"Requested by {interaction.user.display_name}",
-                        icon_url=interaction.user.display_avatar,
-                    )
-                    await interaction.response.send_message(embed=embed)
-
-            # You don't have permission
-            except discord.errors.Forbidden as e:
-                embed_error = discord.Embed(
-                    colour=discord.Colour.red(),
-                    title=f"Failed to change slowmode for {channel.name}",
-                    description=f"tldr: You don't have permission\n`Error info: {e}`",
-                    timestamp=interaction.created_at,
-                )
-                embed_error.set_footer(
-                    text=f"Requested by {interaction.user.display_name}",
-                    icon_url=interaction.user.display_avatar,
-                )
-                await interaction.response.send_message(embed=embed_error)
-                return
+        try:
+            await interaction.channel.edit(slowmode_delay=delay)
+            description = f"Slowmode delay has been {'disabled' if delay == 0 else f'set to {delay} seconds'} for {interaction.channel.mention}."
+            await self.send_embed(interaction, "Success!", description, discord.Colour.green())
+            logger.info(
+                f"{interaction.user} modified slowmode in {interaction.channel.name} to {delay} seconds."
+            )
+        except discord.errors.Forbidden as e:
+            logger.error(f"Failed to change slowmode for {interaction.channel.name}: {e}")
+            await self.send_embed(
+                interaction,
+                "Permission Denied",
+                "Failed to change slowmode due to insufficient permissions.",
+                discord.Colour.red(),
+                error_info=str(e),
+            )
 
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(setSlowmode(bot))
+    await bot.add_cog(Slowmode(bot))
