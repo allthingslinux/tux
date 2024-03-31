@@ -19,6 +19,8 @@ class GhostPings(commands.Cog):
         if message.mentions or message.role_mentions:
             if len(message.mentions) == 1 and message.mentions[0] == message.author:
                 return
+            if len(message.mentions) == 1 and message.mentions[0].bot:
+                return
 
             embed = discord.Embed(
                 title="Ghost Ping!", color=discord.Color.red(), timestamp=message.created_at
