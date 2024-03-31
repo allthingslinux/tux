@@ -10,6 +10,7 @@ class Roles(commands.Cog):
 
     group = app_commands.Group(name="roles", description="Role commands.")
 
+    @app_commands.checks.has_any_role("Admin")
     @group.command(name="create", description="Creates a role in the guild.")
     async def create(self, interaction: discord.Interaction, name: str) -> None:
         if interaction.guild is not None:
@@ -17,6 +18,7 @@ class Roles(commands.Cog):
             await interaction.response.send_message(f"Created role {role.name}.")
             logger.info(f"{interaction.user} created role {role.name}.")
 
+    @app_commands.checks.has_any_role("Admin")
     @group.command(name="delete", description="Deletes a role in the guild.")
     async def delete(self, interaction: discord.Interaction, role: discord.Role) -> None:
         await role.delete()
