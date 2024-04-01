@@ -2,7 +2,7 @@
 > generated with discohook
 
 ## Standard
-![alt text](image.png)
+![alt text](resources/image.png)
 
 #### Notes:
 - color is `Colour.blue` from discord.py
