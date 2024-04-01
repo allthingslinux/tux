@@ -56,7 +56,7 @@ class TimeOut(commands.Cog):
                 icon_url=interaction.user.display_avatar,
             )
             await interaction.response.send_message(embed=embed)
-        except discord.errors.Forbidden as e:
+        except (discord.errors.Forbidden, discord.errors.HTTPException) as e:
             logger.error("")
             embed_error = discord.Embed(
                 colour=discord.Colour.red(),
