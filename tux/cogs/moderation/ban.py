@@ -16,7 +16,7 @@ class Ban(commands.Cog):
     ) -> None:
         logger.info(f"{interaction.user} banned {member.display_name} in {interaction.channel}")
 
-        response = await self.execute_ban(interaction, member, reason, "None provided")
+        response = await self.execute_ban(interaction, member, reason or "None provided")
 
         await interaction.response.send_message(embed=response)
 
