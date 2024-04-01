@@ -40,7 +40,9 @@ class Unban(commands.Cog):
         try:
             await interaction.guild.unban(user_to_unban, reason=reason)
             await interaction.response.send_message(
-                embed=self.create_success_embed(interaction, user_to_unban, reason)
+                embed=self.create_success_embed(
+                    interaction, user_to_unban, reason or "None provided"
+                )
             )
         except discord.HTTPException as e:
             await self.send_error_message(
@@ -55,9 +57,7 @@ class Unban(commands.Cog):
             color=discord.Color.red(),
             timestamp=interaction.created_at,
         )
-        embed.add_field(
-            name="Reason", value=f"`{reason}`" if reason else "`None provided`", inline=True
-        )
+        embed.add_field(name="Reason", value=f"`{reason}`", inline=True)
         embed.add_field(name="Member", value=f"<@{user_to_unban.id}>", inline=True)
         embed.set_footer(
             text=f"Requested by {interaction.user.display_name}",

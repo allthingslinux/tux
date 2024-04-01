@@ -16,7 +16,7 @@ class Ban(commands.Cog):
     ) -> None:
         logger.info(f"{interaction.user} banned {member.display_name} in {interaction.channel}")
 
-        response = await self.execute_ban(interaction, member, reason)
+        response = await self.execute_ban(interaction, member, reason, "None provided")
 
         await interaction.response.send_message(embed=response)
 
@@ -28,7 +28,7 @@ class Ban(commands.Cog):
             embed = discord.Embed(
                 title=f"Banned {member.display_name}!",
                 color=discord.Colour.red(),
-                description=f"Reason: `{reason or 'None provided'}`",
+                description=f"Reason: `{reason}`",
             )
             embed.set_footer(
                 text=f"Banned by {interaction.user.display_name}",

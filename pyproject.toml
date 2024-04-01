@@ -33,12 +33,6 @@ pyright = "pyright:run"
 build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core"]
 
-# Black Configuration
-[tool.black]
-include = '\.pyi?$'
-line-length = 100
-target-version = ['py311']
-
 # Ruff Configuration
 [tool.ruff]
 exclude = [

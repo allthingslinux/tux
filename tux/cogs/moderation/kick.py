@@ -16,7 +16,7 @@ class Kick(commands.Cog):
     ) -> None:
         logger.info(f"{interaction.user} kicked {member.display_name} in {interaction.channel}")
 
-        response = await self.execute_kick(interaction, member, reason)
+        response = await self.execute_kick(interaction, member, reason or "None provided")
 
         await interaction.response.send_message(embed=response)
 
@@ -28,7 +28,7 @@ class Kick(commands.Cog):
             embed = discord.Embed(
                 title=f"Kicked {member.display_name}!",
                 color=discord.Colour.gold(),
-                description=f"Reason: `{reason or 'None provided'}`",
+                description=f"Reason: `{reason}`",
             )
             embed.set_footer(
                 text=f"Kicked by {interaction.user.display_name}",
