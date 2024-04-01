@@ -1,19 +1,20 @@
-import json  # Import the json library
+import json
+from pathlib import Path
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
-# Improved configuration loading with JSON
-with open("/home/kasen/tux/config/settings.json") as config_file:  # noqa PTH123
-    config = json.load(config_file)
+config_file = Path("config/settings.json")
+config = json.loads(config_file.read_text())
 
 # Access role IDs from the JSON data
 admin_role_id = config["Permissions"]["Admin"]
 owner_role_id = config["Permissions"]["Owner"]
 mod_role_id = config["Permissions"]["Mod"]
 jr_mod_role_id = config["Permissions"]["Jr_Mod"]
+testing_role_id = config["Permissions"]["Testing"]
 
 
 class Purge(commands.Cog):
@@ -37,13 +38,14 @@ class Purge(commands.Cog):
             text=f"Requested by {interaction.user.display_name}",
             icon_url=interaction.user.display_avatar.url,
         )
-        await interaction.followup.send(embed=embed)
+        await interaction.followup.send(embed=embed)  # Send the embed to the interaction
 
     @app_commands.checks.has_any_role(
         admin_role_id,
         owner_role_id,
         mod_role_id,
         jr_mod_role_id,
+        *testing_role_id,
     )
     @app_commands.command(
         name="purge", description="Deletes a set number of messages in a channel."
@@ -54,16 +56,15 @@ class Purge(commands.Cog):
     ) -> None:
         if not interaction.channel or interaction.channel.type != discord.ChannelType.text:
             return None
-
         if number_messages <= 0:
             await interaction.response.defer(ephemeral=True)
             return await self.send_embed(
                 interaction,
                 "Error",
                 "The number of messages to purge must be greater than 0.",
-                discord.Colour.blue(),
+                discord.Colour.red(),
             )
-
+        embed = discord.Embed
         try:
             await interaction.response.defer(ephemeral=True)
             await interaction.edit_original_response(content="Purging messages...")
@@ -79,16 +80,17 @@ class Purge(commands.Cog):
                 interaction,
                 "Permission Denied",
                 "Failed to purge messages due to insufficient permissions.",
-                discord.Colour.blue(),
+                discord.Colour.red(),
                 error_info=str(e),
             )
+            embed.timestamp = interaction.created_at  # Add timestamp to the error embed
         except discord.HTTPException as e:
             logger.error(f"Failed to purge messages in {interaction.channel.name}: {e}")
             await self.send_embed(
                 interaction,
                 "Error",
                 f"An error occurred while purging messages: {e}",
-                discord.Colour.blue(),
+                discord.Colour.red(),
             )
 
 
