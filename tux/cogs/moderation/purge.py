@@ -1,7 +1,19 @@
+import json  # Import the json library
+
 import discord
 from discord import app_commands
 from discord.ext import commands
 from loguru import logger
+
+# Improved configuration loading with JSON
+with open("/home/kasen/tux/config/settings.json") as config_file:  # noqa PTH123
+    config = json.load(config_file)
+
+# Access role IDs from the JSON data
+admin_role_id = config["Permissions"]["Admin"]
+owner_role_id = config["Permissions"]["Owner"]
+mod_role_id = config["Permissions"]["Mod"]
+jr_mod_role_id = config["Permissions"]["Jr_Mod"]
 
 
 class Purge(commands.Cog):
@@ -27,7 +39,12 @@ class Purge(commands.Cog):
         )
         await interaction.followup.send(embed=embed)
 
-    @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod", "Jr. Mod")
+    @app_commands.checks.has_any_role(
+        admin_role_id,
+        owner_role_id,
+        mod_role_id,
+        jr_mod_role_id,
+    )
     @app_commands.command(
         name="purge", description="Deletes a set number of messages in a channel."
     )
@@ -44,7 +61,7 @@ class Purge(commands.Cog):
                 interaction,
                 "Error",
                 "The number of messages to purge must be greater than 0.",
-                discord.Colour.red(),
+                discord.Colour.blue(),
             )
 
         try:
@@ -52,7 +69,7 @@ class Purge(commands.Cog):
             await interaction.edit_original_response(content="Purging messages...")
             deleted = await interaction.channel.purge(limit=number_messages)
             description = f"Deleted {len(deleted)} messages in {interaction.channel.mention}"
-            await self.send_embed(interaction, "Success!", description, discord.Colour.green())
+            await self.send_embed(interaction, "Success!", description, discord.Colour.blue())
             logger.info(
                 f"{interaction.user} purged {len(deleted)} messages from {interaction.channel.name}"
             )
@@ -62,7 +79,7 @@ class Purge(commands.Cog):
                 interaction,
                 "Permission Denied",
                 "Failed to purge messages due to insufficient permissions.",
-                discord.Colour.red(),
+                discord.Colour.blue(),
                 error_info=str(e),
             )
         except discord.HTTPException as e:
@@ -71,8 +88,11 @@ class Purge(commands.Cog):
                 interaction,
                 "Error",
                 f"An error occurred while purging messages: {e}",
-                discord.Colour.red(),
+                discord.Colour.blue(),
             )
+
+
+# ... you can add other methods here ...
 
 
 async def setup(bot: commands.Bot) -> None:
