@@ -1,19 +1,19 @@
-from configparser import ConfigParser
+import json  # Import the json library
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
-# Improved configuration loading
-config = ConfigParser()
-config_path = "/home/kasen/tux/config/settings.ini"  # Assuming where tux is, update accordingly? dont know how much this will be appreciated.
+# Improved configuration loading with JSON
+with open("/home/kasen/tux/config/settings.json") as config_file:  # noqa PTH123
+    config = json.load(config_file)
 
-
-admin_role_id = config.getint("Permissions", "Admin")
-owner_role_id = config.getint("Permissions", "Owner")
-mod_role_id = config.getint("Permissions", "Mod")
-jr_mod_role_id = config.getint("Permissions", "Jr_Mod")
+# Access role IDs from the JSON data
+admin_role_id = config["Permissions"]["Admin"]
+owner_role_id = config["Permissions"]["Owner"]
+mod_role_id = config["Permissions"]["Mod"]
+jr_mod_role_id = config["Permissions"]["Jr_Mod"]
 
 
 class Purge(commands.Cog):

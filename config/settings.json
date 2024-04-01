@@ -1,0 +1,33 @@
+{
+    "Permissions": {
+      "Owner": 1172248516370894869,
+      "Admin": [
+        1172248516370894869,
+        1182064847052091484
+      ],
+      "Mod": [
+        1172248516370894869,
+        1182064847052091484,
+        1172333934051336264
+      ],
+      "Jr_Mod": [
+        1172248516370894869,
+        1182064847052091484,
+        1172333934051336264,
+        1172643385425793156
+      ]
+    },
+    "Feature_Permissions": {
+      "load": "Admin",
+      "unload": "Admin",
+      "sync": "Admin",
+      "clear": "Admin",
+      "reload": "Admin",
+      "ban": "Mod",
+      "kick": "Jr_Mod",
+      "ping": "Everyone",
+      "server": "Everyone",
+      "rolecount": "Everyone",
+      "help": "Everyone"
+    }
+  }
