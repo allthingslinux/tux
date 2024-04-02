@@ -66,7 +66,7 @@ class TuxBot(commands.Bot):
 
             for activity in activities:
                 await self.change_presence(activity=activity)
-                await asyncio.sleep(10 * 60)
+                await asyncio.sleep(5 * 60)
 
     # coroutine for console commands
     # loops user input and executes commands
