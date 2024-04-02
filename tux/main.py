@@ -50,7 +50,7 @@ class TuxBot(commands.Bot):
         while True:
             activities = [
                 discord.Activity(type=discord.ActivityType.watching, name="All Things Linux"),
-                discord.Streaming(name="fortnite gamer hourz", url="http://twitch.tv/urmom"),
+                discord.Streaming(name="fortnite gamer hourz", url="https://twitch.tv/urmom"),
                 discord.Activity(type=discord.ActivityType.playing, name="with fire"),
                 discord.Activity(
                     type=discord.ActivityType.watching, name=f"{len(self.users)} members"
