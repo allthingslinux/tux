@@ -1,11 +1,16 @@
+import json
 import os
+from pathlib import Path
 from typing import Final
 
 from dotenv import load_dotenv
 
 load_dotenv()
+config_file = Path("config/settings.json")
+config = json.loads(config_file.read_text())
 
 
+# defining json stuff so it can be pulled later down the file
 class Constants:
     # Bot-related constants
     BOT_VERSION = "1.0.0"
@@ -47,7 +52,14 @@ class Constants:
         "BLACK": 0x000000,
         "WHITE": 0xFFFFFF,
     }
-
+    # User ID Constants
+    USER_IDS: Final[dict[str, int]] = {
+        "ADMIN": config["Permissions"]["Admin"],
+        "MOD": config["Permissions"]["Mod"],
+        "JR MOD": config["Permissions"]["Jr_Mod"],
+        "OWNER": config["Permissions"]["Owner"],
+        "TESTING": config["Permissions"]["Testing"],
+    }
     # Temp VC constants
     TEMPVC_CATEGORY_ID = os.getenv("TEMPVC_CATEGORY_ID")
     TEMPVC_CHANNEL_ID = os.getenv("TEMPVC_CHANNEL_ID")
