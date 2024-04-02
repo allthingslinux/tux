@@ -34,21 +34,43 @@ class TuxBot(commands.Bot):
 
         asyncio.create_task(self.setup())  # noqa: RUF006
 
-        # start console coroutine
-        asyncio.create_task(self.console())
-
     async def setup(self) -> None:
         await self.load_cogs()
 
     async def load_cogs(self) -> None:
         await CogLoader.setup(self)
 
+    # sets a random status message for the bot and waits 30 minutes
+    async def change_activity(self) -> None:
+        """
+        Asynchronous function to change the bot's activity in a loop.
+
+        This function will cycle through a list of activities every 5 minutes.
+        """
+        while True:
+            activities = [
+                discord.Activity(type=discord.ActivityType.watching, name="All Things Linux"),
+                discord.Streaming(name="fortnite gamer hourz", url="http://twitch.tv/urmom"),
+                discord.Activity(type=discord.ActivityType.playing, name="with fire"),
+                discord.Activity(
+                    type=discord.ActivityType.watching, name=f"{len(self.users)} members"
+                ),
+                discord.Activity(type=discord.ActivityType.watching, name="linux tech tips"),
+                discord.Activity(type=discord.ActivityType.listening, name="mpd"),
+                discord.Activity(type=discord.ActivityType.watching, name="a vast field of grain"),
+                discord.Activity(
+                    type=discord.ActivityType.playing,
+                    name="i am calling about your car's extended warranty",
+                ),
+            ]
+
+            for activity in activities:
+                await self.change_presence(activity=activity)
+                await asyncio.sleep(10 * 60)
+
     # coroutine for console commands
     # loops user input and executes commands
     async def console(self) -> None:
-        # wait 3 seconds so the 1st prompt is not mixed with the bot's startup messages
-        logger.info("Waiting for startup to complete...")
-        await asyncio.sleep(3)
         logger.info("Console is ready. Type 'help' for a list of commands.")
         while True:
             # Use asyncio.run_in_executor to run input in a separate thread
@@ -60,6 +82,7 @@ class TuxBot(commands.Bot):
                     logger.info("help - Display this message")
                     logger.info("send [channel_id] [message] - Send a message to a channel")
                     logger.info("embedbuild - Build an embed to send to a channel")
+                    logger.info("setstatus - Set the bot's status")
                     logger.info("exit - Stop the bot")
                     continue
                 if command == "exit":
@@ -95,9 +118,15 @@ class TuxBot(commands.Bot):
                 if command == "embedbuild":
                     # query the user for the title, description, and color of the embed
                     title = await asyncio.get_event_loop().run_in_executor(pool, input, "Title: ")
-                    description = await asyncio.get_event_loop().run_in_executor(
-                        pool, input, "Description: "
-                    )
+                    # ask the user to say DONE when they are finished writing the description
+                    description = ""
+                    while True:
+                        line = await asyncio.get_event_loop().run_in_executor(
+                            pool, input, "Description (type 'DONE' to finish): "
+                        )
+                        if line == "DONE":
+                            break
+                        description += line + "\n"
                     color = await asyncio.get_event_loop().run_in_executor(
                         pool, input, "Color (hex): "
                     )
@@ -123,22 +152,42 @@ class TuxBot(commands.Bot):
 
                     await channel.send(embed=embed)
                     continue
+                if command == "setstatus":
+                    # query the user for the status type and status message
+                    status_type = await asyncio.get_event_loop().run_in_executor(
+                        pool, input, "Status type (watching, listening, playing): "
+                    )
+                    status_message = await asyncio.get_event_loop().run_in_executor(
+                        pool, input, "Status message: "
+                    )
+
+                    # set the bot's status
+                    await self.change_presence(
+                        activity=discord.Activity(
+                            type=getattr(discord.ActivityType, status_type),
+                            name=status_message,
+                        )
+                    )
+                    continue
                 if not command:
                     continue
                 logger.info(f"Command '{command}' not found. Type 'help' for a list of commands.")
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
-        logger.info(f"{self.user} has connected to Discord!")
-
         await self.change_presence(
-            activity=discord.Activity(
-                type=discord.ActivityType.watching,
-                name="All Things Linux",
-            )
+            activity=discord.Activity(type=discord.ActivityType.playing, name="Loading...")
         )
 
+        logger.info(f"{self.user} has connected to Discord!")
+
         await db.connect()
+
+        # start the change_activity coroutine
+        asyncio.create_task(self.change_activity())  # noqa: RUF006
+
+        # start console coroutine
+        asyncio.create_task(self.console())  # noqa: RUF006
 
     @commands.Cog.listener()
     async def on_disconnect(self) -> None:
