@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 import discord
@@ -6,15 +7,17 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+from tux.utils.constants import Constants
+
 config_file = Path("config/settings.json")
 config = json.loads(config_file.read_text())
 
 # Access role IDs from the JSON data
-admin_role_id = config["Permissions"]["Admin"]
-owner_role_id = config["Permissions"]["Owner"]
-mod_role_id = config["Permissions"]["Mod"]
-jr_mod_role_id = config["Permissions"]["Jr_Mod"]
-testing_role_id = config["Permissions"]["Testing"]
+admin_role_id = Constants.USER_IDS["ADMIN"]
+owner_role_id = Constants.USER_IDS["OWNER"]
+mod_role_id = Constants.USER_IDS["MOD"]
+jr_mod_role_id = Constants.USER_IDS["JR MOD"]
+testing_role_id = Constants.USER_IDS["TESTING"] if os.getenv("STAGING") == "True" else "foobar"
 
 
 class Purge(commands.Cog):
