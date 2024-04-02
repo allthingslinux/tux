@@ -155,11 +155,21 @@ class TuxBot(commands.Bot):
                 if command == "setstatus":
                     # query the user for the status type and status message
                     status_type = await asyncio.get_event_loop().run_in_executor(
-                        pool, input, "Status type (watching, listening, playing): "
+                        pool, input, "Status type (watching, listening, playing, streaming): "
                     )
+
                     status_message = await asyncio.get_event_loop().run_in_executor(
                         pool, input, "Status message: "
                     )
+
+                    if status_type == "streaming":
+                        stream_url = await asyncio.get_event_loop().run_in_executor(
+                            pool, input, "Stream URL: "
+                        )
+                        await self.change_presence(
+                            activity=discord.Streaming(name=status_message, url=stream_url)
+                        )
+                        continue
 
                     # set the bot's status
                     await self.change_presence(
