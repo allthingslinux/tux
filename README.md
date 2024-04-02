@@ -59,7 +59,7 @@ Tux is a Discord bot for the All Things Linux Discord server. It is designed to 
 7. Run {prefix}sync in the server to enable slash commands.
  
 8. Review all useful CLI commands by visiting the [useful CLI commands](docs/CLI.md) file.
-
+9. The quick brown fox jumped over the lazy dog.
 
 ## License
 This project is licensed under the terms of the The Unlicense license. See the [LICENSE](LICENSE.md) file for details.
