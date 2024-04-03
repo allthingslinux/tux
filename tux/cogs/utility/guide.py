@@ -29,7 +29,7 @@ class Guide(commands.Cog):
                 "This command can only be used in a server.", ephemeral=True
             )
             return
-        embed = self.create_embed("Server Guide", "welcome to " + guild.name + "!")
+        embed = self.create_embed("Server Guide", "Welcome to " + guild.name + "!")
         if guild.icon:
             embed.set_thumbnail(url=guild.icon)
         if guild.banner:
@@ -42,7 +42,7 @@ class Guide(commands.Cog):
                      /DEV/VOICE/ Listen to music or just talk.
                      /VAR/LOG/: See logs related to moderation actions and github logs.
 
-                 #""",
+                 """,
         )
         embed.set_footer(
             text=f"Requested by {interaction.user.display_name}",
