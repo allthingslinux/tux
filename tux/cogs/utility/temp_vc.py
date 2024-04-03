@@ -43,6 +43,20 @@ class TempVc(commands.Cog):
                     f"Deleted temporary channel {before.channel.name} as it has no members."
                 )
 
+            # search all lost temporary channels and delete them
+            for channel in category.voice_channels:
+                # checks if the channel is a temporary channel
+                if (
+                    not channel.name.startswith(self.base_vc_name)
+                    or len(channel.members) != 0
+                    or channel.id == int(CONST.TEMPVC_CHANNEL_ID or "0")
+                ):
+                    continue
+
+                if len(channel.members) == 0:
+                    await channel.delete()
+                    logger.info(f"Deleted temporary channel {channel.name} as it has no members.")
+
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(TempVc(bot))
