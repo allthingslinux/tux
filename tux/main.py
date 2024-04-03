@@ -74,6 +74,7 @@ class TuxBot(commands.Bot):
     async def console(self) -> None:
         if not os.isatty(sys.stdin.fileno()):
             logger.info("Running in a non-interactive mode. Skipping console input.")
+            return
         logger.info("Console is ready. Type 'help' for a list of commands.")
         while True:
             # Use asyncio.run_in_executor to run input in a separate thread
