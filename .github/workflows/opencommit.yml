@@ -10,7 +10,7 @@ on:
 
 jobs:
   opencommit:
-    if: ${{ github.event_name == 'push' && !startsWith(github.ref, 'refs/heads/opencommit/') }}
+    if: ${{ github.event_name == 'push' && github.ref != 'refs/heads/opencommit' }}
     timeout-minutes: 10
     name: OpenCommit
     runs-on: ubuntu-latest
