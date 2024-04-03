@@ -1,4 +1,3 @@
-from os import name
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -108,18 +107,16 @@ class Info(commands.Cog):
     @group.command(name="irc", description="Shows information about the IRC server")
     async def irc(self, interaction: discord.Interaction) -> None:
         embed = self.create_embed(
-            "IRC Server"
-            "We have an IRC Server! ",
+            "IRC Server" "We have an IRC Server! ",
         )
         embed.set_author(name="Info", icon_url="https://cdn3.emoji.gg/emojis/3228-info.png")
+        embed.add_field(name="Information", value="irc.atl.tools, 6697, TLS/SSL, Channel: #general")
         embed.add_field(
-            name="Information", value="irc.atl.tools, 6697, TLS/SSL, Channel: #general"
-        )
-        embed.add_field(
-          name="NickServ Connection Instructions", value="""
+            name="NickServ Connection Instructions",
+            value="""
           1. Connect to IRC Server
         2. type /msg NickServ register followed by a password and email address.
-      3. Talk!"""
+      3. Talk!""",
         )
         embed.set_footer(
             text=f"Requested by {interaction.user.display_name}",
@@ -128,7 +125,6 @@ class Info(commands.Cog):
         embed.timestamp = interaction.created_at
 
         await interaction.response.send_message(embed=embed)
-
 
 
 async def setup(bot: commands.Bot) -> None:
