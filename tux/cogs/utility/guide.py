@@ -1,8 +1,8 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
+from loguru import logger
 
-# from loguru import logger
 from tux.utils.constants import Constants as CONST
 
 
@@ -49,6 +49,7 @@ class Guide(commands.Cog):
             icon_url=interaction.user.display_avatar.url,
         )
         embed.timestamp = interaction.created_at
+        logger.info(f"{interaction.user} used the guide command in {interaction.channel}.")
         await interaction.response.send_message(embed=embed)
 
 
