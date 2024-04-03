@@ -35,9 +35,13 @@ class Guide(commands.Cog):
         if guild.banner:
             embed.set_image(url=guild.banner.with_format("png").with_size(1024))
         embed.add_field(
-            name="Channels",
-            value="""#general- talk about everything.
-                 #linux-   chat about all things related to linux!
+            name="Categories",
+            value="""/SRV/ Get roles, look at starboard and suggest things.
+                     /HOME/ Chat with our community.
+                     /MNT/SUPPORT/ Get help with a variety of topics!
+                     /DEV/VOICE/ Listen to music or just talk.
+                     /VAR/LOG/: See logs related to moderation actions and github logs.
+
                  #""",
         )
         embed.set_footer(
