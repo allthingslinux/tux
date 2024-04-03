@@ -1,6 +1,7 @@
 import asyncio
 import concurrent.futures
 import os
+import sys
 from typing import Any
 
 import discord
@@ -71,6 +72,8 @@ class TuxBot(commands.Bot):
     # coroutine for console commands
     # loops user input and executes commands
     async def console(self) -> None:
+        if not os.isatty(sys.stdin.fileno()):
+            logger.info("Running in a non-interactive mode. Skipping console input.")
         logger.info("Console is ready. Type 'help' for a list of commands.")
         while True:
             # Use asyncio.run_in_executor to run input in a separate thread
