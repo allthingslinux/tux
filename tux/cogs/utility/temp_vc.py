@@ -18,6 +18,13 @@ class TempVc(commands.Cog):
         after: discord.VoiceState,
     ) -> None:
         if after.channel and after.channel.id == int(CONST.TEMPVC_CHANNEL_ID or "0"):
+            # check if the user already has a temporary channel
+            # if so move the user to the existing channel
+            for channel in after.channel.guild.voice_channels:
+                if channel.name == self.base_vc_name + member.name:
+                    await member.move_to(channel)
+                    logger.info(f"Moved {member.name} to existing temporary channel.")
+                    return
             new_channel = await after.channel.clone(name=self.base_vc_name + member.name)
             await member.move_to(new_channel)
             logger.info(f"Created temporary channel for {member.name}.")
