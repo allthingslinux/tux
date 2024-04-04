@@ -1,8 +1,8 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
+from loguru import logger
 
-# from loguru import logger
 from tux.utils.constants import Constants as CONST
 
 
@@ -29,7 +29,7 @@ class Guide(commands.Cog):
                 "This command can only be used in a server.", ephemeral=True
             )
             return
-        embed = self.create_embed("Server Guide", "welcome to " + guild.name + "!")
+        embed = self.create_embed("Server Guide", "Welcome to " + guild.name + "!")
         if guild.icon:
             embed.set_thumbnail(url=guild.icon)
         if guild.banner:
@@ -42,13 +42,14 @@ class Guide(commands.Cog):
                      /DEV/VOICE/ Listen to music or just talk.
                      /VAR/LOG/: See logs related to moderation actions and github logs.
 
-                 #""",
+                 """,
         )
         embed.set_footer(
             text=f"Requested by {interaction.user.display_name}",
             icon_url=interaction.user.display_avatar.url,
         )
         embed.timestamp = interaction.created_at
+        logger.info(f"{interaction.user} used the guide command in {interaction.channel}.")
         await interaction.response.send_message(embed=embed)
 
 
