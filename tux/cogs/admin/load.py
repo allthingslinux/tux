@@ -6,7 +6,7 @@ class Load(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    # @commands.has_guild_permissions(administrator=True)
+    @commands.has_guild_permissions(administrator=True)
     @commands.command(name="load", description="Loads a cog into the bot.")
     async def load(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
         try:
