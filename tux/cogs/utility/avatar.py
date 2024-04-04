@@ -8,13 +8,13 @@ class Avatar(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @app_commands.command(name="avatar", description="Get the avatar of a user.")
-    @app_commands.describe(member="The user to get the avatar of.")
-    async def ping(self, interaction: discord.Interaction, member: discord.Member) -> None:
+    @app_commands.command(name="avatar", description="Get the avatar of a member.")
+    @app_commands.describe(member="The member to get the avatar of.")
+    async def avatar(self, interaction: discord.Interaction, member: discord.Member) -> None:
         logger.info(f"{interaction.user} used the avatar command in {interaction.channel}.")
 
         await interaction.response.send_message(
-            member.avatar.url if member.avatar else "User has no avatar."
+            member.avatar.url if member.avatar else "Member has no avatar."
         )
 
 

@@ -72,8 +72,8 @@ Example:
 
 from tux.utils.constants import Constants as CONST
 print(CONST.BOT_NAME)
-print(CONST.COLORS.INFO)
-print(CONST.CHANNELS.AUDIT)
+print(CONST.COLORS["INFO"])
+print(CONST.CHANNELS["AUDIT"])
 """
 
 CONST = Constants()

@@ -63,6 +63,7 @@ class ErrorHandler(commands.Cog):
         if type(error) not in error_map:
             self.log_error_traceback(error)
 
+    @commands.Cog.listener()
     async def on_command_error(
         self, ctx: commands.Context[commands.Bot], error: commands.CommandError
     ):
