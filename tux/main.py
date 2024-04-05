@@ -195,19 +195,20 @@ class TuxBot(commands.Bot):
 
         logger.info(f"{self.user} has connected to Discord!")
 
-        await db.connect()
-
         # start the change_activity coroutine
         asyncio.create_task(self.change_activity())  # noqa: RUF006
 
         # start console coroutine
         asyncio.create_task(self.console())  # noqa: RUF006
 
+        # connect to the database
+        await db.connect()
+
     @commands.Cog.listener()
     async def on_disconnect(self) -> None:
         logger.warning("Bot has disconnected from Discord.")
-
         await db.disconnect()
+        logger.warning("Database connection closed.")
 
 
 async def main() -> None:

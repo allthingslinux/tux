@@ -1,7 +1,8 @@
-// // datasource db {
-// //   provider = "postgresql"
-// //   url      = env("DATABASE_URL")
-// // }
+// datasource db {
+//   provider  = "postgresql"
+//   url       = env("DATABASE_URL")
+//   directUrl = env("DIRECT_URL")
+// }
 
 datasource db {
   // SQLite provider
@@ -17,6 +18,16 @@ generator client {
   interface            = "asyncio"
   // Recursive type depth not limited (-1)
   recursive_type_depth = -1
+}
+
+// General settings for the system
+model Settings {
+  // Key of the setting
+  key         String  @id
+  // Value of the setting
+  value       String
+  // Optional description of what the setting does
+  description String?
 }
 
 model Users {
@@ -51,23 +62,32 @@ model Users {
   infractions_received Infractions[] @relation("User")
 
   snippets Snippets[]
+
+  afk        Boolean   @default(false)
+  afk_reason String?
+  afk_since  DateTime?
+
+  notes_given    Notes[] @relation("Moderator")
+  notes_received Notes[] @relation("User")
+
+  Reminders Reminders[]
 }
 
 model Roles {
   // The ID for the role (via Discord)
-  id          BigInt   @id
+  id          BigInt    @id
   // The name of the role
   name        String
   // Indicates if the role will be displayed separately from other members.
-  hoist       Boolean
+  hoist       Boolean   @default(false)
   // Indicates if the role is managed by the guild through some form of integrations such as Twitch.
-  managed     Boolean  @default(false)
+  managed     Boolean   @default(false)
   // Indicates if the role is mentionable.
-  mentionable Boolean  @default(false)
+  mentionable Boolean   @default(false)
   // The role’s creation time in UTC.
-  created_at  DateTime
+  created_at  DateTime?
   // Returns a string that allows you to mention a role.
-  mention     String   @default("")
+  mention     String?   @default("")
 
   // This field links a role to the users that have it. It references the `UserRoles` junction table. If you fetch a role from the database and include this field, you will get a list of UserRoles entries and from there you can find all the users that have this role.
   users UserRoles[]
@@ -106,8 +126,8 @@ model Infractions {
   expires_at        DateTime?
 
   // These fields establish a relationship with the `Users` model. `moderator_id` is the ID of the user who gave the infraction. The line `moderator Users? @relation("Moderator", fields: [moderator_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the moderator) is associated with this infraction.
-  moderator    Users?  @relation("Moderator", fields: [moderator_id], references: [id])
-  moderator_id BigInt?
+  moderator    Users  @relation("Moderator", fields: [moderator_id], references: [id])
+  moderator_id BigInt
 
   // These fields establish another relationship with the `Users` model. `user_id` is the ID of the user who received the infraction. The line `user Users @relation("User", fields: [user_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the user who received the infraction) is associated with this infraction.
   user    Users  @relation("User", fields: [user_id], references: [id])
@@ -121,150 +141,40 @@ model Snippets {
   content    String
   // The creation time of the snippet
   created_at DateTime @default(now())
-  author     Users    @relation(fields: [author_id], references: [id])
-  author_id  BigInt
+
+  // This field establishes a relationship with the `Users` model. `author_id` is the ID of the user who created the snippet. The line `author Users @relation(fields: [author_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the author) is associated with this snippet.
+  author    Users  @relation(fields: [author_id], references: [id])
+  author_id BigInt
 }
 
-// Old stuff 
+model Notes {
+  id         BigInt   @id
+  content    String
+  created_at DateTime @default(now())
 
-// // Table representing users in the system
-// model users {
-//   // user identifier (Discord ID)
-//   user_id          BigInt        @id
-//   // Indicator if the user is a bot
-//   user_is_bot      Boolean?
-//   // Optional user's username
-//   user_username    String?
-//   // Optional user's global name
-//   user_global_name String?
-//   // Timestamp when user was created
-//   user_created_at  DateTime
-//   // Link to roles associated with this user
-//   user_roles       user_roles[]
-//   // Link to notes associated with this user
-//   notes            notes[]
-//   // Link to infractions associated with this user
-//   infractions      infractions[]
-//   // 
-// }
+  // These fields establish a relationship with the `Users` model. `moderator_id` is the ID of the user who created the note. The line `moderator Users? @relation("Moderator", fields: [moderator_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the moderator) is associated with this note.
+  moderator    Users  @relation("Moderator", fields: [moderator_id], references: [id])
+  moderator_id BigInt
 
-// // Table representing roles in the system
-// model roles {
-//   // Role identifier
-//   role_id    BigInt       @id
-//   // Name of the role
-//   role_name  String
-//   // Link to users associated with this role
-//   user_roles user_roles[]
-//   // Link to moderators associated with this role
-//   moderators moderators[]
-// }
+  // These fields establish another relationship with the `Users` model. `user_id` is the ID of the user who the note is about. The line `user Users @relation("User", fields: [user_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the user who the note is about) is associated with this note.
+  user    Users  @relation("User", fields: [user_id], references: [id])
+  user_id BigInt
+}
 
-// // General settings for the system
-// model settings {
-//   // Key of the setting
-//   setting_key         String  @id
-//   // Value of the setting
-//   setting_value       String
-//   // Optional description of what the setting does
-//   setting_description String?
-// }
+model Reminders {
+  id         BigInt   @id
+  content    String
+  created_at DateTime @default(now())
+  expires_at DateTime
 
-// // Table representing moderators in the system
-// model moderators {
-//   // Moderator identifier (Discord ID)
-//   moderator_id BigInt        @id
-//   // Associated role identifier
-//   role_id      BigInt?
-//   // Link to role associated with this moderator
-//   role         roles?        @relation(fields: [role_id], references: [role_id])
-//   // Link to notes created by this moderator
-//   notes        notes[]
-//   // Link to infractions created by this moderator
-//   infractions  infractions[]
-// }
+  // These fields establish a relationship with the `Users` model. `author_id` is the ID of the user who created the reminder. The line `author Users @relation(fields: [author_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the author) is associated with this reminder.
+  author    Users  @relation(fields: [author_id], references: [id])
+  author_id BigInt
+}
 
-// // Table for storing logs
-// model logs {
-//   // Unique log identifier
-//   log_id         String   @id @default(uuid())
-//   // Timestamp when log was created
-//   log_created_at DateTime @default(now())
-//   // Level of the log
-//   log_level      String?
-//   // Content/text of the log
-//   log_content    String?
-// }
-
-// // Relationship table between a user and their roles
-// model user_roles {
-//   // User identifier
-//   user_id BigInt
-//   // Role identifier
-//   role_id BigInt
-//   // Link to the user
-//   users   users  @relation(fields: [user_id], references: [user_id])
-//   // Link to the role
-//   roles   roles  @relation(fields: [role_id], references: [role_id])
-
-//   // Composite primary key consisting of user_id and role_id
-//   @@id([user_id, role_id])
-// }
-
-// // Table for storing notes/moderator reports on users
-// model notes {
-//   // Unique identifier for the note
-//   note_id         String      @id @default(uuid())
-//   // Content of the note
-//   note_content    String
-//   // Moderator who created the note
-//   moderator_id    BigInt?
-//   // User who the note is about
-//   user_id         BigInt?
-//   // When the note was created
-//   note_created_at DateTime    @default(now())
-//   // Link to the moderator 
-//   moderator       moderators? @relation(fields: [moderator_id], references: [moderator_id])
-//   // Link to the user 
-//   user            users?      @relation(fields: [user_id], references: [user_id])
-// }
-
-// // Table for storing one-to-many snippets of text
-// model snippets {
-//   // Name of the snippet
-//   snippet_name    String @id
-//   // Content of the snippet
-//   snippet_content String
-// }
-
-// // Table representing guilds/servers in the system
-// model guilds {
-//   // Unique identifier for the guild (Discord ID)
-//   guild_id       BigInt @id
-//   // Name of the guild
-//   guild_name     String
-//   // ID of the owner of the guild
-//   guild_owner_id BigInt
-// }
-
-// // Table representing infractions/punishments on users
-// model infractions {
-//   // Unique identifier for the infraction
-//   infraction_id         String      @id @default(uuid())
-//   // ID of the moderator who gave the infraction
-//   moderator_id          BigInt?
-//   // ID of the user who received the infraction
-//   user_id               BigInt?
-//   // Type of the infraction (ban, mute, etc)
-//   infraction_type       String
-//   // Optional reason for the infraction
-//   infraction_reason     String?
-//   // When the infraction was given
-//   infraction_created_at DateTime    @default(now())
-//   // When the infraction expires, if applicable
-//   infraction_expires_at DateTime?
-//   // Link to the moderator who gave the infraction
-//   moderator             moderators? @relation(fields: [moderator_id], references: [moderator_id])
-//   // Link to the user who received the infraction
-//   user                  users?      @relation(fields: [user_id], references: [user_id])
+// model Logs {
+//   id         BigInt   @id
+//   content    String
+//   log_type   String
+//   created_at DateTime @default(now())
 // }
