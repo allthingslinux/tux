@@ -1,11 +1,11 @@
-// datasource db {
-//   provider = "postgresql"
-//   url      = env("DATABASE_URL")
-// }
+// // datasource db {
+// //   provider = "postgresql"
+// //   url      = env("DATABASE_URL")
+// // }
 
 datasource db {
   // SQLite provider
-  provider = "sqlite"
+  provider = "postgresql"
   // Database local file
   url      = "file:database.db"
 }
@@ -19,149 +19,252 @@ generator client {
   recursive_type_depth = -1
 }
 
-// Table representing roles in the system
-model roles {
-  // Role identifier
-  role_id    BigInt       @id
-  // Name of the role
-  role_name  String
-  // Link to users associated with this role
-  user_roles user_roles[]
-  // Link to moderators associated with this role
-  moderators moderators[]
+model Users {
+  // The user’s unique ID (via Discord)
+  id           BigInt    @id
+  // The user’s username.
+  name         String
+  // The user’s global nickname, taking precedence over the username in display.
+  global_name  String?
+  // Returns the user’s display name. For regular users this is just their global name or their username, but if they have a guild specific nickname then that is returned instead.
+  display_name String
+  // Returns a string that allows you to mention the given user.
+  mention      String
+  // Specifies if the user is a bot account.
+  bot          Boolean
+  // Returns the user’s creation time in UTC. This is when the user’s Discord account was created.
+  created_at   DateTime
+  // True if user is a member of a guild (not a discord.py attribute)
+  is_member    Boolean   @default(true)
+  // The guild specific nickname of the user. Takes precedence over the global name.
+  nick         String?
+  // An aware datetime object that specifies the date and time in UTC that the member joined the guild. If the member left and rejoined the guild, this will be the latest date. In certain cases, this can be None.
+  joined_at    DateTime?
+
+  // This is a relation field and is a list of roles that the user has, linking to the `UserRoles` table. If you fetch a user from the database and include this field, you will get all the roles associated with that user. 
+  roles UserRoles[]
+
+  // This represents all the infractions that this user has given out when acting as a moderator. It has a `relation` annotation to make clear that for these infractions, this user is referred to in the `moderator` field of the `Infractions` table.
+  infractions_given Infractions[] @relation("Moderator")
+
+  // This is all the infractions that this user has received. It has a `relation` annotation to make clear that for these infractions, this user is referred to in the `user` field of the `Infractions` table.
+  infractions_received Infractions[] @relation("User")
+
+  snippets Snippets[]
 }
 
-// General settings for the system
-model settings {
-  // Key of the setting
-  setting_key         String  @id
-  // Value of the setting
-  setting_value       String
-  // Optional description of what the setting does
-  setting_description String?
+model Roles {
+  // The ID for the role (via Discord)
+  id          BigInt   @id
+  // The name of the role
+  name        String
+  // Indicates if the role will be displayed separately from other members.
+  hoist       Boolean
+  // Indicates if the role is managed by the guild through some form of integrations such as Twitch.
+  managed     Boolean  @default(false)
+  // Indicates if the role is mentionable.
+  mentionable Boolean  @default(false)
+  // The role’s creation time in UTC.
+  created_at  DateTime
+  // Returns a string that allows you to mention a role.
+  mention     String   @default("")
+
+  // This field links a role to the users that have it. It references the `UserRoles` junction table. If you fetch a role from the database and include this field, you will get a list of UserRoles entries and from there you can find all the users that have this role.
+  users UserRoles[]
+
+  // This is a Boolean field indicating if the role is a moderator role. This is not an attribute coming from Discord but an extra field you have defined to distinguish normal roles from moderator roles. It defaults to false, meaning if you don't specify it when creating a new role, it will be assumed to be a non-moderator role.
+  is_mod Boolean @default(false)
 }
 
-// Table representing users in the system
-model users {
-  // User identifier (Discord ID)
-  user_id          BigInt        @id
-  // Indicator if the user is a bot
-  user_is_bot      Boolean?
-  // Optional User's username
-  user_username    String?
-  // Optional User's global name
-  user_global_name String?
-  // Timestamp when user was created
-  user_created_at  DateTime
-  // Link to roles associated with this user
-  user_roles       user_roles[]
-  // Link to notes associated with this user
-  notes            notes[]
-  // Link to infractions associated with this user
-  infractions      infractions[]
-}
+model UserRoles {
+  id BigInt @id @default(autoincrement())
 
-// Table representing moderators in the system
-model moderators {
-  // Moderator identifier (Discord ID)
-  moderator_id BigInt        @id
-  // Associated role identifier
-  role_id      BigInt?
-  // Link to role associated with this moderator
-  role         roles?        @relation(fields: [role_id], references: [role_id])
-  // Link to notes created by this moderator
-  notes        notes[]
-  // Link to infractions created by this moderator
-  infractions  infractions[]
-}
-
-// Table for storing logs
-model logs {
-  // Unique log identifier
-  log_id         String   @id @default(uuid())
-  // Timestamp when log was created
-  log_created_at DateTime @default(now())
-  // Level of the log
-  log_level      String?
-  // Content/text of the log
-  log_content    String?
-}
-
-// Relationship table between a user and their roles
-model user_roles {
-  // User identifier
+  // These refer to the `Users` model. `user_id` is the ID of a user from the `Users` table. The line `user Users @relation(fields: [user_id], references: [id])` implies that `user` establishes a relation with `Users` model based on the `user_id` in this `UserRoles` model and the `id` in the `Users` model.
+  user    Users  @relation(fields: [user_id], references: [id])
   user_id BigInt
-  // Role identifier
+
+  // These refer to the `Roles` model. `role_id` is the ID of a role from the `Roles` table. The line `role Roles @relation(fields: [role_id], references: [id])` implies that `role` establishes a relation with `Roles` model based on the `role_id` in this `UserRoles` model and the `id` in the `Roles` model.
+  role    Roles  @relation(fields: [role_id], references: [id])
   role_id BigInt
-  // Link to the user
-  users   users  @relation(fields: [user_id], references: [user_id])
-  // Link to the role
-  roles   roles  @relation(fields: [role_id], references: [role_id])
 
-  // Composite primary key consisting of user_id and role_id
-  @@id([user_id, role_id])
+  // This specifies a composite unique constraint on `user_id` and `role_id`, meaning each combination of a user id and role id must be unique. It prevents a single user from having the same role multiple times. This constraint helps to maintain data integrity.
+  @@unique([user_id, role_id])
 }
 
-// Table for storing notes/moderator reports on users
-model notes {
-  // Unique identifier for the note
-  note_id         String      @id @default(uuid())
-  // Content of the note
-  note_content    String
-  // Moderator who created the note
-  moderator_id    BigInt?
-  // User who the note is about
-  user_id         BigInt?
-  // When the note was created
-  note_created_at DateTime    @default(now())
-  // Link to the moderator 
-  moderator       moderators? @relation(fields: [moderator_id], references: [moderator_id])
-  // Link to the user 
-  user            users?      @relation(fields: [user_id], references: [user_id])
+enum InfractionType {
+  BAN
+  KICK
+  WARN
+  TIMEOUT
 }
 
-// Table for storing one-to-many snippets of text
-model snippets {
-  // Name of the snippet
-  snippet_name    String @id
-  // Content of the snippet
-  snippet_content String
+model Infractions {
+  id                BigInt         @id
+  infraction_type   InfractionType
+  infraction_reason String?
+  created_at        DateTime
+  expires_at        DateTime?
+
+  // These fields establish a relationship with the `Users` model. `moderator_id` is the ID of the user who gave the infraction. The line `moderator Users? @relation("Moderator", fields: [moderator_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the moderator) is associated with this infraction.
+  moderator    Users?  @relation("Moderator", fields: [moderator_id], references: [id])
+  moderator_id BigInt?
+
+  // These fields establish another relationship with the `Users` model. `user_id` is the ID of the user who received the infraction. The line `user Users @relation("User", fields: [user_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the user who received the infraction) is associated with this infraction.
+  user    Users  @relation("User", fields: [user_id], references: [id])
+  user_id BigInt
 }
 
-// Table representing guilds/servers in the system
-model guilds {
-  // Unique identifier for the guild (Discord ID)
-  guild_id       BigInt @id
-  // Name of the guild
-  guild_name     String
-  // ID of the owner of the guild
-  guild_owner_id BigInt
+model Snippets {
+  // The name of the snippet
+  name       String   @id
+  // The content of the snippet
+  content    String
+  // The creation time of the snippet
+  created_at DateTime @default(now())
+  author     Users    @relation(fields: [author_id], references: [id])
+  author_id  BigInt
 }
 
-// Table representing infractions/punishments on users
-model infractions {
-  // Unique identifier for the infraction
-  infraction_id         String      @id @default(uuid())
-  // ID of the moderator who gave the infraction
-  moderator_id          BigInt?
-  // ID of the user who received the infraction
-  user_id               BigInt?
-  // Type of the infraction (ban, mute, etc)
-  infraction_type       String
-  // Optional reason for the infraction
-  infraction_reason     String?
-  // When the infraction was given
-  infraction_created_at DateTime    @default(now())
-  // When the infraction expires, if applicable
-  infraction_expires_at DateTime?
-  // Link to the moderator who gave the infraction
-  moderator             moderators? @relation(fields: [moderator_id], references: [moderator_id])
-  // Link to the user who received the infraction
-  user                  users?      @relation(fields: [user_id], references: [user_id])
-}
+// Old stuff 
 
-model messages {
-  message_id   BigInt   @id
-  message_text String
-  message_time DateTime
-}
+// // Table representing users in the system
+// model users {
+//   // user identifier (Discord ID)
+//   user_id          BigInt        @id
+//   // Indicator if the user is a bot
+//   user_is_bot      Boolean?
+//   // Optional user's username
+//   user_username    String?
+//   // Optional user's global name
+//   user_global_name String?
+//   // Timestamp when user was created
+//   user_created_at  DateTime
+//   // Link to roles associated with this user
+//   user_roles       user_roles[]
+//   // Link to notes associated with this user
+//   notes            notes[]
+//   // Link to infractions associated with this user
+//   infractions      infractions[]
+//   // 
+// }
+
+// // Table representing roles in the system
+// model roles {
+//   // Role identifier
+//   role_id    BigInt       @id
+//   // Name of the role
+//   role_name  String
+//   // Link to users associated with this role
+//   user_roles user_roles[]
+//   // Link to moderators associated with this role
+//   moderators moderators[]
+// }
+
+// // General settings for the system
+// model settings {
+//   // Key of the setting
+//   setting_key         String  @id
+//   // Value of the setting
+//   setting_value       String
+//   // Optional description of what the setting does
+//   setting_description String?
+// }
+
+// // Table representing moderators in the system
+// model moderators {
+//   // Moderator identifier (Discord ID)
+//   moderator_id BigInt        @id
+//   // Associated role identifier
+//   role_id      BigInt?
+//   // Link to role associated with this moderator
+//   role         roles?        @relation(fields: [role_id], references: [role_id])
+//   // Link to notes created by this moderator
+//   notes        notes[]
+//   // Link to infractions created by this moderator
+//   infractions  infractions[]
+// }
+
+// // Table for storing logs
+// model logs {
+//   // Unique log identifier
+//   log_id         String   @id @default(uuid())
+//   // Timestamp when log was created
+//   log_created_at DateTime @default(now())
+//   // Level of the log
+//   log_level      String?
+//   // Content/text of the log
+//   log_content    String?
+// }
+
+// // Relationship table between a user and their roles
+// model user_roles {
+//   // User identifier
+//   user_id BigInt
+//   // Role identifier
+//   role_id BigInt
+//   // Link to the user
+//   users   users  @relation(fields: [user_id], references: [user_id])
+//   // Link to the role
+//   roles   roles  @relation(fields: [role_id], references: [role_id])
+
+//   // Composite primary key consisting of user_id and role_id
+//   @@id([user_id, role_id])
+// }
+
+// // Table for storing notes/moderator reports on users
+// model notes {
+//   // Unique identifier for the note
+//   note_id         String      @id @default(uuid())
+//   // Content of the note
+//   note_content    String
+//   // Moderator who created the note
+//   moderator_id    BigInt?
+//   // User who the note is about
+//   user_id         BigInt?
+//   // When the note was created
+//   note_created_at DateTime    @default(now())
+//   // Link to the moderator 
+//   moderator       moderators? @relation(fields: [moderator_id], references: [moderator_id])
+//   // Link to the user 
+//   user            users?      @relation(fields: [user_id], references: [user_id])
+// }
+
+// // Table for storing one-to-many snippets of text
+// model snippets {
+//   // Name of the snippet
+//   snippet_name    String @id
+//   // Content of the snippet
+//   snippet_content String
+// }
+
+// // Table representing guilds/servers in the system
+// model guilds {
+//   // Unique identifier for the guild (Discord ID)
+//   guild_id       BigInt @id
+//   // Name of the guild
+//   guild_name     String
+//   // ID of the owner of the guild
+//   guild_owner_id BigInt
+// }
+
+// // Table representing infractions/punishments on users
+// model infractions {
+//   // Unique identifier for the infraction
+//   infraction_id         String      @id @default(uuid())
+//   // ID of the moderator who gave the infraction
+//   moderator_id          BigInt?
+//   // ID of the user who received the infraction
+//   user_id               BigInt?
+//   // Type of the infraction (ban, mute, etc)
+//   infraction_type       String
+//   // Optional reason for the infraction
+//   infraction_reason     String?
+//   // When the infraction was given
+//   infraction_created_at DateTime    @default(now())
+//   // When the infraction expires, if applicable
+//   infraction_expires_at DateTime?
+//   // Link to the moderator who gave the infraction
+//   moderator             moderators? @relation(fields: [moderator_id], references: [moderator_id])
+//   // Link to the user who received the infraction
+//   user                  users?      @relation(fields: [user_id], references: [user_id])
+// }
