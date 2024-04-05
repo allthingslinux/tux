@@ -1,15 +1,15 @@
-// datasource db {
-//   provider  = "postgresql"
-//   url       = env("DATABASE_URL")
-//   directUrl = env("DIRECT_URL")
-// }
-
 datasource db {
-  // SQLite provider
-  provider = "postgresql"
-  // Database local file
-  url      = "file:database.db"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
+
+// datasource db {
+//   // SQLite provider
+//   provider = "postgresql"
+//   // Database local file
+//   url      = "file:database.db"
+// }
 
 generator client {
   // Prisma Python client provider
@@ -70,7 +70,7 @@ model Users {
   notes_given    Notes[] @relation("Moderator")
   notes_received Notes[] @relation("User")
 
-  Reminders Reminders[]
+  reminders Reminders[]
 }
 
 model Roles {
