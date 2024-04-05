@@ -111,18 +111,11 @@ model UserRoles {
   @@unique([user_id, role_id])
 }
 
-enum InfractionType {
-  BAN
-  KICK
-  WARN
-  TIMEOUT
-}
-
 model Infractions {
-  id                BigInt         @id
-  infraction_type   InfractionType
+  id                BigInt    @id
+  infraction_type   String
   infraction_reason String?
-  created_at        DateTime
+  created_at        DateTime? @default(now())
   expires_at        DateTime?
 
   // These fields establish a relationship with the `Users` model. `moderator_id` is the ID of the user who gave the infraction. The line `moderator Users? @relation("Moderator", fields: [moderator_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the moderator) is associated with this infraction.
@@ -136,11 +129,11 @@ model Infractions {
 
 model Snippets {
   // The name of the snippet
-  name       String   @id
+  name       String    @id
   // The content of the snippet
   content    String
   // The creation time of the snippet
-  created_at DateTime @default(now())
+  created_at DateTime? @default(now())
 
   // This field establishes a relationship with the `Users` model. `author_id` is the ID of the user who created the snippet. The line `author Users @relation(fields: [author_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the author) is associated with this snippet.
   author    Users  @relation(fields: [author_id], references: [id])
@@ -148,9 +141,9 @@ model Snippets {
 }
 
 model Notes {
-  id         BigInt   @id
+  id         BigInt    @id
   content    String
-  created_at DateTime @default(now())
+  created_at DateTime? @default(now())
 
   // These fields establish a relationship with the `Users` model. `moderator_id` is the ID of the user who created the note. The line `moderator Users? @relation("Moderator", fields: [moderator_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the moderator) is associated with this note.
   moderator    Users  @relation("Moderator", fields: [moderator_id], references: [id])
@@ -162,9 +155,9 @@ model Notes {
 }
 
 model Reminders {
-  id         BigInt   @id
+  id         BigInt    @id
   content    String
-  created_at DateTime @default(now())
+  created_at DateTime? @default(now())
   expires_at DateTime
 
   // These fields establish a relationship with the `Users` model. `author_id` is the ID of the user who created the reminder. The line `author Users @relation(fields: [author_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the author) is associated with this reminder.
