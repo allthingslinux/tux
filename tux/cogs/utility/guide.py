@@ -32,8 +32,6 @@ class Guide(commands.Cog):
         embed = self.create_embed("Server Guide", f"Welcome to {guild.name}!")
         if guild.icon:
             embed.set_thumbnail(url=guild.icon)
-        if guild.banner:
-            embed.set_image(url=guild.banner.with_format("png").with_size(1024))
         embed.add_field(
             name="Quick Links",
             value="""
