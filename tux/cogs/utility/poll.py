@@ -15,10 +15,10 @@ class Poll(commands.Cog):
         # split the options by comma, and validate that there are at least 2 options and at most 10
         options_list = options.split(",")
 
-        if len(options_list) < 2 or len(options_list) > 10:
+        if len(options_list) < 2 or len(options_list) > 9:
             embed = discord.Embed(
                 title="Error",
-                description=f"Poll options count needs to be between 2-10, you provided {len(options_list)} options.",
+                description=f"Poll options count needs to be between 2-9, you provided {len(options_list)} options.",
                 color=discord.Colour.red(),
             )
 
