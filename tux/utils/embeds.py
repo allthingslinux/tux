@@ -39,6 +39,14 @@ class EmbedCreator:
     #     return f"[{user}@tux ~]$"
 
     @staticmethod
+    def add_field(embed: discord.Embed, name: str, value: str, inline: bool = True) -> None:
+        embed.add_field(name=name, value=value, inline=inline)
+
+    @staticmethod
+    def set_thumbnail(embed: discord.Embed, url: str) -> None:
+        embed.set_thumbnail(url=url)
+
+    @staticmethod
     def base_embed(
         ctx: commands.Context[commands.Bot] | None,
         interaction: discord.Interaction | None,
