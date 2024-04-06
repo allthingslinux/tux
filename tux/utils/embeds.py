@@ -1,7 +1,6 @@
 from datetime import datetime
 
 import discord
-from discord import Member, User
 from discord.ext import commands
 
 from tux.utils.constants import Constants as CONST
@@ -20,14 +19,14 @@ class EmbedCreator:
     def get_footer(
         ctx: commands.Context[commands.Bot] | None, interaction: discord.Interaction | None
     ) -> tuple[str, str | None]:
-        user: User | Member | None = None
+        user: discord.User | discord.Member | None = None
 
         if ctx:
             user = ctx.author
         elif interaction:
             user = interaction.user
 
-        if isinstance(user, User | Member):
+        if isinstance(user, discord.User | discord.Member):
             return (
                 f"Requested by {user.display_name}",
                 str(user.avatar.url) if user.avatar else None,
