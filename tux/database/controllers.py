@@ -21,6 +21,12 @@ class UsersController:
     async def get_user_by_id(self, user_id: int) -> Users | None:
         return await self.table.find_first(where={"id": user_id})
 
+    async def toggle_afk(self, user_id: int, afk: bool) -> Users | None:
+        return await self.table.update(
+            where={"id": user_id},
+            data={"afk": afk},
+        )
+
 
 class InfractionsController:
     def __init__(self):
@@ -34,7 +40,6 @@ class InfractionsController:
 
     async def create_infraction(
         self,
-        infraction_id: int,
         user_id: int,
         moderator_id: int,
         infraction_type: InfractionType,
@@ -42,7 +47,6 @@ class InfractionsController:
     ) -> Infractions:
         return await self.table.create(
             data={
-                "id": infraction_id,
                 "user_id": user_id,
                 "moderator_id": moderator_id,
                 "infraction_type": infraction_type.value,
@@ -71,6 +75,29 @@ class NotesController:
 
     async def get_note_by_id(self, note_id: int) -> Notes | None:
         return await self.table.find_first(where={"id": note_id})
+
+    async def create_note(
+        self,
+        user_id: int,
+        moderator_id: int,
+        note_content: str,
+    ) -> Notes:
+        return await self.table.create(
+            data={
+                "user_id": user_id,
+                "moderator_id": moderator_id,
+                "content": note_content,
+            }
+        )
+
+    async def delete_note(self, note_id: int) -> None:
+        await self.table.delete(where={"id": note_id})
+
+    async def update_note(self, note_id: int, note_content: str) -> Notes | None:
+        return await self.table.update(
+            where={"id": note_id},
+            data={"content": note_content},
+        )
 
 
 class SnippetsController:
