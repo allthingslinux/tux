@@ -29,19 +29,29 @@ class Guide(commands.Cog):
                 "This command can only be used in a server.", ephemeral=True
             )
             return
-        embed = self.create_embed("Server Guide", "Welcome to " + guild.name + "!")
+        embed = self.create_embed("Server Guide", f"Welcome to {guild.name}!")
         if guild.icon:
             embed.set_thumbnail(url=guild.icon)
         if guild.banner:
             embed.set_image(url=guild.banner.with_format("png").with_size(1024))
         embed.add_field(
-            name="Categories",
-            value="""/SRV/ Get roles, look at starboard and suggest things.
-                     /HOME/ Chat with our community.
-                     /MNT/SUPPORT/ Get help with a variety of topics!
-                     /DEV/VOICE/ Listen to music or just talk.
-                     /VAR/LOG/: See logs related to moderation actions and github logs.
-
+            name="Quick Links",
+            value="""
+            **Meta:**
+            <#1172252854371749958>
+            <#1172343581495795752>
+            <#1172259762893754480>
+            <#1193304492226129971>
+            **Support:**
+            <#1172312602181902357>
+            <#1172312653797007461>
+            <#1172312674298761216>
+            **Resources:**
+            <#1221117147091304548>
+            <#1221115462549504060>
+            <#1174251004586381323>
+            <#1174742125036961863>
+            <#1220004498789896253>
                  """,
         )
         embed.set_footer(
