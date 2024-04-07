@@ -22,7 +22,7 @@ class Constants:
     PROD_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("PROD_COG_IGNORE_LIST", "").split(","))
 
     # Staging constants
-    STAGING = os.getenv("STAGING")
+    STAGING: Final[str | None] = os.getenv("STAGING")
     STAGING_TOKEN: Final[str] = os.getenv("STAGING_TOKEN", "")
     STAGING_PREFIX: Final[str] = os.getenv("STAGING_PREFIX", ">")
     STAGING_COG_IGNORE_LIST: Final[set[str]] = set(
@@ -30,7 +30,7 @@ class Constants:
     )
 
     # Sentry-related constants
-    SENTRY_URL: Final[str] = os.getenv("SENTRY_URL", "")
+    SENTRY_URL: Final[str | None] = os.getenv("SENTRY_URL")
 
     # Channel constants
     CHANNELS: Final[dict[str, int]] = {
@@ -50,8 +50,8 @@ class Constants:
     }
 
     # Temp VC constants
-    TEMPVC_CATEGORY_ID = os.getenv("TEMPVC_CATEGORY_ID")
-    TEMPVC_CHANNEL_ID = os.getenv("TEMPVC_CHANNEL_ID")
+    TEMPVC_CATEGORY_ID: Final[str | None] = os.getenv("TEMPVC_CATEGORY_ID")
+    TEMPVC_CHANNEL_ID: Final[str | None] = os.getenv("TEMPVC_CHANNEL_ID")
 
     # Color constants
     EMBED_STATE_COLORS: Final[dict[str, int]] = {

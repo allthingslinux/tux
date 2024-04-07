@@ -12,7 +12,7 @@ class Guide(commands.Cog):
 
     @staticmethod
     def create_embed(
-        title: str = "", description: str = "", color: int = CONST.COLORS["INFO"]
+        title: str = "", description: str = "", color: int = CONST.EMBED_STATE_COLORS["INFO"]
     ) -> discord.Embed:
         """Utility method for creating a basic embed structure."""
         embed = discord.Embed(title=title, description=description, color=color)

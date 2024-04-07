@@ -52,8 +52,8 @@ class EmbedCreator:
         interaction: discord.Interaction | None,
         state: str,
     ) -> discord.Embed:
-        footer = EmbedCreator.get_footer(ctx, interaction)
-        timestamp = EmbedCreator.get_timestamp(ctx, interaction)
+        footer: tuple[str, str | None] = EmbedCreator.get_footer(ctx, interaction)
+        timestamp: datetime = EmbedCreator.get_timestamp(ctx, interaction)
 
         # if ctx:
         #     user_name = ctx.author.display_name
