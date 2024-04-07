@@ -61,14 +61,18 @@ class EmbedCreator:
         #     user_name = interaction.user.display_name if interaction else "Tux"
 
         embed = discord.Embed()
+
         embed.color = CONST.EMBED_STATE_COLORS[state]
+
         embed.set_author(
             name=state.capitalize() if state else "Info",
             icon_url=CONST.EMBED_STATE_ICONS[state]
             if state
             else CONST.EMBED_STATE_ICONS["DEFAULT"],
         )
+
         embed.set_footer(text=footer[0], icon_url=footer[1])
+
         embed.timestamp = timestamp
 
         return embed

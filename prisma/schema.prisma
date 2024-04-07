@@ -161,8 +161,8 @@ model Reminders {
   expires_at DateTime
 
   // These fields establish a relationship with the `Users` model. `author_id` is the ID of the user who created the reminder. The line `author Users @relation(fields: [author_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the author) is associated with this reminder.
-  author    Users  @relation(fields: [author_id], references: [id])
-  author_id BigInt
+  user    Users  @relation(fields: [user_id], references: [id])
+  user_id BigInt
 }
 
 // model Logs {
