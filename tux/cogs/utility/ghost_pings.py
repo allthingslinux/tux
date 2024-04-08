@@ -24,13 +24,18 @@ class GhostPings(commands.Cog):
             ):
                 return
 
-            embed = discord.Embed(
-                title="Ghost Ping!", color=discord.Color.red(), timestamp=message.created_at
+            # embed = discord.Embed(
+            #    title="Ghost Ping!", color=discord.Color.red(), timestamp=message.created_at
+            # )
+
+            # embed.description = f"{message.author.mention} pinged: {', '.join([mention.mention for mention in message.mentions])} {', '.join([role.mention for role in message.role_mentions])}"
+
+            # await message.channel.send(embed=embed)
+
+            await message.channel.send(
+                f"{message.author.mention} pinged: {', '.join([mention.mention for mention in message.mentions])} {', '.join([role.mention for role in message.role_mentions])}",
+                allowed_mentions=discord.AllowedMentions.none(),
             )
-
-            embed.description = f"{message.author.mention} pinged: {', '.join([mention.mention for mention in message.mentions])} {', '.join([role.mention for role in message.role_mentions])}"
-
-            await message.channel.send(embed=embed)
 
 
 async def setup(bot: commands.Bot) -> None:
