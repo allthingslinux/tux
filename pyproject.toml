@@ -24,6 +24,7 @@ ruff = "^0.3.4"
 sentry-sdk = {extras = ["loguru"], version = "^1.44.1"}
 vulture = "^2.11"
 aioconsole = "^0.7.0"
+psutil = "^5.9.8"
 
 [tool.poetry.scripts]
 pyright = "pyright:run"

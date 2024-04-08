@@ -3,35 +3,32 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
-from tux.utils.constants import Constants as CONST
+from tux.utils.embeds import EmbedCreator
 
 
 class Guide(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @staticmethod
-    def create_embed(
-        title: str = "", description: str = "", color: int = CONST.EMBED_STATE_COLORS["INFO"]
-    ) -> discord.Embed:
-        """Utility method for creating a basic embed structure."""
-        embed = discord.Embed(title=title, description=description, color=color)
-        embed.set_author(name="Info", icon_url="https://cdn3.emoji.gg/emojis/3228-info.png")
-        return embed
-
-    @app_commands.command(
-        name="guide", description="See useful channels and other resources for the server."
-    )
+    @app_commands.command(name="guide", description="See useful channels for the server.")
     async def guide(self, interaction: discord.Interaction) -> None:
         guild = interaction.guild
+
         if not guild:
             await interaction.response.send_message(
                 "This command can only be used in a server.", ephemeral=True
             )
             return
-        embed = self.create_embed("Server Guide", f"Welcome to {guild.name}!")
+
+        embed = EmbedCreator.create_info_embed(
+            title="Server Guide",
+            description=f"Welcome to {guild.name}!",
+            interaction=interaction,
+        )
+
         if guild.icon:
             embed.set_thumbnail(url=guild.icon)
+
         embed.add_field(
             name="Quick Links",
             value="""
@@ -50,14 +47,11 @@ class Guide(commands.Cog):
             <#1174251004586381323>
             <#1174742125036961863>
             <#1220004498789896253>
-                 """,
+            """,
         )
-        embed.set_footer(
-            text=f"Requested by {interaction.user.display_name}",
-            icon_url=interaction.user.display_avatar.url,
-        )
-        embed.timestamp = interaction.created_at
+
         logger.info(f"{interaction.user} used the guide command in {interaction.channel}.")
+
         await interaction.response.send_message(embed=embed)
 
 

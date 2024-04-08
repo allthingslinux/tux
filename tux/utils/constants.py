@@ -71,13 +71,17 @@ class Constants:
         "BLACK": 0x000000,
         # pure white
         "WHITE": 0xFFFFFF,
+        # catppuccin yellow
+        "POLL": 0xF9E2AF,
     }
 
     EMBED_STATE_ICONS: Final[dict[str, str]] = {
+        "DEFAULT": "https://i.imgur.com/EqzIMKr.png",
         "INFO": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/mocha_sky.png?raw=true",
         "WARNING": "https://github.com/catppuccin/catppuccin/raw/main/assets/palette/circles/latte_peach.png?raw=true",
         "ERROR": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/latte_red.png?raw=true",
         "SUCCESS": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/mocha_green.png?raw=true",
+        "POLL": "https://github.com/catppuccin/catppuccin/raw/main/assets/palette/circles/mocha_yellow.png?raw=true",
     }
 
     # Embed limit constants

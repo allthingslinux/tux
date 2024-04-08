@@ -3,6 +3,10 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+from tux.utils.embeds import EmbedCreator
+
+# TODO: Create option inputs for the poll command instead of using a comma separated string
+
 
 class Poll(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -16,17 +20,10 @@ class Poll(commands.Cog):
         options_list = options.split(",")
 
         if len(options_list) < 2 or len(options_list) > 9:
-            embed = discord.Embed(
-                title="Error",
+            embed = EmbedCreator.create_error_embed(
+                title="Invalid options count",
                 description=f"Poll options count needs to be between 2-9, you provided {len(options_list)} options.",
-                color=discord.Colour.red(),
-            )
-
-            embed.timestamp = interaction.created_at
-
-            embed.set_footer(
-                text=f"Requested by {interaction.user.display_name}",
-                icon_url=interaction.user.display_avatar.url,
+                interaction=interaction,
             )
 
             await interaction.response.send_message(embed=embed)
@@ -37,23 +34,12 @@ class Poll(commands.Cog):
             [f"{num + 1}\u20e3 {option}" for num, option in enumerate(options_list)]
         )
 
-        # create the embed
-        embed = discord.Embed(
+        embed = EmbedCreator.create_poll_embed(
             title=title,
             description=description,
-            color=discord.Colour.green(),
+            interaction=interaction,
         )
 
-        embed.timestamp = interaction.created_at
-
-        embed.set_footer(
-            text=f"Requested by {interaction.user.display_name}",
-            icon_url=interaction.user.display_avatar.url,
-        )
-
-        logger.info(f"{interaction.user} used the ping command in {interaction.channel}.")
-
-        # send the embed
         await interaction.response.send_message(embed=embed)
 
         # add reactions to the message
@@ -61,6 +47,8 @@ class Poll(commands.Cog):
         message = await interaction.original_response()
         for num in range(len(options_list)):
             await message.add_reaction(f"{num + 1}\u20e3")
+
+        logger.info(f"{interaction.user} used the ping command in {interaction.channel}.")
 
 
 async def setup(bot: commands.Bot) -> None:

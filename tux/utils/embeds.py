@@ -141,3 +141,13 @@ class EmbedCreator:
         interaction: discord.Interaction | None = None,
     ) -> discord.Embed:
         return cls.create_embed(ctx, interaction, "SUCCESS", title, description)
+
+    @classmethod
+    def create_poll_embed(
+        cls,
+        title: str,
+        description: str,
+        ctx: commands.Context[commands.Bot] | None = None,
+        interaction: discord.Interaction | None = None,
+    ) -> discord.Embed:
+        return cls.create_embed(ctx, interaction, "POLL", title, description)

@@ -12,6 +12,18 @@ class InfractionType(Enum):
     TIMEOUT = "timeout"
 
 
+class DatabaseController:
+    def __init__(self) -> None:
+        self.users = UsersController()
+        self.infractions = InfractionsController()
+        self.notes = NotesController()
+        self.snippets = SnippetsController()
+        self.reminders = RemindersController()
+
+
+db_controller = DatabaseController()
+
+
 class UsersController:
     def __init__(self) -> None:
         self.table = db.users
@@ -472,15 +484,3 @@ class RemindersController:
             where={"id": reminder_id},
             data={"content": reminder_content},
         )
-
-
-class DatabaseController:
-    def __init__(self) -> None:
-        self.users = UsersController()
-        self.infractions = InfractionsController()
-        self.notes = NotesController()
-        self.snippets = SnippetsController()
-        self.reminders = RemindersController()
-
-
-db_controller = DatabaseController()

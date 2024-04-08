@@ -3,6 +3,8 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+from tux.utils.embeds import EmbedCreator
+
 des_ids = [
     [1175177565086953523, "_kde"],
     [1175177703066968114, "_gnome"],
@@ -132,9 +134,9 @@ class RoleCount(commands.Cog):
     @app_commands.describe(which="Which option to list!")
     @app_commands.choices(
         which=[
-            app_commands.Choice(name="Distros", value="ds"),
-            app_commands.Choice(name="Languages", value="lg"),
-            app_commands.Choice(name="DE/WMs", value="de"),
+            app_commands.Choice(name="Distro", value="ds"),
+            app_commands.Choice(name="Language", value="lg"),
+            app_commands.Choice(name="DE/WM", value="de"),
             app_commands.Choice(name="Misc", value="misc"),
             app_commands.Choice(name="Vanity", value="vanity"),
         ]
@@ -142,15 +144,10 @@ class RoleCount(commands.Cog):
     async def rolecount(
         self, interaction: discord.Interaction, which: discord.app_commands.Choice[str]
     ) -> None:
-        embed: discord.Embed = discord.Embed(
-            title=f"All Things Linux stats for {which.name}",
-            color=discord.Color.random(),
-            timestamp=interaction.created_at,
-        )
-
-        embed.set_footer(
-            text=f"Requested by {interaction.user.display_name}",
-            icon_url=interaction.user.display_avatar,
+        embed = EmbedCreator.create_info_embed(
+            title="Role Count",
+            description=f"Here is the number of users in each {which.name} role.",
+            interaction=interaction,
         )
 
         if interaction.guild:
@@ -196,6 +193,7 @@ class RoleCount(commands.Cog):
                     )
 
         await interaction.response.send_message(embed=embed)
+
         logger.info(f"{interaction.user} requested role count for {which.name}.")
 
 

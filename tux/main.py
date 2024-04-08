@@ -83,7 +83,6 @@ class TuxBot(commands.Bot):
         if tasks := [task for task in asyncio.all_tasks() if task is not asyncio.current_task()]:
             logger.info(f"Cancelling {len(tasks)} outstanding tasks")
             [task.cancel() for task in tasks]
-
             await asyncio.gather(*tasks, return_exceptions=True)
             logger.info("All tasks cancelled.")
 
