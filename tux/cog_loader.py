@@ -46,20 +46,26 @@ class CogLoader(commands.Cog):
         Returns:
             None
         """
+        try:
+            if await apath.is_dir():
+                async for item in apath.iterdir():
+                    try:
+                        await self.load_cogs(apath=item)
+                    except Exception as error:
+                        logger.error(f"Error loading cog from {item}: {error}")
+            elif await self.is_cog_eligible(filepath=apath):
+                relative_path: AsyncPath = apath.relative_to(AsyncPath(__file__).parent)
+                module: str = str(relative_path).replace("/", ".").replace("\\", ".")[:-3]
 
-        if await apath.is_dir():
-            async for item in apath.iterdir():
-                await self.load_cogs(apath=item)
-        elif await self.is_cog_eligible(filepath=apath):
-            relative_path: AsyncPath = apath.relative_to(AsyncPath(__file__).parent)
-
-            module: str = str(object=relative_path).replace("/", ".").replace("\\", ".")[:-3]
-
-            try:
-                await self.bot.load_extension(name=module)
-                logger.debug(f"Successfully loaded cog: {module}")
-            except Exception as e:
-                logger.error(f"Failed to load cog {module}. Error: {e}\n{traceback.format_exc()}")
+                try:
+                    await self.bot.load_extension(name=module)
+                    logger.debug(f"Successfully loaded cog: {module}")
+                except Exception as e:
+                    logger.error(
+                        f"Failed to load cog {module}. Error: {e}\n{traceback.format_exc()}"
+                    )
+        except Exception as e:
+            logger.error(f"An error occurred while processing {apath}: {e}")
 
     async def load_cogs_from_folder(self, folder_name: str) -> None:
         """

@@ -8,23 +8,22 @@ repository = "https://github.com/allthingslinux/tux"
 version = "0.1.0"
 
 [tool.poetry.dependencies]
-aiohttp = "3.9.1"
 aiopath = "0.6.11"
 asynctempfile = "^0.5.0"
 dateparser = "^1.2.0"
 discord-py = "^2.3.2"
-httpx = "^0.27.0"
 loguru = "^0.7.2"
 mypy = "^1.9.0"
-opentelemetry-distro = "^0.45b0"
 pre-commit = "^3.6.0"
 prisma = "^0.13.1"
+pynacl = "^1.5.0"
 pyright = "^1.1.343"
 python = "^3.11"
 python-dotenv = ">=1.0.0"
 ruff = "^0.3.4"
-sentry-sdk = {extras = ["opentelemetry"], version = "^1.44.0"}
+sentry-sdk = {extras = ["loguru"], version = "^1.44.1"}
 vulture = "^2.11"
+aioconsole = "^0.7.0"
 
 [tool.poetry.scripts]
 pyright = "pyright:run"
@@ -152,9 +151,6 @@ venvPath = "."
 # reportUnknownArgumentType = false
 # reportUnknownMemberType = false
 # reportUnknownParameterType = false
-
-[tool.prisma]
-binary_cache_dir = '.binaries'
 
 [tool.mypy]
 ignore_missing_imports = true
