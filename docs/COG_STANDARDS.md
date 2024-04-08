@@ -24,9 +24,11 @@ class MyCog(commands.Cog):
 
 ## Commands
 - Use the `@commands.command()` decorator for prefix commands.
-- Use the `@app_commands.command()` decorator within a group for slash commands.
+- Use the `@app_commands.command()` decorator slash commands.
+- Use the `@group.command()` decorator for subcommands within a group.
 - Provide a brief description for each command as part of the decorator to improve help documentation.
-- Check permissions appropriately using decorators like `@commands.has_guild_permissions()`.
+- Check permissions appropriately using decorators like `@commands.has_guild_permissions()` or `@commands.has_role()`.
+- Use type hints for arguments and return types to improve code readability and maintainability.
 
 ### Prefix Command Example:
 ```python
@@ -35,12 +37,28 @@ async def my_command(self, ctx: commands.Context, *, arg: str) -> None:
     await ctx.send(f"Argument received: {arg}")
 ```
 
+This would be called with `$mycommand <arg>`.
+
+### Slash Command Example:
+```python
+@app_commands.command(name="myslashcommand", description="This is a sample slash command.")
+async def my_slash_command(self, interaction: discord.Interaction, arg: str) -> None:
+    await interaction.response.send_message(f"Argument received: {arg}")
+```
+
+This would be called with `/myslashcommand <arg>`.
+
 ### Slash Command Example within a Group:
 ```python
+
+@group(name="mygroup", description="This is a sample group.")
+
 @group.command(name="myslashcommand", description="This is a sample slash command.")
 async def my_slash_command(self, interaction: discord.Interaction, arg: str) -> None:
     await interaction.response.send_message(f"Argument received: {arg}")
 ```
+
+This would be called with `/mygroup myslashcommand <arg>`.
 
 ## Event Listeners
 See the [EVENT_STANDARDS.md](EVENT_STANDARDS.md) document for guidelines on implementing event listeners in your cogs.
@@ -74,6 +92,9 @@ logger.info("Something was done successfully.")
 ## Embeds and Utility Functions
 - Use predefined utility functions or classes (e.g., `EmbedCreator`) for consistent styling and behavior.
 - Keep embeds informative, concise, and visually appealing.
+- Avoid hardcoding values in embeds; use variables or constants for dynamic content.
+- Abstract common functionality into utility functions to reduce code duplication and complexity.
+
 
 ## Final Remarks
 - Review existing cogs for examples and inspiration.

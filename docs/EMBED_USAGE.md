@@ -38,7 +38,7 @@ await interaction.response.send_message(embed=embed)
 
 For asynchronous commands or events, remember to `await` the sending operation.
 
-### Step 4: Adding Reactions for Polls
+### Step 4: Adding Reactions for Polls (for example)
 
 If your embed is a poll, you’ll likely want to add reactions that users can click on to vote. Here's an example code snippet to add reactions for option numbers:
 
