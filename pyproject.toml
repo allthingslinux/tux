@@ -8,6 +8,7 @@ repository = "https://github.com/allthingslinux/tux"
 version = "0.1.0"
 
 [tool.poetry.dependencies]
+aioconsole = "^0.7.0"
 aiopath = "0.6.11"
 asynctempfile = "^0.5.0"
 dateparser = "^1.2.0"
@@ -16,6 +17,7 @@ loguru = "^0.7.2"
 mypy = "^1.9.0"
 pre-commit = "^3.6.0"
 prisma = "^0.13.1"
+psutil = "^5.9.8"
 pynacl = "^1.5.0"
 pyright = "^1.1.343"
 python = "^3.11"
@@ -23,8 +25,6 @@ python-dotenv = ">=1.0.0"
 ruff = "^0.3.4"
 sentry-sdk = {extras = ["loguru"], version = "^1.44.1"}
 vulture = "^2.11"
-aioconsole = "^0.7.0"
-psutil = "^5.9.8"
 
 [tool.poetry.scripts]
 pyright = "pyright:run"
