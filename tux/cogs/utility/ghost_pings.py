@@ -33,7 +33,7 @@ class GhostPings(commands.Cog):
             # await message.channel.send(embed=embed)
 
             await message.channel.send(
-                f"{message.author.mention} pinged: {', '.join([mention.mention for mention in message.mentions])} {', '.join([role.mention for role in message.role_mentions])}",
+                f"{message.author.mention} ghost pinged: {', '.join([mention.mention for mention in message.mentions])} {', '.join([role.mention for role in message.role_mentions])} 👻",
                 allowed_mentions=discord.AllowedMentions.none(),
             )
 
