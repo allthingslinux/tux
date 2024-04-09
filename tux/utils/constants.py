@@ -33,11 +33,9 @@ class Constants:
     SENTRY_URL: Final[str | None] = os.getenv("SENTRY_URL")
 
     # Channel constants
-    CHANNELS: Final[dict[str, int]] = {
-        "AUDIT": 1191472088695980083,
-        "MOD": 1234567890,
-        "GENERAL": 1234567890,
-        "BOT": 1234567890,
+    LOG_CHANNELS: Final[dict[str, int]] = {
+        "AUDIT": 1223690612822376529,
+        "MOD": 1223690612822376529,
     }
 
     # User ID Constants
@@ -57,6 +55,8 @@ class Constants:
     EMBED_STATE_COLORS: Final[dict[str, int]] = {
         # tux feet yellow
         "DEFAULT": 0xF4D01A,
+        # tux feet yellow
+        "LOG": 0xF4D01A,
         # catppuccin mocha sky
         "INFO": 0x89DCEB,
         # catppuccin latte peach
@@ -77,11 +77,18 @@ class Constants:
 
     EMBED_STATE_ICONS: Final[dict[str, str]] = {
         "DEFAULT": "https://i.imgur.com/EqzIMKr.png",
+        "LOG": "https://i.imgur.com/4sblrd0.png",
         "INFO": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/mocha_sky.png?raw=true",
         "WARNING": "https://github.com/catppuccin/catppuccin/raw/main/assets/palette/circles/latte_peach.png?raw=true",
         "ERROR": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/latte_red.png?raw=true",
         "SUCCESS": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/mocha_green.png?raw=true",
         "POLL": "https://github.com/catppuccin/catppuccin/raw/main/assets/palette/circles/mocha_yellow.png?raw=true",
+    }
+
+    EMBED_SPECIAL_CHARS: Final[dict[str, str]] = {
+        "SUCCESS": "✅",
+        "ERROR": "❌",
+        "EMPTY": "​",
     }
 
     # Embed limit constants

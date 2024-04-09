@@ -4,13 +4,6 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// datasource db {
-//   // SQLite provider
-//   provider = "postgresql"
-//   // Database local file
-//   url      = "file:database.db"
-// }
-
 generator client {
   // Prisma Python client provider
   provider             = "prisma-client-py"
