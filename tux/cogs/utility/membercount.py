@@ -19,7 +19,7 @@ class MemberCount(commands.Cog):
 
         if interaction.guild:
             members = interaction.guild.member_count
-            humans = sum(member.bot for member in interaction.guild.members if not member.bot)
+            humans = sum(not member.bot for member in interaction.guild.members)
             bots = sum(member.bot for member in interaction.guild.members if member.bot)
 
             embed = EmbedCreator.create_info_embed(
