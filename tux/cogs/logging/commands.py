@@ -9,13 +9,16 @@ class CommandEventsCog(commands.Cog, name="Command Events Handler"):
 
     @commands.Cog.listener()
     async def on_app_command_completion(
-        self,
-        interaction: discord.Interaction,
-        command: discord.app_commands.Command | discord.app_commands.ContextMenu,
+        self, interaction: discord.Interaction, command: discord.app_commands.AppCommand
     ) -> None:
         logger.info(
             f"'{command.name}' command was used by {interaction.user} in {interaction.channel}."
         )
+
+    @commands.Cog.listener()
+    async def on_command_completion(self, ctx: commands.Context[commands.Bot]) -> None:
+        if ctx.command is not None:
+            logger.info(f"'{ctx.command.name}' command was used by {ctx.author} in {ctx.channel}.")
 
 
 async def setup(bot: commands.Bot) -> None:
