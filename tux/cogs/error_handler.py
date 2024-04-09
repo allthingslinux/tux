@@ -80,7 +80,7 @@ class ErrorHandler(commands.Cog):
 
         await ctx.send(
             content=error_message,
-            ephemeral=True,
+            ephemeral=False,
         )
 
         if type(error) not in error_map:

@@ -13,9 +13,14 @@ from tux.utils.console import Console
 from tux.utils.constants import Constants as CONST
 from tux.utils.sentry import setup_sentry
 
+"""
+Advanced logging and debugging setup.
+This setup is intended for debugging purposes. Ensure that you comment out loguru and replace it with the following imports as well as the remaining lines below.
+"""
 # import logging
 # import warnings
 # import tracemalloc
+
 # tracemalloc.start()
 # logging.basicConfig(level=logging.DEBUG)
 # warnings.simplefilter("error", ResourceWarning)
