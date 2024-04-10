@@ -3,6 +3,8 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+from tux.utils.embeds import EmbedCreator
+
 
 class Tldr(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -14,9 +16,8 @@ class Tldr(commands.Cog):
     async def tldr(self, interaction: discord.Interaction, command: str) -> None:
         logger.info(f"{interaction.user} used the /tldr to show info about {command}")
         tldr_page = self.get_tldr_page(command)
-        embed = discord.Embed(
-            title=f"tldr for {command}",
-            description=tldr_page,
+        embed = EmbedCreator.create_default_embed(
+            title=f"TLDR for {command}", description=tldr_page, interaction=interaction
         )
         await interaction.response.send_message(embed=embed)
 
