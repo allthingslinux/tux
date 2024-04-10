@@ -28,36 +28,20 @@ class Tldr(commands.Cog):
         # So yeah, this uses tldr cli on host machine to get tldr page
         # and return it, if somehow an error occurs it will return
         # An error occured
-        injection_symbols = [
-            ";",
-            "&",
-            "|",
-            "\\",
-            '"',
-            "'",
-            "$",
-            "(",
-            ")",
-            "<",
-            ">",
-            "#",
-            "*",
-            "!",
-        ]
-        for symbol in injection_symbols:
-            if symbol in command:
-                return "Can't run tldr: `forbidden symbols found`"
+        if command.startswith("-"):
+            return "Can't run tldr: `command can't start with a dash (-)`"
         proc = subprocess.Popen(
-            [f"tldr -r {command}"],
+            ["tldr", command],
             stdout=subprocess.PIPE,
-            shell=True,
+            stderr=subprocess.PIPE,
+            # shell=True,
         )
         (out, err) = proc.communicate()
         if not err:
             if len(out) < 1:
                 return "No tldr page found"
             return out.decode()
-        return f"An error occured: {err}"
+        return f"An error occured: {err.decode()}"
 
 
 async def setup(bot: commands.Bot) -> None:
