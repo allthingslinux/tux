@@ -1,3 +1,5 @@
+import subprocess
+
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -10,9 +12,22 @@ class Tldr(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    # @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod", "Jr. Mod")
+    async def get_autocomplete(
+        self, interaction: discord.Interaction, query: str
+    ) -> list[app_commands.Choice[str]]:
+        commands = self.get_tldrs()
+        result = [
+            app_commands.Choice(name=cmd, value=cmd)
+            for cmd in commands
+            if cmd.lower().startswith(query.lower())
+        ]
+        if len(result) > 25:
+            return result[:25]
+        return result
+
     @app_commands.command(name="tldr", description="Show a tldr page for (almost) any cli command")
     @app_commands.describe(command="which command to show")
+    @app_commands.autocomplete(command=get_autocomplete)
     async def tldr(self, interaction: discord.Interaction, command: str) -> None:
         logger.info(f"{interaction.user} used the /tldr to show info about {command}")
         tldr_page = self.get_tldr_page(command)
@@ -23,8 +38,6 @@ class Tldr(commands.Cog):
 
     # please change this as it might be vulnerable
     def get_tldr_page(self, command: str) -> str:
-        import subprocess
-
         # So yeah, this uses tldr cli on host machine to get tldr page
         # and return it, if somehow an error occurs it will return
         # An error occured
@@ -42,6 +55,13 @@ class Tldr(commands.Cog):
                 return "No tldr page found"
             return out.decode()
         return f"An error occured: {err.decode()}"
+
+    def get_tldrs(self) -> list[str]:
+        proc = subprocess.Popen(["tldr", "--list"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (out, err) = proc.communicate()
+        if err:
+            return [err.decode()]
+        return out.decode().split("\n")
 
 
 async def setup(bot: commands.Bot) -> None:
