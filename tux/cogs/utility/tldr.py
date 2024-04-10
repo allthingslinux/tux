@@ -31,7 +31,7 @@ class Tldr(commands.Cog):
         if command.startswith("-"):
             return "Can't run tldr: `command can't start with a dash (-)`"
         proc = subprocess.Popen(
-            ["tldr", command],
+            ["tldr", "-r", command],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             # shell=True,
