@@ -21,9 +21,7 @@ class Tldr(commands.Cog):
             for cmd in commands
             if cmd.lower().startswith(query.lower())
         ]
-        if len(result) > 25:
-            return result[:25]
-        return result
+        return result[:25] if len(result) > 25 else result
 
     @app_commands.command(name="tldr", description="Show a tldr page for (almost) any cli command")
     @app_commands.describe(command="which command to show")
@@ -36,32 +34,31 @@ class Tldr(commands.Cog):
         )
         await interaction.response.send_message(embed=embed)
 
-    # please change this as it might be vulnerable
     def get_tldr_page(self, command: str) -> str:
-        # So yeah, this uses tldr cli on host machine to get tldr page
-        # and return it, if somehow an error occurs it will return
-        # An error occured
         if command.startswith("-"):
             return "Can't run tldr: `command can't start with a dash (-)`"
-        proc = subprocess.Popen(
-            ["tldr", "-r", command],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            # shell=True,
-        )
-        (out, err) = proc.communicate()
-        if not err:
-            if len(out) < 1:
-                return "No tldr page found"
-            return out.decode()
-        return f"An error occured: {err.decode()}"
+        return self._run_subprocess(["tldr", "-r", command], "No tldr page found")
 
     def get_tldrs(self) -> list[str]:
-        proc = subprocess.Popen(["tldr", "--list"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (out, err) = proc.communicate()
-        if err:
-            return [err.decode()]
-        return out.decode().split("\n")
+        return self._run_subprocess(["tldr", "--list"], "No tldr pages found").split("\n")
+
+    def _run_subprocess(self, command_list: list[str], default_response: str) -> str:
+        try:
+            proc = subprocess.Popen(
+                command_list,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            (out, err) = proc.communicate()
+            if not err:
+                return default_response if len(out) < 1 else out.decode()
+
+            logger.error(f"An error occured during subprocess: {err.decode()}")
+            return "An error occurred"  # noqa: TRY300
+
+        except Exception as e:
+            logger.error(f"An error occurred: {e!s}")
+            return "An error occurred"
 
 
 async def setup(bot: commands.Bot) -> None:
