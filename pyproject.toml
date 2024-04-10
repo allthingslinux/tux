@@ -25,6 +25,7 @@ python-dotenv = ">=1.0.0"
 ruff = "^0.3.4"
 sentry-sdk = {extras = ["loguru"], version = "^1.44.1"}
 vulture = "^2.11"
+httpx = "^0.27.0"
 
 [tool.poetry.scripts]
 pyright = "pyright:run"
