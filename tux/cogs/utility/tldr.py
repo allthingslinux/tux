@@ -1,0 +1,63 @@
+import discord
+from discord import app_commands
+from discord.ext import commands
+from loguru import logger
+
+
+class Tldr(commands.Cog):
+    def __init__(self, bot: commands.Bot) -> None:
+        self.bot = bot
+
+    # @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod", "Jr. Mod")
+    @app_commands.command(name="tldr", description="Show a tldr page for (almost) any cli command")
+    @app_commands.describe(command="which command to show")
+    async def tldr(self, interaction: discord.Interaction, command: str) -> None:
+        logger.info(f"{interaction.user} used the /tldr to show info about {command}")
+        tldr_page = self.get_tldr_page(command)
+        embed = discord.Embed(
+            title=f"tldr for {command}",
+            description=tldr_page,
+        )
+        await interaction.response.send_message(embed=embed)
+
+    # please change this as it might be vulnerable
+    def get_tldr_page(self, command: str) -> str:
+        import subprocess
+
+        # So yeah, this uses tldr cli on host machine to get tldr page
+        # and return it, if somehow an error occurs it will return
+        # An error occured
+        injection_symbols = [
+            ";",
+            "&",
+            "|",
+            "\\",
+            '"',
+            "'",
+            "$",
+            "(",
+            ")",
+            "<",
+            ">",
+            "#",
+            "*",
+            "!",
+        ]
+        for symbol in injection_symbols:
+            if symbol in command:
+                return "Can't run tldr: `forbidden symbols found`"
+        proc = subprocess.Popen(
+            [f"tldr -r {command}"],
+            stdout=subprocess.PIPE,
+            shell=True,
+        )
+        (out, err) = proc.communicate()
+        if not err:
+            if len(out) < 1:
+                return "No tldr page found"
+            return out.decode()
+        return f"An error occured: {err}"
+
+
+async def setup(bot: commands.Bot) -> None:
+    await bot.add_cog(Tldr(bot))
