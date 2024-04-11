@@ -9,7 +9,7 @@ version = "0.1.0"
 
 [tool.poetry.dependencies]
 aioconsole = "^0.7.0"
-aiopath = "0.6.11"
+aiopath = "0.7.7"
 asynctempfile = "^0.5.0"
 dateparser = "^1.2.0"
 discord-py = "^2.3.2"
