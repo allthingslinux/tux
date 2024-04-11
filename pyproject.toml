@@ -65,6 +65,7 @@ exclude = [
   "examples",
   "tmp",
   "tests",
+  ".archive",
 ]
 
 indent-width = 4
@@ -138,6 +139,7 @@ exclude = [
   "venv",
   "examples",
   "tests",
+  ".archive",
 ]
 include = ["tux"]
 pythonPlatform = "Linux"
@@ -179,6 +181,7 @@ exclude = [
   "venv",
   "examples",
   "tests",
+  ".archive",
 ]
 # paths = ["tux"]
 # ignore_decorators = ["@app.route", "@require_*"]
