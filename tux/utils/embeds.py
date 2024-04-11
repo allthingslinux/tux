@@ -5,6 +5,8 @@ from discord.ext import commands
 
 from tux.utils.constants import Constants as CONST
 
+# TODO: Refactor this to reduce code duplication
+
 
 class EmbedCreator:
     @staticmethod
@@ -58,11 +60,6 @@ class EmbedCreator:
     ) -> discord.Embed:
         footer: tuple[str, str | None] = EmbedCreator.get_footer(ctx, interaction)
         timestamp: datetime = EmbedCreator.get_timestamp(ctx, interaction)
-
-        # if ctx:
-        #     user_name = ctx.author.display_name
-        # else:
-        #     user_name = interaction.user.display_name if interaction else "Tux"
 
         embed = discord.Embed()
 
