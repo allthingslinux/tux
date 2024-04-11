@@ -37,7 +37,7 @@ model Users {
   // Specifies if the user is a bot account.
   bot          Boolean
   // Returns the user’s creation time in UTC. This is when the user’s Discord account was created.
-  created_at   DateTime
+  created_at   DateTime?
   // True if user is a member of a guild (not a discord.py attribute)
   is_member    Boolean   @default(true)
   // The guild specific nickname of the user. Takes precedence over the global name.
@@ -81,6 +81,8 @@ model Roles {
   created_at  DateTime?
   // Returns a string that allows you to mention a role.
   mention     String?   @default("")
+  // The role’s color. An integer representation of hexadecimal colour code.
+  color       BigInt?
 
   // This field links a role to the users that have it. It references the `UserRoles` junction table. If you fetch a role from the database and include this field, you will get a list of UserRoles entries and from there you can find all the users that have this role.
   users UserRoles[]

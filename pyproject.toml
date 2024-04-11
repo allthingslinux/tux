@@ -66,17 +66,16 @@ exclude = [
   "tmp",
   "tests",
 ]
+
 indent-width = 4
 line-length = 100
 target-version = "py311"
 
 # Ruff Linting Configuration
 [tool.ruff.lint]
-ignore = ["E501", "N814"]
-
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-
 fixable = ["ALL"]
+ignore = ["E501", "N814"]
 select = [
   "E",
   "F",
@@ -152,11 +151,6 @@ venvPath = "."
 # reportUnknownArgumentType = false
 # reportUnknownMemberType = false
 # reportUnknownParameterType = false
-
-[tool.mypy]
-ignore_missing_imports = true
-plugins = ["prisma.mypy", "aiopath.mypy"]
-python_version = "3.11"
 
 [tool.vulture]
 exclude = [
