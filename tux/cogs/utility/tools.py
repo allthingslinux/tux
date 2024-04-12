@@ -1,4 +1,6 @@
+import hashlib
 import io
+from base64 import b64encode
 from typing import Any, cast
 
 import cairosvg  # type: ignore
@@ -17,8 +19,26 @@ COLOR_FORMATS = {"HEX": "hex", "RGB": "rgb", "HSL": "hsl", "CMYK": "cmyk"}
 class Tools(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
+        self.encodings = {
+            "base64": self.encode_base64,
+            "md5": self.encode_md5,
+            "sha256": self.encode_sha256,
+            "sha512": self.encode_sha512,
+        }
 
-    group = app_commands.Group(name="tools", description="Information commands.")
+    def encode_base64(self, input_string: str):
+        return b64encode(input_string.encode()).decode()
+
+    def encode_md5(self, input_string: str):
+        return hashlib.md5(input_string.encode()).hexdigest()
+
+    def encode_sha256(self, input_string: str):
+        return hashlib.sha256(input_string.encode()).hexdigest()
+
+    def encode_sha512(self, input_string: str):
+        return hashlib.sha512(input_string.encode()).hexdigest()
+
+    group = app_commands.Group(name="tools", description="Various tool commands.")
 
     @group.command(name="colors", description="Converts a color to different formats.")
     @app_commands.describe(color_format="Original color format to convert from")
@@ -34,6 +54,9 @@ class Tools(commands.Cog):
         color_format: discord.app_commands.Choice[str],
         color: str,
     ) -> None:
+        if color_format.value == "HEX" and color.startswith("#"):
+            color = color[1:]
+
         api = f"https://www.thecolorapi.com/id?format=json&{color_format.value}={color}"
 
         data: Any = await self.make_request(api)
@@ -86,6 +109,35 @@ class Tools(commands.Cog):
         await interaction.response.send_message(
             embed=embed, file=discord.File(png_bio, "color.png")
         )
+
+    @app_commands.command(name="encode", description="Encodes a string to a specified format.")
+    @app_commands.describe(encoding="The encoding format to use", string="The string to encode")
+    @app_commands.choices(
+        encoding=[
+            app_commands.Choice[str](name="base64", value="base64"),
+            app_commands.Choice[str](name="md5", value="md5"),
+            app_commands.Choice[str](name="sha256", value="sha256"),
+            app_commands.Choice[str](name="sha512", value="sha512"),
+        ]
+    )
+    async def encode(
+        self,
+        interaction: discord.Interaction,
+        encoding: app_commands.Choice[str],
+        string: str,
+    ) -> None:
+        title = f"{encoding.name.capitalize()} Encode"
+        try:
+            encode_func = self.encodings[encoding.value]
+            encoded_string = encode_func(string)
+            description = f"Encoded: {encoded_string}"
+        except KeyError:
+            description = "Invalid encoding selected!"
+
+        embed = EmbedCreator.create_info_embed(
+            title=title, description=description, interaction=interaction
+        )
+        await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot: commands.Bot) -> None:
