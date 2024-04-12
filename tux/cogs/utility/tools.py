@@ -110,7 +110,7 @@ class Tools(commands.Cog):
             embed=embed, file=discord.File(png_bio, "color.png")
         )
 
-    @app_commands.command(name="encode", description="Encodes a string to a specified format.")
+    @group.command(name="encode", description="Encodes a string to a specified format.")
     @app_commands.describe(encoding="The encoding format to use", string="The string to encode")
     @app_commands.choices(
         encoding=[
