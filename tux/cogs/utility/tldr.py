@@ -29,7 +29,7 @@ class Tldr(commands.Cog):
     async def tldr(self, interaction: discord.Interaction, command: str) -> None:
         logger.info(f"{interaction.user} used the /tldr to show info about {command}")
         tldr_page = self.get_tldr_page(command)
-        embed = EmbedCreator.create_default_embed(
+        embed = EmbedCreator.create_info_embed(
             title=f"TLDR for {command}", description=tldr_page, interaction=interaction
         )
         await interaction.response.send_message(embed=embed)
