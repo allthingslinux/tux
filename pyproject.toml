@@ -25,6 +25,7 @@ python-dotenv = "^1.0.1"
 ruff = "^0.3.6"
 sentry-sdk = "^1.45.0"
 vulture = "^2.11"
+pygithub = "^2.3.0"
 
 [tool.poetry.scripts]
 pyright = "pyright:run"

@@ -6,7 +6,7 @@ from typing import Final
 from dotenv import load_dotenv
 
 load_dotenv()
-config_file = Path("config/settings.json")
+config_file = Path("/home/kasen/tux/config/settings.json")
 config = json.loads(config_file.read_text())
 
 
