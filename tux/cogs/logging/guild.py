@@ -22,9 +22,17 @@ class GuildLogging(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        # check if the message has no embeds, attachments, or content
+        # check if the message has no embeds, attachments, or content, stickers, or isnt a nitro gift/boost
         # if so its probably a poll
-        if not message.embeds and not message.attachments and not message.content:
+        if (
+            not message.embeds
+            and not message.attachments
+            and not message.content
+            and not message.stickers
+        ):
+            # check if the message is not a message
+            if message.type != discord.MessageType.default:
+                return
             # delete the message and log it
             await message.delete()
             embed = EmbedCreator.create_log_embed(
