@@ -4,13 +4,6 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// datasource db {
-//   // SQLite provider
-//   provider = "postgresql"
-//   // Database local file
-//   url      = "file:database.db"
-// }
-
 generator client {
   // Prisma Python client provider
   provider             = "prisma-client-py"
@@ -44,7 +37,7 @@ model Users {
   // Specifies if the user is a bot account.
   bot          Boolean
   // Returns the user’s creation time in UTC. This is when the user’s Discord account was created.
-  created_at   DateTime
+  created_at   DateTime?
   // True if user is a member of a guild (not a discord.py attribute)
   is_member    Boolean   @default(true)
   // The guild specific nickname of the user. Takes precedence over the global name.
@@ -52,7 +45,7 @@ model Users {
   // An aware datetime object that specifies the date and time in UTC that the member joined the guild. If the member left and rejoined the guild, this will be the latest date. In certain cases, this can be None.
   joined_at    DateTime?
 
-  // This is a relation field and is a list of roles that the user has, linking to the `UserRoles` table. If you fetch a user from the database and include this field, you will get all the roles associated with that user. 
+  // This is a relation field and is a list of roles that the user has, linking to the `UserRoles` table. If you fetch a user from the database and include this field, you will get all the roles associated with that user.
   roles UserRoles[]
 
   // This represents all the infractions that this user has given out when acting as a moderator. It has a `relation` annotation to make clear that for these infractions, this user is referred to in the `moderator` field of the `Infractions` table.
@@ -88,6 +81,8 @@ model Roles {
   created_at  DateTime?
   // Returns a string that allows you to mention a role.
   mention     String?   @default("")
+  // The role’s color. An integer representation of hexadecimal colour code.
+  color       BigInt?
 
   // This field links a role to the users that have it. It references the `UserRoles` junction table. If you fetch a role from the database and include this field, you will get a list of UserRoles entries and from there you can find all the users that have this role.
   users UserRoles[]
@@ -97,18 +92,13 @@ model Roles {
 }
 
 model UserRoles {
-  id BigInt @id @default(autoincrement())
-
-  // These refer to the `Users` model. `user_id` is the ID of a user from the `Users` table. The line `user Users @relation(fields: [user_id], references: [id])` implies that `user` establishes a relation with `Users` model based on the `user_id` in this `UserRoles` model and the `id` in the `Users` model.
   user    Users  @relation(fields: [user_id], references: [id])
   user_id BigInt
 
-  // These refer to the `Roles` model. `role_id` is the ID of a role from the `Roles` table. The line `role Roles @relation(fields: [role_id], references: [id])` implies that `role` establishes a relation with `Roles` model based on the `role_id` in this `UserRoles` model and the `id` in the `Roles` model.
   role    Roles  @relation(fields: [role_id], references: [id])
   role_id BigInt
 
-  // This specifies a composite unique constraint on `user_id` and `role_id`, meaning each combination of a user id and role id must be unique. It prevents a single user from having the same role multiple times. This constraint helps to maintain data integrity.
-  @@unique([user_id, role_id])
+  @@id([user_id, role_id])
 }
 
 model Infractions {

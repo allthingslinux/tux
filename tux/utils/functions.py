@@ -1,5 +1,68 @@
 from collections.abc import Callable
 from datetime import UTC, datetime
+from typing import Any
+
+import discord
+
+
+def compare_changes(before: dict[str, Any], after: dict[str, Any]) -> list[str]:
+    """
+    Compares the changes between two dictionaries and returns a list of strings representing the changes.
+
+    Args:
+        before: The dictionary representing the state before the changes.
+        after: The dictionary representing the state after the changes.
+
+    Returns:
+        A list of strings showing the changes made in the dictionaries.
+    """
+
+    return [
+        f"{key}: {before[key]} -> {after[key]}"
+        for key in before
+        if key in after and before[key] != after[key]
+    ]
+
+
+def extract_guild_attrs(guild: discord.Guild) -> dict[str, Any]:
+    """
+    Extracts relevant attributes from a discord.Guild and returns them as a dictionary.
+
+    Args:
+        guild: The discord.Guild instance to extract attributes from.
+
+    Returns:
+        A dictionary containing the extracted attributes of the guild.
+    """
+
+    return {
+        "name": guild.name,
+        "description": guild.description,
+        "member_count": guild.member_count,
+        "verification_level": str(guild.verification_level),
+        "system_channel": guild.system_channel,
+    }
+
+
+def extract_member_attrs(member: discord.Member) -> dict[str, Any]:
+    """
+    Extracts relevant attributes from a discord.Member and returns them as a dictionary.
+
+    Args:
+        member: The discord.Member instance to extract attributes from.
+
+    Returns:
+        A dictionary containing the extracted attributes of the member.
+    """
+
+    return {
+        "name": member.name,
+        "nick": member.nick,
+        "roles": member.roles,
+        "joined_at": member.joined_at,
+        "status": member.status,
+        "activity": member.activity,
+    }
 
 
 def get_local_time() -> datetime:

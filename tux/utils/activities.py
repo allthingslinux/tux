@@ -69,9 +69,7 @@ class ActivityChanger:
 
     async def run(self):
         while True:
-            self.activities = (
-                self.build_activity_list()
-            )  # Build the activity list afresh every cycle
-
-            await self.bot.change_presence(activity=random.choice(self.activities))
-            await asyncio.sleep(self.delay)
+            self.activities = self.build_activity_list()
+            for activity in self.activities:
+                await self.bot.change_presence(activity=activity)
+                await asyncio.sleep(self.delay)

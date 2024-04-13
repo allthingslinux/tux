@@ -5,6 +5,8 @@ from discord.ext import commands
 
 from tux.utils.constants import Constants as CONST
 
+# TODO: Refactor this to reduce code duplication
+
 
 class EmbedCreator:
     @staticmethod
@@ -47,6 +49,10 @@ class EmbedCreator:
         embed.set_thumbnail(url=url)
 
     @staticmethod
+    def set_image(embed: discord.Embed, url: str) -> None:
+        embed.set_image(url=url)
+
+    @staticmethod
     def base_embed(
         ctx: commands.Context[commands.Bot] | None,
         interaction: discord.Interaction | None,
@@ -54,11 +60,6 @@ class EmbedCreator:
     ) -> discord.Embed:
         footer: tuple[str, str | None] = EmbedCreator.get_footer(ctx, interaction)
         timestamp: datetime = EmbedCreator.get_timestamp(ctx, interaction)
-
-        # if ctx:
-        #     user_name = ctx.author.display_name
-        # else:
-        #     user_name = interaction.user.display_name if interaction else "Tux"
 
         embed = discord.Embed()
 
@@ -151,3 +152,13 @@ class EmbedCreator:
         interaction: discord.Interaction | None = None,
     ) -> discord.Embed:
         return cls.create_embed(ctx, interaction, "POLL", title, description)
+
+    @classmethod
+    def create_log_embed(
+        cls,
+        title: str,
+        description: str,
+        ctx: commands.Context[commands.Bot] | None = None,
+        interaction: discord.Interaction | None = None,
+    ) -> discord.Embed:
+        return cls.create_embed(ctx, interaction, "LOG", title, description)

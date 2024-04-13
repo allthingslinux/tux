@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   bot_env:
-    image: python:3.11-slim
+    image: python:3.12-slim
     container_name: atl-discordbot-python-env
     env_file:
       - .env
