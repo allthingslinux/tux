@@ -21,6 +21,19 @@ class GuildLogging(commands.Cog):
     """Audit logging - Channel"""
 
     @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        # check if the message has no embeds, attachments, or content
+        # if so its probably a poll
+        if not message.embeds and not message.attachments and not message.content:
+            # delete the message and log it
+            await message.delete()
+            embed = EmbedCreator.create_log_embed(
+                title="Poll Deleted",
+                description=f"Message: {message.id}",
+            )
+            await self.send_to_audit_log(embed)
+
+    @commands.Cog.listener()
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
         embed = EmbedCreator.create_log_embed(
             title="Channel Created",
