@@ -36,6 +36,7 @@ class Constants:
     LOG_CHANNELS: Final[dict[str, int]] = {
         "AUDIT": 1223690612822376529,
         "MOD": 1223690612822376529,
+        "REPORT": 1223690612822376529,
     }
 
     # User ID Constants
