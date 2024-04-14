@@ -70,7 +70,8 @@ class ErrorHandler(commands.Cog):
         """Handle traditional command errors."""
         if isinstance(
             error,
-            commands.UnexpectedQuoteError
+            commands.CommandNotFound
+            | commands.UnexpectedQuoteError
             | commands.InvalidEndOfQuotedStringError
             | commands.CheckFailure,
         ):

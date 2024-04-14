@@ -35,7 +35,7 @@ model Users {
   // Returns a string that allows you to mention the given user.
   mention      String
   // Specifies if the user is a bot account.
-  bot          Boolean
+  bot          Boolean   @default(false)
   // Returns the user’s creation time in UTC. This is when the user’s Discord account was created.
   created_at   DateTime?
   // True if user is a member of a guild (not a discord.py attribute)
@@ -63,7 +63,8 @@ model Users {
   notes_given    Notes[] @relation("Moderator")
   notes_received Notes[] @relation("User")
 
-  reminders Reminders[]
+  reminders    Reminders[]
+  CommandStats CommandStats[]
 }
 
 model Roles {
@@ -153,6 +154,24 @@ model Reminders {
   // These fields establish a relationship with the `Users` model. `author_id` is the ID of the user who created the reminder. The line `author Users @relation(fields: [author_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the author) is associated with this reminder.
   user    Users  @relation(fields: [user_id], references: [id])
   user_id BigInt
+}
+
+model Commands {
+  id           BigInt         @id @default(autoincrement())
+  name         String
+  content      String
+  created_at   DateTime?      @default(now())
+  CommandStats CommandStats[]
+}
+
+model CommandStats {
+  id         BigInt    @id @default(autoincrement())
+  command_id BigInt
+  user_id    BigInt
+  used_at    DateTime? @default(now())
+
+  command Commands @relation(fields: [command_id], references: [id])
+  user    Users    @relation(fields: [user_id], references: [id])
 }
 
 // model Logs {
