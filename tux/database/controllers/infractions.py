@@ -1,14 +1,6 @@
-from enum import Enum
-
 from prisma.models import Infractions
 from tux.database.client import db
-
-
-class InfractionType(Enum):
-    BAN = "ban"
-    WARN = "warn"
-    KICK = "kick"
-    TIMEOUT = "timeout"
+from tux.utils.enums import InfractionType
 
 
 class InfractionsController:
