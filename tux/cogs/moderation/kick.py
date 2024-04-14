@@ -3,14 +3,13 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+from prisma.models import Infractions
 from tux.database.controllers import DatabaseController
 from tux.utils.embeds import EmbedCreator
 from tux.utils.enums import InfractionType
 
 
 class Kick(commands.Cog):
-    """Cog for handling the kicking of members from a Discord server."""
-
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
         self.db_controller = DatabaseController().infractions
@@ -21,71 +20,78 @@ class Kick(commands.Cog):
         moderator_id: int,
         infraction_type: InfractionType,
         infraction_reason: str,
-    ) -> None:
-        """Inserts an infraction record into the database."""
+    ) -> Infractions | None:
+        """
+        Inserts an infraction into the database.
+
+        Args:
+            user_id: The user ID who is being infracted.
+            moderator_id: The moderator ID who is creating the infraction.
+            infraction_type: The type of infraction.
+            infraction_reason: The reason for the infraction.
+
+        Returns:
+            An instance of Infractions if successful, None otherwise.
+        """
         try:
-            await self.db_controller.create_infraction(
+            return await self.db_controller.create_infraction(
                 user_id=user_id,
                 moderator_id=moderator_id,
                 infraction_type=infraction_type,
                 infraction_reason=infraction_reason,
             )
-            logger.info("Infraction recorded successfully.")
+
         except Exception as error:
-            logger.error(f"Failed to create infraction. Error: {error}")
+            logger.error(f"Failed to create infraction for user {user_id}. Error: {error}")
+            return None
 
     @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod", "Jr. Mod")
     @app_commands.command(name="kick", description="Kicks a member from the server.")
-    @app_commands.describe(member="Member to kick", reason="Reason for the kick")
+    @app_commands.describe(member="Which member to kick", reason="Reason for kick")
     async def kick(
         self, interaction: discord.Interaction, member: discord.Member, reason: str | None = None
     ) -> None:
-        """Kicks the specified member with an optional reason."""
-        if reason is None:
-            reason = "No reason provided"
+        """
+        Kicks a member from the server.
+
+        Args:
+            interaction: The interaction context for this command.
+            member: The Discord member to be kicked.
+            reason: The reason for kicking the member.
+        """
+        reason = reason or "No reason provided"
 
         try:
-            await member.kick(reason=reason)
-            await self.log_kick(interaction, member, reason)
+            new_kick = await self.insert_infraction(
+                user_id=member.id,
+                moderator_id=interaction.user.id,
+                infraction_type=InfractionType.KICK,
+                infraction_reason=reason,
+            )
+
+            embed = EmbedCreator.create_infraction_embed(
+                title="",
+                interaction=interaction,
+                description="",
+            )
+            embed.add_field(
+                name="Case ID", value=f"`{new_kick.id if new_kick else 'Unknown'}`", inline=True
+            )
+            embed.add_field(name="Action", value="Kick", inline=True)
+            embed.add_field(name="Reason", value=f"`{reason}`", inline=False)
+            embed.add_field(name="By", value=f"{interaction.user.mention}", inline=True)
+            embed.add_field(name="To", value=f"{member.mention}", inline=True)
+
+            logger.info(f"Kicked {member.display_name} ({member.id}): {reason}")
+
         except Exception as error:
-            await self.handle_kick_error(interaction, member, error)
+            msg = f"Failed to kick {member.display_name} ({member.id})."
+            embed = EmbedCreator.create_error_embed(
+                title="Kick Failed", description=msg, interaction=interaction
+            )
 
-    async def log_kick(
-        self, interaction: discord.Interaction, member: discord.Member, reason: str
-    ) -> None:
-        """Sends a log message and informs about the kick operation."""
-        embed = EmbedCreator.create_infraction_embed(
-            title=f"{member.display_name} has been kicked.",
-            description=f"Reason: `{reason}`",
-            interaction=interaction,
-        )
-        embed.add_field(
-            name="Moderator",
-            value=f"{interaction.user.mention} ({interaction.user.id})",
-            inline=False,
-        )
-        embed.add_field(name="Member", value=f"{member.mention} ({member.id})", inline=False)
+            logger.error(f"{msg} Error: {error}")
 
-        await self.insert_infraction(
-            user_id=member.id,
-            moderator_id=interaction.user.id,
-            infraction_type=InfractionType.KICK,
-            infraction_reason=reason,
-        )
-        logger.info(f"Kicked {member.display_name} for: {reason}")
-        await interaction.response.send_message(embed=embed)
-
-    async def handle_kick_error(
-        self, interaction: discord.Interaction, member: discord.Member, error: Exception
-    ) -> None:
-        """Handles errors that occur during the kick operation."""
-        error_msg = f"Failed to kick {member.display_name}. Error: {error}"
-        logger.error(error_msg)
-        embed = EmbedCreator.create_error_embed(
-            title=f"Failed to kick {member.display_name}",
-            description=f"Error Info: `{error}`",
-            interaction=interaction,
-        )
         await interaction.response.send_message(embed=embed)
 
 

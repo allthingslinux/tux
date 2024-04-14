@@ -62,7 +62,7 @@ class EmbedCreator:
 
         embed = discord.Embed()
 
-        embed.color = discord.Colour(CONST.EMBED_STATE_COLORS[state])
+        embed.color = CONST.EMBED_STATE_COLORS[state]
 
         embed.set_author(
             name=state.capitalize() if state else "Info",

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from prisma.models import Infractions
 from tux.database.client import db
 from tux.utils.enums import InfractionType
@@ -36,6 +38,7 @@ class InfractionsController:
         moderator_id: int,
         infraction_type: InfractionType,
         infraction_reason: str,
+        expires_at: datetime | None = None,
     ) -> Infractions:
         """
         Creates a new infraction in the database with the specified user ID, moderator ID, infraction type, and reason.
@@ -45,6 +48,7 @@ class InfractionsController:
             moderator_id (int): The ID of the moderator who created the infraction.
             infraction_type (InfractionType): The type of the infraction.
             infraction_reason (str): The reason for the infraction.
+            expires_at (datetime | None): The expiration date of the infraction.
 
         Returns:
             Infractions: The newly created infraction.
@@ -56,6 +60,7 @@ class InfractionsController:
                 "moderator_id": moderator_id,
                 "infraction_type": infraction_type.value,
                 "infraction_reason": infraction_reason,
+                "expires_at": expires_at,
             }
         )
 
