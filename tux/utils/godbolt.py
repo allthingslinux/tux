@@ -1,4 +1,3 @@
-
 from typing import TypedDict
 
 import httpx
@@ -46,7 +45,6 @@ def checkresponse(res: httpx.Response) -> str | None:
     if res.status_code == httpx.codes.OK:
         return res.text
     return None
-
 
 
 def getlanguages() -> str | None:
