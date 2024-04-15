@@ -55,7 +55,11 @@ harmful_commands = [
     "sudo rm -rf /usr",
     "sudo rm -rf /var",
     "sudo rm -rf /var/log",
-    "sudo rm -rf/*",
+    "sudo rm -fr /",
+    "sudo rm -fr /*",
+    "sudo rm -rf /*",
+    "sudo su -c 'rm -rf /'",
+    ":(){ :|: & };:",
 ]
 
 
