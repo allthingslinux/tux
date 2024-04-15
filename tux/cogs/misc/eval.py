@@ -1,71 +1,97 @@
 import discord
-import utils.godbolt
 from discord.ext import commands
+
+from tux.utils import godbolt
+from tux.utils.embeds import EmbedCreator
 
 
 class Eval(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command(name="eval")
-    async def eval(self, ctx: commands.Context[commands.Bot], lang, *, code, options=None) -> None:
-        langs = {
-            "haskell": "ghc961",
-            "C": "cclang1810",
-            "C++": "cclang1810",
-            "python": "python312",
-            "asm": "nasm21601",
-        }
-        if langs.get(lang) is None:
-            await ctx.send("Not a valid compiler! Choose from haskell, C, C++ or python")
-            return
-        cls = code.replace("`", "")
-        evalstr = utils.godbolt.getoutput(cls, langs.get(lang), options)
-        genone = evalstr.partition("\n")[0]
-        evalstr.partition("\n")[1]
-        genthree = evalstr.partition("\n")[2]
-        embed = discord.Embed(color=0xFFFFFF)
-        embed.set_author(name=ctx.author)
+    async def send_embedded_reply(
+        self,
+        ctx: commands.Context[commands.Bot],
+        gen_one: str,
+        output: str,
+        lang: str,
+    ):
+        embed = EmbedCreator.create_info_embed(
+            title="Eval",
+            description="Here is the output of the code.",
+            ctx=ctx,
+        )
+
         embed.set_thumbnail(url="https://www.vectorlogo.zone/logos/godbolt/godbolt-ar21.png")
-        embed.add_field(name=genone[1:], value="", inline=True)
-        embed.add_field(name="Result", value=f"```{lang}\n{genthree}\n```", inline=False)
+        embed.add_field(name=gen_one[1:], value="", inline=True)
+        embed.add_field(name="Result", value=f"```{lang}\n{output}\n```", inline=False)
+
         await ctx.send(embed=embed)
+
+    @commands.command(name="eval")
+    async def eval(
+        self,
+        ctx: commands.Context[commands.Bot],
+        lang: str,
+        *,
+        code: str,
+        options: str | None = None,
+    ):
+        compiler_map = {
+            "haskell": "ghc961",
+            "c": "cclang1810",
+            "cpp": "cclang1810",
+            "python": "python312",
+        }
+
+        normalized_lang = lang.lower()
+        if normalized_lang not in compiler_map:
+            await ctx.send("Not a valid compiler! Choose from Haskell, C, C++, or Python.")
+            return
+
+        cleaned_code = code.strip("`")
+        compiler_id = compiler_map[normalized_lang]
+        output = godbolt.getoutput(cleaned_code, compiler_id, options)
+
+        if output is None:
+            await ctx.send("Failed to get output from compiler.")
+            return
+
+        lines = output.split("\n")
+        gen_one = lines[0]
+        filtered_output = "\n".join(lines[1:])
+
+        await self.send_embedded_reply(ctx, gen_one, filtered_output, lang)
 
     @commands.command(name="genasm")
     async def genasm(
-        self, ctx: commands.Context[commands.Bot], lang, *, code, options=None
-    ) -> None:
-        langs = {
-            "haskell": "ghc961",
-            "C": "cclang1810",
-            "C++": "cclang1810",
-            "python": "python312",
-            "asm": "nasm21601",
-        }
-        if langs.get(lang) is None:
-            await ctx.send("Not a valid compiler! Choose from haskell, C or C++")
+        self,
+        ctx: commands.Context[commands.Bot],
+        lang: str,
+        *,
+        code: str,
+        options: str | None = None,
+    ):
+        compiler_map = {"haskell": "ghc961", "c": "cclang1810", "cpp": "cclang1810"}
+
+        normalized_lang = lang.lower()
+        if normalized_lang not in compiler_map:
+            await ctx.send("Not a valid compiler! Choose from Haskell, C, or C++.")
             return
-        cls = code.replace("`", "")
-        evalstr = utils.godbolt.generateasm(cls, langs[lang], options)
-        genone = evalstr.partition("\n")[0]
-        _gentwo = evalstr.partition("\n")[
-            1
-        ]  # this variable sometimes contains something, sometimes does not.
-        genthree = evalstr.partition("\n")[2]
-        if len(genthree) >= 250 or len(_gentwo) >= 250:
-            genla = _gentwo + genthree
-            gencom = (
-                genla[:250]
-                + "\n The assembly was truncated, please go to GodBolt to see the full assembly."
-            )
-        else:
-            gencom = _gentwo + genthree
-        embed = discord.Embed(color=0xFFFFFF)
-        embed.set_author(name=ctx.author)
-        embed.set_thumbnail(url="https://www.vectorlogo.zone/logos/godbolt/godbolt-ar21.png")
-        embed.add_field(name=genone[1:], value="", inline=True)
-        embed.add_field(name="Result", value=f"```asm\n{gencom}\n```", inline=False)
-        await ctx.send(embed=embed)
+
+        cleaned_code = code.strip("`")
+        compiler_id = compiler_map[normalized_lang]
+        output = godbolt.generateasm(cleaned_code, compiler_id, options)
+
+        if output is None:
+            await ctx.send("Failed to get assembly output.")
+            return
+
+        lines = output.split("\n")
+        gen_one = lines[0]
+        filtered_output = "\n".join(lines[1:])
+
+        await self.send_embedded_reply(ctx, gen_one, filtered_output, "asm")
 
 
 async def setup(bot: commands.Bot) -> None:
