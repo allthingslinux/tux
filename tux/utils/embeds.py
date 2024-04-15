@@ -5,6 +5,8 @@ from discord.ext import commands
 
 from tux.utils.constants import Constants as CONST
 
+# TODO: Refactor this to reduce code duplication
+
 
 class EmbedCreator:
     @staticmethod
@@ -20,23 +22,22 @@ class EmbedCreator:
         ctx: commands.Context[commands.Bot] | None, interaction: discord.Interaction | None
     ) -> tuple[str, str | None]:
         user: discord.User | discord.Member | None = None
+        latency = None
 
         if ctx:
             user = ctx.author
+            latency = round(ctx.bot.latency * 1000, 2)
         elif interaction:
             user = interaction.user
+            latency = round(interaction.client.latency * 1000, 2)
 
         if isinstance(user, discord.User | discord.Member):
             return (
-                f"Requested by {user.display_name}",
+                f"{user.name}@atl $ ∕tux {latency}ms",  # noqa: RUF001
                 str(user.avatar.url) if user.avatar else None,
             )
 
         return ("", None)
-
-    # @staticmethod
-    # def shell_terminal_format(user: str) -> str:
-    #     return f"[{user}@tux ~]$"
 
     @staticmethod
     def add_field(embed: discord.Embed, name: str, value: str, inline: bool = True) -> None:
@@ -58,11 +59,6 @@ class EmbedCreator:
     ) -> discord.Embed:
         footer: tuple[str, str | None] = EmbedCreator.get_footer(ctx, interaction)
         timestamp: datetime = EmbedCreator.get_timestamp(ctx, interaction)
-
-        # if ctx:
-        #     user_name = ctx.author.display_name
-        # else:
-        #     user_name = interaction.user.display_name if interaction else "Tux"
 
         embed = discord.Embed()
 
@@ -88,7 +84,7 @@ class EmbedCreator:
         interaction: discord.Interaction | None,
         state: str,
         title: str,
-        description: str,
+        description: str = "",
     ) -> discord.Embed:
         embed = cls.base_embed(ctx, interaction, state)
         embed.title = title
@@ -165,3 +161,13 @@ class EmbedCreator:
         interaction: discord.Interaction | None = None,
     ) -> discord.Embed:
         return cls.create_embed(ctx, interaction, "LOG", title, description)
+
+    @classmethod
+    def create_infraction_embed(
+        cls,
+        title: str,
+        description: str,
+        ctx: commands.Context[commands.Bot] | None = None,
+        interaction: discord.Interaction | None = None,
+    ) -> discord.Embed:
+        return cls.create_embed(ctx, interaction, "INFRACTION", title, description)

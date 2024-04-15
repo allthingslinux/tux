@@ -15,7 +15,16 @@ class Sync(commands.Cog):
 
         await self.bot.tree.sync(guild=ctx.guild)
 
+        await ctx.send("Application command tree synced.")
+
         logger.info(f"{ctx.author} synced the application command tree.")
+
+    @sync.error
+    async def sync_error(self, ctx: commands.Context[commands.Bot], error: Exception) -> None:
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send("Please specify a guild to sync.")
+        else:
+            logger.error(f"Error syncing application commands: {error}")
 
 
 async def setup(bot: commands.Bot) -> None:

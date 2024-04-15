@@ -34,8 +34,12 @@ class Constants:
 
     # Channel constants
     LOG_CHANNELS: Final[dict[str, int]] = {
+        # For general logging
         "AUDIT": 1223690612822376529,
+        # For infractions, mod actions, etc.
         "MOD": 1223690612822376529,
+        # For anonymous reports
+        "REPORT": 1223690612822376529,
     }
 
     # User ID Constants
@@ -53,26 +57,42 @@ class Constants:
 
     # Color constants
     EMBED_STATE_COLORS: Final[dict[str, int]] = {
-        # tux feet yellow
+        # # tux feet yellow
         "DEFAULT": 0xF4D01A,
-        # tux feet yellow
+        # # tux feet yellow
         "LOG": 0xF4D01A,
-        # catppuccin mocha sky
+        # # catppuccin mocha sky
         "INFO": 0x89DCEB,
-        # catppuccin latte peach
+        # # catppuccin latte peach
         "WARNING": 0xFE640B,
-        # catppuccin latte red
+        # # catppuccin latte red
         "ERROR": 0xD20F39,
-        # catppuccin mocha green
+        # # catppuccin mocha green
         "SUCCESS": 0xA6E3A1,
-        # catppuccin mocha mauve
+        # # catppuccin mocha mauve
         "DEBUG": 0xCBA6F7,
-        # pure black
-        "BLACK": 0x000000,
-        # pure white
-        "WHITE": 0xFFFFFF,
-        # catppuccin yellow
+        # # pure black
+        # "BLACK": 0x000000,
+        # # pure white
+        # "WHITE": 0xFFFFFF,
+        # # catppuccin yellow
         "POLL": 0xF9E2AF,
+        # # catppuccin crust
+        "INFRACTION": 0x11111B,
+        #######################
+        # TOKYO NIGHT COLORS
+        "FOREGROUND": 0xA9B1DC,
+        "BACKGROUND": 0x1A1B2C,
+        "BLACK": 0x414868,
+        "CURSOR": 0xC0CAF5,
+        "SELECT": 0x28344A,
+        "RED": 0xF7768E,
+        "GREEN": 0x73DACA,
+        "YELLOW": 0xE0AF68,
+        "BLUE": 0x7AA2F7,
+        "PURPLE": 0xBB9AF7,
+        "CYAN": 0x7DCFFF,
+        "WHITE": 0xC0CAF5,
     }
 
     EMBED_STATE_ICONS: Final[dict[str, str]] = {
@@ -83,6 +103,7 @@ class Constants:
         "ERROR": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/latte_red.png?raw=true",
         "SUCCESS": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/mocha_green.png?raw=true",
         "POLL": "https://github.com/catppuccin/catppuccin/raw/main/assets/palette/circles/mocha_yellow.png?raw=true",
+        "INFRACTION": "https://github.com/catppuccin/catppuccin/raw/main/assets/palette/circles/mocha_crust.png?raw=true",
     }
 
     EMBED_SPECIAL_CHARS: Final[dict[str, str]] = {

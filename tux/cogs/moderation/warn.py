@@ -3,65 +3,102 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+from prisma.models import Infractions
+from tux.database.controllers import DatabaseController
+from tux.utils.embeds import EmbedCreator
+from tux.utils.enums import InfractionType
+
 
 class Warn(commands.Cog):
+    """Cog for handling the warning of members in a Discord server."""
+
     def __init__(self, bot: commands.Bot) -> None:
+        """Initializes the Warn Cog with the bot instance and a database controller reference."""
         self.bot = bot
+        self.db_controller = DatabaseController().infractions
 
-    @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod", "Jr. Mod")
-    @app_commands.command(name="warn", description="Warns a member in the server for a reason.")
-    @app_commands.describe(member="Which member to warn", reason="Reason for warn")
-    async def warn(
+    async def insert_infraction(
         self,
-        interaction: discord.Interaction,
-        member: discord.Member,
-        reason: str | None = "No reason",
-    ) -> None:
-        logger.info(f"{interaction.user} just warned user {member} for {reason}")
+        user_id: int,
+        moderator_id: int,
+        infraction_type: InfractionType,
+        infraction_reason: str,
+    ) -> Infractions | None:
+        """
+        Inserts a new warning infraction into the database.
 
-        moderator: discord.Member | discord.User = interaction.user
+        Args:
+            user_id: ID of the user receiving the infraction.
+            moderator_id: ID of the moderator issuing the infraction.
+            infraction_type: Type of infraction, e.g., WARN.
+            infraction_reason: Reason for issuing the infraction.
 
-        if interaction.guild:
-            moderator = await interaction.guild.fetch_member(interaction.user.id)
-
-        response = await self.execute_warn(
-            interaction, moderator, member, reason or "None provided"
-        )
-
-        await interaction.response.send_message(embed=response)
-
-    async def execute_warn(
-        self,
-        interaction: discord.Interaction,
-        moderator: discord.Member | discord.User,
-        member: discord.Member,
-        reason: str,
-    ) -> discord.Embed:
+        Returns:
+            An Infractions object if creation was successful, None otherwise.
+        """
         try:
-            # TODO Replace this with function that creates a warn
-            # await add_infraction(moderator.id, member.id, "warn", reason, datetime.now())
-            embed = discord.Embed(
-                title=f"Warned {member.display_name}!",
-                color=discord.Colour.gold(),
-                description=f"Reason: `{reason}`",
-                timestamp=interaction.created_at,
-            )
-            embed.set_footer(
-                text=f"Warned by {moderator.display_name}",
-                icon_url=moderator.display_avatar.url,
+            return await self.db_controller.create_infraction(
+                user_id=user_id,
+                moderator_id=moderator_id,
+                infraction_type=infraction_type,
+                infraction_reason=infraction_reason,
             )
 
         except Exception as error:
-            embed = discord.Embed(
-                title=f"Failed to warn {member.display_name}",
-                color=discord.Colour.red(),
-                description=f"Unknown error. Error Info: `{error}`",
-                timestamp=interaction.created_at,
-            )
-            logger.error(f"Failed to warn {member.display_name}. Error: {error}")
+            logger.error(f"Failed to create infraction for user {user_id}. Error: {error}")
+            return None
 
-        return embed
+    @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod", "Jr. Mod")
+    @app_commands.command(name="warn", description="Issues a warning to a member of the server.")
+    @app_commands.describe(member="The member to warn", reason="The reason for issuing the warning")
+    async def warn(
+        self, interaction: discord.Interaction, member: discord.Member, reason: str | None = None
+    ) -> None:
+        """
+        Warns a specified member with an optional reason.
+
+        Args:
+            interaction: The Discord interaction context.
+            member: The member object representing the user to warn.
+            reason: The reason for warning the user.
+        """
+        reason = reason or "No reason provided"
+
+        try:
+            warn_entry = await self.insert_infraction(
+                user_id=member.id,
+                moderator_id=interaction.user.id,
+                infraction_type=InfractionType.WARN,
+                infraction_reason=reason,
+            )
+
+            warn_id = warn_entry.id if warn_entry else "Unknown"
+
+            embed = EmbedCreator.create_infraction_embed(
+                title="",
+                description="",
+                interaction=interaction,
+            )
+            embed.add_field(name="Action", value="Warn", inline=True)
+            embed.add_field(name="Case ID", value=f"`{warn_id}`", inline=True)
+            embed.add_field(name="Reason", value=f"`{reason}`", inline=False)
+            embed.add_field(name="Moderator", value=f"{interaction.user.display_name}", inline=True)
+
+            logger.info(f"Warning issued to {member.display_name} ({member.id}) for: {reason}")
+
+        except Exception as error:
+            msg = f"Failed to issue warning to {member.display_name}."
+            embed = EmbedCreator.create_error_embed(
+                title="Warning Failed",
+                description=msg,
+                interaction=interaction,
+            )
+
+            logger.error(f"{msg} Error: {error}")
+
+        await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot: commands.Bot) -> None:
+    """Asynchronously adds the Warn cog to the bot."""
     await bot.add_cog(Warn(bot))

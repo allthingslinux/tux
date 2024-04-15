@@ -13,7 +13,11 @@ class Clear(commands.Cog):
 
         if ctx.guild:
             self.bot.tree.copy_global_to(guild=ctx.guild)
+
         await self.bot.tree.sync(guild=ctx.guild)
+
+        await ctx.send("Slash command tree cleared.")
+
         logger.info(f"{ctx.author} cleared the slash command tree.")
 
 
