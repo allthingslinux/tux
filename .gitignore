@@ -149,7 +149,10 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.env.old
 
 # Local dev database
 prisma/database.db
-.env.old
+
+# private key for github
+github-private-key.pem
