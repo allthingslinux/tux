@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 from pathlib import Path
@@ -14,7 +15,19 @@ class Constants:
     # Bot-related constants
     BOT_VERSION = "1.0.0"
     BOT_NAME = "Tux"
-    BOT_SOURCE = "https://github.com/allthingslinux/tux"
+
+    GITHUB_REPO_URL = "https://github.com/allthingslinux/tux"
+    GITHUB_REPO_OWNER = "allthingslinux"
+    GITHUB_REPO = "tux"
+    GITHUB_TOKEN: Final[str] = os.getenv("GITHUB_TOKEN", "")
+    GITHUB_APP_ID: Final[int] = int(os.getenv("GITHUB_APP_ID", 0))
+    GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
+    GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
+    GITHUB_PUBLIC_KEY = os.getenv("GITHUB_PUBLIC_KEY")
+    GITHUB_INSTALLATION_ID: Final[int] = int(os.getenv("GITHUB_INSTALLATION_ID", 0))
+    GITHUB_PRIVATE_KEY: str = base64.b64decode(os.getenv("GITHUB_PRIVATE_KEY_BASE64", "")).decode(
+        "utf-8"
+    )
 
     # Production constants
     PROD_TOKEN: Final[str] = os.getenv("PROD_TOKEN", "")
