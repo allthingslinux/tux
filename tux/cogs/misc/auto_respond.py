@@ -1,3 +1,5 @@
+import re
+
 import discord
 from discord.ext import commands
 
@@ -60,21 +62,41 @@ harmful_commands = [
     "sudo rm -rf /*",
     "sudo su -c 'rm -rf /'",
     ":(){ :|: & };:",
+    "sudo rm -rf /",
 ]
+
+# TODO: Fix the triple backtick  regex as it is not working
 
 
 class AutoRespond(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
+    def strip_formatting(self, content: str) -> str:
+        # Remove triple backtick blocks considering any spaces and platform-specific newlines
+        content = re.sub(r"```.*?```", "", content, flags=re.DOTALL)
+
+        # Remove inline code snippets preserving their content only
+        content = re.sub(r"`([^`]*)`", r"\1", content)
+
+        # Remove Markdown headers
+        content = re.sub(r"^#+\s+", "", content, flags=re.MULTILINE)
+
+        # Remove other common markdown symbols
+        content = re.sub(r"[\*_~|>]", "", content)
+
+        return content.strip()
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         if message.author.bot:
             return
 
-        if message.content in harmful_commands:
+        stripped_content = self.strip_formatting(message.content)
+
+        if stripped_content in harmful_commands:
             await message.reply(
-                "Warning: This command is potentially harmful. Avoid running it unless you know what you are doing. If this was a mistake, please ignore this message."
+                "Warning: This command is potentially harmful. Please avoid running it unless you are fully aware of its operation. If this was a mistake, please disregard this message."
             )
 
 
