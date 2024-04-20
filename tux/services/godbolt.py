@@ -42,9 +42,7 @@ url = "https://godbolt.org"
 
 
 def checkresponse(res: httpx.Response) -> str | None:
-    if res.status_code == httpx.codes.OK:
-        return res.text
-    return None
+    return res.text if res.status_code == httpx.codes.OK else None
 
 
 def getlanguages() -> str | None:
