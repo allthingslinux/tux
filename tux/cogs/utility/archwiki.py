@@ -1,5 +1,5 @@
 import discord
-import requests
+import httpx
 from discord import app_commands
 from discord.ext import commands
 
@@ -22,8 +22,9 @@ class ArchWiki(commands.Cog):
             "srsearch": search_term,
         }
 
-        # Send a GET request to the ArchWiki API
-        response = requests.get(base_url, params=params)
+        # send a GET request to the ArchWiki API
+        with httpx.Client() as client:
+            response = client.get(base_url, params=params)
 
         # Check if the request was successful
         if response.status_code == 200:
