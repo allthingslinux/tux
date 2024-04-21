@@ -1,6 +1,6 @@
 from discord.ext import commands
 
-from tux.utils import godbolt
+from tux.services import godbolt
 from tux.utils.embeds import EmbedCreator
 
 
