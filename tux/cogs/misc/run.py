@@ -27,8 +27,8 @@ class Eval(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(name="eval")
-    async def eval(
+    @commands.command(name="run")
+    async def run(
         self,
         ctx: commands.Context[commands.Bot],
         lang: str,
