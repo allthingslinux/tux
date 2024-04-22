@@ -2,6 +2,7 @@ import discord
 import httpx
 from discord import app_commands
 from discord.ext import commands
+from loguru import logger
 
 from tux.utils.embeds import EmbedCreator
 
@@ -16,24 +17,29 @@ class ArchWiki(commands.Cog):
 
         # Parameters for the search
         params: dict[str, str] = {
-            "action": "query",
+            "action": "opensearch",
             "format": "json",
-            "list": "search",
-            "srsearch": search_term,
+            "limit": "1",
+            "search": search_term,
         }
 
         # send a GET request to the ArchWiki API
         with httpx.Client() as client:
+            logger.info(f"GET request to {base_url} with params {params}")
             response = client.get(base_url, params=params)
+
+        logger.info(f"URL: {response.url}")
+
+        # example response: ["pacman",["Pacman"],[""],["https://wiki.archlinux.org/title/Pacman"]]
 
         # Check if the request was successful
         if response.status_code == 200:
             # Parse the JSON response
             data = response.json()
 
-            # Extract and print the search results
-            for result in data["query"]["search"]:
-                return result["title"], result["snippet"]
+            if data[1]:
+                return data[1][0], data[3][0]
+
             return "error", "error"
 
         return "error", "error"
@@ -51,7 +57,7 @@ class ArchWiki(commands.Cog):
         else:
             embed = EmbedCreator.create_info_embed(
                 title=title[0],
-                description=f"https://wiki.archlinux.org/title/{title[0].replace(' ', '_')}",
+                description=title[1],
                 interaction=interaction,
             )
 
