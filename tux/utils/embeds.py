@@ -69,6 +69,43 @@ class EmbedCreator:
 
         return embed
 
+    # requests a custom user and latency for the footer
+    @staticmethod
+    def custom_footer_embed(
+        ctx: commands.Context[commands.Bot] | None,
+        interaction: discord.Interaction | None,
+        state: str,
+        user: discord.User | discord.Member,
+        latency: str,
+        content: str = "",
+        title: str = "",
+    ) -> discord.Embed:
+        timestamp: datetime = EmbedCreator.get_timestamp(ctx, interaction)
+
+        embed = discord.Embed()
+
+        embed.color = CONST.EMBED_STATE_COLORS[state]
+
+        embed.description = content
+
+        embed.title = title
+
+        embed.set_author(
+            name=state.capitalize() if state else "Info",
+            icon_url=CONST.EMBED_STATE_ICONS[state]
+            if state
+            else CONST.EMBED_STATE_ICONS["DEFAULT"],
+        )
+
+        embed.set_footer(
+            text=f"{user.name}@atl $ ∕tux {latency}",  # noqa: RUF001
+            icon_url=str(user.avatar.url) if user.avatar else None,
+        )
+
+        embed.timestamp = timestamp
+
+        return embed
+
     @classmethod
     def create_embed(
         cls,
