@@ -23,16 +23,16 @@ def insert_returns(body: list[ast.stmt]) -> None:
         insert_returns(body[-1].body)
 
 
-class Run(commands.Cog):
+class Eval(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @commands.command(name="run", description="Evaluate a Python expression. (Owner only)")
+    @commands.command(name="eval", description="Evaluate a Python expression. (Owner only)")
     async def run(self, ctx: commands.Context[commands.Bot], *, cmd: str) -> None:
         # Check if the user is the bot owner
         if ctx.author.id != CONST.BOT_OWNER_ID:
             logger.warning(
-                f"{ctx.author} tried to run a command but is not the bot owner. (Owner ID: {self.bot.owner_id}, User ID: {ctx.author.id})"
+                f"{ctx.author} tried to run eval but is not the bot owner. (Owner ID: {self.bot.owner_id}, User ID: {ctx.author.id})"
             )
             await ctx.send("You are not the bot owner. Better luck next time!")
             return
@@ -85,4 +85,4 @@ class Run(commands.Cog):
 
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(Run(bot))
+    await bot.add_cog(Eval(bot))
