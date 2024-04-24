@@ -18,6 +18,19 @@ class SnippetsController:
 
         return await self.table.find_many()
 
+    async def get_all_snippets_sorted(self, newestfirst: bool = True) -> list[Snippets]:
+        """
+        Retrieves all snippets from the database sorted by creation date.
+
+        Args:
+            newestfirst (bool): Whether to sort the snippets by newest first or oldest first.
+
+        Returns:
+            list[Snippets]: A list of all snippets sorted by creation date.
+        """
+
+        return await self.table.find_many(order={"created_at": "desc" if newestfirst else "asc"})
+
     async def get_snippet_by_name(self, name: str) -> Snippets | None:
         """
         Retrieves a snippet from the database based on the specified name.

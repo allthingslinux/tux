@@ -15,13 +15,12 @@ class Snippets(commands.Cog):
         self.db_controller = DatabaseController().snippets
 
     @commands.command(
-        name="snippets", description="List snippets by page (max 10).", aliases=["ss"]
+        name="snippets", description="List snippets by page (max 10).", aliases=["ls"]
     )
     async def list_snippets(self, ctx: commands.Context[commands.Bot], page: int = 1) -> None:
-        snippets: list[SnippetsModel] = await self.db_controller.get_all_snippets()
-
-        # sort the snippets by time created
-        snippets: list[SnippetsModel] = sorted(snippets, key=lambda x: x.created_at, reverse=True)
+        snippets: list[SnippetsModel] = await self.db_controller.get_all_snippets_sorted(
+            newestfirst=True
+        )
 
         # calculate the number of pages
         # if there are no or less than 10 snippets, there is only one page
