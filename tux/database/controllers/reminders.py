@@ -36,6 +36,8 @@ class RemindersController:
         user_id: int,
         reminder_content: str,
         expires_at: datetime,
+        channel_id: int,
+        guild_id: int,
     ) -> Reminders:
         """
         Creates a new reminder in the database with the specified user ID, reminder content, and expiration date.
@@ -54,6 +56,8 @@ class RemindersController:
                 "user_id": user_id,
                 "content": reminder_content,
                 "expires_at": expires_at,
+                "channel_id": channel_id,
+                "guild_id": guild_id,
             }
         )
 
