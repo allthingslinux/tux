@@ -1,3 +1,5 @@
+import datetime
+
 from prisma.models import Snippets
 from tux.database.client import db
 
@@ -16,6 +18,19 @@ class SnippetsController:
 
         return await self.table.find_many()
 
+    async def get_all_snippets_sorted(self, newestfirst: bool = True) -> list[Snippets]:
+        """
+        Retrieves all snippets from the database sorted by creation date.
+
+        Args:
+            newestfirst (bool): Whether to sort the snippets by newest first or oldest first.
+
+        Returns:
+            list[Snippets]: A list of all snippets sorted by creation date.
+        """
+
+        return await self.table.find_many(order={"created_at": "desc" if newestfirst else "asc"})
+
     async def get_snippet_by_name(self, name: str) -> Snippets | None:
         """
         Retrieves a snippet from the database based on the specified name.
@@ -29,13 +44,17 @@ class SnippetsController:
 
         return await self.table.find_first(where={"name": name})
 
-    async def create_snippet(self, name: str, content: str) -> Snippets:
+    async def create_snippet(
+        self, name: str, content: str, created_at: datetime.datetime, author_id: int
+    ) -> Snippets:
         """
         Creates a new snippet in the database with the specified name and content.
 
         Args:
             name (str): The name of the snippet.
             content (str): The content of the snippet.
+            created_at (datetime): The creation date of the snippet.
+            author_id (int): The ID of the author who created the snippet.
 
         Returns:
             Snippets: The newly created snippet.
@@ -45,6 +64,8 @@ class SnippetsController:
             data={
                 "name": name,
                 "content": content,
+                "created_at": created_at,
+                "author_id": author_id,
             }
         )
 
