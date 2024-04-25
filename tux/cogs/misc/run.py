@@ -4,7 +4,7 @@ from tux.services import godbolt
 from tux.utils.embeds import EmbedCreator
 
 
-class Eval(commands.Cog):
+class Run(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
@@ -16,7 +16,7 @@ class Eval(commands.Cog):
         lang: str,
     ):
         embed = EmbedCreator.create_info_embed(
-            title="Eval",
+            title="Run",
             description="Here is the output of the code.",
             ctx=ctx,
         )
@@ -27,8 +27,8 @@ class Eval(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(name="eval")
-    async def eval(
+    @commands.command(name="run")
+    async def run(
         self,
         ctx: commands.Context[commands.Bot],
         lang: str,
@@ -94,4 +94,4 @@ class Eval(commands.Cog):
 
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(Eval(bot))
+    await bot.add_cog(Run(bot))
