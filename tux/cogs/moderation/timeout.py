@@ -1,66 +1,3 @@
-# import datetime
-
-# import discord
-# from discord import app_commands
-# from discord.ext import commands
-# from loguru import logger
-# from tux.utils.enums import InfractionType
-# from tux.utils.embeds import EmbedCreator
-
-
-# class TimeOut(commands.Cog):
-#     def __init__(self, bot: commands.Bot) -> None:
-#         self.bot = bot
-
-#     @app_commands.command(name="timeout", description="Timeout a user")
-
-#     async def timeout(
-#         self,
-#         interaction: discord.Interaction,
-#         member: discord.Member,
-
-#         reason: str | None = None,
-#     ) -> None:
-#         logger.info(
-#             f"{interaction.user} used the timeout command to timeout {member}",
-#         )
-#         try:
-#             embed = discord.Embed(
-#                 color=discord.Color.red(),
-#                 title=f"User {member.display_name} timed out",
-#                 description=f"Reason: {reason if reason else '`None provided`'}",
-#                 timestamp=interaction.created_at,
-#             )
-#             embed.add_field(
-#                 name="User",
-#                 value=f"<@{member.id}>",
-#                 inline=True,
-#             )
-#             embed.add_field(
-#                 name="Duration",
-#                 value=duration,
-#                 inline=True,
-#             )
-#             embed.set_footer(
-#                 text=f"Requested by {interaction.user.display_name}",
-#                 icon_url=interaction.user.display_avatar,
-#             )
-#             await interaction.response.send_message(embed=embed)
-#         except (discord.errors.Forbidden, discord.errors.HTTPException) as e:
-#             logger.error("")
-#             embed_error = discord.Embed(
-#                 colour=discord.Colour.red(),
-#                 title=f"Failed to timeout {member.display_name}",
-#                 description=f"`Error info: {e}`",
-#                 timestamp=interaction.created_at,
-#             )
-#             embed_error.set_footer(
-#                 text=f"Requested by {interaction.user.display_name}",
-#                 icon_url=interaction.user.display_avatar,
-#             )
-#             await interaction.response.send_message(embed=embed_error)
-#             return
-
 import datetime
 
 import discord
@@ -78,7 +15,7 @@ from tux.utils.enums import InfractionType
 class Timeout(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.db_controller = DatabaseController().infractions
+        self.db_controller = DatabaseController()
 
     async def insert_infraction(
         self,
@@ -88,20 +25,8 @@ class Timeout(commands.Cog):
         infraction_reason: str,
         expires_at: datetime.datetime | None = None,
     ) -> Infractions | None:
-        """
-        Inserts an infraction into the database.
-
-        Args:
-            user_id: The user ID who is being infracted.
-            moderator_id: The moderator ID who is creating the infraction.
-            infraction_type: The type of infraction.
-            infraction_reason: The reason for the infraction.
-
-        Returns:
-            An instance of Infractions if successful, None otherwise.
-        """
         try:
-            return await self.db_controller.create_infraction(
+            return await self.db_controller.infractions.create_infraction(
                 user_id=user_id,
                 moderator_id=moderator_id,
                 infraction_type=infraction_type,
@@ -113,37 +38,63 @@ class Timeout(commands.Cog):
             logger.error(f"Failed to create infraction for user {user_id}. Error: {error}")
             return None
 
-    @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod")
-    @app_commands.command(name="timeout", description="Timeout a member from the server.")
+    async def get_or_create_user(self, member: discord.Member) -> None:
+        user = await self.db_controller.users.get_user_by_id(member.id)
+
+        if not user:
+            await self.db_controller.users.create_user(
+                user_id=member.id,
+                name=member.name,
+                display_name=member.display_name,
+                mention=member.mention,
+                bot=member.bot,
+                created_at=member.created_at,
+                joined_at=member.joined_at,
+            )
+
+    async def get_or_create_moderator(self, interaction: discord.Interaction) -> None:
+        moderator = await self.db_controller.users.get_user_by_id(interaction.user.id)
+        moderator_context = None
+        if interaction.guild:
+            moderator_context = interaction.guild.get_member(interaction.user.id)
+
+        if not moderator:
+            await self.db_controller.users.create_user(
+                user_id=interaction.user.id,
+                name=interaction.user.name,
+                display_name=interaction.user.display_name,
+                mention=interaction.user.mention,
+                bot=interaction.user.bot,
+                created_at=interaction.user.created_at,
+                joined_at=moderator_context.joined_at if moderator_context else None,
+            )
+
+    @app_commands.checks.has_any_role("Root", "Admin", "Sr. Mod", "Mod")
+    @app_commands.command(name="timeout", description="Issues a timeout to a member of the server.")
     @app_commands.describe(
-        member="Which member to timeout",
-        days="Days of timeout",
-        hours="Hours of timeout",
-        minutes="Minutes of timeout",
-        seconds="Seconds of timeout",
-        reason="Reason to timeout member",
+        member="The member to timeout",
+        reason="The reason for issuing the timeout",
+        days="Number of days for the timeout",
+        hours="Number of hours for the timeout",
+        minutes="Number of minutes for the timeout",
+        seconds="Number of seconds for the timeout",
     )
     async def timeout(
         self,
         interaction: discord.Interaction,
         member: discord.Member,
+        reason: str | None = None,
         days: int = 0,
         hours: int = 0,
         minutes: int = 0,
         seconds: int = 0,
-        reason: str | None = None,
     ) -> None:
-        """
-        Timeout a member from the server.
-
-        Args:
-            interaction: The interaction context for this command.
-            member: The Discord member to timeout.
-            reason: The reason for the member's timeout.
-        """
         reason = reason or "No reason provided"
 
         duration = datetime.timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
+
+        await self.get_or_create_user(member)
+        await self.get_or_create_moderator(interaction)
 
         try:
             await member.timeout(duration, reason=reason)
@@ -156,28 +107,27 @@ class Timeout(commands.Cog):
                 expires_at=datetime.datetime.now(UTC) + duration,
             )
 
+            timeout_id = new_timeout.id if new_timeout else "Unknown"
+
             embed = EmbedCreator.create_infraction_embed(
                 title="",
-                interaction=interaction,
                 description="",
-            )
-
-            embed.add_field(
-                name="Case ID",
-                value=f"`{new_timeout.id if new_timeout else 'Unknown'}`",
-                inline=True,
+                interaction=interaction,
             )
             embed.add_field(name="Action", value="Timeout", inline=True)
+            embed.add_field(name="Case ID", value=f"`{timeout_id}`", inline=True)
             embed.add_field(name="Reason", value=f"`{reason}`", inline=False)
-            embed.add_field(name="By", value=f"{interaction.user.mention}", inline=True)
-            embed.add_field(name="To", value=f"{member.mention}", inline=True)
+            embed.add_field(name="Moderator", value=f"{interaction.user.display_name}", inline=True)
+            embed.add_field(name="Member", value=f"{member.display_name}", inline=True)
 
-            logger.info(f"Timed out {member.display_name} ({member.id}): {reason}")
+            logger.info(f"Timeout issued to {member.display_name} ({member.id}) for: {reason}")
 
         except Exception as error:
-            msg = f"Failed to timeout {member.display_name} ({member.id})."
+            msg = f"Failed to issue timeout to {member.display_name}."
             embed = EmbedCreator.create_error_embed(
-                title="Timeout Failed", description=msg, interaction=interaction
+                title="Timeout Failed",
+                description=msg,
+                interaction=interaction,
             )
 
             logger.error(f"{msg} Error: {error}")
