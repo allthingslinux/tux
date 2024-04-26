@@ -10,12 +10,9 @@ from tux.utils.enums import InfractionType
 
 
 class Warn(commands.Cog):
-    """Cog for handling the warning of members in a Discord server."""
-
     def __init__(self, bot: commands.Bot) -> None:
-        """Initializes the Warn Cog with the bot instance and a database controller reference."""
         self.bot = bot
-        self.db_controller = DatabaseController().infractions
+        self.db_controller = DatabaseController()
 
     async def insert_infraction(
         self,
@@ -24,20 +21,8 @@ class Warn(commands.Cog):
         infraction_type: InfractionType,
         infraction_reason: str,
     ) -> Infractions | None:
-        """
-        Inserts a new warning infraction into the database.
-
-        Args:
-            user_id: ID of the user receiving the infraction.
-            moderator_id: ID of the moderator issuing the infraction.
-            infraction_type: Type of infraction, e.g., WARN.
-            infraction_reason: Reason for issuing the infraction.
-
-        Returns:
-            An Infractions object if creation was successful, None otherwise.
-        """
         try:
-            return await self.db_controller.create_infraction(
+            return await self.db_controller.infractions.create_infraction(
                 user_id=user_id,
                 moderator_id=moderator_id,
                 infraction_type=infraction_type,
@@ -48,31 +33,57 @@ class Warn(commands.Cog):
             logger.error(f"Failed to create infraction for user {user_id}. Error: {error}")
             return None
 
+    async def get_or_create_user(self, member: discord.Member) -> None:
+        user = await self.db_controller.users.get_user_by_id(member.id)
+
+        if not user:
+            await self.db_controller.users.create_user(
+                user_id=member.id,
+                name=member.name,
+                display_name=member.display_name,
+                mention=member.mention,
+                bot=member.bot,
+                created_at=member.created_at,
+                joined_at=member.joined_at,
+            )
+
+    async def get_or_create_moderator(self, interaction: discord.Interaction) -> None:
+        moderator = await self.db_controller.users.get_user_by_id(interaction.user.id)
+        moderator_context = None
+        if interaction.guild:
+            moderator_context = interaction.guild.get_member(interaction.user.id)
+
+        if not moderator:
+            await self.db_controller.users.create_user(
+                user_id=interaction.user.id,
+                name=interaction.user.name,
+                display_name=interaction.user.display_name,
+                mention=interaction.user.mention,
+                bot=interaction.user.bot,
+                created_at=interaction.user.created_at,
+                joined_at=moderator_context.joined_at if moderator_context else None,
+            )
+
     @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod", "Jr. Mod")
     @app_commands.command(name="warn", description="Issues a warning to a member of the server.")
     @app_commands.describe(member="The member to warn", reason="The reason for issuing the warning")
     async def warn(
         self, interaction: discord.Interaction, member: discord.Member, reason: str | None = None
     ) -> None:
-        """
-        Warns a specified member with an optional reason.
-
-        Args:
-            interaction: The Discord interaction context.
-            member: The member object representing the user to warn.
-            reason: The reason for warning the user.
-        """
         reason = reason or "No reason provided"
 
+        await self.get_or_create_user(member)
+        await self.get_or_create_moderator(interaction)
+
         try:
-            warn_entry = await self.insert_infraction(
+            new_warn = await self.insert_infraction(
                 user_id=member.id,
                 moderator_id=interaction.user.id,
                 infraction_type=InfractionType.WARN,
                 infraction_reason=reason,
             )
 
-            warn_id = warn_entry.id if warn_entry else "Unknown"
+            warn_id = new_warn.id if new_warn else "Unknown"
 
             embed = EmbedCreator.create_infraction_embed(
                 title="",
