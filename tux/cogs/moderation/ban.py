@@ -12,7 +12,7 @@ from tux.utils.enums import InfractionType
 class Ban(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.db_controller = DatabaseController().infractions
+        self.db_controller = DatabaseController()
 
     async def insert_infraction(
         self,
@@ -21,20 +21,8 @@ class Ban(commands.Cog):
         infraction_type: InfractionType,
         infraction_reason: str,
     ) -> Infractions | None:
-        """
-        Inserts an infraction into the database.
-
-        Args:
-            user_id: The user ID who is being infracted.
-            moderator_id: The moderator ID who is creating the infraction.
-            infraction_type: The type of infraction.
-            infraction_reason: The reason for the infraction.
-
-        Returns:
-            An instance of Infractions if successful, None otherwise.
-        """
         try:
-            return await self.db_controller.create_infraction(
+            return await self.db_controller.infractions.create_infraction(
                 user_id=user_id,
                 moderator_id=moderator_id,
                 infraction_type=infraction_type,
@@ -45,23 +33,51 @@ class Ban(commands.Cog):
             logger.error(f"Failed to create infraction for user {user_id}. Error: {error}")
             return None
 
-    @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod")
-    @app_commands.command(name="ban", description="Bans a member from the server.")
-    @app_commands.describe(member="Which member to ban", reason="Reason for ban")
+    async def get_or_create_user(self, member: discord.Member) -> None:
+        user = await self.db_controller.users.get_user_by_id(member.id)
+
+        if not user:
+            await self.db_controller.users.create_user(
+                user_id=member.id,
+                name=member.name,
+                display_name=member.display_name,
+                mention=member.mention,
+                bot=member.bot,
+                created_at=member.created_at,
+                joined_at=member.joined_at,
+            )
+
+    async def get_or_create_moderator(self, interaction: discord.Interaction) -> None:
+        moderator = await self.db_controller.users.get_user_by_id(interaction.user.id)
+        moderator_context = None
+        if interaction.guild:
+            moderator_context = interaction.guild.get_member(interaction.user.id)
+
+        if not moderator:
+            await self.db_controller.users.create_user(
+                user_id=interaction.user.id,
+                name=interaction.user.name,
+                display_name=interaction.user.display_name,
+                mention=interaction.user.mention,
+                bot=interaction.user.bot,
+                created_at=interaction.user.created_at,
+                joined_at=moderator_context.joined_at if moderator_context else None,
+            )
+
+    @app_commands.checks.has_any_role("Root", "Admin", "Sr. Mod", "Mod")
+    @app_commands.command(name="ban", description="Issues a ban to a member of the server.")
+    @app_commands.describe(member="The member to ban", reason="The reason for issuing the ban")
     async def ban(
         self, interaction: discord.Interaction, member: discord.Member, reason: str | None = None
     ) -> None:
-        """
-        Bans a member from the server.
-
-        Args:
-            interaction: The interaction context for this command.
-            member: The Discord member to be banned.
-            reason: The reason for banning the member.
-        """
         reason = reason or "No reason provided"
 
+        await self.get_or_create_user(member)
+        await self.get_or_create_moderator(interaction)
+
         try:
+            await member.ban(reason=reason)
+
             new_ban = await self.insert_infraction(
                 user_id=member.id,
                 moderator_id=interaction.user.id,
@@ -69,25 +85,26 @@ class Ban(commands.Cog):
                 infraction_reason=reason,
             )
 
+            ban_id = new_ban.id if new_ban else "Unknown"
+
             embed = EmbedCreator.create_infraction_embed(
                 title="",
-                interaction=interaction,
                 description="",
-            )
-            embed.add_field(
-                name="Case ID", value=f"`{new_ban.id if new_ban else 'Unknown'}`", inline=True
+                interaction=interaction,
             )
             embed.add_field(name="Action", value="Ban", inline=True)
+            embed.add_field(name="Case ID", value=f"`{ban_id}`", inline=True)
             embed.add_field(name="Reason", value=f"`{reason}`", inline=False)
-            embed.add_field(name="By", value=f"{interaction.user.mention}", inline=True)
-            embed.add_field(name="To", value=f"{member.mention}", inline=True)
+            embed.add_field(name="Moderator", value=f"{interaction.user.display_name}", inline=True)
 
-            logger.info(f"Banned {member.display_name} ({member.id}): {reason}")
+            logger.info(f"Ban issued to {member.display_name} ({member.id}) for: {reason}")
 
         except Exception as error:
-            msg = f"Failed to ban {member.display_name} ({member.id})."
+            msg = f"Failed to issue ban to {member.display_name}."
             embed = EmbedCreator.create_error_embed(
-                title="Ban Failed", description=msg, interaction=interaction
+                title="Ban Failed",
+                description=msg,
+                interaction=interaction,
             )
 
             logger.error(f"{msg} Error: {error}")
