@@ -27,7 +27,7 @@ Tux is a Discord bot for the All Things Linux Discord server. It is designed to 
 ## Installation
 
 ### Prerequisites
-- Python 3.11 
+- Python 3.12
 - [Poetry](https://python-poetry.org/docs/)
 
 ### Steps
@@ -56,8 +56,10 @@ Tux is a Discord bot for the All Things Linux Discord server. It is designed to 
     ```bash
     cp .env.example .env
     ```
-7. Run `{prefix}sync <server id>` in the server to sync the slash command tree.
- 
+7. Run the sync command in the server to sync the slash command tree.
+   ```
+   {prefix}sync <server id>
+   ```
 8. Review all useful CLI commands by visiting the [useful CLI commands](docs/CLI.md) file.
    
 
