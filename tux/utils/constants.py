@@ -54,6 +54,10 @@ class Constants:
         "MOD": 1223690612822376529,
         # For anonymous reports
         "REPORT": 1223690612822376529,
+        # For gate logging
+        "GATE": 1223690612822376529,
+        # For tux logs (errors, debug, db, api, etc)
+        "TUX": 1223690612822376529,
     }
 
     # User ID Constants
