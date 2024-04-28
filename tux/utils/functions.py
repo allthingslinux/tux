@@ -5,6 +5,35 @@ from typing import Any
 import discord
 
 
+def datetime_to_unix(dt: datetime | None):
+    """
+    This function accepts a datetime object or None, converts it into a Unix timestamp
+    and returns it as a formatted Discord timestamp string or 'Never'
+    """
+    if dt is None:
+        return "Never"
+
+    unix_timestamp = int(dt.timestamp())
+
+    return f"<t:{unix_timestamp}>"
+
+
+def datetime_to_elapsed_time(dt: datetime | None):
+    """
+    Takes a datetime and computes the elapsed time from then to now in the format: X years, Y months, Z days.
+    """
+    if dt is None:
+        return "Never"
+
+    elapsed_time = datetime.now(UTC) - dt
+    elapsed_days = elapsed_time.days
+
+    years, days_left = divmod(elapsed_days, 365)
+    months, days_left = divmod(days_left, 30)
+
+    return f"{years} years, {months} months, {days_left} days"
+
+
 def compare_changes(before: dict[str, Any], after: dict[str, Any]) -> list[str]:
     """
     Compares the changes between two dictionaries and returns a list of strings representing the changes.
@@ -21,6 +50,60 @@ def compare_changes(before: dict[str, Any], after: dict[str, Any]) -> list[str]:
         f"{key}: {before[key]} -> {after[key]}"
         for key in before
         if key in after and before[key] != after[key]
+    ]
+
+
+def compare_guild_channel_changes(
+    before: discord.abc.GuildChannel, after: discord.abc.GuildChannel
+) -> list[str]:
+    """
+    Compares the changes between two GuildChannel instances and returns a list of strings representing the changes.
+
+    Args:
+        before: The GuildChannel instance representing the state before the changes.
+        after: The GuildChannel instance representing the state after the changes.
+
+    Returns:
+        A list of strings showing the changes made in the instances.
+    """
+
+    keys = [
+        "category",
+        "changed_roles",
+        "created_at",
+        "guild",
+        "name",
+        "overwrites",
+        "permissions_synced",
+        "position",
+    ]
+
+    return [
+        f"{key}: {getattr(before, key)} -> {getattr(after, key)}"
+        for key in keys
+        if getattr(before, key) != getattr(after, key)
+    ]
+
+
+def compare_member_changes(
+    before: discord.Member | discord.User, after: discord.Member | discord.User
+) -> list[str]:
+    """
+    Compares changes between two Member instances and returns a list of strings representing the changes.
+
+    Args:
+        before: The Member instance representing the state before the changes.
+        after: The Member instance representing the state after the changes.
+
+    Returns:
+        A list of strings showing the member's changes.
+    """
+    keys = ["name", "display_name", "global_name"]
+
+    return [
+        f"{key}: {getattr(before, key)} -> {getattr(after, key)}"
+        for key in keys
+        if getattr(before, key) != getattr(after, key)
     ]
 
 
