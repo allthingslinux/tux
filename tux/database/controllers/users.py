@@ -1,8 +1,7 @@
 from datetime import datetime
 
 from prisma.models import Users
-
-# from prisma.types import UsersCreateWithoutRelationsInput
+from prisma.types import UsersUpdateInput
 from tux.database.client import db
 
 
@@ -77,17 +76,22 @@ class UsersController:
     ) -> Users | None:
         """Updates user information in the database with the specified user ID and details."""
 
-        return await self.table.update(
-            where={"id": user_id},
-            data={
-                "name": name or "",
-                "display_name": display_name or "",
-                "mention": mention or "",
-                "bot": bot or False,
-                "created_at": created_at or None,
-                "joined_at": joined_at or None,
-            },
-        )
+        data: UsersUpdateInput = {}
+
+        if name is not None:
+            data["name"] = name
+        if display_name is not None:
+            data["display_name"] = display_name
+        if mention is not None:
+            data["mention"] = mention
+        if bot is not None:
+            data["bot"] = bot
+        if created_at is not None:
+            data["created_at"] = created_at
+        if joined_at is not None:
+            data["joined_at"] = joined_at
+
+        return await self.table.update(where={"id": user_id}, data=data)
 
     async def sync_user(
         self,
@@ -99,9 +103,9 @@ class UsersController:
         created_at: datetime,
         joined_at: datetime | None,
     ) -> Users | None:
-        existing_user = await self.get_user_by_id(user_id)
+        user = await self.get_user_by_id(user_id)
 
-        if existing_user is None:
+        if user is None:
             return await self.create_user(
                 user_id=user_id,
                 name=name,
@@ -112,25 +116,15 @@ class UsersController:
                 joined_at=joined_at,
             )
 
-        if (
-            existing_user.name != name
-            or existing_user.display_name != display_name
-            or existing_user.mention != mention
-            or existing_user.bot != bot
-            or existing_user.created_at != created_at
-            or existing_user.joined_at != joined_at
-        ):
-            return await self.update_user(
-                user_id=user_id,
-                name=name if existing_user.name != name else None,
-                display_name=display_name if existing_user.display_name != display_name else None,
-                mention=mention if existing_user.mention != mention else None,
-                bot=bot if existing_user.bot != bot else None,
-                created_at=created_at if existing_user.created_at != created_at else None,
-                joined_at=joined_at if existing_user.joined_at != joined_at else None,
-            )
-
-        return existing_user
+        return await self.update_user(
+            user_id=user_id,
+            name=name,
+            display_name=display_name,
+            mention=mention,
+            bot=bot,
+            created_at=created_at,
+            joined_at=joined_at,
+        )
 
     async def delete_user(self, user_id: int) -> None:
         """Deletes a user from the database based on the specified user ID."""
