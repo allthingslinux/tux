@@ -33,11 +33,17 @@ class EmbedCreator:
 
         if isinstance(user, discord.User | discord.Member):
             return (
-                f"{user.name}@atl $ ∕tux {latency}ms",  # noqa: RUF001
+                f"{user.name}@atl $ ∕ {latency}ms",  # noqa: RUF001
                 str(user.avatar.url) if user.avatar else None,
             )
 
-        return ("", None)
+        if ctx is None and interaction is None:
+            return ("tux@atl $ ∕", "https://i.imgur.com/4sblrd0.png")  # noqa: RUF001
+
+        return (
+            "",
+            None,
+        )
 
     @staticmethod
     def add_field(embed: discord.Embed, name: str, value: str, inline: bool = True) -> None:
