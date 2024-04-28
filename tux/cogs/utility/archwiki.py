@@ -37,11 +37,7 @@ class ArchWiki(commands.Cog):
             # Parse the JSON response
             data = response.json()
 
-            if data[1]:
-                return data[1][0], data[3][0]
-
-            return "error", "error"
-
+            return (data[1][0], data[3][0]) if data[1] else ("error", "error")
         return "error", "error"
 
     @app_commands.command(name="archwiki", description="Search the Arch Wiki.")

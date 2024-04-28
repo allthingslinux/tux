@@ -39,9 +39,7 @@ def convert_to_seconds(time: str) -> int:
 
 def get_closest_reminder(reminders: list[Reminders]) -> Reminders | None:
     # check if there are any reminders
-    if not reminders:
-        return None
-    return min(reminders, key=lambda x: x.expires_at)
+    return min(reminders, key=lambda x: x.expires_at) if reminders else None
 
 
 class RemindMe(commands.Cog):
