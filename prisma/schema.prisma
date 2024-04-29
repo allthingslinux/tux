@@ -176,6 +176,11 @@ model CommandStats {
   user    Users    @relation(fields: [user_id], references: [id])
 }
 
+model EmojiStats {
+  emoji_id BigInt @id
+  count    BigInt
+}
+
 // model Logs {
 //   id         BigInt   @id
 //   content    String
