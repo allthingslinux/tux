@@ -1,3 +1,4 @@
+from .emojistats import EmojiStatsController
 from .infractions import InfractionsController
 from .notes import NotesController
 from .reminders import RemindersController
@@ -16,3 +17,4 @@ class DatabaseController:
         self.reminders = RemindersController()
         self.roles = RolesController()
         self.user_roles = UserRolesController()
+        self.emojistats = EmojiStatsController()

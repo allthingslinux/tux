@@ -104,7 +104,8 @@ class Snippets(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(name="createsnippet", description="Create a snippet.", aliases=["cs"])
-    async def create_snippet(self, ctx: commands.Context[commands.Bot], *args: str) -> None:
+    async def create_snippet(self, ctx: commands.Context[commands.Bot], *, arg: str) -> None:
+        args = arg.split(" ")
         if len(args) < 2:
             embed = EmbedCreator.create_error_embed(
                 title="Error", description="Please provide a name and content for the snippet."
