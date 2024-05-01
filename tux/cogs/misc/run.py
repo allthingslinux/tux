@@ -5,6 +5,9 @@ from discord.ext import commands
 from tux.services import godbolt
 from tux.utils.embeds import EmbedCreator
 
+ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+remove_ticks = re.compile(r"\`")
+
 
 class Run(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -23,7 +26,6 @@ class Run(commands.Cog):
         Raises:
          None
         """
-        ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
         return ansi_escape.sub("", ansi)
 
     def remove_backticks(self, ticks: str) -> str:
@@ -31,7 +33,7 @@ class Run(commands.Cog):
         Removes backticks from the provided string.
 
         Args:
-         ansi: String to be passed.
+         ticks: String to be passed.
 
         Returns:
          str
@@ -40,7 +42,6 @@ class Run(commands.Cog):
          None
         """
 
-        remove_ticks = re.compile(r"\`")
         return remove_ticks.sub("", ticks)
 
     async def generalized_code_executor(
@@ -207,7 +208,7 @@ class Run(commands.Cog):
         code: str,
     ):
         """
-        A code evaluator. The code must be provided in a backticks along with the syntax highlighting to identify the language. Use short form
+        A code evaluator. The code must be provided in  backticks along with the syntax highlighting to identify the language. Use short form
         syntax for the language. Available languages are Haskell, C, Rust, Julia, Python, C++.
 
         Parameters
@@ -246,386 +247,6 @@ class Run(commands.Cog):
         await self.send_embedded_reply(
             ctx, gen_one, self.remove_ansi(filtered_output), normalized_lang
         )
-
-    @commands.command(name="genasm")
-    async def genasm(
-        self,
-        ctx: commands.Context[commands.Bot],
-        *,
-        code_and_options: str,
-    ):
-        """
-        An assembly generator. The code must be provided in a backticks along with the syntax highlighting to identify the language. Use short fo        rm syntax for the language. Compile time options must be separated by "--". Available languages are Haskell, C, C++, Rust, Julia and Python.
-
-        Parameters
-        ----------
-         ctx: commands.Context
-           The context in which the command is invoked.
-         code_and_options: str
-           A string consisting of the code
-
-        Returns
-        ---------
-          None
-
-        Raises
-        --------
-          None
-        """
-
-        code, *options = code_and_options.split("--")
-        options_str = " ".join(options) if options else None
-
-        compiler_map = {
-            "hs": "ghc961",
-            "c": "cclang1810",
-            "cpp": "cclang1810",
-            "rs": "r1770",
-            "julia": "julia_nightly",
-            "py": "python312",
-        }
-
-        msg = await ctx.send("<a:typing:1231270453021249598>")
-        (filtered_output, gen_one, _nm_lang) = await self.generalized_code_executor(
-            ctx, compiler_map, code, options_str
-        )
-        await msg.delete()
-        if filtered_output == "" and gen_one == "" and _nm_lang == "":
-            return
-
-        await self.send_embedded_reply(ctx, gen_one, self.remove_ansi(filtered_output), "asm")
-
-    @commands.command()
-    async def genasm_ppc64(
-        self,
-        ctx: commands.Context[commands.Bot],
-        *,
-        code_and_options: str,
-    ):
-        """
-        A PPC64 assembly generator. The code must be provided in a backticks along with the syntax highlighting to identify the language. Use sho        rt form syntax for the language. Compile time options must be separated by "--". Available languages are C.
-
-        Parameters
-        ----------
-         ctx: commands.Context
-           The context in which the command is invoked.
-         code_and_options: str
-           A string consisting of the code and options,
-
-        Returns
-        ---------
-          None
-
-        Raises
-        --------
-          None
-        """
-
-        code, *options = code_and_options.split("--")
-        options_str = " ".join(options) if options else None
-
-        # only C for now.
-        compiler_map = {"c": "ppc64g1320"}
-
-        msg = await ctx.send("<a:typing:1231270453021249598>")
-        (filtered_output, gen_one, _nm_lang) = await self.generalized_code_constructor(
-            ctx, compiler_map, code, options_str
-        )
-        await msg.delete()
-        if filtered_output == "" and gen_one == "" and _nm_lang == "":
-            return
-
-        await self.send_embedded_reply(ctx, gen_one, self.remove_ansi(filtered_output), "asm")
-
-    @commands.command()
-    async def genasm_risc64(
-        self,
-        ctx: commands.Context[commands.Bot],
-        *,
-        code_and_options: str,
-    ):
-        """
-        A RISCV64 assembly generator. The code must be provided in a backticks along with the syntax highlighting to identify the language. Use s        hort form syntax for the language. Compile time options must be separated by "--". Available languages are C.
-
-        Parameters
-        ----------
-         ctx: commands.Context
-           The context in which the command is invoked.
-         code_and_options: str
-           A string consisting of the code and options,
-
-        Returns
-        ---------
-          None
-
-        Raises
-        --------
-          None
-        """
-
-        code, *options = code_and_options.split("--")
-
-        options_str = " ".join(options) if options else None
-        compiler_map = {"c": "rv64-gimplegcc1320"}
-
-        msg = await ctx.send("<a:typing:1231270453021249598>")
-        (filtered_output, gen_one, _nm_lang) = await self.generalized_code_constructor(
-            ctx, compiler_map, code, options_str
-        )
-        await msg.delete()
-        if filtered_output == "" and gen_one == "" and _nm_lang == "":
-            return
-
-        await self.send_embedded_reply(ctx, gen_one, self.remove_ansi(filtered_output), "asm")
-
-    @commands.command()
-    async def genasm_s390x(
-        self,
-        ctx: commands.Context[commands.Bot],
-        *,
-        code_and_options: str,
-    ):
-        """
-        A s390x assembly generator. The code must be provided in a backticks along with the syntax highlighting to identify the language. Use sho        rt form syntax for the language. Compile time options must be separated by "--". Available languages are C.
-
-        Parameters
-        ----------
-         ctx: commands.Context
-           The context in which the command is invoked.
-         code_and_options: str
-           A string consisting of the code and options,
-
-        Returns
-        ---------
-          None
-
-        Raises
-        --------
-          None
-        """
-
-        code, *options = code_and_options.split("--")
-
-        options_str = " ".join(options) if options else None
-
-        compiler_map = {"c": "objcpps390xg1320"}
-
-        msg = await ctx.send("<a:typing:1231270453021249598>")
-        (filtered_output, gen_one, _nm_lang) = await self.generalized_code_constructor(
-            ctx, compiler_map, code, options_str
-        )
-        await msg.delete()
-        if filtered_output == "" and gen_one == "" and _nm_lang == "":
-            return
-
-        await self.send_embedded_reply(ctx, gen_one, self.remove_ansi(filtered_output), "asm")
-
-    @commands.command()
-    async def genasm_sparc64(
-        self,
-        ctx: commands.Context[commands.Bot],
-        *,
-        code_and_options: str,
-    ):
-        """
-        A SPARC64 assembly generator. The code must be provided in a backticks along with the syntax highlighting to identify the language. Use s        hort form syntax for the language. Compile time options must be separated by "--". Available languages are C.
-
-        Parameters
-        ----------
-         ctx: commands.Context
-           The context in which the command is invoked.
-         code_and_options: str
-           A string consisting of the code and options,
-
-        Returns
-        ---------
-          None
-
-        Raises
-        --------
-          None
-        """
-
-        code, *options = code_and_options.split("--")
-
-        options_str = " ".join(options) if options else None
-
-        compiler_map = {"c": "gimplesparc64g1320"}
-
-        msg = await ctx.send("<a:typing:1231270453021249598>")
-        (filtered_output, gen_one, _nm_lang) = await self.generalized_code_constructor(
-            ctx, compiler_map, code, options_str
-        )
-        await msg.delete()
-        if filtered_output == "" and gen_one == "" and _nm_lang == "":
-            return
-
-        await self.send_embedded_reply(ctx, gen_one, self.remove_ansi(filtered_output), "asm")
-
-    @commands.command()
-    async def genasm_vax(
-        self,
-        ctx: commands.Context[commands.Bot],
-        *,
-        code_and_options: str,
-    ):
-        """
-        A VAX assembly generator. The code must be provided in a backticks along with the syntax highlighting to identify the language. Use sho          rt form syntax for the language. Compile time options must be separated by "--". Available languages are C.
-
-        Parameters
-        ----------
-         ctx: commands.Context
-           The context in which the command is invoked.
-         code_and_options: str
-           A string consisting of the code and options,
-
-        Returns
-        ---------
-          None
-
-        Raises
-        --------
-          None
-        """
-
-        code, *options = code_and_options.split("--")
-
-        options_str = " ".join(options) if options else None
-        compiler_map = {"c": "gimplevaxg1050"}
-
-        msg = await ctx.send("<a:typing:1231270453021249598>")
-        (filtered_output, gen_one, _nm_lang) = await self.generalized_code_constructor(
-            ctx, compiler_map, code, options_str
-        )
-        await msg.delete()
-        if filtered_output == "" and gen_one == "" and _nm_lang == "":
-            return
-
-        await self.send_embedded_reply(ctx, gen_one, self.remove_ansi(filtered_output), "asm")
-
-    @commands.command()
-    async def genasm_armv8(
-        self,
-        ctx: commands.Context[commands.Bot],
-        *,
-        code_and_options: str,
-    ):
-        """
-        An armv8 assembly generator. The code must be provided in a backticks along with the syntax highlighting to identify the language. Use sh        ort form syntax for the language. Compile time options must be separated by "--". Available languages are C.
-
-        Parameters
-        ----------
-         ctx: commands.Context
-           The context in which the command is invoked.
-         code_and_options: str
-           A string consisting of the code and options,
-
-        Returns
-        ---------
-          None
-
-        Raises
-        --------
-          None
-        """
-
-        code, *options = code_and_options.split("--")
-
-        options_str = " ".join(options) if options else None
-
-        compiler_map = {"c": "armv8-cclang1810"}
-
-        msg = await ctx.send("<a:typing:1231270453021249598>")
-        (filtered_output, gen_one, _nm_lang) = await self.generalized_code_constructor(
-            ctx, compiler_map, code, options_str
-        )
-        await msg.delete()
-        if filtered_output == "" and gen_one == "" and _nm_lang == "":
-            return
-
-        await self.send_embedded_reply(ctx, gen_one, self.remove_ansi(filtered_output), "asm")
-
-    @commands.command()
-    async def genasm_armv7(
-        self,
-        ctx: commands.Context[commands.Bot],
-        *,
-        code_and_options: str,
-    ):
-        """
-        An armv7 assembly generator. The code must be provided in a backticks along with the syntax highlighting to identify the language. Use sh        ort form syntax for the language. Compile time options must be separated by "--". Available languages are C.
-
-        Parameters
-        ----------
-         ctx: commands.Context
-           The context in which the command is invoked.
-         code_and_options: str
-           A string consisting of the code and options,
-
-        Returns
-        ---------
-          None
-
-        Raises
-        --------
-          None
-        """
-
-        code, *options = code_and_options.split("--")
-
-        options_str = " ".join(options) if options else None
-        compiler_map = {"c": "armv7-cclang1810"}
-
-        msg = await ctx.send("<a:typing:1231270453021249598>")
-        (filtered_output, gen_one, _nm_lang) = await self.generalized_code_constructor(
-            ctx, compiler_map, code, options_str
-        )
-        await msg.delete()
-        if filtered_output == "" and gen_one == "" and _nm_lang == "":
-            return
-
-        await self.send_embedded_reply(ctx, gen_one, self.remove_ansi(filtered_output), "asm")
-
-    @commands.command()
-    async def genasm_mips64(
-        self,
-        ctx: commands.Context[commands.Bot],
-        *,
-        code_and_options: str,
-    ):
-        """
-        A MIPS64 assembly generator. The code must be provided in a backticks along with the syntax highlighting to identify the language. Use sh        ort form syntax for the language. Compile time options must be separated by "--". Available languages are C.
-
-        Parameters
-        ----------
-         ctx: commands.Context
-           The context in which the command is invoked.
-         code_and_options: str
-           A string consisting of the code and options,
-
-        Returns
-        ---------
-          None
-
-        Raises
-        --------
-          None
-        """
-
-        code, *options = code_and_options.split("--")
-        options_str = " ".join(options) if options else None
-
-        compiler_map = {"c": "mips64g1320"}
-
-        msg = await ctx.send("<a:typing:1231270453021249598>")
-        (filtered_output, gen_one, _nm_lang) = await self.generalized_code_constructor(
-            ctx, compiler_map, code, options_str
-        )
-        await msg.delete()
-        if filtered_output == "" and gen_one == "" and _nm_lang == "":
-            return
-
-        await self.send_embedded_reply(ctx, gen_one, self.remove_ansi(filtered_output), "asm")
 
 
 async def setup(bot: commands.Bot) -> None:
