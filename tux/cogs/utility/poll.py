@@ -14,11 +14,24 @@ class Poll(commands.Cog):
 
     @app_commands.command(name="poll", description="Creates a poll.")
     @app_commands.describe(title="Title of the poll", options="Poll options, comma separated")
-    # allows up to 10 options
     async def poll(self, interaction: discord.Interaction, title: str, options: str) -> None:
-        # split the options by comma, and validate that there are at least 2 options and at most 10
+        """
+        Create a poll with a title and options.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        title : str
+            The title of the poll.
+        options : str
+            The options for the poll, separated by commas.
+        """
+
+        # Split the options by comma
         options_list = options.split(",")
 
+        # Check if the options count is between 2-9
         if len(options_list) < 2 or len(options_list) > 9:
             embed = EmbedCreator.create_error_embed(
                 title="Invalid options count",
@@ -27,9 +40,9 @@ class Poll(commands.Cog):
             )
 
             await interaction.response.send_message(embed=embed)
-
             return
 
+        # Create the description for the poll embed
         description = "\n".join(
             [f"{num + 1}\u20e3 {option}" for num, option in enumerate(options_list)]
         )
@@ -42,10 +55,10 @@ class Poll(commands.Cog):
 
         await interaction.response.send_message(embed=embed)
 
-        # add reactions to the message
-        # we can use  await interaction.original_response() to get the message object
+        # We can use  await interaction.original_response() to get the message object
         message = await interaction.original_response()
         for num in range(len(options_list)):
+            # Add the number emoji reaction to the message
             await message.add_reaction(f"{num + 1}\u20e3")
 
         logger.info(f"{interaction.user} used the ping command in {interaction.channel}.")

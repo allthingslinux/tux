@@ -15,11 +15,21 @@ class MemberCount(commands.Cog):
         self,
         interaction: discord.Interaction,
     ) -> None:
-        logger.info(f"{interaction.user} showed the member count")
+        """
+        Show the member count for the server.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        """
 
         if interaction.guild:
+            # Get the member count for the server (total members)
             members = interaction.guild.member_count
+            # Get the number of humans in the server (subtract bots from total members)
             humans = sum(not member.bot for member in interaction.guild.members)
+            # Get the number of bots in the server (subtract humans from total members)
             bots = sum(member.bot for member in interaction.guild.members if member.bot)
 
             embed = EmbedCreator.create_info_embed(
@@ -33,6 +43,10 @@ class MemberCount(commands.Cog):
             embed.add_field(name="Bots", value=str(bots))
 
             await interaction.response.send_message(embed=embed)
+
+            logger.info(
+                f"{interaction.user} used the membercount command in {interaction.channel}."
+            )
 
 
 async def setup(bot: commands.Bot) -> None:

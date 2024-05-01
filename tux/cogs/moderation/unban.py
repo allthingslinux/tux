@@ -21,19 +21,43 @@ class Unban(commands.Cog):
         infraction_type: InfractionType,
         infraction_reason: str,
     ) -> Infractions | None:
-        try:
-            return await self.db_controller.infractions.create_infraction(
-                user_id=user_id,
-                moderator_id=moderator_id,
-                infraction_type=infraction_type,
-                infraction_reason=infraction_reason,
-            )
+        """
+        Inserts an infraction into the database.
 
-        except Exception as error:
-            logger.error(f"Failed to create infraction for user {user_id}. Error: {error}")
-            return None
+        Parameters
+        ----------
+        user_id : int
+            The ID of the user to issue the infraction to.
+        moderator_id : int
+            The ID of the moderator issuing the infraction.
+        infraction_type : InfractionType
+            The type of infraction to issue.
+        infraction_reason : str
+            The reason for issuing the infraction.
+
+        Returns
+        -------
+        Infractions | None
+            The infraction that was created, or None if an error occurred.
+        """
+
+        return await self.db_controller.infractions.create_infraction(
+            user_id=user_id,
+            moderator_id=moderator_id,
+            infraction_type=infraction_type,
+            infraction_reason=infraction_reason,
+        )
 
     async def get_or_create_user(self, member: discord.User) -> None:
+        """
+        Retrieves a user from the database or creates a new user if not found.
+
+        Parameters
+        ----------
+        member : discord.User
+            The user to retrieve or create in the database.
+        """
+
         user = await self.db_controller.users.get_user_by_id(member.id)
 
         if not user:
@@ -48,6 +72,15 @@ class Unban(commands.Cog):
             )
 
     async def get_or_create_moderator(self, interaction: discord.Interaction) -> None:
+        """
+        Retrieves a moderator from the database or creates a new moderator if not found.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered the command.
+        """
+
         moderator = await self.db_controller.users.get_user_by_id(interaction.user.id)
         moderator_context = None
         if interaction.guild:
@@ -72,15 +105,37 @@ class Unban(commands.Cog):
     async def unban(
         self, interaction: discord.Interaction, username_or_id: str, reason: str | None = None
     ) -> None:
+        """
+        Unbans a member from the server.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered the command.
+        username_or_id : str
+            The username or ID of the member to unban.
+        reason : str | None, optional
+            The reason for unbanning the member, by default None
+
+        Raises:
+        -------
+        ValueError
+            If the user is not found in the ban list.
+        """
+
         if interaction.guild is None:
             return
 
+        # Get the list of banned users in the guild
         banned_users = [ban.user async for ban in interaction.guild.bans()]
 
         try:
+            # If the username_or_id is an integer, search for the user by ID
             user_id = int(username_or_id)
             user_to_unban = discord.utils.get(banned_users, id=user_id)
+
         except ValueError:
+            # If the username_or_id is not an integer, search for the user by username
             user_to_unban = discord.utils.find(lambda u: u.name == username_or_id, banned_users)
 
         if user_to_unban is None:
@@ -88,10 +143,6 @@ class Unban(commands.Cog):
                 "User not found in the ban list. Please provide a valid user ID or username."
             )
             return
-
-        logger.info(
-            f"{interaction.user} used the unban command in {interaction.channel} to unban user {user_to_unban.display_name}."
-        )
 
         try:
             await interaction.guild.unban(user_to_unban, reason=reason)
@@ -122,14 +173,18 @@ class Unban(commands.Cog):
 
             await interaction.response.send_message(embed=embed)
 
+            logger.info(f"User {user_to_unban.display_name} has been unbanned.")
+
         except Exception as error:
-            logger.error(f"Failed to unban user {user_to_unban.display_name}. Error: {error}")
+            msg = f"Failed to unban user {user_to_unban.display_name}."
 
             embed = EmbedCreator.create_error_embed(
                 title="Unban",
-                description=f"Failed to unban {user_to_unban.display_name}.",
+                description=msg,
                 interaction=interaction,
             )
+
+            logger.error(f"{msg} Error: {error}")
 
             await interaction.response.send_message(embed=embed)
 

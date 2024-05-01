@@ -18,13 +18,17 @@ class CogLoader(commands.Cog):
 
     async def is_cog_eligible(self, filepath: AsyncPath) -> bool:
         """
-        Checks if a cog file is eligible for loading based on specific criteria.
+        Checks if the specified file is a cog.
 
-        Args:
-            filepath (AsyncPath): The path to the cog file.
+        Parameters:
+        -----------
+        filepath : AsyncPath
+            The path to the file to check.
 
         Returns:
-            bool: True if the cog file is eligible, False otherwise.
+        --------
+        bool
+            True if the file is a cog, False otherwise.
         """
 
         cog_name: str = filepath.stem
@@ -40,42 +44,59 @@ class CogLoader(commands.Cog):
         """
         Recursively loads eligible cogs from the specified directory.
 
-        Args:
-            apath (AsyncPath): The path to the directory containing cogs.
+        Parameters:
+        -----------
+        apath : AsyncPath
+            The path to the directory containing cogs.
 
         Returns:
-            None
+        --------
+        None
+
+        Raises:
+        -------
+        Exception
+            If an error occurs while processing the specified path.
         """
+
         try:
             if await apath.is_dir():
                 async for item in apath.iterdir():
                     try:
                         await self.load_cogs(apath=item)
+
                     except Exception as error:
                         logger.error(f"Error loading cog from {item}: {error}")
+
             elif await self.is_cog_eligible(filepath=apath):
-                relative_path: AsyncPath = apath.relative_to(AsyncPath(__file__).parent)
+                # TODO: Fix this type ignore
+                relative_path: AsyncPath = apath.relative_to(AsyncPath(__file__).parent)  # type: ignore
                 module: str = str(relative_path).replace("/", ".").replace("\\", ".")[:-3]
 
                 try:
                     await self.bot.load_extension(name=module)
                     logger.debug(f"Successfully loaded cog: {module}")
+
                 except Exception as e:
                     logger.error(
                         f"Failed to load cog {module}. Error: {e}\n{traceback.format_exc()}"
                     )
+
         except Exception as e:
             logger.error(f"An error occurred while processing {apath}: {e}")
 
     async def load_cogs_from_folder(self, folder_name: str) -> None:
         """
-        Loads cogs from the specified folder by calling the load_cogs function.
+        Loads cogs from the specified folder.
 
-        Args:
-            folder_name (str): The name of the folder containing cogs.
+        Parameters:
+        -----------
+        folder_name : str
+            The name of the folder containing the cogs.
 
         Returns:
-            None
+        --------
+        None
         """
 
         cog_path: AsyncPath = AsyncPath(__file__).parent / folder_name

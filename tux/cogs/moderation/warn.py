@@ -21,19 +21,43 @@ class Warn(commands.Cog):
         infraction_type: InfractionType,
         infraction_reason: str,
     ) -> Infractions | None:
-        try:
-            return await self.db_controller.infractions.create_infraction(
-                user_id=user_id,
-                moderator_id=moderator_id,
-                infraction_type=infraction_type,
-                infraction_reason=infraction_reason,
-            )
+        """
+        Inserts an infraction into the database.
 
-        except Exception as error:
-            logger.error(f"Failed to create infraction for user {user_id}. Error: {error}")
-            return None
+        Parameters
+        ----------
+        user_id : int
+            The ID of the user to issue the infraction to.
+        moderator_id : int
+            The ID of the moderator issuing the infraction.
+        infraction_type : InfractionType
+            The type of infraction to issue.
+        infraction_reason : str
+            The reason for issuing the infraction.
+
+        Returns
+        -------
+        Infractions | None
+            The infraction that was created, or None if an error occurred.
+        """
+
+        return await self.db_controller.infractions.create_infraction(
+            user_id=user_id,
+            moderator_id=moderator_id,
+            infraction_type=infraction_type,
+            infraction_reason=infraction_reason,
+        )
 
     async def get_or_create_user(self, member: discord.Member) -> None:
+        """
+        Retrieves a user from the database or creates a new user if not found.
+
+        Parameters
+        ----------
+        member : discord.Member
+            The member to retrieve or create in the database.
+        """
+
         user = await self.db_controller.users.get_user_by_id(member.id)
 
         if not user:
@@ -48,6 +72,15 @@ class Warn(commands.Cog):
             )
 
     async def get_or_create_moderator(self, interaction: discord.Interaction) -> None:
+        """
+        Retrieves a moderator from the database or creates a new moderator if not found.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered the command.
+        """
+
         moderator = await self.db_controller.users.get_user_by_id(interaction.user.id)
         moderator_context = None
         if interaction.guild:
@@ -70,6 +103,19 @@ class Warn(commands.Cog):
     async def warn(
         self, interaction: discord.Interaction, member: discord.Member, reason: str | None = None
     ) -> None:
+        """
+        Issues a warning to a member of the server.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered the command.
+        member : discord.Member
+            The member to warn.
+        reason : str | None, optional
+            The reason for issuing the warning.
+        """
+
         reason = reason or "No reason provided"
 
         await self.get_or_create_user(member)
@@ -99,6 +145,7 @@ class Warn(commands.Cog):
 
         except Exception as error:
             msg = f"Failed to issue warning to {member.display_name}."
+
             embed = EmbedCreator.create_error_embed(
                 title="Warning Failed",
                 description=msg,

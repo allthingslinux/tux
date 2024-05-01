@@ -7,26 +7,58 @@ class Reload(commands.Cog):
         self.bot = bot
 
     @commands.has_guild_permissions(administrator=True)
-    @commands.command(name="reload", description="Reloads a cog in the bot.")
-    async def reload(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
+    @commands.command(
+        name="reload", description="Reloads an extension into the bot.", usage="reload <extension>"
+    )
+    async def reload(self, ctx: commands.Context[commands.Bot], *, ext: str) -> None:
+        """
+        Reloads an extension in the bot.
+
+        An extension is a python module that contains commands, cogs, or listeners. An extension must have a global function, setup defined as the entry point on what to do when the extension is loaded. This entry point must have a single argument, the bot.
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            The context in which the command is being invoked.
+        ext : str
+            The name of the extension to reload.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        commands.MissingRequiredArgument
+            If an extension is not specified.
+        commands.ExtensionNotLoaded
+            If the specified extension is not loaded or doesn't exist.
+        """
+
         try:
-            await self.bot.unload_extension(cog)
-            await self.bot.load_extension(cog)
-        except Exception as e:
-            logger.error(f"Failed to reload cog {cog}: {e}")
-            await ctx.send(f"Failed to reload cog {cog}: {e}")
+            # Unload and load the cog to "reload" it
+            await self.bot.unload_extension(ext)
+            await self.bot.load_extension(ext)
+
+        except Exception as error:
+            await ctx.send(f"Failed to reload extension {ext}: {error}")
+            logger.error(f"Failed to reload extension {ext}: {error}")
+
         else:
-            logger.info(f"Cog {cog} reloaded.")
-            await ctx.send(f"Cog {cog} reloaded.")
+            await ctx.send(f"Extension {ext} reloaded.")
+            logger.info(f"Extension {ext} reloaded.")
 
     @reload.error
     async def reload_error(self, ctx: commands.Context[commands.Bot], error: Exception) -> None:
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Please specify a cog to reload.")
+            await ctx.send(f"Please specify an extension to reload. {error}")
+
         elif isinstance(error, commands.ExtensionNotLoaded):
-            await ctx.send("That cog is not loaded.")
+            await ctx.send(f"That extension is not loaded. {error}")
+
         else:
-            logger.error(f"Error reloading cog: {error}")
+            await ctx.send(f"Error reloading extension: {error}")
+            logger.error(f"Error reloading extension: {error}")
 
 
 async def setup(bot: commands.Bot) -> None:

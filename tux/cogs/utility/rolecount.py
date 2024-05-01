@@ -1,3 +1,5 @@
+from typing import Literal
+
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -144,6 +146,17 @@ class RoleCount(commands.Cog):
     async def rolecount(
         self, interaction: discord.Interaction, which: discord.app_commands.Choice[str]
     ) -> None:
+        """
+        Shows the number of users in each role.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        which : discord.app_commands.Choice[str]
+            The option to list.
+        """
+
         embed = EmbedCreator.create_info_embed(
             title="Role Count",
             description=f"Here is the number of users in each {which.name} role.",
@@ -172,11 +185,11 @@ class RoleCount(commands.Cog):
 
             for role_emoji in roles_emojis:
                 role_id = int(role_emoji[0])
-                role = interaction.guild.get_role(role_id)
+                role: discord.Role | None = interaction.guild.get_role(role_id)
                 emoji = None
 
                 if role:
-                    emoji = role.unicode_emoji or discord.utils.get(
+                    emoji: str | discord.Emoji | None = role.unicode_emoji or discord.utils.get(
                         self.bot.emojis, name=role_emoji[1]
                     )
 
@@ -186,8 +199,10 @@ class RoleCount(commands.Cog):
                         value=f"{len(role.members)} users",
                         inline=True,
                     )
+
                 else:
-                    missing = "Role" if role is None else "Emoji"
+                    missing: Literal["Role", "Emoji"] = "Role" if role is None else "Emoji"
+
                     logger.warning(
                         f"Cannot find {missing} with ID {role_emoji[0]} or name {role_emoji[1]}"
                     )

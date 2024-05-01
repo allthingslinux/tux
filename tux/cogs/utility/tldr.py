@@ -9,56 +9,136 @@ from tux.utils.embeds import EmbedCreator
 
 
 class Tldr(commands.Cog):
+    """
+    A discord cog to fetch and display TLDR pages for CLI commands.
+    """
+
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
     async def get_autocomplete(
         self, interaction: discord.Interaction, query: str
     ) -> list[app_commands.Choice[str]]:
+        """
+        Provide autocomplete suggestions for TLDR commands based on user query.
+
+        Parameters:
+        -----------
+        interaction : discord.Interaction
+            The interaction object where autocomplete happens.
+        query : str
+            Partial input from the user used to filter suggestions.
+
+        Returns:
+        --------
+        List[app_commands.Choice[str]]
+            A list of up to 25 command names as autocomplete choices.
+        """
+
+        # TODO: Why is interaction not used?
+
         commands = self.get_tldrs()
-        result = [
+
+        filtered_commands = [
             app_commands.Choice(name=cmd, value=cmd)
             for cmd in commands
             if cmd.lower().startswith(query.lower())
         ]
-        return result[:25] if len(result) > 25 else result
 
-    @app_commands.command(name="tldr", description="Show a tldr page for (almost) any cli command")
-    @app_commands.describe(command="which command to show")
+        return filtered_commands[:25]
+
+    @app_commands.command(name="tldr", description="Show a TLDR page for a CLI command")
+    @app_commands.describe(command="The CLI command to show the TLDR for")
     @app_commands.autocomplete(command=get_autocomplete)
     async def tldr(self, interaction: discord.Interaction, command: str) -> None:
-        logger.info(f"{interaction.user} used the /tldr to show info about {command}")
+        """
+        Fetches and displays a TLDR page of a CLI command.
+
+        Parameters:
+        -----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        command : str
+            The command to retrieve the TLDR page for.
+        """
+
         tldr_page = self.get_tldr_page(command)
+
         embed = EmbedCreator.create_info_embed(
             title=f"TLDR for {command}", description=tldr_page, interaction=interaction
         )
+
         await interaction.response.send_message(embed=embed)
 
+        logger.info(f"{interaction.user} requested TLDR for {command}")
+
     def get_tldr_page(self, command: str) -> str:
+        """
+        Retrieves the TLDR page for a given command.
+
+        Parameters:
+        -----------
+        command : str
+            The command to lookup.
+
+        Returns:
+        --------
+        str
+            The content of the TLDR page or an error message.
+        """
+
         if command.startswith("-"):
-            return "Can't run tldr: `command can't start with a dash (-)`"
-        return self._run_subprocess(["tldr", "-r", command], "No tldr page found")
+            return "Invalid command: Command can't start with a dash (-)."
+
+        return self._run_subprocess(["tldr", "-r", command], "No TLDR page found.")
 
     def get_tldrs(self) -> list[str]:
-        return self._run_subprocess(["tldr", "--list"], "No tldr pages found").split("\n")
+        """
+        Fetches a list of available TLDR pages.
+
+        Returns:
+        --------
+        list[str]
+            List of available commands in the TLDR pages.
+        """
+
+        return self._run_subprocess(["tldr", "--list"], "No TLDR pages found.").split("\n")
 
     def _run_subprocess(self, command_list: list[str], default_response: str) -> str:
+        """
+        Helper method to run subprocesses for CLI interactions.
+
+        Parameters:
+        -----------
+        command_list : list[str]
+            List containing the command and its arguments.
+        default_response : str
+            The default response if subprocess does not output anything.
+
+        Returns:
+        --------
+        str
+            The stdout from the subprocess as a string, or an error message.
+
+        Raises:
+        -------
+        subprocess.CalledProcessError
+            If the subprocess fails to run.
+        """
+
         try:
-            proc = subprocess.Popen(
+            process = subprocess.run(
                 command_list,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
+                text=True,
+                check=True,
             )
-            (out, err) = proc.communicate()
-            if not err:
-                return default_response if len(out) < 1 else out.decode()
 
-            logger.error(f"An error occured during subprocess: {err.decode()}")
-            return "An error occurred"  # noqa: TRY300
+        except subprocess.CalledProcessError:
+            return default_response
 
-        except Exception as e:
-            logger.error(f"An error occurred: {e!s}")
-            return "An error occurred"
+        else:
+            return process.stdout
 
 
 async def setup(bot: commands.Bot) -> None:

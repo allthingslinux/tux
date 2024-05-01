@@ -3,92 +3,72 @@ from typing import Any
 import discord
 from discord.ext import commands
 
+from tux.database.controllers import DatabaseController
 from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import EmbedCreator
-from tux.utils.functions import compare_changes, extract_guild_attrs
+from tux.utils.functions import compare_changes, compare_guild_channel_changes, extract_guild_attrs
 
 
-class GuildLogging(commands.Cog):
+class AuditLogging(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.db_controller = DatabaseController()
         self.audit_log_channel_id: int = CONST.LOG_CHANNELS["AUDIT"]
+        self.tux_log_channel_id: int = CONST.LOG_CHANNELS["TUX"]
 
-    async def send_to_audit_log(self, embed: discord.Embed):
+    async def send_to_audit_log(self, embed: discord.Embed) -> None:
         channel = self.bot.get_channel(self.audit_log_channel_id)
         if isinstance(channel, discord.TextChannel):
             await channel.send(embed=embed)
 
-    """Audit logging - Channel"""
+    async def send_to_tux_log(self, embed: discord.Embed) -> None:
+        channel = self.bot.get_channel(self.tux_log_channel_id)
+        if isinstance(channel, discord.TextChannel):
+            await channel.send(embed=embed)
 
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
-        # check if the message has no embeds, attachments, or content, stickers, or isnt a nitro gift/boost
-        # if so its probably a poll
-        poll_channel = self.bot.get_channel(1228717294788673656)
-        if message.channel == poll_channel:
-            # check if the message has content, stickers, or attachments
-            # if so delete the message as its not a poll
-            if message.content or message.stickers or message.attachments:
-                await message.delete()
-                embed = EmbedCreator.create_log_embed(
-                    title="Non-Poll Deleted",
-                    description=f"Message: {message.id}",
-                )
-                await self.send_to_audit_log(embed)
-                return
-
-            # make a thread for the poll
-            await message.create_thread(
-                name=f"Poll by {message.author.display_name}",
-                reason="Poll thread",
-            )
-            return
-
-        if (
-            not message.embeds
-            and not message.attachments
-            and not message.content
-            and not message.stickers
-        ):
-            # check if the message is not a message
-            if message.type != discord.MessageType.default:
-                return
-            # delete the message and log it
-            await message.delete()
-            embed = EmbedCreator.create_log_embed(
-                title="Poll Deleted",
-                description=f"Message: {message.id}",
-            )
-            await self.send_to_audit_log(embed)
+    """Audit Logging - Channel"""
 
     @commands.Cog.listener()
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
-        embed = EmbedCreator.create_log_embed(
+        audit_embed = EmbedCreator.create_log_embed(
             title="Channel Created",
-            description=f"Channel: {channel.name}",
+            description=f"A new channel was created in {channel.guild.name}",
         )
 
-        await self.send_to_audit_log(embed)
+        audit_embed.add_field(name="Channel Name", value=channel.name)
+        audit_embed.add_field(name="Channel ID", value=f"`{channel.id}`")
+        audit_embed.add_field(name="Channel Type", value=channel.type)
+
+        await self.send_to_audit_log(audit_embed)
 
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel: discord.abc.GuildChannel):
-        embed = EmbedCreator.create_log_embed(
+        audit_embed = EmbedCreator.create_log_embed(
             title="Channel Deleted",
-            description=f"Channel: {channel.name}",
+            description=f"A channel was deleted in {channel.guild.name}",
         )
 
-        await self.send_to_audit_log(embed)
+        audit_embed.add_field(name="Channel Name", value=channel.name)
+        audit_embed.add_field(name="Channel ID", value=f"`{channel.id}`")
+        audit_embed.add_field(name="Channel Type", value=channel.type)
+
+        await self.send_to_audit_log(audit_embed)
 
     @commands.Cog.listener()
     async def on_guild_channel_update(
         self, before: discord.abc.GuildChannel, after: discord.abc.GuildChannel
     ):
-        embed = EmbedCreator.create_log_embed(
+        audit_embed = EmbedCreator.create_log_embed(
             title="Channel Updated",
-            description=f"Channel: {before.name}",
+            description=f"A channel was updated in {before.guild.name}",
         )
 
-        await self.send_to_audit_log(embed)
+        changes = compare_guild_channel_changes(before, after)
+
+        for change in changes:
+            audit_embed.add_field(name="Change", value=f"`{change}`")
+
+        await self.send_to_audit_log(audit_embed)
 
     @commands.Cog.listener()
     async def on_guild_channel_pins_update(
@@ -97,13 +77,17 @@ class GuildLogging(commands.Cog):
         last_pin: discord.Message | None,
     ):
         if isinstance(channel, discord.abc.GuildChannel | discord.Thread):
-            channel_name = channel.name
+            channel_name = channel.mention
         else:
             channel_name = "Private Channel"
+        channel_id = channel.id
 
         embed = EmbedCreator.create_log_embed(
-            title="Channel Pins Updated", description=f"Channel: {channel_name}"
+            title="Channel Pins Update",
+            description="A message was pinned/unpinned in a channel",
         )
+
+        embed.add_field(name="Channel", value=f"{channel_name} (`{channel_id}`)")
 
         if isinstance(channel, discord.TextChannel | discord.Thread):
             pins = await channel.pins()
@@ -125,6 +109,8 @@ class GuildLogging(commands.Cog):
             embed.add_field(name="Changes", value="\n".join(changes).upper(), inline=False)
 
         await self.send_to_audit_log(embed)
+
+    """Audit logging - Emoji and Stickers"""
 
     @commands.Cog.listener()
     async def on_guild_emojis_update(
@@ -177,7 +163,7 @@ class GuildLogging(commands.Cog):
 
         await self.send_to_audit_log(embed)
 
-    """Audit logging - Integration"""
+    """Audit Logging - Integrations"""
 
     @commands.Cog.listener()
     async def on_integration_create(self, integration: discord.Integration):
@@ -215,7 +201,7 @@ class GuildLogging(commands.Cog):
 
         await self.send_to_audit_log(embed)
 
-    """Audit logging - Role"""
+    """Audit Logging - Role"""
 
     @commands.Cog.listener()
     async def on_guild_role_create(self, role: discord.Role):
@@ -244,7 +230,7 @@ class GuildLogging(commands.Cog):
 
         await self.send_to_audit_log(embed)
 
-    """ Guild Logging - Scheduled Events"""
+    """Audit Logging - Scheduled Events"""
 
     @commands.Cog.listener()
     async def on_scheduled_event_create(self, event: discord.ScheduledEvent):
@@ -275,7 +261,7 @@ class GuildLogging(commands.Cog):
 
         await self.send_to_audit_log(embed)
 
-    """Guild Logging - Stage Instance"""
+    """Audit Logging - Stage Instance"""
 
     @commands.Cog.listener()
     async def on_stage_instance_create(self, stage_instance: discord.StageInstance):
@@ -306,7 +292,7 @@ class GuildLogging(commands.Cog):
 
         await self.send_to_audit_log(embed)
 
-    """Guild Logging - Thread"""
+    """Audit Logging - Thread"""
 
     @commands.Cog.listener()
     async def on_thread_create(self, thread: discord.Thread):
@@ -337,4 +323,4 @@ class GuildLogging(commands.Cog):
 
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(GuildLogging(bot))
+    await bot.add_cog(AuditLogging(bot))
