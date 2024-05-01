@@ -37,30 +37,40 @@ class Payload(TypedDict):
     allowStoreCodeDebug: bool
 
 
-client = httpx.Client()
+client = httpx.Client(timeout=15)
 url = "https://godbolt.org"
 
 
-def checkresponse(res: httpx.Response) -> str | None:
-    return res.text if res.status_code == httpx.codes.OK else None
+def checkresponse(res: httpx.Response):
+    try:
+        return res.text if res.status_code == httpx.codes.OK else None
+    except httpx.ReadTimeout:
+        return None
+
+
+def sendresponse(url: str) -> str | None:
+    try:
+        response = client.get(url)
+        response.raise_for_status()
+    except httpx.ReadTimeout:
+        return None
+    else:
+        return response.text if response.status_code == httpx.codes.OK else None
 
 
 def getlanguages() -> str | None:
     url_lang = f"{url}/api/languages"
-    response = client.get(url_lang)
-    return checkresponse(response)
+    return sendresponse(url_lang)
 
 
 def getcompilers() -> str | None:
     url_comp = f"{url}/api/compilers"
-    response = client.get(url_comp)
-    return checkresponse(response)
+    return sendresponse(url_comp)
 
 
 def getspecificcompiler(lang: str) -> str | None:
     url_comp = f"{url}/api/compilers/{lang}"
-    response = client.get(url_comp)
-    return checkresponse(response)
+    return sendresponse(url_comp)
 
 
 def getoutput(code: str, lang: str, compileroptions: str | None = None) -> str | None:
@@ -93,7 +103,10 @@ def getoutput(code: str, lang: str, compileroptions: str | None = None) -> str |
         "allowStoreCodeDebug": True,
     }
     uri = client.post(url_comp, json=payload)
-    return checkresponse(uri)
+    try:
+        return uri.text if uri.status_code == httpx.codes.OK else None
+    except httpx.ReadTimeout:
+        return "Could not get data back from the host in time"
 
 
 def generateasm(code: str, lang: str, compileroptions: str | None = None) -> str | None:
@@ -112,7 +125,7 @@ def generateasm(code: str, lang: str, compileroptions: str | None = None) -> str
                 "commentOnly": True,
                 "demangle": True,
                 "directives": True,
-                "execute": True,
+                "execute": False,
                 "intel": True,
                 "labels": True,
                 "libraryCode": True,
@@ -127,4 +140,7 @@ def generateasm(code: str, lang: str, compileroptions: str | None = None) -> str
     }
 
     uri = client.post(url_comp, json=payload)
-    return checkresponse(uri)
+    try:
+        return uri.text if uri.status_code == httpx.codes.OK else None
+    except httpx.ReadTimeout:
+        return "Could not get data back from the host in time"
