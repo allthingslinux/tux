@@ -35,15 +35,18 @@ class TuxBot(commands.Bot):
 
     async def setup(self) -> None:
         """
-        Performs setup tasks for the TuxBot, such as loading cogs.
+        Sets up the bot by connecting to the database and loading cogs.
         """
         try:
+            # Connect to Prisma
             await db.connect()
             logger.info("Database connection established.")
+
         except Exception as e:
             logger.error(f"An error occurred while connecting to the database: {e}")
             return
 
+        # Load cogs via CogLoader
         await self.load_cogs()
 
     async def load_cogs(self) -> None:
@@ -85,6 +88,7 @@ class TuxBot(commands.Bot):
 
         await self.close()
 
+        # Cancel all tasks except the current one
         if tasks := [task for task in asyncio.all_tasks() if task is not asyncio.current_task()]:
             logger.info(f"Cancelling {len(tasks)} outstanding tasks")
             [task.cancel() for task in tasks]
@@ -94,6 +98,7 @@ class TuxBot(commands.Bot):
         try:
             logger.info("Closing database connections...")
             await db.disconnect()
+
         except Exception as e:
             logger.error(f"Error during database disconnection: {e}")
 
@@ -101,20 +106,23 @@ class TuxBot(commands.Bot):
 
 
 async def main() -> None:
-    setup_sentry()
-
-    intents = discord.Intents.all()
     prefix = CONST.STAGING_PREFIX if CONST.STAGING == "True" else CONST.PROD_PREFIX
     token = CONST.STAGING_TOKEN if CONST.STAGING == "True" else CONST.PROD_TOKEN
+    intents = discord.Intents.all()
     bot = TuxBot(command_prefix=prefix, intents=intents)
 
+    # Initialize the console and console task
     console = None
     console_task = None
+
+    # Setup Sentry for error tracking and reporting
+    setup_sentry()
 
     try:
         console = Console(bot)
         console_task = asyncio.create_task(console.run_console())
 
+        # Start the bot and reconnect on disconnection
         await bot.start(token=token, reconnect=True)
 
     except KeyboardInterrupt:
@@ -124,8 +132,10 @@ async def main() -> None:
         logger.info("Closing resources.")
         await bot.shutdown()
 
+        # Cancel the console task if it's still running
         if console_task is not None and not console_task.done():
             console_task.cancel()
+            # Suppress the CancelledError exception
             with contextlib.suppress(asyncio.CancelledError):
                 await console_task
 
@@ -134,6 +144,9 @@ async def main() -> None:
 
 if __name__ == "__main__":
     try:
+        # Run the bot using asyncio
         asyncio.run(main())
+
     except KeyboardInterrupt:
+        # Handle KeyboardInterrupt gracefully
         logger.info("Exiting gracefully.")

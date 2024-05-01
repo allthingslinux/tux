@@ -275,7 +275,7 @@ class Console:
         self.bot = bot
 
     async def shutdown_bot(self) -> None:
-        """Shuts down the bot from the console."""
+        # Shutdown the bot from the console
         logger.info("Initiating bot shutdown from console...")
         await self.bot.shutdown()
 
@@ -297,6 +297,7 @@ class Console:
             logger.error("Usage: send [channel_id] [message]")
             return
 
+        # Extract the channel ID and message from the command
         channel_id, message = parts[1], " ".join(parts[2:])
 
         try:
