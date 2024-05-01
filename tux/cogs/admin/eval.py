@@ -5,20 +5,34 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.utils.constants import Constants as CONST
+from tux.utils.embeds import EmbedCreator
 
 
 def insert_returns(body: list[ast.stmt]) -> None:
-    # insert return stmt if the last expression is a expression statement
+    """
+    Inserts return statements into the body of the function definition.
+
+    Parameters
+    ----------
+    body : list[ast.stmt]
+        The body of the function definition.
+
+    Returns
+    -------
+    None
+    """
+
+    # Insert return statement if the last expression is a expression statement
     if isinstance(body[-1], ast.Expr):
         body[-1] = ast.Return(body[-1].value)
         ast.fix_missing_locations(body[-1])
 
-    # for if statements, we insert returns into the body and the orelse
+    # For if statements, we insert returns into the body and the orelse
     if isinstance(body[-1], ast.If):
         insert_returns(body[-1].body)
         insert_returns(body[-1].orelse)
 
-    # for with blocks, again we insert returns into the body
+    # For with blocks, again we insert returns into the body
     if isinstance(body[-1], ast.With):
         insert_returns(body[-1].body)
 
@@ -29,6 +43,17 @@ class Eval(commands.Cog):
 
     @commands.command(name="eval", description="Evaluate a Python expression. (Owner only)")
     async def run(self, ctx: commands.Context[commands.Bot], *, cmd: str) -> None:
+        """
+        Evaluate a Python expression. (Owner only)
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context in which the command is being invoked.
+        cmd : str
+            The Python expression to evaluate.
+        """
+
         # Check if the user is the bot owner
         if ctx.author.id != CONST.BOT_OWNER_ID:
             logger.warning(
@@ -38,19 +63,19 @@ class Eval(commands.Cog):
             return
 
         try:
-            logger.info(f"Running expression: {cmd}")
             # Evaluate the expression
             fn_name = "_eval_expr"
-
             cmd = cmd.strip("` ")
 
-            # add a layer of indentation
+            # Add a layer of indentation
             cmd = "\n".join(f"    {i}" for i in cmd.splitlines())
 
-            # wrap in async def body
+            # Wrap in async def body
             body = f"async def {fn_name}():\n{cmd}"
 
+            # Parse the body
             parsed = ast.parse(body)
+
             # Ensure the first statement is a function definition
             if isinstance(parsed.body[0], ast.FunctionDef | ast.AsyncFunctionDef):
                 # Access the body of the function definition
@@ -64,24 +89,32 @@ class Eval(commands.Cog):
                 "ctx": ctx,
                 "__import__": __import__,
             }
+
+            # Execute the code
             exec(compile(parsed, filename="<ast>", mode="exec"), env)
 
+            # Evaluate the function
             evaluated = await eval(f"{fn_name}()", env)
 
-            # Send the result
-            embed = discord.Embed(
-                title="Success!", description=f"Result: {evaluated}", color=discord.Color.green()
+            embed = EmbedCreator.create_success_embed(
+                title="Success!",
+                description=f"```py\n{evaluated}```",
+                ctx=ctx,
             )
-            await ctx.send(embed=embed)
-        except Exception as e:
-            logger.error(f"An error occurred while running an expression: {e}")
-            # If an error occurs, send the error message
-            embed = discord.Embed(
-                title="Error!", description=f"An error occurred: {e}", color=discord.Color.red()
-            )
-            await ctx.send(embed=embed)
 
-        logger.info(f"{ctx.author} ran an expression: {cmd}")
+            logger.info(f"{ctx.author} ran an expression: {cmd}")
+
+        except Exception as error:
+            embed = EmbedCreator.create_error_embed(
+                title="Error!",
+                description=f"```py\n{error}```",
+                ctx=ctx,
+            )
+
+            logger.error(f"An error occurred while running an expression: {error}")
+
+        else:
+            await ctx.send(embed=embed)
 
 
 async def setup(bot: commands.Bot) -> None:

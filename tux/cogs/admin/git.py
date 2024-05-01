@@ -32,6 +32,16 @@ class Git(commands.Cog):
     group = app_commands.Group(name="git", description="Github commands.")
 
     async def create_error_embed(self, interaction: discord.Interaction, error: str) -> None:
+        """
+        Create an error embed and send it as a followup message for all commands.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object representing the command invocation
+        error : str
+            The error message to display.
+        """
         embed = EmbedCreator.create_error_embed(
             title="Uh oh!",
             description=error,
@@ -43,6 +53,15 @@ class Git(commands.Cog):
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
     @group.command(name="get_repo", description="Get repository information.")
     async def get_repo(self, interaction: discord.Interaction) -> None:
+        """
+        Get repository information.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object representing the command invocation.
+        """
+
         await interaction.response.defer()
 
         try:
@@ -74,6 +93,19 @@ class Git(commands.Cog):
         title: str,
         body: str,
     ) -> None:
+        """
+        Create an issue.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object representing the command invocation.
+        title : str
+            The title of the issue.
+        body : str
+            The body of the issue.
+        """
+
         await interaction.response.defer()
 
         try:
@@ -104,6 +136,19 @@ class Git(commands.Cog):
         issue_number: int,
         body: str,
     ) -> None:
+        """
+        Create an issue comment.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object representing the command invocation.
+        issue_number : int
+            The number of the issue to comment on.
+        body : str
+            The body of the comment.
+        """
+
         await interaction.response.defer()
 
         try:
@@ -134,6 +179,17 @@ class Git(commands.Cog):
         interaction: discord.Interaction,
         issue_number: int,
     ) -> None:
+        """
+        Close an issue.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object representing the command invocation.
+        issue_number : int
+            The number of the issue to close.
+        """
+
         await interaction.response.defer()
 
         try:
@@ -161,6 +217,17 @@ class Git(commands.Cog):
         interaction: discord.Interaction,
         issue_number: int,
     ) -> None:
+        """
+        Get an issue.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object representing the command invocation.
+        issue_number : int
+            The number of the issue to retrieve.
+        """
+
         await interaction.response.defer()
 
         try:
@@ -188,6 +255,15 @@ class Git(commands.Cog):
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
     @group.command(name="get_open_issues", description="Get open issues.")
     async def get_open_issues(self, interaction: discord.Interaction) -> None:
+        """
+        Get open issues.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object representing the command invocation.
+        """
+
         await interaction.response.defer()
 
         try:
@@ -216,6 +292,15 @@ class Git(commands.Cog):
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
     @group.command(name="get_closed_issues", description="Get closed issues.")
     async def get_closed_issues(self, interaction: discord.Interaction) -> None:
+        """
+        Get closed issues.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object representing the command invocation.
+        """
+
         await interaction.response.defer()
 
         try:
@@ -246,6 +331,15 @@ class Git(commands.Cog):
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
     @group.command(name="get_open_pulls", description="Get open pull requests.")
     async def get_open_pulls(self, interaction: discord.Interaction) -> None:
+        """
+        Get open pull requests.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object representing the command invocation.
+        """
+
         await interaction.response.defer()
 
         try:
@@ -274,6 +368,15 @@ class Git(commands.Cog):
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
     @group.command(name="get_closed_pulls", description="Get closed pull requests.")
     async def get_closed_pulls(self, interaction: discord.Interaction) -> None:
+        """
+        Get closed pull requests.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object representing the command invocation.
+        """
+
         await interaction.response.defer()
 
         try:
@@ -306,6 +409,17 @@ class Git(commands.Cog):
         interaction: discord.Interaction,
         pull_number: int,
     ) -> None:
+        """
+        Get a pull request.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object representing the command invocation.
+        pull_number : int
+            The number of the pull request to retrieve.
+        """
+
         await interaction.response.defer()
 
         try:

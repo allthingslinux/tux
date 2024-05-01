@@ -10,6 +10,7 @@ from loguru import logger
 from tux.database.controllers import DatabaseController
 
 # TODO: Move to a constants file or set a global check/error handler for all commands to avoid repetition.
+
 GUILD_ONLY_MESSAGE = "This command can only be used in a guild."
 
 
@@ -23,6 +24,15 @@ class Db(commands.Cog):
     @app_commands.checks.has_role("Root")
     @group.command(name="members", description="Seeds the database with all members.")
     async def seed_members(self, interaction: discord.Interaction) -> None:
+        """
+        Seeds the database with all members in the guild.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object representing the command invocation.
+        """
+
         await interaction.response.defer()
 
         if interaction.guild is None:
@@ -58,6 +68,15 @@ class Db(commands.Cog):
     @app_commands.checks.has_role("Root")
     @group.command(name="roles", description="Seeds the database with all roles.")
     async def seed_roles(self, interaction: discord.Interaction) -> None:
+        """
+        Seeds the database with all roles in the guild.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object representing the command invocation.
+        """
+
         await interaction.response.defer()
 
         if interaction.guild is None:
@@ -94,6 +113,15 @@ class Db(commands.Cog):
     @app_commands.checks.has_role("Root")
     @group.command(name="user_roles", description="Seeds the database with all user roles.")
     async def seed_user_roles(self, interaction: discord.Interaction) -> None:
+        """
+        Seeds the database with all user roles in the guild.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object representing the command invocation.
+        """
+
         await interaction.response.defer()
 
         if interaction.guild is None:
@@ -118,8 +146,6 @@ class Db(commands.Cog):
                 )
 
             await asyncio.gather(*tasks)
-            logger.info(f"Processed batch starting with member {batch[0].display_name}")
-
             await asyncio.sleep(1)
 
         await interaction.followup.send("Seeded all user roles.")

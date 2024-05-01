@@ -43,7 +43,6 @@ class Sync(commands.Cog):
         await self.bot.tree.sync(guild=ctx.guild)
 
         await ctx.reply("Application command tree synced.")
-
         logger.info(f"{ctx.author} synced the application command tree.")
 
     @sync.error

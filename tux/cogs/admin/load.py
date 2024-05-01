@@ -71,7 +71,6 @@ class Load(commands.Cog):
 
         else:
             await ctx.send(f"Failed to load extension: {error}")
-
             logger.error(f"Failed to load extension: {error}")
 
 
