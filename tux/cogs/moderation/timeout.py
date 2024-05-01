@@ -25,20 +25,46 @@ class Timeout(commands.Cog):
         infraction_reason: str,
         expires_at: datetime.datetime | None = None,
     ) -> Infractions | None:
-        try:
-            return await self.db_controller.infractions.create_infraction(
-                user_id=user_id,
-                moderator_id=moderator_id,
-                infraction_type=infraction_type,
-                infraction_reason=infraction_reason,
-                expires_at=expires_at,
-            )
+        """
+        Inserts an infraction into the database.
 
-        except Exception as error:
-            logger.error(f"Failed to create infraction for user {user_id}. Error: {error}")
-            return None
+        Parameters
+        ----------
+        user_id : int
+            The ID of the user to issue the infraction to.
+        moderator_id : int
+            The ID of the moderator issuing the infraction.
+        infraction_type : InfractionType
+            The type of infraction to issue.
+        infraction_reason : str
+            The reason for issuing the infraction.
+        expires_at : datetime.datetime | None, optional
+            The expiration date for the infraction, by default None.
+
+        Returns
+        -------
+        Infractions | None
+            The infraction that was created, or None if an error occurred.
+        """
+
+        return await self.db_controller.infractions.create_infraction(
+            user_id=user_id,
+            moderator_id=moderator_id,
+            infraction_type=infraction_type,
+            infraction_reason=infraction_reason,
+            expires_at=expires_at,
+        )
 
     async def get_or_create_user(self, member: discord.Member) -> None:
+        """
+        Retrieves a user from the database or creates a new user if not found.
+
+        Parameters
+        ----------
+        member : discord.Member
+            The member to retrieve or create in the database.
+        """
+
         user = await self.db_controller.users.get_user_by_id(member.id)
 
         if not user:
@@ -53,6 +79,15 @@ class Timeout(commands.Cog):
             )
 
     async def get_or_create_moderator(self, interaction: discord.Interaction) -> None:
+        """
+        Retrieves a moderator from the database or creates a new moderator if not found.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction to retrieve or create in the database.
+        """
+
         moderator = await self.db_controller.users.get_user_by_id(interaction.user.id)
         moderator_context = None
         if interaction.guild:
@@ -89,6 +124,27 @@ class Timeout(commands.Cog):
         minutes: int = 0,
         seconds: int = 0,
     ) -> None:
+        """
+        Issues a timeout to a member of the server.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered the command.
+        member : discord.Member
+            The member to issue the timeout to.
+        reason : str | None, optional
+            The reason for issuing the timeout, by default None
+        days : int, optional
+            The number of days for the timeout, by default 0
+        hours : int, optional
+            The number of hours for the timeout, by default 0
+        minutes : int, optional
+            The number of minutes for the timeout, by default 0
+        seconds : int, optional
+            The number of seconds for the timeout, by default 0
+        """
+
         reason = reason or "No reason provided"
 
         duration = datetime.timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
@@ -124,6 +180,7 @@ class Timeout(commands.Cog):
 
         except Exception as error:
             msg = f"Failed to issue timeout to {member.display_name}."
+
             embed = EmbedCreator.create_error_embed(
                 title="Timeout Failed",
                 description=msg,

@@ -21,6 +21,26 @@ class Ban(commands.Cog):
         infraction_type: InfractionType,
         infraction_reason: str,
     ) -> Infractions | None:
+        """
+        Inserts a new infraction into the database.
+
+        Parameters
+        ----------
+        user_id : int
+            The ID of the user for whom the infraction is created.
+        moderator_id : int
+            The ID of the moderator who created the infraction.
+        infraction_type : InfractionType
+            The type of the infraction.
+        infraction_reason : str
+            The reason for the infraction.
+
+        Returns
+        -------
+        Infractions | None
+            The newly created infraction if successful, otherwise None.
+        """
+
         try:
             return await self.db_controller.infractions.create_infraction(
                 user_id=user_id,
@@ -34,6 +54,15 @@ class Ban(commands.Cog):
             return None
 
     async def get_or_create_user(self, member: discord.Member) -> None:
+        """
+        Retrieves or creates a user in the database.
+
+        Parameters
+        ----------
+        member : discord.Member
+            The member to retrieve or create in the database.
+        """
+
         user = await self.db_controller.users.get_user_by_id(member.id)
 
         if not user:
@@ -48,6 +77,15 @@ class Ban(commands.Cog):
             )
 
     async def get_or_create_moderator(self, interaction: discord.Interaction) -> None:
+        """
+        Retrieves or creates a moderator in the database.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction to retrieve or create the moderator from.
+        """
+
         moderator = await self.db_controller.users.get_user_by_id(interaction.user.id)
         moderator_context = None
         if interaction.guild:
@@ -70,6 +108,19 @@ class Ban(commands.Cog):
     async def ban(
         self, interaction: discord.Interaction, member: discord.Member, reason: str | None = None
     ) -> None:
+        """
+        Issues a ban to a member of the server.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered the command.
+        member : discord.Member
+            The member to ban.
+        reason : str | None, optional
+            The reason for issuing the ban, by default None.
+        """
+
         reason = reason or "No reason provided"
 
         await self.get_or_create_user(member)

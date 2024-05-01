@@ -12,13 +12,26 @@ class Slowmode(commands.Cog):
 
     @app_commands.checks.has_any_role("Root", "Admin", "Sr. Mod", "Mod", "Jr. Mod")
     @app_commands.command(name="slowmode", description="Sets slowmode for the current channel.")
-    @app_commands.describe(delay="The slowmode time in seconds, max is 21600, default is 5")
+    @app_commands.describe(delay="The slowmode time in seconds, max is 21600, default is 4")
     async def set_slowmode(
         self,
         interaction: discord.Interaction,
-        delay: int = 5,
+        delay: int = 4,
         channel: discord.TextChannel | discord.ForumChannel | discord.Thread | None = None,
     ) -> None:
+        """
+        Sets slowmode for the current channel.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered the command.
+        delay : int, optional
+            The slowmode time in seconds, max is 21600, by default 4
+        channel : discord.TextChannel | discord.ForumChannel | discord.Thread | None, optional
+            The channel to set slowmode in, by default None
+        """
+
         # Get the target channel (default to the current channel if not provided)
         target_channel = channel or interaction.channel
 
@@ -33,7 +46,9 @@ class Slowmode(commands.Cog):
                 description="Failed to set slowmode. Please provide a valid channel.",
                 interaction=interaction,
             )
+
             await interaction.response.send_message(embed=embed)
+
             logger.error(f"Failed to set slowmode. Invalid channel: {channel}")
 
         # Check if the delay is within the valid range
@@ -43,19 +58,24 @@ class Slowmode(commands.Cog):
                 description="The slowmode delay must be between 0 and 21600 seconds.",
                 interaction=interaction,
             )
+
             await interaction.response.send_message(embed=embed)
+
             logger.error(f"Failed to set slowmode. Invalid delay: {delay}")
 
         try:
             # If the target channel is a valid channel, set the slowmode
             if isinstance(target_channel, discord.TextChannel | discord.ForumChannel):
                 await target_channel.edit(slowmode_delay=delay)
+
                 embed = EmbedCreator.create_info_embed(
                     title="Slowmode Set",
                     description=f"Slowmode set to {delay} seconds in {target_channel.mention}.",
                     interaction=interaction,
                 )
+
                 await interaction.response.send_message(embed=embed)
+
                 logger.info(f"Slowmode set to {delay} seconds in {target_channel.mention}.")
 
             else:
@@ -64,7 +84,9 @@ class Slowmode(commands.Cog):
                     description="Failed to set slowmode. Please provide a valid channel.",
                     interaction=interaction,
                 )
+
                 await interaction.response.send_message(embed=embed)
+
                 logger.error(f"Failed to set slowmode. Invalid channel: {channel}")
 
         except Exception as error:
@@ -75,6 +97,7 @@ class Slowmode(commands.Cog):
             )
 
             await interaction.response.send_message(embed=embed)
+
             logger.error(f"Failed to set slowmode. Error: {error}")
 
 

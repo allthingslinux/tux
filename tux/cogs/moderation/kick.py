@@ -121,6 +121,26 @@ class Kick(commands.Cog):
         infraction_type: InfractionType,
         infraction_reason: str,
     ) -> Infractions | None:
+        """
+        Inserts an infraction into the database.
+
+        Parameters
+        ----------
+        user_id : int
+            The user ID who is being infracted.
+        moderator_id : int
+            The moderator ID who is creating the infraction.
+        infraction_type : InfractionType
+            The type of infraction.
+        infraction_reason : str
+            The reason for the infraction.
+
+        Returns
+        -------
+        Infractions | None
+            The newly created infraction if successful, None otherwise.
+        """
+
         try:
             return await self.db_controller.infractions.create_infraction(
                 user_id=user_id,
@@ -134,6 +154,15 @@ class Kick(commands.Cog):
             return None
 
     async def get_or_create_user(self, member: discord.Member) -> None:
+        """
+        Retrieves or creates a user in the database.
+
+        Parameters
+        ----------
+        member : discord.Member
+            The member to retrieve or create in the database.
+        """
+
         user = await self.db_controller.users.get_user_by_id(member.id)
 
         if not user:
@@ -148,6 +177,15 @@ class Kick(commands.Cog):
             )
 
     async def get_or_create_moderator(self, interaction: discord.Interaction) -> None:
+        """
+        Retrieves or creates a moderator in the database.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction to retrieve or create in the database.
+        """
+
         moderator = await self.db_controller.users.get_user_by_id(interaction.user.id)
         moderator_context = None
         if interaction.guild:
@@ -170,6 +208,19 @@ class Kick(commands.Cog):
     async def kick(
         self, interaction: discord.Interaction, member: discord.Member, reason: str | None = None
     ) -> None:
+        """
+        Issues a kick to a member of the server.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction context for this command.
+        member : discord.Member
+            The Discord member to be kicked.
+        reason : str | None, optional
+            The reason for kicking the member, by default None.
+        """
+
         reason = reason or "No reason provided"
 
         await self.get_or_create_user(member)
