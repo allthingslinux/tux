@@ -103,8 +103,10 @@ def getoutput(code: str, lang: str, compileroptions: str | None = None) -> str |
         "allowStoreCodeDebug": True,
     }
     uri = client.post(url_comp, json=payload)
+
     try:
         return uri.text if uri.status_code == httpx.codes.OK else None
+
     except httpx.ReadTimeout:
         return "Could not get data back from the host in time"
 
@@ -140,7 +142,9 @@ def generateasm(code: str, lang: str, compileroptions: str | None = None) -> str
     }
 
     uri = client.post(url_comp, json=payload)
+
     try:
         return uri.text if uri.status_code == httpx.codes.OK else None
+
     except httpx.ReadTimeout:
         return "Could not get data back from the host in time"

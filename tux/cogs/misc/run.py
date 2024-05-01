@@ -17,29 +17,32 @@ class Run(commands.Cog):
         """
         Converts ANSI encoded text into non-ANSI.
 
-        Args:
-         ansi: String to be passed
+        Parameters
+        ----------
+        ansi : str
+            The ANSI encoded text.
 
-        Returns:
-         str
-
-        Raises:
-         None
+        Returns
+        -------
+        str
+            The non-ANSI encoded text.
         """
+
         return ansi_escape.sub("", ansi)
 
     def remove_backticks(self, ticks: str) -> str:
         """
         Removes backticks from the provided string.
 
-        Args:
-         ticks: String to be passed.
+        Parameters
+        ----------
+        ticks : str
+            The string containing backticks.
 
-        Returns:
-         str
-
-        Raises:
-         None
+        Returns
+        -------
+        str
+            The string without backticks.
         """
 
         return remove_ticks.sub("", ticks)
@@ -54,25 +57,30 @@ class Run(commands.Cog):
         """
         A generalized version of the code executor.
 
-        Args:
-         ctx: Used to send messages upon error.
-         compiler_map: A dictionary containing mappings from a language to its compiler
-         code: A string consisting of the code
-         options: optional arguments to be passed to the compiler
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context in which the command is invoked.
+        compiler_map : dict[str, str]
+            A dictionary containing mappings from a language to its compiler.
+        code : str
+            A string consisting of the code.
+        options : str | None
+            Optional arguments to be passed to the compiler.
 
-        Returns:
-          tuple[str,str,str] | None
-
-        Raises:
-          None
+        Returns
+        -------
+        tuple[str, str, str] | None
+            A tuple containing the filtered output, the first few lines of the output, and the normalized language.
         """
 
         cleaned_code = self.remove_backticks(code)
         normalized_lang = cleaned_code.splitlines().pop(0)
         cleaned_code = "\n".join(cleaned_code.splitlines()[1:])
+
         if normalized_lang not in compiler_map:
             embed = EmbedCreator.create_error_embed(
-                title="Fatal exception occurred!", description="bad formatting", ctx=ctx
+                title="Fatal exception occurred!", description="Bad Formatting", ctx=ctx
             )
             await ctx.send(embed=embed)
             return ("", "", "")
@@ -105,22 +113,27 @@ class Run(commands.Cog):
         """
         A generalized version of the assembly generation function used previously.
 
-        Args:
-         ctx: Used to send messages upon error.
-         compiler_map: A dictionary containing mappings from a language to its compiler
-         code: A string consisting of the code
-         options: optional arguments to be passed to the compiler
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context in which the command is invoked.
+        compiler_map : dict[str, str]
+            A dictionary containing mappings from a language to its compiler.
+        code : str
+            A string consisting of the code.
+        options : str | None
+            Optional arguments to be passed to the compiler.
 
-        Returns:
-          tuple[str,str,str] | None
-
-        Raises:
-          None
+        Returns
+        -------
+        tuple[str, str, str] | None
+            A tuple containing the filtered output, the first few lines of the output, and the normalized language.
         """
 
         cleaned_code = self.remove_backticks(code)
         normalized_lang = cleaned_code.splitlines().pop(0)
         cleaned_code = "\n".join(cleaned_code.splitlines()[1:])
+
         if normalized_lang not in compiler_map:
             embed = EmbedCreator.create_error_embed(
                 title="Fatal exception occurred!", description="bad formatting", ctx=ctx
@@ -143,6 +156,7 @@ class Run(commands.Cog):
         lines = output.split("\n")
         gen_one = lines[0]
         filtered_output = "\n".join(lines[1:])
+
         if len(filtered_output) > 3500:
             return (
                 "The assembly is too big to fit! Please do it on the GodBolt website instead.",
@@ -158,21 +172,24 @@ class Run(commands.Cog):
         gen_one: str,
         output: str,
         lang: str,
-    ):
+    ) -> None:
         """
         A generalized version of an embed.
 
-        Args:
-         ctx: Used to send the embed.
-         gen_one: string containing the first few lines of the output
-         output: output returned
-         lang: the language used
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context in which the command is invoked.
+        gen_one : str
+            The first few lines of the output.
+        output : str
+            The output.
+        lang : str
+            The language of the code.
 
-        Returns:
-          None
-
-        Raises:
-          None
+        Returns
+        -------
+        None
         """
 
         embed = EmbedCreator.create_info_embed(
@@ -180,24 +197,9 @@ class Run(commands.Cog):
             description="",
             ctx=ctx,
         )
-        embed.set_thumbnail(url="https://www.vectorlogo.zone/logos/godbolt/godbolt-ar21.png")
         embed.add_field(name=gen_one[1:], value="", inline=True)
         embed.add_field(name="Result", value=f"```{lang}\n{output}\n```", inline=False)
 
-        await ctx.send(embed=embed)
-
-    async def cog_command_error(
-        self, ctx: commands.Context[commands.Bot], error: commands.CommandError
-    ):
-        desc = ""
-        if isinstance(error, commands.CommandInvokeError):
-            desc = error.original
-        if isinstance(error, commands.MissingRequiredArgument):
-            desc = f"Missing required argument: `{error.param.name}`"
-
-        embed = EmbedCreator.create_error_embed(
-            title="Fatal exception occurred!", description=desc, ctx=ctx
-        )
         await ctx.send(embed=embed)
 
     @commands.command(name="run")
@@ -208,23 +210,18 @@ class Run(commands.Cog):
         code: str,
     ):
         """
-        A code evaluator. The code must be provided in  backticks along with the syntax highlighting to identify the language. Use short form
-        syntax for the language. Available languages are Haskell, C, Rust, Julia, Python, C++.
+        A code evaluator. The code must be provided in  backticks along with the syntax highlighting to identify the language. Use short form syntax for the language. Available languages are Haskell, C, Rust, Julia, Python, C++.
 
         Parameters
         ----------
-         ctx: commands.Context
-           The context in which the command is invoked.
-         code : str
-           A string consisting of the code
+        ctx : commands.Context[commands.Bot]
+            The context in which the command is invoked.
+        code : str
+            The code to be evaluated.
 
         Returns
-        ---------
-          None
-
-        Raises
-        --------
-          None
+        -------
+        None
         """
 
         msg = await ctx.send("<a:typing:1231270453021249598>")
@@ -247,6 +244,31 @@ class Run(commands.Cog):
         await self.send_embedded_reply(
             ctx, gen_one, self.remove_ansi(filtered_output), normalized_lang
         )
+
+    @run.error
+    async def run_error(self, ctx: commands.Context[commands.Bot], error: Exception):
+        """
+        A generalized error handler for the run command.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context in which the command is invoked.
+        error : Exception
+            The error that occurred.
+        """
+
+        desc = ""
+        if isinstance(error, commands.CommandInvokeError):
+            desc = error.original
+        if isinstance(error, commands.MissingRequiredArgument):
+            desc = f"Missing required argument: `{error.param.name}`"
+
+        embed = EmbedCreator.create_error_embed(
+            title="Fatal exception occurred!", description=str(desc), ctx=ctx
+        )
+
+        await ctx.send(embed=embed)
 
 
 async def setup(bot: commands.Bot) -> None:
