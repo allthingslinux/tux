@@ -11,11 +11,22 @@ class Avatar(commands.Cog):
     @app_commands.command(name="avatar", description="Get the avatar of a member.")
     @app_commands.describe(member="The member to get the avatar of.")
     async def avatar(self, interaction: discord.Interaction, member: discord.Member) -> None:
-        logger.info(f"{interaction.user} used the avatar command in {interaction.channel}.")
+        """
+        Get the avatar of a member.
 
-        await interaction.response.send_message(
-            member.avatar.url if member.avatar else "Member has no avatar."
-        )
+        Parameters:
+        -----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        member : discord.Member
+            The member to get the avatar of.
+        """
+
+        avatar = member.avatar.url if member.avatar else "Member has no avatar."
+
+        await interaction.response.send_message(content=avatar)
+
+        logger.info(f"{interaction.user} used the avatar command in {interaction.channel}.")
 
 
 async def setup(bot: commands.Bot) -> None:
