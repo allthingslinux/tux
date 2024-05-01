@@ -9,6 +9,7 @@ from .users import UsersController
 
 class DatabaseController:
     def __init__(self):
+        """Initializes the database controller and connects to all the database tables."""
         self.users = UsersController()
         self.infractions = InfractionsController()
         self.notes = NotesController()
