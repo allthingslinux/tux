@@ -12,20 +12,29 @@ class GateLogging(commands.Cog):
         self.bot = bot
         self.db_controller = DatabaseController()
         self.gate_log_channel_id: int = CONST.LOG_CHANNELS["GATE"]
-        self.tux_log_channel_id: int = CONST.LOG_CHANNELS["TUX"]
+        self.dev_log_channel_id: int = CONST.LOG_CHANNELS["DEV"]
 
     async def send_to_gate_log(self, embed: discord.Embed) -> None:
         channel = self.bot.get_channel(self.gate_log_channel_id)
         if isinstance(channel, discord.TextChannel):
             await channel.send(embed=embed)
 
-    async def send_to_tux_log(self, embed: discord.Embed) -> None:
-        channel = self.bot.get_channel(self.tux_log_channel_id)
+    async def send_to_dev_log(self, embed: discord.Embed) -> None:
+        channel = self.bot.get_channel(self.dev_log_channel_id)
         if isinstance(channel, discord.TextChannel):
             await channel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
+        """
+        When a member joins the server
+
+        Parameters
+        ----------
+        member : discord.Member
+            The member that joined the server.
+        """
+
         gate_embed = EmbedCreator.create_log_embed(
             title="Member Joined", description=f"Welcome {member.mention}!"
         )
@@ -59,10 +68,19 @@ class GateLogging(commands.Cog):
             else f"User {member.mention} synced to database.",
         )
 
-        await self.send_to_tux_log(log_embed)
+        await self.send_to_dev_log(log_embed)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member) -> None:
+        """
+        When a member leaves the server
+
+        Parameters
+        ----------
+        member : discord.Member
+            The member that left the server.
+        """
+
         embed = EmbedCreator.create_log_embed(
             title="Member Left",
             description=f"Goodbye {member.mention}!",
@@ -85,6 +103,15 @@ class GateLogging(commands.Cog):
 
     @commands.Cog.listener()
     async def on_invite_create(self, invite: discord.Invite) -> None:
+        """
+        When an invite is created
+
+        Parameters
+        ----------
+        invite : discord.Invite
+            The invite that was created.
+        """
+
         if invite.expires_at is not None:
             expires_at = datetime_to_unix(invite.expires_at)
         else:

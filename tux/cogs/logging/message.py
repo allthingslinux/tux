@@ -8,15 +8,24 @@ from tux.utils.embeds import EmbedCreator
 class GuildLogging(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.audit_log_channel_id: int = CONST.LOG_CHANNELS["AUDIT"]
+        self.dev_logs_channel_id: int = CONST.LOG_CHANNELS["DEV"]
 
-    async def send_to_audit_log(self, embed: discord.Embed):
-        channel = self.bot.get_channel(self.audit_log_channel_id)
+    async def send_to_dev_log(self, embed: discord.Embed):
+        channel = self.bot.get_channel(self.dev_logs_channel_id)
         if isinstance(channel, discord.TextChannel):
             await channel.send(embed=embed)
 
     @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    async def on_message(self, message: discord.Message) -> None:
+        """
+        When a message is sent in a guild
+
+        Parameters
+        ----------
+        message : discord.Message
+            The message that was sent.
+        """
+
         # check if the message has no embeds, attachments, or content, stickers, or isnt a nitro gift/boost
         # if so its probably a poll
         poll_channel = self.bot.get_channel(1228717294788673656)
@@ -29,7 +38,7 @@ class GuildLogging(commands.Cog):
                     title="Non-Poll Deleted",
                     description=f"Message: {message.id}",
                 )
-                await self.send_to_audit_log(embed)
+                await self.send_to_dev_log(embed)
                 return
 
             # make a thread for the poll
@@ -54,7 +63,7 @@ class GuildLogging(commands.Cog):
                 title="Poll Deleted",
                 description=f"Message: {message.id}",
             )
-            await self.send_to_audit_log(embed)
+            await self.send_to_dev_log(embed)
 
 
 async def setup(bot: commands.Bot) -> None:

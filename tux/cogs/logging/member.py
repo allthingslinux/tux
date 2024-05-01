@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from loguru import logger
 
 from tux.database.controllers import DatabaseController
 from tux.utils.constants import Constants as CONST
@@ -20,7 +19,18 @@ class MemberLogging(commands.Cog):
             await channel.send(embed=embed)
 
     @commands.Cog.listener()
-    async def on_member_update(self, before: discord.Member, after: discord.Member):
+    async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
+        """
+        When a member is updated
+
+        Parameters
+        ----------
+        before : discord.Member
+            The member before the update.
+        after : discord.Member
+            The member after the update.
+        """
+
         embed = EmbedCreator.create_log_embed(
             title="Member Updated",
             description=f"Member {before.mention} has been updated.",
@@ -28,19 +38,16 @@ class MemberLogging(commands.Cog):
 
         if before.name != after.name:
             embed.add_field(name="Name", value=f"`{before.name}` -> `{after.name}`")
-            logger.info(f"{before} -> {after}")
 
         if before.display_name != after.display_name:
             embed.add_field(
                 name="Display Name", value=f"`{before.display_name}` -> `{after.display_name}`"
             )
-            logger.info(f"{before} -> {after}")
 
         if before.global_name != after.global_name:
             embed.add_field(
                 name="Global Name", value=f"`{before.global_name}` -> `{after.global_name}`"
             )
-            logger.info(f"{before} -> {after}")
 
         await self.send_to_audit_log(embed)
 
