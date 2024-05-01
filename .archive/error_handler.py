@@ -1,132 +1,98 @@
-# utils/error_handler.py
+import traceback
 
-from collections.abc import Callable, Coroutine
-
+import discord
+from discord import app_commands
 from discord.ext import commands
-from discord.ext.commands import (
-    BotMissingPermissions,
-    CommandNotFound,
-    CommandOnCooldown,
-    Context,
-    MissingPermissions,
-    MissingRequiredArgument,
-    NotOwner,
-)
-from utils.tux_logger import TuxLogger
+from loguru import logger
 
-logger = TuxLogger(__name__)
-
-ErrorHandlerFunc = Callable[[Context, Exception], Coroutine[None, None, None]]
+# Custom error handling mappings and messages.
+error_map = {
+    # app_commands
+    app_commands.AppCommandError: "An error occurred: {error}",
+    app_commands.CommandInvokeError: "A command invoke error occurred: {error}",
+    app_commands.TransformerError: "A transformer error occurred: {error}",
+    app_commands.MissingRole: "You are missing the role required to use this command.",
+    app_commands.MissingAnyRole: "You are missing some roles required to use this command.",
+    app_commands.MissingPermissions: "You are missing the required permissions to use this command.",
+    app_commands.CheckFailure: "You are not allowed to use this command.",
+    app_commands.CommandNotFound: "This command was not found.",
+    app_commands.CommandOnCooldown: "This command is on cooldown. Try again in {error.retry_after:.2f} seconds.",
+    app_commands.BotMissingPermissions: "The bot is missing the required permissions to use this command.",
+    app_commands.CommandSignatureMismatch: "The command signature does not match: {error}",
+    # commands
+    commands.CommandError: "An error occurred: {error}",
+    commands.CommandInvokeError: "A command invoke error occurred: {error}",
+    commands.ConversionError: "An error occurred during conversion: {error}",
+    commands.MissingRole: "You are missing the role required to use this command.",
+    commands.MissingAnyRole: "You are missing some roles required to use this command.",
+    commands.MissingPermissions: "You are missing the required permissions to use this command.",
+    commands.CheckFailure: "You are not allowed to use this command.",
+    commands.CommandNotFound: "This command was not found.",
+    commands.CommandOnCooldown: "This command is on cooldown. Try again in {error.retry_after:.2f} seconds.",
+    commands.BadArgument: "Invalid argument passed. Correct usage:\n```{ctx.command.usage}```",
+    commands.MissingRequiredArgument: "Missing required argument. Correct usage:\n```{ctx.command.usage}```",
+    commands.MissingRequiredAttachment: "Missing required attachment.",
+    commands.NotOwner: "You are not the owner of this bot.",
+    commands.BotMissingPermissions: "The bot is missing the required permissions to use this command.",
+}
 
 
 class ErrorHandler(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
+        self.error_message = "An error occurred. Please try again later."
+        bot.tree.error(self.dispatch_to_app_command_handler)
 
-    async def send_message_log_error(self, ctx, msg, error, error_type):
-        """
-        Send a message to the context and log the error.
-        """
-        await ctx.send(msg)
-        logger.error(f"{error_type}: {error}")
+    async def dispatch_to_app_command_handler(
+        self, interaction: discord.Interaction, error: app_commands.AppCommandError
+    ):
+        """Dispatch command error to app_command_error event."""
+        await self.on_app_command_error(interaction, error)
 
-    async def handle_command_not_found(self, ctx: Context, error):
-        """
-        Handles the case when an invalid command is used.
-        """
-        await self.send_message_log_error(
-            ctx,
-            f"I'm sorry, but I couldn't find the command: {ctx.message.content}. Please check your command and try again.",
-            error,
-            "CommandNotFound",
-        )
+    async def on_app_command_error(
+        self, interaction: discord.Interaction, error: app_commands.AppCommandError
+    ):
+        """Handle app command errors."""
+        error_message = error_map.get(type(error), self.error_message).format(error=error)
 
-    async def handle_missing_permissions(self, ctx: Context, error):
-        """
-        Handles the case when a user does not have the necessary permissions
-        to use a command.
-        """
-        await self.send_message_log_error(
-            ctx,
-            "It seems you're missing the necessary permissions to perform this command.",
-            f"User '{ctx.author.name}' lacks permission to use this command.",
-            "MissingPermissions",
-        )
+        if interaction.response.is_done():
+            await interaction.followup.send(error_message, ephemeral=True)
+        else:
+            await interaction.response.send_message(error_message, ephemeral=True)
 
-    async def handle_bot_missing_permissions(self, ctx: Context, error):
-        """
-        Handles the case when the bot does not have the necessary permissions
-        to execute a command.
-        """
-        await self.send_message_log_error(
-            ctx,
-            "I'm sorry, but I don't have enough permissions to perform this command.",
-            error,
-            "BotMissingPermissions",
-        )
-
-    async def handle_command_on_cooldown(self, ctx: Context, error):
-        """
-        Handles the case when a user is on cooldown.
-        """
-        await self.send_message_log_error(
-            ctx,
-            "You're on cooldown. Please wait a bit before using this command again.",
-            error,
-            "Cooldown",
-        )
-
-    async def handle_missing_required_argument(self, ctx: Context, error):
-        """
-        Handles the case when a user is missing a required argument.
-        """
-        await self.send_message_log_error(
-            ctx,
-            "You're missing a required argument. Please check your command and try again.",
-            error,
-            "MissingRequiredArgument",
-        )
-
-    async def handle_not_owner(self, ctx: Context, error):
-        """
-        Handles the case when a user is not the owner of the bot.
-        """
-        await self.send_message_log_error(
-            ctx, "You're not the owner of this bot.", error, "NotOwner"
-        )
-
-    async def handle_other_errors(self, ctx: Context, error):
-        """
-        Handles all other types of errors.
-        """
-        logger.exception(f"Unhandled exception in command {ctx.command}: {error}")
+        if type(error) not in error_map:
+            self.log_error_traceback(error)
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx: Context, error):
-        """Called when an error is raised while invoking a command.
+    async def on_command_error(
+        self, ctx: commands.Context[commands.Bot], error: commands.CommandError
+    ):
+        """Handle traditional command errors."""
+        if isinstance(
+            error,
+            commands.CommandNotFound
+            | commands.UnexpectedQuoteError
+            | commands.InvalidEndOfQuotedStringError
+            | commands.CheckFailure,
+        ):
+            return  # Ignore these specific errors.
 
-        Args:
-            ctx (Context): The invocation context.
-            error (Exception): The error that was raised.
+        error_message = error_map.get(type(error), self.error_message).format(error=error, ctx=ctx)
 
-        Note:
-            This function is called when an error is raised while invoking a command. If the error is not
-            handled, it will be propagated to the global error handler.
+        await ctx.send(
+            content=error_message,
+            ephemeral=False,
+        )
 
-        https://discordpy.readthedocs.io/en/stable/ext/commands/api.html#discord.on_command_error
-        """
-        error_handlers: dict[type[commands.CommandError], ErrorHandlerFunc] = {
-            CommandNotFound: self.handle_command_not_found,
-            MissingPermissions: self.handle_missing_permissions,
-            BotMissingPermissions: self.handle_bot_missing_permissions,
-            CommandOnCooldown: self.handle_command_on_cooldown,
-            MissingRequiredArgument: self.handle_missing_required_argument,
-            NotOwner: self.handle_not_owner,
-        }
+        if type(error) not in error_map:
+            self.log_error_traceback(error)
 
-        handler = error_handlers.get(type(error), self.handle_other_errors)
-        await handler(ctx, error)
+    def log_error_traceback(self, error: Exception):
+        """Helper method to log error traceback."""
+        trace = traceback.format_exception(None, error, error.__traceback__)
+        formatted_trace = "".join(trace)
+        logger.error(f"Error: {error}\nTraceback:\n{formatted_trace}")
 
 
-async def setup(bot):
+async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(ErrorHandler(bot))
