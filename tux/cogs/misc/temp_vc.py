@@ -17,16 +17,31 @@ class TempVc(commands.Cog):
         before: discord.VoiceState,
         after: discord.VoiceState,
     ) -> None:
+        """
+        Temporarily create a voice channel for a user when they join the temporary voice channel. If the user leaves the temporary voice channel, the channel will be deleted.
+
+        Parameters
+        ----------
+        member : discord.Member
+            The member that triggered the event.
+        before : discord.VoiceState
+            The voice state before the event.
+        after : discord.VoiceState
+            The voice state after the event.
+        """
+
         if after.channel and after.channel.id == int(CONST.TEMPVC_CHANNEL_ID or "0"):
-            # check if the user already has a temporary channel
-            # if so move the user to the existing channel
+            # Check if the user already has a temporary channel
+            # If so move the user to the existing channel
             for channel in after.channel.guild.voice_channels:
                 if channel.name == self.base_vc_name + member.name:
                     await member.move_to(channel)
                     logger.info(f"Moved {member.name} to existing temporary channel.")
                     return
+
             new_channel = await after.channel.clone(name=self.base_vc_name + member.name)
             await member.move_to(new_channel)
+
             logger.info(f"Created temporary channel for {member.name}.")
             return
 
@@ -50,9 +65,9 @@ class TempVc(commands.Cog):
                     f"Deleted temporary channel {before.channel.name} as it has no members."
                 )
 
-            # search all lost temporary channels and delete them
+            # Search all lost temporary channels and delete them
             for channel in category.voice_channels:
-                # checks if the channel is a temporary channel
+                # Checks if the channel is a temporary channel
                 if (
                     not channel.name.startswith(self.base_vc_name)
                     or len(channel.members) != 0

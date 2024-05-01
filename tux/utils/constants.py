@@ -49,16 +49,26 @@ class Constants:
     # Channel constants
     LOG_CHANNELS: Final[dict[str, int]] = {
         # For general logging
-        "AUDIT": 1223690612822376529,
+        "AUDIT": 1235096271350399076,
         # For infractions, mod actions, etc.
-        "MOD": 1223690612822376529,
+        "MOD": 1235096291672068106,
         # For anonymous reports
-        "REPORT": 1223690612822376529,
+        "REPORTS": 1235096305160814652,
         # For gate logging
-        "GATE": 1223690612822376529,
+        "GATE": 1235096247442870292,
         # For tux logs (errors, debug, db, api, etc)
-        "TUX": 1223690612822376529,
+        "DEV": 1235096558463225887,
+        # For private logs (voice, messages, etc)
+        "PRIVATE": 1235108340791513129,
     }
+
+    if str(STAGING).lower() == "true":
+        LOG_CHANNELS["AUDIT"] = 1235095919788167269
+        LOG_CHANNELS["MOD"] = 1235095919788167269
+        LOG_CHANNELS["REPORTS"] = 1235095919788167269
+        LOG_CHANNELS["GATE"] = 1235095919788167269
+        LOG_CHANNELS["DEV"] = 1235095919788167269
+        LOG_CHANNELS["PRIVATE"] = 1235095919788167269
 
     # User ID Constants
     USER_IDS: Final[dict[str, int]] = {

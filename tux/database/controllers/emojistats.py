@@ -10,35 +10,46 @@ class EmojiStatsController:
         """
         Retrieves all emoji stats from the database.
 
-        Returns:
-            list[EmojiStats]: A list of all emoji stats.
+        Returns
+        -------
+        list[EmojiStats]
+            A list of all emoji stats.
         """
 
         return await self.table.find_many()
 
     async def get_emoji_stats(self, emoji_id: int) -> EmojiStats | None:
         """
-        Retrieves emoji stats from the database based on the specified emoji ID.
+        Retrieves the emoji stats for the specified emoji ID.
 
-        Args:
-            emoji_id (int): The ID of the emoji to retrieve.
+        Parameters
+        ----------
+        emoji_id : int
+            The ID of the emoji to retrieve.
 
-        Returns:
-            EmojiStats | None: The emoji stats if found, None if the emoji does not exist.
+        Returns
+        -------
+        EmojiStats | None
+            The emoji stats if found, otherwise None.
         """
 
         return await self.table.find_first(where={"emoji_id": emoji_id})
 
     async def create_emoji_stats(self, emoji_id: int, count: int) -> EmojiStats:
         """
-        Creates a new emoji stats in the database with the specified emoji ID and count.
+        Creates a new entry for the specified emoji in the database.
 
-        Args:
-            emoji_id (int): The ID of the emoji for which the stats are created.
-            count (int | None): The count of the emoji.
+        Parameters
+        ----------
+        emoji_id : int
+            The ID of the emoji.
+        count : int
+            The count of the emoji.
 
-        Returns:
-            EmojiStats: The newly created emoji stats.
+        Returns
+        -------
+        EmojiStats
+            The newly created emoji stats.
         """
 
         return await self.table.create(
@@ -50,13 +61,17 @@ class EmojiStatsController:
 
     async def increment_emoji_count_or_create(self, emoji_id: int) -> EmojiStats | None:
         """
-        Increments the count of the specified emoji in the database or creates a new entry if the emoji does not exist.
+        Increments the count of the specified emoji in the database or creates a new entry if it does not exist.
 
-        Args:
-            emoji_id (int): The ID of the emoji to increment.
+        Parameters
+        ----------
+        emoji_id : int
+            The ID of the emoji to increment.
 
-        Returns:
-            EmojiStats: The updated or newly created emoji stats.
+        Returns
+        -------
+        EmojiStats | None
+            The updated or newly created emoji stats if successful, None otherwise.
         """
 
         emoji_stats = await self.get_emoji_stats(emoji_id)
@@ -70,12 +85,17 @@ class EmojiStatsController:
         """
         Updates the count of the specified emoji in the database.
 
-        Args:
-            emoji_id (int): The ID of the emoji to update.
-            count (int): The new count of the emoji.
+        Parameters
+        ----------
+        emoji_id : int
+            The ID of the emoji to update.
+        count : int
+            The new count of the emoji.
 
-        Returns:
-            EmojiStats | None: The updated emoji stats if successful, None otherwise.
+        Returns
+        -------
+        EmojiStats | None
+            The updated emoji stats if successful, None otherwise.
         """
 
         return await self.table.update(

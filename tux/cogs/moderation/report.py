@@ -10,7 +10,7 @@ class ReportModal(discord.ui.Modal):
     def __init__(self, *, title: str = "Submit an anonymous report", bot: commands.Bot) -> None:
         super().__init__(title=title)
         self.bot = bot
-        self.channel = CONST.LOG_CHANNELS["REPORT"]
+        self.channel = CONST.LOG_CHANNELS["REPORTS"]
 
     short = discord.ui.TextInput(  # type: ignore
         style=discord.TextStyle.short,
