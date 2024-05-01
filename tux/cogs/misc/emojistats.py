@@ -14,6 +14,15 @@ class EmojiStats(commands.Cog):
 
     @app_commands.command(name="emojistats", description="List the top 10 most used emojis.")
     async def list_emoji_stats(self, interaction: discord.Interaction) -> None:
+        """
+        List the top 10 most used emojis.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object.
+        """
+
         await interaction.response.defer()
 
         emoji_stats = await self.db_controller.get_all_emoji_stats()
@@ -38,13 +47,19 @@ class EmojiStats(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
-        if message.author.bot:
+        """
+        When a message is sent in a guild.
+
+        Parameters
+        ----------
+        message : discord.Message
+            The message that was sent.
+        """
+
+        if message.author.bot or not message.guild:
             return
 
-        if not message.guild:
-            return
-
-        # get all emojis in the message
+        # Get the emojis from the guild and check if any of them are in the message content
         if any(str(emoji) in message.content for emoji in message.guild.emojis):
             for emoji in message.guild.emojis:
                 if str(emoji) in message.content:
@@ -52,6 +67,15 @@ class EmojiStats(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
+        """
+        When a reaction is added to a message.
+
+        Parameters
+        ----------
+        payload : discord.RawReactionActionEvent
+            The payload of the event.
+        """
+
         if not self.bot.user:
             logger.error("Bot user not found. This should never happen.")
             return
@@ -65,7 +89,7 @@ class EmojiStats(commands.Cog):
         if not payload.emoji.id:
             return
 
-        # check if the emoji exists and is from the guild
+        # Check if the emoji is from the guild
         emoji = self.bot.get_emoji(payload.emoji.id)
         if not emoji or emoji.guild_id != payload.guild_id:
             return

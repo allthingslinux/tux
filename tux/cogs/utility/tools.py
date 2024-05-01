@@ -14,6 +14,8 @@ client = httpx.AsyncClient()
 
 COLOR_FORMATS = {"HEX": "hex", "RGB": "rgb", "HSL": "hsl", "CMYK": "cmyk"}
 
+# TODO: Fix color format input parsing for URL encoding
+
 
 class Tools(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -62,6 +64,19 @@ class Tools(commands.Cog):
         color_format: discord.app_commands.Choice[str],
         color: str,
     ) -> None:
+        """
+        Converts a color to different formats.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        color_format : discord.app_commands.Choice[str]
+            The original color format to convert from.
+        color : str
+            The color to convert.
+        """
+
         if color_format.value == "HEX" and color.startswith("#"):
             color = color[1:]
 
@@ -81,6 +96,25 @@ class Tools(commands.Cog):
         return (await client.get(svg_url)).content
 
     def convert_svg_to_png(self, content: bytes) -> io.BytesIO:
+        """
+        Convert SVG content to PNG.
+
+        Parameters
+        ----------
+        content : bytes
+            The SVG content to convert.
+
+        Returns
+        -------
+        io.BytesIO
+            The PNG content as a BytesIO stream.
+
+        Raises
+        ------
+        ValueError
+            If the conversion fails.
+        """
+
         # Attempt conversion from SVG to PNG
         png_content = cairosvg.svg2png(bytestring=content, dpi=96, scale=1, unsafe=False)  # type: ignore
 
@@ -96,6 +130,22 @@ class Tools(commands.Cog):
         return png_bio
 
     def construct_embed(self, interaction: discord.Interaction, data: Any) -> discord.Embed:
+        """
+        Construct an embed with the color data.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        data : Any
+            The color data to display.
+
+        Returns
+        -------
+        discord.Embed
+            The constructed embed.
+        """
+
         embed = EmbedCreator.create_info_embed(
             title="Color Converter",
             description="Here is your color converted!",
@@ -134,17 +184,38 @@ class Tools(commands.Cog):
         encoding: app_commands.Choice[str],
         string: str,
     ) -> None:
+        """
+        Encodes a string to a specified format.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        encoding : app_commands.Choice[str]
+            The encoding format to use.
+        string : str
+            The string to encode.
+
+        Raises
+        ------
+        KeyError
+            If the encoding is not found.
+        """
+
         title = f"{encoding.name.capitalize()} Encode"
+
         try:
             encode_func = self.encodings[encoding.value]
             encoded_string = encode_func(string)
             description = f"Encoded: {encoded_string}"
+
         except KeyError:
             description = "Invalid encoding selected!"
 
         embed = EmbedCreator.create_info_embed(
             title=title, description=description, interaction=interaction
         )
+
         await interaction.response.send_message(embed=embed)
 
     @group.command(name="decode", description="Decodes a string from a specified format.")
@@ -160,17 +231,38 @@ class Tools(commands.Cog):
         encoding: app_commands.Choice[str],
         string: str,
     ) -> None:
+        """
+        Decodes a string from a specified format.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        encoding : app_commands.Choice[str]
+            The decoding format to use.
+        string : str
+            The string to decode.
+
+        Raises
+        ------
+        KeyError
+            If the decoding is not found.
+        """
+
         title = f"{encoding.name.capitalize()} Decode"
+
         try:
             decode_func = self.decodings[encoding.value]
             decoded_string = decode_func(string)
             description = f"Decoded: {decoded_string}"
+
         except KeyError:
             description = "Invalid decoding selected!"
 
         embed = EmbedCreator.create_info_embed(
             title=title, description=description, interaction=interaction
         )
+
         await interaction.response.send_message(embed=embed)
 
 

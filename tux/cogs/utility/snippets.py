@@ -18,29 +18,41 @@ class Snippets(commands.Cog):
         name="snippets", description="List snippets by page (max 10).", aliases=["ls"]
     )
     async def list_snippets(self, ctx: commands.Context[commands.Bot], page: int = 1) -> None:
+        """
+        List snippets by page (max 10).
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object.
+        page : int, optional
+            The page number, by default 1.
+        """
+
         snippets: list[SnippetsModel] = await self.db_controller.get_all_snippets_sorted(
             newestfirst=True
         )
 
-        # calculate the number of pages
-        # if there are no or less than 10 snippets, there is only one page
+        # Calculate the number of pages based on the number of snippets
         pages = 1 if len(snippets) <= 10 else len(snippets) // 10 + 1
 
-        # if no snippets are found
+        # If there are no snippets, send an error message
         if not snippets:
-            embed = EmbedCreator.create_error_embed(title="Error", description="No snippets found.")
-            await ctx.send(embed=embed)
-            return
-
-        # if the page is out of bounds
-        if page < 1 or page > pages:
             embed = EmbedCreator.create_error_embed(
-                title="Error", description="Invalid page number."
+                title="Error", description="No snippets found.", ctx=ctx
             )
             await ctx.send(embed=embed)
             return
 
-        # get the snippets for the specified page
+        # If the page number is invalid, send an error message
+        if page < 1 or page > pages:
+            embed = EmbedCreator.create_error_embed(
+                title="Error", description="Invalid page number.", ctx=ctx
+            )
+            await ctx.send(embed=embed)
+            return
+
+        # Get the snippets for the specified page
         snippets = snippets[(page - 1) * 10 : page * 10]
 
         # Snippets:
@@ -55,6 +67,7 @@ class Snippets(commands.Cog):
                     for index, snippet in enumerate(snippets)
                 ]
             ),
+            ctx=ctx,
         )
         embed.set_footer(text=f"Page {page}/{pages}")
 
@@ -62,32 +75,59 @@ class Snippets(commands.Cog):
 
     @commands.command(name="deletesnippet", description="Delete a snippet.", aliases=["ds"])
     async def delete_snippet(self, ctx: commands.Context[commands.Bot], name: str) -> None:
+        """
+        Delete a snippet.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object.
+        name : str
+            The name of the snippet.
+        """
+
         snippet = await self.db_controller.get_snippet_by_name(name)
 
         if snippet is None:
-            embed = EmbedCreator.create_error_embed(title="Error", description="Snippet not found.")
+            embed = EmbedCreator.create_error_embed(
+                title="Error", description="Snippet not found.", ctx=ctx
+            )
             await ctx.send(embed=embed)
             return
 
-        # check if the author of the snippet is the same as the user who wants to delete it, and if theres no author dont allow deletion
+        # Check if the author of the snippet is the same as the user who wants to delete it and if theres no author don't allow deletion
         author_id = snippet.author_id or 0
         if author_id != ctx.author.id:
             embed = EmbedCreator.create_error_embed(
-                title="Error", description="You can only delete your own snippets."
+                title="Error", description="You can only delete your own snippets.", ctx=ctx
             )
             await ctx.send(embed=embed)
             return
 
         await self.db_controller.delete_snippet(name)
-        logger.info(f"{ctx.author} deleted the snippet with the name {name}.")
+
         await ctx.send("Snippet deleted.")
+        logger.info(f"{ctx.author} deleted the snippet with the name {name}.")
 
     @commands.command(name="snippet", description="Get a snippet.", aliases=["s"])
     async def get_snippet(self, ctx: commands.Context[commands.Bot], name: str) -> None:
+        """
+        Get a snippet.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object.
+        name : str
+            The name of the snippet.
+        """
+
         snippet = await self.db_controller.get_snippet_by_name(name)
 
         if snippet is None:
-            embed = EmbedCreator.create_error_embed(title="Error", description="Snippet not found.")
+            embed = EmbedCreator.create_error_embed(
+                title="Error", description="Snippet not found.", ctx=ctx
+            )
             await ctx.send(embed=embed)
             return
 
@@ -105,10 +145,23 @@ class Snippets(commands.Cog):
 
     @commands.command(name="createsnippet", description="Create a snippet.", aliases=["cs"])
     async def create_snippet(self, ctx: commands.Context[commands.Bot], *, arg: str) -> None:
+        """
+        Create a snippet.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object.
+        arg : str
+            The name and content of the snippet.
+        """
+
         args = arg.split(" ")
         if len(args) < 2:
             embed = EmbedCreator.create_error_embed(
-                title="Error", description="Please provide a name and content for the snippet."
+                title="Error",
+                description="Please provide a name and content for the snippet.",
+                ctx=ctx,
             )
             await ctx.send(embed=embed)
             return
@@ -118,17 +171,18 @@ class Snippets(commands.Cog):
         created_at = datetime.datetime.now(datetime.UTC)
         author_id = ctx.author.id
 
-        # check if the snippet already exists
+        # Check if the snippet already exists
         if await self.db_controller.get_snippet_by_name(name) is not None:
             embed = EmbedCreator.create_error_embed(
-                title="Error", description="Snippet already exists."
+                title="Error", description="Snippet already exists.", ctx=ctx
             )
             await ctx.send(embed=embed)
             return
 
-        # check if the name is longer than 20 characters and includes non-alphanumeric characters (except -_)
+        # Check if the name is longer than 20 characters and includes non-alphanumeric characters (except -_)
         rules = set(string.ascii_letters + string.digits + "-_")
-        if len(name) > 20 or not all(char in rules for char in name):
+
+        if len(name) > 20 or any(char not in rules for char in name):
             embed = EmbedCreator.create_error_embed(
                 title="Error",
                 description="Snippet name must be alphanumeric (allows dashes and underscores) and less than 20 characters.",
@@ -143,8 +197,8 @@ class Snippets(commands.Cog):
             author_id=author_id,
         )
 
-        logger.info(f"{ctx.author} created a snippet with the name {name} and content {content}.")
         await ctx.send("Snippet created.")
+        logger.info(f"{ctx.author} created a snippet with the name {name} and content {content}.")
 
 
 async def setup(bot: commands.Bot) -> None:

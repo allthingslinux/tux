@@ -228,11 +228,15 @@ class Run(commands.Cog):
 
         compiler_map = {
             "hs": "ghc961",
+            "haskell": "ghc961",
             "c": "cclang1810",
             "cpp": "cclang1810",
+            "c++": "cclang1810",
             "rs": "r1770",
+            "rust": "r1770",
             "julia": "julia_nightly",
             "py": "python312",
+            "python": "python312",
         }
 
         (filtered_output, gen_one, normalized_lang) = await self.generalized_code_executor(

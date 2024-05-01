@@ -42,6 +42,7 @@ class Git(commands.Cog):
         error : str
             The error message to display.
         """
+
         embed = EmbedCreator.create_error_embed(
             title="Uh oh!",
             description=error,

@@ -3,69 +3,11 @@ import re
 import discord
 from discord.ext import commands
 
-harmful_commands = [
-    "doas rm -fr /*",
-    "doas rm -rf /*",
-    "doas rm -rf /",
-    "doas rm -rf / --no-preserve-root",
-    "doas rm -rf /* --no-preserve-root",
-    "rm --force / --recursive",
-    "rm --force /* --recursive",
-    "rm --recursive --force /",
-    "rm --recursive --force /*",
-    "rm --recursive / --force",
-    "rm --recursive /* --force",
-    "rm --recursive /network.",
-    "rm --recursive /system",
-    "rm -f --recursive /",
-    "rm -f --recursive /*",
-    "rm -fR /",
-    "rm -fR /*",
-    "rm -r -f /",
-    "rm -r -f /*",
-    "rm -R -f /*",
-    "rm -R -f /",
-    "rm -rf /",
-    "rm -rf /*",
-    "rm -Rf /*",
-    "rm -Rf /",
-    "rm rf /*",
-    "sudo rm --force --recursive /",
-    "sudo rm --force --recursive /*",
-    "sudo rm --force --recursive / --no-preserve-root",
-    "sudo rm --force --recursive /* --no-preserve-root",
-    "sudo rm -fR /",
-    "sudo rm -fR /*",
-    "sudo rm -r -f / --no-preserve-root",
-    "sudo rm -r -f /* --no-preserve-root",
-    "sudo rm -rf --no-preserve-root",
-    "sudo rm -rf --no-preserve-root /",
-    "sudo rm -rf /*",
-    "sudo rm -rf /",
-    "sudo rm -rf /* --no-preserve-root",
-    "sudo rm -rf / --no-preserve-root",
-    "sudo rm -rf /* --no-preserve-root *",
-    "sudo rm -rf /bin",
-    "sudo rm -rf /boot",
-    "sudo rm -rf /etc",
-    "sudo rm -rf /lib",
-    "sudo rm -rf /proc",
-    "sudo rm -rf /root",
-    "sudo rm -rf /sbin",
-    "sudo rm -rf /sys",
-    "sudo rm -rf /tmp /*",
-    "sudo rm -rf /usr",
-    "sudo rm -rf /var",
-    "sudo rm -rf /var/log",
-    "sudo rm -fr /",
-    "sudo rm -fr /*",
-    "sudo rm -rf /*",
-    "sudo su -c 'rm -rf /'",
-    ":(){ :|: & };:",
-    "sudo rm -rf /",
-]
+harmful_command_pattern = r"(?:sudo\s+|doas\s+)?rm\s+(-[frR]*|--force|--recursive|--no-preserve-root|\s+)*(/\s*|\*|/bin|/boot|/etc|/lib|/proc|/root|/sbin|/sys|/tmp|/usr|/var|/var/log|/network.|/system)(\s+--no-preserve-root|\s+\*)*|:\(\)\{ :|:& \};:"
 
-# TODO: Fix the triple backtick  regex as it is not working
+
+def is_harmful(command: str) -> bool:
+    return re.search(harmful_command_pattern, command) is not None
 
 
 class AutoRespond(commands.Cog):
@@ -73,6 +15,8 @@ class AutoRespond(commands.Cog):
         self.bot = bot
 
     def strip_formatting(self, content: str) -> str:
+        # TODO: Fix the triple backtick  regex as it is not working
+
         # Remove triple backtick blocks considering any spaces and platform-specific newlines
         content = re.sub(r"```.*?```", "", content, flags=re.DOTALL)
 
@@ -89,12 +33,23 @@ class AutoRespond(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
+        """
+        When a message is sent in a guild
+
+        Parameters
+        ----------
+        message : discord.Message
+            The message that was sent.
+        """
+
         if message.author.bot:
             return
 
+        # Strip the message content of any formatting
         stripped_content = self.strip_formatting(message.content)
 
-        if stripped_content in harmful_commands:
+        # Check if the stripped content is in the list of harmful commands
+        if is_harmful(stripped_content):
             await message.reply(
                 "Warning: This command is potentially harmful. Please avoid running it unless you are fully aware of its operation. If this was a mistake, please disregard this message."
             )

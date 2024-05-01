@@ -74,6 +74,29 @@ def getspecificcompiler(lang: str) -> str | None:
 
 
 def getoutput(code: str, lang: str, compileroptions: str | None = None) -> str | None:
+    """
+    This function sends a POST request to the Godbolt API to get the output of the given code.
+
+    Parameters
+    ----------
+    code : str
+        The code to compile.
+    lang : str
+        The language of the code.
+    compileroptions : str | None, optional
+        The compiler options, by default None
+
+    Returns
+    -------
+    str | None
+        The output of the code if successful, otherwise None.
+
+    Raises
+    ------
+    httpx.ReadTimeout
+        If the request times out.
+    """
+
     url_comp = f"{url}/api/compiler/{lang}/compile"
 
     copt = compileroptions if compileroptions is not None else ""
@@ -112,6 +135,29 @@ def getoutput(code: str, lang: str, compileroptions: str | None = None) -> str |
 
 
 def generateasm(code: str, lang: str, compileroptions: str | None = None) -> str | None:
+    """
+    Generate assembly code from the given code.
+
+    Parameters
+    ----------
+    code : str
+        The code to generate assembly from.
+    lang : str
+        The language of the code.
+    compileroptions : str | None, optional
+        The compiler options, by default None
+
+    Returns
+    -------
+    str | None
+        The assembly code if successful, otherwise None.
+
+    Raises
+    ------
+    httpx.ReadTimeout
+        If the request times out.
+    """
+
     url_comp = f"{url}/api/compiler/{lang}/compile"
 
     copt = compileroptions if compileroptions is not None else ""

@@ -95,11 +95,26 @@ class RemindMe(commands.Cog):
         await self.update()
 
     async def end_timer(self, reminder: Reminders) -> None:
+        """
+        End the timer for the reminder.
+
+        Parameters
+        ----------
+        reminder : Reminders
+            The reminder object.
+        """
+
         # Wait until the reminder expires
         await discord.utils.sleep_until(reminder.expires_at)
         await self.send_reminders(reminder)
 
     async def update(self) -> None:
+        """
+        Update the reminders
+
+        Check if there are any reminders and send the closest one.
+        """
+
         try:
             # Get all reminders
             reminders = await self.db_controller.reminders.get_all_reminders()
