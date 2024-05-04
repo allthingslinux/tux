@@ -1,6 +1,8 @@
 import datetime
 import string
 
+import discord
+from discord import AllowedMentions
 from discord.ext import commands
 from loguru import logger
 
@@ -131,15 +133,49 @@ class Snippets(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        embed = EmbedCreator.custom_footer_embed(
-            ctx=None,
-            interaction=None,
-            state="DEFAULT",
-            user=self.bot.get_user(snippet.author_id) or ctx.author,
-            content=snippet.content,
-            title=snippet.name,
+        top_row = f"`/snippets/{snippet.name}.txt` |⦚| {self.bot.get_user(snippet.author_id) or 'Unknown Author'}"
+
+        text = f"{top_row}\n{snippet.content}"
+
+        await ctx.send(text, allowed_mentions=AllowedMentions.none())
+
+    @commands.command(
+        name="snippetinfo", description="Get information about a snippet.", aliases=["si"]
+    )
+    async def get_snippet_info(self, ctx: commands.Context[commands.Bot], name: str) -> None:
+        """
+        Get information about a snippet.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object.
+        name : str
+            The name of the snippet.
+        """
+
+        snippet = await self.db_controller.get_snippet_by_name(name)
+
+        if snippet is None:
+            embed = EmbedCreator.create_error_embed(
+                title="Error", description="Snippet not found.", ctx=ctx
+            )
+            await ctx.send(embed=embed)
+            return
+
+        author = self.bot.get_user(snippet.author_id) or ctx.author
+
+        embed: discord.Embed = EmbedCreator.custom_footer_embed(
+            title="Snippet Information",
+            content=f"**Name:** {snippet.name}\n**Author:** {author}\n**Created At:** (set as embed timestamp)\n**Content:** {snippet.content}",
+            ctx=ctx,
             latency="N/A",
+            interaction=None,
+            state="DEBUG",
+            user=author,
         )
+
+        embed.timestamp = snippet.created_at or datetime.datetime.fromtimestamp(0, datetime.UTC)
 
         await ctx.send(embed=embed)
 
