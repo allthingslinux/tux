@@ -127,6 +127,7 @@ class Constants:
         "DEFAULT": "https://i.imgur.com/EqzIMKr.png",
         "LOG": "https://i.imgur.com/4sblrd0.png",
         "INFO": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/mocha_sky.png?raw=true",
+        "DEBUG": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/mocha_mauve.png?raw=true",
         "WARNING": "https://github.com/catppuccin/catppuccin/raw/main/assets/palette/circles/latte_peach.png?raw=true",
         "ERROR": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/latte_red.png?raw=true",
         "SUCCESS": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/mocha_green.png?raw=true",
