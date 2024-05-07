@@ -158,9 +158,9 @@ class Note(commands.Cog):
 
         try:
             for i in range(num1, num2):
-                embed.add_field(name=f"Note #: {str(i)}", value=result[i][0], inline=False)
-                embed.add_field(name=f"Note {str(i)} Target", value=result[i][1], inline=False)
-                embed.add_field(name=f"Note {str(i)} ID: ", value=result[i][2], inline=False)
+                embed.add_field(name=f"Note #: {i!s}", value=result[i][0], inline=False)
+                embed.add_field(name=f"Note {i!s} Target", value=result[i][1], inline=False)
+                embed.add_field(name=f"Note {i!s} ID: ", value=result[i][2], inline=False)
         except IndexError:
             embed = EmbedCreator.create_error_embed(
                 title="Index Error", description="Out of range", interaction=interaction
