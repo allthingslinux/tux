@@ -17,7 +17,10 @@ class Snippets(commands.Cog):
         self.db_controller = DatabaseController().snippets
 
     @commands.command(
-        name="snippets", description="List snippets by page (max 10).", aliases=["ls"]
+        name="snippets",
+        usage="$ls [page]",
+        description="List snippets by page (max 10).",
+        aliases=["ls"],
     )
     async def list_snippets(self, ctx: commands.Context[commands.Bot], page: int = 1) -> None:
         """
@@ -75,7 +78,9 @@ class Snippets(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(name="deletesnippet", description="Delete a snippet.", aliases=["ds"])
+    @commands.command(
+        name="deletesnippet", usage="$ds <name>", description="Delete a snippet.", aliases=["ds"]
+    )
     async def delete_snippet(self, ctx: commands.Context[commands.Bot], name: str) -> None:
         """
         Delete a snippet.
@@ -111,7 +116,9 @@ class Snippets(commands.Cog):
         await ctx.send("Snippet deleted.")
         logger.info(f"{ctx.author} deleted the snippet with the name {name}.")
 
-    @commands.command(name="snippet", description="Get a snippet.", aliases=["s"])
+    @commands.command(
+        name="snippet", usage="$s <name>", description="Get a snippet.", aliases=["s"]
+    )
     async def get_snippet(self, ctx: commands.Context[commands.Bot], name: str) -> None:
         """
         Get a snippet.
@@ -140,7 +147,10 @@ class Snippets(commands.Cog):
         await ctx.send(text, allowed_mentions=AllowedMentions.none())
 
     @commands.command(
-        name="snippetinfo", description="Get information about a snippet.", aliases=["si"]
+        name="snippetinfo",
+        usage="$si <name>",
+        description="Get information about a snippet.",
+        aliases=["si"],
     )
     async def get_snippet_info(self, ctx: commands.Context[commands.Bot], name: str) -> None:
         """
@@ -179,7 +189,12 @@ class Snippets(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(name="createsnippet", description="Create a snippet.", aliases=["cs"])
+    @commands.command(
+        name="createsnippet",
+        usage="$cs <name> <content>",
+        description="Create a snippet.",
+        aliases=["cs"],
+    )
     async def create_snippet(self, ctx: commands.Context[commands.Bot], *, arg: str) -> None:
         """
         Create a snippet.
