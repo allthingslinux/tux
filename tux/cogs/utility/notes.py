@@ -7,8 +7,8 @@ from tux.database.client import db
 from tux.database.controllers import DatabaseController
 from tux.utils.embeds import EmbedCreator
 
-# look im going to be real honest with you this code is a mess and I have no idea how this ever worked.
-# I need some *SERIOUS* help fixing this and any and all tips are appreciated.
+# The current implementation has complexities that may hinder its functionality and maintainability.
+# Assistance in refining and optimizing the code is welcome.
 
 
 class Note(commands.Cog):
