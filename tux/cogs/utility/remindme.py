@@ -30,9 +30,6 @@ def get_closest_reminder(reminders: list[Reminders]) -> Reminders | None:
     return min(reminders, key=lambda x: x.expires_at) if reminders else None
 
 
-# TODO: Refactor and clean up this code
-
-
 class RemindMe(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot

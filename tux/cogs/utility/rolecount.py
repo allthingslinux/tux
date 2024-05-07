@@ -60,7 +60,7 @@ distro_ids = [
     [1192177499413684226, "_asahi"],
     [1207599112585740309, "_fedoraatomic"],
     [1232383833152819282, "_solus"],
-    [1210000519272079411, "_rhel"],
+    [1210000519272079411, "_redhat"],
     [1232199326722293790, "_mxlinux"],
     [1232387598107017227, "_netbsd"],
     [1232385920335089734, "_qubesos"],
@@ -136,7 +136,7 @@ misc_ids = [
     [1189236400571301958, "_chromium"],
 ]
 
-# # TODO: Figure out how to make this work without hard coding the roles and emojis.
+# # TODO: Figure out how to make rolecount work without hard coded ids
 
 
 class RoleCount(commands.Cog):

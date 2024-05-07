@@ -9,8 +9,6 @@ from loguru import logger
 
 from tux.database.controllers import DatabaseController
 
-# TODO: Move to a constants file or set a global check/error handler for all commands to avoid repetition.
-
 GUILD_ONLY_MESSAGE = "This command can only be used in a guild."
 
 
@@ -41,7 +39,7 @@ class Db(commands.Cog):
 
         members: Sequence[discord.Member] = interaction.guild.members
 
-        batch_size = 10
+        batch_size = 25
 
         for i in range(0, len(members), batch_size):
             batch = members[i : i + batch_size]
@@ -85,7 +83,7 @@ class Db(commands.Cog):
 
         roles: Sequence[discord.Role] = interaction.guild.roles
 
-        batch_size = 10
+        batch_size = 25
 
         for i in range(0, len(roles), batch_size):
             batch = roles[i : i + batch_size]
@@ -129,7 +127,7 @@ class Db(commands.Cog):
             return
 
         members: Sequence[discord.Member] = interaction.guild.members
-        batch_size = 10
+        batch_size = 25
 
         for i in range(0, len(members), batch_size):
             batch = members[i : i + batch_size]

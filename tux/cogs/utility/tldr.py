@@ -35,7 +35,7 @@ class Tldr(commands.Cog):
             A list of up to 25 command names as autocomplete choices.
         """
 
-        # TODO: Why is interaction not used?
+        # TODO: Resolve why interaction is not being used.
 
         commands = self.get_tldrs()
 

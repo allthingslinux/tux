@@ -22,15 +22,9 @@ class Tools(commands.Cog):
         self.bot = bot
         self.encodings = {
             "base64": self.encode_base64,
-            # "md5": self.encode_md5,
-            # "sha256": self.encode_sha256,
-            # "sha512": self.encode_sha512,
         }
         self.decodings = {
             "base64": self.decode_base64,
-            # "md5": self.decode_md5,
-            # "sha256": self.decode_sha256,
-            # "sha512": self.decode_sha512,
         }
 
     def encode_base64(self, input_string: str):
@@ -38,15 +32,6 @@ class Tools(commands.Cog):
 
     def decode_base64(self, input_string: str):
         return b64decode(input_string.encode()).decode()
-
-    # def encode_md5(self, input_string: str):
-    #     return hashlib.md5(input_string.encode()).hexdigest()
-
-    # def encode_sha256(self, input_string: str):
-    #     return hashlib.sha256(input_string.encode()).hexdigest()
-
-    # def encode_sha512(self, input_string: str):
-    #     return hashlib.sha512(input_string.encode()).hexdigest()
 
     group = app_commands.Group(name="tools", description="Various tool commands.")
 
@@ -173,9 +158,6 @@ class Tools(commands.Cog):
     @app_commands.choices(
         encoding=[
             app_commands.Choice[str](name="base64", value="base64"),
-            # app_commands.Choice[str](name="md5", value="md5"),
-            # app_commands.Choice[str](name="sha256", value="sha256"),
-            # app_commands.Choice[str](name="sha512", value="sha512"),
         ]
     )
     async def encode(

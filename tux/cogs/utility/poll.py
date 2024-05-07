@@ -31,6 +31,9 @@ class Poll(commands.Cog):
         # Split the options by comma
         options_list = options.split(",")
 
+        # Remove any leading or trailing whitespaces from the options
+        options_list = [option.strip() for option in options_list]
+
         # Check if the options count is between 2-9
         if len(options_list) < 2 or len(options_list) > 9:
             embed = EmbedCreator.create_error_embed(
