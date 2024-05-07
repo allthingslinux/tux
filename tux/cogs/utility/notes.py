@@ -9,13 +9,14 @@ from tux.utils.embeds import EmbedCreator
 
 # look im going to be real honest with you this code is a mess and I have no idea how this ever worked.
 # I need some *SERIOUS* help fixing this and any and all tips are appreciated.
-# for now though, it works and is that not all that matters?
 
 
 class Note(commands.Cog):
     def __init__(self, bot: commands.bot) -> None:
         self.bot = bot
-        self.db_controller = DatabaseController().notes
+        self.db_controller = (
+            DatabaseController().notes
+        )  # Define some stuff so that way I can use DB
         self.table = db.notes
 
     async def create_note(
@@ -70,8 +71,64 @@ class Note(commands.Cog):
         """
         return await self.table.find_first(where={"user_id": user_id})
 
-    group = app_commands.Group(name="notes", description="note related commands")
+    async def get_note_by_note_id(self, note_id: int) -> Notes | None:
+        """
+        Retrieves a note from the database based on the specified user ID.
 
+        Parameters
+        ----------
+        note_id : int
+            The ID of the note to retrieve.
+
+        Returns
+        -------
+        Notes or None
+            The note if found, otherwise None.
+        """
+        return await self.table.find_first(where={"id": note_id})
+
+    async def delete_note(self, note_id: int) -> None:
+        """
+        Deletes a note from the database based on the specified note ID.
+
+        Parameters
+        ----------
+        user_id : int
+            The ID of the note to delete.
+
+        Returns
+        -------
+        None
+        """
+        await self.table.delete(where={"id": note_id})
+
+    async def update_note(self, note_id: int, note_content: str) -> Notes | None:
+        """
+        Updates a note in the database with the specified user ID and new content.
+
+        Parameters
+        ----------
+        note_id : int
+            The ID of the note to update.
+        note_content : str
+            The new content for the note.
+
+        Returns
+        -------
+        Notes or None
+            The updated note if successful, otherwise None if the note was not found.
+        """
+        return await self.table.update(
+            where={"id": note_id},
+            data={"content": note_content},
+        )
+
+    group = app_commands.Group(name="notes", description="note related commands")
+    # Make a group so that way everything is in one nice place
+
+    @app_commands.checks.has_any_role(
+        "Root", "Admin", "Sr. Mod", "Mod", "Contributor"
+    )  # Role Checking
     @group.command(name="create", description="Create a note.")
     async def create(
         self, interaction: discord.Interaction, target_member: discord.Member, note: str
@@ -85,6 +142,7 @@ class Note(commands.Cog):
         embed.add_field(name="Note Content", value=note)
         await interaction.response.send_message(embed=embed)
 
+    @app_commands.checks.has_any_role("Root", "Admin", "Sr. Mod", "Mod", "Contributor")
     @group.command(name="get_num", description="Get x notes in a list.")
     async def get_num(
         self,
@@ -96,12 +154,13 @@ class Note(commands.Cog):
         embed = EmbedCreator.create_success_embed(
             title="Success!", description="Notes obtained!", interaction=interaction
         )
-        result = [(note.content, note.user_id) for note in notes]
+        result = [(note.content, note.user_id, note.id) for note in notes]
 
         try:
             for i in range(num1, num2):
                 embed.add_field(name="Note #: " + str(i), value=result[i][0], inline=False)
                 embed.add_field(name="Note " + str(i) + " Target", value=result[i][1], inline=False)
+                embed.add_field(name="Note " + str(i) + " ID: ", value=result[i][2], inline=False)
         except IndexError:
             embed = EmbedCreator.create_error_embed(
                 title="Index Error", description="Out of range", interaction=interaction
@@ -113,6 +172,7 @@ class Note(commands.Cog):
             )
         await interaction.response.send_message(embed=embed)
 
+    @app_commands.checks.has_any_role("Root", "Admin", "Sr. Mod", "Mod", "Contributor")
     @group.command(name="get_by_member", description="Obtain a note based on a certain member.")
     async def get_by_member(self, interaction: discord.Interaction, member: discord.Member) -> None:
         member_id = member.id
@@ -133,6 +193,60 @@ class Note(commands.Cog):
             )
             embed.add_field(name="Note Target", value=str(member))
             embed.add_field(name="Note content", value=note.content)
+            embed.add_field(name="Note ID", value=note.id)
+            await interaction.response.send_message(embed=embed)
+
+    @app_commands.checks.has_any_role("Root", "Admin", "Sr. Mod", "Mod", "Contributor")
+    @group.command(name="delete", description="Remove a note based on note ID.")
+    async def delete(
+        self,
+        interaction: discord.Interaction,
+        note_id: int,
+    ) -> None:
+        note = await self.get_note_by_note_id(
+            note_id=note_id
+        )  # First do a check to make sure a note exists
+        if note is None:
+            embed = EmbedCreator.create_error_embed(title="No note found.", description="")
+            embed.add_field(
+                name="Error Details",
+                value="No note found to delete. please provide a valid note ID.",
+            )
+            await interaction.response.send_message(embed=embed)
+        else:
+            await self.delete_note(note_id=note_id)
+            embed = EmbedCreator.create_success_embed(
+                title="Success!",
+                description="Deleted Note " + str(note_id) + ".",
+                interaction=interaction,
+            )
+
+            await interaction.response.send_message(embed=embed)
+
+    @app_commands.checks.has_any_role("Root", "Admin", "Sr. Mod", "Mod", "Contributor")
+    @group.command(name="update", description="update a note based on note ID")
+    async def update(
+        self,
+        interaction: discord.Interaction,
+        note_id: int,
+        new_content: str,
+    ) -> None:
+        note = await self.get_note_by_note_id(
+            note_id=note_id
+        )  # check if there is actually a note before moving on.
+        if note is None:
+            embed = EmbedCreator.create_error_embed(title="No note found.", description="")
+            embed.add_field(
+                name="Error Details",
+                value="No note found to update. please provide a valid note ID.",
+            )
+            await interaction.response.send_message(embed=embed)
+        else:
+            await self.update_note(note_id=note_id, note_content=new_content)
+            embed = EmbedCreator.create_success_embed(
+                title="Success!", description="Updated note " + str(note_id) + "."
+            )
+            embed.add_field(name="New note", value=new_content)
             await interaction.response.send_message(embed=embed)
 
 
