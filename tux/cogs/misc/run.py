@@ -136,7 +136,7 @@ class Run(commands.Cog):
 
         if normalized_lang not in compiler_map:
             embed = EmbedCreator.create_error_embed(
-                title="Fatal exception occurred!", description="bad formatting", ctx=ctx
+                title="Fatal exception occurred!", description="Bad Formatting", ctx=ctx
             )
             await ctx.send(embed=embed)
             return ("", "", "")
@@ -202,7 +202,12 @@ class Run(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(name="run")
+    @commands.command(
+        name="run",
+        aliases=["r"],
+        help="Run code in various languages.",
+        usage="$run `language`\n```code```",
+    )
     async def run(
         self,
         ctx: commands.Context[commands.Bot],
@@ -224,7 +229,7 @@ class Run(commands.Cog):
         None
         """
 
-        msg = await ctx.send("<a:typing:1231270453021249598>")
+        msg = await ctx.send("<a:typing:1236671731859722270>")
 
         compiler_map = {
             "hs": "ghc961",
@@ -237,6 +242,22 @@ class Run(commands.Cog):
             "julia": "julia_nightly",
             "py": "python312",
             "python": "python312",
+            "scala": "scalac300",
+            "go": "gccgo131",
+            "kotlin": "kotlinc1920",
+            "kt": "kotlinc1920",
+            "kot": "kotlinc1920",
+            "erlang": "erl2622",
+            "dart": "dart322",
+            "swift": "swift59",
+            "zig": "z090",
+            "java": "java2200",
+            "fsharp": "dotnet707fsharp",
+            "fs": "dotnet707fsharp",
+            "csharp": "dotnet707csharp",
+            "cs": "dotnet707csharp",
+            "ts": "tsc_0_0_35_gc",
+            "typescript": "tsc_0_0_35_gc",
         }
 
         (filtered_output, gen_one, normalized_lang) = await self.generalized_code_executor(
