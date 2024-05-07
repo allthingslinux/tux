@@ -142,7 +142,7 @@ class Note(commands.Cog):
         embed.add_field(name="Note Content", value=note)
         await interaction.response.send_message(embed=embed)
 
-    @app_commands.checks.has_any_role("Root", "Admin", "Sr. Mod", "Mod", "Contributor")
+    @app_commands.checks.has_permissions(manage_messages=True)
     @group.command(name="get_num", description="Get x notes in a list.")
     async def get_num(
         self,
