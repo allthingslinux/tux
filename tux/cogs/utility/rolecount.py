@@ -68,6 +68,11 @@ distro_ids = [
     [1232390816312590369, "_devuan"],
     [1221123322100584518, "_zorin"],
     [1220995767813013544, "_chimera"],
+    [1237701796940611635, "_antix"],
+    [1237704018629885983, "_cachyos"],
+    [1237702486421147698, "_rockylinux"],
+    [1237701203404783698, "_nobara"],
+    [1237700290732490762, "_deepin"],
 ]
 
 lang_ids = [
@@ -98,6 +103,7 @@ lang_ids = [
     [1207600618542206976, "_clojure"],
     [1232389554426876045, "_godot"],
     [1232390379337285692, "_nim"],
+    [1237700521465217084, "_swift"],
 ]
 
 vanity_ids = [
@@ -136,7 +142,7 @@ misc_ids = [
     [1189236400571301958, "_chromium"],
 ]
 
-# # TODO: Figure out how to make rolecount work without hard coded ids
+# TODO: Figure out how to make rolecount work without hard coded ids
 
 
 class RoleCount(commands.Cog):
@@ -207,19 +213,25 @@ class RoleCount(commands.Cog):
         role_emoji: tuple[str, str],
         which: discord.app_commands.Choice[str],
         pages: list[discord.Embed],
-    ):
-        if role_count >= 25:
-            pages.append(embed)
-            embed = self.create_embed(interaction, which)
-            role_count = 0
+    ) -> tuple[int, discord.Embed]:
+        # Check if current embed field count has reached max limit of 12 fields
+        if role_count >= 12:
+            pages.append(embed)  # Append current embed to the page list
+            embed = self.create_embed(
+                interaction, which
+            )  # Create a new embed for the next set of fields
+            role_count = 0  # Reset the role count for new page
 
+        # Fetch an emoji for the role from available emojis or the predefined emoji identifier
         emoji = role.unicode_emoji or discord.utils.get(self.bot.emojis, name=role_emoji[1])
 
+        # Add a new field to the current embed
         embed.add_field(
             name=f"{emoji!s} {role.name}",
             value=f"{len(role.members)} users",
             inline=True,
         )
+
         role_count += 1
 
         return role_count, embed
