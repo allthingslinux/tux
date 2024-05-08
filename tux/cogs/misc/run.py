@@ -222,7 +222,7 @@ class Run(commands.Cog):
         """
 
         embed = EmbedCreator.create_info_embed(
-            title="Compilation provided https://godbolt.org/",
+            title="Compilation provided by https://godbolt.org/",
             description=f"```{lang}\n{output}\n```",
             ctx=ctx,
         )
