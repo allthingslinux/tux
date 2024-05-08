@@ -8,6 +8,35 @@ from tux.utils.embeds import EmbedCreator
 ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 remove_ticks = re.compile(r"\`")
 
+compiler_map = {
+    "hs": "ghc961",
+    "haskell": "ghc961",
+    "c": "cclang1810",
+    "cpp": "cclang1810",
+    "c++": "cclang1810",
+    "rs": "r1770",
+    "rust": "r1770",
+    "julia": "julia_nightly",
+    "py": "python312",
+    "python": "python312",
+    "scala": "scalac300",
+    "go": "gccgo131",
+    "kotlin": "kotlinc1920",
+    "kt": "kotlinc1920",
+    "kot": "kotlinc1920",
+    "erlang": "erl2622",
+    "dart": "dart322",
+    "swift": "swift59",
+    "zig": "z090",
+    "java": "java2200",
+    "fsharp": "dotnet707fsharp",
+    "fs": "dotnet707fsharp",
+    "csharp": "dotnet707csharp",
+    "cs": "dotnet707csharp",
+    "ts": "tsc_0_0_35_gc",
+    "typescript": "tsc_0_0_35_gc",
+}
+
 
 class Run(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -193,12 +222,10 @@ class Run(commands.Cog):
         """
 
         embed = EmbedCreator.create_info_embed(
-            title="Run",
-            description="",
+            title="Compilation provided https://godbolt.org/",
+            description=f"```{lang}\n{output}\n```",
             ctx=ctx,
         )
-        embed.add_field(name=gen_one[1:], value="", inline=True)
-        embed.add_field(name="Result", value=f"```{lang}\n{output}\n```", inline=False)
 
         await ctx.send(embed=embed)
 
@@ -231,35 +258,6 @@ class Run(commands.Cog):
 
         msg = await ctx.send("<a:typing:1236671731859722270>")
 
-        compiler_map = {
-            "hs": "ghc961",
-            "haskell": "ghc961",
-            "c": "cclang1810",
-            "cpp": "cclang1810",
-            "c++": "cclang1810",
-            "rs": "r1770",
-            "rust": "r1770",
-            "julia": "julia_nightly",
-            "py": "python312",
-            "python": "python312",
-            "scala": "scalac300",
-            "go": "gccgo131",
-            "kotlin": "kotlinc1920",
-            "kt": "kotlinc1920",
-            "kot": "kotlinc1920",
-            "erlang": "erl2622",
-            "dart": "dart322",
-            "swift": "swift59",
-            "zig": "z090",
-            "java": "java2200",
-            "fsharp": "dotnet707fsharp",
-            "fs": "dotnet707fsharp",
-            "csharp": "dotnet707csharp",
-            "cs": "dotnet707csharp",
-            "ts": "tsc_0_0_35_gc",
-            "typescript": "tsc_0_0_35_gc",
-        }
-
         (filtered_output, gen_one, normalized_lang) = await self.generalized_code_executor(
             ctx, compiler_map, code
         )
@@ -291,6 +289,29 @@ class Run(commands.Cog):
 
         embed = EmbedCreator.create_error_embed(
             title="Fatal exception occurred!", description=str(desc), ctx=ctx
+        )
+
+        await ctx.send(embed=embed)
+
+    @commands.command(name="languages", aliases=["langs"], help="List all the supported languages.")
+    async def languages(self, ctx: commands.Context[commands.Bot]) -> None:
+        """
+        Lists all the supported languages.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context in which the command is invoked.
+
+        Returns
+        -------
+        None
+        """
+
+        embed = EmbedCreator.create_info_embed(
+            title="Supported Languages",
+            description=f"```{', '.join(compiler_map.keys())}```",
+            ctx=ctx,
         )
 
         await ctx.send(embed=embed)
