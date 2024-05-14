@@ -34,9 +34,16 @@ class Snippets(commands.Cog):
             The page number, by default 1.
         """
 
+        if ctx.guild is None:
+            await ctx.send("This command cannot be used in direct messages.")
+            return
+
         snippets: list[SnippetsModel] = await self.db_controller.get_all_snippets_sorted(
             newestfirst=True
         )
+
+        # remove snippets that are not in the current server
+        snippets = [snippet for snippet in snippets if snippet.server_id == ctx.guild.id]
 
         # Calculate the number of pages based on the number of snippets
         pages = 1 if len(snippets) <= 10 else len(snippets) // 10 + 1
@@ -93,7 +100,11 @@ class Snippets(commands.Cog):
             The name of the snippet.
         """
 
-        snippet = await self.db_controller.get_snippet_by_name(name)
+        if ctx.guild is None:
+            await ctx.send("This command cannot be used in direct messages.")
+            return
+
+        snippet = await self.db_controller.get_snippet_by_name_in_server(name, ctx.guild.id)
 
         if snippet is None:
             embed = EmbedCreator.create_error_embed(
@@ -131,7 +142,11 @@ class Snippets(commands.Cog):
             The name of the snippet.
         """
 
-        snippet = await self.db_controller.get_snippet_by_name(name)
+        if ctx.guild is None:
+            await ctx.send("This command cannot be used in direct messages.")
+            return
+
+        snippet = await self.db_controller.get_snippet_by_name_in_server(name, ctx.guild.id)
 
         if snippet is None:
             embed = EmbedCreator.create_error_embed(
@@ -164,7 +179,11 @@ class Snippets(commands.Cog):
             The name of the snippet.
         """
 
-        snippet = await self.db_controller.get_snippet_by_name(name)
+        if ctx.guild is None:
+            await ctx.send("This command cannot be used in direct messages.")
+            return
+
+        snippet = await self.db_controller.get_snippet_by_name_in_server(name, ctx.guild.id)
 
         if snippet is None:
             embed = EmbedCreator.create_error_embed(
@@ -207,6 +226,10 @@ class Snippets(commands.Cog):
             The name and content of the snippet.
         """
 
+        if ctx.guild is None:
+            await ctx.send("This command cannot be used in direct messages.")
+            return
+
         args = arg.split(" ")
         if len(args) < 2:
             embed = EmbedCreator.create_error_embed(
@@ -221,9 +244,10 @@ class Snippets(commands.Cog):
         content = " ".join(args[1:])
         created_at = datetime.datetime.now(datetime.UTC)
         author_id = ctx.author.id
+        server_id = ctx.guild.id
 
         # Check if the snippet already exists
-        if await self.db_controller.get_snippet_by_name(name) is not None:
+        if await self.db_controller.get_snippet_by_name_in_server(name, server_id) is not None:
             embed = EmbedCreator.create_error_embed(
                 title="Error", description="Snippet already exists.", ctx=ctx
             )
@@ -246,6 +270,7 @@ class Snippets(commands.Cog):
             content=content,
             created_at=created_at,
             author_id=author_id,
+            server_id=server_id,
         )
 
         await ctx.send("Snippet created.")
