@@ -54,8 +54,26 @@ class SnippetsController:
         """
         return await self.table.find_first(where={"name": name})
 
+    async def get_snippet_by_name_in_server(self, name: str, server_id: int) -> Snippets | None:
+        """
+        Retrieves a snippet from the database based on the specified name and server ID.
+
+        Parameters
+        ----------
+        name : str
+            The name of the snippet to retrieve.
+        server_id : int
+            The server ID to retrieve the snippet from.
+
+        Returns
+        -------
+        Snippets or None
+            The snippet if found, otherwise None.
+        """
+        return await self.table.find_first(where={"name": name, "server_id": server_id})
+
     async def create_snippet(
-        self, name: str, content: str, created_at: datetime.datetime, author_id: int
+        self, name: str, content: str, created_at: datetime.datetime, author_id: int, server_id: int
     ) -> Snippets:
         """
         Creates a new snippet in the database with the specified name, content, creation date, and author ID.
@@ -82,6 +100,7 @@ class SnippetsController:
                 "content": content,
                 "created_at": created_at,
                 "author_id": author_id,
+                "server_id": server_id,
             }
         )
 
@@ -100,7 +119,9 @@ class SnippetsController:
         """
         await self.table.delete(where={"name": name})
 
-    async def update_snippet(self, name: str, content: str) -> Snippets | None:
+    async def update_snippet(
+        self, name: str, content: str, server_id: int | None
+    ) -> Snippets | None:
         """
         Updates a snippet in the database with the specified name and new content.
 
@@ -110,12 +131,21 @@ class SnippetsController:
             The name of the snippet to update.
         content : str
             The new content for the snippet.
+        server_id : int, optional
+            The server ID to update the snippet with, by default None.
 
         Returns
         -------
         Snippets or None
             The updated snippet if successful, otherwise None if the snippet was not found.
         """
+
+        if server_id:
+            return await self.table.update(
+                where={"name": name},
+                data={"content": content, "server_id": server_id},
+            )
+
         return await self.table.update(
             where={"name": name},
             data={"content": content},

@@ -126,6 +126,10 @@ model Snippets {
   // The creation time of the snippet
   created_at DateTime? @default(now())
 
+  // The server ID of the guild where the snippet was created
+  // 0 is the default value for this field for migration purposes
+  server_id BigInt @default(0)
+
   // This field establishes a relationship with the `Users` model. `author_id` is the ID of the user who created the snippet. The line `author Users @relation(fields: [author_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the author) is associated with this snippet.
   author    Users  @relation(fields: [author_id], references: [id])
   author_id BigInt
