@@ -19,6 +19,8 @@
     </p>
 </div>
 
+# NOTE: This bot (without plenty of tweaking) is not ready for multi-server use, we recommend against using it until it is more complete
+
 ## About
 
 Tux is a Discord bot for the All Things Linux Discord server. It is designed to provide a variety of features to the server, including moderation, support, utility, and various fun commands. The bot is written in Python using the discord.py library.
