@@ -42,6 +42,7 @@ class Random(commands.Cog):
             The question to ask the 8ball.
         """
         responses = [
+            # Standard responses
             "It is certain",
             "It is decidedly so",
             "Without a doubt",
@@ -62,6 +63,14 @@ class Random(commands.Cog):
             "My sources say no",
             "Outlook not so good",
             "Very doubtful",
+            # Custom responses
+            "Why the hell are you asking me lmao",
+            "what???",
+            "hell yeah",
+            "hell no",
+            "When pigs fly",
+            "Ask someone else for once, I'm sick and tired of answering your questions you absolute buffoon.",
+            "I dont know, ask me later",
         ]
 
         choice = random.choice(responses)
