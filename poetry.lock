@@ -648,13 +648,13 @@ files = [
 
 [[package]]
 name = "githubkit"
-version = "0.11.4"
+version = "0.11.5"
 description = "GitHub SDK for Python"
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "githubkit-0.11.4-py3-none-any.whl", hash = "sha256:281af76e9ec24a1f3dc1c99ed4e50785898220d47f84acb2f87be8d7a572769a"},
-    {file = "githubkit-0.11.4.tar.gz", hash = "sha256:e629d833f98157cb4b1c14b69fdb54f7f960fb0da6906f1fa30fca14c347c0d4"},
+    {file = "githubkit-0.11.5-py3-none-any.whl", hash = "sha256:c87eaaa9142b0ba1285ce4a7bce5e5c1a93d359fbb756489e79eb4fa7b26b520"},
+    {file = "githubkit-0.11.5.tar.gz", hash = "sha256:3557e4a82bf6e7ae3d4cba19b08237972c3601d6d78bc026b583ed1a3209f210"},
 ]
 
 [package.dependencies]
