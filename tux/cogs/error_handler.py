@@ -25,7 +25,7 @@ error_map: dict[type[Exception], str] = {
     commands.MissingRole: "User not in sudoers file. This incident will be reported. (Missing Role)",
     commands.MissingAnyRole: "User not in sudoers file. This incident will be reported. (Missing Roles)",
     commands.MissingPermissions: "User not in sudoers file. This incident will be reported. (Missing Permissions)",
-    commands.CheckFailure: "User not in sudoers file. This incident will be reported. (Check Failure)",
+    commands.CheckFailure: "User not in sudoers file. This incident will be reported. (Permission Check Failed)",
     commands.CommandNotFound: "This command was not found.",
     commands.CommandOnCooldown: "This command is on cooldown. Try again in {error.retry_after:.2f} seconds.",
     commands.BadArgument: "Invalid argument passed. Correct usage: `{ctx.command.usage}`",
