@@ -13,7 +13,7 @@ error_map: dict[type[Exception], str] = {
     app_commands.MissingRole: "User not in sudoers file. This incident will be reported. (Missing Role)",
     app_commands.MissingAnyRole: "User not in sudoers file. This incident will be reported. (Missing Roles)",
     app_commands.MissingPermissions: "User not in sudoers file. This incident will be reported. (Missing Permissions)",
-    app_commands.CheckFailure: "User not in sudoers file. This incident will be reported. (Check Failure)",
+    app_commands.CheckFailure: "User not in sudoers file. This incident will be reported. (Permission Check Failed)",
     app_commands.CommandNotFound: "This command was not found.",
     app_commands.CommandOnCooldown: "This command is on cooldown. Try again in {error.retry_after:.2f} seconds.",
     app_commands.BotMissingPermissions: "User not in sudoers file. This incident will be reported. (Bot Missing Permissions)",
