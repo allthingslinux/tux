@@ -4,6 +4,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.database.controllers import DatabaseController
+from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import EmbedCreator
 
 
@@ -44,6 +45,53 @@ class EmojiStats(commands.Cog):
         )
 
         await interaction.followup.send(embed=embed)
+
+    # TODO: make it not error out if the emoji isnt from the guild
+    @commands.command(
+        name="emojiinfo", description="Get information about an emoji. (put emoji as parameter)"
+    )
+    async def emoji_info(self, ctx: commands.Context[commands.Bot], emoji: discord.Emoji) -> None:
+        """
+        Get information about an emoji.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object.
+        emoji : discord.Emoji
+            The emoji to get information about.
+        """
+
+        # create custom embed
+        embed = discord.Embed(
+            title=f"Emoji Info for {emoji.name}",
+            color=CONST.EMBED_STATE_COLORS["DEBUG"],
+        )
+
+        embed.add_field(name="Name", value=emoji.name, inline=True)
+        embed.add_field(name="ID", value=emoji.id, inline=True)
+        embed.add_field(name="URL", value=emoji.url, inline=False)
+        # set the emoji image as the thumbnail
+        embed.set_thumbnail(url=emoji.url)
+
+        # get the emojis usage stats if it exists
+        emoji_stats = await self.db_controller.get_emoji_stats(emoji.id)
+        if emoji_stats:
+            embed.add_field(name="Usage Count", value=emoji_stats.count, inline=True)
+            # find how the emoji ranks in the guild
+            emoji_stats = await self.db_controller.get_all_emoji_stats()
+            emoji_stats = sorted(emoji_stats, key=lambda x: x.count, reverse=True)
+            rank = next(
+                (
+                    index + 1
+                    for index, emoji_stat in enumerate(emoji_stats)
+                    if emoji_stat.emoji_id == emoji.id
+                ),
+                None,
+            )
+            embed.add_field(name="Rank", value=rank, inline=True)
+
+        await ctx.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
