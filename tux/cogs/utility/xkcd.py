@@ -16,7 +16,15 @@ class XKCD(commands.Cog):
 
     @group.command(name="newest", description="Get the latest xkcd comic")
     async def newest(self, interaction: discord.Interaction) -> None:
-        client = xkcd_wrapper.Client()
+class XKCD(commands.Cog):
+    def __init__(self, bot: commands.Bot) -> None:
+        self.bot = bot
+        self.client = xkcd_wrapper.Client()
+
+    @group.command(name="newest", description="Get the latest xkcd comic")
+    async def newest(self, interaction: discord.Interaction) -> None:
+        try:
+            latest_comic = self.client.latest(raw_comic_image=True)
         try:
             latest_comic = client.latest(raw_comic_image=True)
             embed = EmbedCreator.create_success_embed(
