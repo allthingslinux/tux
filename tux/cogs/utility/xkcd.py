@@ -69,7 +69,7 @@ class XKCD(commands.Cog):
         except requests.Timeout:
             embed = EmbedCreator.create_error_embed(
                 title="Error",
-                description="A timeout has occoured, please try again.",
+                description="A timeout has occurred, please try again.",
                 interaction=interaction,
             )
             await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -108,3 +108,6 @@ class XKCD(commands.Cog):
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(XKCD(bot))
+
+
+""" Sets up the actual XKCD cog for the bot."""
