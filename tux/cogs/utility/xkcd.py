@@ -11,14 +11,14 @@ from tux.utils.embeds import EmbedCreator
 class XKCD(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.client = xkcd_wrapper.Client()
 
     group = app_commands.Group(name="xkcd", description="xkcd commands")
 
     @group.command(name="newest", description="Get the latest xkcd comic")
     async def newest(self, interaction: discord.Interaction) -> None:
-        client = xkcd_wrapper.Client()
         try:
-            latest_comic = client.latest(raw_comic_image=True)
+            latest_comic = self.client.latest(raw_comic_image=True)
             embed = EmbedCreator.create_success_embed(
                 title="Latest xkcd Comic", description=latest_comic.title, interaction=interaction
             )
@@ -46,10 +46,8 @@ class XKCD(commands.Cog):
 
     @group.command(name="random", description="Get a random xkcd comic")
     async def random(self, interaction: discord.Interaction) -> None:
-        client = xkcd_wrapper.Client()
-
         try:
-            random_comic = client.random(raw_comic_image=True)
+            random_comic = self.client.random(raw_comic_image=True)
             embed = EmbedCreator.create_success_embed(
                 title="Random xkcd Comic", description=random_comic.title, interaction=interaction
             )
@@ -76,9 +74,8 @@ class XKCD(commands.Cog):
 
     @group.command(name="specific", description="Search for a specific xkcd comic")
     async def specific(self, interaction: discord.Interaction, comic_id: int) -> None:
-        client = xkcd_wrapper.Client()
         try:
-            specific_comic = client.get(comic_id=comic_id, raw_comic_image=True)
+            specific_comic = self.client.get(comic_id=comic_id, raw_comic_image=True)
             embed = EmbedCreator.create_success_embed(
                 title=f"xkcd comic {comic_id}",
                 description=specific_comic.title,
