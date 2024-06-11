@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  tux:
+    build: .
+    image: allthingslinux/tux:latest
+    container_name: tux
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    command: ["sh", "-c", "ls && poetry run prisma generate && poetry run python tux/main.py"]
