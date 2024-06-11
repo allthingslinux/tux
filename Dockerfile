@@ -10,8 +10,18 @@ RUN apt-get update && apt-get install -y \
     libgdk-pixbuf2.0-0 \
     libffi-dev \
     shared-mime-info \
+    curl \
+    build-essential \ 
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Rust and Cargo
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Install tealdeer and update tldr cache
+RUN cargo install tealdeer
+RUN tldr -u
 
 # Copy Poetry files and install dependencies
 COPY pyproject.toml poetry.lock /app/
