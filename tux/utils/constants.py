@@ -107,6 +107,7 @@ class Constants:
         "POLL": 0xF9E2AF,
         # # catppuccin crust
         "INFRACTION": 0x11111B,
+        "NOTE": 0xFE640B,
         #######################
         # TOKYO NIGHT COLORS
         "FOREGROUND": 0xA9B1DC,
@@ -130,15 +131,20 @@ class Constants:
         "DEBUG": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/mocha_mauve.png?raw=true",
         "WARNING": "https://github.com/catppuccin/catppuccin/raw/main/assets/palette/circles/latte_peach.png?raw=true",
         "ERROR": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/latte_red.png?raw=true",
-        "SUCCESS": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/mocha_green.png?raw=true",
+        "SUCCESS": "https://github.com/allthingslinux/tux/blob/main/assets/slicedsymbol-5.png?raw=true",
         "POLL": "https://github.com/catppuccin/catppuccin/raw/main/assets/palette/circles/mocha_yellow.png?raw=true",
         "INFRACTION": "https://github.com/catppuccin/catppuccin/raw/main/assets/palette/circles/mocha_crust.png?raw=true",
+        "NOTE": "https://github.com/catppuccin/catppuccin/raw/main/assets/palette/circles/latte_peach.png?raw=true",
     }
 
-    EMBED_SPECIAL_CHARS: Final[dict[str, str]] = {
+    UNICODE: Final[dict[str, str]] = {
         "SUCCESS": "✅",
         "ERROR": "❌",
-        "EMPTY": "​",
+        "EMPTY": " ",  # noqa: RUF001
+    }
+
+    EMOJIS: Final[dict[str, str]] = {
+        "EMPTY": "​<:transparent:1227090229639250032>",
     }
 
     # Embed limit constants
