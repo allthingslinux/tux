@@ -255,9 +255,6 @@ class NotesCog(commands.Cog):
             interaction=interaction,
         )
 
-        # for note in notes:
-        # embed.add_field(name=f"Note ID {note.id}", value=f"`{note.content}`", inline=False)
-
         logger.info(
             f"Listed all notes for {member.display_name} by {interaction.user.display_name}."
         )
