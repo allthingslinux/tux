@@ -1,254 +1,492 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
+from loguru import logger
 
-from prisma.models import Notes
-from tux.database.client import db
+from prisma.models import Notes, Users
 from tux.database.controllers import DatabaseController
 from tux.utils.embeds import EmbedCreator
-
-# The current implementation has complexities that may hinder its functionality and maintainability.
-# Assistance in refining and optimizing the code is welcome.
+from tux.utils.functions import datetime_to_unix
 
 
-class Note(commands.Cog):
-    def __init__(self, bot: commands.bot) -> None:
-        self.bot = bot
-        self.db_controller = (
-            DatabaseController().notes
-        )  # Define some stuff so that way I can use DB
-        self.table = db.notes
+class NotesCog(commands.Cog):
+    def __init__(self, bot: commands.Bot) -> None:
+        self.bot: commands.Bot = bot
+        self.db_controller: DatabaseController = DatabaseController()
+
+    group = app_commands.Group(name="notes", description="Commands for managing notes.")
+
+    async def get_or_create_user(self, member: discord.Member) -> None:
+        """
+        Retrieves a user from the database or creates a new user if not found.
+
+        Parameters
+        ----------
+        member : discord.Member
+            The member to retrieve or create in the database.
+        """
+        user: Users | None = await self.db_controller.users.get_user_by_id(user_id=member.id)
+
+        if not user:
+            await self.db_controller.users.create_user(
+                user_id=member.id,
+                name=member.name,
+                display_name=member.display_name,
+                mention=member.mention,
+                bot=member.bot,
+                created_at=member.created_at,
+                joined_at=member.joined_at,
+            )
+
+    async def get_or_create_moderator(self, interaction: discord.Interaction) -> None:
+        """
+        Retrieves a moderator from the database or creates a new moderator if not found.
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered the command.
+        """
+        moderator: Users | None = await self.db_controller.users.get_user_by_id(interaction.user.id)
+
+        moderator_context: discord.Member | None = (
+            interaction.guild.get_member(interaction.user.id) if interaction.guild else None
+        )
+
+        if not moderator:
+            await self.db_controller.users.create_user(
+                user_id=interaction.user.id,
+                name=interaction.user.name,
+                display_name=interaction.user.display_name,
+                mention=interaction.user.mention,
+                bot=interaction.user.bot,
+                created_at=interaction.user.created_at,
+                joined_at=moderator_context.joined_at if moderator_context else None,
+            )
 
     async def create_note(
-        self,
-        user_id: int,
-        moderator_id: int,
-        note_content: str,
-    ) -> Notes:
-        """
-        Creates a new note in the database with the specified user ID, moderator ID, and content.
+        self, interaction: discord.Interaction, member: discord.Member, content: str
+    ) -> discord.Embed:
+        new_note: Notes = await self.db_controller.notes.create_note(
+            user_id=member.id,
+            moderator_id=interaction.user.id,
+            note_content=content,
+        )
+        note_id: int | str = new_note.id if new_note else "Unknown"
 
-        Args:
-            user_id (int): The ID of the user for whom the note is created.
-            moderator_id (int): The ID of the moderator who created the note.
-            note_content (str): The content of the note.
-
-        Returns:
-            Notes: The newly created note.
-        """
-
-        return await self.table.create(
-            data={
-                "user_id": user_id,
-                "moderator_id": moderator_id,
-                "content": note_content,
-            }
+        embed: discord.Embed = EmbedCreator.create_success_embed(
+            title="",
+            description="",
+            interaction=interaction,
         )
 
-    async def get_all_notes(self) -> list[Notes]:
-        """
-        Retrieves all notes from the database.
-
-        Returns:
-            list[Notes]: A list of all notes.
-        """
-
-        return await self.table.find_many()
-
-    async def get_note_by_user_id(self, user_id: int) -> Notes | None:
-        """
-        Retrieves a note from the database based on the specified user ID.
-
-        Parameters
-        ----------
-        user_id : int
-            The ID of the note to retrieve.
-
-        Returns
-        -------
-        Notes or None
-            The note if found, otherwise None.
-        """
-        return await self.table.find_first(where={"user_id": user_id})
-
-    async def get_note_by_note_id(self, note_id: int) -> Notes | None:
-        """
-        Retrieves a note from the database based on the specified user ID.
-
-        Parameters
-        ----------
-        note_id : int
-            The ID of the note to retrieve.
-
-        Returns
-        -------
-        Notes or None
-            The note if found, otherwise None.
-        """
-        return await self.table.find_first(where={"id": note_id})
-
-    async def delete_note(self, note_id: int) -> None:
-        """
-        Deletes a note from the database based on the specified note ID.
-
-        Parameters
-        ----------
-        user_id : int
-            The ID of the note to delete.
-
-        Returns
-        -------
-        None
-        """
-        await self.table.delete(where={"id": note_id})
-
-    async def update_note(self, note_id: int, note_content: str) -> Notes | None:
-        """
-        Updates a note in the database with the specified user ID and new content.
-
-        Parameters
-        ----------
-        note_id : int
-            The ID of the note to update.
-        note_content : str
-            The new content for the note.
-
-        Returns
-        -------
-        Notes or None
-            The updated note if successful, otherwise None if the note was not found.
-        """
-        return await self.table.update(
-            where={"id": note_id},
-            data={"content": note_content},
+        embed.set_author(
+            name=f"Note #{note_id} created",
+            icon_url="https://github.com/allthingslinux/tux/blob/main/assets/slicedsymbol-5.png?raw=true",
         )
 
-    group = app_commands.Group(name="notes", description="note related commands")
-    # Make a group so that way everything is in one nice place
-
-    @app_commands.checks.has_any_role(
-        "Root", "Admin", "Sr. Mod", "Mod", "Contributor"
-    )  # Role Checking
-    @group.command(name="create", description="Create a note.")
-    async def create(
-        self, interaction: discord.Interaction, target_member: discord.Member, note: str
-    ) -> None:
-        invoke_id = interaction.user.id
-        await self.create_note(user_id=target_member.id, moderator_id=invoke_id, note_content=note)
-        embed = EmbedCreator.create_success_embed(
-            title="Success!", description="Note Created.", interaction=interaction
+        embed.add_field(name="Member", value=f"- __{member.name}__\n`{member.id}`", inline=True)
+        embed.add_field(
+            name="Moderator",
+            value=f"- __{interaction.user.name}__\n`{interaction.user.id}`",
+            inline=True,
         )
-        embed.add_field(name="Note Target", value=target_member)
-        embed.add_field(name="Note Content", value=note)
-        await interaction.response.send_message(embed=embed)
 
-    @app_commands.checks.has_permissions(manage_messages=True)
-    @group.command(name="get_num", description="Get x notes in a list.")
-    async def get_num(
+        embed.add_field(name="Content", value=f"> {content}", inline=False)
+
+        logger.info(
+            f"Note added to {member.display_name} ({member.id}) by {interaction.user.display_name}. Note: {content}"
+        )
+
+        return embed
+
+    async def delete_note_by_id(
+        self, interaction: discord.Interaction, note_id: int
+    ) -> discord.Embed:
+        note: Notes | None = await self.db_controller.notes.get_note_by_id(note_id)
+
+        if not note:
+            msg = "Note not found."
+            raise ValueError(msg)
+
+        await self.db_controller.notes.delete_note(note_id)
+
+        embed: discord.Embed = EmbedCreator.create_note_embed(
+            title="",
+            description="",
+            interaction=interaction,
+        )
+
+        member: discord.Member | None = (
+            interaction.guild.get_member(note.user_id) if interaction.guild else None
+        )
+        moderator: discord.Member | None = (
+            interaction.guild.get_member(note.moderator_id) if interaction.guild else None
+        )
+
+        moderator_name: str = moderator.display_name if moderator else "Unknown"
+        member_name: str = member.display_name if member else "Unknown"
+        deleted_content = note.content
+
+        embed.set_author(
+            name=f"Note #{note_id} deleted",
+            icon_url="https://github.com/allthingslinux/tux/blob/main/assets/slicedsymbol-1.png?raw=true",
+        )
+
+        embed.add_field(name="Member", value=f"- {member_name}\n`{note.user_id}`", inline=True)
+        embed.add_field(
+            name="Moderator", value=f"- {moderator_name}\n`{note.moderator_id}`", inline=True
+        )
+        embed.add_field(name="Original Content", value=f"> {deleted_content}", inline=False)
+        embed.add_field(
+            name="Created At", value=f"{datetime_to_unix(note.created_at)}", inline=False
+        )
+
+        logger.info(f"Note ID {note_id} deleted by {interaction.user.display_name}.")
+
+        return embed
+
+    async def update_note_by_id(
+        self, interaction: discord.Interaction, note_id: int, content: str
+    ) -> discord.Embed:
+        note: Notes | None = await self.db_controller.notes.get_note_by_id(note_id)
+
+        if not note:
+            msg = "Note not found."
+            raise ValueError(msg)
+
+        await self.db_controller.notes.update_note(note_id, content)
+
+        embed: discord.Embed = EmbedCreator.create_note_embed(
+            title="",
+            description="",
+            interaction=interaction,
+        )
+
+        member: discord.Member | None = (
+            interaction.guild.get_member(note.user_id) if interaction.guild else None
+        )
+
+        moderator: discord.Member | None = (
+            interaction.guild.get_member(note.moderator_id) if interaction.guild else None
+        )
+
+        member_name: str = member.display_name if member else "Unknown"
+        moderator_name: str = moderator.display_name if moderator else "Unknown"
+        old_content: str = note.content
+        new_content: str = content
+
+        embed.set_author(
+            name=f"Note #{note_id} updated",
+            icon_url="https://github.com/allthingslinux/tux/blob/main/assets/slicedsymbol-5.png?raw=true",
+        )
+
+        embed.add_field(name="Member", value=f"- {member_name}\n`{note.user_id}`", inline=True)
+        embed.add_field(
+            name="Moderator", value=f"- {moderator_name}\n`{note.moderator_id}`", inline=True
+        )
+        embed.add_field(name="Previous Content", value=f"> {old_content}", inline=False)
+        embed.add_field(name="Updated Content", value=f"> {new_content}", inline=False)
+
+        logger.info(f"Note ID {note_id} updated by {interaction.user.display_name}.")
+
+        return embed
+
+    async def view_note_by_id(
+        self, interaction: discord.Interaction, note_id: int
+    ) -> discord.Embed:
+        note: Notes | None = await self.db_controller.notes.get_note_by_id(note_id)
+
+        if not note:
+            msg = "Note not found."
+            raise ValueError(msg)
+
+        embed: discord.Embed = EmbedCreator.create_note_embed(
+            title="",
+            description="",
+            interaction=interaction,
+        )
+
+        moderator: discord.Member | None = (
+            interaction.guild.get_member(note.moderator_id) if interaction.guild else None
+        )
+        moderator_name: str = moderator.display_name if moderator else "Unknown"
+
+        member: discord.Member | None = (
+            interaction.guild.get_member(note.user_id) if interaction.guild else None
+        )
+
+        member_name: str = member.display_name if member else "Unknown"
+        note_content: str = note.content
+
+        embed.set_author(
+            name=f"Note #{note_id} viewed",
+            icon_url="https://github.com/allthingslinux/tux/blob/main/assets/slicedsymbol-4.png?raw=true",
+        )
+
+        embed.add_field(name="Member", value=f"- {member_name}\n`{note.user_id}`", inline=True)
+        embed.add_field(
+            name="Moderator", value=f"- {moderator_name}\n`{note.moderator_id}`", inline=True
+        )
+        embed.add_field(name="Content", value=f"> {note_content}", inline=False)
+
+        embed.add_field(
+            name="Created At", value=f"{datetime_to_unix(note.created_at)}", inline=False
+        )
+
+        logger.info(f"Note ID {note_id} viewed by {interaction.user.display_name}.")
+
+        return embed
+
+    async def list_notes(
+        self, interaction: discord.Interaction, member: discord.Member
+    ) -> discord.Embed:
+        notes: list[Notes] = await self.db_controller.notes.get_notes_by_user_id(member.id)
+
+        description = "\n".join(
+            [
+                f"<:tux_note:1251209868824805426> `{note.id}`: {datetime_to_unix(note.created_at)} - <@{note.moderator_id}>"
+                for note in notes
+            ]
+        )
+
+        embed: discord.Embed = EmbedCreator.create_note_embed(
+            title=f"All notes for {member.display_name}",
+            description=description,
+            interaction=interaction,
+        )
+
+        # for note in notes:
+        # embed.add_field(name=f"Note ID {note.id}", value=f"`{note.content}`", inline=False)
+
+        logger.info(
+            f"Listed all notes for {member.display_name} by {interaction.user.display_name}."
+        )
+
+        return embed
+
+    async def list_notes_by_moderator(
+        self, interaction: discord.Interaction, moderator: discord.Member
+    ) -> discord.Embed:
+        notes: list[Notes] = await self.db_controller.notes.get_notes_by_moderator_id(moderator.id)
+
+        description = "\n".join(
+            [
+                f"<:tux_note:1251209868824805426> `{note.id}`: {datetime_to_unix(note.created_at)} - <@{note.user_id}>"
+                for note in notes
+            ]
+        )
+
+        embed: discord.Embed = EmbedCreator.create_note_embed(
+            title=f"All notes by {moderator.display_name}",
+            description=description,
+            interaction=interaction,
+        )
+
+        embed.add_field(name="Total Notes", value=f"`{len(notes)}`", inline=True)
+
+        logger.info(
+            f"Listed all notes for {moderator.display_name} by {interaction.user.display_name}."
+        )
+
+        return embed
+
+    @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod", "Jr. Mod")
+    @group.command(name="create", description="Creates a note for a member of the server.")
+    async def note_create(
         self,
         interaction: discord.Interaction,
-        num1: int,
-        num2: int,
+        member: discord.Member,
+        content: str,
     ) -> None:
-        notes = await self.get_all_notes()
-        embed = EmbedCreator.create_success_embed(
-            title="Success!", description="Notes obtained!", interaction=interaction
-        )
-        result = [(note.content, note.user_id, note.id) for note in notes]
+        """
+        Creates a note for a member of the server.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered the command.
+        member : discord.Member
+            The member to add a note to.
+        content : str
+            The content of the note.
+        """
+        message = ""
+
+        await self.get_or_create_user(member)
+        await self.get_or_create_moderator(interaction)
 
         try:
-            for i in range(num1, num2):
-                embed.add_field(name=f"Note #: {i!s}", value=result[i][0], inline=False)
-                embed.add_field(name=f"Note {i!s} Target", value=result[i][1], inline=False)
-                embed.add_field(name=f"Note {i!s} ID: ", value=result[i][2], inline=False)
-        except IndexError:
+            embed: discord.Embed = await self.create_note(interaction, member, content)
+            message = f"Note added to {member.mention} by {interaction.user.mention}."
+
+        except Exception as error:
+            msg: str = f"Failed to add note for {member.display_name}. {error!s}"
+
             embed = EmbedCreator.create_error_embed(
-                title="Index Error", description="Out of range", interaction=interaction
-            )
-            embed.add_field(
-                name="Error details",
-                value="One of the numbers you provided is not in the notes list. "
-                "try again with a valid index range.",
-            )
-        await interaction.response.send_message(embed=embed)
-
-    @app_commands.checks.has_any_role("Root", "Admin", "Sr. Mod", "Mod", "Contributor")
-    @group.command(name="get_by_member", description="Obtain a note based on a certain member.")
-    async def get_by_member(self, interaction: discord.Interaction, member: discord.Member) -> None:
-        member_id = member.id
-        note = await self.get_note_by_user_id(member_id)
-
-        if note is None:
-            embed = EmbedCreator.create_error_embed(
-                title="Error", description="Note not found", interaction=interaction
-            )
-            embed.add_field(
-                name="Error Details",
-                value="Note not found! please try a different member that has a note.",
-            )
-            await interaction.response.send_message(embed=embed)
-        else:
-            embed = EmbedCreator.create_success_embed(
-                title="Note Found!", interaction=interaction, description=""
-            )
-            embed.add_field(name="Note Target", value=str(member))
-            embed.add_field(name="Note content", value=note.content)
-            embed.add_field(name="Note ID", value=note.id)
-            await interaction.response.send_message(embed=embed)
-
-    @app_commands.checks.has_any_role("Root", "Admin", "Sr. Mod", "Mod", "Contributor")
-    @group.command(name="delete", description="Remove a note based on note ID.")
-    async def delete(
-        self,
-        interaction: discord.Interaction,
-        note_id: int,
-    ) -> None:
-        note = await self.get_note_by_note_id(
-            note_id=note_id
-        )  # First do a check to make sure a note exists
-        if note is None:
-            embed = EmbedCreator.create_error_embed(title="No note found.", description="")
-            embed.add_field(
-                name="Error Details",
-                value="No note found to delete. please provide a valid note ID.",
-            )
-            await interaction.response.send_message(embed=embed)
-        else:
-            await self.delete_note(note_id=note_id)
-            embed = EmbedCreator.create_success_embed(
-                title="Success!",
-                description="Deleted Note " + str(note_id) + ".",
+                title="Note Addition Failed",
+                description=msg,
                 interaction=interaction,
             )
 
-            await interaction.response.send_message(embed=embed)
+            logger.error(msg)
 
-    @app_commands.checks.has_any_role("Root", "Admin", "Sr. Mod", "Mod", "Contributor")
-    @group.command(name="update", description="update a note based on note ID")
-    async def update(
+        await interaction.response.send_message(
+            message, embed=embed, allowed_mentions=discord.AllowedMentions.none()
+        )
+
+    @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod", "Jr. Mod")
+    @group.command(name="delete", description="Deletes a note by ID.")
+    async def note_delete(
         self,
         interaction: discord.Interaction,
         note_id: int,
-        new_content: str,
     ) -> None:
-        note = await self.get_note_by_note_id(
-            note_id=note_id
-        )  # check if there is actually a note before moving on.
-        if note is None:
-            embed = EmbedCreator.create_error_embed(title="No note found.", description="")
-            embed.add_field(
-                name="Error Details",
-                value="No note found to update. please provide a valid note ID.",
+        """
+        Deletes a note by ID.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered the command.
+        note_id : int
+            The ID of the note to delete.
+        """
+
+        try:
+            embed: discord.Embed = await self.delete_note_by_id(interaction, note_id)
+
+        except Exception as error:
+            msg: str = f"Failed to delete note ID {note_id}. {error!s}"
+
+            embed = EmbedCreator.create_error_embed(
+                title="Note Deletion Failed",
+                description=msg,
+                interaction=interaction,
             )
-            await interaction.response.send_message(embed=embed)
-        else:
-            await self.update_note(note_id=note_id, note_content=new_content)
-            embed = EmbedCreator.create_success_embed(
-                title="Success!", description="Updated note " + str(note_id) + "."
+
+            logger.error(msg)
+
+        await interaction.response.send_message(embed=embed)
+
+    @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod", "Jr. Mod")
+    @group.command(name="update", description="Updates a note by ID.")
+    async def note_update(
+        self,
+        interaction: discord.Interaction,
+        note_id: int,
+        content: str,
+    ) -> Notes | None:
+        """
+        Updates a note by ID.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered the command.
+        note_id : int
+            The ID of the note to update.
+        content : str
+            The new content for the note.
+        """
+        try:
+            embed: discord.Embed = await self.update_note_by_id(interaction, note_id, content)
+
+        except Exception as error:
+            msg: str = f"Failed to update note ID {note_id}. {error!s}"
+
+            embed = EmbedCreator.create_error_embed(
+                title="Note Update Failed",
+                description=msg,
+                interaction=interaction,
             )
-            embed.add_field(name="New note", value=new_content)
-            await interaction.response.send_message(embed=embed)
+
+            logger.error(msg)
+
+        await interaction.response.send_message(embed=embed)
+
+    @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod", "Jr. Mod")
+    @group.command(name="view", description="Views a note by ID.")
+    async def note_view(
+        self,
+        interaction: discord.Interaction,
+        note_id: int,
+    ) -> Notes | None:
+        """
+        Views a note by ID.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered the command.
+        note_id : int
+            The ID of the note to view.
+        """
+        try:
+            embed: discord.Embed = await self.view_note_by_id(interaction, note_id)
+
+        except Exception as error:
+            msg: str = f"Failed to view note ID {note_id}. {error!s}"
+
+            embed = EmbedCreator.create_error_embed(
+                title="Note View Failed",
+                description=msg,
+                interaction=interaction,
+            )
+
+            logger.error(msg)
+
+        await interaction.response.send_message(embed=embed)
+
+    @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod", "Jr. Mod")
+    @group.command(name="list", description="Lists all notes for a member or by a moderator.")
+    @app_commands.describe(
+        member="The member to list notes for (optional).",
+        moderator="The moderator to list notes from (optional).",
+    )
+    async def note_list(
+        self,
+        interaction: discord.Interaction,
+        member: discord.Member | None = None,
+        moderator: discord.Member | None = None,
+    ) -> None:
+        """
+        Lists all notes for a member or by a moderator.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered the command.
+        member : discord.Member | None, optional
+            The member to list all notes for.
+        moderator : discord.Member | None, optional
+            The moderator to list all notes from.
+        """
+        try:
+            if member:
+                await self.get_or_create_user(member)
+                embed: discord.Embed = await self.list_notes(interaction, member)
+
+            elif moderator:
+                if interaction.guild:
+                    await self.get_or_create_user(moderator)
+                embed: discord.Embed = await self.list_notes_by_moderator(interaction, moderator)
+
+            else:
+                msg = "You must provide either a member or a moderator."
+                raise ValueError(msg)  # noqa: TRY301
+
+        except Exception as error:
+            msg: str = f"Failed to list notes. {error!s}"
+            embed = EmbedCreator.create_error_embed(
+                title="Note List Failed",
+                description=msg,
+                interaction=interaction,
+            )
+            logger.error(msg)
+
+        await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(Note(bot))
+    """Asynchronously adds the NotesCog to the bot."""
+    await bot.add_cog(NotesCog(bot))

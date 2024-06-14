@@ -46,6 +46,10 @@ class EmbedCreator:
         )
 
     @staticmethod
+    def add_author(embed: discord.Embed, name: str, icon_url: str) -> None:
+        embed.set_author(name=name, icon_url=icon_url)
+
+    @staticmethod
     def add_field(embed: discord.Embed, name: str, value: str, inline: bool = True) -> None:
         embed.add_field(name=name, value=value, inline=inline)
 
@@ -206,3 +210,13 @@ class EmbedCreator:
         interaction: discord.Interaction | None = None,
     ) -> discord.Embed:
         return cls.create_embed(ctx, interaction, "INFRACTION", title, description)
+
+    @classmethod
+    def create_note_embed(
+        cls,
+        title: str,
+        description: str,
+        ctx: commands.Context[commands.Bot] | None = None,
+        interaction: discord.Interaction | None = None,
+    ) -> discord.Embed:
+        return cls.create_embed(ctx, interaction, "NOTE", title, description)

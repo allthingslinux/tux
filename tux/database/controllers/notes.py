@@ -102,3 +102,36 @@ class NotesController:
             where={"id": note_id},
             data={"content": note_content},
         )
+
+    async def get_notes_by_user_id(self, user_id: int) -> list[Notes]:
+        """
+        Retrieves all notes from the database based on the specified user ID.
+
+        Parameters
+        ----------
+        user_id : int
+            The ID of the user to retrieve notes for.
+
+        Returns
+        -------
+        list[Notes]
+            A list of all notes for the specified user.
+        """
+
+        return await self.table.find_many(where={"user_id": user_id})
+
+    async def get_notes_by_moderator_id(self, moderator_id: int) -> list[Notes]:
+        """
+        Retrieves all notes from the database based on the specified moderator ID.
+
+        Parameters
+        ----------
+        moderator_id : int
+            The ID of the moderator to retrieve notes for.
+
+        Returns
+        -------
+        list[Notes]
+            A list of all notes created by the specified moderator.
+        """
+        return await self.table.find_many(where={"moderator_id": moderator_id})
