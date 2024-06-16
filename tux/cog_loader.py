@@ -11,9 +11,7 @@ class CogLoader(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
         self.cog_ignore_list: set[str] = (
-            CONST.PROD_COG_IGNORE_LIST
-            if CONST.STAGING == "False"
-            else CONST.STAGING_COG_IGNORE_LIST
+            CONST.PROD_COG_IGNORE_LIST if CONST.DEV == "False" else CONST.DEV_COG_IGNORE_LIST
         )
 
     async def is_cog_eligible(self, filepath: AsyncPath) -> bool:

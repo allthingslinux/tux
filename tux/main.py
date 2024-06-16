@@ -106,8 +106,8 @@ class TuxBot(commands.Bot):
 
 
 async def main() -> None:
-    prefix = CONST.STAGING_PREFIX if CONST.STAGING == "True" else CONST.PROD_PREFIX
-    token = CONST.STAGING_TOKEN if CONST.STAGING == "True" else CONST.PROD_TOKEN
+    prefix = CONST.DEV_PREFIX if CONST.DEV == "True" else CONST.PROD_PREFIX
+    token = CONST.DEV_TOKEN if CONST.DEV == "True" else CONST.PROD_TOKEN
     intents = discord.Intents.all()
     bot = TuxBot(command_prefix=prefix, intents=intents)
 

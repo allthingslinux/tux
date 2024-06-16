@@ -1,37 +1,67 @@
 {
-    "Permissions": {
-      "Owner": 1172248516370894869,
-      "Admin": [
-        1172248516370894869,
-        1182064847052091484
-      ],
-      "Mod": [
-        1172248516370894869,
-        1182064847052091484,
-        1172333934051336264
-      ],
-      "Jr_Mod": [
-        1172248516370894869,
-        1182064847052091484,
-        1172333934051336264,
-        1172643385425793156
-      ],
-      "Testing": [
-        1223693346699214999,
-        1224170906847416430
-      ]
-    },
-    "Feature_Permissions": {
-      "load": "Admin",
-      "unload": "Admin",
-      "sync": "Admin",
-      "clear": "Admin",
-      "reload": "Admin",
-      "ban": "Mod",
-      "kick": "Jr_Mod",
-      "ping": "Everyone",
-      "server": "Everyone",
-      "rolecount": "Everyone",
-      "help": "Everyone"
-    }
+  "PREFIX": {
+    "PROD": "$",
+    "DEV": "~"
+  },
+  "ROLES": {
+    "ADMIN": 123456789012345679,
+    "MOD": 123456789012345679,
+    "JR_MOD": 123456789012345679,
+    "OWNER": 123456789012345679,
+    "TESTING": 123456789012345679
+  },
+  "TEMPVC_CATEGORY_ID": 1235096247442870292,
+  "TEMPVC_CHANNEL_ID": 1235096247442870292,
+  "LOG_CHANNELS": {
+    "AUDIT": 1235096271350399076,
+    "MOD": 1235096291672068106,
+    "REPORTS": 1235096305160814652,
+    "GATE": 1235096247442870292,
+    "DEV": 1235095919788167269,
+    "PRIVATE": 1235108340791513129
+  },
+  "EMBED_STATE_COLORS": {
+    "DEFAULT": 16056474,
+    "LOG": 16056474,
+    "INFO": 9028715,
+    "WARNING": 16634507,
+    "ERROR": 13760665,
+    "SUCCESS": 10930337,
+    "DEBUG": 13461271,
+    "POLL": 16322095,
+    "INFRACTION": 1118486,
+    "NOTE": 16634507,
+    "FOREGROUND": 11050940,
+    "BACKGROUND": 1714828,
+    "BLACK": 4282214,
+    "CURSOR": 12645749,
+    "SELECT": 2682506,
+    "RED": 16293838,
+    "GREEN": 7562304,
+    "YELLOW": 14703816,
+    "BLUE": 8044279,
+    "PURPLE": 12319927,
+    "CYAN": 8258815,
+    "WHITE": 12645749
+  },
+  "EMBED_STATE_ICONS": {
+    "DEFAULT": "https://i.imgur.com/EqzIMKr.png",
+    "LOG": "https://i.imgur.com/4sblrd0.png",
+    "INFO": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/mocha_sky.png?raw=true",
+    "DEBUG": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/mocha_mauve.png?raw=true",
+    "WARNING": "https://github.com/catppuccin/catppuccin/raw/main/assets/palette/circles/latte_peach.png?raw=true",
+    "ERROR": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/latte_red.png?raw=true",
+    "SUCCESS": "https://github.com/allthingslinux/tux/blob/main/assets/slicedsymbol-5.png?raw=true",
+    "POLL": "https://github.com/catppuccin/catppuccin/raw/main/assets/palette/circles/mocha_yellow.png?raw=true",
+    "INFRACTION": "https://github.com/catppuccin/catppuccin/raw/main/assets/palette/circles/mocha_crust.png?raw=true",
+    "NOTE": "https://github.com/catppuccin/catppuccin/raw/main/assets/palette/circles/latte_peach.png?raw=true"
+  },
+  "UNICODE": {
+    "SUCCESS": "✅",
+    "ERROR": "❌",
+    "EMPTY": " "
+  },
+  "EMOJIS": {
+    "EMPTY": "​<:transparent:1227090229639250032>"
+  }
 }

@@ -10,8 +10,7 @@ def setup_sentry():
     traces_sample_rate = 1.0
     profiles_sample_rate = 1.0
     enable_tracing = True
-    staging = CONST.STAGING == "True"
-    environment = "staging" if staging else "production"
+    environment = "dev" if CONST.DEV == "True" else "prod"
 
     sentry_sdk.init(
         dsn=dsn,
