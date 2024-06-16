@@ -46,15 +46,10 @@ class Constants:
     )
 
     # Channel constants
-
-    # Dynamically load log channels from config
-    LOG_CHANNELS: Final[dict[str, int]] = {
-        key: value for key, value in config["LOG_CHANNELS"].items() if key != "DEV"
-    }
-
-    if str(DEV).lower() == "true":
-        for channel_name in LOG_CHANNELS:
-            LOG_CHANNELS[channel_name] = config["LOG_CHANNELS"]["DEV"]
+    LOG_CHANNELS: Final[dict[str, int]] = config["LOG_CHANNELS"].copy()
+    if DEV and DEV.lower() == "true":
+        for key in LOG_CHANNELS:
+            LOG_CHANNELS[key] = LOG_CHANNELS["DEV"]
 
     # Temp VC constants
     TEMPVC_CATEGORY_ID: Final[str | None] = os.getenv("TEMPVC_CATEGORY_ID")
