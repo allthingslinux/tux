@@ -57,7 +57,7 @@ class Avatar(commands.Cog):
         discord.File
             The discord file.
         """
-        response = await client.get(url)
+        response = await client.get(url, timeout=10)
         response.raise_for_status()
         image_data = response.content
         image_file = BytesIO(image_data)
