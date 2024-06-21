@@ -12,9 +12,9 @@ class Xkcd(commands.Cog):
         self.bot = bot
         self.client = xkcd.Client()
 
-    group = app_commands.Group(name="xkcd", description="xkcd-related commands")
+    xkcd = app_commands.Group(name="xkcd", description="xkcd-related commands")
 
-    @group.command(name="latest", description="Get the latest xkcd comic")
+    @xkcd.command(name="latest", description="Get the latest xkcd comic")
     async def latest(self, interaction: discord.Interaction) -> None:
         try:
             latest_comic = self.client.get_latest_comic(raw_comic_image=True)
@@ -45,7 +45,7 @@ class Xkcd(commands.Cog):
 
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @group.command(name="random", description="Get a random xkcd comic")
+    @xkcd.command(name="random", description="Get a random xkcd comic")
     async def random(self, interaction: discord.Interaction) -> None:
         try:
             random_comic = self.client.get_random_comic(raw_comic_image=True)
@@ -76,7 +76,7 @@ class Xkcd(commands.Cog):
 
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @group.command(name="specific", description="Search for a specific xkcd comic")
+    @xkcd.command(name="specific", description="Search for a specific xkcd comic")
     async def specific(self, interaction: discord.Interaction, comic_id: int) -> None:
         try:
             specific_comic = self.client.get_comic(comic_id, raw_comic_image=True)
