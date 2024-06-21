@@ -12,97 +12,67 @@ class Xkcd(commands.Cog):
         self.bot = bot
         self.client = xkcd.Client()
 
-    group = app_commands.Group(name="xkcd", description="xkcd-related commands")
+    xkcd = app_commands.Group(name="xkcd", description="xkcd-related commands")
 
-    @group.command(name="latest", description="Get the latest xkcd comic")
+    @xkcd.command(name="latest", description="Get the latest xkcd comic")
     async def latest(self, interaction: discord.Interaction) -> None:
-        try:
-            latest_comic = self.client.get_latest_comic(raw_comic_image=True)
-            comic_id = latest_comic.id
+        embed, ephemeral = await self.get_comic_and_embed(latest=True)
+        await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
-            description = f"[Explainxkcd]({latest_comic.explanation_url}) | [Webpage]({latest_comic.comic_url})"
-
-            embed = EmbedCreator.create_success_embed(
-                title=f"xkcd {comic_id} - {latest_comic.title}",
-                description=description,
-                interaction=interaction,
-            )
-
-            embed.set_image(url=latest_comic.image_url)
-
-            logger.info(f"{interaction.user} got the latest xkcd comic in {interaction.channel}")
-
-            await interaction.response.send_message(embed=embed)
-
-        except Exception as e:
-            logger.error(f"Error getting the latest xkcd comic: {e}")
-
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
-                description="An error occurred while fetching the latest xkcd comic",
-                interaction=interaction,
-            )
-
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-
-    @group.command(name="random", description="Get a random xkcd comic")
+    @xkcd.command(name="random", description="Get a random xkcd comic")
     async def random(self, interaction: discord.Interaction) -> None:
-        try:
-            random_comic = self.client.get_random_comic(raw_comic_image=True)
-            comic_id = random_comic.id
+        embed, ephemeral = await self.get_comic_and_embed()
+        await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
-            description = f"[Explainxkcd]({random_comic.explanation_url}) | [Webpage]({random_comic.comic_url})"
-
-            embed = EmbedCreator.create_success_embed(
-                title=f"xkcd {comic_id} - {random_comic.title}",
-                description=description,
-                interaction=interaction,
-            )
-
-            embed.set_image(url=random_comic.image_url)
-
-            logger.info(f"{interaction.user} got a random xkcd comic in {interaction.channel}")
-
-            await interaction.response.send_message(embed=embed)
-
-        except Exception as e:
-            logger.error(f"Error getting a random xkcd comic: {e}")
-
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
-                description="An error occurred while fetching a random xkcd comic",
-                interaction=interaction,
-            )
-
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-
-    @group.command(name="specific", description="Search for a specific xkcd comic")
+    @xkcd.command(name="specific", description="Search for a specific xkcd comic")
     async def specific(self, interaction: discord.Interaction, comic_id: int) -> None:
-        try:
-            specific_comic = self.client.get_comic(comic_id, raw_comic_image=True)
+        embed, ephemeral = await self.get_comic_and_embed(number=comic_id)
+        await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
-            description = f"[Explainxkcd]({specific_comic.explanation_url}) | [Webpage]({specific_comic.comic_url})"
+    async def get_comic_and_embed(
+        self, latest: bool = False, number: int | None = None
+    ) -> tuple[discord.Embed, bool]:
+        """
+        Get the xkcd comic and create an embed.
+        """
+        try:
+            if latest:
+                comic = self.client.get_latest_comic(raw_comic_image=True)
+            elif number:
+                comic = self.client.get_comic(number, raw_comic_image=True)
+            else:
+                comic = self.client.get_random_comic(raw_comic_image=True)
+
+            description = f"[Explainxkcd]({comic.explanation_url}) | [Webpage]({comic.comic_url})"
 
             embed = EmbedCreator.create_success_embed(
-                title=f"xkcd {comic_id} - {specific_comic.title}",
+                title=f"xkcd {comic.id} - {comic.title}",
                 description=description,
-                interaction=interaction,
             )
 
-            embed.set_image(url=specific_comic.image_url)
+            embed.set_image(url=comic.image_url)
+            ephemeral = False
 
-            await interaction.response.send_message(embed=embed)
-
-        except Exception as e:
-            logger.error(f"Error getting specific xkcd comic: {e}")
-
+        except xkcd.HttpError:
+            logger.error("HTTP error occurred while fetching xkcd comic")
             embed = EmbedCreator.create_error_embed(
                 title="Error",
-                description="An error occurred while fetching a specific xkcd comic",
-                interaction=interaction,
+                description="I couldn't find the xkcd comic. Please try again later.",
             )
+            ephemeral = True
+            return embed, ephemeral
 
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+        except Exception as e:
+            logger.error(f"Error getting xkcd comic: {e}")
+            embed = EmbedCreator.create_error_embed(
+                title="Error",
+                description="An error occurred while fetching the xkcd comic",
+            )
+            ephemeral = True
+            return embed, ephemeral
+
+        else:
+            return embed, ephemeral
 
 
 async def setup(bot: commands.Bot) -> None:

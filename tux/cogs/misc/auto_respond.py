@@ -3,7 +3,7 @@ import re
 import discord
 from discord.ext import commands
 
-harmful_command_pattern = r"(?:sudo\s+|doas\s+)?rm\s+(-[frR]*|--force|--recursive|--no-preserve-root|\s+)*(/\s*|\*|/bin|/boot|/etc|/lib|/proc|/root|/sbin|/sys|/tmp|/usr|/var|/var/log|/network.|/system)(\s+--no-preserve-root|\s+\*)*|:\(\)\{ :|:& \};:"
+harmful_command_pattern = r"(?:sudo\s+|doas\s+|run0\s+)?rm\s+(-[frR]*|--force|--recursive|--no-preserve-root|\s+)*(/\s*|\*|/bin|/boot|/etc|/lib|/proc|/root|/sbin|/sys|/tmp|/usr|/var|/var/log|/network.|/system)(\s+--no-preserve-root|\s+\*)*|:\(\)\{ :|:& \};:"
 
 
 def is_harmful(command: str) -> bool:
@@ -15,10 +15,8 @@ class AutoRespond(commands.Cog):
         self.bot = bot
 
     def strip_formatting(self, content: str) -> str:
-        # TODO: Fix the triple backtick  regex as it is not working
-
         # Remove triple backtick blocks considering any spaces and platform-specific newlines
-        content = re.sub(r"```.*?```", "", content, flags=re.DOTALL)
+        content = re.sub(r"`/```(.*)```/", "", content, flags=re.DOTALL)
 
         # Remove inline code snippets preserving their content only
         content = re.sub(r"`([^`]*)`", r"\1", content)
