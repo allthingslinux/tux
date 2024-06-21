@@ -71,10 +71,10 @@ class Xkcd(commands.Cog):
             return embed, None, ephemeral
 
         else:
-            return embed, XkcdLinksButton(comic.explanation_url, comic.comic_url), ephemeral
+            return embed, XkcdLinkButtons(comic.explanation_url, comic.comic_url), ephemeral
 
 
-class XkcdLinksButton(discord.ui.View):
+class XkcdLinkButtons(discord.ui.View):
     def __init__(self, explain_url: str, webpage_url: str) -> None:
         super().__init__()
         self.add_item(
