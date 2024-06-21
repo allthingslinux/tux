@@ -45,6 +45,9 @@ class Xkcd(commands.Cog):
 
             description = f"[Explainxkcd]({comic.explanation_url}) | [Webpage]({comic.comic_url})"
 
+            if comic.description:
+                description += f"\n\n> {comic.description}"
+
             embed = EmbedCreator.create_success_embed(
                 title=f"xkcd {comic.id} - {comic.title}",
                 description=description,
