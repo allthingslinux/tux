@@ -27,7 +27,7 @@ class Xkcd(commands.Cog):
     @xkcd.command(name="specific", description="Search for a specific xkcd comic")
     async def specific(self, interaction: discord.Interaction, comic_id: int) -> None:
         embed, ephemeral = await self.get_comic_and_embed(number=comic_id)
-        return await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+        await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
     async def get_comic_and_embed(
         self, latest: bool = False, number: int | None = None
