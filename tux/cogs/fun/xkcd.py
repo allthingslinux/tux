@@ -45,7 +45,7 @@ class Xkcd(commands.Cog):
 
             embed = EmbedCreator.create_success_embed(
                 title="",
-                description=f"\n\n> {comic.description}" if comic.description else None,
+                description=f"\n\n> {comic.description.strip()}" if comic.description else None,
             )
 
             embed.set_author(name=f"xkcd {comic.id} - {comic.title}")
