@@ -15,10 +15,8 @@ class AutoRespond(commands.Cog):
         self.bot = bot
 
     def strip_formatting(self, content: str) -> str:
-        # TODO: Fix the triple backtick  regex as it is not working
-
         # Remove triple backtick blocks considering any spaces and platform-specific newlines
-        content = re.sub(r"```.*?```", "", content, flags=re.DOTALL)
+        content = re.sub(r"`/```(.*)```/", "", content, flags=re.DOTALL)
 
         # Remove inline code snippets preserving their content only
         content = re.sub(r"`([^`]*)`", r"\1", content)
