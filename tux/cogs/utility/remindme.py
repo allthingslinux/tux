@@ -132,7 +132,7 @@ class RemindMe(commands.Cog):
             return
 
         # Create a task to wait until the reminder expires
-        await self.bot.loop.create_task(self.end_timer(closest_reminder))
+        self.bot.loop.create_task(self.end_timer(closest_reminder))
 
     @app_commands.command(
         name="remindme", description="Reminds you after a certain amount of time."
