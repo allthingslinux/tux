@@ -23,18 +23,34 @@ class ExportBanned(commands.Cog):
         """
         Export a list of banned users in csv format.
         """
-        banned_users = [entry async for entry in interaction.guild.bans(limit=2000)]
+        bans = [entry async for entry in interaction.guild.bans(limit=10000)]
 
-        if not banned_users:
+        if not bans:
             embed = EmbedCreator.create_success_embed(
                 title=f"{interaction.guild} Banned Users",
                 description="There are no banned users in this server.",
             )
             return await interaction.response.send_message(embed=embed)
 
-        # get the csv file based on the flags and banned users list and send
-        file = await self.export_ban_list_csv(banned_users, *flags.split(sep=" ") if flags else [])
-        return await interaction.response.send_message(file=file)
+        if flags and "help" not in flags:
+            file = await self.export_ban_list_csv(bans, *flags.split(sep=" ") if flags else [])
+            return await interaction.response.send_message(file=file)
+
+        embed = EmbedCreator.create_success_embed(
+            title=f"Total Bans in {interaction.guild}: {len(bans)}",
+            description="Use any combination of the following flags "
+            "to export a list of banned users to a CSV file:\n"
+            "```"
+            "--user (User Name)\n"
+            "--display (Display Name)\n"
+            "--id (User ID)\n"
+            "--reason (Ban Reason)\n"
+            "--mention (User Mention)\n"
+            "--created (User Creation Date)\n"
+            "--help (Show this message)"
+            "```",
+        )
+        return await interaction.response.send_message(embed=embed)
 
     @staticmethod
     async def export_ban_list_csv(bans: list[discord.guild.BanEntry], *args: str) -> discord.File:
@@ -47,13 +63,13 @@ class ExportBanned(commands.Cog):
             "created": "Creation Date",
         }
 
-        if args:
-            headers = []
-            for flag in args:
-                flag_key = flag.removeprefix("--")
-                if flag_key in valid_flags:
-                    headers.append(valid_flags[flag_key])
-        else:
+        headers = []
+        for flag in args:
+            flag_key = flag.removeprefix("--")
+            if flag_key in valid_flags:
+                headers.append(valid_flags[flag_key])
+
+        if not headers:
             headers = [valid_flags["user"], valid_flags["id"], valid_flags["reason"]]
 
         rows = []
