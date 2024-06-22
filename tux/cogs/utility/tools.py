@@ -14,6 +14,7 @@ client = httpx.AsyncClient()
 
 COLOR_FORMATS = {"HEX": "hex", "RGB": "rgb", "HSL": "hsl", "CMYK": "cmyk"}
 
+
 # TODO: Fix color format input parsing for URL encoding
 
 
