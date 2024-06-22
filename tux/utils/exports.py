@@ -14,10 +14,13 @@ _flags = {
 }
 
 
-async def _define_headers(args: tuple) -> list[str]:
+async def _define_headers(args: tuple, default: list | None = None) -> list[str]:
     """
     Define the headers for the CSV output file.
     """
+    if default is None:
+        default = [_flags["user"], _flags["id"]]
+
     headers = []
 
     if "--all" in args:
@@ -28,10 +31,7 @@ async def _define_headers(args: tuple) -> list[str]:
             if flag_key in _flags:
                 headers.append(_flags[flag_key])
 
-    if not headers:
-        headers = [_flags["user"], _flags["id"], _flags["reason"]]
-
-    return headers
+    return headers or default
 
 
 async def _create_encoded_string(headers, rows, quoting=csv.QUOTE_MINIMAL) -> io.BytesIO:
