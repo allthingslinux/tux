@@ -46,7 +46,7 @@ class ExportBanned(commands.Cog):
             "--id (User ID)\n"
             "--reason (Ban Reason)\n"
             "--mention (User Mention)\n"
-            "--created (User Creation Date)\n"
+            "--created (Account Creation Date)\n"
             "--help (Show this message)"
             "```",
         )
