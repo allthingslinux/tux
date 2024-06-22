@@ -16,22 +16,22 @@ class Xkcd(commands.Cog):
 
     @xkcd.command(name="latest", description="Get the latest xkcd comic")
     async def latest(self, interaction: discord.Interaction) -> None:
-        embed, ephemeral = await self.get_comic_and_embed(latest=True)
-        await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+        embed, view, ephemeral = await self.get_comic_and_embed(latest=True)
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=ephemeral)
 
     @xkcd.command(name="random", description="Get a random xkcd comic")
     async def random(self, interaction: discord.Interaction) -> None:
-        embed, ephemeral = await self.get_comic_and_embed()
-        await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+        embed, view, ephemeral = await self.get_comic_and_embed()
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=ephemeral)
 
     @xkcd.command(name="specific", description="Search for a specific xkcd comic")
     async def specific(self, interaction: discord.Interaction, comic_id: int) -> None:
-        embed, ephemeral = await self.get_comic_and_embed(number=comic_id)
-        await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+        embed, view, ephemeral = await self.get_comic_and_embed(number=comic_id)
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=ephemeral)
 
     async def get_comic_and_embed(
         self, latest: bool = False, number: int | None = None
-    ) -> tuple[discord.Embed, bool]:
+    ) -> tuple[discord.Embed, discord.ui.View | None, bool]:
         """
         Get the xkcd comic and create an embed.
         """
@@ -43,13 +43,12 @@ class Xkcd(commands.Cog):
             else:
                 comic = self.client.get_random_comic(raw_comic_image=True)
 
-            description = f"[Explainxkcd]({comic.explanation_url}) | [Webpage]({comic.comic_url})"
-
             embed = EmbedCreator.create_success_embed(
-                title=f"xkcd {comic.id} - {comic.title}",
-                description=description,
+                title="",
+                description=f"\n\n> {comic.description.strip()}" if comic.description else None,
             )
 
+            embed.set_author(name=f"xkcd {comic.id} - {comic.title}")
             embed.set_image(url=comic.image_url)
             ephemeral = False
 
@@ -60,7 +59,7 @@ class Xkcd(commands.Cog):
                 description="I couldn't find the xkcd comic. Please try again later.",
             )
             ephemeral = True
-            return embed, ephemeral
+            return embed, None, ephemeral
 
         except Exception as e:
             logger.error(f"Error getting xkcd comic: {e}")
@@ -69,10 +68,29 @@ class Xkcd(commands.Cog):
                 description="An error occurred while fetching the xkcd comic",
             )
             ephemeral = True
-            return embed, ephemeral
+            return embed, None, ephemeral
 
         else:
-            return embed, ephemeral
+            return embed, XkcdLinkButtons(comic.explanation_url, comic.comic_url), ephemeral
+
+
+class XkcdLinkButtons(discord.ui.View):
+    def __init__(self, explain_url: str, webpage_url: str) -> None:
+        super().__init__()
+        self.add_item(
+            discord.ui.Button(
+                style=discord.ButtonStyle.link,
+                label="Explainxkcd",
+                url=explain_url,
+            )
+        )
+        self.add_item(
+            discord.ui.Button(
+                style=discord.ButtonStyle.link,
+                label="Webpage",
+                url=webpage_url,
+            )
+        )
 
 
 async def setup(bot: commands.Bot) -> None:
