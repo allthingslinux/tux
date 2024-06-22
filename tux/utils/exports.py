@@ -34,6 +34,17 @@ async def _define_headers(args: tuple) -> list[str]:
     return headers
 
 
+async def _create_encoded_string(headers, rows, quoting=csv.QUOTE_MINIMAL) -> io.BytesIO:
+    """
+    Create an encoded string from the retrieved data.
+    """
+    csvfile = io.StringIO()
+    writer = csv.DictWriter(csvfile, fieldnames=headers, quoting=quoting)
+    writer.writeheader()
+    writer.writerows(rows)
+    return io.BytesIO(csvfile.getvalue().encode())
+
+
 async def get_ban_list_csv(
     interaction: discord.Interaction, bans: list[discord.guild.BanEntry], *args: str
 ) -> discord.File:
@@ -62,14 +73,8 @@ async def get_ban_list_csv(
 
         rows.append(row)
 
-    csvfile = io.StringIO()
-
-    writer = csv.DictWriter(csvfile, fieldnames=headers, quoting=csv.QUOTE_ALL)
-    writer.writeheader()
-    writer.writerows(rows)
-
     guild_id = interaction.guild.id
     timestamp = datetime.datetime.now(tz=datetime.UTC).strftime("%Y%m%d_%H%M%S")
-    return discord.File(
-        io.BytesIO(csvfile.getvalue().encode()), filename=f"{guild_id}_bans_{timestamp}.csv"
-    )
+    csvfile = await _create_encoded_string(headers, rows)
+
+    return discord.File(csvfile, filename=f"{guild_id}_bans_{timestamp}.csv")
