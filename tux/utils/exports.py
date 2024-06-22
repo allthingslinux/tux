@@ -52,7 +52,9 @@ async def get_ban_list_csv(
     Export a list of banned users in CSV format.
     """
 
-    headers: list = await _define_headers(args)
+    headers: list = await _define_headers(
+        args, default=[_flags["user"], _flags["id"], _flags["reason"]]
+    )
 
     rows = []
     for ban in bans:
