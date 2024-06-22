@@ -26,13 +26,11 @@ class GuildLogging(commands.Cog):
             The message that was sent.
         """
 
-        # check if the message has no embeds, attachments, or content, stickers, or isnt a nitro gift/boost
-        # if so its probably a poll
-        poll_channel = self.bot.get_channel(1228717294788673656)
+        poll_channel = self.bot.get_channel(1228717294788673656)  # TODO: stop hardcoding this
+
         if message.channel == poll_channel:
-            # check if the message has content, stickers, or attachments
-            # if so delete the message as its not a poll
-            if message.content or message.stickers or message.attachments:
+            # delete non-poll messages in the poll channel
+            if message.poll is None:
                 await message.delete()
                 embed = EmbedCreator.create_log_embed(
                     title="Non-Poll Deleted",
