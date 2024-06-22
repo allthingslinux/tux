@@ -1,4 +1,5 @@
 import csv
+import datetime
 import io
 
 import discord
@@ -34,7 +35,9 @@ class ExportBanned(commands.Cog):
             return await interaction.response.send_message(embed=embed)
 
         if flags and "--help" not in flags:
-            file = await self.export_ban_list_csv(bans, *flags.split(sep=" ") if flags else [])
+            file = await self.export_ban_list_csv(
+                interaction, bans, *flags.split(sep=" ") if flags else []
+            )
             return await interaction.response.send_message(file=file)
 
         embed = EmbedCreator.create_success_embed(
@@ -55,7 +58,9 @@ class ExportBanned(commands.Cog):
         return await interaction.response.send_message(embed=embed)
 
     @staticmethod
-    async def export_ban_list_csv(bans: list[discord.guild.BanEntry], *args: str) -> discord.File:
+    async def export_ban_list_csv(
+        interaction: discord.Interaction, bans: list[discord.guild.BanEntry], *args: str
+    ) -> discord.File:
         valid_flags = {
             "user": "User",
             "display": "Display Name",
@@ -103,7 +108,11 @@ class ExportBanned(commands.Cog):
         writer.writeheader()
         writer.writerows(rows)
 
-        return discord.File(io.BytesIO(csvfile.getvalue().encode()), filename="bans.csv")
+        guild_id = interaction.guild.id
+        timestamp = datetime.datetime.now(tz=datetime.UTC).strftime("%Y%m%d_%H%M%S")
+        return discord.File(
+            io.BytesIO(csvfile.getvalue().encode()), filename=f"{guild_id}_bans_{timestamp}.csv"
+        )
 
 
 async def setup(bot: commands.Bot) -> None:
