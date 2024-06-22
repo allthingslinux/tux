@@ -48,9 +48,7 @@ async def _create_encoded_string(headers, rows, quoting=csv.QUOTE_ALL) -> io.Byt
     return io.BytesIO(csvfile.getvalue().encode())
 
 
-async def get_help_embed(
-    interaction: discord.Interaction, valid_flags: list, title: str, data_description: str
-) -> discord.Embed:
+async def get_help_embed(valid_flags: list, title: str, data_description: str) -> discord.Embed:
     """
     Create an embed with help information for exporting data.
     """
