@@ -35,7 +35,7 @@ async def _define_headers(args: tuple, valid_flags: list, default: list | None =
     return headers or default
 
 
-async def _create_encoded_string(headers, rows, quoting=csv.QUOTE_MINIMAL) -> io.BytesIO:
+async def _create_encoded_string(headers, rows, quoting=csv.QUOTE_ALL) -> io.BytesIO:
     """
     Create an encoded string from the retrieved data.
     """
