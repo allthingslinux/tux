@@ -54,7 +54,6 @@ async def get_help_embed(
     """
     Create an embed with help information for exporting data.
     """
-    valid_flags.append("--all")
     valid_flags.sort()
 
     return EmbedCreator.create_info_embed(
@@ -62,6 +61,7 @@ async def get_help_embed(
         description="Use any combination of the following flags to "
         + f"export a list of {data_description} to a CSV file:"
         + "\n```"
+        + "\n--all\n"
         + "\n".join([f"--{flag}" for flag in valid_flags])
         + "\n```",
     )
