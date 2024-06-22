@@ -4,6 +4,8 @@ import io
 
 import discord
 
+from tux.utils.embeds import EmbedCreator
+
 _flags = {
     "user": "User",
     "display": "Display Name",
@@ -46,13 +48,34 @@ async def _create_encoded_string(headers, rows, quoting=csv.QUOTE_ALL) -> io.Byt
     return io.BytesIO(csvfile.getvalue().encode())
 
 
+async def get_help_embed(
+    interaction: discord.Interaction, valid_flags: list, title: str, data_description: str
+) -> discord.Embed:
+    """
+    Create an embed with help information for exporting data.
+    """
+    valid_flags.append("--all")
+    valid_flags.sort()
+
+    return EmbedCreator.create_info_embed(
+        title=title,
+        description="Use any combination of the following flags to "
+        + f"export a list of {data_description} to a CSV file:"
+        + "\n```"
+        + "\n".join([f"--{flag}" for flag in valid_flags])
+        + "\n```",
+    )
+
+
 async def get_ban_list_csv(
-    interaction: discord.Interaction, bans: list[discord.guild.BanEntry], *args: str
+    interaction: discord.Interaction,
+    bans: list[discord.guild.BanEntry],
+    valid_flags: list,
+    *args: str,
 ) -> discord.File:
     """
     Export a list of banned users in CSV format.
     """
-    valid_flags = ["user", "display", "id", "reason", "mention", "created", "all"]
     headers: list = await _define_headers(
         args, valid_flags, default=[_flags["user"], _flags["id"], _flags["reason"]]
     )
@@ -84,12 +107,11 @@ async def get_ban_list_csv(
 
 
 async def get_member_list_csv(
-    interaction: discord.Interaction, members: list[discord.Member], *args: str
+    interaction: discord.Interaction, members: list[discord.Member], valid_flags, *args: str
 ) -> discord.File:
     """
     Export a list of members in CSV format.
     """
-    valid_flags = ["user", "display", "id", "mention", "created", "all"]
     headers: list = await _define_headers(args, valid_flags, [_flags["user"], _flags["id"]])
 
     rows = []

@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from tux.utils.embeds import EmbedCreator
-from tux.utils.exports import get_ban_list_csv, get_member_list_csv
+from tux.utils.exports import get_ban_list_csv, get_help_embed, get_member_list_csv
 
 
 class Export(commands.Cog):
@@ -23,6 +23,7 @@ class Export(commands.Cog):
         Export a list of banned users in csv format.
         """
         bans = [entry async for entry in interaction.guild.bans(limit=10000)]
+        valid_flags = ["user", "display", "id", "reason", "mention", "created"]
 
         if not bans:
             embed = EmbedCreator.create_success_embed(
@@ -32,24 +33,14 @@ class Export(commands.Cog):
             return await interaction.response.send_message(embed=embed)
 
         if flags and "--help" not in flags:
-            file = await get_ban_list_csv(interaction, bans, *flags.split(sep=" ") if flags else [])
+            file = await get_ban_list_csv(
+                interaction, bans, valid_flags, *flags.split(sep=" ") if flags else []
+            )
             return await interaction.response.send_message(file=file)
 
-        embed = EmbedCreator.create_success_embed(
-            title=f"Total Bans in {interaction.guild}: {len(bans)}",
-            description="Use any combination of the following flags "
-            "to export a list of banned users to a CSV file:\n"
-            "```"
-            "--user (User Name)\n"
-            "--display (Display Name)\n"
-            "--id (User ID)\n"
-            "--reason (Ban Reason)\n"
-            "--mention (User Mention)\n"
-            "--created (Account Creation Date)\n"
-            "--all (Export all available fields)\n"
-            "--help (Show this message)"
-            "```",
-        )
+        title = f"Total Bans in {interaction.guild}: {len(bans)}"
+        data_description = "banned users"
+        embed = await get_help_embed(interaction, valid_flags, title, data_description)
         return await interaction.response.send_message(embed=embed)
 
     @export.command(name="members", description="Export a list of all members in the server.")
@@ -61,28 +52,18 @@ class Export(commands.Cog):
         """
         Export a list of members in csv format.
         """
-        members = interaction.guild.members
+        members = list(interaction.guild.members)
+        valid_flags = ["user", "display", "id", "mention", "created"]
 
         if flags and "--help" not in flags:
             file = await get_member_list_csv(
-                interaction, members, *flags.split(sep=" ") if flags else []
+                interaction, members, valid_flags, *flags.split(sep=" ") if flags else []
             )
             return await interaction.response.send_message(file=file)
 
-        embed = EmbedCreator.create_success_embed(
-            title=f"Total Members in {interaction.guild}: {len(members)}",
-            description="Use any combination of the following flags "
-            "to export a list of server members to a CSV file:\n"
-            "```"
-            "--user (User Name)\n"
-            "--display (Display Name)\n"
-            "--id (User ID)\n"
-            "--mention (User Mention)\n"
-            "--created (Account Creation Date)\n"
-            "--all (Export all available fields)\n"
-            "--help (Show this message)"
-            "```",
-        )
+        title = f"Total Members in {interaction.guild}: {len(members)}"
+        data_description = "members"
+        embed = await get_help_embed(interaction, valid_flags, title, data_description)
         return await interaction.response.send_message(embed=embed)
 
 
