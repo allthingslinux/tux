@@ -15,6 +15,7 @@ class ExportBanned(commands.Cog):
     export = app_commands.Group(name="export", description="export server data with Tux.")
 
     @export.command(name="banned", description="Export a list of all banned users.")
+    @commands.bot_has_permissions(ban_members=True)
     async def export_banned(
         self,
         interaction: discord.Interaction,
