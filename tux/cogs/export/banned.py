@@ -33,7 +33,7 @@ class ExportBanned(commands.Cog):
             )
             return await interaction.response.send_message(embed=embed)
 
-        if flags and "help" not in flags:
+        if flags and "--help" not in flags:
             file = await self.export_ban_list_csv(bans, *flags.split(sep=" ") if flags else [])
             return await interaction.response.send_message(file=file)
 
@@ -48,6 +48,7 @@ class ExportBanned(commands.Cog):
             "--reason (Ban Reason)\n"
             "--mention (User Mention)\n"
             "--created (Account Creation Date)\n"
+            "--all (Export all available fields)\n"
             "--help (Show this message)"
             "```",
         )
@@ -65,10 +66,14 @@ class ExportBanned(commands.Cog):
         }
 
         headers = []
-        for flag in args:
-            flag_key = flag.removeprefix("--")
-            if flag_key in valid_flags:
-                headers.append(valid_flags[flag_key])
+
+        if "--all" in args:
+            headers = list(valid_flags.values())
+        else:
+            for flag in args:
+                flag_key = flag.removeprefix("--")
+                if flag_key in valid_flags:
+                    headers.append(valid_flags[flag_key])
 
         if not headers:
             headers = [valid_flags["user"], valid_flags["id"], valid_flags["reason"]]
