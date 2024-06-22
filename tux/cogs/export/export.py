@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from tux.utils.embeds import EmbedCreator
-from tux.utils.exports import get_ban_list_csv
+from tux.utils.exports import get_ban_list_csv, get_member_list_csv
 
 
 class Export(commands.Cog):
@@ -44,6 +44,39 @@ class Export(commands.Cog):
             "--display (Display Name)\n"
             "--id (User ID)\n"
             "--reason (Ban Reason)\n"
+            "--mention (User Mention)\n"
+            "--created (Account Creation Date)\n"
+            "--all (Export all available fields)\n"
+            "--help (Show this message)"
+            "```",
+        )
+        return await interaction.response.send_message(embed=embed)
+
+    @export.command(name="members", description="Export a list of all members in the server.")
+    async def export_members(
+        self,
+        interaction: discord.Interaction,
+        flags: str | None = None,
+    ) -> None:
+        """
+        Export a list of members in csv format.
+        """
+        members = interaction.guild.members
+
+        if flags and "--help" not in flags:
+            file = await get_member_list_csv(
+                interaction, members, *flags.split(sep=" ") if flags else []
+            )
+            return await interaction.response.send_message(file=file)
+
+        embed = EmbedCreator.create_success_embed(
+            title=f"Total Members in {interaction.guild}: {len(members)}",
+            description="Use any combination of the following flags "
+            "to export a list of server members to a CSV file:\n"
+            "```"
+            "--user (User Name)\n"
+            "--display (Display Name)\n"
+            "--id (User ID)\n"
             "--mention (User Mention)\n"
             "--created (Account Creation Date)\n"
             "--all (Export all available fields)\n"
