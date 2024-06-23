@@ -14,6 +14,7 @@ class Export(commands.Cog):
 
     @export.command(name="banned", description="Export a list of all banned users.")
     @commands.bot_has_permissions(ban_members=True)
+    @commands.guild_only()
     async def export_banned(
         self,
         interaction: discord.Interaction,
@@ -22,6 +23,10 @@ class Export(commands.Cog):
         """
         Export a list of banned users in csv format.
         """
+        if interaction.guild is None:
+            msg = "Interaction does not have a guild attribute."
+            raise ValueError(msg)
+
         bans = [entry async for entry in interaction.guild.bans(limit=10000)]
         valid_flags = ["user", "display", "id", "reason", "mention", "created"]
 
@@ -34,7 +39,7 @@ class Export(commands.Cog):
 
         if flags and "--help" not in flags:
             file = await exports.get_ban_list_csv(
-                interaction, bans, valid_flags, *flags.split(sep=" ") if flags else []
+                interaction, bans, valid_flags, flags.split(sep=" ") if flags else []
             )
             return await interaction.response.send_message(file=file)
 
@@ -44,6 +49,7 @@ class Export(commands.Cog):
         return await interaction.response.send_message(embed=embed)
 
     @export.command(name="members", description="Export a list of all members in the server.")
+    @commands.guild_only()
     async def export_members(
         self,
         interaction: discord.Interaction,
@@ -52,12 +58,16 @@ class Export(commands.Cog):
         """
         Export a list of members in csv format.
         """
+        if interaction.guild is None:
+            msg = "Interaction does not have a guild attribute."
+            raise ValueError(msg)
+
         members = list(interaction.guild.members)
         valid_flags = ["user", "display", "id", "mention", "created"]
 
         if flags and "--help" not in flags:
             file = await exports.get_member_list_csv(
-                interaction, members, valid_flags, *flags.split(sep=" ") if flags else []
+                interaction, members, valid_flags, flags.split(sep=" ") if flags else []
             )
             return await interaction.response.send_message(file=file)
 
