@@ -118,42 +118,6 @@ class Info(commands.Cog):
 
         logger.info(f"{interaction.user} used the member command in {interaction.channel}.")
 
-    @group.command(name="irc", description="Shows information about the IRC server")
-    async def irc(self, interaction: discord.Interaction) -> None:
-        """
-        Show information about the IRC server.
-
-        Parameters
-        ----------
-        interaction : discord.Interaction
-            The discord interaction object.
-        """
-
-        embed = EmbedCreator.create_info_embed(
-            title="IRC",
-            description="Here is some information about the IRC server.",
-            interaction=interaction,
-        )
-
-        embed.add_field(
-            name="Connection Details",
-            value="irc.atl.tools, 6697, TLS/SSL enabled, /join #general",
-            inline=False,
-        )
-        embed.add_field(
-            name="NickServ Instructions",
-            value="""
-            ➡️ Connect to IRC Server
-            ➡️ Type /msg NickServ register <password> <email>
-            ➡️ Talk!
-            """,
-            inline=False,
-        )
-
-        await interaction.response.send_message(embed=embed)
-
-        logger.info(f"{interaction.user} used the irc command in {interaction.channel}.")
-
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Info(bot))
