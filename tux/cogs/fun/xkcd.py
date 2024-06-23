@@ -17,17 +17,26 @@ class Xkcd(commands.Cog):
     @xkcd.command(name="latest", description="Get the latest xkcd comic")
     async def latest(self, interaction: discord.Interaction) -> None:
         embed, view, ephemeral = await self.get_comic_and_embed(latest=True)
-        await interaction.response.send_message(embed=embed, view=view, ephemeral=ephemeral)
+        if view:
+            await interaction.response.send_message(embed=embed, view=view, ephemeral=ephemeral)
+        else:
+            await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
     @xkcd.command(name="random", description="Get a random xkcd comic")
     async def random(self, interaction: discord.Interaction) -> None:
         embed, view, ephemeral = await self.get_comic_and_embed()
-        await interaction.response.send_message(embed=embed, view=view, ephemeral=ephemeral)
+        if view:
+            await interaction.response.send_message(embed=embed, view=view, ephemeral=ephemeral)
+        else:
+            await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
     @xkcd.command(name="specific", description="Search for a specific xkcd comic")
     async def specific(self, interaction: discord.Interaction, comic_id: int) -> None:
         embed, view, ephemeral = await self.get_comic_and_embed(number=comic_id)
-        await interaction.response.send_message(embed=embed, view=view, ephemeral=ephemeral)
+        if view:
+            await interaction.response.send_message(embed=embed, view=view, ephemeral=ephemeral)
+        else:
+            await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
     async def get_comic_and_embed(
         self, latest: bool = False, number: int | None = None
@@ -45,7 +54,7 @@ class Xkcd(commands.Cog):
 
             embed = EmbedCreator.create_success_embed(
                 title="",
-                description=f"\n\n> {comic.description.strip()}" if comic.description else None,
+                description=f"\n\n> {comic.description.strip()}" if comic.description else "",
             )
 
             embed.set_author(name=f"xkcd {comic.id} - {comic.title}")
@@ -71,7 +80,11 @@ class Xkcd(commands.Cog):
             return embed, None, ephemeral
 
         else:
-            return embed, XkcdLinkButtons(comic.explanation_url, comic.comic_url), ephemeral
+            return (
+                embed,
+                XkcdLinkButtons(str(comic.explanation_url), str(comic.comic_url)),
+                ephemeral,
+            )
 
 
 class XkcdLinkButtons(discord.ui.View):
