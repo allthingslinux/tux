@@ -155,9 +155,7 @@ class Snippets(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        top_row = f"`/snippets/{snippet.name}.txt` |⦚| {self.bot.get_user(snippet.author_id) or 'Unknown Author'}"
-
-        text = f"{top_row}\n{snippet.content}"
+        text = f"`/snippets/{snippet.name}.txt` || {snippet.content}"
 
         await ctx.send(text, allowed_mentions=AllowedMentions.none())
 
