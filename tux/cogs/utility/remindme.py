@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 import datetime
 
@@ -88,6 +89,10 @@ class RemindMe(commands.Cog):
         # Delete the reminder after sending
         await self.db_controller.reminders.delete_reminder(reminder.id)
 
+        # wait for a second so that the reminder is deleted before checking for more reminders
+        # who knows if this works, it seems to
+        await asyncio.sleep(1)
+
         # Run update again to check if there are any more reminders
         await self.update()
 
@@ -146,9 +151,9 @@ class RemindMe(commands.Cog):
         interaction : discord.Interaction
             The discord interaction object.
         time : str
-            The time to wait before reminding.
+            Time in the format `[number][M/w/d/h/m/s]`.
         reminder : str
-            The reminder message.
+            Reminder content.
         """
 
         seconds = convert_to_seconds(time)
@@ -156,7 +161,7 @@ class RemindMe(commands.Cog):
         # Check if the time is valid (this is set to 0 if the time is invalid via convert_to_seconds)
         if seconds == 0:
             await interaction.response.send_message(
-                "Invalid time format. Please use a format like `1d`, `2h`, `3m`, etc. (only days, hours, and minutes are supported)"
+                "Invalid time format. Please use the format `[number][M/w/d/h/m/s]`.",
             )
             return
 
@@ -191,7 +196,7 @@ class RemindMe(commands.Cog):
 
             logger.error(f"Error creating reminder: {e}")
 
-        await interaction.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
         # Run update again to check if this reminder is the closest
         await self.update()
