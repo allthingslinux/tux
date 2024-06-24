@@ -7,7 +7,7 @@ import discord
 
 def convert_to_seconds(time_str: str) -> int:
     """
-    Converts a formatted time string with 'd' for days, 'h' for hours, and 'm' for minutes into total seconds.
+    Converts a formatted time string with the formats Mwdhms
     Any unexpected format leads to returning 0.
 
     Parameters:
@@ -21,14 +21,14 @@ def convert_to_seconds(time_str: str) -> int:
         The total seconds from the formatted time string.
     """
 
-    # Lowercase to standardize the input
-    time_str = time_str.lower()
-
     # Time conversion factors from units to seconds
     time_units = {
+        "M": 2592000,  # Months to seconds
+        "w": 604800,  # Weeks to seconds
         "d": 86400,  # Days to seconds
         "h": 3600,  # Hours to seconds
         "m": 60,  # Minutes to seconds
+        "s": 1,  # Seconds to seconds
     }
 
     total_seconds = 0
