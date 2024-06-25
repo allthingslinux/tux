@@ -1,74 +1,78 @@
 import discord
 from discord.ext import commands
 
-from prisma.models import Case, User
+from prisma.enums import CaseType
+from prisma.models import Case
 from tux.database.controllers import DatabaseController
 from tux.utils.constants import Constants as CONST
-from tux.utils.embeds import EmbedCreator
-from tux.utils.enums import CaseType
-
-db_controller = DatabaseController()
+from tux.utils.embeds import create_embed_footer
 
 
-async def send_temporary_message(ctx: commands.Context[commands.Bot], message: str) -> None:
-    await ctx.send(message, ephemeral=True, delete_after=5)
+class Moderation:
+    """
+    A utility/helper class to handle moderation-related operations.
+    """
 
+    def __init__(self) -> None:
+        self.db_controller = DatabaseController()
+        self.mod_log_channel_id = CONST.LOG_CHANNELS["MOD"]
+        self.mod_log_embed_color = CONST.COLORS["RED"]
+        self.mod_log_embed_icon = CONST.ICONS["SUCCESS"]
 
-async def send_embed_to_mod_log(
-    ctx: commands.Context[commands.Bot],
-    mod_log_channel_id: int,
-    embed: discord.Embed,
-) -> None:
-    if (
-        ctx.guild
-        and (mod_log_channel := ctx.guild.get_channel(mod_log_channel_id))
-        and isinstance(mod_log_channel, discord.TextChannel)
-    ):
-        await mod_log_channel.send(embed=embed)
+    async def create_modlog_embed(
+        self,
+        ctx: commands.Context[commands.Bot],
+        case_number: int,
+        action: str,
+        moderator: discord.Member,
+        target: discord.Member,
+        reason: str,
+        duration: str | None = None,
+    ) -> discord.Embed:
+        embed = discord.Embed()
+        embed.color = self.mod_log_embed_color
+        author_name = f"Case #{case_number} | {action} ({duration})" if duration else f"Case #{case_number} | {action}"
+        embed.set_author(name=author_name, icon_url=self.mod_log_embed_icon)
+        embed.add_field(name="Moderator", value=f"__{moderator.name}__\n`{moderator.id}`", inline=True)
+        embed.add_field(name="Target", value=f"__{target.name}__\n`{target.id}`", inline=True)
+        embed.add_field(name="Reason", value=f"> {reason}")
+        footer = create_embed_footer(ctx)
+        embed.set_footer(text=footer[0], icon_url=footer[1])
+        embed.timestamp = ctx.message.created_at
+        return embed
 
+    async def send_modlog_embed(
+        self,
+        ctx: commands.Context[commands.Bot],
+        embed: discord.Embed,
+    ) -> None:
+        if (
+            ctx.guild
+            and (mod_log_channel := ctx.guild.get_channel(self.mod_log_channel_id))
+            and isinstance(mod_log_channel, discord.TextChannel)
+        ):
+            await mod_log_channel.send(embed=embed)
 
-def create_mod_log_embed(
-    ctx: commands.Context[commands.Bot],
-    title: str,
-    color: int | discord.Color,
-    author_icon_url: str = CONST.ICONS["SUCCESS"],
-) -> discord.Embed:
-    embed = EmbedCreator.create_embed(ctx, title=title)
-    embed.color = color
-    embed.set_author(name=title, icon_url=author_icon_url)
-    return embed
+    async def send_command_response(
+        self,
+        ctx: commands.Context[commands.Bot],
+        embed: discord.Embed,
+    ) -> None:
+        await ctx.reply(embed=embed, delete_after=5)
 
-
-async def insert_user_and_moderator(
-    target: discord.Member, ctx: commands.Context[commands.Bot]
-) -> tuple[User, User] | None:
-    if ctx.guild:
-        target_record = await db_controller.users.insert_user(
-            user_id=target.id, user_name=target.name, guild_id=ctx.guild.id
-        )
-        moderator_record = await db_controller.users.insert_user(
-            user_id=ctx.author.id,
-            user_name=ctx.author.name,
-            guild_id=ctx.guild.id,
-        )
-        return target_record, moderator_record
-    return None
-
-
-async def insert_case(
-    target: discord.Member, ctx: commands.Context[commands.Bot], case_type: CaseType, reason: str
-) -> Case | None:
-    if ctx.guild:
-        return await db_controller.cases.insert_case(
-            guild_id=ctx.guild.id,
-            case_user_id=target.id,
-            case_moderator_id=ctx.author.id,
-            case_type=case_type,
-            case_reason=reason,
-        )
-    return None
-
-
-async def cleanup_failed_case(case: Case | None) -> None:
-    if case:
-        await db_controller.cases.delete_case_by_id(case.case_id)
+    async def insert_case(
+        self,
+        ctx: commands.Context[commands.Bot],
+        target: discord.Member,
+        case_type: CaseType,
+        reason: str,
+    ) -> Case | None:
+        if ctx.guild:
+            return await self.db_controller.cases.insert_case(
+                guild_id=ctx.guild.id,
+                case_target_id=target.id,
+                case_moderator_id=ctx.author.id,
+                case_type=case_type,
+                case_reason=reason,
+            )
+        return None

@@ -7,9 +7,7 @@ class Unload(commands.Cog):
         self.bot = bot
 
     @commands.has_guild_permissions(administrator=True)
-    @commands.command(
-        name="unload", description="Unloads an extension from the bot.", usage="unload <extension>"
-    )
+    @commands.command(name="unload", description="Unloads an extension from the bot.", usage="unload <extension>")
     async def unload(self, ctx: commands.Context[commands.Bot], *, ext: str) -> None:
         """
         Unloads an extension from the bot.

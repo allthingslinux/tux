@@ -64,9 +64,9 @@ class RemindMe(commands.Cog):
 
             except discord.Forbidden:
                 # Send a message in the channel if the user has DMs closed
-                channel: (
-                    discord.abc.GuildChannel | discord.Thread | discord.abc.PrivateChannel | None
-                ) = self.bot.get_channel(reminder.channel_id)
+                channel: discord.abc.GuildChannel | discord.Thread | discord.abc.PrivateChannel | None = (
+                    self.bot.get_channel(reminder.channel_id)
+                )
 
                 if channel is not None and isinstance(
                     channel, discord.TextChannel | discord.Thread | discord.VoiceChannel
@@ -78,9 +78,7 @@ class RemindMe(commands.Cog):
                         )
 
                 else:
-                    logger.error(
-                        f"Failed to send reminder to {user.id}, DMs closed and channel not found."
-                    )
+                    logger.error(f"Failed to send reminder to {user.id}, DMs closed and channel not found.")
 
         else:
             logger.error(f"Failed to send reminder to {reminder.user_id}, user not found.")
@@ -134,9 +132,7 @@ class RemindMe(commands.Cog):
         # Create a task to wait until the reminder expires
         self.bot.loop.create_task(self.end_timer(closest_reminder))
 
-    @app_commands.command(
-        name="remindme", description="Reminds you after a certain amount of time."
-    )
+    @app_commands.command(name="remindme", description="Reminds you after a certain amount of time.")
     async def remindme(self, interaction: discord.Interaction, time: str, *, reminder: str) -> None:
         """
         Set a reminder for a certain amount of time.

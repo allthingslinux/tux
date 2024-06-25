@@ -168,9 +168,7 @@ class Git(commands.Cog):
             logger.error(f"Error creating comment: {e}")
 
         else:
-            await interaction.followup.send(
-                embed=embed, view=LinkButton(created_issue_comment.html_url)
-            )
+            await interaction.followup.send(embed=embed, view=LinkButton(created_issue_comment.html_url))
             logger.info(f"{interaction.user} created a comment.")
 
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
@@ -323,9 +321,7 @@ class Git(commands.Cog):
         else:
             await interaction.followup.send(
                 embed=embed,
-                view=LinkButton(
-                    "https://github.com/allthingslinux/tux/issues?q=is%3Aissue+is%3Aclosed"
-                ),
+                view=LinkButton("https://github.com/allthingslinux/tux/issues?q=is%3Aissue+is%3Aclosed"),
             )
             logger.info(f"{interaction.user} fetched closed issues.")
 

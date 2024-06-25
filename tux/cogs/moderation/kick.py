@@ -205,9 +205,7 @@ class Kick(commands.Cog):
     @app_commands.checks.has_any_role("Root", "Admin", "Sr. Mod", "Mod")
     @app_commands.command(name="kick", description="Issues a kick to a member of the server.")
     @app_commands.describe(member="The member to kick", reason="The reason for issuing the kick")
-    async def kick(
-        self, interaction: discord.Interaction, member: discord.Member, reason: str | None = None
-    ) -> None:
+    async def kick(self, interaction: discord.Interaction, member: discord.Member, reason: str | None = None) -> None:
         """
         Issues a kick to a member of the server.
 

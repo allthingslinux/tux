@@ -11,13 +11,9 @@ class Purge(commands.Cog):
         self.bot = bot
 
     @app_commands.checks.has_any_role("Root", "Admin", "Sr. Mod", "Mod")
-    @app_commands.command(
-        name="purge", description="Deletes a set number of messages in a channel."
-    )
+    @app_commands.command(name="purge", description="Deletes a set number of messages in a channel.")
     @app_commands.describe(number_messages="The number of messages to be purged.")
-    async def purge_messages(
-        self, interaction: discord.Interaction, number_messages: int = 10
-    ) -> None:
+    async def purge_messages(self, interaction: discord.Interaction, number_messages: int = 10) -> None:
         """
         Deletes a set number of messages in a channel.
 
@@ -56,9 +52,7 @@ class Purge(commands.Cog):
                 interaction=interaction,
             )
 
-            logger.info(
-                f"{interaction.user} purged {len(deleted)} messages from {interaction.channel.name}"
-            )
+            logger.info(f"{interaction.user} purged {len(deleted)} messages from {interaction.channel.name}")
 
             await interaction.edit_original_response(embed=embed)
 

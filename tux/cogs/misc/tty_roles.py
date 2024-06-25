@@ -25,9 +25,7 @@ class TtyRoles(commands.Cog):
 
         role_name = self.compute_role_name(user_count)
 
-        role = self.get_role_by_name(member, role_name) or await self.try_create_role(
-            member, role_name
-        )
+        role = self.get_role_by_name(member, role_name) or await self.try_create_role(member, role_name)
 
         if role:
             await self.try_assign_role(member, role)

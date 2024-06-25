@@ -43,9 +43,7 @@ class Constants:
     GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
     GITHUB_PUBLIC_KEY = os.getenv("GITHUB_PUBLIC_KEY")
     GITHUB_INSTALLATION_ID: Final[int] = int(os.getenv("GITHUB_INSTALLATION_ID", 0))
-    GITHUB_PRIVATE_KEY: str = base64.b64decode(os.getenv("GITHUB_PRIVATE_KEY_BASE64", "")).decode(
-        "utf-8"
-    )
+    GITHUB_PRIVATE_KEY: str = base64.b64decode(os.getenv("GITHUB_PRIVATE_KEY_BASE64", "")).decode("utf-8")
 
     # Channel constants
     prod_log_channels: Final[dict[str, int]] = config["PROD_LOG_CHANNELS"]

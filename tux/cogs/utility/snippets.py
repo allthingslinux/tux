@@ -38,9 +38,7 @@ class Snippets(commands.Cog):
             await ctx.send("This command cannot be used in direct messages.")
             return
 
-        snippets: list[SnippetsModel] = await self.db_controller.get_all_snippets_sorted(
-            newestfirst=True
-        )
+        snippets: list[SnippetsModel] = await self.db_controller.get_all_snippets_sorted(newestfirst=True)
 
         # remove snippets that are not in the current server
         snippets = [snippet for snippet in snippets if snippet.server_id == ctx.guild.id]
@@ -50,17 +48,13 @@ class Snippets(commands.Cog):
 
         # If there are no snippets, send an error message
         if not snippets:
-            embed = EmbedCreator.create_error_embed(
-                title="Error", description="No snippets found.", ctx=ctx
-            )
+            embed = EmbedCreator.create_error_embed(title="Error", description="No snippets found.", ctx=ctx)
             await ctx.send(embed=embed)
             return
 
         # If the page number is invalid, send an error message
         if page < 1 or page > pages:
-            embed = EmbedCreator.create_error_embed(
-                title="Error", description="Invalid page number.", ctx=ctx
-            )
+            embed = EmbedCreator.create_error_embed(title="Error", description="Invalid page number.", ctx=ctx)
             await ctx.send(embed=embed)
             return
 
@@ -85,9 +79,7 @@ class Snippets(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(
-        name="deletesnippet", usage="$ds <name>", description="Delete a snippet.", aliases=["ds"]
-    )
+    @commands.command(name="deletesnippet", usage="$ds <name>", description="Delete a snippet.", aliases=["ds"])
     async def delete_snippet(self, ctx: commands.Context[commands.Bot], name: str) -> None:
         """
         Delete a snippet.
@@ -107,9 +99,7 @@ class Snippets(commands.Cog):
         snippet = await self.db_controller.get_snippet_by_name_in_server(name, ctx.guild.id)
 
         if snippet is None:
-            embed = EmbedCreator.create_error_embed(
-                title="Error", description="Snippet not found.", ctx=ctx
-            )
+            embed = EmbedCreator.create_error_embed(title="Error", description="Snippet not found.", ctx=ctx)
             await ctx.send(embed=embed)
             return
 
@@ -127,9 +117,7 @@ class Snippets(commands.Cog):
         await ctx.send("Snippet deleted.")
         logger.info(f"{ctx.author} deleted the snippet with the name {name}.")
 
-    @commands.command(
-        name="snippet", usage="$s <name>", description="Get a snippet.", aliases=["s"]
-    )
+    @commands.command(name="snippet", usage="$s <name>", description="Get a snippet.", aliases=["s"])
     async def get_snippet(self, ctx: commands.Context[commands.Bot], name: str) -> None:
         """
         Get a snippet.
@@ -149,9 +137,7 @@ class Snippets(commands.Cog):
         snippet = await self.db_controller.get_snippet_by_name_in_server(name, ctx.guild.id)
 
         if snippet is None:
-            embed = EmbedCreator.create_error_embed(
-                title="Error", description="Snippet not found.", ctx=ctx
-            )
+            embed = EmbedCreator.create_error_embed(title="Error", description="Snippet not found.", ctx=ctx)
             await ctx.send(embed=embed)
             return
 
@@ -186,9 +172,7 @@ class Snippets(commands.Cog):
         snippet = await self.db_controller.get_snippet_by_name_in_server(name, ctx.guild.id)
 
         if snippet is None:
-            embed = EmbedCreator.create_error_embed(
-                title="Error", description="Snippet not found.", ctx=ctx
-            )
+            embed = EmbedCreator.create_error_embed(title="Error", description="Snippet not found.", ctx=ctx)
             await ctx.send(embed=embed)
             return
 
@@ -248,9 +232,7 @@ class Snippets(commands.Cog):
 
         # Check if the snippet already exists
         if await self.db_controller.get_snippet_by_name_in_server(name, server_id) is not None:
-            embed = EmbedCreator.create_error_embed(
-                title="Error", description="Snippet already exists.", ctx=ctx
-            )
+            embed = EmbedCreator.create_error_embed(title="Error", description="Snippet already exists.", ctx=ctx)
             await ctx.send(embed=embed)
             return
 

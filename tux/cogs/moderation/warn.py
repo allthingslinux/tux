@@ -100,9 +100,7 @@ class Warn(commands.Cog):
     @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod", "Jr. Mod")
     @app_commands.command(name="warn", description="Issues a warning to a member of the server.")
     @app_commands.describe(member="The member to warn", reason="The reason for issuing the warning")
-    async def warn(
-        self, interaction: discord.Interaction, member: discord.Member, reason: str | None = None
-    ) -> None:
+    async def warn(self, interaction: discord.Interaction, member: discord.Member, reason: str | None = None) -> None:
         """
         Issues a warning to a member of the server.
 

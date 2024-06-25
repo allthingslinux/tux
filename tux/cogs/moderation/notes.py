@@ -99,9 +99,7 @@ class NotesCog(commands.Cog):
 
         return embed
 
-    async def delete_note_by_id(
-        self, interaction: discord.Interaction, note_id: int
-    ) -> discord.Embed:
+    async def delete_note_by_id(self, interaction: discord.Interaction, note_id: int) -> discord.Embed:
         note: Notes | None = await self.db_controller.notes.get_note_by_id(note_id)
 
         if not note:
@@ -116,9 +114,7 @@ class NotesCog(commands.Cog):
             interaction=interaction,
         )
 
-        member: discord.Member | None = (
-            interaction.guild.get_member(note.user_id) if interaction.guild else None
-        )
+        member: discord.Member | None = interaction.guild.get_member(note.user_id) if interaction.guild else None
         moderator: discord.Member | None = (
             interaction.guild.get_member(note.moderator_id) if interaction.guild else None
         )
@@ -133,21 +129,15 @@ class NotesCog(commands.Cog):
         )
 
         embed.add_field(name="Member", value=f"- {member_name}\n`{note.user_id}`", inline=True)
-        embed.add_field(
-            name="Moderator", value=f"- {moderator_name}\n`{note.moderator_id}`", inline=True
-        )
+        embed.add_field(name="Moderator", value=f"- {moderator_name}\n`{note.moderator_id}`", inline=True)
         embed.add_field(name="Original Content", value=f"> {deleted_content}", inline=False)
-        embed.add_field(
-            name="Created At", value=f"{datetime_to_unix(note.created_at)}", inline=False
-        )
+        embed.add_field(name="Created At", value=f"{datetime_to_unix(note.created_at)}", inline=False)
 
         logger.info(f"Note ID {note_id} deleted by {interaction.user.display_name}.")
 
         return embed
 
-    async def update_note_by_id(
-        self, interaction: discord.Interaction, note_id: int, content: str
-    ) -> discord.Embed:
+    async def update_note_by_id(self, interaction: discord.Interaction, note_id: int, content: str) -> discord.Embed:
         note: Notes | None = await self.db_controller.notes.get_note_by_id(note_id)
 
         if not note:
@@ -162,9 +152,7 @@ class NotesCog(commands.Cog):
             interaction=interaction,
         )
 
-        member: discord.Member | None = (
-            interaction.guild.get_member(note.user_id) if interaction.guild else None
-        )
+        member: discord.Member | None = interaction.guild.get_member(note.user_id) if interaction.guild else None
 
         moderator: discord.Member | None = (
             interaction.guild.get_member(note.moderator_id) if interaction.guild else None
@@ -181,9 +169,7 @@ class NotesCog(commands.Cog):
         )
 
         embed.add_field(name="Member", value=f"- {member_name}\n`{note.user_id}`", inline=True)
-        embed.add_field(
-            name="Moderator", value=f"- {moderator_name}\n`{note.moderator_id}`", inline=True
-        )
+        embed.add_field(name="Moderator", value=f"- {moderator_name}\n`{note.moderator_id}`", inline=True)
         embed.add_field(name="Previous Content", value=f"> {old_content}", inline=False)
         embed.add_field(name="Updated Content", value=f"> {new_content}", inline=False)
 
@@ -191,9 +177,7 @@ class NotesCog(commands.Cog):
 
         return embed
 
-    async def view_note_by_id(
-        self, interaction: discord.Interaction, note_id: int
-    ) -> discord.Embed:
+    async def view_note_by_id(self, interaction: discord.Interaction, note_id: int) -> discord.Embed:
         note: Notes | None = await self.db_controller.notes.get_note_by_id(note_id)
 
         if not note:
@@ -211,9 +195,7 @@ class NotesCog(commands.Cog):
         )
         moderator_name: str = moderator.display_name if moderator else "Unknown"
 
-        member: discord.Member | None = (
-            interaction.guild.get_member(note.user_id) if interaction.guild else None
-        )
+        member: discord.Member | None = interaction.guild.get_member(note.user_id) if interaction.guild else None
 
         member_name: str = member.display_name if member else "Unknown"
         note_content: str = note.content
@@ -224,22 +206,16 @@ class NotesCog(commands.Cog):
         )
 
         embed.add_field(name="Member", value=f"- {member_name}\n`{note.user_id}`", inline=True)
-        embed.add_field(
-            name="Moderator", value=f"- {moderator_name}\n`{note.moderator_id}`", inline=True
-        )
+        embed.add_field(name="Moderator", value=f"- {moderator_name}\n`{note.moderator_id}`", inline=True)
         embed.add_field(name="Content", value=f"> {note_content}", inline=False)
 
-        embed.add_field(
-            name="Created At", value=f"{datetime_to_unix(note.created_at)}", inline=False
-        )
+        embed.add_field(name="Created At", value=f"{datetime_to_unix(note.created_at)}", inline=False)
 
         logger.info(f"Note ID {note_id} viewed by {interaction.user.display_name}.")
 
         return embed
 
-    async def list_notes(
-        self, interaction: discord.Interaction, member: discord.Member
-    ) -> discord.Embed:
+    async def list_notes(self, interaction: discord.Interaction, member: discord.Member) -> discord.Embed:
         notes: list[Notes] = await self.db_controller.notes.get_notes_by_user_id(member.id)
 
         description = "\n".join(
@@ -255,9 +231,7 @@ class NotesCog(commands.Cog):
             interaction=interaction,
         )
 
-        logger.info(
-            f"Listed all notes for {member.display_name} by {interaction.user.display_name}."
-        )
+        logger.info(f"Listed all notes for {member.display_name} by {interaction.user.display_name}.")
 
         return embed
 
@@ -281,9 +255,7 @@ class NotesCog(commands.Cog):
 
         embed.add_field(name="Total Notes", value=f"`{len(notes)}`", inline=True)
 
-        logger.info(
-            f"Listed all notes for {moderator.display_name} by {interaction.user.display_name}."
-        )
+        logger.info(f"Listed all notes for {moderator.display_name} by {interaction.user.display_name}.")
 
         return embed
 
@@ -327,9 +299,7 @@ class NotesCog(commands.Cog):
 
             logger.error(msg)
 
-        await interaction.response.send_message(
-            message, embed=embed, allowed_mentions=discord.AllowedMentions.none()
-        )
+        await interaction.response.send_message(message, embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
     @app_commands.checks.has_any_role("Admin", "Sr. Mod", "Mod", "Jr. Mod")
     @group.command(name="delete", description="Deletes a note by ID.")

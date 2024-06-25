@@ -258,15 +258,11 @@ class Run(commands.Cog):
 
         msg = await ctx.send("<a:typing:1236671731859722270>")
 
-        (filtered_output, gen_one, normalized_lang) = await self.generalized_code_executor(
-            ctx, compiler_map, code
-        )
+        (filtered_output, gen_one, normalized_lang) = await self.generalized_code_executor(ctx, compiler_map, code)
         await msg.delete()
         if filtered_output == "" and gen_one == "" and normalized_lang == "":
             return
-        await self.send_embedded_reply(
-            ctx, gen_one, self.remove_ansi(filtered_output), normalized_lang
-        )
+        await self.send_embedded_reply(ctx, gen_one, self.remove_ansi(filtered_output), normalized_lang)
 
     @run.error
     async def run_error(self, ctx: commands.Context[commands.Bot], error: Exception):
@@ -287,9 +283,7 @@ class Run(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             desc = f"Missing required argument: `{error.param.name}`"
 
-        embed = EmbedCreator.create_error_embed(
-            title="Fatal exception occurred!", description=str(desc), ctx=ctx
-        )
+        embed = EmbedCreator.create_error_embed(title="Fatal exception occurred!", description=str(desc), ctx=ctx)
 
         await ctx.send(embed=embed)
 

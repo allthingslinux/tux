@@ -45,9 +45,7 @@ class Guide(commands.Cog):
         guild = interaction.guild
 
         if not guild:
-            await interaction.response.send_message(
-                "This command can only be used in a server.", ephemeral=True
-            )
+            await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
             return
 
         embed = EmbedCreator.create_info_embed(

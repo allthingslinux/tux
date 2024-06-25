@@ -74,7 +74,7 @@ exclude = [
 ]
 
 indent-width = 4
-line-length = 100
+line-length = 120
 target-version = "py312"
 
 # Ruff Linting Configuration
@@ -111,7 +111,7 @@ unfixable = []
 docstring-code-format = true
 docstring-code-line-length = "dynamic"
 indent-style = "space"
-line-ending = "auto"
+line-ending = "lf"
 quote-style = "double"
 skip-magic-trailing-comma = false
 

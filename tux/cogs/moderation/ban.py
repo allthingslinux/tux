@@ -17,9 +17,7 @@ from . import (
 mod_log_channel_id = CONST.LOG_CHANNELS["MOD"]
 
 
-async def ban_user(
-    ctx: commands.Context[commands.Bot], target: discord.Member, flags: BanFlags
-) -> None:
+async def ban_user(ctx: commands.Context[commands.Bot], target: discord.Member, flags: BanFlags) -> None:
     case = None
     try:
         await insert_user_and_moderator(target, ctx)
@@ -36,63 +34,47 @@ async def ban_user(
 
     if banned:
         embed = create_mod_log_embed(
-            ctx,
-            f"Case #{case.case_number if case else 'N/A'} - Ban Added",
-            CONST.COLORS["RED"],
+            ctx, f"Case #{case.case_number if case else 'N/A'} - Ban Added", CONST.COLORS["RED"]
         )
 
-        embed.add_field(
-            name="Moderator", value=f"__{ctx.author.name}__\n`{ctx.author.id}`", inline=True
-        )
+        embed.add_field(name="Moderator", value=f"__{ctx.author.name}__\n`{ctx.author.id}`", inline=True)
+
         embed.add_field(
             name="Target",
             value=f"{'📬' if dm_sent else ''} __{target.name}__\n`{target.id}`",
             inline=True,
         )
-        embed.add_field(
-            name="Reason",
-            value=f"> {flags.reason}",
-        )
+
+        embed.add_field(name="Reason", value=f"> {flags.reason}")
 
         await send_embed_to_mod_log(ctx, mod_log_channel_id, embed)
 
-        await send_temporary_message(
-            ctx, f"{target.name} has been banned for the following reason: {flags.reason}"
-        )
+        await send_temporary_message(ctx, f"{target.name} has been banned for the following reason: {flags.reason}")
 
     else:
         await cleanup_failed_case(case)
 
-        await send_temporary_message(
-            ctx, f"Failed to ban {target.name} for the following reason: {flags.reason}"
-        )
+        await send_temporary_message(ctx, f"Failed to ban {target.name} for the following reason: {flags.reason}")
 
 
-async def dm_user(
-    ctx: commands.Context[commands.Bot], target: discord.Member, message: str
-) -> bool:
+async def dm_user(ctx: commands.Context[commands.Bot], target: discord.Member, message: str) -> bool:
     try:
         await target.send(message)
-        return True
+        dm_sent = True
+    except discord.Forbidden:
+        await send_temporary_message(ctx, f"Failed to send a DM to {target.name} regarding the ban.")
+        dm_sent = False
+    return dm_sent
 
-    except (discord.Forbidden, discord.HTTPException):
-        await send_temporary_message(ctx, f"Failed to DM {target.name}")
 
-        return False
-
-
-async def perform_ban(
-    ctx: commands.Context[commands.Bot], target: discord.Member, flags: BanFlags
-) -> bool:
+async def perform_ban(ctx: commands.Context[commands.Bot], target: discord.Member, flags: BanFlags) -> bool:
     try:
         await target.ban(reason=flags.reason, delete_message_days=flags.purge_days)
-        return True
-
+        banned = True
     except (discord.Forbidden, discord.HTTPException):
-        await send_temporary_message(
-            ctx, f"Failed to ban {target.name} for the following reason: {flags.reason}"
-        )
-        return False
+        await send_temporary_message(ctx, f"Failed to ban {target.name} for the following reason: {flags.reason}")
+        banned = False
+    return banned
 
 
 class Ban(commands.Cog):
@@ -105,13 +87,7 @@ class Ban(commands.Cog):
         aliases=["b"],
         usage="$ban @member -r foo -p 7",
     )
-    async def ban(
-        self,
-        ctx: commands.Context[commands.Bot],
-        target: discord.Member,
-        *,
-        flags: BanFlags,
-    ) -> None:
+    async def ban(self, ctx: commands.Context[commands.Bot], target: discord.Member, *, flags: BanFlags) -> None:
         if not ctx.guild:
             return
 

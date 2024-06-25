@@ -53,9 +53,7 @@ class Neofetch(commands.Cog):
 ⠀⠀⠀⠀⠀⠀⠈⠑⠒⠶⠬⠞⠊⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⠢⣆⣑⡬⠖⠋⠀⠀⠀⠀⠀⠀"""
 
         # get uptime in the format of days, hours, minutes
-        uptime = time.strftime(
-            "%d days, %H hours, %M minutes", time.gmtime(time.time() - psutil.boot_time())
-        )
+        uptime = time.strftime("%d days, %H hours, %M minutes", time.gmtime(time.time() - psutil.boot_time()))
         cpuusage = psutil.cpu_percent()
         memusage = psutil.virtual_memory().percent
 
@@ -80,12 +78,7 @@ class Neofetch(commands.Cog):
 """
 
         fetch = (
-            "\n".join(
-                [
-                    f"{base.splitlines()[i]}  {lines.splitlines()[i]}"
-                    for i in range(len(lines.splitlines()))
-                ]
-            )
+            "\n".join([f"{base.splitlines()[i]}  {lines.splitlines()[i]}" for i in range(len(lines.splitlines()))])
             + "\n"
             + "\n".join(base.splitlines()[len(lines.splitlines()) :])
         )

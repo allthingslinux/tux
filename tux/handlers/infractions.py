@@ -57,9 +57,7 @@ async def temp_ban_member(member: discord.Member, reason: str, purge_days: int |
     await member.ban(reason=reason, delete_message_days=purge_days or 0)
 
 
-async def log_to_discord(
-    ctx: commands.Context[commands.Bot], infraction: Infractions | None
-) -> None:
+async def log_to_discord(ctx: commands.Context[commands.Bot], infraction: Infractions | None) -> None:
     if not infraction:
         return
     await ctx.send(f"Infraction logged: {infraction.id}")

@@ -137,11 +137,7 @@ class Db(commands.Cog):
             for member in batch:
                 role_ids: list[int] = [role.id for role in member.roles]
 
-                tasks.append(
-                    self.db_controller.user_roles.sync_user_roles(
-                        user_id=member.id, role_ids=role_ids
-                    )
-                )
+                tasks.append(self.db_controller.user_roles.sync_user_roles(user_id=member.id, role_ids=role_ids))
 
             await asyncio.gather(*tasks)
             await asyncio.sleep(1)
