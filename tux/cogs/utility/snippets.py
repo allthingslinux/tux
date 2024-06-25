@@ -53,7 +53,7 @@ class Snippets(commands.Cog):
             embed = EmbedCreator.create_error_embed(
                 title="Error", description="No snippets found.", ctx=ctx
             )
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed, delete_after=5)
             return
 
         # If the page number is invalid, send an error message
@@ -110,7 +110,7 @@ class Snippets(commands.Cog):
             embed = EmbedCreator.create_error_embed(
                 title="Error", description="Snippet not found.", ctx=ctx
             )
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed, delete_after=5)
             return
 
         # Check if the author of the snippet is the same as the user who wants to delete it and if theres no author don't allow deletion
@@ -152,7 +152,7 @@ class Snippets(commands.Cog):
             embed = EmbedCreator.create_error_embed(
                 title="Error", description="Snippet not found.", ctx=ctx
             )
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed, delete_after=5)
             return
 
         text = f"`/snippets/{snippet.name}.txt` || {snippet.content}"
@@ -187,7 +187,7 @@ class Snippets(commands.Cog):
             embed = EmbedCreator.create_error_embed(
                 title="Error", description="Snippet not found.", ctx=ctx
             )
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed, delete_after=5)
             return
 
         author = self.bot.get_user(snippet.author_id) or ctx.author
