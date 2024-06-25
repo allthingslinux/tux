@@ -7,7 +7,10 @@ harmful_command_pattern = r"(?:sudo\s+|doas\s+|run0\s+)?rm\s+(-[frR]*|--force|--
 
 
 def is_harmful(command: str) -> bool:
-    return re.search(harmful_command_pattern, command) is not None
+    first_test: bool = re.search(harmful_command_pattern, command) is not None
+    second_test: bool = re.search(r"rm.{0,5}[rfRF]", command) is not None
+
+    return first_test and second_test
 
 
 class AutoRespond(commands.Cog):
