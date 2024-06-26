@@ -53,7 +53,7 @@ class Mail(commands.Cog):
             api_path = "/add/mailbox"
             api_endpoint = self.api_url + api_path
 
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 try:
                     response = await client.post(
                         api_endpoint, headers=self.headers, json=mailbox_data
@@ -96,9 +96,16 @@ After changing, you can also set up your mailbox on your mobile device or email 
 If you have any questions or need assistance, please feel free to reach out to the server staff. Enjoy your new mailbox! 📬
                         """
 
-                        await member.send(
-                            f"Hello {member.mention},\n{dm_message.strip()}", suppress_embeds=True
-                        )
+                        try:
+                            await member.send(
+                                f"Hello {member.mention},\n{dm_message.strip()}",
+                                suppress_embeds=True,
+                            )
+                        except discord.Forbidden:
+                            await interaction.response.send_message(
+                                f"Failed to send a DM to {member.mention}. Please enable DMs from server members.",
+                                ephemeral=True,
+                            )
 
                     elif response.status_code == 401:
                         await interaction.response.send_message(
