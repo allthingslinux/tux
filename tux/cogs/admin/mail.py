@@ -96,7 +96,12 @@ After changing, you can also set up your mailbox on your mobile device or email 
 If you have any questions or need assistance, please feel free to reach out to the server staff. Enjoy your new mailbox! 📬
                         """
 
-                        await member.send(
+                        try:
+                            await member.send(
+                                f"Hello {member.mention},\n{dm_message.strip()}", suppress_embeds=True
+                            )
+                        except discord.Forbidden:
+                            await ctx.send(f"{member.mention}, I couldn't send you a DM. Please check your DM settings.")
                             f"Hello {member.mention},\n{dm_message.strip()}", suppress_embeds=True
                         )
 
