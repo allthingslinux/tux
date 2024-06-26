@@ -38,6 +38,12 @@ class Mail(commands.Cog):
     async def register(
         self, interaction: discord.Interaction, member: discord.Member, username: str
     ) -> None:
+        if not username.isalnum():
+            await interaction.response.send_message(
+                "Username must be alphanumeric and contain no spaces.", ephemeral=True
+            )
+            return
+
         if interaction.guild:
             mailbox_data = self.default_options.copy()
             mailbox_data["local_part"] = username
