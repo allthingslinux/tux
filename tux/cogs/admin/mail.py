@@ -1,3 +1,5 @@
+import random
+
 import discord
 import httpx
 from discord import app_commands
@@ -20,8 +22,8 @@ class Mail(commands.Cog):
         self.default_options = {
             "active": "1",
             "domain": "atl.tools",
-            "password": "changeme1234!",
-            "password2": "changeme1234!",
+            "password": "ErrorPleaseReportThis",
+            "password2": "ErrorPleaseReportThis",
             "quota": "3072",
             "force_pw_update": "1",
             "tls_enforce_in": "0",
@@ -40,6 +42,20 @@ class Mail(commands.Cog):
             mailbox_data = self.default_options.copy()
             mailbox_data["local_part"] = username
             mailbox_data["name"] = username
+
+            # Generate 6 random numbers
+            password = "changeme"
+            for _ in range(6):
+                password += str(random.randint(0, 9))
+
+            # Generate 4 random special characters
+            special_chars = "!@#$%^&*"
+            for _ in range(4):
+                password += random.choice(special_chars)
+
+            mailbox_data["password"] = password
+            mailbox_data["password2"] = password
+
             # Ensure tags are copied correctly and member ID is added
             tags = (
                 self.default_options["tags"]
@@ -87,7 +103,7 @@ class Mail(commands.Cog):
 
 **Email Address**: `{mailbox_info}`
 **Access Mailbox**: [mail.atl.tools](https://mail.atl.tools)
-**Default Password**: `changeme1234!`
+**Default Password**: ||`{password}`||
 
 **Please change your password after logging in for the first time.**
 
