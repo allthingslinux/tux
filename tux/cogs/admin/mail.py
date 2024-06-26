@@ -53,7 +53,7 @@ class Mail(commands.Cog):
             api_path = "/add/mailbox"
             api_endpoint = self.api_url + api_path
 
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 try:
                     response = await client.post(
                         api_endpoint, headers=self.headers, json=mailbox_data
