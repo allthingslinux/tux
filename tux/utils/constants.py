@@ -45,6 +45,10 @@ class Constants:
         "utf-8"
     )
 
+    # Mailcow constants
+    MAILCOW_API_KEY: Final[str] = os.getenv("MAILCOW_API_KEY", "")
+    MAILCOW_API_URL: Final[str] = os.getenv("MAILCOW_API_URL", "")
+
     # Channel constants
     LOG_CHANNELS: Final[dict[str, int]] = config["LOG_CHANNELS"].copy()
     if DEV and DEV.lower() == "true":
