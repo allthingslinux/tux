@@ -316,7 +316,7 @@ class Console:
         except discord.HTTPException as e:
             logger.error(f"Failed to send message: {e}")
 
-    async def build_embed(self) -> None:
+    async def build_embed(self, command: str) -> None:
         title = await self.get_input("Title: ")
         description = ""
         while True:
@@ -340,7 +340,7 @@ class Console:
 
         await channel.send(embed=embed)
 
-    async def set_status(self) -> None:
+    async def set_status(self, command: str) -> None:
         status_type = await self.get_input(
             "Status type (watching, listening, playing, streaming): "
         )
