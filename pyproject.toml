@@ -28,7 +28,7 @@ python = ">=3.12,<4"
 python-dotenv = "^1.0.1"
 rsa = "^4.9"
 ruff = "^0.4.0"
-sentry-sdk = "^2.0.0"
+sentry-sdk = {extras = ["httpx", "loguru"], version = "^2.7.0"}
 vulture = "^2.11"
 
 [tool.poetry.scripts]
