@@ -7,28 +7,28 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
-from prisma.models import Reminders
+from prisma.models import Reminder
 from tux.database.controllers import DatabaseController
 from tux.utils.embeds import EmbedCreator
 from tux.utils.functions import convert_to_seconds
 
 
-def get_closest_reminder(reminders: list[Reminders]) -> Reminders | None:
+def get_closest_reminder(reminders: list[Reminder]) -> Reminder | None:
     """
     Check if there are any reminders and return the closest one.
 
 
     Parameters
     ----------
-    reminders : list[Reminders]
+    reminders : list[Reminder]
         A list of reminders to check.
 
     Returns
     -------
-    Reminders | None
+    Reminder | None
         The closest reminder or None if there are no reminders.
     """
-    return min(reminders, key=lambda x: x.expires_at) if reminders else None
+    return min(reminders, key=lambda x: x.reminder_expires_at) if reminders else None
 
 
 class RemindMe(commands.Cog):
@@ -37,17 +37,17 @@ class RemindMe(commands.Cog):
         self.db_controller = DatabaseController()
         self.bot.loop.create_task(self.update())
 
-    async def send_reminders(self, reminder: Reminders) -> None:
+    async def send_reminders(self, reminder: Reminder) -> None:
         """
         Send the reminder to the user.
 
         Parameters
         ----------
-        reminder : Reminders
+        reminder : Reminder
             The reminder object.
         """
 
-        user = self.bot.get_user(reminder.user_id)
+        user = self.bot.get_user(reminder.reminder_user_id)
 
         if user is not None:
             embed = EmbedCreator.custom_footer_embed(
@@ -56,7 +56,7 @@ class RemindMe(commands.Cog):
                 state="SUCCESS",
                 user=user,
                 latency="N/A",
-                content=reminder.content,
+                content=reminder.reminder_content,
                 title="Reminder",
             )
 
@@ -67,7 +67,7 @@ class RemindMe(commands.Cog):
                 # Send a message in the channel if the user has DMs closed
                 channel: (
                     discord.abc.GuildChannel | discord.Thread | discord.abc.PrivateChannel | None
-                ) = self.bot.get_channel(reminder.channel_id)
+                ) = self.bot.get_channel(reminder.reminder_channel_id)
 
                 if channel is not None and isinstance(
                     channel, discord.TextChannel | discord.Thread | discord.VoiceChannel
@@ -84,10 +84,10 @@ class RemindMe(commands.Cog):
                     )
 
         else:
-            logger.error(f"Failed to send reminder to {reminder.user_id}, user not found.")
+            logger.error(f"Failed to send reminder to {reminder.reminder_user_id}, user not found.")
 
         # Delete the reminder after sending
-        await self.db_controller.reminders.delete_reminder(reminder.id)
+        await self.db_controller.reminders.delete_reminder_by_id(reminder.reminder_id)
 
         # wait for a second so that the reminder is deleted before checking for more reminders
         # who knows if this works, it seems to
@@ -96,18 +96,18 @@ class RemindMe(commands.Cog):
         # Run update again to check if there are any more reminders
         await self.update()
 
-    async def end_timer(self, reminder: Reminders) -> None:
+    async def end_timer(self, reminder: Reminder) -> None:
         """
         End the timer for the reminder.
 
         Parameters
         ----------
-        reminder : Reminders
+        reminder : Reminder
             The reminder object.
         """
 
         # Wait until the reminder expires
-        await discord.utils.sleep_until(reminder.expires_at)
+        await discord.utils.sleep_until(reminder.reminder_expires_at)
         await self.send_reminders(reminder)
 
     async def update(self) -> None:
@@ -132,7 +132,7 @@ class RemindMe(commands.Cog):
             return
 
         # Check if it's expired
-        if closest_reminder.expires_at < datetime.datetime.now(datetime.UTC):
+        if closest_reminder.reminder_expires_at < datetime.datetime.now(datetime.UTC):
             await self.send_reminders(closest_reminder)
             return
 
@@ -168,11 +168,11 @@ class RemindMe(commands.Cog):
         seconds = datetime.datetime.now(datetime.UTC) + datetime.timedelta(seconds=seconds)
 
         try:
-            await self.db_controller.reminders.create_reminder(
-                user_id=interaction.user.id,
+            await self.db_controller.reminders.insert_reminder(
+                reminder_user_id=interaction.user.id,
                 reminder_content=reminder,
-                expires_at=seconds,
-                channel_id=interaction.channel_id or 0,
+                reminder_expires_at=seconds,
+                reminder_channel_id=interaction.channel_id or 0,
                 guild_id=interaction.guild_id or 0,
             )
 

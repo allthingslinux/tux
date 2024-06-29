@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 
-from tux.database.controllers import DatabaseController
 from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import EmbedCreator
 from tux.utils.functions import datetime_to_elapsed_time, datetime_to_unix
@@ -10,17 +9,10 @@ from tux.utils.functions import datetime_to_elapsed_time, datetime_to_unix
 class GateLogging(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.db_controller = DatabaseController()
         self.gate_log_channel_id: int = CONST.LOG_CHANNELS["GATE"]
-        self.dev_log_channel_id: int = CONST.LOG_CHANNELS["DEV"]
 
     async def send_to_gate_log(self, embed: discord.Embed) -> None:
         channel = self.bot.get_channel(self.gate_log_channel_id)
-        if isinstance(channel, discord.TextChannel):
-            await channel.send(embed=embed)
-
-    async def send_to_dev_log(self, embed: discord.Embed) -> None:
-        channel = self.bot.get_channel(self.dev_log_channel_id)
         if isinstance(channel, discord.TextChannel):
             await channel.send(embed=embed)
 
@@ -50,25 +42,6 @@ class GateLogging(commands.Cog):
         gate_embed.set_thumbnail(url=member.display_avatar)
 
         await self.send_to_gate_log(gate_embed)
-
-        new_user = await self.db_controller.users.sync_user(
-            user_id=member.id,
-            name=member.name,
-            display_name=member.display_name,
-            mention=member.mention,
-            bot=member.bot,
-            created_at=member.created_at,
-            joined_at=member.joined_at,
-        )
-
-        log_embed = EmbedCreator.create_log_embed(
-            title="Database User Synced",
-            description=f"User {member.mention} (`{new_user.id}`) synced to database."
-            if new_user is not None
-            else f"User {member.mention} synced to database.",
-        )
-
-        await self.send_to_dev_log(log_embed)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member) -> None:

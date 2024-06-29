@@ -6,7 +6,7 @@ from discord import AllowedMentions
 from discord.ext import commands
 from loguru import logger
 
-from prisma.models import Snippets as SnippetsModel
+from prisma.models import Snippet
 from tux.database.controllers import DatabaseController
 from tux.utils.embeds import EmbedCreator
 
@@ -38,12 +38,10 @@ class Snippets(commands.Cog):
             await ctx.send("This command cannot be used in direct messages.")
             return
 
-        snippets: list[SnippetsModel] = await self.db_controller.get_all_snippets_sorted(
-            newestfirst=True
-        )
+        snippets: list[Snippet] = await self.db_controller.get_all_snippets_sorted(newestfirst=True)
 
         # remove snippets that are not in the current server
-        snippets = [snippet for snippet in snippets if snippet.server_id == ctx.guild.id]
+        snippets = [snippet for snippet in snippets if snippet.guild_id == ctx.guild.id]
 
         # Calculate the number of pages based on the number of snippets
         pages = 1 if len(snippets) <= 10 else len(snippets) // 10 + 1
@@ -75,7 +73,7 @@ class Snippets(commands.Cog):
             title="Snippets",
             description="\n".join(
                 [
-                    f"`{str(index + 1).zfill(2)}. {snippet.name.ljust(20)} | author: {self.bot.get_user(snippet.author_id) or 'Unknown'}`"
+                    f"`{str(index + 1).zfill(2)}. {snippet.snippet_name.ljust(20)} | author: {self.bot.get_user(snippet.snippet_user_id) or 'Unknown'}`"
                     for index, snippet in enumerate(snippets)
                 ]
             ),
@@ -104,7 +102,7 @@ class Snippets(commands.Cog):
             await ctx.send("This command cannot be used in direct messages.")
             return
 
-        snippet = await self.db_controller.get_snippet_by_name_in_server(name, ctx.guild.id)
+        snippet = await self.db_controller.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
             embed = EmbedCreator.create_error_embed(
@@ -114,7 +112,7 @@ class Snippets(commands.Cog):
             return
 
         # Check if the author of the snippet is the same as the user who wants to delete it and if theres no author don't allow deletion
-        author_id = snippet.author_id or 0
+        author_id = snippet.snippet_user_id or 0
         if author_id != ctx.author.id:
             embed = EmbedCreator.create_error_embed(
                 title="Error", description="You can only delete your own snippets.", ctx=ctx
@@ -122,7 +120,7 @@ class Snippets(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        await self.db_controller.delete_snippet(name)
+        await self.db_controller.delete_snippet_by_id(snippet.snippet_id)
 
         await ctx.send("Snippet deleted.")
         logger.info(f"{ctx.author} deleted the snippet with the name {name}.")
@@ -146,7 +144,7 @@ class Snippets(commands.Cog):
             await ctx.send("This command cannot be used in direct messages.")
             return
 
-        snippet = await self.db_controller.get_snippet_by_name_in_server(name, ctx.guild.id)
+        snippet = await self.db_controller.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
             embed = EmbedCreator.create_error_embed(
@@ -155,7 +153,7 @@ class Snippets(commands.Cog):
             await ctx.send(embed=embed, delete_after=5)
             return
 
-        text = f"`/snippets/{snippet.name}.txt` || {snippet.content}"
+        text = f"`/snippets/{snippet.snippet_name}.txt` || {snippet.snippet_content}"
 
         await ctx.send(text, allowed_mentions=AllowedMentions.none())
 
@@ -181,7 +179,7 @@ class Snippets(commands.Cog):
             await ctx.send("This command cannot be used in direct messages.")
             return
 
-        snippet = await self.db_controller.get_snippet_by_name_in_server(name, ctx.guild.id)
+        snippet = await self.db_controller.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
             embed = EmbedCreator.create_error_embed(
@@ -190,11 +188,11 @@ class Snippets(commands.Cog):
             await ctx.send(embed=embed, delete_after=5)
             return
 
-        author = self.bot.get_user(snippet.author_id) or ctx.author
+        author = self.bot.get_user(snippet.snippet_user_id) or ctx.author
 
         embed: discord.Embed = EmbedCreator.custom_footer_embed(
             title="Snippet Information",
-            content=f"**Name:** {snippet.name}\n**Author:** {author}\n**Created At:** (set as embed timestamp)\n**Content:** {snippet.content}",
+            content=f"**Name:** {snippet.snippet_name}\n**Author:** {author}\n**Created At:** (set as embed timestamp)\n**Content:** {snippet.snippet_content}",
             ctx=ctx,
             latency="N/A",
             interaction=None,
@@ -202,7 +200,9 @@ class Snippets(commands.Cog):
             user=author,
         )
 
-        embed.timestamp = snippet.created_at or datetime.datetime.fromtimestamp(0, datetime.UTC)
+        embed.timestamp = snippet.snippet_created_at or datetime.datetime.fromtimestamp(
+            0, datetime.UTC
+        )
 
         await ctx.send(embed=embed)
 
@@ -245,7 +245,10 @@ class Snippets(commands.Cog):
         server_id = ctx.guild.id
 
         # Check if the snippet already exists
-        if await self.db_controller.get_snippet_by_name_in_server(name, server_id) is not None:
+        if (
+            await self.db_controller.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
+            is not None
+        ):
             embed = EmbedCreator.create_error_embed(
                 title="Error", description="Snippet already exists.", ctx=ctx
             )
@@ -264,11 +267,11 @@ class Snippets(commands.Cog):
             return
 
         await self.db_controller.create_snippet(
-            name=name,
-            content=content,
-            created_at=created_at,
-            author_id=author_id,
-            server_id=server_id,
+            snippet_name=name,
+            snippet_content=content,
+            snippet_created_at=created_at,
+            snippet_user_id=author_id,
+            guild_id=server_id,
         )
 
         await ctx.send("Snippet created.")
