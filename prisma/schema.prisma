@@ -1,7 +1,7 @@
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  url       = env("PROD_DATABASE_URL")
+  directUrl = env("PROD_DIRECT_URL")
 }
 
 generator client {
@@ -13,181 +13,78 @@ generator client {
   recursive_type_depth = -1
 }
 
-// General settings for the system
-model Settings {
-  // Key of the setting
-  key         String  @id
-  // Value of the setting
-  value       String
-  // Optional description of what the setting does
-  description String?
+enum CaseType {
+  BAN
+  HACK_BAN
+  TEMP_BAN
+  UNBAN
+  KICK
+  TIMEOUT_ADD
+  TIMEOUT_REMOVE
+  WARN
 }
 
-model Users {
-  // The user’s unique ID (via Discord)
-  id           BigInt    @id
-  // The user’s username.
-  name         String
-  // The user’s global nickname, taking precedence over the username in display.
-  global_name  String?
-  // Returns the user’s display name. For regular users this is just their global name or their username, but if they have a guild specific nickname then that is returned instead.
-  display_name String
-  // Returns a string that allows you to mention the given user.
-  mention      String
-  // Specifies if the user is a bot account.
-  bot          Boolean   @default(false)
-  // Returns the user’s creation time in UTC. This is when the user’s Discord account was created.
-  created_at   DateTime?
-  // True if user is a member of a guild (not a discord.py attribute)
-  is_member    Boolean   @default(true)
-  // The guild specific nickname of the user. Takes precedence over the global name.
-  nick         String?
-  // An aware datetime object that specifies the date and time in UTC that the member joined the guild. If the member left and rejoined the guild, this will be the latest date. In certain cases, this can be None.
-  joined_at    DateTime?
+model Guild {
+  guild_id        BigInt     @id
+  guild_joined_at DateTime?  @default(now())
+  cases           Case[]
+  snippets        Snippet[]
+  notes           Note[]
+  reminders       Reminder[]
 
-  // This is a relation field and is a list of roles that the user has, linking to the `UserRoles` table. If you fetch a user from the database and include this field, you will get all the roles associated with that user.
-  roles UserRoles[]
-
-  // This represents all the infractions that this user has given out when acting as a moderator. It has a `relation` annotation to make clear that for these infractions, this user is referred to in the `moderator` field of the `Infractions` table.
-  infractions_given Infractions[] @relation("Moderator")
-
-  // This is all the infractions that this user has received. It has a `relation` annotation to make clear that for these infractions, this user is referred to in the `user` field of the `Infractions` table.
-  infractions_received Infractions[] @relation("User")
-
-  snippets Snippets[]
-
-  afk        Boolean   @default(false)
-  afk_reason String?
-  afk_since  DateTime?
-
-  notes_given    Notes[] @relation("Moderator")
-  notes_received Notes[] @relation("User")
-
-  reminders    Reminders[]
-  CommandStats CommandStats[]
+  @@unique([guild_id])
 }
 
-model Roles {
-  // The ID for the role (via Discord)
-  id          BigInt    @id
-  // The name of the role
-  name        String
-  // Indicates if the role will be displayed separately from other members.
-  hoist       Boolean   @default(false)
-  // Indicates if the role is managed by the guild through some form of integrations such as Twitch.
-  managed     Boolean   @default(false)
-  // Indicates if the role is mentionable.
-  mentionable Boolean   @default(false)
-  // The role’s creation time in UTC.
-  created_at  DateTime?
-  // Returns a string that allows you to mention a role.
-  mention     String?   @default("")
-  // The role’s color. An integer representation of hexadecimal colour code.
-  color       BigInt?
+model Case {
+  case_id           BigInt    @id @default(autoincrement())
+  case_type         CaseType
+  case_reason       String
+  case_moderator_id BigInt
+  case_target_id    BigInt
+  case_number       Int?
+  case_created_at   DateTime? @default(now())
+  case_expires_at   DateTime?
+  guild_id          BigInt
+  guild             Guild     @relation(fields: [guild_id], references: [guild_id])
 
-  // This field links a role to the users that have it. It references the `UserRoles` junction table. If you fetch a role from the database and include this field, you will get a list of UserRoles entries and from there you can find all the users that have this role.
-  users UserRoles[]
-
-  // This is a Boolean field indicating if the role is a moderator role. This is not an attribute coming from Discord but an extra field you have defined to distinguish normal roles from moderator roles. It defaults to false, meaning if you don't specify it when creating a new role, it will be assumed to be a non-moderator role.
-  is_mod Boolean @default(false)
+  @@unique([case_number, guild_id])
+  @@index([case_number, guild_id])
 }
 
-model UserRoles {
-  user    Users  @relation(fields: [user_id], references: [id])
-  user_id BigInt
+model Snippet {
+  snippet_id         BigInt   @id @default(autoincrement())
+  snippet_name       String
+  snippet_content    String
+  snippet_user_id    BigInt
+  snippet_created_at DateTime @default(now())
+  guild_id           BigInt
+  guild              Guild    @relation(fields: [guild_id], references: [guild_id])
 
-  role    Roles  @relation(fields: [role_id], references: [id])
-  role_id BigInt
-
-  @@id([user_id, role_id])
+  @@unique([snippet_name, guild_id])
+  @@index([snippet_name, guild_id])
 }
 
-model Infractions {
-  id                BigInt    @id @default(autoincrement())
-  infraction_type   String
-  infraction_reason String?
-  created_at        DateTime? @default(now())
-  expires_at        DateTime?
+model Note {
+  note_id           BigInt   @id @default(autoincrement())
+  note_content      String
+  note_created_at   DateTime @default(now())
+  note_moderator_id BigInt
+  note_target_id    BigInt
+  note_number       Int?
+  guild_id          BigInt
+  guild             Guild    @relation(fields: [guild_id], references: [guild_id])
 
-  // These fields establish a relationship with the `Users` model. `moderator_id` is the ID of the user who gave the infraction. The line `moderator Users? @relation("Moderator", fields: [moderator_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the moderator) is associated with this infraction.
-  moderator    Users  @relation("Moderator", fields: [moderator_id], references: [id])
-  moderator_id BigInt
-
-  // These fields establish another relationship with the `Users` model. `user_id` is the ID of the user who received the infraction. The line `user Users @relation("User", fields: [user_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the user who received the infraction) is associated with this infraction.
-  user    Users  @relation("User", fields: [user_id], references: [id])
-  user_id BigInt
+  @@unique([note_number, guild_id])
+  @@index([note_number, guild_id])
 }
 
-model Snippets {
-  // The name of the snippet
-  name       String    @id
-  // The content of the snippet
-  content    String
-  // The creation time of the snippet
-  created_at DateTime? @default(now())
-
-  // The server ID of the guild where the snippet was created
-  // 0 is the default value for this field for migration purposes
-  server_id BigInt @default(0)
-
-  // This field establishes a relationship with the `Users` model. `author_id` is the ID of the user who created the snippet. The line `author Users @relation(fields: [author_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the author) is associated with this snippet.
-  author    Users  @relation(fields: [author_id], references: [id])
-  author_id BigInt
+model Reminder {
+  reminder_id         BigInt   @id @default(autoincrement())
+  reminder_content    String
+  reminder_created_at DateTime @default(now())
+  reminder_expires_at DateTime
+  reminder_channel_id BigInt
+  reminder_user_id    BigInt
+  guild_id            BigInt
+  guild               Guild    @relation(fields: [guild_id], references: [guild_id])
 }
-
-model Notes {
-  id         BigInt    @id @default(autoincrement())
-  content    String
-  created_at DateTime? @default(now())
-
-  // These fields establish a relationship with the `Users` model. `moderator_id` is the ID of the user who created the note. The line `moderator Users? @relation("Moderator", fields: [moderator_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the moderator) is associated with this note.
-  moderator    Users  @relation("Moderator", fields: [moderator_id], references: [id])
-  moderator_id BigInt
-
-  // These fields establish another relationship with the `Users` model. `user_id` is the ID of the user who the note is about. The line `user Users @relation("User", fields: [user_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the user who the note is about) is associated with this note.
-  user    Users  @relation("User", fields: [user_id], references: [id])
-  user_id BigInt
-}
-
-model Reminders {
-  id         BigInt    @id @default(autoincrement())
-  content    String
-  created_at DateTime? @default(now())
-  expires_at DateTime
-  channel_id BigInt
-  guild_id   BigInt
-
-  // These fields establish a relationship with the `Users` model. `author_id` is the ID of the user who created the reminder. The line `author Users @relation(fields: [author_id], references: [id])` links to the `Users` model, indicating that an instance of `Users` (the author) is associated with this reminder.
-  user    Users  @relation(fields: [user_id], references: [id])
-  user_id BigInt
-}
-
-model Commands {
-  id           BigInt         @id @default(autoincrement())
-  name         String
-  content      String
-  created_at   DateTime?      @default(now())
-  CommandStats CommandStats[]
-}
-
-model CommandStats {
-  id         BigInt    @id @default(autoincrement())
-  command_id BigInt
-  user_id    BigInt
-  used_at    DateTime? @default(now())
-
-  command Commands @relation(fields: [command_id], references: [id])
-  user    Users    @relation(fields: [user_id], references: [id])
-}
-
-model EmojiStats {
-  emoji_id BigInt @id
-  count    BigInt
-}
-
-// model Logs {
-//   id         BigInt   @id
-//   content    String
-//   log_type   String
-//   created_at DateTime @default(now())
-// }

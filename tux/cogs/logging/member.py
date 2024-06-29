@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 
-from tux.database.controllers import DatabaseController
 from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import EmbedCreator
 
@@ -9,9 +8,7 @@ from tux.utils.embeds import EmbedCreator
 class MemberLogging(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.db_controller = DatabaseController()
         self.audit_log_channel_id: int = CONST.LOG_CHANNELS["AUDIT"]
-        self.mod_log_channel_id: int = CONST.LOG_CHANNELS["MOD"]
 
     async def send_to_audit_log(self, embed: discord.Embed):
         channel = self.bot.get_channel(self.audit_log_channel_id)

@@ -1,21 +1,15 @@
-from .emojistats import EmojiStatsController
-from .infractions import InfractionsController
-from .notes import NotesController
-from .reminders import RemindersController
-from .roles import RolesController
-from .snippets import SnippetsController
-from .user_roles import UserRolesController
-from .users import UsersController
+from .cases import CaseController
+from .notes import NoteController
+from .reminders import ReminderController
+from .snippets import SnippetController
 
 
 class DatabaseController:
     def __init__(self):
-        """Initializes the database controller and connects to all the database tables."""
-        self.users = UsersController()
-        self.infractions = InfractionsController()
-        self.notes = NotesController()
-        self.snippets = SnippetsController()
-        self.reminders = RemindersController()
-        self.roles = RolesController()
-        self.user_roles = UserRolesController()
-        self.emojistats = EmojiStatsController()
+        self.cases = CaseController()
+        self.notes = NoteController()
+        self.snippets = SnippetController()
+        self.reminders = ReminderController()
+
+
+db_controller = DatabaseController()
