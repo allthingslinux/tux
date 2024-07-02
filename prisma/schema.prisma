@@ -25,14 +25,53 @@ enum CaseType {
 }
 
 model Guild {
-  guild_id        BigInt     @id
-  guild_joined_at DateTime?  @default(now())
+  guild_id        BigInt        @id
+  guild_joined_at DateTime?     @default(now())
   cases           Case[]
   snippets        Snippet[]
   notes           Note[]
   reminders       Reminder[]
+  guild_config    GuildConfig[]
 
   @@unique([guild_id])
+  @@index([guild_id])
+}
+
+model GuildConfig {
+  guild_prefix String? @default("$")
+
+  guild_mod_log_channel_id     BigInt?
+  guild_audit_log_channel_id   BigInt?
+  guild_join_log_channel_id    BigInt?
+  guild_private_log_channel_id BigInt?
+  guild_report_log_channel_id  BigInt?
+  guild_dev_log_channel_id     BigInt?
+
+  guild_jail_channel_id      BigInt?
+  guild_general_channel_id   BigInt?
+  guild_starboard_channel_id BigInt?
+  guild_mod_channel_id       BigInt?
+  guild_bot_channel_id       BigInt?
+
+  guild_dev_role_id        BigInt?
+  guild_admin_role_id      BigInt?
+  guild_senior_role_id     BigInt?
+  guild_mod_role_id        BigInt?
+  guild_junior_role_id     BigInt?
+  guild_base_staff_role_id BigInt?
+
+  guild_base_member_role_id BigInt?
+  guild_jail_role_id        BigInt?
+  guild_quarantine_role_id  BigInt?
+
+  guild_disabled_commands String[] @default([])
+  guild_disabled_cogs     String[] @default([])
+
+  guild_id BigInt
+  guild    Guild? @relation(fields: [guild_id], references: [guild_id])
+
+  @@unique([guild_id])
+  @@index([guild_id])
 }
 
 model Case {
@@ -87,4 +126,7 @@ model Reminder {
   reminder_user_id    BigInt
   guild_id            BigInt
   guild               Guild    @relation(fields: [guild_id], references: [guild_id])
+
+  @@unique([reminder_id, guild_id])
+  @@index([reminder_id, guild_id])
 }
