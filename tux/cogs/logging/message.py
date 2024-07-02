@@ -46,12 +46,7 @@ class GuildLogging(commands.Cog):
             )
             return
 
-        if (
-            not message.embeds
-            and not message.attachments
-            and not message.content
-            and not message.stickers
-        ):
+        if not message.embeds and not message.attachments and not message.content and not message.stickers:
             # check if the message is not a message
             if message.type != discord.MessageType.default:
                 return

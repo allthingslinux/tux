@@ -37,14 +37,10 @@ class MemberLogging(commands.Cog):
             embed.add_field(name="Name", value=f"`{before.name}` -> `{after.name}`")
 
         if before.display_name != after.display_name:
-            embed.add_field(
-                name="Display Name", value=f"`{before.display_name}` -> `{after.display_name}`"
-            )
+            embed.add_field(name="Display Name", value=f"`{before.display_name}` -> `{after.display_name}`")
 
         if before.global_name != after.global_name:
-            embed.add_field(
-                name="Global Name", value=f"`{before.global_name}` -> `{after.global_name}`"
-            )
+            embed.add_field(name="Global Name", value=f"`{before.global_name}` -> `{after.global_name}`")
 
         await self.send_to_audit_log(embed)
 
