@@ -29,10 +29,6 @@ python-dotenv = "^1.0.1"
 rsa = "^4.9"
 ruff = "^0.4.0"
 sentry-sdk = {extras = ["httpx", "loguru"], version = "^2.7.0"}
-vulture = "^2.11"
-
-[tool.poetry.scripts]
-pyright = "pyright:run"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
@@ -74,7 +70,7 @@ exclude = [
 ]
 
 indent-width = 4
-line-length = 100
+line-length = 120
 target-version = "py312"
 
 # Ruff Linting Configuration
@@ -111,7 +107,7 @@ unfixable = []
 docstring-code-format = true
 docstring-code-line-length = "dynamic"
 indent-style = "space"
-line-ending = "auto"
+line-ending = "lf"
 quote-style = "double"
 skip-magic-trailing-comma = false
 
@@ -152,46 +148,3 @@ pythonVersion = "3.12"
 typeCheckingMode = "strict"
 venv = ".venv"
 venvPath = "."
-# reportMissingImports = true
-# reportMissingParameterType = false
-# reportMissingTypeStubs = false
-# reportUnknownArgumentType = false
-# reportUnknownMemberType = false
-# reportUnknownParameterType = false
-
-[tool.vulture]
-exclude = [
-  ".direnv",
-  ".eggs",
-  ".git",
-  ".hg",
-  ".ipynb_checkpoints",
-  ".mypy_cache",
-  ".nox",
-  ".pants.d",
-  ".pyenv",
-  ".pytest_cache",
-  ".pytype",
-  ".svn",
-  ".tox",
-  ".venv",
-  ".vscode",
-  "__pypackages__",
-  "_build",
-  "buck-out",
-  "build",
-  "dist",
-  "node_modules",
-  "site-packages",
-  "venv",
-  "examples",
-  "tests",
-  ".archive",
-]
-# paths = ["tux"]
-# ignore_decorators = ["@app.route", "@require_*"]
-# ignore_names = ["visit_*", "do_*"]
-# make_whitelist = true
-# min_confidence = 100
-# sort_by_size = true
-# verbose = true
