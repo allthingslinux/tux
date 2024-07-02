@@ -5,7 +5,11 @@ from sentry_sdk.integrations.loguru import LoguruIntegration
 from tux.utils.constants import Constants as CONST
 
 
-def setup_sentry():
+def setup_sentry() -> None:
+    """
+    Sets up Sentry for error tracking and monitoring.
+    """
+
     dsn = CONST.SENTRY_URL
     traces_sample_rate = 1.0
     profiles_sample_rate = 1.0

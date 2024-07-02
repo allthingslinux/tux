@@ -1,8 +1,30 @@
+import re
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 
 import discord
+
+harmful_command_pattern = r"(?:sudo\s+|doas\s+|run0\s+)?rm\s+(-[frR]*|--force|--recursive|--no-preserve-root|\s+)*(/\s*|\*|/bin|/boot|/etc|/lib|/proc|/root|/sbin|/sys|/tmp|/usr|/var|/var/log|/network.|/system)(\s+--no-preserve-root|\s+\*)*|:\(\)\{ :|:& \};:"
+
+
+def is_harmful(command: str) -> bool:
+    first_test: bool = re.search(harmful_command_pattern, command) is not None
+    second_test: bool = re.search(r"rm.{0,5}[rfRF]", command) is not None
+    return first_test and second_test
+
+
+def strip_formatting(content: str) -> str:
+    # Remove triple backtick blocks considering any spaces and platform-specific newlines
+    content = re.sub(r"`/```(.*)```/", "", content, flags=re.DOTALL)
+    # Remove inline code snippets preserving their content only
+    content = re.sub(r"`([^`]*)`", r"\1", content)
+    # Remove Markdown headers
+    content = re.sub(r"^#+\s+", "", content, flags=re.MULTILINE)
+    # Remove other common markdown symbols
+    content = re.sub(r"[\*_~|>]", "", content)
+
+    return content.strip()
 
 
 def convert_to_seconds(time_str: str) -> int:
@@ -119,16 +141,10 @@ def compare_changes(before: dict[str, Any], after: dict[str, Any]) -> list[str]:
         A list of strings showing the changes made in the dictionaries.
     """
 
-    return [
-        f"{key}: {before[key]} -> {after[key]}"
-        for key in before
-        if key in after and before[key] != after[key]
-    ]
+    return [f"{key}: {before[key]} -> {after[key]}" for key in before if key in after and before[key] != after[key]]
 
 
-def compare_guild_channel_changes(
-    before: discord.abc.GuildChannel, after: discord.abc.GuildChannel
-) -> list[str]:
+def compare_guild_channel_changes(before: discord.abc.GuildChannel, after: discord.abc.GuildChannel) -> list[str]:
     """
     Compares the changes between two GuildChannel instances and returns a list of strings representing the changes.
 
@@ -163,9 +179,7 @@ def compare_guild_channel_changes(
     ]
 
 
-def compare_member_changes(
-    before: discord.Member | discord.User, after: discord.Member | discord.User
-) -> list[str]:
+def compare_member_changes(before: discord.Member | discord.User, after: discord.Member | discord.User) -> list[str]:
     """
     Compares changes between two Member instances and returns a list of strings representing the changes.
 
