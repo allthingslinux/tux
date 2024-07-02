@@ -36,8 +36,8 @@ error_map: dict[type[Exception], str] = {
 }
 
 
-class UnifiedErrorHandler(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+class ErrorHandler(commands.Cog):
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
         self.error_message = "An error occurred. Please try again later or contact support."
         # Attach the error handler if using app commands
@@ -46,26 +46,26 @@ class UnifiedErrorHandler(commands.Cog):
 
     async def dispatch_to_app_command_handler(
         self, interaction: discord.Interaction, error: app_commands.AppCommandError
-    ):
+    ) -> None:
         """Dispatch command error to appropriate handler."""
         await self.handle_app_command_error(interaction, error)
 
     async def handle_app_command_error(
         self, interaction: discord.Interaction, error: app_commands.AppCommandError
-    ):
+    ) -> None:
         """Handle errors for app commands."""
         error_message = error_map.get(type(error), self.error_message).format(error=error)
+
         if interaction.response.is_done():
             await interaction.followup.send(error_message, ephemeral=True)
         else:
             await interaction.response.send_message(error_message, ephemeral=True)
+
         if type(error) not in error_map:
             self.log_error_traceback(error)
 
     @commands.Cog.listener()
-    async def on_command_error(
-        self, ctx: commands.Context[commands.Bot], error: commands.CommandError
-    ):
+    async def on_command_error(self, ctx: commands.Context[commands.Bot], error: commands.CommandError) -> None:
         """Handle errors for traditional commands."""
         if (
             hasattr(ctx.command, "on_error")
@@ -73,28 +73,32 @@ class UnifiedErrorHandler(commands.Cog):
             and ctx.cog._get_overridden_method(ctx.cog.cog_command_error) is not None
         ):
             return
+
         if isinstance(error, commands.CommandNotFound):
-            return  # Optionally, provide feedback for unknown commands.
+            return
+
         error = getattr(error, "original", error)
         message: str = self.get_error_message(error, ctx)
-        await ctx.send(content=message, ephemeral=False)
+
+        await ctx.send(content=message, ephemeral=True, delete_after=10)
+
         if type(error) not in error_map:
             self.log_error_traceback(error)
 
-    def get_error_message(
-        self, error: Exception, ctx: commands.Context[commands.Bot] | None = None
-    ) -> str:
+    def get_error_message(self, error: Exception, ctx: commands.Context[commands.Bot] | None = None) -> str:
         """Generate an error message from the error map."""
         if ctx:
             return error_map.get(type(error), self.error_message).format(error=error, ctx=ctx)
+
         return error_map.get(type(error), self.error_message).format(error=error)
 
     def log_error_traceback(self, error: Exception):
         """Helper method to log error traceback."""
         trace = traceback.format_exception(None, error, error.__traceback__)
         formatted_trace = "".join(trace)
+
         logger.error(f"Error: {error}\nTraceback:\n{formatted_trace}")
 
 
-async def setup(bot: commands.Bot):
-    await bot.add_cog(UnifiedErrorHandler(bot))
+async def setup(bot: commands.Bot) -> None:
+    await bot.add_cog(ErrorHandler(bot))

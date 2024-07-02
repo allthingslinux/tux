@@ -76,9 +76,7 @@ class CogLoader(commands.Cog):
                     logger.debug(f"Successfully loaded cog: {module}")
 
                 except Exception as e:
-                    logger.error(
-                        f"Failed to load cog {module}. Error: {e}\n{traceback.format_exc()}"
-                    )
+                    logger.error(f"Failed to load cog {module}. Error: {e}\n{traceback.format_exc()}")
 
         except Exception as e:
             logger.error(f"An error occurred while processing {apath}: {e}")
@@ -104,6 +102,6 @@ class CogLoader(commands.Cog):
     @classmethod
     async def setup(cls, bot: commands.Bot) -> None:
         cog_loader = cls(bot)
-
         await cog_loader.load_cogs_from_folder(folder_name="cogs")
+        await cog_loader.load_cogs_from_folder(folder_name="handlers")
         await bot.add_cog(cog_loader)

@@ -37,6 +37,7 @@ class TuxBot(commands.Bot):
         """
         Sets up the bot by connecting to the database and loading cogs.
         """
+
         try:
             # Connect to Prisma
             await db.connect()
@@ -76,9 +77,10 @@ class TuxBot(commands.Bot):
         """
         Executes actions when the bot disconnects from Discord, such as closing the database connection.
         """
+
         logger.warning("Bot has disconnected from Discord.")
 
-    async def shutdown(self):
+    async def shutdown(self) -> None:
         if self.is_shutting_down:
             logger.info("Shutdown already in progress. Exiting...")
             return
@@ -106,17 +108,18 @@ class TuxBot(commands.Bot):
 
 
 async def main() -> None:
+    # Setup Sentry for error tracking and reporting
+    setup_sentry()
+
     prefix = CONST.DEV_PREFIX if CONST.DEV == "True" else CONST.PROD_PREFIX
     token = CONST.DEV_TOKEN if CONST.DEV == "True" else CONST.PROD_TOKEN
-    intents = discord.Intents.all()
-    bot = TuxBot(command_prefix=prefix, intents=intents)
+
+    # Initialize the bot
+    bot = TuxBot(command_prefix=prefix, intents=discord.Intents.all())
 
     # Initialize the console and console task
     console = None
     console_task = None
-
-    # Setup Sentry for error tracking and reporting
-    setup_sentry()
 
     try:
         console = Console(bot)
@@ -146,7 +149,6 @@ if __name__ == "__main__":
     try:
         # Run the bot using asyncio
         asyncio.run(main())
-
     except KeyboardInterrupt:
         # Handle KeyboardInterrupt gracefully
         logger.info("Exiting gracefully.")
