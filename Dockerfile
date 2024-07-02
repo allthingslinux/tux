@@ -3,7 +3,8 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Install dependencies for cairo and other utilities
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && \
+  apt-get install -y \
   libcairo2 \
   libpango1.0-0 \
   libpangocairo-1.0-0 \
@@ -11,8 +12,8 @@ RUN apt-get update && apt-get install -y \
   libffi-dev \
   shared-mime-info \
   curl \
-  build-essential &&
-  apt-get clean &&
+  build-essential && \
+  apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
 # Install Rust and Cargo
@@ -25,8 +26,8 @@ RUN tldr -u
 
 # Copy Poetry files and install dependencies
 COPY pyproject.toml poetry.lock /app/
-RUN pip install poetry &&
-  poetry config virtualenvs.create false &&
+RUN pip install poetry && \
+  poetry config virtualenvs.create false && \
   poetry install --no-interaction --no-ansi
 
 # Copy the remaining project files
