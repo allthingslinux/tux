@@ -40,8 +40,7 @@ class Tools(commands.Cog):
     @app_commands.describe(color_format="Original color format to convert from")
     @app_commands.choices(
         color_format=[
-            app_commands.Choice[str](name=color_format, value=value)
-            for color_format, value in COLOR_FORMATS.items()
+            app_commands.Choice[str](name=color_format, value=value) for color_format, value in COLOR_FORMATS.items()
         ]
     )
     async def colors(
@@ -147,12 +146,8 @@ class Tools(commands.Cog):
 
         return embed
 
-    async def send_message(
-        self, interaction: discord.Interaction, embed: discord.Embed, png_bio: io.BytesIO
-    ) -> None:
-        await interaction.response.send_message(
-            embed=embed, file=discord.File(png_bio, "color.png")
-        )
+    async def send_message(self, interaction: discord.Interaction, embed: discord.Embed, png_bio: io.BytesIO) -> None:
+        await interaction.response.send_message(embed=embed, file=discord.File(png_bio, "color.png"))
 
     @group.command(name="encode", description="Encodes a string to a specified format.")
     @app_commands.describe(encoding="The encoding format to use", string="The string to encode")
@@ -195,9 +190,7 @@ class Tools(commands.Cog):
         except KeyError:
             description = "Invalid encoding selected!"
 
-        embed = EmbedCreator.create_info_embed(
-            title=title, description=description, interaction=interaction
-        )
+        embed = EmbedCreator.create_info_embed(title=title, description=description, interaction=interaction)
 
         await interaction.response.send_message(embed=embed)
 
@@ -242,9 +235,7 @@ class Tools(commands.Cog):
         except KeyError:
             description = "Invalid decoding selected!"
 
-        embed = EmbedCreator.create_info_embed(
-            title=title, description=description, interaction=interaction
-        )
+        embed = EmbedCreator.create_info_embed(title=title, description=description, interaction=interaction)
 
         await interaction.response.send_message(embed=embed)
 

@@ -44,9 +44,7 @@ class MemberCount(commands.Cog):
 
             await interaction.response.send_message(embed=embed)
 
-            logger.info(
-                f"{interaction.user} used the membercount command in {interaction.channel}."
-            )
+            logger.info(f"{interaction.user} used the membercount command in {interaction.channel}.")
 
 
 async def setup(bot: commands.Bot) -> None:

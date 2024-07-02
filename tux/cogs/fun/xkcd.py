@@ -7,6 +7,25 @@ from tux.services import xkcd
 from tux.utils.embeds import EmbedCreator
 
 
+class XkcdLinkButtons(discord.ui.View):
+    def __init__(self, explain_url: str, webpage_url: str) -> None:
+        super().__init__()
+        self.add_item(
+            discord.ui.Button(
+                style=discord.ButtonStyle.link,
+                label="Explainxkcd",
+                url=explain_url,
+            )
+        )
+        self.add_item(
+            discord.ui.Button(
+                style=discord.ButtonStyle.link,
+                label="Webpage",
+                url=webpage_url,
+            )
+        )
+
+
 class Xkcd(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
@@ -17,6 +36,7 @@ class Xkcd(commands.Cog):
     @xkcd.command(name="latest", description="Get the latest xkcd comic")
     async def latest(self, interaction: discord.Interaction) -> None:
         embed, view, ephemeral = await self.get_comic_and_embed(latest=True)
+
         if view:
             await interaction.response.send_message(embed=embed, view=view, ephemeral=ephemeral)
         else:
@@ -25,6 +45,7 @@ class Xkcd(commands.Cog):
     @xkcd.command(name="random", description="Get a random xkcd comic")
     async def random(self, interaction: discord.Interaction) -> None:
         embed, view, ephemeral = await self.get_comic_and_embed()
+
         if view:
             await interaction.response.send_message(embed=embed, view=view, ephemeral=ephemeral)
         else:
@@ -33,6 +54,7 @@ class Xkcd(commands.Cog):
     @xkcd.command(name="specific", description="Search for a specific xkcd comic")
     async def specific(self, interaction: discord.Interaction, comic_id: int) -> None:
         embed, view, ephemeral = await self.get_comic_and_embed(number=comic_id)
+
         if view:
             await interaction.response.send_message(embed=embed, view=view, ephemeral=ephemeral)
         else:
@@ -85,25 +107,6 @@ class Xkcd(commands.Cog):
                 XkcdLinkButtons(str(comic.explanation_url), str(comic.comic_url)),
                 ephemeral,
             )
-
-
-class XkcdLinkButtons(discord.ui.View):
-    def __init__(self, explain_url: str, webpage_url: str) -> None:
-        super().__init__()
-        self.add_item(
-            discord.ui.Button(
-                style=discord.ButtonStyle.link,
-                label="Explainxkcd",
-                url=explain_url,
-            )
-        )
-        self.add_item(
-            discord.ui.Button(
-                style=discord.ButtonStyle.link,
-                label="Webpage",
-                url=webpage_url,
-            )
-        )
 
 
 async def setup(bot: commands.Bot) -> None:

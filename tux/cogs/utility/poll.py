@@ -46,9 +46,7 @@ class Poll(commands.Cog):
             return
 
         # Create the description for the poll embed
-        description = "\n".join(
-            [f"{num + 1}\u20e3 {option}" for num, option in enumerate(options_list)]
-        )
+        description = "\n".join([f"{num + 1}\u20e3 {option}" for num, option in enumerate(options_list)])
 
         embed = EmbedCreator.create_poll_embed(
             title=title,

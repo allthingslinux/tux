@@ -26,10 +26,10 @@ class LinkButton(discord.ui.View):
 class Git(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.git = GitHubService()
+        self.github = GitHubService()
         self.repo_url = CONST.GITHUB_REPO_URL
 
-    group = app_commands.Group(name="git", description="Github commands.")
+    git = app_commands.Group(name="git", description="Github commands.")
 
     async def create_error_embed(self, interaction: discord.Interaction, error: str) -> None:
         """
@@ -52,7 +52,7 @@ class Git(commands.Cog):
         await interaction.followup.send(embed=embed)
 
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
-    @group.command(name="get_repo", description="Get repository information.")
+    @git.command(name="get_repo", description="Get repository information.")
     async def get_repo(self, interaction: discord.Interaction) -> None:
         """
         Get repository information.
@@ -66,7 +66,7 @@ class Git(commands.Cog):
         await interaction.response.defer()
 
         try:
-            repo = await self.git.get_repo()
+            repo = await self.github.get_repo()
 
             embed = EmbedCreator.create_info_embed(
                 title="Tux",
@@ -87,7 +87,7 @@ class Git(commands.Cog):
             logger.info(f"{interaction.user} fetched repository information.")
 
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
-    @group.command(name="create_issue", description="Create an issue.")
+    @git.command(name="create_issue", description="Create an issue.")
     async def create_issue(
         self,
         interaction: discord.Interaction,
@@ -110,7 +110,7 @@ class Git(commands.Cog):
         await interaction.response.defer()
 
         try:
-            created_issue = await self.git.create_issue(title, body)
+            created_issue = await self.github.create_issue(title, body)
 
             embed = EmbedCreator.create_success_embed(
                 title="Issue Created",
@@ -130,7 +130,7 @@ class Git(commands.Cog):
             logger.info(f"{interaction.user} created an issue.")
 
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
-    @group.command(name="create_issue_comment", description="Create an issue comment.")
+    @git.command(name="create_issue_comment", description="Create an issue comment.")
     async def create_issue_comment(
         self,
         interaction: discord.Interaction,
@@ -153,7 +153,7 @@ class Git(commands.Cog):
         await interaction.response.defer()
 
         try:
-            created_issue_comment = await self.git.create_issue_comment(issue_number, body)
+            created_issue_comment = await self.github.create_issue_comment(issue_number, body)
 
             embed = EmbedCreator.create_success_embed(
                 title="Comment Created",
@@ -168,13 +168,11 @@ class Git(commands.Cog):
             logger.error(f"Error creating comment: {e}")
 
         else:
-            await interaction.followup.send(
-                embed=embed, view=LinkButton(created_issue_comment.html_url)
-            )
+            await interaction.followup.send(embed=embed, view=LinkButton(created_issue_comment.html_url))
             logger.info(f"{interaction.user} created a comment.")
 
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
-    @group.command(name="close_issue", description="Close an issue.")
+    @git.command(name="close_issue", description="Close an issue.")
     async def close_issue(
         self,
         interaction: discord.Interaction,
@@ -194,7 +192,7 @@ class Git(commands.Cog):
         await interaction.response.defer()
 
         try:
-            closed_issue = await self.git.close_issue(issue_number)
+            closed_issue = await self.github.close_issue(issue_number)
 
             embed = EmbedCreator.create_success_embed(
                 title="Issue Closed",
@@ -212,7 +210,7 @@ class Git(commands.Cog):
             logger.info(f"{interaction.user} closed an issue.")
 
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
-    @group.command(name="get_issue", description="Get an issue.")
+    @git.command(name="get_issue", description="Get an issue.")
     async def get_issue(
         self,
         interaction: discord.Interaction,
@@ -232,7 +230,7 @@ class Git(commands.Cog):
         await interaction.response.defer()
 
         try:
-            issue = await self.git.get_issue(issue_number)
+            issue = await self.github.get_issue(issue_number)
 
             embed = EmbedCreator.create_info_embed(
                 title=issue.title,
@@ -254,7 +252,7 @@ class Git(commands.Cog):
             logger.info(f"{interaction.user} fetched an issue.")
 
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
-    @group.command(name="get_open_issues", description="Get open issues.")
+    @git.command(name="get_open_issues", description="Get open issues.")
     async def get_open_issues(self, interaction: discord.Interaction) -> None:
         """
         Get open issues.
@@ -268,7 +266,7 @@ class Git(commands.Cog):
         await interaction.response.defer()
 
         try:
-            open_issues: list[Issue] = await self.git.get_open_issues()
+            open_issues: list[Issue] = await self.github.get_open_issues()
 
             embed = EmbedCreator.create_info_embed(
                 title="Open Issues",
@@ -291,7 +289,7 @@ class Git(commands.Cog):
             logger.info(f"{interaction.user} fetched open issues.")
 
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
-    @group.command(name="get_closed_issues", description="Get closed issues.")
+    @git.command(name="get_closed_issues", description="Get closed issues.")
     async def get_closed_issues(self, interaction: discord.Interaction) -> None:
         """
         Get closed issues.
@@ -305,7 +303,7 @@ class Git(commands.Cog):
         await interaction.response.defer()
 
         try:
-            closed_issues = await self.git.get_closed_issues()
+            closed_issues = await self.github.get_closed_issues()
 
             embed = EmbedCreator.create_info_embed(
                 title="Closed Issues",
@@ -323,14 +321,12 @@ class Git(commands.Cog):
         else:
             await interaction.followup.send(
                 embed=embed,
-                view=LinkButton(
-                    "https://github.com/allthingslinux/tux/issues?q=is%3Aissue+is%3Aclosed"
-                ),
+                view=LinkButton("https://github.com/allthingslinux/tux/issues?q=is%3Aissue+is%3Aclosed"),
             )
             logger.info(f"{interaction.user} fetched closed issues.")
 
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
-    @group.command(name="get_open_pulls", description="Get open pull requests.")
+    @git.command(name="get_open_pulls", description="Get open pull requests.")
     async def get_open_pulls(self, interaction: discord.Interaction) -> None:
         """
         Get open pull requests.
@@ -344,7 +340,7 @@ class Git(commands.Cog):
         await interaction.response.defer()
 
         try:
-            open_pulls = await self.git.get_open_pulls()
+            open_pulls = await self.github.get_open_pulls()
 
             embed = EmbedCreator.create_info_embed(
                 title="Open Pull Requests",
@@ -367,7 +363,7 @@ class Git(commands.Cog):
             logger.info(f"{interaction.user} fetched open pull requests.")
 
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
-    @group.command(name="get_closed_pulls", description="Get closed pull requests.")
+    @git.command(name="get_closed_pulls", description="Get closed pull requests.")
     async def get_closed_pulls(self, interaction: discord.Interaction) -> None:
         """
         Get closed pull requests.
@@ -381,7 +377,7 @@ class Git(commands.Cog):
         await interaction.response.defer()
 
         try:
-            closed_pulls = await self.git.get_closed_pulls()
+            closed_pulls = await self.github.get_closed_pulls()
 
             embed = EmbedCreator.create_info_embed(
                 title="Closed Pull Requests",
@@ -404,7 +400,7 @@ class Git(commands.Cog):
             logger.info(f"{interaction.user} fetched closed pull requests.")
 
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
-    @group.command(name="get_pull", description="Get a pull request.")
+    @git.command(name="get_pull", description="Get a pull request.")
     async def get_pull(
         self,
         interaction: discord.Interaction,
@@ -424,7 +420,7 @@ class Git(commands.Cog):
         await interaction.response.defer()
 
         try:
-            pull = await self.git.get_pull(pull_number)
+            pull = await self.github.get_pull(pull_number)
 
             embed = EmbedCreator.create_info_embed(
                 title=pull.title,

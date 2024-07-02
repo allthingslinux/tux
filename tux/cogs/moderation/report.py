@@ -44,30 +44,10 @@ class ReportModal(discord.ui.Modal):
             interaction=None,
         )
 
-        # Get the channel to send the report to
         channel = self.bot.get_channel(self.channel) or await self.bot.fetch_channel(self.channel)
-
-        # Create a webhook in the channel to send the report
-        webhook: discord.Webhook | None = None
-
-        # Check if the channel is a text channel
         if isinstance(channel, discord.TextChannel):
-            webhook = await channel.create_webhook(
-                name="Tux",
-                reason="Anonymous report webhook",
-            )
-
-        if webhook:
-            # Send the report to the webhook
-            await webhook.send(embed=embed)
-            # Delete the webhook after sending the report
-            await webhook.delete(reason="Report sent")
-
-        # Send a confirmation message to the user
-        await interaction.response.send_message(
-            "The report has been sent to the moderation team. Thank you for your help!",
-            ephemeral=True,
-        )
+            await interaction.response.send_message("Your report has been submitted.", ephemeral=True)
+            await channel.send(embed=embed)
 
 
 class Report(commands.Cog):

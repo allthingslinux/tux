@@ -66,9 +66,7 @@ class Info(commands.Cog):
             description="Tux is a Discord bot written in Python using discord.py.",
             interaction=interaction,
         )
-        embed.add_field(
-            name="GitHub", value="[View the source code](https://github.com/allthingslinux/tux)"
-        )
+        embed.add_field(name="GitHub", value="[View the source code](https://github.com/allthingslinux/tux)")
 
         await interaction.response.send_message(embed=embed)
 
@@ -88,13 +86,9 @@ class Info(commands.Cog):
         """
 
         bot_status = "✅" if member.bot else "❌"
-        joined = (
-            member.joined_at.strftime("%a, %b %e, %Y %l:%M %p") if member.joined_at else "Unknown"
-        )
+        joined = member.joined_at.strftime("%a, %b %e, %Y %l:%M %p") if member.joined_at else "Unknown"
         created = member.created_at.strftime("%a, %b %e, %Y %l:%M %p")
-        roles = (
-            ", ".join(role.mention for role in member.roles[1:]) if member.roles[1:] else "No roles"
-        )
+        roles = ", ".join(role.mention for role in member.roles[1:]) if member.roles[1:] else "No roles"
 
         fetched_member = await self.bot.fetch_user(member.id)
 
