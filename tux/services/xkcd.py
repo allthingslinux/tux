@@ -63,7 +63,11 @@ class Comic:
             The date of the comic.
         """
         try:
-            return datetime.date(int(xkcd_dict["year"]), int(xkcd_dict["month"]), int(xkcd_dict["day"]))
+            return datetime.date(
+                int(xkcd_dict["year"]),
+                int(xkcd_dict["month"]),
+                int(xkcd_dict["day"]),
+            )
 
         except (KeyError, ValueError):
             return None

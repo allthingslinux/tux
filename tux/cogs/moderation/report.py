@@ -46,7 +46,10 @@ class ReportModal(discord.ui.Modal):
 
         channel = self.bot.get_channel(self.channel) or await self.bot.fetch_channel(self.channel)
         if isinstance(channel, discord.TextChannel):
-            await interaction.response.send_message("Your report has been submitted.", ephemeral=True)
+            await interaction.response.send_message(
+                "Your report has been submitted.",
+                ephemeral=True,
+            )
             await channel.send(embed=embed)
 
 

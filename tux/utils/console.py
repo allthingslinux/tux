@@ -341,19 +341,23 @@ class Console:
         await channel.send(embed=embed)
 
     async def set_status(self, command: str) -> None:
-        status_type = await self.get_input("Status type (watching, listening, playing, streaming): ")
+        status_type = await self.get_input(
+            "Status type (watching, listening, playing, streaming): ",
+        )
         status_message = await self.get_input("Status message: ")
 
         if status_type == "streaming":
             stream_url = await self.get_input("Stream URL: ")
-            await self.bot.change_presence(activity=discord.Streaming(name=status_message, url=stream_url))
+            await self.bot.change_presence(
+                activity=discord.Streaming(name=status_message, url=stream_url),
+            )
             return
 
         await self.bot.change_presence(
             activity=discord.Activity(
                 type=getattr(discord.ActivityType, status_type),
                 name=status_message,
-            )
+            ),
         )
 
     async def run_console(self) -> None:

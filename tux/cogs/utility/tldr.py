@@ -16,7 +16,11 @@ class Tldr(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    async def get_autocomplete(self, interaction: discord.Interaction, query: str) -> list[app_commands.Choice[str]]:
+    async def get_autocomplete(
+        self,
+        interaction: discord.Interaction,
+        query: str,
+    ) -> list[app_commands.Choice[str]]:
         """
         Provide autocomplete suggestions for TLDR commands based on user query.
 
@@ -61,7 +65,9 @@ class Tldr(commands.Cog):
         tldr_page = self.get_tldr_page(command)
 
         embed = EmbedCreator.create_info_embed(
-            title=f"TLDR for {command}", description=tldr_page, interaction=interaction
+            title=f"TLDR for {command}",
+            description=tldr_page,
+            interaction=interaction,
         )
 
         await interaction.response.send_message(embed=embed)
@@ -123,12 +129,7 @@ class Tldr(commands.Cog):
         """
 
         try:
-            process = subprocess.run(
-                command_list,
-                capture_output=True,
-                text=True,
-                check=True,
-            )
+            process = subprocess.run(command_list, capture_output=True, text=True, check=True)
 
         except subprocess.CalledProcessError:
             return default_response

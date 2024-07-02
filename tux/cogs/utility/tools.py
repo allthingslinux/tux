@@ -21,12 +21,8 @@ COLOR_FORMATS = {"HEX": "hex", "RGB": "rgb", "HSL": "hsl", "CMYK": "cmyk"}
 class Tools(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.encodings = {
-            "base64": self.encode_base64,
-        }
-        self.decodings = {
-            "base64": self.decode_base64,
-        }
+        self.encodings = {"base64": self.encode_base64}
+        self.decodings = {"base64": self.decode_base64}
 
     def encode_base64(self, input_string: str):
         return b64encode(input_string.encode()).decode()
@@ -41,7 +37,7 @@ class Tools(commands.Cog):
     @app_commands.choices(
         color_format=[
             app_commands.Choice[str](name=color_format, value=value) for color_format, value in COLOR_FORMATS.items()
-        ]
+        ],
     )
     async def colors(
         self,
@@ -146,16 +142,20 @@ class Tools(commands.Cog):
 
         return embed
 
-    async def send_message(self, interaction: discord.Interaction, embed: discord.Embed, png_bio: io.BytesIO) -> None:
-        await interaction.response.send_message(embed=embed, file=discord.File(png_bio, "color.png"))
+    async def send_message(
+        self,
+        interaction: discord.Interaction,
+        embed: discord.Embed,
+        png_bio: io.BytesIO,
+    ) -> None:
+        await interaction.response.send_message(
+            embed=embed,
+            file=discord.File(png_bio, "color.png"),
+        )
 
     @group.command(name="encode", description="Encodes a string to a specified format.")
     @app_commands.describe(encoding="The encoding format to use", string="The string to encode")
-    @app_commands.choices(
-        encoding=[
-            app_commands.Choice[str](name="base64", value="base64"),
-        ]
-    )
+    @app_commands.choices(encoding=[app_commands.Choice[str](name="base64", value="base64")])
     async def encode(
         self,
         interaction: discord.Interaction,
@@ -190,17 +190,17 @@ class Tools(commands.Cog):
         except KeyError:
             description = "Invalid encoding selected!"
 
-        embed = EmbedCreator.create_info_embed(title=title, description=description, interaction=interaction)
+        embed = EmbedCreator.create_info_embed(
+            title=title,
+            description=description,
+            interaction=interaction,
+        )
 
         await interaction.response.send_message(embed=embed)
 
     @group.command(name="decode", description="Decodes a string from a specified format.")
     @app_commands.describe(encoding="The decoding format to use", string="The string to decode")
-    @app_commands.choices(
-        encoding=[
-            app_commands.Choice[str](name="base64", value="base64"),
-        ]
-    )
+    @app_commands.choices(encoding=[app_commands.Choice[str](name="base64", value="base64")])
     async def decode(
         self,
         interaction: discord.Interaction,
@@ -235,7 +235,11 @@ class Tools(commands.Cog):
         except KeyError:
             description = "Invalid decoding selected!"
 
-        embed = EmbedCreator.create_info_embed(title=title, description=description, interaction=interaction)
+        embed = EmbedCreator.create_info_embed(
+            title=title,
+            description=description,
+            interaction=interaction,
+        )
 
         await interaction.response.send_message(embed=embed)
 

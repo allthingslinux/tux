@@ -28,7 +28,7 @@ class EventHandler(commands.Cog):
         stripped_content = strip_formatting(message.content)
         if is_harmful(stripped_content):
             await message.reply(
-                "Warning: This command is potentially harmful. Please avoid running it unless you are fully aware of it's operation. If this was a mistake, please disregard this message."
+                "Warning: This command is potentially harmful. Please avoid running it unless you are fully aware of it's operation. If this was a mistake, please disregard this message.",
             )
 
 

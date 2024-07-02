@@ -35,10 +35,16 @@ class Mail(commands.Cog):
 
     @mail.command(name="register", description="Registers a user for mail.")
     @app_commands.checks.has_any_role("Root", "Admin", "Mod")
-    async def register(self, interaction: discord.Interaction, member: discord.Member, username: str) -> None:
+    async def register(
+        self,
+        interaction: discord.Interaction,
+        member: discord.Member,
+        username: str,
+    ) -> None:
         if not username.isalnum():
             await interaction.response.send_message(
-                "Username must be alphanumeric and contain no spaces.", ephemeral=True
+                "Username must be alphanumeric and contain no spaces.",
+                ephemeral=True,
             )
             return
 
@@ -71,7 +77,11 @@ class Mail(commands.Cog):
 
             async with httpx.AsyncClient(timeout=10.0) as client:
                 try:
-                    response = await client.post(api_endpoint, headers=self.headers, json=mailbox_data)
+                    response = await client.post(
+                        api_endpoint,
+                        headers=self.headers,
+                        json=mailbox_data,
+                    )
                     if response.status_code == 200:
                         result = response.json()
                         logger.info(f"Response JSON: {result}")
@@ -93,7 +103,8 @@ class Mail(commands.Cog):
                                     return
 
                         await interaction.response.send_message(
-                            f"Successfully registered {mailbox_info} for mail.", ephemeral=True
+                            f"Successfully registered {mailbox_info} for mail.",
+                            ephemeral=True,
                         )
 
                         dm_message = f"""
@@ -123,7 +134,8 @@ If you have any questions or need assistance, please feel free to reach out to t
 
                     elif response.status_code == 401:
                         await interaction.response.send_message(
-                            "Unauthorized. Check your API credentials.", ephemeral=True
+                            "Unauthorized. Check your API credentials.",
+                            ephemeral=True,
                         )
                     else:
                         await interaction.response.send_message(
@@ -132,12 +144,14 @@ If you have any questions or need assistance, please feel free to reach out to t
                         )
                 except httpx.RequestError as exc:
                     await interaction.response.send_message(
-                        f"An error occurred while requesting {exc.request.url!r}.", ephemeral=True
+                        f"An error occurred while requesting {exc.request.url!r}.",
+                        ephemeral=True,
                     )
                     logger.error(f"An error occurred while requesting, {exc}")
         else:
             await interaction.response.send_message(
-                "This command can only be used in a guild (server).", ephemeral=True
+                "This command can only be used in a guild (server).",
+                ephemeral=True,
             )
 
 

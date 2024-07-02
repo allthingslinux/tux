@@ -13,7 +13,11 @@ class Avatar(commands.Cog):
         self.bot = bot
 
     @commands.command(name="avatar", description="Get the avatar of a member.")
-    async def prefix_avatar(self, ctx: commands.Context[commands.Bot], member: discord.Member) -> None:
+    async def prefix_avatar(
+        self,
+        ctx: commands.Context[commands.Bot],
+        member: discord.Member,
+    ) -> None:
         """
         Get the avatar of a member.
 

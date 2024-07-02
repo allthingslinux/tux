@@ -27,7 +27,9 @@ class Random(commands.Cog):
             The context object for the command.
         """
 
-        await ctx.send(content="You got heads!" if random.choice([True, False]) else "You got tails!")
+        await ctx.send(
+            content="You got heads!" if random.choice([True, False]) else "You got tails!",
+        )
 
     @random.command(name="8ball", description="Ask the magic 8ball a question.")
     @app_commands.describe(question="The question to ask the 8ball.")
@@ -123,7 +125,12 @@ class Random(commands.Cog):
         minimum="The minimum value of the random number. (default: 0)",
         maximum="The maximum value of the random number. (default: 100)",
     )
-    async def random_number(self, ctx: commands.Context[commands.Bot], minimum: int = 0, maximum: int = 100) -> None:
+    async def random_number(
+        self,
+        ctx: commands.Context[commands.Bot],
+        minimum: int = 0,
+        maximum: int = 100,
+    ) -> None:
         """
         Generate a random number.
 
@@ -138,7 +145,10 @@ class Random(commands.Cog):
         """
 
         if minimum > maximum:
-            await ctx.reply(content="The minimum value must be less than the maximum value.", ephemeral=True)
+            await ctx.reply(
+                content="The minimum value must be less than the maximum value.",
+                ephemeral=True,
+            )
             return
 
         await ctx.reply(content=f"Your random number is: {random.randint(minimum, maximum)}")

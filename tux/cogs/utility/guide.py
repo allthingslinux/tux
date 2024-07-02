@@ -12,11 +12,7 @@ meta_fields = [
     "<#1193304492226129971>",
 ]
 
-support_fields = [
-    "<#1172312602181902357>",
-    "<#1172312653797007461>",
-    "<#1172312674298761216>",
-]
+support_fields = ["<#1172312602181902357>", "<#1172312653797007461>", "<#1172312674298761216>"]
 
 resources_fields = [
     "<#1221117147091304548>",
@@ -45,7 +41,10 @@ class Guide(commands.Cog):
         guild = interaction.guild
 
         if not guild:
-            await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
+            await interaction.response.send_message(
+                "This command can only be used in a server.",
+                ephemeral=True,
+            )
             return
 
         embed = EmbedCreator.create_info_embed(

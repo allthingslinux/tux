@@ -27,14 +27,21 @@ class GateLogging(commands.Cog):
             The member that joined the server.
         """
 
-        gate_embed = EmbedCreator.create_log_embed(title="Member Joined", description=f"Welcome {member.mention}!")
+        gate_embed = EmbedCreator.create_log_embed(
+            title="Member Joined",
+            description=f"Welcome {member.mention}!",
+        )
 
         created_at = datetime_to_unix(member.created_at)
         account_age = datetime_to_elapsed_time(member.created_at)
 
         gate_embed.add_field(name="User", value=member)
         gate_embed.add_field(name="ID", value=f"`{member.id}`")
-        gate_embed.add_field(name="Account Age", value=f"{account_age} ago ({created_at})", inline=False)
+        gate_embed.add_field(
+            name="Account Age",
+            value=f"{account_age} ago ({created_at})",
+            inline=False,
+        )
         gate_embed.set_thumbnail(url=member.display_avatar)
 
         await self.send_to_gate_log(gate_embed)

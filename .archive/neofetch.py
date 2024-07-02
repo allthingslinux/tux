@@ -24,7 +24,7 @@ class Neofetch(commands.Cog):
     async def neofetch(self, interaction: discord.Interaction) -> None:
         if interaction.guild is None:
             await interaction.response.send_message(
-                content="This command cannot be used in direct messages.", ephemeral=True
+                content="This command cannot be used in direct messages.", ephemeral=True,
             )
             return
 
@@ -52,13 +52,15 @@ class Neofetch(commands.Cog):
 ⠙⠲⠦⠥⢥⣅⡕⡐⡐⡐⡐⠌⢌⡾⠟⠟⠛⠛⠛⠛⠽⠾⣇⢂⢂⠢⡑⢌⢂⡶⠋⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠈⠑⠒⠶⠬⠞⠊⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⠢⣆⣑⡬⠖⠋⠀⠀⠀⠀⠀⠀"""
 
+
+
         # get uptime in the format of days, hours, minutes
         uptime = time.strftime("%d days, %H hours, %M minutes", time.gmtime(time.time() - psutil.boot_time()))
         cpuusage = psutil.cpu_percent()
         memusage = psutil.virtual_memory().percent
 
         lines = f"""{yellow}tux{reset}@{yellow}{interaction.guild.name.lower().replace(" ", "")}{reset}
------------------- 
+------------------
 [1;4;36;40mTux Stats{reset}
 {red}OS{reset}: Tux Alpha
 {yellow}Kernel{reset}: 6.9
@@ -66,7 +68,7 @@ class Neofetch(commands.Cog):
 {cyan}CPU{reset}: {cpuusage}%
 {blue}Memory{reset}: {memusage}%
 {pink}Ping{reset}: {round(self.bot.latency * 1000)}ms
------------------- 
+------------------
 [1;4;36;40mServer Stats{reset}
 {red}Name{reset}: {interaction.guild.name}
 {yellow}Owner{reset}: {interaction.guild.owner}

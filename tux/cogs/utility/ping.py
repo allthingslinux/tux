@@ -36,7 +36,9 @@ class Ping(commands.Cog):
             ram_amount_formatted = f"{ram_amount // (1024**2)}MB"
 
         embed = EmbedCreator.create_success_embed(
-            title="Pong!", description="Here are some stats about the bot.", interaction=interaction
+            title="Pong!",
+            description="Here are some stats about the bot.",
+            interaction=interaction,
         )
 
         embed.add_field(name="API Latency", value=f"{discord_ping}ms", inline=True)

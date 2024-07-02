@@ -10,14 +10,18 @@ from tux.utils.constants import Constants as CONST
 
 class EmbedCreator:
     @staticmethod
-    def get_timestamp(ctx: commands.Context[commands.Bot] | None, interaction: discord.Interaction | None) -> datetime:
+    def get_timestamp(
+        ctx: commands.Context[commands.Bot] | None,
+        interaction: discord.Interaction | None,
+    ) -> datetime:
         if ctx and ctx.message:
             return ctx.message.created_at
         return interaction.created_at if interaction else discord.utils.utcnow()
 
     @staticmethod
     def get_footer(
-        ctx: commands.Context[commands.Bot] | None, interaction: discord.Interaction | None
+        ctx: commands.Context[commands.Bot] | None,
+        interaction: discord.Interaction | None,
     ) -> tuple[str, str | None]:
         user: discord.User | discord.Member | None = None
         latency = None
@@ -38,10 +42,7 @@ class EmbedCreator:
         if ctx is None and interaction is None:
             return ("tux@atl $ ∕", "https://i.imgur.com/4sblrd0.png")  # noqa: RUF001
 
-        return (
-            "",
-            None,
-        )
+        return ("", None)
 
     @staticmethod
     def add_author(embed: discord.Embed, name: str, icon_url: str) -> None:

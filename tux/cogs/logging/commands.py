@@ -13,7 +13,9 @@ class CommandEventsCog(commands.Cog, name="Command Events Handler"):
 
     @commands.Cog.listener()
     async def on_app_command_completion(
-        self, interaction: discord.Interaction, command: discord.app_commands.AppCommand
+        self,
+        interaction: discord.Interaction,
+        command: discord.app_commands.AppCommand,
     ) -> None:
         logger.info(f"Command {command.name} completed by {interaction.user}")
 

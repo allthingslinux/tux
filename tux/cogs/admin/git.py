@@ -1,9 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from githubkit.versions.latest.models import (
-    Issue,
-)
+from githubkit.versions.latest.models import Issue
 from loguru import logger
 
 from tux.services.github import GitHubService
@@ -15,11 +13,7 @@ class LinkButton(discord.ui.View):
     def __init__(self, url: str) -> None:
         super().__init__()
         self.add_item(
-            discord.ui.Button(
-                style=discord.ButtonStyle.link,
-                label="View on Github",
-                url=url,
-            )
+            discord.ui.Button(style=discord.ButtonStyle.link, label="View on Github", url=url),
         )
 
 
@@ -88,12 +82,7 @@ class Git(commands.Cog):
 
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
     @git.command(name="create_issue", description="Create an issue.")
-    async def create_issue(
-        self,
-        interaction: discord.Interaction,
-        title: str,
-        body: str,
-    ) -> None:
+    async def create_issue(self, interaction: discord.Interaction, title: str, body: str) -> None:
         """
         Create an issue.
 
@@ -168,16 +157,15 @@ class Git(commands.Cog):
             logger.error(f"Error creating comment: {e}")
 
         else:
-            await interaction.followup.send(embed=embed, view=LinkButton(created_issue_comment.html_url))
+            await interaction.followup.send(
+                embed=embed,
+                view=LinkButton(created_issue_comment.html_url),
+            )
             logger.info(f"{interaction.user} created a comment.")
 
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
     @git.command(name="close_issue", description="Close an issue.")
-    async def close_issue(
-        self,
-        interaction: discord.Interaction,
-        issue_number: int,
-    ) -> None:
+    async def close_issue(self, interaction: discord.Interaction, issue_number: int) -> None:
         """
         Close an issue.
 
@@ -211,11 +199,7 @@ class Git(commands.Cog):
 
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
     @git.command(name="get_issue", description="Get an issue.")
-    async def get_issue(
-        self,
-        interaction: discord.Interaction,
-        issue_number: int,
-    ) -> None:
+    async def get_issue(self, interaction: discord.Interaction, issue_number: int) -> None:
         """
         Get an issue.
 
@@ -321,7 +305,9 @@ class Git(commands.Cog):
         else:
             await interaction.followup.send(
                 embed=embed,
-                view=LinkButton("https://github.com/allthingslinux/tux/issues?q=is%3Aissue+is%3Aclosed"),
+                view=LinkButton(
+                    "https://github.com/allthingslinux/tux/issues?q=is%3Aissue+is%3Aclosed",
+                ),
             )
             logger.info(f"{interaction.user} fetched closed issues.")
 
@@ -401,11 +387,7 @@ class Git(commands.Cog):
 
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
     @git.command(name="get_pull", description="Get a pull request.")
-    async def get_pull(
-        self,
-        interaction: discord.Interaction,
-        pull_number: int,
-    ) -> None:
+    async def get_pull(self, interaction: discord.Interaction, pull_number: int) -> None:
         """
         Get a pull request.
 

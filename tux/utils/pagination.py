@@ -22,7 +22,14 @@ _LT = TypeVar("_LT", discord.Embed, str, covariant=True)
 
 
 class InteractionListMenuView(discord.ui.View):
-    def __init__(self, user_id: int, listmenu: list[_LT], *, timeout: float = 180, ephemeral: bool = False):
+    def __init__(
+        self,
+        user_id: int,
+        listmenu: list[_LT],
+        *,
+        timeout: float = 180,
+        ephemeral: bool = False,
+    ):
         super().__init__(timeout=timeout)
         self.user_id = user_id
         self.listmenu = listmenu
@@ -44,7 +51,11 @@ class InteractionListMenuView(discord.ui.View):
         element = self.setup_by_current_index()
 
         if isinstance(element, discord.Embed):
-            self.message = await response.send_message(embed=element, view=self, ephemeral=self.ephemeral)
+            self.message = await response.send_message(
+                embed=element,
+                view=self,
+                ephemeral=self.ephemeral,
+            )
         else:
             self.message = await response.send_message(element, view=self, ephemeral=self.ephemeral)
 

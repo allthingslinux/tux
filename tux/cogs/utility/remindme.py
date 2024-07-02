@@ -70,7 +70,8 @@ class RemindMe(commands.Cog):
                 )
 
                 if channel is not None and isinstance(
-                    channel, discord.TextChannel | discord.Thread | discord.VoiceChannel
+                    channel,
+                    discord.TextChannel | discord.Thread | discord.VoiceChannel,
                 ):
                     with contextlib.suppress(discord.Forbidden):
                         await channel.send(
@@ -79,7 +80,9 @@ class RemindMe(commands.Cog):
                         )
 
                 else:
-                    logger.error(f"Failed to send reminder to {user.id}, DMs closed and channel not found.")
+                    logger.error(
+                        f"Failed to send reminder to {user.id}, DMs closed and channel not found.",
+                    )
 
         else:
             logger.error(f"Failed to send reminder to {reminder.reminder_user_id}, user not found.")
@@ -137,7 +140,10 @@ class RemindMe(commands.Cog):
         # Create a task to wait until the reminder expires
         self.bot.loop.create_task(self.end_timer(closest_reminder))
 
-    @app_commands.command(name="remindme", description="Reminds you after a certain amount of time.")
+    @app_commands.command(
+        name="remindme",
+        description="Reminds you after a certain amount of time.",
+    )
     async def remindme(self, interaction: discord.Interaction, time: str, *, reminder: str) -> None:
         """
         Set a reminder for a certain amount of time.

@@ -15,7 +15,11 @@ class Dev(commands.Cog):
             await ctx.send_help("dev")
 
     @commands.has_guild_permissions(administrator=True)
-    @dev.command(name="sync_tree", description="Syncs the app command tree.", usage="dev sync_tree <guild>")
+    @dev.command(
+        name="sync_tree",
+        description="Syncs the app command tree.",
+        usage="dev sync_tree <guild>",
+    )
     async def sync_tree(self, ctx: commands.Context[commands.Bot], guild: discord.Guild) -> None:
         """
         Syncs the application commands to Discord.
@@ -47,7 +51,11 @@ class Dev(commands.Cog):
         await ctx.reply("Application command tree synced.")
 
     @commands.has_guild_permissions(administrator=True)
-    @dev.command(name="clear_tree", description="Clears the app command tree.", usage="dev clear_tree")
+    @dev.command(
+        name="clear_tree",
+        description="Clears the app command tree.",
+        usage="dev clear_tree",
+    )
     async def clear_tree(self, ctx: commands.Context[commands.Bot]) -> None:
         """
         Parameters
@@ -79,7 +87,11 @@ class Dev(commands.Cog):
         await ctx.reply("Slash command tree cleared.")
 
     @commands.has_guild_permissions(administrator=True)
-    @dev.command(name="load_cog", description="Loads a cog into the bot.", usage="dev load_cog <cog>")
+    @dev.command(
+        name="load_cog",
+        description="Loads a cog into the bot.",
+        usage="dev load_cog <cog>",
+    )
     @app_commands.describe(cog="The name of the cog to load.")
     async def load_cog(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
         """
@@ -120,7 +132,11 @@ class Dev(commands.Cog):
             logger.info(f"Cog {cog} loaded.")
 
     @commands.has_guild_permissions(administrator=True)
-    @dev.command(name="unload_cog", description="Unloads a cog from the bot.", usage="dev unload_cog <cog>")
+    @dev.command(
+        name="unload_cog",
+        description="Unloads a cog from the bot.",
+        usage="dev unload_cog <cog>",
+    )
     async def unload_cog(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
         """
         Unloads an cog from the bot.
@@ -154,7 +170,11 @@ class Dev(commands.Cog):
             await ctx.send(f"Cog {cog} unloaded.")
 
     @commands.has_guild_permissions(administrator=True)
-    @dev.command(name="reload_cog", description="Reloads a cog into the bot.", usage="dev reload_cog <cog>")
+    @dev.command(
+        name="reload_cog",
+        description="Reloads a cog into the bot.",
+        usage="dev reload_cog <cog>",
+    )
     async def reload_cog(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
         """
         Reloads a cog in the bot.

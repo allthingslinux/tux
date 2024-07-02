@@ -11,10 +11,7 @@ class MemberCount(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="membercount", description="Shows server member count")
-    async def membercount(
-        self,
-        interaction: discord.Interaction,
-    ) -> None:
+    async def membercount(self, interaction: discord.Interaction) -> None:
         """
         Show the member count for the server.
 
@@ -44,7 +41,9 @@ class MemberCount(commands.Cog):
 
             await interaction.response.send_message(embed=embed)
 
-            logger.info(f"{interaction.user} used the membercount command in {interaction.channel}.")
+            logger.info(
+                f"{interaction.user} used the membercount command in {interaction.channel}.",
+            )
 
 
 async def setup(bot: commands.Bot) -> None:

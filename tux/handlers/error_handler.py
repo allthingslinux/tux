@@ -45,13 +45,17 @@ class ErrorHandler(commands.Cog):
             bot.tree.error(self.dispatch_to_app_command_handler)
 
     async def dispatch_to_app_command_handler(
-        self, interaction: discord.Interaction, error: app_commands.AppCommandError
+        self,
+        interaction: discord.Interaction,
+        error: app_commands.AppCommandError,
     ) -> None:
         """Dispatch command error to appropriate handler."""
         await self.handle_app_command_error(interaction, error)
 
     async def handle_app_command_error(
-        self, interaction: discord.Interaction, error: app_commands.AppCommandError
+        self,
+        interaction: discord.Interaction,
+        error: app_commands.AppCommandError,
     ) -> None:
         """Handle errors for app commands."""
         error_message = error_map.get(type(error), self.error_message).format(error=error)
@@ -65,7 +69,11 @@ class ErrorHandler(commands.Cog):
             self.log_error_traceback(error)
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx: commands.Context[commands.Bot], error: commands.CommandError) -> None:
+    async def on_command_error(
+        self,
+        ctx: commands.Context[commands.Bot],
+        error: commands.CommandError,
+    ) -> None:
         """Handle errors for traditional commands."""
         if (
             hasattr(ctx.command, "on_error")
@@ -85,7 +93,11 @@ class ErrorHandler(commands.Cog):
         if type(error) not in error_map:
             self.log_error_traceback(error)
 
-    def get_error_message(self, error: Exception, ctx: commands.Context[commands.Bot] | None = None) -> str:
+    def get_error_message(
+        self,
+        error: Exception,
+        ctx: commands.Context[commands.Bot] | None = None,
+    ) -> str:
         """Generate an error message from the error map."""
         if ctx:
             return error_map.get(type(error), self.error_message).format(error=error, ctx=ctx)

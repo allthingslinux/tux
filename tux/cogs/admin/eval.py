@@ -57,7 +57,7 @@ class Eval(commands.Cog):
         # Check if the user is the bot owner
         if ctx.author.id != CONST.BOT_OWNER_ID:
             logger.warning(
-                f"{ctx.author} tried to run eval but is not the bot owner. (Owner ID: {self.bot.owner_id}, User ID: {ctx.author.id})"
+                f"{ctx.author} tried to run eval but is not the bot owner. (Owner ID: {self.bot.owner_id}, User ID: {ctx.author.id})",
             )
             await ctx.send("You are not the bot owner. Better luck next time!")
             return

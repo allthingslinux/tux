@@ -104,14 +104,14 @@ class Wiki(commands.Cog):
         title: tuple[str, str] = self.query_arch_wiki(query)
 
         if title[0] == "error":
-            embed = EmbedCreator.create_error_embed(title="Error", description="No search results found.", ctx=ctx)
-
-        else:
-            embed = EmbedCreator.create_info_embed(
-                title=title[0],
-                description=title[1],
+            embed = EmbedCreator.create_error_embed(
+                title="Error",
+                description="No search results found.",
                 ctx=ctx,
             )
+
+        else:
+            embed = EmbedCreator.create_info_embed(title=title[0], description=title[1], ctx=ctx)
 
         await ctx.reply(embed=embed)
 
@@ -132,14 +132,14 @@ class Wiki(commands.Cog):
         title: tuple[str, str] = self.query_atl_wiki(query)
 
         if title[0] == "error":
-            embed = EmbedCreator.create_error_embed(title="Error", description="No search results found.", ctx=ctx)
-
-        else:
-            embed = EmbedCreator.create_info_embed(
-                title=title[0],
-                description=title[1],
+            embed = EmbedCreator.create_error_embed(
+                title="Error",
+                description="No search results found.",
                 ctx=ctx,
             )
+
+        else:
+            embed = EmbedCreator.create_info_embed(title=title[0], description=title[1], ctx=ctx)
 
         await ctx.reply(embed=embed)
 

@@ -46,7 +46,10 @@ class TempVc(commands.Cog):
             return
 
         if before.channel is not None:
-            category = discord.utils.get(before.channel.guild.categories, id=int(CONST.TEMPVC_CATEGORY_ID or "0"))
+            category = discord.utils.get(
+                before.channel.guild.categories,
+                id=int(CONST.TEMPVC_CATEGORY_ID or "0"),
+            )
 
             if (
                 not category
@@ -59,7 +62,9 @@ class TempVc(commands.Cog):
 
             if len(before.channel.members) == 0:
                 await before.channel.delete()
-                logger.info(f"Deleted temporary channel {before.channel.name} as it has no members.")
+                logger.info(
+                    f"Deleted temporary channel {before.channel.name} as it has no members.",
+                )
 
             # Search all lost temporary channels and delete them
             for channel in category.voice_channels:

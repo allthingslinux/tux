@@ -66,7 +66,10 @@ class Info(commands.Cog):
             description="Tux is a Discord bot written in Python using discord.py.",
             interaction=interaction,
         )
-        embed.add_field(name="GitHub", value="[View the source code](https://github.com/allthingslinux/tux)")
+        embed.add_field(
+            name="GitHub",
+            value="[View the source code](https://github.com/allthingslinux/tux)",
+        )
 
         await interaction.response.send_message(embed=embed)
 

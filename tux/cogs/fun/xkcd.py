@@ -11,18 +11,10 @@ class XkcdLinkButtons(discord.ui.View):
     def __init__(self, explain_url: str, webpage_url: str) -> None:
         super().__init__()
         self.add_item(
-            discord.ui.Button(
-                style=discord.ButtonStyle.link,
-                label="Explainxkcd",
-                url=explain_url,
-            )
+            discord.ui.Button(style=discord.ButtonStyle.link, label="Explainxkcd", url=explain_url),
         )
         self.add_item(
-            discord.ui.Button(
-                style=discord.ButtonStyle.link,
-                label="Webpage",
-                url=webpage_url,
-            )
+            discord.ui.Button(style=discord.ButtonStyle.link, label="Webpage", url=webpage_url),
         )
 
 
@@ -61,7 +53,9 @@ class Xkcd(commands.Cog):
             await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
     async def get_comic_and_embed(
-        self, latest: bool = False, number: int | None = None
+        self,
+        latest: bool = False,
+        number: int | None = None,
     ) -> tuple[discord.Embed, discord.ui.View | None, bool]:
         """
         Get the xkcd comic and create an embed.

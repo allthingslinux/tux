@@ -38,7 +38,12 @@ class Export(commands.Cog):
             return await interaction.response.send_message(embed=embed)
 
         if flags and "--help" not in flags:
-            file = await exports.get_ban_list_csv(interaction, bans, valid_flags, flags.split(sep=" ") if flags else [])
+            file = await exports.get_ban_list_csv(
+                interaction,
+                bans,
+                valid_flags,
+                flags.split(sep=" ") if flags else [],
+            )
             return await interaction.response.send_message(file=file)
 
         title = f"Total Bans in {interaction.guild}: {len(bans)}"
@@ -65,7 +70,10 @@ class Export(commands.Cog):
 
         if flags and "--help" not in flags:
             file = await exports.get_member_list_csv(
-                interaction, members, valid_flags, flags.split(sep=" ") if flags else []
+                interaction,
+                members,
+                valid_flags,
+                flags.split(sep=" ") if flags else [],
             )
             return await interaction.response.send_message(file=file)
 
