@@ -16,9 +16,7 @@ class Tldr(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    async def get_autocomplete(
-        self, interaction: discord.Interaction, query: str
-    ) -> list[app_commands.Choice[str]]:
+    async def get_autocomplete(self, interaction: discord.Interaction, query: str) -> list[app_commands.Choice[str]]:
         """
         Provide autocomplete suggestions for TLDR commands based on user query.
 
@@ -40,9 +38,7 @@ class Tldr(commands.Cog):
         commands = self.get_tldrs()
 
         filtered_commands = [
-            app_commands.Choice(name=cmd, value=cmd)
-            for cmd in commands
-            if cmd.lower().startswith(query.lower())
+            app_commands.Choice(name=cmd, value=cmd) for cmd in commands if cmd.lower().startswith(query.lower())
         ]
 
         return filtered_commands[:25]

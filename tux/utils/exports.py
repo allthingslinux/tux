@@ -16,9 +16,7 @@ _flags = {
 }
 
 
-async def _define_headers(
-    args: list[str], valid_flags: list[str], default: list[str] | None = None
-) -> list[str]:
+async def _define_headers(args: list[str], valid_flags: list[str], default: list[str] | None = None) -> list[str]:
     """
     Define the headers for the CSV output file.
     """
@@ -52,9 +50,7 @@ async def _create_encoded_string(
     return io.BytesIO(csvfile.getvalue().encode())
 
 
-async def get_help_embed(
-    valid_flags: list[str], title: str, data_description: str
-) -> discord.Embed:
+async def get_help_embed(valid_flags: list[str], title: str, data_description: str) -> discord.Embed:
     """
     Create an embed with help information for exporting data.
     """

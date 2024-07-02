@@ -76,9 +76,7 @@ class CogLoader(commands.Cog):
                     logger.debug(f"Successfully loaded cog: {module}")
 
                 except Exception as e:
-                    logger.error(
-                        f"Failed to load cog {module}. Error: {e}\n{traceback.format_exc()}"
-                    )
+                    logger.error(f"Failed to load cog {module}. Error: {e}\n{traceback.format_exc()}")
 
         except Exception as e:
             logger.error(f"An error occurred while processing {apath}: {e}")

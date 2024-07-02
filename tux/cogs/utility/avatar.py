@@ -29,11 +29,7 @@ class Avatar(commands.Cog):
         guild_avatar = member.guild_avatar.url if member.guild_avatar else None
         profile_avatar = member.avatar.url if member.avatar else None
 
-        files = [
-            await self.create_avatar_file(avatar)
-            for avatar in [guild_avatar, profile_avatar]
-            if avatar
-        ]
+        files = [await self.create_avatar_file(avatar) for avatar in [guild_avatar, profile_avatar] if avatar]
 
         if files:
             await interaction.response.send_message(files=files)

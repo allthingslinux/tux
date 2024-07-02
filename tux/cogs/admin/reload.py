@@ -7,9 +7,7 @@ class Reload(commands.Cog):
         self.bot = bot
 
     @commands.has_guild_permissions(administrator=True)
-    @commands.command(
-        name="reload", description="Reloads an extension into the bot.", usage="reload <extension>"
-    )
+    @commands.command(name="reload", description="Reloads an extension into the bot.", usage="reload <extension>")
     async def reload(self, ctx: commands.Context[commands.Bot], *, ext: str) -> None:
         """
         Reloads an extension in the bot.

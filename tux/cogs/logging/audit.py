@@ -74,9 +74,7 @@ class AuditLogging(commands.Cog):
         await self.send_to_audit_log(audit_embed)
 
     @commands.Cog.listener()
-    async def on_guild_channel_update(
-        self, before: discord.abc.GuildChannel, after: discord.abc.GuildChannel
-    ) -> None:
+    async def on_guild_channel_update(self, before: discord.abc.GuildChannel, after: discord.abc.GuildChannel) -> None:
         """
         Logs when a channel is updated in a guild.
 
@@ -228,9 +226,7 @@ class AuditLogging(commands.Cog):
         deleted_stickers = [sticker for sticker in before if sticker not in after]
 
         if new_stickers:
-            stickers_str = "\n".join(
-                [f"[{sticker.name}]({sticker.url})" for sticker in new_stickers]
-            )
+            stickers_str = "\n".join([f"[{sticker.name}]({sticker.url})" for sticker in new_stickers])
             embed.add_field(name="Added Stickers", value=stickers_str[:1024])
 
             embed.set_image(url=new_stickers[0].url)
@@ -412,9 +408,7 @@ class AuditLogging(commands.Cog):
         await self.send_to_audit_log(embed)
 
     @commands.Cog.listener()
-    async def on_scheduled_event_update(
-        self, before: discord.ScheduledEvent, after: discord.ScheduledEvent
-    ) -> None:
+    async def on_scheduled_event_update(self, before: discord.ScheduledEvent, after: discord.ScheduledEvent) -> None:
         """
         Logs when a scheduled event is updated.
 
@@ -472,9 +466,7 @@ class AuditLogging(commands.Cog):
         await self.send_to_audit_log(embed)
 
     @commands.Cog.listener()
-    async def on_stage_instance_update(
-        self, before: discord.StageInstance, after: discord.StageInstance
-    ) -> None:
+    async def on_stage_instance_update(self, before: discord.StageInstance, after: discord.StageInstance) -> None:
         """
         Logs when a stage instance is updated.
 

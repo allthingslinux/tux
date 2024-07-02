@@ -12,19 +12,13 @@ class SnippetController:
         return await self.table.find_many()
 
     async def get_all_snippets_sorted(self, newestfirst: bool = True) -> list[Snippet]:
-        return await self.table.find_many(
-            order={"snippet_created_at": "desc" if newestfirst else "asc"}
-        )
+        return await self.table.find_many(order={"snippet_created_at": "desc" if newestfirst else "asc"})
 
     async def get_snippet_by_name(self, snippet_name: str) -> Snippet | None:
         return await self.table.find_first(where={"snippet_name": snippet_name})
 
-    async def get_snippet_by_name_and_guild_id(
-        self, snippet_name: str, guild_id: int
-    ) -> Snippet | None:
-        return await self.table.find_first(
-            where={"snippet_name": snippet_name, "guild_id": guild_id}
-        )
+    async def get_snippet_by_name_and_guild_id(self, snippet_name: str, guild_id: int) -> Snippet | None:
+        return await self.table.find_first(where={"snippet_name": snippet_name, "guild_id": guild_id})
 
     async def create_snippet(
         self,
@@ -48,6 +42,4 @@ class SnippetController:
         await self.table.delete(where={"snippet_id": snippet_id})
 
     async def update_snippet_by_id(self, snippet_id: int, snippet_content: str) -> Snippet | None:
-        return await self.table.update(
-            where={"snippet_id": snippet_id}, data={"snippet_content": snippet_content}
-        )
+        return await self.table.update(where={"snippet_id": snippet_id}, data={"snippet_content": snippet_content})

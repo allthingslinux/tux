@@ -167,9 +167,7 @@ class RoleCount(commands.Cog):
             app_commands.Choice(name="Vanity", value="vanity"),
         ]
     )
-    async def rolecount(
-        self, interaction: discord.Interaction, which: discord.app_commands.Choice[str]
-    ) -> None:
+    async def rolecount(self, interaction: discord.Interaction, which: discord.app_commands.Choice[str]) -> None:
         if interaction.guild:
             roles_emojis: list[list[int | str]] = self.roles_emoji_mapping.get(which.value, [])
             await self.process_roles(interaction, roles_emojis, which)
@@ -217,9 +215,7 @@ class RoleCount(commands.Cog):
         # Check if current embed field count has reached max limit of 12 fields
         if role_count >= 12:
             pages.append(embed)  # Append current embed to the page list
-            embed = self.create_embed(
-                interaction, which
-            )  # Create a new embed for the next set of fields
+            embed = self.create_embed(interaction, which)  # Create a new embed for the next set of fields
             role_count = 0  # Reset the role count for new page
 
         # Fetch an emoji for the role from available emojis or the predefined emoji identifier
@@ -236,9 +232,7 @@ class RoleCount(commands.Cog):
 
         return role_count, embed
 
-    def create_embed(
-        self, interaction: discord.Interaction, which: discord.app_commands.Choice[str]
-    ):
+    def create_embed(self, interaction: discord.Interaction, which: discord.app_commands.Choice[str]):
         return EmbedCreator.create_info_embed(
             title=f"{which.name} Roles",
             description="Number of users in each role",

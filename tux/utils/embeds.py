@@ -10,9 +10,7 @@ from tux.utils.constants import Constants as CONST
 
 class EmbedCreator:
     @staticmethod
-    def get_timestamp(
-        ctx: commands.Context[commands.Bot] | None, interaction: discord.Interaction | None
-    ) -> datetime:
+    def get_timestamp(ctx: commands.Context[commands.Bot] | None, interaction: discord.Interaction | None) -> datetime:
         if ctx and ctx.message:
             return ctx.message.created_at
         return interaction.created_at if interaction else discord.utils.utcnow()
@@ -68,9 +66,7 @@ class EmbedCreator:
 
         embed.set_author(
             name=state.capitalize() if state else "Info",
-            icon_url=CONST.EMBED_STATE_ICONS[state]
-            if state
-            else CONST.EMBED_STATE_ICONS["DEFAULT"],
+            icon_url=CONST.EMBED_STATE_ICONS[state] if state else CONST.EMBED_STATE_ICONS["DEFAULT"],
         )
 
         embed.set_footer(text=footer[0], icon_url=footer[1])
@@ -102,9 +98,7 @@ class EmbedCreator:
 
         embed.set_author(
             name=state.capitalize() if state else "Info",
-            icon_url=CONST.EMBED_STATE_ICONS[state]
-            if state
-            else CONST.EMBED_STATE_ICONS["DEFAULT"],
+            icon_url=CONST.EMBED_STATE_ICONS[state] if state else CONST.EMBED_STATE_ICONS["DEFAULT"],
         )
 
         embed.set_footer(

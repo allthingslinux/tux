@@ -8,9 +8,7 @@ class Sync(commands.Cog):
         self.bot = bot
 
     @commands.has_guild_permissions(administrator=True)
-    @commands.command(
-        name="sync", description="Syncs the application commands to Discord.", usage="sync <guild>"
-    )
+    @commands.command(name="sync", description="Syncs the application commands to Discord.", usage="sync <guild>")
     async def sync(self, ctx: commands.Context[commands.Bot], guild: discord.Guild) -> None:
         """
         Syncs the application commands to Discord.

@@ -122,9 +122,7 @@ class Random(commands.Cog):
         minimum="The minimum value of the random number. (default: 0)",
         maximum="The maximum value of the random number. (default: 100)",
     )
-    async def random_number(
-        self, interaction: discord.Interaction, minimum: int = 0, maximum: int = 100
-    ) -> None:
+    async def random_number(self, interaction: discord.Interaction, minimum: int = 0, maximum: int = 100) -> None:
         """
         Generate a random number.
 
@@ -138,9 +136,7 @@ class Random(commands.Cog):
             The maximum value of the random number, by default 100.
         """
         if minimum > maximum:
-            await interaction.response.send_message(
-                content="The minimum value must be less than the maximum value."
-            )
+            await interaction.response.send_message(content="The minimum value must be less than the maximum value.")
             return
 
         embed = EmbedCreator.create_info_embed(

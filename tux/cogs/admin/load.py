@@ -7,9 +7,7 @@ class Load(commands.Cog):
         self.bot = bot
 
     @commands.has_guild_permissions(administrator=True)
-    @commands.command(
-        name="load", description="Loads an extension into the bot.", usage="load <extension>"
-    )
+    @commands.command(name="load", description="Loads an extension into the bot.", usage="load <extension>")
     async def load(self, ctx: commands.Context[commands.Bot], *, ext: str) -> None:
         """
         Loads an extension into the bot.

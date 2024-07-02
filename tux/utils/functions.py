@@ -119,16 +119,10 @@ def compare_changes(before: dict[str, Any], after: dict[str, Any]) -> list[str]:
         A list of strings showing the changes made in the dictionaries.
     """
 
-    return [
-        f"{key}: {before[key]} -> {after[key]}"
-        for key in before
-        if key in after and before[key] != after[key]
-    ]
+    return [f"{key}: {before[key]} -> {after[key]}" for key in before if key in after and before[key] != after[key]]
 
 
-def compare_guild_channel_changes(
-    before: discord.abc.GuildChannel, after: discord.abc.GuildChannel
-) -> list[str]:
+def compare_guild_channel_changes(before: discord.abc.GuildChannel, after: discord.abc.GuildChannel) -> list[str]:
     """
     Compares the changes between two GuildChannel instances and returns a list of strings representing the changes.
 
@@ -163,9 +157,7 @@ def compare_guild_channel_changes(
     ]
 
 
-def compare_member_changes(
-    before: discord.Member | discord.User, after: discord.Member | discord.User
-) -> list[str]:
+def compare_member_changes(before: discord.Member | discord.User, after: discord.Member | discord.User) -> list[str]:
     """
     Compares changes between two Member instances and returns a list of strings representing the changes.
 
