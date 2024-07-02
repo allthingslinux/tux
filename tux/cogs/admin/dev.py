@@ -50,6 +50,13 @@ class Dev(commands.Cog):
         await self.bot.tree.sync(guild=ctx.guild)
         await ctx.reply("Application command tree synced.")
 
+    @sync_tree.error
+    async def sync_error(self, ctx: commands.Context[commands.Bot], error: Exception) -> None:
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send(f"Please specify a guild to sync application commands to. {error}")
+        else:
+            logger.error(f"Error syncing application commands: {error}")
+
     @commands.has_guild_permissions(administrator=True)
     @dev.command(
         name="clear_tree",
@@ -131,6 +138,22 @@ class Dev(commands.Cog):
             await ctx.send(f"Cog {cog} loaded.")
             logger.info(f"Cog {cog} loaded.")
 
+    @load_cog.error
+    async def load_error(self, ctx: commands.Context[commands.Bot], error: Exception) -> None:
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send(f"Please specify an cog to load. {error}")
+        elif isinstance(error, commands.ExtensionAlreadyLoaded):
+            await ctx.send(f"The specified cog is already loaded. {error}")
+        elif isinstance(error, commands.ExtensionNotFound):
+            await ctx.send(f"The specified cog is not found. {error}")
+        elif isinstance(error, commands.ExtensionFailed):
+            await ctx.send(f"Failed to load cog: {error}")
+        elif isinstance(error, commands.NoEntryPointError):
+            await ctx.send(f"The specified cog does not have a setup function. {error}")
+        else:
+            await ctx.send(f"Failed to load cog: {error}")
+            logger.error(f"Failed to load cog: {error}")
+
     @commands.has_guild_permissions(administrator=True)
     @dev.command(
         name="unload_cog",
@@ -168,6 +191,15 @@ class Dev(commands.Cog):
         else:
             logger.info(f"Cog {cog} unloaded.")
             await ctx.send(f"Cog {cog} unloaded.")
+
+    @unload_cog.error
+    async def unload_error(self, ctx: commands.Context[commands.Bot], error: Exception) -> None:
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send(f"Please specify an extension to unload. {error}")
+        elif isinstance(error, commands.ExtensionNotLoaded):
+            await ctx.send(f"That cog is not loaded. {error}")
+        else:
+            logger.error(f"Error unloading cog: {error}")
 
     @commands.has_guild_permissions(administrator=True)
     @dev.command(
@@ -208,14 +240,6 @@ class Dev(commands.Cog):
             await ctx.send(f"Cog {cog} reloaded.")
             logger.info(f"Cog {cog} reloaded.")
 
-    @sync_tree.error
-    async def sync_error(self, ctx: commands.Context[commands.Bot], error: Exception) -> None:
-        if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(f"Please specify a guild to sync application commands to. {error}")
-
-        else:
-            logger.error(f"Error syncing application commands: {error}")
-
     @reload_cog.error
     async def reload_error(self, ctx: commands.Context[commands.Bot], error: Exception) -> None:
         if isinstance(error, commands.MissingRequiredArgument):
@@ -225,31 +249,6 @@ class Dev(commands.Cog):
         else:
             await ctx.send(f"Error reloading cog: {error}")
             logger.error(f"Error reloading cog: {error}")
-
-    @unload_cog.error
-    async def unload_error(self, ctx: commands.Context[commands.Bot], error: Exception) -> None:
-        if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(f"Please specify an extension to unload. {error}")
-        elif isinstance(error, commands.ExtensionNotLoaded):
-            await ctx.send(f"That cog is not loaded. {error}")
-        else:
-            logger.error(f"Error unloading cog: {error}")
-
-    @load_cog.error
-    async def load_error(self, ctx: commands.Context[commands.Bot], error: Exception) -> None:
-        if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(f"Please specify an cog to load. {error}")
-        elif isinstance(error, commands.ExtensionAlreadyLoaded):
-            await ctx.send(f"The specified cog is already loaded. {error}")
-        elif isinstance(error, commands.ExtensionNotFound):
-            await ctx.send(f"The specified cog is not found. {error}")
-        elif isinstance(error, commands.ExtensionFailed):
-            await ctx.send(f"Failed to load cog: {error}")
-        elif isinstance(error, commands.NoEntryPointError):
-            await ctx.send(f"The specified cog does not have a setup function. {error}")
-        else:
-            await ctx.send(f"Failed to load cog: {error}")
-            logger.error(f"Failed to load cog: {error}")
 
 
 async def setup(bot: commands.Bot) -> None:

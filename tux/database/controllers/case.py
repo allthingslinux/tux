@@ -1,13 +1,20 @@
 from datetime import datetime
 
 from prisma.enums import CaseType
-from prisma.models import Case
+from prisma.models import Case, Guild
 from tux.database.client import db
 
 
 class CaseController:
     def __init__(self):
         self.table = db.case
+        self.guild_table = db.guild
+
+    async def ensure_guild_exists(self, guild_id: int) -> Guild | None:
+        guild = await self.guild_table.find_first(where={"guild_id": guild_id})
+        if guild is None:
+            return await self.guild_table.create(data={"guild_id": guild_id})
+        return guild
 
     async def get_all_cases(self) -> list[Case]:
         return await self.table.find_many()
@@ -24,13 +31,15 @@ class CaseController:
         case_reason: str,
         case_expires_at: datetime | None = None,
     ) -> Case | None:
+        await self.ensure_guild_exists(guild_id)
+
         return await self.table.create(
             data={
                 "guild_id": guild_id,
                 "case_target_id": case_target_id,
                 "case_moderator_id": case_moderator_id,
-                "case_reason": case_reason,
                 "case_type": case_type,
+                "case_reason": case_reason,
                 "case_expires_at": case_expires_at,
             },
         )

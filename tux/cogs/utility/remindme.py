@@ -34,7 +34,7 @@ def get_closest_reminder(reminders: list[Reminder]) -> Reminder | None:
 class RemindMe(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.db_controller = DatabaseController()
+        self.db = DatabaseController().reminder
         self.bot.loop.create_task(self.update())
 
     async def send_reminders(self, reminder: Reminder) -> None:
@@ -88,7 +88,7 @@ class RemindMe(commands.Cog):
             logger.error(f"Failed to send reminder to {reminder.reminder_user_id}, user not found.")
 
         # Delete the reminder after sending
-        await self.db_controller.reminders.delete_reminder_by_id(reminder.reminder_id)
+        await self.db.delete_reminder_by_id(reminder.reminder_id)
 
         # wait for a second so that the reminder is deleted before checking for more reminders
         # who knows if this works, it seems to
@@ -120,7 +120,7 @@ class RemindMe(commands.Cog):
 
         try:
             # Get all reminders
-            reminders = await self.db_controller.reminders.get_all_reminders()
+            reminders = await self.db.get_all_reminders()
             # Get the closest reminder
             closest_reminder = get_closest_reminder(reminders)
 
@@ -170,7 +170,7 @@ class RemindMe(commands.Cog):
         seconds = datetime.datetime.now(datetime.UTC) + datetime.timedelta(seconds=seconds)
 
         try:
-            await self.db_controller.reminders.insert_reminder(
+            await self.db.insert_reminder(
                 reminder_user_id=interaction.user.id,
                 reminder_content=reminder,
                 reminder_expires_at=seconds,

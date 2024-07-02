@@ -1,10 +1,17 @@
-from prisma.models import Note
+from prisma.models import Guild, Note
 from tux.database.client import db
 
 
 class NoteController:
     def __init__(self):
         self.table = db.note
+        self.guild_table = db.guild
+
+    async def ensure_guild_exists(self, guild_id: int) -> Guild | None:
+        guild = await self.guild_table.find_first(where={"guild_id": guild_id})
+        if guild is None:
+            return await self.guild_table.create(data={"guild_id": guild_id})
+        return guild
 
     async def get_all_notes(self) -> list[Note]:
         return await self.table.find_many()
@@ -19,6 +26,8 @@ class NoteController:
         note_content: str,
         guild_id: int,
     ) -> Note:
+        await self.ensure_guild_exists(guild_id)
+
         return await self.table.create(
             data={
                 "note_target_id": note_target_id,

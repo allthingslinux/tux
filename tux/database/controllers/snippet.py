@@ -1,12 +1,19 @@
 import datetime
 
-from prisma.models import Snippet
+from prisma.models import Guild, Snippet
 from tux.database.client import db
 
 
 class SnippetController:
     def __init__(self) -> None:
         self.table = db.snippet
+        self.guild_table = db.guild
+
+    async def ensure_guild_exists(self, guild_id: int) -> Guild | None:
+        guild = await self.guild_table.find_first(where={"guild_id": guild_id})
+        if guild is None:
+            return await self.guild_table.create(data={"guild_id": guild_id})
+        return guild
 
     async def get_all_snippets(self) -> list[Snippet]:
         return await self.table.find_many()
@@ -36,6 +43,8 @@ class SnippetController:
         snippet_user_id: int,
         guild_id: int,
     ) -> Snippet:
+        await self.ensure_guild_exists(guild_id)
+
         return await self.table.create(
             data={
                 "snippet_name": snippet_name,

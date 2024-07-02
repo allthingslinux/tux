@@ -1,12 +1,19 @@
 from datetime import datetime
 
-from prisma.models import Reminder
+from prisma.models import Guild, Reminder
 from tux.database.client import db
 
 
 class ReminderController:
     def __init__(self) -> None:
         self.table = db.reminder
+        self.guild_table = db.guild
+
+    async def ensure_guild_exists(self, guild_id: int) -> Guild | None:
+        guild = await self.guild_table.find_first(where={"guild_id": guild_id})
+        if guild is None:
+            return await self.guild_table.create(data={"guild_id": guild_id})
+        return guild
 
     async def get_all_reminders(self) -> list[Reminder]:
         return await self.table.find_many()
@@ -22,6 +29,8 @@ class ReminderController:
         reminder_channel_id: int,
         guild_id: int,
     ) -> Reminder:
+        await self.ensure_guild_exists(guild_id)
+
         return await self.table.create(
             data={
                 "reminder_user_id": reminder_user_id,

@@ -28,15 +28,7 @@ class Avatar(commands.Cog):
         member : discord.Member
             The member to get the avatar of.
         """
-        guild_avatar = member.guild_avatar.url if member.guild_avatar else None
-        profile_avatar = member.avatar.url if member.avatar else None
-
-        files = [await self.create_avatar_file(avatar) for avatar in [guild_avatar, profile_avatar] if avatar]
-
-        if files:
-            await ctx.reply(files=files)
-        else:
-            await ctx.reply("Member has no avatar.")
+        await self.send_avatar(ctx, member)
 
     @app_commands.command(name="avatar", description="Get the avatar of a member.")
     @app_commands.describe(member="The member to get the avatar of.")
@@ -51,15 +43,40 @@ class Avatar(commands.Cog):
         member : discord.Member
             The member to get the avatar of.
         """
+        await self.send_avatar(interaction, member)
+
+    async def send_avatar(
+        self,
+        source: commands.Context[commands.Bot] | discord.Interaction,
+        member: discord.Member,
+    ) -> None:
+        """
+        Send the avatar of a member.
+
+        Parameters
+        ----------
+        source : commands.Context[commands.Bot] | discord.Interaction
+            The source object for sending the message.
+        member : discord.Member
+            The member to get the avatar of.
+        """
+
         guild_avatar = member.guild_avatar.url if member.guild_avatar else None
         profile_avatar = member.avatar.url if member.avatar else None
 
         files = [await self.create_avatar_file(avatar) for avatar in [guild_avatar, profile_avatar] if avatar]
 
         if files:
-            await interaction.response.send_message(files=files)
+            if isinstance(source, discord.Interaction):
+                await source.response.send_message(files=files)
+            else:
+                await source.reply(files=files)
         else:
-            await interaction.response.send_message(content="Member has no avatar.")
+            message = "Member has no avatar."
+            if isinstance(source, discord.Interaction):
+                await source.response.send_message(content=message)
+            else:
+                await source.reply(content=message)
 
     @staticmethod
     async def create_avatar_file(url: str) -> discord.File:
