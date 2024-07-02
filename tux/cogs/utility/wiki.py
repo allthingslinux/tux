@@ -1,4 +1,3 @@
-import discord
 import httpx
 from discord import app_commands
 from discord.ext import commands
@@ -7,13 +6,13 @@ from loguru import logger
 from tux.utils.embeds import EmbedCreator
 
 
-class ArchWiki(commands.Cog):
+class Wiki(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.base_url = "https://wiki.archlinux.org/api.php"
-        self.atl_base_url = "https://atl.wiki/api.php"
+        self.arch_wiki_base_url = "https://wiki.archlinux.org/api.php"
+        self.atl_wiki_base_url = "https://atl.wiki/api.php"
 
-    def query_archwiki(self, search_term: str) -> tuple[str, str]:
+    def query_arch_wiki(self, search_term: str) -> tuple[str, str]:
         """
         Query the ArchWiki API for a search term and return the title and URL of the first search result.
 
@@ -37,10 +36,8 @@ class ArchWiki(commands.Cog):
 
         # Send a GET request to the ArchWiki API
         with httpx.Client() as client:
-            response = client.get(self.base_url, params=params)
-            logger.info(f"GET request to {self.base_url} with params {params}")
-
-        logger.info(f"URL: {response.url}")
+            response = client.get(self.arch_wiki_base_url, params=params)
+            logger.info(f"GET request to {self.arch_wiki_base_url} with params {params}")
 
         # example response: ["pacman",["Pacman"],[""],["https://wiki.archlinux.org/title/Pacman"]]
 
@@ -50,7 +47,7 @@ class ArchWiki(commands.Cog):
             return (data[1][0], data[3][0]) if data[1] else ("error", "error")
         return "error", "error"
 
-    def query_atlwiki(self, search_term: str) -> tuple[str, str]:
+    def query_atl_wiki(self, search_term: str) -> tuple[str, str]:
         """
         Query the atl.wiki API for a search term and return the title and URL of the first search result.
 
@@ -72,14 +69,12 @@ class ArchWiki(commands.Cog):
             "search": search_term,
         }
 
-        # Send a GET request to the ArchWiki API
+        # Send a GET request to the ATL Wiki API
         with httpx.Client() as client:
-            response = client.get(self.atl_base_url, params=params)
-            logger.info(f"GET request to {self.base_url} with params {params}")
+            response = client.get(self.atl_wiki_base_url, params=params)
+            logger.info(f"GET request to {self.atl_wiki_base_url} with params {params}")
 
-        logger.info(f"URL: {response.url}")
-
-        # example response: ["pacman",["Pacman"],[""],["https://wiki.archlinux.org/title/Pacman"]]
+        # example response: ["pacman",["Pacman"],[""],["https://atl.wiki/title/Pacman"]]
 
         # Check if the request was successful
         if response.status_code == 200:
@@ -87,66 +82,67 @@ class ArchWiki(commands.Cog):
             return (data[1][0], data[3][0]) if data[1] else ("error", "error")
         return "error", "error"
 
-    @app_commands.command(name="archwiki", description="Search the Arch Wiki.")
+    @commands.hybrid_group(name="wiki", description="Wiki related commands.")
+    async def wiki(self, ctx: commands.Context[commands.Bot]) -> None:
+        if ctx.invoked_subcommand is None:
+            await ctx.send_help("wiki")
+
+    @wiki.command(name="arch", description="Search the Arch Wiki.")
     @app_commands.describe(query="The search query.")
-    async def archwiki(self, interaction: discord.Interaction, query: str) -> None:
+    async def arch_wiki(self, ctx: commands.Context[commands.Bot], query: str) -> None:
         """
         Search the Arch Wiki for a given query and return the title and URL of the first search result.
 
         Parameters
         ----------
-        interaction : discord.Interaction
-            The discord interaction object.
+        ctx : commands.Context[commands.Bot]
+            The context object for the command.
         query : str
             The search query.
         """
 
-        title: tuple[str, str] = self.query_archwiki(query)
+        title: tuple[str, str] = self.query_arch_wiki(query)
 
         if title[0] == "error":
-            embed = EmbedCreator.create_error_embed(
-                title="Error", description="No search results found.", interaction=interaction
-            )
+            embed = EmbedCreator.create_error_embed(title="Error", description="No search results found.", ctx=ctx)
 
         else:
             embed = EmbedCreator.create_info_embed(
                 title=title[0],
                 description=title[1],
-                interaction=interaction,
+                ctx=ctx,
             )
 
-        await interaction.response.send_message(embed=embed)
+        await ctx.reply(embed=embed)
 
-    @app_commands.command(name="atlwiki", description="Search the All Things Linux Wiki.")
+    @wiki.command(name="atl", description="Search the All Things Linux Wiki.")
     @app_commands.describe(query="The search query.")
-    async def atlwiki(self, interaction: discord.Interaction, query: str) -> None:
+    async def atl_wiki(self, ctx: commands.Context[commands.Bot], query: str) -> None:
         """
         Search the All Things Linux Wiki for a given query and return the title and URL of the first search result.
 
         Parameters
         ----------
-        interaction : discord.Interaction
-            The discord interaction object.
+        ctx : commands.Context[commands.Bot]
+            The context object for the command.
         query : str
             The search query.
         """
 
-        title: tuple[str, str] = self.query_atlwiki(query)
+        title: tuple[str, str] = self.query_atl_wiki(query)
 
         if title[0] == "error":
-            embed = EmbedCreator.create_error_embed(
-                title="Error", description="No search results found.", interaction=interaction
-            )
+            embed = EmbedCreator.create_error_embed(title="Error", description="No search results found.", ctx=ctx)
 
         else:
             embed = EmbedCreator.create_info_embed(
                 title=title[0],
                 description=title[1],
-                interaction=interaction,
+                ctx=ctx,
             )
 
-        await interaction.response.send_message(embed=embed)
+        await ctx.reply(embed=embed)
 
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(ArchWiki(bot))
+    await bot.add_cog(Wiki(bot))
