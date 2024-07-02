@@ -16,7 +16,7 @@ migrate-prisma:
 # Run the bot
 run:
     poetry run python tux/main.py
-    
+
 # Lint the code using ruff
 lint:
     poetry run ruff check .
@@ -35,7 +35,7 @@ setup-env:
     # just prisma-migrate
 
 start-docker:
-    docker compose up --build --detatch
+    docker compose up --build -d
 
 stop-docker:
     docker compose down
