@@ -1,9 +1,7 @@
 import random
 
-import discord
 from discord import app_commands
 from discord.ext import commands
-from loguru import logger
 
 from tux.utils.embeds import EmbedCreator
 
@@ -12,35 +10,39 @@ class Random(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @app_commands.command(name="coinflip", description="Flip a coin.")
-    async def coinflip(self, interaction: discord.Interaction) -> None:
+    @commands.hybrid_group(name="random", description="Random generation commands.")
+    @commands.guild_only()
+    async def random(self, ctx: commands.Context[commands.Bot]) -> None:
+        if ctx.invoked_subcommand is None:
+            await ctx.send_help("random")
+
+    @random.command(name="coinflip", description="Flip a coin.")
+    async def coinflip(self, ctx: commands.Context[commands.Bot]) -> None:
         """
         Flip a coin.
 
         Parameters
         ----------
-        interaction : discord.Interaction
-            The discord interaction object.
+        ctx : commands.Context[commands.Bot]
+            The context object for the command.
         """
-        await interaction.response.send_message(
-            content="You got heads!" if random.choice([True, False]) else "You got tails!"
-        )
 
-        logger.info(f"{interaction.user} used the coinflip command in {interaction.channel}.")
+        await ctx.send(content="You got heads!" if random.choice([True, False]) else "You got tails!")
 
-    @app_commands.command(name="8ball", description="Ask the magic 8ball a question.")
+    @random.command(name="8ball", description="Ask the magic 8ball a question.")
     @app_commands.describe(question="The question to ask the 8ball.")
-    async def eight_ball(self, interaction: discord.Interaction, question: str) -> None:
+    async def eight_ball(self, ctx: commands.Context[commands.Bot], *, question: str) -> None:
         """
         Ask the magic 8ball a question.
 
         Parameters
         ----------
-        interaction : discord.Interaction
-            The discord interaction object.
+        ctx : commands.Context[commands.Bot]
+            The context object for the command.
         question : str
             The question to ask the 8ball.
         """
+
         responses = [
             # Standard responses
             "It is certain",
@@ -61,22 +63,25 @@ class Random(commands.Cog):
             "Don't count on it",
             "My reply is no",
             "My sources say no",
+            "Probably",
             "Outlook not so good",
             "Very doubtful",
-            # Custom responses
             "Why the hell are you asking me lmao",
-            "what???",
-            "hell yeah",
-            "hell no",
+            "What???",
+            "Hell yeah",
+            "Hell no",
             "When pigs fly",
             "Ask someone else for once, I'm sick and tired of answering your questions you absolute buffoon.",
             "I dont know, ask me later",
+            "I'm not sure",
+            "Ask your mom",
+            "Ask Puffy or Beastie",
+            "Absolutely",
         ]
-
         choice = random.choice(responses)
 
         response = f"""Response to "{question}":
-  {"_" * len(choice)} 
+  {"_" * len(choice)}
 < {choice} >
   {"-" * len(choice)}
         \\   ^__^
@@ -85,73 +90,58 @@ class Random(commands.Cog):
                 ||----w |
                 ||     ||
 """
+        await ctx.reply(content=f"```{response}```")
 
-        await interaction.response.send_message(content=f"```{response}```")
-
-        logger.info(f"{interaction.user} used the 8ball command in {interaction.channel}.")
-
-    @app_commands.command(name="dice", description="Roll a dice.")
+    @random.command(name="dice", description="Roll a dice.")
     @app_commands.describe(sides="The number of sides on the dice. (default: 6)")
-    async def dice(self, interaction: discord.Interaction, sides: int = 6) -> None:
+    async def dice(self, ctx: commands.Context[commands.Bot], sides: int = 6) -> None:
         """
         Roll a dice.
 
         Parameters
         ----------
-        interaction : discord.Interaction
-            The discord interaction object.
+        ctx : commands.Context[commands.Bot]
+            The context object for the command.
         sides : int, optional
             The number of sides on the dice, by default 6.
         """
+
         if sides < 2:
-            await interaction.response.send_message(content="The dice must have at least 2 sides.")
+            await ctx.reply(content="The dice must have at least 2 sides.", ephemeral=True)
             return
 
         embed = EmbedCreator.create_info_embed(
             title=f"Dice Roll (D{sides})",
             description=f"You rolled a {random.randint(1, sides)}!",
-            interaction=interaction,
+            ctx=ctx,
         )
 
-        await interaction.response.send_message(embed=embed)
+        await ctx.reply(embed=embed)
 
-        logger.info(f"{interaction.user} used the dice command in {interaction.channel}.")
-
-    @app_commands.command(name="randomnumber", description="Generate a random number.")
+    @random.command(name="number", description="Generate a random number.")
     @app_commands.describe(
         minimum="The minimum value of the random number. (default: 0)",
         maximum="The maximum value of the random number. (default: 100)",
     )
-    async def random_number(
-        self, interaction: discord.Interaction, minimum: int = 0, maximum: int = 100
-    ) -> None:
+    async def random_number(self, ctx: commands.Context[commands.Bot], minimum: int = 0, maximum: int = 100) -> None:
         """
         Generate a random number.
 
         Parameters
         ----------
-        interaction : discord.Interaction
-            The discord interaction object.
+        ctx : commands.Context[commands.Bot]
+            The context object for the command.
         minimum : int, optional
             The minimum value of the random number, by default 0.
         maximum : int, optional
             The maximum value of the random number, by default 100.
         """
+
         if minimum > maximum:
-            await interaction.response.send_message(
-                content="The minimum value must be less than the maximum value."
-            )
+            await ctx.reply(content="The minimum value must be less than the maximum value.", ephemeral=True)
             return
 
-        embed = EmbedCreator.create_info_embed(
-            title="Random Number",
-            description=f"Your random number is: {random.randint(minimum, maximum)}",
-            interaction=interaction,
-        )
-
-        await interaction.response.send_message(embed=embed)
-
-        logger.info(f"{interaction.user} used the randomnumber command in {interaction.channel}.")
+        await ctx.reply(content=f"Your random number is: {random.randint(minimum, maximum)}")
 
 
 async def setup(bot: commands.Bot) -> None:
