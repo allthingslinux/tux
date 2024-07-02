@@ -35,9 +35,7 @@ class Mail(commands.Cog):
 
     @mail.command(name="register", description="Registers a user for mail.")
     @app_commands.checks.has_any_role("Root", "Admin", "Mod")
-    async def register(
-        self, interaction: discord.Interaction, member: discord.Member, username: str
-    ) -> None:
+    async def register(self, interaction: discord.Interaction, member: discord.Member, username: str) -> None:
         if not username.isalnum():
             await interaction.response.send_message(
                 "Username must be alphanumeric and contain no spaces.", ephemeral=True
@@ -63,11 +61,7 @@ class Mail(commands.Cog):
             mailbox_data["password2"] = password
 
             # Ensure tags are copied correctly and member ID is added
-            tags = (
-                self.default_options["tags"]
-                if isinstance(self.default_options["tags"], list)
-                else []
-            )
+            tags = self.default_options["tags"] if isinstance(self.default_options["tags"], list) else []
             tags = tags.copy()  # Ensure it's a fresh copy of the list
             tags.append(str(member.id))
             mailbox_data["tags"] = tags
@@ -77,9 +71,7 @@ class Mail(commands.Cog):
 
             async with httpx.AsyncClient(timeout=10.0) as client:
                 try:
-                    response = await client.post(
-                        api_endpoint, headers=self.headers, json=mailbox_data
-                    )
+                    response = await client.post(api_endpoint, headers=self.headers, json=mailbox_data)
                     if response.status_code == 200:
                         result = response.json()
                         logger.info(f"Response JSON: {result}")
