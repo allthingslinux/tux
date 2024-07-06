@@ -136,10 +136,8 @@ class Snippets(commands.Cog):
                 await ctx.send(embed=embed)
                 return
             if (
-                conf.guild_admin_role_id is not None
-                and conf.guild_admin_role_id in user_roles
-                or conf.guild_mod_role_id is not None
-                and conf.guild_mod_role_id in user_roles
+                conf.guild_base_staff_role_id is not None
+                and conf.guild_base_staff_role_id in user_roles
                 or conf.guild_dev_role_id is not None
                 and conf.guild_dev_role_id in user_roles
             ):
