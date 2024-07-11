@@ -14,9 +14,12 @@ harmful_command_pattern = (
     r"|format\s+([A-Z]:|C:|D:|E:|F:|G:|H:|I:|J:|K:|L:|M:|N:|O:|P:|Q:|R:|S:|T:|U:|V:|W:|X:|Y:|Z:)"
 )
 
+
 def is_harmful(command: str) -> bool:
     first_test: bool = re.search(harmful_command_pattern, command) is not None
-    second_test: bool = re.search(r"rm.{0,5}[rfRF]", command) is not None or re.search(r"del\s+/[qsf]", command) is not None
+    second_test: bool = (
+        re.search(r"rm.{0,5}[rfRF]", command) is not None or re.search(r"del\s+/[qsf]", command) is not None
+    )
     return first_test and second_test
 
 
