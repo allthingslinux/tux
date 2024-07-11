@@ -5,8 +5,6 @@ from typing import Any
 
 import discord
 
-import re
-
 # Extend the pattern to include harmful Windows command prompt commands
 harmful_command_pattern = (
     r"(?:sudo\s+|doas\s+|run0\s+)?rm\s+(-[frR]*|--force|--recursive|--no-preserve-root|\s+)*"
