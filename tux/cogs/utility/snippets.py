@@ -15,6 +15,7 @@ class Snippets(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
         self.db_controller = DatabaseController().snippet
+        self.config_db = DatabaseController().guild_config
 
     @commands.command(
         name="snippets",
@@ -123,13 +124,32 @@ class Snippets(commands.Cog):
         # Check if the author of the snippet is the same as the user who wants to delete it and if theres no author don't allow deletion
         author_id = snippet.snippet_user_id or 0
         if author_id != ctx.author.id:
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
-                description="You can only delete your own snippets.",
-                ctx=ctx,
-            )
-            await ctx.send(embed=embed)
-            return
+            conf = await self.config_db.get_guild_config_by_id(ctx.guild.id)
+            # TODO: this was quick and dirty, needs to be refactored
+            user_roles = [role.id for role in ctx.author.roles]  # type: ignore
+            if not conf:
+                embed = EmbedCreator.create_error_embed(
+                    title="Error",
+                    description="You can only delete your own snippets.",
+                    ctx=ctx,
+                )
+                await ctx.send(embed=embed)
+                return
+            if (
+                conf.guild_base_staff_role_id is not None
+                and conf.guild_base_staff_role_id in user_roles
+                or conf.guild_dev_role_id is not None
+                and conf.guild_dev_role_id in user_roles
+            ):
+                pass
+            else:
+                embed = EmbedCreator.create_error_embed(
+                    title="Error",
+                    description="You can only delete your own snippets.",
+                    ctx=ctx,
+                )
+                await ctx.send(embed=embed)
+                return
 
         await self.db_controller.delete_snippet_by_id(snippet.snippet_id)
 
