@@ -10,7 +10,7 @@ class CaseController:
         self.table = db.case
         self.guild_table = db.guild
 
-    async def ensure_guild_exists(self, guild_id: int) -> Guild | None:
+    async def ensure_guild_exists(self, guild_id: int) -> Guild:
         guild = await self.guild_table.find_first(where={"guild_id": guild_id})
         if guild is None:
             return await self.guild_table.create(data={"guild_id": guild_id})
@@ -30,7 +30,7 @@ class CaseController:
         case_type: CaseType,
         case_reason: str,
         case_expires_at: datetime | None = None,
-    ) -> Case | None:
+    ) -> Case:
         await self.ensure_guild_exists(guild_id)
 
         return await self.table.create(
@@ -57,6 +57,22 @@ class CaseController:
             where={"case_number_guild_id": {"case_number": case_number, "guild_id": guild_id}},
             data={"case_reason": case_reason},
         )
+
+    async def get_case_by_case_number_and_guild_id(
+        self,
+        case_number: int,
+        guild_id: int,
+    ) -> Case | None:
+        return await self.table.find_unique(
+            where={"case_number_guild_id": {"case_number": case_number, "guild_id": guild_id}},
+        )
+
+    async def delete_case_by_case_number_and_guild_id(
+        self,
+        case_number: int,
+        guild_id: int,
+    ) -> None:
+        await self.table.delete(where={"case_number_guild_id": {"case_number": case_number, "guild_id": guild_id}})
 
     async def get_cases_by_guild_id(self, guild_id: int) -> list[Case] | None:
         return await self.table.find_many(where={"guild_id": guild_id})
