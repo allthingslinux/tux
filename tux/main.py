@@ -12,6 +12,7 @@ from tux.database.client import db
 from tux.utils.activities import ActivityChanger
 from tux.utils.console import Console
 from tux.utils.constants import Constants as CONST
+from tux.utils.embeds import EmbedCreator
 from tux.utils.sentry import setup_sentry
 
 """
@@ -38,11 +39,11 @@ class TuxHelp(commands.HelpCommand):
         Sends help message for the bot.
         """
         embed = discord.Embed(
-            title="Tux Help",
+            title="Categories",
             color=discord.Color.blurple(),
         )
 
-        category_strings = {}
+        category_strings: dict[str, str] = {}
 
         for cog, mapping_commands in mapping.items():
             for command in mapping_commands:
@@ -61,9 +62,85 @@ class TuxHelp(commands.HelpCommand):
                 # add the command name to the list of commands for the category
                 category_strings[category] += f"{command_name} "
 
+        # TODO: normalize spacing between category and command names
         # set the description of the embed to the category strings
         embed.description = "\n".join(category_strings.values())
 
+        embed.set_footer(
+            text=f"Use {CONST.DEV_PREFIX if CONST.DEV == "True" else CONST.PROD_PREFIX}help <category/command> to get more information about a category or command.",
+        )
+
+        await self.get_destination().send(embed=embed)
+
+    async def send_cog_help(self, cog: commands.Cog):
+        """
+        Sends help message for a cog.
+        """
+        embed = discord.Embed(
+            title=f"{cog.qualified_name} Commands",
+            color=discord.Color.blurple(),
+        )
+
+        for command in cog.get_commands():
+            embed.add_field(
+                name=f"{command.name}/{"/".join(command.aliases) or "No aliases."}",
+                value=command.short_doc or "No documentation summary.",
+                inline=False,
+            )
+
+        await self.get_destination().send(embed=embed)
+
+    async def send_command_help(self, command: commands.Command[Any, Any, Any]):
+        """
+        Sends help message for a command.
+        """
+        embed = discord.Embed(
+            title=f"{command.name}",
+            description=command.help or "No documentation available.",
+            color=discord.Color.blurple(),
+        )
+
+        embed.add_field(name="Usage", value=f"{command.signature or "No usage."}", inline=False)
+        embed.add_field(
+            name="Aliases",
+            value=", ".join(command.aliases) if command.aliases else "No aliases.",
+            inline=False,
+        )
+
+        await self.get_destination().send(embed=embed)
+
+    async def send_group_help(self, group: commands.Group[Any, Any, Any]):
+        """
+        Sends help message for a group.
+        """
+        embed = discord.Embed(
+            title=f"{group.name}",
+            description=group.help or "No documentation available.",
+            color=discord.Color.blurple(),
+        )
+
+        embed.add_field(name="Usage", value=f"{group.signature or "No usage."}", inline=False)
+        embed.add_field(
+            name="Aliases",
+            value=", ".join(group.aliases) if group.aliases else "No aliases.",
+            inline=False,
+        )
+
+        for command in group.commands:
+            embed.add_field(
+                name=f"{command.name}/{'/'.join(command.aliases) or "No aliases."}",
+                value=command.short_doc or "No documentation summary.",
+                inline=False,
+            )
+
+        await self.get_destination().send(embed=embed)
+
+    async def send_error_message(self, error: str) -> None:
+        logger.error(f"An error occurred while sending help message: {error}")
+        embed = EmbedCreator.create_error_embed(
+            title="An error occurred while sending help message.",
+            description=error,
+        )
         await self.get_destination().send(embed=embed)
 
 
