@@ -3,23 +3,18 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
-from tux.utils.embeds import EmbedCreator
-
 
 class Purge(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @app_commands.checks.has_any_role("Root", "Admin", "Sr. Mod", "Mod")
-    @app_commands.command(
-        name="purge",
-        description="Deletes a set number of messages in a channel.",
-    )
-    @app_commands.describe(number_messages="The number of messages to be purged.")
-    async def purge_messages(
+    @app_commands.command(name="purge")
+    @app_commands.guild_only()
+    async def slash_purge(
         self,
         interaction: discord.Interaction,
-        number_messages: int = 10,
+        limit: int,
+        channel: discord.TextChannel | None = None,
     ) -> None:
         """
         Deletes a set number of messages in a channel.
@@ -27,55 +22,106 @@ class Purge(commands.Cog):
         Parameters
         ----------
         interaction : discord.Interaction
-            The interaction that triggered the command.
-        number_messages : int, optional
-            The number of messages to be purged, by default 10.
+            The interaction object for the command.
+        limit : int
+            The number of messages to delete.
+        channel : discord.TextChannel | None
+            The channel to delete messages from.
+
+        Raises
+        ------
+        discord.Forbidden
+            If the bot is unable to delete messages.
+        discord.HTTPException
+            If an error occurs while deleting messages.
         """
 
-        if not interaction.channel or interaction.channel.type != discord.ChannelType.text:
-            return await interaction.response.send_message(
-                "This command can only be used in text channels.",
+        if interaction.guild is None:
+            return logger.warning("Purge command used outside of a guild context.")
+
+        # Check if the limit is within the valid range
+        if limit < 1 or limit > 500:
+            await interaction.response.defer(ephemeral=True)
+            return await interaction.followup.send(
+                "Invalid amount, maximum 500, minimum 1.",
                 ephemeral=True,
             )
 
-        if number_messages <= 0:
-            await interaction.response.defer(ephemeral=True)
-            embed = EmbedCreator.create_error_embed(
-                title="Invalid Number",
-                description="Please provide a number greater than 0.",
-            )
+        # If the channel is not specified, default to the current channel
+        if channel is None:
+            # Check if the current channel is a text channel
+            if not isinstance(interaction.channel, discord.TextChannel):
+                await interaction.response.defer(ephemeral=True)
+                return await interaction.followup.send(
+                    "Invalid channel type, must be a text channel.",
+                    ephemeral=True,
+                )
+            channel = interaction.channel
 
-            return await interaction.followup.send(embed=embed, ephemeral=True)
-
+        # Purge the specified number of messages
         try:
             await interaction.response.defer(ephemeral=True)
             await interaction.edit_original_response(content="Purging messages...")
-
-            deleted = await interaction.channel.purge(limit=number_messages)
-            description = f"Deleted {len(deleted)} messages in {interaction.channel.mention}"
-
-            embed = EmbedCreator.create_success_embed(
-                title="Purge Successful",
-                description=description,
-                interaction=interaction,
-            )
-
-            logger.info(
-                f"{interaction.user} purged {len(deleted)} messages from {interaction.channel.name}",
-            )
-
-            await interaction.edit_original_response(embed=embed)
+            await channel.purge(limit=limit)
+            await interaction.edit_original_response(content=f"Purged {limit} messages in {channel.mention}.")
 
         except Exception as error:
-            embed = EmbedCreator.create_error_embed(
-                title="Purge Failed",
-                description=f"Failed to purge messages in {interaction.channel.mention}.",
-                interaction=interaction,
-            )
+            await interaction.edit_original_response(content=f"An error occurred while purging messages: {error}")
 
-            logger.error(f"Failed to purge messages in {interaction.channel.name}. Error: {error}")
+    @commands.command(
+        name="purge",
+        aliases=["clear", "p"],
+        usage="$purge 10 #general",
+    )
+    @commands.guild_only()
+    async def prefix_purge(
+        self,
+        ctx: commands.Context[commands.Bot],
+        limit: int,
+        channel: discord.TextChannel | None = None,
+    ) -> None:
+        """
+        Purge a specified number of messages from a channel.
 
-            await interaction.edit_original_response(embed=embed)
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context in which the command is being invoked.
+        limit : int
+            The number of messages to delete.
+        channel : discord.TextChannel | None
+            The channel to delete messages from.
+
+        Raises
+        ------
+        discord.Forbidden
+            If the bot is unable to delete messages.
+        discord.HTTPException
+            If an error occurs while deleting messages.
+        """
+
+        if ctx.guild is None:
+            logger.warning("Purge command used outside of a guild context.")
+            return
+
+        # Check if the limit is within the valid range
+        if limit < 1 or limit > 500:
+            await ctx.reply("Invalid amount, maximum 500, minimum 1.", delete_after=10, ephemeral=True)
+            return
+
+        # If the channel is not specified, default to the current channe
+        if channel is None:
+            # Check if the current channel is a text channel
+            if not isinstance(ctx.channel, discord.TextChannel):
+                await ctx.reply("Invalid channel type, must be a text channel.", delete_after=10, ephemeral=True)
+                return
+            channel = ctx.channel
+
+        # Purge the specified number of messages
+        await channel.purge(limit=limit)
+
+        # Send a confirmation message
+        await ctx.send(f"Purged {limit} messages from {channel.mention}.", delete_after=10, ephemeral=True)
 
 
 async def setup(bot: commands.Bot) -> None:
