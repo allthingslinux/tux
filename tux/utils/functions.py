@@ -5,12 +5,21 @@ from typing import Any
 
 import discord
 
-harmful_command_pattern = r"(?:sudo\s+|doas\s+|run0\s+)?rm\s+(-[frR]*|--force|--recursive|--no-preserve-root|\s+)*(/\s*|\*|/bin|/boot|/etc|/lib|/proc|/root|/sbin|/sys|/tmp|/usr|/var|/var/log|/network.|/system)(\s+--no-preserve-root|\s+\*)*|:\(\)\{ :|:& \};:"
+# Extend the pattern to include harmful Windows command prompt commands
+harmful_command_pattern = (
+    r"(?:sudo\s+|doas\s+|run0\s+)?rm\s+(-[frR]*|--force|--recursive|--no-preserve-root|\s+)*"
+    r"(/|\*|~|/bin|/boot|/etc|/lib|/proc|/root|/sbin|/sys|/tmp|/usr|/var|/var/log|/network.|/system)(\s+--no-preserve-root|\s+\*)*"
+    r"|:\(\)\{ :|:& \};:"
+    r"|del\s+/[qsf]\s+(\*|C:\\|C:\\Windows|C:\\System32|C:\\Users|C:\\Program Files|C:\\Program Files \(x86\))"
+    r"|format\s+([A-Z]:|C:|D:|E:|F:|G:|H:|I:|J:|K:|L:|M:|N:|O:|P:|Q:|R:|S:|T:|U:|V:|W:|X:|Y:|Z:)"
+)
 
 
 def is_harmful(command: str) -> bool:
     first_test: bool = re.search(harmful_command_pattern, command) is not None
-    second_test: bool = re.search(r"rm.{0,5}[rfRF]", command) is not None
+    second_test: bool = (
+        re.search(r"rm.{0,5}[rfRF]", command) is not None or re.search(r"del\s+/[qsf]", command) is not None
+    )
     return first_test and second_test
 
 
