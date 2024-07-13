@@ -20,48 +20,23 @@
     "DEV": 1235095919788167269,
     "PRIVATE": 1235108340791513129
   },
-  "EMBED_STATE_COLORS": {
-    "DEFAULT": 16056474,
-    "LOG": 16056474,
-    "INFO": 9028715,
+  "EMBED_COLORS": {
+    "DEFAULT": 16044058,
+    "INFO": 12634869,
     "WARNING": 16634507,
-    "ERROR": 13760665,
-    "SUCCESS": 10930337,
-    "DEBUG": 13461271,
-    "POLL": 16322095,
-    "INFRACTION": 1118486,
-    "NOTE": 16634507,
-    "FOREGROUND": 11050940,
-    "BACKGROUND": 1714828,
-    "BLACK": 4282214,
-    "CURSOR": 12645749,
-    "SELECT": 2682506,
-    "RED": 16293838,
-    "GREEN": 7562304,
-    "YELLOW": 14703816,
-    "BLUE": 8044279,
-    "PURPLE": 12319927,
-    "CYAN": 8258815,
-    "WHITE": 12645749
+    "ERROR": 16067173,
+    "SUCCESS": 10407530,
+    "POLL": 14724968,
+    "CASE": 16217742,
+    "NOTE": 16752228
   },
-  "EMBED_STATE_ICONS": {
-    "DEFAULT": "https://i.imgur.com/EqzIMKr.png",
-    "LOG": "https://i.imgur.com/4sblrd0.png",
-    "INFO": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/mocha_sky.png?raw=true",
-    "DEBUG": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/mocha_mauve.png?raw=true",
-    "WARNING": "https://github.com/catppuccin/catppuccin/raw/main/assets/palette/circles/latte_peach.png?raw=true",
-    "ERROR": "https://github.com/catppuccin/catppuccin/blob/main/assets/palette/circles/latte_red.png?raw=true",
-    "SUCCESS": "https://github.com/allthingslinux/tux/blob/main/assets/slicedsymbol-5.png?raw=true",
-    "POLL": "https://github.com/catppuccin/catppuccin/raw/main/assets/palette/circles/mocha_yellow.png?raw=true",
-    "INFRACTION": "https://github.com/catppuccin/catppuccin/raw/main/assets/palette/circles/mocha_crust.png?raw=true",
-    "NOTE": "https://github.com/catppuccin/catppuccin/raw/main/assets/palette/circles/latte_peach.png?raw=true"
-  },
-  "UNICODE": {
-    "SUCCESS": "✅",
-    "ERROR": "❌",
-    "EMPTY": " "
-  },
-  "EMOJIS": {
-    "EMPTY": "​<:transparent:1227090229639250032>"
+  "EMBED_ICONS": {
+    "DEFAULT": "https://i.imgur.com/owW4EZk.png",
+    "INFO": "https://i.imgur.com/8GRtR2G.png",
+    "SUCCESS": "https://i.imgur.com/JsNbN7D.png",
+    "ERROR": "https://i.imgur.com/zZjuWaU.png",
+    "CASE": "https://i.imgur.com/c43cwnV.png",
+    "NOTE": "https://i.imgur.com/VqPFbil.png",
+    "POLL": "https://i.imgur.com/pkPeG5q.png"
   }
 }
