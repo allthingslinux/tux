@@ -10,9 +10,9 @@ class Info(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    group = app_commands.Group(name="info", description="Information commands.")
+    info = app_commands.Group(name="info", description="Information commands.")
 
-    @group.command(name="server", description="Shows information about the server.")
+    @info.command(name="server")
     async def server(self, interaction: discord.Interaction) -> None:
         """
         Show information about the server.
@@ -22,12 +22,10 @@ class Info(commands.Cog):
         interaction : discord.Interaction
             The discord interaction object.
         """
-
-        guild = interaction.guild
-        if not guild:
+        if not interaction.guild:
             return
 
-        bots = sum(member.bot for member in guild.members if member.bot)
+        guild = interaction.guild
         owner = str(guild.owner) if guild.owner else "Unknown"
 
         embed = EmbedCreator.create_info_embed(
@@ -37,6 +35,7 @@ class Info(commands.Cog):
         )
 
         embed.add_field(name="Members", value=str(guild.member_count))
+        bots = sum(member.bot for member in guild.members if member.bot)
         embed.add_field(name="Bots", value=str(bots))
         embed.add_field(name="Boosts", value=str(guild.premium_subscription_count))
         embed.add_field(name="Vanity URL", value=str(guild.vanity_url_code or "None"))
@@ -50,7 +49,7 @@ class Info(commands.Cog):
 
         logger.info(f"{interaction.user} used the server command in {interaction.channel}.")
 
-    @group.command(name="tux", description="Shows information about Tux.")
+    @info.command(name="tux", description="Shows information about Tux.")
     async def tux(self, interaction: discord.Interaction) -> None:
         """
         Show information about Tux.
@@ -75,7 +74,7 @@ class Info(commands.Cog):
 
         logger.info(f"{interaction.user} used the tux command in {interaction.channel}.")
 
-    @group.command(name="member", description="Shows information about a member.")
+    @info.command(name="member", description="Shows information about a member.")
     async def member(self, interaction: discord.Interaction, member: discord.Member) -> None:
         """
         Show information about a member.
