@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+from collections.abc import Mapping
 from typing import Any
 
 import discord
@@ -25,6 +26,46 @@ This setup is intended for debugging purposes. Ensure that you comment out logur
 # logging.basicConfig(level=logging.DEBUG)
 # warnings.simplefilter("error", ResourceWarning)
 
+# TODO: move this to a separate file
+
+
+class TuxHelp(commands.HelpCommand):
+    async def send_bot_help(
+        self,
+        mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]],
+    ):
+        """
+        Sends help message for the bot.
+        """
+        embed = discord.Embed(
+            title="Tux Help",
+            color=discord.Color.blurple(),
+        )
+
+        category_strings = {}
+
+        for cog, mapping_commands in mapping.items():
+            for command in mapping_commands:
+                if cog is None:
+                    continue
+
+                # get the category name
+                category = cog.qualified_name
+                # get the command name
+                command_name = command.name
+
+                # check if the category is already in the list
+                if category not in category_strings:
+                    category_strings[category] = f"**{category}** | "
+
+                # add the command name to the list of commands for the category
+                category_strings[category] += f"{command_name} "
+
+        # set the description of the embed to the category strings
+        embed.description = "\n".join(category_strings.values())
+
+        await self.get_destination().send(embed=embed)
+
 
 class TuxBot(commands.Bot):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -32,6 +73,7 @@ class TuxBot(commands.Bot):
         self.activity_changer = ActivityChanger(self)
         self.setup_task = asyncio.create_task(self.setup())
         self.is_shutting_down = False
+        self.help_command = TuxHelp()
 
     async def setup(self) -> None:
         """
