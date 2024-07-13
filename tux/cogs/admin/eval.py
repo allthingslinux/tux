@@ -41,7 +41,7 @@ class Eval(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @commands.command(name="eval", description="Evaluate a Python expression. (Owner only)")
+    @commands.command(name="eval", aliases=["e"])
     async def run(self, ctx: commands.Context[commands.Bot], *, cmd: str) -> None:
         """
         Evaluate a Python expression. (Owner only)
