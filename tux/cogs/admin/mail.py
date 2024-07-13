@@ -8,6 +8,8 @@ from loguru import logger
 
 from tux.utils.constants import Constants as CONST
 
+# TODO: Refactor Mail cog
+
 
 class Mail(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -33,7 +35,7 @@ class Mail(commands.Cog):
 
     mail = app_commands.Group(name="mail", description="Mail commands.")
 
-    @mail.command(name="register", description="Registers a user for mail.")
+    @mail.command(name="register")
     @app_commands.checks.has_any_role("Root", "Admin", "Mod")
     async def register(
         self,
@@ -41,6 +43,23 @@ class Mail(commands.Cog):
         member: discord.Member,
         username: str,
     ) -> None:
+        """
+        Registers a user for mail.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object for the command.
+        member : discord.Member
+            The member to register for mail.
+        username : str
+            The username to register for mail.
+
+        Raises
+        ------
+        discord.Forbidden
+            If the bot is unable to send a DM to the member.
+        """
         if not username.isalnum():
             await interaction.response.send_message(
                 "Username must be alphanumeric and contain no spaces.",

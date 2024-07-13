@@ -46,7 +46,7 @@ class Git(commands.Cog):
         await interaction.followup.send(embed=embed)
 
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
-    @git.command(name="get_repo", description="Get repository information.")
+    @git.command(name="get_repo")
     async def get_repo(self, interaction: discord.Interaction) -> None:
         """
         Get repository information.
@@ -81,7 +81,7 @@ class Git(commands.Cog):
             logger.info(f"{interaction.user} fetched repository information.")
 
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
-    @git.command(name="create_issue", description="Create an issue.")
+    @git.command(name="create_issue")
     async def create_issue(self, interaction: discord.Interaction, title: str, body: str) -> None:
         """
         Create an issue.
@@ -117,51 +117,6 @@ class Git(commands.Cog):
         else:
             await interaction.followup.send(embed=embed, view=LinkButton(created_issue.html_url))
             logger.info(f"{interaction.user} created an issue.")
-
-    @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
-    @git.command(name="create_issue_comment", description="Create an issue comment.")
-    async def create_issue_comment(
-        self,
-        interaction: discord.Interaction,
-        issue_number: int,
-        body: str,
-    ) -> None:
-        """
-        Create an issue comment.
-
-        Parameters
-        ----------
-        interaction : discord.Interaction
-            The interaction object representing the command invocation.
-        issue_number : int
-            The number of the issue to comment on.
-        body : str
-            The body of the comment.
-        """
-
-        await interaction.response.defer()
-
-        try:
-            created_issue_comment = await self.github.create_issue_comment(issue_number, body)
-
-            embed = EmbedCreator.create_success_embed(
-                title="Comment Created",
-                description="The comment has been created successfully.",
-                interaction=interaction,
-            )
-            embed.add_field(name="Issue Number", value=issue_number, inline=False)
-            embed.add_field(name="Body", value=body, inline=False)
-
-        except Exception as e:
-            await self.create_error_embed(interaction, f"Error creating comment: {e}")
-            logger.error(f"Error creating comment: {e}")
-
-        else:
-            await interaction.followup.send(
-                embed=embed,
-                view=LinkButton(created_issue_comment.html_url),
-            )
-            logger.info(f"{interaction.user} created a comment.")
 
     @app_commands.checks.has_any_role("Contributor", "Root", "Admin")
     @git.command(name="close_issue", description="Close an issue.")

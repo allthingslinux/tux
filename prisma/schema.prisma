@@ -2,6 +2,8 @@ datasource db {
   provider  = "postgresql"
   url       = env("PROD_DATABASE_URL")
   directUrl = env("PROD_DIRECT_URL")
+  // url       = env("DEV_DATABASE_URL")
+  // directUrl = env("DEV_DIRECT_URL")
 }
 
 generator client {
@@ -15,12 +17,12 @@ generator client {
 
 enum CaseType {
   BAN
+  UNBAN
   HACK_BAN
   TEMP_BAN
-  UNBAN
   KICK
-  TIMEOUT_ADD
-  TIMEOUT_REMOVE
+  TIMEOUT
+  UNTIMEOUT
   WARN
 }
 

@@ -25,6 +25,10 @@ lint:
 lint-fix:
     poetry run ruff --fix .
 
+# Type-check the code using pyright
+check-types:
+    poetry run pyright
+
 # Environment setup
 setup-env:
     @echo "Setting up environment..."

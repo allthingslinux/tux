@@ -9,10 +9,6 @@ from tux.utils.embeds import EmbedCreator
 
 
 class Tldr(commands.Cog):
-    """
-    A discord cog to fetch and display TLDR pages for CLI commands.
-    """
-
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
@@ -47,12 +43,11 @@ class Tldr(commands.Cog):
 
         return filtered_commands[:25]
 
-    @app_commands.command(name="tldr", description="Show a TLDR page for a CLI command")
-    @app_commands.describe(command="The CLI command to show the TLDR for")
+    @app_commands.command(name="tldr")
     @app_commands.autocomplete(command=get_autocomplete)
-    async def tldr(self, interaction: discord.Interaction, command: str) -> None:
+    async def slash_tldr(self, interaction: discord.Interaction, command: str) -> None:
         """
-        Fetches and displays a TLDR page of a CLI command.
+        Show a TLDR page for a CLI command
 
         Parameters:
         -----------
@@ -73,6 +68,31 @@ class Tldr(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
         logger.info(f"{interaction.user} requested TLDR for {command}")
+
+    @commands.command(name="tldr")
+    async def prefix_tldr(self, ctx: commands.Context[commands.Bot], command: str) -> None:
+        """
+        Show a TLDR page for a CLI command
+
+        Parameters:
+        -----------
+        ctx : commands.Context[commands.Bot]
+            The context object for the command.
+        command : str
+            The command to retrieve the TLDR page for.
+        """
+
+        tldr_page = self.get_tldr_page(command)
+
+        embed = EmbedCreator.create_info_embed(
+            title=f"TLDR for {command}",
+            description=tldr_page,
+            ctx=ctx,
+        )
+
+        await ctx.reply(embed=embed)
+
+        logger.info(f"{ctx.author} requested TLDR for {command}")
 
     def get_tldr_page(self, command: str) -> str:
         """

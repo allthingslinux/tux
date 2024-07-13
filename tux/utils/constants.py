@@ -17,16 +17,21 @@ class Constants:
     ROLES: Final[dict[str, int]] = config["ROLES"]
     BOT_OWNER_ID: Final[int] = int(os.getenv("BOT_OWNER_ID", 0))
 
-    # Production constants
+    # Production env constants
     PROD_TOKEN: Final[str] = os.getenv("PROD_TOKEN", "")
     PROD_PREFIX: Final[str] = config["PREFIX"]["PROD"]
     PROD_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("PROD_COG_IGNORE_LIST", "").split(","))
 
-    # DEV constants
+    # Dev env constants
     DEV: Final[str | None] = os.getenv("DEV")
     DEV_TOKEN: Final[str] = os.getenv("DEV_TOKEN", "")
     DEV_PREFIX: Final[str] = config["PREFIX"]["DEV"]
     DEV_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("DEV_COG_IGNORE_LIST", "").split(","))
+
+    # Final env constants
+    TOKEN: Final[str] = DEV_TOKEN if DEV and DEV.lower() == "true" else PROD_TOKEN
+    PREFIX: Final[str] = DEV_PREFIX if DEV and DEV.lower() == "true" else PROD_PREFIX
+    COG_IGNORE_LIST: Final[set[str]] = DEV_COG_IGNORE_LIST if DEV and DEV.lower() == "true" else PROD_COG_IGNORE_LIST
 
     # Sentry-related constants
     SENTRY_URL: Final[str | None] = os.getenv("SENTRY_URL")
@@ -51,6 +56,7 @@ class Constants:
 
     # Channel constants
     LOG_CHANNELS: Final[dict[str, int]] = config["LOG_CHANNELS"].copy()
+
     if DEV and DEV.lower() == "true":
         for key in LOG_CHANNELS:
             LOG_CHANNELS[key] = LOG_CHANNELS["DEV"]
@@ -60,16 +66,10 @@ class Constants:
     TEMPVC_CHANNEL_ID: Final[str | None] = os.getenv("TEMPVC_CHANNEL_ID")
 
     # Color constants
-    EMBED_STATE_COLORS: Final[dict[str, int]] = config["EMBED_STATE_COLORS"]
+    EMBED_COLORS: Final[dict[str, int]] = config["EMBED_COLORS"]
 
     # Icon constants
-    EMBED_STATE_ICONS: Final[dict[str, str]] = config["EMBED_STATE_ICONS"]
-
-    # Unicode constants
-    UNICODE: Final[dict[str, str]] = config["UNICODE"]
-
-    # Emoji constants
-    EMOJIS: Final[dict[str, str]] = config["EMOJIS"]
+    EMBED_ICONS: Final[dict[str, str]] = config["EMBED_ICONS"]
 
     # Embed limit constants
     EMBED_MAX_NAME_LENGTH = 256
