@@ -127,7 +127,7 @@ async def main() -> None:
 
     finally:
         logger.info("Closing resources.")
-        await bot.close()
+        await bot.shutdown()
 
         # Cancel the console task if it's still running
         # if console_task is not None and not console_task.done():
