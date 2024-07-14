@@ -1,25 +1,15 @@
 import re
-from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 
 import discord
 
-# Extend the pattern to include harmful Windows command prompt commands
-harmful_command_pattern = (
-    r"(?:sudo\s+|doas\s+|run0\s+)?rm\s+(-[frR]*|--force|--recursive|--no-preserve-root|\s+)*"
-    r"(/|\*|~|/bin|/boot|/etc|/lib|/proc|/root|/sbin|/sys|/tmp|/usr|/var|/var/log|/network.|/system)(\s+--no-preserve-root|\s+\*)*"
-    r"|:\(\)\{ :|:& \};:"
-    r"|del\s+/[qsf]\s+(\*|C:\\|C:\\Windows|C:\\System32|C:\\Users|C:\\Program Files|C:\\Program Files \(x86\))"
-    r"|format\s+([A-Z]:|C:|D:|E:|F:|G:|H:|I:|J:|K:|L:|M:|N:|O:|P:|Q:|R:|S:|T:|U:|V:|W:|X:|Y:|Z:)"
-)
+harmful_command_pattern = r"(?:sudo\s+|doas\s+|run0\s+)?rm\s+(-[frR]*|--force|--recursive|--no-preserve-root|\s+)*(/\s*|\*|/bin|/boot|/etc|/lib|/proc|/root|/sbin|/sys|/tmp|/usr|/var|/var/log|/network.|/system)(\s+--no-preserve-root|\s+\*)*|:\(\)\{ :|:& \};:"
 
 
 def is_harmful(command: str) -> bool:
     first_test: bool = re.search(harmful_command_pattern, command) is not None
-    second_test: bool = (
-        re.search(r"rm.{0,5}[rfRF]", command) is not None or re.search(r"del\s+/[qsf]", command) is not None
-    )
+    second_test: bool = re.search(r"rm.{0,5}[rfRF]", command) is not None
     return first_test and second_test
 
 
@@ -82,7 +72,7 @@ def convert_to_seconds(time_str: str) -> int:
     return 0 if current_value != 0 else total_seconds
 
 
-def datetime_to_unix(dt: datetime | None):
+def datetime_to_unix(dt: datetime | None) -> str:
     """
     This function accepts a datetime object or None, converts it into a Unix timestamp
     and returns it as a formatted Discord timestamp string or 'Never'
@@ -106,7 +96,7 @@ def datetime_to_unix(dt: datetime | None):
     return f"<t:{unix_timestamp}>"
 
 
-def datetime_to_elapsed_time(dt: datetime | None):
+def datetime_to_elapsed_time(dt: datetime | None) -> str:
     """
     Takes a datetime and computes the elapsed time from then to now in the format: X years, Y months, Z days.
 
@@ -267,146 +257,3 @@ def extract_member_attrs(member: discord.Member) -> dict[str, Any]:
         "status": member.status,
         "activity": member.activity,
     }
-
-
-def get_local_time() -> datetime:
-    """
-    Get the current local time.
-
-    Returns:
-    -------
-    datetime
-        The current local time.
-    """
-
-    local_timezone = datetime.now(UTC).astimezone().tzinfo
-    return datetime.now(local_timezone)
-
-
-def days(day: str | int) -> str:
-    """
-    Returns the number of days ago in a human-readable format.
-
-    Parameters:
-    ----------
-    day : str | int
-        The number of days ago.
-
-    Returns:
-    -------
-    str
-        The number of days ago in a human-readable format.
-    """
-
-    day = int(day)
-
-    if day == 0:
-        return "**today**"
-
-    return f"{day} day ago" if day == 1 else f"{day} days ago"
-
-
-def truncate(text: str, max_len: int = 1024) -> str:
-    """
-    Truncates a string to a specified length.
-
-    Parameters:
-    ----------
-    text : str
-        The string to truncate.
-    max_len : int
-        The maximum length of the truncated string.
-
-    Returns:
-    -------
-    str
-        The truncated string.
-    """
-
-    etc = "\n[…]"
-
-    return f"{text[:max_len - len(etc)]}{etc}" if len(text) > max_len - len(etc) else text
-
-
-def ordinal(n: int) -> str:
-    """
-    Returns the ordinal representation of a number.
-
-    Parameters:
-    ----------
-    n : int
-        The number to convert to an ordinal.
-
-    Returns:
-    -------
-    str
-        The ordinal representation of the number.
-    """
-
-    return str(n) + {1: "st", 2: "nd", 3: "rd"}.get(4 if 10 <= n % 100 < 20 else n % 10, "th")
-
-
-def is_convertible_to_type(string: str, type_func: Callable[..., object]) -> bool:
-    """
-    Checks if a string is convertible to a specified type.
-
-    Parameters:
-    ----------
-    string : str
-        The string to check.
-    type_func : Callable
-        The function to convert the string to a specified type.
-
-    Returns:
-    -------
-    bool
-        True if the string is convertible to the specified type, False otherwise.
-
-    Raises:
-    -------
-    ValueError
-        If the string is not convertible to the specified type.
-    """
-
-    try:
-        type_func(string)
-    except ValueError:
-        return False
-    else:
-        return True
-
-
-def is_integer(string: str):
-    """
-    Checks if a string is convertible to an integer.
-
-    Parameters:
-    ----------
-    string : str
-        The string to check.
-
-    Returns:
-    -------
-    bool
-        True if the string is convertible to an integer, False otherwise.
-    """
-
-    return is_convertible_to_type(string, int)
-
-
-def is_float(string: str):
-    """
-    Checks if a string is convertible to a float.
-
-    Parameters:
-    ----------
-    string : str
-        The string to check.
-
-    Returns:
-    -------
-    bool
-        True if the string is convertible to a float, False otherwise.
-    """
-
-    return is_convertible_to_type(string, float)

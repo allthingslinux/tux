@@ -1,5 +1,4 @@
 import discord
-from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
@@ -23,34 +22,83 @@ class Xkcd(commands.Cog):
         self.bot = bot
         self.client = xkcd.Client()
 
-    xkcd = app_commands.Group(name="xkcd", description="xkcd-related commands")
+    @commands.hybrid_group(name="xkcd", aliases=["xk"])
+    @commands.guild_only()
+    async def xkcd(self, ctx: commands.Context[commands.Bot], comic_id: int | None = None) -> None:
+        """
+        xkcd related commands.
 
-    @xkcd.command(name="latest", description="Get the latest xkcd comic")
-    async def latest(self, interaction: discord.Interaction) -> None:
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object for the command.
+        comic_id : int | None
+            The ID of the xkcd comic to search for.
+        """
+
+        if comic_id:
+            await self.specific(ctx, comic_id)
+        else:
+            await ctx.send_help("xkcd")
+
+    @xkcd.command(name="latest", aliases=["l", "new", "n"])
+    @commands.guild_only()
+    async def latest(self, ctx: commands.Context[commands.Bot]) -> None:
+        """
+        Get the latest xkcd comic.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object for the command.
+        """
+
         embed, view, ephemeral = await self.get_comic_and_embed(latest=True)
 
         if view:
-            await interaction.response.send_message(embed=embed, view=view, ephemeral=ephemeral)
+            await ctx.reply(embed=embed, view=view, ephemeral=ephemeral)
         else:
-            await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+            await ctx.reply(embed=embed, ephemeral=ephemeral)
 
-    @xkcd.command(name="random", description="Get a random xkcd comic")
-    async def random(self, interaction: discord.Interaction) -> None:
+    @xkcd.command(name="random", aliases=["rand", "r"])
+    @commands.guild_only()
+    async def random(self, ctx: commands.Context[commands.Bot]) -> None:
+        """
+        Get a random xkcd comic.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object for the
+        """
+
         embed, view, ephemeral = await self.get_comic_and_embed()
 
         if view:
-            await interaction.response.send_message(embed=embed, view=view, ephemeral=ephemeral)
+            await ctx.reply(embed=embed, view=view, ephemeral=ephemeral)
         else:
-            await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+            await ctx.reply(embed=embed, ephemeral=ephemeral)
 
-    @xkcd.command(name="specific", description="Search for a specific xkcd comic")
-    async def specific(self, interaction: discord.Interaction, comic_id: int) -> None:
+    @xkcd.command(name="specific", aliases=["s", "id", "i", "#", "num"])
+    @commands.guild_only()
+    async def specific(self, ctx: commands.Context[commands.Bot], comic_id: int) -> None:
+        """
+        Get a specific xkcd comic.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object for the command.
+        comic_id : int
+            The ID of the comic to search for.
+        """
+
         embed, view, ephemeral = await self.get_comic_and_embed(number=comic_id)
 
         if view:
-            await interaction.response.send_message(embed=embed, view=view, ephemeral=ephemeral)
+            await ctx.reply(embed=embed, view=view, ephemeral=ephemeral)
         else:
-            await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+            await ctx.reply(embed=embed, ephemeral=ephemeral)
 
     async def get_comic_and_embed(
         self,

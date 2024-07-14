@@ -8,6 +8,28 @@ from tux.utils.constants import Constants as CONST
 # TODO: Refactor this to reduce code duplication
 
 
+def create_embed_footer(
+    ctx: commands.Context[commands.Bot] | None = None,
+    interaction: discord.Interaction | None = None,
+    fallback_text: str = "tux@atl $",
+    fallback_icon_url: str = "https://i.imgur.com/4sblrd0.png",
+) -> tuple[str, str | None]:
+    user: discord.User | discord.Member | None = None
+    latency = None
+    if ctx:
+        user = ctx.author
+        latency = round(ctx.bot.latency * 1000, 2)
+    elif interaction:
+        user = interaction.user
+        latency = round(interaction.client.latency * 1000, 2)
+    if isinstance(user, discord.User | discord.Member):
+        return (
+            f"{user.name}@atl $ {latency}ms",
+            str(user.avatar.url) if user.avatar else fallback_icon_url,
+        )
+    return (fallback_text, fallback_icon_url)
+
+
 class EmbedCreator:
     @staticmethod
     def get_timestamp(
@@ -63,11 +85,11 @@ class EmbedCreator:
 
         embed = discord.Embed()
 
-        embed.color = CONST.EMBED_STATE_COLORS[state]
+        embed.color = CONST.EMBED_COLORS[state]  # type: ignore
 
         embed.set_author(
             name=state.capitalize() if state else "Info",
-            icon_url=CONST.EMBED_STATE_ICONS[state] if state else CONST.EMBED_STATE_ICONS["DEFAULT"],
+            icon_url=CONST.EMBED_ICONS[state] if state else CONST.EMBED_ICONS["DEFAULT"],
         )
 
         embed.set_footer(text=footer[0], icon_url=footer[1])
@@ -91,7 +113,7 @@ class EmbedCreator:
 
         embed = discord.Embed()
 
-        embed.color = CONST.EMBED_STATE_COLORS[state]
+        embed.color = CONST.EMBED_COLORS[state]  # type: ignore
 
         embed.description = content
 
@@ -99,7 +121,7 @@ class EmbedCreator:
 
         embed.set_author(
             name=state.capitalize() if state else "Info",
-            icon_url=CONST.EMBED_STATE_ICONS[state] if state else CONST.EMBED_STATE_ICONS["DEFAULT"],
+            icon_url=CONST.EMBED_ICONS[state] if state else CONST.EMBED_ICONS["DEFAULT"],
         )
 
         embed.set_footer(

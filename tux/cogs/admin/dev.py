@@ -1,5 +1,4 @@
 import discord
-from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
@@ -8,21 +7,17 @@ class Dev(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @commands.hybrid_group(name="dev", description="Dev related commands.")
+    @commands.hybrid_group(name="dev", description="Dev related commands.", aliases=["d"])
     @commands.has_guild_permissions(administrator=True)
     async def dev(self, ctx: commands.Context[commands.Bot]) -> None:
         if ctx.invoked_subcommand is None:
             await ctx.send_help("dev")
 
-    @commands.has_guild_permissions(administrator=True)
-    @dev.command(
-        name="sync_tree",
-        description="Syncs the app command tree.",
-        usage="dev sync_tree <guild>",
-    )
+    @commands.has_permissions(administrator=True)
+    @dev.command(name="sync_tree", usage="$dev sync_tree <guild>", aliases=["sync", "st"])
     async def sync_tree(self, ctx: commands.Context[commands.Bot], guild: discord.Guild) -> None:
         """
-        Syncs the application commands to Discord.
+        Syncs the app command tree.
 
         Parameters
         ----------
@@ -60,11 +55,13 @@ class Dev(commands.Cog):
     @commands.has_guild_permissions(administrator=True)
     @dev.command(
         name="clear_tree",
-        description="Clears the app command tree.",
-        usage="dev clear_tree",
+        usage="$dev clear_tree",
+        aliases=["clear", "ct"],
     )
     async def clear_tree(self, ctx: commands.Context[commands.Bot]) -> None:
         """
+        Clears the app command tree.
+
         Parameters
         ----------
         ctx : commands.Context
@@ -96,13 +93,12 @@ class Dev(commands.Cog):
     @commands.has_guild_permissions(administrator=True)
     @dev.command(
         name="load_cog",
-        description="Loads a cog into the bot.",
         usage="dev load_cog <cog>",
+        aliases=["load", "lc"],
     )
-    @app_commands.describe(cog="The name of the cog to load.")
     async def load_cog(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
         """
-        Loads an cog into the bot.
+        Loads a cog into the bot.
 
         Parameters
         ----------
@@ -157,12 +153,12 @@ class Dev(commands.Cog):
     @commands.has_guild_permissions(administrator=True)
     @dev.command(
         name="unload_cog",
-        description="Unloads a cog from the bot.",
         usage="dev unload_cog <cog>",
+        aliases=["unload", "uc"],
     )
     async def unload_cog(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
         """
-        Unloads an cog from the bot.
+        Unloads a cog from the bot.
 
         Parameters
         ----------
@@ -204,8 +200,8 @@ class Dev(commands.Cog):
     @commands.has_guild_permissions(administrator=True)
     @dev.command(
         name="reload_cog",
-        description="Reloads a cog into the bot.",
         usage="dev reload_cog <cog>",
+        aliases=["reload", "rc"],
     )
     async def reload_cog(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
         """

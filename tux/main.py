@@ -1,5 +1,5 @@
 import asyncio
-import contextlib
+#import contextlib
 from collections.abc import Mapping
 from typing import Any
 
@@ -9,8 +9,8 @@ from loguru import logger
 
 from tux.cog_loader import CogLoader
 from tux.database.client import db
-from tux.utils.activities import ActivityChanger
-from tux.utils.console import Console
+
+# from tux.utils.console import Console
 from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import EmbedCreator
 from tux.utils.sentry import setup_sentry
@@ -144,10 +144,9 @@ class TuxHelp(commands.HelpCommand):
         await self.get_destination().send(embed=embed)
 
 
-class TuxBot(commands.Bot):
+class Tux(commands.Bot):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.activity_changer = ActivityChanger(self)
         self.setup_task = asyncio.create_task(self.setup())
         self.is_shutting_down = False
         self.help_command = TuxHelp()
@@ -174,6 +173,7 @@ class TuxBot(commands.Bot):
         Loads cogs by calling the setup method of CogLoader.
         """
 
+        logger.info("Loading cogs...")
         await CogLoader.setup(self)
 
     @commands.Cog.listener()
@@ -181,30 +181,24 @@ class TuxBot(commands.Bot):
         """
         Executes actions when the bot is ready, such as connecting to Discord and running tasks.
         """
+        logger.info(f"{self.user} has connected to Discord!")
 
         if not self.setup_task.done():
             await self.setup_task
 
-        logger.info(f"{self.user} has connected to Discord!")
-
-        activity_task = asyncio.create_task(self.activity_changer.run())
-
-        await asyncio.gather(activity_task)
-
     @commands.Cog.listener()
     async def on_disconnect(self) -> None:
         """
-        Executes actions when the bot disconnects from Discord, such as closing the database connection.
+        Executes actions when the bot disconnects from Discord.
         """
-
         logger.warning("Bot has disconnected from Discord.")
 
     async def shutdown(self) -> None:
         if self.is_shutting_down:
             logger.info("Shutdown already in progress. Exiting...")
             return
-        self.is_shutting_down = True
 
+        self.is_shutting_down = True
         logger.info("Shutting down...")
 
         await self.close()
@@ -227,22 +221,21 @@ class TuxBot(commands.Bot):
 
 
 async def main() -> None:
-    # Setup Sentry for error tracking and reporting
     setup_sentry()
 
-    prefix = CONST.DEV_PREFIX if CONST.DEV == "True" else CONST.PROD_PREFIX
-    token = CONST.DEV_TOKEN if CONST.DEV == "True" else CONST.PROD_TOKEN
+    prefix = CONST.PREFIX
+    token = CONST.TOKEN
 
     # Initialize the bot
-    bot = TuxBot(command_prefix=prefix, intents=discord.Intents.all())
+    bot = Tux(command_prefix=prefix, intents=discord.Intents.all())
 
     # Initialize the console and console task
-    console = None
-    console_task = None
+    # console = None
+    # console_task = None
 
     try:
-        console = Console(bot)
-        console_task = asyncio.create_task(console.run_console())
+        # console = Console(bot)
+        # console_task = asyncio.create_task(console.run_console())
 
         # Start the bot and reconnect on disconnection
         await bot.start(token=token, reconnect=True)
@@ -255,11 +248,11 @@ async def main() -> None:
         await bot.shutdown()
 
         # Cancel the console task if it's still running
-        if console_task is not None and not console_task.done():
-            console_task.cancel()
-            # Suppress the CancelledError exception
-            with contextlib.suppress(asyncio.CancelledError):
-                await console_task
+        # if console_task is not None and not console_task.done():
+        # console_task.cancel()
+        # Suppress the CancelledError exception
+        # with contextlib.suppress(asyncio.CancelledError):
+        # await console_task
 
     logger.info("Bot shutdown complete.")
 
@@ -268,6 +261,7 @@ if __name__ == "__main__":
     try:
         # Run the bot using asyncio
         asyncio.run(main())
+
     except KeyboardInterrupt:
         # Handle KeyboardInterrupt gracefully
         logger.info("Exiting gracefully.")

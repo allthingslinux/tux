@@ -1,6 +1,5 @@
 import random
 
-from discord import app_commands
 from discord.ext import commands
 
 from tux.utils.embeds import EmbedCreator
@@ -16,7 +15,8 @@ class Random(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.send_help("random")
 
-    @random.command(name="coinflip", description="Flip a coin.")
+    @random.command(name="coinflip")
+    @commands.guild_only()
     async def coinflip(self, ctx: commands.Context[commands.Bot]) -> None:
         """
         Flip a coin.
@@ -31,8 +31,8 @@ class Random(commands.Cog):
             content="You got heads!" if random.choice([True, False]) else "You got tails!",
         )
 
-    @random.command(name="8ball", description="Ask the magic 8ball a question.")
-    @app_commands.describe(question="The question to ask the 8ball.")
+    @random.command(name="8ball")
+    @commands.guild_only()
     async def eight_ball(self, ctx: commands.Context[commands.Bot], *, question: str) -> None:
         """
         Ask the magic 8ball a question.
@@ -46,7 +46,6 @@ class Random(commands.Cog):
         """
 
         responses = [
-            # Standard responses
             "It is certain",
             "It is decidedly so",
             "Without a doubt",
@@ -80,6 +79,7 @@ class Random(commands.Cog):
             "Ask Puffy or Beastie",
             "Absolutely",
         ]
+
         choice = random.choice(responses)
 
         response = f"""Response to "{question}":
@@ -94,8 +94,8 @@ class Random(commands.Cog):
 """
         await ctx.reply(content=f"```{response}```")
 
-    @random.command(name="dice", description="Roll a dice.")
-    @app_commands.describe(sides="The number of sides on the dice. (default: 6)")
+    @random.command(name="dice")
+    @commands.guild_only()
     async def dice(self, ctx: commands.Context[commands.Bot], sides: int = 6) -> None:
         """
         Roll a dice.
@@ -120,11 +120,8 @@ class Random(commands.Cog):
 
         await ctx.reply(embed=embed)
 
-    @random.command(name="number", description="Generate a random number.")
-    @app_commands.describe(
-        minimum="The minimum value of the random number. (default: 0)",
-        maximum="The maximum value of the random number. (default: 100)",
-    )
+    @random.command(name="number")
+    @commands.guild_only()
     async def random_number(
         self,
         ctx: commands.Context[commands.Bot],

@@ -1,6 +1,8 @@
 import traceback
+from pathlib import Path
 
-from aiopath import AsyncPath  # type: ignore
+import aiofiles
+import aiofiles.os
 from discord.ext import commands
 from loguru import logger
 
@@ -10,17 +12,15 @@ from tux.utils.constants import Constants as CONST
 class CogLoader(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.cog_ignore_list: set[str] = (
-            CONST.PROD_COG_IGNORE_LIST if CONST.DEV == "False" else CONST.DEV_COG_IGNORE_LIST
-        )
+        self.cog_ignore_list: set[str] = CONST.COG_IGNORE_LIST
 
-    async def is_cog_eligible(self, filepath: AsyncPath) -> bool:
+    async def is_cog_eligible(self, filepath: Path) -> bool:
         """
         Checks if the specified file is a cog.
 
         Parameters:
         -----------
-        filepath : AsyncPath
+        filepath : Path
             The path to the file to check.
 
         Returns:
@@ -35,16 +35,16 @@ class CogLoader(commands.Cog):
             filepath.suffix == ".py"
             and cog_name not in self.cog_ignore_list
             and not filepath.name.startswith("_")
-            and await filepath.is_file()
+            and await aiofiles.os.path.isfile(filepath)
         )
 
-    async def load_cogs(self, apath: AsyncPath) -> None:
+    async def load_cogs(self, path: Path) -> None:
         """
         Recursively loads eligible cogs from the specified directory.
 
         Parameters:
         -----------
-        apath : AsyncPath
+        path : Path
             The path to the directory containing cogs.
 
         Returns:
@@ -58,17 +58,16 @@ class CogLoader(commands.Cog):
         """
 
         try:
-            if await apath.is_dir():
-                async for item in apath.iterdir():
+            if await aiofiles.os.path.isdir(path):
+                for item in path.iterdir():
                     try:
-                        await self.load_cogs(apath=item)
+                        await self.load_cogs(path=item)
 
                     except Exception as error:
                         logger.error(f"Error loading cog from {item}: {error}")
 
-            elif await self.is_cog_eligible(filepath=apath):
-                # TODO: Fix this type ignore
-                relative_path: AsyncPath = apath.relative_to(AsyncPath(__file__).parent)  # type: ignore
+            elif await self.is_cog_eligible(filepath=path):
+                relative_path: Path = path.relative_to(Path(__file__).parent)
                 module: str = str(relative_path).replace("/", ".").replace("\\", ".")[:-3]
 
                 try:
@@ -81,7 +80,7 @@ class CogLoader(commands.Cog):
                     )
 
         except Exception as e:
-            logger.error(f"An error occurred while processing {apath}: {e}")
+            logger.error(f"An error occurred while processing {path}: {e}")
 
     async def load_cogs_from_folder(self, folder_name: str) -> None:
         """
@@ -97,9 +96,9 @@ class CogLoader(commands.Cog):
         None
         """
 
-        cog_path: AsyncPath = AsyncPath(__file__).parent / folder_name
+        cog_path: Path = Path(__file__).parent / folder_name
 
-        await self.load_cogs(apath=cog_path)
+        await self.load_cogs(path=cog_path)
 
     @classmethod
     async def setup(cls, bot: commands.Bot) -> None:

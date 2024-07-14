@@ -1,5 +1,4 @@
 import httpx
-from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
@@ -87,11 +86,10 @@ class Wiki(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.send_help("wiki")
 
-    @wiki.command(name="arch", description="Search the Arch Wiki.")
-    @app_commands.describe(query="The search query.")
+    @wiki.command(name="arch")
     async def arch_wiki(self, ctx: commands.Context[commands.Bot], query: str) -> None:
         """
-        Search the Arch Wiki for a given query and return the title and URL of the first search result.
+        Search the Arch Linux Wiki
 
         Parameters
         ----------
@@ -115,11 +113,10 @@ class Wiki(commands.Cog):
 
         await ctx.reply(embed=embed)
 
-    @wiki.command(name="atl", description="Search the All Things Linux Wiki.")
-    @app_commands.describe(query="The search query.")
+    @wiki.command(name="atl")
     async def atl_wiki(self, ctx: commands.Context[commands.Bot], query: str) -> None:
         """
-        Search the All Things Linux Wiki for a given query and return the title and URL of the first search result.
+        Search the All Things Linux Wiki
 
         Parameters
         ----------
