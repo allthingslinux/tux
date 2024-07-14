@@ -588,17 +588,17 @@ files = [
 
 [[package]]
 name = "githubkit"
-version = "0.11.6"
+version = "0.11.7"
 description = "GitHub SDK for Python"
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "githubkit-0.11.6-py3-none-any.whl", hash = "sha256:3b0918c19f1ad675a4a19e295c00520e3eb967d5a29562f45d30737fe337a328"},
-    {file = "githubkit-0.11.6.tar.gz", hash = "sha256:a520492190124a7852365a73771d1e2661bb4edc16da00f7f65b5e1ddb7c7b68"},
+    {file = "githubkit-0.11.7-py3-none-any.whl", hash = "sha256:1dc3f1b8a5b63509962e14eaa66af561bfefa31c8bc9d106d875475f4ccd029f"},
+    {file = "githubkit-0.11.7.tar.gz", hash = "sha256:f7ff916d1def03b62d52bfe3097dd531cef0fa8e75dcc563c8f6a457e43d88e3"},
 ]
 
 [package.dependencies]
-hishel = ">=0.0.21,<=0.0.26"
+hishel = ">=0.0.21,<=0.0.30"
 httpx = ">=0.23.0,<1.0.0"
 pydantic = ">=1.9.1,<2.5.0 || >2.5.0,<2.5.1 || >2.5.1,<3.0.0"
 PyJWT = {version = ">=2.4.0,<3.0.0", extras = ["crypto"], optional = true, markers = "extra == \"jwt\" or extra == \"auth-app\" or extra == \"auth\" or extra == \"all\""}
