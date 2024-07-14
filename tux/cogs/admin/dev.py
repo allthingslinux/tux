@@ -7,14 +7,39 @@ class Dev(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @commands.hybrid_group(name="dev", description="Dev related commands.", aliases=["d"])
+    @commands.hybrid_group(
+        name="dev",
+        aliases=["d"],
+        usage="$[dev|d] <subcommand>",
+    )
+    @commands.guild_only()
     @commands.has_guild_permissions(administrator=True)
     async def dev(self, ctx: commands.Context[commands.Bot]) -> None:
+        """
+        Dev related commands.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object for the command.
+
+        Raises
+        ------
+        commands.MissingPermissions
+            If the user does not have the required permissions
+        commands.CommandInvokeError
+            If the subcommand is not found.
+        """
         if ctx.invoked_subcommand is None:
             await ctx.send_help("dev")
 
+    @dev.command(
+        name="sync_tree",
+        aliases=["st", "sync", "s"],
+        usage="$[dev|d] sync_tree <guild>",
+    )
+    @commands.guild_only()
     @commands.has_permissions(administrator=True)
-    @dev.command(name="sync_tree", usage="$dev sync_tree <guild>", aliases=["sync", "st"])
     async def sync_tree(self, ctx: commands.Context[commands.Bot], guild: discord.Guild) -> None:
         """
         Syncs the app command tree.
@@ -26,10 +51,6 @@ class Dev(commands.Cog):
         guild : discord.Guild
             The guild to sync application commands to.
 
-        Returns
-        -------
-        None
-
         Raises
         ------
         commands.MissingRequiredArgument
@@ -39,6 +60,7 @@ class Dev(commands.Cog):
         if ctx.guild is None:
             await ctx.send("This command can only be used in a server.")
             return
+
         # Copy the global tree to the guild
         self.bot.tree.copy_global_to(guild=ctx.guild)
         # Sync the guild tree
@@ -52,12 +74,13 @@ class Dev(commands.Cog):
         else:
             logger.error(f"Error syncing application commands: {error}")
 
-    @commands.has_guild_permissions(administrator=True)
     @dev.command(
         name="clear_tree",
-        usage="$dev clear_tree",
-        aliases=["clear", "ct"],
+        aliases=["ct", "clear", "c"],
+        usage="$[dev|d] clear_tree",
     )
+    @commands.guild_only()
+    @commands.has_guild_permissions(administrator=True)
     async def clear_tree(self, ctx: commands.Context[commands.Bot]) -> None:
         """
         Clears the app command tree.
@@ -66,10 +89,6 @@ class Dev(commands.Cog):
         ----------
         ctx : commands.Context
             The context in which the command is being invoked.
-
-        Returns
-        -------
-        None
 
         Raises
         ------
@@ -90,12 +109,13 @@ class Dev(commands.Cog):
 
         await ctx.reply("Slash command tree cleared.")
 
-    @commands.has_guild_permissions(administrator=True)
     @dev.command(
         name="load_cog",
-        usage="dev load_cog <cog>",
-        aliases=["load", "lc"],
+        aliases=["lc", "load", "l"],
+        usage="$[dev|d] load_cog <cog>",
     )
+    @commands.guild_only()
+    @commands.has_guild_permissions(administrator=True)
     async def load_cog(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
         """
         Loads a cog into the bot.
@@ -106,10 +126,6 @@ class Dev(commands.Cog):
             The context in which the command is being invoked.
         cog : str
             The name of the cog to load.
-
-        Returns
-        -------
-        None
 
         Raises
         ------
@@ -153,8 +169,8 @@ class Dev(commands.Cog):
     @commands.has_guild_permissions(administrator=True)
     @dev.command(
         name="unload_cog",
-        usage="dev unload_cog <cog>",
-        aliases=["unload", "uc"],
+        aliases=["uc", "unload", "u"],
+        usage="$[dev|d] unload_cog <cog>",
     )
     async def unload_cog(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
         """
@@ -166,10 +182,6 @@ class Dev(commands.Cog):
             The context in which the command is being invoked.
         cog : str
             The name of the cog to unload.
-
-        Returns
-        -------
-        None
 
         Raises
         ------
@@ -197,12 +209,13 @@ class Dev(commands.Cog):
         else:
             logger.error(f"Error unloading cog: {error}")
 
-    @commands.has_guild_permissions(administrator=True)
     @dev.command(
         name="reload_cog",
-        usage="dev reload_cog <cog>",
-        aliases=["reload", "rc"],
+        aliases=["rc", "reload", "r"],
+        usage="$[dev|d] reload_cog <cog>",
     )
+    @commands.guild_only()
+    @commands.has_guild_permissions(administrator=True)
     async def reload_cog(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
         """
         Reloads a cog in the bot.
@@ -213,10 +226,6 @@ class Dev(commands.Cog):
             The context in which the command is being invoked.
         cog : str
             The name of the cog to reload.
-
-        Returns
-        -------
-        None
 
         Raises
         ------

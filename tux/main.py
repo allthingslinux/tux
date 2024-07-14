@@ -35,7 +35,7 @@ class TuxHelp(commands.HelpCommand):
     async def send_bot_help(
         self,
         mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]],
-    ):
+    ) -> None:
         """
         Sends help message for the bot.
         """
@@ -63,12 +63,17 @@ class TuxHelp(commands.HelpCommand):
                 # add the command name to the list of commands for the category
                 category_strings[category] += f"{command_name} "
 
+                # Check if the command is a group command and add subcommands
+                if isinstance(command, commands.Group):
+                    for subcommand in command.commands:
+                        category_strings[category] += f"{subcommand.name} "
+
         # TODO: normalize spacing between category and command names
         # set the description of the embed to the category strings
         embed.description = "\n".join(category_strings.values())
 
         embed.set_footer(
-            text=f"Use {CONST.DEV_PREFIX if CONST.DEV == "True" else CONST.PROD_PREFIX}help <category/command> to get more information about a category or command.",
+            text=f"Use {CONST.DEV_PREFIX if CONST.DEV == "True" else CONST.PROD_PREFIX}help <Category> or <command> to learn about a category or command.",
         )
 
         await self.get_destination().send(embed=embed)
@@ -84,10 +89,18 @@ class TuxHelp(commands.HelpCommand):
 
         for command in cog.get_commands():
             embed.add_field(
-                name=f"{command.name}/{"/".join(command.aliases) or "No aliases."}",
+                name=f"{command.name}/{"/".join(command.aliases) if command.aliases else "No aliases."}",
                 value=command.short_doc or "No documentation summary.",
                 inline=False,
             )
+
+            if isinstance(command, commands.Group):
+                for subcommand in command.commands:
+                    embed.add_field(
+                        name=f"{subcommand.name}/{"/".join(subcommand.aliases) if subcommand.aliases else "No aliases."}",
+                        value=subcommand.short_doc or "No documentation summary.",
+                        inline=False,
+                    )
 
         await self.get_destination().send(embed=embed)
 
@@ -97,11 +110,10 @@ class TuxHelp(commands.HelpCommand):
         """
         embed = discord.Embed(
             title=f"{command.name}",
-            description=command.help or "No documentation available.",
+            description=f"> {command.help or 'No documentation available.'}",
             color=discord.Color.blurple(),
         )
-
-        embed.add_field(name="Usage", value=f"{command.signature or "No usage."}", inline=False)
+        embed.add_field(name="Usage", value=f"`{command.signature or 'No usage.'}`", inline=False)
         embed.add_field(
             name="Aliases",
             value=", ".join(command.aliases) if command.aliases else "No aliases.",

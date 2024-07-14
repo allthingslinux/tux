@@ -70,8 +70,8 @@ class Purge(commands.Cog):
 
     @commands.command(
         name="purge",
-        aliases=["clear", "p"],
-        usage="$purge 10 #general",
+        aliases=["p"],
+        usage="$[purge|p] <limit> <channel>",
     )
     @commands.guild_only()
     async def prefix_purge(
