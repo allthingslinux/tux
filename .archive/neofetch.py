@@ -60,7 +60,7 @@ class Neofetch(commands.Cog):
         memusage = psutil.virtual_memory().percent
 
         lines = f"""{yellow}tux{reset}@{yellow}{interaction.guild.name.lower().replace(" ", "")}{reset}
-------------------
+-----------------
 [1;4;36;40mTux Stats{reset}
 {red}OS{reset}: Tux Alpha
 {yellow}Kernel{reset}: 6.9
@@ -68,7 +68,7 @@ class Neofetch(commands.Cog):
 {cyan}CPU{reset}: {cpuusage}%
 {blue}Memory{reset}: {memusage}%
 {pink}Ping{reset}: {round(self.bot.latency * 1000)}ms
-------------------
+-----------------
 [1;4;36;40mServer Stats{reset}
 {red}Name{reset}: {interaction.guild.name}
 {yellow}Owner{reset}: {interaction.guild.owner}
@@ -76,7 +76,7 @@ class Neofetch(commands.Cog):
 {cyan}Roles{reset}: {len(interaction.guild.roles)}
 {blue}Channels{reset}: {len(interaction.guild.channels)}
 {pink}Emojis + Stickers{reset}: {len(interaction.guild.emojis) + len(interaction.guild.stickers)}
-------------------
+-----------------
 """
 
         fetch = (

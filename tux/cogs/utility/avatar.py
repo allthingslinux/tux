@@ -23,7 +23,7 @@ class Avatar(commands.Cog):
         Get the global/server avatar for a member.
 
         Parameters
-        -----------
+        ----------
         interaction : discord.Interaction
             The discord interaction object.
         member : discord.Member
@@ -47,7 +47,7 @@ class Avatar(commands.Cog):
         Get the global/server avatar for a member.
 
         Parameters
-        -----------
+        ----------
         ctx : commands.Context[commands.Bot]
             The context in which the command is being invoked.
         member : discord.Member
@@ -106,12 +106,12 @@ class Avatar(commands.Cog):
         Create a discord file from an avatar url.
 
         Parameters
-        -----------
+        ----------
         url : str
             The url of the avatar.
 
         Returns
-        --------
+        -------
         discord.File
             The discord file.
         """

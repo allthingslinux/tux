@@ -21,14 +21,14 @@ class Tldr(commands.Cog):
         Provide autocomplete suggestions for TLDR commands based on user query.
 
         Parameters
-        -----------
+        ----------
         interaction : discord.Interaction
             The interaction object where autocomplete happens.
         query : str
             Partial input from the user used to filter suggestions.
 
         Returns
-        --------
+        -------
         List[app_commands.Choice[str]]
             A list of up to 25 command names as autocomplete choices.
         """
@@ -51,7 +51,7 @@ class Tldr(commands.Cog):
         Show a TLDR page for a CLI command
 
         Parameters
-        -----------
+        ----------
         interaction : discord.Interaction
             The discord interaction object.
         command : str
@@ -81,7 +81,7 @@ class Tldr(commands.Cog):
         Show a TLDR page for a CLI command
 
         Parameters
-        -----------
+        ----------
         ctx : commands.Context[commands.Bot]
             The context object for the command.
         command : str
@@ -105,12 +105,12 @@ class Tldr(commands.Cog):
         Retrieves the TLDR page for a given command.
 
         Parameters
-        -----------
+        ----------
         command : str
             The command to lookup.
 
         Returns
-        --------
+        -------
         str
             The content of the TLDR page or an error message.
         """
@@ -125,7 +125,7 @@ class Tldr(commands.Cog):
         Fetches a list of available TLDR pages.
 
         Returns
-        --------
+        -------
         list[str]
             List of available commands in the TLDR pages.
         """
@@ -137,14 +137,14 @@ class Tldr(commands.Cog):
         Helper method to run subprocesses for CLI interactions.
 
         Parameters
-        -----------
+        ----------
         command_list : list[str]
             List containing the command and its arguments.
         default_response : str
             The default response if subprocess does not output anything.
 
         Returns
-        --------
+        -------
         str
             The stdout from the subprocess as a string, or an error message.
 

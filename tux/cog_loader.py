@@ -19,12 +19,12 @@ class CogLoader(commands.Cog):
         Checks if the specified file is a cog.
 
         Parameters
-        -----------
+        ----------
         filepath : Path
             The path to the file to check.
 
         Returns
-        --------
+        -------
         bool
             True if the file is a cog, False otherwise.
         """
@@ -43,12 +43,12 @@ class CogLoader(commands.Cog):
         Recursively loads eligible cogs from the specified directory.
 
         Parameters
-        -----------
+        ----------
         path : Path
             The path to the directory containing cogs.
 
         Returns
-        --------
+        -------
         None
 
         Raises
@@ -87,12 +87,12 @@ class CogLoader(commands.Cog):
         Loads cogs from the specified folder.
 
         Parameters
-        -----------
+        ----------
         folder_name : str
             The name of the folder containing the cogs.
 
         Returns
-        --------
+        -------
         None
         """
 
