@@ -61,12 +61,12 @@ class TuxHelp(commands.HelpCommand):
                     category_strings[category] = f"**{category}** | "
 
                 # add the command name to the list of commands for the category
-                category_strings[category] += f"{command_name} "
+                category_strings[category] += f"`{command_name}` "
 
                 # Check if the command is a group command and add subcommands
                 if isinstance(command, commands.Group):
                     for subcommand in command.commands:
-                        category_strings[category] += f"{subcommand.name} "
+                        category_strings[category] += f"`{subcommand.name}` "
 
         # TODO: normalize spacing between category and command names
         # set the description of the embed to the category strings
@@ -90,7 +90,7 @@ class TuxHelp(commands.HelpCommand):
         for command in cog.get_commands():
             embed.add_field(
                 name=f"{command.name}/{"/".join(command.aliases) if command.aliases else "No aliases."}",
-                value=command.short_doc or "No documentation summary.",
+                value=f"> {command.short_doc or 'No documentation summary.'}",
                 inline=False,
             )
 
@@ -98,7 +98,7 @@ class TuxHelp(commands.HelpCommand):
                 for subcommand in command.commands:
                     embed.add_field(
                         name=f"{subcommand.name}/{"/".join(subcommand.aliases) if subcommand.aliases else "No aliases."}",
-                        value=subcommand.short_doc or "No documentation summary.",
+                        value=f"> {subcommand.short_doc or 'No documentation summary.'}",
                         inline=False,
                     )
 
@@ -116,7 +116,7 @@ class TuxHelp(commands.HelpCommand):
         embed.add_field(name="Usage", value=f"`{command.signature or 'No usage.'}`", inline=False)
         embed.add_field(
             name="Aliases",
-            value=", ".join(command.aliases) if command.aliases else "No aliases.",
+            value=f"`{', '.join(command.aliases)}`" if command.aliases else "No aliases.",
             inline=False,
         )
 
@@ -135,14 +135,14 @@ class TuxHelp(commands.HelpCommand):
         embed.add_field(name="Usage", value=f"`{group.signature or 'No usage.'}`", inline=False)
         embed.add_field(
             name="Aliases",
-            value=", ".join(group.aliases) if group.aliases else "No aliases.",
+            value=f"`{', '.join(group.aliases)}`" if group.aliases else "No aliases.",
             inline=False,
         )
 
         for command in group.commands:
             embed.add_field(
                 name=f"{command.name}/{'/'.join(command.aliases) or "No aliases."}",
-                value=command.short_doc or "No documentation summary.",
+                value=f"> {command.short_doc or 'No documentation summary.'}",
                 inline=False,
             )
 

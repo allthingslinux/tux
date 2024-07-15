@@ -83,7 +83,6 @@ class Wiki(commands.Cog):
 
     @commands.hybrid_group(
         name="wiki",
-        aliases=["w"],
         usage="$wiki [arch|atl]",
     )
     async def wiki(self, ctx: commands.Context[commands.Bot]) -> None:

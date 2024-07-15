@@ -82,10 +82,9 @@ class TimeoutFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
 
 
 class UnbanFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
-    username_or_id: int | str = commands.flag(
+    username_or_id: str = commands.flag(
         name="username_or_id",
         description="The username or ID of the user to ban.",
-        default=0,
     )
 
     reason: str = commands.flag(
