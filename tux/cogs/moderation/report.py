@@ -75,11 +75,11 @@ class Report(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @app_commands.command(name="report", description="Report a user or issue anonymously")
+    @app_commands.command(name="report")
     @app_commands.guild_only()
     async def report(self, interaction: discord.Interaction) -> None:
         """
-        Opens the report modal for users to submit an anonymous report.
+        Report a user or issue anonymously
 
         Parameters
         ----------

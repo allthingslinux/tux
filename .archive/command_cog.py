@@ -19,7 +19,7 @@ class CommandCog(commands.Cog):
         Args:
         - ctx (commands.Context): The context of the command.
 
-        Returns:
+        Returns
         - bool: True if the user has the required permission, False otherwise.
         """
         if not ctx.guild:

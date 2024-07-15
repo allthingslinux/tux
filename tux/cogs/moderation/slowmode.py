@@ -7,11 +7,10 @@ class Slowmode(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @commands.has_any_role("Admin", "Mod")
     @commands.hybrid_command(
         name="slowmode",
-        description="Sets slowmode for the current channel.",
         aliases="sm",
+        usage="$slowmode [delay] <channel>",
     )
     @commands.guild_only()
     async def slowmode(
@@ -21,7 +20,7 @@ class Slowmode(commands.Cog):
         channel: discord.TextChannel | None = None,
     ) -> None:
         """
-        Sets slowmode for the current channel.
+        Sets slowmode for the current channel or specified channel.
 
         Parameters
         ----------
@@ -30,6 +29,7 @@ class Slowmode(commands.Cog):
         delay : int
             The slowmode time in seconds, max is 21600.
         """
+
         if ctx.guild is None:
             return
 

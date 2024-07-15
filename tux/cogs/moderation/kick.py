@@ -17,11 +17,9 @@ class Kick(ModerationCogBase):
     @commands.hybrid_command(
         name="kick",
         aliases=["k"],
-        usage="$kick @target -r reason -s",
+        usage="$kick [target] [reason] <silent>",
     )
     @commands.guild_only()
-    @commands.bot_has_permissions(kick_members=True)
-    @commands.has_permissions(kick_members=True)
     async def kick(
         self,
         ctx: commands.Context[commands.Bot],

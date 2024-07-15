@@ -81,12 +81,28 @@ class Wiki(commands.Cog):
             return (data[1][0], data[3][0]) if data[1] else ("error", "error")
         return "error", "error"
 
-    @commands.hybrid_group(name="wiki", description="Wiki related commands.")
+    @commands.hybrid_group(
+        name="wiki",
+        aliases=["w"],
+        usage="$wiki [arch|atl]",
+    )
     async def wiki(self, ctx: commands.Context[commands.Bot]) -> None:
+        """
+        Wiki related commands.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object for the command.
+        """
+
         if ctx.invoked_subcommand is None:
             await ctx.send_help("wiki")
 
-    @wiki.command(name="arch")
+    @wiki.command(
+        name="arch",
+        usage="$wiki arch [query]",
+    )
     async def arch_wiki(self, ctx: commands.Context[commands.Bot], query: str) -> None:
         """
         Search the Arch Linux Wiki
@@ -113,7 +129,10 @@ class Wiki(commands.Cog):
 
         await ctx.reply(embed=embed)
 
-    @wiki.command(name="atl")
+    @wiki.command(
+        name="atl",
+        usage="$wiki atl [query]",
+    )
     async def atl_wiki(self, ctx: commands.Context[commands.Bot], query: str) -> None:
         """
         Search the All Things Linux Wiki

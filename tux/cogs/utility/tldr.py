@@ -20,14 +20,14 @@ class Tldr(commands.Cog):
         """
         Provide autocomplete suggestions for TLDR commands based on user query.
 
-        Parameters:
+        Parameters
         -----------
         interaction : discord.Interaction
             The interaction object where autocomplete happens.
         query : str
             Partial input from the user used to filter suggestions.
 
-        Returns:
+        Returns
         --------
         List[app_commands.Choice[str]]
             A list of up to 25 command names as autocomplete choices.
@@ -44,12 +44,13 @@ class Tldr(commands.Cog):
         return filtered_commands[:25]
 
     @app_commands.command(name="tldr")
+    @app_commands.guild_only()
     @app_commands.autocomplete(command=get_autocomplete)
     async def slash_tldr(self, interaction: discord.Interaction, command: str) -> None:
         """
         Show a TLDR page for a CLI command
 
-        Parameters:
+        Parameters
         -----------
         interaction : discord.Interaction
             The discord interaction object.
@@ -69,12 +70,17 @@ class Tldr(commands.Cog):
 
         logger.info(f"{interaction.user} requested TLDR for {command}")
 
-    @commands.command(name="tldr")
+    @commands.command(
+        name="tldr",
+        aliases=["man"],
+        usage="$tldr [command]",
+    )
+    @commands.guild_only()
     async def prefix_tldr(self, ctx: commands.Context[commands.Bot], command: str) -> None:
         """
         Show a TLDR page for a CLI command
 
-        Parameters:
+        Parameters
         -----------
         ctx : commands.Context[commands.Bot]
             The context object for the command.
@@ -98,12 +104,12 @@ class Tldr(commands.Cog):
         """
         Retrieves the TLDR page for a given command.
 
-        Parameters:
+        Parameters
         -----------
         command : str
             The command to lookup.
 
-        Returns:
+        Returns
         --------
         str
             The content of the TLDR page or an error message.
@@ -118,7 +124,7 @@ class Tldr(commands.Cog):
         """
         Fetches a list of available TLDR pages.
 
-        Returns:
+        Returns
         --------
         list[str]
             List of available commands in the TLDR pages.
@@ -130,19 +136,19 @@ class Tldr(commands.Cog):
         """
         Helper method to run subprocesses for CLI interactions.
 
-        Parameters:
+        Parameters
         -----------
         command_list : list[str]
             List containing the command and its arguments.
         default_response : str
             The default response if subprocess does not output anything.
 
-        Returns:
+        Returns
         --------
         str
             The stdout from the subprocess as a string, or an error message.
 
-        Raises:
+        Raises
         -------
         subprocess.CalledProcessError
             If the subprocess fails to run.

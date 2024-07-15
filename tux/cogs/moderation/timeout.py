@@ -2,7 +2,6 @@ import re
 from datetime import UTC, datetime, timedelta
 
 import discord
-from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
@@ -19,10 +18,10 @@ def parse_time_string(time_str: str) -> timedelta:
     Convert a string representation of time (e.g., '60s', '1m', '2h', '10d')
     into a datetime.timedelta object.
 
-    Parameters:
+    Parameters
     time_str (str): The string representation of time.
 
-    Returns:
+    Returns
     timedelta: Corresponding timedelta object.
     """
     # Define regex pattern to parse time strings
@@ -59,15 +58,8 @@ class Timeout(ModerationCogBase):
 
     @commands.hybrid_command(
         name="timeout",
-        description="Timeout a user from the server.",
-        aliases=["t"],
-        usage="$timeout @target -d 1h -r reason -s",
-    )
-    @app_commands.describe(
-        target="The user to timeout.",
-        duration="The duration of the timeout.",
-        reason="The reason for the timeout.",
-        silent="Do not send a DM to the target.",
+        aliases=["t", "to"],
+        usage="$timeout [target] [duration] [reason]",
     )
     @commands.guild_only()
     async def timeout(
@@ -77,6 +69,24 @@ class Timeout(ModerationCogBase):
         *,
         flags: TimeoutFlags,
     ) -> None:
+        """
+        Timeout a user from the server.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context in which the command is being invoked.
+        target : discord.Member
+            The user to timeout.
+        flags : TimeoutFlags
+            The flags for the command.
+
+        Raises
+        ------
+        discord.DiscordException
+            If an error occurs while timing out the user.
+        """
+
         moderator = await commands.MemberConverter().convert(ctx, str(ctx.author.id))
 
         if ctx.guild is None:

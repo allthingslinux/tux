@@ -1,5 +1,4 @@
 import discord
-from discord import app_commands
 from discord.ext import commands
 
 from prisma.models import Note
@@ -14,18 +13,28 @@ class Notes(ModerationCogBase):
 
     @commands.hybrid_group(
         name="notes",
-        description="Notes related commands.",
         aliases=["n"],
+        usage="$notes <subcommand>",
     )
+    @commands.guild_only()
     async def notes(self, ctx: commands.Context[commands.Bot]) -> None:
+        """
+        Notes related commands.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object for the command.
+        """
         if ctx.invoked_subcommand is None:
             await ctx.send_help("notes")
 
     @notes.command(
         name="create",
-        description="Create a note for a user.",
-        aliases=["add", "c"],
+        aliases=["c", "add", "a"],
+        usage="$notes create [target] [content]",
     )
+    @commands.guild_only()
     async def create_note(self, ctx: commands.Context[commands.Bot], target: discord.Member, content: str) -> None:
         """
         Create a note for a user.
@@ -41,19 +50,26 @@ class Notes(ModerationCogBase):
         """
 
         if ctx.guild:
-            note = await self.db.note.insert_note(
-                note_target_id=target.id,
-                note_moderator_id=ctx.author.id,
-                note_content=content,
-                guild_id=ctx.guild.id,
-            )
+            try:
+                note = await self.db.note.insert_note(
+                    note_target_id=target.id,
+                    note_moderator_id=ctx.author.id,
+                    note_content=content,
+                    guild_id=ctx.guild.id,
+                )
+
+            except Exception as e:
+                await ctx.reply(f"An error occurred while creating the note: {e}", delete_after=10, ephemeral=True)
+                return
 
             await self.handle_note_response(ctx, note, "created", content, target)
 
     @notes.command(
         name="delete",
-        aliases=["remove", "d"],
+        aliases=["d"],
+        usage="$notes delete [note_id]",
     )
+    @commands.guild_only()
     async def delete_note(self, ctx: commands.Context[commands.Bot], note_id: int) -> None:
         """
         Delete a note by ID.
@@ -75,21 +91,26 @@ class Notes(ModerationCogBase):
 
         if ctx.guild:
             note = await self.db.note.get_note_by_id(note_id)
+
             if not note:
                 await ctx.reply("Note not found.", delete_after=10, ephemeral=True)
                 return
 
             await self.db.note.delete_note_by_id(note_id)
+
             try:
                 target = await commands.MemberConverter().convert(ctx, str(note.note_target_id))
             except commands.MemberNotFound:
                 target = await commands.UserConverter().convert(ctx, str(note.note_target_id))
+
             await self.handle_note_response(ctx, note, "deleted", note.note_content, target)
 
     @notes.command(
         name="update",
-        aliases=["edit", "u"],
+        aliases=["u", "edit", "e", "modify", "m"],
+        usage="$notes update [note_id] [content]",
     )
+    @commands.guild_only()
     async def update_note(self, ctx: commands.Context[commands.Bot], note_id: int, content: str) -> None:
         """
         Update a note by ID.
@@ -113,25 +134,27 @@ class Notes(ModerationCogBase):
 
         if ctx.guild:
             note = await self.db.note.get_note_by_id(note_id)
+
             if not note:
                 await ctx.reply("Note not found.", delete_after=10, ephemeral=True)
                 return
+
             previous_content = note.note_content
             await self.db.note.update_note_by_id(note_id, content)
+
             try:
                 target = await commands.MemberConverter().convert(ctx, str(note.note_target_id))
             except commands.MemberNotFound:
                 target = await commands.UserConverter().convert(ctx, str(note.note_target_id))
+
             await self.handle_note_response(ctx, note, "updated", content, target, previous_content)
 
     @notes.command(
         name="view",
-        description="View a note by ID.",
-        aliases=["get", "v"],
+        aliases=["v", "get", "g"],
+        usage="$notes view [note_id]",
     )
-    @app_commands.describe(
-        note_id="The ID of the note to view.",
-    )
+    @commands.guild_only()
     async def view_note(self, ctx: commands.Context[commands.Bot], note_id: int) -> None:
         """
         View a note by ID.
@@ -153,13 +176,16 @@ class Notes(ModerationCogBase):
 
         if ctx.guild:
             note = await self.db.note.get_note_by_id(note_id)
+
             if not note:
                 await ctx.reply("Note not found.", delete_after=10, ephemeral=True)
                 return
+
             try:
                 target = await commands.MemberConverter().convert(ctx, str(note.note_target_id))
             except commands.MemberNotFound:
                 target = await commands.UserConverter().convert(ctx, str(note.note_target_id))
+
             await self.handle_note_response(ctx, note, "viewed", note.note_content, target)
 
     async def handle_note_response(

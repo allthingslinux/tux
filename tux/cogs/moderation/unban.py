@@ -1,5 +1,4 @@
 import discord
-from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
@@ -17,13 +16,8 @@ class Unban(ModerationCogBase):
 
     @commands.hybrid_command(
         name="unban",
-        description="Unban a user from the server.",
         aliases=["ub"],
-        usage="$unban @target -r reason",
-    )
-    @app_commands.describe(
-        target="The user to unban.",
-        reason="The reason for the unban.",
+        usage="$unban [target] [reason]",
     )
     @commands.guild_only()
     async def unban(
@@ -33,6 +27,26 @@ class Unban(ModerationCogBase):
         *,
         flags: UnbanFlags,
     ) -> None:
+        """
+        Unban a user from the server.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object for the command.
+        target : discord.Member
+            The member to unban.
+        flags : UnbanFlags
+            The flags for the command.
+
+        Raises
+        ------
+        discord.Forbidden
+            If the bot does not have the necessary permissions.
+        discord.HTTPException
+            If an error occurs while unbanning the user.
+        """
+
         # moderator = await commands.MemberConverter().convert(ctx, str(ctx.author.id))
 
         # Check for necessary permissions

@@ -17,7 +17,7 @@ class Ban(ModerationCogBase):
     @commands.hybrid_command(
         name="ban",
         aliases=["b"],
-        usage="$[ban,b] @target -r reason -p 7 -s",
+        usage="$ban [target] [reason] <purge_days> <silent>",
     )
     @commands.guild_only()
     async def ban(

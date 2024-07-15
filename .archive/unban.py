@@ -117,7 +117,7 @@ class Unban(commands.Cog):
         reason : str | None, optional
             The reason for unbanning the member, by default None
 
-        Raises:
+        Raises
         -------
         ValueError
             If the user is not found in the ban list.
