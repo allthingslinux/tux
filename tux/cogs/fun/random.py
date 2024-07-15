@@ -9,13 +9,29 @@ class Random(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @commands.hybrid_group(name="random", description="Random generation commands.")
+    @commands.hybrid_group(
+        name="random",
+        aliases=["rand", "rand", "r"],
+        usage="$[random|rand|r] <subcommand>",
+    )
     @commands.guild_only()
     async def random(self, ctx: commands.Context[commands.Bot]) -> None:
+        """
+        Random generation commands.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object for the
+        """
         if ctx.invoked_subcommand is None:
             await ctx.send_help("random")
 
-    @random.command(name="coinflip")
+    @random.command(
+        name="coinflip",
+        aliases=["cf"],
+        usage="$[random|rand|r] coinflip",
+    )
     @commands.guild_only()
     async def coinflip(self, ctx: commands.Context[commands.Bot]) -> None:
         """
@@ -31,7 +47,11 @@ class Random(commands.Cog):
             content="You got heads!" if random.choice([True, False]) else "You got tails!",
         )
 
-    @random.command(name="8ball")
+    @random.command(
+        name="8ball",
+        aliases=["eightball", "8b"],
+        usage="$[random|rand|r] 8ball [question]",
+    )
     @commands.guild_only()
     async def eight_ball(self, ctx: commands.Context[commands.Bot], *, question: str) -> None:
         """
@@ -94,7 +114,11 @@ class Random(commands.Cog):
 """
         await ctx.reply(content=f"```{response}```")
 
-    @random.command(name="dice")
+    @random.command(
+        name="dice",
+        aliases=["d"],
+        usage="$[random|rand|r] dice <sides>",
+    )
     @commands.guild_only()
     async def dice(self, ctx: commands.Context[commands.Bot], sides: int = 6) -> None:
         """
@@ -120,7 +144,11 @@ class Random(commands.Cog):
 
         await ctx.reply(embed=embed)
 
-    @random.command(name="number")
+    @random.command(
+        name="number",
+        aliases=["n"],
+        usage="$[random|rand|r] number <min> <max>",
+    )
     @commands.guild_only()
     async def random_number(
         self,
@@ -129,7 +157,7 @@ class Random(commands.Cog):
         maximum: int = 100,
     ) -> None:
         """
-        Generate a random number.
+        Generate a random number between two values.
 
         Parameters
         ----------

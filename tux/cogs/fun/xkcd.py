@@ -2,8 +2,8 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.services import xkcd
 from tux.utils.embeds import EmbedCreator
+from tux.wrappers import xkcd
 
 
 class XkcdLinkButtons(discord.ui.View):
@@ -41,7 +41,11 @@ class Xkcd(commands.Cog):
         else:
             await ctx.send_help("xkcd")
 
-    @xkcd.command(name="latest", aliases=["l", "new", "n"])
+    @xkcd.command(
+        name="latest",
+        aliases=["l", "new", "n"],
+        usage="$[xkcd|xk] latest",
+    )
     @commands.guild_only()
     async def latest(self, ctx: commands.Context[commands.Bot]) -> None:
         """
@@ -60,7 +64,11 @@ class Xkcd(commands.Cog):
         else:
             await ctx.reply(embed=embed, ephemeral=ephemeral)
 
-    @xkcd.command(name="random", aliases=["rand", "r"])
+    @xkcd.command(
+        name="random",
+        aliases=["rand", "r"],
+        usage="$[xkcd|xk] random",
+    )
     @commands.guild_only()
     async def random(self, ctx: commands.Context[commands.Bot]) -> None:
         """

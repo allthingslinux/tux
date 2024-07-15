@@ -109,7 +109,7 @@ class TuxHelp(commands.HelpCommand):
         Sends help message for a command.
         """
         embed = discord.Embed(
-            title=f"{command.name}",
+            title=f"{command.qualified_name}",
             description=f"> {command.help or 'No documentation available.'}",
             color=discord.Color.blurple(),
         )
@@ -128,11 +128,11 @@ class TuxHelp(commands.HelpCommand):
         """
         embed = discord.Embed(
             title=f"{group.name}",
-            description=group.help or "No documentation available.",
+            description=f"> {group.help or 'No documentation available.'}",
             color=discord.Color.blurple(),
         )
 
-        embed.add_field(name="Usage", value=f"{group.signature or "No usage."}", inline=False)
+        embed.add_field(name="Usage", value=f"`{group.signature or 'No usage.'}`", inline=False)
         embed.add_field(
             name="Aliases",
             value=", ".join(group.aliases) if group.aliases else "No aliases.",

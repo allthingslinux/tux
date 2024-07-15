@@ -2,8 +2,8 @@ import re
 
 from discord.ext import commands
 
-from tux.services import godbolt
 from tux.utils.embeds import EmbedCreator
+from tux.wrappers import godbolt
 
 ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 remove_ticks = re.compile(r"\`")
