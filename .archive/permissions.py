@@ -29,10 +29,10 @@ class Permissions:
         Args:
             command (str): The command to get the permission group for.
 
-        Returns:
+        Returns
             str: The permission group for the command.
 
-        Raises:
+        Raises
             commands.CommandNotFound: If the command is not found in the configuration.
         """
         command_permissions_group = self.feature_permissions_section.get(command, None)
@@ -47,10 +47,10 @@ class Permissions:
         Args:
             command_permissions_group (str): The permission group to get permissions for.
 
-        Returns:
+        Returns
             str | None: The permissions for the group or None if it's the "Everyone" group.
 
-        Raises:
+        Raises
             PermissionNotFoundError: If permissions for the group are not found in the configuration.
         """
         if command_permissions_group == "Everyone":
@@ -69,7 +69,7 @@ class Permissions:
         Args:
             command_permissions (str): The comma-separated string of required permissions.
 
-        Returns:
+        Returns
             List[str]: The list of required permissions.
         """
         return [role.strip() for role in command_permissions.split(",")]
@@ -82,7 +82,7 @@ class Permissions:
             roles (List[str]): The list of roles to check against required permissions.
             command (str): The command to check for permissions.
 
-        Returns:
+        Returns
             List[str] | None: List of missing permissions or None if all are present.
         """
         command_permissions_group = self._get_command_permissions_group(command)
@@ -105,7 +105,7 @@ class Permissions:
         Args:
             file_path (str): The path to the INI file.
 
-        Returns:
+        Returns
             ConfigParser: The reloaded configuration.
         """
         config = configparser.ConfigParser()

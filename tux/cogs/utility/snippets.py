@@ -19,13 +19,13 @@ class Snippets(commands.Cog):
 
     @commands.command(
         name="snippets",
-        usage="$ls [page]",
-        description="List snippets by page (max 10).",
         aliases=["ls"],
+        usage="$snippets <page>",
     )
+    @commands.guild_only()
     async def list_snippets(self, ctx: commands.Context[commands.Bot], page: int = 1) -> None:
         """
-        List snippets by page (max 10).
+        List snippets by page.
 
         Parameters
         ----------
@@ -90,13 +90,13 @@ class Snippets(commands.Cog):
 
     @commands.command(
         name="deletesnippet",
-        usage="$ds <name>",
-        description="Delete a snippet.",
         aliases=["ds"],
+        usage="$deletesnippet [name]",
     )
+    @commands.guild_only()
     async def delete_snippet(self, ctx: commands.Context[commands.Bot], name: str) -> None:
         """
-        Delete a snippet.
+        Delete a snippet by name.
 
         Parameters
         ----------
@@ -122,11 +122,13 @@ class Snippets(commands.Cog):
             return
 
         # Check if the author of the snippet is the same as the user who wants to delete it and if theres no author don't allow deletion
+        # TODO: this was quick and dirty, needs to be refactored
+
         author_id = snippet.snippet_user_id or 0
         if author_id != ctx.author.id:
             conf = await self.config_db.get_guild_config_by_id(ctx.guild.id)
-            # TODO: this was quick and dirty, needs to be refactored
             user_roles = [role.id for role in ctx.author.roles]  # type: ignore
+
             if not conf:
                 embed = EmbedCreator.create_error_embed(
                     title="Error",
@@ -135,14 +137,10 @@ class Snippets(commands.Cog):
                 )
                 await ctx.send(embed=embed)
                 return
-            if (
-                conf.guild_base_staff_role_id is not None
-                and conf.guild_base_staff_role_id in user_roles
-                or conf.guild_dev_role_id is not None
-                and conf.guild_dev_role_id in user_roles
+
+            if (conf.guild_base_staff_role_id is None or conf.guild_base_staff_role_id not in user_roles) and (
+                conf.guild_dev_role_id is None or conf.guild_dev_role_id not in user_roles
             ):
-                pass
-            else:
                 embed = EmbedCreator.create_error_embed(
                     title="Error",
                     description="You can only delete your own snippets.",
@@ -158,13 +156,13 @@ class Snippets(commands.Cog):
 
     @commands.command(
         name="snippet",
-        usage="$s <name>",
-        description="Get a snippet.",
         aliases=["s"],
+        usage="$snippet [name]",
     )
+    @commands.guild_only()
     async def get_snippet(self, ctx: commands.Context[commands.Bot], name: str) -> None:
         """
-        Get a snippet.
+        Get a snippet by name.
 
         Parameters
         ----------
@@ -195,13 +193,13 @@ class Snippets(commands.Cog):
 
     @commands.command(
         name="snippetinfo",
-        usage="$si <name>",
-        description="Get information about a snippet.",
         aliases=["si"],
+        usage="$snippetinfo [name]",
     )
+    @commands.guild_only()
     async def get_snippet_info(self, ctx: commands.Context[commands.Bot], name: str) -> None:
         """
-        Get information about a snippet.
+        Get information about a snippet by name.
 
         Parameters
         ----------
@@ -247,10 +245,10 @@ class Snippets(commands.Cog):
 
     @commands.command(
         name="createsnippet",
-        usage="$cs <name> <content>",
-        description="Create a snippet.",
         aliases=["cs"],
+        usage="$createsnippet [name] [content]",
     )
+    @commands.guild_only()
     async def create_snippet(self, ctx: commands.Context[commands.Bot], *, arg: str) -> None:
         """
         Create a snippet.

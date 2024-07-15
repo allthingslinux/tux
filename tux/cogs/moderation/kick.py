@@ -17,7 +17,7 @@ class Kick(ModerationCogBase):
     @commands.hybrid_command(
         name="kick",
         aliases=["k"],
-        usage="$[kick|k] <target> -flags",
+        usage="$kick [target] [reason] <silent>",
     )
     @commands.guild_only()
     async def kick(

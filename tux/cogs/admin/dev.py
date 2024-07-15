@@ -10,7 +10,7 @@ class Dev(commands.Cog):
     @commands.hybrid_group(
         name="dev",
         aliases=["d"],
-        usage="$[dev|d] <subcommand>",
+        usage="$dev <subcommand>",
     )
     @commands.guild_only()
     @commands.has_guild_permissions(administrator=True)
@@ -36,7 +36,7 @@ class Dev(commands.Cog):
     @dev.command(
         name="sync_tree",
         aliases=["st", "sync", "s"],
-        usage="$[dev|d] sync_tree <guild>",
+        usage="$dev sync_tree [guild]",
     )
     @commands.guild_only()
     @commands.has_permissions(administrator=True)
@@ -77,7 +77,7 @@ class Dev(commands.Cog):
     @dev.command(
         name="clear_tree",
         aliases=["ct", "clear", "c"],
-        usage="$[dev|d] clear_tree",
+        usage="$dev clear_tree",
     )
     @commands.guild_only()
     @commands.has_guild_permissions(administrator=True)
@@ -112,7 +112,7 @@ class Dev(commands.Cog):
     @dev.command(
         name="load_cog",
         aliases=["lc", "load", "l"],
-        usage="$[dev|d] load_cog <cog>",
+        usage="$dev load_cog [cog]",
     )
     @commands.guild_only()
     @commands.has_guild_permissions(administrator=True)
@@ -170,7 +170,7 @@ class Dev(commands.Cog):
     @dev.command(
         name="unload_cog",
         aliases=["uc", "unload", "u"],
-        usage="$[dev|d] unload_cog <cog>",
+        usage="$dev unload_cog [cog]",
     )
     async def unload_cog(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
         """
@@ -212,7 +212,7 @@ class Dev(commands.Cog):
     @dev.command(
         name="reload_cog",
         aliases=["rc", "reload", "r"],
-        usage="$[dev|d] reload_cog <cog>",
+        usage="$dev reload_cog [cog]",
     )
     @commands.guild_only()
     @commands.has_guild_permissions(administrator=True)

@@ -31,12 +31,12 @@ def convert_to_seconds(time_str: str) -> int:
     Converts a formatted time string with the formats Mwdhms
     Any unexpected format leads to returning 0.
 
-    Parameters:
+    Parameters
     ----------
     time_str : str
         The formatted time string to convert to total seconds.
 
-    Returns:
+    Returns
     -------
     int
         The total seconds from the formatted time string.
@@ -77,12 +77,12 @@ def datetime_to_unix(dt: datetime | None) -> str:
     This function accepts a datetime object or None, converts it into a Unix timestamp
     and returns it as a formatted Discord timestamp string or 'Never'
 
-    Parameters:
+    Parameters
     ----------
     dt : datetime
         The datetime object to convert to a Discord timestamp string.
 
-    Returns:
+    Returns
     -------
     str
         The formatted Discord timestamp string or 'Never'
@@ -100,12 +100,12 @@ def datetime_to_elapsed_time(dt: datetime | None) -> str:
     """
     Takes a datetime and computes the elapsed time from then to now in the format: X years, Y months, Z days.
 
-    Parameters:
+    Parameters
     ----------
     dt : datetime
         The datetime object to compute the elapsed time from.
 
-    Returns:
+    Returns
     -------
     str
         The elapsed time in the format: X years, Y months, Z days.
@@ -127,14 +127,14 @@ def compare_changes(before: dict[str, Any], after: dict[str, Any]) -> list[str]:
     """
     Compares the changes between two dictionaries and returns a list of strings representing the changes.
 
-    Parameters:
+    Parameters
     ----------
     before : dict
         The dictionary representing the state before the changes.
     after : dict
         The dictionary representing the state after the changes.
 
-    Returns:
+    Returns
     -------
     list
         A list of strings showing the changes made in the dictionaries.
@@ -150,14 +150,14 @@ def compare_guild_channel_changes(
     """
     Compares the changes between two GuildChannel instances and returns a list of strings representing the changes.
 
-    Parameters:
+    Parameters
     ----------
     before : discord.abc.GuildChannel
         The GuildChannel instance representing the state before the changes.
     after : discord.abc.GuildChannel
         The GuildChannel instance representing the state after the changes.
 
-    Returns:
+    Returns
     -------
     list
         A list of strings showing the changes made in the GuildChannel instances.
@@ -188,14 +188,14 @@ def compare_member_changes(
     """
     Compares changes between two Member instances and returns a list of strings representing the changes.
 
-    Parameters:
+    Parameters
     ----------
     before : discord.Member
         The Member instance representing the state before the changes.
     after : discord.Member
         The Member instance representing the state after the changes.
 
-    Returns:
+    Returns
     -------
     list
         A list of strings showing the changes made in the Member instances.
@@ -214,12 +214,12 @@ def extract_guild_attrs(guild: discord.Guild) -> dict[str, Any]:
     """
     Extracts relevant attributes from a discord.Guild and returns them as a dictionary.
 
-    Parameters:
+    Parameters
     ----------
     guild : discord.Guild
         The discord.Guild instance to extract attributes from.
 
-    Returns:
+    Returns
     -------
     dict
         A dictionary containing the extracted attributes of the guild.
@@ -238,12 +238,12 @@ def extract_member_attrs(member: discord.Member) -> dict[str, Any]:
     """
     Extracts relevant attributes from a discord.Member and returns them as a dictionary.
 
-    Parameters:
+    Parameters
     ----------
     member : discord.Member
         The discord.Member instance to extract attributes from.
 
-    Returns:
+    Returns
     -------
     dict
         A dictionary containing the extracted attributes of the member.

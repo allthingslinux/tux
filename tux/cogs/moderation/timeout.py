@@ -18,10 +18,10 @@ def parse_time_string(time_str: str) -> timedelta:
     Convert a string representation of time (e.g., '60s', '1m', '2h', '10d')
     into a datetime.timedelta object.
 
-    Parameters:
+    Parameters
     time_str (str): The string representation of time.
 
-    Returns:
+    Returns
     timedelta: Corresponding timedelta object.
     """
     # Define regex pattern to parse time strings
@@ -59,7 +59,7 @@ class Timeout(ModerationCogBase):
     @commands.hybrid_command(
         name="timeout",
         aliases=["t", "to"],
-        usage="$[timeout|t|to] <target> <duration> <reason>",
+        usage="$timeout [target] [duration] [reason]",
     )
     @commands.guild_only()
     async def timeout(

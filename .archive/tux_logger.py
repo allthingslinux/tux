@@ -78,7 +78,7 @@ class TuxLogger(logging.Logger):
         Args:
             filename (str): Filename for the log file.
 
-        Returns:
+        Returns
             logging.FileHandler: A file handler object.
         """
         file_handler = logging.FileHandler(filename, mode="a")

@@ -410,7 +410,7 @@ class Git(commands.Cog):
     @commands.hybrid_group(
         name="git",
         aliases=["g"],
-        usage="$[git|g] <subcommand>",
+        usage="$git <subcommand>",
     )
     @commands.guild_only()
     async def git(self, ctx: commands.Context[commands.Bot]) -> None:
@@ -429,7 +429,7 @@ class Git(commands.Cog):
     @git.command(
         name="get_repo",
         aliases=["r"],
-        usage="$[git|g] get_repo",
+        usage="$git get_repo",
     )
     @commands.guild_only()
     async def get_repo(self, ctx: commands.Context[commands.Bot]) -> None:
@@ -466,7 +466,7 @@ class Git(commands.Cog):
     @git.command(
         name="create_issue",
         aliases=["ci"],
-        usage="$git create_issue <title> <body>",
+        usage="$git create_issue [title] [body]",
     )
     @commands.guild_only()
     async def create_issue(self, ctx: commands.Context[commands.Bot], title: str, body: str) -> None:
@@ -506,7 +506,7 @@ class Git(commands.Cog):
     @git.command(
         name="get_issue",
         aliases=["gi", "issue", "i"],
-        usage="$[git|g] get_issue <issue_number>",
+        usage="$git get_issue [issue_number]",
     )
     @commands.guild_only()
     async def get_issue(self, ctx: commands.Context[commands.Bot], issue_number: int) -> None:

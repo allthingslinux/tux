@@ -11,8 +11,8 @@ class Random(commands.Cog):
 
     @commands.hybrid_group(
         name="random",
-        aliases=["rand", "rand", "r"],
-        usage="$[random|rand|r] <subcommand>",
+        aliases=["rand"],
+        usage="$random <subcommand>",
     )
     @commands.guild_only()
     async def random(self, ctx: commands.Context[commands.Bot]) -> None:
@@ -30,7 +30,7 @@ class Random(commands.Cog):
     @random.command(
         name="coinflip",
         aliases=["cf"],
-        usage="$[random|rand|r] coinflip",
+        usage="$random coinflip",
     )
     @commands.guild_only()
     async def coinflip(self, ctx: commands.Context[commands.Bot]) -> None:
@@ -50,7 +50,7 @@ class Random(commands.Cog):
     @random.command(
         name="8ball",
         aliases=["eightball", "8b"],
-        usage="$[random|rand|r] 8ball [question]",
+        usage="$random 8ball [question]",
     )
     @commands.guild_only()
     async def eight_ball(self, ctx: commands.Context[commands.Bot], *, question: str) -> None:
@@ -117,7 +117,7 @@ class Random(commands.Cog):
     @random.command(
         name="dice",
         aliases=["d"],
-        usage="$[random|rand|r] dice <sides>",
+        usage="$random dice <sides>",
     )
     @commands.guild_only()
     async def dice(self, ctx: commands.Context[commands.Bot], sides: int = 6) -> None:
@@ -147,7 +147,7 @@ class Random(commands.Cog):
     @random.command(
         name="number",
         aliases=["n"],
-        usage="$[random|rand|r] number <min> <max>",
+        usage="$random number <min> <max>",
     )
     @commands.guild_only()
     async def random_number(

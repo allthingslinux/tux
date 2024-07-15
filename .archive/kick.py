@@ -30,7 +30,7 @@
 #             infraction_type: The type of infraction.
 #             infraction_reason: The reason for the infraction.
 
-#         Returns:
+#         Returns
 #             An instance of Infractions if successful, None otherwise.
 #         """
 #         try:

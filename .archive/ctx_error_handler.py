@@ -19,10 +19,10 @@ class ContextCommandErrorHandler(commands.Cog):
             ctx: The context in which the error occurred.
             error: The exception that was raised.
 
-        Returns:
+        Returns
             None
 
-        Raises:
+        Raises
             None
         """
 

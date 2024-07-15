@@ -10,7 +10,7 @@ class Slowmode(commands.Cog):
     @commands.hybrid_command(
         name="slowmode",
         aliases="sm",
-        usage="$[slowmode|sm] <delay> <channel>",
+        usage="$slowmode [delay] <channel>",
     )
     @commands.guild_only()
     async def slowmode(

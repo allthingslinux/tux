@@ -22,7 +22,11 @@ class Xkcd(commands.Cog):
         self.bot = bot
         self.client = xkcd.Client()
 
-    @commands.hybrid_group(name="xkcd", aliases=["xk"])
+    @commands.hybrid_group(
+        name="xkcd",
+        aliases=["xk"],
+        usage="$xkcd <subcommand>",
+    )
     @commands.guild_only()
     async def xkcd(self, ctx: commands.Context[commands.Bot], comic_id: int | None = None) -> None:
         """
@@ -44,7 +48,7 @@ class Xkcd(commands.Cog):
     @xkcd.command(
         name="latest",
         aliases=["l", "new", "n"],
-        usage="$[xkcd|xk] latest",
+        usage="$xkcd latest",
     )
     @commands.guild_only()
     async def latest(self, ctx: commands.Context[commands.Bot]) -> None:
@@ -67,7 +71,7 @@ class Xkcd(commands.Cog):
     @xkcd.command(
         name="random",
         aliases=["rand", "r"],
-        usage="$[xkcd|xk] random",
+        usage="$xkcd random",
     )
     @commands.guild_only()
     async def random(self, ctx: commands.Context[commands.Bot]) -> None:
@@ -87,7 +91,11 @@ class Xkcd(commands.Cog):
         else:
             await ctx.reply(embed=embed, ephemeral=ephemeral)
 
-    @xkcd.command(name="specific", aliases=["s", "id", "i", "#", "num"])
+    @xkcd.command(
+        name="specific",
+        aliases=["s", "id", "num"],
+        usage="$xkcd specific [comic_id]",
+    )
     @commands.guild_only()
     async def specific(self, ctx: commands.Context[commands.Bot], comic_id: int) -> None:
         """

@@ -44,7 +44,7 @@ class Eval(commands.Cog):
     @commands.command(
         name="eval",
         aliases=["e"],
-        usage="$[eval|e] <expression>",
+        usage="$eval [expression]",
     )
     @commands.guild_only()
     async def run(self, ctx: commands.Context[commands.Bot], *, cmd: str) -> None:

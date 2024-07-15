@@ -22,7 +22,7 @@ class Avatar(commands.Cog):
         """
         Get the global/server avatar for a member.
 
-        Parameters:
+        Parameters
         -----------
         interaction : discord.Interaction
             The discord interaction object.
@@ -35,13 +35,13 @@ class Avatar(commands.Cog):
     @commands.command(
         name="avatar",
         aliases=["av"],
-        usage="$avatar @member",
+        usage="$avatar <member>",
     )
     @commands.guild_only()
     async def prefix_avatar(
         self,
         ctx: commands.Context[commands.Bot],
-        member: discord.Member,
+        member: discord.Member | None = None,
     ) -> None:
         """
         Get the global/server avatar for a member.
@@ -59,7 +59,7 @@ class Avatar(commands.Cog):
     async def send_avatar(
         self,
         source: commands.Context[commands.Bot] | discord.Interaction,
-        member: discord.Member,
+        member: discord.Member | None = None,
     ) -> None:
         """
         Send the global/server avatar for a member.
@@ -71,36 +71,46 @@ class Avatar(commands.Cog):
         member : discord.Member
             The member to get the avatar of.
         """
+        if member is not None:
+            guild_avatar = member.guild_avatar.url if member.guild_avatar else None
+            global_avatar = member.avatar.url if member.avatar else None
+            files = [await self.create_avatar_file(avatar) for avatar in [guild_avatar, global_avatar] if avatar]
 
-        guild_avatar = member.guild_avatar.url if member.guild_avatar else None
-        global_avatar = member.avatar.url if member.avatar else None
-
-        files = [await self.create_avatar_file(avatar) for avatar in [guild_avatar, global_avatar] if avatar]
-
-        if files:
-            if isinstance(source, discord.Interaction):
-                await source.response.send_message(files=files)
+            if files:
+                if isinstance(source, discord.Interaction):
+                    await source.response.send_message(files=files)
+                else:
+                    await source.reply(files=files)
             else:
+                message = "Member has no avatar."
+                if isinstance(source, discord.Interaction):
+                    await source.response.send_message(content=message)
+                else:
+                    await source.reply(content=message)
+
+        elif isinstance(source, commands.Context):
+            member = await commands.MemberConverter().convert(source, str(source.author.id))
+
+            guild_avatar = member.guild_avatar.url if member.guild_avatar else None
+            global_avatar = member.avatar.url if member.avatar else None
+            files = [await self.create_avatar_file(avatar) for avatar in [guild_avatar, global_avatar] if avatar]
+
+            if files:
                 await source.reply(files=files)
-
-        else:
-            message = "Member has no avatar."
-            if isinstance(source, discord.Interaction):
-                await source.response.send_message(content=message)
             else:
-                await source.reply(content=message)
+                await source.reply("You have no avatar.")
 
     @staticmethod
     async def create_avatar_file(url: str) -> discord.File:
         """
         Create a discord file from an avatar url.
 
-        Parameters:
+        Parameters
         -----------
         url : str
             The url of the avatar.
 
-        Returns:
+        Returns
         --------
         discord.File
             The discord file.

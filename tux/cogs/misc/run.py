@@ -235,13 +235,12 @@ class Run(commands.Cog):
 
     @commands.command(
         name="run",
-        aliases=["r"],
-        help="Run code in various languages.",
+        aliases=["compile", "exec"],
         usage="$run `language`\n```code```",
     )
     async def run(self, ctx: commands.Context[commands.Bot], *, code: str):
         """
-        A code evaluator. The code must be provided in  backticks along with the syntax highlighting to identify the language. Use short form syntax for the language. Available languages are Haskell, C, Rust, Julia, Python, C++.
+        Run code in various languages. Code should be enclosed in triple backticks with syntax highlighting.
 
         Parameters
         ----------
@@ -249,10 +248,6 @@ class Run(commands.Cog):
             The context in which the command is invoked.
         code : str
             The code to be evaluated.
-
-        Returns
-        -------
-        None
         """
 
         msg = await ctx.send("<a:typing:1236671731859722270>")
@@ -299,7 +294,11 @@ class Run(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(name="languages", aliases=["langs"], help="List all the supported languages.")
+    @commands.command(
+        name="languages",
+        aliases=["langs"],
+        usage="$languages",
+    )
     async def languages(self, ctx: commands.Context[commands.Bot]) -> None:
         """
         Lists all the supported languages.

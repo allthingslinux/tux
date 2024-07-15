@@ -15,7 +15,7 @@ class Warn(ModerationCogBase):
     @commands.hybrid_group(
         name="warn",
         aliases=["w"],
-        usage="$[warn|w] <subcommand>",
+        usage="$warn <subcommand>",
     )
     @commands.guild_only()
     async def warn(self, ctx: commands.Context[commands.Bot]) -> None:
@@ -38,7 +38,7 @@ class Warn(ModerationCogBase):
     @warn.command(
         name="create",
         aliases=["c", "add", "a"],
-        usage="$[warn|w] create <target> <reason>",
+        usage="$warn create [target] [reason]",
     )
     @commands.guild_only()
     async def create_warn(self, ctx: commands.Context[commands.Bot], target: discord.Member, reason: str) -> None:
@@ -74,7 +74,7 @@ class Warn(ModerationCogBase):
     @warn.command(
         name="delete",
         aliases=["d", "remove", "r"],
-        usage="$[warn|w] delete <case_number>",
+        usage="$warn delete [case_number]",
     )
     async def delete_warn(self, ctx: commands.Context[commands.Bot], case_number: int) -> None:
         """
@@ -109,7 +109,7 @@ class Warn(ModerationCogBase):
     @warn.command(
         name="update",
         aliases=["u", "edit", "e", "modify", "m"],
-        usage="$[warn|w] update <case_number> <reason>",
+        usage="$warn update [case_number] [reason]",
     )
     async def update_warn(self, ctx: commands.Context[commands.Bot], case_number: int, reason: str) -> None:
         """
