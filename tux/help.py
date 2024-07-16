@@ -53,7 +53,7 @@ class TuxHelp(commands.HelpCommand):
         embed.description = "\n".join(category_strings.values())
 
         embed.set_footer(
-            text=f"Use {CONST.DEV_PREFIX if CONST.DEV == "True" else CONST.PROD_PREFIX}help <Category> or <command> to learn about a category or command.",
+            text=f"Use {CONST.DEV_PREFIX if CONST.DEV == 'True' else CONST.PROD_PREFIX}help <Category> or <command> to learn about a category or command.",
         )
 
         await self.get_destination().send(embed=embed)
@@ -77,7 +77,7 @@ class TuxHelp(commands.HelpCommand):
             if isinstance(command, commands.Group):
                 for subcommand in command.commands:
                     embed.add_field(
-                        name=f"{subcommand.name}/{"/".join(subcommand.aliases) if subcommand.aliases else "No aliases."}",
+                        name=f"{subcommand.name}/{'/'.join(subcommand.aliases) if subcommand.aliases else 'No aliases.'}",
                         value=f"> {subcommand.short_doc or 'No documentation summary.'}",
                         inline=False,
                     )
@@ -121,7 +121,7 @@ class TuxHelp(commands.HelpCommand):
 
         for command in group.commands:
             embed.add_field(
-                name=f"{command.name}/{'/'.join(command.aliases) or "No aliases."}",
+                name=f"{command.name}/{'/'.join(command.aliases) or 'No aliases.'}",
                 value=f"> {command.short_doc or 'No documentation summary.'}",
                 inline=False,
             )
