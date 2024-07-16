@@ -219,10 +219,6 @@ class Run(commands.Cog):
             The output.
         lang : str
             The language of the code.
-
-        Returns
-        -------
-        None
         """
 
         embed = EmbedCreator.create_info_embed(
@@ -236,7 +232,7 @@ class Run(commands.Cog):
     @commands.command(
         name="run",
         aliases=["compile", "exec"],
-        usage="$run `language`\n```code```",
+        usage="$run <code>",
     )
     async def run(self, ctx: commands.Context[commands.Bot], *, code: str):
         """
@@ -307,10 +303,6 @@ class Run(commands.Cog):
         ----------
         ctx : commands.Context[commands.Bot]
             The context in which the command is invoked.
-
-        Returns
-        -------
-        None
         """
 
         embed = EmbedCreator.create_info_embed(

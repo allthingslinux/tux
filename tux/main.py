@@ -21,8 +21,6 @@ This setup is intended for debugging purposes. Ensure that you comment out logur
 # logging.basicConfig(level=logging.DEBUG)
 # warnings.simplefilter("error", ResourceWarning)
 
-# TODO: move this to a separate file
-
 
 async def main() -> None:
     setup_sentry()
