@@ -24,10 +24,4 @@ repos:
     rev: v8.18.4
     hooks:
       - id: gitleaks
-
-  - repo: https://github.com/hija/clean-dotenv
-    rev: v0.0.7
-    hooks:
-      - id: clean-dotenv
-
 exclude: ".archive/"
