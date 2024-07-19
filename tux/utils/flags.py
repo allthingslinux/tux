@@ -93,3 +93,35 @@ class UnbanFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
         aliases=["r"],
         default="No reason provided.",
     )
+
+
+class JailFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
+    reason: str = commands.flag(
+        name="reason",
+        description="The reason for the member jail.",
+        aliases=["r"],
+        default="No reason provided.",
+    )
+
+    silent: bool = commands.flag(
+        name="silent",
+        description="Do not send a DM to the target.",
+        aliases=["s", "quiet"],
+        default=False,
+    )
+
+
+class UnjailFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
+    reason: str = commands.flag(
+        name="reason",
+        description="The reason for the member unjail.",
+        aliases=["r"],
+        default="No reason provided.",
+    )
+
+    silent: bool = commands.flag(
+        name="silent",
+        description="Do not send a DM to the target.",
+        aliases=["s", "quiet"],
+        default=False,
+    )

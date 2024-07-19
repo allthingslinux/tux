@@ -1,9 +1,9 @@
 datasource db {
   provider  = "postgresql"
-  url       = env("PROD_DATABASE_URL")
-  directUrl = env("PROD_DIRECT_URL")
-  // url       = env("DEV_DATABASE_URL")
-  // directUrl = env("DEV_DIRECT_URL")
+  // url       = env("PROD_DATABASE_URL")
+  // directUrl = env("PROD_DIRECT_URL")
+  url       = env("DEV_DATABASE_URL")
+  directUrl = env("DEV_DIRECT_URL")
 }
 
 generator client {
@@ -24,6 +24,8 @@ enum CaseType {
   TIMEOUT
   UNTIMEOUT
   WARN
+  JAIL
+  UNJAIL
 }
 
 model Guild {
@@ -82,9 +84,10 @@ model Case {
   case_reason       String
   case_moderator_id BigInt
   case_target_id    BigInt
-  case_number       Int?
+  case_target_roles BigInt[]  @default([]) // Role IDs for the jailed user
+  case_number       Int? // Incremented for each case per guild via a trigger/function
   case_created_at   DateTime? @default(now())
-  case_expires_at   DateTime?
+  case_expires_at   DateTime? // For temporary bans and timeouts
   guild_id          BigInt
   guild             Guild     @relation(fields: [guild_id], references: [guild_id])
 
@@ -111,7 +114,7 @@ model Note {
   note_created_at   DateTime @default(now())
   note_moderator_id BigInt
   note_target_id    BigInt
-  note_number       Int?
+  note_number       Int? // Incremented for each note per guild via a trigger/function
   guild_id          BigInt
   guild             Guild    @relation(fields: [guild_id], references: [guild_id])
 
@@ -124,7 +127,7 @@ model Reminder {
   reminder_content    String
   reminder_created_at DateTime @default(now())
   reminder_expires_at DateTime
-  reminder_channel_id BigInt
+  reminder_channel_id BigInt // Channel to send the reminder to if direct message fails
   reminder_user_id    BigInt
   guild_id            BigInt
   guild               Guild    @relation(fields: [guild_id], references: [guild_id])

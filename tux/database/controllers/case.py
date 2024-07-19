@@ -29,6 +29,7 @@ class CaseController:
         case_moderator_id: int,
         case_type: CaseType,
         case_reason: str,
+        case_target_roles: list[int] | None = None,
         case_expires_at: datetime | None = None,
     ) -> Case:
         await self.ensure_guild_exists(guild_id)
@@ -41,7 +42,19 @@ class CaseController:
                 "case_type": case_type,
                 "case_reason": case_reason,
                 "case_expires_at": case_expires_at,
+                "case_target_roles": case_target_roles if case_target_roles is not None else [],
             },
+        )
+
+    async def get_last_jail_case_by_target_id_and_guild_id(
+        self,
+        case_target_id: int,
+        guild_id: int,
+    ) -> Case | None:
+        # Get the latest jail case for the target
+        return await self.table.find_first(
+            where={"guild_id": guild_id, "case_target_id": case_target_id, "case_type": CaseType.JAIL},
+            order={"case_created_at": "desc"},
         )
 
     async def delete_case_by_id(self, case_id: int) -> None:
