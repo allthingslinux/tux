@@ -98,6 +98,11 @@ class Random(commands.Cog):
             "Ask your mom",
             "Ask Puffy or Beastie",
             "Absolutely",
+            "Absolutely not",
+            "You're joking right?",
+            "Ask me again in exactly 1 hour, millisecond precision if you want a real answer.",
+            "Ask a real person.",
+            "I may be a robot but some questions are just too stupid to answer.",
         ]
 
         choice = random.choice(responses)
@@ -106,11 +111,15 @@ class Random(commands.Cog):
   {"_" * len(choice)}
 < {choice} >
   {"-" * len(choice)}
-        \\   ^__^
-         \\  (oo)\\_______
-            (__)\\       )\\/\\
-                ||----w |
-                ||     ||
+   \\
+    \
+    .--.
+       |o_o |
+       |:_/ |
+      //   \\ \\
+     (|     | )
+    /'\\_   _/`\\
+    \\___)=(___/
 """
         await ctx.reply(content=f"```{response}```")
 
