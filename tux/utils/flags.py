@@ -1,4 +1,7 @@
+import discord
 from discord.ext import commands
+
+from prisma.enums import CaseType
 
 
 class BanFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
@@ -49,7 +52,6 @@ class KickFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
         aliases=["r"],
         default="No reason provided.",
     )
-
     silent: bool = commands.flag(
         name="silent",
         description="Do not send a DM to the target.",
@@ -65,7 +67,6 @@ class TimeoutFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
         aliases=["d"],
         default="1h",
     )
-
     reason: str = commands.flag(
         name="reason",
         description="The reason for the member ban.",
@@ -86,7 +87,6 @@ class UnbanFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
         name="username_or_id",
         description="The username or ID of the user to ban.",
     )
-
     reason: str = commands.flag(
         name="reason",
         description="The reason for the member ban.",
@@ -102,7 +102,6 @@ class JailFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
         aliases=["r"],
         default="No reason provided.",
     )
-
     silent: bool = commands.flag(
         name="silent",
         description="Do not send a DM to the target.",
@@ -118,10 +117,36 @@ class UnjailFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
         aliases=["r"],
         default="No reason provided.",
     )
-
     silent: bool = commands.flag(
         name="silent",
         description="Do not send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
+    )
+
+
+class CasesViewFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
+    number: int = commands.flag(
+        name="number",
+        description="The case number to view.",
+        aliases=["n", "id"],
+        default=None,
+    )
+    type: CaseType = commands.flag(
+        name="type",
+        description="The case type to view.",
+        aliases=["t"],
+        default=None,
+    )
+    target: discord.Member = commands.flag(
+        name="member",
+        description="The member to view cases for.",
+        aliases=["memb", "m", "user", "u"],
+        default=None,
+    )
+    moderator: discord.Member = commands.flag(
+        name="moderator",
+        description="The moderator to view cases for.",
+        aliases=["mod"],
+        default=None,
     )
