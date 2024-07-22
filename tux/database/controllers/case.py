@@ -1,7 +1,10 @@
 from datetime import datetime
 
+from loguru import logger
+
 from prisma.enums import CaseType
 from prisma.models import Case, Guild
+from prisma.types import CaseWhereInput
 from tux.database.client import db
 
 
@@ -11,16 +14,27 @@ class CaseController:
         self.guild_table = db.guild
 
     async def ensure_guild_exists(self, guild_id: int) -> Guild:
+        """
+        Ensure a guild exists in the database and return the found or created object.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to ensure exists.
+
+        Returns
+        -------
+        Guild
+            The guild database object.
+        """
         guild = await self.guild_table.find_first(where={"guild_id": guild_id})
         if guild is None:
             return await self.guild_table.create(data={"guild_id": guild_id})
         return guild
 
-    async def get_all_cases(self) -> list[Case]:
-        return await self.table.find_many()
-
-    async def get_case_by_id(self, case_id: int) -> Case | None:
-        return await self.table.find_first(where={"case_id": case_id})
+    """
+    CREATE
+    """
 
     async def insert_case(
         self,
@@ -32,6 +46,31 @@ class CaseController:
         case_target_roles: list[int] | None = None,
         case_expires_at: datetime | None = None,
     ) -> Case:
+        """
+        Insert a case into the database.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to insert the case into.
+        case_target_id : int
+            The ID of the target of the case.
+        case_moderator_id : int
+            The ID of the moderator of the case.
+        case_type : CaseType
+            The type of the case.
+        case_reason : str
+            The reason for the case.
+        case_target_roles : list[int] | None
+            The roles of the target of the case.
+        case_expires_at : datetime | None
+            The expiration date of the case.
+
+        Returns
+        -------
+        Case
+            The case database object.
+        """
         await self.ensure_guild_exists(guild_id)
 
         return await self.table.create(
@@ -46,381 +85,181 @@ class CaseController:
             },
         )
 
-    async def get_last_jail_case_by_target_id_and_guild_id(
+    """
+    READ
+    """
+
+    async def get_all_cases(self, guild_id: int) -> list[Case]:
+        """
+        Get all cases for a guild.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to get cases for.
+
+        Returns
+        -------
+        list[Case]
+            A list of cases for the guild.
+        """
+        return await self.table.find_many(where={"guild_id": guild_id}, order={"case_created_at": "desc"})
+
+    async def get_cases_by_options(
         self,
-        case_target_id: int,
         guild_id: int,
+        options: CaseWhereInput,
+    ) -> list[Case] | None:
+        """
+        Get cases for a guild by options.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to get cases for.
+        options : CaseWhereInput
+            The options to filter cases by.
+
+        Returns
+        -------
+        list[Case] | None
+            A list of cases for the guild if found, otherwise None.
+        """
+        cases = await self.table.find_many(where={"guild_id": guild_id, **options}, order={"case_created_at": "desc"})
+        logger.info(cases)
+        return cases
+
+    async def get_case_by_number(self, guild_id: int, case_number: int) -> Case | None:
+        """
+        Get a case by its number in a guild.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to get the case in.
+        case_number : int
+            The number of the case to get.
+
+        Returns
+        -------
+        Case | None
+            The case if found, otherwise None.
+        """
+        return await self.table.find_first(where={"guild_id": guild_id, "case_number": case_number})
+
+    async def get_all_cases_by_target_id(self, guild_id: int, case_target_id: int) -> list[Case]:
+        """
+        Get all cases for a target in a guild.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to get cases for.
+        case_target_id : int
+            The ID of the target to get cases for.
+
+        Returns
+        -------
+        list[Case]
+            A list of cases for the target in the guild.
+        """
+        return await self.table.find_many(
+            where={"guild_id": guild_id, "case_target_id": case_target_id},
+            order={"case_created_at": "desc"},
+        )
+
+    async def get_all_cases_by_moderator_id(self, guild_id: int, case_moderator_id: int) -> list[Case]:
+        """
+        Get all cases for a moderator in a guild.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to get cases for.
+        case_moderator_id : int
+            The ID of the moderator to get cases for.
+
+        Returns
+        -------
+        list[Case]
+            A list of cases for the moderator in the guild.
+        """
+        return await self.table.find_many(
+            where={"guild_id": guild_id, "case_moderator_id": case_moderator_id},
+            order={"case_created_at": "desc"},
+        )
+
+    async def get_all_cases_by_type(self, guild_id: int, case_type: CaseType) -> list[Case]:
+        """
+        Get all cases of a type in a guild.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to get cases for.
+        case_type : CaseType
+            The type of case to get.
+
+        Returns
+        -------
+        list[Case]
+            A list of cases of the type in the guild.
+        """
+        return await self.table.find_many(
+            where={"guild_id": guild_id, "case_type": case_type},
+            order={"case_created_at": "desc"},
+        )
+
+    async def get_last_jail_case_by_target_id(
+        self,
+        guild_id: int,
+        case_target_id: int,
     ) -> Case | None:
-        # Get the latest jail case for the target
         return await self.table.find_first(
             where={"guild_id": guild_id, "case_target_id": case_target_id, "case_type": CaseType.JAIL},
             order={"case_created_at": "desc"},
         )
 
-    async def delete_case_by_id(self, case_id: int) -> None:
-        await self.table.delete(where={"case_id": case_id})
+    """
+    UPDATE
+    """
 
-    async def update_case_by_case_number_and_guild_id(
+    async def update_case(
         self,
-        case_number: int,
         guild_id: int,
+        case_number: int,
         case_reason: str,
+        case_status: bool | None = None,
     ) -> Case | None:
+        case = await self.table.find_first(where={"guild_id": guild_id, "case_number": case_number})
+        if case is None:
+            return None
         return await self.table.update(
-            where={"case_number_guild_id": {"case_number": case_number, "guild_id": guild_id}},
-            data={"case_reason": case_reason},
+            where={"case_id": case.case_id},
+            data={"case_reason": case_reason, "case_status": case_status},
         )
 
-    async def get_case_by_case_number_and_guild_id(
-        self,
-        case_number: int,
-        guild_id: int,
-    ) -> Case | None:
-        return await self.table.find_unique(
-            where={"case_number_guild_id": {"case_number": case_number, "guild_id": guild_id}},
-        )
+    """
+    DELETE
+    """
 
-    async def delete_case_by_case_number_and_guild_id(
-        self,
-        case_number: int,
-        guild_id: int,
-    ) -> None:
-        await self.table.delete(where={"case_number_guild_id": {"case_number": case_number, "guild_id": guild_id}})
+    async def delete_case_by_number(self, guild_id: int, case_number: int) -> Case | None:
+        """
+        Delete a case by its number in a guild.
 
-    async def get_cases_by_guild_id(self, guild_id: int) -> list[Case] | None:
-        return await self.table.find_many(where={"guild_id": guild_id})
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to delete the case in.
+        case_number : int
+            The number of the case to delete.
 
-    async def get_cases_by_target_id(self, case_target_id: int) -> list[Case] | None:
-        return await self.table.find_many(where={"case_target_id": case_target_id})
-
-    async def get_cases_by_moderator_id(self, case_moderator_id: int) -> list[Case] | None:
-        return await self.table.find_many(where={"case_moderator_id": case_moderator_id})
-
-    async def get_cases_by_guild_id_and_target_id(
-        self,
-        guild_id: int,
-        case_target_id: int,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={"guild_id": guild_id, "case_target_id": case_target_id},
-        )
-
-    async def get_cases_by_guild_id_and_moderator_id(
-        self,
-        guild_id: int,
-        case_moderator_id: int,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={"guild_id": guild_id, "case_moderator_id": case_moderator_id},
-        )
-
-    async def get_cases_by_guild_id_and_type(
-        self,
-        guild_id: int,
-        case_type: CaseType,
-    ) -> list[Case] | None:
-        return await self.table.find_many(where={"guild_id": guild_id, "case_type": case_type})
-
-    async def get_cases_by_guild_id_and_reason(
-        self,
-        guild_id: int,
-        case_reason: str,
-    ) -> list[Case] | None:
-        return await self.table.find_many(where={"guild_id": guild_id, "case_reason": case_reason})
-
-    async def get_cases_by_guild_id_and_expires_at(
-        self,
-        guild_id: int,
-        case_expires_at: datetime,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={"guild_id": guild_id, "case_expires_at": case_expires_at},
-        )
-
-    async def get_cases_by_guild_id_and_target_id_and_moderator_id(
-        self,
-        guild_id: int,
-        case_target_id: int,
-        case_moderator_id: int,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={
-                "guild_id": guild_id,
-                "case_target_id": case_target_id,
-                "case_moderator_id": case_moderator_id,
-            },
-        )
-
-    async def get_cases_by_guild_id_and_target_id_and_type(
-        self,
-        guild_id: int,
-        case_target_id: int,
-        case_type: CaseType,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={"guild_id": guild_id, "case_target_id": case_target_id, "case_type": case_type},
-        )
-
-    async def get_cases_by_guild_id_and_target_id_and_reason(
-        self,
-        guild_id: int,
-        case_target_id: int,
-        case_reason: str,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={
-                "guild_id": guild_id,
-                "case_target_id": case_target_id,
-                "case_reason": case_reason,
-            },
-        )
-
-    async def get_cases_by_guild_id_and_target_id_and_expires_at(
-        self,
-        guild_id: int,
-        case_target_id: int,
-        case_expires_at: datetime,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={
-                "guild_id": guild_id,
-                "case_target_id": case_target_id,
-                "case_expires_at": case_expires_at,
-            },
-        )
-
-    async def get_cases_by_guild_id_and_moderator_id_and_type(
-        self,
-        guild_id: int,
-        case_moderator_id: int,
-        case_type: CaseType,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={
-                "guild_id": guild_id,
-                "case_moderator_id": case_moderator_id,
-                "case_type": case_type,
-            },
-        )
-
-    async def get_cases_by_guild_id_and_moderator_id_and_reason(
-        self,
-        guild_id: int,
-        case_moderator_id: int,
-        case_reason: str,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={
-                "guild_id": guild_id,
-                "case_moderator_id": case_moderator_id,
-                "case_reason": case_reason,
-            },
-        )
-
-    async def get_cases_by_guild_id_and_moderator_id_and_expires_at(
-        self,
-        guild_id: int,
-        case_moderator_id: int,
-        case_expires_at: datetime,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={
-                "guild_id": guild_id,
-                "case_moderator_id": case_moderator_id,
-                "case_expires_at": case_expires_at,
-            },
-        )
-
-    async def get_cases_by_guild_id_and_type_and_reason(
-        self,
-        guild_id: int,
-        case_type: CaseType,
-        case_reason: str,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={"guild_id": guild_id, "case_type": case_type, "case_reason": case_reason},
-        )
-
-    async def get_cases_by_guild_id_and_type_and_expires_at(
-        self,
-        guild_id: int,
-        case_type: CaseType,
-        case_expires_at: datetime,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={"guild_id": guild_id, "case_type": case_type, "case_expires_at": case_expires_at},
-        )
-
-    async def get_cases_by_guild_id_and_reason_and_expires_at(
-        self,
-        guild_id: int,
-        case_reason: str,
-        case_expires_at: datetime,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={
-                "guild_id": guild_id,
-                "case_reason": case_reason,
-                "case_expires_at": case_expires_at,
-            },
-        )
-
-    async def get_cases_by_guild_id_and_target_id_and_moderator_id_and_type(
-        self,
-        guild_id: int,
-        case_target_id: int,
-        case_moderator_id: int,
-        case_type: CaseType,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={
-                "guild_id": guild_id,
-                "case_target_id": case_target_id,
-                "case_moderator_id": case_moderator_id,
-                "case_type": case_type,
-            },
-        )
-
-    async def get_cases_by_guild_id_and_target_id_and_moderator_id_and_reason(
-        self,
-        guild_id: int,
-        case_target_id: int,
-        case_moderator_id: int,
-        case_reason: str,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={
-                "guild_id": guild_id,
-                "case_target_id": case_target_id,
-                "case_moderator_id": case_moderator_id,
-                "case_reason": case_reason,
-            },
-        )
-
-    async def get_cases_by_guild_id_and_target_id_and_moderator_id_and_expires_at(
-        self,
-        guild_id: int,
-        case_target_id: int,
-        case_moderator_id: int,
-        case_expires_at: datetime,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={
-                "guild_id": guild_id,
-                "case_target_id": case_target_id,
-                "case_moderator_id": case_moderator_id,
-                "case_expires_at": case_expires_at,
-            },
-        )
-
-    async def get_cases_by_guild_id_and_target_id_and_type_and_reason(
-        self,
-        guild_id: int,
-        case_target_id: int,
-        case_type: CaseType,
-        case_reason: str,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={
-                "guild_id": guild_id,
-                "case_target_id": case_target_id,
-                "case_type": case_type,
-                "case_reason": case_reason,
-            },
-        )
-
-    async def get_cases_by_guild_id_and_target_id_and_type_and_expires_at(
-        self,
-        guild_id: int,
-        case_target_id: int,
-        case_type: CaseType,
-        case_expires_at: datetime,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={
-                "guild_id": guild_id,
-                "case_target_id": case_target_id,
-                "case_type": case_type,
-                "case_expires_at": case_expires_at,
-            },
-        )
-
-    async def get_cases_by_guild_id_and_target_id_and_reason_and_expires_at(
-        self,
-        guild_id: int,
-        case_target_id: int,
-        case_reason: str,
-        case_expires_at: datetime,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={
-                "guild_id": guild_id,
-                "case_target_id": case_target_id,
-                "case_reason": case_reason,
-                "case_expires_at": case_expires_at,
-            },
-        )
-
-    async def get_cases_by_guild_id_and_moderator_id_and_type_and_reason(
-        self,
-        guild_id: int,
-        case_moderator_id: int,
-        case_type: CaseType,
-        case_reason: str,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={
-                "guild_id": guild_id,
-                "case_moderator_id": case_moderator_id,
-                "case_type": case_type,
-                "case_reason": case_reason,
-            },
-        )
-
-    async def get_cases_by_guild_id_and_moderator_id_and_type_and_expires_at(
-        self,
-        guild_id: int,
-        case_moderator_id: int,
-        case_type: CaseType,
-        case_expires_at: datetime,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={
-                "guild_id": guild_id,
-                "case_moderator_id": case_moderator_id,
-                "case_type": case_type,
-                "case_expires_at": case_expires_at,
-            },
-        )
-
-    async def get_cases_by_guild_id_and_moderator_id_and_reason_and_expires_at(
-        self,
-        guild_id: int,
-        case_moderator_id: int,
-        case_reason: str,
-        case_expires_at: datetime,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={
-                "guild_id": guild_id,
-                "case_moderator_id": case_moderator_id,
-                "case_reason": case_reason,
-                "case_expires_at": case_expires_at,
-            },
-        )
-
-    async def get_cases_by_guild_id_and_type_and_reason_and_expires_at(
-        self,
-        guild_id: int,
-        case_type: CaseType,
-        case_reason: str,
-        case_expires_at: datetime,
-    ) -> list[Case] | None:
-        return await self.table.find_many(
-            where={
-                "guild_id": guild_id,
-                "case_type": case_type,
-                "case_reason": case_reason,
-                "case_expires_at": case_expires_at,
-            },
-        )
+        Returns
+        -------
+        Case | None
+            The case if found and deleted, otherwise None.
+        """
+        case = await self.table.find_first(where={"guild_id": guild_id, "case_number": case_number})
+        if case is not None:
+            return await self.table.delete(where={"case_id": case.case_id})
+        return None

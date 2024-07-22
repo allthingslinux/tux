@@ -18,8 +18,8 @@ generator client {
 enum CaseType {
   BAN
   UNBAN
-  HACK_BAN
-  TEMP_BAN
+  HACKBAN
+  TEMPBAN
   KICK
   TIMEOUT
   UNTIMEOUT
@@ -80,12 +80,13 @@ model GuildConfig {
 
 model Case {
   case_id           BigInt    @id @default(autoincrement())
+  case_status       Boolean?  @default(true) // True for active, false for inactive
   case_type         CaseType
   case_reason       String
   case_moderator_id BigInt
   case_target_id    BigInt
   case_target_roles BigInt[]  @default([]) // Role IDs for the jailed user
-  case_number       Int? // Incremented for each case per guild via a trigger/function
+  case_number       BigInt? // Incremented for each case per guild via a trigger/function
   case_created_at   DateTime? @default(now())
   case_expires_at   DateTime? // For temporary bans and timeouts
   guild_id          BigInt
@@ -114,7 +115,7 @@ model Note {
   note_created_at   DateTime @default(now())
   note_moderator_id BigInt
   note_target_id    BigInt
-  note_number       Int? // Incremented for each note per guild via a trigger/function
+  note_number       BigInt? // Incremented for each note per guild via a trigger/function
   guild_id          BigInt
   guild             Guild    @relation(fields: [guild_id], references: [guild_id])
 
