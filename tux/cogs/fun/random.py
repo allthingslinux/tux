@@ -53,7 +53,7 @@ class Random(commands.Cog):
         usage="$random 8ball [question]",
     )
     @commands.guild_only()
-    async def eight_ball(self, ctx: commands.Context[commands.Bot], *, question: str) -> None:
+    async def eight_ball(self, ctx: commands.Context[commands.Bot], *, question: str, cow: bool = False) -> None:
         """
         Ask the magic 8ball a question.
 
@@ -63,6 +63,8 @@ class Random(commands.Cog):
             The context object for the command.
         question : str
             The question to ask the 8ball.
+        cow : bool, optional
+            Whether to use the cow ASCII art, by default False.
         """
 
         responses = [
@@ -107,13 +109,25 @@ class Random(commands.Cog):
 
         choice = random.choice(responses)
 
-        response = f"""Response to "{question}":
+        if cow:
+            response = f"""Response to "{question}":
+  {"_" * len(choice)}
+< {choice} >
+  {"-" * len(choice)}
+        \\   ^__^
+         \\  (oo)\\_______
+            (__)\\       )\\/\\
+                ||----w |
+                ||     ||
+"""
+        else:
+            response = f"""Response to "{question}":
   {"_" * len(choice)}
 < {choice} >
   {"-" * len(choice)}
    \\
-    \
-    .--.
+    \\
+        .--.
        |o_o |
        |:_/ |
       //   \\ \\
