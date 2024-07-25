@@ -25,6 +25,7 @@ pynacl = "^1.5.0"
 pyright = "^1.1.358"
 python = ">=3.12,<4"
 python-dotenv = "^1.0.1"
+reactionmenu = "^3.1.7"
 rsa = "^4.9"
 ruff = "^0.5.0"
 sentry-sdk = {extras = ["httpx", "loguru"], version = "^2.7.0"}
@@ -69,6 +70,7 @@ exclude = [
   "tmp",
   "tests",
   ".archive",
+  "stubs",
 ]
 
 indent-width = 4
@@ -143,6 +145,7 @@ exclude = [
   "examples",
   "tests",
   ".archive",
+  "stubs",
 ]
 include = ["tux"]
 pythonPlatform = "Linux"
