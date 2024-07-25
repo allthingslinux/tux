@@ -28,6 +28,9 @@ class Constants:
     DEV_PREFIX: Final[str] = config["PREFIX"]["DEV"]
     DEV_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("DEV_COG_IGNORE_LIST", "").split(","))
 
+    # Debug env constants
+    DEBUG: Final[bool] = bool(os.getenv("DEBUG", False))
+
     # Final env constants
     TOKEN: Final[str] = DEV_TOKEN if DEV and DEV.lower() == "true" else PROD_TOKEN
     PREFIX: Final[str] = DEV_PREFIX if DEV and DEV.lower() == "true" else PROD_PREFIX

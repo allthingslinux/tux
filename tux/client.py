@@ -27,7 +27,7 @@ class Tux(commands.Bot):
             logger.info("Database connection established.")
 
         except Exception as e:
-            logger.error(f"An error occurred while connecting to the database: {e}")
+            logger.critical(f"An error occurred while connecting to the database: {e}")
             return
 
         # Load cogs via CogLoader
@@ -82,6 +82,6 @@ class Tux(commands.Bot):
             await db.disconnect()
 
         except Exception as e:
-            logger.error(f"Error during database disconnection: {e}")
+            logger.critical(f"Error during database disconnection: {e}")
 
         logger.info("Shutdown complete.")

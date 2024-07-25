@@ -17,7 +17,7 @@ class Ban(ModerationCogBase):
     @commands.hybrid_command(
         name="ban",
         aliases=["b"],
-        usage="$ban [target] [reason] <purge_days> <silent>",
+        usage="$ban [target] <flags>",
     )
     @commands.guild_only()
     async def ban(
@@ -65,7 +65,6 @@ class Ban(ModerationCogBase):
         try:
             await self.send_dm(ctx, flags.silent, target, flags.reason, "banned")
             await ctx.guild.ban(target, reason=flags.reason, delete_message_days=flags.purge_days)
-
         except (discord.Forbidden, discord.HTTPException) as e:
             logger.error(f"Failed to ban {target}. {e}")
             await ctx.send(f"Failed to ban {target}. {e}", delete_after=10, ephemeral=True)
