@@ -37,6 +37,15 @@
     "ERROR": "https://i.imgur.com/zZjuWaU.png",
     "CASE": "https://i.imgur.com/c43cwnV.png",
     "NOTE": "https://i.imgur.com/VqPFbil.png",
-    "POLL": "https://i.imgur.com/pkPeG5q.png"
+    "POLL": "https://i.imgur.com/pkPeG5q.png",
+    "ACTIVE_CASE": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/active_case.png?raw=true",
+    "INACTIVE_CASE": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/inactive_case.png?raw=true",
+    "ADD": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/added.png?raw=true",
+    "REMOVE": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/removed.png?raw=true",
+    "BAN": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/ban.png?raw=true",
+    "JAIL": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/jail.png?raw=true",
+    "KICK": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/kick.png?raw=true",
+    "TIMEOUT": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/timeout.png?raw=true",
+    "WARN": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/warn.png?raw=true"
   }
 }

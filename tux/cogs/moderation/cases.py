@@ -33,7 +33,11 @@ class Cases(ModerationCogBase):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__(bot)
 
-    @commands.hybrid_group(name="cases", aliases=["c"], usage="$cases <subcommand>")
+    @commands.hybrid_group(
+        name="cases",
+        aliases=["c"],
+        usage="$cases <subcommand>",
+    )
     @commands.guild_only()
     async def cases(self, ctx: commands.Context[commands.Bot]) -> None:
         """
@@ -42,7 +46,11 @@ class Cases(ModerationCogBase):
         if ctx.invoked_subcommand is None:
             await ctx.send_help("cases")
 
-    @cases.command(name="view", aliases=["v", "ls", "list"], usage="$cases view <case_number> <flags>")
+    @cases.command(
+        name="view",
+        aliases=["v", "ls", "list"],
+        usage="$cases view <case_number> <flags>",
+    )
     @commands.guild_only()
     async def cases_view(
         self,
@@ -52,7 +60,17 @@ class Cases(ModerationCogBase):
     ) -> None:
         """
         View moderation cases in the server.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context in which the command is being invoked.
+        case_number : int | None
+            The case number to view.
+        flags : CasesViewFlags
+            The flags for the command. (type, target, moderator)
         """
+
         if ctx.guild is None:
             logger.warning("Cases view command used outside of a guild context.")
             return
@@ -62,12 +80,31 @@ class Cases(ModerationCogBase):
         else:
             await self._view_cases_with_flags(ctx, flags)
 
-    @cases.command(name="modify", aliases=["m", "edit"], usage="$cases modify <case_number> <flags>")
+    @cases.command(
+        name="modify",
+        aliases=["m", "edit"],
+        usage="$cases modify [case_number] <flags>",
+    )
     @commands.guild_only()
-    async def cases_modify(self, ctx: commands.Context[commands.Bot], case_number: int, flags: CaseModifyFlags) -> None:
+    async def cases_modify(
+        self,
+        ctx: commands.Context[commands.Bot],
+        case_number: int,
+        flags: CaseModifyFlags,
+    ) -> None:
         """
         Modify a moderation case in the server.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context in which the command is being invoked.
+        case_number : int
+            The case number to modify.
+        flags : CaseModifyFlags
+            The flags for the command. (reason, status)
         """
+
         if ctx.guild is None:
             logger.warning("Cases modify command used outside of a guild context.")
             return
@@ -81,7 +118,22 @@ class Cases(ModerationCogBase):
         if case.case_number is not None:
             await self._update_case(ctx, case, flags)
 
-    async def _view_single_case(self, ctx: commands.Context[commands.Bot], case_number: int) -> None:
+    async def _view_single_case(
+        self,
+        ctx: commands.Context[commands.Bot],
+        case_number: int,
+    ) -> None:
+        """
+        View a single case by its number.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context in which the command is being invoked.
+        case_number : int
+            The number of the case to view.
+        """
+
         if ctx.guild is None:
             logger.warning("Cases view command used outside of a guild context.")
             return
@@ -94,7 +146,22 @@ class Cases(ModerationCogBase):
         target = await commands.MemberConverter().convert(ctx, str(case.case_target_id))
         await self._handle_case_response(ctx, case, "viewed", case.case_reason, target)
 
-    async def _view_cases_with_flags(self, ctx: commands.Context[commands.Bot], flags: CasesViewFlags) -> None:
+    async def _view_cases_with_flags(
+        self,
+        ctx: commands.Context[commands.Bot],
+        flags: CasesViewFlags,
+    ) -> None:
+        """
+        View cases with the provided flags.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context in which the command is being invoked.
+        flags : CasesViewFlags
+            The flags for the command. (type, target, moderator)
+        """
+
         if ctx.guild is None:
             logger.warning("Cases view command used outside of a guild context.")
             return
@@ -115,7 +182,25 @@ class Cases(ModerationCogBase):
 
         await self._handle_case_list_response(ctx, cases)
 
-    async def _update_case(self, ctx: commands.Context[commands.Bot], case: Case, flags: CaseModifyFlags) -> None:
+    async def _update_case(
+        self,
+        ctx: commands.Context[commands.Bot],
+        case: Case,
+        flags: CaseModifyFlags,
+    ) -> None:
+        """
+        Update a case with the provided flags.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context in which the command is being invoked.
+        case : Case
+            The case to update.
+        flags : CaseModifyFlags
+            The flags for the command. (reason, status)
+        """
+
         if ctx.guild is None:
             logger.warning("Cases modify command used outside of a guild context.")
             return
@@ -136,7 +221,6 @@ class Cases(ModerationCogBase):
             return
 
         target = await commands.MemberConverter().convert(ctx, str(updated_case.case_target_id))
-
         await self._handle_case_response(ctx, updated_case, "updated", flags.reason, target)
 
     async def _handle_case_response(
@@ -152,14 +236,12 @@ class Cases(ModerationCogBase):
 
             fields = self._create_case_fields(moderator, target, reason)
 
-            # status_emoji = active_case_emoji if case.case_status else inactive_case_emoji
-
             embed = await self.create_embed(
                 ctx,
                 title=f"Case #{case.case_number} ({case.case_type}) {action}",
                 fields=fields,
                 color=CONST.EMBED_COLORS["CASE"],
-                icon_url=CONST.EMBED_ICONS["CASE"],
+                icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"] if case.case_status else CONST.EMBED_ICONS["INACTIVE_CASE"],
             )
         else:
             embed = discord.Embed(
