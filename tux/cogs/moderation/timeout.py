@@ -8,7 +8,7 @@ from loguru import logger
 from prisma.enums import CaseType
 from prisma.models import Case
 from tux.utils.constants import Constants as CONST
-from tux.utils.flags import TimeoutFlags
+from tux.utils.flags import TimeoutFlags, UnTimeoutFlags
 
 from . import ModerationCogBase
 
@@ -133,10 +133,10 @@ class Timeout(ModerationCogBase):
         ctx: commands.Context[commands.Bot],
         target: discord.Member,
         *,
-        flags: TimeoutFlags,
+        flags: UnTimeoutFlags,
     ) -> None:
         """
-        Timeout a user from the server.
+        Untimeout a user from the server.
 
         Parameters
         ----------
@@ -144,7 +144,7 @@ class Timeout(ModerationCogBase):
             The context in which the command is being invoked.
         target : discord.Member
             The user to timeout.
-        flags : TimeoutFlags
+        flags : UnTimeoutFlags
             The flags for the command.
 
         Raises
