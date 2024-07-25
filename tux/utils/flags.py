@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord.utils import MISSING
 
 from prisma.enums import CaseType
 
@@ -9,11 +10,11 @@ class BanFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
         name="reason",
         description="The reason for the member ban.",
         aliases=["r"],
-        default="No reason provided.",
+        default=MISSING,
     )
     purge_days: int = commands.flag(
         name="purge_days",
-        description="The number of days (< 7) to purge in messages.",
+        description="Number of days in messages",
         aliases=["p", "purge"],
         default=0,
     )
@@ -30,7 +31,7 @@ class TempBanFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
         name="reason",
         description="The reason for the member temp ban.",
         aliases=["r"],
-        default="No reason provided.",
+        default=MISSING,
     )
     expires_at: int = commands.flag(
         name="expires_at",
@@ -71,7 +72,7 @@ class TimeoutFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
         name="reason",
         description="The reason for the member ban.",
         aliases=["r"],
-        default="No reason provided.",
+        default=MISSING,
     )
 
     silent: bool = commands.flag(
@@ -91,7 +92,7 @@ class UnbanFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
         name="reason",
         description="The reason for the member ban.",
         aliases=["r"],
-        default="No reason provided.",
+        default=MISSING,
     )
 
 
@@ -100,7 +101,7 @@ class JailFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
         name="reason",
         description="The reason for the member jail.",
         aliases=["r"],
-        default="No reason provided.",
+        default=MISSING,
     )
     silent: bool = commands.flag(
         name="silent",
@@ -115,7 +116,7 @@ class UnjailFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
         name="reason",
         description="The reason for the member unjail.",
         aliases=["r"],
-        default="No reason provided.",
+        default=MISSING,
     )
     silent: bool = commands.flag(
         name="silent",
@@ -126,27 +127,34 @@ class UnjailFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
 
 
 class CasesViewFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
-    number: int = commands.flag(
-        name="number",
-        description="The case number to view.",
-        aliases=["n", "id"],
-        default=None,
-    )
     type: CaseType = commands.flag(
-        name="type",
+        name="case_type",
         description="The case type to view.",
         aliases=["t"],
         default=None,
     )
     target: discord.Member = commands.flag(
-        name="member",
+        name="case_target",
         description="The member to view cases for.",
         aliases=["memb", "m", "user", "u"],
         default=None,
     )
     moderator: discord.Member = commands.flag(
-        name="moderator",
+        name="case_moderator",
         description="The moderator to view cases for.",
         aliases=["mod"],
         default=None,
+    )
+
+
+class CaseModifyFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
+    reason: str = commands.flag(
+        name="case_reason",
+        description="The modified reason.",
+        aliases=["r"],
+    )
+    status: bool = commands.flag(
+        name="case_status",
+        description="The status of the case.",
+        aliases=["s"],
     )

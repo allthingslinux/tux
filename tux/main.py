@@ -9,13 +9,10 @@ from tux.client import Tux
 from tux.utils.constants import Constants as CONST
 from tux.utils.sentry import setup_sentry
 
-"""
-Advanced logging and debugging setup.
-This setup is intended for debugging purposes. Ensure that you comment out loguru and replace it with the following imports as well as the remaining lines below.
-"""
+# if CONST.DEBUG is True:
 # import logging
-# import warnings
 # import tracemalloc
+# import warnings
 
 # tracemalloc.start()
 # logging.basicConfig(level=logging.DEBUG)
@@ -23,24 +20,21 @@ This setup is intended for debugging purposes. Ensure that you comment out logur
 
 
 async def main() -> None:
-    setup_sentry()
-
-    prefix = CONST.PREFIX
-    token = CONST.TOKEN
-
-    # Initialize the bot
-    bot = Tux(command_prefix=prefix, intents=discord.Intents.all())
-
     # Initialize the console and console task
     # console = None
     # console_task = None
+
+    # Initialize the bot
+    bot = Tux(command_prefix=CONST.PREFIX, intents=discord.Intents.all())
+
+    setup_sentry(bot)
 
     try:
         # console = Console(bot)
         # console_task = asyncio.create_task(console.run_console())
 
         # Start the bot and reconnect on disconnection
-        await bot.start(token=token, reconnect=True)
+        await bot.start(token=CONST.TOKEN, reconnect=True)
 
     except KeyboardInterrupt:
         logger.info("KeyboardInterrupt received, shutting down.")

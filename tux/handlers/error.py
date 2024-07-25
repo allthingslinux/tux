@@ -1,6 +1,7 @@
 import traceback
 
 import discord
+import sentry_sdk
 from discord import app_commands
 from discord.ext import commands
 from loguru import logger
@@ -40,24 +41,29 @@ class ErrorHandler(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
         self.error_message = "An error occurred. Please try again later or contact support."
-        # Attach the error handler if using app commands
-        if hasattr(bot, "tree"):
-            bot.tree.error(self.dispatch_to_app_command_handler)
 
-    async def dispatch_to_app_command_handler(
+    async def cog_load(self):
+        # Set a global error handler for application commands
+        tree = self.bot.tree
+        self._old_tree_error = tree.on_error
+        tree.on_error = self.on_app_command_error
+
+    async def on_app_command_error(
         self,
         interaction: discord.Interaction,
         error: app_commands.AppCommandError,
     ) -> None:
-        """Dispatch command error to appropriate handler."""
-        await self.handle_app_command_error(interaction, error)
+        """
+        Handle errors for application commands.
 
-    async def handle_app_command_error(
-        self,
-        interaction: discord.Interaction,
-        error: app_commands.AppCommandError,
-    ) -> None:
-        """Handle errors for app commands."""
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        error : app_commands.AppCommandError
+            The error that occurred.
+        """
+
         error_message = error_map.get(type(error), self.error_message).format(error=error)
 
         if interaction.response.is_done():
@@ -74,22 +80,42 @@ class ErrorHandler(commands.Cog):
         ctx: commands.Context[commands.Bot],
         error: commands.CommandError,
     ) -> None:
-        """Handle errors for traditional commands."""
-        if (
-            hasattr(ctx.command, "on_error")
-            or ctx.cog
-            and ctx.cog._get_overridden_method(ctx.cog.cog_command_error) is not None
+        """
+        Handle errors for traditional prefix commands.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The discord context object.
+        error : commands.CommandError
+            The error that occurred.
+        """
+
+        # # If the command has its own error handler, return
+        if hasattr(ctx.command, "on_error"):
+            return
+
+        # # If the cog has its own error handler, return
+        if ctx.cog and ctx.cog._get_overridden_method(ctx.cog.cog_command_error) is not None:
+            return
+
+        # If the error is CommandNotFound, return
+        if isinstance(
+            error,
+            commands.CommandNotFound,
         ):
             return
 
-        if isinstance(error, commands.CommandNotFound):
-            return
+        # Check for original error raised and sent to CommandInvokeError
 
         error = getattr(error, "original", error)
+
+        # Get the error message and send it to the user
         message: str = self.get_error_message(error, ctx)
 
         await ctx.send(content=message, ephemeral=True, delete_after=10)
 
+        # Log the error traceback if it's not in the error map
         if type(error) not in error_map:
             self.log_error_traceback(error)
 
@@ -98,18 +124,34 @@ class ErrorHandler(commands.Cog):
         error: Exception,
         ctx: commands.Context[commands.Bot] | None = None,
     ) -> str:
-        """Generate an error message from the error map."""
+        """
+        Get the error message for a given error.
+
+        Parameters
+        ----------
+        error : Exception
+            The error that occurred.
+        ctx : commands.Context[commands.Bot], optional
+            The discord context object, by default None
+        """
         if ctx:
             return error_map.get(type(error), self.error_message).format(error=error, ctx=ctx)
 
         return error_map.get(type(error), self.error_message).format(error=error)
 
-    def log_error_traceback(self, error: Exception):
-        """Helper method to log error traceback."""
+    def log_error_traceback(self, error: Exception) -> None:
+        """
+        Log the error traceback.
+
+        Parameters
+        ----------
+        error : Exception
+            The error that occurred
+        """
         trace = traceback.format_exception(None, error, error.__traceback__)
         formatted_trace = "".join(trace)
-
         logger.error(f"Error: {error}\nTraceback:\n{formatted_trace}")
+        sentry_sdk.capture_exception(error)
 
 
 async def setup(bot: commands.Bot) -> None:
