@@ -58,7 +58,7 @@ class Timeout(ModerationCogBase):
 
     @commands.hybrid_command(
         name="timeout",
-        aliases=["t", "to"],
+        aliases=["t", "to", "mute"],
         usage="$timeout [target] [duration] [reason]",
     )
     @commands.guild_only()
@@ -117,6 +117,72 @@ class Timeout(ModerationCogBase):
             case_type=CaseType.TIMEOUT,
             case_reason=flags.reason,
             case_expires_at=datetime.now(UTC) + duration,
+            guild_id=ctx.guild.id,
+        )
+
+        await self.handle_case_response(ctx, flags, case, "created", flags.reason, target)
+
+    @commands.hybrid_command(
+        name="untimeout",
+        aliases=["ut", "uto", "unmute"],
+        usage="$untimeout [target] [reason]",
+    )
+    @commands.guild_only()
+    async def untimeout(
+        self,
+        ctx: commands.Context[commands.Bot],
+        target: discord.Member,
+        *,
+        flags: TimeoutFlags,
+    ) -> None:
+        """
+        Timeout a user from the server.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context in which the command is being invoked.
+        target : discord.Member
+            The user to timeout.
+        flags : TimeoutFlags
+            The flags for the command.
+
+        Raises
+        ------
+        discord.DiscordException
+            If an error occurs while timing out the user.
+        """
+
+        moderator = await commands.MemberConverter().convert(ctx, str(ctx.author.id))
+
+        if ctx.guild is None:
+            logger.warning("Timeout command used outside of a guild context.")
+            return
+        if target == ctx.author:
+            await ctx.reply("You cannot untimeout yourself.", delete_after=10, ephemeral=True)
+            return
+        if target.top_role >= moderator.top_role:
+            await ctx.reply("You cannot untimeout a user with a higher or equal role.", delete_after=10, ephemeral=True)
+            return
+        if target == ctx.guild.owner:
+            await ctx.reply("You cannot untimeout the server owner.", delete_after=10, ephemeral=True)
+            return
+        if not target.is_timed_out():
+            await ctx.reply(f"{target} is not currently timed out.", delete_after=10, ephemeral=True)
+
+        try:
+            await self.send_dm(ctx, flags.silent, target, flags.reason, "untimed out")
+            await target.timeout(None, reason=flags.reason)
+        except discord.DiscordException as e:
+            await ctx.reply(f"Failed to untimeout {target}. {e}", delete_after=10, ephemeral=True)
+            return
+
+        case = await self.db.case.insert_case(
+            case_target_id=target.id,
+            case_moderator_id=ctx.author.id,
+            case_type=CaseType.UNTIMEOUT,
+            case_reason=flags.reason,
+            case_expires_at=None,
             guild_id=ctx.guild.id,
         )
 

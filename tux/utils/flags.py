@@ -83,6 +83,22 @@ class TimeoutFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
     )
 
 
+class UnTimeoutFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
+    reason: str = commands.flag(
+        name="reason",
+        description="The reason for the member ban.",
+        aliases=["r"],
+        default=MISSING,
+    )
+
+    silent: bool = commands.flag(
+        name="silent",
+        description="Do not send a DM to the target.",
+        aliases=["s", "quiet"],
+        default=False,
+    )
+
+
 class UnbanFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
     username_or_id: str = commands.flag(
         name="username_or_id",

@@ -80,6 +80,7 @@ class CaseController:
                 "case_moderator_id": case_moderator_id,
                 "case_type": case_type,
                 "case_reason": case_reason,
+                "case_number": await self.table.count(where={"guild_id": guild_id}) + 1,
                 "case_expires_at": case_expires_at,
                 "case_target_roles": case_target_roles if case_target_roles is not None else [],
             },
@@ -238,6 +239,19 @@ class CaseController:
             where={"case_id": case.case_id},
             data={"case_reason": case_reason, "case_status": case_status},
         )
+
+    async def update_case_numbers(self) -> None:
+        # for every guild in the database get all cases and update the case_number based on the order
+        guilds = await self.guild_table.find_many()
+        for guild in guilds:
+            cases = await self.table.find_many(where={"guild_id": guild.guild_id}, order={"case_created_at": "asc"})
+            for index, case in enumerate(cases):
+                await self.table.update(where={"case_id": case.case_id}, data={"case_number": index + 1})
+
+    async def update_case_numbers_for_guild(self, guild_id: int) -> None:
+        cases = await self.table.find_many(where={"guild_id": guild_id}, order={"case_created_at": "asc"})
+        for index, case in enumerate(cases):
+            await self.table.update(where={"case_id": case.case_id}, data={"case_number": index + 1})
 
     """
     DELETE
