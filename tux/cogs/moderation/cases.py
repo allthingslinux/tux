@@ -231,6 +231,23 @@ class Cases(ModerationCogBase):
         reason: str,
         target: discord.Member | discord.User,
     ) -> None:
+        """
+        Handle the response for a case.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context in which the command is being invoked.
+        case : Case | None
+            The case to handle the response for.
+        action : str
+            The action being performed on the case.
+        reason : str
+            The reason for the case.
+        target : discord.Member | discord.User
+            The target of the case.
+        """
+
         if case is not None:
             moderator = await commands.MemberConverter().convert(ctx, str(case.case_moderator_id))
 
@@ -252,7 +269,11 @@ class Cases(ModerationCogBase):
 
         await ctx.reply(embed=embed, delete_after=10, ephemeral=True)
 
-    async def _handle_case_list_response(self, ctx: commands.Context[commands.Bot], cases: list[Case]) -> None:
+    async def _handle_case_list_response(
+        self,
+        ctx: commands.Context[commands.Bot],
+        cases: list[Case],
+    ) -> None:
         menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed)
 
         if not cases:
@@ -287,7 +308,11 @@ class Cases(ModerationCogBase):
             ("Reason", f"> {reason}", False),
         ]
 
-    def _create_case_list_embed(self, ctx: commands.Context[commands.Bot], cases: list[Case]) -> discord.Embed:
+    def _create_case_list_embed(
+        self,
+        ctx: commands.Context[commands.Bot],
+        cases: list[Case],
+    ) -> discord.Embed:
         embed = discord.Embed(
             title=f"Total Cases ({len(cases)})",
             description="",
@@ -305,18 +330,18 @@ class Cases(ModerationCogBase):
 
         return embed
 
-    def _add_case_to_embed(self, embed: discord.Embed, case: Case) -> None:
+    def _add_case_to_embed(
+        self,
+        embed: discord.Embed,
+        case: Case,
+    ) -> None:
         case_status = active_case_emoji if case.case_status else inactive_case_emoji
-
         case_date = discord.utils.format_dt(case.case_created_at, "R") if case.case_created_at else "Unknown"
-
         case_number = f"{case.case_number:04d}"
-
         case_type = case_type_emojis.get(case.case_type, "+?")
 
         if not embed.description:
             embed.description = "**Case**\u2002\u2002\u2002\u2002\u2002**Type**\u2002\u2002\u2002**Date**\n"
-
         embed.description += f"{case_status} `{case_number}`\u2002\u2002**{case_type}**\u2002\u2002*{case_date}*\n"
 
 
