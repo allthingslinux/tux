@@ -19,6 +19,17 @@ class EventHandler(commands.Cog):
         await self.db.guild.delete_guild_by_id(guild.id)
 
     @commands.Cog.listener()
+    async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
+        # Ignore messages from bots to prevent infinite loops
+        if after.author.bot:
+            return
+        stripped_content = strip_formatting(after.content)
+        if is_harmful(stripped_content):
+            await after.reply(
+                "Warning: This command is potentially harmful. Please avoid running it unless you are fully aware of it's operation. If this was a mistake, please disregard this message.",
+            )
+
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         # Ignore messages from bots to prevent infinite loops
         if message.author.bot:
