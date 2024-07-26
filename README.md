@@ -26,6 +26,27 @@
 Tux is a Discord bot for the All Things Linux Discord server. It is designed to provide a variety of features to the server, including moderation, support, utility, and various fun commands. The bot is written in Python using the discord.py library.
 
 
+## Tech Stack
+- Poetry for dependency management
+- Docker and Docker Compose for development and deployment
+- Strict typing with Pyright and type hints
+- Type safe ORM using Prisma
+- PostgreSQL database with Supabase
+- Linting and formatting via Ruff and Pre-commit
+- Justfile for easy CLI commands
+- Beautiful logging with Loguru
+- Exception handling with Sentry
+
+## Bot Features
+- Asynchronous codebase
+- Hybrid command system with both slash commands and traditional commands
+- Cog loading system with hot reloading
+- Branded embeds and messages
+- Robust error handling
+- Activity rotation
+- Custom help command
+- Configuration system
+
 ## Installation
 
 ### Prerequisites
@@ -33,6 +54,7 @@ Tux is a Discord bot for the All Things Linux Discord server. It is designed to 
 - [Poetry](https://python-poetry.org/docs/)
 - Optional: [Docker](https://docs.docker.com/get-docker/)
 - Optional: [Docker Compose](https://docs.docker.com/compose/install/)
+- Optional: [Just](https://github.com/casey/just/)
 
 ### Steps
 1. Clone the repository
