@@ -106,7 +106,7 @@ class Ban(ModerationCogBase):
                 title=f"Case #{case.case_number} ({case.case_type}) {action}",
                 fields=fields,
                 color=CONST.EMBED_COLORS["CASE"],
-                icon_url=CONST.EMBED_ICONS["CASE"],
+                icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
             )
         else:
             embed = await self.create_embed(
@@ -114,7 +114,7 @@ class Ban(ModerationCogBase):
                 title=f"Case {action} ({CaseType.BAN})",
                 fields=fields,
                 color=CONST.EMBED_COLORS["CASE"],
-                icon_url=CONST.EMBED_ICONS["CASE"],
+                icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
             )
 
         await self.send_embed(ctx, embed, log_type="mod")

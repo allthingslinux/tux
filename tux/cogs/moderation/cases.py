@@ -102,11 +102,16 @@ class Cases(ModerationCogBase):
         case_number : int
             The case number to modify.
         flags : CaseModifyFlags
-            The flags for the command. (reason, status)
+            The flags for the command. (status, reason)
         """
 
         if ctx.guild is None:
             logger.warning("Cases modify command used outside of a guild context.")
+            return
+
+        # If the command is used via prefix, let the user know to use the slash command
+        if ctx.message.content.startswith(str(ctx.prefix)):
+            await ctx.reply("Please use the slash command for this command.", delete_after=10, ephemeral=True)
             return
 
         case = await self.db.case.get_case_by_number(ctx.guild.id, case_number)
@@ -176,11 +181,13 @@ class Cases(ModerationCogBase):
             options["case_moderator_id"] = flags.moderator.id
 
         cases = await self.db.case.get_cases_by_options(ctx.guild.id, options)
+        total_cases = await self.db.case.get_all_cases(ctx.guild.id)
+
         if not cases:
             await ctx.send("No cases found.")
             return
 
-        await self._handle_case_list_response(ctx, cases)
+        await self._handle_case_list_response(ctx, cases, len(total_cases))
 
     async def _update_case(
         self,
@@ -198,7 +205,7 @@ class Cases(ModerationCogBase):
         case : Case
             The case to update.
         flags : CaseModifyFlags
-            The flags for the command. (reason, status)
+            The flags for the command. (status, reason)
         """
 
         if ctx.guild is None:
@@ -212,8 +219,8 @@ class Cases(ModerationCogBase):
         updated_case = await self.db.case.update_case(
             ctx.guild.id,
             case.case_number,
-            flags.reason,
-            flags.status,
+            case_reason=flags.reason if flags.reason is not None else case.case_reason,
+            case_status=flags.status if flags.status is not None else case.case_status,
         )
 
         if updated_case is None:
@@ -221,7 +228,7 @@ class Cases(ModerationCogBase):
             return
 
         target = await commands.MemberConverter().convert(ctx, str(updated_case.case_target_id))
-        await self._handle_case_response(ctx, updated_case, "updated", flags.reason, target)
+        await self._handle_case_response(ctx, updated_case, "updated", updated_case.case_reason, target)
 
     async def _handle_case_response(
         self,
@@ -258,7 +265,9 @@ class Cases(ModerationCogBase):
                 title=f"Case #{case.case_number} ({case.case_type}) {action}",
                 fields=fields,
                 color=CONST.EMBED_COLORS["CASE"],
-                icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"] if case.case_status else CONST.EMBED_ICONS["INACTIVE_CASE"],
+                icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"]
+                if case.case_status is True
+                else CONST.EMBED_ICONS["INACTIVE_CASE"],
             )
         else:
             embed = discord.Embed(
@@ -273,6 +282,7 @@ class Cases(ModerationCogBase):
         self,
         ctx: commands.Context[commands.Bot],
         cases: list[Case],
+        total_cases: int,
     ) -> None:
         menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed)
 
@@ -287,7 +297,7 @@ class Cases(ModerationCogBase):
 
         cases_per_page = 10
         for i in range(0, len(cases), cases_per_page):
-            embed = self._create_case_list_embed(ctx, cases[i : i + cases_per_page])
+            embed = self._create_case_list_embed(ctx, cases[i : i + cases_per_page], total_cases)
             menu.add_page(embed)
 
         menu.add_button(ViewButton.back())
@@ -312,9 +322,10 @@ class Cases(ModerationCogBase):
         self,
         ctx: commands.Context[commands.Bot],
         cases: list[Case],
+        total_cases: int,
     ) -> discord.Embed:
         embed = discord.Embed(
-            title=f"Total Cases ({len(cases)})",
+            title=f"Total Cases ({total_cases})",
             description="",
             color=CONST.EMBED_COLORS["CASE"],
         )

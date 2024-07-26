@@ -232,9 +232,14 @@ class Run(commands.Cog):
     @commands.command(
         name="run",
         aliases=["compile", "exec"],
-        usage="$run <code>",
+        usage="$run [code]",
     )
-    async def run(self, ctx: commands.Context[commands.Bot], *, code: str):
+    async def run(
+        self,
+        ctx: commands.Context[commands.Bot],
+        *,
+        code: str,
+    ):
         """
         Run code in various languages. Code should be enclosed in triple backticks with syntax highlighting.
 
@@ -264,7 +269,11 @@ class Run(commands.Cog):
         )
 
     @run.error
-    async def run_error(self, ctx: commands.Context[commands.Bot], error: Exception):
+    async def run_error(
+        self,
+        ctx: commands.Context[commands.Bot],
+        error: Exception,
+    ):
         """
         A generalized error handler for the run command.
 

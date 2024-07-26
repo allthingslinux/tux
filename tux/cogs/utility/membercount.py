@@ -1,7 +1,6 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from loguru import logger
 
 from tux.utils.embeds import EmbedCreator
 
@@ -28,6 +27,7 @@ class MemberCount(commands.Cog):
             humans = sum(not member.bot for member in interaction.guild.members)
             # Get the number of bots in the server (subtract humans from total members)
             bots = sum(member.bot for member in interaction.guild.members if member.bot)
+            staff = sum(role.name.lower() == "%wheel" for role in interaction.guild.roles)
 
             embed = EmbedCreator.create_info_embed(
                 title="Member Count",
@@ -35,15 +35,12 @@ class MemberCount(commands.Cog):
                 interaction=interaction,
             )
 
-            embed.add_field(name="Members", value=str(members))
-            embed.add_field(name="Humans", value=str(humans))
-            embed.add_field(name="Bots", value=str(bots))
+            embed.add_field(name="Members", value=str(members), inline=False)
+            embed.add_field(name="Humans", value=str(humans), inline=True)
+            embed.add_field(name="Bots", value=str(bots), inline=True)
+            embed.add_field(name="Staff", value=str(staff), inline=True)
 
             await interaction.response.send_message(embed=embed)
-
-            logger.info(
-                f"{interaction.user} used the membercount command in {interaction.channel}.",
-            )
 
 
 async def setup(bot: commands.Bot) -> None:

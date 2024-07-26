@@ -3,7 +3,7 @@ import asyncio
 import discord
 from loguru import logger
 
-from tux.client import Tux
+from tux.bot import Tux
 
 # from tux.utils.console import Console
 from tux.utils.constants import Constants as CONST

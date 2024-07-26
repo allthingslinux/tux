@@ -2,9 +2,9 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from loguru import logger
+from reactionmenu import ViewButton, ViewMenu
 
 from tux.utils.embeds import EmbedCreator
-from tux.utils.pagination import InteractionListMenuView
 
 des_ids = [
     [1175177565086953523, "_kde"],
@@ -185,6 +185,7 @@ class RoleCount(commands.Cog):
         which: discord.app_commands.Choice[str],
     ) -> None:
         pages: list[discord.Embed] = []
+
         role_count = 0
         embed = self.create_embed(interaction, which)
 
@@ -226,7 +227,9 @@ class RoleCount(commands.Cog):
             role_count = 0  # Reset the role count for new page
 
         # Fetch an emoji for the role from available emojis or the predefined emoji identifier
-        emoji = role.unicode_emoji or discord.utils.get(self.bot.emojis, name=role_emoji[1])
+        # convert default emojis like "wheel" to their respective discord.Emoji object
+
+        emoji = role.display_icon or discord.utils.get(self.bot.emojis, name=role_emoji[1])
 
         # Add a new field to the current embed
         embed.add_field(
@@ -252,10 +255,13 @@ class RoleCount(commands.Cog):
 
     async def send_response(self, interaction: discord.Interaction, pages: list[discord.Embed]):
         if pages:
-            paginator = InteractionListMenuView(user_id=interaction.user.id, listmenu=pages)
-            await paginator.start(interaction.response)
-        else:
-            await interaction.response.send_message("No roles found to display.", ephemeral=True)
+            menu = ViewMenu(interaction, menu_type=ViewMenu.TypeEmbed)
+            for page in pages:
+                menu.add_page(page)
+            menu.add_button(ViewButton.back())
+            menu.add_button(ViewButton.next())
+            menu.add_button(ViewButton.end_session())
+            await menu.start()
 
 
 async def setup(bot: commands.Bot):

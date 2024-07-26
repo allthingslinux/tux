@@ -2,7 +2,6 @@ import discord
 import psutil
 from discord import app_commands
 from discord.ext import commands
-from loguru import logger
 
 from tux.utils.embeds import EmbedCreator
 
@@ -46,8 +45,6 @@ class Ping(commands.Cog):
         embed.add_field(name="RAM Usage", value=f"{ram_amount_formatted}", inline=True)
 
         await interaction.response.send_message(embed=embed)
-
-        logger.info(f"{interaction.user} used the ping command in {interaction.channel}.")
 
 
 async def setup(bot: commands.Bot) -> None:

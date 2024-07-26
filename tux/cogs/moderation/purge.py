@@ -14,7 +14,7 @@ class Purge(commands.Cog):
         self,
         interaction: discord.Interaction,
         limit: int,
-        channel: discord.TextChannel | None = None,
+        channel: discord.TextChannel | discord.Thread | None = None,
     ) -> None:
         """
         Deletes a set number of messages in a channel.
@@ -25,7 +25,7 @@ class Purge(commands.Cog):
             The interaction object for the command.
         limit : int
             The number of messages to delete.
-        channel : discord.TextChannel | None
+        channel : discord.TextChannel | discord.Thread | None
             The channel to delete messages from.
 
         Raises
@@ -50,7 +50,7 @@ class Purge(commands.Cog):
         # If the channel is not specified, default to the current channel
         if channel is None:
             # Check if the current channel is a text channel
-            if not isinstance(interaction.channel, discord.TextChannel):
+            if not isinstance(interaction.channel, discord.TextChannel | discord.Thread):
                 await interaction.response.defer(ephemeral=True)
                 return await interaction.followup.send(
                     "Invalid channel type, must be a text channel.",
@@ -64,7 +64,6 @@ class Purge(commands.Cog):
             await interaction.edit_original_response(content="Purging messages...")
             await channel.purge(limit=limit)
             await interaction.edit_original_response(content=f"Purged {limit} messages in {channel.mention}.")
-
         except Exception as error:
             await interaction.edit_original_response(content=f"An error occurred while purging messages: {error}")
 
@@ -78,7 +77,7 @@ class Purge(commands.Cog):
         self,
         ctx: commands.Context[commands.Bot],
         limit: int,
-        channel: discord.TextChannel | None = None,
+        channel: discord.TextChannel | discord.Thread | None = None,
     ) -> None:
         """
         Purge a specified number of messages from a channel.
@@ -89,7 +88,7 @@ class Purge(commands.Cog):
             The context in which the command is being invoked.
         limit : int
             The number of messages to delete.
-        channel : discord.TextChannel | None
+        channel : discord.TextChannel | discord.Thread | None
             The channel to delete messages from.
 
         Raises
@@ -112,13 +111,18 @@ class Purge(commands.Cog):
         # If the channel is not specified, default to the current channe
         if channel is None:
             # Check if the current channel is a text channel
-            if not isinstance(ctx.channel, discord.TextChannel):
+            if not isinstance(ctx.channel, discord.TextChannel | discord.Thread):
                 await ctx.reply("Invalid channel type, must be a text channel.", delete_after=10, ephemeral=True)
                 return
             channel = ctx.channel
 
         # Purge the specified number of messages
-        await channel.purge(limit=limit)
+        try:
+            await channel.purge(limit=limit + 1)
+        except Exception as error:
+            logger.error(f"An error occurred while purging messages: {error}")
+            await ctx.reply(f"An error occurred while purging messages: {error}", delete_after=10, ephemeral=True)
+            return
 
         # Send a confirmation message
         await ctx.send(f"Purged {limit} messages from {channel.mention}.", delete_after=10, ephemeral=True)

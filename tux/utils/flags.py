@@ -102,6 +102,9 @@ class UnbanFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
     username_or_id: str = commands.flag(
         name="username_or_id",
         description="The username or ID of the user to ban.",
+        aliases=["u"],
+        default=MISSING,
+        positional=True,
     )
     reason: str = commands.flag(
         name="reason",
@@ -163,13 +166,28 @@ class CasesViewFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
 
 
 class CaseModifyFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
-    reason: str = commands.flag(
+    status: bool | None = commands.flag(
+        name="case_status",
+        description="The status of the case.",
+        aliases=["s"],
+    )
+    reason: str | None = commands.flag(
         name="case_reason",
         description="The modified reason.",
         aliases=["r"],
     )
-    status: bool = commands.flag(
-        name="case_status",
-        description="The status of the case.",
-        aliases=["s"],
+
+
+class WarnFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
+    reason: str = commands.flag(
+        name="reason",
+        description="The reason for the member warn.",
+        aliases=["r"],
+        default=MISSING,
+    )
+    silent: bool = commands.flag(
+        name="silent",
+        description="Do not send a DM to the target.",
+        aliases=["s", "quiet"],
+        default=False,
     )

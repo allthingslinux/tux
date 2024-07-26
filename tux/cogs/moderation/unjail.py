@@ -66,7 +66,7 @@ class Unjail(ModerationCogBase):
             return
 
         # Get the last jail case for the target
-        case = await self.db.case.get_last_jail_case_by_target_id_and_guild_id(target.id, ctx.guild.id)
+        case = await self.db.case.get_last_jail_case_by_target_id(target.id, ctx.guild.id)
         if case is None:
             await ctx.send("No jail case found for the user.", delete_after=10, ephemeral=True)
             return
@@ -115,7 +115,7 @@ class Unjail(ModerationCogBase):
                 title=f"Case #{case.case_number} ({case.case_type}) {action}",
                 fields=fields,
                 color=CONST.EMBED_COLORS["CASE"],
-                icon_url=CONST.EMBED_ICONS["CASE"],
+                icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
             )
         else:
             embed = await self.create_embed(
@@ -123,7 +123,7 @@ class Unjail(ModerationCogBase):
                 title=f"Case {action} ({CaseType.BAN})",
                 fields=fields,
                 color=CONST.EMBED_COLORS["CASE"],
-                icon_url=CONST.EMBED_ICONS["CASE"],
+                icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
             )
 
         await self.send_embed(ctx, embed, log_type="mod")

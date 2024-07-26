@@ -129,5 +129,5 @@ class TtyRoles(commands.Cog):
             logger.error(f"Adding tty role failed for {member.display_name}")
 
 
-async def setup(bot: commands.Bot):
+async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(TtyRoles(bot))

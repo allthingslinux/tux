@@ -1,7 +1,5 @@
 from datetime import datetime
 
-from loguru import logger
-
 from prisma.enums import CaseType
 from prisma.models import Case, Guild
 from prisma.types import CaseWhereInput
@@ -125,9 +123,10 @@ class CaseController:
         list[Case] | None
             A list of cases for the guild if found, otherwise None.
         """
-        cases = await self.table.find_many(where={"guild_id": guild_id, **options}, order={"case_created_at": "desc"})
-        logger.info(cases)
-        return cases
+        return await self.table.find_many(
+            where={"guild_id": guild_id, **options},
+            order={"case_created_at": "desc"},
+        )
 
     async def get_case_by_number(self, guild_id: int, case_number: int) -> Case | None:
         """
