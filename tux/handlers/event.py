@@ -18,18 +18,23 @@ class EventHandler(commands.Cog):
     async def on_guild_remove(self, guild: discord.Guild) -> None:
         await self.db.guild.delete_guild_by_id(guild.id)
 
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.Message) -> None:
-        # Ignore messages from bots to prevent infinite loops
+    async def handle_harmful_message(self, message: discord.Message) -> None:
         if message.author.bot:
             return
 
-        # Check if the message contains harmful commands
         stripped_content = strip_formatting(message.content)
         if is_harmful(stripped_content):
             await message.reply(
-                "Warning: This command is potentially harmful. Please avoid running it unless you are fully aware of it's operation. If this was a mistake, please disregard this message.",
+                "Warning: This command is potentially harmful. Please avoid running it unless you are fully aware of its operation. If this was a mistake, please disregard this message.",
             )
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
+        await self.handle_harmful_message(after)
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message) -> None:
+        await self.handle_harmful_message(message)
 
 
 async def setup(bot: commands.Bot) -> None:
