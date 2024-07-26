@@ -1,6 +1,3 @@
-import re
-from datetime import UTC, datetime, timedelta
-
 import discord
 from discord.ext import commands
 from loguru import logger
@@ -8,69 +5,30 @@ from loguru import logger
 from prisma.enums import CaseType
 from prisma.models import Case
 from tux.utils.constants import Constants as CONST
-from tux.utils.flags import TimeoutFlags
+from tux.utils.flags import UntimeoutFlags
 
 from . import ModerationCogBase
 
 
-def parse_time_string(time_str: str) -> timedelta:
-    """
-    Convert a string representation of time (e.g., '60s', '1m', '2h', '10d')
-    into a datetime.timedelta object.
-
-    Parameters
-    time_str (str): The string representation of time.
-
-    Returns
-    timedelta: Corresponding timedelta object.
-    """
-    # Define regex pattern to parse time strings
-    time_pattern = re.compile(r"^(?P<value>\d+)(?P<unit>[smhdw])$")
-
-    # Match the input string with the pattern
-    match = time_pattern.match(time_str)
-
-    if not match:
-        msg = f"Invalid time format: '{time_str}'"
-        raise ValueError(msg)
-
-    # Extract the value and unit from the pattern match
-    value = int(match["value"])
-    unit = match["unit"]
-
-    # Define the mapping of units to keyword arguments for timedelta
-    unit_map = {"s": "seconds", "m": "minutes", "h": "hours", "d": "days", "w": "weeks"}
-
-    # Check if the unit is in the map
-    if unit not in unit_map:
-        msg = f"Unknown time unit: '{unit}'"
-        raise ValueError(msg)
-
-    # Create the timedelta with the appropriate keyword argument
-    kwargs = {unit_map[unit]: value}
-
-    return timedelta(**kwargs)
-
-
-class Timeout(ModerationCogBase):
+class Untimeout(ModerationCogBase):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__(bot)
 
     @commands.hybrid_command(
-        name="timeout",
-        aliases=["t", "to", "mute"],
-        usage="$timeout [target] [duration] [reason]",
+        name="untimeout",
+        aliases=["ut", "uto", "unmute"],
+        usage="$untimeout [target] [reason]",
     )
     @commands.guild_only()
-    async def timeout(
+    async def untimeout(
         self,
         ctx: commands.Context[commands.Bot],
         target: discord.Member,
         *,
-        flags: TimeoutFlags,
+        flags: UntimeoutFlags,
     ) -> None:
         """
-        Timeout a user from the server.
+        Untimeout a user from the server.
 
         Parameters
         ----------
@@ -78,7 +36,7 @@ class Timeout(ModerationCogBase):
             The context in which the command is being invoked.
         target : discord.Member
             The user to timeout.
-        flags : TimeoutFlags
+        flags : UntimeoutFlags
             The flags for the command.
 
         Raises
@@ -93,33 +51,30 @@ class Timeout(ModerationCogBase):
             logger.warning("Timeout command used outside of a guild context.")
             return
         if target == ctx.author:
-            await ctx.reply("You cannot timeout yourself.", delete_after=10, ephemeral=True)
+            await ctx.reply("You cannot untimeout yourself.", delete_after=10, ephemeral=True)
             return
         if target.top_role >= moderator.top_role:
-            await ctx.reply("You cannot timeout a user with a higher or equal role.", delete_after=10, ephemeral=True)
+            await ctx.reply("You cannot untimeout a user with a higher or equal role.", delete_after=10, ephemeral=True)
             return
         if target == ctx.guild.owner:
-            await ctx.reply("You cannot timeout the server owner.", delete_after=10, ephemeral=True)
+            await ctx.reply("You cannot untimeout the server owner.", delete_after=10, ephemeral=True)
             return
-        if target.is_timed_out():
-            await ctx.reply(f"{target} is already timed out.", delete_after=10, ephemeral=True)
-            return
-
-        duration = parse_time_string(flags.duration)
+        if not target.is_timed_out():
+            await ctx.reply(f"{target} is not currently timed out.", delete_after=10, ephemeral=True)
 
         try:
-            await self.send_dm(ctx, flags.silent, target, flags.reason, f"timed out for {flags.duration}")
-            await target.timeout(duration, reason=flags.reason)
+            await self.send_dm(ctx, flags.silent, target, flags.reason, "untimed out")
+            await target.timeout(None, reason=flags.reason)
         except discord.DiscordException as e:
-            await ctx.reply(f"Failed to timeout {target}. {e}", delete_after=10, ephemeral=True)
+            await ctx.reply(f"Failed to untimeout {target}. {e}", delete_after=10, ephemeral=True)
             return
 
         case = await self.db.case.insert_case(
             case_target_id=target.id,
             case_moderator_id=ctx.author.id,
-            case_type=CaseType.TIMEOUT,
+            case_type=CaseType.UNTIMEOUT,
             case_reason=flags.reason,
-            case_expires_at=datetime.now(UTC) + duration,
+            case_expires_at=None,
             guild_id=ctx.guild.id,
         )
 
@@ -128,7 +83,7 @@ class Timeout(ModerationCogBase):
     async def handle_case_response(
         self,
         ctx: commands.Context[commands.Bot],
-        flags: TimeoutFlags,
+        flags: UntimeoutFlags,
         case: Case | None,
         action: str,
         reason: str,
@@ -149,7 +104,7 @@ class Timeout(ModerationCogBase):
         if case is not None:
             embed = await self.create_embed(
                 ctx,
-                title=f"Case #{case.case_number} {action} ({flags.duration} {case.case_type})",
+                title=f"Case #{case.case_number} {action} ({case.case_type})",
                 fields=fields,
                 color=CONST.EMBED_COLORS["CASE"],
                 icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
@@ -157,7 +112,7 @@ class Timeout(ModerationCogBase):
         else:
             embed = await self.create_embed(
                 ctx,
-                title=f"Case #0 {action} ({flags.duration} {CaseType.TIMEOUT})",
+                title=f"Case #0 {action} ({CaseType.UNTIMEOUT})",
                 fields=fields,
                 color=CONST.EMBED_COLORS["CASE"],
                 icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
@@ -168,4 +123,4 @@ class Timeout(ModerationCogBase):
 
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(Timeout(bot))
+    await bot.add_cog(Untimeout(bot))
