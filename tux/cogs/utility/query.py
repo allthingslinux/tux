@@ -14,7 +14,7 @@ class Query(commands.Cog):
     @commands.hybrid_command(
         name="query",
         aliases=["q"],
-        usage="$query <search_term>",
+        usage="$query [search_term]",
     )
     async def query(self, ctx: commands.Context[commands.Bot], *, search_term: str) -> None:
         """
