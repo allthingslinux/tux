@@ -10,13 +10,13 @@ from tux.utils.constants import Constants as CONST
 from tux.utils.sentry import setup_sentry
 
 # if CONST.DEBUG is True:
-# import logging
-# import tracemalloc
-# import warnings
+#     import logging
+#     import tracemalloc
+#     import warnings
 
-# tracemalloc.start()
-# logging.basicConfig(level=logging.DEBUG)
-# warnings.simplefilter("error", ResourceWarning)
+#     tracemalloc.start()
+#     logging.basicConfig(level=logging.DEBUG)
+#     warnings.simplefilter("error", ResourceWarning)
 
 
 async def main() -> None:
