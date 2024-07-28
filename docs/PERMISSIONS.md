@@ -22,7 +22,7 @@ Below is the hierarchy of permission levels available in Tux:
 - **5: Administrator**
 - **6: Head Administrator**
 - **7: Server Owner**
-- **8: Bot Owner**
-- **9: Developer**
+- **8: Sys Admin** (User ID list in `config.json`)
+- **9: Bot Owner** (User ID in `config.json`)
 
 By leveraging these permission levels, Tux provides a robust and adaptable way to manage who can execute specific commands, making it suitable for various server environments.

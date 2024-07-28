@@ -19,15 +19,20 @@ class GuildConfigController:
             return await self.guild_table.create(data={"guild_id": guild_id})
         return guild
 
-    async def get_guild_config(self, guild_id: int) -> GuildConfig | None:
-        return await self.table.find_first(where={"guild_id": guild_id})
+    """
+    CREATE
+    """
 
     async def insert_guild_config(self, guild_id: int) -> GuildConfig:
         await self.ensure_guild_exists(guild_id)
         return await self.table.create(data={"guild_id": guild_id})
 
-    async def delete_guild_config(self, guild_id: int) -> None:
-        await self.table.delete(where={"guild_id": guild_id})
+    """
+    READ
+    """
+
+    async def get_guild_config(self, guild_id: int) -> GuildConfig | None:
+        return await self.table.find_first(where={"guild_id": guild_id})
 
     async def get_log_channel(self, guild_id: int, log_type: str) -> int | None:
         log_channel_ids: dict[str, GuildConfigScalarFieldKeys] = {
@@ -39,6 +44,106 @@ class GuildConfigController:
             "dev": "dev_log_id",
         }
         return await self.get_guild_config_field_value(guild_id, log_channel_ids[log_type])
+
+    async def get_perm_level_role(self, guild_id: int, role_type: str) -> int | None:
+        role_ids: dict[str, GuildConfigScalarFieldKeys] = {
+            "staff": "base_staff_role_id",
+            "member": "base_member_role_id",
+            "jail": "jail_role_id",
+            "quarantine": "quarantine_role_id",
+            "perm_level_0_role_id": "perm_level_0_role_id",
+            "perm_level_1_role_id": "perm_level_1_role_id",
+            "perm_level_2_role_id": "perm_level_2_role_id",
+            "perm_level_3_role_id": "perm_level_3_role_id",
+            "perm_level_4_role_id": "perm_level_4_role_id",
+            "perm_level_5_role_id": "perm_level_5_role_id",
+            "perm_level_6_role_id": "perm_level_6_role_id",
+            "perm_level_7_role_id": "perm_level_7_role_id",
+            "perm_level_8_role_id": "perm_level_8_role_id",
+            "perm_level_9_role_id": "perm_level_9_role_id",
+        }
+
+        return await self.get_guild_config_field_value(guild_id, role_ids[role_type])
+
+    async def get_guild_config_field_value(
+        self,
+        guild_id: int,
+        field: GuildConfigScalarFieldKeys,
+    ) -> Any:
+        config = await self.table.find_first(where={"guild_id": guild_id})
+        return None if config is None else getattr(config, field)
+
+    async def get_mod_log_channel(self, guild_id: int) -> int | None:
+        return await self.get_guild_config_field_value(guild_id, "mod_log_id")
+
+    async def get_audit_log_channel(self, guild_id: int) -> int | None:
+        return await self.get_guild_config_field_value(guild_id, "audit_log_id")
+
+    async def get_join_log_channel(self, guild_id: int) -> int | None:
+        return await self.get_guild_config_field_value(guild_id, "join_log_id")
+
+    async def get_private_log_channel(self, guild_id: int) -> int | None:
+        return await self.get_guild_config_field_value(guild_id, "private_log_id")
+
+    async def get_report_log_channel(self, guild_id: int) -> int | None:
+        return await self.get_guild_config_field_value(guild_id, "report_log_id")
+
+    async def get_dev_log_channel(self, guild_id: int) -> int | None:
+        return await self.get_guild_config_field_value(guild_id, "dev_log_id")
+
+    async def get_jail_channel(self, guild_id: int) -> int | None:
+        return await self.get_guild_config_field_value(guild_id, "jail_channel_id")
+
+    async def get_general_channel(self, guild_id: int) -> int | None:
+        return await self.get_guild_config_field_value(guild_id, "general_channel_id")
+
+    async def get_starboard_channel(self, guild_id: int) -> int | None:
+        return await self.get_guild_config_field_value(guild_id, "starboard_channel_id")
+
+    async def get_base_staff_role(self, guild_id: int) -> int | None:
+        return await self.get_guild_config_field_value(guild_id, "base_staff_role_id")
+
+    async def get_base_member_role(self, guild_id: int) -> int | None:
+        return await self.get_guild_config_field_value(guild_id, "base_member_role_id")
+
+    async def get_jail_role(self, guild_id: int) -> int | None:
+        return await self.get_guild_config_field_value(guild_id, "jail_role_id")
+
+    async def get_quarantine_role(self, guild_id: int) -> int | None:
+        return await self.get_guild_config_field_value(guild_id, "quarantine_role_id")
+
+    """
+    UPDATE
+    """
+
+    async def update_perm_level_role(
+        self,
+        guild_id: int,
+        level: str,
+        role_id: int,
+    ) -> GuildConfig | None:
+        await self.ensure_guild_exists(guild_id)
+
+        perm_level_roles: dict[str, str] = {
+            "0": "perm_level_0_role_id",
+            "1": "perm_level_1_role_id",
+            "2": "perm_level_2_role_id",
+            "3": "perm_level_3_role_id",
+            "4": "perm_level_4_role_id",
+            "5": "perm_level_5_role_id",
+            "6": "perm_level_6_role_id",
+            "7": "perm_level_7_role_id",
+            "8": "perm_level_8_role_id",
+            "9": "perm_level_9_role_id",
+        }
+
+        return await self.table.upsert(
+            where={"guild_id": guild_id},
+            data={
+                "create": {"guild_id": guild_id, perm_level_roles[level]: role_id},  # type: ignore
+                "update": {perm_level_roles[level]: role_id},
+            },
+        )
 
     async def update_mod_log_id(
         self,
@@ -255,22 +360,6 @@ class GuildConfigController:
             },
         )
 
-    # async def update_guild_disabled_commands(
-    #     self, guild_id: int, guild_disabled_commands: list[str]
-    # ) -> GuildConfig | None:
-    #     return await self.table.update(
-    #         where={"guild_id": guild_id},
-    #         data={"guild_disabled_commands": guild_disabled_commands},
-    #     )
-
-    # async def update_guild_disabled_cogs(
-    #     self, guild_id: int, guild_disabled_cogs: list[str]
-    # ) -> GuildConfig | None:
-    #     return await self.table.update(
-    #         where={"guild_id": guild_id},
-    #         data={"guild_disabled_cogs": guild_disabled_cogs},
-    #     )
-
     async def update_guild_config(
         self,
         guild_id: int,
@@ -280,83 +369,9 @@ class GuildConfigController:
 
         return await self.table.update(where={"guild_id": guild_id}, data=data)
 
-    async def get_guild_config_field_value(
-        self,
-        guild_id: int,
-        field: GuildConfigScalarFieldKeys,
-    ) -> Any:
-        config = await self.table.find_first(where={"guild_id": guild_id})
-        return None if config is None else getattr(config, field)
+    """
+    DELETE
+    """
 
-    async def get_mod_log_channel(self, guild_id: int) -> int | None:
-        return await self.get_guild_config_field_value(guild_id, "mod_log_id")
-
-    async def get_audit_log_channel(self, guild_id: int) -> int | None:
-        return await self.get_guild_config_field_value(guild_id, "audit_log_id")
-
-    async def get_join_log_channel(self, guild_id: int) -> int | None:
-        return await self.get_guild_config_field_value(guild_id, "join_log_id")
-
-    async def get_private_log_channel(self, guild_id: int) -> int | None:
-        return await self.get_guild_config_field_value(guild_id, "private_log_id")
-
-    async def get_report_log_channel(self, guild_id: int) -> int | None:
-        return await self.get_guild_config_field_value(guild_id, "report_log_id")
-
-    async def get_dev_log_channel(self, guild_id: int) -> int | None:
-        return await self.get_guild_config_field_value(guild_id, "dev_log_id")
-
-    async def get_jail_channel(self, guild_id: int) -> int | None:
-        return await self.get_guild_config_field_value(guild_id, "jail_channel_id")
-
-    async def get_general_channel(self, guild_id: int) -> int | None:
-        return await self.get_guild_config_field_value(guild_id, "general_channel_id")
-
-    async def get_starboard_channel(self, guild_id: int) -> int | None:
-        return await self.get_guild_config_field_value(guild_id, "starboard_channel_id")
-
-    async def get_base_staff_role(self, guild_id: int) -> int | None:
-        return await self.get_guild_config_field_value(guild_id, "base_staff_role_id")
-
-    async def get_base_member_role(self, guild_id: int) -> int | None:
-        return await self.get_guild_config_field_value(guild_id, "base_member_role_id")
-
-    async def get_jail_role(self, guild_id: int) -> int | None:
-        return await self.get_guild_config_field_value(guild_id, "jail_role_id")
-
-    async def get_quarantine_role(self, guild_id: int) -> int | None:
-        return await self.get_guild_config_field_value(guild_id, "quarantine_role_id")
-
-    # async def get_disabled_commands(self, guild_id: int) -> list[str] | None:
-    #     return await self.get_guild_config_field_value(guild_id, "guild_disabled_commands")
-
-    # async def get_disabled_cogs(self, guild_id: int) -> list[str] | None:
-    #     return await self.get_guild_config_field_value(guild_id, "guild_disabled_cogs")
-
-    async def update_perm_level_roles(
-        self,
-        guild_id: int,
-        level: str,
-        role: int,
-    ) -> GuildConfig | None:
-        perm_level_roles = {
-            "0": "perm_level_0_roles",
-            "1": "perm_level_1_roles",
-            "2": "perm_level_2_roles",
-            "3": "perm_level_3_roles",
-            "4": "perm_level_4_roles",
-            "5": "perm_level_5_roles",
-            "6": "perm_level_6_roles",
-            "7": "perm_level_7_roles",
-            "8": "perm_level_8_roles",
-            "9": "perm_level_9_roles",
-        }
-
-        return await self.table.update(
-            where={"guild_id": guild_id},
-            data={
-                perm_level_roles[level]: {
-                    "set": [role],  # type: ignore
-                },
-            },
-        )
+    async def delete_guild_config(self, guild_id: int) -> None:
+        await self.table.delete(where={"guild_id": guild_id})

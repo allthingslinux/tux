@@ -14,8 +14,8 @@ from tux.utils.embeds import EmbedCreator
 class Snippets(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.db_controller = DatabaseController().snippet
-        self.config_db = DatabaseController().guild_config
+        self.db = DatabaseController().snippet
+        self.config = DatabaseController().guild_config
 
     @commands.command(
         name="snippets",
@@ -39,7 +39,7 @@ class Snippets(commands.Cog):
             await ctx.send("This command cannot be used in direct messages.")
             return
 
-        snippets: list[Snippet] = await self.db_controller.get_all_snippets_sorted(newestfirst=True)
+        snippets: list[Snippet] = await self.db.get_all_snippets_sorted(newestfirst=True)
 
         # remove snippets that are not in the current server
         snippets = [snippet for snippet in snippets if snippet.guild_id == ctx.guild.id]
@@ -110,7 +110,7 @@ class Snippets(commands.Cog):
             await ctx.send("This command cannot be used in direct messages.")
             return
 
-        snippet = await self.db_controller.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
+        snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
             embed = EmbedCreator.create_error_embed(
@@ -122,11 +122,12 @@ class Snippets(commands.Cog):
             return
 
         # Check if the author of the snippet is the same as the user who wants to delete it and if theres no author don't allow deletion
+
         # TODO: this was quick and dirty, needs to be refactored
 
         author_id = snippet.snippet_user_id or 0
         if author_id != ctx.author.id:
-            conf = await self.config_db.get_guild_config_by_id(ctx.guild.id)
+            conf = await self.config.get_guild_config(ctx.guild.id)
             user_roles = [role.id for role in ctx.author.roles]  # type: ignore
 
             if not conf:
@@ -138,9 +139,7 @@ class Snippets(commands.Cog):
                 await ctx.send(embed=embed)
                 return
 
-            if (conf.guild_base_staff_role_id is None or conf.guild_base_staff_role_id not in user_roles) and (
-                conf.guild_dev_role_id is None or conf.guild_dev_role_id not in user_roles
-            ):
+            if all(role not in user_roles for role in conf.perm_level_9_role_id):
                 embed = EmbedCreator.create_error_embed(
                     title="Error",
                     description="You can only delete your own snippets.",
@@ -149,7 +148,7 @@ class Snippets(commands.Cog):
                 await ctx.send(embed=embed)
                 return
 
-        await self.db_controller.delete_snippet_by_id(snippet.snippet_id)
+        await self.db.delete_snippet_by_id(snippet.snippet_id)
 
         await ctx.send("Snippet deleted.")
         logger.info(f"{ctx.author} deleted the snippet with the name {name}.")
@@ -176,7 +175,7 @@ class Snippets(commands.Cog):
             await ctx.send("This command cannot be used in direct messages.")
             return
 
-        snippet = await self.db_controller.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
+        snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
             embed = EmbedCreator.create_error_embed(
@@ -213,7 +212,7 @@ class Snippets(commands.Cog):
             await ctx.send("This command cannot be used in direct messages.")
             return
 
-        snippet = await self.db_controller.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
+        snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
             embed = EmbedCreator.create_error_embed(
@@ -282,7 +281,7 @@ class Snippets(commands.Cog):
         server_id = ctx.guild.id
 
         # Check if the snippet already exists
-        if await self.db_controller.get_snippet_by_name_and_guild_id(name, ctx.guild.id) is not None:
+        if await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id) is not None:
             embed = EmbedCreator.create_error_embed(
                 title="Error",
                 description="Snippet already exists.",
@@ -302,7 +301,7 @@ class Snippets(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        await self.db_controller.create_snippet(
+        await self.db.create_snippet(
             snippet_name=name,
             snippet_content=content,
             snippet_created_at=created_at,

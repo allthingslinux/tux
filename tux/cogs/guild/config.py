@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Literal
 
 import discord
 from discord import app_commands
@@ -59,14 +59,14 @@ class Config(commands.Cog):
         if interaction.guild is None:
             return
 
-        await self.db.update_perm_level_roles(
+        await self.db.update_perm_level_role(
             interaction.guild.id,
             setting.value,
             role.id,
         )
 
         await interaction.response.send_message(
-            f"Perm level {setting.value} roles set to {role.mention}.",
+            f"Perm level {setting.value} role set to {role.mention}.",
             ephemeral=True,
         )
 
@@ -85,17 +85,9 @@ class Config(commands.Cog):
         )
 
         for i in range(10):
-            field: str = f"perm_level_{i}_roles"
-            field_value = await self.db.get_guild_config_field_value(interaction.guild.id, field)  # type: ignore
-
-            if not field_value:
-                role = "Not set"
-            elif isinstance(field_value, list):
-                role_id: Any = field_value[0]
-                role = f"<@&{role_id}>"
-            else:
-                role = f"<@&{field_value}>"
-
+            perm_level: str = f"perm_level_{i}_role_id"
+            role_id = await self.db.get_perm_level_role(interaction.guild.id, perm_level)
+            role = f"<@&{role_id}>" if role_id else "Not set"
             embed.add_field(name=f"Perm Level {i}", value=role, inline=True)
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
