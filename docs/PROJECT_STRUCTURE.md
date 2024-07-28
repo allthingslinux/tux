@@ -35,10 +35,6 @@ This document outlines the structure of the Discord bot project to help you navi
 
 - **examples/** - Contains sample code and usage examples.
 
-## Type Checking Configuration
-
-- **mypy.ini** - Configuration for MyPy, a static type checker.
-
 ## Dependency Management
 
 - **poetry.lock** - Lock file for Poetry to ensure reproducible installs.
@@ -106,7 +102,6 @@ tux
 │  └─ resources
 │     ├─ image.png
 ├─ examples
-├─ mypy.ini
 ├─ poetry.lock
 ├─ prisma
 │  ├─ database.db
