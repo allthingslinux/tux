@@ -6,6 +6,15 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+import tux.handlers.error as error
+
+
+class PermissionLevelError(commands.CheckFailure):
+    def __init__(self, permission: str) -> None:
+        self.permission = permission
+        super().__init__(f"User does not have the required permission: {permission}")
+
+
 error_map: dict[type[Exception], str] = {
     # app_commands
     app_commands.AppCommandError: "An error occurred: {error}",
@@ -34,6 +43,8 @@ error_map: dict[type[Exception], str] = {
     commands.MissingRequiredAttachment: "Missing required attachment.",
     commands.NotOwner: "User not in sudoers file. This incident will be reported. (Not Owner)",
     commands.BotMissingPermissions: "User not in sudoers file. This incident will be reported. (Bot Missing Permissions)",
+    # Custom errors
+    error.PermissionLevelError: "User not in sudoers file. This incident will be reported. (You do not have the required permission: {error.permission})",
 }
 
 
@@ -78,7 +89,7 @@ class ErrorHandler(commands.Cog):
     async def on_command_error(
         self,
         ctx: commands.Context[commands.Bot],
-        error: commands.CommandError,
+        error: commands.CommandError | commands.CheckFailure,
     ) -> None:
         """
         Handle errors for traditional prefix commands.
@@ -87,16 +98,23 @@ class ErrorHandler(commands.Cog):
         ----------
         ctx : commands.Context[commands.Bot]
             The discord context object.
-        error : commands.CommandError
+        error : commands.CommandError | commands.CheckFailure
             The error that occurred.
         """
 
         # # If the command has its own error handler, return
         if hasattr(ctx.command, "on_error"):
+            logger.debug(f"Command {ctx.command} has its own error handler.")
             return
 
         # # If the cog has its own error handler, return
         if ctx.cog and ctx.cog._get_overridden_method(ctx.cog.cog_command_error) is not None:
+            logger.debug(f"Cog {ctx.cog} has its own error handler.")
+            return
+
+        if isinstance(error, commands.CheckFailure):
+            message = error_map.get(type(error), self.error_message).format(error=error, ctx=ctx)
+            await ctx.send(content=message, ephemeral=True, delete_after=10)
             return
 
         # If the error is CommandNotFound, return
