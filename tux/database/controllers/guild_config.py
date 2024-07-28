@@ -190,76 +190,6 @@ class GuildConfigController:
             },
         )
 
-    # async def update_guild_dev_role_id(
-    #     self,
-    #     guild_id: int,
-    #     guild_dev_role_id: int,
-    # ) -> GuildConfig | None:
-    #     await self.ensure_guild_exists(guild_id)
-    #     return await self.table.upsert(
-    #         where={"guild_id": guild_id},
-    #         data={
-    #             "create": {"guild_id": guild_id, "guild_dev_role_id": guild_dev_role_id},
-    #             "update": {"guild_dev_role_id": guild_dev_role_id},
-    #         },
-    #     )
-
-    # async def update_guild_admin_role_id(
-    #     self,
-    #     guild_id: int,
-    #     guild_admin_role_id: int,
-    # ) -> GuildConfig | None:
-    #     await self.ensure_guild_exists(guild_id)
-    #     return await self.table.upsert(
-    #         where={"guild_id": guild_id},
-    #         data={
-    #             "create": {"guild_id": guild_id, "guild_admin_role_id": guild_admin_role_id},
-    #             "update": {"guild_admin_role_id": guild_admin_role_id},
-    #         },
-    #     )
-
-    # async def update_guild_senior_role_id(
-    #     self,
-    #     guild_id: int,
-    #     guild_senior_role_id: int,
-    # ) -> GuildConfig | None:
-    #     await self.ensure_guild_exists(guild_id)
-    #     return await self.table.upsert(
-    #         where={"guild_id": guild_id},
-    #         data={
-    #             "create": {"guild_id": guild_id, "guild_senior_role_id": guild_senior_role_id},
-    #             "update": {"guild_senior_role_id": guild_senior_role_id},
-    #         },
-    #     )
-
-    # async def update_guild_mod_role_id(
-    #     self,
-    #     guild_id: int,
-    #     guild_mod_role_id: int,
-    # ) -> GuildConfig | None:
-    #     await self.ensure_guild_exists(guild_id)
-    #     return await self.table.upsert(
-    #         where={"guild_id": guild_id},
-    #         data={
-    #             "create": {"guild_id": guild_id, "guild_mod_role_id": guild_mod_role_id},
-    #             "update": {"guild_mod_role_id": guild_mod_role_id},
-    #         },
-    #     )
-
-    # async def update_guild_junior_role_id(
-    #     self,
-    #     guild_id: int,
-    #     guild_junior_role_id: int,
-    # ) -> GuildConfig | None:
-    #     await self.ensure_guild_exists(guild_id)
-    #     return await self.table.upsert(
-    #         where={"guild_id": guild_id},
-    #         data={
-    #             "create": {"guild_id": guild_id, "guild_junior_role_id": guild_junior_role_id},
-    #             "update": {"guild_junior_role_id": guild_junior_role_id},
-    #         },
-    #     )
-
     async def update_base_staff_role_id(
         self,
         guild_id: int,
@@ -346,6 +276,8 @@ class GuildConfigController:
         guild_id: int,
         data: GuildConfigUpdateInput,
     ) -> GuildConfig | None:
+        await self.ensure_guild_exists(guild_id)
+
         return await self.table.update(where={"guild_id": guild_id}, data=data)
 
     async def get_guild_config_field_value(
@@ -383,21 +315,6 @@ class GuildConfigController:
     async def get_starboard_channel(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "starboard_channel_id")
 
-    # async def get_dev_role(self, guild_id: int) -> int | None:
-    #     return await self.get_guild_config_field_value(guild_id, "guild_dev_role_id")
-
-    # async def get_admin_role(self, guild_id: int) -> int | None:
-    #     return await self.get_guild_config_field_value(guild_id, "guild_admin_role_id")
-
-    # async def get_senior_role(self, guild_id: int) -> int | None:
-    #     return await self.get_guild_config_field_value(guild_id, "guild_senior_role_id")
-
-    # async def get_mod_role(self, guild_id: int) -> int | None:
-    #     return await self.get_guild_config_field_value(guild_id, "guild_mod_role_id")
-
-    # async def get_junior_role(self, guild_id: int) -> int | None:
-    #     return await self.get_guild_config_field_value(guild_id, "guild_junior_role_id")
-
     async def get_base_staff_role(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "base_staff_role_id")
 
@@ -416,44 +333,30 @@ class GuildConfigController:
     # async def get_disabled_cogs(self, guild_id: int) -> list[str] | None:
     #     return await self.get_guild_config_field_value(guild_id, "guild_disabled_cogs")
 
-    async def get_all_guild_configs(self) -> list[GuildConfig]:
-        return await self.table.find_many()
+    async def update_perm_level_roles(
+        self,
+        guild_id: int,
+        level: str,
+        role: int,
+    ) -> GuildConfig | None:
+        perm_level_roles = {
+            "0": "perm_level_0_roles",
+            "1": "perm_level_1_roles",
+            "2": "perm_level_2_roles",
+            "3": "perm_level_3_roles",
+            "4": "perm_level_4_roles",
+            "5": "perm_level_5_roles",
+            "6": "perm_level_6_roles",
+            "7": "perm_level_7_roles",
+            "8": "perm_level_8_roles",
+            "9": "perm_level_9_roles",
+        }
 
-    #   perm_level_0_roles   BigInt[]
-    #   perm_level_1_roles   BigInt[]
-    #   perm_level_2_roles   BigInt[]
-    #   perm_level_3_roles   BigInt[]
-    #   perm_level_4_roles   BigInt[]
-    #   perm_level_5_roles   BigInt[]
-    #   perm_level_6_roles   BigInt[]
-    #   perm_level_7_roles   BigInt[]
-    #   perm_level_8_roles   BigInt[]
-    #   perm_level_9_roles   BigInt[]
-
-    # async def update_perm_level_roles(
-    #     self,
-    #     guild_id: int,
-    #     perm_level: str,
-    #     roles: list[int] | None,
-    # ) -> GuildConfig | None:
-    #     await self.ensure_guild_exists(guild_id)
-
-    #     perm_level_roles = {
-    #         "0": "perm_level_0_roles",
-    #         "1": "perm_level_1_roles",
-    #         "2": "perm_level_2_roles",
-    #         "3": "perm_level_3_roles",
-    #         "4": "perm_level_4_roles",
-    #         "5": "perm_level_5_roles",
-    #         "6": "perm_level_6_roles",
-    #         "7": "perm_level_7_roles",
-    #         "8": "perm_level_8_roles",
-    #         "9": "perm_level_9_roles",
-    #     }
-
-    #     roles_update = roles if roles is not None else []
-
-    #     data: GuildConfigUpsertInput = {
-    #         "create": GuildConfigCreateInput(guild_id=guild_id, **{perm_level_roles[perm_level]: roles_update}),
-    #         "update": GuildConfigUpdateInput(**{perm_level_roles[perm_level]: roles_update}),
-    #     }
+        return await self.table.update(
+            where={"guild_id": guild_id},
+            data={
+                perm_level_roles[level]: {
+                    "set": [role],  # type: ignore
+                },
+            },
+        )
