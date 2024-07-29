@@ -15,7 +15,8 @@ config = json.loads(config_file.read_text())
 class Constants:
     # Permission constants
     ROLES: Final[dict[str, int]] = config["ROLES"]
-    BOT_OWNER_ID: Final[int] = int(os.getenv("BOT_OWNER_ID", 0))
+    BOT_OWNER_ID: Final[int] = config["USER_IDS"]["BOT_OWNER"]
+    SYSADMIN_IDS: Final[list[int]] = config["USER_IDS"]["SYSADMINS"]
 
     # Production env constants
     PROD_TOKEN: Final[str] = os.getenv("PROD_TOKEN", "")

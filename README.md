@@ -82,11 +82,15 @@ Tux is a Discord bot for the All Things Linux Discord server. It is designed to 
     ```bash
     cp .env.example .env
     ```
-7. Run the sync command in the server to sync the slash command tree.
+7. Copy the `config/settings.json.example` file to `config/settings.json` and fill in the required values
+    ```bash
+    cp config/settings.json.example config/settings.json
+    ```
+8. Run the sync command in the server to sync the slash command tree.
    ```
    {prefix}dev sync <server id>
    ```
-8. Review all useful CLI commands by visiting the [useful CLI commands](docs/CLI.md) file.
+9. Review all useful CLI commands by visiting the [useful CLI commands](docs/CLI.md) file.
    
 
 ## License
