@@ -269,6 +269,7 @@ class Cases(ModerationCogBase):
                 if case.case_status is True
                 else CONST.EMBED_ICONS["INACTIVE_CASE"],
             )
+            embed.set_thumbnail(url=target.avatar)
         else:
             embed = discord.Embed(
                 title=f"Case {action}",

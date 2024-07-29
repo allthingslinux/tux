@@ -51,7 +51,7 @@ class KickFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
         name="reason",
         description="The reason for the member kick.",
         aliases=["r"],
-        default="No reason provided.",
+        default=MISSING,
     )
     silent: bool = commands.flag(
         name="silent",
@@ -70,11 +70,10 @@ class TimeoutFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
     )
     reason: str = commands.flag(
         name="reason",
-        description="The reason for the member ban.",
+        description="The reason for the member ban. (e.g. 1d, 1h, 1m)",
         aliases=["r"],
         default=MISSING,
     )
-
     silent: bool = commands.flag(
         name="silent",
         description="Do not send a DM to the target.",

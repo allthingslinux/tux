@@ -1,7 +1,6 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from loguru import logger
 
 from tux.utils.embeds import EmbedCreator
 
@@ -47,8 +46,6 @@ class Info(commands.Cog):
 
         await interaction.response.send_message(embed=embed)
 
-        logger.info(f"{interaction.user} used the server command in {interaction.channel}.")
-
     @info.command(name="tux", description="Shows information about Tux.")
     async def tux(self, interaction: discord.Interaction) -> None:
         """
@@ -71,8 +68,6 @@ class Info(commands.Cog):
         )
 
         await interaction.response.send_message(embed=embed)
-
-        logger.info(f"{interaction.user} used the tux command in {interaction.channel}.")
 
     @info.command(name="member", description="Shows information about a member.")
     async def member(self, interaction: discord.Interaction, member: discord.Member) -> None:
@@ -111,8 +106,6 @@ class Info(commands.Cog):
         embed.set_image(url=fetched_member.banner)
 
         await interaction.response.send_message(embed=embed)
-
-        logger.info(f"{interaction.user} used the member command in {interaction.channel}.")
 
 
 async def setup(bot: commands.Bot) -> None:

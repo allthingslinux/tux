@@ -18,10 +18,10 @@ def create_embed_footer(
     latency = None
     if ctx:
         user = ctx.author
-        latency = round(ctx.bot.latency * 1000, 2)
+        latency = round(ctx.bot.latency * 1000)
     elif interaction:
         user = interaction.user
-        latency = round(interaction.client.latency * 1000, 2)
+        latency = round(interaction.client.latency * 1000)
     if isinstance(user, discord.User | discord.Member):
         return (
             f"{user.name}@atl $ {latency}ms",
@@ -50,19 +50,19 @@ class EmbedCreator:
 
         if ctx:
             user = ctx.author
-            latency = round(ctx.bot.latency * 1000, 2)
+            latency = round(ctx.bot.latency * 1000)
         elif interaction:
             user = interaction.user
-            latency = round(interaction.client.latency * 1000, 2)
+            latency = round(interaction.client.latency * 1000)
 
         if isinstance(user, discord.User | discord.Member):
             return (
-                f"{user.name}@atl $ ∕ {latency}ms",  # noqa: RUF001
+                f"{user.name}@atl $ {latency}ms",
                 str(user.avatar.url) if user.avatar else None,
             )
 
         if ctx is None and interaction is None:
-            return ("tux@atl $ ∕", "https://i.imgur.com/4sblrd0.png")  # noqa: RUF001
+            return ("tux@atl $", "https://i.imgur.com/4sblrd0.png")
 
         return ("", None)
 
@@ -85,7 +85,7 @@ class EmbedCreator:
 
         embed = discord.Embed()
 
-        embed.color = CONST.EMBED_COLORS[state]  # type: ignore
+        embed.color = CONST.EMBED_COLORS[state]
 
         embed.set_author(
             name=state.capitalize() if state else "Info",
@@ -113,7 +113,7 @@ class EmbedCreator:
 
         embed = discord.Embed()
 
-        embed.color = CONST.EMBED_COLORS[state]  # type: ignore
+        embed.color = CONST.EMBED_COLORS[state]
 
         embed.description = content
 

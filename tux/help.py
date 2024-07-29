@@ -27,12 +27,27 @@ class TuxHelp(commands.HelpCommand):
             color=CONST.EMBED_COLORS["DEFAULT"],
         )
 
-    def add_command_field(self, embed: discord.Embed, command: commands.Command[Any, Any, Any], prefix: str):
+    def add_command_field(
+        self,
+        embed: discord.Embed,
+        command: commands.Command[Any, Any, Any],
+        prefix: str,
+    ):
         embed.add_field(
             name=f"{prefix}{command.qualified_name} ({', '.join(command.aliases) if command.aliases else 'No aliases.'})",
             value=f"> {command.short_doc or 'No documentation summary.'}",
             inline=False,
         )
+
+    def _get_flag_type(self, flag_annotation: Any) -> Any:
+        if flag_annotation is None:
+            return "Any"
+        if isinstance(flag_annotation, type):
+            return flag_annotation.__name__
+        return flag_annotation
+
+    def format_flag_name(self, flag: commands.Flag) -> str:
+        return f"--[{flag.name}]" if flag.required else f"--<{flag.name}>"
 
     def format_flag_details(self, command: commands.Command[Any, Any, Any]) -> str:
         try:
@@ -43,23 +58,26 @@ class TuxHelp(commands.HelpCommand):
         flag_details: list[str] = []
 
         for param_annotation in type_hints.values():
-            if isinstance(param_annotation, type) and issubclass(param_annotation, commands.FlagConverter):
-                command_flags = param_annotation.__commands_flags__
-                for flag in command_flags.values():
-                    flag_type = flag.annotation if flag.annotation is not None else "Any"
-                    if isinstance(flag_type, type):
-                        flag_type = flag_type.__name__
-                    flag_name_format = f"--[{flag.name}]" if flag.required else f"--<{flag.name}>"
-                    flag_str = f"{flag_name_format}"
-                    if flag.aliases:
-                        flag_str += f" ({', '.join(flag.aliases)})"
-                    flag_str += f"\n\t{flag.description or 'No description provided.'}"
-                    flag_str += f"\n\tType: `{flag_type}`"
-                    if flag.default is not discord.utils.MISSING:
-                        flag_str += f"\n\tDefault: {flag.default}"
-                    flag_str += "\n\n"
-                    flag_details.append(flag_str)
-        return "".join(flag_details)
+            if not isinstance(param_annotation, type) or not issubclass(param_annotation, commands.FlagConverter):
+                continue
+
+            command_flags = param_annotation.__commands_flags__
+            for flag in command_flags.values():
+                flag_type = self._get_flag_type(flag.annotation)
+                flag_str = self.format_flag_name(flag)
+
+                if flag.aliases:
+                    alias_list = ", ".join(flag.aliases)
+                    flag_str += f" ({alias_list})"
+
+                flag_str += f"\n\t{flag.description or 'No description provided.'}"
+                flag_str += f"\n\tType: `{flag_type}`"
+                if flag.default is not discord.utils.MISSING:
+                    flag_str += f"\n\tDefault: {flag.default}"
+
+                flag_details.append(flag_str)
+
+        return "\n\n".join(flag_details)
 
     async def send_bot_help(
         self,
@@ -68,35 +86,25 @@ class TuxHelp(commands.HelpCommand):
         """
         Sends help message for the bot.
         """
-        embed = self.embed_base("Categories")
-
         category_strings: dict[str, str] = {}
-
         for cog, mapping_commands in mapping.items():
+            if cog is None:
+                continue
+            if len(mapping_commands) == 0:
+                continue
+
+            category = cog.qualified_name
+            if category not in category_strings:
+                category_strings[category] = f"**{category}** | "
+
             for command in mapping_commands:
-                if cog is None:
-                    continue
-
-                # Get the category and command name
-                category = cog.qualified_name
                 command_name = command.name
-
-                # Check if the category is already in the list
-                if category not in category_strings:
-                    category_strings[category] = f"**{category}** | "
-
-                # Add the command name to the list of commands for the category
                 category_strings[category] += f"`{command_name}` "
-
-                # Check if the command is a group command and add subcommands
                 if isinstance(command, commands.Group):
-                    for subcommand in command.commands:
-                        category_strings[category] += f"`{subcommand.name}` "
+                    category_strings[category] += "".join(f"`{subcmd.name}` " for subcmd in command.commands)
 
-        embed.description = "\n".join(category_strings.values())
-
+        embed = self.embed_base("Categories", "\n".join(category_strings.values()))
         embed.set_footer(text=f"Use {self.prefix}help [category] or [command] to learn about it.")
-
         await self.get_destination().send(embed=embed)
 
     async def send_cog_help(self, cog: commands.Cog) -> None:
@@ -126,7 +134,7 @@ class TuxHelp(commands.HelpCommand):
         embed.add_field(name="Usage", value=f"`{command.signature or 'No usage.'}`", inline=False)
         embed.add_field(
             name="Aliases",
-            value=f"`{', '.join(command.aliases)}`" if command.aliases else "No aliases.",
+            value=(f"`{', '.join(command.aliases)}`" if command.aliases else "No aliases."),
             inline=False,
         )
 

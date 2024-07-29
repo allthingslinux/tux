@@ -58,15 +58,25 @@ class Unjail(ModerationCogBase):
         if not jail_role:
             await ctx.send("No jail role has been set up for this server.", delete_after=10, ephemeral=True)
             return
+
         jail_role = await commands.RoleConverter().convert(ctx, str(jail_role))
+        if not jail_role:
+            await ctx.send("The jail role has been deleted.", delete_after=10, ephemeral=True)
+            return
 
         # Check if the target is jailed or not
         if jail_role not in target.roles:
             await ctx.send("The user is not jailed.", delete_after=10, ephemeral=True)
             return
 
+        # Check if the jail channel is set up
+        jail_channel = await self.config.get_jail_channel(ctx.guild.id)
+        if not jail_channel:
+            await ctx.send("No jail channel has been set up for this server.", delete_after=10, ephemeral=True)
+            return
+
         # Get the last jail case for the target
-        case = await self.db.case.get_last_jail_case_by_target_id(target.id, ctx.guild.id)
+        case = await self.db.case.get_last_jail_case_by_target_id(ctx.guild.id, target.id)
         if case is None:
             await ctx.send("No jail case found for the user.", delete_after=10, ephemeral=True)
             return
@@ -76,7 +86,12 @@ class Unjail(ModerationCogBase):
 
         # Add the previous roles back to the target
         previous_roles = [await commands.RoleConverter().convert(ctx, str(role)) for role in case.case_target_roles]
-        await target.add_roles(*previous_roles, reason=flags.reason)
+
+        if previous_roles:
+            await target.add_roles(*previous_roles, reason=flags.reason)
+        else:
+            await ctx.send("No previous roles found for the user.", delete_after=10, ephemeral=True)
+            return
 
         # Insert the unjail case to the database
         case = await self.db.case.insert_case(
@@ -117,6 +132,7 @@ class Unjail(ModerationCogBase):
                 color=CONST.EMBED_COLORS["CASE"],
                 icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
             )
+            embed.set_thumbnail(url=target.avatar)
         else:
             embed = await self.create_embed(
                 ctx,

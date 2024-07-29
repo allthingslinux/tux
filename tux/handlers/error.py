@@ -125,7 +125,6 @@ class ErrorHandler(commands.Cog):
             return
 
         # Check for original error raised and sent to CommandInvokeError
-
         error = getattr(error, "original", error)
 
         # Get the error message and send it to the user
