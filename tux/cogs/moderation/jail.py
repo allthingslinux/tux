@@ -1,4 +1,5 @@
 import discord
+from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
@@ -13,6 +14,51 @@ from . import ModerationCogBase
 class Jail(ModerationCogBase):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__(bot)
+
+    @app_commands.command(
+        name="setup_jail",
+    )
+    async def setup_jail(self, interaction: discord.Interaction) -> None:
+        """
+        Set up the jail role channel permissions for the server.
+
+        Parameters
+        ----------
+
+        interaction : discord.Interaction
+            The discord interaction object.
+        """
+
+        if interaction.guild is None:
+            return
+
+        jail_role = await self.config.get_guild_config_field_value(interaction.guild.id, "jail_role_id")
+        if not jail_role:
+            await interaction.response.send_message("No jail role has been set up for this server.", ephemeral=True)
+            return
+
+        jail_role = interaction.guild.get_role(jail_role)
+        if not jail_role:
+            await interaction.response.send_message("The jail role has been deleted.", ephemeral=True)
+            return
+
+        jail_channel = await self.config.get_guild_config_field_value(interaction.guild.id, "jail_channel_id")
+        if not jail_channel:
+            await interaction.response.send_message("No jail channel has been set up for this server.", ephemeral=True)
+            return
+
+        await interaction.response.defer(ephemeral=True)
+
+        for channel in interaction.guild.channels:
+            if isinstance(channel, discord.TextChannel | discord.VoiceChannel | discord.ForumChannel):
+                await channel.set_permissions(jail_role, send_messages=False, read_messages=False)
+
+                if channel.id == jail_channel:
+                    await channel.set_permissions(jail_role, send_messages=True, read_messages=True)
+
+                await interaction.edit_original_response(content=f"Setting up permissions for {channel.name}.")
+
+        await interaction.edit_original_response(content="Permissions have been set up for the jail role.")
 
     @commands.hybrid_command(
         name="jail",
@@ -53,12 +99,19 @@ class Jail(ModerationCogBase):
             await ctx.send("You cannot jail the server owner.", delete_after=10, ephemeral=True)
             return
 
-        # Convert the jail role ID to a discord.Role object
         jail_role = await self.config.get_jail_role(ctx.guild.id)
         if not jail_role:
             await ctx.send("No jail role has been set up for this server.", delete_after=10, ephemeral=True)
             return
+
         jail_role = ctx.guild.get_role(jail_role)
+        if not jail_role:
+            await ctx.send("The jail role has been deleted.", delete_after=10, ephemeral=True)
+
+        jail_channel = await self.config.get_jail_channel(ctx.guild.id)
+        if not jail_channel:
+            await ctx.send("No jail channel has been set up for this server.", delete_after=10, ephemeral=True)
+            return
 
         # Get the target roles that are manageable
         target_roles = [
@@ -78,7 +131,7 @@ class Jail(ModerationCogBase):
         case_target_roles = [role.id for role in target_roles]
 
         try:
-            if jail_role is not None:
+            if target_roles and jail_role:
                 # Send a DM to the target if the silent flag is not set
                 await self.send_dm(ctx, flags.silent, target, flags.reason, "jailed")
                 # Remove all roles
@@ -86,7 +139,7 @@ class Jail(ModerationCogBase):
                 # Add the jail role
                 await target.add_roles(jail_role, reason=flags.reason)
             else:
-                await ctx.send("No jail role has been set up for this server.", delete_after=10, ephemeral=True)
+                await ctx.send("An error occurred while trying to jail the user.", delete_after=10, ephemeral=True)
                 return
 
         except (discord.Forbidden, discord.HTTPException) as e:
@@ -133,6 +186,7 @@ class Jail(ModerationCogBase):
                 color=CONST.EMBED_COLORS["CASE"],
                 icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
             )
+            embed.set_thumbnail(url=target.avatar)
         else:
             embed = await self.create_embed(
                 ctx,

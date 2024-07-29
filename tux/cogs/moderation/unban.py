@@ -104,6 +104,7 @@ class Unban(ModerationCogBase):
                 color=CONST.EMBED_COLORS["CASE"],
                 icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
             )
+            embed.set_thumbnail(url=target.avatar)
         else:
             embed = await self.create_embed(
                 ctx,

@@ -46,8 +46,8 @@ class Config(commands.Cog):
             app_commands.Choice(name="Perm Level 5 (e.g. Admin)", value="5"),
             app_commands.Choice(name="Perm Level 6 (e.g. Head Admin)", value="6"),
             app_commands.Choice(name="Perm Level 7 (e.g. Server Owner)", value="7"),
-            app_commands.Choice(name="Perm Level 8 (e.g. Bot Owner)", value="8"),
-            app_commands.Choice(name="Perm Level 9 (e.g. Developer)", value="9"),
+            app_commands.Choice(name="Perm Level 8 (e.g. Sys Admin)", value="8"),
+            app_commands.Choice(name="Perm Level 9 (e.g. Bot Owner)", value="9"),
         ],
     )
     async def config_set_roles(
