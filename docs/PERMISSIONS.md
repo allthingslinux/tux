@@ -14,7 +14,7 @@ The level-based system allows Tux to manage command execution efficiently across
 
 Below is the hierarchy of permission levels available in Tux:
 
-- **0: Everyone**
+- **0: Member**
 - **1: Support**
 - **2: Junior Moderator**
 - **3: Moderator**
