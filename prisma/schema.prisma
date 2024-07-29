@@ -59,8 +59,6 @@ model GuildConfig {
   perm_level_5_role_id BigInt?
   perm_level_6_role_id BigInt?
   perm_level_7_role_id BigInt?
-  perm_level_8_role_id BigInt?
-  perm_level_9_role_id BigInt?
   base_staff_role_id   BigInt?
   base_member_role_id  BigInt?
   jail_role_id         BigInt?
