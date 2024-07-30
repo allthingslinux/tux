@@ -59,11 +59,26 @@ class GuildConfigController:
             "perm_level_5_role_id": "perm_level_5_role_id",
             "perm_level_6_role_id": "perm_level_6_role_id",
             "perm_level_7_role_id": "perm_level_7_role_id",
-            "perm_level_8_role_id": "perm_level_8_role_id",
-            "perm_level_9_role_id": "perm_level_9_role_id",
         }
 
         return await self.get_guild_config_field_value(guild_id, role_ids[role_type])
+
+    async def get_perm_level_roles(self, guild_id: int, lower_bound: int) -> list[int]:
+        perm_level_roles: dict[int, GuildConfigScalarFieldKeys] = {
+            0: "perm_level_0_role_id",
+            1: "perm_level_1_role_id",
+            2: "perm_level_2_role_id",
+            3: "perm_level_3_role_id",
+            4: "perm_level_4_role_id",
+            5: "perm_level_5_role_id",
+            6: "perm_level_6_role_id",
+            7: "perm_level_7_role_id",
+        }
+
+        return [
+            await self.get_guild_config_field_value(guild_id, perm_level_roles[level])
+            for level in range(lower_bound, 8)
+        ]
 
     async def get_guild_config_field_value(
         self,

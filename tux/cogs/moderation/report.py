@@ -3,6 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+import tux.utils.checks as checks
 from tux.database.controllers import DatabaseController
 from tux.utils.embeds import EmbedCreator
 
@@ -38,36 +39,46 @@ class ReportModal(discord.ui.Modal):
         interaction : discord.Interaction
             The interaction that triggered the command.
         """
+
+        logger.info(f"Received report from {interaction.user.id}")
         if not interaction.guild:
+            logger.error("Guild is None")
             return
 
+        logger.info(f"Creating embed for {interaction.user.id}")
         embed = EmbedCreator.create_log_embed(
             title=(f"Anonymous report for {self.short.value}"),  # type: ignore
             description=self.long.value,  # type: ignore
             interaction=None,
         )
+        logger.info(f"Embed created for {interaction.user.id}")
 
         # Get the report log channel ID for the guild
         try:
-            report_log_channel_id = await self.config.get_mod_log_channel(interaction.guild.id)
+            logger.info(f"Getting report log channel for guild {interaction.guild.id}")
+            report_log_channel_id = await self.config.get_report_log_channel(interaction.guild.id)
         except Exception as e:
-            logger.error(f"Failed to get mod log channel for guild {interaction.guild.id}. {e}")
+            logger.error(f"Failed to get report log channel for guild {interaction.guild.id}. {e}")
             return
         if not report_log_channel_id:
+            logger.error(f"Report log channel not set for guild {interaction.guild.id}")
             return
 
         # Get the report log channel object
         report_log_channel = interaction.guild.get_channel(report_log_channel_id)
         if not report_log_channel or not isinstance(report_log_channel, discord.TextChannel):
+            logger.error(f"Failed to get report log channel for guild {interaction.guild.id}")
             return
 
         # Send confirmation message to user
+        logger.info(f"Sending confirmation message to {interaction.user.id}")
         await interaction.response.send_message(
             "Your report has been submitted.",
             ephemeral=True,
         )
 
         # Send the embed to the report log channel
+        logger.info(f"Sending report to {report_log_channel_id}")
         await report_log_channel.send(embed=embed)
 
 
@@ -77,6 +88,7 @@ class Report(commands.Cog):
 
     @app_commands.command(name="report")
     @app_commands.guild_only()
+    @checks.has_pl(9)
     async def report(self, interaction: discord.Interaction) -> None:
         """
         Report a user or issue anonymously
@@ -89,6 +101,7 @@ class Report(commands.Cog):
 
         modal = ReportModal(bot=self.bot)
 
+        logger.info(f"Opening report modal for {interaction.user.id}")
         await interaction.response.send_modal(modal)
 
 

@@ -46,8 +46,6 @@ class Config(commands.Cog):
             app_commands.Choice(name="Perm Level 5 (e.g. Admin)", value="5"),
             app_commands.Choice(name="Perm Level 6 (e.g. Head Admin)", value="6"),
             app_commands.Choice(name="Perm Level 7 (e.g. Server Owner)", value="7"),
-            app_commands.Choice(name="Perm Level 8 (e.g. Sys Admin)", value="8"),
-            app_commands.Choice(name="Perm Level 9 (e.g. Bot Owner)", value="9"),
         ],
     )
     async def config_set_roles(
@@ -84,7 +82,7 @@ class Config(commands.Cog):
             timestamp=discord.utils.utcnow(),
         )
 
-        for i in range(10):
+        for i in range(8):
             perm_level: str = f"perm_level_{i}_role_id"
             role_id = await self.db.get_perm_level_role(interaction.guild.id, perm_level)
             role = f"<@&{role_id}>" if role_id else "Not set"
