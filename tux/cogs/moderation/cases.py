@@ -148,7 +148,11 @@ class Cases(ModerationCogBase):
             await ctx.send("Case not found.", delete_after=30)
             return
 
-        target = await commands.MemberConverter().convert(ctx, str(case.case_target_id))
+        target = await commands.MemberConverter().convert(
+            ctx,
+            str(case.case_target_id),
+        ) or await commands.UserConverter().convert(ctx, str(case.case_target_id))
+
         await self._handle_case_response(ctx, case, "viewed", case.case_reason, target)
 
     async def _view_cases_with_flags(
@@ -227,7 +231,11 @@ class Cases(ModerationCogBase):
             await ctx.send("Failed to update case.", delete_after=30, ephemeral=True)
             return
 
-        target = await commands.MemberConverter().convert(ctx, str(updated_case.case_target_id))
+        target = await commands.MemberConverter().convert(
+            ctx,
+            str(case.case_target_id),
+        ) or await commands.UserConverter().convert(ctx, str(case.case_target_id))
+
         await self._handle_case_response(ctx, updated_case, "updated", updated_case.case_reason, target)
 
     async def _handle_case_response(
@@ -256,7 +264,10 @@ class Cases(ModerationCogBase):
         """
 
         if case is not None:
-            moderator = await commands.MemberConverter().convert(ctx, str(case.case_moderator_id))
+            moderator = await commands.MemberConverter().convert(
+                ctx,
+                str(case.case_moderator_id),
+            ) or await commands.UserConverter().convert(ctx, str(case.case_moderator_id))
 
             fields = self._create_case_fields(moderator, target, reason)
 

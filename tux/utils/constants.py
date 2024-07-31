@@ -39,6 +39,16 @@ class Constants:
     # Sentry-related constants
     SENTRY_URL: Final[str | None] = os.getenv("SENTRY_URL")
 
+    # Database constants
+    PROD_DATABASE_URL: Final[str] = os.getenv("PROD_DATABASE_URL", "")
+    PROD_DIRECT_URL: Final[str] = os.getenv("PROD_DIRECT_URL", "")
+
+    DEV_DATABASE_URL: Final[str] = os.getenv("DEV_DATABASE_URL", "")
+    DEV_DIRECT_URL: Final[str] = os.getenv("DEV_DIRECT_URL", "")
+
+    DATABASE_URL: Final[str] = DEV_DATABASE_URL if DEV and DEV.lower() == "true" else PROD_DATABASE_URL
+    DIRECT_URL: Final[str] = DEV_DIRECT_URL if DEV and DEV.lower() == "true" else PROD_DIRECT_URL
+
     # GitHub constants
     GITHUB_REPO_URL: Final[str] = os.getenv("GITHUB_REPO_URL", "")
     GITHUB_REPO_OWNER: Final[str] = os.getenv("GITHUB_REPO_OWNER", "")

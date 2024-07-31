@@ -20,6 +20,8 @@ from tux.utils.sentry import setup_sentry
 
 
 async def main() -> None:
+    logger.info("Starting bot.")
+
     # Initialize the console and console task
     # console = None
     # console_task = None
