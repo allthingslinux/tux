@@ -13,21 +13,43 @@ from tux.utils.flags import CaseModifyFlags, CasesViewFlags
 
 from . import ModerationCogBase
 
-active_case_emoji, inactive_case_emoji = (
-    "<:active_case:1265754900533608509>",
-    "<:inactive_case:1265754928610279495>",
-)
+# active_case_emoji, inactive_case_emoji = (1265754900533608509, 1265754928610279495)
 
-case_type_emojis = {
-    CaseType.BAN: "<:added:1265754950642696265><:ban:1265755024932212813>",
-    CaseType.UNBAN: "<:removed:1265754965029425224><:ban:1265755024932212813>",
-    CaseType.KICK: "<:added:1265754950642696265><:kick:1265755037603467406>",
-    CaseType.TIMEOUT: "<:added:1265754950642696265><:timeout:1265755056041496596>",
-    CaseType.UNTIMEOUT: "<:removed:1265754965029425224><:timeout:1265755056041496596>",
-    CaseType.WARN: "<:added:1265754950642696265><:warn:1265755010042691807>",
-    CaseType.JAIL: "<:added:1265754950642696265><:jail:1265754989083758643>",
-    CaseType.UNJAIL: "<:removed:1265754965029425224><:jail:1265754989083758643>",
+emojis = {
+    "active_case_emoji": 1268115730344443966,
+    "inactive_case_emoji": 1268115712627441715,
+    "added": 1268115639914987562,
+    "removed": 1268116308927713331,
+    "ban": 1268115779350560799,
+    "kick": 1268115792818470944,
+    "timeout": 1268115809083981886,
+    "warn": 1268115764498399264,
+    "jail": 1268115750392954880,
 }
+
+# case_type_emojis = {
+#     CaseType.BAN: emojis["added"] + emojis["ban"],
+#     CaseType.UNBAN: emojis["removed"] + emojis["ban"],
+#     CaseType.KICK: emojis["added"] + emojis["kick"],
+#     CaseType.TIMEOUT: emojis["added"] + emojis["timeout"],
+#     CaseType.UNTIMEOUT: emojis["removed"] + emojis["timeout"],
+#     CaseType.WARN: emojis["added"] + emojis["warn"],
+#     CaseType.JAIL: emojis["added"] + emojis["jail"],
+#     CaseType.UNJAIL: emojis["removed"] + emojis["jail"],
+# }
+
+# we need to define each case type to an action emoji and a case type emoji and they need to be seperated by a space
+
+# case_type_emojis = {
+#     CaseType.BAN: f"{emojis['added']} {emojis['ban']}",
+#     CaseType.UNBAN: f"{emojis['removed']} {emojis['ban']}",
+#     CaseType.KICK: f"{emojis['added']} {emojis['kick']}",
+#     CaseType.TIMEOUT: f"{emojis['added']} {emojis['timeout']}",
+#     CaseType.UNTIMEOUT: f"{emojis['removed']} {emojis['timeout']}",
+#     CaseType.WARN: f"{emojis['added']} {emojis['warn']}",
+#     CaseType.JAIL: f"{emojis['added']} {emojis['jail']}",
+#     CaseType.UNJAIL: f"{emojis['removed']} {emojis['jail']}",
+# }
 
 
 class Cases(ModerationCogBase):
@@ -346,19 +368,75 @@ class Cases(ModerationCogBase):
 
         return embed
 
+    def _format_emoji(self, emoji: discord.Emoji) -> str:
+        return f"<:{emoji.name}:{emoji.id}>"
+
     def _add_case_to_embed(
         self,
         embed: discord.Embed,
         case: Case,
     ) -> None:
-        case_status = active_case_emoji if case.case_status else inactive_case_emoji
+        case_status_emoji = (
+            self.bot.get_emoji(emojis["active_case_emoji"])
+            if case.case_status
+            else self.bot.get_emoji(emojis["inactive_case_emoji"])
+        )
+
+        case_status = ""
+        if case_status_emoji:
+            case_status = self._format_emoji(case_status_emoji)
+
+        if case.case_type in [CaseType.BAN, CaseType.UNBAN]:
+            case_type_emoji = self.bot.get_emoji(emojis["ban"])
+        elif case.case_type == CaseType.KICK:
+            case_type_emoji = self.bot.get_emoji(emojis["kick"])
+        elif case.case_type in [CaseType.TIMEOUT, CaseType.UNTIMEOUT]:
+            case_type_emoji = self.bot.get_emoji(emojis["timeout"])
+        elif case.case_type == CaseType.WARN:
+            case_type_emoji = self.bot.get_emoji(emojis["warn"])
+        elif case.case_type in [CaseType.JAIL, CaseType.UNJAIL]:
+            case_type_emoji = self.bot.get_emoji(emojis["jail"])
+        else:
+            case_type_emoji = None
+
+        if case_type_emoji:
+            case_type = self._format_emoji(case_type_emoji)
+
+        if case.case_type in [
+            CaseType.BAN,
+            CaseType.KICK,
+            CaseType.TIMEOUT,
+            CaseType.WARN,
+            CaseType.JAIL,
+        ]:
+            case_action_emoji = self.bot.get_emoji(emojis["added"])
+
+        elif case.case_type in [CaseType.UNBAN, CaseType.UNTIMEOUT, CaseType.UNJAIL]:
+            case_action_emoji = self.bot.get_emoji(emojis["removed"])
+
+        else:
+            case_action_emoji = None
+
+        if case_action_emoji:
+            case_action = self._format_emoji(case_action_emoji)
+        if case_type_emoji:
+            case_type = self._format_emoji(case_type_emoji)
+
+        case_type = self._format_emoji(case_type_emoji) if case_type_emoji else ""
+        case_action = ""
+        if case_action_emoji:
+            case_action = self._format_emoji(case_action_emoji)
+
+        case_type_and_action = f"{case_action} {case_type}" if case_action_emoji and case_type_emoji else "Unknown"
+
         case_date = discord.utils.format_dt(case.case_created_at, "R") if case.case_created_at else "Unknown"
         case_number = f"{case.case_number:04d}"
-        case_type = case_type_emojis.get(case.case_type, "+?")
 
         if not embed.description:
             embed.description = "**Case**\u2002\u2002\u2002\u2002\u2002**Type**\u2002\u2002\u2002**Date**\n"
-        embed.description += f"{case_status} `{case_number}`\u2002\u2002**{case_type}**\u2002\u2002*{case_date}*\n"
+        embed.description += (
+            f"{case_status} `{case_number}`\u2002\u2002 {case_type_and_action} \u2002\u2002*{case_date}*\n"
+        )
 
 
 async def setup(bot: commands.Bot) -> None:
