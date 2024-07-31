@@ -216,7 +216,7 @@ class EmbedCreator:
         ctx: commands.Context[commands.Bot] | None = None,
         interaction: discord.Interaction | None = None,
     ) -> discord.Embed:
-        return cls.create_embed(ctx, interaction, "LOG", title, description)
+        return cls.create_embed(ctx, interaction, "DEFAULT", title, description)
 
     @classmethod
     def create_infraction_embed(

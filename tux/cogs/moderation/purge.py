@@ -3,6 +3,8 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+import tux.utils.checks as checks
+
 
 class Purge(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -10,6 +12,7 @@ class Purge(commands.Cog):
 
     @app_commands.command(name="purge")
     @app_commands.guild_only()
+    @checks.ac_has_pl(2)
     async def slash_purge(
         self,
         interaction: discord.Interaction,
@@ -73,6 +76,7 @@ class Purge(commands.Cog):
         usage="$purge [limit] <channel>",
     )
     @commands.guild_only()
+    @checks.has_pl(2)
     async def prefix_purge(
         self,
         ctx: commands.Context[commands.Bot],

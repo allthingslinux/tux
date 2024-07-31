@@ -3,6 +3,7 @@ from discord.ext import commands
 from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
+import tux.utils.checks as checks
 from prisma.enums import CaseType
 from prisma.models import Case
 from prisma.types import CaseWhereInput
@@ -39,6 +40,7 @@ class Cases(ModerationCogBase):
         usage="$cases <subcommand>",
     )
     @commands.guild_only()
+    @checks.has_pl(2)
     async def cases(self, ctx: commands.Context[commands.Bot]) -> None:
         """
         Manage moderation cases in the server.
@@ -52,6 +54,7 @@ class Cases(ModerationCogBase):
         usage="$cases view <case_number> <flags>",
     )
     @commands.guild_only()
+    @checks.has_pl(2)
     async def cases_view(
         self,
         ctx: commands.Context[commands.Bot],
@@ -86,6 +89,7 @@ class Cases(ModerationCogBase):
         usage="$cases modify [case_number] <flags>",
     )
     @commands.guild_only()
+    @checks.has_pl(2)
     async def cases_modify(
         self,
         ctx: commands.Context[commands.Bot],

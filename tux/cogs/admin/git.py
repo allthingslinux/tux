@@ -388,6 +388,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+import tux.utils.checks as checks
 from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import EmbedCreator
 from tux.wrappers.github import GitHubService
@@ -413,6 +414,7 @@ class Git(commands.Cog):
         usage="$git <subcommand>",
     )
     @commands.guild_only()
+    @checks.has_pl(8)
     async def git(self, ctx: commands.Context[commands.Bot]) -> None:
         """
         Github related commands.
@@ -432,6 +434,7 @@ class Git(commands.Cog):
         usage="$git get_repo",
     )
     @commands.guild_only()
+    @checks.has_pl(8)
     async def get_repo(self, ctx: commands.Context[commands.Bot]) -> None:
         """
         Get repository information.
@@ -469,6 +472,7 @@ class Git(commands.Cog):
         usage="$git create_issue [title] [body]",
     )
     @commands.guild_only()
+    @checks.has_pl(8)
     async def create_issue(self, ctx: commands.Context[commands.Bot], title: str, body: str) -> None:
         """
         Create an issue.
@@ -509,6 +513,7 @@ class Git(commands.Cog):
         usage="$git get_issue [issue_number]",
     )
     @commands.guild_only()
+    @checks.has_pl(8)
     async def get_issue(self, ctx: commands.Context[commands.Bot], issue_number: int) -> None:
         """
         Get an issue by issue number.

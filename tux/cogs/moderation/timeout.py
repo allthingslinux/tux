@@ -5,6 +5,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+import tux.utils.checks as checks
 from prisma.enums import CaseType
 from prisma.models import Case
 from tux.utils.constants import Constants as CONST
@@ -62,6 +63,7 @@ class Timeout(ModerationCogBase):
         usage="$timeout [target] [duration] [reason]",
     )
     @commands.guild_only()
+    @checks.has_pl(2)
     async def timeout(
         self,
         ctx: commands.Context[commands.Bot],

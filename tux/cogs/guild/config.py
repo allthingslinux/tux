@@ -4,6 +4,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+import tux.utils.checks as checks
 from tux.database.controllers import DatabaseController
 from tux.ui.views.config import ConfigSetChannels, ConfigSetPrivateLogs, ConfigSetPublicLogs
 
@@ -13,12 +14,27 @@ class Config(commands.Cog):
         self.bot = bot
         self.db = DatabaseController().guild_config
 
-    @app_commands.command(name="config_set_logs", description="Configure the guild logs.")
+    @app_commands.command(name="config_set_logs")
+    @app_commands.describe(category="Which category of logs to configure")
+    @app_commands.guild_only()
+    @checks.ac_has_pl(7)
     async def config_set_logs(
         self,
         interaction: discord.Interaction,
         category: Literal["Public", "Private"],
     ) -> None:
+        """
+        Configure the guild logs.
+
+        Parameters
+        ----------
+
+        interaction : discord.Interaction
+            The discord interaction object.
+        category : Literal["Public", "Private"]
+            The category of logs to configure.
+        """
+
         if category == "Public":
             view = ConfigSetPublicLogs()
         elif category == "Private":
@@ -26,15 +42,26 @@ class Config(commands.Cog):
 
         await interaction.response.send_message(view=view, ephemeral=True)
 
-    @app_commands.command(name="config_set_channels", description="Configure the guild channels.")
+    @app_commands.command(name="config_set_channels")
+    @app_commands.guild_only()
+    @checks.ac_has_pl(7)
     async def config_set_channels(
         self,
         interaction: discord.Interaction,
     ) -> None:
+        """
+        Configure the guild channels.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        """
+
         view = ConfigSetChannels()
         await interaction.response.send_message(view=view, ephemeral=True)
 
-    @app_commands.command(name="config_set_roles", description="Configure the guild roles.")
+    @app_commands.command(name="config_set_roles")
     @app_commands.describe(setting="Which permission level to configure")
     @app_commands.choices(
         setting=[
@@ -46,16 +73,29 @@ class Config(commands.Cog):
             app_commands.Choice(name="Perm Level 5 (e.g. Admin)", value="5"),
             app_commands.Choice(name="Perm Level 6 (e.g. Head Admin)", value="6"),
             app_commands.Choice(name="Perm Level 7 (e.g. Server Owner)", value="7"),
-            app_commands.Choice(name="Perm Level 8 (e.g. Sys Admin)", value="8"),
-            app_commands.Choice(name="Perm Level 9 (e.g. Bot Owner)", value="9"),
         ],
     )
+    @app_commands.guild_only()
+    @checks.ac_has_pl(7)
     async def config_set_roles(
         self,
         interaction: discord.Interaction,
         setting: discord.app_commands.Choice[str],
         role: discord.Role,
     ) -> None:
+        """
+        Set the role for a permission level.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        setting : discord.app_commands.Choice[str]
+            The permission level to configure.
+        role : discord.Role
+            The role to set for the permission level.
+        """
+
         if interaction.guild is None:
             return
 
@@ -70,11 +110,22 @@ class Config(commands.Cog):
             ephemeral=True,
         )
 
-    @discord.app_commands.command(name="config_get_roles", description="Get the guild roles.")
+    @app_commands.command(name="config_get_roles")
+    @app_commands.guild_only()
+    @checks.ac_has_pl(7)
     async def config_get_roles(
         self,
         interaction: discord.Interaction,
     ) -> None:
+        """
+        Get the roles for each permission level.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        """
+
         if interaction.guild is None:
             return
 
@@ -84,7 +135,7 @@ class Config(commands.Cog):
             timestamp=discord.utils.utcnow(),
         )
 
-        for i in range(10):
+        for i in range(8):
             perm_level: str = f"perm_level_{i}_role_id"
             role_id = await self.db.get_perm_level_role(interaction.guild.id, perm_level)
             role = f"<@&{role_id}>" if role_id else "Not set"

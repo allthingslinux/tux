@@ -3,6 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+import tux.utils.checks as checks
 from prisma.enums import CaseType
 from prisma.models import Case
 from tux.utils.constants import Constants as CONST
@@ -18,6 +19,8 @@ class Jail(ModerationCogBase):
     @app_commands.command(
         name="setup_jail",
     )
+    @commands.guild_only()
+    @checks.ac_has_pl(7)
     async def setup_jail(self, interaction: discord.Interaction) -> None:
         """
         Set up the jail role channel permissions for the server.
@@ -66,6 +69,7 @@ class Jail(ModerationCogBase):
         usage="$jail [target] [reason] <silent>",
     )
     @commands.guild_only()
+    @checks.has_pl(2)
     async def jail(
         self,
         ctx: commands.Context[commands.Bot],

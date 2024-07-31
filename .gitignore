@@ -157,3 +157,4 @@ prisma/database.db
 # private key for github
 github-private-key.pem
 /debug.csv
+config/settings.json

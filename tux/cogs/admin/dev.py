@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+import tux.utils.checks as checks
+
 
 class Dev(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -13,7 +15,7 @@ class Dev(commands.Cog):
         usage="$dev <subcommand>",
     )
     @commands.guild_only()
-    @commands.has_guild_permissions(administrator=True)
+    @checks.has_pl(8)
     async def dev(self, ctx: commands.Context[commands.Bot]) -> None:
         """
         Dev related commands.
@@ -39,7 +41,7 @@ class Dev(commands.Cog):
         usage="$dev sync_tree [guild]",
     )
     @commands.guild_only()
-    @commands.has_permissions(administrator=True)
+    @checks.has_pl(8)
     async def sync_tree(self, ctx: commands.Context[commands.Bot], guild: discord.Guild) -> None:
         """
         Syncs the app command tree.
@@ -80,7 +82,7 @@ class Dev(commands.Cog):
         usage="$dev clear_tree",
     )
     @commands.guild_only()
-    @commands.has_guild_permissions(administrator=True)
+    @checks.has_pl(8)
     async def clear_tree(self, ctx: commands.Context[commands.Bot]) -> None:
         """
         Clears the app command tree.
@@ -115,7 +117,7 @@ class Dev(commands.Cog):
         usage="$dev load_cog [cog]",
     )
     @commands.guild_only()
-    @commands.has_guild_permissions(administrator=True)
+    @checks.has_pl(8)
     async def load_cog(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
         """
         Loads a cog into the bot.
@@ -166,12 +168,13 @@ class Dev(commands.Cog):
             await ctx.send(f"Failed to load cog: {error}")
             logger.error(f"Failed to load cog: {error}")
 
-    @commands.has_guild_permissions(administrator=True)
     @dev.command(
         name="unload_cog",
         aliases=["uc", "unload", "u"],
         usage="$dev unload_cog [cog]",
     )
+    @commands.guild_only()
+    @checks.has_pl(8)
     async def unload_cog(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
         """
         Unloads a cog from the bot.
@@ -215,7 +218,7 @@ class Dev(commands.Cog):
         usage="$dev reload_cog [cog]",
     )
     @commands.guild_only()
-    @commands.has_guild_permissions(administrator=True)
+    @checks.has_pl(8)
     async def reload_cog(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
         """
         Reloads a cog in the bot.

@@ -1,5 +1,7 @@
 from typing import Any
 
+from loguru import logger
+
 from prisma.models import Guild, GuildConfig
 from prisma.types import (
     GuildConfigScalarFieldKeys,
@@ -45,25 +47,46 @@ class GuildConfigController:
         }
         return await self.get_guild_config_field_value(guild_id, log_channel_ids[log_type])
 
-    async def get_perm_level_role(self, guild_id: int, role_type: str) -> int | None:
-        role_ids: dict[str, GuildConfigScalarFieldKeys] = {
-            "staff": "base_staff_role_id",
-            "member": "base_member_role_id",
-            "jail": "jail_role_id",
-            "quarantine": "quarantine_role_id",
-            "perm_level_0_role_id": "perm_level_0_role_id",
-            "perm_level_1_role_id": "perm_level_1_role_id",
-            "perm_level_2_role_id": "perm_level_2_role_id",
-            "perm_level_3_role_id": "perm_level_3_role_id",
-            "perm_level_4_role_id": "perm_level_4_role_id",
-            "perm_level_5_role_id": "perm_level_5_role_id",
-            "perm_level_6_role_id": "perm_level_6_role_id",
-            "perm_level_7_role_id": "perm_level_7_role_id",
-            "perm_level_8_role_id": "perm_level_8_role_id",
-            "perm_level_9_role_id": "perm_level_9_role_id",
+    async def get_perm_level_role(self, guild_id: int, level: str) -> int | None:
+        """
+        Get the role id for a specific permission level.
+        """
+        try:
+            role_id = await self.get_guild_config_field_value(guild_id, level)  # type: ignore
+            logger.debug(f"Retrieved role_id {role_id} for guild {guild_id} and level {level}")
+        except Exception as e:
+            logger.error(f"Error getting perm level role: {e}")
+            return None
+        return role_id
+
+    async def get_perm_level_roles(self, guild_id: int, lower_bound: int) -> list[int] | None:
+        """
+        Get the role ids for all permission levels from the lower_bound up to but not including 8.
+        """
+        perm_level_roles: dict[int, str] = {
+            0: "perm_level_0_role_id",
+            1: "perm_level_1_role_id",
+            2: "perm_level_2_role_id",
+            3: "perm_level_3_role_id",
+            4: "perm_level_4_role_id",
+            5: "perm_level_5_role_id",
+            6: "perm_level_6_role_id",
+            7: "perm_level_7_role_id",
         }
 
-        return await self.get_guild_config_field_value(guild_id, role_ids[role_type])
+        try:
+            role_ids: list[int] = []
+            for level in range(lower_bound, 8):
+                if role_field := perm_level_roles.get(level):
+                    role_id = await self.get_guild_config_field_value(guild_id, role_field)  # type: ignore
+                    if role_id:
+                        role_ids.append(role_id)
+            logger.debug(f"Retrieved role_ids {role_ids} for guild {guild_id} with lower bound {lower_bound}")
+        except Exception as e:
+            logger.error(f"Error getting perm level roles: {e}")
+            return None
+
+        return role_ids
 
     async def get_guild_config_field_value(
         self,
@@ -71,7 +94,12 @@ class GuildConfigController:
         field: GuildConfigScalarFieldKeys,
     ) -> Any:
         config = await self.table.find_first(where={"guild_id": guild_id})
-        return None if config is None else getattr(config, field)
+        if config is None:
+            logger.error(f"No guild config found for guild_id: {guild_id}")
+            return None
+        value = getattr(config, field, None)
+        logger.debug(f"Retrieved field value for {field}: {value}")
+        return value
 
     async def get_mod_log_channel(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "mod_log_id")

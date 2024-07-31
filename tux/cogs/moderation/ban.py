@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+import tux.utils.checks as checks
 from prisma.enums import CaseType
 from prisma.models import Case
 from tux.utils.constants import Constants as CONST
@@ -20,6 +21,7 @@ class Ban(ModerationCogBase):
         usage="$ban [target] <flags>",
     )
     @commands.guild_only()
+    @checks.has_pl(3)
     async def ban(
         self,
         ctx: commands.Context[commands.Bot],
