@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+import tux.utils.checks as checks
 from prisma.enums import CaseType
 from prisma.models import Case
 from tux.utils.constants import Constants as CONST
@@ -20,6 +21,7 @@ class Unjail(ModerationCogBase):
         usage="$unjail [target] [reason] <silent>",
     )
     @commands.guild_only()
+    @checks.has_pl(2)
     async def unjail(
         self,
         ctx: commands.Context[commands.Bot],

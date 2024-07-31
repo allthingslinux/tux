@@ -3,7 +3,6 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
-import tux.utils.checks as checks
 from tux.database.controllers import DatabaseController
 from tux.utils.embeds import EmbedCreator
 
@@ -88,7 +87,6 @@ class Report(commands.Cog):
 
     @app_commands.command(name="report")
     @app_commands.guild_only()
-    @checks.has_pl(9)
     async def report(self, interaction: discord.Interaction) -> None:
         """
         Report a user or issue anonymously

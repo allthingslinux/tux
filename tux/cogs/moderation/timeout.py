@@ -62,8 +62,8 @@ class Timeout(ModerationCogBase):
         aliases=["t", "to", "mute"],
         usage="$timeout [target] [duration] [reason]",
     )
-    @checks.has_pl(2)
     @commands.guild_only()
+    @checks.has_pl(2)
     async def timeout(
         self,
         ctx: commands.Context[commands.Bot],

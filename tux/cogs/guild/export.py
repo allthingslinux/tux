@@ -2,6 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+import tux.utils.checks as checks
 from tux.utils import exports
 from tux.utils.embeds import EmbedCreator
 
@@ -12,9 +13,9 @@ class Export(commands.Cog):
 
     export = app_commands.Group(name="export", description="export server data with Tux.")
 
-    @export.command(name="banned", description="Export a list of all banned users.")
-    @commands.bot_has_permissions(ban_members=True)
-    @commands.guild_only()
+    @export.command(name="banned")
+    @app_commands.guild_only()
+    @checks.ac_has_pl(3)
     async def export_banned(
         self,
         interaction: discord.Interaction,
@@ -22,7 +23,15 @@ class Export(commands.Cog):
     ) -> None:
         """
         Export a list of banned users in csv format.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        flags : str | None
+            The flags for the command.
         """
+
         if interaction.guild is None:
             msg = "Interaction does not have a guild attribute."
             raise ValueError(msg)
@@ -35,6 +44,7 @@ class Export(commands.Cog):
                 title=f"{interaction.guild} Banned Users",
                 description="There are no banned users in this server.",
             )
+
             return await interaction.response.send_message(embed=embed)
 
         if flags and "--help" not in flags:
@@ -44,15 +54,18 @@ class Export(commands.Cog):
                 valid_flags,
                 flags.split(sep=" ") if flags else [],
             )
+
             return await interaction.response.send_message(file=file)
 
         title = f"Total Bans in {interaction.guild}: {len(bans)}"
         data_description = "banned users"
         embed = await exports.get_help_embed(valid_flags, title, data_description)
+
         return await interaction.response.send_message(embed=embed)
 
-    @export.command(name="members", description="Export a list of all members in the server.")
-    @commands.guild_only()
+    @export.command(name="members")
+    @app_commands.guild_only()
+    @checks.ac_has_pl(3)
     async def export_members(
         self,
         interaction: discord.Interaction,
@@ -60,7 +73,15 @@ class Export(commands.Cog):
     ) -> None:
         """
         Export a list of members in csv format.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        flags : str | None
+            The flags for the command.
         """
+
         if interaction.guild is None:
             msg = "Interaction does not have a guild attribute."
             raise ValueError(msg)
@@ -75,11 +96,13 @@ class Export(commands.Cog):
                 valid_flags,
                 flags.split(sep=" ") if flags else [],
             )
+
             return await interaction.response.send_message(file=file)
 
         title = f"Total Members in {interaction.guild}: {len(members)}"
         data_description = "members"
         embed = await exports.get_help_embed(valid_flags, title, data_description)
+
         return await interaction.response.send_message(embed=embed)
 
 

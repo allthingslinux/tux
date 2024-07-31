@@ -35,76 +35,72 @@ async def has_permission(
         Whether the user has the permission level.
     """
 
-    # If the higher bound is not set, set it to the lower bound
-    if higher_bound is None:
-        higher_bound = lower_bound
+    # If higher_bound is None, set it to lower_bound
+    higher_bound = higher_bound or lower_bound
 
     # If the source is a context object and the guild is None, return False if the lower bound is not 0
     if source.guild is None:
         logger.debug("Guild is None, returning False if lower bound is not 0")
         return lower_bound == 0
 
-    # Determine the source type
-    if isinstance(source, commands.Context):
-        ctx, interaction = source, None
-    else:
-        interaction, ctx = source, None
+    # If the source is a context object, set the context object to source
+    ctx = source if isinstance(source, commands.Context) else None
+    # If the source is an interaction object, set the interaction object to source
+    interaction = source if isinstance(source, discord.Interaction) else None
 
     # Initialize the list of roles to an empty list to avoid type errors
     roles: list[Any] = []
 
     try:
-        # Single level check
         if higher_bound == lower_bound:
+            # Get the role ID for the permission level
             role_id = await get_perm_level_role_id(source, f"perm_level_{lower_bound}_role_id")
+
+            # If the role ID exists, append it to the list of roles
             if role_id:
                 roles.append(role_id)
             else:
                 logger.debug(f"No Role ID fetched for perm_level_{lower_bound}_role_id")
 
-        # Range check
         else:
+            # Get the role IDs for the permission levels
             fetched_roles = await get_perm_level_roles(source, lower_bound)
+
+            # If the role IDs exist, extend the list of roles with the fetched roles
             if fetched_roles:
                 roles.extend(fetched_roles)
+
             else:
                 logger.debug(f"No roles fetched for levels above and equal to {lower_bound}")
 
-        # Initialize the author/member object to None to avoid type errors
-        author: discord.Member | None = None
+        # Set the author to None to avoid type errors
+        author = None
 
-        # Fetch the author/member object from the context or interaction object
+        # If the context object or interaction object exists and the guild is not None, fetch the author
         if ctx and ctx.guild:
             author = await ctx.guild.fetch_member(ctx.author.id)
         elif interaction and interaction.guild:
             author = await interaction.guild.fetch_member(interaction.user.id)
 
-        # Check if the author has any of the roles in the list of roles
-        is_authorized = any(role.id in roles for role in author.roles) if author else False
-        if is_authorized:
+        # If the author is not None and the author has any of the roles in the list of roles, return True
+        if author and any(role.id in roles for role in author.roles):
             return True
 
     except Exception as e:
         logger.error(f"Exception in permission check: {e}")
 
-    # Fallback Path: Sysadmin/Bot Owner Check
     logger.debug("All checks failed, checking for sysadmin or bot owner status")
 
     try:
-        if ctx:
-            # Check if the author is a sysadmin or the bot owner for contexts
-            if 8 in range(lower_bound, higher_bound + 1) and ctx.author.id in CONST.SYSADMIN_IDS:
+        # Get the user ID from the context object or interaction object
+        user_id = ctx.author.id if ctx else interaction.user.id if interaction else None
+
+        if user_id:
+            # Check if the user is a sysadmin or the bot owner
+            if 8 in range(lower_bound, higher_bound + 1) and user_id in CONST.SYSADMIN_IDS:
                 logger.debug("User is a sysadmin")
                 return True
-            if 9 in range(lower_bound, higher_bound + 1) and ctx.author.id == CONST.BOT_OWNER_ID:
-                logger.debug("User is the bot owner")
-                return True
-        else:
-            # Check if the author is a sysadmin or the bot owner for interactions
-            if interaction and 8 in range(lower_bound, higher_bound + 1) and interaction.user.id in CONST.SYSADMIN_IDS:
-                logger.debug("User is a sysadmin")
-                return True
-            if interaction and 9 in range(lower_bound, higher_bound + 1) and interaction.user.id == CONST.BOT_OWNER_ID:
+            if 9 in range(lower_bound, higher_bound + 1) and user_id == CONST.BOT_OWNER_ID:
                 logger.debug("User is the bot owner")
                 return True
 
@@ -112,8 +108,6 @@ async def has_permission(
         logger.error(f"Exception while checking sysadmin or bot owner status: {e}")
 
     logger.debug("All checks failed, returning False")
-
-    # If all checks fail, return False
     return False
 
 

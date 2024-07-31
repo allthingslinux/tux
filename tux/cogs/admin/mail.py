@@ -6,6 +6,7 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+import tux.utils.checks as checks
 from tux.utils.constants import Constants as CONST
 
 # TODO: Refactor Mail cog
@@ -37,6 +38,7 @@ class Mail(commands.Cog):
 
     @mail.command(name="register")
     @app_commands.checks.has_any_role("Root", "Admin", "Mod")
+    @checks.ac_has_pl(5)
     async def register(
         self,
         interaction: discord.Interaction,

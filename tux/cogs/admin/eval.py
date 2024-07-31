@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+import tux.utils.checks as checks
 from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import EmbedCreator
 
@@ -47,7 +48,8 @@ class Eval(commands.Cog):
         usage="$eval [expression]",
     )
     @commands.guild_only()
-    async def run(self, ctx: commands.Context[commands.Bot], *, cmd: str) -> None:
+    @checks.has_pl(9)
+    async def eval(self, ctx: commands.Context[commands.Bot], *, cmd: str) -> None:
         """
         Evaluate a Python expression. (Owner only)
 

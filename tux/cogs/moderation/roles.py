@@ -3,6 +3,8 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+import tux.utils.checks as checks
+
 
 class Roles(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -11,7 +13,8 @@ class Roles(commands.Cog):
     roles = app_commands.Group(name="roles", description="Commands for managing roles.")
 
     @roles.command(name="toggle")
-    @commands.has_permissions(manage_roles=True)
+    @app_commands.guild_only()
+    @checks.ac_has_pl(3)
     async def toggle_role(self, interaction: discord.Interaction, user: discord.Member, role: discord.Role) -> None:
         """
         Toggle a role for a user.

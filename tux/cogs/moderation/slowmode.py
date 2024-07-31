@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+import tux.utils.checks as checks
+
 
 class Slowmode(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
@@ -13,6 +15,7 @@ class Slowmode(commands.Cog):
         usage="$slowmode [delay: int] <channel>",
     )
     @commands.guild_only()
+    @checks.has_pl(2)
     async def slowmode(
         self,
         ctx: commands.Context[commands.Bot],
