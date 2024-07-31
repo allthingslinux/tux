@@ -61,4 +61,4 @@ class ModerationCogBase(commands.Cog):
                 )
             except (discord.Forbidden, discord.HTTPException) as e:
                 logger.warning(f"Failed to send DM to {target}. {e}")
-                await ctx.send(f"Failed to send DM to {target}. {e}", delete_after=10, ephemeral=True)
+                await ctx.send(f"Failed to send DM to {target}. {e}", delete_after=30, ephemeral=True)

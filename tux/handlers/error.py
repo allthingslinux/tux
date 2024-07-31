@@ -121,7 +121,7 @@ class ErrorHandler(commands.Cog):
 
         if isinstance(error, commands.CheckFailure):
             message = error_map.get(type(error), self.error_message).format(error=error, ctx=ctx)
-            await ctx.send(content=message, ephemeral=True, delete_after=10)
+            await ctx.send(content=message, ephemeral=True, delete_after=30)
             return
 
         # If the error is CommandNotFound, return
@@ -137,7 +137,7 @@ class ErrorHandler(commands.Cog):
         # Get the error message and send it to the user
         message: str = self.get_error_message(error, ctx)
 
-        await ctx.send(content=message, ephemeral=True, delete_after=10)
+        await ctx.send(content=message, ephemeral=True, delete_after=30)
 
         # Log the error traceback if it's not in the error map
         if type(error) not in error_map:

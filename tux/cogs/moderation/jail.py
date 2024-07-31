@@ -94,27 +94,27 @@ class Jail(ModerationCogBase):
             logger.warning("Jail command used outside of a guild context.")
             return
         if target == ctx.author:
-            await ctx.send("You cannot jail yourself.", delete_after=10, ephemeral=True)
+            await ctx.send("You cannot jail yourself.", delete_after=30, ephemeral=True)
             return
         if target.top_role >= moderator.top_role:
-            await ctx.send("You cannot jail a user with a higher or equal role.", delete_after=10, ephemeral=True)
+            await ctx.send("You cannot jail a user with a higher or equal role.", delete_after=30, ephemeral=True)
             return
         if target == ctx.guild.owner:
-            await ctx.send("You cannot jail the server owner.", delete_after=10, ephemeral=True)
+            await ctx.send("You cannot jail the server owner.", delete_after=30, ephemeral=True)
             return
 
         jail_role = await self.config.get_jail_role(ctx.guild.id)
         if not jail_role:
-            await ctx.send("No jail role has been set up for this server.", delete_after=10, ephemeral=True)
+            await ctx.send("No jail role has been set up for this server.", delete_after=30, ephemeral=True)
             return
 
         jail_role = ctx.guild.get_role(jail_role)
         if not jail_role:
-            await ctx.send("The jail role has been deleted.", delete_after=10, ephemeral=True)
+            await ctx.send("The jail role has been deleted.", delete_after=30, ephemeral=True)
 
         jail_channel = await self.config.get_jail_channel(ctx.guild.id)
         if not jail_channel:
-            await ctx.send("No jail channel has been set up for this server.", delete_after=10, ephemeral=True)
+            await ctx.send("No jail channel has been set up for this server.", delete_after=30, ephemeral=True)
             return
 
         # Get the target roles that are manageable
@@ -143,12 +143,12 @@ class Jail(ModerationCogBase):
                 # Add the jail role
                 await target.add_roles(jail_role, reason=flags.reason)
             else:
-                await ctx.send("An error occurred while trying to jail the user.", delete_after=10, ephemeral=True)
+                await ctx.send("An error occurred while trying to jail the user.", delete_after=30, ephemeral=True)
                 return
 
         except (discord.Forbidden, discord.HTTPException) as e:
             logger.error(f"Failed to jail {target}. {e}")
-            await ctx.send(f"Failed to jail {target}. {e}", delete_after=10, ephemeral=True)
+            await ctx.send(f"Failed to jail {target}. {e}", delete_after=30, ephemeral=True)
             return
 
         case = await self.db.case.insert_case(
@@ -201,7 +201,7 @@ class Jail(ModerationCogBase):
             )
 
         await self.send_embed(ctx, embed, log_type="mod")
-        await ctx.reply(embed=embed, delete_after=10, ephemeral=True)
+        await ctx.reply(embed=embed, delete_after=30, ephemeral=True)
 
 
 async def setup(bot: commands.Bot) -> None:

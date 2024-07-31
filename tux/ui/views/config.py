@@ -27,7 +27,7 @@ class ConfigSetPrivateLogs(discord.ui.View):
         await interaction.response.send_message(
             f"Private log channel set to {select.values[0]}.",
             ephemeral=True,
-            delete_after=5,
+            delete_after=30,
         )
 
     @discord.ui.select(
@@ -47,7 +47,7 @@ class ConfigSetPrivateLogs(discord.ui.View):
         await interaction.response.send_message(
             f"Report log channel set to {select.values[0]}.",
             ephemeral=True,
-            delete_after=5,
+            delete_after=30,
         )
 
     @discord.ui.select(
@@ -67,7 +67,7 @@ class ConfigSetPrivateLogs(discord.ui.View):
         await interaction.response.send_message(
             f"Dev log channel set to {select.values[0]}.",
             ephemeral=True,
-            delete_after=5,
+            delete_after=30,
         )
 
 
@@ -93,7 +93,7 @@ class ConfigSetPublicLogs(discord.ui.View):
         await interaction.response.send_message(
             f"Mod log channel set to {select.values[0]}.",
             ephemeral=True,
-            delete_after=5,
+            delete_after=30,
         )
 
     @discord.ui.select(
@@ -113,7 +113,7 @@ class ConfigSetPublicLogs(discord.ui.View):
         await interaction.response.send_message(
             f"Audit log channel set to {select.values[0]}.",
             ephemeral=True,
-            delete_after=5,
+            delete_after=30,
         )
 
     @discord.ui.select(
@@ -133,7 +133,7 @@ class ConfigSetPublicLogs(discord.ui.View):
         await interaction.response.send_message(
             f"Join log channel set to {select.values[0]}.",
             ephemeral=True,
-            delete_after=5,
+            delete_after=30,
         )
 
 
@@ -159,7 +159,7 @@ class ConfigSetChannels(discord.ui.View):
         await interaction.response.send_message(
             f"Jail channel set to {select.values[0]}.",
             ephemeral=True,
-            delete_after=5,
+            delete_after=30,
         )
 
     @discord.ui.select(
@@ -179,7 +179,7 @@ class ConfigSetChannels(discord.ui.View):
         await interaction.response.send_message(
             f"Starboard channel set to {select.values[0]}.",
             ephemeral=True,
-            delete_after=5,
+            delete_after=30,
         )
 
     @discord.ui.select(
@@ -199,5 +199,5 @@ class ConfigSetChannels(discord.ui.View):
         await interaction.response.send_message(
             f"General channel set to {select.values[0]}.",
             ephemeral=True,
-            delete_after=5,
+            delete_after=30,
         )

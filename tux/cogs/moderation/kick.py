@@ -55,13 +55,13 @@ class Kick(ModerationCogBase):
             logger.warning("Kick command used outside of a guild context.")
             return
         if target == ctx.author:
-            await ctx.send("You cannot kick yourself.", delete_after=10, ephemeral=True)
+            await ctx.send("You cannot kick yourself.", delete_after=30, ephemeral=True)
             return
         if target.top_role >= moderator.top_role:
-            await ctx.send("You cannot kick a user with a higher or equal role.", delete_after=10, ephemeral=True)
+            await ctx.send("You cannot kick a user with a higher or equal role.", delete_after=30, ephemeral=True)
             return
         if target == ctx.guild.owner:
-            await ctx.send("You cannot kick the server owner.", delete_after=10, ephemeral=True)
+            await ctx.send("You cannot kick the server owner.", delete_after=30, ephemeral=True)
             return
 
         try:
@@ -70,7 +70,7 @@ class Kick(ModerationCogBase):
 
         except (discord.Forbidden, discord.HTTPException) as e:
             logger.error(f"Failed to kick {target}. {e}")
-            await ctx.send(f"Failed to kick {target}. {e}", delete_after=10, ephemeral=True)
+            await ctx.send(f"Failed to kick {target}. {e}", delete_after=30, ephemeral=True)
             return
 
         case = await self.db.case.insert_case(
@@ -122,7 +122,7 @@ class Kick(ModerationCogBase):
             )
 
         await self.send_embed(ctx, embed, log_type="mod")
-        await ctx.reply(embed=embed, delete_after=10, ephemeral=True)
+        await ctx.reply(embed=embed, delete_after=30, ephemeral=True)
 
 
 async def setup(bot: commands.Bot) -> None:

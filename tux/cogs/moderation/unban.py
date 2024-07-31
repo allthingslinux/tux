@@ -58,14 +58,14 @@ class Unban(ModerationCogBase):
         user = await commands.UserConverter().convert(ctx, flags.username_or_id)
 
         if user not in banned_users:
-            await ctx.reply(f"{user} was not found in the guild ban list.", delete_after=10, ephemeral=True)
+            await ctx.reply(f"{user} was not found in the guild ban list.", delete_after=30, ephemeral=True)
             return
 
         try:
             await ctx.guild.unban(user, reason=flags.reason)
         except (discord.Forbidden, discord.HTTPException, discord.NotFound) as e:
             logger.error(f"Failed to unban {user}. {e}")
-            await ctx.reply(f"Failed to unban {user}. {e}", delete_after=10, ephemeral=True)
+            await ctx.reply(f"Failed to unban {user}. {e}", delete_after=30, ephemeral=True)
             return
 
         case = await self.db.case.insert_case(
@@ -117,7 +117,7 @@ class Unban(ModerationCogBase):
             )
 
         await self.send_embed(ctx, embed, log_type="mod")
-        await ctx.reply(embed=embed, delete_after=10, ephemeral=True)
+        await ctx.reply(embed=embed, delete_after=30, ephemeral=True)
 
 
 async def setup(bot: commands.Bot) -> None:

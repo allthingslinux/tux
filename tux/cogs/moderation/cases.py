@@ -137,13 +137,13 @@ class Cases(ModerationCogBase):
 
         # If the command is used via prefix, let the user know to use the slash command
         if ctx.message.content.startswith(str(ctx.prefix)):
-            await ctx.reply("Please use the slash command for this command.", delete_after=10, ephemeral=True)
+            await ctx.reply("Please use the slash command for this command.", delete_after=30, ephemeral=True)
             return
 
         case = await self.db.case.get_case_by_number(ctx.guild.id, case_number)
 
         if not case:
-            await ctx.reply("Case not found.", delete_after=10, ephemeral=True)
+            await ctx.reply("Case not found.", delete_after=30, ephemeral=True)
             return
 
         if case.case_number is not None:
@@ -171,7 +171,7 @@ class Cases(ModerationCogBase):
 
         case = await self.db.case.get_case_by_number(ctx.guild.id, case_number)
         if not case:
-            await ctx.reply("Case not found.", delete_after=10)
+            await ctx.reply("Case not found.", delete_after=30)
             return
 
         target = await commands.MemberConverter().convert(ctx, str(case.case_target_id))
@@ -239,7 +239,7 @@ class Cases(ModerationCogBase):
             return
 
         if case.case_number is None:
-            await ctx.reply("Failed to update case.", delete_after=10)
+            await ctx.reply("Failed to update case.", delete_after=30)
             return
 
         updated_case = await self.db.case.update_case(
@@ -250,7 +250,7 @@ class Cases(ModerationCogBase):
         )
 
         if updated_case is None:
-            await ctx.reply("Failed to update case.", delete_after=10)
+            await ctx.reply("Failed to update case.", delete_after=30)
             return
 
         target = await commands.MemberConverter().convert(ctx, str(updated_case.case_target_id))
@@ -303,7 +303,7 @@ class Cases(ModerationCogBase):
                 color=CONST.EMBED_COLORS["ERROR"],
             )
 
-        await ctx.reply(embed=embed, delete_after=10, ephemeral=True)
+        await ctx.reply(embed=embed, delete_after=30, ephemeral=True)
 
     async def _handle_case_list_response(
         self,
@@ -319,7 +319,7 @@ class Cases(ModerationCogBase):
                 description="No cases found.",
                 color=CONST.EMBED_COLORS["ERROR"],
             )
-            await ctx.reply(embed=embed, delete_after=10, ephemeral=True)
+            await ctx.reply(embed=embed, delete_after=30, ephemeral=True)
             return
 
         cases_per_page = 10

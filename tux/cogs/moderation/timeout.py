@@ -95,16 +95,16 @@ class Timeout(ModerationCogBase):
             logger.warning("Timeout command used outside of a guild context.")
             return
         if target == ctx.author:
-            await ctx.reply("You cannot timeout yourself.", delete_after=10, ephemeral=True)
+            await ctx.reply("You cannot timeout yourself.", delete_after=30, ephemeral=True)
             return
         if target.top_role >= moderator.top_role:
-            await ctx.reply("You cannot timeout a user with a higher or equal role.", delete_after=10, ephemeral=True)
+            await ctx.reply("You cannot timeout a user with a higher or equal role.", delete_after=30, ephemeral=True)
             return
         if target == ctx.guild.owner:
-            await ctx.reply("You cannot timeout the server owner.", delete_after=10, ephemeral=True)
+            await ctx.reply("You cannot timeout the server owner.", delete_after=30, ephemeral=True)
             return
         if target.is_timed_out():
-            await ctx.reply(f"{target} is already timed out.", delete_after=10, ephemeral=True)
+            await ctx.reply(f"{target} is already timed out.", delete_after=30, ephemeral=True)
             return
 
         duration = parse_time_string(flags.duration)
@@ -113,7 +113,7 @@ class Timeout(ModerationCogBase):
             await self.send_dm(ctx, flags.silent, target, flags.reason, f"timed out for {flags.duration}")
             await target.timeout(duration, reason=flags.reason)
         except discord.DiscordException as e:
-            await ctx.reply(f"Failed to timeout {target}. {e}", delete_after=10, ephemeral=True)
+            await ctx.reply(f"Failed to timeout {target}. {e}", delete_after=30, ephemeral=True)
             return
 
         case = await self.db.case.insert_case(
@@ -167,7 +167,7 @@ class Timeout(ModerationCogBase):
             )
 
         await self.send_embed(ctx, embed, log_type="mod")
-        await ctx.reply(embed=embed, delete_after=10, ephemeral=True)
+        await ctx.reply(embed=embed, delete_after=30, ephemeral=True)
 
 
 async def setup(bot: commands.Bot) -> None:

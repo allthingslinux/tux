@@ -51,7 +51,7 @@ class Snippets(commands.Cog):
                 description="No snippets found.",
                 ctx=ctx,
             )
-            await ctx.send(embed=embed, delete_after=5)
+            await ctx.send(embed=embed, delete_after=30)
             return
 
         menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed)
@@ -124,7 +124,7 @@ class Snippets(commands.Cog):
                 description="Snippet not found.",
                 ctx=ctx,
             )
-            await ctx.send(embed=embed, delete_after=5)
+            await ctx.send(embed=embed, delete_after=30)
             return
 
         # Check if the author of the snippet is the same as the user who wants to delete it and if theres no author don't allow deletion
@@ -203,7 +203,7 @@ class Snippets(commands.Cog):
                 description="Snippet not found.",
                 ctx=ctx,
             )
-            await ctx.send(embed=embed, delete_after=5)
+            await ctx.send(embed=embed, delete_after=30)
             return
 
         text = f"`/snippets/{snippet.snippet_name}.txt` || {snippet.snippet_content}"
@@ -240,7 +240,7 @@ class Snippets(commands.Cog):
     #             description="Snippet not found.",
     #             ctx=ctx,
     #         )
-    #         await ctx.send(embed=embed, delete_after=5)
+    #         await ctx.send(embed=embed, delete_after=30)
     #         return
 
     #     author = self.bot.get_user(snippet.snippet_user_id) or ctx.author

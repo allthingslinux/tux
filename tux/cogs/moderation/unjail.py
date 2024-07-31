@@ -46,41 +46,41 @@ class Unjail(ModerationCogBase):
             logger.warning("Unjail command used outside of a guild context.")
             return
         if target == ctx.author:
-            await ctx.send("You cannot unjail yourself.", delete_after=10, ephemeral=True)
+            await ctx.send("You cannot unjail yourself.", delete_after=30, ephemeral=True)
             return
         if target.top_role >= moderator.top_role:
-            await ctx.send("You cannot unjail a user with a higher or equal role.", delete_after=10, ephemeral=True)
+            await ctx.send("You cannot unjail a user with a higher or equal role.", delete_after=30, ephemeral=True)
             return
         if target == ctx.guild.owner:
-            await ctx.send("You cannot unjail the server owner.", delete_after=10, ephemeral=True)
+            await ctx.send("You cannot unjail the server owner.", delete_after=30, ephemeral=True)
             return
 
         # Convert the jail role ID to a discord.Role object
         jail_role = await self.config.get_jail_role(ctx.guild.id)
         if not jail_role:
-            await ctx.send("No jail role has been set up for this server.", delete_after=10, ephemeral=True)
+            await ctx.send("No jail role has been set up for this server.", delete_after=30, ephemeral=True)
             return
 
         jail_role = await commands.RoleConverter().convert(ctx, str(jail_role))
         if not jail_role:
-            await ctx.send("The jail role has been deleted.", delete_after=10, ephemeral=True)
+            await ctx.send("The jail role has been deleted.", delete_after=30, ephemeral=True)
             return
 
         # Check if the target is jailed or not
         if jail_role not in target.roles:
-            await ctx.send("The user is not jailed.", delete_after=10, ephemeral=True)
+            await ctx.send("The user is not jailed.", delete_after=30, ephemeral=True)
             return
 
         # Check if the jail channel is set up
         jail_channel = await self.config.get_jail_channel(ctx.guild.id)
         if not jail_channel:
-            await ctx.send("No jail channel has been set up for this server.", delete_after=10, ephemeral=True)
+            await ctx.send("No jail channel has been set up for this server.", delete_after=30, ephemeral=True)
             return
 
         # Get the last jail case for the target
         case = await self.db.case.get_last_jail_case_by_target_id(ctx.guild.id, target.id)
         if case is None:
-            await ctx.send("No jail case found for the user.", delete_after=10, ephemeral=True)
+            await ctx.send("No jail case found for the user.", delete_after=30, ephemeral=True)
             return
 
         # Remove the jail role from the target
@@ -92,7 +92,7 @@ class Unjail(ModerationCogBase):
         if previous_roles:
             await target.add_roles(*previous_roles, reason=flags.reason)
         else:
-            await ctx.send("No previous roles found for the user.", delete_after=10, ephemeral=True)
+            await ctx.send("No previous roles found for the user.", delete_after=30, ephemeral=True)
             return
 
         # Insert the unjail case to the database
@@ -145,7 +145,7 @@ class Unjail(ModerationCogBase):
             )
 
         await self.send_embed(ctx, embed, log_type="mod")
-        await ctx.reply(embed=embed, delete_after=10, ephemeral=True)
+        await ctx.reply(embed=embed, delete_after=30, ephemeral=True)
 
 
 async def setup(bot: commands.Bot) -> None:

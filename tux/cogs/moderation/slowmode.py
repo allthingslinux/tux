@@ -42,19 +42,19 @@ class Slowmode(commands.Cog):
         if channel is None:
             # Check if the current channel is a text channel
             if not isinstance(ctx.channel, discord.TextChannel | discord.Thread):
-                await ctx.reply("Invalid channel type, must be a text channel.", delete_after=10, ephemeral=True)
+                await ctx.reply("Invalid channel type, must be a text channel.", delete_after=30, ephemeral=True)
                 return
             channel = ctx.channel
 
         if delay < 0 or delay > 21600:
-            await ctx.reply("The slowmode delay must be between 0 and 21600 seconds.", delete_after=10, ephemeral=True)
+            await ctx.reply("The slowmode delay must be between 0 and 21600 seconds.", delete_after=30, ephemeral=True)
 
         try:
             await channel.edit(slowmode_delay=delay)
-            await ctx.reply(f"Slowmode set to {delay} seconds in {channel.mention}.", delete_after=10, ephemeral=True)
+            await ctx.reply(f"Slowmode set to {delay} seconds in {channel.mention}.", delete_after=30, ephemeral=True)
 
         except Exception as error:
-            await ctx.reply(f"Failed to set slowmode. Error: {error}", delete_after=10, ephemeral=True)
+            await ctx.reply(f"Failed to set slowmode. Error: {error}", delete_after=30, ephemeral=True)
             logger.error(f"Failed to set slowmode. Error: {error}")
 
 
