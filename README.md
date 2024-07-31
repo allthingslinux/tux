@@ -46,6 +46,7 @@ Tux is a Discord bot for the All Things Linux Discord server. It is designed to 
 - Activity rotation
 - Custom help command
 - Configuration system
+- Dynamic role-based (access level) permission system
 
 ## Installation
 
@@ -86,12 +87,14 @@ Tux is a Discord bot for the All Things Linux Discord server. It is designed to 
     ```bash
     cp config/settings.json.example config/settings.json
     ```
-8. Run the sync command in the server to sync the slash command tree.
+8. Run the bot
+    ```bash
+    poetry run python tux/main.py
+    ```
+9. Run the sync command in the server to sync the slash command tree.
    ```
    {prefix}dev sync <server id>
    ```
-9. Review all useful CLI commands by visiting the [useful CLI commands](docs/CLI.md) file.
    
-
 ## License
 This project is licensed under the terms of the The GNU General Public License v3.0. See the [LICENSE](LICENSE.md) file for details.
