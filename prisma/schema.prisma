@@ -10,12 +10,12 @@ datasource db {
   provider = "postgresql"
 
   // Uncomment the following lines to use a development database
-  url       = env("DEV_DATABASE_URL")
-  directUrl = env("DEV_DIRECT_URL")
+  // url       = env("DEV_DATABASE_URL")
+  // directUrl = env("DEV_DIRECT_URL")
 
   // Uncomment the following lines to use a production database
-  // url       = env("PROD_DATABASE_URL")
-  // directUrl = env("PROD_DIRECT_URL")
+  url       = env("PROD_DATABASE_URL")
+  directUrl = env("PROD_DIRECT_URL")
 }
 
 // Docs: https://prisma-client-py.readthedocs.io/en/stable/reference/client/

@@ -14,7 +14,6 @@ config = json.loads(config_file.read_text())
 
 class Constants:
     # Permission constants
-    ROLES: Final[dict[str, int]] = config["ROLES"]
     BOT_OWNER_ID: Final[int] = config["USER_IDS"]["BOT_OWNER"]
     SYSADMIN_IDS: Final[list[int]] = config["USER_IDS"]["SYSADMINS"]
 
