@@ -1,20 +1,32 @@
+// Prisma Client Python is a next-generation ORM built on top of Prisma that has been designed from the ground up for ease of use and correctness. Prisma is a TypeScript ORM with zero-cost type safety for your database, although don't worry, Prisma Client Python interfaces with Prisma using Rust, you don't need Node or TypeScript.
+
+// For more information on how to use Prisma Client Python, please refer to the documentation:
+// https://www.prisma.io/docs/prisma-client-py
+
+// For more information on the Prisma schema, please refer to the documentation:
+// https://www.prisma.io/docs/orm/prisma-schema
+
 datasource db {
-  provider  = "postgresql"
-  // url       = env("PROD_DATABASE_URL")
-  // directUrl = env("PROD_DIRECT_URL")
+  provider = "postgresql"
+
+  // Uncomment the following lines to use a development database
   url       = env("DEV_DATABASE_URL")
   directUrl = env("DEV_DIRECT_URL")
+
+  // Uncomment the following lines to use a production database
+  // url       = env("PROD_DATABASE_URL")
+  // directUrl = env("PROD_DIRECT_URL")
 }
 
+// Docs: https://prisma-client-py.readthedocs.io/en/stable/reference/client/
+// Docs: https://prisma-client-py.readthedocs.io/en/stable/reference/config/#recursive-type-depth
 generator client {
-  // Prisma Python client provider
   provider             = "prisma-client-py"
-  // Asynchronous interface to use
   interface            = "asyncio"
-  // Recursive type depth not limited (-1)
   recursive_type_depth = -1
 }
 
+// Docs: https://www.prisma.io/docs/orm/reference/prisma-schema-reference#enum
 enum CaseType {
   BAN
   UNBAN
@@ -28,6 +40,8 @@ enum CaseType {
   UNJAIL
 }
 
+// Docs: https://www.prisma.io/docs/orm/prisma-schema/data-model/models#defining-models
+// Docs: https://www.prisma.io/docs/orm/prisma-schema/data-model/models#defining-attributes
 model Guild {
   guild_id        BigInt        @id
   guild_joined_at DateTime?     @default(now())
@@ -73,7 +87,7 @@ model GuildConfig {
 
 model Case {
   case_id           BigInt    @id @default(autoincrement())
-  case_status       Boolean?  @default(true) // True for active, false for inactive
+  case_status       Boolean?  @default(true)
   case_type         CaseType
   case_reason       String
   case_moderator_id BigInt
