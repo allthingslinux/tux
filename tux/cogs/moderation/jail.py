@@ -27,7 +27,6 @@ class Jail(ModerationCogBase):
 
         Parameters
         ----------
-
         interaction : discord.Interaction
             The discord interaction object.
         """
@@ -35,33 +34,46 @@ class Jail(ModerationCogBase):
         if interaction.guild is None:
             return
 
-        jail_role = await self.config.get_guild_config_field_value(interaction.guild.id, "jail_role_id")
-        if not jail_role:
+        jail_role_id = await self.config.get_guild_config_field_value(interaction.guild.id, "jail_role_id")
+        if not jail_role_id:
             await interaction.response.send_message("No jail role has been set up for this server.", ephemeral=True)
             return
 
-        jail_role = interaction.guild.get_role(jail_role)
+        jail_role = interaction.guild.get_role(jail_role_id)
         if not jail_role:
             await interaction.response.send_message("The jail role has been deleted.", ephemeral=True)
             return
 
-        jail_channel = await self.config.get_guild_config_field_value(interaction.guild.id, "jail_channel_id")
-        if not jail_channel:
+        jail_channel_id = await self.config.get_guild_config_field_value(interaction.guild.id, "jail_channel_id")
+        if not jail_channel_id:
             await interaction.response.send_message("No jail channel has been set up for this server.", ephemeral=True)
             return
 
         await interaction.response.defer(ephemeral=True)
 
-        for channel in interaction.guild.channels:
-            if isinstance(channel, discord.TextChannel | discord.VoiceChannel | discord.ForumChannel):
-                await channel.set_permissions(jail_role, send_messages=False, read_messages=False)
-
-                if channel.id == jail_channel:
-                    await channel.set_permissions(jail_role, send_messages=True, read_messages=True)
-
-                await interaction.edit_original_response(content=f"Setting up permissions for {channel.name}.")
+        await self._set_permissions_for_channels(interaction, jail_role, jail_channel_id)
 
         await interaction.edit_original_response(content="Permissions have been set up for the jail role.")
+
+    async def _set_permissions_for_channels(
+        self,
+        interaction: discord.Interaction,
+        jail_role: discord.Role,
+        jail_channel_id: int,
+    ) -> None:
+        if interaction.guild is None:
+            return
+
+        for channel in interaction.guild.channels:
+            if not isinstance(channel, discord.TextChannel | discord.VoiceChannel | discord.ForumChannel):
+                continue
+
+            await channel.set_permissions(jail_role, send_messages=False, read_messages=False)
+
+            if channel.id == jail_channel_id:
+                await channel.set_permissions(jail_role, send_messages=True, read_messages=True)
+
+            await interaction.edit_original_response(content=f"Setting up permissions for {channel.name}.")
 
     @commands.hybrid_command(
         name="jail",
@@ -90,81 +102,27 @@ class Jail(ModerationCogBase):
         """
         moderator = await commands.MemberConverter().convert(ctx, str(ctx.author.id))
 
-        if ctx.guild is None:
+        if not ctx.guild:
             logger.warning("Jail command used outside of a guild context.")
             return
-        if target == ctx.author:
-            await ctx.send("You cannot jail yourself.", delete_after=30, ephemeral=True)
-            return
-        if target.top_role >= moderator.top_role:
-            await ctx.send("You cannot jail a user with a higher or equal role.", delete_after=30, ephemeral=True)
-            return
-        if target == ctx.guild.owner:
-            await ctx.send("You cannot jail the server owner.", delete_after=30, ephemeral=True)
+
+        if await self._cannot_jail(ctx, target, moderator):
             return
 
-        jail_role = await self.config.get_jail_role(ctx.guild.id)
-        if not jail_role:
+        jail_role_id = await self.config.get_jail_role(ctx.guild.id)
+        if not jail_role_id:
             await ctx.send("No jail role has been set up for this server.", delete_after=30, ephemeral=True)
             return
 
-        jail_role = ctx.guild.get_role(jail_role)
+        jail_role = ctx.guild.get_role(jail_role_id)
         if not jail_role:
             await ctx.send("The jail role has been deleted.", delete_after=30, ephemeral=True)
-
-        jail_channel = await self.config.get_jail_channel(ctx.guild.id)
-        if not jail_channel:
-            await ctx.send("No jail channel has been set up for this server.", delete_after=30, ephemeral=True)
             return
 
-        # Get the target roles that are manageable
-        target_roles = [
-            role
-            for role in target.roles
-            if not (
-                role.is_bot_managed()
-                or role.is_premium_subscriber()
-                or role.is_integration()
-                or role.is_default()
-                or role == jail_role
-            )
-            and role.is_assignable()
-        ]
+        target_roles: list[discord.Role] = self._get_manageable_roles(target, jail_role)
+        case_target_roles = [role.id for role in target_roles]
 
-        if not target_roles:
-            try:
-                if jail_role:
-                    # Send a DM to the target if the silent flag is not set
-                    await self.send_dm(ctx, flags.silent, target, flags.reason, "jailed")
-                    # Add the jail role
-                    await target.add_roles(jail_role, reason=flags.reason)
-            except (discord.Forbidden, discord.HTTPException) as e:
-                logger.error(f"Failed to jail {target}. {e}")
-                await ctx.send(f"Failed to jail {target}. {e}", delete_after=30, ephemeral=True)
-                return
-
-            case_target_roles = []
-
-        else:
-            # Get the target role IDs for the case
-            case_target_roles = [role.id for role in target_roles]
-
-            try:
-                if target_roles and jail_role:
-                    # Send a DM to the target if the silent flag is not set
-                    await self.send_dm(ctx, flags.silent, target, flags.reason, "jailed")
-                    # Remove all roles
-                    await target.remove_roles(*target_roles, reason=flags.reason)
-                    # Add the jail role
-                    await target.add_roles(jail_role, reason=flags.reason)
-                else:
-                    await ctx.send("An error occurred while trying to jail the user.", delete_after=30, ephemeral=True)
-                    return
-
-            except (discord.Forbidden, discord.HTTPException) as e:
-                logger.error(f"Failed to jail {target}. {e}")
-                await ctx.send(f"Failed to jail {target}. {e}", delete_after=30, ephemeral=True)
-                return
+        await self._jail_user(ctx, target, flags, jail_role, target_roles)
 
         case = await self.db.case.insert_case(
             guild_id=ctx.guild.id,
@@ -177,6 +135,64 @@ class Jail(ModerationCogBase):
 
         await self.handle_case_response(ctx, case, "created", flags.reason, target)
 
+    async def _cannot_jail(
+        self,
+        ctx: commands.Context[commands.Bot],
+        target: discord.Member,
+        moderator: discord.Member,
+    ) -> bool:
+        if ctx.guild is None:
+            logger.warning("Jail command used outside of a guild context.")
+            return True
+
+        if target == ctx.author:
+            await ctx.send("You cannot jail yourself.", delete_after=30, ephemeral=True)
+            return True
+
+        if target.top_role >= moderator.top_role:
+            await ctx.send("You cannot jail a user with a higher or equal role.", delete_after=30, ephemeral=True)
+            return True
+
+        if target == ctx.guild.owner:
+            await ctx.send("You cannot jail the server owner.", delete_after=30, ephemeral=True)
+            return True
+
+        return False
+
+    def _get_manageable_roles(self, target: discord.Member, jail_role: discord.Role) -> list[discord.Role]:
+        return [
+            role
+            for role in target.roles
+            if not (
+                role.is_bot_managed()
+                or role.is_premium_subscriber()
+                or role.is_integration()
+                or role.is_default()
+                or role == jail_role
+            )
+            and role.is_assignable()
+        ]
+
+    async def _jail_user(
+        self,
+        ctx: commands.Context[commands.Bot],
+        target: discord.Member,
+        flags: JailFlags,
+        jail_role: discord.Role,
+        target_roles: list[discord.Role],
+    ) -> None:
+        try:
+            await self.send_dm(ctx, flags.silent, target, flags.reason, "jailed")
+
+            if target_roles:
+                await target.remove_roles(*target_roles, reason=flags.reason)
+            await target.add_roles(jail_role, reason=flags.reason)
+
+        except (discord.Forbidden, discord.HTTPException) as e:
+            logger.error(f"Failed to jail {target}. {e}")
+            await ctx.send(f"Failed to jail {target}. {e}", delete_after=30, ephemeral=True)
+            return
+
     async def handle_case_response(
         self,
         ctx: commands.Context[commands.Bot],
@@ -186,10 +202,8 @@ class Jail(ModerationCogBase):
         target: discord.Member | discord.User,
         previous_reason: str | None = None,
     ) -> None:
-        moderator = ctx.author
-
         fields = [
-            ("Moderator", f"__{moderator}__\n`{moderator.id}`", True),
+            ("Moderator", f"__{ctx.author}__\n`{ctx.author.id}`", True),
             ("Target", f"__{target}__\n`{target.id}`", True),
             ("Reason", f"> {reason}", False),
         ]
@@ -197,26 +211,31 @@ class Jail(ModerationCogBase):
         if previous_reason:
             fields.append(("Previous Reason", f"> {previous_reason}", False))
 
-        if case is not None:
-            embed = await self.create_embed(
-                ctx,
-                title=f"Case #{case.case_number} ({case.case_type}) {action}",
-                fields=fields,
-                color=CONST.EMBED_COLORS["CASE"],
-                icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
-            )
-            embed.set_thumbnail(url=target.avatar)
-        else:
-            embed = await self.create_embed(
-                ctx,
-                title=f"Case {action} ({CaseType.JAIL})",
-                fields=fields,
-                color=CONST.EMBED_COLORS["CASE"],
-                icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
-            )
+        embed = await self._create_case_embed(ctx, case, action, fields, target)
 
         await self.send_embed(ctx, embed, log_type="mod")
         await ctx.reply(embed=embed, delete_after=30, ephemeral=True)
+
+    async def _create_case_embed(
+        self,
+        ctx: commands.Context[commands.Bot],
+        case: Case | None,
+        action: str,
+        fields: list[tuple[str, str, bool]],
+        target: discord.Member | discord.User,
+    ) -> discord.Embed:
+        title = f"Case #{case.case_number} ({case.case_type}) {action}" if case else f"Case {action} ({CaseType.JAIL})"
+
+        embed = await self.create_embed(
+            ctx,
+            title=title,
+            fields=fields,
+            color=CONST.EMBED_COLORS["CASE"],
+            icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
+        )
+
+        embed.set_thumbnail(url=target.avatar)
+        return embed
 
 
 async def setup(bot: commands.Bot) -> None:
