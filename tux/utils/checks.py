@@ -17,63 +17,72 @@ async def has_permission(
     lower_bound: int,
     higher_bound: int | None = None,
 ) -> bool:
+    """
+    Check if a user has a permission level.
+
+    Parameters
+    ----------
+    source : commands.Context[commands.Bot] | discord.Interaction
+        The source object for the command.
+    lower_bound : int
+        The lower bound of the permission level.
+    higher_bound : int | None, optional
+        The higher bound of the permission level, by default None.
+
+    Returns
+    -------
+    bool
+        Whether the user has the permission level.
+    """
+
+    # If the higher bound is not set, set it to the lower bound
     if higher_bound is None:
         higher_bound = lower_bound
 
+    # If the source is a context object and the guild is None, return False if the lower bound is not 0
     if source.guild is None:
         logger.debug("Guild is None, returning False if lower bound is not 0")
         return lower_bound == 0
 
+    # Determine the source type
     if isinstance(source, commands.Context):
-        logger.debug(f"Checking permissions for context-based command by {source.author}")
         ctx, interaction = source, None
     else:
-        logger.debug(f"Checking permissions for interaction-based command by {source.user}")
         interaction, ctx = source, None
 
+    # Initialize the list of roles to an empty list to avoid type errors
     roles: list[Any] = []
+
     try:
-        # Single level and not sysadmin/bot owner
+        # Single level check
         if higher_bound == lower_bound:
-            logger.debug(f"Getting role id for permission level {lower_bound}")
             role_id = await get_perm_level_role_id(source, f"perm_level_{lower_bound}_role_id")
-            logger.debug(f"Received role ID {role_id} for level {lower_bound}")
             if role_id:
                 roles.append(role_id)
-                logger.debug(f"Added role ID {role_id} for permission level {lower_bound}")
             else:
                 logger.debug(f"No Role ID fetched for perm_level_{lower_bound}_role_id")
 
-        # Range checks
+        # Range check
         else:
-            logger.debug(f"Getting role ids for permission levels above and equal to {lower_bound}")
             fetched_roles = await get_perm_level_roles(source, lower_bound)
-            logger.debug(f"Roles fetched: {fetched_roles}")
             if fetched_roles:
                 roles.extend(fetched_roles)
-                logger.debug(f"Added roles {fetched_roles} for levels above and equal to {lower_bound}")
             else:
                 logger.debug(f"No roles fetched for levels above and equal to {lower_bound}")
 
-        logger.debug(f"Roles required for level {lower_bound} or higher: {roles}")
+        # Initialize the author/member object to None to avoid type errors
+        author: discord.Member | None = None
 
-        # Fetch author/member roles
+        # Fetch the author/member object from the context or interaction object
         if ctx and ctx.guild:
             author = await ctx.guild.fetch_member(ctx.author.id)
         elif interaction and interaction.guild:
             author = await interaction.guild.fetch_member(interaction.user.id)
 
-        logger.debug(f"Author's roles: {[role.id for role in author.roles]}")
-
-        # Author's role matching
-        is_authorized = any(role.id in roles for role in author.roles)
-        logger.debug(f"Role matching success: {is_authorized}")
-
+        # Check if the author has any of the roles in the list of roles
+        is_authorized = any(role.id in roles for role in author.roles) if author else False
         if is_authorized:
-            logger.debug(f"User has permission level {lower_bound} or higher")
             return True
-
-        logger.debug("No matching roles found for user")
 
     except Exception as e:
         logger.error(f"Exception in permission check: {e}")
@@ -83,6 +92,7 @@ async def has_permission(
 
     try:
         if ctx:
+            # Check if the author is a sysadmin or the bot owner for contexts
             if 8 in range(lower_bound, higher_bound + 1) and ctx.author.id in CONST.SYSADMIN_IDS:
                 logger.debug("User is a sysadmin")
                 return True
@@ -90,16 +100,20 @@ async def has_permission(
                 logger.debug("User is the bot owner")
                 return True
         else:
+            # Check if the author is a sysadmin or the bot owner for interactions
             if interaction and 8 in range(lower_bound, higher_bound + 1) and interaction.user.id in CONST.SYSADMIN_IDS:
                 logger.debug("User is a sysadmin")
                 return True
             if interaction and 9 in range(lower_bound, higher_bound + 1) and interaction.user.id == CONST.BOT_OWNER_ID:
                 logger.debug("User is the bot owner")
                 return True
+
     except Exception as e:
         logger.error(f"Exception while checking sysadmin or bot owner status: {e}")
 
     logger.debug("All checks failed, returning False")
+
+    # If all checks fail, return False
     return False
 
 
@@ -123,24 +137,34 @@ async def level_to_name(
     str
         The name of the permission level.
     """
+
+    # Check if the level is 8 or 9 and return the corresponding name
     if level in {8, 9}:
         return "Sys Admin" if level == 8 else "Bot Owner"
 
+    # Check if the source is a context object and the guild is not None
     if isinstance(source, commands.Context):
         ctx = source
         if ctx.guild is None:
             return "Error"
+
+        # Get the role ID from the database for the guild and the role field
         role_id = await db.get_perm_level_role(ctx.guild.id, f"perm_level_{level}_role_id")
         if role_id and (role := ctx.guild.get_role(role_id)):
             return f"{role.name} or higher" if or_higher else role.name
+
     else:
+        # Get the interaction object and check if it exists and is in a guild
         interaction = source
         if not interaction or not interaction.guild:
             return "Error"
+
+        # Get the role ID from the database for the guild and the role field
         role_id = await db.get_perm_level_role(interaction.guild.id, f"perm_level_{level}_role_id")
         if role_id and (role := interaction.guild.get_role(role_id)):
             return f"{role.name} or higher" if or_higher else role.name
 
+    # Dictionary of permission levels with the level as the key and the name as the value
     dictionary = {
         0: "Member",
         1: "Support",
@@ -154,6 +178,8 @@ async def level_to_name(
         9: "Bot Owner",
     }
 
+    # Return the name of the permission level from the dictionary
+    # or the name of the permission level with "or higher" appended if or_higher is True
     return f"{dictionary[level]} or higher" if or_higher else dictionary[level]
 
 
@@ -162,25 +188,46 @@ async def get_perm_level_role_id(
     level: str,
 ) -> int | None:
     """
-    Get the role id of the permission level.
+    Get the role ID for a permission level.
+
+    Parameters
+    ----------
+    source : commands.Context[commands.Bot] | discord.Interaction
+        The source object for the command.
+    level : str
+        The permission level to get the role ID for.
+
+    Returns
+    -------
+    int | None
+        The role ID for the permission level or None if it does not exist.
     """
+
+    # Initialize the role ID to None to avoid type errors
     role_id = None
+
     try:
+        # Check if the source is a context object and if the guild is not None
         if isinstance(source, commands.Context):
             ctx = source
             if ctx.guild is None:
                 return None
 
+            # Get the role ID from the database for the guild and the role field
             role_id = await db.get_perm_level_role(ctx.guild.id, level)
+
         else:
+            # Get the interaction object and check if it exists and is in a guild
             interaction = source
             if not interaction or not interaction.guild:
                 return None
 
+            # Get the role ID from the database for the guild and the role field
             role_id = await db.get_perm_level_role(interaction.guild.id, level)
-        logger.debug(f"Role ID retrieved for {level}: {role_id}")
+
     except Exception as e:
         logger.error(f"Error retrieving role ID for level {level}: {e}")
+
     return role_id
 
 
@@ -189,8 +236,22 @@ async def get_perm_level_roles(
     lower_bound: int,
 ) -> list[int] | None:
     """
-    Get the role ids of the permission levels between the lower and higher bounds.
+    Get the role IDs for a range of permission levels.
+
+    Parameters
+    ----------
+    source : commands.Context[commands.Bot] | discord.Interaction
+        The source object for the command.
+    lower_bound : int
+        The lower bound of the permission level.
+
+    Returns
+    -------
+    list[int] | None
+        The list of role IDs for the permission levels or None if they do not exist.
     """
+
+    # Dictionary of permission level roles with the level as the key and the field name as the value
     perm_level_roles: dict[int, str] = {
         0: "perm_level_0_role_id",
         1: "perm_level_1_role_id",
@@ -201,21 +262,24 @@ async def get_perm_level_roles(
         6: "perm_level_6_role_id",
         7: "perm_level_7_role_id",
     }
+
+    # Initialize the list of role IDs to an empty list to avoid type errors
     role_ids: list[int] = []
 
     try:
-        logger.debug(f"Starting to fetch roles for levels {lower_bound} to 7")
+        # For each level in the range of the lower bound to 8
         for level in range(lower_bound, 8):
-            role_field = perm_level_roles.get(level)
-            logger.debug(f"Fetching role_id for role_field: {role_field}")
-            if role_field:
+            # If the role field exists, get the role ID by the field name (e.g. perm_level_1_role_id)
+            if role_field := perm_level_roles.get(level):
+                # Get the role ID from the database for the guild and the role field
                 role_id = await db.get_guild_config_field_value(source.guild.id, role_field)  # type: ignore
-                logger.debug(f"Role ID retrieved for {role_field}: {role_id}")
+                # If the role ID exists, append it to the list of role IDs
                 if role_id:
                     role_ids.append(role_id)
                 else:
                     logger.debug(f"No role ID found for {role_field}, skipping")
-        logger.debug(f"Retrieved role_ids: {role_ids}")
+
+    # Catch any exceptions that occur while getting the role IDs
     except KeyError as e:
         logger.error(f"Key error when accessing role field: {e}")
     except AttributeError as e:
@@ -227,40 +291,119 @@ async def get_perm_level_roles(
     return role_ids
 
 
-# checks if the user has permission level 1 (Support)
 def has_pl(level: int, or_higher: bool = True):
+    """
+    Check if a user has a permission level via a decorator for prefix and hybrid commands.
+
+    Parameters
+    ----------
+    level : int
+        The permission level to check.
+    or_higher : bool, optional
+        Whether the user should have the permission level or higher, by default True.
+
+    Returns
+    -------
+    commands.check
+        The check for the permission level
+    """
+
     async def predicate(ctx: commands.Context[commands.Bot] | discord.Interaction) -> bool:
+        """
+        Check if the user has the permission level.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot] | discord.Interaction
+            The context or interaction object for the command.
+
+        Returns
+        -------
+        bool
+            Whether the user has the permission level.
+
+        Raises
+        ------
+        PermissionLevelError
+            If the user does not have the permission level.
+        """
+
         if isinstance(ctx, discord.Interaction):
-            logger.error("Interaction source is not supported for this check, please use ac_has_pl instead.")
-            msg = "Interaction source is not supported for this check, please use ac_has_pl instead. Please report this as a issue."
+            logger.error("Incorrect checks decorator used. Please use ac_has_pl instead.")
+            msg = "Incorrect checks decorator used. Please use ac_has_pl instead and report this as a issue."
+
             raise PermissionLevelError(msg)
+
         if not await has_permission(ctx, level, 9 if or_higher else None):
             logger.error(
-                f"{ctx.author} tried to run a command without permission. Command: {ctx.command}, Permission Level: {level} or higher: {or_higher}",
+                f"{ctx.author} tried to run a command without perms. Command: {ctx.command}, Perm Level: {level} or higher: {or_higher}",
             )
+
             raise PermissionLevelError(await level_to_name(ctx, level, or_higher))
+
         logger.info(
-            f"{ctx.author} ran command {ctx.command} with permission level {await level_to_name(ctx, level, or_higher)}",
+            f"{ctx.author} ran command {ctx.command} with perm level {await level_to_name(ctx, level, or_higher)}",
         )
+
         return True
 
     return commands.check(predicate)
 
 
 def ac_has_pl(level: int, or_higher: bool = True):
+    """
+    Check if a user has a permission level via a decorator for app commands.
+
+    Parameters
+    ----------
+    level : int
+        The permission level to check.
+    or_higher : bool, optional
+        Whether the user should have the permission level or higher, by default True.
+
+    Returns
+    -------
+    app_commands.check
+        The check for the permission level
+    """
+
     async def predicate(ctx: commands.Context[commands.Bot] | discord.Interaction) -> bool:
+        """
+        Check if the user has the permission level.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot] | discord.Interaction
+            The context or interaction object for the command.
+
+        Returns
+        -------
+        bool
+            Whether the user has the permission level.
+
+        Raises
+        ------
+        AppCommandPermissionLevelError
+            If the user does not have the permission level.
+        """
+
         if isinstance(ctx, commands.Context):
-            logger.error("Context source is not supported for this check, please use has_pl instead.")
-            msg = "Context source is not supported for this check, please use has_pl instead. Please report this as a issue."
+            logger.error("Incorrect checks decorator used. Please use has_pl instead.")
+            msg = "Incorrect checks decorator used. Please use has_pl instead and report this as a issue."
+
             raise AppCommandPermissionLevelError(msg)
+
         if not await has_permission(ctx, level, 9 if or_higher else None):
             logger.error(
-                f"{ctx.user} tried to run a command without permission. Command: {ctx.command}, Permission Level: {level} or higher: {or_higher}",
+                f"{ctx.user} tried to run a command without perms. Command: {ctx.command}, Perm Level: {level} or higher: {or_higher}",
             )
+
             raise AppCommandPermissionLevelError(await level_to_name(ctx, level, or_higher))
+
         logger.info(
-            f"{ctx.user} ran command {ctx.command} with permission level {await level_to_name(ctx, level, or_higher)}",
+            f"{ctx.user} ran command {ctx.command} with perm level {await level_to_name(ctx, level, or_higher)}",
         )
+
         return True
 
     return app_commands.check(predicate)
