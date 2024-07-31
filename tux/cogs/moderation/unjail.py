@@ -93,7 +93,6 @@ class Unjail(ModerationCogBase):
             await target.add_roles(*previous_roles, reason=flags.reason)
         else:
             await ctx.send("No previous roles found for the user.", delete_after=30, ephemeral=True)
-            return
 
         # Insert the unjail case to the database
         case = await self.db.case.insert_case(
