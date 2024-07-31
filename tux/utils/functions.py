@@ -6,6 +6,7 @@ import discord
 
 harmful_command_pattern = r"(?:sudo\s+|doas\s+|run0\s+)?rm\s+(-[frR]*|--force|--recursive|--no-preserve-root|\s+)*([/\∕]\s*|\*|/bin|/boot|/etc|/lib|/proc|/root|/sbin|/sys|/tmp|/usr|/var|/var/log|/network.|/system)(\s+--no-preserve-root|\s+\*)*|:\(\)\{ :|:& \};:"
 
+
 def is_harmful(command: str) -> bool:
     first_test: bool = re.search(harmful_command_pattern, command) is not None
     second_test: bool = re.search(r"rm.{0,5}[rfRF]", command) is not None
