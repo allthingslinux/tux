@@ -368,6 +368,9 @@ class Cases(ModerationCogBase):
 
         return embed
 
+    #     emojis are represented like <:name:id> with an a in front for animated(<a:name:id>)
+    # use \:emoji: to get this format
+    # for example\:python: sends <:python3:​232720527448342530>
     def _format_emoji(self, emoji: discord.Emoji) -> str:
         return f"<:{emoji.name}:{emoji.id}>"
 
