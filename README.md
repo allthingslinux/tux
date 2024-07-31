@@ -63,38 +63,50 @@ Tux is a Discord bot for the All Things Linux Discord server. It is designed to 
    ```bash
    git clone https://github.com/allthingslinux/tux && cd tux
    ```
+
 2. Install the dependencies
     ```bash
     poetry install
     ```
+
 3. Activate the virtual environment
     ```bash
     poetry shell
     ```
+
 4. Install the pre-commit hooks
     ```bash
     pre-commit install
     ```
+
 5. Generate the prisma client
     ```bash
     prisma generate
     ```
+
 6. Copy the `.env.example` file to `.env` and fill in the required values
     ```bash
     cp .env.example .env
     ```
+
 7. Copy the `config/settings.json.example` file to `config/settings.json` and fill in the required values
     ```bash
     cp config/settings.json.example config/settings.json
     ```
+
 8. Run the bot
     ```bash
     poetry run python tux/main.py
     ```
+
 9. Run the sync command in the server to sync the slash command tree.
    ```
    {prefix}dev sync <server id>
    ```
-   
+
+## Development Notes
+- Make sure to add your discord ID to the sys admin list if you are testing locally.
+- Make sure to set the prisma schema database ENV variable to the DEV database URL.
+
 ## License
 This project is licensed under the terms of the The GNU General Public License v3.0. See the [LICENSE](LICENSE.md) file for details.
