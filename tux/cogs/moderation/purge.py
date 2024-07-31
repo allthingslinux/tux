@@ -109,14 +109,14 @@ class Purge(commands.Cog):
 
         # Check if the limit is within the valid range
         if limit < 1 or limit > 500:
-            await ctx.reply("Invalid amount, maximum 500, minimum 1.", delete_after=30, ephemeral=True)
+            await ctx.send("Invalid amount, maximum 500, minimum 1.", delete_after=30, ephemeral=True)
             return
 
         # If the channel is not specified, default to the current channe
         if channel is None:
             # Check if the current channel is a text channel
             if not isinstance(ctx.channel, discord.TextChannel | discord.Thread):
-                await ctx.reply("Invalid channel type, must be a text channel.", delete_after=30, ephemeral=True)
+                await ctx.send("Invalid channel type, must be a text channel.", delete_after=30, ephemeral=True)
                 return
             channel = ctx.channel
 
@@ -125,7 +125,7 @@ class Purge(commands.Cog):
             await channel.purge(limit=limit + 1)
         except Exception as error:
             logger.error(f"An error occurred while purging messages: {error}")
-            await ctx.reply(f"An error occurred while purging messages: {error}", delete_after=30, ephemeral=True)
+            await ctx.send(f"An error occurred while purging messages: {error}", delete_after=30, ephemeral=True)
             return
 
         # Send a confirmation message

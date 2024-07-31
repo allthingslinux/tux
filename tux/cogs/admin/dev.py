@@ -60,19 +60,23 @@ class Dev(commands.Cog):
         """
 
         if ctx.guild is None:
-            await ctx.send("This command can only be used in a server.")
+            await ctx.send("This command can only be used in a server.", ephemeral=True, delete_after=30)
             return
 
         # Copy the global tree to the guild
         self.bot.tree.copy_global_to(guild=ctx.guild)
         # Sync the guild tree
         await self.bot.tree.sync(guild=ctx.guild)
-        await ctx.reply("Application command tree synced.")
+        await ctx.send("Application command tree synced.")
 
     @sync_tree.error
     async def sync_error(self, ctx: commands.Context[commands.Bot], error: Exception) -> None:
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(f"Please specify a guild to sync application commands to. {error}")
+            await ctx.send(
+                f"Please specify a guild to sync application commands to. {error}",
+                ephemeral=True,
+                delete_after=30,
+            )
         else:
             logger.error(f"Error syncing application commands: {error}")
 
@@ -99,7 +103,7 @@ class Dev(commands.Cog):
         """
 
         if ctx.guild is None:
-            await ctx.send("This command can only be used in a guild.")
+            await ctx.send("This command can only be used in a guild.", ephemeral=True, delete_after=30)
             return
 
         # Clear the slash command tree for the guild.
@@ -109,7 +113,7 @@ class Dev(commands.Cog):
         # Sync the slash command tree for the guild.
         await self.bot.tree.sync(guild=ctx.guild)
 
-        await ctx.reply("Slash command tree cleared.")
+        await ctx.send("Slash command tree cleared.")
 
     @dev.command(
         name="load_cog",
@@ -155,17 +159,21 @@ class Dev(commands.Cog):
     @load_cog.error
     async def load_error(self, ctx: commands.Context[commands.Bot], error: Exception) -> None:
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(f"Please specify an cog to load. {error}")
+            await ctx.send(f"Please specify an cog to load. {error}", ephemeral=True, delete_after=30)
         elif isinstance(error, commands.ExtensionAlreadyLoaded):
-            await ctx.send(f"The specified cog is already loaded. {error}")
+            await ctx.send(f"The specified cog is already loaded. {error}", ephemeral=True, delete_after=30)
         elif isinstance(error, commands.ExtensionNotFound):
-            await ctx.send(f"The specified cog is not found. {error}")
+            await ctx.send(f"The specified cog is not found. {error}", ephemeral=True, delete_after=30)
         elif isinstance(error, commands.ExtensionFailed):
-            await ctx.send(f"Failed to load cog: {error}")
+            await ctx.send(f"Failed to load cog: {error}", ephemeral=True, delete_after=30)
         elif isinstance(error, commands.NoEntryPointError):
-            await ctx.send(f"The specified cog does not have a setup function. {error}")
+            await ctx.send(
+                f"The specified cog does not have a setup function. {error}",
+                ephemeral=True,
+                delete_after=30,
+            )
         else:
-            await ctx.send(f"Failed to load cog: {error}")
+            await ctx.send(f"Failed to load cog: {error}", ephemeral=True, delete_after=30)
             logger.error(f"Failed to load cog: {error}")
 
     @dev.command(
@@ -198,17 +206,17 @@ class Dev(commands.Cog):
             await self.bot.unload_extension(cog)
         except Exception as error:
             logger.error(f"Failed to unload cog {cog}: {error}")
-            await ctx.send(f"Failed to unload cog {cog}: {error}")
+            await ctx.send(f"Failed to unload cog {cog}: {error}", ephemeral=True, delete_after=30)
         else:
             logger.info(f"Cog {cog} unloaded.")
-            await ctx.send(f"Cog {cog} unloaded.")
+            await ctx.send(f"Cog {cog} unloaded.", ephemeral=True, delete_after=30)
 
     @unload_cog.error
     async def unload_error(self, ctx: commands.Context[commands.Bot], error: Exception) -> None:
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(f"Please specify an extension to unload. {error}")
+            await ctx.send(f"Please specify an extension to unload. {error}", ephemeral=True, delete_after=30)
         elif isinstance(error, commands.ExtensionNotLoaded):
-            await ctx.send(f"That cog is not loaded. {error}")
+            await ctx.send(f"That cog is not loaded. {error}", ephemeral=True, delete_after=30)
         else:
             logger.error(f"Error unloading cog: {error}")
 
@@ -242,20 +250,20 @@ class Dev(commands.Cog):
             await self.bot.unload_extension(cog)
             await self.bot.load_extension(cog)
         except Exception as error:
-            await ctx.send(f"Failed to reload cog {cog}: {error}")
+            await ctx.send(f"Failed to reload cog {cog}: {error}", ephemeral=True, delete_after=30)
             logger.error(f"Failed to reload cog {cog}: {error}")
         else:
-            await ctx.send(f"Cog {cog} reloaded.")
+            await ctx.send(f"Cog {cog} reloaded.", ephemeral=True, delete_after=30)
             logger.info(f"Cog {cog} reloaded.")
 
     @reload_cog.error
     async def reload_error(self, ctx: commands.Context[commands.Bot], error: Exception) -> None:
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(f"Please specify a cog to reload. {error}")
+            await ctx.send(f"Please specify a cog to reload. {error}", ephemeral=True, delete_after=30)
         elif isinstance(error, commands.ExtensionNotLoaded):
-            await ctx.send(f"That cog is not loaded. {error}")
+            await ctx.send(f"That cog is not loaded. {error}", ephemeral=True, delete_after=30)
         else:
-            await ctx.send(f"Error reloading cog: {error}")
+            await ctx.send(f"Error reloading cog: {error}", ephemeral=True, delete_after=30)
             logger.error(f"Error reloading cog: {error}")
 
 

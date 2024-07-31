@@ -164,6 +164,8 @@ class RemindMe(commands.Cog):
         if seconds == 0:
             await interaction.response.send_message(
                 "Invalid time format. Please use the format `[number][M/w/d/h/m/s]`.",
+                ephemeral=True,
+                delete_after=30,
             )
             return
 

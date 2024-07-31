@@ -125,7 +125,7 @@ class Run(commands.Cog):
                 description="failed to get output from the compiler",
                 ctx=ctx,
             )
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             return ("", "", "")
 
         lines = output.split("\n")
@@ -171,7 +171,7 @@ class Run(commands.Cog):
                 description="Bad Formatting",
                 ctx=ctx,
             )
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             return ("", "", "")
 
         compiler_id = compiler_map[normalized_lang]
@@ -183,7 +183,7 @@ class Run(commands.Cog):
                 description="failed to get output from the compiler",
                 ctx=ctx,
             )
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             return ("", "", "")
 
         lines = output.split("\n")
@@ -297,7 +297,7 @@ class Run(commands.Cog):
             ctx=ctx,
         )
 
-        await ctx.send(embed=embed)
+        await ctx.send(embed=embed, ephemeral=True, delete_after=30)
 
     @commands.command(
         name="languages",

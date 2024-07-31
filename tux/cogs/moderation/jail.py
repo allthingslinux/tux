@@ -53,7 +53,9 @@ class Jail(ModerationCogBase):
 
         await self._set_permissions_for_channels(interaction, jail_role, jail_channel_id)
 
-        await interaction.edit_original_response(content="Permissions have been set up for the jail role.")
+        await interaction.edit_original_response(
+            content="Permissions have been set up for the jail role.",
+        )
 
     async def _set_permissions_for_channels(
         self,
@@ -68,8 +70,15 @@ class Jail(ModerationCogBase):
             if not isinstance(channel, discord.TextChannel | discord.VoiceChannel | discord.ForumChannel):
                 continue
 
-            await channel.set_permissions(jail_role, send_messages=False, read_messages=False)
+            if (
+                jail_role in channel.overwrites
+                and channel.overwrites[jail_role].send_messages is False
+                and channel.overwrites[jail_role].read_messages is False
+                and channel.id != jail_channel_id
+            ):
+                continue
 
+            await channel.set_permissions(jail_role, send_messages=False, read_messages=False)
             if channel.id == jail_channel_id:
                 await channel.set_permissions(jail_role, send_messages=True, read_messages=True)
 
@@ -235,7 +244,7 @@ class Jail(ModerationCogBase):
         embed = await self._create_case_embed(ctx, case, action, fields, target)
 
         await self.send_embed(ctx, embed, log_type="mod")
-        await ctx.reply(embed=embed, delete_after=30, ephemeral=True)
+        await ctx.send(embed=embed, delete_after=30, ephemeral=True)
 
     async def _create_case_embed(
         self,

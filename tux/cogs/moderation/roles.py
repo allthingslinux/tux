@@ -34,6 +34,8 @@ class Roles(commands.Cog):
             await interaction.response.send_message(
                 f"Removed role {role.mention} from {user.mention}",
                 allowed_mentions=discord.AllowedMentions.none(),
+                ephemeral=True,
+                delete_after=30,
             )
             logger.info(f"{interaction.user} removed role {role.name} from {user}.")
         else:
@@ -41,6 +43,8 @@ class Roles(commands.Cog):
             await interaction.response.send_message(
                 f"Added role {role.mention} to {user.mention}",
                 allowed_mentions=discord.AllowedMentions.none(),
+                ephemeral=True,
+                delete_after=30,
             )
             logger.info(f"{interaction.user} added role {role.name} to {user}.")
 

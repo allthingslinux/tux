@@ -1,7 +1,6 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from loguru import logger
 
 from tux.utils.embeds import EmbedCreator
 
@@ -42,7 +41,7 @@ class Poll(commands.Cog):
                 interaction=interaction,
             )
 
-            await interaction.response.send_message(embed=embed)
+            await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
             return
 
         # Create the description for the poll embed
@@ -63,8 +62,6 @@ class Poll(commands.Cog):
         for num in range(len(options_list)):
             # Add the number emoji reaction to the message
             await message.add_reaction(f"{num + 1}\u20e3")
-
-        logger.info(f"{interaction.user} used the ping command in {interaction.channel}.")
 
 
 async def setup(bot: commands.Bot) -> None:

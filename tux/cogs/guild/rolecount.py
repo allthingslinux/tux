@@ -229,7 +229,7 @@ class RoleCount(commands.Cog):
         # Fetch an emoji for the role from available emojis or the predefined emoji identifier
         # convert default emojis like "wheel" to their respective discord.Emoji object
 
-        emoji = role.display_icon or discord.utils.get(self.bot.emojis, name=role_emoji[1])
+        emoji = discord.utils.get(self.bot.emojis, name=role_emoji[1]) or "?"
 
         # Add a new field to the current embed
         embed.add_field(

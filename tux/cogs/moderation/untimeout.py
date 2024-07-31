@@ -53,22 +53,22 @@ class Untimeout(ModerationCogBase):
             logger.warning("Timeout command used outside of a guild context.")
             return
         if target == ctx.author:
-            await ctx.reply("You cannot untimeout yourself.", delete_after=30, ephemeral=True)
+            await ctx.send("You cannot untimeout yourself.", delete_after=30, ephemeral=True)
             return
         if target.top_role >= moderator.top_role:
-            await ctx.reply("You cannot untimeout a user with a higher or equal role.", delete_after=30, ephemeral=True)
+            await ctx.send("You cannot untimeout a user with a higher or equal role.", delete_after=30, ephemeral=True)
             return
         if target == ctx.guild.owner:
-            await ctx.reply("You cannot untimeout the server owner.", delete_after=30, ephemeral=True)
+            await ctx.send("You cannot untimeout the server owner.", delete_after=30, ephemeral=True)
             return
         if not target.is_timed_out():
-            await ctx.reply(f"{target} is not currently timed out.", delete_after=30, ephemeral=True)
+            await ctx.send(f"{target} is not currently timed out.", delete_after=30, ephemeral=True)
 
         try:
             await self.send_dm(ctx, flags.silent, target, flags.reason, "untimed out")
             await target.timeout(None, reason=flags.reason)
         except discord.DiscordException as e:
-            await ctx.reply(f"Failed to untimeout {target}. {e}", delete_after=30, ephemeral=True)
+            await ctx.send(f"Failed to untimeout {target}. {e}", delete_after=30, ephemeral=True)
             return
 
         case = await self.db.case.insert_case(
@@ -122,7 +122,7 @@ class Untimeout(ModerationCogBase):
             )
 
         await self.send_embed(ctx, embed, log_type="mod")
-        await ctx.reply(embed=embed, delete_after=30, ephemeral=True)
+        await ctx.send(embed=embed, delete_after=30, ephemeral=True)
 
 
 async def setup(bot: commands.Bot) -> None:

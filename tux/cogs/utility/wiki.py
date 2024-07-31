@@ -84,6 +84,7 @@ class Wiki(commands.Cog):
     @commands.hybrid_group(
         name="wiki",
         usage="$wiki [arch|atl]",
+        aliases=["wk"],
     )
     async def wiki(self, ctx: commands.Context[commands.Bot]) -> None:
         """
@@ -126,7 +127,7 @@ class Wiki(commands.Cog):
         else:
             embed = EmbedCreator.create_info_embed(title=title[0], description=title[1], ctx=ctx)
 
-        await ctx.reply(embed=embed)
+        await ctx.send(embed=embed)
 
     @wiki.command(
         name="atl",
@@ -156,7 +157,7 @@ class Wiki(commands.Cog):
         else:
             embed = EmbedCreator.create_info_embed(title=title[0], description=title[1], ctx=ctx)
 
-        await ctx.reply(embed=embed)
+        await ctx.send(embed=embed)
 
 
 async def setup(bot: commands.Bot) -> None:

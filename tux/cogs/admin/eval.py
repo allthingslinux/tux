@@ -66,7 +66,7 @@ class Eval(commands.Cog):
             logger.warning(
                 f"{ctx.author} tried to run eval but is not the bot owner. (Owner ID: {self.bot.owner_id}, User ID: {ctx.author.id})",
             )
-            await ctx.send("You are not the bot owner. Better luck next time!")
+            await ctx.send("You are not the bot owner. Better luck next time!", ephemeral=True, delete_after=30)
             return
 
         try:
@@ -121,7 +121,7 @@ class Eval(commands.Cog):
             logger.error(f"An error occurred while running an expression: {error}")
 
         else:
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
 
 
 async def setup(bot: commands.Bot) -> None:

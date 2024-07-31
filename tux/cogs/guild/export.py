@@ -45,7 +45,7 @@ class Export(commands.Cog):
                 description="There are no banned users in this server.",
             )
 
-            return await interaction.response.send_message(embed=embed)
+            return await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
 
         if flags and "--help" not in flags:
             file = await exports.get_ban_list_csv(

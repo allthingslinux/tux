@@ -113,6 +113,7 @@ class Config(commands.Cog):
         await interaction.response.send_message(
             f"Perm level {setting.value} role set to {role.mention}.",
             ephemeral=True,
+            delete_after=30,
         )
 
     @app_commands.command(name="config_set_roles")
@@ -151,7 +152,11 @@ class Config(commands.Cog):
 
         if setting.value == "jail_role_id":
             await self.db.update_jail_role_id(interaction.guild.id, role.id)
-            await interaction.response.send_message(f"{setting.value} role set to {role.mention}.", ephemeral=True)
+            await interaction.response.send_message(
+                f"{setting.value} role set to {role.mention}.",
+                ephemeral=True,
+                delete_after=30,
+            )
 
     @app_commands.command(name="config_get_roles")
     @app_commands.guild_only()
@@ -185,7 +190,7 @@ class Config(commands.Cog):
             role = f"<@&{role_id}>" if role_id else "Not set"
             embed.add_field(name=f"Perm Level {i}", value=role, inline=True)
 
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
 
 
 async def setup(bot: commands.Bot) -> None:

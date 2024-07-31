@@ -59,7 +59,7 @@ class Notes(ModerationCogBase):
                 )
 
             except Exception as e:
-                await ctx.reply(f"An error occurred while creating the note: {e}", delete_after=30, ephemeral=True)
+                await ctx.send(f"An error occurred while creating the note: {e}", delete_after=30, ephemeral=True)
                 return
 
             await self.handle_note_response(ctx, note, "created", content, target)
@@ -93,7 +93,7 @@ class Notes(ModerationCogBase):
             note = await self.db.note.get_note_by_id(note_id)
 
             if not note:
-                await ctx.reply("Note not found.", delete_after=30, ephemeral=True)
+                await ctx.send("Note not found.", delete_after=30, ephemeral=True)
                 return
 
             await self.db.note.delete_note_by_id(note_id)
@@ -136,7 +136,7 @@ class Notes(ModerationCogBase):
             note = await self.db.note.get_note_by_id(note_id)
 
             if not note:
-                await ctx.reply("Note not found.", delete_after=30, ephemeral=True)
+                await ctx.send("Note not found.", delete_after=30, ephemeral=True)
                 return
 
             previous_content = note.note_content
@@ -182,7 +182,7 @@ class Notes(ModerationCogBase):
             note = await self.db.note.get_note_by_id(note_id)
 
             if not note:
-                await ctx.reply("Note not found.", delete_after=30, ephemeral=True)
+                await ctx.send("Note not found.", delete_after=30, ephemeral=True)
                 return
 
             try:
@@ -220,7 +220,7 @@ class Notes(ModerationCogBase):
         )
 
         await self.send_embed(ctx, embed, log_type="private")
-        await ctx.reply(embed=embed, delete_after=30, ephemeral=True)
+        await ctx.send(embed=embed, delete_after=30, ephemeral=True)
 
 
 async def setup(bot: commands.Bot) -> None:

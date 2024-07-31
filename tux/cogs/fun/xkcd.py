@@ -64,9 +64,9 @@ class Xkcd(commands.Cog):
         embed, view, ephemeral = await self.get_comic_and_embed(latest=True)
 
         if view:
-            await ctx.reply(embed=embed, view=view, ephemeral=ephemeral)
+            await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
         else:
-            await ctx.reply(embed=embed, ephemeral=ephemeral)
+            await ctx.send(embed=embed, ephemeral=ephemeral)
 
     @xkcd.command(
         name="random",
@@ -87,9 +87,9 @@ class Xkcd(commands.Cog):
         embed, view, ephemeral = await self.get_comic_and_embed()
 
         if view:
-            await ctx.reply(embed=embed, view=view, ephemeral=ephemeral)
+            await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
         else:
-            await ctx.reply(embed=embed, ephemeral=ephemeral)
+            await ctx.send(embed=embed, ephemeral=ephemeral)
 
     @xkcd.command(
         name="specific",
@@ -112,9 +112,9 @@ class Xkcd(commands.Cog):
         embed, view, ephemeral = await self.get_comic_and_embed(number=comic_id)
 
         if view:
-            await ctx.reply(embed=embed, view=view, ephemeral=ephemeral)
+            await ctx.send(embed=embed, view=view, ephemeral=ephemeral)
         else:
-            await ctx.reply(embed=embed, ephemeral=ephemeral)
+            await ctx.send(embed=embed, ephemeral=ephemeral)
 
     async def get_comic_and_embed(
         self,

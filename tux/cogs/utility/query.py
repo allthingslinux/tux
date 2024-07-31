@@ -91,7 +91,7 @@ class Query(commands.Cog):
                     description="No results found for the search term.",
                     ctx=ctx,
                 )
-                await ctx.reply(embed=embed)
+                await ctx.send(embed=embed, delete_after=30, ephemeral=True)
                 return
 
         embed = discord.Embed(
@@ -108,7 +108,7 @@ class Query(commands.Cog):
         )
 
         embed.set_footer(
-            text="Data acquired using the DuckDuckGo API.",
+            text="Data via DuckDuckGo API.",
             icon_url="https://duckduckgo.com/favicon.png",
         )
 
@@ -119,7 +119,7 @@ class Query(commands.Cog):
                 inline=False,
             )
 
-        await ctx.reply(embed=embed)
+        await ctx.send(embed=embed)
 
 
 async def setup(bot: commands.Bot) -> None:

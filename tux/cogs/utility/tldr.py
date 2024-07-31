@@ -3,7 +3,6 @@ import subprocess
 import discord
 from discord import app_commands
 from discord.ext import commands
-from loguru import logger
 
 from tux.utils.embeds import EmbedCreator
 
@@ -68,8 +67,6 @@ class Tldr(commands.Cog):
 
         await interaction.response.send_message(embed=embed)
 
-        logger.info(f"{interaction.user} requested TLDR for {command}")
-
     @commands.command(
         name="tldr",
         aliases=["man"],
@@ -96,9 +93,7 @@ class Tldr(commands.Cog):
             ctx=ctx,
         )
 
-        await ctx.reply(embed=embed)
-
-        logger.info(f"{ctx.author} requested TLDR for {command}")
+        await ctx.send(embed=embed)
 
     def get_tldr_page(self, command: str) -> str:
         """

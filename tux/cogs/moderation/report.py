@@ -50,9 +50,7 @@ class ReportModal(discord.ui.Modal):
             description=self.long.value,  # type: ignore
             interaction=None,
         )
-        logger.info(f"Embed created for {interaction.user.id}")
 
-        # Get the report log channel ID for the guild
         try:
             logger.info(f"Getting report log channel for guild {interaction.guild.id}")
             report_log_channel_id = await self.config.get_report_log_channel(interaction.guild.id)
@@ -74,10 +72,9 @@ class ReportModal(discord.ui.Modal):
         await interaction.response.send_message(
             "Your report has been submitted.",
             ephemeral=True,
+            delete_after=30,
         )
 
-        # Send the embed to the report log channel
-        logger.info(f"Sending report to {report_log_channel_id}")
         await report_log_channel.send(embed=embed)
 
 
@@ -99,7 +96,6 @@ class Report(commands.Cog):
 
         modal = ReportModal(bot=self.bot)
 
-        logger.info(f"Opening report modal for {interaction.user.id}")
         await interaction.response.send_modal(modal)
 
 

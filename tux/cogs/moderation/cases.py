@@ -13,9 +13,7 @@ from tux.utils.flags import CaseModifyFlags, CasesViewFlags
 
 from . import ModerationCogBase
 
-# active_case_emoji, inactive_case_emoji = (1265754900533608509, 1265754928610279495)
-
-emojis = {
+emojis: dict[str, int] = {
     "active_case_emoji": 1268115730344443966,
     "inactive_case_emoji": 1268115712627441715,
     "added": 1268115639914987562,
@@ -26,30 +24,6 @@ emojis = {
     "warn": 1268115764498399264,
     "jail": 1268115750392954880,
 }
-
-# case_type_emojis = {
-#     CaseType.BAN: emojis["added"] + emojis["ban"],
-#     CaseType.UNBAN: emojis["removed"] + emojis["ban"],
-#     CaseType.KICK: emojis["added"] + emojis["kick"],
-#     CaseType.TIMEOUT: emojis["added"] + emojis["timeout"],
-#     CaseType.UNTIMEOUT: emojis["removed"] + emojis["timeout"],
-#     CaseType.WARN: emojis["added"] + emojis["warn"],
-#     CaseType.JAIL: emojis["added"] + emojis["jail"],
-#     CaseType.UNJAIL: emojis["removed"] + emojis["jail"],
-# }
-
-# we need to define each case type to an action emoji and a case type emoji and they need to be seperated by a space
-
-# case_type_emojis = {
-#     CaseType.BAN: f"{emojis['added']} {emojis['ban']}",
-#     CaseType.UNBAN: f"{emojis['removed']} {emojis['ban']}",
-#     CaseType.KICK: f"{emojis['added']} {emojis['kick']}",
-#     CaseType.TIMEOUT: f"{emojis['added']} {emojis['timeout']}",
-#     CaseType.UNTIMEOUT: f"{emojis['removed']} {emojis['timeout']}",
-#     CaseType.WARN: f"{emojis['added']} {emojis['warn']}",
-#     CaseType.JAIL: f"{emojis['added']} {emojis['jail']}",
-#     CaseType.UNJAIL: f"{emojis['removed']} {emojis['jail']}",
-# }
 
 
 class Cases(ModerationCogBase):
@@ -137,13 +111,13 @@ class Cases(ModerationCogBase):
 
         # If the command is used via prefix, let the user know to use the slash command
         if ctx.message.content.startswith(str(ctx.prefix)):
-            await ctx.reply("Please use the slash command for this command.", delete_after=30, ephemeral=True)
+            await ctx.send("Please use the slash command for this command.", delete_after=30, ephemeral=True)
             return
 
         case = await self.db.case.get_case_by_number(ctx.guild.id, case_number)
 
         if not case:
-            await ctx.reply("Case not found.", delete_after=30, ephemeral=True)
+            await ctx.send("Case not found.", delete_after=30, ephemeral=True)
             return
 
         if case.case_number is not None:
@@ -171,7 +145,7 @@ class Cases(ModerationCogBase):
 
         case = await self.db.case.get_case_by_number(ctx.guild.id, case_number)
         if not case:
-            await ctx.reply("Case not found.", delete_after=30)
+            await ctx.send("Case not found.", delete_after=30)
             return
 
         target = await commands.MemberConverter().convert(ctx, str(case.case_target_id))
@@ -239,7 +213,7 @@ class Cases(ModerationCogBase):
             return
 
         if case.case_number is None:
-            await ctx.reply("Failed to update case.", delete_after=30)
+            await ctx.send("Failed to update case.", delete_after=30, ephemeral=True)
             return
 
         updated_case = await self.db.case.update_case(
@@ -250,7 +224,7 @@ class Cases(ModerationCogBase):
         )
 
         if updated_case is None:
-            await ctx.reply("Failed to update case.", delete_after=30)
+            await ctx.send("Failed to update case.", delete_after=30, ephemeral=True)
             return
 
         target = await commands.MemberConverter().convert(ctx, str(updated_case.case_target_id))
@@ -303,7 +277,7 @@ class Cases(ModerationCogBase):
                 color=CONST.EMBED_COLORS["ERROR"],
             )
 
-        await ctx.reply(embed=embed, delete_after=30, ephemeral=True)
+        await ctx.send(embed=embed, delete_after=30, ephemeral=True)
 
     async def _handle_case_list_response(
         self,
@@ -319,7 +293,7 @@ class Cases(ModerationCogBase):
                 description="No cases found.",
                 color=CONST.EMBED_COLORS["ERROR"],
             )
-            await ctx.reply(embed=embed, delete_after=30, ephemeral=True)
+            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
         cases_per_page = 10
@@ -368,78 +342,70 @@ class Cases(ModerationCogBase):
 
         return embed
 
-    #     emojis are represented like <:name:id> with an a in front for animated(<a:name:id>)
-    # use \:emoji: to get this format
-    # for example\:python: sends <:python3:​232720527448342530>
-    def _format_emoji(self, emoji: discord.Emoji) -> str:
-        return f"<:{emoji.name}:{emoji.id}>"
+    def _format_emoji(self, emoji: discord.Emoji | None) -> str:
+        return f"<:{emoji.name}:{emoji.id}>" if emoji else ""
 
-    def _add_case_to_embed(
-        self,
-        embed: discord.Embed,
-        case: Case,
-    ) -> None:
-        case_status_emoji = (
-            self.bot.get_emoji(emojis["active_case_emoji"])
-            if case.case_status
-            else self.bot.get_emoji(emojis["inactive_case_emoji"])
+    def _get_case_status_emoji(self, case_status: bool | None) -> discord.Emoji | None:
+        if case_status is None:
+            return None
+        return self.bot.get_emoji(emojis["active_case_emoji" if case_status else "inactive_case_emoji"])
+
+    def _get_case_type_emoji(self, case_type: CaseType) -> discord.Emoji | None:
+        emoji_map = {
+            CaseType.BAN: "ban",
+            CaseType.UNBAN: "ban",
+            CaseType.KICK: "kick",
+            CaseType.TIMEOUT: "timeout",
+            CaseType.UNTIMEOUT: "timeout",
+            CaseType.WARN: "warn",
+            CaseType.JAIL: "jail",
+            CaseType.UNJAIL: "jail",
+        }
+        emoji_name = emoji_map.get(case_type)
+        if emoji_name is not None:
+            emoji_id = emojis.get(emoji_name)
+            if emoji_id is not None:
+                return self.bot.get_emoji(emoji_id)
+        return None
+
+    def _get_case_action_emoji(self, case_type: CaseType) -> discord.Emoji | None:
+        action = (
+            "added"
+            if case_type in [CaseType.BAN, CaseType.KICK, CaseType.TIMEOUT, CaseType.WARN, CaseType.JAIL]
+            else "removed"
+            if case_type in [CaseType.UNBAN, CaseType.UNTIMEOUT, CaseType.UNJAIL]
+            else None
         )
+        if action is not None:
+            emoji_id = emojis.get(action)
+            if emoji_id is not None:
+                return self.bot.get_emoji(emoji_id)
+        return None
 
-        case_status = ""
-        if case_status_emoji:
-            case_status = self._format_emoji(case_status_emoji)
-
-        if case.case_type in [CaseType.BAN, CaseType.UNBAN]:
-            case_type_emoji = self.bot.get_emoji(emojis["ban"])
-        elif case.case_type == CaseType.KICK:
-            case_type_emoji = self.bot.get_emoji(emojis["kick"])
-        elif case.case_type in [CaseType.TIMEOUT, CaseType.UNTIMEOUT]:
-            case_type_emoji = self.bot.get_emoji(emojis["timeout"])
-        elif case.case_type == CaseType.WARN:
-            case_type_emoji = self.bot.get_emoji(emojis["warn"])
-        elif case.case_type in [CaseType.JAIL, CaseType.UNJAIL]:
-            case_type_emoji = self.bot.get_emoji(emojis["jail"])
-        else:
-            case_type_emoji = None
-
-        if case_type_emoji:
-            case_type = self._format_emoji(case_type_emoji)
-
-        if case.case_type in [
-            CaseType.BAN,
-            CaseType.KICK,
-            CaseType.TIMEOUT,
-            CaseType.WARN,
-            CaseType.JAIL,
-        ]:
-            case_action_emoji = self.bot.get_emoji(emojis["added"])
-
-        elif case.case_type in [CaseType.UNBAN, CaseType.UNTIMEOUT, CaseType.UNJAIL]:
-            case_action_emoji = self.bot.get_emoji(emojis["removed"])
-
-        else:
-            case_action_emoji = None
-
-        if case_action_emoji:
-            case_action = self._format_emoji(case_action_emoji)
-        if case_type_emoji:
-            case_type = self._format_emoji(case_type_emoji)
-
-        case_type = self._format_emoji(case_type_emoji) if case_type_emoji else ""
-        case_action = ""
-        if case_action_emoji:
-            case_action = self._format_emoji(case_action_emoji)
-
-        case_type_and_action = f"{case_action} {case_type}" if case_action_emoji and case_type_emoji else "Unknown"
-
-        case_date = discord.utils.format_dt(case.case_created_at, "R") if case.case_created_at else "Unknown"
+    def _get_case_description(
+        self,
+        case: Case,
+        case_status_emoji: str,
+        case_type_emoji: str,
+        case_action_emoji: str,
+    ) -> str:
+        case_type_and_action = (
+            f"{case_action_emoji} {case_type_emoji}" if case_action_emoji and case_type_emoji else "?"
+        )
+        case_date = discord.utils.format_dt(case.case_created_at, "R") if case.case_created_at else "?"
         case_number = f"{case.case_number:04d}"
+
+        return f"{case_status_emoji} `{case_number}`\u2002\u2002 {case_type_and_action} \u2002\u2002*{case_date}*\n"
+
+    def _add_case_to_embed(self, embed: discord.Embed, case: Case) -> None:
+        case_status_emoji = self._format_emoji(self._get_case_status_emoji(case.case_status))
+        case_type_emoji = self._format_emoji(self._get_case_type_emoji(case.case_type))
+        case_action_emoji = self._format_emoji(self._get_case_action_emoji(case.case_type))
 
         if not embed.description:
             embed.description = "**Case**\u2002\u2002\u2002\u2002\u2002**Type**\u2002\u2002\u2002**Date**\n"
-        embed.description += (
-            f"{case_status} `{case_number}`\u2002\u2002 {case_type_and_action} \u2002\u2002*{case_date}*\n"
-        )
+
+        embed.description += self._get_case_description(case, case_status_emoji, case_type_emoji, case_action_emoji)
 
 
 async def setup(bot: commands.Bot) -> None:

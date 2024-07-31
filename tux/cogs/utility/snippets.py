@@ -155,22 +155,22 @@ class Snippets(commands.Cog):
                 return
 
             # TODO: Fix snippet deletion permission check later
-            if (conf.perm_level_9_role_id or 0) | (conf.perm_level_8_role_id or 0) | (
-                conf.perm_level_7_role_id or 0
-            ) | (conf.perm_level_6_role_id or 0) | (conf.perm_level_5_role_id or 0) | (
-                conf.perm_level_4_role_id or 0
-            ) | (conf.perm_level_3_role_id or 0) | (conf.perm_level_2_role_id or 0) not in user_roles:
+            if (conf.perm_level_7_role_id or 0) | (conf.perm_level_6_role_id or 0) | (
+                conf.perm_level_5_role_id or 0
+            ) | (conf.perm_level_4_role_id or 0) | (conf.perm_level_3_role_id or 0) | (
+                conf.perm_level_2_role_id or 0
+            ) not in user_roles:
                 embed = EmbedCreator.create_error_embed(
                     title="Error",
                     description="You can only delete your own snippets.",
                     ctx=ctx,
                 )
-                await ctx.send(embed=embed)
+                await ctx.send(embed=embed, ephemeral=True, delete_after=30)
                 return
 
         await self.db.delete_snippet_by_id(snippet.snippet_id)
 
-        await ctx.send("Snippet deleted.")
+        await ctx.send("Snippet deleted.", delete_after=30, ephemeral=True)
         logger.info(f"{ctx.author} deleted the snippet with the name {name}.")
 
     @commands.command(
@@ -203,7 +203,7 @@ class Snippets(commands.Cog):
                 description="Snippet not found.",
                 ctx=ctx,
             )
-            await ctx.send(embed=embed, delete_after=30)
+            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
         text = f"`/snippets/{snippet.snippet_name}.txt` || {snippet.snippet_content}"
@@ -291,7 +291,7 @@ class Snippets(commands.Cog):
                 description="Please provide a name and content for the snippet.",
                 ctx=ctx,
             )
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
         name = args[0]
@@ -307,7 +307,7 @@ class Snippets(commands.Cog):
                 description="Snippet already exists.",
                 ctx=ctx,
             )
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
         # Check if the name is longer than 20 characters and includes non-alphanumeric characters (except -_)
@@ -329,7 +329,7 @@ class Snippets(commands.Cog):
             guild_id=server_id,
         )
 
-        await ctx.send("Snippet created.")
+        await ctx.send("Snippet created.", delete_after=30, ephemeral=True)
         logger.info(f"{ctx.author} created a snippet with the name {name} and content {content}.")
 
 

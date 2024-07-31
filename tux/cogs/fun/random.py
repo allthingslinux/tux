@@ -135,7 +135,7 @@ class Random(commands.Cog):
     /'\\_   _/`\\
     \\___)=(___/
 """
-        await ctx.reply(content=f"```{response}```")
+        await ctx.send(content=f"```{response}```")
 
     @random.command(
         name="dice",
@@ -156,7 +156,7 @@ class Random(commands.Cog):
         """
 
         if sides < 2:
-            await ctx.reply(content="The dice must have at least 2 sides.", ephemeral=True)
+            await ctx.send(content="The dice must have at least 2 sides.", ephemeral=True, delete_after=30)
             return
 
         embed = EmbedCreator.create_info_embed(
@@ -165,7 +165,7 @@ class Random(commands.Cog):
             ctx=ctx,
         )
 
-        await ctx.reply(embed=embed)
+        await ctx.send(embed=embed)
 
     @random.command(
         name="number",
@@ -193,13 +193,14 @@ class Random(commands.Cog):
         """
 
         if minimum > maximum:
-            await ctx.reply(
+            await ctx.send(
                 content="The minimum value must be less than the maximum value.",
                 ephemeral=True,
+                delete_after=30,
             )
             return
 
-        await ctx.reply(content=f"Your random number is: {random.randint(minimum, maximum)}")
+        await ctx.send(content=f"Your random number is: {random.randint(minimum, maximum)}")
 
 
 async def setup(bot: commands.Bot) -> None:

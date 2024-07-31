@@ -84,9 +84,9 @@ class Avatar(commands.Cog):
             else:
                 message = "Member has no avatar."
                 if isinstance(source, discord.Interaction):
-                    await source.response.send_message(content=message)
+                    await source.response.send_message(content=message, ephemeral=True, delete_after=30)
                 else:
-                    await source.reply(content=message)
+                    await source.reply(content=message, ephemeral=True, delete_after=30)
 
         elif isinstance(source, commands.Context):
             member = await commands.MemberConverter().convert(source, str(source.author.id))
@@ -98,7 +98,7 @@ class Avatar(commands.Cog):
             if files:
                 await source.reply(files=files)
             else:
-                await source.reply("You have no avatar.")
+                await source.reply("You have no avatar.", ephemeral=True, delete_after=30)
 
     @staticmethod
     async def create_avatar_file(url: str) -> discord.File:
