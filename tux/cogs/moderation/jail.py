@@ -131,25 +131,40 @@ class Jail(ModerationCogBase):
             and role.is_assignable()
         ]
 
-        # Get the target role IDs for the case
-        case_target_roles = [role.id for role in target_roles]
-
-        try:
-            if target_roles and jail_role:
-                # Send a DM to the target if the silent flag is not set
-                await self.send_dm(ctx, flags.silent, target, flags.reason, "jailed")
-                # Remove all roles
-                await target.remove_roles(*target_roles, reason=flags.reason)
-                # Add the jail role
-                await target.add_roles(jail_role, reason=flags.reason)
-            else:
-                await ctx.send("An error occurred while trying to jail the user.", delete_after=30, ephemeral=True)
+        if not target_roles:
+            try:
+                if jail_role:
+                    # Send a DM to the target if the silent flag is not set
+                    await self.send_dm(ctx, flags.silent, target, flags.reason, "jailed")
+                    # Add the jail role
+                    await target.add_roles(jail_role, reason=flags.reason)
+            except (discord.Forbidden, discord.HTTPException) as e:
+                logger.error(f"Failed to jail {target}. {e}")
+                await ctx.send(f"Failed to jail {target}. {e}", delete_after=30, ephemeral=True)
                 return
 
-        except (discord.Forbidden, discord.HTTPException) as e:
-            logger.error(f"Failed to jail {target}. {e}")
-            await ctx.send(f"Failed to jail {target}. {e}", delete_after=30, ephemeral=True)
-            return
+            case_target_roles = []
+
+        else:
+            # Get the target role IDs for the case
+            case_target_roles = [role.id for role in target_roles]
+
+            try:
+                if target_roles and jail_role:
+                    # Send a DM to the target if the silent flag is not set
+                    await self.send_dm(ctx, flags.silent, target, flags.reason, "jailed")
+                    # Remove all roles
+                    await target.remove_roles(*target_roles, reason=flags.reason)
+                    # Add the jail role
+                    await target.add_roles(jail_role, reason=flags.reason)
+                else:
+                    await ctx.send("An error occurred while trying to jail the user.", delete_after=30, ephemeral=True)
+                    return
+
+            except (discord.Forbidden, discord.HTTPException) as e:
+                logger.error(f"Failed to jail {target}. {e}")
+                await ctx.send(f"Failed to jail {target}. {e}", delete_after=30, ephemeral=True)
+                return
 
         case = await self.db.case.insert_case(
             guild_id=ctx.guild.id,

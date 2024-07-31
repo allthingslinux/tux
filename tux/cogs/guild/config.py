@@ -65,7 +65,7 @@ class Config(commands.Cog):
         view = ConfigSetChannels()
         await interaction.response.send_message(view=view, ephemeral=True)
 
-    @app_commands.command(name="config_set_roles")
+    @app_commands.command(name="config_set_perms")
     @app_commands.describe(setting="Which permission level to configure")
     @app_commands.choices(
         setting=[
@@ -82,7 +82,7 @@ class Config(commands.Cog):
     @app_commands.guild_only()
     # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
-    async def config_set_roles(
+    async def config_set_perms(
         self,
         interaction: discord.Interaction,
         setting: discord.app_commands.Choice[str],
@@ -114,6 +114,44 @@ class Config(commands.Cog):
             f"Perm level {setting.value} role set to {role.mention}.",
             ephemeral=True,
         )
+
+    @app_commands.command(name="config_set_roles")
+    @app_commands.guild_only()
+    # @checks.ac_has_pl(7)
+    @app_commands.describe(setting="Which role to configure")
+    @app_commands.choices(
+        setting=[
+            app_commands.Choice(name="Jail", value="jail_role_id"),
+        ],
+    )
+    @app_commands.checks.has_permissions(administrator=True)
+    async def config_set_roles(
+        self,
+        interaction: discord.Interaction,
+        setting: discord.app_commands.Choice[str],
+        role: discord.Role,
+    ) -> None:
+        """
+        Configure the guild roles.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+
+        setting : discord.app_commands.Choice[str]
+            The role to configure.
+
+        role : discord.Role
+            The role to set.
+        """
+
+        if interaction.guild is None:
+            return
+
+        if setting.value == "jail_role_id":
+            await self.db.update_jail_role_id(interaction.guild.id, role.id)
+            await interaction.response.send_message(f"{setting.value} role set to {role.mention}.", ephemeral=True)
 
     @app_commands.command(name="config_get_roles")
     @app_commands.guild_only()
