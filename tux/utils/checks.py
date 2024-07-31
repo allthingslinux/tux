@@ -1,9 +1,11 @@
 import discord
+from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
 from tux.database.controllers import DatabaseController
-from tux.handlers.error import PermissionLevelError
+from tux.handlers.error import AppCommandPermissionLevelError, PermissionLevelError
+from tux.utils.constants import CONST
 
 db = DatabaseController().guild_config
 
@@ -26,93 +28,72 @@ async def has_permission(
         The higher bound of the permission level, by default None
     """
 
-    # if higher_bound is None:
-    #     logger.debug(f"Setting higher bound to {lower_bound}")
-    #     higher_bound = lower_bound
+    if higher_bound is None:
+        logger.debug(f"Setting higher bound to {lower_bound}")
+        higher_bound = lower_bound
 
-    # if ctx.guild is None:
-    #     logger.debug("Guild is None, returning False if lower bound is not 0 (Everyone)")
-    #     return lower_bound == 0
+    if source.guild is None:
+        logger.debug("Guild is None, returning False if lower bound is not 0 (Everyone)")
+        return lower_bound == 0
 
-    # # if the source is ctx
-    # if isinstance(source, commands.Context):
-    #     ctx = source
-    #     if ctx.guild is None:
-    #         logger.debug("Guild is None, returning False if lower bound is not 0 (Everyone)")
-    #         return lower_bound == 0
-    # # if the source is an interaction
-    # else:
-    #     interaction = source
-    #     if not interaction:
-    #         logger.debug("Channel is None, returning False if lower bound is not 0 (Everyone)")
-    #         return lower_bound == 0
-
-    # # get the role ids of the permission levels
-    # if higher_bound == lower_bound:
-    #     logger.debug(f"Getting role id for permission level {lower_bound}")
-    #     roles = [await get_perm_level_role_id(source, f"perm_level_{lower_bound}_role_id")]
-    # else:
-    #     logger.debug(f"Getting role ids for permission levels above and equal to {lower_bound}")
-    #     roles = await get_perm_level_roles(source, lower_bound)
-
+    # if the source is ctx
     if isinstance(source, commands.Context):
         ctx = source
         if ctx.guild is None:
+            logger.debug("Guild is None, returning False if lower bound is not 0 (Everyone)")
             return lower_bound == 0
-        if higher_bound is None:
-            higher_bound = lower_bound
-
-        roles = (
-            await get_perm_level_roles(ctx, lower_bound)
-            if higher_bound != lower_bound
-            else [await get_perm_level_role_id(ctx, f"perm_level_{lower_bound}_role_id")]
-        )
-
-        author = await commands.MemberConverter().convert(ctx, str(ctx.author.id))
-
-        for role in author.roles:
-            if role.id in roles:
-                return True
-
+    # if the source is an interaction
     else:
         interaction = source
-        if not interaction.guild:
+        if not interaction:
+            logger.debug("Channel is None, returning False if lower bound is not 0 (Everyone)")
             return lower_bound == 0
-        if higher_bound is None:
-            higher_bound = lower_bound
-        roles = (
-            await get_perm_level_roles(interaction, lower_bound)
-            if higher_bound != lower_bound
-            else [await get_perm_level_role_id(interaction, f"perm_level_{lower_bound}_role_id")]
-        )
 
-    # get the role ids of the permission level
-    # # get the role ids of the permission levels
-    # if higher_bound == lower_bound:
-    #     logger.debug(f"Getting role id for permission level {lower_bound}")
-    #     roles = [await get_perm_level_role_id(ctx, f"perm_level_{lower_bound}_role_id")]
-    # else:
-    #     logger.debug(f"Getting role ids for permission levels above and equal to {lower_bound}")
-    #     roles = await get_perm_level_roles(ctx, lower_bound)
+    # get the role ids of the permission levels
+    if (
+        higher_bound == lower_bound
+        and 8 not in range(lower_bound, higher_bound + 1)
+        and 9 not in range(lower_bound, higher_bound + 1)
+    ):
+        logger.debug(f"Getting role id for permission level {lower_bound}")
+        roles = [await get_perm_level_role_id(source, f"perm_level_{lower_bound}_role_id")]
+    elif 8 not in range(lower_bound, higher_bound + 1) and 9 not in range(lower_bound, higher_bound + 1):
+        logger.debug(f"Getting role ids for permission levels above and equal to {lower_bound}")
+        roles = await get_perm_level_roles(source, lower_bound)
+    else:
+        roles = None
 
-    # # Convert the context author to a member object because ctx.author defaults to a User object first?
-    # author = await commands.MemberConverter().convert(ctx, str(ctx.author.id))
-    # for role in author.roles:
-    #     if role.id in roles:
-    #         logger.debug(f"User has permission level {lower_bound} or higher")
-    #         return True
+    # Convert the context author to a member object because ctx.author defaults to a User object first?
+    # author = await commands.MemberConverter().convert(source, str(source.author.id))
+    if isinstance(source, commands.Context):
+        author = await commands.MemberConverter().convert(source, str(source.author.id))
+    else:
+        author = await source.guild.fetch_member(source.user.id)
+    for role in author.roles:
+        if roles and role.id in roles:
+            logger.debug(f"User has permission level {lower_bound} or higher")
+            return True
 
-    # # check sysadmins and bot owner
-    # # if the bound includes sysadmin or bot owner, check if the user is a sysadmin or bot owner
-    # # (sysadmin is 8, bot owner is 9)
-    # logger.debug("Checking if user is a sysadmin or bot owner")
-    # if 8 in range(lower_bound, higher_bound + 1) and ctx.author.id in CONST.SYSADMIN_IDS:
-    #     logger.debug("User is a sysadmin")
-    #     return True
+    # check sysadmins and bot owner
+    # if the bound includes sysadmin or bot owner, check if the user is a sysadmin or bot owner
+    # (sysadmin is 8, bot owner is 9)
+    logger.debug("Checking if user is a sysadmin or bot owner")
+    if isinstance(source, commands.Context):
+        if 8 in range(lower_bound, higher_bound + 1) and source.author.id in CONST.SYSADMIN_IDS:
+            logger.debug("User is a sysadmin")
+            return True
 
-    # if 9 in range(lower_bound, higher_bound + 1) and ctx.author.id == CONST.BOT_OWNER_ID:
-    #     logger.debug("User is the bot owner")
-    #     return True
+        if 9 in range(lower_bound, higher_bound + 1) and source.author.id == CONST.BOT_OWNER_ID:
+            logger.debug("User is the bot owner")
+            return True
+    else:
+        if 8 in range(lower_bound, higher_bound + 1) and source.user.id in CONST.SYSADMIN_IDS:
+            logger.debug("User is a sysadmin")
+            return True
+
+        if 9 in range(lower_bound, higher_bound + 1) and source.user.id == CONST.BOT_OWNER_ID:
+            logger.debug("User is the bot owner")
+            return True
 
     logger.debug("All checks failed, returning False")
     return False
@@ -161,6 +142,9 @@ async def level_to_name(
     # return dictionary[level]
 
     # get the role name from the role id
+
+    if level == 8 or level == 9:
+        return "Sys Admin" if level == 8 else "Bot Owner"
 
     # if the source is ctx
     if isinstance(source, commands.Context):
@@ -284,42 +268,49 @@ def has_pl(level: int, or_higher: bool = True):
         Whether the user should have the permission level or higher, by default False
     """
 
-    async def predicate(source: commands.Context[commands.Bot] | discord.Interaction) -> bool:
-        # if not await has_permission(ctx, level, 9 if or_higher else None):
-        #     logger.error(f"{ctx.author} tried to run a command without permission. Command: {ctx.command}, Permission Level: {level} or higher: {or_higher}")
-        #     raise PermissionLevelError(await level_to_name(ctx, level, or_higher))
-        # logger.info(f"{ctx.author} ran command {ctx.command} with permission level {await level_to_name(ctx, level, or_higher)}")
-        # return True
-
-        # if source is ctx
-        if isinstance(source, commands.Context):
-            logger.debug("Checking permission level for context")
-            ctx = source
-            if ctx.guild is None:
-                return False
-            if not await has_permission(ctx, level, 9 if or_higher else None):
-                logger.error(
-                    f"{ctx.author} tried to run a command without permission. Command: {ctx.command}, Permission Level: {level} or higher: {or_higher}",
-                )
-                raise PermissionLevelError(await level_to_name(ctx, level, or_higher))
-            logger.info(
-                f"{ctx.author} ran command {ctx.command} with permission level {await level_to_name(ctx, level, or_higher)}",
-            )
-            return True
-        logger.debug("Checking permission level for interaction")
-        interaction = source
-        if not interaction:
-            return False
-        if not interaction.guild:
-            return False
-        if not await has_permission(interaction, level, 9 if or_higher else None):
+    async def predicate(ctx: commands.Context[commands.Bot] | discord.Interaction) -> bool:
+        if isinstance(ctx, discord.Interaction):
+            logger.error("Interaction source is not supported for this check, please use ac_has_pl instead.")
+            msg = "Interaction source is not supported for this check, please use ac_has_pl instead. Please report this as a issue."
+            raise PermissionLevelError(msg)
+        if not await has_permission(ctx, level, 9 if or_higher else None):
             logger.error(
-                f"{interaction.user} tried to run a command without permission. Command: {interaction.command}, Permission Level: {level} or higher: {or_higher}",
+                f"{ctx.author} tried to run a command without permission. Command: {ctx.command}, Permission Level: {level} or higher: {or_higher}",
             )
-            raise PermissionLevelError(await level_to_name(interaction, level, or_higher))
+            raise PermissionLevelError(await level_to_name(ctx, level, or_higher))
         logger.info(
-            f"{interaction.user} ran command {interaction.command} with permission level {await level_to_name(interaction, level, or_higher)}",
+            f"{ctx.author} ran command {ctx.command} with permission level {await level_to_name(ctx, level, or_higher)}",
         )
         return True
 
     return commands.check(predicate)
+
+
+def ac_has_pl(level: int, or_higher: bool = True):
+    """
+    Check if the user has a permission level equal to or higher than the given level.
+
+    Parameters
+    ----------
+    level : int
+        The permission level to check against.
+    or_higher : bool, optional
+        Whether the user should have the permission level or higher, by default False
+    """
+
+    async def predicate(ctx: commands.Context[commands.Bot] | discord.Interaction) -> bool:
+        if isinstance(ctx, commands.Context):
+            logger.error("Context source is not supported for this check, please use has_pl instead.")
+            msg = "Context source is not supported for this check, please use has_pl instead. Please report this as a issue."
+            raise AppCommandPermissionLevelError(msg)
+        if not await has_permission(ctx, level, 9 if or_higher else None):
+            logger.error(
+                f"{ctx.user} tried to run a command without permission. Command: {ctx.command}, Permission Level: {level} or higher: {or_higher}",
+            )
+            raise AppCommandPermissionLevelError(await level_to_name(ctx, level, or_higher))
+        logger.info(
+            f"{ctx.user} ran command {ctx.command} with permission level {await level_to_name(ctx, level, or_higher)}",
+        )
+        return True
+
+    return app_commands.check(predicate)

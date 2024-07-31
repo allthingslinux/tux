@@ -15,6 +15,12 @@ class PermissionLevelError(commands.CheckFailure):
         super().__init__(f"User does not have the required permission: {permission}")
 
 
+class AppCommandPermissionLevelError(app_commands.CheckFailure):
+    def __init__(self, permission: str) -> None:
+        self.permission = permission
+        super().__init__(f"User does not have the required permission: {permission}")
+
+
 error_map: dict[type[Exception], str] = {
     # app_commands
     app_commands.AppCommandError: "An error occurred: {error}",
@@ -45,6 +51,7 @@ error_map: dict[type[Exception], str] = {
     commands.BotMissingPermissions: "User not in sudoers file. This incident will be reported. (Bot Missing Permissions)",
     # Custom errors
     error.PermissionLevelError: "User not in sudoers file. This incident will be reported. (You do not have the required permission: {error.permission})",
+    error.AppCommandPermissionLevelError: "User not in sudoers file. This incident will be reported. (You do not have the required permission: {error.permission})",
 }
 
 
