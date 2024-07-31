@@ -18,7 +18,6 @@ class Config(commands.Cog):
         self.db = DatabaseController().guild_config
 
     @app_commands.command(name="config_set_logs")
-    @app_commands.describe(setting="Which category of logs to configure")
     @app_commands.guild_only()
     # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
