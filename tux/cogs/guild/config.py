@@ -4,9 +4,12 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-import tux.utils.checks as checks
 from tux.database.controllers import DatabaseController
 from tux.ui.views.config import ConfigSetChannels, ConfigSetPrivateLogs, ConfigSetPublicLogs
+
+# TODO: Add onboarding setup to ensure all required channels, logs, and roles are set up
+# TODO: Figure out how to handle using our custom checks because the current checks would result in a lock out
+# TODO: Add a command to reset the guild config to default values
 
 
 class Config(commands.Cog):
@@ -15,9 +18,10 @@ class Config(commands.Cog):
         self.db = DatabaseController().guild_config
 
     @app_commands.command(name="config_set_logs")
-    @app_commands.describe(category="Which category of logs to configure")
+    @app_commands.describe(setting="Which category of logs to configure")
     @app_commands.guild_only()
-    @checks.ac_has_pl(7)
+    # @checks.ac_has_pl(7)
+    @app_commands.checks.has_permissions(administrator=True)
     async def config_set_logs(
         self,
         interaction: discord.Interaction,
@@ -44,7 +48,8 @@ class Config(commands.Cog):
 
     @app_commands.command(name="config_set_channels")
     @app_commands.guild_only()
-    @checks.ac_has_pl(7)
+    # @checks.ac_has_pl(7)
+    @app_commands.checks.has_permissions(administrator=True)
     async def config_set_channels(
         self,
         interaction: discord.Interaction,
@@ -76,7 +81,8 @@ class Config(commands.Cog):
         ],
     )
     @app_commands.guild_only()
-    @checks.ac_has_pl(7)
+    # @checks.ac_has_pl(7)
+    @app_commands.checks.has_permissions(administrator=True)
     async def config_set_roles(
         self,
         interaction: discord.Interaction,
@@ -112,7 +118,8 @@ class Config(commands.Cog):
 
     @app_commands.command(name="config_get_roles")
     @app_commands.guild_only()
-    @checks.ac_has_pl(7)
+    # @checks.ac_has_pl(7)
+    @app_commands.checks.has_permissions(administrator=True)
     async def config_get_roles(
         self,
         interaction: discord.Interaction,
