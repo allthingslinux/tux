@@ -120,20 +120,41 @@ class Jail(ModerationCogBase):
             return
 
         target_roles: list[discord.Role] = self._get_manageable_roles(target, jail_role)
+
+        if jail_role in target.roles:
+            await ctx.send("The user is already jailed.", delete_after=30, ephemeral=True)
+            return
+
         case_target_roles = [role.id for role in target_roles]
 
         await self._jail_user(ctx, target, flags, jail_role, target_roles)
-
-        case = await self.db.case.insert_case(
-            guild_id=ctx.guild.id,
-            case_target_id=target.id,
-            case_moderator_id=ctx.author.id,
-            case_type=CaseType.JAIL,
-            case_reason=flags.reason,
-            case_target_roles=case_target_roles,
-        )
-
+        case = await self._insert_jail_case(ctx, target, flags.reason, case_target_roles)
         await self.handle_case_response(ctx, case, "created", flags.reason, target)
+
+    async def _insert_jail_case(
+        self,
+        ctx: commands.Context[commands.Bot],
+        target: discord.Member,
+        reason: str,
+        case_target_roles: list[int] | None = None,
+    ) -> Case | None:
+        if not ctx.guild:
+            logger.warning("Jail command used outside of a guild context.")
+            return None
+
+        try:
+            return await self.db.case.insert_case(
+                case_target_id=target.id,
+                case_moderator_id=ctx.author.id,
+                case_type=CaseType.JAIL,
+                case_reason=reason,
+                guild_id=ctx.guild.id,
+                case_target_roles=case_target_roles,
+            )
+        except Exception as e:
+            logger.error(f"Failed to insert jail case for {target}. {e}")
+            await ctx.send(f"Failed to insert jail case for {target}. {e}", delete_after=30, ephemeral=True)
+            return None
 
     async def _cannot_jail(
         self,
