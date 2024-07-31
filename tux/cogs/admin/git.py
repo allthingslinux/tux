@@ -472,7 +472,8 @@ class Git(commands.Cog):
         usage="$git create_issue [title] [body]",
     )
     @commands.guild_only()
-    @checks.has_pl(8)
+    # @checks.has_pl(8)
+    @commands.has_any_role("Root", "Admin", "Contributor", "Tux Contributor", "Tux Beta Tester", "%wheel")
     async def create_issue(self, ctx: commands.Context[commands.Bot], title: str, body: str) -> None:
         """
         Create an issue.
