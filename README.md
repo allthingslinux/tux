@@ -53,9 +53,9 @@ Tux is a Discord bot for the All Things Linux Discord server. It is designed to 
 ### Prerequisites
 - Python 3.12
 - [Poetry](https://python-poetry.org/docs/)
-- Optional: [Docker](https://docs.docker.com/get-docker/)
-- Optional: [Docker Compose](https://docs.docker.com/compose/install/)
-- Optional: [Just](https://github.com/casey/just/)
+- Optional: [Docker](https://docs.docker.com/get-docker/) if you want to run the bot in a container.
+- Optional: [Docker Compose](https://docs.docker.com/compose/install/) if you want to define the container environment in a `docker-compose.yml` file.
+- Optional: [Just](https://github.com/casey/just/) if you want to use the Justfile for easy CLI commands.
 
 ### Steps
 1. Clone the repository
