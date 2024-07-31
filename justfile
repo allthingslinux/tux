@@ -36,10 +36,15 @@ setup-env:
     just install
     just lint-fix
     just generate-prisma
-    # just prisma-migrate
 
 start-docker:
     docker compose up --build -d
 
 stop-docker:
     docker compose down
+
+serve-docs:
+	mkdocs serve
+
+build-docs:
+	mkdocs build

@@ -34,6 +34,9 @@ types-psutil = "^6.0.0.20240621"
 typing-extensions = "^4.12.2"
 pydantic = "^2.8.2"
 
+[tool.poetry.group.docs.dependencies]
+mkdocs-material = "^9.5.30"
+
 [build-system]
 build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core"]
