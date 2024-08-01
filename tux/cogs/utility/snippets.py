@@ -9,6 +9,7 @@ from reactionmenu import ViewButton, ViewMenu
 
 from prisma.models import Snippet
 from tux.database.controllers import DatabaseController
+from tux.utils import checks
 from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import EmbedCreator, create_embed_footer
 
@@ -128,50 +129,59 @@ class Snippets(commands.Cog):
             return
 
         # Check if the author of the snippet is the same as the user who wants to delete it and if theres no author don't allow deletion
-
         author_id = snippet.snippet_user_id or 0
         if author_id != ctx.author.id:
-            conf = await self.config.get_guild_config(ctx.guild.id)
-            member = ctx.guild.get_member(ctx.author.id)
-
-            if member is None:
-                embed = EmbedCreator.create_error_embed(
-                    title="Error",
-                    description="You can only delete your own snippets.",
-                    ctx=ctx,
-                )
-                await ctx.send(embed=embed)
-                return
-
-            user_roles = [role.id for role in member.roles]
-
-            if not conf:
-                embed = EmbedCreator.create_error_embed(
-                    title="Error",
-                    description="You can only delete your own snippets.",
-                    ctx=ctx,
-                )
-                await ctx.send(embed=embed)
-                return
-
-            # TODO: Fix snippet deletion permission check later
-            if (conf.perm_level_7_role_id or 0) | (conf.perm_level_6_role_id or 0) | (
-                conf.perm_level_5_role_id or 0
-            ) | (conf.perm_level_4_role_id or 0) | (conf.perm_level_3_role_id or 0) | (
-                conf.perm_level_2_role_id or 0
-            ) not in user_roles:
-                embed = EmbedCreator.create_error_embed(
-                    title="Error",
-                    description="You can only delete your own snippets.",
-                    ctx=ctx,
-                )
-                await ctx.send(embed=embed, ephemeral=True, delete_after=30)
-                return
+            embed = EmbedCreator.create_error_embed(
+                title="Error",
+                description="You can only delete your own snippets.",
+                ctx=ctx,
+            )
+            await ctx.send(embed=embed)
+            return
 
         await self.db.delete_snippet_by_id(snippet.snippet_id)
 
         await ctx.send("Snippet deleted.", delete_after=30, ephemeral=True)
         logger.info(f"{ctx.author} deleted the snippet with the name {name}.")
+
+    @commands.command(
+        name="forcedeletesnippet",
+        aliases=["fds"],
+        usage="$forcedeletesnippet [name]",
+    )
+    @commands.guild_only()
+    @checks.has_pl(2)
+    async def force_delete_snippet(self, ctx: commands.Context[commands.Bot], name: str) -> None:
+        """
+        Force delete a snippet by name.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object.
+        name : str
+            The name of the snippet.
+        """
+
+        if ctx.guild is None:
+            await ctx.send("This command cannot be used in direct messages.")
+            return
+
+        snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
+
+        if snippet is None:
+            embed = EmbedCreator.create_error_embed(
+                title="Error",
+                description="Snippet not found.",
+                ctx=ctx,
+            )
+            await ctx.send(embed=embed, delete_after=30)
+            return
+
+        await self.db.delete_snippet_by_id(snippet.snippet_id)
+
+        await ctx.send("Snippet deleted.", delete_after=30, ephemeral=True)
+        logger.info(f"{ctx.author} force deleted the snippet with the name {name}.")
 
     @commands.command(
         name="snippet",
@@ -210,57 +220,57 @@ class Snippets(commands.Cog):
 
         await ctx.send(text, allowed_mentions=AllowedMentions.none())
 
-    # @commands.command(
-    #     name="snippetinfo",
-    #     aliases=["si"],
-    #     usage="$snippetinfo [name]",
-    # )
-    # @commands.guild_only()
-    # async def get_snippet_info(self, ctx: commands.Context[commands.Bot], name: str) -> None:
-    #     """
-    #     Get information about a snippet by name.
+    @commands.command(
+        name="snippetinfo",
+        aliases=["si"],
+        usage="$snippetinfo [name]",
+    )
+    @commands.guild_only()
+    async def get_snippet_info(self, ctx: commands.Context[commands.Bot], name: str) -> None:
+        """
+        Get information about a snippet by name.
 
-    #     Parameters
-    #     ----------
-    #     ctx : commands.Context[commands.Bot]
-    #         The context object.
-    #     name : str
-    #         The name of the snippet.
-    #     """
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object.
+        name : str
+            The name of the snippet.
+        """
 
-    #     if ctx.guild is None:
-    #         await ctx.send("This command cannot be used in direct messages.")
-    #         return
+        if ctx.guild is None:
+            await ctx.send("This command cannot be used in direct messages.")
+            return
 
-    #     snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
+        snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
-    #     if snippet is None:
-    #         embed = EmbedCreator.create_error_embed(
-    #             title="Error",
-    #             description="Snippet not found.",
-    #             ctx=ctx,
-    #         )
-    #         await ctx.send(embed=embed, delete_after=30)
-    #         return
+        if snippet is None:
+            embed = EmbedCreator.create_error_embed(
+                title="Error",
+                description="Snippet not found.",
+                ctx=ctx,
+            )
+            await ctx.send(embed=embed, delete_after=30)
+            return
 
-    #     author = self.bot.get_user(snippet.snippet_user_id) or ctx.author
+        author = self.bot.get_user(snippet.snippet_user_id) or ctx.author
 
-    #     embed: discord.Embed = EmbedCreator.custom_footer_embed(
-    #         title="Snippet Information",
-    #         content=f"**Name:** {snippet.snippet_name}\n**Author:** {author}\n**Created At:** (set as embed timestamp)\n**Content:** {snippet.snippet_content}",
-    #         ctx=ctx,
-    #         latency="N/A",
-    #         interaction=None,
-    #         state="DEFAULT",
-    #         user=author,
-    #     )
+        embed: discord.Embed = EmbedCreator.custom_footer_embed(
+            title="Snippet Information",
+            content=f"**Name:** {snippet.snippet_name}\n**Author:** {author}\n**Created At:** (set as embed timestamp)\n**Content:** {snippet.snippet_content}",
+            ctx=ctx,
+            latency="N/A",
+            interaction=None,
+            state="DEFAULT",
+            user=author,
+        )
 
-    #     embed.timestamp = snippet.snippet_created_at or datetime.datetime.fromtimestamp(
-    #         0,
-    #         datetime.UTC,
-    #     )
+        embed.timestamp = snippet.snippet_created_at or datetime.datetime.fromtimestamp(
+            0,
+            datetime.UTC,
+        )
 
-    #     await ctx.send(embed=embed)
+        await ctx.send(embed=embed)
 
     @commands.command(
         name="createsnippet",
