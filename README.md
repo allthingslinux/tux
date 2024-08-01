@@ -105,10 +105,17 @@ Tux is a Discord bot for the All Things Linux Discord server. It is designed to 
    ```
 
 ## Development Notes
-- Make sure to add your discord ID to the sys admin list if you are testing locally.
-- Make sure to set the prisma schema database ENV variable to the DEV database URL.
+
+> [!NOTE]  
+> Make sure to add your discord ID to the sys admin list if you are testing locally.
+
+> [!NOTE]
+> Make sure to set the prisma schema database ENV variable to the DEV database URL.
 
 ## License
+
 This project is licensed under the terms of the The GNU General Public License v3.0. See the [LICENSE](LICENSE.md) file for details.
+
+## Metrics
 
 ![Alt](https://repobeats.axiom.co/api/embed/cd24c48127e0b6fbc9467711d6d4bd74b30ff8d2.svg "Repobeats analytics image")
