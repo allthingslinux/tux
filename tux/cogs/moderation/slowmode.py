@@ -19,7 +19,7 @@ class Slowmode(commands.Cog):
     async def slowmode(
         self,
         ctx: commands.Context[commands.Bot],
-        delay: int,
+        delay: int | str,
         channel: discord.TextChannel | discord.Thread | None = None,
     ) -> None:
         """
@@ -45,6 +45,10 @@ class Slowmode(commands.Cog):
                 await ctx.send("Invalid channel type, must be a text channel.", delete_after=30, ephemeral=True)
                 return
             channel = ctx.channel
+
+        if isinstance(delay, str):
+            # Check if the delay is a string and remove the 's' from the end
+            delay = int(delay[:-1])
 
         if delay < 0 or delay > 21600:
             await ctx.send("The slowmode delay must be between 0 and 21600 seconds.", delete_after=30, ephemeral=True)

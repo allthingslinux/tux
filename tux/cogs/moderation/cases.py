@@ -55,6 +55,7 @@ class Cases(ModerationCogBase):
         self,
         ctx: commands.Context[commands.Bot],
         case_number: int | None,
+        *,
         flags: CasesViewFlags,
     ) -> None:
         """
@@ -90,6 +91,7 @@ class Cases(ModerationCogBase):
         self,
         ctx: commands.Context[commands.Bot],
         case_number: int,
+        *,
         flags: CaseModifyFlags,
     ) -> None:
         """
