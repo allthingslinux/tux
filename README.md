@@ -110,3 +110,5 @@ Tux is a Discord bot for the All Things Linux Discord server. It is designed to 
 
 ## License
 This project is licensed under the terms of the The GNU General Public License v3.0. See the [LICENSE](LICENSE.md) file for details.
+
+![Alt](https://repobeats.axiom.co/api/embed/cd24c48127e0b6fbc9467711d6d4bd74b30ff8d2.svg "Repobeats analytics image")
