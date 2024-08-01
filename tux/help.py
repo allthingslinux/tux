@@ -1,9 +1,13 @@
+import os
+import re
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any, get_type_hints
 
 import discord
 from discord.ext import commands
 from loguru import logger
+from reactionmenu import ViewButton, ViewMenu
 
 from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import EmbedCreator
@@ -14,9 +18,9 @@ class TuxHelp(commands.HelpCommand):
         self.prefix = CONST.PREFIX
         super().__init__(
             command_attrs={
-                "help": "Lists all categories and commands.",
+                "help": "Lists all commands and sub-commands.",
                 "aliases": ["h"],
-                "usage": "$help <category> or <command>",
+                "usage": "$help <command> or <sub-command>",
             },
         )
 
@@ -84,28 +88,50 @@ class TuxHelp(commands.HelpCommand):
         mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]],
     ) -> None:
         """
-        Sends help message for the bot.
+        Sends help message for the bot with pagination based on the folder it is in.
         """
-        category_strings: dict[str, str] = {}
+        command_categories: dict[str, dict[str, str]] = {}
         for cog, mapping_commands in mapping.items():
             if cog is None:
                 continue
+            match = re.search(r"<cogs\.([^\.]+)\..*>", str(cog))
+            if match:
+                cog_group: str = match.group(1)
+            else:
+                cog_group = "extra"
             if len(mapping_commands) == 0:
                 continue
+            cmd = cog.qualified_name
+            if cog_group not in command_categories:
+                command_categories[cog_group] = {}
+            if cmd not in command_categories[cog_group]:
+                command_categories[cog_group][cmd] = f"**{cmd}** | "
 
-            category = cog.qualified_name
-            if category not in category_strings:
-                category_strings[category] = f"**{category}** | "
+            for subcmd in mapping_commands:
+                command_name = subcmd.name
+                command_categories[cog_group][cmd] += f"`{command_name}` "
+                if isinstance(subcmd, commands.Group):
+                    command_categories[cog_group][cmd] += "".join(f"`{subcmd.name}` " for subcmd in subcmd.commands)
 
-            for command in mapping_commands:
-                command_name = command.name
-                category_strings[category] += f"`{command_name}` "
-                if isinstance(command, commands.Group):
-                    category_strings[category] += "".join(f"`{subcmd.name}` " for subcmd in command.commands)
+        menu = ViewMenu(self.context, menu_type=ViewMenu.TypeEmbed)
+        cog_groups = [d for d in os.listdir("./tux/cogs") if Path(f"./tux/cogs/{d}").is_dir() and d != "__pycache__"]
+        for i in range(len(cog_groups)):
+            embed = self.embed_base(cog_groups[i] + " Commands", "\n")
+            embed.set_footer(text=f"Use {self.prefix}help <command> or <sub-command> to learn about it.")
 
-        embed = self.embed_base("Categories", "\n".join(category_strings.values()))
-        embed.set_footer(text=f"Use {self.prefix}help [category] or [command] to learn about it.")
-        await self.get_destination().send(embed=embed)
+            if cog_groups[i] in command_categories:
+                for cmd, command_list in command_categories[cog_groups[i]].items():
+                    embed.add_field(name=cmd, value=command_list, inline=False)
+            else:
+                embed.add_field(name="No commands found", value="This command has no sub-commands.", inline=False)
+
+            menu.add_page(embed)
+
+        menu.add_button(ViewButton.back())
+        menu.add_button(ViewButton.next())
+        menu.add_button(ViewButton.end_session())
+
+        await menu.start()
 
     async def send_cog_help(self, cog: commands.Cog) -> None:
         """
