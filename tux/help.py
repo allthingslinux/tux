@@ -116,7 +116,7 @@ class TuxHelp(commands.HelpCommand):
         menu = ViewMenu(self.context, menu_type=ViewMenu.TypeEmbed)
         cog_groups = [d for d in os.listdir("./tux/cogs") if Path(f"./tux/cogs/{d}").is_dir() and d != "__pycache__"]
         for i in range(len(cog_groups)):
-            embed = self.embed_base(cog_groups[i] + " Commands", "\n")
+            embed = self.embed_base(cog_groups[i].capitalize() + " Commands", "\n")
             embed.set_footer(text=f"Use {self.prefix}help <command> or <sub-command> to learn about it.")
 
             if cog_groups[i] in command_categories:
