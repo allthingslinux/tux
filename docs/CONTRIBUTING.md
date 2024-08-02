@@ -20,7 +20,7 @@ git push origin feat/add-help-command
 ```
 
 5. Send a PR with the modifications, referencing `main`.
-6. Your contribution will be verified.
+6. Your contribution will be reviewed by the maintainers.
 
 
 After merge:
