@@ -89,7 +89,9 @@ class ErrorHandler(commands.Cog):
         else:
             await interaction.response.send_message(error_message, ephemeral=True)
 
-        if type(error) not in error_map:
+        if type(error) in error_map:
+            sentry_sdk.capture_exception(error)
+        else:
             self.log_error_traceback(error)
 
     @commands.Cog.listener()
@@ -122,6 +124,7 @@ class ErrorHandler(commands.Cog):
         if isinstance(error, commands.CheckFailure):
             message = error_map.get(type(error), self.error_message).format(error=error, ctx=ctx)
             await ctx.send(content=message, ephemeral=True, delete_after=30)
+            sentry_sdk.capture_exception(error)
             return
 
         # If the error is CommandNotFound, return
@@ -142,6 +145,8 @@ class ErrorHandler(commands.Cog):
         # Log the error traceback if it's not in the error map
         if type(error) not in error_map:
             self.log_error_traceback(error)
+        else:
+            sentry_sdk.capture_exception(error)
 
     def get_error_message(
         self,
