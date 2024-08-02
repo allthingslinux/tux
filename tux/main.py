@@ -27,7 +27,13 @@ async def main() -> None:
     # console_task = None
 
     # Initialize the bot
-    bot = Tux(command_prefix=CONST.PREFIX, intents=discord.Intents.all())
+    bot = Tux(
+        command_prefix=CONST.PREFIX,
+        strip_after_prefix=True,
+        intents=discord.Intents.all(),
+        owner_id=CONST.BOT_OWNER_ID,
+        allowed_mentions=discord.AllowedMentions(everyone=False, roles=False),
+    )
 
     setup_sentry(bot)
 
