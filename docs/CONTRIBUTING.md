@@ -19,7 +19,7 @@ git commit -m "feat(tux): add help command" -m "Help command description"
 git push origin feat/add-help-command
 ```
 
-5. Send a PR with the modifications, referencing `main`.
+5. Send a Pull Request (PR) with the modifications, referencing the `main` branch.
 6. Your contribution will be reviewed by the maintainers.
 
 
