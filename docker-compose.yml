@@ -10,4 +10,4 @@ services:
       - .env
     volumes:
       - .:/app
-    command: ["sh", "-c", "ls && poetry run prisma generate && poetry run python tux/main.py"]
+    command: ["sh", "-c", "ls && poetry run prisma py fetch && poetry run prisma generate && poetry run python tux/main.py"]

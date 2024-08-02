@@ -39,4 +39,4 @@ RUN mkdir -p /app/.cache/prisma && chmod +x /app/.cache/prisma
 ENV PYTHONPATH=/app
 
 # Removing entrypoint and using CMD instead for better debugging
-CMD ["sh", "-c", "ls && poetry run prisma generate && poetry run python tux/main.py"]
+CMD ["sh", "-c", "ls && poetry run prisma py fetch && poetry run prisma generate && poetry run python tux/main.py"]

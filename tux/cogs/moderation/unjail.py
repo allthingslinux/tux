@@ -26,6 +26,7 @@ class Unjail(ModerationCogBase):
         self,
         ctx: commands.Context[commands.Bot],
         target: discord.Member,
+        *,
         flags: UnjailFlags,
     ) -> None:
         """
@@ -138,7 +139,7 @@ class Unjail(ModerationCogBase):
             previous_roles = [await commands.RoleConverter().convert(ctx, str(role)) for role in case.case_target_roles]
 
             if previous_roles:
-                await target.add_roles(*previous_roles, reason=reason)
+                await target.add_roles(*previous_roles, reason=reason, atomic=False)
             else:
                 await ctx.send("No previous roles found for the user.", delete_after=30, ephemeral=True)
 

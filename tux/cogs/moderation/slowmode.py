@@ -12,14 +12,14 @@ class Slowmode(commands.Cog):
     @commands.hybrid_command(
         name="slowmode",
         aliases=["sm"],
-        usage="$slowmode [delay: int] <channel>",
+        usage="$slowmode [delay] <channel>",
     )
     @commands.guild_only()
     @checks.has_pl(2)
     async def slowmode(
         self,
         ctx: commands.Context[commands.Bot],
-        delay: int,
+        delay: str,
         channel: discord.TextChannel | discord.Thread | None = None,
     ) -> None:
         """
@@ -46,11 +46,25 @@ class Slowmode(commands.Cog):
                 return
             channel = ctx.channel
 
-        if delay < 0 or delay > 21600:
-            await ctx.send("The slowmode delay must be between 0 and 21600 seconds.", delete_after=30, ephemeral=True)
+        # If the delay is in the format of e.g. 5s, convert it to 5
+        if delay and delay[-1] in ["s", "m", "h"]:
+            delay = delay[:-1]
+
+        # Unsure of how to type hint this properly as it can be a string or int
+        # and I can't use a Union for the argument because discord.py nagging?
 
         try:
-            await channel.edit(slowmode_delay=delay)
+            delay = int(delay)  # type: ignore
+        except ValueError:
+            await ctx.send("The delay must be a valid integer.", delete_after=30, ephemeral=True)
+            return
+
+        if delay < 0 or delay > 21600:  # type: ignore
+            await ctx.send("The slowmode delay must be between 0 and 21600 seconds.", delete_after=30, ephemeral=True)
+            return
+
+        try:
+            await channel.edit(slowmode_delay=delay)  # type: ignore
             await ctx.send(f"Slowmode set to {delay} seconds in {channel.mention}.", delete_after=30, ephemeral=True)
 
         except Exception as error:

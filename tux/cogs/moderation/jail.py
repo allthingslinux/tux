@@ -95,6 +95,7 @@ class Jail(ModerationCogBase):
         self,
         ctx: commands.Context[commands.Bot],
         target: discord.Member,
+        *,
         flags: JailFlags,
     ) -> None:
         """
@@ -215,7 +216,7 @@ class Jail(ModerationCogBase):
             await self.send_dm(ctx, flags.silent, target, flags.reason, "jailed")
 
             if target_roles:
-                await target.remove_roles(*target_roles, reason=flags.reason)
+                await target.remove_roles(*target_roles, reason=flags.reason, atomic=False)
             await target.add_roles(jail_role, reason=flags.reason)
 
         except (discord.Forbidden, discord.HTTPException) as e:
