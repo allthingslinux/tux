@@ -12,7 +12,7 @@ class Slowmode(commands.Cog):
     @commands.hybrid_command(
         name="slowmode",
         aliases=["sm"],
-        usage="$slowmode [delay: int] <channel>",
+        usage="$slowmode [delay] <channel>",
     )
     @commands.guild_only()
     @checks.has_pl(2)
