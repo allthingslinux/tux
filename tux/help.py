@@ -178,13 +178,13 @@ class TuxHelp(commands.HelpCommand):
         mapping : Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]]
             The mapping of cogs to commands.
         """
-        
+
         # Make the first info page of the command
         menu = ViewMenu(self.context, menu_type=ViewMenu.TypeEmbed)
         embed = self.embed_base("Header Text")
         embed.set_footer(text=f"Use {self.prefix}help <command> or <sub-command> to learn about it.")
         menu.add_page(embed)
-        
+
         command_categories: dict[str, dict[str, str]] = {}
         # Iterate over the mapping and build the command categories
         for cog, mapping_commands in mapping.items():
@@ -236,7 +236,7 @@ class TuxHelp(commands.HelpCommand):
                     embed.add_field(name=cmd, value=command_list, inline=False)
 
                 menu.add_page(embed)
-                
+
         pagenumbers_dict: dict[int, str] = {1: "One", 2: "Two"}
 
         menu.add_button(ViewButton.back())
@@ -245,7 +245,6 @@ class TuxHelp(commands.HelpCommand):
         menu.add_button(ViewButton.end_session())
 
         await menu.start()
-
 
     async def send_cog_help(self, cog: commands.Cog) -> None:
         """
