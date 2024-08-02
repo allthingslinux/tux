@@ -105,7 +105,7 @@ class TuxHelp(commands.HelpCommand):
             if cog_group not in command_categories:
                 command_categories[cog_group] = {}
             if cmd not in command_categories[cog_group]:
-                command_categories[cog_group][cmd] = f"**{cmd}** | "
+                command_categories[cog_group][cmd] = ""
 
             for subcmd in mapping_commands:
                 command_name = subcmd.name
