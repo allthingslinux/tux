@@ -60,6 +60,8 @@ class EventHandler(commands.Cog):
             return
         if channel.type != discord.ChannelType.text:
             return
+        if channel.id != 1172343581495795752:
+            return
 
         message = await channel.fetch_message(payload.message_id)
         if not message:
