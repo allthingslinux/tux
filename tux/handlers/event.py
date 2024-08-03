@@ -58,8 +58,9 @@ class EventHandler(commands.Cog):
         channel = guild.get_channel(payload.channel_id)
         if channel is None:
             return
-        if channel.type != discord.ChannelType.text:
+        if channel.type != discord.ChannelType.text or discord.ChannelType.news:
             return
+
         if channel.id != 1172343581495795752:
             return
 
