@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from loguru import logger
 
 from tux.database.controllers import DatabaseController
 from tux.utils.functions import is_harmful, strip_formatting
@@ -55,18 +56,18 @@ class EventHandler(commands.Cog):
         if member is None:
             return
 
-        channel = guild.get_channel(payload.channel_id)
+        channel = self.bot.get_channel(payload.channel_id)
+        logger.info(f"Channel: {channel}")
         if channel is None:
             return
-        if channel.type != discord.ChannelType.text or discord.ChannelType.news:
-            return
-
         if channel.id != 1172343581495795752:
+            logger.info(f"Channel ID: {channel.id}")
+            return
+        if not isinstance(channel, discord.TextChannel):
+            logger.info(f"Channel Type: {type(channel)}")
             return
 
         message = await channel.fetch_message(payload.message_id)
-        if not message:
-            return
 
         emoji = payload.emoji
         if any(0x1F1E6 <= ord(char) <= 0x1F1FF for char in emoji.name):
