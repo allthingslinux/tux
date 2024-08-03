@@ -11,7 +11,7 @@ from loguru import logger
 from tux.utils.constants import Constants as CONST
 
 
-class GitHubService:
+class GithubService:
     def __init__(self) -> None:
         self.github = GitHub(
             AppInstallationAuthStrategy(

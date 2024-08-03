@@ -384,28 +384,20 @@
 
 # TODO: Rewrite this cog to use the new hybrid command system.
 
-import discord
 from discord.ext import commands
 from loguru import logger
 
-import tux.utils.checks as checks
+from tux.ui.buttons import GithubButton
+from tux.utils import checks
 from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import EmbedCreator
-from tux.wrappers.github import GitHubService
-
-
-class LinkButton(discord.ui.View):
-    def __init__(self, url: str) -> None:
-        super().__init__()
-        self.add_item(
-            discord.ui.Button(style=discord.ButtonStyle.link, label="View on Github", url=url),
-        )
+from tux.wrappers.github import GithubService
 
 
 class Git(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.github = GitHubService()
+        self.github = GithubService()
         self.repo_url = CONST.GITHUB_REPO_URL
 
     @commands.hybrid_group(
@@ -463,7 +455,7 @@ class Git(commands.Cog):
             logger.error(f"Error fetching repository: {e}")
 
         else:
-            await ctx.send(embed=embed, view=LinkButton(repo.html_url))
+            await ctx.send(embed=embed, view=GithubButton(repo.html_url))
             logger.info(f"{ctx.author} fetched repository information.")
 
     @git.command(
@@ -505,7 +497,7 @@ class Git(commands.Cog):
             logger.error(f"Error creating issue: {e}")
 
         else:
-            await ctx.send(embed=embed, view=LinkButton(created_issue.html_url))
+            await ctx.send(embed=embed, view=GithubButton(created_issue.html_url))
             logger.info(f"{ctx.author} created an issue.")
 
     @git.command(
@@ -546,7 +538,7 @@ class Git(commands.Cog):
             logger.error(f"Error fetching issue: {e}")
 
         else:
-            await ctx.send(embed=embed, view=LinkButton(issue.html_url))
+            await ctx.send(embed=embed, view=GithubButton(issue.html_url))
             logger.info(f"{ctx.author} fetched an issue.")
 
 

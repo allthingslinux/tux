@@ -62,8 +62,10 @@ class Snippets(commands.Cog):
             embed = self._create_snippets_list_embed(ctx, snippets[i : i + snippets_per_page], len(snippets))
             menu.add_page(embed)
 
+        menu.add_button(ViewButton.go_to_first_page())
         menu.add_button(ViewButton.back())
         menu.add_button(ViewButton.next())
+        menu.add_button(ViewButton.go_to_last_page())
         menu.add_button(ViewButton.end_session())
 
         await menu.start()
@@ -86,11 +88,15 @@ class Snippets(commands.Cog):
         footer_text, footer_icon_url = create_embed_footer(ctx)
         embed.set_footer(text=footer_text, icon_url=footer_icon_url)
         embed.timestamp = ctx.message.created_at
+
         description = "```\n"
+
         for snippet in snippets:
             author = self.bot.get_user(snippet.snippet_user_id) or "Unknown"
             description += f"{snippet.snippet_name.ljust(20)} | by: {author}\n"
+
         description += "```"
+
         embed.description = description
 
         return embed
@@ -125,7 +131,8 @@ class Snippets(commands.Cog):
                 description="Snippet not found.",
                 ctx=ctx,
             )
-            await ctx.send(embed=embed, delete_after=30)
+
+            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
         # Check if the author of the snippet is the same as the user who wants to delete it and if theres no author don't allow deletion
@@ -136,7 +143,7 @@ class Snippets(commands.Cog):
                 description="You can only delete your own snippets.",
                 ctx=ctx,
             )
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
         await self.db.delete_snippet_by_id(snippet.snippet_id)
@@ -175,7 +182,7 @@ class Snippets(commands.Cog):
                 description="Snippet not found.",
                 ctx=ctx,
             )
-            await ctx.send(embed=embed, delete_after=30)
+            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
         await self.db.delete_snippet_by_id(snippet.snippet_id)
@@ -255,15 +262,20 @@ class Snippets(commands.Cog):
 
         author = self.bot.get_user(snippet.snippet_user_id) or ctx.author
 
+        latency = round(int(ctx.bot.latency * 1000))
+
         embed: discord.Embed = EmbedCreator.custom_footer_embed(
             title="Snippet Information",
-            content=f"**Name:** {snippet.snippet_name}\n**Author:** {author}\n**Created At:** (set as embed timestamp)\n**Content:** {snippet.snippet_content}",
             ctx=ctx,
-            latency="N/A",
+            latency=f"{latency}ms",
             interaction=None,
             state="DEFAULT",
             user=author,
         )
+
+        embed.add_field(name="Name", value=snippet.snippet_name, inline=False)
+        embed.add_field(name="Author", value=f"{author.mention}", inline=False)
+        embed.add_field(name="Content", value=f"> {snippet.snippet_content}", inline=False)
 
         embed.timestamp = snippet.snippet_created_at or datetime.datetime.fromtimestamp(
             0,

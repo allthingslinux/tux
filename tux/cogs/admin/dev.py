@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-import tux.utils.checks as checks
+from tux.utils import checks
 
 
 class Dev(commands.Cog):

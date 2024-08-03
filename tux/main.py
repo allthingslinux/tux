@@ -32,7 +32,7 @@ async def main() -> None:
         strip_after_prefix=True,
         intents=discord.Intents.all(),
         owner_id=CONST.BOT_OWNER_ID,
-        allowed_mentions=discord.AllowedMentions(everyone=False, roles=False),
+        allowed_mentions=discord.AllowedMentions(everyone=False),
     )
 
     setup_sentry(bot)

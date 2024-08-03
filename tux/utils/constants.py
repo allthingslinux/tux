@@ -75,8 +75,8 @@ class Constants:
             LOG_CHANNELS[key] = LOG_CHANNELS["DEV"]
 
     # Temp VC constants
-    TEMPVC_CATEGORY_ID: Final[str | None] = os.getenv("TEMPVC_CATEGORY_ID")
-    TEMPVC_CHANNEL_ID: Final[str | None] = os.getenv("TEMPVC_CHANNEL_ID")
+    TEMPVC_CATEGORY_ID: Final[str | None] = config["TEMPVC_CATEGORY_ID"]
+    TEMPVC_CHANNEL_ID: Final[str | None] = config["TEMPVC_CHANNEL_ID"]
 
     # Color constants
     EMBED_COLORS: Final[dict[str, int]] = config["EMBED_COLORS"]
