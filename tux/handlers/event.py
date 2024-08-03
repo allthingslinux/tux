@@ -40,6 +40,8 @@ class EventHandler(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
+        flag_list = ["🏳️‍🌈", "🏳️‍⚧️"]
+
         user = self.bot.get_user(payload.user_id)
         if user is None:
             return
@@ -74,6 +76,9 @@ class EventHandler(commands.Cog):
             await message.remove_reaction(emoji, member)
             return
         if "flag" in emoji.name.lower():
+            await message.remove_reaction(emoji, member)
+            return
+        if emoji.name in flag_list:
             await message.remove_reaction(emoji, member)
             return
 
