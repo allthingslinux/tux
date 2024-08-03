@@ -69,7 +69,7 @@ class EventHandler(commands.Cog):
         if any(0x1F1E6 <= ord(char) <= 0x1F1FF for char in emoji.name):
             await message.remove_reaction(emoji, member)
             return
-        if "flag" in emoji.name:
+        if "flag" in emoji.name.lower():
             await message.remove_reaction(emoji, member)
             return
 
