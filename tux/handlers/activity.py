@@ -13,7 +13,7 @@ class ActivityHandler(commands.Cog):
 
     def build_activity_list(self) -> list[discord.Activity | discord.Streaming]:
         activity_data = [
-            {"type": discord.ActivityType.watching, "name": f"{self._get_member_count()} members"},
+            {"type": discord.ActivityType.watching, "name": "{member_count} members"},
             {"type": discord.ActivityType.watching, "name": "All Things Linux"},
             {"type": discord.ActivityType.playing, "name": "with fire"},
             {"type": discord.ActivityType.watching, "name": "linux tech tips"},
@@ -40,16 +40,20 @@ class ActivityHandler(commands.Cog):
         return activities
 
     def _get_member_count(self) -> int:
-        return sum(len(guild.members) for guild in self.bot.guilds)
+        return sum(guild.member_count for guild in self.bot.guilds if guild.member_count is not None)
 
     async def run(self) -> NoReturn:
         while True:
             for activity in self.activities:
+                if activity.name and "{member_count}" in activity.name:
+                    activity.name = activity.name.replace("{member_count}", str(self._get_member_count()))
+
                 await self.bot.change_presence(activity=activity)
                 await asyncio.sleep(self.delay)
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
+        await asyncio.sleep(5)
         activity_task = asyncio.create_task(self.run())
         await asyncio.gather(activity_task)
 
