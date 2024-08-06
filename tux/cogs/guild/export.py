@@ -2,8 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-import tux.utils.checks as checks
-from tux.utils import exports
+from tux.utils import checks, exports
 from tux.utils.embeds import EmbedCreator
 
 

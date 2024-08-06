@@ -37,6 +37,47 @@ class EventHandler(commands.Cog):
     async def on_message(self, message: discord.Message) -> None:
         await self.handle_harmful_message(message)
 
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
+        flag_list = ["🏳️‍🌈", "🏳️‍⚧️"]
+
+        user = self.bot.get_user(payload.user_id)
+        if user is None:
+            return
+        if user.bot:
+            return
+
+        if payload.guild_id is None:
+            return
+        guild = self.bot.get_guild(payload.guild_id)
+        if guild is None:
+            return
+
+        member = guild.get_member(payload.user_id)
+        if member is None:
+            return
+
+        channel = self.bot.get_channel(payload.channel_id)
+        if channel is None:
+            return
+        if channel.id != 1172343581495795752:
+            return
+        if not isinstance(channel, discord.TextChannel):
+            return
+
+        message = await channel.fetch_message(payload.message_id)
+
+        emoji = payload.emoji
+        if any(0x1F1E6 <= ord(char) <= 0x1F1FF for char in emoji.name):
+            await message.remove_reaction(emoji, member)
+            return
+        if "flag" in emoji.name.lower():
+            await message.remove_reaction(emoji, member)
+            return
+        if emoji.name in flag_list:
+            await message.remove_reaction(emoji, member)
+            return
+
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(EventHandler(bot))

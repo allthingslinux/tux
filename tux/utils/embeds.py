@@ -125,7 +125,7 @@ class EmbedCreator:
         )
 
         embed.set_footer(
-            text=f"{user.name}@atl $ ∕tux {latency}",  # noqa: RUF001
+            text=f"{user.name}@atl $ {latency}",
             icon_url=str(user.avatar.url) if user.avatar else None,
         )
 

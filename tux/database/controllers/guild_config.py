@@ -161,8 +161,6 @@ class GuildConfigController:
             "5": "perm_level_5_role_id",
             "6": "perm_level_6_role_id",
             "7": "perm_level_7_role_id",
-            "8": "perm_level_8_role_id",
-            "9": "perm_level_9_role_id",
         }
 
         return await self.table.upsert(

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   tux:
     build: .
@@ -10,4 +8,3 @@ services:
       - .env
     volumes:
       - .:/app
-    command: ["sh", "-c", "ls && poetry run prisma py fetch && poetry run prisma generate && poetry run python tux/main.py"]

@@ -3,10 +3,10 @@ from discord.ext import commands
 from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
-import tux.utils.checks as checks
 from prisma.enums import CaseType
 from prisma.models import Case
 from prisma.types import CaseWhereInput
+from tux.utils import checks
 from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import create_embed_footer
 from tux.utils.flags import CaseModifyFlags, CasesViewFlags

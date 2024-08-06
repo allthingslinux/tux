@@ -6,7 +6,7 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
-import tux.utils.checks as checks
+from tux.utils import checks
 from tux.utils.constants import Constants as CONST
 
 # TODO: Refactor Mail cog

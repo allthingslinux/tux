@@ -2,19 +2,9 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.ui.buttons import XkcdButtons
 from tux.utils.embeds import EmbedCreator
 from tux.wrappers import xkcd
-
-
-class XkcdLinkButtons(discord.ui.View):
-    def __init__(self, explain_url: str, webpage_url: str) -> None:
-        super().__init__()
-        self.add_item(
-            discord.ui.Button(style=discord.ButtonStyle.link, label="Explainxkcd", url=explain_url),
-        )
-        self.add_item(
-            discord.ui.Button(style=discord.ButtonStyle.link, label="Webpage", url=webpage_url),
-        )
 
 
 class Xkcd(commands.Cog):
@@ -162,7 +152,7 @@ class Xkcd(commands.Cog):
         else:
             return (
                 embed,
-                XkcdLinkButtons(str(comic.explanation_url), str(comic.comic_url)),
+                XkcdButtons(str(comic.explanation_url), str(comic.comic_url)),
                 ephemeral,
             )
 

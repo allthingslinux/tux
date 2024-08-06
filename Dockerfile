@@ -16,6 +16,7 @@ RUN apt-get update && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
+
 # Install Rust and Cargo
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
@@ -38,5 +39,4 @@ RUN mkdir -p /app/.cache/prisma && chmod +x /app/.cache/prisma
 # Set PYTHONPATH environment variable to /app
 ENV PYTHONPATH=/app
 
-# Removing entrypoint and using CMD instead for better debugging
 CMD ["sh", "-c", "ls && poetry run prisma py fetch && poetry run prisma generate && poetry run python tux/main.py"]

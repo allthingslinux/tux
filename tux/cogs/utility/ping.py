@@ -1,6 +1,4 @@
-import discord
 import psutil
-from discord import app_commands
 from discord.ext import commands
 
 from tux.utils.embeds import EmbedCreator
@@ -10,15 +8,18 @@ class Ping(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @app_commands.command(name="ping", description="Checks the bot's latency.")
-    async def ping(self, interaction: discord.Interaction) -> None:
+    @commands.hybrid_command(
+        name="ping",
+        usage="$ping",
+    )
+    async def ping(self, ctx: commands.Context[commands.Bot]) -> None:
         """
         Check the bot's latency and other stats.
 
         Parameters
         ----------
-        interaction : discord.Interaction
-            The discord interaction object.
+        ctx : commands.Context[commands.Bot]
+            The discord context object.
         """
 
         # Get the latency of the bot in milliseconds
@@ -26,6 +27,7 @@ class Ping(commands.Cog):
 
         # Get the CPU usage and RAM usage of the bot
         cpu_usage = psutil.cpu_percent()
+        # Get the amount of RAM used by the bot
         ram_amount = psutil.virtual_memory().used
 
         # Format the RAM usage to be in GB or MB
@@ -37,14 +39,14 @@ class Ping(commands.Cog):
         embed = EmbedCreator.create_success_embed(
             title="Pong!",
             description="Here are some stats about the bot.",
-            interaction=interaction,
+            ctx=ctx,
         )
 
         embed.add_field(name="API Latency", value=f"{discord_ping}ms", inline=True)
         embed.add_field(name="CPU Usage", value=f"{cpu_usage}%", inline=True)
         embed.add_field(name="RAM Usage", value=f"{ram_amount_formatted}", inline=True)
 
-        await interaction.response.send_message(embed=embed)
+        await ctx.send(embed=embed)
 
 
 async def setup(bot: commands.Bot) -> None:

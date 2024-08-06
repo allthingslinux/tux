@@ -2,9 +2,9 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-import tux.utils.checks as checks
 from prisma.enums import CaseType
 from prisma.models import Case
+from tux.utils import checks
 from tux.utils.constants import Constants as CONST
 from tux.utils.flags import UnjailFlags
 
@@ -66,8 +66,10 @@ class Unjail(ModerationCogBase):
             return
 
         await self._unjail_user(ctx, target, jail_role, case, flags.reason)
-        await self._insert_unjail_case(ctx, target, flags.reason)
-        await self.handle_case_response(ctx, case, "created", flags.reason, target)
+
+        unjail_case = await self._insert_unjail_case(ctx, target, flags.reason)
+
+        await self.handle_case_response(ctx, unjail_case, "created", flags.reason, target)
 
     async def _cannot_unjail(
         self,
@@ -95,7 +97,7 @@ class Unjail(ModerationCogBase):
 
     async def _get_jail_role(self, ctx: commands.Context[commands.Bot]) -> discord.Role | None:
         if ctx.guild is None:
-            logger.warning("Jail command used outside of a guild context.")
+            logger.warning("Unjail command used outside of a guild context.")
             return None
 
         jail_role_id = await self.config.get_jail_role(ctx.guild.id)
@@ -112,7 +114,7 @@ class Unjail(ModerationCogBase):
 
     async def _check_jail_channel(self, ctx: commands.Context[commands.Bot]) -> bool:
         if ctx.guild is None:
-            logger.warning("Jail command used outside of a guild context.")
+            logger.warning("Unjail command used outside of a guild context.")
             return False
 
         jail_channel_id = await self.config.get_jail_channel(ctx.guild.id)
@@ -159,12 +161,13 @@ class Unjail(ModerationCogBase):
 
         try:
             return await self.db.case.insert_case(
+                guild_id=ctx.guild.id,
                 case_target_id=target.id,
                 case_moderator_id=ctx.author.id,
                 case_type=CaseType.UNJAIL,
                 case_reason=reason,
-                guild_id=ctx.guild.id,
             )
+
         except Exception as e:
             logger.error(f"Failed to insert unjail case for {target}. {e}")
             await ctx.send(f"Failed to insert unjail case for {target}. {e}", delete_after=30, ephemeral=True)

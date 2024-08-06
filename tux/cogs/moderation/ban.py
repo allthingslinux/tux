@@ -2,9 +2,9 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-import tux.utils.checks as checks
 from prisma.enums import CaseType
 from prisma.models import Case
+from tux.utils import checks
 from tux.utils.constants import Constants as CONST
 from tux.utils.flags import BanFlags
 
@@ -14,6 +14,30 @@ from . import ModerationCogBase
 class Ban(ModerationCogBase):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__(bot)
+
+    async def check_ban_conditions(
+        self,
+        ctx: commands.Context[commands.Bot],
+        target: discord.Member,
+        moderator: discord.Member,
+    ) -> bool:
+        if ctx.guild is None:
+            logger.warning("Ban command used outside of a guild context.")
+            return False
+
+        if target == ctx.author:
+            await ctx.send("You cannot ban yourself.", delete_after=30, ephemeral=True)
+            return False
+
+        if target.top_role >= moderator.top_role:
+            await ctx.send("You cannot ban a user with a higher or equal role.", delete_after=30, ephemeral=True)
+            return False
+
+        if target == ctx.guild.owner:
+            await ctx.send("You cannot ban the server owner.", delete_after=30, ephemeral=True)
+            return False
+
+        return True
 
     @commands.hybrid_command(
         name="ban",
@@ -48,25 +72,19 @@ class Ban(ModerationCogBase):
         discord.HTTPException
             If an error occurs while banning the user.
         """
-
-        moderator = await commands.MemberConverter().convert(ctx, str(ctx.author.id))
-
         if ctx.guild is None:
             logger.warning("Ban command used outside of a guild context.")
             return
-        if target == ctx.author:
-            await ctx.send("You cannot ban yourself.", delete_after=30, ephemeral=True)
-            return
-        if target.top_role >= moderator.top_role:
-            await ctx.send("You cannot ban a user with a higher or equal role.", delete_after=30, ephemeral=True)
-            return
-        if target == ctx.guild.owner:
-            await ctx.send("You cannot ban the server owner.", delete_after=30, ephemeral=True)
+
+        moderator = await commands.MemberConverter().convert(ctx, str(ctx.author.id))
+
+        if not await self.check_ban_conditions(ctx, target, moderator):
             return
 
         try:
             await self.send_dm(ctx, flags.silent, target, flags.reason, "banned")
             await ctx.guild.ban(target, reason=flags.reason, delete_message_days=flags.purge_days)
+
         except (discord.Forbidden, discord.HTTPException) as e:
             logger.error(f"Failed to ban {target}. {e}")
             await ctx.send(f"Failed to ban {target}. {e}", delete_after=30, ephemeral=True)
