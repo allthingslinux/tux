@@ -1,7 +1,6 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
 from tux.utils.embeds import EmbedCreator
@@ -156,7 +155,7 @@ class RoleCount(commands.Cog):
             "vanity": vanity_ids,
         }
 
-    @app_commands.command(name="rolecount", description="Shows the number of users in each role.")
+    @app_commands.command(name="rolecount")
     @app_commands.describe(which="Which option to list!")
     @app_commands.choices(
         which=[
@@ -172,22 +171,47 @@ class RoleCount(commands.Cog):
         interaction: discord.Interaction,
         which: discord.app_commands.Choice[str],
     ) -> None:
+        """
+        Show the number of users in each role.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object.
+        which : discord.app_commands.Choice[str]
+            The role type to list.
+        """
+
         if interaction.guild:
+            # Get the roles and emojis for the selected option
             roles_emojis: list[list[int | str]] = self.roles_emoji_mapping.get(which.value, [])
-            await self.process_roles(interaction, roles_emojis, which)
+            # Process the roles and emojis for the selected option
+            await self._process_roles(interaction, roles_emojis, which)
 
-        logger.info(f"{interaction.user} requested role count for {which.name}.")
-
-    async def process_roles(
+    async def _process_roles(
         self,
         interaction: discord.Interaction,
         roles_emojis: list[list[int | str]],
         which: discord.app_commands.Choice[str],
     ) -> None:
+        """
+        Process the roles and emojis for the selected option.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object.
+        roles_emojis : list[list[int | str]]
+            The list of roles and emojis.
+        which : discord.app_commands.Choice[str]
+            The selected option.
+        """
+
         role_data: list[tuple[discord.Role, list[int | str]]] = []
 
         for role_emoji in roles_emojis:
             role_id = int(role_emoji[0])
+
             if interaction.guild and (role := interaction.guild.get_role(role_id)):
                 role_data.append((role, role_emoji))
 
@@ -195,11 +219,13 @@ class RoleCount(commands.Cog):
         sorted_roles = sorted(role_data, key=lambda x: len(x[0].members), reverse=True)
 
         pages: list[discord.Embed] = []
-        embed = self.create_embed(interaction, which)
+
+        embed = self._create_embed(interaction, which)
+
         role_count = 0
 
         for role, role_emoji in sorted_roles:
-            role_count, embed = self.format_embed(
+            role_count, embed = self._format_embed(
                 embed,
                 interaction,
                 role,
@@ -212,9 +238,9 @@ class RoleCount(commands.Cog):
         if embed.fields:
             pages.append(embed)
 
-        await self.send_response(interaction, pages)
+        await self._send_response(interaction, pages)
 
-    def format_embed(
+    def _format_embed(
         self,
         embed: discord.Embed,
         interaction: discord.Interaction,
@@ -224,21 +250,39 @@ class RoleCount(commands.Cog):
         which: discord.app_commands.Choice[str],
         pages: list[discord.Embed],
     ) -> tuple[int, discord.Embed]:
-        # Check if current embed field count has reached max limit of 12 fields
-        if role_count >= 12:
-            pages.append(embed)  # Append current embed to the page list
-            embed = self.create_embed(
-                interaction,
-                which,
-            )  # Create a new embed for the next set of fields
-            role_count = 0  # Reset the role count for new page
+        """
+        Format the embed with the role data.
 
-        # Fetch an emoji for the role from available emojis or the predefined emoji identifier
-        # convert default emojis like "wheel" to their respective discord.Emoji object
+        Parameters
+        ----------
+        embed : discord.Embed
+            The embed to format.
+        interaction : discord.Interaction
+            The interaction object.
+        role : discord.Role
+            The role to format.
+        role_count : int
+            The current role count.
+        role_emoji : tuple[str, str]
+            The role emoji. The first element is the role ID and the second is the emoji name.
+        which : discord.app_commands.Choice[str]
+            The selected option.
+        pages : list[discord.Embed]
+            The list of embeds to send.
 
-        emoji = discord.utils.get(self.bot.emojis, name=role_emoji[1]) or "?"
+        Returns
+        -------
+        tuple[int, discord.Embed]
+            The updated role count and embed.
+        """
 
-        # Add a new field to the current embed
+        if role_count >= 9:
+            pages.append(embed)
+            embed = self._create_embed(interaction, which)
+            role_count = 0
+
+        emoji = discord.utils.get(self.bot.emojis, name=role_emoji[1]) or f"<:{role_emoji[1]}:>" or "❔"
+
         embed.add_field(
             name=f"{emoji!s} {role.name}",
             value=f"{len(role.members)} users",
@@ -249,20 +293,52 @@ class RoleCount(commands.Cog):
 
         return role_count, embed
 
-    def create_embed(
+    def _create_embed(
         self,
         interaction: discord.Interaction,
         which: discord.app_commands.Choice[str],
-    ):
+    ) -> discord.Embed:
+        """
+        Create an embed for the role data.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object.
+        which : discord.app_commands.Choice[str]
+            The selected option.
+
+        Returns
+        -------
+        discord.Embed
+            The created embed.
+        """
+
         return EmbedCreator.create_info_embed(
             title=f"{which.name} Roles",
             description="Number of users in each role",
             interaction=interaction,
         )
 
-    async def send_response(self, interaction: discord.Interaction, pages: list[discord.Embed]):
+    async def _send_response(
+        self,
+        interaction: discord.Interaction,
+        pages: list[discord.Embed],
+    ) -> None:
+        """
+        Send the response to the interaction.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object.
+        pages : list[discord.Embed]
+            The list of embeds to send.
+        """
+
         if pages:
             menu = ViewMenu(interaction, menu_type=ViewMenu.TypeEmbed)
+
             for page in pages:
                 menu.add_page(page)
 
