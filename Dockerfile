@@ -16,7 +16,6 @@ RUN apt-get update && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
-RUN apt install -y nodejs npm
 
 # Install Rust and Cargo
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
