@@ -281,7 +281,7 @@ class RoleCount(commands.Cog):
             embed = self._create_embed(interaction, which)
             role_count = 0
 
-        emoji = discord.utils.get(self.bot.emojis, name=role_emoji[1]) or f"<:{role_emoji[1]}:>" or "❔"
+        emoji = discord.utils.get(self.bot.emojis, name=role_emoji[1]) or f":{role_emoji[1]}:" or "❔"
 
         embed.add_field(
             name=f"{emoji!s} {role.name}",
