@@ -184,23 +184,30 @@ class RoleCount(commands.Cog):
         roles_emojis: list[list[int | str]],
         which: discord.app_commands.Choice[str],
     ) -> None:
-        pages: list[discord.Embed] = []
-
-        role_count = 0
-        embed = self.create_embed(interaction, which)
+        role_data: list[tuple[discord.Role, list[int | str]]] = []
 
         for role_emoji in roles_emojis:
             role_id = int(role_emoji[0])
             if interaction.guild and (role := interaction.guild.get_role(role_id)):
-                role_count, embed = self.format_embed(
-                    embed,
-                    interaction,
-                    role,
-                    role_count,
-                    (str(role_emoji[0]), str(role_emoji[1])),
-                    which,
-                    pages,
-                )
+                role_data.append((role, role_emoji))
+
+        # Sort roles by the number of members in descending order
+        sorted_roles = sorted(role_data, key=lambda x: len(x[0].members), reverse=True)
+
+        pages: list[discord.Embed] = []
+        embed = self.create_embed(interaction, which)
+        role_count = 0
+
+        for role, role_emoji in sorted_roles:
+            role_count, embed = self.format_embed(
+                embed,
+                interaction,
+                role,
+                role_count,
+                (str(role_emoji[0]), str(role_emoji[1])),
+                which,
+                pages,
+            )
 
         if embed.fields:
             pages.append(embed)
@@ -258,9 +265,13 @@ class RoleCount(commands.Cog):
             menu = ViewMenu(interaction, menu_type=ViewMenu.TypeEmbed)
             for page in pages:
                 menu.add_page(page)
+
+            menu.add_button(ViewButton.go_to_first_page())
             menu.add_button(ViewButton.back())
             menu.add_button(ViewButton.next())
+            menu.add_button(ViewButton.go_to_last_page())
             menu.add_button(ViewButton.end_session())
+
             await menu.start()
 
 
