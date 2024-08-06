@@ -13,10 +13,10 @@ RUN apt-get update && \
   shared-mime-info \
   curl \
   build-essential && \
-  nodejs && \
-  npm && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
+
+RUN apt install -y nodejs npm
 
 # Install Rust and Cargo
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
