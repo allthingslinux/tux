@@ -121,7 +121,7 @@ class Avatar(commands.Cog):
         response.raise_for_status()
 
         content_type = response.headers.get("Content-Type")
-        extension = mimetypes.guess_extension(content_type)
+        extension = mimetypes.guess_extension(content_type) or ".png"
 
         image_data = response.content
         image_file = BytesIO(image_data)
