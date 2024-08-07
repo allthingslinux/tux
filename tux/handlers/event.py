@@ -68,7 +68,7 @@ class EventHandler(commands.Cog):
         message = await channel.fetch_message(payload.message_id)
 
         emoji = payload.emoji
-        if any(0x1F1E6 <= ord(char) <= 0x1F1FF for char in emoji.name):
+        if any(0x1F1E3 <= ord(char) <= 0x1F1FF for char in emoji.name):
             await message.remove_reaction(emoji, member)
             return
         if "flag" in emoji.name.lower():
