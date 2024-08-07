@@ -8,6 +8,8 @@ import discord
 from discord.ext import commands
 from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
+from reactionmenu.abc import Page
+from reactionmenu.views_menu import ViewSelect
 
 from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import EmbedCreator
@@ -15,6 +17,7 @@ from tux.utils.embeds import EmbedCreator
 
 class TuxHelp(commands.HelpCommand):
     def __init__(self):
+        """Initializes the TuxHelp command with necessary attributes."""
         self.prefix = CONST.PREFIX
         super().__init__(
             command_attrs={
@@ -24,9 +27,9 @@ class TuxHelp(commands.HelpCommand):
             },
         )
 
-    def embed_base(self, title: str, description: str | None = None) -> discord.Embed:
+    def _embed_base(self, title: str, description: str | None = None) -> discord.Embed:
         """
-        Creates a base embed for help messages.
+        Creates a base embed with uniform styling.
 
         Parameters
         ----------
@@ -38,93 +41,85 @@ class TuxHelp(commands.HelpCommand):
         Returns
         -------
         discord.Embed
-            The base embed for help messages.
+            The created embed.
         """
-
         return discord.Embed(
             title=title,
             description=description,
             color=CONST.EMBED_COLORS["DEFAULT"],
         )
 
-    def add_command_field(
-        self,
-        embed: discord.Embed,
-        command: commands.Command[Any, Any, Any],
-        prefix: str,
-    ) -> None:
+    def _add_command_field(self, embed: discord.Embed, command: commands.Command[Any, Any, Any], prefix: str) -> None:
         """
-        Adds a command field to an embed.
+        Adds a command's details as a field to an embed.
 
         Parameters
         ----------
         embed : discord.Embed
-            The embed to add the command field to.
+            The embed to which the command details will be added.
         command : commands.Command[Any, Any, Any]
-            The command to add to the embed.
+            The command whose details are to be added.
         prefix : str
-            The prefix to use for the command.
+            The prefix used to invoke the command.
         """
-
         embed.add_field(
             name=f"{prefix}{command.qualified_name} ({', '.join(command.aliases) if command.aliases else 'No aliases.'})",
             value=f"> {command.short_doc or 'No documentation summary.'}",
             inline=False,
         )
 
-    def _get_flag_type(self, flag_annotation: Any) -> Any:
+    def _get_flag_type(self, flag_annotation: Any) -> str:
         """
-        Gets the flag type for a command.
+        Determines the type of a flag based on its annotation.
 
         Parameters
         ----------
         flag_annotation : Any
-            The flag annotation to get the type for.
+            The annotation of the flag.
 
         Returns
         -------
-        Any
-            The flag type.
+        str
+            The type of the flag.
         """
+        match flag_annotation:
+            case None:
+                return "Any"
+            case t if isinstance(t, type):
+                return t.__name__
+            case _:
+                return str(flag_annotation)
 
-        if flag_annotation is None:
-            return "Any"
-        if isinstance(flag_annotation, type):
-            return flag_annotation.__name__
-        return flag_annotation
-
-    def format_flag_name(self, flag: commands.Flag) -> str:
+    def _format_flag_name(self, flag: commands.Flag) -> str:
         """
-        Formats the flag name for a command.
+        Formats the flag name based on whether it is required.
 
         Parameters
         ----------
         flag : commands.Flag
-            The flag to format the name for.
+            The flag to be formatted.
 
         Returns
         -------
         str
             The formatted flag name.
         """
-
         return f"--[{flag.name}]" if flag.required else f"--<{flag.name}>"
 
-    def format_flag_details(self, command: commands.Command[Any, Any, Any]) -> str:
+    def _format_flag_details(self, command: commands.Command[Any, Any, Any]) -> str:
         """
-        Formats the flag details for a command.
+        Formats the details of flags for a command.
 
         Parameters
         ----------
         command : commands.Command[Any, Any, Any]
-            The command to format the flag details for.
+            The command whose flag details are to be formatted.
 
         Returns
         -------
         str
             The formatted flag details.
         """
-
         try:
             type_hints = get_type_hints(command.callback)
         except Exception:
@@ -132,32 +127,19 @@ class TuxHelp(commands.HelpCommand):
 
         flag_details: list[str] = []
 
-        # Iterate over the type hints and get the flag details
         for param_annotation in type_hints.values():
-            # Check if the parameter annotation is a FlagConverter
             if not isinstance(param_annotation, type) or not issubclass(param_annotation, commands.FlagConverter):
                 continue
 
-            # Get the flags from the parameter annotation
-            command_flags = param_annotation.__commands_flags__
-
-            # Iterate over the flags and get the flag details
-            for flag in command_flags.values():
+            for flag in param_annotation.__commands_flags__.values():
                 flag_type = self._get_flag_type(flag.annotation)
-                flag_str = self.format_flag_name(flag)
+                flag_str = self._format_flag_name(flag)
 
-                # Add the flag aliases if they exist
                 if flag.aliases:
-                    alias_list = ", ".join(flag.aliases)
-                    flag_str += f" ({alias_list})"
+                    flag_str += f" ({', '.join(flag.aliases)})"
 
-                # Add the flag description if it exists
                 flag_str += f"\n\t{flag.description or 'No description provided.'}"
-
-                # Add the flag type if it exists e.g. int, str, etc.
                 flag_str += f"\n\tType: `{flag_type}`"
-
-                # Add the default value if it exists e.g. 5, True, etc.
                 if flag.default is not discord.utils.MISSING:
                     flag_str += f"\n\tDefault: {flag.default}"
 
@@ -170,148 +152,281 @@ class TuxHelp(commands.HelpCommand):
         mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]],
     ) -> None:
         """
-        Sends help message for the bot with pagination based on the folder it is in.
+        Sends help messages for the bot with pagination based on the folder it is in.
 
         Parameters
         ----------
         mapping : Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]]
             The mapping of cogs to commands.
         """
+        menu = ViewMenu(
+            self.context,
+            menu_type=ViewMenu.TypeEmbed,
+            delete_on_timeout=True,
+            timeout=180,
+            show_page_director=False,
+        )
 
-        command_categories: dict[str, dict[str, str]] = {}
+        embed = self._embed_base(
+            "Hello! Welcome to the help command.",
+            "Tux is an all-in-one bot for the All Things Linux Discord server. The bot is written in Python 3.12 using discord.py, and we are actively seeking contributors!",
+        )
 
-        # Iterate over the mapping and build the command categories
-        for cog, mapping_commands in mapping.items():
-            if cog is None:
-                continue
+        self._add_bot_help_fields(embed)
+        menu.add_page(embed)
 
-            # Check if the cog is in the cogs folder
-            if match := re.search(r"<cogs\.([^\.]+)\..*>", str(cog)):
-                cog_group: str = match[1]
-            else:
-                cog_group = "extra"
-
-            if len(mapping_commands) == 0:
-                continue
-
-            cmd = cog.qualified_name
-
-            # Check if the cog group is in the command categories
-            if cog_group not in command_categories:
-                command_categories[cog_group] = {}
-
-            # Check if the command is in the command categories for the cog group
-            if cmd not in command_categories[cog_group]:
-                command_categories[cog_group][cmd] = ""
-
-            # For each subcommand in the command, add it to the command categories for the cog group and command
-            for subcmd in mapping_commands:
-                command_name = subcmd.name
-                command_categories[cog_group][cmd] += f"`{command_name}` "
-
-                # Check if the subcommand is a group and add the subcommands to the command categories for the cog group and command
-                if isinstance(subcmd, commands.Group):
-                    command_categories[cog_group][cmd] += "".join(f"`{subcmd.name}` " for subcmd in subcmd.commands)
-
-        menu = ViewMenu(self.context, menu_type=ViewMenu.TypeEmbed)
-
-        # Get the cog groups from the cogs folder
-        cog_groups = [d for d in os.listdir("./tux/cogs") if Path(f"./tux/cogs/{d}").is_dir() and d != "__pycache__"]
-
-        # Iterate over the cog groups and add the commands to the menu
-        for cog_group_ in cog_groups:
-            if cog_group_ in command_categories and any(
-                command_categories[cog_group_].values(),
-            ):  # Check if there are commands
-                embed = self.embed_base(f"{cog_group_.capitalize()} Commands", "\n")
-                embed.set_footer(text=f"Use {self.prefix}help <command> or <sub-command> to learn about it.")
-
-                # Iterate over the commands in the cog group and add them to the embed
-                for cmd, command_list in command_categories[cog_group_].items():
-                    embed.add_field(name=cmd, value=command_list, inline=False)
-
-                menu.add_page(embed)
-
-        menu.add_button(ViewButton.go_to_first_page())
-        menu.add_button(ViewButton.back())
-        menu.add_button(ViewButton.next())
-        menu.add_button(ViewButton.go_to_last_page())
-        menu.add_button(ViewButton.end_session())
+        self._add_cog_pages(menu, mapping)
 
         await menu.start()
 
-    async def send_cog_help(self, cog: commands.Cog) -> None:
+    def _add_bot_help_fields(self, embed: discord.Embed) -> None:
         """
-        Sends help message for a cog.
+        Adds additional help information about the bot.
+
+        Parameters
+        ----------
+        embed : discord.Embed
+            The embed to which the help information will be added.
+        """
+        embed.add_field(
+            name="How to Use",
+            value=f"Most commands are hybrid meaning they can be used via prefix `{self.prefix}` OR slash `/`. Commands strictly available via `/` are not listed in the help menu.",
+            inline=False,
+        )
+        embed.add_field(
+            name="Command Help",
+            value=f"Use `{self.prefix}help <command>` or `{self.prefix}help <subcommand>` to learn about a specific command.\n> e.g. `{self.prefix}help ban` or `{self.prefix}h dev load_cog`",
+            inline=False,
+        )
+        embed.add_field(
+            name="Flag Help",
+            value=f"Flags in `[]` are required and `<>` are optional. Most flags have aliases that can be used.\n> e.g. `{self.prefix}ban @user --reason spamming` or `{self.prefix}b @user -r spamming`",
+            inline=False,
+        )
+        embed.add_field(
+            name="Support Server",
+            value="[Need support? Join Server](https://discord.gg/gpmSjcjQxg)",
+            inline=True,
+        )
+        embed.add_field(
+            name="GitHub Repository",
+            value="[Help contribute! View Repo](https://github.com/allthingslinux/tux)",
+            inline=True,
+        )
+
+    def _add_cog_pages(
+        self,
+        menu: ViewMenu,
+        mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]],
+    ) -> None:
+        """
+        Adds pages for each cog category to the help menu.
+
+        Parameters
+        ----------
+        menu : ViewMenu
+            The menu to which the pages will be added.
+        mapping : Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]]
+            The mapping of cogs to commands.
+        """
+        command_categories = self._get_command_categories(mapping)
+        cog_groups = self._get_cog_groups()
+        select_options = self._create_select_options(command_categories, cog_groups, menu)
+        self._add_navigation_and_selection(menu, select_options)
+
+    def _get_command_categories(
+        self,
+        mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]],
+    ) -> dict[str, dict[str, str]]:
+        """
+        Retrieves the command categories and their corresponding commands.
+
+        Parameters
+        ----------
+        mapping : Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]]
+            The mapping of cogs to commands.
+
+        Returns
+        -------
+        dict[str, dict[str, str]]
+            The dictionary of command categories and commands.
+        """
+        command_categories: dict[str, dict[str, str]] = {}
+
+        for cog, mapping_commands in mapping.items():
+            if cog and len(mapping_commands) > 0:
+                cog_group = self._extract_cog_group(cog) or "extra"
+                command_categories.setdefault(cog_group, {})
+                cmd = cog.qualified_name
+                command_categories[cog_group][cmd] = " ".join(f"`{command.name}`" for command in mapping_commands)
+
+        return command_categories
+
+    def _get_cog_groups(self) -> list[str]:
+        """
+        Retrieves a list of cog groups from the 'cogs' folder.
+
+        Returns
+        -------
+        list[str]
+            A list of cog groups.
+        """
+        return [d for d in os.listdir("./tux/cogs") if Path(f"./tux/cogs/{d}").is_dir() and d != "__pycache__"]
+
+    def _create_select_options(
+        self,
+        command_categories: dict[str, dict[str, str]],
+        cog_groups: list[str],
+        menu: ViewMenu,
+    ) -> dict[discord.SelectOption, list[Page]]:
+        """
+        Creates select options for each command category.
+
+        Parameters
+        ----------
+        command_categories : dict[str, dict[str, str]]
+            The dictionary of command categories.
+        cog_groups : list[str]
+            The list of cog groups.
+        menu : ViewMenu
+            The menu to which the select options will be added.
+
+        Returns
+        -------
+        dict[discord.SelectOption, list[Page]]
+            The created select options.
+        """
+        select_options: dict[discord.SelectOption, list[Page]] = {}
+
+        for index, cog_group in enumerate(cog_groups, start=1):
+            if cog_group in command_categories and any(command_categories[cog_group].values()):
+                embed = self._embed_base(f"{cog_group.capitalize()} Commands", "\n")
+                embed.set_footer(text=f"Use {self.prefix}help <command> or <subcommand> to learn about it.")
+
+                for cmd, command_list in command_categories[cog_group].items():
+                    embed.add_field(name=cmd, value=command_list, inline=False)
+
+                page = Page(embed=embed)
+                menu.add_page(embed)
+
+                select_options[discord.SelectOption(label=cog_group.capitalize(), emoji=f"{index}️⃣")] = [page]
+
+        return select_options
+
+    def _add_navigation_and_selection(
+        self,
+        menu: ViewMenu,
+        select_options: dict[discord.SelectOption, list[Page]],
+    ) -> None:
+        """
+        Adds navigation buttons and select options to the help menu.
+
+        Parameters
+        ----------
+        menu : ViewMenu
+            The menu to which the navigation and selection will be added.
+        select_options : dict[discord.SelectOption, list[Page]]
+            The dictionary of select options.
+        """
+        menu.add_select(ViewSelect(title="Command Categories", options=select_options))
+        menu.add_button(ViewButton.end_session())
+
+    def _extract_cog_group(self, cog: commands.Cog) -> str | None:
+        """
+        Extracts the cog group from a cog's string representation.
 
         Parameters
         ----------
         cog : commands.Cog
-            The cog to send the help message for.
+            The cog from which the group is to be extracted.
+
+        Returns
+        -------
+        str | None
+            The extracted cog group or None if not found.
         """
+        if match := re.search(r"<cogs\.([^\.]+)\..*>", str(cog)):
+            return match[1]
+        return None
 
-        embed = self.embed_base(f"{cog.qualified_name} Commands")
+    async def send_cog_help(self, cog: commands.Cog) -> None:
+        """
+        Sends a help message for a specific cog.
 
-        # For each command in the cog, add it to the embed
+        Parameters
+        ----------
+        cog : commands.Cog
+            The cog for which the help message is to be sent.
+        """
+        embed = self._embed_base(f"{cog.qualified_name} Commands")
+
         for command in cog.get_commands():
-            self.add_command_field(embed, command, self.prefix)
+            self._add_command_field(embed, command, self.prefix)
 
-            # Check if the command is a group and add the subcommands to the embed
             if isinstance(command, commands.Group):
                 for subcommand in command.commands:
-                    self.add_command_field(embed, subcommand, self.prefix)
+                    self._add_command_field(embed, subcommand, self.prefix)
 
         await self.get_destination().send(embed=embed)
 
     async def send_command_help(self, command: commands.Command[Any, Any, Any]) -> None:
         """
-        Sends help message for a command.
+        Sends a help message for a specific command.
 
         Parameters
         ----------
         command : commands.Command[Any, Any, Any]
-            The command to send the help message for.
+            The command for which the help message is to be sent.
         """
-
-        embed = self.embed_base(
+        embed = self._embed_base(
             title=f"{self.prefix}{command.qualified_name}",
             description=f"> {command.help or 'No documentation available.'}",
         )
 
-        embed.add_field(name="Usage", value=f"`{command.signature or 'No usage.'}`", inline=False)
+        self._add_command_help_fields(embed, command)
+
+        if flag_details := self._format_flag_details(command):
+            embed.add_field(name="Flags", value=f"```\n{flag_details}\n```", inline=False)
+
+        await self.get_destination().send(embed=embed)
+
+    def _add_command_help_fields(self, embed: discord.Embed, command: commands.Command[Any, Any, Any]) -> None:
+        """
+        Adds fields with usage and alias information for a command to an embed.
+
+        Parameters
+        ----------
+        embed : discord.Embed
+            The embed to which the fields will be added.
+        command : commands.Command[Any, Any, Any]
+            The command whose details are to be added.
+        """
+        embed.add_field(
+            name="Usage",
+            value=f"`{command.signature or 'No usage.'}`",
+            inline=False,
+        )
         embed.add_field(
             name="Aliases",
             value=(f"`{', '.join(command.aliases)}`" if command.aliases else "No aliases."),
             inline=False,
         )
 
-        if flag_details := self.format_flag_details(command):
-            embed.add_field(name="Flags", value=f"```\n{flag_details}\n```", inline=False)
-
-        await self.get_destination().send(embed=embed)
-
     async def send_group_help(self, group: commands.Group[Any, Any, Any]) -> None:
         """
-        Sends help message for a group.
+        Sends a help message for a specific command group.
 
         Parameters
         ----------
         group : commands.Group[Any, Any, Any]
-            The group to send the help message for.
+            The group for which the help message is to be sent.
         """
+        embed = self._embed_base(f"{group.name}", f"> {group.help or 'No documentation available.'}")
 
-        embed = self.embed_base(f"{group.name}", f"> {group.help or 'No documentation available.'}")
-
-        embed.add_field(name="Usage", value=f"`{group.signature or 'No usage.'}`", inline=False)
-
-        embed.add_field(
-            name="Aliases",
-            value=f"`{', '.join(group.aliases)}`" if group.aliases else "No aliases.",
-            inline=False,
-        )
+        self._add_command_help_fields(embed, group)
 
         for command in group.commands:
-            self.add_command_field(embed, command, self.prefix)
+            self._add_command_field(embed, command, self.prefix)
 
         await self.get_destination().send(embed=embed)
 
@@ -322,9 +437,8 @@ class TuxHelp(commands.HelpCommand):
         Parameters
         ----------
         error : str
-            The error message to send.
+            The error message to be sent.
         """
-
         logger.error(f"An error occurred while sending a help message: {error}")
 
         embed = EmbedCreator.create_error_embed(
