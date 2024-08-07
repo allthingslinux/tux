@@ -191,21 +191,21 @@ class TuxHelp(commands.HelpCommand):
         # Make the first info page of the command - Commented until a proper embed is made
         embed = self.embed_base("Hello! Welcome to the help command.")
 
-        embed.description = "Tux is an all in one bot for the All Things Linux Discord server.\n\nIt is designed to provide a variety of features to the server, including moderation, support, utility, and various fun commands. The bot is currently written in Python 3.12 using the discord.py library."
+        embed.description = "Tux is an all in one bot for the All Things Linux Discord server. The bot is currently written in Python 3.12 using discord.py and we are actively seeking contributors!"
 
         embed.add_field(
             name="How to Use",
-            value=f"Most commands are hybrid meaning they can be used via prefix `{self.prefix}` OR slash `/`. Commands available via slash command only are not currently listed in the help menu.",
+            value=f"Most commands are hybrid meaning they can be used via prefix `{self.prefix}` OR slash `/`. Commands strictly available via `/` are not listed in the help menu.",
             inline=False,
         )
         embed.add_field(
             name="Command Help",
-            value=f"Use `{self.prefix}help <command` or `{self.prefix}help <subcommand>` to view information about a specific command.\n> e.g. `{self.prefix}help ban` or `{self.prefix}help dev load_cog`",
+            value=f"Use `{self.prefix}help <command` or `{self.prefix}help <subcommand>` to learn about a specific command.\n> e.g. `{self.prefix}help ban` or `{self.prefix}h dev load_cog`",
             inline=False,
         )
         embed.add_field(
             name="Flag Help",
-            value=f"Flags are arguments that can be used with commands. Flags enclosed in `[]` are required and `<>` are optional. Many flags have aliases that can be used as well.\n> e.g. `{self.prefix}ban @user -reason spamming` or `{self.prefix}b @user -r spamming`",
+            value=f"Flags in `[]` are required and `<>` are optional. Most flags have aliases that can be used.\n> e.g. `{self.prefix}ban @user -reason spamming` or `{self.prefix}b @user -r spamming`",
             inline=False,
         )
         embed.add_field(
