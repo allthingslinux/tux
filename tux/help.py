@@ -180,12 +180,46 @@ class TuxHelp(commands.HelpCommand):
             The mapping of cogs to commands.
         """
 
-        menu = ViewMenu(self.context, menu_type=ViewMenu.TypeEmbed, show_page_director=False)
+        menu = ViewMenu(
+            self.context,
+            menu_type=ViewMenu.TypeEmbed,
+            delete_on_timeout=True,
+            timeout=180,
+            show_page_director=False,
+        )
 
         # Make the first info page of the command - Commented until a proper embed is made
-        # embed = self.embed_base("Tux")
-        # embed.set_footer(text=f"Use {self.prefix}help <command> or <sub-command> to learn about it.")
-        # menu.add_page(embed)
+        embed = self.embed_base("Hello! Welcome to the help command.")
+
+        embed.description = "Tux is an all in one bot for the All Things Linux Discord server.\n\nIt is designed to provide a variety of features to the server, including moderation, support, utility, and various fun commands. The bot is currently written in Python 3.12 using the discord.py library."
+
+        embed.add_field(
+            name="How to Use",
+            value=f"Most commands are hybrid meaning they can be used via prefix `{self.prefix}` OR slash `/`. Commands available via slash command only are not currently listed in the help menu.",
+            inline=False,
+        )
+        embed.add_field(
+            name="Command Help",
+            value=f"Use `{self.prefix}help <command` or `{self.prefix}help <subcommand>` to view information about a specific command.\n> e.g. `{self.prefix}help ban` or `{self.prefix}help dev load_cog`",
+            inline=False,
+        )
+        embed.add_field(
+            name="Flag Help",
+            value=f"Flags are arguments that can be used with commands. Flags enclosed in `[]` are required and `<>` are optional. Many flags have aliases that can be used as well.\n> e.g. `{self.prefix}ban @user -reason spamming` or `{self.prefix}b @user -r spamming`",
+            inline=False,
+        )
+        embed.add_field(
+            name="Support Server",
+            value="[Need support? Join Server](https://discord.gg/gpmSjcjQxg)",
+            inline=True,
+        )
+        embed.add_field(
+            name="GitHub Repository",
+            value="[Help contribute! View Repo](https://github.com/allthingslinux/tux)",
+            inline=True,
+        )
+
+        menu.add_page(embed)
 
         command_categories: dict[str, dict[str, str]] = {}
         # Iterate over the mapping and build the command categories
@@ -231,8 +265,10 @@ class TuxHelp(commands.HelpCommand):
             if cog_group_ in command_categories and any(command_categories[cog_group_].values()):
                 # Create the base of the embed with a header and footer
                 header = f"{cog_group_.capitalize()} Commands"
+
                 embed = self.embed_base(header, "\n")
-                embed.set_footer(text=f"Use {self.prefix}help <command> or <sub-command> to learn about it.")
+
+                embed.set_footer(text=f"Use {self.prefix}help <command> or <subcommand> to learn about it.")
 
                 # Iterate over the commands in the cog group and add them to the embed
                 for cmd, command_list in command_categories[cog_group_].items():
