@@ -1,3 +1,4 @@
+import mimetypes
 from io import BytesIO
 
 import discord
@@ -119,11 +120,14 @@ class Avatar(commands.Cog):
         response = await client.get(url, timeout=10)
         response.raise_for_status()
 
+        content_type = response.headers.get("Content-Type")
+        extension = mimetypes.guess_extension(content_type)
+
         image_data = response.content
         image_file = BytesIO(image_data)
         image_file.seek(0)
 
-        return discord.File(image_file, filename="avatar.png")
+        return discord.File(image_file, filename=f"avatar{extension}")
 
 
 async def setup(bot: commands.Bot) -> None:
