@@ -8,6 +8,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
+from reactionmenu.abc import Page
 from reactionmenu.views_menu import ViewSelect
 
 from tux.utils.constants import Constants as CONST
@@ -179,11 +180,12 @@ class TuxHelp(commands.HelpCommand):
             The mapping of cogs to commands.
         """
 
-        # Make the first info page of the command
-        menu = ViewMenu(self.context, menu_type=ViewMenu.TypeEmbed)
-        embed = self.embed_base("Header Text")
-        embed.set_footer(text=f"Use {self.prefix}help <command> or <sub-command> to learn about it.")
-        menu.add_page(embed)
+        menu = ViewMenu(self.context, menu_type=ViewMenu.TypeEmbed, show_page_director=False)
+
+        # Make the first info page of the command - Commented until a proper embed is made
+        # embed = self.embed_base("Tux")
+        # embed.set_footer(text=f"Use {self.prefix}help <command> or <sub-command> to learn about it.")
+        # menu.add_page(embed)
 
         command_categories: dict[str, dict[str, str]] = {}
         # Iterate over the mapping and build the command categories
@@ -222,11 +224,12 @@ class TuxHelp(commands.HelpCommand):
         # Get the cog groups from the cogs folder
         cog_groups = [d for d in os.listdir("./tux/cogs") if Path(f"./tux/cogs/{d}").is_dir() and d != "__pycache__"]
 
+        select_options: dict[discord.SelectOption, list[Page]] = {}
+
         # Iterate over the cog groups and add the commands to the menu
-        for cog_group_ in cog_groups:
-            if cog_group_ in command_categories and any(
-                command_categories[cog_group_].values(),
-            ):  # Create the base of the embed with a header and footer
+        for index, cog_group_ in enumerate(cog_groups, start=1):
+            if cog_group_ in command_categories and any(command_categories[cog_group_].values()):
+                # Create the base of the embed with a header and footer
                 header = f"{cog_group_.capitalize()} Commands"
                 embed = self.embed_base(header, "\n")
                 embed.set_footer(text=f"Use {self.prefix}help <command> or <sub-command> to learn about it.")
@@ -237,10 +240,13 @@ class TuxHelp(commands.HelpCommand):
 
                 menu.add_page(embed)
 
-        pagenumbers_dict: dict[int, str] = {1: "One", 2: "Two"}
+                # Create a SelectOption for the cog groups
+                select_options[discord.SelectOption(label=cog_group_.capitalize(), emoji=f"{index}️⃣")] = [
+                    Page(embed=embed),
+                ]
 
         menu.add_button(ViewButton.back())
-        menu.add_go_to_select(ViewSelect.GoTo(title="Go to page...", page_numbers=pagenumbers_dict))
+        menu.add_select(ViewSelect(title="Command Categories", options=select_options))
         menu.add_button(ViewButton.next())
         menu.add_button(ViewButton.end_session())
 
