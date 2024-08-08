@@ -1,11 +1,21 @@
 import discord
 from discord.ext import commands
-from loguru import logger
 
 from tux.utils.constants import Constants as CONST
 
 
 class TempVc(commands.Cog):
+    """
+    A cog that manages temporary voice channels.
+
+    Attributes
+    ----------
+    bot : commands.Bot
+        The bot instance.
+    base_vc_name : str
+        The base name for temporary voice channels.
+    """
+
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
         self.base_vc_name: str = "/tmp/"
@@ -18,7 +28,8 @@ class TempVc(commands.Cog):
         after: discord.VoiceState,
     ) -> None:
         """
-        Temporarily create a voice channel for a user when they join the temporary voice channel. If the user leaves the temporary voice channel, the channel will be deleted.
+        Temporarily create a voice channel for a user when they join the temporary voice channel.
+        If the user leaves the temporary voice channel, the channel will be deleted.
 
         Parameters
         ----------
@@ -30,55 +41,95 @@ class TempVc(commands.Cog):
             The voice state after the event.
         """
 
-        if after.channel and after.channel.id == int(CONST.TEMPVC_CHANNEL_ID or "0"):
-            # Check if the user already has a temporary channel
-            # If so move the user to the existing channel
-            for channel in after.channel.guild.voice_channels:
-                if channel.name == self.base_vc_name + member.name:
-                    await member.move_to(channel)
-                    logger.info(f"Moved {member.name} to existing temporary channel.")
-                    return
-
-            new_channel = await after.channel.clone(name=self.base_vc_name + member.name)
-            await member.move_to(new_channel)
-
-            logger.info(f"Created temporary channel for {member.name}.")
+        # Ensure constants are set correctly
+        temp_channel_id = int(CONST.TEMPVC_CHANNEL_ID or "0")
+        temp_category_id = int(CONST.TEMPVC_CATEGORY_ID or "0")
+        if temp_channel_id == 0 or temp_category_id == 0:
             return
 
-        if before.channel is not None:
-            category = discord.utils.get(
-                before.channel.guild.categories,
-                id=int(CONST.TEMPVC_CATEGORY_ID or "0"),
-            )
+        # When user joins the temporary voice channel
+        if after.channel and after.channel.id == temp_channel_id:
+            await self.handle_user_join(member, after.channel)
 
-            if (
-                not category
-                or before.channel.category_id != category.id
-                or before.channel == after.channel
-                or before.channel.id == int(CONST.TEMPVC_CHANNEL_ID or "0")
-                or not before.channel.name.startswith(self.base_vc_name)
-            ):
+        # When user leaves any voice channel
+        elif before.channel:
+            await self.handle_user_leave(before.channel, after.channel, temp_channel_id, temp_category_id)
+
+    async def handle_user_join(
+        self,
+        member: discord.Member,
+        channel: discord.VoiceChannel | discord.StageChannel,
+    ) -> None:
+        """
+        Handle the case when a user joins the temporary voice channel.
+
+        Parameters
+        ----------
+        member : discord.Member
+            The member that joined the channel.
+        channel : discord.VoiceChannel
+            The channel that the member joined.
+        """
+
+        for voice_channel in channel.guild.voice_channels:
+            # Check if the channel is a temporary channel and if it is the user's channel
+            if voice_channel.name == self.base_vc_name + member.name:
+                await member.move_to(voice_channel)
                 return
 
-            if len(before.channel.members) == 0:
-                await before.channel.delete()
-                logger.info(
-                    f"Deleted temporary channel {before.channel.name} as it has no members.",
-                )
+        # Create a new channel for the user if it doesn't exist
+        new_channel = await channel.clone(name=self.base_vc_name + member.name)
+        await member.move_to(new_channel)
 
-            # Search all lost temporary channels and delete them
-            for channel in category.voice_channels:
-                # Checks if the channel is a temporary channel
-                if (
-                    not channel.name.startswith(self.base_vc_name)
-                    or len(channel.members) != 0
-                    or channel.id == int(CONST.TEMPVC_CHANNEL_ID or "0")
-                ):
-                    continue
+    async def handle_user_leave(
+        self,
+        before_channel: discord.VoiceChannel | discord.StageChannel,
+        after_channel: discord.VoiceChannel | discord.StageChannel | None,
+        temp_channel_id: int,
+        temp_category_id: int,
+    ) -> None:
+        """
+        Handle the case when a user leaves a voice channel. Deletes empty temporary channels.
 
-                if len(channel.members) == 0:
-                    await channel.delete()
-                    logger.info(f"Deleted temporary channel {channel.name} as it has no members.")
+        Parameters
+        ----------
+        before_channel : discord.VoiceChannel
+            The channel the user was in before.
+        after_channel : discord.VoiceChannel
+            The channel the user moved to. Could be None if the user disconnected.
+        temp_channel_id: int
+            The ID of the temporary voice channel the bot manages.
+        temp_category_id: int
+            The ID of the category holding temporary voice channels.
+        """
+
+        # Get the category of the temporary channels
+        category = discord.utils.get(before_channel.guild.categories, id=temp_category_id)
+
+        # Check if the channel is a temporary channel
+        if (
+            not category
+            or before_channel.category_id != category.id
+            or before_channel == after_channel
+            or before_channel.id == temp_channel_id
+            or not before_channel.name.startswith(self.base_vc_name)
+        ):
+            return
+
+        # Delete the channel if it is empty
+        if len(before_channel.members) == 0:
+            await before_channel.delete()
+
+        # Search and delete all empty temporary channels
+        for channel in category.voice_channels:
+            if (
+                not channel.name.startswith(self.base_vc_name)
+                or len(channel.members) != 0
+                or channel.id == temp_channel_id
+            ):
+                continue
+
+            await channel.delete()
 
 
 async def setup(bot: commands.Bot) -> None:
