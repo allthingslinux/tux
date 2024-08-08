@@ -29,7 +29,6 @@ class EventHandler(commands.Cog):
                 "Warning: This command is potentially harmful. Please avoid running it unless you're fully aware of it's operation. If this was a mistake, disregard this message.",
             )
 
-
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
         if not is_harmful(before.content) and is_harmful(after.content):
