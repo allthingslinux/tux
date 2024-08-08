@@ -1,3 +1,4 @@
+import datetime
 import math
 
 import discord
@@ -6,6 +7,17 @@ from loguru import logger
 
 
 class TtyRoles(commands.Cog):
+    """
+    A cog that assigns roles to users based on the number of users in the guild.
+
+    Attributes
+    ----------
+    bot : commands.Bot
+        The bot instance.
+    base_role_name : str
+        The base name for the roles.
+    """
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.base_role_name = "/dev/tty"
@@ -22,18 +34,14 @@ class TtyRoles(commands.Cog):
         """
 
         user_count = member.guild.member_count
+        role_name = self._compute_role_name(user_count)
 
-        role_name = self.compute_role_name(user_count)
-
-        role = self.get_role_by_name(member, role_name) or await self.try_create_role(
-            member,
-            role_name,
-        )
+        role = self.get_role_by_name(member, role_name) or await self.try_create_role(member, role_name)
 
         if role:
             await self.try_assign_role(member, role)
 
-    def compute_role_name(self, user_count: int | None) -> str:
+    def _compute_role_name(self, user_count: int | None) -> str:
         """
         Compute the role name based on the number of users in the guild.
 
@@ -56,7 +64,7 @@ class TtyRoles(commands.Cog):
 
         exponent = int(math.floor(math.log2(user_count)))
 
-        return self.base_role_name + str(2**exponent)
+        return f"{self.base_role_name}{2 ** exponent}"
 
     @staticmethod
     def get_role_by_name(member: discord.Member, role_name: str) -> discord.Role | None:
@@ -97,14 +105,10 @@ class TtyRoles(commands.Cog):
         """
 
         try:
-            role = await member.guild.create_role(name=role_name)
-            logger.trace(f"Created new role {role_name}")
+            return await member.guild.create_role(name=role_name)
 
         except Exception as error:
             logger.error(f"Failed to create role {role_name}: {error}")
-
-        else:
-            return role
 
         return None
 
@@ -122,11 +126,11 @@ class TtyRoles(commands.Cog):
         """
 
         try:
+            await discord.utils.sleep_until(datetime.datetime.now(datetime.UTC) + datetime.timedelta(seconds=5))
             await member.add_roles(role)
-            logger.trace(f"Assigned {role.name} to {member.display_name}")
 
-        except discord.HTTPException:
-            logger.error(f"Adding tty role failed for {member.display_name}")
+        except Exception as error:
+            logger.error(f"Failed to assign role {role.name} to {member}: {error}")
 
 
 async def setup(bot: commands.Bot) -> None:

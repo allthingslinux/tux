@@ -2,9 +2,11 @@
 __pycache__/
 *.py[cod]
 *$py.class
-# Replit Slop
+
+# Replit
 *.replit
 *.nix
+
 # C extensions
 *.so
 
@@ -36,7 +38,7 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test/coverage reports
+# Unit test / coverage reports
 htmlcov/
 .tox/
 .nox/
@@ -55,17 +57,17 @@ cover/
 *.mo
 *.pot
 
-# Django stuff
+# Django
 *.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
-# Flask stuff
+# Flask
 instance/
 .webassets-cache
 
-# Scrapy stuff
+# Scrapy
 .scrapy
 
 # Sphinx documentation
@@ -83,16 +85,16 @@ profile_default/
 ipython_config.py
 
 # Pyenv
-# .python-version
+.python-version
 
 # Pipenv
-# Pipfile.lock
+Pipfile.lock
 
 # Poetry
-# poetry.lock
+poetry.lock
 
 # Pdm
-# .pdm.toml
+.pdm.toml
 
 # PEP 582
 __pypackages__/
@@ -104,14 +106,14 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
-# Spyder project settings
+# Spyder
 .spyderproject
 .spyproject
 
-# Rope project settings
+# Rope
 .ropeproject
 
-# mkdocs documentation
+# mkdocs
 /site
 
 # Mypy
@@ -119,19 +121,23 @@ celerybeat.pid
 .dmypy.json
 dmypy.json
 
-# Pyre type checker
+# Pyre
 .pyre/
 
-# Pytype static type analyzer
+# Pytype
 .pytype/
 
-# Cython debug symbols
+# Cython
 cython_debug/
+
+# Ruff
+.ruff_cache/
 
 # Logs
 logs/
 tux/logs/
 
+# IDEs
 # PyCharm
 .idea/
 
@@ -140,6 +146,7 @@ tux/logs/
 
 # Prisma
 .binaries/
+prisma/database.db
 
 # Environments
 .env
@@ -151,10 +158,9 @@ env.bak/
 venv.bak/
 .env.old
 
-# Local dev database
-prisma/database.db
-
-# private key for github
+# Sensitive files
 github-private-key.pem
+
+# Miscellaneous
 /debug.csv
 config/settings.json
