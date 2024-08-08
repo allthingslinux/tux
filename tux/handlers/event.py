@@ -31,7 +31,8 @@ class EventHandler(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
-        await self.handle_harmful_message(after)
+        if not is_harmful(before.content) and is_harmful(after.content):
+            await self.handle_harmful_message(after)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
