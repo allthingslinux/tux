@@ -176,8 +176,8 @@ class Random(commands.Cog):
     async def random_number(
         self,
         ctx: commands.Context[commands.Bot],
-        minimum: int = 0,
-        maximum: int = 100,
+        minimum_str: str = "0",
+        maximum_str: str = "100",
     ) -> None:
         """
         Generate a random number between two values.
@@ -186,13 +186,24 @@ class Random(commands.Cog):
         ----------
         ctx : commands.Context[commands.Bot]
             The context object for the command.
-        minimum : int, optional
-            The minimum value of the random number, by default 0.
-        maximum : int, optional
-            The maximum value of the random number, by default 100.
-        """
+        minimum_str : str, optional
+            The minimum value of the random number, by default 0. Converted to int after removing certain characters.
+        maximum_str : str, optional
+            The maximum value of the random number, by default 100. Converted to int after removing certain characters.
 
-        if minimum > maximum:
+        """
+        try:
+            minimum_int = int(minimum_str.replace(",", "").replace(".", ""))
+            maximum_int = int(maximum_str.replace(",", "").replace(".", ""))
+        except ValueError:
+            await ctx.send(
+                content="Invalid input for minimum or maximum value. Please provide valid numbers.",
+                ephemeral=True,
+                delete_after=30,
+            )
+            return
+
+        if minimum_int > maximum_int:
             await ctx.send(
                 content="The minimum value must be less than the maximum value.",
                 ephemeral=True,
@@ -200,7 +211,7 @@ class Random(commands.Cog):
             )
             return
 
-        await ctx.send(content=f"Your random number is: {random.randint(minimum, maximum)}")
+        await ctx.send(content=f"Your random number is: {random.randint(minimum_int, maximum_int)}")
 
 
 async def setup(bot: commands.Bot) -> None:
