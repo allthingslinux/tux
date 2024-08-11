@@ -9,7 +9,7 @@ from loguru import logger
 from tux.utils import checks
 from tux.utils.constants import Constants as CONST
 
-# TODO: Refactor Mail cog
+MailboxData = dict[str, str | list[str]]
 
 
 class Mail(commands.Cog):
@@ -22,7 +22,7 @@ class Mail(commands.Cog):
             "X-API-Key": CONST.MAILCOW_API_KEY,
             "Authorization": f"Bearer {CONST.MAILCOW_API_KEY}",
         }
-        self.default_options = {
+        self.default_options: dict[str, str | list[str]] = {
             "active": "1",
             "domain": "atl.tools",
             "password": "ErrorPleaseReportThis",
@@ -71,65 +71,115 @@ class Mail(commands.Cog):
             return
 
         if interaction.guild:
-            mailbox_data = self.default_options.copy()
-            mailbox_data["local_part"] = username
-            mailbox_data["name"] = username
-
-            # Generate 6 random numbers
-            password = "changeme"
-            for _ in range(6):
-                password += str(random.randint(0, 9))
-
-            # Generate 4 random special characters
-            special_chars = "!@#$%^&*"
-            for _ in range(4):
-                password += random.choice(special_chars)
-
-            mailbox_data["password"] = password
-            mailbox_data["password2"] = password
-
-            # Ensure tags are copied correctly and member ID is added
-            tags = self.default_options["tags"] if isinstance(self.default_options["tags"], list) else []
-            tags = tags.copy()  # Ensure it's a fresh copy of the list
-            tags.append(str(member.id))
-            mailbox_data["tags"] = tags
-
-            api_path = "/add/mailbox"
-            api_endpoint = self.api_url + api_path
+            password = self._generate_password()
+            mailbox_data = self._prepare_mailbox_data(username, password, member.id)
 
             async with httpx.AsyncClient(timeout=10.0) as client:
                 try:
                     response = await client.post(
-                        api_endpoint,
+                        f"{self.api_url}/add/mailbox",
                         headers=self.headers,
                         json=mailbox_data,
                     )
-                    if response.status_code == 200:
-                        result = response.json()
-                        logger.info(f"Response JSON: {result}")
 
-                        # Initialize the mailbox_info as 'Unknown'
-                        mailbox_info = "Unknown"
+                    await self._handle_response(interaction, response, member, password)
 
-                        # Check the response for success or failure messages
-                        for item in result:
-                            if "msg" in item:
-                                if "mailbox_added" in item["msg"]:
-                                    mailbox_info = item["msg"][1]
-                                    break
-                                if "mailbox_quota_left_exceeded" in item["msg"]:
-                                    await interaction.response.send_message(
-                                        "Failed to register the mailbox. Quota limit exceeded.",
-                                        ephemeral=True,
-                                    )
-                                    return
+                except httpx.RequestError as exc:
+                    await interaction.response.send_message(
+                        f"An error occurred while requesting {exc.request.url!r}.",
+                        ephemeral=True,
+                        delete_after=30,
+                    )
+                    logger.error(f"HTTP request error: {exc}")
+        else:
+            await interaction.response.send_message(
+                "This command can only be used in a guild (server).",
+                ephemeral=True,
+                delete_after=30,
+            )
 
-                        await interaction.response.send_message(
-                            f"Successfully registered {mailbox_info} for mail.",
-                            ephemeral=True,
-                        )
+    def _generate_password(self) -> str:
+        password = "changeme" + "".join(str(random.randint(0, 9)) for _ in range(6))
+        password += "".join(random.choice("!@#$%^&*") for _ in range(4))
+        return password
 
-                        dm_message = f"""
+    def _prepare_mailbox_data(
+        self,
+        username: str,
+        password: str,
+        member_id: int,
+    ) -> MailboxData:
+        mailbox_data = self.default_options.copy()
+
+        mailbox_data.update(
+            {
+                "local_part": username,
+                "name": username,
+                "password": password,
+                "password2": password,
+                "tags": self.default_options["tags"] + [str(member_id)]
+                if isinstance(self.default_options["tags"], list)
+                else [str(member_id)],
+            },
+        )
+
+        return mailbox_data
+
+    async def _handle_response(
+        self,
+        interaction: discord.Interaction,
+        response: httpx.Response,
+        member: discord.Member,
+        password: str,
+    ) -> None:
+        if response.status_code == 200:
+            result: list[dict[str, str | None]] = response.json()
+            logger.info(f"Response JSON: {result}")
+
+            if mailbox_info := self._extract_mailbox_info(result):
+                await interaction.response.send_message(
+                    f"Successfully registered {mailbox_info} for mail.",
+                    ephemeral=True,
+                )
+
+                await self._send_dm(interaction, member, mailbox_info, password)
+
+            else:
+                await interaction.response.send_message(
+                    "Failed to register the mailbox. Quota limit exceeded.",
+                    ephemeral=True,
+                )
+
+        elif response.status_code == 401:
+            await interaction.response.send_message("Unauthorized. Check your API credentials.", ephemeral=True)
+
+        else:
+            await interaction.response.send_message(
+                f"Failed to register the requested username for mail. Status code: {response.status_code}.",
+                ephemeral=True,
+                delete_after=30,
+            )
+
+    def _extract_mailbox_info(self, result: list[dict[str, str | None]]) -> str | None:
+        for item in result:
+            if "msg" in item:
+                msg = item["msg"]
+
+                if msg and "mailbox_added" in msg:
+                    return msg[1]
+                if msg and "mailbox_quota_left_exceeded" in msg:
+                    return None
+
+        return None
+
+    async def _send_dm(
+        self,
+        interaction: discord.Interaction,
+        member: discord.Member,
+        mailbox_info: str,
+        password: str,
+    ) -> None:
+        dm_message = f"""
 **Your mailbox has been successfully registered!**
 
 **Email Address**: `{mailbox_info}`
@@ -141,41 +191,13 @@ class Mail(commands.Cog):
 After changing, you can also set up your mailbox on your mobile device or email client following the instructions provided on the mail server. Alternatively, feel free to use our webmail interface available at [mail.atl.tools/SOGo](https://mail.atl.tools/SOGo/).
 
 If you have any questions or need assistance, please feel free to reach out to the server staff. Enjoy your new mailbox! 📬
-                        """
+        """
+        try:
+            await member.send(f"Hello {member.mention},\n{dm_message.strip()}", suppress_embeds=True)
 
-                        try:
-                            await member.send(
-                                f"Hello {member.mention},\n{dm_message.strip()}",
-                                suppress_embeds=True,
-                            )
-                        except discord.Forbidden:
-                            await interaction.response.send_message(
-                                f"Failed to send a DM to {member.mention}. Please enable DMs from server members.",
-                                ephemeral=True,
-                                delete_after=30,
-                            )
-
-                    elif response.status_code == 401:
-                        await interaction.response.send_message(
-                            "Unauthorized. Check your API credentials.",
-                            ephemeral=True,
-                        )
-                    else:
-                        await interaction.response.send_message(
-                            f"Failed to register {username} for mail. Status code: {response.status_code}.",
-                            ephemeral=True,
-                            delete_after=30,
-                        )
-                except httpx.RequestError as exc:
-                    await interaction.response.send_message(
-                        f"An error occurred while requesting {exc.request.url!r}.",
-                        ephemeral=True,
-                        delete_after=30,
-                    )
-                    logger.error(f"An error occurred while requesting, {exc}")
-        else:
+        except discord.Forbidden:
             await interaction.response.send_message(
-                "This command can only be used in a guild (server).",
+                f"Failed to send a DM to {member.mention}. Please enable DMs from server members.",
                 ephemeral=True,
                 delete_after=30,
             )
