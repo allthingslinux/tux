@@ -11,15 +11,6 @@ from tux.bot import Tux
 # from tux.utils.console import Console
 from tux.utils.constants import Constants as CONST
 
-# if CONST.DEBUG is True:
-#     import logging
-#     import tracemalloc
-#     import warnings
-
-#     tracemalloc.start()
-#     logging.basicConfig(level=logging.DEBUG)
-#     warnings.simplefilter("error", ResourceWarning)
-
 
 async def main() -> None:
     if not CONST.TOKEN:
