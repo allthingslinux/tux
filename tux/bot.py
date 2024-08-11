@@ -23,8 +23,10 @@ class Tux(commands.Bot):
 
         try:
             # Connect to Prisma
+            logger.info("Setting up Prisma client...")
             await db.connect()
-            logger.info("Database connection established.")
+            logger.info(f"Prisma client connected: {db.is_connected()}")
+            logger.info(f"Prisma client registered: {db.is_registered()}")
 
         except Exception as e:
             logger.critical(f"An error occurred while connecting to the database: {e}")
@@ -46,7 +48,7 @@ class Tux(commands.Bot):
         """
         Executes actions when the bot is ready, such as connecting to Discord and running tasks.
         """
-        logger.info(f"{self.user} has connected to Discord!")
+        logger.info("Bot has connected to Discord!")
 
         if not self.setup_task.done():
             await self.setup_task
@@ -60,7 +62,7 @@ class Tux(commands.Bot):
 
     async def shutdown(self) -> None:
         if self.is_shutting_down:
-            logger.info("Shutdown already in progress. Exiting...")
+            logger.info("Shutdown already in progress. Exiting.")
             return
 
         self.is_shutting_down = True
@@ -69,16 +71,16 @@ class Tux(commands.Bot):
         await self.close()
 
         if tasks := [task for task in asyncio.all_tasks() if task is not asyncio.current_task()]:
-            logger.info(f"Cancelling {len(tasks)} outstanding tasks")
+            logger.debug(f"Cancelling {len(tasks)} outstanding tasks.")
 
             for task in tasks:
                 task.cancel()
 
             await asyncio.gather(*tasks, return_exceptions=True)
-            logger.info("All tasks cancelled.")
+            logger.debug("All tasks cancelled.")
 
         try:
-            logger.info("Closing database connections...")
+            logger.info("Closing database connections.")
             await db.disconnect()
 
         except Exception as e:

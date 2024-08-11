@@ -4,9 +4,9 @@ import os
 from pathlib import Path
 from typing import Final
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv, set_key
 
-load_dotenv()
+load_dotenv(verbose=True)
 
 config_file = Path("config/settings.json")
 config = json.loads(config_file.read_text())
@@ -41,13 +41,11 @@ class Constants:
 
     # Database constants
     PROD_DATABASE_URL: Final[str] = os.getenv("PROD_DATABASE_URL", "")
-    PROD_DIRECT_URL: Final[str] = os.getenv("PROD_DIRECT_URL", "")
-
     DEV_DATABASE_URL: Final[str] = os.getenv("DEV_DATABASE_URL", "")
-    DEV_DIRECT_URL: Final[str] = os.getenv("DEV_DIRECT_URL", "")
 
     DATABASE_URL: Final[str] = DEV_DATABASE_URL if DEV and DEV.lower() == "true" else PROD_DATABASE_URL
-    DIRECT_URL: Final[str] = DEV_DIRECT_URL if DEV and DEV.lower() == "true" else PROD_DIRECT_URL
+
+    set_key(".env", "DATABASE_URL", DATABASE_URL)
 
     # GitHub constants
     GITHUB_REPO_URL: Final[str] = os.getenv("GITHUB_REPO_URL", "")

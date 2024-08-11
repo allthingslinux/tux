@@ -1,13 +1,15 @@
 import asyncio
 
 import discord
+import sentry_sdk
 from loguru import logger
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
+from sentry_sdk.integrations.loguru import LoguruIntegration
 
 from tux.bot import Tux
 
 # from tux.utils.console import Console
 from tux.utils.constants import Constants as CONST
-from tux.utils.sentry import setup_sentry
 
 # if CONST.DEBUG is True:
 #     import logging
@@ -20,13 +22,23 @@ from tux.utils.sentry import setup_sentry
 
 
 async def main() -> None:
-    logger.info("Starting bot.")
+    if not CONST.TOKEN:
+        logger.critical("No token provided, exiting.")
+        return
 
-    # Initialize the console and console task
-    # console = None
-    # console_task = None
+    logger.info("Setting up Sentry...")
 
-    # Initialize the bot
+    sentry_sdk.init(
+        dsn=CONST.SENTRY_URL,
+        environment="dev" if CONST.DEV == "True" else "prod",
+        traces_sample_rate=1.0,
+        profiles_sample_rate=1.0,
+        enable_tracing=True,
+        integrations=[AsyncioIntegration(), LoguruIntegration()],
+    )
+
+    logger.info(f"Sentry setup intitalized: {sentry_sdk.is_initialized()}")
+
     bot = Tux(
         command_prefix=CONST.PREFIX,
         strip_after_prefix=True,
@@ -35,20 +47,20 @@ async def main() -> None:
         allowed_mentions=discord.AllowedMentions(everyone=False),
     )
 
-    setup_sentry(bot)
-
+    # Initialize the console and console task
+    # console = None
+    # console_task = None
     try:
         # console = Console(bot)
         # console_task = asyncio.create_task(console.run_console())
 
-        # Start the bot and reconnect on disconnection
         await bot.start(token=CONST.TOKEN, reconnect=True)
 
     except KeyboardInterrupt:
         logger.info("KeyboardInterrupt received, shutting down.")
 
     finally:
-        logger.info("Closing resources.")
+        logger.info("Closing resources...")
         await bot.shutdown()
 
         # Cancel the console task if it's still running
