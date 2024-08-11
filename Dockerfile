@@ -5,14 +5,14 @@ WORKDIR /app
 # Install dependencies for cairo and other utilities
 RUN apt-get update && \
   apt-get install -y \
+  build-essential \
+  curl \
   libcairo2 \
+  libffi-dev \
+  libgdk-pixbuf2.0-0 \
   libpango1.0-0 \
   libpangocairo-1.0-0 \
-  libgdk-pixbuf2.0-0 \
-  libffi-dev \
-  shared-mime-info \
-  curl \
-  build-essential && \
+  shared-mime-info && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
