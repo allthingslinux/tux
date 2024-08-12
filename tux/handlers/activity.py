@@ -27,6 +27,7 @@ class ActivityHandler(commands.Cog):
             {"type": discord.ActivityType.listening, "name": "Terry Davis on YouTube"},
             {"type": discord.ActivityType.playing, "name": "with Puffy"},
             {"type": discord.ActivityType.watching, "name": "the stars"},
+            {"type": discord.ActivityType.watching, "name": "VLC"},
             {"type": "streaming", "name": "SuperTuxKart", "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"},
         ]
 
