@@ -56,6 +56,7 @@ model GuildConfig {
   join_log_id          BigInt?
   private_log_id       BigInt?
   report_log_id        BigInt?
+  suggestion_log_id    BigInt?
   dev_log_id           BigInt?
   jail_channel_id      BigInt?
   general_channel_id   BigInt?

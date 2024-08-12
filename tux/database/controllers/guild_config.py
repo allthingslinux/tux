@@ -43,6 +43,7 @@ class GuildConfigController:
             "join": "join_log_id",
             "private": "private_log_id",
             "report": "report_log_id",
+            "suggestion": "suggestion_log_id",
             "dev": "dev_log_id",
         }
         return await self.get_guild_config_field_value(guild_id, log_channel_ids[log_type])
@@ -115,6 +116,9 @@ class GuildConfigController:
 
     async def get_report_log_channel(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "report_log_id")
+
+    async def get_suggestion_log_channel(self, guild_id: int) -> int | None:
+        return await self.get_guild_config_field_value(guild_id, "suggestion_log_id")
 
     async def get_dev_log_channel(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "dev_log_id")
@@ -253,6 +257,23 @@ class GuildConfigController:
                     "report_log_id": report_log_id,
                 },
                 "update": {"report_log_id": report_log_id},
+            },
+        )
+
+    async def update_suggestion_log_id(
+        self,
+        guild_id: int,
+        suggestion_log_id: int,
+    ) -> GuildConfig | None:
+        await self.ensure_guild_exists(guild_id)
+        return await self.table.upsert(
+            where={"guild_id": guild_id},
+            data={
+                "create": {
+                    "guild_id": guild_id,
+                    "suggestion_log_id": suggestion_log_id,
+                },
+                "update": {"suggestion_log_id": suggestion_log_id},
             },
         )
 

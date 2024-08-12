@@ -136,6 +136,26 @@ class ConfigSetPublicLogs(discord.ui.View):
             delete_after=30,
         )
 
+    @discord.ui.select(
+        cls=discord.ui.ChannelSelect,
+        channel_types=[discord.ChannelType.text],
+        placeholder="Set the suggestion channel.",
+    )
+    async def _set_suggestion_log(
+        self,
+        interaction: discord.Interaction,
+        select: discord.ui.ChannelSelect[Any],
+    ) -> None:
+        if interaction.guild is None:
+            return
+
+        await self.db.update_suggestion_log_id(interaction.guild.id, select.values[0].id)
+        await interaction.response.send_message(
+            f"Suggestion log channel set to {select.values[0]}.",
+            ephemeral=True,
+            delete_after=30,
+        )
+
 
 class ConfigSetChannels(discord.ui.View):
     def __init__(self, *, timeout: float = 180):
