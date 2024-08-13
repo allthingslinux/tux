@@ -115,6 +115,12 @@ class SuggestionModal(discord.ui.Modal):
         view = ButtonView(embed=embed)
         message = await suggestion_log_channel.send(embed=embed, view=view)
 
+        await suggestion_log_channel.create_thread(
+            name=f"Suggestion: {self.suggestion_title.value}",  # type: ignore
+            message=message,
+            auto_archive_duration=1440,
+        )
+
         reactions = ["👍", "👎"]
         for reaction in reactions:
             await message.add_reaction(reaction)
