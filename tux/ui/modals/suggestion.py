@@ -3,7 +3,27 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.database.controllers import DatabaseController
-from tux.utils.embeds import EmbedCreator
+from tux.utils import checks
+from tux.utils.constants import Constants as CONST
+from tux.utils.embeds import create_embed_footer
+
+
+class ButtonView(discord.ui.View):
+    def __init__(self, embed: discord.Embed):
+        super().__init__()
+        self.embed = embed
+
+    @discord.ui.button(label="Accept Suggestion", style=discord.ButtonStyle.green)
+    @checks.has_pl(5)
+    async def green_button(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]):
+        self.embed.set_author(name="Suggestion Status: Accepted")
+        await interaction.response.edit_message(embed=self.embed, view=self)
+
+    @discord.ui.button(label="Deny Suggestion", style=discord.ButtonStyle.red)
+    @checks.has_pl(5)
+    async def red_button(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]):
+        self.embed.set_author(name="Suggestion Status: Rejected")
+        await interaction.response.edit_message(embed=self.embed, view=self)
 
 
 class SuggestionModal(discord.ui.Modal):
@@ -12,20 +32,20 @@ class SuggestionModal(discord.ui.Modal):
         self.bot = bot
         self.config = DatabaseController().guild_config
 
-    short = discord.ui.TextInput(  # type: ignore
+    suggestion_title = discord.ui.TextInput(  # type: ignore
         label="Suggestion Summary",
         style=discord.TextStyle.short,
         required=True,
         max_length=100,
-        placeholder="Add an AI chatbot to Tux",
+        placeholder="Summarise your suggestion briefly",
     )
 
-    long = discord.ui.TextInput(  # type: ignore
+    suggestion_description = discord.ui.TextInput(  # type: ignore
         style=discord.TextStyle.long,
-        label="The suggestion",
+        label="Suggestion Description",
         required=True,
         max_length=4000,
-        placeholder="Please provide as much detail as possible",
+        placeholder="Please provide as much detail as possible on your suggestion",
     )
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
@@ -42,11 +62,19 @@ class SuggestionModal(discord.ui.Modal):
             logger.error("Guild is None")
             return
 
-        embed = EmbedCreator.create_log_embed(
-            title=(f"Suggestion for {self.short.value}"),  # type: ignore
-            description=self.long.value,  # type: ignore
-            interaction=None,
+        embed = discord.Embed(
+            title=self.suggestion_title.value,  # type: ignore
+            description=self.suggestion_description.value,  # type: ignore
+            color=CONST.EMBED_COLORS["DEFAULT"],
         )
+        embed.set_author(name="Suggestion Status: Under Review")
+        embed.add_field(
+            name="Review Info",
+            value="No review has been submitted",
+            inline=False,
+        )
+        footer_text, footer_icon_url = create_embed_footer(interaction=interaction)
+        embed.set_footer(text=footer_text, icon_url=footer_icon_url)
 
         try:
             suggestion_log_channel_id = await self.config.get_suggestion_log_channel(interaction.guild.id)
@@ -62,13 +90,12 @@ class SuggestionModal(discord.ui.Modal):
         if not suggestion_log_channel_id:
             logger.error(f"Suggestion log channel not set for guild {interaction.guild.id}")
             await interaction.response.send_message(
-                "The suggestion log channel has not been set up. Please contact an administrator.",
+                "The suggestion channel has not been set up. Please contact an administrator.",
                 ephemeral=True,
                 delete_after=30,
             )
             return
 
-        # Get the suggestion log channel object
         suggestion_log_channel = interaction.guild.get_channel(suggestion_log_channel_id)
         if not suggestion_log_channel or not isinstance(suggestion_log_channel, discord.TextChannel):
             logger.error(f"Failed to get suggestion log channel for guild {interaction.guild.id}")
@@ -79,11 +106,15 @@ class SuggestionModal(discord.ui.Modal):
             )
             return
 
-        # Send confirmation message to user
         await interaction.response.send_message(
             "Your suggestion has been submitted.",
             ephemeral=True,
             delete_after=30,
         )
 
-        await suggestion_log_channel.send(embed=embed)
+        view = ButtonView(embed=embed)
+        message = await suggestion_log_channel.send(embed=embed, view=view)
+
+        reactions = ["👍", "👎"]
+        for reaction in reactions:
+            await message.add_reaction(reaction)
