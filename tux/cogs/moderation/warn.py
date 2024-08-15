@@ -42,19 +42,13 @@ class Warn(ModerationCogBase):
             The flags for the command. (reason: str, silent: bool)
         """
 
-        moderator = ctx.author
-
         if ctx.guild is None:
             logger.warning("Warn command used outside of a guild context.")
             return
-        if target == ctx.author:
-            await ctx.send("You cannot warn yourself.", delete_after=30, ephemeral=True)
-            return
-        if isinstance(moderator, discord.Member) and target.top_role >= moderator.top_role:
-            await ctx.send("You cannot warn a user with a higher or equal role.", delete_after=30, ephemeral=True)
-            return
-        if target == ctx.guild.owner:
-            await ctx.send("You cannot warn the server owner.", delete_after=30, ephemeral=True)
+
+        moderator = ctx.author
+
+        if not await self.check_conditions(ctx, target, moderator, "warn"):
             return
 
         await self.send_dm(ctx, flags.silent, target, flags.reason, "warned")

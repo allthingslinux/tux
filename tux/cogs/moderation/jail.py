@@ -110,13 +110,14 @@ class Jail(ModerationCogBase):
         flags : JailFlags
             The flags for the command. (reason: str, silent: bool)
         """
-        moderator = ctx.author
 
         if not ctx.guild:
             logger.warning("Jail command used outside of a guild context.")
             return
 
-        if await self._cannot_jail(ctx, target, moderator):
+        moderator = ctx.author
+
+        if not await self.check_conditions(ctx, target, moderator, "jail"):
             return
 
         jail_role_id = await self.config.get_jail_role(ctx.guild.id)
@@ -130,7 +131,6 @@ class Jail(ModerationCogBase):
             return
 
         target_roles: list[discord.Role] = self._get_manageable_roles(target, jail_role)
-
         if jail_role in target.roles:
             await ctx.send("The user is already jailed.", delete_after=30, ephemeral=True)
             return
@@ -138,7 +138,9 @@ class Jail(ModerationCogBase):
         case_target_roles = [role.id for role in target_roles]
 
         await self._jail_user(ctx, target, flags, jail_role, target_roles)
+
         case = await self._insert_jail_case(ctx, target, flags.reason, case_target_roles)
+
         await self.handle_case_response(ctx, case, "created", flags.reason, target)
 
     async def _insert_jail_case(
@@ -165,30 +167,6 @@ class Jail(ModerationCogBase):
             logger.error(f"Failed to insert jail case for {target}. {e}")
             await ctx.send(f"Failed to insert jail case for {target}. {e}", delete_after=30, ephemeral=True)
             return None
-
-    async def _cannot_jail(
-        self,
-        ctx: commands.Context[commands.Bot],
-        target: discord.Member,
-        moderator: discord.Member | discord.User,
-    ) -> bool:
-        if ctx.guild is None:
-            logger.warning("Jail command used outside of a guild context.")
-            return True
-
-        if target == ctx.author:
-            await ctx.send("You cannot jail yourself.", delete_after=30, ephemeral=True)
-            return True
-
-        if isinstance(moderator, discord.Member) and target.top_role >= moderator.top_role:
-            await ctx.send("You cannot jail a user with a higher or equal role.", delete_after=30, ephemeral=True)
-            return True
-
-        if target == ctx.guild.owner:
-            await ctx.send("You cannot jail the server owner.", delete_after=30, ephemeral=True)
-            return True
-
-        return False
 
     def _get_manageable_roles(self, target: discord.Member, jail_role: discord.Role) -> list[discord.Role]:
         return [

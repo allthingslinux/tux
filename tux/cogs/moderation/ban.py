@@ -15,30 +15,6 @@ class Ban(ModerationCogBase):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__(bot)
 
-    async def check_ban_conditions(
-        self,
-        ctx: commands.Context[commands.Bot],
-        target: discord.Member,
-        moderator: discord.Member | discord.User,
-    ) -> bool:
-        if ctx.guild is None:
-            logger.warning("Ban command used outside of a guild context.")
-            return False
-
-        if target == ctx.author:
-            await ctx.send("You cannot ban yourself.", delete_after=30, ephemeral=True)
-            return False
-
-        if isinstance(moderator, discord.Member) and target.top_role >= moderator.top_role:
-            await ctx.send("You cannot ban a user with a higher or equal role.", delete_after=30, ephemeral=True)
-            return False
-
-        if target == ctx.guild.owner:
-            await ctx.send("You cannot ban the server owner.", delete_after=30, ephemeral=True)
-            return False
-
-        return True
-
     @commands.hybrid_command(
         name="ban",
         aliases=["b"],
@@ -78,7 +54,7 @@ class Ban(ModerationCogBase):
 
         moderator = ctx.author
 
-        if not await self.check_ban_conditions(ctx, target, moderator):
+        if not await self.check_conditions(ctx, target, moderator, "ban"):
             return
 
         try:

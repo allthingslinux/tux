@@ -48,7 +48,6 @@ class Unban(ModerationCogBase):
             If an error occurs while unbanning the user.
         """
 
-        # Check for necessary permissions
         if ctx.guild is None:
             logger.warning("Unban command used outside of a guild context.")
             return
@@ -63,6 +62,7 @@ class Unban(ModerationCogBase):
 
         try:
             await ctx.guild.unban(user, reason=flags.reason)
+
         except (discord.Forbidden, discord.HTTPException, discord.NotFound) as e:
             logger.error(f"Failed to unban {user}. {e}")
             await ctx.send(f"Failed to unban {user}. {e}", delete_after=30, ephemeral=True)

@@ -89,21 +89,15 @@ class Timeout(ModerationCogBase):
         discord.DiscordException
             If an error occurs while timing out the user.
         """
-
-        moderator = ctx.author
-
         if ctx.guild is None:
             logger.warning("Timeout command used outside of a guild context.")
             return
-        if target == ctx.author:
-            await ctx.send("You cannot timeout yourself.", delete_after=30, ephemeral=True)
+
+        moderator = ctx.author
+
+        if not await self.check_conditions(ctx, target, moderator, "timeout"):
             return
-        if isinstance(moderator, discord.Member) and target.top_role >= moderator.top_role:
-            await ctx.send("You cannot timeout a user with a higher or equal role.", delete_after=30, ephemeral=True)
-            return
-        if target == ctx.guild.owner:
-            await ctx.send("You cannot timeout the server owner.", delete_after=30, ephemeral=True)
-            return
+
         if target.is_timed_out():
             await ctx.send(f"{target} is already timed out.", delete_after=30, ephemeral=True)
             return
@@ -113,6 +107,7 @@ class Timeout(ModerationCogBase):
         try:
             await self.send_dm(ctx, flags.silent, target, flags.reason, f"timed out for {flags.duration}")
             await target.timeout(duration, reason=flags.reason)
+
         except discord.DiscordException as e:
             await ctx.send(f"Failed to timeout {target}. {e}", delete_after=30, ephemeral=True)
             return
