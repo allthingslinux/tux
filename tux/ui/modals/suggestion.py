@@ -10,16 +10,16 @@ from tux.utils.embeds import create_embed_footer
 
 class ButtonView(discord.ui.View):
     def __init__(self, embed: discord.Embed):
-        super().__init__()
+        super().__init__(timeout=None)
         self.embed = embed
 
-    @discord.ui.button(label="Accept Suggestion", style=discord.ButtonStyle.green)
+    @discord.ui.button(label="Accept Suggestion", style=discord.ButtonStyle.green, custom_id="accept_suggestion_button")
     @checks.has_pl(5)
     async def green_button(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]):
         self.embed.set_author(name="Suggestion Status: Accepted")
         await interaction.response.edit_message(embed=self.embed, view=self)
 
-    @discord.ui.button(label="Deny Suggestion", style=discord.ButtonStyle.red)
+    @discord.ui.button(label="Deny Suggestion", style=discord.ButtonStyle.red, custom_id="deny_suggestion_button")
     @checks.has_pl(5)
     async def red_button(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]):
         self.embed.set_author(name="Suggestion Status: Rejected")
