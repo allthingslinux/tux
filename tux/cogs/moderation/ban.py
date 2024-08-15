@@ -19,7 +19,7 @@ class Ban(ModerationCogBase):
         self,
         ctx: commands.Context[commands.Bot],
         target: discord.Member,
-        moderator: discord.Member,
+        moderator: discord.Member | discord.User,
     ) -> bool:
         if ctx.guild is None:
             logger.warning("Ban command used outside of a guild context.")
@@ -29,7 +29,7 @@ class Ban(ModerationCogBase):
             await ctx.send("You cannot ban yourself.", delete_after=30, ephemeral=True)
             return False
 
-        if target.top_role >= moderator.top_role:
+        if isinstance(moderator, discord.Member) and target.top_role >= moderator.top_role:
             await ctx.send("You cannot ban a user with a higher or equal role.", delete_after=30, ephemeral=True)
             return False
 
@@ -76,7 +76,7 @@ class Ban(ModerationCogBase):
             logger.warning("Ban command used outside of a guild context.")
             return
 
-        moderator = await commands.MemberConverter().convert(ctx, str(ctx.author.id))
+        moderator = ctx.author
 
         if not await self.check_ban_conditions(ctx, target, moderator):
             return

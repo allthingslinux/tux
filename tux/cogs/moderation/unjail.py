@@ -41,7 +41,7 @@ class Unjail(ModerationCogBase):
         flags : UnjailFlags
             The flags for the command. (reason: str, silent: bool)
         """
-        moderator = await commands.MemberConverter().convert(ctx, str(ctx.author.id))
+        moderator = ctx.author
 
         if not ctx.guild:
             logger.warning("Unjail command used outside of a guild context.")
@@ -75,7 +75,7 @@ class Unjail(ModerationCogBase):
         self,
         ctx: commands.Context[commands.Bot],
         target: discord.Member,
-        moderator: discord.Member,
+        moderator: discord.Member | discord.User,
     ) -> bool:
         if ctx.guild is None:
             logger.warning("Unjail command used outside of a guild context.")
@@ -85,7 +85,7 @@ class Unjail(ModerationCogBase):
             await ctx.send("You cannot unjail yourself.", delete_after=30, ephemeral=True)
             return True
 
-        if target.top_role >= moderator.top_role:
+        if isinstance(moderator, discord.Member) and target.top_role >= moderator.top_role:
             await ctx.send("You cannot unjail a user with a higher or equal role.", delete_after=30, ephemeral=True)
             return True
 
@@ -138,6 +138,7 @@ class Unjail(ModerationCogBase):
 
         try:
             await target.remove_roles(jail_role, reason=reason)
+
             previous_roles = [await commands.RoleConverter().convert(ctx, str(role)) for role in case.case_target_roles]
 
             if previous_roles:

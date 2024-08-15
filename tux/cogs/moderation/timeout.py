@@ -25,6 +25,7 @@ def parse_time_string(time_str: str) -> timedelta:
     Returns
     timedelta: Corresponding timedelta object.
     """
+
     # Define regex pattern to parse time strings
     time_pattern = re.compile(r"^(?P<value>\d+)(?P<unit>[smhdw])$")
 
@@ -89,7 +90,7 @@ class Timeout(ModerationCogBase):
             If an error occurs while timing out the user.
         """
 
-        moderator = await commands.MemberConverter().convert(ctx, str(ctx.author.id))
+        moderator = ctx.author
 
         if ctx.guild is None:
             logger.warning("Timeout command used outside of a guild context.")
@@ -97,7 +98,7 @@ class Timeout(ModerationCogBase):
         if target == ctx.author:
             await ctx.send("You cannot timeout yourself.", delete_after=30, ephemeral=True)
             return
-        if target.top_role >= moderator.top_role:
+        if isinstance(moderator, discord.Member) and target.top_role >= moderator.top_role:
             await ctx.send("You cannot timeout a user with a higher or equal role.", delete_after=30, ephemeral=True)
             return
         if target == ctx.guild.owner:

@@ -47,7 +47,7 @@ class Slowmode(commands.Cog):
             channel = ctx.channel
 
         # If the delay is in the format of e.g. 5s, convert it to 5
-        if delay and delay[-1] in ["s", "m", "h"]:
+        if delay and delay[-1] in ["s", "m"]:
             delay = delay[:-1]
 
         # Unsure of how to type hint this properly as it can be a string or int
