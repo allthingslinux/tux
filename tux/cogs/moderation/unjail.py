@@ -77,7 +77,7 @@ class Unjail(ModerationCogBase):
             logger.warning("Unjail command used outside of a guild context.")
             return None
 
-        jail_role_id = await self.config.get_jail_role(ctx.guild.id)
+        jail_role_id = await self.config.get_jail_role_id(ctx.guild.id)
         if not jail_role_id:
             await ctx.send("No jail role has been set up for this server.", delete_after=30, ephemeral=True)
             return None
@@ -94,7 +94,7 @@ class Unjail(ModerationCogBase):
             logger.warning("Unjail command used outside of a guild context.")
             return False
 
-        jail_channel_id = await self.config.get_jail_channel(ctx.guild.id)
+        jail_channel_id = await self.config.get_jail_channel_id(ctx.guild.id)
         if not jail_channel_id:
             await ctx.send("No jail channel has been set up for this server.", delete_after=30, ephemeral=True)
             return False

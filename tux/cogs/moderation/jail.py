@@ -120,7 +120,7 @@ class Jail(ModerationCogBase):
         if not await self.check_conditions(ctx, target, moderator, "jail"):
             return
 
-        jail_role_id = await self.config.get_jail_role(ctx.guild.id)
+        jail_role_id = await self.config.get_jail_role_id(ctx.guild.id)
         if not jail_role_id:
             await ctx.send("No jail role has been set up for this server.", delete_after=30, ephemeral=True)
             return

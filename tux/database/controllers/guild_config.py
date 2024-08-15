@@ -101,43 +101,43 @@ class GuildConfigController:
         logger.debug(f"Retrieved field value for {field}: {value}")
         return value
 
-    async def get_mod_log_channel(self, guild_id: int) -> int | None:
+    async def get_mod_log_id(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "mod_log_id")
 
-    async def get_audit_log_channel(self, guild_id: int) -> int | None:
+    async def get_audit_log_id(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "audit_log_id")
 
-    async def get_join_log_channel(self, guild_id: int) -> int | None:
+    async def get_join_log_id(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "join_log_id")
 
-    async def get_private_log_channel(self, guild_id: int) -> int | None:
+    async def get_private_log_id(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "private_log_id")
 
-    async def get_report_log_channel(self, guild_id: int) -> int | None:
+    async def get_report_log_id(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "report_log_id")
 
-    async def get_dev_log_channel(self, guild_id: int) -> int | None:
+    async def get_dev_log_id(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "dev_log_id")
 
-    async def get_jail_channel(self, guild_id: int) -> int | None:
+    async def get_jail_channel_id(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "jail_channel_id")
 
-    async def get_general_channel(self, guild_id: int) -> int | None:
+    async def get_general_channel_id(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "general_channel_id")
 
-    async def get_starboard_channel(self, guild_id: int) -> int | None:
+    async def get_starboard_channel_id(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "starboard_channel_id")
 
-    async def get_base_staff_role(self, guild_id: int) -> int | None:
+    async def get_base_staff_role_id(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "base_staff_role_id")
 
-    async def get_base_member_role(self, guild_id: int) -> int | None:
+    async def get_base_member_role_id(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "base_member_role_id")
 
-    async def get_jail_role(self, guild_id: int) -> int | None:
+    async def get_jail_role_id(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "jail_role_id")
 
-    async def get_quarantine_role(self, guild_id: int) -> int | None:
+    async def get_quarantine_role_id(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "quarantine_role_id")
 
     """

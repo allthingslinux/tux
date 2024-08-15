@@ -192,6 +192,98 @@ class Config(commands.Cog):
 
         await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
 
+    @app_commands.command(name="config_get_channels")
+    @app_commands.guild_only()
+    # @checks.ac_has_pl(7)
+    @app_commands.checks.has_permissions(administrator=True)
+    async def config_get_channels(
+        self,
+        interaction: discord.Interaction,
+    ) -> None:
+        """
+        Get the channels for each category.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        """
+
+        if interaction.guild is None:
+            return
+
+        embed = discord.Embed(
+            title="Config - Channels",
+            color=discord.Color.blue(),
+            timestamp=discord.utils.utcnow(),
+        )
+
+        jail_channel_id = await self.db.get_jail_channel_id(interaction.guild.id)
+        jail_channel = f"<#{jail_channel_id}>" if jail_channel_id else "Not set"
+        embed.add_field(name="Jail Channel", value=jail_channel, inline=False)
+
+        starboard_channel_id = await self.db.get_starboard_channel_id(interaction.guild.id)
+        starboard_channel = f"<#{starboard_channel_id}>" if starboard_channel_id else "Not set"
+        embed.add_field(name="Starboard Channel", value=starboard_channel, inline=False)
+
+        general_channel_id = await self.db.get_general_channel_id(interaction.guild.id)
+        general_channel = f"<#{general_channel_id}>" if general_channel_id else "Not set"
+        embed.add_field(name="General Channel", value=general_channel, inline=False)
+
+        await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
+
+    @app_commands.command(name="config_get_logs")
+    @app_commands.guild_only()
+    # @checks.ac_has_pl(7)
+    @app_commands.checks.has_permissions(administrator=True)
+    async def config_get_logs(
+        self,
+        interaction: discord.Interaction,
+    ) -> None:
+        """
+        Get the log channels for every category.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        """
+
+        if interaction.guild is None:
+            return
+
+        embed = discord.Embed(
+            title="Config - Logs",
+            color=discord.Color.blue(),
+            timestamp=discord.utils.utcnow(),
+        )
+
+        join_log_id = await self.db.get_join_log_id(interaction.guild.id)
+        join_log = f"<#{join_log_id}>" if join_log_id else "Not set"
+        embed.add_field(name="Join Log", value=join_log, inline=True)
+
+        audit_log_id = await self.db.get_audit_log_id(interaction.guild.id)
+        audit_log = f"<#{audit_log_id}>" if audit_log_id else "Not set"
+        embed.add_field(name="Audit Log", value=audit_log, inline=True)
+
+        mod_log_id = await self.db.get_mod_log_id(interaction.guild.id)
+        mod_log = f"<#{mod_log_id}>" if mod_log_id else "Not set"
+        embed.add_field(name="Mod Log", value=mod_log, inline=True)
+
+        private_log_id = await self.db.get_private_log_id(interaction.guild.id)
+        private_log = f"<#{private_log_id}>" if private_log_id else "Not set"
+        embed.add_field(name="Private Log", value=private_log, inline=True)
+
+        report_log_id = await self.db.get_report_log_id(interaction.guild.id)
+        report_log = f"<#{report_log_id}>" if report_log_id else "Not set"
+        embed.add_field(name="Report Log", value=report_log, inline=True)
+
+        dev_log_id = await self.db.get_dev_log_id(interaction.guild.id)
+        dev_log = f"<#{dev_log_id}>" if dev_log_id else "Not set"
+        embed.add_field(name="Dev Log", value=dev_log, inline=True)
+
+        await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
+
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Config(bot))
