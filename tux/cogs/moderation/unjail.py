@@ -41,18 +41,19 @@ class Unjail(ModerationCogBase):
         flags : UnjailFlags
             The flags for the command. (reason: str, silent: bool)
         """
-        moderator = await commands.MemberConverter().convert(ctx, str(ctx.author.id))
-
         if not ctx.guild:
             logger.warning("Unjail command used outside of a guild context.")
             return
 
-        if await self._cannot_unjail(ctx, target, moderator):
+        moderator = ctx.author
+
+        if not await self.check_conditions(ctx, target, moderator, "unjail"):
             return
 
         jail_role = await self._get_jail_role(ctx)
         if not jail_role:
             return
+
         if jail_role not in target.roles:
             await ctx.send("The user is not jailed.", delete_after=30, ephemeral=True)
             return
@@ -71,36 +72,12 @@ class Unjail(ModerationCogBase):
 
         await self.handle_case_response(ctx, unjail_case, "created", flags.reason, target)
 
-    async def _cannot_unjail(
-        self,
-        ctx: commands.Context[commands.Bot],
-        target: discord.Member,
-        moderator: discord.Member,
-    ) -> bool:
-        if ctx.guild is None:
-            logger.warning("Unjail command used outside of a guild context.")
-            return True
-
-        if target == ctx.author:
-            await ctx.send("You cannot unjail yourself.", delete_after=30, ephemeral=True)
-            return True
-
-        if target.top_role >= moderator.top_role:
-            await ctx.send("You cannot unjail a user with a higher or equal role.", delete_after=30, ephemeral=True)
-            return True
-
-        if target == ctx.guild.owner:
-            await ctx.send("You cannot unjail the server owner.", delete_after=30, ephemeral=True)
-            return True
-
-        return False
-
     async def _get_jail_role(self, ctx: commands.Context[commands.Bot]) -> discord.Role | None:
         if ctx.guild is None:
             logger.warning("Unjail command used outside of a guild context.")
             return None
 
-        jail_role_id = await self.config.get_jail_role(ctx.guild.id)
+        jail_role_id = await self.config.get_jail_role_id(ctx.guild.id)
         if not jail_role_id:
             await ctx.send("No jail role has been set up for this server.", delete_after=30, ephemeral=True)
             return None
@@ -117,7 +94,7 @@ class Unjail(ModerationCogBase):
             logger.warning("Unjail command used outside of a guild context.")
             return False
 
-        jail_channel_id = await self.config.get_jail_channel(ctx.guild.id)
+        jail_channel_id = await self.config.get_jail_channel_id(ctx.guild.id)
         if not jail_channel_id:
             await ctx.send("No jail channel has been set up for this server.", delete_after=30, ephemeral=True)
             return False
@@ -138,6 +115,7 @@ class Unjail(ModerationCogBase):
 
         try:
             await target.remove_roles(jail_role, reason=reason)
+
             previous_roles = [await commands.RoleConverter().convert(ctx, str(role)) for role in case.case_target_roles]
 
             if previous_roles:

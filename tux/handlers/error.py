@@ -87,7 +87,7 @@ class ErrorHandler(commands.Cog):
         if interaction.response.is_done():
             await interaction.followup.send(error_message, ephemeral=True)
         else:
-            await interaction.response.send_message(error_message, ephemeral=True)
+            await interaction.response.send_message(error_message, ephemeral=True, delete_after=30)
 
         if type(error) in error_map:
             sentry_sdk.capture_exception(error)

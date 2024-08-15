@@ -49,7 +49,7 @@ class ReportModal(discord.ui.Modal):
         )
 
         try:
-            report_log_channel_id = await self.config.get_report_log_channel(interaction.guild.id)
+            report_log_channel_id = await self.config.get_report_log_id(interaction.guild.id)
         except Exception as e:
             logger.error(f"Failed to get report log channel for guild {interaction.guild.id}. {e}")
             await interaction.response.send_message(

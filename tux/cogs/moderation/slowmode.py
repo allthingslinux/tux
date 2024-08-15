@@ -42,21 +42,26 @@ class Slowmode(commands.Cog):
         if channel is None:
             # Check if the current channel is a text channel
             if not isinstance(ctx.channel, discord.TextChannel | discord.Thread):
-                await ctx.send("Invalid channel type, must be a text channel.", delete_after=30, ephemeral=True)
+                await ctx.send(
+                    "Invalid channel type, must be a text channel or thread.",
+                    delete_after=30,
+                    ephemeral=True,
+                )
                 return
             channel = ctx.channel
 
-        # If the delay is in the format of e.g. 5s, convert it to 5
-        if delay and delay[-1] in ["s", "m", "h"]:
-            delay = delay[:-1]
-
         # Unsure of how to type hint this properly as it can be a string or int
         # and I can't use a Union for the argument because discord.py nagging?
-
         try:
+            if delay[-1] in ["s"]:
+                delay = delay[:-1]
+            if delay[-1] == "m":
+                delay = delay[:-1]
+                delay = int(delay) * 60  # type: ignore
+
             delay = int(delay)  # type: ignore
         except ValueError:
-            await ctx.send("The delay must be a valid integer.", delete_after=30, ephemeral=True)
+            await ctx.send("Invalid delay value, must be an integer.", delete_after=30, ephemeral=True)
             return
 
         if delay < 0 or delay > 21600:  # type: ignore

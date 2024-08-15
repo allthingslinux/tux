@@ -49,19 +49,13 @@ class Kick(ModerationCogBase):
             If an error occurs while kicking the user.
         """
 
-        moderator = await commands.MemberConverter().convert(ctx, str(ctx.author.id))
-
         if ctx.guild is None:
             logger.warning("Kick command used outside of a guild context.")
             return
-        if target == ctx.author:
-            await ctx.send("You cannot kick yourself.", delete_after=30, ephemeral=True)
-            return
-        if target.top_role >= moderator.top_role:
-            await ctx.send("You cannot kick a user with a higher or equal role.", delete_after=30, ephemeral=True)
-            return
-        if target == ctx.guild.owner:
-            await ctx.send("You cannot kick the server owner.", delete_after=30, ephemeral=True)
+
+        moderator = ctx.author
+
+        if not await self.check_conditions(ctx, target, moderator, "kick"):
             return
 
         try:

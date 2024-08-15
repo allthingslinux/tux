@@ -118,11 +118,13 @@ class Purge(commands.Cog):
             if not isinstance(ctx.channel, discord.TextChannel | discord.Thread):
                 await ctx.send("Invalid channel type, must be a text channel.", delete_after=30, ephemeral=True)
                 return
+
             channel = ctx.channel
 
         # Purge the specified number of messages
         try:
             await channel.purge(limit=limit + 1)
+
         except Exception as error:
             logger.error(f"An error occurred while purging messages: {error}")
             await ctx.send(f"An error occurred while purging messages: {error}", delete_after=30, ephemeral=True)

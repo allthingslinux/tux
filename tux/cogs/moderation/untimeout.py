@@ -46,21 +46,15 @@ class Untimeout(ModerationCogBase):
         discord.DiscordException
             If an error occurs while timing out the user.
         """
-
-        moderator = await commands.MemberConverter().convert(ctx, str(ctx.author.id))
-
         if ctx.guild is None:
             logger.warning("Timeout command used outside of a guild context.")
             return
-        if target == ctx.author:
-            await ctx.send("You cannot untimeout yourself.", delete_after=30, ephemeral=True)
+
+        moderator = ctx.author
+
+        if not await self.check_conditions(ctx, target, moderator, "untimeout"):
             return
-        if target.top_role >= moderator.top_role:
-            await ctx.send("You cannot untimeout a user with a higher or equal role.", delete_after=30, ephemeral=True)
-            return
-        if target == ctx.guild.owner:
-            await ctx.send("You cannot untimeout the server owner.", delete_after=30, ephemeral=True)
-            return
+
         if not target.is_timed_out():
             await ctx.send(f"{target} is not currently timed out.", delete_after=30, ephemeral=True)
 
