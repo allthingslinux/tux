@@ -26,7 +26,7 @@ class EventHandler(commands.Cog):
 
         if is_harmful(stripped_content):
             await message.reply(
-                "Warning: This command is potentially harmful. Please avoid running it unless you're fully aware of it's operation. If this was a mistake, disregard this message.",
+                "Warning: This command is potentially harmful. This will remove the directory and all its contents. There is no undo to this operation. Be sure you understand this before executing this. You have been warned. Please ignore this message if you believe to have recieved it in error.",
             )
 
     @commands.Cog.listener()
