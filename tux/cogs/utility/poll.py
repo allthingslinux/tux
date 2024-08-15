@@ -36,6 +36,20 @@ class Poll(commands.Cog):
         # delete the message
         await message.delete()
 
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User) -> None:
+        # Block any reactions that are not numbers for the poll
+
+        if reaction.message.embeds:
+            embed = reaction.message.embeds[0]
+            if (
+                embed.author.name
+                and embed.author.name.startswith("Poll")
+                and reaction.emoji not in [f"{num + 1}\u20e3" for num in range(9)]
+            ):
+                await reaction.remove(user)
+                return
+
     @app_commands.command(name="poll", description="Creates a poll.")
     @app_commands.describe(title="Title of the poll", options="Poll options, comma separated")
     async def poll(self, interaction: discord.Interaction, title: str, options: str) -> None:
@@ -84,6 +98,7 @@ class Poll(commands.Cog):
 
         # We can use  await interaction.original_response() to get the message object
         message = await interaction.original_response()
+
         for num in range(len(options_list)):
             # Add the number emoji reaction to the message
             await message.add_reaction(f"{num + 1}\u20e3")
