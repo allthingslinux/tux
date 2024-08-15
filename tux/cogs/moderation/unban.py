@@ -18,7 +18,7 @@ class Unban(ModerationCogBase):
     @commands.hybrid_command(
         name="unban",
         aliases=["ub"],
-        usage="$unban [target] [reason]",
+        usage="unban [target] [reason]",
     )
     @commands.guild_only()
     @checks.has_pl(3)

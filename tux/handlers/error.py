@@ -7,6 +7,7 @@ from discord.ext import commands
 from loguru import logger
 
 import tux.handlers.error as error
+from tux.utils.embeds import create_error_embed
 
 
 class PermissionLevelError(commands.CheckFailure):
@@ -44,14 +45,14 @@ error_map: dict[type[Exception], str] = {
     commands.CheckFailure: "User not in sudoers file. This incident will be reported. (Permission Check Failed)",
     commands.CommandNotFound: "This command was not found.",
     commands.CommandOnCooldown: "This command is on cooldown. Try again in {error.retry_after:.2f} seconds.",
-    commands.BadArgument: "Invalid argument passed. Correct usage: `{ctx.command.usage}`",
-    commands.MissingRequiredArgument: "Missing required argument. Correct usage: `{ctx.command.usage}`",
+    commands.BadArgument: "Invalid argument passed. Correct usage: `{ctx.prefix}{ctx.command.usage}`",
+    commands.MissingRequiredArgument: "Missing required arg. Correct usage: `{ctx.prefix}{ctx.command.usage}`",
     commands.MissingRequiredAttachment: "Missing required attachment.",
     commands.NotOwner: "User not in sudoers file. This incident will be reported. (Not Owner)",
     commands.BotMissingPermissions: "User not in sudoers file. This incident will be reported. (Bot Missing Permissions)",
     # Custom errors
-    error.PermissionLevelError: "User not in sudoers file. This incident will be reported. (You do not have the required permission: {error.permission})",
-    error.AppCommandPermissionLevelError: "User not in sudoers file. This incident will be reported. (You do not have the required permission: {error.permission})",
+    error.PermissionLevelError: "User not in sudoers file. This incident will be reported. (Missing required permission: {error.permission})",
+    error.AppCommandPermissionLevelError: "User not in sudoers file. This incident will be reported. (Missing required permission: {error.permission})",
 }
 
 
@@ -84,10 +85,12 @@ class ErrorHandler(commands.Cog):
 
         error_message = error_map.get(type(error), self.error_message).format(error=error)
 
+        embed = create_error_embed(error_message)
+
         if interaction.response.is_done():
-            await interaction.followup.send(error_message, ephemeral=True)
+            await interaction.followup.send(embed=embed, ephemeral=True)
         else:
-            await interaction.response.send_message(error_message, ephemeral=True, delete_after=30)
+            await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
 
         if type(error) in error_map:
             sentry_sdk.capture_exception(error)
@@ -112,18 +115,20 @@ class ErrorHandler(commands.Cog):
         """
 
         # # If the command has its own error handler, return
-        if hasattr(ctx.command, "on_error"):
-            logger.debug(f"Command {ctx.command} has its own error handler.")
-            return
+        # if hasattr(ctx.command, "on_error"):
+        #     logger.debug(f"Command {ctx.command} has its own error handler.")
+        #     return
 
         # # If the cog has its own error handler, return
-        if ctx.cog and ctx.cog._get_overridden_method(ctx.cog.cog_command_error) is not None:
-            logger.debug(f"Cog {ctx.cog} has its own error handler.")
-            return
+        # if ctx.cog and ctx.cog._get_overridden_method(ctx.cog.cog_command_error) is not None:
+        #     logger.debug(f"Cog {ctx.cog} has its own error handler.")
+        #     return
 
         if isinstance(error, commands.CheckFailure):
             message = error_map.get(type(error), self.error_message).format(error=error, ctx=ctx)
-            await ctx.send(content=message, ephemeral=True, delete_after=30)
+            # await ctx.send(content=message, ephemeral=True, delete_after=30)
+            embed = create_error_embed(message)
+            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             sentry_sdk.capture_exception(error)
             return
 
@@ -140,7 +145,10 @@ class ErrorHandler(commands.Cog):
         # Get the error message and send it to the user
         message: str = self.get_error_message(error, ctx)
 
-        await ctx.send(content=message, ephemeral=True, delete_after=30)
+        # await ctx.send(content=message, ephemeral=True, delete_after=30)
+
+        embed = create_error_embed(message)
+        await ctx.send(embed=embed, ephemeral=True, delete_after=30)
 
         # Log the error traceback if it's not in the error map
         if type(error) not in error_map:

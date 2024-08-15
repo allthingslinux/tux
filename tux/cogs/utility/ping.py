@@ -10,7 +10,7 @@ class Ping(commands.Cog):
 
     @commands.hybrid_command(
         name="ping",
-        usage="$ping",
+        usage="ping",
     )
     async def ping(self, ctx: commands.Context[commands.Bot]) -> None:
         """

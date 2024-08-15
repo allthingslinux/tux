@@ -23,7 +23,7 @@ class Snippets(commands.Cog):
     @commands.command(
         name="snippets",
         aliases=["ls"],
-        usage="$snippets",
+        usage="snippets",
     )
     @commands.guild_only()
     async def list_snippets(self, ctx: commands.Context[commands.Bot]) -> None:
@@ -104,7 +104,7 @@ class Snippets(commands.Cog):
     @commands.command(
         name="deletesnippet",
         aliases=["ds"],
-        usage="$deletesnippet [name]",
+        usage="deletesnippet [name]",
     )
     @commands.guild_only()
     async def delete_snippet(self, ctx: commands.Context[commands.Bot], name: str) -> None:
@@ -154,7 +154,7 @@ class Snippets(commands.Cog):
     @commands.command(
         name="forcedeletesnippet",
         aliases=["fds"],
-        usage="$forcedeletesnippet [name]",
+        usage="forcedeletesnippet [name]",
     )
     @commands.guild_only()
     @checks.has_pl(2)
@@ -193,7 +193,7 @@ class Snippets(commands.Cog):
     @commands.command(
         name="snippet",
         aliases=["s"],
-        usage="$snippet [name]",
+        usage="snippet [name]",
     )
     @commands.guild_only()
     async def get_snippet(self, ctx: commands.Context[commands.Bot], name: str) -> None:
@@ -230,7 +230,7 @@ class Snippets(commands.Cog):
     @commands.command(
         name="snippetinfo",
         aliases=["si"],
-        usage="$snippetinfo [name]",
+        usage="snippetinfo [name]",
     )
     @commands.guild_only()
     async def get_snippet_info(self, ctx: commands.Context[commands.Bot], name: str) -> None:
@@ -287,7 +287,7 @@ class Snippets(commands.Cog):
     @commands.command(
         name="createsnippet",
         aliases=["cs"],
-        usage="$createsnippet [name] [content]",
+        usage="createsnippet [name] [content]",
     )
     @commands.guild_only()
     async def create_snippet(self, ctx: commands.Context[commands.Bot], *, arg: str) -> None:

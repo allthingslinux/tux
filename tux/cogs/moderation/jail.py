@@ -87,7 +87,7 @@ class Jail(ModerationCogBase):
     @commands.hybrid_command(
         name="jail",
         aliases=["j"],
-        usage="$jail [target] [reason] <silent>",
+        usage="jail [target] [reason] <silent>",
     )
     @commands.guild_only()
     @checks.has_pl(2)

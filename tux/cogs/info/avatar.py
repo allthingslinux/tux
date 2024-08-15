@@ -36,7 +36,7 @@ class Avatar(commands.Cog):
     @commands.command(
         name="avatar",
         aliases=["av"],
-        usage="$avatar <member>",
+        usage="avatar <member>",
     )
     @commands.guild_only()
     async def prefix_avatar(

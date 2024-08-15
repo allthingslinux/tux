@@ -45,7 +45,7 @@ class Eval(commands.Cog):
     @commands.command(
         name="eval",
         aliases=["e"],
-        usage="$eval [expression]",
+        usage="eval [expression]",
     )
     @commands.guild_only()
     @checks.has_pl(9)

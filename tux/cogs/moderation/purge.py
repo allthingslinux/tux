@@ -73,7 +73,7 @@ class Purge(commands.Cog):
     @commands.command(
         name="purge",
         aliases=["p"],
-        usage="$purge [limit] <channel>",
+        usage="purge [limit] <channel>",
     )
     @commands.guild_only()
     @checks.has_pl(2)

@@ -18,7 +18,6 @@ from tux.utils.embeds import EmbedCreator
 class TuxHelp(commands.HelpCommand):
     def __init__(self):
         """Initializes the TuxHelp command with necessary attributes."""
-        self.prefix = CONST.PREFIX
         super().__init__(
             command_attrs={
                 "help": "Lists all commands and sub-commands.",
@@ -26,6 +25,17 @@ class TuxHelp(commands.HelpCommand):
                 "usage": "$help <command> or <sub-command>",
             },
         )
+
+    async def _get_prefix(self):
+        """
+        Dynamically fetches the prefix from the context.
+
+        Returns
+        -------
+        str
+            The prefix used to invoke the bot.
+        """
+        return (await self.context.bot.get_prefix(self.context.message))[0] or CONST.PREFIX
 
     def _embed_base(self, title: str, description: str | None = None) -> discord.Embed:
         """
@@ -62,8 +72,10 @@ class TuxHelp(commands.HelpCommand):
         prefix : str
             The prefix used to invoke the command.
         """
+        command_aliases = ", ".join(command.aliases) if command.aliases else "No aliases."
+
         embed.add_field(
-            name=f"{prefix}{command.qualified_name} ({', '.join(command.aliases) if command.aliases else 'No aliases.'})",
+            name=f"{prefix}{command.qualified_name} ({command_aliases})",
             value=f"> {command.short_doc or 'No documentation summary.'}",
             inline=False,
         )
@@ -172,14 +184,14 @@ class TuxHelp(commands.HelpCommand):
             "Tux is an all-in-one bot for the All Things Linux Discord server. The bot is written in Python 3.12 using discord.py, and we are actively seeking contributors!",
         )
 
-        self._add_bot_help_fields(embed)
+        await self._add_bot_help_fields(embed)
         menu.add_page(embed)
 
-        self._add_cog_pages(menu, mapping)
+        await self._add_cog_pages(menu, mapping)
 
         await menu.start()
 
-    def _add_bot_help_fields(self, embed: discord.Embed) -> None:
+    async def _add_bot_help_fields(self, embed: discord.Embed) -> None:
         """
         Adds additional help information about the bot.
 
@@ -188,19 +200,21 @@ class TuxHelp(commands.HelpCommand):
         embed : discord.Embed
             The embed to which the help information will be added.
         """
+        prefix = await self._get_prefix()
+
         embed.add_field(
             name="How to Use",
-            value=f"Most commands are hybrid meaning they can be used via prefix `{self.prefix}` OR slash `/`. Commands strictly available via `/` are not listed in the help menu.",
+            value=f"Most commands are hybrid meaning they can be used via prefix `{prefix}` OR slash `/`. Commands strictly available via `/` are not listed in the help menu.",
             inline=False,
         )
         embed.add_field(
             name="Command Help",
-            value=f"Use `{self.prefix}help <command>` or `{self.prefix}help <subcommand>` to learn about a specific command.\n> e.g. `{self.prefix}help ban` or `{self.prefix}h dev load_cog`",
+            value=f"Use `{prefix}help <command>` or `{prefix}help <subcommand>` to learn about a specific command.\n> e.g. `{prefix}help ban` or `{prefix}h dev load_cog`",
             inline=False,
         )
         embed.add_field(
             name="Flag Help",
-            value=f"Flags in `[]` are required and `<>` are optional. Most flags have aliases that can be used.\n> e.g. `{self.prefix}ban @user --reason spamming` or `{self.prefix}b @user -r spamming`",
+            value=f"Flags in `[]` are required and `<>` are optional. Most flags have aliases that can be used.\n> e.g. `{prefix}ban @user --reason spamming` or `{prefix}b @user -r spamming`",
             inline=False,
         )
         embed.add_field(
@@ -214,7 +228,7 @@ class TuxHelp(commands.HelpCommand):
             inline=True,
         )
 
-    def _add_cog_pages(
+    async def _add_cog_pages(
         self,
         menu: ViewMenu,
         mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]],
@@ -229,12 +243,12 @@ class TuxHelp(commands.HelpCommand):
         mapping : Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]]
             The mapping of cogs to commands.
         """
-        command_categories = self._get_command_categories(mapping)
+        command_categories = await self._get_command_categories(mapping)
         cog_groups = self._get_cog_groups()
-        select_options = self._create_select_options(command_categories, cog_groups, menu)
+        select_options = await self._create_select_options(command_categories, cog_groups, menu)
         self._add_navigation_and_selection(menu, select_options)
 
-    def _get_command_categories(
+    async def _get_command_categories(
         self,
         mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]],
     ) -> dict[str, dict[str, str]]:
@@ -257,8 +271,11 @@ class TuxHelp(commands.HelpCommand):
             if cog and len(mapping_commands) > 0:
                 cog_group = self._extract_cog_group(cog) or "extra"
                 command_categories.setdefault(cog_group, {})
-                cmd = cog.qualified_name
-                command_categories[cog_group][cmd] = " ".join(f"`{command.name}`" for command in mapping_commands)
+                for command in mapping_commands:
+                    cmd_name_and_aliases = f"`{command.name}`"
+                    if command.aliases:
+                        cmd_name_and_aliases += f" ({', '.join(f'`{alias}`' for alias in command.aliases)})"
+                    command_categories[cog_group][command.name] = cmd_name_and_aliases
 
         return command_categories
 
@@ -273,7 +290,7 @@ class TuxHelp(commands.HelpCommand):
         """
         return [d for d in os.listdir("./tux/cogs") if Path(f"./tux/cogs/{d}").is_dir() and d != "__pycache__"]
 
-    def _create_select_options(
+    async def _create_select_options(
         self,
         command_categories: dict[str, dict[str, str]],
         cog_groups: list[str],
@@ -301,7 +318,9 @@ class TuxHelp(commands.HelpCommand):
         for index, cog_group in enumerate(cog_groups, start=1):
             if cog_group in command_categories and any(command_categories[cog_group].values()):
                 embed = self._embed_base(f"{cog_group.capitalize()} Commands", "\n")
-                embed.set_footer(text=f"Use {self.prefix}help <command> or <subcommand> to learn about it.")
+                embed.set_footer(
+                    text=f"Use {await self._get_prefix()}help <command> or <subcommand> to learn about it.",
+                )
 
                 for cmd, command_list in command_categories[cog_group].items():
                     embed.add_field(name=cmd, value=command_list, inline=False)
@@ -358,14 +377,15 @@ class TuxHelp(commands.HelpCommand):
         cog : commands.Cog
             The cog for which the help message is to be sent.
         """
+        prefix = await self._get_prefix()
         embed = self._embed_base(f"{cog.qualified_name} Commands")
 
         for command in cog.get_commands():
-            self._add_command_field(embed, command, self.prefix)
+            self._add_command_field(embed, command, prefix)
 
             if isinstance(command, commands.Group):
                 for subcommand in command.commands:
-                    self._add_command_field(embed, subcommand, self.prefix)
+                    self._add_command_field(embed, subcommand, prefix)
 
         await self.get_destination().send(embed=embed)
 
@@ -378,19 +398,21 @@ class TuxHelp(commands.HelpCommand):
         command : commands.Command[Any, Any, Any]
             The command for which the help message is to be sent.
         """
+        prefix = await self._get_prefix()
+
         embed = self._embed_base(
-            title=f"{self.prefix}{command.qualified_name}",
+            title=f"{prefix}{command.qualified_name}",
             description=f"> {command.help or 'No documentation available.'}",
         )
 
-        self._add_command_help_fields(embed, command)
+        await self._add_command_help_fields(embed, command)
 
         if flag_details := self._format_flag_details(command):
             embed.add_field(name="Flags", value=f"```\n{flag_details}\n```", inline=False)
 
         await self.get_destination().send(embed=embed)
 
-    def _add_command_help_fields(self, embed: discord.Embed, command: commands.Command[Any, Any, Any]) -> None:
+    async def _add_command_help_fields(self, embed: discord.Embed, command: commands.Command[Any, Any, Any]) -> None:
         """
         Adds fields with usage and alias information for a command to an embed.
 
@@ -401,9 +423,11 @@ class TuxHelp(commands.HelpCommand):
         command : commands.Command[Any, Any, Any]
             The command whose details are to be added.
         """
+        prefix = await self._get_prefix()
+
         embed.add_field(
             name="Usage",
-            value=f"`{command.signature or 'No usage.'}`",
+            value=f"`{prefix}{command.usage or 'No usage.'}`",
             inline=False,
         )
         embed.add_field(
@@ -421,12 +445,14 @@ class TuxHelp(commands.HelpCommand):
         group : commands.Group[Any, Any, Any]
             The group for which the help message is to be sent.
         """
+        prefix = await self._get_prefix()
+
         embed = self._embed_base(f"{group.name}", f"> {group.help or 'No documentation available.'}")
 
-        self._add_command_help_fields(embed, group)
+        await self._add_command_help_fields(embed, group)
 
         for command in group.commands:
-            self._add_command_field(embed, command, self.prefix)
+            self._add_command_field(embed, command, prefix)
 
         await self.get_destination().send(embed=embed)
 
