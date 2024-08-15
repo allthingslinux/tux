@@ -164,3 +164,6 @@ github-private-key.pem
 # Miscellaneous
 /debug.csv
 config/settings.json
+
+# MacOS
+.DS_Store
