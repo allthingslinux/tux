@@ -201,6 +201,12 @@ class Snippets(commands.Cog):
 
         snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
+        if snippet is None and "_" in name:
+            embed = create_error_embed(
+                error="Snippet not found. Did you mean to use `-` instead of `_`? Due to a recent change, `_` is no longer allowed in snippet names.",
+            )
+            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+            return
         if snippet is None:
             embed = create_error_embed(error="Snippet not found.")
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
