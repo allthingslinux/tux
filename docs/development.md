@@ -76,3 +76,27 @@ The project is structured as follows:
 - `.pre-commit-config.yaml`: The pre-commit configuration file containing the pre-commit hooks for the bot.
 - `.github/workflows/`: The GitHub Actions directory containing the CI/CD workflows for the bot.
 - `renovate.json`: The Renovate configuration file containing the dependency update settings for the bot.
+
+## Cogs Primer
+
+TODO: Add cogs primer
+
+## Database Primer
+
+TODO: Add database primer
+
+## Handlers Primer
+
+TODO: Add handlers primer
+
+## UI Primer
+
+TODO: Add UI primer
+
+## Utils Primer
+
+TODO: Add utils primer
+
+## Wrappers Primer
+
+TODO: Add wrappers primer
