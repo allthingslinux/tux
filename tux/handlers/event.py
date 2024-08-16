@@ -30,6 +30,13 @@ class EventHandler(commands.Cog):
                 await message.reply(
                     "⚠️ **This command is likely harmful.**\n-# By running it, **all directory contents will be deleted. There is no undo.** Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it. [Learn more](<https://itsfoss.com/sudo-rm-rf/>)",
                 )
+            else:
+                await message.reply(
+                    f"⚠️ **This command may be harmful.** Please ensure you understand its effects before proceeding. If you received this message in error, please disregard it.",
+                )
+                await message.reply(
+                    "⚠️ **This command is likely harmful.**\n-# By running it, **all directory contents will be deleted. There is no undo.** Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it. [Learn more](<https://itsfoss.com/sudo-rm-rf/>)",
+                )
             elif bad_command_type == "dd":
                 await message.reply(
                     "⚠️ **This command is likely harmful.**\n-# By running it, **all data on the specified disk will be erased. There is no undo.** Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it.",
