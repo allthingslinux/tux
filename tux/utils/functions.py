@@ -7,9 +7,10 @@ import discord
 harmful_command_pattern = r"(?:sudo\s+|doas\s+|run0\s+)?rm\s+(-[frR]*|--force|--recursive|--no-preserve-root|\s+)*([/\∕~]\s*|\*|/bin|/boot|/etc|/lib|/proc|/root|/sbin|/sys|/tmp|/usr|/var|/var/log|/network.|/system)(\s+--no-preserve-root|\s+\*)*|:\(\)\{ :|:& \};:"  # noqa: RUF001
 harmful_dd_command_pattern = r"dd\s+if=\/dev\/(zero|random|urandom)\s+of=\/dev\/.*da.*"
 
+
 def is_harmful(command: str) -> bool:
     first_test: bool = re.search(harmful_command_pattern, command, re.IGNORECASE) is not None
-    second_test: bool = re.search(r"rm.{0,5}[rfRF]", command, re.IGNORECASE) is not None 
+    second_test: bool = re.search(r"rm.{0,5}[rfRF]", command, re.IGNORECASE) is not None
     third_test: bool = re.search(r"X\s*=\s*/\s*&&\s*(sudo\s*)?rm\s*-\s*rf", command, re.IGNORECASE) is not None
     ret: bool = first_test and second_test or third_test
     if not ret:
@@ -17,10 +18,11 @@ def is_harmful(command: str) -> bool:
         ret = re.search(harmful_dd_command_pattern, command, re.IGNORECASE) is not None
     return ret
 
+
 def get_harmful_command_type(command: str) -> str:
     bad_command_type = ""
     first_test: bool = re.search(harmful_command_pattern, command, re.IGNORECASE) is not None
-    second_test: bool = re.search(r"rm.{0,5}[rfRF]", command, re.IGNORECASE) is not None 
+    second_test: bool = re.search(r"rm.{0,5}[rfRF]", command, re.IGNORECASE) is not None
     third_test: bool = re.search(r"X\s*=\s*/\s*&&\s*(sudo\s*)?rm\s*-\s*rf", command, re.IGNORECASE) is not None
     if first_test and second_test or third_test:
         bad_command_type = "rm"
@@ -28,6 +30,7 @@ def get_harmful_command_type(command: str) -> str:
         if re.search(harmful_dd_command_pattern, command, re.IGNORECASE) is not None:
             bad_command_type = "dd"
     return bad_command_type
+
 
 def strip_formatting(content: str) -> str:
     # Remove triple backtick blocks considering any spaces and platform-specific newlines

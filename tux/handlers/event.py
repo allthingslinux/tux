@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from tux.database.controllers import DatabaseController
-from tux.utils.functions import is_harmful, get_harmful_command_type, strip_formatting
+from tux.utils.functions import get_harmful_command_type, is_harmful, strip_formatting
 
 
 class EventHandler(commands.Cog):
@@ -28,11 +28,11 @@ class EventHandler(commands.Cog):
             bad_command_type: str = get_harmful_command_type(stripped_content)
             if bad_command_type == "rm":
                 await message.reply(
-                    "⚠️ **This command is likely harmful.**\n-# By running it, **all directory contents will be deleted. There is no undo.** Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it. [Learn more](<https://itsfoss.com/sudo-rm-rf/>)"
+                    "⚠️ **This command is likely harmful.**\n-# By running it, **all directory contents will be deleted. There is no undo.** Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it. [Learn more](<https://itsfoss.com/sudo-rm-rf/>)",
                 )
             elif bad_command_type == "dd":
                 await message.reply(
-                    "⚠️ **This command is likely harmful.**\n-# By running it, **all data on the specified disk will be erased. There is no undo.** Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it."
+                    "⚠️ **This command is likely harmful.**\n-# By running it, **all data on the specified disk will be erased. There is no undo.** Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it.",
                 )
 
     @commands.Cog.listener()
