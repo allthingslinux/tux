@@ -303,8 +303,8 @@ class Snippets(commands.Cog):
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
-        # Check if the name is longer than 20 characters and includes non-alphanumeric characters (except -_)
-        rules = set(string.ascii_letters + string.digits + "-_")
+        # Check if the name is longer than 20 characters and includes non-alphanumeric characters (except -)
+        rules = set(string.ascii_letters + string.digits + "-")
 
         if len(name) > 20 or any(char not in rules for char in name):
             embed = create_error_embed(
