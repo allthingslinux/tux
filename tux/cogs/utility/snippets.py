@@ -11,7 +11,7 @@ from prisma.models import Snippet
 from tux.database.controllers import DatabaseController
 from tux.utils import checks
 from tux.utils.constants import Constants as CONST
-from tux.utils.embeds import EmbedCreator, create_embed_footer
+from tux.utils.embeds import EmbedCreator, create_embed_footer, create_error_embed
 
 
 class Snippets(commands.Cog):
@@ -126,23 +126,14 @@ class Snippets(commands.Cog):
         snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
-                description="Snippet not found.",
-                ctx=ctx,
-            )
-
+            embed = create_error_embed(error="Snippet not found.")
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
         # Check if the author of the snippet is the same as the user who wants to delete it and if theres no author don't allow deletion
         author_id = snippet.snippet_user_id or 0
         if author_id != ctx.author.id:
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
-                description="You can only delete your own snippets.",
-                ctx=ctx,
-            )
+            embed = create_error_embed(error="You can only delete your own snippets.")
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
@@ -177,11 +168,7 @@ class Snippets(commands.Cog):
         snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
-                description="Snippet not found.",
-                ctx=ctx,
-            )
+            embed = create_error_embed(error="Snippet not found.")
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
@@ -215,11 +202,7 @@ class Snippets(commands.Cog):
         snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
-                description="Snippet not found.",
-                ctx=ctx,
-            )
+            embed = create_error_embed(error="Snippet not found.")
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
@@ -252,11 +235,7 @@ class Snippets(commands.Cog):
         snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
-                description="Snippet not found.",
-                ctx=ctx,
-            )
+            embed = create_error_embed(error="Snippet not found.")
             await ctx.send(embed=embed, delete_after=30)
             return
 
@@ -308,11 +287,7 @@ class Snippets(commands.Cog):
 
         args = arg.split(" ")
         if len(args) < 2:
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
-                description="Please provide a name and content for the snippet.",
-                ctx=ctx,
-            )
+            embed = create_error_embed(error="Please provide a name and content for the snippet.")
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
@@ -324,11 +299,7 @@ class Snippets(commands.Cog):
 
         # Check if the snippet already exists
         if await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id) is not None:
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
-                description="Snippet already exists.",
-                ctx=ctx,
-            )
+            embed = create_error_embed(error="Snippet already exists.")
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
@@ -336,10 +307,10 @@ class Snippets(commands.Cog):
         rules = set(string.ascii_letters + string.digits + "-_")
 
         if len(name) > 20 or any(char not in rules for char in name):
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
-                description="Snippet name must be alphanumeric (allows dashes and underscores) and less than 20 characters.",
+            embed = create_error_embed(
+                error="Snippet name must be alphanumeric (allows dashes and underscores) and less than 20 characters.",
             )
+
             await ctx.send(embed=embed)
             return
 
