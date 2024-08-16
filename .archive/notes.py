@@ -14,7 +14,7 @@ class Notes(ModerationCogBase):
     @commands.hybrid_group(
         name="notes",
         aliases=["n"],
-        usage="$notes <subcommand>",
+        usage="notes <subcommand>",
     )
     @commands.guild_only()
     async def notes(self, ctx: commands.Context[commands.Bot]) -> None:
@@ -32,7 +32,7 @@ class Notes(ModerationCogBase):
     @notes.command(
         name="create",
         aliases=["c", "add", "a"],
-        usage="$notes create [target] [content]",
+        usage="notes create [target] [content]",
     )
     @commands.guild_only()
     async def create_note(self, ctx: commands.Context[commands.Bot], target: discord.Member, content: str) -> None:
@@ -67,7 +67,7 @@ class Notes(ModerationCogBase):
     @notes.command(
         name="delete",
         aliases=["d"],
-        usage="$notes delete [note_id]",
+        usage="notes delete [note_id]",
     )
     @commands.guild_only()
     async def delete_note(self, ctx: commands.Context[commands.Bot], note_id: int) -> None:
@@ -108,7 +108,7 @@ class Notes(ModerationCogBase):
     @notes.command(
         name="update",
         aliases=["u", "edit", "e", "modify", "m"],
-        usage="$notes update [note_id] [content]",
+        usage="notes update [note_id] [content]",
     )
     @commands.guild_only()
     async def update_note(self, ctx: commands.Context[commands.Bot], note_id: int, content: str) -> None:
@@ -152,7 +152,7 @@ class Notes(ModerationCogBase):
     @notes.command(
         name="view",
         aliases=["v", "get", "g"],
-        usage="$notes view [note_id]",
+        usage="notes view [note_id]",
     )
     @commands.guild_only()
     async def view_note(

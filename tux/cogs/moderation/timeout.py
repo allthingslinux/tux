@@ -61,7 +61,7 @@ class Timeout(ModerationCogBase):
     @commands.hybrid_command(
         name="timeout",
         aliases=["t", "to", "mute"],
-        usage="$timeout [target] [duration] [reason]",
+        usage="timeout [target] [duration] [reason]",
     )
     @commands.guild_only()
     @checks.has_pl(2)

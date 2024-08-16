@@ -232,7 +232,7 @@ class Run(commands.Cog):
     @commands.command(
         name="run",
         aliases=["compile", "exec"],
-        usage="$run [code]",
+        usage="run [code]",
     )
     async def run(
         self,
@@ -302,7 +302,7 @@ class Run(commands.Cog):
     @commands.command(
         name="languages",
         aliases=["langs"],
-        usage="$languages",
+        usage="languages",
     )
     async def languages(self, ctx: commands.Context[commands.Bot]) -> None:
         """

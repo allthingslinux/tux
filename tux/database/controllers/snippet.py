@@ -24,7 +24,7 @@ class SnippetController:
         )
 
     async def get_snippet_by_name(self, snippet_name: str) -> Snippet | None:
-        return await self.table.find_first(where={"snippet_name": snippet_name})
+        return await self.table.find_first(where={"snippet_name": {"contains": snippet_name, "mode": "insensitive"}})
 
     async def get_snippet_by_name_and_guild_id(
         self,
@@ -32,7 +32,7 @@ class SnippetController:
         guild_id: int,
     ) -> Snippet | None:
         return await self.table.find_first(
-            where={"snippet_name": snippet_name, "guild_id": guild_id},
+            where={"snippet_name": {"equals": snippet_name, "mode": "insensitive"}, "guild_id": guild_id},
         )
 
     async def create_snippet(

@@ -18,7 +18,7 @@ class Warn(ModerationCogBase):
     @commands.hybrid_command(
         name="warn",
         aliases=["w"],
-        usage="$warn [target] <flags>",
+        usage="warn [target] <flags>",
     )
     @commands.guild_only()
     @checks.has_pl(2)

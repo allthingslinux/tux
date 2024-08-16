@@ -403,7 +403,7 @@ class Git(commands.Cog):
     @commands.hybrid_group(
         name="git",
         aliases=["g"],
-        usage="$git <subcommand>",
+        usage="git <subcommand>",
     )
     @commands.guild_only()
     @checks.has_pl(8)
@@ -423,7 +423,7 @@ class Git(commands.Cog):
     @git.command(
         name="get_repo",
         aliases=["r"],
-        usage="$git get_repo",
+        usage="git get_repo",
     )
     @commands.guild_only()
     @checks.has_pl(8)
@@ -461,7 +461,7 @@ class Git(commands.Cog):
     @git.command(
         name="create_issue",
         aliases=["ci"],
-        usage="$git create_issue [title] [body]",
+        usage="git create_issue [title] [body]",
     )
     @commands.guild_only()
     # @checks.has_pl(8)
@@ -503,7 +503,7 @@ class Git(commands.Cog):
     @git.command(
         name="get_issue",
         aliases=["gi", "issue", "i"],
-        usage="$git get_issue [issue_number]",
+        usage="git get_issue [issue_number]",
     )
     @commands.guild_only()
     @checks.has_pl(8)

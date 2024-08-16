@@ -18,7 +18,7 @@ class Untimeout(ModerationCogBase):
     @commands.hybrid_command(
         name="untimeout",
         aliases=["ut", "uto", "unmute"],
-        usage="$untimeout [target] [reason]",
+        usage="untimeout [target] [reason]",
     )
     @commands.guild_only()
     @checks.has_pl(2)

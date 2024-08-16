@@ -18,7 +18,7 @@ class Ban(ModerationCogBase):
     @commands.hybrid_command(
         name="ban",
         aliases=["b"],
-        usage="$ban [target] <flags>",
+        usage="ban [target] <flags>",
     )
     @commands.guild_only()
     @checks.has_pl(3)

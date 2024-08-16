@@ -33,7 +33,7 @@ class Cases(ModerationCogBase):
     @commands.hybrid_group(
         name="cases",
         aliases=["c"],
-        usage="$cases <subcommand>",
+        usage="cases <subcommand>",
     )
     @commands.guild_only()
     @checks.has_pl(2)
@@ -47,7 +47,7 @@ class Cases(ModerationCogBase):
     @cases.command(
         name="view",
         aliases=["v", "ls", "list"],
-        usage="$cases view <case_number> <flags>",
+        usage="cases view <case_number> <flags>",
     )
     @commands.guild_only()
     @checks.has_pl(2)
@@ -83,7 +83,7 @@ class Cases(ModerationCogBase):
     @cases.command(
         name="modify",
         aliases=["m", "edit"],
-        usage="$cases modify [case_number] <flags>",
+        usage="cases modify [case_number] <flags>",
     )
     @commands.guild_only()
     @checks.has_pl(2)

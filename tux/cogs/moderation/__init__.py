@@ -5,7 +5,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.database.controllers import DatabaseController
-from tux.utils.embeds import create_embed_footer
+from tux.utils.embeds import create_embed_footer, create_error_embed
 
 
 class ModerationCogBase(commands.Cog):
@@ -151,15 +151,18 @@ class ModerationCogBase(commands.Cog):
             return False
 
         if target == ctx.author:
-            await ctx.send(f"You cannot {action} yourself.", delete_after=30, ephemeral=True)
+            embed = create_error_embed("You cannot {action} yourself.")
+            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             return False
 
         if isinstance(moderator, discord.Member) and target.top_role >= moderator.top_role:
-            await ctx.send(f"You cannot {action} a user with a higher or equal role.", delete_after=30, ephemeral=True)
+            embed = create_error_embed("You cannot {action} a user with a higher or equal role.")
+            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             return False
 
         if target == ctx.guild.owner:
-            await ctx.send(f"You cannot {action} the server owner.", delete_after=30, ephemeral=True)
+            embed = create_error_embed("You cannot {action} the server owner.")
+            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             return False
 
         return True

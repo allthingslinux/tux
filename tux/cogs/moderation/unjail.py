@@ -18,7 +18,7 @@ class Unjail(ModerationCogBase):
     @commands.hybrid_command(
         name="unjail",
         aliases=["uj"],
-        usage="$unjail [target] [reason] <silent>",
+        usage="unjail [target] [reason] <silent>",
     )
     @commands.guild_only()
     @checks.has_pl(2)

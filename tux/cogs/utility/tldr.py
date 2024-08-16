@@ -70,7 +70,7 @@ class Tldr(commands.Cog):
     @commands.command(
         name="tldr",
         aliases=["man"],
-        usage="$tldr [command]",
+        usage="tldr [command]",
     )
     @commands.guild_only()
     async def prefix_tldr(self, ctx: commands.Context[commands.Bot], command: str) -> None:

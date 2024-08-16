@@ -30,6 +30,14 @@ def create_embed_footer(
     return (fallback_text, fallback_icon_url)
 
 
+@staticmethod
+def create_error_embed(error: str) -> discord.Embed:
+    embed = discord.Embed()
+    embed.color = CONST.EMBED_COLORS["ERROR"]
+    embed.description = f"<:tux_error:1273494919897681930> {error}"
+    return embed
+
+
 class EmbedCreator:
     @staticmethod
     def get_timestamp(

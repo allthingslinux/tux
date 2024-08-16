@@ -18,7 +18,7 @@ class Kick(ModerationCogBase):
     @commands.hybrid_command(
         name="kick",
         aliases=["k"],
-        usage="$kick [target] [reason] <silent>",
+        usage="kick [target] [reason] <silent>",
     )
     @commands.guild_only()
     @checks.has_pl(2)
