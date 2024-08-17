@@ -2,17 +2,13 @@
 
 ## Introduction
 
-This document is intended to provide a guide for developers who want to contribute to the development of the project. It is assumed that the reader has a basic understanding of the project and its goals and has a working knowledge of the tools and technologies used in the project.
+This document is intended to provide a guide for developers who want to contribute to the development of the project.
+
+It is assumed that the reader has a basic understanding of the project and its goals as well as the tools and technologies used in the project.
 
 ## Getting Started
 
-To get started with the development of the project, you will need to have the following tools and technologies installed on your system:
-
-- Python 3.12
-- [Poetry](https://python-poetry.org/docs/)
-- Optional: [Docker](https://docs.docker.com/get-docker/) if you want to run the bot in a container.
-- Optional: [Docker Compose](https://docs.docker.com/compose/install/) if you want to define the container environment in a `docker-compose.yml` file.
-- Optional: [Just](https://github.com/casey/just/) if you want to use the Justfile for easy CLI commands.
+To get started with the development of the project, refer to the installation instructions in the project [README](../README.md).
 
 ## Installation
 
@@ -85,9 +81,13 @@ The project is structured as follows:
 
 There comes a point in your bot’s development when you want to organize a collection of commands, listeners, and some state into one class. Cogs allow you to do just that.
 
-It should be noted that cogs are typically used alongside with Extensions. An extension at its core is a python file with an entry point called setup. This setup function must be a Python coroutine. It takes a single parameter of the Bot that loads the extension.
+It should be noted that cogs are typically used alongside with Extensions.
 
-With regards to Tux, we typically define one cog per extension. Furthermore, we have a `CogLoader` class that loads our cogs (technically, extensions) from the `cogs` directory and registers them with the bot at startup.
+An extension at its core is a python file with an entry point called setup. This setup function must be a Python coroutine. It takes a single parameter of the Bot that loads the extension.
+
+With regards to Tux, we typically define one cog per extension. This allows us to keep our code organized and modular.
+
+Furthermore, we have a `CogLoader` class that loads our cogs (technically, extensions) from the `cogs` directory and registers them with the bot at startup.
 
 ### Cog Essentials
 
