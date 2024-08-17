@@ -1,6 +1,8 @@
-# Project Documentation 
+# Project Documentation
 
-This document outlines the essential commands and workflows needed for the installation, development, and management of this project. Each section provides relevant commands and instructions for specific tasks.
+This document outlines the essential commands and workflows needed for the installation, development, and management of this project.
+
+Each section provides relevant commands and instructions for specific tasks.
 
 ## Table of Contents
 

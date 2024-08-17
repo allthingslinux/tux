@@ -9,7 +9,6 @@
 - Moderation
 - Utility
 
-
 ## Commands
 
 ### Admin

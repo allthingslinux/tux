@@ -2,7 +2,9 @@
 
 ## Overview
 
-Services within the context of this bot are background tasks that run continuously and provide various functionalities to the server. They are typically not directly interacted with by users, but rather provide additional features to the server that are not covered by commands.
+Services within the context of this bot are background tasks that run continuously and provide various functionalities to the server.
+
+They are typically not directly interacted with by users, but rather provide additional features to the server that are not covered by commands.
 
 ## Available Services
 

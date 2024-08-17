@@ -14,6 +14,3 @@ class DatabaseController:
         self.reminder = ReminderController()
         self.guild = GuildController()
         self.guild_config = GuildConfigController()
-
-
-db_controller = DatabaseController()
