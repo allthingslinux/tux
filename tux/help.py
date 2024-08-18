@@ -26,15 +26,16 @@ class TuxHelp(commands.HelpCommand):
             },
         )
 
-    async def _get_prefix(self):
+    async def _get_prefix(self) -> str:
         """
-        Dynamically fetches the prefix from the context.
+        Dynamically fetches the prefix from the context or uses a default prefix constant.
 
         Returns
         -------
         str
             The prefix used to invoke the bot.
         """
+
         return (await self.context.bot.get_prefix(self.context.message))[0] or CONST.PREFIX
 
     def _embed_base(self, title: str, description: str | None = None) -> discord.Embed:
@@ -53,13 +54,19 @@ class TuxHelp(commands.HelpCommand):
         discord.Embed
             The created embed.
         """
+
         return discord.Embed(
             title=title,
             description=description,
             color=CONST.EMBED_COLORS["DEFAULT"],
         )
 
-    def _add_command_field(self, embed: discord.Embed, command: commands.Command[Any, Any, Any], prefix: str) -> None:
+    def _add_command_field(
+        self,
+        embed: discord.Embed,
+        command: commands.Command[Any, Any, Any],
+        prefix: str,
+    ) -> None:
         """
         Adds a command's details as a field to an embed.
 
@@ -72,6 +79,7 @@ class TuxHelp(commands.HelpCommand):
         prefix : str
             The prefix used to invoke the command.
         """
+
         command_aliases = ", ".join(command.aliases) if command.aliases else "No aliases."
 
         embed.add_field(
@@ -94,6 +102,7 @@ class TuxHelp(commands.HelpCommand):
         str
             The type of the flag.
         """
+
         match flag_annotation:
             case None:
                 return "Any"
@@ -116,6 +125,7 @@ class TuxHelp(commands.HelpCommand):
         str
             The formatted flag name.
         """
+
         return f"-[{flag.name}]" if flag.required else f"-<{flag.name}>"
 
     def _format_flag_details(self, command: commands.Command[Any, Any, Any]) -> str:
@@ -132,12 +142,12 @@ class TuxHelp(commands.HelpCommand):
         str
             The formatted flag details.
         """
+        flag_details: list[str] = []
+
         try:
             type_hints = get_type_hints(command.callback)
         except Exception:
             type_hints = {}
-
-        flag_details: list[str] = []
 
         for param_annotation in type_hints.values():
             if not isinstance(param_annotation, type) or not issubclass(param_annotation, commands.FlagConverter):
@@ -171,6 +181,7 @@ class TuxHelp(commands.HelpCommand):
         mapping : Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]]
             The mapping of cogs to commands.
         """
+
         menu = ViewMenu(
             self.context,
             menu_type=ViewMenu.TypeEmbed,
@@ -186,7 +197,6 @@ class TuxHelp(commands.HelpCommand):
 
         await self._add_bot_help_fields(embed)
         menu.add_page(embed)
-
         await self._add_cog_pages(menu, mapping)
 
         await menu.start()
@@ -200,6 +210,7 @@ class TuxHelp(commands.HelpCommand):
         embed : discord.Embed
             The embed to which the help information will be added.
         """
+
         prefix = await self._get_prefix()
 
         embed.add_field(
@@ -243,6 +254,7 @@ class TuxHelp(commands.HelpCommand):
         mapping : Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]]
             The mapping of cogs to commands.
         """
+
         command_categories = await self._get_command_categories(mapping)
         cog_groups = self._get_cog_groups()
         select_options = await self._create_select_options(command_categories, cog_groups, menu)
@@ -265,6 +277,7 @@ class TuxHelp(commands.HelpCommand):
         dict[str, dict[str, str]]
             The dictionary of command categories and commands.
         """
+
         command_categories: dict[str, dict[str, str]] = {}
 
         for cog, mapping_commands in mapping.items():
@@ -288,6 +301,7 @@ class TuxHelp(commands.HelpCommand):
         list[str]
             A list of cog groups.
         """
+
         return [d for d in os.listdir("./tux/cogs") if Path(f"./tux/cogs/{d}").is_dir() and d != "__pycache__"]
 
     async def _create_select_options(
@@ -313,6 +327,7 @@ class TuxHelp(commands.HelpCommand):
         dict[discord.SelectOption, list[Page]]
             The created select options.
         """
+
         select_options: dict[discord.SelectOption, list[Page]] = {}
 
         for index, cog_group in enumerate(cog_groups, start=1):
@@ -347,6 +362,7 @@ class TuxHelp(commands.HelpCommand):
         select_options : dict[discord.SelectOption, list[Page]]
             The dictionary of select options.
         """
+
         menu.add_select(ViewSelect(title="Command Categories", options=select_options))
         menu.add_button(ViewButton.end_session())
 
@@ -364,6 +380,7 @@ class TuxHelp(commands.HelpCommand):
         str | None
             The extracted cog group or None if not found.
         """
+
         if match := re.search(r"<cogs\.([^\.]+)\..*>", str(cog)):
             return match[1]
         return None
@@ -377,7 +394,9 @@ class TuxHelp(commands.HelpCommand):
         cog : commands.Cog
             The cog for which the help message is to be sent.
         """
+
         prefix = await self._get_prefix()
+
         embed = self._embed_base(f"{cog.qualified_name} Commands")
 
         for command in cog.get_commands():
@@ -398,6 +417,7 @@ class TuxHelp(commands.HelpCommand):
         command : commands.Command[Any, Any, Any]
             The command for which the help message is to be sent.
         """
+
         prefix = await self._get_prefix()
 
         embed = self._embed_base(
@@ -423,6 +443,7 @@ class TuxHelp(commands.HelpCommand):
         command : commands.Command[Any, Any, Any]
             The command whose details are to be added.
         """
+
         prefix = await self._get_prefix()
 
         embed.add_field(
@@ -445,12 +466,12 @@ class TuxHelp(commands.HelpCommand):
         group : commands.Group[Any, Any, Any]
             The group for which the help message is to be sent.
         """
+
         prefix = await self._get_prefix()
 
         embed = self._embed_base(f"{group.name}", f"> {group.help or 'No documentation available.'}")
 
         await self._add_command_help_fields(embed, group)
-
         for command in group.commands:
             self._add_command_field(embed, command, prefix)
 
@@ -465,6 +486,7 @@ class TuxHelp(commands.HelpCommand):
         error : str
             The error message to be sent.
         """
+
         logger.error(f"An error occurred while sending a help message: {error}")
 
         embed = EmbedCreator.create_error_embed(

@@ -79,6 +79,25 @@ class EventHandler(commands.Cog):
             await message.remove_reaction(emoji, member)
             return
 
+    @commands.Cog.listener()
+    async def on_thread_create(self, thread: discord.Thread) -> None:
+        # Temporary hardcoded support forum ID and general chat ID
+        support_forum = 1172312653797007461
+        general_chat = 1172245377395728467
+
+        if thread.parent_id == support_forum:
+            owner_mention = thread.owner.mention if thread.owner else {thread.owner_id}
+            tags = [tag.name for tag in thread.applied_tags]
+            if tags:
+                tag_list = ", ".join(tags)
+                msg = f"<:tux_notify:1274504953666474025> **New support thread created** - help is appreciated!\n{thread.mention} by {owner_mention}\n<:tux_tag:1274504955163709525> **Tags**: `{tag_list}`"
+            else:
+                msg = f"<:tux_notify:1274504953666474025> **New support thread created** - help is appreciated!\n{thread.mention} by {owner_mention}"
+            embed = discord.Embed(description=msg, color=discord.Color.random())
+            channel = self.bot.get_channel(general_chat)
+            if channel is not None and isinstance(channel, discord.TextChannel):
+                await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(EventHandler(bot))

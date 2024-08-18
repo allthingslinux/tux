@@ -109,7 +109,21 @@ class Random(commands.Cog):
 
         choice = random.choice(responses)
 
-        if cow:
+        if len(question) > 120:
+            response = """  _________________________________________
+< That question is too long! Try a new one. >
+  -----------------------------------------
+   \\
+    \\
+        .--.
+       |o_o |
+       |:_/ |
+      //   \\ \\
+     (|     | )
+    /'\\_   _/`\\
+    \\___)=(___/
+"""
+        elif cow:
             response = f"""Response to "{question}":
   {"_" * len(choice)}
 < {choice} >

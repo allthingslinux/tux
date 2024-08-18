@@ -16,6 +16,3 @@ class DatabaseController:
         self.guild = GuildController()
         self.guild_config = GuildConfigController()
         self.suggestion = SuggestionController()
-
-
-db_controller = DatabaseController()
