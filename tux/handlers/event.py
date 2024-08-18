@@ -84,6 +84,7 @@ class EventHandler(commands.Cog):
         # Temporary hardcoded support forum ID and general chat ID
         support_forum = 1172312653797007461
         general_chat = 1172245377395728467
+        support_role = "<@&1274823545087590533>"
 
         if thread.parent_id == support_forum:
             owner_mention = thread.owner.mention if thread.owner else {thread.owner_id}
@@ -96,7 +97,7 @@ class EventHandler(commands.Cog):
             embed = discord.Embed(description=msg, color=discord.Color.random())
             channel = self.bot.get_channel(general_chat)
             if channel is not None and isinstance(channel, discord.TextChannel):
-                await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+                await channel.send(content=support_role, embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
 
 async def setup(bot: commands.Bot) -> None:
