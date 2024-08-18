@@ -35,6 +35,12 @@ enum CaseType {
   UNJAIL
 }
 
+enum SuggestionStatus { 
+  APPROVED
+  PENDING
+  DENIED
+}
+
 // Docs: https://www.prisma.io/docs/orm/prisma-schema/data-model/models#defining-models
 // Docs: https://www.prisma.io/docs/orm/prisma-schema/data-model/models#defining-attributes
 model Guild {
@@ -45,6 +51,7 @@ model Guild {
   notes           Note[]
   reminders       Reminder[]
   guild_config    GuildConfig[]
+  suggestions     Suggestion[]
 
   @@unique([guild_id])
   @@index([guild_id])
@@ -138,4 +145,18 @@ model Reminder {
 
   @@unique([reminder_id, guild_id])
   @@index([reminder_id, guild_id])
+}
+
+model Suggestion {
+  suggestion_id           BigInt            @id @default(autoincrement())
+  suggestion_title        String 
+  suggestion_description  String
+  suggestion_status       SuggestionStatus  @default(PENDING)
+  suggestion_review       String?
+  suggestion_user_id      BigInt         
+  guild_id                BigInt
+  guild                   Guild             @relation(fields: [guild_id], references: [guild_id])
+
+  @@unique([suggestion_id, guild_id])
+  @@index([suggestion_id, guild_id])
 }

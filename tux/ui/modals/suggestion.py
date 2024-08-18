@@ -13,16 +13,20 @@ class ButtonView(discord.ui.View):
         super().__init__(timeout=None)
         self.embed = embed
 
-    @discord.ui.button(label="Accept Suggestion", style=discord.ButtonStyle.green, custom_id="accept_suggestion_button")
+    @discord.ui.button(label="Accept", style=discord.ButtonStyle.green, custom_id="accept_suggestion_button")
     @checks.has_pl(5)
     async def green_button(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]):
         self.embed.set_author(name="Suggestion Status: Accepted")
+        self.embed.add_field(name="Reviewed by", value=interaction.user.name, inline=False)
+        self.embed.color = discord.Color.green()
         await interaction.response.edit_message(embed=self.embed, view=self)
 
-    @discord.ui.button(label="Deny Suggestion", style=discord.ButtonStyle.red, custom_id="deny_suggestion_button")
+    @discord.ui.button(label="Deny", style=discord.ButtonStyle.red, custom_id="deny_suggestion_button")
     @checks.has_pl(5)
     async def red_button(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]):
         self.embed.set_author(name="Suggestion Status: Rejected")
+        self.embed.add_field(name="Reviewed by", value=interaction.user.name, inline=False)
+        self.embed.color = discord.Color.red()
         await interaction.response.edit_message(embed=self.embed, view=self)
 
 
@@ -68,11 +72,13 @@ class SuggestionModal(discord.ui.Modal):
             color=CONST.EMBED_COLORS["DEFAULT"],
         )
         embed.set_author(name="Suggestion Status: Under Review")
+        """ Commented until I finish the rest of the code
         embed.add_field(
             name="Review Info",
             value="No review has been submitted",
             inline=False,
         )
+        """
         footer_text, footer_icon_url = create_embed_footer(interaction=interaction)
         embed.set_footer(text=footer_text, icon_url=footer_icon_url)
 

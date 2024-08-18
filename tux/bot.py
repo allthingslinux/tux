@@ -1,12 +1,14 @@
 import asyncio
 from typing import Any
 
+import discord
 from discord.ext import commands
 from loguru import logger
 
 from tux.cog_loader import CogLoader
 from tux.database.client import db
 from tux.help import TuxHelp
+from tux.ui.modals.suggestion import ButtonView
 
 
 class Tux(commands.Bot):
@@ -52,6 +54,8 @@ class Tux(commands.Bot):
 
         if not self.setup_task.done():
             await self.setup_task
+
+        self.add_view(ButtonView(embed=discord.Embed()))
 
     @commands.Cog.listener()
     async def on_disconnect(self) -> None:
