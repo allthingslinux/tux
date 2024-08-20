@@ -373,11 +373,12 @@ class Snippets(commands.Cog):
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
-        async def update_snippet_by_id(self, snippet_id: int, snippet_content: str) -> Snippet | None:
-            return await self.table.update(
-                where={"snippet_id": name},
-                data={"snippet_content": content},
-            )
+        await self.db.update_snippet_by_id(
+            snippet_id=name,
+            snippet_content=content,
+        )
+        await ctx.send("Snippet Edited.", delete_after=30, ephemeral=True)  # Correct indentation
+        logger.info(f"{ctx.author} Edited a snippet with the name {name} and content {content}.")  # Correct indentation
 
 
 async def setup(bot: commands.Bot) -> None:
