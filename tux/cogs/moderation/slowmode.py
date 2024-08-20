@@ -9,7 +9,7 @@ class Slowmode(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @commands.hybrid_command(
+    @commands.hybrid_group(
         name="slowmode",
         aliases=["sm"],
         usage="slowmode [delay] <channel>",
@@ -75,6 +75,54 @@ class Slowmode(commands.Cog):
         except Exception as error:
             await ctx.send(f"Failed to set slowmode. Error: {error}", delete_after=30, ephemeral=True)
             logger.error(f"Failed to set slowmode. Error: {error}")
+
+    @slowmode.command(
+        name="get",
+        aliases=["g"],
+        usage="slowmodeget <channel>",
+    )
+    @commands.guild_only()
+    @checks.has_pl(2)
+    async def slowmodeget(
+        self,
+        ctx: commands.Context[commands.Bot],
+        channel: discord.TextChannel | discord.Thread | None = None,
+    ) -> None:
+        """
+        Get the slowmode delay for the current channel or specified channel.
+        Parameters
+        ----------
+        self : Slowmode
+            The Slowmode cog instance.
+        ctx : commands.Context[commands.Bot]
+            The context of the command.
+        channel : discord.TextChannel | discord.Thread | None
+            The channel to get the slowmode delay from.
+        """
+        if ctx.guild is None:
+            return
+
+        # If the channel is not specified, default to the current channel
+        if channel is None:
+            # Check if the current channel is a text channel or thread
+            if not isinstance(ctx.channel, discord.TextChannel | discord.Thread):
+                await ctx.send(
+                    "Invalid channel type, must be a text channel or thread.",
+                    delete_after=30,
+                    ephemeral=True,
+                )
+                return
+            channel = ctx.channel
+
+        try:
+            await ctx.send(
+                f"The slowmode for {channel.mention} is {channel.slowmode_delay} seconds.",
+                delete_after=30,
+                ephemeral=True,
+            )
+        except Exception as error:
+            await ctx.send(f"Failed to get slowmode. Error: {error}", delete_after=30, ephemeral=True)
+            logger.error(f"Failed to get slowmode. Error: {error}")
 
 
 async def setup(bot: commands.Bot) -> None:
