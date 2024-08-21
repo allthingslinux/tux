@@ -512,10 +512,7 @@ class Snippets(commands.Cog):
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
-        # dm the author of the snippet
-        # if failed to dm just ignore it
-        author = self.bot.get_user(snippet.snippet_user_id)
-        if author:
+        if author := self.bot.get_user(snippet.snippet_user_id):
             with contextlib.suppress(discord.Forbidden):
                 await author.send(
                     f"""Your snippet `{snippet.snippet_name}` has been {'locked' if status.locked else 'unlocked'}.
