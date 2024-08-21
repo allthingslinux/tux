@@ -49,7 +49,7 @@ class Slowmode(commands.Cog):
                 return
             channel = ctx.channel
 
-        if action.lower() == "get":
+        if action.lower() in {"get", "g"}:
             try:
                 await ctx.send(
                     f"The slowmode for {channel.mention} is {channel.slowmode_delay} seconds.",
