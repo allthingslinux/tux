@@ -118,10 +118,7 @@ class Snippets(commands.Cog):
         """
 
         # find the top 10 snippets by uses
-        snippets: list[Snippet] = await self.db.get_all_snippets()
-
-        # Remove snippets that are not in the current server
-        snippets = [snippet for snippet in snippets if snippet.guild_id == ctx.guild.id]  # type: ignore # because of guild_only this will never be None
+        snippets: list[Snippet] = await self.db.get_all_snippets_by_guild_id(ctx.guild.id)  # type: ignore # wio
 
         # If there are no snippets, send an error message
         if not snippets:
