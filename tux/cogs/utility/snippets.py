@@ -422,6 +422,11 @@ class Snippets(commands.Cog):
         author_id = ctx.author.id
         snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
+        if snippet is None:
+            embed = create_error_embed(error="Snippet not found.")
+            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+            return
+
         # Check if the author of the snippet is the same as the user who wants to edit it and if theres no author don't allow editing
         author_id = snippet.snippet_user_id or 0
         if author_id != ctx.author.id:
