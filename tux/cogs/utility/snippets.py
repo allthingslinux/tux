@@ -467,8 +467,11 @@ class Snippets(commands.Cog):
             snippet_content=content,
         )
 
+        if len(previous_content) > 50:
+            previous_content = previous_content[: 50 - 3] + "..."
+
         await ctx.send(f"Snippet Edited. {previous_content} -> {content}", delete_after=30, ephemeral=True)
-        logger.info(f"{ctx.author} Edited a snippet with the name {name} and content {content}.")
+        logger.info(f"{ctx.author} edited a snippet with the name {name} and content {content}.")
 
     @commands.command(
         name="togglesnippetlock",
