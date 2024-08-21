@@ -109,7 +109,7 @@ class Snippets(commands.Cog):
     @commands.guild_only()
     async def top_snippets(self, ctx: commands.Context[commands.Bot]) -> None:
         """
-        List top snippets by pagination.
+        List top snippets.
 
         Parameters
         ----------
