@@ -63,3 +63,13 @@ class SnippetController:
             where={"snippet_id": snippet_id},
             data={"snippet_content": snippet_content},
         )
+
+    async def increment_snippet_uses(self, snippet_id: int) -> Snippet | None:
+        snippet = await self.table.find_first(where={"snippet_id": snippet_id})
+        if snippet is None:
+            return None
+
+        return await self.table.update(
+            where={"snippet_id": snippet_id},
+            data={"uses": snippet.uses + 1},
+        )
