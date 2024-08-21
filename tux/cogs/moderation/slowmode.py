@@ -9,21 +9,21 @@ class Slowmode(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
-    @commands.hybrid_group(
+    @commands.hybrid_command(
         name="slowmode",
         aliases=["sm"],
-        usage="slowmode [delay] <channel>",
+        usage="slowmode [delay|get] <channel>",
     )
     @commands.guild_only()
     @checks.has_pl(2)
     async def slowmode(
         self,
         ctx: commands.Context[commands.Bot],
-        delay: str,
+        action: str,
         channel: discord.TextChannel | discord.Thread | None = None,
     ) -> None:
         """
-        Sets slowmode for the current channel or specified channel.
+        Set or get the slowmode delay for a channel.
 
         Parameters
         ----------
@@ -38,10 +38,9 @@ class Slowmode(commands.Cog):
         if ctx.guild is None:
             return
 
-        # If the channel is not specified, default to the current channe
+        # Default to the current channel if none is specified
         if channel is None:
-            # Check if the current channel is a text channel
-            if not isinstance(ctx.channel, discord.TextChannel | discord.Thread):
+            if not isinstance(ctx.channel, (discord.TextChannel | discord.Thread)):
                 await ctx.send(
                     "Invalid channel type, must be a text channel or thread.",
                     delete_after=30,
@@ -50,79 +49,49 @@ class Slowmode(commands.Cog):
                 return
             channel = ctx.channel
 
-        # Unsure of how to type hint this properly as it can be a string or int
-        # and I can't use a Union for the argument because discord.py nagging?
-        try:
-            if delay[-1] in ["s"]:
-                delay = delay[:-1]
-            if delay[-1] == "m":
-                delay = delay[:-1]
-                delay = int(delay) * 60  # type: ignore
-
-            delay = int(delay)  # type: ignore
-        except ValueError:
-            await ctx.send("Invalid delay value, must be an integer.", delete_after=30, ephemeral=True)
-            return
-
-        if delay < 0 or delay > 21600:  # type: ignore
-            await ctx.send("The slowmode delay must be between 0 and 21600 seconds.", delete_after=30, ephemeral=True)
-            return
-
-        try:
-            await channel.edit(slowmode_delay=delay)  # type: ignore
-            await ctx.send(f"Slowmode set to {delay} seconds in {channel.mention}.", delete_after=30, ephemeral=True)
-
-        except Exception as error:
-            await ctx.send(f"Failed to set slowmode. Error: {error}", delete_after=30, ephemeral=True)
-            logger.error(f"Failed to set slowmode. Error: {error}")
-
-    @slowmode.command(
-        name="get",
-        aliases=["g"],
-        usage="slowmodeget <channel>",
-    )
-    @commands.guild_only()
-    @checks.has_pl(2)
-    async def slowmodeget(
-        self,
-        ctx: commands.Context[commands.Bot],
-        channel: discord.TextChannel | discord.Thread | None = None,
-    ) -> None:
-        """
-        Get the slowmode delay for the current channel or specified channel.
-        Parameters
-        ----------
-        self : Slowmode
-            The Slowmode cog instance.
-        ctx : commands.Context[commands.Bot]
-            The context of the command.
-        channel : discord.TextChannel | discord.Thread | None
-            The channel to get the slowmode delay from.
-        """
-        if ctx.guild is None:
-            return
-
-        # If the channel is not specified, default to the current channel
-        if channel is None:
-            # Check if the current channel is a text channel or thread
-            if not isinstance(ctx.channel, discord.TextChannel | discord.Thread):
+        if action.lower() == "get":
+            try:
                 await ctx.send(
-                    "Invalid channel type, must be a text channel or thread.",
+                    f"The slowmode for {channel.mention} is {channel.slowmode_delay} seconds.",
+                    delete_after=30,
+                    ephemeral=True,
+                )
+            except Exception as error:
+                await ctx.send(f"Failed to get slowmode. Error: {error}", delete_after=30, ephemeral=True)
+                logger.error(f"Failed to get slowmode. Error: {error}")
+        else:
+            delay = action
+            try:
+                if delay[-1] in ["s"]:
+                    delay = delay[:-1]
+                if delay[-1] == "m":
+                    delay = delay[:-1]
+                    delay = int(delay) * 60  # type: ignore
+
+                delay = int(delay)  # type: ignore
+            except ValueError:
+                await ctx.send("Invalid delay value, must be an integer.", delete_after=30, ephemeral=True)
+                return
+
+            if delay < 0 or delay > 21600:  # type: ignore
+                await ctx.send(
+                    "The slowmode delay must be between 0 and 21600 seconds.",
                     delete_after=30,
                     ephemeral=True,
                 )
                 return
-            channel = ctx.channel
 
-        try:
-            await ctx.send(
-                f"The slowmode for {channel.mention} is {channel.slowmode_delay} seconds.",
-                delete_after=30,
-                ephemeral=True,
-            )
-        except Exception as error:
-            await ctx.send(f"Failed to get slowmode. Error: {error}", delete_after=30, ephemeral=True)
-            logger.error(f"Failed to get slowmode. Error: {error}")
+            try:
+                await channel.edit(slowmode_delay=delay)  # type: ignore
+                await ctx.send(
+                    f"Slowmode set to {delay} seconds in {channel.mention}.",
+                    delete_after=30,
+                    ephemeral=True,
+                )
+
+            except Exception as error:
+                await ctx.send(f"Failed to set slowmode. Error: {error}", delete_after=30, ephemeral=True)
+                logger.error(f"Failed to set slowmode. Error: {error}")
 
 
 async def setup(bot: commands.Bot) -> None:
