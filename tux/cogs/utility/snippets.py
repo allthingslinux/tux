@@ -428,7 +428,8 @@ class Snippets(commands.Cog):
             return
 
         name = args[0]
-        previous_content = self.db.snippet_content
+        snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
+        previous_content = snippet.snippet_content
         content = " ".join(args[1:])
         author_id = ctx.author.id
         snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
