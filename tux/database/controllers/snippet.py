@@ -18,6 +18,9 @@ class SnippetController:
     async def get_all_snippets(self) -> list[Snippet]:
         return await self.table.find_many()
 
+    async def get_all_snippets_by_guild_id(self, guild_id: int) -> list[Snippet]:
+        return await self.table.find_many(where={"guild_id": guild_id})
+
     async def get_all_snippets_sorted(self, newestfirst: bool = True) -> list[Snippet]:
         return await self.table.find_many(
             order={"snippet_created_at": "desc" if newestfirst else "asc"},
