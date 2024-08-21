@@ -374,9 +374,10 @@ class Snippets(commands.Cog):
             return
 
         await self.db.update_snippet_by_id(
-            snippet_id=name,
-            snippet_content=content,
+            snippet.snippet_id,
+            snippet.snippet_content,
         )
+
         await ctx.send("Snippet Edited.", delete_after=30, ephemeral=True)  # Correct indentation
         logger.info(f"{ctx.author} Edited a snippet with the name {name} and content {content}.")  # Correct indentation
 
