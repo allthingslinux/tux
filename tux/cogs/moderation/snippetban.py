@@ -4,6 +4,7 @@ from loguru import logger
 
 from prisma.enums import CaseType
 from prisma.models import Case
+from tux.database.controllers.case import CaseController
 from tux.utils import checks
 from tux.utils.constants import Constants as CONST
 from tux.utils.flags import SnippetBanFlags
@@ -14,6 +15,7 @@ from . import ModerationCogBase
 class SnippetBan(ModerationCogBase):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__(bot)
+        self.case_controller = CaseController()
 
     @commands.hybrid_command(
         name="snippetban",
@@ -45,7 +47,12 @@ class SnippetBan(ModerationCogBase):
             logger.warning("Snippet ban command used outside of a guild context.")
             return
 
-        await self.send_dm(ctx, flags.silent, target, flags.reason, "Snippet Banned")
+        # Check if the user is already snippet banned
+        cases = await self.case_controller.get_all_cases_by_type(ctx.guild.id, CaseType.SNIPPETBAN)
+        for case in cases:
+            if case.case_target_id == target.id:
+                await ctx.send(f"{target.mention} is already snippet banned.", delete_after=10)
+                return
 
         case = await self.db.case.insert_case(
             case_target_id=target.id,
@@ -55,6 +62,7 @@ class SnippetBan(ModerationCogBase):
             guild_id=ctx.guild.id,
         )
 
+        await self.send_dm(ctx, flags.silent, target, flags.reason, "Snippet Banned")
         await self.handle_case_response(ctx, case, "created", flags.reason, target)
 
     async def handle_case_response(
