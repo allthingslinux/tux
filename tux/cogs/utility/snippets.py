@@ -1,3 +1,4 @@
+import contextlib
 import datetime
 import string
 
@@ -182,6 +183,14 @@ class Snippets(commands.Cog):
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
+        # check if the snippet is locked
+        if snippet.locked:
+            embed = create_error_embed(
+                error="This snippet is locked and cannot be deleted. If you are a moderator you can use the `forcedeletesnippet` command.",
+            )
+            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+            return
+
         # Check if the author of the snippet is the same as the user who wants to delete it and if theres no author don't allow deletion
         author_id = snippet.snippet_user_id or 0
         if author_id != ctx.author.id:
@@ -319,6 +328,7 @@ class Snippets(commands.Cog):
         embed.add_field(name="Author", value=f"{author.mention}", inline=False)
         embed.add_field(name="Content", value=f"> {snippet.snippet_content}", inline=False)
         embed.add_field(name="Uses", value=snippet.uses, inline=False)
+        embed.add_field(name="Locked", value="Yes" if snippet.locked else "No", inline=False)
 
         embed.timestamp = snippet.snippet_created_at or datetime.datetime.fromtimestamp(
             0,
@@ -434,6 +444,22 @@ class Snippets(commands.Cog):
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
+        # check if the snippet is locked
+        if snippet.locked:
+            logger.info(
+                f"{ctx.author} is trying to edit a snippet with the name {name} and content {content}. Checking if they have the permission level to edit locked snippets.",
+            )
+            # dont make the check send its own error message
+            try:
+                await checks.has_pl(2).predicate(ctx)
+            except commands.CheckFailure:
+                embed = create_error_embed(
+                    error="This snippet is locked and cannot be edited. If you are a moderator you can use the `forcedeletesnippet` command.",
+                )
+                await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+                return
+            logger.info(f"{ctx.author} has the permission level to edit locked snippets.")
+
         await self.db.update_snippet_by_id(
             snippet.snippet_id,
             snippet_content=content,
@@ -441,6 +467,68 @@ class Snippets(commands.Cog):
 
         await ctx.send("Snippet Edited.", delete_after=30, ephemeral=True)  # Correct indentation
         logger.info(f"{ctx.author} Edited a snippet with the name {name} and content {content}.")  # Correct indentation
+
+    @commands.command(
+        name="togglesnippetlock",
+        aliases=["tsl"],
+        usage="togglesnippetlock [name]",
+    )
+    @commands.guild_only()
+    @checks.has_pl(2)
+    async def toggle_snippet_lock(self, ctx: commands.Context[commands.Bot], name: str) -> None:
+        """
+        Toggle a snippet lock.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object.
+        name : str
+            The name of the snippet.
+        """
+
+        if ctx.guild is None:
+            await ctx.send("This command cannot be used in direct messages.")
+            return
+
+        snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
+
+        if snippet is None:
+            embed = create_error_embed(error="Snippet not found.")
+            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+            return
+
+        # Check if the author of the snippet is the same as the user who wants to lock it and if theres no author don't allow locking
+        author_id = snippet.snippet_user_id or 0
+        if author_id != ctx.author.id:
+            embed = create_error_embed(error="You can only lock your own snippets.")
+            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+            return
+
+        status = await self.db.toggle_snippet_lock_by_id(snippet.snippet_id)
+
+        if status is None:
+            embed = create_error_embed(error="No return value from locking the snippet. It may still have been locked.")
+            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+            return
+
+        # dm the author of the snippet
+        # if failed to dm just ignore it
+        author = self.bot.get_user(snippet.snippet_user_id)
+        if author:
+            with contextlib.suppress(discord.Forbidden):
+                await author.send(
+                    f"""Your snippet `{snippet.snippet_name}` has been {'locked' if status.locked else 'unlocked'}.
+                    
+**What does this mean?**
+If a snippet is locked, it cannot be edited by anyone other than moderators. This means that you can no longer edit this snippet.
+
+**Why was it locked?**
+Snippets are usually locked by moderators if they are important to usual use of the server. Changes or deletions to these snippets can have a big impact on the server. If you believe this was done in error, please open a ticket with /ticket.""",
+                )
+
+        await ctx.send("Snippet lock toggled.", delete_after=30, ephemeral=True)
+        logger.info(f"{ctx.author} toggled the lock of the snippet with the name {name}.")
 
 
 async def setup(bot: commands.Bot) -> None:

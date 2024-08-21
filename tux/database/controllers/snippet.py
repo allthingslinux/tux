@@ -76,3 +76,25 @@ class SnippetController:
             where={"snippet_id": snippet_id},
             data={"uses": snippet.uses + 1},
         )
+
+    async def lock_snippet_by_id(self, snippet_id: int) -> Snippet | None:
+        return await self.table.update(
+            where={"snippet_id": snippet_id},
+            data={"locked": True},
+        )
+
+    async def unlock_snippet_by_id(self, snippet_id: int) -> Snippet | None:
+        return await self.table.update(
+            where={"snippet_id": snippet_id},
+            data={"locked": False},
+        )
+
+    async def toggle_snippet_lock_by_id(self, snippet_id: int) -> Snippet | None:
+        snippet = await self.table.find_first(where={"snippet_id": snippet_id})
+        if snippet is None:
+            return None
+
+        return await self.table.update(
+            where={"snippet_id": snippet_id},
+            data={"locked": not snippet.locked},
+        )
