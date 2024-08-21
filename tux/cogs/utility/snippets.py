@@ -428,6 +428,7 @@ class Snippets(commands.Cog):
             return
 
         name = args[0]
+        previous_content = self.db.snippet_content
         content = " ".join(args[1:])
         author_id = ctx.author.id
         snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
@@ -465,8 +466,8 @@ class Snippets(commands.Cog):
             snippet_content=content,
         )
 
-        await ctx.send("Snippet Edited.", delete_after=30, ephemeral=True)  # Correct indentation
-        logger.info(f"{ctx.author} Edited a snippet with the name {name} and content {content}.")  # Correct indentation
+        await ctx.send(f"Snippet Edited. {previous_content} -> {content}", delete_after=30, ephemeral=True)
+        logger.info(f"{ctx.author} Edited a snippet with the name {name} and content {content}.")
 
     @commands.command(
         name="togglesnippetlock",
