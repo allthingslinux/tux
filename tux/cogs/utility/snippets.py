@@ -334,12 +334,12 @@ class Snippets(commands.Cog):
         logger.info(f"{ctx.author} created a snippet with the name {name} and content {content}.")
 
     @commands.command(
-        name="editsnippit",
+        name="editsnippet",
         aliases=["es"],
-        usage="editsnippit [name]",
+        usage="editsnippet [name]",
     )
     @commands.guild_only()
-    async def edit_snippit(self, ctx: commands.Context[commands.Bot], *, arg: str) -> None:
+    async def edit_snippet(self, ctx: commands.Context[commands.Bot], *, arg: str) -> None:
         """
         Edit a snippet.
 
@@ -375,7 +375,7 @@ class Snippets(commands.Cog):
 
         await self.db.update_snippet_by_id(
             snippet.snippet_id,
-            snippet.snippet_content,
+            snippet_content=content,
         )
 
         await ctx.send("Snippet Edited.", delete_after=30, ephemeral=True)  # Correct indentation
