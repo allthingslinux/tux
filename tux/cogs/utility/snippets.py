@@ -498,13 +498,6 @@ class Snippets(commands.Cog):
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
-        # Check if the author of the snippet is the same as the user who wants to lock it and if theres no author don't allow locking
-        author_id = snippet.snippet_user_id or 0
-        if author_id != ctx.author.id:
-            embed = create_error_embed(error="You can only lock your own snippets.")
-            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
-            return
-
         status = await self.db.toggle_snippet_lock_by_id(snippet.snippet_id)
 
         if status is None:
