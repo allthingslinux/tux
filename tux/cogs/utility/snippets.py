@@ -520,6 +520,38 @@ Snippets are usually locked by moderators if they are important to usual use of 
         await ctx.send("Snippet lock toggled.", delete_after=30, ephemeral=True)
         logger.info(f"{ctx.author} toggled the lock of the snippet with the name {name}.")
 
+    @commands.command(
+        name="snippetban",
+        aliases=["sb"],
+        usage="snippetban [target]",
+    )
+    @commands.guild_only()
+    @checks.has_pl(3)
+    async def snippet_ban(self, ctx: commands.Context[commands.Bot], target: discord.Member) -> None:
+        """
+        Ban a user from creating snippets.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object.
+        target : discord.Member
+            The member to snippet ban.
+        """
+        if ctx.guild is None:
+            await ctx.send("This command cannot be used in direct messages.")
+            return
+
+        if target.id == ctx.author.id:
+            embed = create_error_embed(error="You cannot ban yourself.")
+            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+            return
+
+        # note to self: add check if user is already banned and if they have perm above the banner
+
+        await ctx.send(f"{target} has been banned from creating snippets.", delete_after=30, ephemeral=True)
+        logger.info(f"{ctx.author} banned {target} from creating snippets.")
+
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Snippets(bot))
