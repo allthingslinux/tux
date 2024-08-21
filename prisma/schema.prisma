@@ -107,6 +107,7 @@ model Snippet {
   guild_id           BigInt
   guild              Guild    @relation(fields: [guild_id], references: [guild_id])
   uses               BigInt   @default(0)
+  locked             Boolean  @default(false)
 
   @@unique([snippet_name, guild_id])
   @@index([snippet_name, guild_id])
