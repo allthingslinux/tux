@@ -23,6 +23,7 @@ emojis: dict[str, int] = {
     "timeout": 1268115809083981886,
     "warn": 1268115764498399264,
     "jail": 1268115750392954880,
+    "snippetban": 1275782294363312172,  # Placeholder
 }
 
 
@@ -373,6 +374,7 @@ class Cases(ModerationCogBase):
             CaseType.WARN: "warn",
             CaseType.JAIL: "jail",
             CaseType.UNJAIL: "jail",
+            CaseType.SNIPPETBAN: "snippetban",
         }
         emoji_name = emoji_map.get(case_type)
         if emoji_name is not None:
@@ -384,7 +386,8 @@ class Cases(ModerationCogBase):
     def _get_case_action_emoji(self, case_type: CaseType) -> discord.Emoji | None:
         action = (
             "added"
-            if case_type in [CaseType.BAN, CaseType.KICK, CaseType.TIMEOUT, CaseType.WARN, CaseType.JAIL]
+            if case_type
+            in [CaseType.BAN, CaseType.KICK, CaseType.TIMEOUT, CaseType.WARN, CaseType.JAIL, CaseType.SNIPPETBAN]
             else "removed"
             if case_type in [CaseType.UNBAN, CaseType.UNTIMEOUT, CaseType.UNJAIL]
             else None
