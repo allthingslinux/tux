@@ -389,6 +389,54 @@ class Snippets(commands.Cog):
         await ctx.send("Snippet created.", delete_after=30, ephemeral=True)
         logger.info(f"{ctx.author} created a snippet with the name {name} and content {content}.")
 
+    @commands.command(
+        name="editsnippet",
+        aliases=["es"],
+        usage="editsnippet [name]",
+    )
+    @commands.guild_only()
+    async def edit_snippet(self, ctx: commands.Context[commands.Bot], *, arg: str) -> None:
+        """
+        Edit a snippet.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object.
+        arg : str
+            The name and content of the snippet.
+        """
+
+        if ctx.guild is None:
+            await ctx.send("This command cannot be used in direct messages.")
+            return
+
+        args = arg.split(" ")
+        if len(args) < 2:
+            embed = create_error_embed(error="Please provide a name and content for the snippet.")
+            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+            return
+
+        name = args[0]
+        content = " ".join(args[1:])
+        author_id = ctx.author.id
+        snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
+
+        # Check if the author of the snippet is the same as the user who wants to edit it and if theres no author don't allow editing
+        author_id = snippet.snippet_user_id or 0
+        if author_id != ctx.author.id:
+            embed = create_error_embed(error="You can only edit your own snippets.")
+            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+            return
+
+        await self.db.update_snippet_by_id(
+            snippet.snippet_id,
+            snippet_content=content,
+        )
+
+        await ctx.send("Snippet Edited.", delete_after=30, ephemeral=True)  # Correct indentation
+        logger.info(f"{ctx.author} Edited a snippet with the name {name} and content {content}.")  # Correct indentation
+
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Snippets(bot))
