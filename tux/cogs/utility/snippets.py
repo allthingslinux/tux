@@ -102,6 +102,58 @@ class Snippets(commands.Cog):
         return embed
 
     @commands.command(
+        name="topsnippets",
+        aliases=["ts"],
+        usage="topsnippets",
+    )
+    @commands.guild_only()
+    async def top_snippets(self, ctx: commands.Context[commands.Bot]) -> None:
+        """
+        List top snippets.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object.
+        """
+
+        # find the top 10 snippets by uses
+        snippets: list[Snippet] = await self.db.get_all_snippets_by_guild_id(ctx.guild.id)  # type: ignore # wio
+
+        # If there are no snippets, send an error message
+        if not snippets:
+            embed = EmbedCreator.create_error_embed(
+                title="Error",
+                description="No snippets found.",
+                ctx=ctx,
+            )
+            await ctx.send(embed=embed, delete_after=30)
+            return
+
+        # sort the snippets by uses
+        snippets.sort(key=lambda x: x.uses, reverse=True)
+
+        # print in this format
+        # 1. snippet_name | uses: 10
+        # 2. snippet_name | uses: 9
+        # 3. snippet_name | uses: 8
+        # ...
+
+        text = "```\n"
+        for i, snippet in enumerate(snippets[:10]):
+            text += f"{i+1}. {snippet.snippet_name.ljust(20)} | uses: {snippet.uses}\n"
+        text += "```"
+
+        # only show top 10, no pagination
+        embed = discord.Embed(
+            title="Top Snippets",
+            description=text,
+            color=CONST.EMBED_COLORS["DEFAULT"],
+        )
+
+        await ctx.send(embed=embed)
+
+    @commands.command(
         name="deletesnippet",
         aliases=["ds"],
         usage="deletesnippet [name]",
@@ -214,6 +266,9 @@ class Snippets(commands.Cog):
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
+        # increment the usage count of the snippet
+        await self.db.increment_snippet_uses(snippet.snippet_id)
+
         text = f"`/snippets/{snippet.snippet_name}.txt` || {snippet.snippet_content}"
 
         await ctx.send(text, allowed_mentions=AllowedMentions.none())
@@ -263,6 +318,7 @@ class Snippets(commands.Cog):
         embed.add_field(name="Name", value=snippet.snippet_name, inline=False)
         embed.add_field(name="Author", value=f"{author.mention}", inline=False)
         embed.add_field(name="Content", value=f"> {snippet.snippet_content}", inline=False)
+        embed.add_field(name="Uses", value=snippet.uses, inline=False)
 
         embed.timestamp = snippet.snippet_created_at or datetime.datetime.fromtimestamp(
             0,
