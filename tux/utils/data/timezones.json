@@ -1,0 +1,122 @@
+[
+    {
+        "offset": "-10:00",
+        "timezone": "HST",
+        "full_timezone": "Pacific/Honolulu",
+        "discord_emoji": ":flag_hn:"
+    },
+    {
+        "offset": "-09:00",
+        "timezone": "AKST",
+        "full_timezone": "America/Anchorage",
+        "discord_emoji": ":flag_us:"
+    },
+    {
+        "offset": "-08:00",
+        "timezone": "PST",
+        "full_timezone": "America/Los_Angeles",
+        "discord_emoji": ":flag_us:"
+    },
+    {
+        "offset": "-07:00",
+        "timezone": "MST",
+        "full_timezone": "America/Denver",
+        "discord_emoji": ":flag_us:"
+    },
+    {
+        "offset": "-06:00",
+        "timezone": "CST",
+        "full_timezone": "America/Chicago",
+        "discord_emoji": ":flag_us:"
+    },
+    {
+        "offset": "-05:00",
+        "timezone": "EST",
+        "full_timezone": "America/New_York",
+        "discord_emoji": ":flag_us:"
+    },
+    {
+        "offset": "-04:00",
+        "timezone": "AST",
+        "full_timezone": "America/Puerto_Rico",
+        "discord_emoji": ":flag_pr:"
+    },
+    {
+        "offset": "-03:00",
+        "timezone": "ART",
+        "full_timezone": "America/Argentina/Buenos_Aires",
+        "discord_emoji": ":flag_ar:"
+    },
+    {
+        "offset": "-02:00",
+        "timezone": "GST",
+        "full_timezone": "Atlantic/South_Georgia",
+        "discord_emoji": ":flag_gs:"
+    },
+    {
+        "offset": "-01:00",
+        "timezone": "CVT",
+        "full_timezone": "Atlantic/Cape_Verde",
+        "discord_emoji": ":flag_cv:"
+    },
+    {
+        "offset": "+00:00",
+        "timezone": "GMT",
+        "full_timezone": "Europe/London",
+        "discord_emoji": ":flag_gb:"
+    },
+    {
+        "offset": "+01:00",
+        "timezone": "CET",
+        "full_timezone": "Europe/Berlin",
+        "discord_emoji": ":flag_de:"
+    },
+    {
+        "offset": "+02:00",
+        "timezone": "EET",
+        "full_timezone": "Europe/Athens",
+        "discord_emoji": ":flag_gr:"
+    },
+    {
+        "offset": "+03:00",
+        "timezone": "MSK",
+        "full_timezone": "Europe/Moscow",
+        "discord_emoji": ":flag_ru:"
+    },
+    {
+        "offset": "+04:00",
+        "timezone": "GST",
+        "full_timezone": "Asia/Dubai",
+        "discord_emoji": ":flag_ae:"
+    },
+    {
+        "offset": "+05:00",
+        "timezone": "PKT",
+        "full_timezone": "Asia/Karachi",
+        "discord_emoji": ":flag_pk:"
+    },
+    {
+        "offset": "+06:00",
+        "timezone": "BST",
+        "full_timezone": "Asia/Dhaka",
+        "discord_emoji": ":flag_bd:"
+    },
+    {
+        "offset": "+07:00",
+        "timezone": "THA",
+        "full_timezone": "Asia/Bangkok",
+        "discord_emoji": ":flag_th:"
+    },
+    {
+        "offset": "+08:00",
+        "timezone": "CST",
+        "full_timezone": "Asia/Singapore",
+        "discord_emoji": ":flag_sg:"
+    },
+    {
+        "offset": "+09:00",
+        "timezone": "JST",
+        "full_timezone": "Asia/Tokyo",
+        "discord_emoji": ":flag_jp:"
+    }
+]
