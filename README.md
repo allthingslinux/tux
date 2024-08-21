@@ -148,4 +148,4 @@ See [LICENSE](LICENSE.md) for details.
 
 ## Metrics
 
-![Alt](https://repobeats.axiom.co/api/embed/cd24c48127e0b6fbc9467711d6d4bd74b30ff8d2.svg "Repobeats analytics image")
+![Alt](https://repobeats.axiom.co/api/embed/b988ba04401b7c68edf9def00f5132cd2a7f3735.svg "Repobeats analytics image")
