@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from tux.database.controllers import DatabaseController
-from tux.utils.functions import is_harmful, strip_formatting
+from tux.utils.functions import get_harmful_command_type, is_harmful, strip_formatting
 
 
 class EventHandler(commands.Cog):
@@ -25,9 +25,22 @@ class EventHandler(commands.Cog):
         stripped_content = strip_formatting(message.content)
 
         if is_harmful(stripped_content):
-            await message.reply(
-                "-# ⚠️ **This command is likely harmful. By running it, all directory contents will be deleted. There is no undo. Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it.**",
-            )
+            bad_command_type: str = get_harmful_command_type(stripped_content)
+            if bad_command_type == "rm":
+                await message.reply(
+                    "⚠️ **This command is likely harmful.**\n-# By running it, **all directory contents will be deleted. There is no undo.** Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it. [Learn more](<https://itsfoss.com/sudo-rm-rf/>)",
+                )
+            else:
+                await message.reply(
+                    f"⚠️ **This command may be harmful.** Please ensure you understand its effects before proceeding. If you received this message in error, please disregard it.",
+                )
+                await message.reply(
+                    "⚠️ **This command is likely harmful.**\n-# By running it, **all directory contents will be deleted. There is no undo.** Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it. [Learn more](<https://itsfoss.com/sudo-rm-rf/>)",
+                )
+            elif bad_command_type == "dd":
+                await message.reply(
+                    "⚠️ **This command is likely harmful.**\n-# By running it, **all data on the specified disk will be erased. There is no undo.** Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it.",
+                )
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
