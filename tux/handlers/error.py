@@ -6,21 +6,8 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
-import tux.handlers.error as error
 from tux.utils.embeds import create_error_embed
-
-
-class PermissionLevelError(commands.CheckFailure):
-    def __init__(self, permission: str) -> None:
-        self.permission = permission
-        super().__init__(f"User does not have the required permission: {permission}")
-
-
-class AppCommandPermissionLevelError(app_commands.CheckFailure):
-    def __init__(self, permission: str) -> None:
-        self.permission = permission
-        super().__init__(f"User does not have the required permission: {permission}")
-
+from tux.utils.exceptions import AppCommandPermissionLevelError, PermissionLevelError
 
 error_map: dict[type[Exception], str] = {
     # app_commands
@@ -51,8 +38,8 @@ error_map: dict[type[Exception], str] = {
     commands.NotOwner: "User not in sudoers file. This incident will be reported. (Not Owner)",
     commands.BotMissingPermissions: "User not in sudoers file. This incident will be reported. (Bot Missing Permissions)",
     # Custom errors
-    error.PermissionLevelError: "User not in sudoers file. This incident will be reported. (Missing required permission: {error.permission})",
-    error.AppCommandPermissionLevelError: "User not in sudoers file. This incident will be reported. (Missing required permission: {error.permission})",
+    PermissionLevelError: "User not in sudoers file. This incident will be reported. (Missing required permission: {error.permission})",
+    AppCommandPermissionLevelError: "User not in sudoers file. This incident will be reported. (Missing required permission: {error.permission})",
 }
 
 
