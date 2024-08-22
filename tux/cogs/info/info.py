@@ -133,6 +133,32 @@ class Info(commands.Cog):
 
         await interaction.response.send_message(embed=embed)
 
+    @info.command(name="emotes", description="Lists all emotes in the server.")
+    async def emotes(self, interaction: discord.Interaction) -> None:
+        """
+        List all emotes in the server.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        """
+        if not interaction.guild:
+            return
+
+        guild = interaction.guild
+        emotes = [str(emote) for emote in guild.emojis]
+
+        embed = EmbedCreator.create_info_embed(
+            title="Server Emotes",
+            description=f"Emote list for {guild.name}",
+            interaction=interaction,
+        )
+
+        embed.add_field(name="Emotes", value=" ".join(emotes) if emotes else "No emotes available", inline=False)
+
+        await interaction.response.send_message(embed=embed)
+
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Info(bot))
