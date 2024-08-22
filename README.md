@@ -110,10 +110,10 @@ Further detailed instructions can be found in the [development guide](docs/devel
 
     We offer dev tokens on request in our Discord server.
 
-7. Copy the `config/settings.json.example` file to `config/settings.json` and fill in the required values.
+7. Copy the `config/settings.yml.example` file to `config/settings.yml` and fill in the required values.
 
     ```bash
-    cp config/settings.json.example config/settings.json
+    cp config/settings.yml.example config/settings.yml
     ```
 
     Be sure to add your Discord user ID to the `BOT_OWNER` key in the settings file.

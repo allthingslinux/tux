@@ -50,9 +50,9 @@ The project is structured as follows:
 
 ### Configuration
 
-- `.env.example`: The example environment file containing the environment variables required for the bot.
+- `.env`: The environment file containing the secret environment variables for the bot.
 - `config/`: The config directory containing the configuration files for the bot.
-  - `settings.json`: The settings file containing the bot settings and configuration.
+  - `settings.yml`: The settings file containing the bot settings and configuration.
 
 ### Documentation
 
