@@ -16,7 +16,7 @@
 </div>
 
 > [!WARNING]
-**This bot (without plenty of tweaking) is not ready for production use, we recommend against using it until it is more complete.**
+**This bot (without plenty of tweaking) is not ready for production use, we suggest against using it until announced. Join our support server: [atl.dev](https://discord.gg/gpmSjcjQxg) for more info!**
 
 ## About
 
@@ -36,6 +36,7 @@ It is designed to provide a variety of features to the server, including moderat
 - Justfile for easy CLI commands
 - Beautiful logging with Loguru
 - Exception handling with Sentry
+- Request handling with HTTPX
 
 ## Bot Features
 
@@ -110,10 +111,10 @@ Further detailed instructions can be found in the [development guide](docs/devel
 
     We offer dev tokens on request in our Discord server.
 
-7. Copy the `config/settings.json.example` file to `config/settings.json` and fill in the required values.
+7. Copy the `config/settings.yml.example` file to `config/settings.yml` and fill in the required values.
 
     ```bash
-    cp config/settings.json.example config/settings.json
+    cp config/settings.yml.example config/settings.yml
     ```
 
     Be sure to add your Discord user ID to the `BOT_OWNER` key in the settings file.
