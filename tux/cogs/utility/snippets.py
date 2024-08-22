@@ -24,8 +24,13 @@ class Snippets(commands.Cog):
         self.case_controller = CaseController()
 
     async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
-        cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETBAN)
-        return any(case.case_target_id == user_id for case in cases)
+        ban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETBAN)
+        unban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETUNBAN)
+
+        ban_count = sum(1 for case in ban_cases if case.case_target_id == user_id)
+        unban_count = sum(1 for case in unban_cases if case.case_target_id == user_id)
+
+        return ban_count > unban_count
 
     @commands.command(
         name="snippets",

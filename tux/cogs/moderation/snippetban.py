@@ -47,12 +47,9 @@ class SnippetBan(ModerationCogBase):
             logger.warning("Snippet ban command used outside of a guild context.")
             return
 
-        # Check if the user is already snippet banned
-        cases = await self.case_controller.get_all_cases_by_type(ctx.guild.id, CaseType.SNIPPETBAN)
-        for case in cases:
-            if case.case_target_id == target.id:
-                await ctx.send(f"{target.mention} is already snippet banned.", delete_after=10)
-                return
+        if await self.is_snippetbanned(ctx.guild.id, target.id):
+            await ctx.send("User is already snippet banned.", delete_after=30)
+            return
 
         case = await self.db.case.insert_case(
             case_target_id=target.id,
@@ -105,6 +102,15 @@ class SnippetBan(ModerationCogBase):
 
         await self.send_embed(ctx, embed, log_type="mod")
         await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+
+    async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
+        ban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETBAN)
+        unban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETUNBAN)
+
+        ban_count = sum(1 for case in ban_cases if case.case_target_id == user_id)
+        unban_count = sum(1 for case in unban_cases if case.case_target_id == user_id)
+
+        return ban_count > unban_count
 
 
 async def setup(bot: commands.Bot) -> None:
