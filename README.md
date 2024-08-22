@@ -16,7 +16,7 @@
 </div>
 
 > [!WARNING]
-**This bot (without plenty of tweaking) is not ready for production use, we recommend against using it until it is more complete.**
+**This bot (without plenty of tweaking) is not ready for production use, we suggest against using it until announced. Join our support server: [atl.dev](https://discord.gg/gpmSjcjQxg) for more info!**
 
 ## About
 
