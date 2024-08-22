@@ -32,6 +32,8 @@ class Tux(commands.Bot):
             logger.critical(f"An error occurred while connecting to the database: {e}")
             return
 
+        # Load Jishaku for debugging
+        await self.load_extension("jishaku")
         # Load cogs via CogLoader
         await self.load_cogs()
 
