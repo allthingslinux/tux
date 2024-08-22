@@ -36,6 +36,7 @@ It is designed to provide a variety of features to the server, including moderat
 - Justfile for easy CLI commands
 - Beautiful logging with Loguru
 - Exception handling with Sentry
+- Request handling with HTTPX
 
 ## Bot Features
 
