@@ -355,7 +355,7 @@ def has_pl(level: int, or_higher: bool = True):
             raise PermissionLevelError(msg)
 
         if not await has_permission(ctx, level, 9 if or_higher else None):
-            logger.error(
+            logger.info(
                 f"{ctx.author} tried to run a command without perms. Command: {ctx.command}, Perm Level: {level} or higher: {or_higher}",
             )
             raise PermissionLevelError(await level_to_name(ctx, level, or_higher))
@@ -388,7 +388,7 @@ def ac_has_pl(level: int, or_higher: bool = True):
             raise AppCommandPermissionLevelError(msg)
 
         if not await has_permission(ctx, level, 9 if or_higher else None):
-            logger.error(
+            logger.info(
                 f"{ctx.user} tried to run a command without perms. Command: {ctx.command}, Perm Level: {level} or higher: {or_higher}",
             )
             raise AppCommandPermissionLevelError(await level_to_name(ctx, level, or_higher))
