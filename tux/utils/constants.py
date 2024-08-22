@@ -29,7 +29,7 @@ class Constants:
     DEV_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("DEV_COG_IGNORE_LIST", "").split(","))
 
     # Debug env constants
-    DEBUG: Final[bool] = bool(os.getenv("DEBUG", True))
+    DEBUG: Final[bool] = bool(os.getenv("DEBUG", "True"))
 
     # Final env constants
     TOKEN: Final[str] = DEV_TOKEN if DEV and DEV.lower() == "true" else PROD_TOKEN
@@ -52,11 +52,11 @@ class Constants:
     GITHUB_REPO_OWNER: Final[str] = os.getenv("GITHUB_REPO_OWNER", "")
     GITHUB_REPO: Final[str] = os.getenv("GITHUB_REPO", "")
     GITHUB_TOKEN: Final[str] = os.getenv("GITHUB_TOKEN", "")
-    GITHUB_APP_ID: Final[int] = int(os.getenv("GITHUB_APP_ID", 0))
+    GITHUB_APP_ID: Final[int] = int(os.getenv("GITHUB_APP_ID", "0"))
     GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID", "")
     GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET", "")
     GITHUB_PUBLIC_KEY = os.getenv("GITHUB_PUBLIC_KEY", "")
-    GITHUB_INSTALLATION_ID: Final[int] = int(os.getenv("GITHUB_INSTALLATION_ID", 0))
+    GITHUB_INSTALLATION_ID: Final[str] = os.getenv("GITHUB_INSTALLATION_ID", "0")
     GITHUB_PRIVATE_KEY: str = (
         base64.b64decode(os.getenv("GITHUB_PRIVATE_KEY_BASE64", "")).decode("utf-8")
         if os.getenv("GITHUB_PRIVATE_KEY_BASE64")
