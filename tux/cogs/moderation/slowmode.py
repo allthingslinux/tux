@@ -23,14 +23,14 @@ class Slowmode(commands.Cog):
         channel: discord.TextChannel | discord.Thread | None = None,
     ) -> None:
         """
-        Set or get the slowmode delay for a channel.
+        Set or get the slowmode for a channel.
 
         Parameters
         ----------
         ctx : commands.Context[commands.Bot]
             The context of the command.
-        delay : int
-            The slowmode time in seconds, max is 21600.
+        action : str
+            Either 'get' to get the current slowmode or the slowmode time in seconds, max is 21600.
         channel : discord.TextChannel | discord.Thread | None
             The channel to set the slowmode in.
         """
