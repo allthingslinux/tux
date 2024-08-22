@@ -5,7 +5,6 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.utils import checks
-from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import EmbedCreator
 
 
@@ -48,7 +47,7 @@ class Eval(commands.Cog):
         usage="eval [expression]",
     )
     @commands.guild_only()
-    @checks.has_pl(9)
+    @checks.has_pl(8)  # sysadmin or higher
     async def eval(self, ctx: commands.Context[commands.Bot], *, cmd: str) -> None:
         """
         Evaluate a Python expression. (Owner only)
@@ -61,10 +60,15 @@ class Eval(commands.Cog):
             The Python expression to evaluate.
         """
 
-        # Check if the user is the bot owner
-        if ctx.author.id != CONST.BOT_OWNER_ID:
+        # Check if the user is in the discord.py owner_ids list in the bot instance
+        if self.bot.owner_ids is None:
+            logger.warning("Bot owner IDs are not set.")
+            await ctx.send("Bot owner IDs are not set. Better luck next time!", ephemeral=True, delete_after=30)
+            return
+
+        if ctx.author.id not in self.bot.owner_ids:
             logger.warning(
-                f"{ctx.author} tried to run eval but is not the bot owner. (Owner ID: {self.bot.owner_id}, User ID: {ctx.author.id})",
+                f"{ctx.author} tried to run eval but is not the bot owner. (User ID: {ctx.author.id})",
             )
             await ctx.send("You are not the bot owner. Better luck next time!", ephemeral=True, delete_after=30)
             return
