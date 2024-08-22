@@ -1,15 +1,15 @@
 import base64
-import json
 import os
 from pathlib import Path
 from typing import Final
 
+import yaml
 from dotenv import load_dotenv, set_key
 
 load_dotenv(verbose=True)
 
-config_file = Path("config/settings.json")
-config = json.loads(config_file.read_text())
+config_file = Path("config/settings.yml")
+config = yaml.safe_load(config_file.read_text())
 
 
 class Constants:
@@ -29,7 +29,7 @@ class Constants:
     DEV_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("DEV_COG_IGNORE_LIST", "").split(","))
 
     # Debug env constants
-    DEBUG: Final[bool] = bool(os.getenv("DEBUG", True))
+    DEBUG: Final[bool] = bool(os.getenv("DEBUG", "True"))
 
     # Final env constants
     TOKEN: Final[str] = DEV_TOKEN if DEV and DEV.lower() == "true" else PROD_TOKEN
@@ -37,7 +37,7 @@ class Constants:
     COG_IGNORE_LIST: Final[set[str]] = DEV_COG_IGNORE_LIST if DEV and DEV.lower() == "true" else PROD_COG_IGNORE_LIST
 
     # Sentry-related constants
-    SENTRY_URL: Final[str | None] = os.getenv("SENTRY_URL")
+    SENTRY_URL: Final[str | None] = os.getenv("SENTRY_URL", "")
 
     # Database constants
     PROD_DATABASE_URL: Final[str] = os.getenv("PROD_DATABASE_URL", "")
@@ -52,25 +52,20 @@ class Constants:
     GITHUB_REPO_OWNER: Final[str] = os.getenv("GITHUB_REPO_OWNER", "")
     GITHUB_REPO: Final[str] = os.getenv("GITHUB_REPO", "")
     GITHUB_TOKEN: Final[str] = os.getenv("GITHUB_TOKEN", "")
-    GITHUB_APP_ID: Final[int] = int(os.getenv("GITHUB_APP_ID", 0))
-    GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
-    GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
-    GITHUB_PUBLIC_KEY = os.getenv("GITHUB_PUBLIC_KEY")
-    GITHUB_INSTALLATION_ID: Final[int] = int(os.getenv("GITHUB_INSTALLATION_ID", 0))
-    GITHUB_PRIVATE_KEY: str = base64.b64decode(os.getenv("GITHUB_PRIVATE_KEY_BASE64", "")).decode(
-        "utf-8",
+    GITHUB_APP_ID: Final[int] = int(os.getenv("GITHUB_APP_ID", "0"))
+    GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID", "")
+    GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET", "")
+    GITHUB_PUBLIC_KEY = os.getenv("GITHUB_PUBLIC_KEY", "")
+    GITHUB_INSTALLATION_ID: Final[str] = os.getenv("GITHUB_INSTALLATION_ID", "0")
+    GITHUB_PRIVATE_KEY: str = (
+        base64.b64decode(os.getenv("GITHUB_PRIVATE_KEY_BASE64", "")).decode("utf-8")
+        if os.getenv("GITHUB_PRIVATE_KEY_BASE64")
+        else ""
     )
 
     # Mailcow constants
     MAILCOW_API_KEY: Final[str] = os.getenv("MAILCOW_API_KEY", "")
     MAILCOW_API_URL: Final[str] = os.getenv("MAILCOW_API_URL", "")
-
-    # Channel constants
-    LOG_CHANNELS: Final[dict[str, int]] = config["LOG_CHANNELS"].copy()
-
-    if DEV and DEV.lower() == "true":
-        for key in LOG_CHANNELS:
-            LOG_CHANNELS[key] = LOG_CHANNELS["DEV"]
 
     # Temp VC constants
     TEMPVC_CATEGORY_ID: Final[str | None] = config["TEMPVC_CATEGORY_ID"]
