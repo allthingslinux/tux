@@ -205,3 +205,18 @@ class SnippetBanFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
         aliases=["s", "quiet"],
         default=False,
     )
+
+
+class SnippetUnbanFlags(commands.FlagConverter, delimiter=" ", prefix="-"):
+    reason: str = commands.flag(
+        name="reason",
+        description="The reason for the snippet unban.",
+        aliases=["r"],
+        default=MISSING,
+    )
+    silent: bool = commands.flag(
+        name="silent",
+        description="Do not send a DM to the target.",
+        aliases=["s", "quiet"],
+        default=False,
+    )
