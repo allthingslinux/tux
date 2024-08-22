@@ -1,0 +1,42 @@
+# config/settings.yml
+
+PREFIX:
+  PROD: "$"
+  DEV: "~"
+
+USER_IDS:
+  SYSADMINS:
+    - 123456789012345679
+    - 123456789012345679
+  BOT_OWNER: 123456789012345679
+
+TEMPVC_CATEGORY_ID: 123456789012345679
+TEMPVC_CHANNEL_ID: 123456789012345679
+
+EMBED_COLORS:
+  DEFAULT: 16044058
+  INFO: 12634869
+  WARNING: 16634507
+  ERROR: 16067173
+  SUCCESS: 10407530
+  POLL: 14724968
+  CASE: 16217742
+  NOTE: 16752228
+
+EMBED_ICONS:
+  DEFAULT: "https://i.imgur.com/owW4EZk.png"
+  INFO: "https://i.imgur.com/8GRtR2G.png"
+  SUCCESS: "https://i.imgur.com/JsNbN7D.png"
+  ERROR: "https://i.imgur.com/zZjuWaU.png"
+  CASE: "https://i.imgur.com/c43cwnV.png"
+  NOTE: "https://i.imgur.com/VqPFbil.png"
+  POLL: "https://i.imgur.com/pkPeG5q.png"
+  ACTIVE_CASE: "https://github.com/allthingslinux/tux/blob/main/assets/embeds/active_case.png?raw=true"
+  INACTIVE_CASE: "https://github.com/allthingslinux/tux/blob/main/assets/embeds/inactive_case.png?raw=true"
+  ADD: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/added.png?raw=true"
+  REMOVE: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/removed.png?raw=true"
+  BAN: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/ban.png?raw=true"
+  JAIL: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/jail.png?raw=true"
+  KICK: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/kick.png?raw=true"
+  TIMEOUT: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/timeout.png?raw=true"
+  WARN: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/warn.png?raw=true"
