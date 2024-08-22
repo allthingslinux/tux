@@ -17,7 +17,7 @@ class Fact(commands.Cog):
             "Linux's 1.0 release was in March 1994.",
             "Less than 1% of the latest kernel release includes code written by Linus Torvalds.",
             "Linux is used by every major space programme in the world.",
-            "Approximatly 13.3% of the latest Linux kernel is made up of blank lines.",
+            "Approximately 13.3% of the latest Linux kernel is made up of blank lines.",
             "Vim has various easter eggs. A notable one is found by typing :help 42 into the command bar.",
             "Slackware is the oldest active linux distribution being released on the 17th July 1993.",
             "Freax was the original planned name for Linux.",
@@ -27,7 +27,7 @@ class Fact(commands.Cog):
             "95% of the Linux kernel is written in the C programming Language. Assembly language is the second most used language for Linux at 2.8%.",
             "The first kernel version - Version 0.01 - contained about 10,000 lines of code.",
             "96.3% of the top 1,000,000 web servers were reported to run on Linux.",
-            "In the early 2000's Steve Jobs - The then CEO of Apple - offered a job to Linux Torvalds which Torvalds declined.",
+            "In the early 2000s, Steve Jobs, who at the time was the CEO of Apple, offered a job to Linus Torvalds to work on OSX which Torvalds declined.",
         ]
 
     @commands.hybrid_group(
