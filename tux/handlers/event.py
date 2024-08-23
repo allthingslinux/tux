@@ -95,7 +95,7 @@ class EventHandler(commands.Cog):
                 # TODO: Add database configuration for primary support role
                 support_role = "<@&1274823545087590533>"
 
-                await channel.send(content=support_role, embed=embed, allowed_mentions=discord.AllowedMentions.none())
+                await channel.send(content=support_role, embed=embed)
 
 
 async def setup(bot: commands.Bot) -> None:
