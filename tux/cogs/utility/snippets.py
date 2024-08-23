@@ -8,8 +8,9 @@ from discord.ext import commands
 from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
+from prisma.enums import CaseType
 from prisma.models import Snippet
-from tux.database.controllers import DatabaseController
+from tux.database.controllers import CaseController, DatabaseController
 from tux.utils import checks
 from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import EmbedCreator, create_embed_footer, create_error_embed
@@ -20,6 +21,16 @@ class Snippets(commands.Cog):
         self.bot = bot
         self.db = DatabaseController().snippet
         self.config = DatabaseController().guild_config
+        self.case_controller = CaseController()
+
+    async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
+        ban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETBAN)
+        unban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETUNBAN)
+
+        ban_count = sum(1 for case in ban_cases if case.case_target_id == user_id)
+        unban_count = sum(1 for case in unban_cases if case.case_target_id == user_id)
+
+        return ban_count > unban_count
 
     @commands.command(
         name="snippets",
@@ -357,6 +368,10 @@ class Snippets(commands.Cog):
 
         if ctx.guild is None:
             await ctx.send("This command cannot be used in direct messages.")
+            return
+
+        if await self.is_snippetbanned(ctx.guild.id, ctx.author.id):
+            await ctx.send("You are banned from using snippets.")
             return
 
         args = arg.split(" ")
