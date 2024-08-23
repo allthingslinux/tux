@@ -105,6 +105,22 @@ class SnippetBan(ModerationCogBase):
         await ctx.send(embed=embed, delete_after=30, ephemeral=True)
 
     async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
+        """
+        Check if a user is snippet banned.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to check in.
+        user_id : int
+            The ID of the user to check.
+
+        Returns
+        -------
+        bool
+            True if the user is snippet banned, False otherwise.
+        """
+
         ban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETBAN)
         unban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETUNBAN)
 
