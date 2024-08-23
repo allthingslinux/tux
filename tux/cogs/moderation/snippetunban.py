@@ -31,6 +31,19 @@ class SnippetUnban(ModerationCogBase):
         *,
         flags: SnippetUnbanFlags,
     ):
+        """
+        Unban a user from creating snippets.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object.
+        target : discord.Member
+            The member to snippet unban.
+        flags : SnippetUnbanFlags
+            The flags for the command. (reason: str, silent: bool)
+        """
+
         if ctx.guild is None:
             logger.warning("Snippet ban command used outside of a guild context.")
             return
@@ -48,7 +61,7 @@ class SnippetUnban(ModerationCogBase):
             guild_id=ctx.guild.id,
         )
 
-        await self.send_dm(ctx, flags.silent, target, flags.reason, "Snippet Unbanned")
+        await self.send_dm(ctx, flags.silent, target, flags.reason, "Snippet unbanned")
         await self.handle_case_response(ctx, case, "created", flags.reason, target)
 
     async def handle_case_response(
@@ -96,7 +109,11 @@ class SnippetUnban(ModerationCogBase):
         ban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETBAN)
         unban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETUNBAN)
 
-        ban_count = sum(1 for case in ban_cases if case.case_target_id == user_id)
-        unban_count = sum(1 for case in unban_cases if case.case_target_id == user_id)
+        ban_count = sum(case.case_target_id == user_id for case in ban_cases)
+        unban_count = sum(case.case_target_id == user_id for case in unban_cases)
 
         return ban_count > unban_count
+
+
+async def setup(bot: commands.Bot) -> None:
+    await bot.add_cog(SnippetUnban(bot))
