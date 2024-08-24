@@ -28,11 +28,13 @@ enum CaseType {
   HACKBAN
   TEMPBAN
   KICK
+  SNIPPETBAN
   TIMEOUT
   UNTIMEOUT
   WARN
   JAIL
   UNJAIL
+  SNIPPETUNBAN
 }
 
 // Docs: https://www.prisma.io/docs/orm/prisma-schema/data-model/models#defining-models
