@@ -18,7 +18,7 @@ class Untimeout(ModerationCogBase):
     @commands.hybrid_command(
         name="untimeout",
         aliases=["ut", "uto", "unmute"],
-        usage="untimeout [target] [reason]",
+        usage="untimeout [target] [reason] <silent>",
     )
     @commands.guild_only()
     @checks.has_pl(2)
@@ -30,16 +30,16 @@ class Untimeout(ModerationCogBase):
         flags: UntimeoutFlags,
     ) -> None:
         """
-        Untimeout a user from the server.
+        Untimeout a member from the server.
 
         Parameters
         ----------
         ctx : commands.Context[commands.Bot]
             The context in which the command is being invoked.
         target : discord.Member
-            The user to timeout.
+            The member to untimeout.
         flags : UntimeoutFlags
-            The flags for the command.
+            The flags for the command (reason: str, silent: bool).
 
         Raises
         ------
