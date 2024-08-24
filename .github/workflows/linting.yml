@@ -19,7 +19,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: 3.12
 
       # Install Ruff
       - name: Install Ruff
@@ -30,4 +30,4 @@ jobs:
         run: ruff format && ruff check . --fix
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: '[Fix] Linting and formatting via Ruff'
+          commit_message: 'fix: Linting and formatting via Ruff'
