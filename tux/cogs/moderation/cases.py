@@ -23,6 +23,8 @@ emojis: dict[str, int] = {
     "timeout": 1268115809083981886,
     "warn": 1268115764498399264,
     "jail": 1268115750392954880,
+    "snippetban": 1275782294363312172,  # Placeholder
+    "snippetunban": 1275782294363312172,  # Placeholder
 }
 
 
@@ -47,7 +49,7 @@ class Cases(ModerationCogBase):
     @cases.command(
         name="view",
         aliases=["v", "ls", "list"],
-        usage="cases view <case_number> <flags>",
+        usage="cases view <case_number> <type> <target> <moderator>",
     )
     @commands.guild_only()
     @checks.has_pl(2)
@@ -83,7 +85,7 @@ class Cases(ModerationCogBase):
     @cases.command(
         name="modify",
         aliases=["m", "edit"],
-        usage="cases modify [case_number] <flags>",
+        usage="cases modify [case_number] <status> <reason>",
     )
     @commands.guild_only()
     @checks.has_pl(2)
@@ -150,10 +152,7 @@ class Cases(ModerationCogBase):
             await ctx.send("Case not found.", delete_after=30)
             return
 
-        target = await commands.MemberConverter().convert(
-            ctx,
-            str(case.case_target_id),
-        ) or await commands.UserConverter().convert(ctx, str(case.case_target_id))
+        target = await commands.UserConverter().convert(ctx, str(case.case_target_id))
 
         await self._handle_case_response(ctx, case, "viewed", case.case_reason, target)
 
@@ -233,10 +232,7 @@ class Cases(ModerationCogBase):
             await ctx.send("Failed to update case.", delete_after=30, ephemeral=True)
             return
 
-        target = await commands.MemberConverter().convert(
-            ctx,
-            str(case.case_target_id),
-        ) or await commands.UserConverter().convert(ctx, str(case.case_target_id))
+        target = await commands.UserConverter().convert(ctx, str(case.case_target_id))
 
         await self._handle_case_response(ctx, updated_case, "updated", updated_case.case_reason, target)
 
@@ -266,10 +262,10 @@ class Cases(ModerationCogBase):
         """
 
         if case is not None:
-            moderator = await commands.MemberConverter().convert(
-                ctx,
-                str(case.case_moderator_id),
-            ) or await commands.UserConverter().convert(ctx, str(case.case_moderator_id))
+            moderator = ctx.author
+
+            if not isinstance(moderator, discord.Member):
+                moderator = await commands.MemberConverter().convert(ctx, str(case.case_moderator_id))
 
             fields = self._create_case_fields(moderator, target, reason)
 
@@ -298,7 +294,7 @@ class Cases(ModerationCogBase):
         cases: list[Case],
         total_cases: int,
     ) -> None:
-        menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed)
+        menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed, all_can_click=True, delete_on_timeout=True)
 
         if not cases:
             embed = discord.Embed(
@@ -314,9 +310,16 @@ class Cases(ModerationCogBase):
             embed = self._create_case_list_embed(ctx, cases[i : i + cases_per_page], total_cases)
             menu.add_page(embed)
 
-        menu.add_button(ViewButton.back())
-        menu.add_button(ViewButton.next())
-        menu.add_button(ViewButton.end_session())
+        menu.add_button(
+            ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_GO_TO_FIRST_PAGE, emoji="⏮️"),
+        )
+        menu.add_button(
+            ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_PREVIOUS_PAGE, emoji="⏪"),
+        )
+        menu.add_button(ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_NEXT_PAGE, emoji="⏩"))
+        menu.add_button(
+            ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_GO_TO_LAST_PAGE, emoji="⏭️"),
+        )
 
         await menu.start()
 
@@ -373,6 +376,8 @@ class Cases(ModerationCogBase):
             CaseType.WARN: "warn",
             CaseType.JAIL: "jail",
             CaseType.UNJAIL: "jail",
+            CaseType.SNIPPETBAN: "snippetban",
+            CaseType.SNIPPETUNBAN: "snippetunban",
         }
         emoji_name = emoji_map.get(case_type)
         if emoji_name is not None:
@@ -384,9 +389,10 @@ class Cases(ModerationCogBase):
     def _get_case_action_emoji(self, case_type: CaseType) -> discord.Emoji | None:
         action = (
             "added"
-            if case_type in [CaseType.BAN, CaseType.KICK, CaseType.TIMEOUT, CaseType.WARN, CaseType.JAIL]
+            if case_type
+            in [CaseType.BAN, CaseType.KICK, CaseType.TIMEOUT, CaseType.WARN, CaseType.JAIL, CaseType.SNIPPETBAN]
             else "removed"
-            if case_type in [CaseType.UNBAN, CaseType.UNTIMEOUT, CaseType.UNJAIL]
+            if case_type in [CaseType.UNBAN, CaseType.UNTIMEOUT, CaseType.UNJAIL, CaseType.SNIPPETUNBAN]
             else None
         )
         if action is not None:
@@ -403,12 +409,14 @@ class Cases(ModerationCogBase):
         case_action_emoji: str,
     ) -> str:
         case_type_and_action = (
-            f"{case_action_emoji} {case_type_emoji}" if case_action_emoji and case_type_emoji else "?"
+            f"{case_action_emoji} {case_type_emoji}"
+            if case_action_emoji and case_type_emoji
+            else ":interrobang: :interrobang:"
         )
-        case_date = discord.utils.format_dt(case.case_created_at, "R") if case.case_created_at else "?"
+        case_date = discord.utils.format_dt(case.case_created_at, "R") if case.case_created_at else ":interrobang:"
         case_number = f"{case.case_number:04d}"
 
-        return f"{case_status_emoji} `{case_number}`\u2002\u2002 {case_type_and_action} \u2002\u2002*{case_date}*\n"
+        return f"{case_status_emoji} `{case_number}`\u2002\u2002 {case_type_and_action} \u2002\u2002__{case_date}__\n"
 
     def _add_case_to_embed(self, embed: discord.Embed, case: Case) -> None:
         case_status_emoji = self._format_emoji(self._get_case_status_emoji(case.case_status))

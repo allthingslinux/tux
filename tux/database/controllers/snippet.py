@@ -18,6 +18,9 @@ class SnippetController:
     async def get_all_snippets(self) -> list[Snippet]:
         return await self.table.find_many()
 
+    async def get_all_snippets_by_guild_id(self, guild_id: int) -> list[Snippet]:
+        return await self.table.find_many(where={"guild_id": guild_id})
+
     async def get_all_snippets_sorted(self, newestfirst: bool = True) -> list[Snippet]:
         return await self.table.find_many(
             order={"snippet_created_at": "desc" if newestfirst else "asc"},
@@ -62,4 +65,36 @@ class SnippetController:
         return await self.table.update(
             where={"snippet_id": snippet_id},
             data={"snippet_content": snippet_content},
+        )
+
+    async def increment_snippet_uses(self, snippet_id: int) -> Snippet | None:
+        snippet = await self.table.find_first(where={"snippet_id": snippet_id})
+        if snippet is None:
+            return None
+
+        return await self.table.update(
+            where={"snippet_id": snippet_id},
+            data={"uses": snippet.uses + 1},
+        )
+
+    async def lock_snippet_by_id(self, snippet_id: int) -> Snippet | None:
+        return await self.table.update(
+            where={"snippet_id": snippet_id},
+            data={"locked": True},
+        )
+
+    async def unlock_snippet_by_id(self, snippet_id: int) -> Snippet | None:
+        return await self.table.update(
+            where={"snippet_id": snippet_id},
+            data={"locked": False},
+        )
+
+    async def toggle_snippet_lock_by_id(self, snippet_id: int) -> Snippet | None:
+        snippet = await self.table.find_first(where={"snippet_id": snippet_id})
+        if snippet is None:
+            return None
+
+        return await self.table.update(
+            where={"snippet_id": snippet_id},
+            data={"locked": not snippet.locked},
         )

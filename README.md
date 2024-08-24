@@ -1,8 +1,6 @@
-<div align="center">
-    <img src="docs/resources/tux.gif" width=128 height=128></img>
-    <h1>Tux</h1>
-    <h3><b>A Discord bot for the All Things Linux Discord server</b></h3>
-</div>
+# Tux
+
+## A Discord bot for the All Things Linux Discord server
 
 <div align="center">
     <p align="center">
@@ -12,21 +10,23 @@
             <img alt="Repo size" src="https://img.shields.io/github/repo-size/allthingslinux/tux?style=for-the-badge&logo=github&color=FAB387&logoColor=FAB387&labelColor=302D41"/></a>
         <a href="https://github.com/allthingslinux/tux/issues">
             <img alt="Issues" src="https://img.shields.io/github/issues/allthingslinux/tux?style=for-the-badge&logo=githubactions&color=F9E2AF&logoColor=F9E2AF&labelColor=302D41"></a>
-        <a href="https://www.gnu.org/licenses/gpl-3.0.html">
-            <img alt="License" src="https://img.shields.io/github/license/allthingslinux/tux?style=for-the-badge&logo=gitbook&color=A6E3A1&logoColor=A6E3A1&labelColor=302D41"></a>
         <a href="https://discord.gg/linux">
             <img alt="Discord" src="https://img.shields.io/discord/1172245377395728464?style=for-the-badge&logo=discord&color=B4BEFE&logoColor=B4BEFE&labelColor=302D41"></a>
     </p>
 </div>
 
-# NOTE: This bot (without plenty of tweaking) is not ready for multi-server use, we recommend against using it until it is more complete
+> [!WARNING]
+**This bot (without plenty of tweaking) is not ready for production use, we suggest against using it until announced. Join our support server: [atl.dev](https://discord.gg/gpmSjcjQxg) for more info!**
 
 ## About
 
-Tux is a Discord bot for the All Things Linux Discord server. It is designed to provide a variety of features to the server, including moderation, support, utility, and various fun commands. The bot is written in Python using the discord.py library.
+Tux is an all in one Discord bot for the All Things Linux Discord server.
 
+It is designed to provide a variety of features to the server, including moderation, support, utility, and various fun commands.
 
 ## Tech Stack
+
+- Python 3.12 alongside the Discord.py library
 - Poetry for dependency management
 - Docker and Docker Compose for development and deployment
 - Strict typing with Pyright and type hints
@@ -36,8 +36,10 @@ Tux is a Discord bot for the All Things Linux Discord server. It is designed to 
 - Justfile for easy CLI commands
 - Beautiful logging with Loguru
 - Exception handling with Sentry
+- Request handling with HTTPX
 
 ## Bot Features
+
 - Asynchronous codebase
 - Hybrid command system with both slash commands and traditional commands
 - Cog loading system with hot reloading
@@ -51,71 +53,100 @@ Tux is a Discord bot for the All Things Linux Discord server. It is designed to 
 ## Installation
 
 ### Prerequisites
+
 - Python 3.12
 - [Poetry](https://python-poetry.org/docs/)
-- Optional: [Docker](https://docs.docker.com/get-docker/) if you want to run the bot in a container.
-- Optional: [Docker Compose](https://docs.docker.com/compose/install/) if you want to define the container environment in a `docker-compose.yml` file.
-- Optional: [Just](https://github.com/casey/just/) if you want to use the Justfile for easy CLI commands.
+- [Supabase](https://supabase.io/)
+- Optional: [Docker](https://docs.docker.com/get-docker/)
+- Optional: [Docker Compose](https://docs.docker.com/compose/install/)
+- Optional: [Just](https://github.com/casey/just/)
 
-### Steps
+### Steps to Install
+
+Assuming you have the prerequisites installed, follow these steps to get started with the development of the project:
+
+Further detailed instructions can be found in the [development guide](docs/development.md).
+
 1. Clone the repository
-   
+
    ```bash
    git clone https://github.com/allthingslinux/tux && cd tux
    ```
 
-2. Install the dependencies
+2. Install the project's dependencies
+
     ```bash
     poetry install
     ```
 
 3. Activate the virtual environment
+
     ```bash
     poetry shell
     ```
 
 4. Install the pre-commit hooks
+
     ```bash
     pre-commit install
     ```
 
 5. Generate the prisma client
+
     ```bash
     prisma generate
     ```
 
-6. Copy the `.env.example` file to `.env` and fill in the required values
+    Currently, you will need to have a Supabase database set up and the URL set in the `DATABASE_URL` environment variable.
+
+    In the future, we will provide a way to use a local database. We can provide a dev database on request.
+
+6. Copy the `.env.example` file to `.env` and fill in the required values.
+
     ```bash
     cp .env.example .env
     ```
 
-7. Copy the `config/settings.json.example` file to `config/settings.json` and fill in the required values
+    You'll need to fill in your Discord bot token here, as well as the Sentry DSN if you want to use Sentry for error tracking.
+
+    We offer dev tokens on request in our Discord server.
+
+7. Copy the `config/settings.yml.example` file to `config/settings.yml` and fill in the required values.
+
     ```bash
-    cp config/settings.json.example config/settings.json
+    cp config/settings.yml.example config/settings.yml
     ```
 
-8. Run the bot
+    Be sure to add your Discord user ID to the `BOT_OWNER` key in the settings file.
+
+    You can also add your custom prefix here.
+
+8. Start the bot!
+
     ```bash
     poetry run python tux/main.py
     ```
 
 9. Run the sync command in the server to sync the slash command tree.
-   ```
+
+   ```bash
    {prefix}dev sync <server id>
    ```
 
 ## Development Notes
 
-> [!NOTE]  
-> Make sure to add your discord ID to the sys admin list if you are testing locally.
+> [!NOTE]
+Make sure to add your discord ID to the sys admin list if you are testing locally.
 
 > [!NOTE]
-> Make sure to set the prisma schema database ENV variable to the DEV database URL.
+Make sure to set the prisma schema database ENV variable to the DEV database URL.
 
 ## License
 
-This project is licensed under the terms of the The GNU General Public License v3.0. See the [LICENSE](LICENSE.md) file for details.
+This project is licensed under the terms of the The GNU General Public License v3.0.
+
+See [LICENSE](LICENSE.md) for details.
 
 ## Metrics
 
-![Alt](https://repobeats.axiom.co/api/embed/cd24c48127e0b6fbc9467711d6d4bd74b30ff8d2.svg "Repobeats analytics image")
+![Alt](https://repobeats.axiom.co/api/embed/b988ba04401b7c68edf9def00f5132cd2a7f3735.svg "Repobeats analytics image")

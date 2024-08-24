@@ -2,17 +2,13 @@
 
 ## Introduction
 
-This document is intended to provide a guide for developers who want to contribute to the development of the project. It is assumed that the reader has a basic understanding of the project and its goals and has a working knowledge of the tools and technologies used in the project.
+This document is intended to provide a guide for developers who want to contribute to the development of the project.
+
+It is assumed that the reader has a basic understanding of the project and its goals as well as the tools and technologies used in the project.
 
 ## Getting Started
 
-To get started with the development of the project, you will need to have the following tools and technologies installed on your system:
-
-- Python 3.12
-- [Poetry](https://python-poetry.org/docs/)
-- Optional: [Docker](https://docs.docker.com/get-docker/) if you want to run the bot in a container.
-- Optional: [Docker Compose](https://docs.docker.com/compose/install/) if you want to define the container environment in a `docker-compose.yml` file.
-- Optional: [Just](https://github.com/casey/just/) if you want to use the Justfile for easy CLI commands.
+To get started with the development of the project, refer to the installation instructions in the project [README](../README.md).
 
 ## Installation
 
@@ -53,11 +49,13 @@ The project is structured as follows:
   - `help.py`: The help command class definition.
 
 ### Configuration
-- `.env.example`: The example environment file containing the environment variables required for the bot.
+
+- `.env`: The environment file containing the secret environment variables for the bot.
 - `config/`: The config directory containing the configuration files for the bot.
-  - `settings.json`: The settings file containing the bot settings and configuration.
+  - `settings.yml`: The settings file containing the bot settings and configuration.
 
 ### Documentation
+
 - `docs/`: The documentation directory containing the project documentation.
 - `CONTRIBUTING.md`: The contributing guidelines for the project.
 - `README.md`: The project README file containing the project overview and installation instructions.
@@ -66,6 +64,7 @@ The project is structured as follows:
 - `LICENSE.md`: The license file containing the project license information.
 
 ### Development
+
 - `pyproject.toml`: The Poetry configuration file containing the project metadata and dependencies for the bot.
 - `Dockerfile`: The Dockerfile containing the container configuration for the bot.
 - `docker-compose.yml`: The Docker Compose file containing the container environment configuration for the bot.
@@ -73,13 +72,37 @@ The project is structured as follows:
 - `.gitignore`: The Git ignore file containing the files and directories to be ignored by Git.
 
 ### CI/CD
+
 - `.pre-commit-config.yaml`: The pre-commit configuration file containing the pre-commit hooks for the bot.
 - `.github/workflows/`: The GitHub Actions directory containing the CI/CD workflows for the bot.
 - `renovate.json`: The Renovate configuration file containing the dependency update settings for the bot.
 
 ## Cogs Primer
 
-TODO: Add cogs primer
+There comes a point in your bot’s development when you want to organize a collection of commands, listeners, and some state into one class. Cogs allow you to do just that.
+
+It should be noted that cogs are typically used alongside with Extensions.
+
+An extension at its core is a python file with an entry point called setup. This setup function must be a Python coroutine. It takes a single parameter of the Bot that loads the extension.
+
+With regards to Tux, we typically define one cog per extension. This allows us to keep our code organized and modular.
+
+Furthermore, we have a `CogLoader` class that loads our cogs (technically, extensions) from the `cogs` directory and registers them with the bot at startup.
+
+### Cog Essentials
+
+- Each cog is a Python class that subclasses commands.Cog.
+- Every regular command or "prefix" is marked with the `@commands.command()` decorator.
+- Every app or "slash" command is marked with the `@app_commands.command()` decorator.
+- Every hybrid command is marked with the `@commands.hybrid_command()` decorator.
+- Every listener is marked with the `@commands.Cog.listener()` decorator.
+
+tl;dr - Extensions are imported "modules", cogs are classes that are subclasses of `commands.Cog`.
+
+Referance:
+
+- [discord.py - Cogs](https://discordpy.readthedocs.io/en/stable/ext/commands/cogs.html)
+- [discord.py - Extensions](https://discordpy.readthedocs.io/en/stable/ext/commands/extensions.html)
 
 ## Database Primer
 

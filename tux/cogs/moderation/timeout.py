@@ -73,14 +73,14 @@ class Timeout(ModerationCogBase):
         flags: TimeoutFlags,
     ) -> None:
         """
-        Timeout a user from the server.
+        Timeout a member from the server.
 
         Parameters
         ----------
         ctx : commands.Context[commands.Bot]
             The context in which the command is being invoked.
         target : discord.Member
-            The user to timeout.
+            The member to timeout.
         flags : TimeoutFlags
             The flags for the command.
 
@@ -89,6 +89,7 @@ class Timeout(ModerationCogBase):
         discord.DiscordException
             If an error occurs while timing out the user.
         """
+
         if ctx.guild is None:
             logger.warning("Timeout command used outside of a guild context.")
             return

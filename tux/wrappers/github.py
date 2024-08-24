@@ -17,7 +17,7 @@ class GithubService:
             AppInstallationAuthStrategy(
                 CONST.GITHUB_APP_ID,
                 CONST.GITHUB_PRIVATE_KEY,
-                CONST.GITHUB_INSTALLATION_ID,
+                int(CONST.GITHUB_INSTALLATION_ID),
                 CONST.GITHUB_CLIENT_ID,
                 CONST.GITHUB_CLIENT_SECRET,
             ),

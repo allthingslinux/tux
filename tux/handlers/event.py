@@ -43,9 +43,7 @@ class EventHandler(commands.Cog):
         flag_list = ["🏳️‍🌈", "🏳️‍⚧️"]
 
         user = self.bot.get_user(payload.user_id)
-        if user is None:
-            return
-        if user.bot:
+        if user is None or user.bot:
             return
 
         if payload.guild_id is None:
@@ -59,25 +57,45 @@ class EventHandler(commands.Cog):
             return
 
         channel = self.bot.get_channel(payload.channel_id)
-        if channel is None:
-            return
-        if channel.id != 1172343581495795752:
-            return
-        if not isinstance(channel, discord.TextChannel):
+        if channel is None or channel.id != 1172343581495795752 or not isinstance(channel, discord.TextChannel):
             return
 
         message = await channel.fetch_message(payload.message_id)
 
         emoji = payload.emoji
-        if any(0x1F1E3 <= ord(char) <= 0x1F1FF for char in emoji.name):
+        if (
+            any(0x1F1E3 <= ord(char) <= 0x1F1FF for char in emoji.name)
+            or "flag" in emoji.name.lower()
+            or emoji.name in flag_list
+        ):
             await message.remove_reaction(emoji, member)
             return
-        if "flag" in emoji.name.lower():
-            await message.remove_reaction(emoji, member)
-            return
-        if emoji.name in flag_list:
-            await message.remove_reaction(emoji, member)
-            return
+
+    @commands.Cog.listener()
+    async def on_thread_create(self, thread: discord.Thread) -> None:
+        # TODO: Add database configuration for primmary support forum
+        support_forum = 1172312653797007461
+
+        if thread.parent_id == support_forum:
+            owner_mention = thread.owner.mention if thread.owner else {thread.owner_id}
+
+            if tags := [tag.name for tag in thread.applied_tags]:
+                tag_list = ", ".join(tags)
+                msg = f"<:tux_notify:1274504953666474025> **New support thread created** - help is appreciated!\n{thread.mention} by {owner_mention}\n<:tux_tag:1274504955163709525> **Tags**: `{tag_list}`"
+
+            else:
+                msg = f"<:tux_notify:1274504953666474025> **New support thread created** - help is appreciated!\n{thread.mention} by {owner_mention}"
+
+            embed = discord.Embed(description=msg, color=discord.Color.random())
+
+            general_chat = 1172245377395728467
+            channel = self.bot.get_channel(general_chat)
+
+            if channel is not None and isinstance(channel, discord.TextChannel):
+                # TODO: Add database configuration for primary support role
+                support_role = "<@&1274823545087590533>"
+
+                await channel.send(content=support_role, embed=embed)
 
 
 async def setup(bot: commands.Bot) -> None:

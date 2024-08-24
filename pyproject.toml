@@ -27,6 +27,7 @@ pynacl = "^1.5.0"
 pyright = "^1.1.358"
 python = ">=3.12,<4"
 python-dotenv = "^1.0.1"
+pyyaml = "^6.0.2"
 reactionmenu = "^3.1.7"
 rsa = "^4.9"
 ruff = "^0.6.0"
@@ -34,6 +35,8 @@ sentry-sdk = {extras = ["httpx", "loguru"], version = "^2.7.0"}
 types-aiofiles = "^24.1.0.20240626"
 types-psutil = "^6.0.0.20240621"
 typing-extensions = "^4.12.2"
+jishaku = "^2.5.2"
+pytz = "^2024.1"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.30"
@@ -86,8 +89,7 @@ target-version = "py312"
 [tool.ruff.lint]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 fixable = ["ALL"]
-ignore = ["E501", "N814"]
-
+ignore = ["E501", "N814", "PLR0913", "PLR2004"]
 select = [
   "I", # isort
   "E", # pycodestyle-error
@@ -96,6 +98,8 @@ select = [
   "N", # pep8-naming
   "TRY", # tryceratops
   "UP", # pyupgrade
+  "FURB", # refurb
+  "PL", # pylint
   "B", # flake8-bugbear
   "SIM", # flake8-simplify
   "ASYNC", # flake8-async

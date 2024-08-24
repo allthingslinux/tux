@@ -4,79 +4,64 @@ from loguru import logger
 
 from prisma.enums import CaseType
 from prisma.models import Case
+from tux.database.controllers.case import CaseController
 from tux.utils import checks
 from tux.utils.constants import Constants as CONST
-from tux.utils.flags import UnbanFlags
+from tux.utils.flags import SnippetBanFlags
 
 from . import ModerationCogBase
 
 
-class Unban(ModerationCogBase):
+class SnippetBan(ModerationCogBase):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__(bot)
+        self.case_controller = CaseController()
 
     @commands.hybrid_command(
-        name="unban",
-        aliases=["ub"],
-        usage="unban [username_or_id] [reason]",
+        name="snippetban",
+        aliases=["sb"],
+        usage="snippetban [target]",
     )
     @commands.guild_only()
     @checks.has_pl(3)
-    async def unban(
+    async def snippet_ban(
         self,
         ctx: commands.Context[commands.Bot],
+        target: discord.Member,
         *,
-        flags: UnbanFlags,
+        flags: SnippetBanFlags,
     ) -> None:
         """
-        Unban a user from the server.
+        Ban a user from creating snippets.
 
         Parameters
         ----------
         ctx : commands.Context[commands.Bot]
-            The context object for the command.
+            The context object.
         target : discord.Member
-            The member to unban.
-        flags : UnbanFlags
-            The flags for the command (username_or_id: str, reason: str).
-
-        Raises
-        ------
-        discord.Forbidden
-            If the bot does not have the necessary permissions.
-        discord.HTTPException
-            If an error occurs while unbanning the user.
+            The member to snippet ban.
+        flags : SnippetBanFlags
+            The flags for the command. (reason: str, silent: bool)
         """
 
         if ctx.guild is None:
-            logger.warning("Unban command used outside of a guild context.")
+            logger.warning("Snippet ban command used outside of a guild context.")
             return
 
-        # Get the list of banned users in the guild
-        banned_users = [ban.user async for ban in ctx.guild.bans()]
-        user = await commands.UserConverter().convert(ctx, flags.username_or_id)
-
-        if user not in banned_users:
-            await ctx.send(f"{user} was not found in the guild ban list.", delete_after=30, ephemeral=True)
-            return
-
-        try:
-            await ctx.guild.unban(user, reason=flags.reason)
-
-        except (discord.Forbidden, discord.HTTPException, discord.NotFound) as e:
-            logger.error(f"Failed to unban {user}. {e}")
-            await ctx.send(f"Failed to unban {user}. {e}", delete_after=30, ephemeral=True)
+        if await self.is_snippetbanned(ctx.guild.id, target.id):
+            await ctx.send("User is already snippet banned.", delete_after=30)
             return
 
         case = await self.db.case.insert_case(
-            guild_id=ctx.guild.id,
-            case_target_id=user.id,
+            case_target_id=target.id,
             case_moderator_id=ctx.author.id,
-            case_type=CaseType.UNBAN,
+            case_type=CaseType.SNIPPETBAN,
             case_reason=flags.reason,
+            guild_id=ctx.guild.id,
         )
 
-        await self.handle_case_response(ctx, case, "created", flags.reason, user)
+        await self.send_dm(ctx, flags.silent, target, flags.reason, "Snippet banned")
+        await self.handle_case_response(ctx, case, "created", flags.reason, target)
 
     async def handle_case_response(
         self,
@@ -110,7 +95,7 @@ class Unban(ModerationCogBase):
         else:
             embed = await self.create_embed(
                 ctx,
-                title=f"Case {action} ({CaseType.UNBAN})",
+                title=f"Case {action} ({CaseType.SNIPPETBAN})",
                 fields=fields,
                 color=CONST.EMBED_COLORS["CASE"],
                 icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
@@ -119,6 +104,31 @@ class Unban(ModerationCogBase):
         await self.send_embed(ctx, embed, log_type="mod")
         await ctx.send(embed=embed, delete_after=30, ephemeral=True)
 
+    async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
+        """
+        Check if a user is snippet banned.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to check in.
+        user_id : int
+            The ID of the user to check.
+
+        Returns
+        -------
+        bool
+            True if the user is snippet banned, False otherwise.
+        """
+
+        ban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETBAN)
+        unban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETUNBAN)
+
+        ban_count = sum(case.case_target_id == user_id for case in ban_cases)
+        unban_count = sum(case.case_target_id == user_id for case in unban_cases)
+
+        return ban_count > unban_count
+
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(Unban(bot))
+    await bot.add_cog(SnippetBan(bot))

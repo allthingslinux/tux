@@ -18,7 +18,7 @@ class Ban(ModerationCogBase):
     @commands.hybrid_command(
         name="ban",
         aliases=["b"],
-        usage="ban [target] <flags>",
+        usage="ban [target] [reason] <purge_days> <silent>",
     )
     @commands.guild_only()
     @checks.has_pl(3)
@@ -30,7 +30,7 @@ class Ban(ModerationCogBase):
         flags: BanFlags,
     ) -> None:
         """
-        Ban a user from the server.
+        Ban a member from the server.
 
         Parameters
         ----------
@@ -39,7 +39,7 @@ class Ban(ModerationCogBase):
         target : discord.Member
             The member to ban.
         flags : BanFlags
-            The flags for the command. (reason: str, purge_days: int, silent: bool)
+            The flags for the command. (reason: str, purge_days: int (< 7), silent: bool)
 
         Raises
         ------
@@ -58,7 +58,7 @@ class Ban(ModerationCogBase):
             return
 
         try:
-            await self.send_dm(ctx, flags.silent, target, flags.reason, "banned")
+            await self.send_dm(ctx, flags.silent, target, flags.reason, action="banned")
             await ctx.guild.ban(target, reason=flags.reason, delete_message_days=flags.purge_days)
 
         except (discord.Forbidden, discord.HTTPException) as e:
