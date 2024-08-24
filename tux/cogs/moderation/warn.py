@@ -18,7 +18,7 @@ class Warn(ModerationCogBase):
     @commands.hybrid_command(
         name="warn",
         aliases=["w"],
-        usage="warn [target] <flags>",
+        usage="warn [target] [reason] <silent>",
     )
     @commands.guild_only()
     @checks.has_pl(2)
@@ -30,7 +30,7 @@ class Warn(ModerationCogBase):
         flags: WarnFlags,
     ) -> None:
         """
-        Warn a user from the server.
+        Warn a member from the server.
 
         Parameters
         ----------
