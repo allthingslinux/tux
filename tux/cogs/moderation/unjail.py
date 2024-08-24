@@ -30,7 +30,7 @@ class Unjail(ModerationCogBase):
         flags: UnjailFlags,
     ) -> None:
         """
-        Unjail a user in the server.
+        Unjail a member in the server.
 
         Parameters
         ----------
@@ -41,6 +41,7 @@ class Unjail(ModerationCogBase):
         flags : UnjailFlags
             The flags for the command. (reason: str, silent: bool)
         """
+
         if not ctx.guild:
             logger.warning("Unjail command used outside of a guild context.")
             return
@@ -55,7 +56,7 @@ class Unjail(ModerationCogBase):
             return
 
         if jail_role not in target.roles:
-            await ctx.send("The user is not jailed.", delete_after=30, ephemeral=True)
+            await ctx.send("The member is not jailed.", delete_after=30, ephemeral=True)
             return
 
         if not await self._check_jail_channel(ctx):
@@ -63,7 +64,7 @@ class Unjail(ModerationCogBase):
 
         case = await self.db.case.get_last_jail_case_by_target_id(ctx.guild.id, target.id)
         if not case:
-            await ctx.send("No jail case found for the user.", delete_after=30, ephemeral=True)
+            await ctx.send("No jail case found for this member.", delete_after=30, ephemeral=True)
             return
 
         await self._unjail_user(ctx, target, jail_role, case, flags.reason)
@@ -121,11 +122,11 @@ class Unjail(ModerationCogBase):
             if previous_roles:
                 await target.add_roles(*previous_roles, reason=reason, atomic=False)
             else:
-                await ctx.send("No previous roles found for the user.", delete_after=30, ephemeral=True)
+                await ctx.send("No previous roles found for the member.", delete_after=30, ephemeral=True)
 
         except (discord.Forbidden, discord.HTTPException) as e:
-            logger.error(f"Failed to unjail user {target}. {e}")
-            await ctx.send(f"Failed to unjail user {target}. {e}", delete_after=30, ephemeral=True)
+            logger.error(f"Failed to unjail member {target}. {e}")
+            await ctx.send(f"Failed to unjail member {target}. {e}", delete_after=30, ephemeral=True)
 
     async def _insert_unjail_case(
         self,
