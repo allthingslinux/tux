@@ -443,8 +443,6 @@ class Snippets(commands.Cog):
             return
 
         name = args[0]
-        snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
-        previous_content = snippet.snippet_content
         content = " ".join(args[1:])
         author_id = ctx.author.id
         snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
@@ -452,6 +450,10 @@ class Snippets(commands.Cog):
         if snippet is None:
             embed = create_error_embed(error="Snippet not found.")
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+            return
+
+        if await self.is_snippetbanned(ctx.guild.id, ctx.author.id):
+            awaitawait ctx.send("You are banned from using snippets.")
             return
 
         # Check if the author of the snippet is the same as the user who wants to edit it and if theres no author don't allow editing
@@ -482,14 +484,8 @@ class Snippets(commands.Cog):
             snippet_content=content,
         )
 
-        logger.info(f"{ctx.author} edited a snippet with the name {name} and content {content}.")
-
-        if len(previous_content) > 50:
-            previous_content = previous_content[: 50 - 3] + "..."
-        if len(content) > 50:
-            content = content[: 50 - 3] + "..."
-
-        await ctx.send(f"Snippet Edited. {previous_content} -> {content}", delete_after=30, ephemeral=True)
+        await ctx.send("Snippet Edited.", delete_after=30, ephemeral=True)  # Correct indentation
+        logger.info(f"{ctx.author} Edited a snippet with the name {name} and content {content}.")  # Correct indentation
 
     @commands.command(
         name="togglesnippetlock",
