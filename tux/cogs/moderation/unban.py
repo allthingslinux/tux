@@ -18,7 +18,7 @@ class Unban(ModerationCogBase):
     @commands.hybrid_command(
         name="unban",
         aliases=["ub"],
-        usage="unban [target] [reason]",
+        usage="unban [username_or_id] [reason]",
     )
     @commands.guild_only()
     @checks.has_pl(3)
@@ -38,7 +38,7 @@ class Unban(ModerationCogBase):
         target : discord.Member
             The member to unban.
         flags : UnbanFlags
-            The flags for the command.
+            The flags for the command (username_or_id: str, reason: str).
 
         Raises
         ------
@@ -69,11 +69,11 @@ class Unban(ModerationCogBase):
             return
 
         case = await self.db.case.insert_case(
+            guild_id=ctx.guild.id,
             case_target_id=user.id,
             case_moderator_id=ctx.author.id,
             case_type=CaseType.UNBAN,
             case_reason=flags.reason,
-            guild_id=ctx.guild.id,
         )
 
         await self.handle_case_response(ctx, case, "created", flags.reason, user)

@@ -49,7 +49,7 @@ class Cases(ModerationCogBase):
     @cases.command(
         name="view",
         aliases=["v", "ls", "list"],
-        usage="cases view <case_number> <flags>",
+        usage="cases view <case_number> <type> <target> <moderator>",
     )
     @commands.guild_only()
     @checks.has_pl(2)
@@ -85,7 +85,7 @@ class Cases(ModerationCogBase):
     @cases.command(
         name="modify",
         aliases=["m", "edit"],
-        usage="cases modify [case_number] <flags>",
+        usage="cases modify [case_number] <status> <reason>",
     )
     @commands.guild_only()
     @checks.has_pl(2)
@@ -294,7 +294,7 @@ class Cases(ModerationCogBase):
         cases: list[Case],
         total_cases: int,
     ) -> None:
-        menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed)
+        menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed, all_can_click=True, delete_on_timeout=True)
 
         if not cases:
             embed = discord.Embed(
@@ -310,9 +310,16 @@ class Cases(ModerationCogBase):
             embed = self._create_case_list_embed(ctx, cases[i : i + cases_per_page], total_cases)
             menu.add_page(embed)
 
-        menu.add_button(ViewButton.back())
-        menu.add_button(ViewButton.next())
-        menu.add_button(ViewButton.end_session())
+        menu.add_button(
+            ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_GO_TO_FIRST_PAGE, emoji="⏮️"),
+        )
+        menu.add_button(
+            ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_PREVIOUS_PAGE, emoji="⏪"),
+        )
+        menu.add_button(ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_NEXT_PAGE, emoji="⏩"))
+        menu.add_button(
+            ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_GO_TO_LAST_PAGE, emoji="⏭️"),
+        )
 
         await menu.start()
 
@@ -402,12 +409,14 @@ class Cases(ModerationCogBase):
         case_action_emoji: str,
     ) -> str:
         case_type_and_action = (
-            f"{case_action_emoji} {case_type_emoji}" if case_action_emoji and case_type_emoji else "?"
+            f"{case_action_emoji} {case_type_emoji}"
+            if case_action_emoji and case_type_emoji
+            else ":interrobang: :interrobang:"
         )
-        case_date = discord.utils.format_dt(case.case_created_at, "R") if case.case_created_at else "?"
+        case_date = discord.utils.format_dt(case.case_created_at, "R") if case.case_created_at else ":interrobang:"
         case_number = f"{case.case_number:04d}"
 
-        return f"{case_status_emoji} `{case_number}`\u2002\u2002 {case_type_and_action} \u2002\u2002*{case_date}*\n"
+        return f"{case_status_emoji} `{case_number}`\u2002\u2002 {case_type_and_action} \u2002\u2002__{case_date}__\n"
 
     def _add_case_to_embed(self, embed: discord.Embed, case: Case) -> None:
         case_status_emoji = self._format_emoji(self._get_case_status_emoji(case.case_status))
