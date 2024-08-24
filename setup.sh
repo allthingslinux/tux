@@ -58,8 +58,8 @@ cp .env.example .env
 echo -e "${GREEN}.env file created. Please fill in the required values.${NC}"
 
 # Copy and configure settings.json file
-echo -e "${YELLOW}Configuring settings.json...${NC}"
-cp config/settings.json.example config/settings.json
+echo -e "${YELLOW}Configuring config/settings.yml...${NC}"
+cp config/settings.yml.example config/settings.yml
 echo -e "${GREEN}settings.json file created. Please fill in the required values.${NC}"
 
 # Prompt the user for the development prefix and Discord ID
