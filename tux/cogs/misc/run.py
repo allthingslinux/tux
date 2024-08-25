@@ -5,8 +5,8 @@ from discord.ext import commands
 from tux.utils.embeds import EmbedCreator
 from tux.wrappers import godbolt
 
-ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-remove_ticks = re.compile(r"\`")
+ansi_re = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+ticks_re = re.compile(r"\`")
 
 compiler_map = {
     "hs": "ghc961",
@@ -57,9 +57,9 @@ class Run(commands.Cog):
             The non-ANSI encoded text.
         """
 
-        return ansi_escape.sub("", ansi)
+        return ansi_re.sub("", ansi)
 
-    def remove_backticks(self, ticks: str) -> str:
+    def remove_backticks(self, st: str) -> str:
         """
         Removes backticks from the provided string.
 
@@ -74,7 +74,7 @@ class Run(commands.Cog):
             The string without backticks.
         """
 
-        return remove_ticks.sub("", ticks)
+        return ticks_re.sub("", st)
 
     async def generalized_code_executor(
         self,
@@ -99,7 +99,7 @@ class Run(commands.Cog):
 
         Returns
         -------
-        tuple[str, str, str] | None
+        tuple[str, str, str] 
             A tuple containing the filtered output, the first few lines of the output, and the normalized language.
         """
 
