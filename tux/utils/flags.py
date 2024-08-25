@@ -1,3 +1,6 @@
+import inspect
+from typing import Any
+
 import discord
 from discord.ext import commands
 from discord.utils import MISSING
@@ -6,16 +9,69 @@ from prisma.enums import CaseType
 from tux.utils.converters import CaseTypeConverter
 
 
+def generate_usage(
+    command: commands.Command[Any, Any, Any],
+    flag_converter: type[commands.FlagConverter],
+) -> str:
+    """
+    Generate a usage string for a command with flags.
+
+    Parameters
+    ----------
+    command : commands.Command
+        The command for which to generate the usage string.
+    flag_converter : type[commands.FlagConverter]
+        The flag converter class for the command.
+
+    Returns
+    -------
+    str
+        The usage string for the command. Example: "ban [target] -[reason] -<silent>"
+    """
+
+    # Get the name of the command
+    command_name = command.qualified_name
+
+    # Start the usage string with the command name
+    usage = f"{command_name}"
+
+    # Get the parameters of the command (excluding the `ctx` and `flags` parameters)
+    parameters: dict[str, commands.Parameter] = command.clean_params
+
+    flag_prefix = getattr(flag_converter, "__commands_flag_prefix__", "-")
+    flags: dict[str, commands.Flag] = flag_converter.get_flags()
+
+    # Add non-flag arguments to the usage string
+    for param_name, param in parameters.items():
+        # Ignore these parameters
+        if param_name in ["ctx", "flags"]:
+            continue
+        # Determine if the parameter is required
+        is_required = param.default == inspect.Parameter.empty
+        # Add the parameter to the usage string with required or optional wrapping
+        usage += f" [{param_name}]" if is_required else f" <{param_name}>"
+
+    # Add flag arguments to the usage string
+    for flag_name, flag_obj in flags.items():
+        # Determine if the flag is required or optional
+        if flag_obj.required:
+            usage += f" {flag_prefix}[{flag_name}]"
+        else:
+            usage += f" {flag_prefix}<{flag_name}>"
+
+    return usage
+
+
 class BanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
-        description="The reason for the ban.",
+        description="Reason for the ban.",
         aliases=["r"],
         default=MISSING,
     )
     purge_days: int = commands.flag(
         name="purge_days",
-        description="The number of days (< 7) to purge in messages.",
+        description="Number of days in messages. (< 7)",
         aliases=["p", "purge"],
         default=0,
     )
@@ -30,18 +86,18 @@ class BanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", pre
 class TempBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
-        description="The reason for the temp ban.",
+        description="Reason for the temp ban.",
         aliases=["r"],
         default=MISSING,
     )
     expires_at: int = commands.flag(
         name="expires_at",
-        description="The time in days the ban will last for.",
+        description="Number of days the ban will last for.",
         aliases=["t", "d", "e", "duration", "expires", "time"],
     )
     purge_days: int = commands.flag(
         name="purge_days",
-        description="The number of days (< 7) to purge in messages.",
+        description="Number of days in messages. (< 7)",
         aliases=["p"],
         default=0,
     )
@@ -56,7 +112,7 @@ class TempBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ",
 class KickFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
-        description="The reason for the kick.",
+        description="Reason for the kick.",
         aliases=["r"],
         default=MISSING,
     )
@@ -71,13 +127,13 @@ class KickFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", pr
 class TimeoutFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     duration: str = commands.flag(
         name="duration",
-        description="The duration of the timeout. (e.g. 1d, 1h, 1m)",
+        description="Duration of the timeout. (e.g. 1d, 1h, 1m)",
         aliases=["d"],
         default=MISSING,
     )
     reason: str = commands.flag(
         name="reason",
-        description="The reason for the timeout.",
+        description="Reason for the timeout.",
         aliases=["r"],
         default=MISSING,
     )
@@ -92,7 +148,7 @@ class TimeoutFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ",
 class UntimeoutFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
-        description="The reason for the untimeout.",
+        description="Reason for the untimeout.",
         aliases=["r"],
         default=MISSING,
     )
@@ -105,16 +161,9 @@ class UntimeoutFlags(commands.FlagConverter, case_insensitive=True, delimiter=" 
 
 
 class UnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    username_or_id: str = commands.flag(
-        name="username_or_id",
-        description="The username or ID of the user.",
-        aliases=["u"],
-        default=MISSING,
-        positional=True,
-    )
     reason: str = commands.flag(
         name="reason",
-        description="The reason for the unban.",
+        description="Reason for the unban.",
         aliases=["r"],
         default=MISSING,
     )
@@ -123,7 +172,7 @@ class UnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", p
 class JailFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
-        description="The reason for the jail.",
+        description="Reason for the jail.",
         aliases=["r"],
         default=MISSING,
     )
@@ -138,7 +187,7 @@ class JailFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", pr
 class UnjailFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
-        description="The reason for the unjail.",
+        description="Reason for the unjail.",
         aliases=["r"],
         default=MISSING,
     )
@@ -153,20 +202,20 @@ class UnjailFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", 
 class CasesViewFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     type: CaseType = commands.flag(
         name="case_type",
-        description="The case type to view.",
+        description="Type of case to view.",
         aliases=["t"],
         default=None,
         converter=CaseTypeConverter,
     )
     target: discord.User = commands.flag(
         name="case_target",
-        description="The user to view cases for.",
+        description="User to view cases for.",
         aliases=["user", "u", "member", "memb", "m"],
         default=None,
     )
     moderator: discord.User = commands.flag(
         name="case_moderator",
-        description="The moderator to view cases for.",
+        description="Moderator to view cases for.",
         aliases=["mod"],
         default=None,
     )
@@ -175,12 +224,12 @@ class CasesViewFlags(commands.FlagConverter, case_insensitive=True, delimiter=" 
 class CaseModifyFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     status: bool | None = commands.flag(
         name="case_status",
-        description="The status of the case.",
+        description="Status of the case.",
         aliases=["s"],
     )
     reason: str | None = commands.flag(
         name="case_reason",
-        description="The modified reason.",
+        description="Modified reason.",
         aliases=["r"],
     )
 
@@ -188,7 +237,7 @@ class CaseModifyFlags(commands.FlagConverter, case_insensitive=True, delimiter="
 class WarnFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
-        description="The reason for the warn.",
+        description="Reason for the warn.",
         aliases=["r"],
         default=MISSING,
     )
@@ -203,7 +252,7 @@ class WarnFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", pr
 class SnippetBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
-        description="The reason for the snippet ban.",
+        description="Reason for the snippet ban.",
         aliases=["r"],
         default=MISSING,
     )
@@ -218,7 +267,7 @@ class SnippetBanFlags(commands.FlagConverter, case_insensitive=True, delimiter="
 class SnippetUnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
-        description="The reason for the snippet unban.",
+        description="Reason for the snippet unban.",
         aliases=["r"],
         default=MISSING,
     )

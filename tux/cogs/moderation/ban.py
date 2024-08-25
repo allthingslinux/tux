@@ -4,7 +4,7 @@ from loguru import logger
 
 from prisma.enums import CaseType
 from tux.utils import checks
-from tux.utils.flags import BanFlags
+from tux.utils.flags import BanFlags, generate_usage
 
 from . import ModerationCogBase
 
@@ -12,12 +12,9 @@ from . import ModerationCogBase
 class Ban(ModerationCogBase):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__(bot)
+        self.ban.usage = generate_usage(self.ban, BanFlags)
 
-    @commands.hybrid_command(
-        name="ban",
-        aliases=["b"],
-        usage="ban [target] [reason] <purge_days> <silent>",
-    )
+    @commands.hybrid_command(name="ban", aliases=["b"])
     @commands.guild_only()
     @checks.has_pl(3)
     async def ban(

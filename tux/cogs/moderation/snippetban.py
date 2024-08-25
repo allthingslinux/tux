@@ -5,7 +5,7 @@ from loguru import logger
 from prisma.enums import CaseType
 from tux.database.controllers.case import CaseController
 from tux.utils import checks
-from tux.utils.flags import SnippetBanFlags
+from tux.utils.flags import SnippetBanFlags, generate_usage
 
 from . import ModerationCogBase
 
@@ -14,11 +14,11 @@ class SnippetBan(ModerationCogBase):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__(bot)
         self.case_controller = CaseController()
+        self.snippet_ban.usage = generate_usage(self.snippet_ban, SnippetBanFlags)
 
     @commands.hybrid_command(
         name="snippetban",
         aliases=["sb"],
-        usage="snippetban [target] [reason] <silent>",
     )
     @commands.guild_only()
     @checks.has_pl(3)

@@ -4,7 +4,7 @@ from loguru import logger
 
 from prisma.enums import CaseType
 from tux.utils import checks
-from tux.utils.flags import UnjailFlags
+from tux.utils.flags import UnjailFlags, generate_usage
 
 from . import ModerationCogBase
 
@@ -12,11 +12,11 @@ from . import ModerationCogBase
 class Unjail(ModerationCogBase):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__(bot)
+        self.unjail.usage = generate_usage(self.unjail, UnjailFlags)
 
     @commands.hybrid_command(
         name="unjail",
         aliases=["uj"],
-        usage="unjail [target] [reason] <silent>",
     )
     @commands.guild_only()
     @checks.has_pl(2)

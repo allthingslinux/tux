@@ -4,7 +4,7 @@ from loguru import logger
 
 from prisma.enums import CaseType
 from tux.utils import checks
-from tux.utils.flags import KickFlags
+from tux.utils.flags import KickFlags, generate_usage
 
 from . import ModerationCogBase
 
@@ -12,11 +12,11 @@ from . import ModerationCogBase
 class Kick(ModerationCogBase):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__(bot)
+        self.kick.usage = generate_usage(self.kick, KickFlags)
 
     @commands.hybrid_command(
         name="kick",
         aliases=["k"],
-        usage="kick [target] [reason] <silent>",
     )
     @commands.guild_only()
     @checks.has_pl(2)

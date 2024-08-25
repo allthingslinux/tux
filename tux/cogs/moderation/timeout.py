@@ -1,5 +1,4 @@
-import re
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 import discord
 from discord.ext import commands
@@ -7,59 +6,20 @@ from loguru import logger
 
 from prisma.enums import CaseType
 from tux.utils import checks
-from tux.utils.flags import TimeoutFlags
+from tux.utils.flags import TimeoutFlags, generate_usage
+from tux.utils.functions import parse_time_string
 
 from . import ModerationCogBase
-
-
-def parse_time_string(time_str: str) -> timedelta:
-    """
-    Convert a string representation of time (e.g., '60s', '1m', '2h', '10d')
-    into a datetime.timedelta object.
-
-    Parameters
-    time_str (str): The string representation of time.
-
-    Returns
-    timedelta: Corresponding timedelta object.
-    """
-
-    # Define regex pattern to parse time strings
-    time_pattern = re.compile(r"^(?P<value>\d+)(?P<unit>[smhdw])$")
-
-    # Match the input string with the pattern
-    match = time_pattern.match(time_str)
-
-    if not match:
-        msg = f"Invalid time format: '{time_str}'"
-        raise ValueError(msg)
-
-    # Extract the value and unit from the pattern match
-    value = int(match["value"])
-    unit = match["unit"]
-
-    # Define the mapping of units to keyword arguments for timedelta
-    unit_map = {"s": "seconds", "m": "minutes", "h": "hours", "d": "days", "w": "weeks"}
-
-    # Check if the unit is in the map
-    if unit not in unit_map:
-        msg = f"Unknown time unit: '{unit}'"
-        raise ValueError(msg)
-
-    # Create the timedelta with the appropriate keyword argument
-    kwargs = {unit_map[unit]: value}
-
-    return timedelta(**kwargs)
 
 
 class Timeout(ModerationCogBase):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__(bot)
+        self.timeout.usage = generate_usage(self.timeout, TimeoutFlags)
 
     @commands.hybrid_command(
         name="timeout",
         aliases=["t", "to", "mute"],
-        usage="timeout [target] [duration] [reason]",
     )
     @commands.guild_only()
     @checks.has_pl(2)

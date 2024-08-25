@@ -4,7 +4,7 @@ from loguru import logger
 
 from prisma.enums import CaseType
 from tux.utils import checks
-from tux.utils.flags import WarnFlags
+from tux.utils.flags import WarnFlags, generate_usage
 
 from . import ModerationCogBase
 
@@ -12,11 +12,11 @@ from . import ModerationCogBase
 class Warn(ModerationCogBase):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__(bot)
+        self.warn.usage = generate_usage(self.warn, WarnFlags)
 
     @commands.hybrid_command(
         name="warn",
         aliases=["w"],
-        usage="warn [target] [reason] <silent>",
     )
     @commands.guild_only()
     @checks.has_pl(2)

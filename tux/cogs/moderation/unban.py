@@ -4,7 +4,7 @@ from loguru import logger
 
 from prisma.enums import CaseType
 from tux.utils import checks
-from tux.utils.flags import UnbanFlags
+from tux.utils.flags import UnbanFlags, generate_usage
 
 from . import ModerationCogBase
 
@@ -12,17 +12,18 @@ from . import ModerationCogBase
 class Unban(ModerationCogBase):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__(bot)
+        self.unban.usage = generate_usage(self.unban, UnbanFlags)
 
     @commands.hybrid_command(
         name="unban",
         aliases=["ub"],
-        usage="unban [username_or_id] [reason]",
     )
     @commands.guild_only()
     @checks.has_pl(3)
     async def unban(
         self,
         ctx: commands.Context[commands.Bot],
+        username_or_id: str,
         *,
         flags: UnbanFlags,
     ) -> None:
@@ -33,8 +34,10 @@ class Unban(ModerationCogBase):
         ----------
         ctx : commands.Context[commands.Bot]
             The context object for the command.
+        username_or_id : str
+            The username or ID of the user to unban.
         flags : UnbanFlags
-            The flags for the command (username_or_id: str, reason: str).
+            The flags for the command (reason: str).
 
         Raises
         ------
@@ -50,7 +53,7 @@ class Unban(ModerationCogBase):
 
         # Get the list of banned users in the guild
         banned_users = [ban.user async for ban in ctx.guild.bans()]
-        user = await commands.UserConverter().convert(ctx, flags.username_or_id)
+        user = await commands.UserConverter().convert(ctx, username_or_id)
 
         if user not in banned_users:
             await ctx.send(f"{user} was not found in the guild ban list.", delete_after=30, ephemeral=True)
