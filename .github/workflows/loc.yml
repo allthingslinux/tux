@@ -16,19 +16,19 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v2
 
+      # Debugging step to print the current directory and its contents
       - name: Print workspace info for debugging purposes
         run: |
           echo "Workspace directory: ${{ github.workspace }}"
-          ls -al ${{ github.workspace }}
+          ls -alR ${{ github.workspace }}
 
       - name: Calculate Lines of Code
         id: loc
         uses: PavanMudigonda/lines-of-code-reporter@v1.6
         with:
-          directory: "tux,docs,prisma"              # Directories to include
-          github_token: ${{ secrets.GITHUB_TOKEN }} # GitHub Token
-          exclude_lang: "JSON"                      # Exclude JSON files
-          exclude_dir: "assets"
+          directory: "${{ github.workspace }}/tux,${{ github.workspace }}/docs,${{ github.workspace }}/prisma"  # Directories to include
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # GitHub Token
+          exclude_dir: "${{ github.workspace }}/assets" # Exclude assets directory
 
       - name: Print Lines of Code Output
         shell: pwsh
