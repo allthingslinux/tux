@@ -9,6 +9,103 @@ from loguru import logger
 from tux.utils.embeds import create_error_embed
 from tux.utils.exceptions import AppCommandPermissionLevelError, PermissionLevelError
 
+"""
+Exception
+    DiscordException
+        GatewayNotFound
+        ClientException
+            CommandRegistrationError
+            InvalidData
+            LoginFailure
+            ConnectionClosed
+            PrivilegedIntentsRequired
+            InteractionResponded
+        HTTPException
+            Forbidden
+            NotFound
+            DiscordServerError
+            app_commands.CommandSyncFailure
+        RateLimited
+        CommandError
+            ConversionError
+            UserInputError
+                MissingRequiredArgument
+                MissingRequiredAttachment
+                TooManyArguments
+                BadArgument
+                    MessageNotFound
+                    MemberNotFound
+                    GuildNotFound
+                    UserNotFound
+                    ChannelNotFound
+                    ChannelNotReadable
+                    BadColourArgument
+                    RoleNotFound
+                    BadInviteArgument
+                    EmojiNotFound
+                    GuildStickerNotFound
+                    ScheduledEventNotFound
+                    PartialEmojiConversionFailure
+                    BadBoolArgument
+                    RangeError
+                    ThreadNotFound
+                    FlagError
+                        BadFlagArgument
+                        MissingFlagArgument
+                        TooManyFlags
+                        MissingRequiredFlag
+                    BadUnionArgument
+                    BadLiteralArgument
+                    ArgumentParsingError
+                        UnexpectedQuoteError
+                        InvalidEndOfQuotedStringError
+                        ExpectedClosingQuoteError
+                CommandNotFound
+                CheckFailure
+                    CheckAnyFailure
+                    PrivateMessageOnly
+                    NoPrivateMessage
+                    NotOwner
+                    MissingPermissions
+                    BotMissingPermissions
+                    MissingRole
+                    BotMissingRole
+                    MissingAnyRole
+                    BotMissingAnyRole
+                    NSFWChannelRequired
+                DisabledCommand
+                CommandInvokeError
+                CommandOnCooldown
+                MaxConcurrencyReached
+                HybridCommandError
+            ExtensionError
+                ExtensionAlreadyLoaded
+                ExtensionNotLoaded
+                NoEntryPointError
+                ExtensionFailed
+                ExtensionNotFound
+        AppCommandError
+            CommandInvokeError
+            TransformerError
+            TranslationError
+            CheckFailure
+                NoPrivateMessage
+                MissingRole
+                MissingAnyRole
+                MissingPermissions
+                BotMissingPermissions
+                CommandOnCooldown
+            CommandLimitReached
+            CommandAlreadyRegistered
+            CommandSignatureMismatch
+            CommandNotFound
+            MissingApplicationID
+            CommandSyncFailure
+        HTTPException
+            CommandSyncFailure
+"""
+
+
 error_map: dict[type[Exception], str] = {
     # app_commands
     app_commands.AppCommandError: "An error occurred: {error}",
@@ -29,12 +126,12 @@ error_map: dict[type[Exception], str] = {
     commands.MissingRole: "User not in sudoers file. This incident will be reported. (Missing Role)",
     commands.MissingAnyRole: "User not in sudoers file. This incident will be reported. (Missing Roles)",
     commands.MissingPermissions: "User not in sudoers file. This incident will be reported. (Missing Permissions)",
+    commands.FlagError: "An error occurred with the flags:\n`{error}`",
+    commands.MissingRequiredFlag: "Missing argument: {error}. Correct usage:\n`{ctx.prefix}{ctx.command.usage}`",
     commands.CheckFailure: "User not in sudoers file. This incident will be reported. (Permission Check Failed)",
-    commands.CommandNotFound: "This command was not found.",
     commands.CommandOnCooldown: "This command is on cooldown. Try again in {error.retry_after:.2f} seconds.",
-    commands.BadArgument: "Invalid argument passed. Correct usage: `{ctx.prefix}{ctx.command.usage}`",
-    commands.MissingRequiredArgument: "Missing required arg. Correct usage: `{ctx.prefix}{ctx.command.usage}`",
-    commands.MissingRequiredAttachment: "Missing required attachment.",
+    commands.MissingRequiredArgument: "Missing required argument. Correct usage:\n`{ctx.prefix}{ctx.command.usage}`",
+    commands.TooManyArguments: "Too many arguments passed. Correct usage:\n`{ctx.prefix}{ctx.command.usage}`",
     commands.NotOwner: "User not in sudoers file. This incident will be reported. (Not Owner)",
     commands.BotMissingPermissions: "User not in sudoers file. This incident will be reported. (Bot Missing Permissions)",
     # Custom errors
@@ -101,12 +198,12 @@ class ErrorHandler(commands.Cog):
             The error that occurred.
         """
 
-        # # If the command has its own error handler, return
+        # If the command has its own error handler, return
         # if hasattr(ctx.command, "on_error"):
         #     logger.debug(f"Command {ctx.command} has its own error handler.")
         #     return
 
-        # # If the cog has its own error handler, return
+        # If the cog has its own error handler, return
         # if ctx.cog and ctx.cog._get_overridden_method(ctx.cog.cog_command_error) is not None:
         #     logger.debug(f"Cog {ctx.cog} has its own error handler.")
         #     return

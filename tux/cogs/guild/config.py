@@ -17,7 +17,9 @@ class Config(commands.Cog):
         self.bot = bot
         self.db = DatabaseController().guild_config
 
-    @app_commands.command(name="config_set_logs")
+    config = app_commands.Group(name="config", description="Configure Tux for your server.")
+
+    @config.command(name="set_logs")
     @app_commands.guild_only()
     # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
@@ -45,7 +47,7 @@ class Config(commands.Cog):
 
         await interaction.response.send_message(view=view, ephemeral=True)
 
-    @app_commands.command(name="config_set_channels")
+    @config.command(name="set_channels")
     @app_commands.guild_only()
     # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
@@ -65,7 +67,7 @@ class Config(commands.Cog):
         view = ConfigSetChannels()
         await interaction.response.send_message(view=view, ephemeral=True)
 
-    @app_commands.command(name="config_set_perms")
+    @config.command(name="set_perms")
     @app_commands.describe(setting="Which permission level to configure")
     @app_commands.choices(
         setting=[
@@ -116,7 +118,7 @@ class Config(commands.Cog):
             delete_after=30,
         )
 
-    @app_commands.command(name="config_set_roles")
+    @config.command(name="set_roles")
     @app_commands.guild_only()
     # @checks.ac_has_pl(7)
     @app_commands.describe(setting="Which role to configure")
@@ -158,11 +160,43 @@ class Config(commands.Cog):
                 delete_after=30,
             )
 
-    @app_commands.command(name="config_get_roles")
+    @config.command(name="get_roles")
     @app_commands.guild_only()
     # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
     async def config_get_roles(
+        self,
+        interaction: discord.Interaction,
+    ) -> None:
+        """
+        Get the basic roles for the guild.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        """
+
+        if interaction.guild is None:
+            return
+
+        embed = discord.Embed(
+            title="Config - Roles",
+            color=discord.Color.blue(),
+            timestamp=discord.utils.utcnow(),
+        )
+
+        jail_role_id = await self.db.get_jail_role_id(interaction.guild.id)
+        jail_role = f"<@&{jail_role_id}>" if jail_role_id else "Not set"
+        embed.add_field(name="Jail Role", value=jail_role, inline=False)
+
+        await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
+
+    @config.command(name="get_perms")
+    @app_commands.guild_only()
+    # @checks.ac_has_pl(7)
+    @app_commands.checks.has_permissions(administrator=True)
+    async def config_get_perms(
         self,
         interaction: discord.Interaction,
     ) -> None:
@@ -192,7 +226,7 @@ class Config(commands.Cog):
 
         await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
 
-    @app_commands.command(name="config_get_channels")
+    @config.command(name="get_channels")
     @app_commands.guild_only()
     # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
@@ -232,7 +266,7 @@ class Config(commands.Cog):
 
         await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
 
-    @app_commands.command(name="config_get_logs")
+    @config.command(name="get_logs")
     @app_commands.guild_only()
     # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)

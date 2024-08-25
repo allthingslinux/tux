@@ -23,8 +23,8 @@ emojis: dict[str, int] = {
     "timeout": 1268115809083981886,
     "warn": 1268115764498399264,
     "jail": 1268115750392954880,
-    "snippetban": 1275782294363312172,  # Placeholder
-    "snippetunban": 1275782294363312172,  # Placeholder
+    "snippetban": 1277174953950576681,
+    "snippetunban": 1277174953292337222,
 }
 
 
@@ -269,7 +269,7 @@ class Cases(ModerationCogBase):
 
             fields = self._create_case_fields(moderator, target, reason)
 
-            embed = await self.create_embed(
+            embed = self.create_embed(
                 ctx,
                 title=f"Case #{case.case_number} ({case.case_type}) {action}",
                 fields=fields,
