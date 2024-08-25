@@ -99,7 +99,7 @@ class Run(commands.Cog):
 
         Returns
         -------
-        tuple[str, str, str] 
+        tuple[str, str, str]
             A tuple containing the filtered output, the first few lines of the output, and the normalized language.
         """
 
