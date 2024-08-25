@@ -24,5 +24,4 @@ repos:
     rev: v8.18.4
     hooks:
       - id: gitleaks
-
 exclude: ".archive/"
