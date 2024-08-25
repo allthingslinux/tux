@@ -22,7 +22,22 @@ check_command() {
 
 check_command git
 check_command python3.12
-check_command poetry
+
+# Check for Poetry and offer installation if not installed
+check_command poetry || {
+  echo -e "${YELLOW}Poetry is not installed. Would you like to install it now? (y/N): ${NC}"
+  read -r install_poetry
+  if [[ "<span class="math-inline">install\_poetry" \=\~ ^\[Yy\]</span> ]]; then
+    echo -e "<span class="math-inline">\{YELLOW\}Downloading and installing Poetry\.\.\.</span>{NC}"
+    curl -sSL https://install.python-poetry.org | python3.12 - || {
+      echo >&2 "<span class="math-inline">\{RED\}Failed to install Poetry\. Please visit https\://python\-poetry\.org/ for manual installation instructions\.</span>{NC}"
+      exit 1
+    }
+    echo -e "<span class="math-inline">\{GREEN\}Poetry installation complete\.</span>{NC}"
+  else
+    echo -e "<span class="math-inline">\{YELLOW\}Skipping Poetry installation\. Please install it manually if required\.</span>{NC}"
+  fi
+}
 
 # Install dependencies
 echo -e "${YELLOW}Installing dependencies...${NC}"
