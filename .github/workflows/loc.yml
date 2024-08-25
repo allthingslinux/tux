@@ -1,0 +1,58 @@
+name: Calculate and Publish Lines of Code Report
+
+on:
+  push:
+    branches:
+      - main
+  release:
+    types: [published]
+
+jobs:
+
+  loc-report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Calculate Lines of Code
+        id: loc
+        uses: PavanMudigonda/lines-of-code-reporter@v1.6
+        with:
+          directory: "./tux, ./docs, ./prisma"        # Directories to include
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # GitHub Token
+          exclude_lang: "JSON"                       # Exclude JSON files
+          exclude_dir: "assets"
+
+      - name: Print Lines of Code Output
+        shell: pwsh
+        run: |
+          Write-Host 'Total Lines of Code...:  ${{ steps.loc.outputs.total_lines_string }}'
+          Write-Host 'Lines of Code Markdown Report Path...:  ${{ steps.loc.outputs.loc_report }}'
+
+      - name: Add Lines of Code Summary
+        run: echo "${{ steps.loc.outputs.lines-of-code-summary }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Update README with LOC
+        id: update-readme
+        run: |
+          # Define the placeholder and new content
+          LOC_PLACEHOLDER="<!-- LOC-REPORT -->"
+          LOC_CONTENT="${{ steps.loc.outputs.lines-of-code-summary }}"
+
+          # Read the current README.md and replace the placeholder with the new content
+          README_CONTENT=$(cat README.md)
+          UPDATED_README_CONTENT="${README_CONTENT//$LOC_PLACEHOLDER/$LOC_CONTENT}"
+
+          # Save the updated content back to README.md
+          echo "${UPDATED_README_CONTENT}" > README.md
+
+      - name: Commit changes to README
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "Update README with LOC report"
+          git push
