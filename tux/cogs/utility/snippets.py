@@ -322,7 +322,7 @@ class Snippets(commands.Cog):
             await ctx.send(embed=embed, delete_after=30)
             return
 
-        author = self.bot.get_user(snippet.snippet_user_id) or ctx.author
+        author = self.bot.get_user(snippet.snippet_user_id)
 
         latency = round(int(ctx.bot.latency * 1000))
 
@@ -332,11 +332,15 @@ class Snippets(commands.Cog):
             latency=f"{latency}ms",
             interaction=None,
             state="DEFAULT",
-            user=author,
+            user=author or ctx.author,
         )
 
         embed.add_field(name="Name", value=snippet.snippet_name, inline=False)
-        embed.add_field(name="Author", value=f"{author.mention}", inline=False)
+        embed.add_field(
+            name="Author",
+            value=f"{author.mention if author else f'<@!{snippet.snippet_user_id}>'}",
+            inline=False,
+        )
         embed.add_field(name="Content", value=f"> {snippet.snippet_content}", inline=False)
         embed.add_field(name="Uses", value=snippet.uses, inline=False)
         embed.add_field(name="Locked", value="Yes" if snippet.locked else "No", inline=False)
