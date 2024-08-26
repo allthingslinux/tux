@@ -1,4 +1,5 @@
-name: "Run TODO to Issue"
+name: "TODO to Issue"
+
 on:
   push:
   workflow_dispatch:

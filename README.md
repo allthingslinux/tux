@@ -150,3 +150,8 @@ See [LICENSE](LICENSE.md) for details.
 ## Metrics
 
 ![Alt](https://repobeats.axiom.co/api/embed/b988ba04401b7c68edf9def00f5132cd2a7f3735.svg "Repobeats analytics image")
+
+## Contributors
+
+<!-- readme: collaborators,contributors -start -->
+<!-- readme: collaborators,contributors -end -->
