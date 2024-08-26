@@ -35,7 +35,6 @@ class Fact(commands.Cog):
     @commands.hybrid_command(
         name="fact",
         aliases=["funfact"],
-        usage="fact",
     )
     async def fact(self, ctx: commands.Context[commands.Bot]) -> None:
         """
