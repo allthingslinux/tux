@@ -28,18 +28,35 @@ class Fact(commands.Cog):
             "The first kernel version - Version 0.01 - contained about 10,000 lines of code.",
             "96.3% of the top 1,000,000 web servers were reported to run on Linux.",
             "In the early 2000s, Steve Jobs, who at the time was the CEO of Apple, offered a job to Linus Torvalds to work on OSX which Torvalds declined.",
+            "Linus Torvalds said that he would have never created Linux if FreeBSD had been available at the time.",
+            "Linux is used by every major space programme in the world including NASA, SpaceX, and the European Space Agency.",
         ]
 
-    @commands.hybrid_group(
+    @commands.hybrid_command(
         name="fact",
-        aliases=["facts"],
+        aliases=["funfact"],
         usage="fact",
     )
     async def fact(self, ctx: commands.Context[commands.Bot]) -> None:
+        """
+        Get a random fun fact.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context object for the command.
+        """
         embed = EmbedCreator.create_info_embed(
             title="Fun Fact",
             description=random.choice(self.facts),
             ctx=ctx,
+        )
+
+        # set author
+        embed.set_author(
+            name="Submit more facts here!",
+            url="https://github.com/allthingslinux/tux/blob/main/tux/cogs/fun/fact.py",
+            icon_url="https://github.com/allthingslinux/tux/blob/main/assets/emojis/tux_info.png?raw=true",
         )
 
         await ctx.send(embed=embed)
