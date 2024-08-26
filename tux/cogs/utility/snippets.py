@@ -8,8 +8,9 @@ from discord.ext import commands
 from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
+from prisma.enums import CaseType
 from prisma.models import Snippet
-from tux.database.controllers import DatabaseController
+from tux.database.controllers import CaseController, DatabaseController
 from tux.utils import checks
 from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import EmbedCreator, create_embed_footer, create_error_embed
@@ -20,6 +21,16 @@ class Snippets(commands.Cog):
         self.bot = bot
         self.db = DatabaseController().snippet
         self.config = DatabaseController().guild_config
+        self.case_controller = CaseController()
+
+    async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
+        ban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETBAN)
+        unban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETUNBAN)
+
+        ban_count = sum(1 for case in ban_cases if case.case_target_id == user_id)
+        unban_count = sum(1 for case in unban_cases if case.case_target_id == user_id)
+
+        return ban_count > unban_count
 
     @commands.command(
         name="snippets",
@@ -311,7 +322,7 @@ class Snippets(commands.Cog):
             await ctx.send(embed=embed, delete_after=30)
             return
 
-        author = self.bot.get_user(snippet.snippet_user_id) or ctx.author
+        author = self.bot.get_user(snippet.snippet_user_id)
 
         latency = round(int(ctx.bot.latency * 1000))
 
@@ -321,11 +332,15 @@ class Snippets(commands.Cog):
             latency=f"{latency}ms",
             interaction=None,
             state="DEFAULT",
-            user=author,
+            user=author or ctx.author,
         )
 
         embed.add_field(name="Name", value=snippet.snippet_name, inline=False)
-        embed.add_field(name="Author", value=f"{author.mention}", inline=False)
+        embed.add_field(
+            name="Author",
+            value=f"{author.mention if author else f'<@!{snippet.snippet_user_id}>'}",
+            inline=False,
+        )
         embed.add_field(name="Content", value=f"> {snippet.snippet_content}", inline=False)
         embed.add_field(name="Uses", value=snippet.uses, inline=False)
         embed.add_field(name="Locked", value="Yes" if snippet.locked else "No", inline=False)
@@ -357,6 +372,10 @@ class Snippets(commands.Cog):
 
         if ctx.guild is None:
             await ctx.send("This command cannot be used in direct messages.")
+            return
+
+        if await self.is_snippetbanned(ctx.guild.id, ctx.author.id):
+            await ctx.send("You are banned from using snippets.")
             return
 
         args = arg.split(" ")
@@ -437,11 +456,8 @@ class Snippets(commands.Cog):
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
-        # Check if the author of the snippet is the same as the user who wants to edit it and if theres no author don't allow editing
-        author_id = snippet.snippet_user_id or 0
-        if author_id != ctx.author.id:
-            embed = create_error_embed(error="You can only edit your own snippets.")
-            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+        if await self.is_snippetbanned(ctx.guild.id, ctx.author.id):
+            await ctx.send("You are banned from using snippets.")
             return
 
         # check if the snippet is locked
@@ -459,6 +475,13 @@ class Snippets(commands.Cog):
                 await ctx.send(embed=embed, delete_after=30, ephemeral=True)
                 return
             logger.info(f"{ctx.author} has the permission level to edit locked snippets.")
+
+        # Check if the author of the snippet is the same as the user who wants to edit it and if theres no author don't allow editing
+        author_id = snippet.snippet_user_id or 0
+        if author_id != ctx.author.id:
+            embed = create_error_embed(error="You can only edit your own snippets.")
+            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+            return
 
         await self.db.update_snippet_by_id(
             snippet.snippet_id,

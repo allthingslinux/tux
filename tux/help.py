@@ -158,10 +158,12 @@ class TuxHelp(commands.HelpCommand):
                 flag_str = self._format_flag_name(flag)
 
                 if flag.aliases:
-                    flag_str += f" ({', '.join(flag.aliases)})"
+                    flag_str += f" ({', '.join(flag.aliases)}) : {flag_type}"
+                else:
+                    flag_str += f" : {flag_type}"
 
                 flag_str += f"\n\t{flag.description or 'No description provided.'}"
-                flag_str += f"\n\tType: `{flag_type}`"
+
                 if flag.default is not discord.utils.MISSING:
                     flag_str += f"\n\tDefault: {flag.default}"
 
@@ -225,7 +227,7 @@ class TuxHelp(commands.HelpCommand):
         )
         embed.add_field(
             name="Flag Help",
-            value=f"Flags in `[]` are required and `<>` are optional. Most flags have aliases that can be used.\n> e.g. `{prefix}ban @user --reason spamming` or `{prefix}b @user -r spamming`",
+            value=f"Flags in `[]` are required and `<>` are optional. Most flags have aliases that can be used.\n> e.g. `{prefix}ban @user -reason spamming` or `{prefix}b @user -r spamming`",
             inline=False,
         )
         embed.add_field(

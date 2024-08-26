@@ -4,7 +4,9 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from prisma.enums import CaseType
 from tux.database.controllers import DatabaseController
+from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import create_embed_footer, create_error_embed
 
 
@@ -14,7 +16,7 @@ class ModerationCogBase(commands.Cog):
         self.db = DatabaseController()
         self.config = DatabaseController().guild_config
 
-    async def create_embed(
+    def create_embed(
         self,
         ctx: commands.Context[commands.Bot],
         title: str,
@@ -22,6 +24,7 @@ class ModerationCogBase(commands.Cog):
         color: int,
         icon_url: str,
         timestamp: datetime | None = None,
+        thumbnail_url: str | None = None,
     ) -> discord.Embed:
         """
         Create an embed for moderation actions.
@@ -49,6 +52,7 @@ class ModerationCogBase(commands.Cog):
 
         embed = discord.Embed(color=color, timestamp=timestamp or ctx.message.created_at)
         embed.set_author(name=title, icon_url=icon_url)
+        embed.set_thumbnail(url=thumbnail_url)
 
         footer_text, footer_icon_url = create_embed_footer(ctx)
         embed.set_footer(text=footer_text, icon_url=footer_icon_url)
@@ -166,3 +170,42 @@ class ModerationCogBase(commands.Cog):
             return False
 
         return True
+
+    async def handle_case_response(
+        self,
+        ctx: commands.Context[commands.Bot],
+        case_type: CaseType,
+        case_id: int | None,
+        reason: str,
+        target: discord.Member | discord.User,
+        duration: str | None = None,
+    ):
+        moderator = ctx.author
+
+        fields = [
+            ("Moderator", f"__{moderator}__\n`{moderator.id}`", True),
+            ("Target", f"__{target}__\n`{target.id}`", True),
+            ("Reason", f"> {reason}", False),
+        ]
+
+        if case_id is not None:
+            embed = self.create_embed(
+                ctx,
+                title=f"Case #{case_id} ({duration} {case_type})" if duration else f"Case #{case_id} ({case_type})",
+                fields=fields,
+                color=CONST.EMBED_COLORS["CASE"],
+                icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
+            )
+            embed.set_thumbnail(url=target.avatar)
+
+        else:
+            embed = self.create_embed(
+                ctx,
+                title=f"Case #0 ({duration} {case_type})" if duration else f"Case #0 ({case_type})",
+                fields=fields,
+                color=CONST.EMBED_COLORS["CASE"],
+                icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
+            )
+
+        await self.send_embed(ctx, embed, log_type="mod")
+        await ctx.send(embed=embed, delete_after=30, ephemeral=True)

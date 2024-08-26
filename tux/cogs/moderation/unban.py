@@ -3,10 +3,8 @@ from discord.ext import commands
 from loguru import logger
 
 from prisma.enums import CaseType
-from prisma.models import Case
 from tux.utils import checks
-from tux.utils.constants import Constants as CONST
-from tux.utils.flags import UnbanFlags
+from tux.utils.flags import UnbanFlags, generate_usage
 
 from . import ModerationCogBase
 
@@ -14,17 +12,18 @@ from . import ModerationCogBase
 class Unban(ModerationCogBase):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__(bot)
+        self.unban.usage = generate_usage(self.unban, UnbanFlags)
 
     @commands.hybrid_command(
         name="unban",
         aliases=["ub"],
-        usage="unban [target] [reason]",
     )
     @commands.guild_only()
     @checks.has_pl(3)
     async def unban(
         self,
         ctx: commands.Context[commands.Bot],
+        username_or_id: str,
         *,
         flags: UnbanFlags,
     ) -> None:
@@ -35,10 +34,10 @@ class Unban(ModerationCogBase):
         ----------
         ctx : commands.Context[commands.Bot]
             The context object for the command.
-        target : discord.Member
-            The member to unban.
+        username_or_id : str
+            The username or ID of the user to unban.
         flags : UnbanFlags
-            The flags for the command.
+            The flags for the command (reason: str).
 
         Raises
         ------
@@ -54,7 +53,7 @@ class Unban(ModerationCogBase):
 
         # Get the list of banned users in the guild
         banned_users = [ban.user async for ban in ctx.guild.bans()]
-        user = await commands.UserConverter().convert(ctx, flags.username_or_id)
+        user = await commands.UserConverter().convert(ctx, username_or_id)
 
         if user not in banned_users:
             await ctx.send(f"{user} was not found in the guild ban list.", delete_after=30, ephemeral=True)
@@ -69,55 +68,14 @@ class Unban(ModerationCogBase):
             return
 
         case = await self.db.case.insert_case(
+            guild_id=ctx.guild.id,
             case_target_id=user.id,
             case_moderator_id=ctx.author.id,
             case_type=CaseType.UNBAN,
             case_reason=flags.reason,
-            guild_id=ctx.guild.id,
         )
 
-        await self.handle_case_response(ctx, case, "created", flags.reason, user)
-
-    async def handle_case_response(
-        self,
-        ctx: commands.Context[commands.Bot],
-        case: Case | None,
-        action: str,
-        reason: str,
-        target: discord.Member | discord.User,
-        previous_reason: str | None = None,
-    ) -> None:
-        moderator = ctx.author
-
-        fields = [
-            ("Moderator", f"__{moderator}__\n`{moderator.id}`", True),
-            ("Target", f"__{target}__\n`{target.id}`", True),
-            ("Reason", f"> {reason}", False),
-        ]
-
-        if previous_reason:
-            fields.append(("Previous Reason", f"> {previous_reason}", False))
-
-        if case is not None:
-            embed = await self.create_embed(
-                ctx,
-                title=f"Case #{case.case_number} ({case.case_type}) {action}",
-                fields=fields,
-                color=CONST.EMBED_COLORS["CASE"],
-                icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
-            )
-            embed.set_thumbnail(url=target.avatar)
-        else:
-            embed = await self.create_embed(
-                ctx,
-                title=f"Case {action} ({CaseType.UNBAN})",
-                fields=fields,
-                color=CONST.EMBED_COLORS["CASE"],
-                icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
-            )
-
-        await self.send_embed(ctx, embed, log_type="mod")
-        await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+        await self.handle_case_response(ctx, CaseType.UNBAN, case.case_id, flags.reason, user)
 
 
 async def setup(bot: commands.Bot) -> None:

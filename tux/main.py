@@ -33,8 +33,9 @@ async def main() -> None:
     bot = Tux(
         command_prefix=CONST.PREFIX,
         strip_after_prefix=True,
+        case_insensitive=True,
         intents=discord.Intents.all(),
-        owner_id=CONST.BOT_OWNER_ID,
+        owner_ids=[*CONST.SYSADMIN_IDS, CONST.BOT_OWNER_ID],
         allowed_mentions=discord.AllowedMentions(everyone=False),
     )
 

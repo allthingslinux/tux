@@ -1,5 +1,5 @@
 import re
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import discord
@@ -24,6 +24,49 @@ def strip_formatting(content: str) -> str:
     content = re.sub(r"[\*_~|>]", "", content)
 
     return content.strip()
+
+
+def parse_time_string(time_str: str) -> timedelta:
+    """
+    Convert a string representation of time into a datetime.timedelta object.
+
+    Parameters
+    ----------
+    time_str : str
+        The string representation of time to convert. (e.g., '60s', '1m', '2h', '10d')
+
+    Returns
+    -------
+    timedelta
+        The timedelta object representing the time string.
+    """
+
+    # Define regex pattern to parse time strings
+    time_pattern = re.compile(r"^(?P<value>\d+)(?P<unit>[smhdw])$")
+
+    # Match the input string with the pattern
+    match = time_pattern.match(time_str)
+
+    if not match:
+        msg = f"Invalid time format: '{time_str}'"
+        raise ValueError(msg)
+
+    # Extract the value and unit from the pattern match
+    value = int(match["value"])
+    unit = match["unit"]
+
+    # Define the mapping of units to keyword arguments for timedelta
+    unit_map = {"s": "seconds", "m": "minutes", "h": "hours", "d": "days", "w": "weeks"}
+
+    # Check if the unit is in the map
+    if unit not in unit_map:
+        msg = f"Unknown time unit: '{unit}'"
+        raise ValueError(msg)
+
+    # Create the timedelta with the appropriate keyword argument
+    kwargs = {unit_map[unit]: value}
+
+    return timedelta(**kwargs)
 
 
 def convert_to_seconds(time_str: str) -> int:
