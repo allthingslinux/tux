@@ -452,6 +452,10 @@ class Snippets(commands.Cog):
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
+        if await self.is_snippetbanned(ctx.guild.id, ctx.author.id):
+            await ctx.send("You are banned from using snippets.")
+            return
+
         # Check if the author of the snippet is the same as the user who wants to edit it and if theres no author don't allow editing
         author_id = snippet.snippet_user_id or 0
         if author_id != ctx.author.id:
