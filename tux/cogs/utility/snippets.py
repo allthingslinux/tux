@@ -460,13 +460,6 @@ class Snippets(commands.Cog):
             await ctx.send("You are banned from using snippets.")
             return
 
-        # Check if the author of the snippet is the same as the user who wants to edit it and if theres no author don't allow editing
-        author_id = snippet.snippet_user_id or 0
-        if author_id != ctx.author.id:
-            embed = create_error_embed(error="You can only edit your own snippets.")
-            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
-            return
-
         # check if the snippet is locked
         if snippet.locked:
             logger.info(
@@ -482,6 +475,13 @@ class Snippets(commands.Cog):
                 await ctx.send(embed=embed, delete_after=30, ephemeral=True)
                 return
             logger.info(f"{ctx.author} has the permission level to edit locked snippets.")
+
+        # Check if the author of the snippet is the same as the user who wants to edit it and if theres no author don't allow editing
+        author_id = snippet.snippet_user_id or 0
+        if author_id != ctx.author.id:
+            embed = create_error_embed(error="You can only edit your own snippets.")
+            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+            return
 
         await self.db.update_snippet_by_id(
             snippet.snippet_id,
