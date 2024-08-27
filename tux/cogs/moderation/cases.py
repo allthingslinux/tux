@@ -9,7 +9,7 @@ from prisma.types import CaseWhereInput
 from tux.utils import checks
 from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import create_embed_footer
-from tux.utils.flags import CaseModifyFlags, CasesViewFlags
+from tux.utils.flags import CaseModifyFlags, CasesViewFlags, generate_usage
 
 from . import ModerationCogBase
 
@@ -31,6 +31,8 @@ emojis: dict[str, int] = {
 class Cases(ModerationCogBase):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__(bot)
+        self.cases_view.usage = generate_usage(self.cases_view, CasesViewFlags)
+        self.cases_modify.usage = generate_usage(self.cases_modify, CaseModifyFlags)
 
     @commands.hybrid_group(
         name="cases",
@@ -49,7 +51,6 @@ class Cases(ModerationCogBase):
     @cases.command(
         name="view",
         aliases=["v", "ls", "list"],
-        usage="cases view <case_number> <type> <target> <moderator>",
     )
     @commands.guild_only()
     @checks.has_pl(2)
@@ -85,7 +86,6 @@ class Cases(ModerationCogBase):
     @cases.command(
         name="modify",
         aliases=["m", "edit"],
-        usage="cases modify [case_number] <status> <reason>",
     )
     @commands.guild_only()
     @checks.has_pl(2)
