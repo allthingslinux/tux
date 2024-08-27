@@ -1,15 +1,15 @@
 repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
       - id: check-yaml
       - id: check-json
       - id: check-toml
-
-  - repo: https://github.com/asottile/add-trailing-comma
-    rev: v3.1.0
-    hooks:
-      - id: add-trailing-comma
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.6.2
@@ -20,8 +20,14 @@ repos:
       # Run the formatter.
       - id: ruff-format
 
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.18.4
+  - repo: https://github.com/asottile/add-trailing-comma
+    rev: v3.1.0
     hooks:
-      - id: gitleaks
+      - id: add-trailing-comma
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.17.0
+    hooks:
+      - id: pyupgrade
+
 exclude: ".archive/"
