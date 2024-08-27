@@ -154,13 +154,13 @@ class TuxHelp(commands.HelpCommand):
                 continue
 
             for flag in param_annotation.__commands_flags__.values():
-                flag_type = self._get_flag_type(flag.annotation)
+                # flag_type = self._get_flag_type(flag.annotation)
                 flag_str = self._format_flag_name(flag)
 
                 if flag.aliases:
-                    flag_str += f" ({', '.join(flag.aliases)}) : {flag_type}"
-                else:
-                    flag_str += f" : {flag_type}"
+                    flag_str += f" ({', '.join(flag.aliases)})"
+                # else:
+                # flag_str += f" : {flag_type}"
 
                 flag_str += f"\n\t{flag.description or 'No description provided.'}"
 

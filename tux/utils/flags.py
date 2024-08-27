@@ -201,34 +201,34 @@ class UnjailFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", 
 
 class CasesViewFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     type: CaseType = commands.flag(
-        name="case_type",
+        name="type",
         description="Type of case to view.",
         aliases=["t"],
         default=None,
         converter=CaseTypeConverter,
     )
-    target: discord.User = commands.flag(
-        name="case_target",
+    user: discord.User = commands.flag(
+        name="user",
         description="User to view cases for.",
-        aliases=["user", "u", "member", "memb", "m"],
+        aliases=["u", "member", "memb", "m", "target"],
         default=None,
     )
     moderator: discord.User = commands.flag(
-        name="case_moderator",
+        name="mod",
         description="Moderator to view cases for.",
-        aliases=["mod"],
+        aliases=["moderator"],
         default=None,
     )
 
 
 class CaseModifyFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     status: bool | None = commands.flag(
-        name="case_status",
+        name="status",
         description="Status of the case.",
         aliases=["s"],
     )
     reason: str | None = commands.flag(
-        name="case_reason",
+        name="reason",
         description="Modified reason.",
         aliases=["r"],
     )

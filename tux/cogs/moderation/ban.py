@@ -20,7 +20,7 @@ class Ban(ModerationCogBase):
     async def ban(
         self,
         ctx: commands.Context[commands.Bot],
-        target: discord.Member,
+        member: discord.Member,
         *,
         flags: BanFlags,
     ) -> None:
@@ -31,7 +31,7 @@ class Ban(ModerationCogBase):
         ----------
         ctx : commands.Context[commands.Bot]
             The context in which the command is being invoked.
-        target : discord.Member
+        member : discord.Member
             The member to ban.
         flags : BanFlags
             The flags for the command. (reason: str, purge_days: int (< 7), silent: bool)
@@ -50,27 +50,27 @@ class Ban(ModerationCogBase):
 
         moderator = ctx.author
 
-        if not await self.check_conditions(ctx, target, moderator, "ban"):
+        if not await self.check_conditions(ctx, member, moderator, "ban"):
             return
 
         try:
-            await self.send_dm(ctx, flags.silent, target, flags.reason, action="banned")
-            await ctx.guild.ban(target, reason=flags.reason, delete_message_days=flags.purge_days)
+            await self.send_dm(ctx, flags.silent, member, flags.reason, action="banned")
+            await ctx.guild.ban(member, reason=flags.reason, delete_message_days=flags.purge_days)
 
         except (discord.Forbidden, discord.HTTPException) as e:
-            logger.error(f"Failed to ban {target}. {e}")
-            await ctx.send(f"Failed to ban {target}. {e}", delete_after=30, ephemeral=True)
+            logger.error(f"Failed to ban {member}. {e}")
+            await ctx.send(f"Failed to ban {member}. {e}", delete_after=30, ephemeral=True)
             return
 
         case = await self.db.case.insert_case(
-            case_target_id=target.id,
+            case_user_id=member.id,
             case_moderator_id=ctx.author.id,
             case_type=CaseType.BAN,
             case_reason=flags.reason,
             guild_id=ctx.guild.id,
         )
 
-        await self.handle_case_response(ctx, CaseType.BAN, case.case_id, flags.reason, target)
+        await self.handle_case_response(ctx, CaseType.BAN, case.case_number, flags.reason, member)
 
 
 async def setup(bot: commands.Bot) -> None:

@@ -92,7 +92,7 @@ class ModerationCogBase(commands.Cog):
         self,
         ctx: commands.Context[commands.Bot],
         silent: bool,
-        target: discord.Member,
+        user: discord.Member,
         reason: str,
         action: str,
     ) -> None:
@@ -105,7 +105,7 @@ class ModerationCogBase(commands.Cog):
             The context of the command.
         silent : bool
             Whether the command is silent.
-        target : discord.Member
+        user : discord.Member
             The target of the moderation action.
         reason : str
             The reason for the moderation action.
@@ -115,18 +115,18 @@ class ModerationCogBase(commands.Cog):
 
         if not silent:
             try:
-                await target.send(
+                await user.send(
                     f"You have been {action} from {ctx.guild} for the following reason:\n> {reason}",
                 )
 
             except (discord.Forbidden, discord.HTTPException) as e:
-                logger.warning(f"Failed to send DM to {target}. {e}")
-                await ctx.send(f"Failed to send DM to {target}. {e}", delete_after=30, ephemeral=True)
+                logger.warning(f"Failed to send DM to {user}. {e}")
+                await ctx.send(f"Failed to send DM to {user}. {e}", delete_after=30, ephemeral=True)
 
     async def check_conditions(
         self,
         ctx: commands.Context[commands.Bot],
-        target: discord.Member,
+        user: discord.Member,
         moderator: discord.Member | discord.User,
         action: str,
     ) -> bool:
@@ -137,7 +137,7 @@ class ModerationCogBase(commands.Cog):
         ----------
         ctx : commands.Context[commands.Bot]
             The context of the command.
-        target : discord.Member
+        user : discord.Member
             The target of the moderation action.
         moderator : discord.Member | discord.User
             The moderator of the moderation action.
@@ -154,49 +154,93 @@ class ModerationCogBase(commands.Cog):
             logger.warning(f"{action.capitalize()} command used outside of a guild context.")
             return False
 
-        if target == ctx.author:
+        if user == ctx.author:
             embed = create_error_embed("You cannot {action} yourself.")
             await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             return False
 
-        if isinstance(moderator, discord.Member) and target.top_role >= moderator.top_role:
+        if isinstance(moderator, discord.Member) and user.top_role >= moderator.top_role:
             embed = create_error_embed("You cannot {action} a user with a higher or equal role.")
             await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             return False
 
-        if target == ctx.guild.owner:
+        if user == ctx.guild.owner:
             embed = create_error_embed("You cannot {action} the server owner.")
             await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             return False
 
         return True
 
+    async def check_jail_conditions(
+        self,
+        ctx: commands.Context[commands.Bot],
+        user: discord.Member,
+    ) -> tuple[bool, discord.Role | None, discord.abc.GuildChannel | None]:
+        """
+        Validate jail role and channel existence and member condition.
+
+        Parameters
+        ----------
+        ctx : commands.Context[commands.Bot]
+            The context of the command.
+        user : discord.Member
+            The member to jail.
+
+        Returns
+        -------
+        tuple
+            A tuple containing a boolean indicating success, the jail role, and the jail channel.
+        """
+
+        if not ctx.guild:
+            logger.warning("Jail command used outside of a guild context.")
+            return False, None, None
+
+        jail_role_id = await self.config.get_jail_role_id(ctx.guild.id)
+        jail_role = ctx.guild.get_role(jail_role_id) if jail_role_id else None
+        jail_channel_id = await self.config.get_jail_channel_id(ctx.guild.id)
+        jail_channel = ctx.guild.get_channel(jail_channel_id) if jail_channel_id else None
+
+        if jail_role is None:
+            await ctx.send("The jail role has been deleted or not set up.", delete_after=30, ephemeral=True)
+            return False, None, None
+        if jail_channel is None:
+            await ctx.send("The jail channel has been deleted or not set up.", delete_after=30, ephemeral=True)
+            return False, None, None
+        if jail_role in user.roles:
+            await ctx.send("The user is already jailed.", delete_after=30, ephemeral=True)
+            return False, None, None
+
+        return True, jail_role, jail_channel
+
     async def handle_case_response(
         self,
         ctx: commands.Context[commands.Bot],
         case_type: CaseType,
-        case_id: int | None,
+        case_number: int | None,
         reason: str,
-        target: discord.Member | discord.User,
+        user: discord.Member | discord.User,
         duration: str | None = None,
     ):
         moderator = ctx.author
 
         fields = [
             ("Moderator", f"__{moderator}__\n`{moderator.id}`", True),
-            ("Target", f"__{target}__\n`{target.id}`", True),
+            ("Target", f"__{user}__\n`{user.id}`", True),
             ("Reason", f"> {reason}", False),
         ]
 
-        if case_id is not None:
+        if case_number is not None:
             embed = self.create_embed(
                 ctx,
-                title=f"Case #{case_id} ({duration} {case_type})" if duration else f"Case #{case_id} ({case_type})",
+                title=f"Case #{case_number} ({duration} {case_type})"
+                if duration
+                else f"Case #{case_number} ({case_type})",
                 fields=fields,
                 color=CONST.EMBED_COLORS["CASE"],
                 icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
             )
-            embed.set_thumbnail(url=target.avatar)
+            embed.set_thumbnail(url=user.avatar)
 
         else:
             embed = self.create_embed(

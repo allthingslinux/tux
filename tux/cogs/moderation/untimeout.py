@@ -23,7 +23,7 @@ class Untimeout(ModerationCogBase):
     async def untimeout(
         self,
         ctx: commands.Context[commands.Bot],
-        target: discord.Member,
+        member: discord.Member,
         *,
         flags: UntimeoutFlags,
     ) -> None:
@@ -34,7 +34,7 @@ class Untimeout(ModerationCogBase):
         ----------
         ctx : commands.Context[commands.Bot]
             The context in which the command is being invoked.
-        target : discord.Member
+        member : discord.Member
             The member to untimeout.
         flags : UntimeoutFlags
             The flags for the command (reason: str, silent: bool).
@@ -50,20 +50,21 @@ class Untimeout(ModerationCogBase):
 
         moderator = ctx.author
 
-        if not await self.check_conditions(ctx, target, moderator, "untimeout"):
+        if not await self.check_conditions(ctx, member, moderator, "untimeout"):
             return
 
-        if not target.is_timed_out():
-            await ctx.send(f"{target} is not currently timed out.", delete_after=30, ephemeral=True)
+        if not member.is_timed_out():
+            await ctx.send(f"{member} is not currently timed out.", delete_after=30, ephemeral=True)
 
         try:
-            await target.timeout(None, reason=flags.reason)
+            # By passing `None` as the duration, the timeout is removed
+            await member.timeout(None, reason=flags.reason)
         except discord.DiscordException as e:
-            await ctx.send(f"Failed to untimeout {target}. {e}", delete_after=30, ephemeral=True)
+            await ctx.send(f"Failed to untimeout {member}. {e}", delete_after=30, ephemeral=True)
             return
 
         case = await self.db.case.insert_case(
-            case_target_id=target.id,
+            case_user_id=member.id,
             case_moderator_id=ctx.author.id,
             case_type=CaseType.UNTIMEOUT,
             case_reason=flags.reason,
@@ -71,8 +72,8 @@ class Untimeout(ModerationCogBase):
             guild_id=ctx.guild.id,
         )
 
-        await self.send_dm(ctx, flags.silent, target, flags.reason, "untimed out")
-        await self.handle_case_response(ctx, CaseType.UNTIMEOUT, case.case_id, flags.reason, target)
+        await self.send_dm(ctx, flags.silent, member, flags.reason, "untimed out")
+        await self.handle_case_response(ctx, CaseType.UNTIMEOUT, case.case_number, flags.reason, member)
 
 
 async def setup(bot: commands.Bot) -> None:

@@ -88,8 +88,8 @@ model Case {
   case_type         CaseType
   case_reason       String
   case_moderator_id BigInt
-  case_target_id    BigInt
-  case_target_roles BigInt[]  @default([]) // Role IDs for the jailed user
+  case_user_id      BigInt
+  case_user_roles   BigInt[]  @default([]) // Role IDs for the jailed user
   case_number       BigInt? // Incremented for each case per guild via a trigger/function
   case_created_at   DateTime? @default(now())
   case_expires_at   DateTime? // For temporary bans and timeouts
@@ -120,7 +120,7 @@ model Note {
   note_content      String
   note_created_at   DateTime @default(now())
   note_moderator_id BigInt
-  note_target_id    BigInt
+  note_user_id      BigInt
   note_number       BigInt? // Incremented for each note per guild via a trigger/function
   guild_id          BigInt
   guild             Guild    @relation(fields: [guild_id], references: [guild_id])

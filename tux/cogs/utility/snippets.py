@@ -27,8 +27,8 @@ class Snippets(commands.Cog):
         ban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETBAN)
         unban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETUNBAN)
 
-        ban_count = sum(1 for case in ban_cases if case.case_target_id == user_id)
-        unban_count = sum(1 for case in unban_cases if case.case_target_id == user_id)
+        ban_count = sum(case.case_user_id == user_id for case in ban_cases)
+        unban_count = sum(case.case_user_id == user_id for case in unban_cases)
 
         return ban_count > unban_count
 
@@ -532,7 +532,7 @@ class Snippets(commands.Cog):
             with contextlib.suppress(discord.Forbidden):
                 await author.send(
                     f"""Your snippet `{snippet.snippet_name}` has been {'locked' if status.locked else 'unlocked'}.
-                    
+
 **What does this mean?**
 If a snippet is locked, it cannot be edited by anyone other than moderators. This means that you can no longer edit this snippet.
 

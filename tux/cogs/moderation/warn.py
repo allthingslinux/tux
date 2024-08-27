@@ -23,7 +23,7 @@ class Warn(ModerationCogBase):
     async def warn(
         self,
         ctx: commands.Context[commands.Bot],
-        target: discord.Member,
+        member: discord.Member,
         *,
         flags: WarnFlags,
     ) -> None:
@@ -34,7 +34,7 @@ class Warn(ModerationCogBase):
         ----------
         ctx : commands.Context[commands.Bot]
             The context in which the command is being invoked.
-        target : discord.Member
+        member : discord.Member
             The member to warn.
         flags : WarnFlags
             The flags for the command. (reason: str, silent: bool)
@@ -46,20 +46,20 @@ class Warn(ModerationCogBase):
 
         moderator = ctx.author
 
-        if not await self.check_conditions(ctx, target, moderator, "warn"):
+        if not await self.check_conditions(ctx, member, moderator, "warn"):
             return
 
-        await self.send_dm(ctx, flags.silent, target, flags.reason, "warned")
+        await self.send_dm(ctx, flags.silent, member, flags.reason, "warned")
 
         case = await self.db.case.insert_case(
-            case_target_id=target.id,
+            case_user_id=member.id,
             case_moderator_id=ctx.author.id,
             case_type=CaseType.WARN,
             case_reason=flags.reason,
             guild_id=ctx.guild.id,
         )
 
-        await self.handle_case_response(ctx, CaseType.WARN, case.case_id, flags.reason, target)
+        await self.handle_case_response(ctx, CaseType.WARN, case.case_number, flags.reason, member)
 
 
 async def setup(bot: commands.Bot) -> None:
