@@ -20,10 +20,10 @@ class Jail(ModerationCogBase):
     )
     @commands.guild_only()
     @checks.has_pl(2)
-    async def jail(  # noqa: PLR0911
+    async def jail(
         self,
         ctx: commands.Context[commands.Bot],
-        target: discord.Member,
+        member: discord.Member,
         *,
         flags: JailFlags,
     ) -> None:
@@ -34,7 +34,7 @@ class Jail(ModerationCogBase):
         ----------
         ctx : commands.Context[commands.Bot]
             The discord context object.
-        target : discord.Member
+        member : discord.Member
             The member to jail.
         flags : JailFlags
             The flags for the command. (reason: str, silent: bool)
@@ -46,57 +46,49 @@ class Jail(ModerationCogBase):
 
         moderator = ctx.author
 
-        if not await self.check_conditions(ctx, target, moderator, "jail"):
+        if not await self.check_conditions(ctx, member, moderator, "jail"):
             return
 
-        jail_role_id = await self.config.get_jail_role_id(ctx.guild.id)
-        if not jail_role_id:
-            await ctx.send("No jail role has been set up for this server.", delete_after=30, ephemeral=True)
+        is_valid, jail_role, jail_channel = await self.check_jail_conditions(ctx, member)
+        if not is_valid:
             return
+        assert jail_role is not None
+        assert jail_channel is not None
 
-        jail_role = ctx.guild.get_role(jail_role_id)
-        if not jail_role:
-            await ctx.send("The jail role has been deleted.", delete_after=30, ephemeral=True)
-            return
-
-        target_roles: list[discord.Role] = self._get_manageable_roles(target, jail_role)
-        if jail_role in target.roles:
-            await ctx.send("The user is already jailed.", delete_after=30, ephemeral=True)
-            return
-
-        case_target_roles = [role.id for role in target_roles]
+        user_roles: list[discord.Role] = self._get_manageable_roles(member, jail_role)
+        case_user_roles = [role.id for role in user_roles]
 
         try:
             case = await self.db.case.insert_case(
-                case_target_id=target.id,
+                case_user_id=member.id,
                 case_moderator_id=ctx.author.id,
                 case_type=CaseType.JAIL,
                 case_reason=flags.reason,
                 guild_id=ctx.guild.id,
-                case_target_roles=case_target_roles,
+                case_user_roles=case_user_roles,
             )
 
         except Exception as e:
-            logger.error(f"Failed to jail {target}. {e}")
-            await ctx.send(f"Failed to jail {target}. {e}", delete_after=30, ephemeral=True)
+            logger.error(f"Failed to jail {member}. {e}")
+            await ctx.send(f"Failed to jail {member}. {e}", delete_after=30, ephemeral=True)
             return
 
         try:
-            if target_roles:
-                await target.remove_roles(*target_roles, reason=flags.reason, atomic=False)
-                await target.add_roles(jail_role, reason=flags.reason)
+            if user_roles:
+                await member.remove_roles(*user_roles, reason=flags.reason, atomic=False)
+                await member.add_roles(jail_role, reason=flags.reason)
 
         except (discord.Forbidden, discord.HTTPException) as e:
-            logger.error(f"Failed to jail {target}. {e}")
-            await ctx.send(f"Failed to jail {target}. {e}", delete_after=30, ephemeral=True)
+            logger.error(f"Failed to jail {member}. {e}")
+            await ctx.send(f"Failed to jail {member}. {e}", delete_after=30, ephemeral=True)
             return
 
-        await self.send_dm(ctx, flags.silent, target, flags.reason, "jailed")
-        await self.handle_case_response(ctx, CaseType.JAIL, case.case_id, flags.reason, target)
+        await self.send_dm(ctx, flags.silent, member, flags.reason, "jailed")
+        await self.handle_case_response(ctx, CaseType.JAIL, case.case_number, flags.reason, member)
 
     def _get_manageable_roles(
         self,
-        target: discord.Member,
+        member: discord.Member,
         jail_role: discord.Role,
     ) -> list[discord.Role]:
         """
@@ -104,7 +96,7 @@ class Jail(ModerationCogBase):
 
         Parameters
         ----------
-        target : discord.Member
+        member : discord.Member
             The member to jail.
         jail_role : discord.Role
             The jail role.
@@ -117,7 +109,7 @@ class Jail(ModerationCogBase):
 
         return [
             role
-            for role in target.roles
+            for role in member.roles
             if not (
                 role.is_bot_managed()
                 or role.is_premium_subscriber()

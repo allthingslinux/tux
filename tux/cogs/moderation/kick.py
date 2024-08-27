@@ -23,7 +23,7 @@ class Kick(ModerationCogBase):
     async def kick(
         self,
         ctx: commands.Context[commands.Bot],
-        target: discord.Member,
+        member: discord.Member,
         *,
         flags: KickFlags,
     ) -> None:
@@ -34,7 +34,7 @@ class Kick(ModerationCogBase):
         ----------
         ctx : commands.Context[commands.Bot]
             The context in which the command is being invoked.
-        target : discord.Member
+        member : discord.Member
             The member to kick.
         flags : KickFlags
             The flags for the command. (reason: str, silent: bool)
@@ -53,27 +53,27 @@ class Kick(ModerationCogBase):
 
         moderator = ctx.author
 
-        if not await self.check_conditions(ctx, target, moderator, "kick"):
+        if not await self.check_conditions(ctx, member, moderator, "kick"):
             return
 
         try:
-            await self.send_dm(ctx, flags.silent, target, flags.reason, "kicked")
-            await ctx.guild.kick(target, reason=flags.reason)
+            await self.send_dm(ctx, flags.silent, member, flags.reason, "kicked")
+            await ctx.guild.kick(member, reason=flags.reason)
 
         except (discord.Forbidden, discord.HTTPException) as e:
-            logger.error(f"Failed to kick {target}. {e}")
-            await ctx.send(f"Failed to kick {target}. {e}", delete_after=30, ephemeral=True)
+            logger.error(f"Failed to kick {member}. {e}")
+            await ctx.send(f"Failed to kick {member}. {e}", delete_after=30, ephemeral=True)
             return
 
         case = await self.db.case.insert_case(
-            case_target_id=target.id,
+            case_user_id=member.id,
             case_moderator_id=ctx.author.id,
             case_type=CaseType.KICK,
             case_reason=flags.reason,
             guild_id=ctx.guild.id,
         )
 
-        await self.handle_case_response(ctx, CaseType.KICK, case.case_id, flags.reason, target)
+        await self.handle_case_response(ctx, CaseType.KICK, case.case_number, flags.reason, member)
 
 
 async def setup(bot: commands.Bot) -> None:

@@ -57,7 +57,7 @@ class Cases(ModerationCogBase):
     async def cases_view(
         self,
         ctx: commands.Context[commands.Bot],
-        case_number: int | None,
+        number: int | None,
         *,
         flags: CasesViewFlags,
     ) -> None:
@@ -68,18 +68,18 @@ class Cases(ModerationCogBase):
         ----------
         ctx : commands.Context[commands.Bot]
             The context in which the command is being invoked.
-        case_number : int | None
+        number : int | None
             The case number to view.
         flags : CasesViewFlags
-            The flags for the command. (type, target, moderator)
+            The flags for the command. (type, user, moderator)
         """
 
         if ctx.guild is None:
             logger.warning("Cases view command used outside of a guild context.")
             return
 
-        if case_number is not None:
-            await self._view_single_case(ctx, case_number)
+        if number is not None:
+            await self._view_single_case(ctx, number)
         else:
             await self._view_cases_with_flags(ctx, flags)
 
@@ -92,7 +92,7 @@ class Cases(ModerationCogBase):
     async def cases_modify(
         self,
         ctx: commands.Context[commands.Bot],
-        case_number: int,
+        number: int,
         *,
         flags: CaseModifyFlags,
     ) -> None:
@@ -103,7 +103,7 @@ class Cases(ModerationCogBase):
         ----------
         ctx : commands.Context[commands.Bot]
             The context in which the command is being invoked.
-        case_number : int
+        number : int
             The case number to modify.
         flags : CaseModifyFlags
             The flags for the command. (status, reason)
@@ -118,7 +118,7 @@ class Cases(ModerationCogBase):
             await ctx.send("Please use the slash command for this command.", delete_after=30, ephemeral=True)
             return
 
-        case = await self.db.case.get_case_by_number(ctx.guild.id, case_number)
+        case = await self.db.case.get_case_by_number(ctx.guild.id, number)
 
         if not case:
             await ctx.send("Case not found.", delete_after=30, ephemeral=True)
@@ -130,7 +130,7 @@ class Cases(ModerationCogBase):
     async def _view_single_case(
         self,
         ctx: commands.Context[commands.Bot],
-        case_number: int,
+        number: int,
     ) -> None:
         """
         View a single case by its number.
@@ -139,7 +139,7 @@ class Cases(ModerationCogBase):
         ----------
         ctx : commands.Context[commands.Bot]
             The context in which the command is being invoked.
-        case_number : int
+        number : int
             The number of the case to view.
         """
 
@@ -147,14 +147,14 @@ class Cases(ModerationCogBase):
             logger.warning("Cases view command used outside of a guild context.")
             return
 
-        case = await self.db.case.get_case_by_number(ctx.guild.id, case_number)
+        case = await self.db.case.get_case_by_number(ctx.guild.id, number)
         if not case:
             await ctx.send("Case not found.", delete_after=30)
             return
 
-        target = await commands.UserConverter().convert(ctx, str(case.case_target_id))
+        user = await commands.UserConverter().convert(ctx, str(case.case_user_id))
 
-        await self._handle_case_response(ctx, case, "viewed", case.case_reason, target)
+        await self._handle_case_response(ctx, case, "viewed", case.case_reason, user)
 
     async def _view_cases_with_flags(
         self,
@@ -169,7 +169,7 @@ class Cases(ModerationCogBase):
         ctx : commands.Context[commands.Bot]
             The context in which the command is being invoked.
         flags : CasesViewFlags
-            The flags for the command. (type, target, moderator)
+            The flags for the command. (type, user, moderator)
         """
 
         if ctx.guild is None:
@@ -180,8 +180,8 @@ class Cases(ModerationCogBase):
 
         if flags.type:
             options["case_type"] = flags.type
-        if flags.target:
-            options["case_target_id"] = flags.target.id
+        if flags.user:
+            options["case_user_id"] = flags.user.id
         if flags.moderator:
             options["case_moderator_id"] = flags.moderator.id
 
@@ -232,9 +232,9 @@ class Cases(ModerationCogBase):
             await ctx.send("Failed to update case.", delete_after=30, ephemeral=True)
             return
 
-        target = await commands.UserConverter().convert(ctx, str(case.case_target_id))
+        user = await commands.UserConverter().convert(ctx, str(case.case_user_id))
 
-        await self._handle_case_response(ctx, updated_case, "updated", updated_case.case_reason, target)
+        await self._handle_case_response(ctx, updated_case, "updated", updated_case.case_reason, user)
 
     async def _handle_case_response(
         self,
@@ -242,7 +242,7 @@ class Cases(ModerationCogBase):
         case: Case | None,
         action: str,
         reason: str,
-        target: discord.Member | discord.User,
+        user: discord.Member | discord.User,
     ) -> None:
         """
         Handle the response for a case.
@@ -257,7 +257,7 @@ class Cases(ModerationCogBase):
             The action being performed on the case.
         reason : str
             The reason for the case.
-        target : discord.Member | discord.User
+        user : discord.Member | discord.User
             The target of the case.
         """
 
@@ -267,7 +267,7 @@ class Cases(ModerationCogBase):
             if not isinstance(moderator, discord.Member):
                 moderator = await commands.MemberConverter().convert(ctx, str(case.case_moderator_id))
 
-            fields = self._create_case_fields(moderator, target, reason)
+            fields = self._create_case_fields(moderator, user, reason)
 
             embed = self.create_embed(
                 ctx,
@@ -278,7 +278,7 @@ class Cases(ModerationCogBase):
                 if case.case_status is True
                 else CONST.EMBED_ICONS["INACTIVE_CASE"],
             )
-            embed.set_thumbnail(url=target.avatar)
+            embed.set_thumbnail(url=user.avatar)
         else:
             embed = discord.Embed(
                 title=f"Case {action}",
@@ -326,12 +326,12 @@ class Cases(ModerationCogBase):
     def _create_case_fields(
         self,
         moderator: discord.Member,
-        target: discord.Member | discord.User,
+        user: discord.Member | discord.User,
         reason: str,
     ) -> list[tuple[str, str, bool]]:
         return [
             ("Moderator", f"__{moderator}__\n`{moderator.id}`", True),
-            ("Target", f"__{target}__\n`{target.id}`", True),
+            ("User", f"__{user}__\n`{user.id}`", True),
             ("Reason", f"> {reason}", False),
         ]
 

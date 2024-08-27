@@ -69,13 +69,13 @@ class Unban(ModerationCogBase):
 
         case = await self.db.case.insert_case(
             guild_id=ctx.guild.id,
-            case_target_id=user.id,
+            case_user_id=user.id,
             case_moderator_id=ctx.author.id,
             case_type=CaseType.UNBAN,
             case_reason=flags.reason,
         )
 
-        await self.handle_case_response(ctx, CaseType.UNBAN, case.case_id, flags.reason, user)
+        await self.handle_case_response(ctx, CaseType.UNBAN, case.case_number, flags.reason, user)
 
 
 async def setup(bot: commands.Bot) -> None:

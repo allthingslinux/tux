@@ -26,7 +26,7 @@ class Timeout(ModerationCogBase):
     async def timeout(
         self,
         ctx: commands.Context[commands.Bot],
-        target: discord.Member,
+        member: discord.Member,
         *,
         flags: TimeoutFlags,
     ) -> None:
@@ -37,10 +37,10 @@ class Timeout(ModerationCogBase):
         ----------
         ctx : commands.Context[commands.Bot]
             The context in which the command is being invoked.
-        target : discord.Member
+        member : discord.Member
             The member to timeout.
         flags : TimeoutFlags
-            The flags for the command.
+            The flags for the command (duration: str, reason: str, silent: bool).
 
         Raises
         ------
@@ -54,24 +54,24 @@ class Timeout(ModerationCogBase):
 
         moderator = ctx.author
 
-        if not await self.check_conditions(ctx, target, moderator, "timeout"):
+        if not await self.check_conditions(ctx, member, moderator, "timeout"):
             return
 
-        if target.is_timed_out():
-            await ctx.send(f"{target} is already timed out.", delete_after=30, ephemeral=True)
+        if member.is_timed_out():
+            await ctx.send(f"{member} is already timed out.", delete_after=30, ephemeral=True)
             return
 
         duration = parse_time_string(flags.duration)
 
         try:
-            await target.timeout(duration, reason=flags.reason)
+            await member.timeout(duration, reason=flags.reason)
 
         except discord.DiscordException as e:
-            await ctx.send(f"Failed to timeout {target}. {e}", delete_after=30, ephemeral=True)
+            await ctx.send(f"Failed to timeout {member}. {e}", delete_after=30, ephemeral=True)
             return
 
         case = await self.db.case.insert_case(
-            case_target_id=target.id,
+            case_user_id=member.id,
             case_moderator_id=ctx.author.id,
             case_type=CaseType.TIMEOUT,
             case_reason=flags.reason,
@@ -79,8 +79,8 @@ class Timeout(ModerationCogBase):
             guild_id=ctx.guild.id,
         )
 
-        await self.send_dm(ctx, flags.silent, target, flags.reason, f"timed out for {flags.duration}")
-        await self.handle_case_response(ctx, CaseType.TIMEOUT, case.case_id, flags.reason, target, flags.duration)
+        await self.send_dm(ctx, flags.silent, member, flags.reason, f"timed out for {flags.duration}")
+        await self.handle_case_response(ctx, CaseType.TIMEOUT, case.case_number, flags.reason, member, flags.duration)
 
 
 async def setup(bot: commands.Bot) -> None:

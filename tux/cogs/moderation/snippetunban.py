@@ -25,7 +25,7 @@ class SnippetUnban(ModerationCogBase):
     async def snippet_unban(
         self,
         ctx: commands.Context[commands.Bot],
-        target: discord.Member,
+        member: discord.Member,
         *,
         flags: SnippetUnbanFlags,
     ):
@@ -36,7 +36,7 @@ class SnippetUnban(ModerationCogBase):
         ----------
         ctx : commands.Context[commands.Bot]
             The context object.
-        target : discord.Member
+        member : discord.Member
             The member to snippet unban.
         flags : SnippetUnbanFlags
             The flags for the command. (reason: str, silent: bool)
@@ -46,13 +46,13 @@ class SnippetUnban(ModerationCogBase):
             logger.warning("Snippet ban command used outside of a guild context.")
             return
 
-        if not await self.is_snippetbanned(ctx.guild.id, target.id):
+        if not await self.is_snippetbanned(ctx.guild.id, member.id):
             await ctx.send("User is not snippet banned.", delete_after=30, ephemeral=True)
             return
 
         try:
             case = await self.db.case.insert_case(
-                case_target_id=target.id,
+                case_user_id=member.id,
                 case_moderator_id=ctx.author.id,
                 case_type=CaseType.SNIPPETUNBAN,
                 case_reason=flags.reason,
@@ -60,12 +60,12 @@ class SnippetUnban(ModerationCogBase):
             )
 
         except Exception as e:
-            logger.error(f"Failed to snippet unban {target}. {e}")
-            await ctx.send(f"Failed to snippet unban {target}. {e}", delete_after=30, ephemeral=True)
+            logger.error(f"Failed to snippet unban {member}. {e}")
+            await ctx.send(f"Failed to snippet unban {member}. {e}", delete_after=30, ephemeral=True)
             return
 
-        await self.send_dm(ctx, flags.silent, target, flags.reason, "snippet unbanned")
-        await self.handle_case_response(ctx, CaseType.SNIPPETUNBAN, case.case_id, flags.reason, target)
+        await self.send_dm(ctx, flags.silent, member, flags.reason, "snippet unbanned")
+        await self.handle_case_response(ctx, CaseType.SNIPPETUNBAN, case.case_number, flags.reason, member)
 
     async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
         """
@@ -87,8 +87,8 @@ class SnippetUnban(ModerationCogBase):
         ban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETBAN)
         unban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETUNBAN)
 
-        ban_count = sum(case.case_target_id == user_id for case in ban_cases)
-        unban_count = sum(case.case_target_id == user_id for case in unban_cases)
+        ban_count = sum(case.case_user_id == user_id for case in ban_cases)
+        unban_count = sum(case.case_user_id == user_id for case in unban_cases)
 
         return ban_count > unban_count
 
