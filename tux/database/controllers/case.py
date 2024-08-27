@@ -37,11 +37,11 @@ class CaseController:
     async def insert_case(
         self,
         guild_id: int,
-        case_target_id: int,
+        case_user_id: int,
         case_moderator_id: int,
         case_type: CaseType,
         case_reason: str,
-        case_target_roles: list[int] | None = None,
+        case_user_roles: list[int] | None = None,
         case_expires_at: datetime | None = None,
     ) -> Case:
         """
@@ -51,7 +51,7 @@ class CaseController:
         ----------
         guild_id : int
             The ID of the guild to insert the case into.
-        case_target_id : int
+        case_user_id : int
             The ID of the target of the case.
         case_moderator_id : int
             The ID of the moderator of the case.
@@ -59,7 +59,7 @@ class CaseController:
             The type of the case.
         case_reason : str
             The reason for the case.
-        case_target_roles : list[int] | None
+        case_user_roles : list[int] | None
             The roles of the target of the case.
         case_expires_at : datetime | None
             The expiration date of the case.
@@ -74,12 +74,12 @@ class CaseController:
         return await self.table.create(
             data={
                 "guild_id": guild_id,
-                "case_target_id": case_target_id,
+                "case_user_id": case_user_id,
                 "case_moderator_id": case_moderator_id,
                 "case_type": case_type,
                 "case_reason": case_reason,
                 "case_expires_at": case_expires_at,
-                "case_target_roles": case_target_roles if case_target_roles is not None else [],
+                "case_user_roles": case_user_roles if case_user_roles is not None else [],
             },
         )
 
@@ -146,7 +146,11 @@ class CaseController:
         """
         return await self.table.find_first(where={"guild_id": guild_id, "case_number": case_number})
 
-    async def get_all_cases_by_target_id(self, guild_id: int, case_target_id: int) -> list[Case]:
+    async def get_all_cases_by_user_id(
+        self,
+        guild_id: int,
+        case_user_id: int,
+    ) -> list[Case]:
         """
         Get all cases for a target in a guild.
 
@@ -154,7 +158,7 @@ class CaseController:
         ----------
         guild_id : int
             The ID of the guild to get cases for.
-        case_target_id : int
+        case_user_id : int
             The ID of the target to get cases for.
 
         Returns
@@ -163,7 +167,7 @@ class CaseController:
             A list of cases for the target in the guild.
         """
         return await self.table.find_many(
-            where={"guild_id": guild_id, "case_target_id": case_target_id},
+            where={"guild_id": guild_id, "case_user_id": case_user_id},
             order={"case_created_at": "desc"},
         )
 
@@ -209,13 +213,13 @@ class CaseController:
             order={"case_created_at": "desc"},
         )
 
-    async def get_last_jail_case_by_target_id(
+    async def get_last_jail_case_by_user_id(
         self,
         guild_id: int,
-        case_target_id: int,
+        case_user_id: int,
     ) -> Case | None:
         return await self.table.find_first(
-            where={"guild_id": guild_id, "case_target_id": case_target_id, "case_type": CaseType.JAIL},
+            where={"guild_id": guild_id, "case_user_id": case_user_id, "case_type": CaseType.JAIL},
             order={"case_created_at": "desc"},
         )
 

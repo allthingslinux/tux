@@ -21,7 +21,7 @@ class NoteController:
 
     async def insert_note(
         self,
-        note_target_id: int,
+        note_user_id: int,
         note_moderator_id: int,
         note_content: str,
         guild_id: int,
@@ -30,7 +30,7 @@ class NoteController:
 
         return await self.table.create(
             data={
-                "note_target_id": note_target_id,
+                "note_user_id": note_user_id,
                 "note_moderator_id": note_moderator_id,
                 "note_content": note_content,
                 "guild_id": guild_id,
@@ -46,8 +46,8 @@ class NoteController:
             data={"note_content": note_content},
         )
 
-    async def get_notes_by_target_id(self, target_id: int) -> list[Note]:
-        return await self.table.find_many(where={"note_target_id": target_id})
+    async def get_notes_by_user_id(self, note_user_id: int) -> list[Note]:
+        return await self.table.find_many(where={"note_user_id": note_user_id})
 
     async def get_notes_by_moderator_id(self, moderator_id: int) -> list[Note]:
         return await self.table.find_many(where={"note_moderator_id": moderator_id})
@@ -55,12 +55,12 @@ class NoteController:
     async def get_notes_by_guild_id(self, guild_id: int) -> list[Note]:
         return await self.table.find_many(where={"guild_id": guild_id})
 
-    async def get_notes_by_target_id_and_guild_id(
+    async def get_notes_by_user_id_and_guild_id(
         self,
-        target_id: int,
+        note_user_id: int,
         guild_id: int,
     ) -> list[Note]:
-        return await self.table.find_many(where={"note_target_id": target_id, "guild_id": guild_id})
+        return await self.table.find_many(where={"note_user_id": note_user_id, "guild_id": guild_id})
 
     async def get_notes_by_moderator_id_and_guild_id(
         self,
@@ -71,24 +71,24 @@ class NoteController:
             where={"note_moderator_id": moderator_id, "guild_id": guild_id},
         )
 
-    async def get_notes_by_target_id_and_moderator_id(
+    async def get_notes_by_user_id_and_moderator_id(
         self,
-        target_id: int,
+        user_id: int,
         moderator_id: int,
     ) -> list[Note]:
         return await self.table.find_many(
-            where={"note_target_id": target_id, "note_moderator_id": moderator_id},
+            where={"note_user_id": user_id, "note_moderator_id": moderator_id},
         )
 
-    async def get_notes_by_target_id_moderator_id_and_guild_id(
+    async def get_notes_by_user_id_moderator_id_and_guild_id(
         self,
-        target_id: int,
+        user_id: int,
         moderator_id: int,
         guild_id: int,
     ) -> list[Note]:
         return await self.table.find_many(
             where={
-                "note_target_id": target_id,
+                "note_user_id": user_id,
                 "note_moderator_id": moderator_id,
                 "guild_id": guild_id,
             },
