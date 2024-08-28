@@ -12,8 +12,18 @@ class Bookmarks(commands.Cog):
         if str(reaction.emoji) == "🔖":
             message_link = f"https://discord.com/channels/{reaction.message.guild.id}/{reaction.message.channel.id}/{reaction.message.id}"
             message_contents = reaction.message.content
+            message_attachments = reaction.message.attachments
+            author_username = reaction.message.author.name
             try:
-                await user.send(f"Bookmarked: {message_link} \n Content: {message_contents}")
+                if message_attachments:
+                    attachments_info = "\n".join([attachment.url for attachment in message_attachments])
+                    await user.send(
+                        f"Bookmarked: {message_link}\nAuthor: {author_username}\nContent: {message_contents}\nAttachments: {attachments_info}",
+                    )
+                else:
+                    await user.send(
+                        f"Bookmarked: {message_link}\nAuthor: {author_username}\nContent: {message_contents}",
+                    )
             except (discord.Forbidden, discord.HTTPException):
                 logger.error(f"An error occurred while bookmarking {message_link} for {user}")
                 return
