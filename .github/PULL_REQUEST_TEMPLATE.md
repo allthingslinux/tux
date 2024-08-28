@@ -10,15 +10,17 @@ Please include a summary of the changes and the related issue. Please also inclu
 - [ ] Documentation update
 - [ ] Other: (write here)
 
-## Checklist
+## Guidelines
 
-- [ ] My code follows the style guidelines of this project (formatted with Ruff)
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation if needed
-- [ ] My changes generate no new warnings
-- [ ] I have tested this change
-- [ ] Any dependent changes have been merged and published in downstream modules
+- My code follows the style guidelines of this project (formatted with Ruff)
+- I have performed a self-review of my own code
+- I have commented my code, particularly in hard-to-understand areas
+- I have made corresponding changes to the documentation if needed
+- My changes generate no new warnings
+- I have tested this change
+- Any dependent changes have been merged and published in downstream modules
+
+- [ ] I have followed all of these guidelines.
 
 ## How Has This Been Tested? (if applicable)
 
