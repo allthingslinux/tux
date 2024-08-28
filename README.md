@@ -200,26 +200,26 @@ See [LICENSE](LICENSE.md) for details.
                 </a>
             </td>
             <td align="center">
+                <a href="https://github.com/Atmois">
+                    <img src="https://avatars.githubusercontent.com/u/130537361?v=4" width="100;" alt="Atmois"/>
+                    <br />
+                    <sub><b>Atmois</b></sub>
+                </a>
+            </td>
+            <td align="center">
                 <a href="https://github.com/ExploitDemon">
                     <img src="https://avatars.githubusercontent.com/u/75138914?v=4" width="100;" alt="ExploitDemon"/>
                     <br />
                     <sub><b>ExploitDemon</b></sub>
                 </a>
             </td>
+		</tr>
+		<tr>
             <td align="center">
                 <a href="https://github.com/jwe66">
                     <img src="https://avatars.githubusercontent.com/u/142009905?v=4" width="100;" alt="jwe66"/>
                     <br />
                     <sub><b>jwe66</b></sub>
-                </a>
-            </td>
-		</tr>
-		<tr>
-            <td align="center">
-                <a href="https://github.com/Atmois">
-                    <img src="https://avatars.githubusercontent.com/u/130537361?v=4" width="100;" alt="Atmois"/>
-                    <br />
-                    <sub><b>Atmois</b></sub>
                 </a>
             </td>
             <td align="center">
