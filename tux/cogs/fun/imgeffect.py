@@ -60,7 +60,7 @@ class ImgEffect(commands.Cog):
         pil_image = pil_image.convert("RGB")
         logger.info("Image opened with PIL.")
 
-        # resize image to 50% then back to original size
+        # resize image to 25% then back to original size
         logger.info("Resizing image...")
         pil_image = pil_image.resize((int(pil_image.width * 0.25), int(pil_image.height * 0.25)))
         logger.info("Image resized.")
@@ -84,7 +84,7 @@ class ImgEffect(commands.Cog):
 
         # send image
         logger.info("Sending image...")
-        pil_image = pil_image.resize((int(pil_image.width * 2), int(pil_image.height * 2)))
+        pil_image = pil_image.resize((int(pil_image.width * 4), int(pil_image.height * 4)))
         arr = io.BytesIO()
         pil_image.save(arr, format="JPEG", quality=1)
         arr.seek(0)
