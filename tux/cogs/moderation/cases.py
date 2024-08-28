@@ -152,7 +152,9 @@ class Cases(ModerationCogBase):
             await ctx.send("Case not found.", delete_after=30)
             return
 
-        user = await commands.UserConverter().convert(ctx, str(case.case_user_id))
+        user = self.bot.get_user(case.case_user_id)
+        if user is None:
+            user = await self.bot.fetch_user(case.case_user_id)
 
         await self._handle_case_response(ctx, case, "viewed", case.case_reason, user)
 
