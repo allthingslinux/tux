@@ -264,10 +264,14 @@ class Cases(ModerationCogBase):
         if case is not None:
             moderator = ctx.author
 
-            if not isinstance(moderator, discord.Member):
-                moderator = await commands.MemberConverter().convert(ctx, str(case.case_moderator_id))
-
-            fields = self._create_case_fields(moderator, user, reason)
+            if isinstance(moderator, discord.Member):
+                fields = self._create_case_fields(moderator, user, reason)
+            else:
+                fields = self._create_case_fields(
+                    await commands.MemberConverter().convert(ctx, str(case.case_moderator_id)),
+                    user,
+                    reason,
+                )
 
             embed = self.create_embed(
                 ctx,
