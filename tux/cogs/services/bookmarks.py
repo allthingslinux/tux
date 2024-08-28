@@ -11,9 +11,9 @@ class Bookmarks(commands.Cog):
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User) -> None:
         if str(reaction.emoji) == "🔖":
             message_link = f"https://discord.com/channels/{reaction.message.guild.id}/{reaction.message.channel.id}/{reaction.message.id}"
-            message_contents = {reaction.message.content}
+            message_contents = reaction.message.content
             try:
-                await user.send(f"Bookmarked: {message_link}\n{message_contents}")
+                await user.send(f"Bookmarked: {message_link} \n Content: {message_contents}")
             except (discord.Forbidden, discord.HTTPException):
                 logger.error(f"An error occurred while bookmarking {message_link} for {user}")
                 return
