@@ -1,10 +1,6 @@
-# Pull Request Template
-
 ## Description
 
-Please include a summary of the changes and the related issue. Please also include relevant motivation and context. List any dependencies that are required for this change.
-
-Fixes # (issue)
+Please include a summary of the changes and the related issue. Please also include relevant motivation and context. List any dependencies that are required for this change. If this change fixes any issues please put "Fixes #XX" in the description.
 
 ## Type of Change
 
@@ -12,24 +8,21 @@ Fixes # (issue)
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
 - [ ] Documentation update
+- [ ] Other: (write here)
 
 ## Checklist
 
-- [ ] My code follows the style guidelines of this project
+- [ ] My code follows the style guidelines of this project (formatted with Ruff)
 - [ ] I have performed a self-review of my own code
 - [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
+- [ ] I have made corresponding changes to the documentation if needed
 - [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
+- [ ] I have tested this change
 - [ ] Any dependent changes have been merged and published in downstream modules
 
 ## How Has This Been Tested?
 
-Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration.
-
-- [ ] Test A
-- [ ] Test B
+Please describe how you tested your code. e.g describe what commands you ran, what arguments, and any config stuff (if applicable)
 
 ## Screenshots (if applicable)
 
