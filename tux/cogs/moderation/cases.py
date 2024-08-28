@@ -152,7 +152,9 @@ class Cases(ModerationCogBase):
             await ctx.send("Case not found.", delete_after=30)
             return
 
-        user = await commands.UserConverter().convert(ctx, str(case.case_user_id))
+        user = self.bot.get_user(case.case_user_id)
+        if user is None:
+            user = await self.bot.fetch_user(case.case_user_id)
 
         await self._handle_case_response(ctx, case, "viewed", case.case_reason, user)
 
@@ -264,10 +266,14 @@ class Cases(ModerationCogBase):
         if case is not None:
             moderator = ctx.author
 
-            if not isinstance(moderator, discord.Member):
-                moderator = await commands.MemberConverter().convert(ctx, str(case.case_moderator_id))
-
-            fields = self._create_case_fields(moderator, user, reason)
+            if isinstance(moderator, discord.Member):
+                fields = self._create_case_fields(moderator, user, reason)
+            else:
+                fields = self._create_case_fields(
+                    await commands.MemberConverter().convert(ctx, str(case.case_moderator_id)),
+                    user,
+                    reason,
+                )
 
             embed = self.create_embed(
                 ctx,
