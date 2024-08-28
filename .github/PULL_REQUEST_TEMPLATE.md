@@ -20,7 +20,7 @@ Please include a summary of the changes and the related issue. Please also inclu
 - [ ] I have tested this change
 - [ ] Any dependent changes have been merged and published in downstream modules
 
-## How Has This Been Tested?
+## How Has This Been Tested? (if applicable)
 
 Please describe how you tested your code. e.g describe what commands you ran, what arguments, and any config stuff (if applicable)
 
