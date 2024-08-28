@@ -289,7 +289,12 @@ class Snippets(commands.Cog):
         # increment the usage count of the snippet
         await self.db.increment_snippet_uses(snippet.snippet_id)
 
-        text = f"`/snippets/{snippet.snippet_name}.txt` || {snippet.snippet_content}"
+        # example text:
+        # `/snippets/name.txt` [if locked put '🔒 ' icon]|| [content]
+        text = f"`/snippets/{snippet.snippet_name}.txt` "
+        if snippet.locked:
+            text += "🔒 "
+        text += f"|| {snippet.snippet_content}"
 
         await ctx.send(text, allowed_mentions=AllowedMentions.none())
 
