@@ -50,7 +50,7 @@ class ImgEffect(commands.Cog):
 
         # say that the image is being processed
         logger.info("Processing image...")
-        await interaction.response.send_message("Processing image...")
+        await interaction.response.defer("Processing image...")
 
         # open url with PIL
         logger.info("Opening image with PIL and HTTPX...")
@@ -90,7 +90,7 @@ class ImgEffect(commands.Cog):
         arr.seek(0)
         file = discord.File(arr, filename="deepfried.jpg")
         # edit message with image
-        await interaction.followup.send(content="Here is your deepfried image:", file=file)
+        await interaction.response.edit_message(content="Here is your deepfried image:", file=file)
 
 
 async def setup(bot: commands.Bot) -> None:
