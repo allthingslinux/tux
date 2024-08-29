@@ -1,3 +1,5 @@
+from typing import cast
+
 import discord
 from discord.ext import commands
 from loguru import logger
@@ -20,6 +22,7 @@ class Bookmarks(commands.Cog):
         if channel is None:
             logger.error(f"Channel not found for ID: {payload.channel_id}")
             return
+        channel = cast(discord.TextChannel | discord.Thread, channel)
 
         # Fetch the message that was reacted to
         try:
@@ -70,7 +73,7 @@ class Bookmarks(commands.Cog):
         user: discord.User,
         message: discord.Message,
         embed: discord.Embed,
-        emoji: str,
+        emoji: discord.PartialEmoji,
     ) -> None:
         """
         Send a bookmarked message to the user.
