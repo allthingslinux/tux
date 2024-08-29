@@ -295,6 +295,13 @@ See [LICENSE](LICENSE.md) for details.
                 </a>
             </td>
             <td align="center">
+                <a href="https://github.com/Ow0cast">
+                    <img src="https://avatars.githubusercontent.com/u/57546895?v=4" width="100;" alt="Ow0cast"/>
+                    <br />
+                    <sub><b>Ow0cast</b></sub>
+                </a>
+            </td>
+            <td align="center">
                 <a href="https://github.com/userbyte">
                     <img src="https://avatars.githubusercontent.com/u/42632711?v=4" width="100;" alt="userbyte"/>
                     <br />
@@ -313,13 +320,6 @@ See [LICENSE](LICENSE.md) for details.
                     <img src="https://avatars.githubusercontent.com/u/139659047?v=4" width="100;" alt="Bikoil"/>
                     <br />
                     <sub><b>Bikoil</b></sub>
-                </a>
-            </td>
-            <td align="center">
-                <a href="https://github.com/Ow0cast">
-                    <img src="https://avatars.githubusercontent.com/u/57546895?v=4" width="100;" alt="Ow0cast"/>
-                    <br />
-                    <sub><b>Ow0cast</b></sub>
                 </a>
             </td>
             <td align="center">
