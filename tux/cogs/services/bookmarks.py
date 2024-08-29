@@ -47,7 +47,7 @@ class Bookmarks(commands.Cog):
         self,
         message: discord.Message,
     ) -> discord.Embed:
-        if message.content.length > CONST.EMBED_MAX_DESC_LENGTH:
+        if len(message.content) > CONST.EMBED_MAX_DESC_LENGTH:
             message.content = f"{message.content[:CONST.EMBED_MAX_DESC_LENGTH - 3]}..."
 
         embed = EmbedCreator.create_info_embed(
