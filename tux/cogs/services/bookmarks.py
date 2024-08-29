@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import EmbedCreator
 
 
@@ -46,6 +47,9 @@ class Bookmarks(commands.Cog):
         self,
         message: discord.Message,
     ) -> discord.Embed:
+        if message.content.length > CONST.EMBED_MAX_DESC_LENGTH:
+            message.content = f"{message.content[:CONST.EMBED_MAX_DESC_LENGTH - 3]}..."
+
         embed = EmbedCreator.create_info_embed(
             title="Message Bookmarked",
             description=f"> {message.content}",
@@ -85,16 +89,14 @@ class Bookmarks(commands.Cog):
 
         try:
             await user.send(embed=embed)
-            await message.remove_reaction(emoji, user)
 
         except (discord.Forbidden, discord.HTTPException) as dm_error:
             logger.error(f"Cannot send a DM to {user.name}: {dm_error}")
 
-            await message.remove_reaction(emoji, user)
-
             notify_message = await message.channel.send(
                 f"{user.mention}, I couldn't send you a DM. Please make sure your DMs are open for bookmarks to work.",
             )
+
             await notify_message.delete(delay=30)
 
 
