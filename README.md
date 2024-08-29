@@ -158,10 +158,10 @@ See [LICENSE](LICENSE.md) for details.
 	<tbody>
 		<tr>
             <td align="center">
-                <a href="https://github.com/GabberBalls">
-                    <img src="https://avatars.githubusercontent.com/u/102343489?v=4" width="100;" alt="GabberBalls"/>
+                <a href="https://github.com/targzballs">
+                    <img src="https://avatars.githubusercontent.com/u/102343489?v=4" width="100;" alt="targzballs"/>
                     <br />
-                    <sub><b>GabberBalls</b></sub>
+                    <sub><b>targzballs</b></sub>
                 </a>
             </td>
             <td align="center">
