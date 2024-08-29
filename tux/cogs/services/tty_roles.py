@@ -36,7 +36,7 @@ class TtyRoles(commands.Cog):
         user_count = member.guild.member_count
         role_name = self._compute_role_name(user_count)
 
-        role = self.get_role_by_name(member, role_name) or await self.try_create_role(member, role_name)
+        role = discord.utils.get(member.guild.roles, name=role_name) or await self.try_create_role(member, role_name)
 
         if role:
             await self.try_assign_role(member, role)
@@ -65,26 +65,6 @@ class TtyRoles(commands.Cog):
         exponent = int(math.floor(math.log2(user_count)))
 
         return f"{self.base_role_name}{2 ** exponent}"
-
-    @staticmethod
-    def get_role_by_name(member: discord.Member, role_name: str) -> discord.Role | None:
-        """
-        Get a role by name from the guild.
-
-        Parameters
-        ----------
-        member : discord.Member
-            The member whose guild to search for the role.
-        role_name : str
-            The name of the role to search for.
-
-        Returns
-        -------
-        discord.Role | None
-            The role if found, otherwise None.
-        """
-
-        return discord.utils.get(member.guild.roles, name=role_name)
 
     @staticmethod
     async def try_create_role(member: discord.Member, role_name: str) -> discord.Role | None:
