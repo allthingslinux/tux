@@ -23,31 +23,31 @@ class Bookmarks(commands.Cog):
                     logger.error("Message not found")
                     return
 
-                message_link = message.jump_url
-                message_contents = message.content
-                message_attachments = message.attachments
-                author_username = message.author.name
-
                 embed = EmbedCreator.create_info_embed(
                     title="Message Bookmarked",
-                    description=f"> {message_contents}",
+                    description=f"> {message.content}",
                 )
-                embed.add_field(name="Author", value=author_username, inline=False)
-                embed.add_field(name="Jump to Message", value=f"[Click Here]({message_link})", inline=False)
+                embed.add_field(name="Author", value=message.author.name, inline=False)
+                embed.add_field(name="Jump to Message", value=f"[Click Here]({message.jump_url})", inline=False)
 
-                if message_attachments:
-                    attachments_info = "\n".join([attachment.url for attachment in message_attachments])
+                if message.attachments:
+                    attachments_info = "\n".join([attachment.url for attachment in message.attachments])
                     embed.add_field(name="Attachments", value=attachments_info, inline=False)
 
                 try:
                     user = self.bot.get_user(payload.user_id)
                     if user is not None:
                         await user.send(embed=embed)
+                        await message.remove_reaction(payload.emoji, user)
                     else:
                         logger.error(f"User not found for ID: {payload.user_id}")
-                except (discord.Forbidden, discord.HTTPException) as e:
-                    logger.error(f"An error occurred while bookmarking {message_link} for {payload.user_id}: {e}")
-
+                except (discord.Forbidden, discord.HTTPException):
+                    logger.error(f"Cannot send a DM to {user.name}. They may have DMs turned off.")
+                    await message.remove_reaction(payload.emoji, user)
+                    temp_message = await channel.send(
+                        f"{user.mention}, I couldn't send you a DM make sure your DMs are open for bookmarks to work",
+                    )
+                    await temp_message.delete(delay=30)
             except (discord.NotFound, discord.Forbidden, discord.HTTPException) as e:
                 logger.error(f"Failed to process the reaction: {e}")
 
