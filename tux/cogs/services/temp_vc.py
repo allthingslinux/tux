@@ -49,13 +49,13 @@ class TempVc(commands.Cog):
 
         # When user joins the temporary voice channel
         if after.channel and after.channel.id == temp_channel_id:
-            await self.handle_user_join(member, after.channel)
+            await self._handle_user_join(member, after.channel)
 
         # When user leaves any voice channel
         elif before.channel:
-            await self.handle_user_leave(before.channel, after.channel, temp_channel_id, temp_category_id)
+            await self._handle_user_leave(before.channel, after.channel, temp_channel_id, temp_category_id)
 
-    async def handle_user_join(
+    async def _handle_user_join(
         self,
         member: discord.Member,
         channel: discord.VoiceChannel | discord.StageChannel,
@@ -81,7 +81,7 @@ class TempVc(commands.Cog):
         new_channel = await channel.clone(name=self.base_vc_name + member.name)
         await member.move_to(new_channel)
 
-    async def handle_user_leave(
+    async def _handle_user_leave(
         self,
         before_channel: discord.VoiceChannel | discord.StageChannel,
         after_channel: discord.VoiceChannel | discord.StageChannel | None,
