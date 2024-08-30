@@ -18,3 +18,11 @@ class GithubButton(discord.ui.View):
         self.add_item(
             discord.ui.Button(style=discord.ButtonStyle.link, label="View on Github", url=url),
         )
+
+
+class PkgSourceButton(discord.ui.View):
+    def __init__(self, url: str) -> None:
+        super().__init__()
+        self.add_item(
+            discord.ui.Button(style=discord.ButtonStyle.link, label="Visit source", url=url),
+        )
