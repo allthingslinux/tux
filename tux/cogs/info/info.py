@@ -1,5 +1,8 @@
+from collections.abc import Generator, Iterable, Iterator
+
 import discord
 from discord.ext import commands
+from reactionmenu import ViewButton, ViewMenu
 
 
 class Info(commands.Cog):
@@ -127,13 +130,26 @@ class Info(commands.Cog):
 
         embed = discord.Embed(
             title="Server Roles",
-            description=f"Role list for {guild.name}",
             color=discord.Color.blurple(),
         )
 
-        embed.add_field(name="Roles", value=", ".join(roles), inline=False)
+        chunk_size = 32
+        if not len(roles) > chunk_size:
+            embed.description = self._create_embed_desc("roles", guild.name, roles)
+            await ctx.send(embed=embed)
+            return
 
-        await ctx.send(embed=embed)
+        chunks = self._chunks(iter(roles), chunk_size)
+        menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed)
+
+        for chunk in chunks:
+            embed = embed.copy()
+
+            embed.description = self._create_embed_desc("roles", guild.name, chunk)
+            menu.add_page(embed)
+
+        menu = self._add_buttons_to_menu(menu)
+        await menu.start()
 
     @info.command(
         name="emotes",
@@ -153,17 +169,74 @@ class Info(commands.Cog):
             return
 
         guild = ctx.guild
-        emotes = [str(emote) for emote in guild.emojis]
+        emotes: list[str] = [str(emote) for emote in guild.emojis]
 
         embed = discord.Embed(
             title="Server Emotes",
-            description=f"Emote list for {guild.name}",
             color=discord.Color.blurple(),
         )
 
-        embed.add_field(name="Emotes", value=" ".join(emotes) if emotes else "No emotes available", inline=False)
+        chunk_size = 128
+        if not len(emotes) > chunk_size:
+            embed.description = self._create_embed_desc("emotes", guild.name, emotes)
+            await ctx.send(embed=embed)
+            return
 
-        await ctx.send(embed=embed)
+        chunks = self._chunks(iter(emotes), chunk_size)
+        menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed)
+
+        for chunk in chunks:
+            embed = embed.copy()
+
+            embed.description = self._create_embed_desc("emotes", guild.name, chunk)
+            menu.add_page(embed)
+
+        menu = self._add_buttons_to_menu(menu)
+        await menu.start()
+
+    def _chunks[T](self, it: Iterator[T], size: int) -> Generator[list[T], None, None]:
+        """
+        Split an iterator into chunks of a specified size.
+
+        This function takes an iterator and divides it into chunks of a given size.
+        Any remaining elements that do not fill a complete chunk are included in the
+        final chunk, which may be smaller than the specified size.
+
+        Parameters
+        ----------
+        it : Iterator[T]
+            The input iterator to be split into chunks.
+        size : int
+            The size of each chunk.
+
+        Yields
+        -------
+        list[T]
+            A list containing a chunk of elements from the input iterator. The last
+            list may contain fewer elements if there are not enough remaining to fill
+            a complete chunk.
+        """
+        chunk: list[T] = []
+        for item in it:
+            chunk.append(item)
+            if len(chunk) == size:
+                yield chunk
+                chunk = []
+        if chunk:  # if last chunk has any items
+            yield chunk
+
+    def _create_embed_desc(self, list_type: str, guild_name: str, items: Iterable[str]) -> str:
+        return (
+            f"{list_type.capitalize()} list for {guild_name}:\n {" ".join(items) if items else "No items available."}"
+        )
+
+    def _add_buttons_to_menu[T: ViewMenu](self, menu: T) -> T:
+        menu.add_button(ViewButton.go_to_first_page())
+        menu.add_button(ViewButton.back())
+        menu.add_button(ViewButton.next())
+        menu.add_button(ViewButton.go_to_last_page())
+        menu.add_button(ViewButton.end_session())
+        return menu
 
 
 async def setup(bot: commands.Bot) -> None:
