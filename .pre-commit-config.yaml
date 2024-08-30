@@ -30,4 +30,9 @@ repos:
     hooks:
       - id: pyupgrade
 
-exclude: ".archive/"
+  - repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.378
+    hooks:
+      - id: pyright
+
+exclude: '(^\.archive|/stubs)/'
