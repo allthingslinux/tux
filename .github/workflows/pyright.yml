@@ -1,0 +1,45 @@
+name: Pyright
+
+on: [push, pull_request]
+
+jobs:
+  pyright:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'poetry'
+
+      - name: Install project
+        run: poetry install --no-interaction
+
+      - name: Activate virtual environment
+        run: echo "${{ github.workspace }}/.venv/bin" >> $GITHUB_PATH
+
+      - name: Add Poetry binary to PATH
+        run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
+
+      - name: Print environment for debug
+        run: |
+          echo "Python location: $(which python)"
+          echo "Poetry location: $(which poetry)"
+          poetry --version
+          which pyright
+
+      - name: Generate Prisma Client
+        run: poetry run prisma generate
+
+      - name: Run Pyright
+        uses: jakebailey/pyright-action@v2
+        with:
+          version: "PATH"
+          annotate: "all"
