@@ -7,67 +7,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      #----------------------------------------------
-      #       check-out repo and set-up python
-      #----------------------------------------------
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up python
+      - name: Set up Python
         id: setup-python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: 'poetry'
 
-      #----------------------------------------------
-      #  -----  install & configure poetry  -----
-      #----------------------------------------------
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
           virtualenvs-create: true
           virtualenvs-in-project: true
-          virtualenvs-path: .venv
           installer-parallel: true
 
-      #----------------------------------------------
-      #       load cached venv if cache exists
-      #----------------------------------------------
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v4
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
-
-      #----------------------------------------------
-      # install dependencies if cache does not exist
-      #----------------------------------------------
       - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
 
-      #----------------------------------------------
-      # install your root project, if required
-      #----------------------------------------------
       - name: Install project
         run: poetry install --no-interaction
 
-      #----------------------------------------------
-      #         activate virtual environment
-      #----------------------------------------------
       - name: Activate virtual environment
         run: echo "${{ github.workspace }}/.venv/bin" >> $GITHUB_PATH
 
-      #----------------------------------------------
-      #         add poetry bin to PATH
-      #----------------------------------------------
-      - name: Add poetry bin to PATH
-        run: export PATH="${HOME}/.local/bin:${PATH}"
+      - name: Add Poetry binary to PATH
+        run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
 
-      #----------------------------------------------
-      #         run Pyright for type checking
-      #----------------------------------------------
+      - name: Print environment for debug
+        run: |
+          echo "Python location: $(which python)"
+          echo "Poetry location: $(which poetry)"
+          poetry --version
+          which pyright
+
       - name: Run Pyright
         uses: jakebailey/pyright-action@v2
         with:
