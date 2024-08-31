@@ -330,15 +330,6 @@ See [LICENSE](LICENSE.md) for details.
                 </a>
             </td>
 		</tr>
-		<tr>
-            <td align="center">
-                <a href="https://github.com/teilorr">
-                    <img src="https://avatars.githubusercontent.com/u/100589370?v=4" width="100;" alt="teilorr"/>
-                    <br />
-                    <sub><b>teilorr</b></sub>
-                </a>
-            </td>
-		</tr>
 	<tbody>
 </table>
 <!-- readme: collaborators,contributors -end -->
