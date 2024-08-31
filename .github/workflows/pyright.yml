@@ -1,10 +1,11 @@
 name: Pyright
 
-on: [ push, pull_request ]
+on: [push, pull_request]
 
 jobs:
-  test:
+  pyright:
     runs-on: ubuntu-latest
+
     steps:
       #----------------------------------------------
       #       check-out repo and set-up python
@@ -51,6 +52,18 @@ jobs:
       #----------------------------------------------
       - name: Install project
         run: poetry install --no-interaction
+
+      #----------------------------------------------
+      #         activate virtual environment
+      #----------------------------------------------
+      - name: Activate virtual environment
+        run: echo "${{ github.workspace }}/.venv/bin" >> $GITHUB_PATH
+
+      #----------------------------------------------
+      #         add poetry bin to PATH
+      #----------------------------------------------
+      - name: Add poetry bin to PATH
+        run: export PATH="${HOME}/.local/bin:${PATH}"
 
       #----------------------------------------------
       #         run Pyright for type checking
