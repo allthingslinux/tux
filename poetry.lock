@@ -1972,6 +1972,26 @@ files = [
 ]
 
 [[package]]
+name = "repology-client"
+version = "0.2.0"
+description = "Asynchronous wrapper for Repology API"
+optional = false
+python-versions = ">=3.11"
+files = [
+    {file = "repology_client-0.2.0-py3-none-any.whl", hash = "sha256:e87917554ff32d015a2cfbe34f0ba13c9e293e3008b87f93b6243b2fb73e1e0d"},
+    {file = "repology_client-0.2.0.tar.gz", hash = "sha256:495fe3910f7c7f5ca6b5d56b0ff227e369bc822ad67b7307777840b3d27bdfc0"},
+]
+
+[package.dependencies]
+aiohttp = ">=3,<4"
+pydantic = ">=2,<3"
+pydantic-core = ">=2,<3"
+
+[package.extras]
+docs = ["alabaster", "sphinx", "sphinx-prompt"]
+test = ["pytest", "pytest-asyncio", "pytest-recording"]
+
+[[package]]
 name = "requests"
 version = "2.32.3"
 description = "Python HTTP for Humans."
@@ -2422,4 +2442,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12,<4"
-content-hash = "e773f58b7548a102f8e9ebc152ec2390d1149a549fe9f77e9c248b37e896f56a"
+content-hash = "23f2f7a3fc6b0aeac492e32171fa6102ff69f098a20848a05755fc50f4e43ff7"

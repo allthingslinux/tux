@@ -37,6 +37,7 @@ types-psutil = "^6.0.0.20240621"
 typing-extensions = "^4.12.2"
 jishaku = "^2.5.2"
 pytz = "^2024.1"
+repology-client = "^0.2.0"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.30"
