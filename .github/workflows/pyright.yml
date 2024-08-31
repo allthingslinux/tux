@@ -43,4 +43,3 @@ jobs:
         with:
           version: "PATH"
           annotate: "all"
-          extra-args: "--exclude=**/stubs/**"
