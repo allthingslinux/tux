@@ -2,11 +2,12 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux import bot
 from tux.utils import checks
 
 
 class Dev(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: bot.Tux) -> None:
         self.bot = bot
 
     @commands.hybrid_group(
@@ -216,6 +217,27 @@ class Dev(commands.Cog):
             await ctx.send(f"Cog {cog} reloaded.", ephemeral=True, delete_after=30)
             logger.info(f"Cog {cog} reloaded.")
 
+    @dev.command(
+        name="stop",
+        usage="dev stop",
+    )
+    @commands.guild_only()
+    @checks.has_pl(8)
+    async def stop(self, ctx: commands.Context[commands.Bot]) -> None:
+        """
+        Stops the bot. If Tux is running with Docker Compose, this will restart the container.
 
-async def setup(bot: commands.Bot) -> None:
+        Parameters
+        ----------
+        ctx : commands.Context
+            The context in which the command is being invoked.
+        """
+
+        await ctx.send(
+            "Stopping the bot...\n-# Note: if Tux is running with Docker Compose, this will restart the container.",
+        )
+        await self.bot.shutdown()
+
+
+async def setup(bot: bot.Tux) -> None:
     await bot.add_cog(Dev(bot))
