@@ -7,7 +7,7 @@ class AfkController:
         self.table = db.afkmodel
         self.guild = db.guild
 
-    async def ensure_guild_exists(self, guild_id: int) -> Guild | None:
+    async def ensure_guild_exists(self, guild_id: int) -> Guild:
         guild = await self.guild.find_first(where={"guild_id": guild_id})
         if guild is None:
             return await self.guild.create(data={"guild_id": guild_id})
