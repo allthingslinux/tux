@@ -11,7 +11,5 @@ services:
           target: /app/
           ignore:
             - .venv/
-        - action: rebuild
-          path: Dockerfile
     env_file:
       - .env
