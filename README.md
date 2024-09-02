@@ -240,13 +240,6 @@ See [LICENSE](LICENSE.md) for details.
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/HikariNeee">
-                    <img src="https://avatars.githubusercontent.com/u/162735312?v=4" width="100;" alt="HikariNeee"/>
-                    <br />
-                    <sub><b>HikariNeee</b></sub>
-                </a>
-            </td>
-            <td align="center">
                 <a href="https://github.com/AuraPy">
                     <img src="https://avatars.githubusercontent.com/u/119633142?v=4" width="100;" alt="AuraPy"/>
                     <br />
@@ -254,10 +247,10 @@ See [LICENSE](LICENSE.md) for details.
                 </a>
             </td>
             <td align="center">
-                <a href="https://github.com/clonidine">
-                    <img src="https://avatars.githubusercontent.com/u/86500701?v=4" width="100;" alt="clonidine"/>
+                <a href="https://github.com/HikariNeee">
+                    <img src="https://avatars.githubusercontent.com/u/162735312?v=4" width="100;" alt="HikariNeee"/>
                     <br />
-                    <sub><b>clonidine</b></sub>
+                    <sub><b>HikariNeee</b></sub>
                 </a>
             </td>
             <td align="center">
@@ -265,6 +258,13 @@ See [LICENSE](LICENSE.md) for details.
                     <img src="https://avatars.githubusercontent.com/u/91651232?v=4" width="100;" alt="exhq"/>
                     <br />
                     <sub><b>exhq</b></sub>
+                </a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/clonidine">
+                    <img src="https://avatars.githubusercontent.com/u/86500701?v=4" width="100;" alt="clonidine"/>
+                    <br />
+                    <sub><b>clonidine</b></sub>
                 </a>
             </td>
             <td align="center">
