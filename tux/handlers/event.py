@@ -1,12 +1,13 @@
 import discord
 from discord.ext import commands
 
+from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.utils.functions import is_harmful, strip_formatting
 
 
 class EventHandler(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.db = DatabaseController()
 
@@ -98,5 +99,5 @@ class EventHandler(commands.Cog):
                 await channel.send(content=support_role, embed=embed)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(EventHandler(bot))

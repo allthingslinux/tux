@@ -2,11 +2,12 @@ import random
 
 from discord.ext import commands
 
+from tux.bot import Tux
 from tux.utils.embeds import EmbedCreator
 
 
 class Fact(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.facts = [
             "The Linux kernel has over 36 million lines of code in its Git repository.",
@@ -36,13 +37,13 @@ class Fact(commands.Cog):
         name="fact",
         aliases=["funfact"],
     )
-    async def fact(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def fact(self, ctx: commands.Context[Tux]) -> None:
         """
         Get a random fun fact.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         """
         embed = EmbedCreator.create_info_embed(
@@ -61,5 +62,5 @@ class Fact(commands.Cog):
         await ctx.send(embed=embed)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Fact(bot))

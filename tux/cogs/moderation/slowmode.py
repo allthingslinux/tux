@@ -2,11 +2,12 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.bot import Tux
 from tux.utils import checks
 
 
 class Slowmode(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
     @commands.hybrid_command(
@@ -18,7 +19,7 @@ class Slowmode(commands.Cog):
     @checks.has_pl(2)
     async def slowmode(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         action: str,
         channel: discord.TextChannel | discord.Thread | None = None,
     ) -> None:
@@ -27,7 +28,7 @@ class Slowmode(commands.Cog):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context of the command.
         action : str
             Either 'get' to get the current slowmode or the slowmode time in seconds, max is 21600.
@@ -94,5 +95,5 @@ class Slowmode(commands.Cog):
                 logger.error(f"Failed to set slowmode. Error: {error}")
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Slowmode(bot))

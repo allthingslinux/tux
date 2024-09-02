@@ -4,6 +4,7 @@
 # from githubkit.versions.latest.models import Issue
 # from loguru import logger
 
+
 # from tux.wrappers.github import GitHubService
 # from tux.utils.constants import Constants as CONST
 # from tux.utils.embeds import EmbedCreator
@@ -18,7 +19,7 @@
 
 
 # class Git(commands.Cog):
-#     def __init__(self, bot: commands.Bot) -> None:
+#     def __init__(self, bot: Tux) -> None:
 #         self.bot = bot
 #         self.github = GitHubService()
 #         self.repo_url = CONST.GITHUB_REPO_URL
@@ -379,7 +380,7 @@
 #             logger.info(f"{interaction.user} fetched a pull request.")
 
 
-# async def setup(bot: commands.Bot) -> None:
+# async def setup(bot: Tux) -> None:
 #     await bot.add_cog(Git(bot))
 
 # TODO: Rewrite this cog to use the new hybrid command system.
@@ -387,6 +388,7 @@
 from discord.ext import commands
 from loguru import logger
 
+from tux.bot import Tux
 from tux.ui.buttons import GithubButton
 from tux.utils import checks
 from tux.utils.constants import Constants as CONST
@@ -395,7 +397,7 @@ from tux.wrappers.github import GithubService
 
 
 class Git(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.github = GithubService()
         self.repo_url = CONST.GITHUB_REPO_URL
@@ -407,13 +409,13 @@ class Git(commands.Cog):
     )
     @commands.guild_only()
     @checks.has_pl(8)
-    async def git(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def git(self, ctx: commands.Context[Tux]) -> None:
         """
         Github related commands.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         """
 
@@ -427,13 +429,13 @@ class Git(commands.Cog):
     )
     @commands.guild_only()
     @checks.has_pl(8)
-    async def get_repo(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def get_repo(self, ctx: commands.Context[Tux]) -> None:
         """
         Get repository information.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         """
 
@@ -466,13 +468,13 @@ class Git(commands.Cog):
     @commands.guild_only()
     # @checks.has_pl(8)
     @commands.has_any_role("Root", "Admin", "Contributor", "Tux Contributor", "Tux Beta Tester", "%wheel")
-    async def create_issue(self, ctx: commands.Context[commands.Bot], title: str, body: str) -> None:
+    async def create_issue(self, ctx: commands.Context[Tux], title: str, body: str) -> None:
         """
         Create an issue.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         title : str
             The title of the issue.
@@ -507,13 +509,13 @@ class Git(commands.Cog):
     )
     @commands.guild_only()
     @checks.has_pl(8)
-    async def get_issue(self, ctx: commands.Context[commands.Bot], issue_number: int) -> None:
+    async def get_issue(self, ctx: commands.Context[Tux], issue_number: int) -> None:
         """
         Get an issue by issue number.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         issue_number : int
             The number of the issue to retrieve.
@@ -542,5 +544,5 @@ class Git(commands.Cog):
             logger.info(f"{ctx.author} fetched an issue.")
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Git(bot))

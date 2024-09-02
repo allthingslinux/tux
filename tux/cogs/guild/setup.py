@@ -2,12 +2,13 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.utils import checks
 
 
 class Setup(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.db = DatabaseController()
         self.config = DatabaseController().guild_config
@@ -81,5 +82,5 @@ class Setup(commands.Cog):
             await interaction.edit_original_response(content=f"Setting up permissions for {channel.name}.")
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Setup(bot))

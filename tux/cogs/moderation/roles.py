@@ -3,11 +3,12 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+from tux.bot import Tux
 from tux.utils import checks
 
 
 class Roles(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
     roles = app_commands.Group(name="roles", description="Commands for managing roles.")
@@ -59,5 +60,5 @@ class Roles(commands.Cog):
             logger.info(f"{interaction.user} added role {role.name} to {user}.")
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Roles(bot))

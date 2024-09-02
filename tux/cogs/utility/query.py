@@ -3,12 +3,13 @@ import httpx
 from discord.ext import commands
 from loguru import logger
 
+from tux.bot import Tux
 from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import EmbedCreator
 
 
 class Query(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
     @commands.hybrid_command(
@@ -16,13 +17,13 @@ class Query(commands.Cog):
         aliases=["q"],
         usage="query [search_term]",
     )
-    async def query(self, ctx: commands.Context[commands.Bot], *, search_term: str) -> None:
+    async def query(self, ctx: commands.Context[Tux], *, search_term: str) -> None:
         """
         Query the DuckDuckGo API for a search term and return a answer.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         search_term : str
             The search term.
@@ -122,5 +123,5 @@ class Query(commands.Cog):
         await ctx.send(embed=embed)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Query(bot))

@@ -4,9 +4,11 @@ from typing import NoReturn
 import discord
 from discord.ext import commands
 
+from tux.bot import Tux
+
 
 class ActivityHandler(commands.Cog):
-    def __init__(self, bot: commands.Bot, delay: int = 5 * 60) -> None:
+    def __init__(self, bot: Tux, delay: int = 5 * 60) -> None:
         self.bot = bot
         self.delay = delay
         self.activities = self.build_activity_list()
@@ -59,5 +61,5 @@ class ActivityHandler(commands.Cog):
         await asyncio.gather(activity_task)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(ActivityHandler(bot))

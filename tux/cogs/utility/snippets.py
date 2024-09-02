@@ -10,6 +10,7 @@ from reactionmenu import ViewButton, ViewMenu
 
 from prisma.enums import CaseType
 from prisma.models import Snippet
+from tux.bot import Tux
 from tux.database.controllers import CaseController, DatabaseController
 from tux.utils import checks
 from tux.utils.constants import Constants as CONST
@@ -17,7 +18,7 @@ from tux.utils.embeds import EmbedCreator, create_embed_footer, create_error_emb
 
 
 class Snippets(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.db = DatabaseController().snippet
         self.config = DatabaseController().guild_config
@@ -38,13 +39,13 @@ class Snippets(commands.Cog):
         usage="snippets",
     )
     @commands.guild_only()
-    async def list_snippets(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def list_snippets(self, ctx: commands.Context[Tux]) -> None:
         """
         List snippets by pagination.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object.
         """
 
@@ -84,7 +85,7 @@ class Snippets(commands.Cog):
 
     def _create_snippets_list_embed(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         snippets: list[Snippet],
         total_snippets: int,
     ) -> discord.Embed:
@@ -119,13 +120,13 @@ class Snippets(commands.Cog):
         usage="topsnippets",
     )
     @commands.guild_only()
-    async def top_snippets(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def top_snippets(self, ctx: commands.Context[Tux]) -> None:
         """
         List top snippets.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object.
         """
 
@@ -171,13 +172,13 @@ class Snippets(commands.Cog):
         usage="deletesnippet [name]",
     )
     @commands.guild_only()
-    async def delete_snippet(self, ctx: commands.Context[commands.Bot], name: str) -> None:
+    async def delete_snippet(self, ctx: commands.Context[Tux], name: str) -> None:
         """
         Delete a snippet by name.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object.
         name : str
             The name of the snippet.
@@ -221,13 +222,13 @@ class Snippets(commands.Cog):
     )
     @commands.guild_only()
     @checks.has_pl(2)
-    async def force_delete_snippet(self, ctx: commands.Context[commands.Bot], name: str) -> None:
+    async def force_delete_snippet(self, ctx: commands.Context[Tux], name: str) -> None:
         """
         Force delete a snippet by name.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object.
         name : str
             The name of the snippet.
@@ -255,13 +256,13 @@ class Snippets(commands.Cog):
         usage="snippet [name]",
     )
     @commands.guild_only()
-    async def get_snippet(self, ctx: commands.Context[commands.Bot], name: str) -> None:
+    async def get_snippet(self, ctx: commands.Context[Tux], name: str) -> None:
         """
         Get a snippet by name.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object.
         name : str
             The name of the snippet.
@@ -304,13 +305,13 @@ class Snippets(commands.Cog):
         usage="snippetinfo [name]",
     )
     @commands.guild_only()
-    async def get_snippet_info(self, ctx: commands.Context[commands.Bot], name: str) -> None:
+    async def get_snippet_info(self, ctx: commands.Context[Tux], name: str) -> None:
         """
         Get information about a snippet by name.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object.
         name : str
             The name of the snippet.
@@ -363,13 +364,13 @@ class Snippets(commands.Cog):
         usage="createsnippet [name] [content]",
     )
     @commands.guild_only()
-    async def create_snippet(self, ctx: commands.Context[commands.Bot], *, arg: str) -> None:
+    async def create_snippet(self, ctx: commands.Context[Tux], *, arg: str) -> None:
         """
         Create a snippet.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object.
         arg : str
             The name and content of the snippet.
@@ -429,13 +430,13 @@ class Snippets(commands.Cog):
         usage="editsnippet [name]",
     )
     @commands.guild_only()
-    async def edit_snippet(self, ctx: commands.Context[commands.Bot], *, arg: str) -> None:
+    async def edit_snippet(self, ctx: commands.Context[Tux], *, arg: str) -> None:
         """
         Edit a snippet.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object.
         arg : str
             The name and content of the snippet.
@@ -503,13 +504,13 @@ class Snippets(commands.Cog):
     )
     @commands.guild_only()
     @checks.has_pl(2)
-    async def toggle_snippet_lock(self, ctx: commands.Context[commands.Bot], name: str) -> None:
+    async def toggle_snippet_lock(self, ctx: commands.Context[Tux], name: str) -> None:
         """
         Toggle a snippet lock.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object.
         name : str
             The name of the snippet.
@@ -549,5 +550,5 @@ Snippets are usually locked by moderators if they are important to usual use of 
         logger.info(f"{ctx.author} toggled the lock of the snippet with the name {name}.")
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Snippets(bot))

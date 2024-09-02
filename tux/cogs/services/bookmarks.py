@@ -4,12 +4,13 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.bot import Tux
 from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import EmbedCreator
 
 
 class Bookmarks(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
     @commands.Cog.listener()
@@ -103,5 +104,5 @@ class Bookmarks(commands.Cog):
             await notify_message.delete(delay=30)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Bookmarks(bot))

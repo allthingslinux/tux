@@ -2,6 +2,7 @@ import re
 
 from discord.ext import commands
 
+from tux.bot import Tux
 from tux.utils.embeds import EmbedCreator
 from tux.wrappers import godbolt
 
@@ -39,7 +40,7 @@ compiler_map = {
 
 
 class Run(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: Tux):
         self.bot = bot
 
     def remove_ansi(self, ansi: str) -> str:
@@ -78,7 +79,7 @@ class Run(commands.Cog):
 
     async def generalized_code_executor(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         compiler_map: dict[str, str],
         code: str,
         options: str | None = None,
@@ -88,7 +89,7 @@ class Run(commands.Cog):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is invoked.
         compiler_map : dict[str, str]
             A dictionary containing mappings from a language to its compiler.
@@ -136,7 +137,7 @@ class Run(commands.Cog):
 
     async def generalized_code_constructor(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         compiler_map: dict[str, str],
         code: str,
         options: str | None = None,
@@ -146,7 +147,7 @@ class Run(commands.Cog):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is invoked.
         compiler_map : dict[str, str]
             A dictionary containing mappings from a language to its compiler.
@@ -201,7 +202,7 @@ class Run(commands.Cog):
 
     async def send_embedded_reply(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         gen_one: str,
         output: str,
         lang: str,
@@ -211,7 +212,7 @@ class Run(commands.Cog):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is invoked.
         gen_one : str
             The first few lines of the output.
@@ -236,7 +237,7 @@ class Run(commands.Cog):
     )
     async def run(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         *,
         code: str,
     ):
@@ -245,7 +246,7 @@ class Run(commands.Cog):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is invoked.
         code : str
             The code to be evaluated.
@@ -271,7 +272,7 @@ class Run(commands.Cog):
     @run.error
     async def run_error(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         error: Exception,
     ):
         """
@@ -279,7 +280,7 @@ class Run(commands.Cog):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is invoked.
         error : Exception
             The error that occurred.
@@ -304,13 +305,13 @@ class Run(commands.Cog):
         aliases=["langs"],
         usage="languages",
     )
-    async def languages(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def languages(self, ctx: commands.Context[Tux]) -> None:
         """
         Lists all the supported languages.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is invoked.
         """
 
@@ -323,5 +324,5 @@ class Run(commands.Cog):
         await ctx.send(embed=embed)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Run(bot))

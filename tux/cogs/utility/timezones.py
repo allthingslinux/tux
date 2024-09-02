@@ -5,6 +5,8 @@ import pytz
 from discord.ext import commands
 from reactionmenu import Page, ViewButton, ViewMenu, ViewSelect
 
+from tux.bot import Tux
+
 timezones = {
     "North America": [
         ("🇺🇸", "US", "Pacific/Honolulu", "HST", -10),
@@ -85,7 +87,7 @@ continent_emojis = {
 
 
 class Timezones(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
     @commands.hybrid_command(
@@ -93,7 +95,7 @@ class Timezones(commands.Cog):
         aliases=["tz"],
         usage="timezones",
     )
-    async def timezones(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def timezones(self, ctx: commands.Context[Tux]) -> None:
         utc_now = datetime.now(UTC)
 
         menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed)
@@ -136,5 +138,5 @@ class Timezones(commands.Cog):
         await menu.start()
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Timezones(bot))

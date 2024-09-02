@@ -4,9 +4,12 @@ services:
     image: allthingslinux/tux:latest
     container_name: tux
     restart: always
-    volumes:
-      - type: bind
-        source: .
-        target: /app/
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app/
+          ignore:
+            - .venv/
     env_file:
       - .env

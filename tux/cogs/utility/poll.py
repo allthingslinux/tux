@@ -3,13 +3,14 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+from tux.bot import Tux
 from tux.utils.embeds import EmbedCreator
 
 # TODO: Create option inputs for the poll command instead of using a comma separated string
 
 
 class Poll(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
     @commands.Cog.listener()  # listen for messages
@@ -104,5 +105,5 @@ class Poll(commands.Cog):
             await message.add_reaction(f"{num + 1}\u20e3")
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Poll(bot))

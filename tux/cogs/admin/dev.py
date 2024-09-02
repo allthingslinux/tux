@@ -2,12 +2,12 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux import bot
+from tux.bot import Tux
 from tux.utils import checks
 
 
 class Dev(commands.Cog):
-    def __init__(self, bot: bot.Tux) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
     @commands.hybrid_group(
@@ -17,13 +17,13 @@ class Dev(commands.Cog):
     )
     @commands.guild_only()
     @checks.has_pl(8)
-    async def dev(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def dev(self, ctx: commands.Context[Tux]) -> None:
         """
         Dev related commands.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
 
         Raises
@@ -43,7 +43,7 @@ class Dev(commands.Cog):
     )
     @commands.guild_only()
     @checks.has_pl(8)
-    async def sync_tree(self, ctx: commands.Context[commands.Bot], guild: discord.Guild) -> None:
+    async def sync_tree(self, ctx: commands.Context[Tux], guild: discord.Guild) -> None:
         """
         Syncs the app command tree.
 
@@ -77,7 +77,7 @@ class Dev(commands.Cog):
     )
     @commands.guild_only()
     @checks.has_pl(8)
-    async def clear_tree(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def clear_tree(self, ctx: commands.Context[Tux]) -> None:
         """
         Clears the app command tree.
 
@@ -112,7 +112,7 @@ class Dev(commands.Cog):
     )
     @commands.guild_only()
     @checks.has_pl(8)
-    async def load_cog(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
+    async def load_cog(self, ctx: commands.Context[Tux], *, cog: str) -> None:
         """
         Loads a cog into the bot.
 
@@ -153,7 +153,7 @@ class Dev(commands.Cog):
     )
     @commands.guild_only()
     @checks.has_pl(8)
-    async def unload_cog(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
+    async def unload_cog(self, ctx: commands.Context[Tux], *, cog: str) -> None:
         """
         Unloads a cog from the bot.
 
@@ -188,7 +188,7 @@ class Dev(commands.Cog):
     )
     @commands.guild_only()
     @checks.has_pl(8)
-    async def reload_cog(self, ctx: commands.Context[commands.Bot], *, cog: str) -> None:
+    async def reload_cog(self, ctx: commands.Context[Tux], *, cog: str) -> None:
         """
         Reloads a cog in the bot.
 
@@ -223,7 +223,7 @@ class Dev(commands.Cog):
     )
     @commands.guild_only()
     @checks.has_pl(8)
-    async def stop(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def stop(self, ctx: commands.Context[Tux]) -> None:
         """
         Stops the bot. If Tux is running with Docker Compose, this will restart the container.
 
@@ -239,5 +239,5 @@ class Dev(commands.Cog):
         await self.bot.shutdown()
 
 
-async def setup(bot: bot.Tux) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Dev(bot))
