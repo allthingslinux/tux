@@ -32,7 +32,7 @@ class AFK(commands.Cog):
 
         await self.db.insert_afk(target.id, nickname, reason, ctx.guild.id)
         await target.edit(nick=f"[AFK] {nickname}")
-        return await ctx.send("\N{SLEEPING SYMBOL} || You are now afk! " + "Reason: `{reason}`")
+        return await ctx.send("\N{SLEEPING SYMBOL} || You are now afk! " + f"Reason: `{reason}`")
 
     @commands.Cog.listener("on_message")
     async def remove_afk(self, message: discord.Message):
