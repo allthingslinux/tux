@@ -3,6 +3,7 @@ from discord.ext import commands
 from loguru import logger
 
 from prisma.enums import CaseType
+from tux.bot import Tux
 from tux.utils import checks
 from tux.utils.flags import JailFlags, generate_usage
 
@@ -10,7 +11,7 @@ from . import ModerationCogBase
 
 
 class Jail(ModerationCogBase):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
         self.jail.usage = generate_usage(self.jail, JailFlags)
 
@@ -22,7 +23,7 @@ class Jail(ModerationCogBase):
     @checks.has_pl(2)
     async def jail(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         member: discord.Member,
         *,
         flags: JailFlags,
@@ -32,7 +33,7 @@ class Jail(ModerationCogBase):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The discord context object.
         member : discord.Member
             The member to jail.
@@ -121,5 +122,5 @@ class Jail(ModerationCogBase):
         ]
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Jail(bot))

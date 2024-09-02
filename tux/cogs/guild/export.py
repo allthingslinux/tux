@@ -2,12 +2,13 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from tux.bot import Tux
 from tux.utils import checks, exports
 from tux.utils.embeds import EmbedCreator
 
 
 class Export(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
     export = app_commands.Group(name="export", description="export server data with Tux.")
@@ -105,5 +106,5 @@ class Export(commands.Cog):
         return await interaction.response.send_message(embed=embed)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Export(bot))

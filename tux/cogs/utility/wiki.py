@@ -2,11 +2,12 @@ import httpx
 from discord.ext import commands
 from loguru import logger
 
+from tux.bot import Tux
 from tux.utils.embeds import EmbedCreator
 
 
 class Wiki(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.arch_wiki_base_url = "https://wiki.archlinux.org/api.php"
         self.atl_wiki_base_url = "https://atl.wiki/api.php"
@@ -86,13 +87,13 @@ class Wiki(commands.Cog):
         usage="wiki [arch|atl]",
         aliases=["wk"],
     )
-    async def wiki(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def wiki(self, ctx: commands.Context[Tux]) -> None:
         """
         Wiki related commands.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         """
 
@@ -103,13 +104,13 @@ class Wiki(commands.Cog):
         name="arch",
         usage="wiki arch [query]",
     )
-    async def arch_wiki(self, ctx: commands.Context[commands.Bot], query: str) -> None:
+    async def arch_wiki(self, ctx: commands.Context[Tux], query: str) -> None:
         """
         Search the Arch Linux Wiki
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         query : str
             The search query.
@@ -133,13 +134,13 @@ class Wiki(commands.Cog):
         name="atl",
         usage="wiki atl [query]",
     )
-    async def atl_wiki(self, ctx: commands.Context[commands.Bot], query: str) -> None:
+    async def atl_wiki(self, ctx: commands.Context[Tux], query: str) -> None:
         """
         Search the All Things Linux Wiki
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         query : str
             The search query.
@@ -160,5 +161,5 @@ class Wiki(commands.Cog):
         await ctx.send(embed=embed)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Wiki(bot))

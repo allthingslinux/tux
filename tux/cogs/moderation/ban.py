@@ -3,6 +3,7 @@ from discord.ext import commands
 from loguru import logger
 
 from prisma.enums import CaseType
+from tux.bot import Tux
 from tux.utils import checks
 from tux.utils.flags import BanFlags, generate_usage
 
@@ -10,7 +11,7 @@ from . import ModerationCogBase
 
 
 class Ban(ModerationCogBase):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
         self.ban.usage = generate_usage(self.ban, BanFlags)
 
@@ -19,7 +20,7 @@ class Ban(ModerationCogBase):
     @checks.has_pl(3)
     async def ban(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         member: discord.Member,
         *,
         flags: BanFlags,
@@ -29,7 +30,7 @@ class Ban(ModerationCogBase):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
         member : discord.Member
             The member to ban.
@@ -73,5 +74,5 @@ class Ban(ModerationCogBase):
         await self.handle_case_response(ctx, CaseType.BAN, case.case_number, flags.reason, member)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Ban(bot))

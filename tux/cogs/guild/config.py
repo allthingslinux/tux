@@ -4,6 +4,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.ui.views.config import ConfigSetChannels, ConfigSetPrivateLogs, ConfigSetPublicLogs
 
@@ -13,7 +14,7 @@ from tux.ui.views.config import ConfigSetChannels, ConfigSetPrivateLogs, ConfigS
 
 
 class Config(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.db = DatabaseController().guild_config
 
@@ -319,5 +320,5 @@ class Config(commands.Cog):
         await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Config(bot))

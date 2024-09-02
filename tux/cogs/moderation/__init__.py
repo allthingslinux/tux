@@ -5,20 +5,21 @@ from discord.ext import commands
 from loguru import logger
 
 from prisma.enums import CaseType
+from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import create_embed_footer, create_error_embed
 
 
 class ModerationCogBase(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.db = DatabaseController()
         self.config = DatabaseController().guild_config
 
     def create_embed(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         title: str,
         fields: list[tuple[str, str, bool]],
         color: int,
@@ -31,7 +32,7 @@ class ModerationCogBase(commands.Cog):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context of the command.
         title : str
             The title of the embed.
@@ -64,7 +65,7 @@ class ModerationCogBase(commands.Cog):
 
     async def send_embed(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         embed: discord.Embed,
         log_type: str,
     ) -> None:
@@ -73,7 +74,7 @@ class ModerationCogBase(commands.Cog):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context of the command.
         embed : discord.Embed
             The embed to send.
@@ -90,7 +91,7 @@ class ModerationCogBase(commands.Cog):
 
     async def send_dm(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         silent: bool,
         user: discord.Member,
         reason: str,
@@ -101,7 +102,7 @@ class ModerationCogBase(commands.Cog):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context of the command.
         silent : bool
             Whether the command is silent.
@@ -125,7 +126,7 @@ class ModerationCogBase(commands.Cog):
 
     async def check_conditions(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         user: discord.Member,
         moderator: discord.Member | discord.User,
         action: str,
@@ -135,7 +136,7 @@ class ModerationCogBase(commands.Cog):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context of the command.
         user : discord.Member
             The target of the moderation action.
@@ -173,7 +174,7 @@ class ModerationCogBase(commands.Cog):
 
     async def check_jail_conditions(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         user: discord.Member,
     ) -> tuple[bool, discord.Role | None, discord.abc.GuildChannel | None]:
         """
@@ -181,7 +182,7 @@ class ModerationCogBase(commands.Cog):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context of the command.
         user : discord.Member
             The member to jail.
@@ -215,7 +216,7 @@ class ModerationCogBase(commands.Cog):
 
     async def handle_case_response(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         case_type: CaseType,
         case_number: int | None,
         reason: str,

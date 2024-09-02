@@ -6,6 +6,7 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+from tux.bot import Tux
 from tux.utils.embeds import create_error_embed
 from tux.utils.exceptions import AppCommandPermissionLevelError, PermissionLevelError
 
@@ -141,7 +142,7 @@ error_map: dict[type[Exception], str] = {
 
 
 class ErrorHandler(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.error_message = "An error occurred. Please try again later or contact support."
 
@@ -184,7 +185,7 @@ class ErrorHandler(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         error: commands.CommandError | commands.CheckFailure,
     ) -> None:
         """
@@ -192,7 +193,7 @@ class ErrorHandler(commands.Cog):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The discord context object.
         error : commands.CommandError | commands.CheckFailure
             The error that occurred.
@@ -243,7 +244,7 @@ class ErrorHandler(commands.Cog):
     def get_error_message(
         self,
         error: Exception,
-        ctx: commands.Context[commands.Bot] | None = None,
+        ctx: commands.Context[Tux] | None = None,
     ) -> str:
         """
         Get the error message for a given error.
@@ -252,7 +253,7 @@ class ErrorHandler(commands.Cog):
         ----------
         error : Exception
             The error that occurred.
-        ctx : commands.Context[commands.Bot], optional
+        ctx : commands.Context[Tux], optional
             The discord context object, by default None
         """
         if ctx:
@@ -275,5 +276,5 @@ class ErrorHandler(commands.Cog):
         sentry_sdk.capture_exception(error)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(ErrorHandler(bot))

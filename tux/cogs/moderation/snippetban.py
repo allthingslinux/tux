@@ -3,6 +3,7 @@ from discord.ext import commands
 from loguru import logger
 
 from prisma.enums import CaseType
+from tux.bot import Tux
 from tux.database.controllers.case import CaseController
 from tux.utils import checks
 from tux.utils.flags import SnippetBanFlags, generate_usage
@@ -11,7 +12,7 @@ from . import ModerationCogBase
 
 
 class SnippetBan(ModerationCogBase):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
         self.case_controller = CaseController()
         self.snippet_ban.usage = generate_usage(self.snippet_ban, SnippetBanFlags)
@@ -24,7 +25,7 @@ class SnippetBan(ModerationCogBase):
     @checks.has_pl(3)
     async def snippet_ban(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         member: discord.Member,
         *,
         flags: SnippetBanFlags,
@@ -34,7 +35,7 @@ class SnippetBan(ModerationCogBase):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object.
         member : discord.Member
             The member to snippet ban.
@@ -93,5 +94,5 @@ class SnippetBan(ModerationCogBase):
         return ban_count > unban_count
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(SnippetBan(bot))

@@ -6,6 +6,7 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+from tux.bot import Tux
 from tux.utils import checks
 from tux.utils.constants import Constants as CONST
 
@@ -13,7 +14,7 @@ MailboxData = dict[str, str | list[str]]
 
 
 class Mail(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.api_url = CONST.MAILCOW_API_URL
         self.headers = {
@@ -203,5 +204,5 @@ If you have any questions or need assistance, please feel free to reach out to t
             )
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Mail(bot))

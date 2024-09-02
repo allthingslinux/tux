@@ -3,6 +3,7 @@ from discord.ext import commands
 from loguru import logger
 
 from prisma.enums import CaseType
+from tux.bot import Tux
 from tux.utils import checks
 from tux.utils.flags import KickFlags, generate_usage
 
@@ -10,7 +11,7 @@ from . import ModerationCogBase
 
 
 class Kick(ModerationCogBase):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
         self.kick.usage = generate_usage(self.kick, KickFlags)
 
@@ -22,7 +23,7 @@ class Kick(ModerationCogBase):
     @checks.has_pl(2)
     async def kick(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         member: discord.Member,
         *,
         flags: KickFlags,
@@ -32,7 +33,7 @@ class Kick(ModerationCogBase):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
         member : discord.Member
             The member to kick.
@@ -76,5 +77,5 @@ class Kick(ModerationCogBase):
         await self.handle_case_response(ctx, CaseType.KICK, case.case_number, flags.reason, member)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Kick(bot))

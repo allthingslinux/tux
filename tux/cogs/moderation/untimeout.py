@@ -3,6 +3,7 @@ from discord.ext import commands
 from loguru import logger
 
 from prisma.enums import CaseType
+from tux.bot import Tux
 from tux.utils import checks
 from tux.utils.flags import UntimeoutFlags, generate_usage
 
@@ -10,7 +11,7 @@ from . import ModerationCogBase
 
 
 class Untimeout(ModerationCogBase):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
         self.untimeout.usage = generate_usage(self.untimeout, UntimeoutFlags)
 
@@ -22,7 +23,7 @@ class Untimeout(ModerationCogBase):
     @checks.has_pl(2)
     async def untimeout(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         member: discord.Member,
         *,
         flags: UntimeoutFlags,
@@ -32,7 +33,7 @@ class Untimeout(ModerationCogBase):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
         member : discord.Member
             The member to untimeout.
@@ -76,5 +77,5 @@ class Untimeout(ModerationCogBase):
         await self.handle_case_response(ctx, CaseType.UNTIMEOUT, case.case_number, flags.reason, member)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Untimeout(bot))
