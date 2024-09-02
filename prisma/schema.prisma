@@ -47,6 +47,7 @@ model Guild {
   notes           Note[]
   reminders       Reminder[]
   guild_config    GuildConfig[]
+  AFK             AFKModel[]
 
   @@unique([guild_id])
   @@index([guild_id])
@@ -141,4 +142,16 @@ model Reminder {
 
   @@unique([reminder_id, guild_id])
   @@index([reminder_id, guild_id])
+}
+
+model AFKModel {
+  member_id BigInt   @id
+  nickname  String
+  reason    String
+  since     DateTime @default(now())
+  guild_id  BigInt
+  guild     Guild    @relation(fields: [guild_id], references: [guild_id])
+
+  @@unique([member_id, guild_id])
+  @@index([member_id])
 }
