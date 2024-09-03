@@ -52,7 +52,7 @@ class Info(commands.Cog):
             .add_field(name="Text Channels", value=len(guild.text_channels))
             .add_field(name="Voice Channels", value=len(guild.voice_channels))
             .add_field(name="Forum Channels", value=len(guild.forums))
-            .add_field(name="Emojis", value=f"{len(guild.emojis)}/{guild.emoji_limit}")
+            .add_field(name="Emojis", value=f"{len(guild.emojis)}/{2*guild.emoji_limit}")
             .add_field(name="Stickers", value=f"{len(guild.stickers)}/{guild.sticker_limit}")
             .add_field(name="Roles", value=len(guild.roles))
             .add_field(name="Humans", value=sum(not member.bot for member in guild.members))
