@@ -2,11 +2,12 @@ import discord
 from discord.ext import commands
 
 from prisma.models import AFKModel
+from tux.bot import Tux
 from tux.database.controllers import AfkController
 
 
 class AFK(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.db = AfkController()
 
@@ -15,7 +16,7 @@ class AFK(commands.Cog):
         usage="afk [reason]",
     )
     @commands.guild_only()
-    async def afk(self, ctx: commands.Context[commands.Bot], *, reason: str = "No reason."):
+    async def afk(self, ctx: commands.Context[Tux], *, reason: str = "No reason."):
         if not ctx.guild:
             return await ctx.send("This command cannot be used in direct messages.")
 
@@ -83,5 +84,5 @@ class AFK(commands.Cog):
         )
 
 
-async def setup(bot: commands.Bot):
+async def setup(bot: Tux):
     await bot.add_cog(AFK(bot))
