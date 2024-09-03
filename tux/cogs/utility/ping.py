@@ -32,11 +32,11 @@ class Ping(commands.Cog):
         ram_amount_in_bytes = psutil.Process().memory_info().rss
         ram_amount_in_mb = ram_amount_in_bytes / (1024 * 1024)
 
-        # Format the RAM usage to be in GB or MB
+        # Format the RAM usage to be in GB or MB, rounded to nearest integer
         if ram_amount_in_mb >= 1024:
-            ram_amount_formatted = f"{ram_amount_in_mb / 1024:.2f}GB"
+            ram_amount_formatted = f"{round(ram_amount_in_mb / 1024)}GB"
         else:
-            ram_amount_formatted = f"{ram_amount_in_mb:.2f}MB"
+            ram_amount_formatted = f"{round(ram_amount_in_mb)}MB"
 
         embed = EmbedCreator.create_success_embed(
             title="Pong!",
