@@ -427,7 +427,7 @@ class Snippets(commands.Cog):
     @commands.command(
         name="editsnippet",
         aliases=["es"],
-        usage="editsnippet [name]",
+        usage="editsnippet [name] [content]",
     )
     @commands.guild_only()
     async def edit_snippet(self, ctx: commands.Context[Tux], *, arg: str) -> None:
