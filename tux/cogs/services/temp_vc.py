@@ -6,17 +6,6 @@ from tux.utils.constants import Constants as CONST
 
 
 class TempVc(commands.Cog):
-    """
-    A cog that manages temporary voice channels.
-
-    Attributes
-    ----------
-    bot : Tux
-        The bot instance.
-    base_vc_name : str
-        The base name for temporary voice channels.
-    """
-
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.base_vc_name: str = "/tmp/"

@@ -163,7 +163,12 @@ async def check_sysadmin_or_owner(
     """
 
     try:
-        user_id = ctx.author.id if ctx else (interaction.user.id if interaction else None)
+        if ctx:
+            user_id = ctx.author.id
+        elif interaction:
+            user_id = interaction.user.id
+        else:
+            user_id = None
 
         if user_id:
             if 8 in range(lower_bound, higher_bound + 1) and user_id in CONST.SYSADMIN_IDS:

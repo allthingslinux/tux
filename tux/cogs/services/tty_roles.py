@@ -9,17 +9,6 @@ from tux.bot import Tux
 
 
 class TtyRoles(commands.Cog):
-    """
-    A cog that assigns roles to users based on the number of users in the guild.
-
-    Attributes
-    ----------
-    bot : Tux
-        The bot instance.
-    base_role_name : str
-        The base name for the roles.
-    """
-
     def __init__(self, bot: Tux):
         self.bot = bot
         self.base_role_name = "/dev/tty"
