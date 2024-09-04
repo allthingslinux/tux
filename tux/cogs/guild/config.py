@@ -7,6 +7,7 @@ from discord.ext import commands
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.ui.views.config import ConfigSetChannels, ConfigSetPrivateLogs, ConfigSetPublicLogs
+from tux.utils.constants import CONST
 from tux.utils.embeds import EmbedCreator
 
 # TODO: Add onboarding setup to ensure all required channels, logs, and roles are set up
@@ -14,16 +15,21 @@ from tux.utils.embeds import EmbedCreator
 # TODO: Add a command to reset the guild config to default values
 
 
-class Config(commands.Cog):
+@app_commands.guild_only()
+@app_commands.checks.has_permissions(administrator=True)
+class Config(commands.GroupCog, group_name="config"):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.db = DatabaseController().guild_config
 
-    config = app_commands.Group(name="config", description="Configure Tux for your server.")
+    logs = app_commands.Group(name="logs", description="Configure the guild logs.")
+    channels = app_commands.Group(name="channels", description="Configure the guild channels.")
+    perms = app_commands.Group(name="perms", description="Configure the guild permission levels.")
+    roles = app_commands.Group(name="roles", description="Configure the guild roles.")
+    prefix = app_commands.Group(name="prefix", description="Configure the guild prefix.")
 
-    @config.command(name="set_logs")
+    @logs.command(name="set")
     @app_commands.guild_only()
-    # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
     async def config_set_logs(
         self,
@@ -49,9 +55,8 @@ class Config(commands.Cog):
 
         await interaction.response.send_message(view=view, ephemeral=True)
 
-    @config.command(name="set_channels")
+    @channels.command(name="set")
     @app_commands.guild_only()
-    # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
     async def config_set_channels(
         self,
@@ -69,7 +74,9 @@ class Config(commands.Cog):
         view = ConfigSetChannels()
         await interaction.response.send_message(view=view, ephemeral=True)
 
-    @config.command(name="set_perms")
+    @perms.command(name="set")
+    @app_commands.guild_only()
+    @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(setting="Which permission level to configure")
     @app_commands.choices(
         setting=[
@@ -84,7 +91,6 @@ class Config(commands.Cog):
         ],
     )
     @app_commands.guild_only()
-    # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
     async def config_set_perms(
         self,
@@ -120,16 +126,15 @@ class Config(commands.Cog):
             delete_after=30,
         )
 
-    @config.command(name="set_roles")
+    @roles.command(name="set")
     @app_commands.guild_only()
-    # @checks.ac_has_pl(7)
+    @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(setting="Which role to configure")
     @app_commands.choices(
         setting=[
             app_commands.Choice(name="Jail", value="jail_role_id"),
         ],
     )
-    @app_commands.checks.has_permissions(administrator=True)
     async def config_set_roles(
         self,
         interaction: discord.Interaction,
@@ -162,9 +167,8 @@ class Config(commands.Cog):
                 delete_after=30,
             )
 
-    @config.command(name="get_roles")
+    @roles.command(name="get")
     @app_commands.guild_only()
-    # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
     async def config_get_roles(
         self,
@@ -194,9 +198,8 @@ class Config(commands.Cog):
 
         await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
 
-    @config.command(name="get_perms")
+    @perms.command(name="get")
     @app_commands.guild_only()
-    # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
     async def config_get_perms(
         self,
@@ -228,9 +231,8 @@ class Config(commands.Cog):
 
         await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
 
-    @config.command(name="get_channels")
+    @channels.command(name="get")
     @app_commands.guild_only()
-    # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
     async def config_get_channels(
         self,
@@ -268,9 +270,8 @@ class Config(commands.Cog):
 
         await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
 
-    @config.command(name="get_logs")
+    @logs.command(name="get")
     @app_commands.guild_only()
-    # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
     async def config_get_logs(
         self,
@@ -320,21 +321,23 @@ class Config(commands.Cog):
 
         await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
 
-    @config.command(name="set_prefix")
+    @prefix.command(name="configure")
     @app_commands.guild_only()
     @app_commands.checks.has_permissions(administrator=True)
-    async def config_set_prefix(
+    async def config_configure_prefix(
         self,
         interaction: discord.Interaction,
         prefix: str,
     ) -> None:
         """
-        Get the prefix for the guild.
+        Set the prefix for the guild.
 
         Parameters
         ----------
         interaction : discord.Interaction
             The discord interaction object.
+        prefix : str
+            The prefix to set for the guild.
         """
 
         assert interaction.guild
@@ -345,6 +348,34 @@ class Config(commands.Cog):
             embed=EmbedCreator.create_success_embed(
                 title="Guild Config",
                 description=f"The prefix was updated to `{prefix}`",
+                interaction=interaction,
+            ),
+        )
+
+    @prefix.command(name="reset")
+    @app_commands.guild_only()
+    @app_commands.checks.has_permissions(administrator=True)
+    async def config_reset_prefix(
+        self,
+        interaction: discord.Interaction,
+    ) -> None:
+        """
+        Reset the prefix to the default value for this guild.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        """
+
+        assert interaction.guild
+
+        await self.db.delete_guild_prefix(interaction.guild.id)
+
+        await interaction.response.send_message(
+            embed=EmbedCreator.create_success_embed(
+                title="Guild Config",
+                description=f"The prefix was reset to `{CONST.DEFAULT_PREFIX}`",
                 interaction=interaction,
             ),
         )

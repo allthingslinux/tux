@@ -419,3 +419,6 @@ class GuildConfigController:
 
     async def delete_guild_config(self, guild_id: int) -> None:
         await self.table.delete(where={"guild_id": guild_id})
+
+    async def delete_guild_prefix(self, guild_id: int) -> None:
+        await self.table.update(where={"guild_id": guild_id}, data={"prefix": None})
