@@ -14,3 +14,6 @@ class GuildController:
 
     async def delete_guild_by_id(self, guild_id: int) -> None:
         await self.table.delete(where={"guild_id": guild_id})
+
+    async def get_all_guilds(self) -> list[Guild]:
+        return await self.table.find_many()
