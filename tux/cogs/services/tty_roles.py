@@ -5,20 +5,11 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.bot import Tux
+
 
 class TtyRoles(commands.Cog):
-    """
-    A cog that assigns roles to users based on the number of users in the guild.
-
-    Attributes
-    ----------
-    bot : commands.Bot
-        The bot instance.
-    base_role_name : str
-        The base name for the roles.
-    """
-
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: Tux):
         self.bot = bot
         self.base_role_name = "/dev/tty"
 
@@ -113,5 +104,5 @@ class TtyRoles(commands.Cog):
             logger.error(f"Failed to assign role {role.name} to {member}: {error}")
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(TtyRoles(bot))

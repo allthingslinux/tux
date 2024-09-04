@@ -6,6 +6,7 @@ from reactionmenu import ViewButton, ViewMenu
 from prisma.enums import CaseType
 from prisma.models import Case
 from prisma.types import CaseWhereInput
+from tux.bot import Tux
 from tux.utils import checks
 from tux.utils.constants import Constants as CONST
 from tux.utils.embeds import create_embed_footer
@@ -29,7 +30,7 @@ emojis: dict[str, int] = {
 
 
 class Cases(ModerationCogBase):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
         self.cases_view.usage = generate_usage(self.cases_view, CasesViewFlags)
         self.cases_modify.usage = generate_usage(self.cases_modify, CaseModifyFlags)
@@ -41,7 +42,7 @@ class Cases(ModerationCogBase):
     )
     @commands.guild_only()
     @checks.has_pl(2)
-    async def cases(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def cases(self, ctx: commands.Context[Tux]) -> None:
         """
         Manage moderation cases in the server.
         """
@@ -56,7 +57,7 @@ class Cases(ModerationCogBase):
     @checks.has_pl(2)
     async def cases_view(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         number: int | None,
         *,
         flags: CasesViewFlags,
@@ -66,7 +67,7 @@ class Cases(ModerationCogBase):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
         number : int | None
             The case number to view.
@@ -91,7 +92,7 @@ class Cases(ModerationCogBase):
     @checks.has_pl(2)
     async def cases_modify(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         number: int,
         *,
         flags: CaseModifyFlags,
@@ -101,7 +102,7 @@ class Cases(ModerationCogBase):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
         number : int
             The case number to modify.
@@ -129,7 +130,7 @@ class Cases(ModerationCogBase):
 
     async def _view_single_case(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         number: int,
     ) -> None:
         """
@@ -137,7 +138,7 @@ class Cases(ModerationCogBase):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
         number : int
             The number of the case to view.
@@ -160,7 +161,7 @@ class Cases(ModerationCogBase):
 
     async def _view_cases_with_flags(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         flags: CasesViewFlags,
     ) -> None:
         """
@@ -168,7 +169,7 @@ class Cases(ModerationCogBase):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
         flags : CasesViewFlags
             The flags for the command. (type, user, moderator)
@@ -198,7 +199,7 @@ class Cases(ModerationCogBase):
 
     async def _update_case(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         case: Case,
         flags: CaseModifyFlags,
     ) -> None:
@@ -207,7 +208,7 @@ class Cases(ModerationCogBase):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
         case : Case
             The case to update.
@@ -240,7 +241,7 @@ class Cases(ModerationCogBase):
 
     async def _handle_case_response(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         case: Case | None,
         action: str,
         reason: str,
@@ -251,7 +252,7 @@ class Cases(ModerationCogBase):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
         case : Case | None
             The case to handle the response for.
@@ -296,7 +297,7 @@ class Cases(ModerationCogBase):
 
     async def _handle_case_list_response(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         cases: list[Case],
         total_cases: int,
     ) -> None:
@@ -343,7 +344,7 @@ class Cases(ModerationCogBase):
 
     def _create_case_list_embed(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         cases: list[Case],
         total_cases: int,
     ) -> discord.Embed:
@@ -435,5 +436,5 @@ class Cases(ModerationCogBase):
         embed.description += self._get_case_description(case, case_status_emoji, case_type_emoji, case_action_emoji)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Cases(bot))

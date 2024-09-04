@@ -4,13 +4,15 @@ import discord
 from discord.ext import commands
 from reactionmenu import ViewButton, ViewMenu
 
+from tux.bot import Tux
+
 
 class Info(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
     @commands.hybrid_group(name="info", aliases=["i"], usage="info <subcommand>")
-    async def info(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def info(self, ctx: commands.Context[Tux]) -> None:
         """
         Information commands.
 
@@ -24,7 +26,7 @@ class Info(commands.Cog):
             await ctx.send_help("info")
 
     @info.command(name="server", aliases=["s"], usage="info server")
-    async def server(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def server(self, ctx: commands.Context[Tux]) -> None:
         """
         Show information about the server.
 
@@ -50,7 +52,7 @@ class Info(commands.Cog):
             .add_field(name="Text Channels", value=len(guild.text_channels))
             .add_field(name="Voice Channels", value=len(guild.voice_channels))
             .add_field(name="Forum Channels", value=len(guild.forums))
-            .add_field(name="Emojis", value=f"{len(guild.emojis)}/{guild.emoji_limit}")
+            .add_field(name="Emojis", value=f"{len(guild.emojis)}/{2*guild.emoji_limit}")
             .add_field(name="Stickers", value=f"{len(guild.stickers)}/{guild.sticker_limit}")
             .add_field(name="Roles", value=len(guild.roles))
             .add_field(name="Humans", value=sum(not member.bot for member in guild.members))
@@ -62,7 +64,7 @@ class Info(commands.Cog):
         await ctx.send(embed=embed)
 
     @info.command(name="member", aliases=["m", "user", "u"], usage="info member [member]")
-    async def member(self, ctx: commands.Context[commands.Bot], member: discord.Member) -> None:
+    async def member(self, ctx: commands.Context[Tux], member: discord.Member) -> None:
         """
         Show information about a member.
 
@@ -106,7 +108,7 @@ class Info(commands.Cog):
         await ctx.send(embed=embed)
 
     @info.command(name="roles", aliases=["r"], usage="info roles")
-    async def roles(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def roles(self, ctx: commands.Context[Tux]) -> None:
         """
         List all roles in the server.
 
@@ -124,7 +126,7 @@ class Info(commands.Cog):
         await self.paginated_embed(ctx, "Server Roles", "roles", guild.name, roles, 32)
 
     @info.command(name="emotes", aliases=["e"], usage="info emotes")
-    async def emotes(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def emotes(self, ctx: commands.Context[Tux]) -> None:
         """
         List all emotes in the server.
 
@@ -142,7 +144,7 @@ class Info(commands.Cog):
 
     async def paginated_embed(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         title: str,
         list_type: str,
         guild_name: str,
@@ -238,5 +240,5 @@ class Info(commands.Cog):
         return menu
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Info(bot))

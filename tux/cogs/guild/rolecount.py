@@ -3,6 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 from reactionmenu import ViewButton, ViewMenu
 
+from tux.bot import Tux
 from tux.utils.embeds import EmbedCreator
 
 des_ids = [
@@ -146,7 +147,7 @@ misc_ids = [
 
 
 class RoleCount(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: Tux):
         self.bot = bot
         self.roles_emoji_mapping = {
             "ds": distro_ids,
@@ -352,5 +353,5 @@ class RoleCount(commands.Cog):
             await menu.start()
 
 
-async def setup(bot: commands.Bot):
+async def setup(bot: Tux):
     await bot.add_cog(RoleCount(bot))

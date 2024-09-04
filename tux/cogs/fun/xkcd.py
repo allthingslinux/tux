@@ -2,13 +2,14 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.bot import Tux
 from tux.ui.buttons import XkcdButtons
 from tux.utils.embeds import EmbedCreator
 from tux.wrappers import xkcd
 
 
 class Xkcd(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.client = xkcd.Client()
 
@@ -18,13 +19,13 @@ class Xkcd(commands.Cog):
         usage="xkcd <subcommand>",
     )
     @commands.guild_only()
-    async def xkcd(self, ctx: commands.Context[commands.Bot], comic_id: int | None = None) -> None:
+    async def xkcd(self, ctx: commands.Context[Tux], comic_id: int | None = None) -> None:
         """
         xkcd related commands.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         comic_id : int | None
             The ID of the xkcd comic to search for.
@@ -41,13 +42,13 @@ class Xkcd(commands.Cog):
         usage="xkcd latest",
     )
     @commands.guild_only()
-    async def latest(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def latest(self, ctx: commands.Context[Tux]) -> None:
         """
         Get the latest xkcd comic.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         """
 
@@ -64,13 +65,13 @@ class Xkcd(commands.Cog):
         usage="xkcd random",
     )
     @commands.guild_only()
-    async def random(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def random(self, ctx: commands.Context[Tux]) -> None:
         """
         Get a random xkcd comic.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the
         """
 
@@ -87,13 +88,13 @@ class Xkcd(commands.Cog):
         usage="xkcd specific [comic_id]",
     )
     @commands.guild_only()
-    async def specific(self, ctx: commands.Context[commands.Bot], comic_id: int) -> None:
+    async def specific(self, ctx: commands.Context[Tux], comic_id: int) -> None:
         """
         Get a specific xkcd comic.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         comic_id : int
             The ID of the comic to search for.
@@ -157,5 +158,5 @@ class Xkcd(commands.Cog):
             )
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Xkcd(bot))

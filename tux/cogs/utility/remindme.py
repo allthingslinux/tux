@@ -8,6 +8,7 @@ from discord.ext import commands
 from loguru import logger
 
 from prisma.models import Reminder
+from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.utils.embeds import EmbedCreator
 from tux.utils.functions import convert_to_seconds
@@ -32,7 +33,7 @@ def get_closest_reminder(reminders: list[Reminder]) -> Reminder | None:
 
 
 class RemindMe(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.db = DatabaseController().reminder
         self.bot.loop.create_task(self.update())
@@ -206,5 +207,5 @@ class RemindMe(commands.Cog):
         await self.update()
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(RemindMe(bot))

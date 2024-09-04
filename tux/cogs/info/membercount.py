@@ -2,11 +2,12 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from tux.bot import Tux
 from tux.utils.embeds import EmbedCreator
 
 
 class MemberCount(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
     @app_commands.command(name="membercount", description="Shows server member count")
@@ -48,5 +49,5 @@ class MemberCount(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(MemberCount(bot))

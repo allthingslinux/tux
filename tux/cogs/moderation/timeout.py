@@ -5,6 +5,7 @@ from discord.ext import commands
 from loguru import logger
 
 from prisma.enums import CaseType
+from tux.bot import Tux
 from tux.utils import checks
 from tux.utils.flags import TimeoutFlags, generate_usage
 from tux.utils.functions import parse_time_string
@@ -13,7 +14,7 @@ from . import ModerationCogBase
 
 
 class Timeout(ModerationCogBase):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
         self.timeout.usage = generate_usage(self.timeout, TimeoutFlags)
 
@@ -25,7 +26,7 @@ class Timeout(ModerationCogBase):
     @checks.has_pl(2)
     async def timeout(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         member: discord.Member,
         *,
         flags: TimeoutFlags,
@@ -35,7 +36,7 @@ class Timeout(ModerationCogBase):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
         member : discord.Member
             The member to timeout.
@@ -83,5 +84,5 @@ class Timeout(ModerationCogBase):
         await self.handle_case_response(ctx, CaseType.TIMEOUT, case.case_number, flags.reason, member, flags.duration)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Timeout(bot))

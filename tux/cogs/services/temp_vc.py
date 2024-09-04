@@ -1,22 +1,12 @@
 import discord
 from discord.ext import commands
 
+from tux.bot import Tux
 from tux.utils.constants import Constants as CONST
 
 
 class TempVc(commands.Cog):
-    """
-    A cog that manages temporary voice channels.
-
-    Attributes
-    ----------
-    bot : commands.Bot
-        The bot instance.
-    base_vc_name : str
-        The base name for temporary voice channels.
-    """
-
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.base_vc_name: str = "/tmp/"
 
@@ -132,5 +122,5 @@ class TempVc(commands.Cog):
             await channel.delete()
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(TempVc(bot))

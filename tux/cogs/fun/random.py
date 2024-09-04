@@ -2,11 +2,12 @@ import random
 
 from discord.ext import commands
 
+from tux.bot import Tux
 from tux.utils.embeds import EmbedCreator
 
 
 class Random(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
     @commands.hybrid_group(
@@ -15,13 +16,13 @@ class Random(commands.Cog):
         usage="random <subcommand>",
     )
     @commands.guild_only()
-    async def random(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def random(self, ctx: commands.Context[Tux]) -> None:
         """
         Random generation commands.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the
         """
         if ctx.invoked_subcommand is None:
@@ -33,13 +34,13 @@ class Random(commands.Cog):
         usage="random coinflip",
     )
     @commands.guild_only()
-    async def coinflip(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def coinflip(self, ctx: commands.Context[Tux]) -> None:
         """
         Flip a coin.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         """
 
@@ -53,13 +54,13 @@ class Random(commands.Cog):
         usage="random 8ball [question]",
     )
     @commands.guild_only()
-    async def eight_ball(self, ctx: commands.Context[commands.Bot], *, question: str, cow: bool = False) -> None:
+    async def eight_ball(self, ctx: commands.Context[Tux], *, question: str, cow: bool = False) -> None:
         """
         Ask the magic 8ball a question.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         question : str
             The question to ask the 8ball.
@@ -157,13 +158,13 @@ class Random(commands.Cog):
         usage="random dice <sides>",
     )
     @commands.guild_only()
-    async def dice(self, ctx: commands.Context[commands.Bot], sides: int = 6) -> None:
+    async def dice(self, ctx: commands.Context[Tux], sides: int = 6) -> None:
         """
         Roll a dice.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         sides : int, optional
             The number of sides on the dice, by default 6.
@@ -189,7 +190,7 @@ class Random(commands.Cog):
     @commands.guild_only()
     async def random_number(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         minimum_str: str = "0",
         maximum_str: str = "100",
     ) -> None:
@@ -198,7 +199,7 @@ class Random(commands.Cog):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         minimum_str : str, optional
             The minimum value of the random number, by default 0. Converted to int after removing certain characters.
@@ -228,5 +229,5 @@ class Random(commands.Cog):
         await ctx.send(content=f"Your random number is: {random.randint(minimum_int, maximum_int)}")
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Random(bot))

@@ -3,11 +3,12 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+from tux.bot import Tux
 from tux.utils import checks
 
 
 class Purge(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
     @app_commands.command(name="purge")
@@ -79,7 +80,7 @@ class Purge(commands.Cog):
     @checks.has_pl(2)
     async def prefix_purge(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         limit: int,
         channel: discord.TextChannel | discord.Thread | None = None,
     ) -> None:
@@ -88,7 +89,7 @@ class Purge(commands.Cog):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
         limit : int
             The number of messages to delete.
@@ -134,5 +135,5 @@ class Purge(commands.Cog):
         await ctx.send(f"Purged {limit} messages from {channel.mention}.", delete_after=30, ephemeral=True)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Purge(bot))

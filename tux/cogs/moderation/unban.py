@@ -3,6 +3,7 @@ from discord.ext import commands
 from loguru import logger
 
 from prisma.enums import CaseType
+from tux.bot import Tux
 from tux.utils import checks
 from tux.utils.flags import UnbanFlags, generate_usage
 
@@ -10,7 +11,7 @@ from . import ModerationCogBase
 
 
 class Unban(ModerationCogBase):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
         self.unban.usage = generate_usage(self.unban, UnbanFlags)
 
@@ -22,7 +23,7 @@ class Unban(ModerationCogBase):
     @checks.has_pl(3)
     async def unban(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         username_or_id: str,
         *,
         flags: UnbanFlags,
@@ -32,7 +33,7 @@ class Unban(ModerationCogBase):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         username_or_id : str
             The username or ID of the user to unban.
@@ -78,5 +79,5 @@ class Unban(ModerationCogBase):
         await self.handle_case_response(ctx, CaseType.UNBAN, case.case_number, flags.reason, user)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Unban(bot))

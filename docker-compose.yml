@@ -3,8 +3,13 @@ services:
     build: .
     image: allthingslinux/tux:latest
     container_name: tux
-    restart: unless-stopped
+    restart: always
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app/
+          ignore:
+            - .venv/
     env_file:
       - .env
-    volumes:
-      - .:/app

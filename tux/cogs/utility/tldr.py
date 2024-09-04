@@ -4,11 +4,12 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from tux.bot import Tux
 from tux.utils.embeds import EmbedCreator
 
 
 class Tldr(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
     async def get_autocomplete(
@@ -73,13 +74,13 @@ class Tldr(commands.Cog):
         usage="tldr [command]",
     )
     @commands.guild_only()
-    async def prefix_tldr(self, ctx: commands.Context[commands.Bot], command: str) -> None:
+    async def prefix_tldr(self, ctx: commands.Context[Tux], command: str) -> None:
         """
         Show a TLDR page for a CLI command
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         command : str
             The command to retrieve the TLDR page for.
@@ -159,5 +160,5 @@ class Tldr(commands.Cog):
             return process.stdout
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Tldr(bot))

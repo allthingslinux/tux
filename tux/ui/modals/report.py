@@ -1,13 +1,13 @@
 import discord
-from discord.ext import commands
 from loguru import logger
 
+from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.utils.embeds import EmbedCreator
 
 
 class ReportModal(discord.ui.Modal):
-    def __init__(self, *, title: str = "Submit an anonymous report", bot: commands.Bot) -> None:
+    def __init__(self, *, title: str = "Submit an anonymous report", bot: Tux) -> None:
         super().__init__(title=title)
         self.bot = bot
         self.config = DatabaseController().guild_config

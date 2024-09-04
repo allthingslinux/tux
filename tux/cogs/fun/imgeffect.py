@@ -7,11 +7,12 @@ from discord.ext import commands
 from loguru import logger
 from PIL import Image, ImageEnhance, ImageOps
 
+from tux.bot import Tux
 from tux.utils.embeds import EmbedCreator
 
 
 class ImgEffect(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.allowed_mimetypes = [
             "image/jpeg",
@@ -93,5 +94,5 @@ class ImgEffect(commands.Cog):
         await interaction.followup.send(file=file, ephemeral=True)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(ImgEffect(bot))

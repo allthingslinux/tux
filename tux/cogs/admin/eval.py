@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.bot import Tux
 from tux.utils import checks
 from tux.utils.embeds import EmbedCreator
 
@@ -38,7 +39,7 @@ def insert_returns(body: list[ast.stmt]) -> None:
 
 
 class Eval(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
     @commands.command(
@@ -48,13 +49,13 @@ class Eval(commands.Cog):
     )
     @commands.guild_only()
     @checks.has_pl(8)  # sysadmin or higher
-    async def eval(self, ctx: commands.Context[commands.Bot], *, cmd: str) -> None:
+    async def eval(self, ctx: commands.Context[Tux], *, cmd: str) -> None:
         """
         Evaluate a Python expression. (Owner only)
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
         cmd : str
             The Python expression to evaluate.
@@ -128,5 +129,5 @@ class Eval(commands.Cog):
             await ctx.send(embed=embed, ephemeral=True, delete_after=30)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Eval(bot))

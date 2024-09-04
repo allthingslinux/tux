@@ -5,6 +5,7 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.utils.constants import CONST
 from tux.utils.exceptions import AppCommandPermissionLevelError, PermissionLevelError
@@ -13,7 +14,7 @@ db = DatabaseController().guild_config
 
 
 async def has_permission(
-    source: commands.Context[commands.Bot] | discord.Interaction,
+    source: commands.Context[Tux] | discord.Interaction,
     lower_bound: int,
     higher_bound: int | None = None,
 ) -> bool:
@@ -22,7 +23,7 @@ async def has_permission(
 
     Parameters
     ----------
-    source : commands.Context[commands.Bot] | discord.Interaction
+    source : commands.Context[Tux] | discord.Interaction
         The source of the command.
     lower_bound : int
         The lower bound of the permission level.
@@ -162,7 +163,12 @@ async def check_sysadmin_or_owner(
     """
 
     try:
-        user_id = ctx.author.id if ctx else (interaction.user.id if interaction else None)
+        if ctx:
+            user_id = ctx.author.id
+        elif interaction:
+            user_id = interaction.user.id
+        else:
+            user_id = None
 
         if user_id:
             if 8 in range(lower_bound, higher_bound + 1) and user_id in CONST.SYSADMIN_IDS:
@@ -182,7 +188,7 @@ async def check_sysadmin_or_owner(
 
 
 async def level_to_name(
-    source: commands.Context[commands.Bot] | discord.Interaction,
+    source: commands.Context[Tux] | discord.Interaction,
     level: int,
     or_higher: bool = False,
 ) -> str:
@@ -191,7 +197,7 @@ async def level_to_name(
 
     Parameters
     ----------
-    source : commands.Context[commands.Bot] | discord.Interaction
+    source : commands.Context[Tux] | discord.Interaction
         The source of the command.
     level : int
         The permission level.
@@ -257,7 +263,7 @@ async def get_role_name_from_source(
 
 
 async def get_perm_level_role_id(
-    source: commands.Context[commands.Bot] | discord.Interaction,
+    source: commands.Context[Tux] | discord.Interaction,
     level: str,
 ) -> int | None:
     """
@@ -265,7 +271,7 @@ async def get_perm_level_role_id(
 
     Parameters
     ----------
-    source : commands.Context[commands.Bot] | discord.Interaction
+    source : commands.Context[Tux] | discord.Interaction
         The source of the command.
     level : str
         The permission level.
@@ -286,7 +292,7 @@ async def get_perm_level_role_id(
 
 
 async def get_perm_level_roles(
-    source: commands.Context[commands.Bot] | discord.Interaction,
+    source: commands.Context[Tux] | discord.Interaction,
     lower_bound: int,
 ) -> list[int] | None:
     """
@@ -294,7 +300,7 @@ async def get_perm_level_roles(
 
     Parameters
     ----------
-    source : commands.Context[commands.Bot] | discord.Interaction
+    source : commands.Context[Tux] | discord.Interaction
         The source of the command.
     lower_bound : int
         The lower bound of the permission level.
@@ -348,7 +354,7 @@ def has_pl(level: int, or_higher: bool = True):
         Whether to include "or higher" in the name, by default True.
     """
 
-    async def predicate(ctx: commands.Context[commands.Bot] | discord.Interaction) -> bool:
+    async def predicate(ctx: commands.Context[Tux] | discord.Interaction) -> bool:
         if isinstance(ctx, discord.Interaction):
             logger.error("Incorrect checks decorator used. Please use ac_has_pl instead.")
             msg = "Incorrect checks decorator used. Please use ac_has_pl instead and report this as a issue."
@@ -381,7 +387,7 @@ def ac_has_pl(level: int, or_higher: bool = True):
         Whether to include "or higher" in the name, by default True.
     """
 
-    async def predicate(ctx: commands.Context[commands.Bot] | discord.Interaction) -> bool:
+    async def predicate(ctx: commands.Context[Tux] | discord.Interaction) -> bool:
         if isinstance(ctx, commands.Context):
             logger.error("Incorrect checks decorator used. Please use has_pl instead.")
             msg = "Incorrect checks decorator used. Please use has_pl instead and report this as a issue."

@@ -58,7 +58,7 @@ It is designed to provide a variety of features to the server, including moderat
 - [Poetry](https://python-poetry.org/docs/)
 - [Supabase](https://supabase.io/)
 - Optional: [Docker](https://docs.docker.com/get-docker/)
-- Optional: [Docker Compose](https://docs.docker.com/compose/install/)
+- Optional: [Docker Compose](https://docs.docker.com/compose/install/) (see the [development notes](#development-notes) for more information)
 - Optional: [Just](https://github.com/casey/just/)
 
 ### Steps to Install
@@ -140,6 +140,9 @@ Make sure to add your discord ID to the sys admin list if you are testing locall
 
 > [!NOTE]
 Make sure to set the prisma schema database ENV variable to the DEV database URL.
+
+> [!NOTE]
+If you want to develop Tux using Docker Compose, we recommend using `docker compose up --watch` for hot reloading.
 
 ## License
 
