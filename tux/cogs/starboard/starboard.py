@@ -8,6 +8,7 @@ from loguru import logger
 from tux.bot import Tux
 from tux.database.controllers.starboard import StarboardController, StarboardMessageController
 from tux.utils import checks
+from tux.utils.embeds import EmbedCreator
 
 
 class Starboard(commands.Cog):
@@ -71,9 +72,16 @@ class Starboard(commands.Cog):
                 return
 
             await self.starboard_controller.create_or_update_starboard(ctx.guild.id, channel.id, emoji, threshold)
-            await ctx.send(
-                f"Starboard configured successfully. Channel: {channel.mention}, Emoji: {emoji}, Threshold: {threshold}",
+            embed = EmbedCreator.create_success_embed(
+                title="Starboard Setup",
+                description="Starboard configured successfully.",
+                ctx=ctx,
             )
+            embed.add_field(name="Channel", value=channel.mention)
+            embed.add_field(name="Emoji", value=emoji)
+            embed.add_field(name="Threshold", value=threshold)
+            await ctx.send(embed=embed)
+
         except Exception as e:
             logger.error(f"Error configuring starboard: {e!s}")
             await ctx.send(f"An error occurred while configuring the starboard: {e!s}")
