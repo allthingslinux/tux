@@ -109,9 +109,20 @@ class Starboard(commands.Cog):
         try:
             result = await self.starboard_controller.delete_starboard_by_guild_id(ctx.guild.id)
             if result:
-                await ctx.send("Starboard configuration removed successfully.")
+                embed = EmbedCreator.create_success_embed(
+                    title="Starboard Removed",
+                    description="Starboard configuration removed successfully.",
+                    ctx=ctx,
+                )
             else:
-                await ctx.send("No starboard configuration found for this server.")
+                embed = EmbedCreator.create_error_embed(
+                    title="No Starboard Found",
+                    description="No starboard configuration found for this server.",
+                    ctx=ctx,
+                )
+
+            await ctx.send(embed=embed)
+
         except Exception as e:
             logger.error(f"Error removing starboard configuration: {e!s}")
             await ctx.send(f"An error occurred while removing the starboard configuration: {e!s}")
