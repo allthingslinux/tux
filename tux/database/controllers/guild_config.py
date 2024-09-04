@@ -37,7 +37,8 @@ class GuildConfigController:
         return await self.table.find_first(where={"guild_id": guild_id})
 
     async def get_guild_prefix(self, guild_id: int) -> str | None:
-        return await self.get_guild_config_field_value(guild_id, "prefix")
+        config = await self.table.find_first(where={"guild_id": guild_id})
+        return None if config is None else config.prefix
 
     async def get_log_channel(self, guild_id: int, log_type: str) -> int | None:
         log_channel_ids: dict[str, GuildConfigScalarFieldKeys] = {
