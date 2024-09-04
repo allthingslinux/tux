@@ -54,7 +54,7 @@ class TempBan(ModerationCogBase):
             return
 
         moderator = ctx.author
-        duration = parse_time_string(f"{flags.expires_at}d")
+        duration = parse_time_string(f"{flags.expires_at}m")
         expires_at = datetime.now(UTC) + duration
 
         if not await self.check_conditions(ctx, member, moderator, "temporarily ban"):
@@ -76,48 +76,50 @@ class TempBan(ModerationCogBase):
             case_reason=flags.reason,
             guild_id=ctx.guild.id,
             case_expires_at=expires_at,
+            case_tempban_expired=False
         )
 
         await self.handle_case_response(ctx, CaseType.TEMPBAN, case.case_number, flags.reason, member)
 
-    @tasks.loop(minutes=30)
+    @tasks.loop(seconds=30)
     async def tempban_check(self) -> None:
-        # Fetch all guilds and fetch all tempbans for each guild's ID
-        guilds = await self.db.guild.get_all_guilds()
-        tempbans = [await self.db.case.get_all_cases_by_type(guild.guild_id, CaseType.TEMPBAN) for guild in guilds]
-        # Here, we have 3 nested for loops because for some odd reason, tempbans is a list of a list of lists, very confusing ikr
+        # Get all expired tempbans
+        expired_temp_bans = await self.db.case.get_expired_tempbans()
+        logger.debug(f"Checking {len(expired_temp_bans)} expired tempbans. {expired_temp_bans}")
+        for temp_ban in expired_temp_bans:
+            #Debug Print
+            logger.debug(f"Unbanning user with ID {temp_ban.case_user_id} | Case number {temp_ban.case_number}")
+            guild = self.bot.get_guild(temp_ban.guild_id)
 
-        for tempban in tempbans:
-            for cases in tempbans:
-                for case in cases:
-                    # Check if the case has expired
-                    if case.case_expires_at < datetime.now(UTC):
-                        # Get the guild, if that doesnt work then fetch it instead
+            if guild is None:
+                #Debug Print
+                logger.debug(f"Fetching guild with ID {temp_ban.guild_id}")
+                try:
+                    guild = await self.bot.fetch_guild(temp_ban.guild_id)
 
-                        guild = self.bot.get_guild(case.guild_id)
-                        if guild is None:
-                            try:
-                                guild = await self.bot.fetch_guild(case.guild_id)
+                except (discord.Forbidden, discord.HTTPException) as e:
+                    logger.error(
+                            f"Failed to unban user with ID  {temp_ban.case_user_id} | Case number {temp_ban.case_number} | Issue: Failed to get guild with ID {temp_ban.guild_id}. {e}",
+                        )
+                    return
+            else:
+                logger.debug(f"Found guild with ID {temp_ban.guild_id}")
+                try:
+                    # Unban the user
 
-                            except (discord.Forbidden, discord.HTTPException) as e:
-                                logger.error(
-                                    f"Failed to unban user with ID  {case.case_user_id} | Case number {case.case_number} | Issue: Failed to get guild with ID {case.guild_id}. {e}",
-                                )
-                                return
-                        else:
-                            try:
-                                # Unban the user
+                    guild_bans = guild.bans()
+                    async for ban_entry in guild_bans:
+                        if ban_entry.user.id == temp_ban.case_user_id:
+                            await guild.unban(ban_entry.user, reason="Tempban expired")
+                            await self.db.case.set_tempban_expired(temp_ban.case_number, temp_ban.guild_id)
+                except (discord.Forbidden, discord.HTTPException) as e:
+                    logger.error(
+                        f"Faile+d to unban user with ID  {temp_ban.case_user_id} | Case number {temp_ban.case_number} Issue: Failed to unban user. {e}",
+                    )
+                    return
+                #Debug Print
+                logger.debug(f"Unbanned user with ID {temp_ban.case_user_id} | Case number {temp_ban.case_number}")
 
-                                guild_bans = guild.bans()
-                                async for ban_entry in guild_bans:
-                                    if ban_entry.user.id == case.case_user_id:
-                                        await guild.unban(ban_entry.user, reason="Tempban expired")
-
-                            except (discord.Forbidden, discord.HTTPException) as e:
-                                logger.error(
-                                    f"Failed to unban user with ID  {case.case_user_id} | Case number {case.case_number} Issue: Failed to unban user. {e}",
-                                )
-                                return
 
 
 async def setup(bot: Tux) -> None:

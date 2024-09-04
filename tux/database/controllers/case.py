@@ -82,6 +82,7 @@ class CaseController:
         case_reason: str,
         case_user_roles: list[int] | None = None,
         case_expires_at: datetime | None = None,
+        case_tempban_expired: bool = False,
     ) -> Case:
         """
         Insert a case into the database.
@@ -102,6 +103,8 @@ class CaseController:
             The roles of the target of the case.
         case_expires_at : datetime | None
             The expiration date of the case.
+        case_tempban_expired : bool
+            Whether the tempban has expired (Use only for tempbans).
 
         Returns
         -------
@@ -121,6 +124,7 @@ class CaseController:
                 "case_reason": case_reason,
                 "case_expires_at": case_expires_at,
                 "case_user_roles": case_user_roles if case_user_roles is not None else [],
+                "case_tempban_expired": case_tempban_expired,
             },
         )
 
@@ -307,3 +311,40 @@ class CaseController:
         if case is not None:
             return await self.table.delete(where={"case_id": case.case_id})
         return None
+
+    async def get_expired_tempbans(self) -> list[Case]:
+        """
+        Get all cases that have expired tempbans.
+
+        Returns
+        -------
+        list[Case]
+            A list of cases of the type in the guild.
+        """
+        return await self.table.find_many(
+            where={
+                "case_type": CaseType.TEMPBAN,
+                "case_expires_at": {"lt": datetime.now()},
+                "case_tempban_expired": False
+            }
+        )
+    async def set_tempban_expired(self, case_number: int, guild_id: int) -> Case | None:
+        """
+        Set a tempban case as expired.
+
+        Parameters
+        ----------
+        case_number : int
+            The number of the case to delete.
+        guild_id : int
+            The ID of the guild to delete the case in.
+
+        Returns
+        -------
+        Case | None
+            The case if found and deleted, otherwise None.
+        """
+        return await self.table.update(
+            where={"case_number": case_number, "guild_id": guild_id},
+            data={"case_tempban_expired": True}
+        )
