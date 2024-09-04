@@ -1,44 +1,15 @@
-// Prisma Client Python is a next-generation ORM built on top of Prisma that has been designed from the ground up for ease of use and correctness. Prisma is a TypeScript ORM with zero-cost type safety for your database, although don't worry, Prisma Client Python interfaces with Prisma using Rust, you don't need Node or TypeScript.
-
-// For more information on how to use Prisma Client Python, please refer to the documentation:
-// https://www.prisma.io/docs/prisma-client-py
-
-// For more information on the Prisma schema, please refer to the documentation:
-// https://www.prisma.io/docs/orm/prisma-schema
+generator client {
+  provider             = "prisma-client-py"
+  recursive_type_depth = "-1"
+  interface            = "asyncio"
+}
 
 datasource db {
-  provider = "postgresql"
-
+  provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DATABASE_URL")
 }
 
-// Docs: https://prisma-client-py.readthedocs.io/en/stable/reference/client/
-// Docs: https://prisma-client-py.readthedocs.io/en/stable/reference/config/#recursive-type-depth
-generator client {
-  provider             = "prisma-client-py"
-  interface            = "asyncio"
-  recursive_type_depth = -1
-}
-
-// Docs: https://www.prisma.io/docs/orm/reference/prisma-schema-reference#enum
-enum CaseType {
-  BAN
-  UNBAN
-  HACKBAN
-  TEMPBAN
-  KICK
-  SNIPPETBAN
-  TIMEOUT
-  UNTIMEOUT
-  WARN
-  JAIL
-  UNJAIL
-  SNIPPETUNBAN
-}
-
-// Docs: https://www.prisma.io/docs/orm/prisma-schema/data-model/models#defining-models
-// Docs: https://www.prisma.io/docs/orm/prisma-schema/data-model/models#defining-attributes
 model Guild {
   guild_id        BigInt        @id
   guild_joined_at DateTime?     @default(now())
@@ -48,8 +19,10 @@ model Guild {
   reminders       Reminder[]
   guild_config    GuildConfig[]
   AFK             AFKModel[]
+  Starboard        Starboard?
+  StarboardMessage StarboardMessage[]
+  case_count       BigInt             @default(0)
 
-  @@unique([guild_id])
   @@index([guild_id])
 }
 
@@ -75,11 +48,9 @@ model GuildConfig {
   base_member_role_id  BigInt?
   jail_role_id         BigInt?
   quarantine_role_id   BigInt?
+  guild_id             BigInt  @id @unique
+  guild                Guild   @relation(fields: [guild_id], references: [guild_id])
 
-  guild_id BigInt @id
-  guild    Guild? @relation(fields: [guild_id], references: [guild_id])
-
-  @@unique([guild_id])
   @@index([guild_id])
 }
 
@@ -90,10 +61,10 @@ model Case {
   case_reason       String
   case_moderator_id BigInt
   case_user_id      BigInt
-  case_user_roles   BigInt[]  @default([]) // Role IDs for the jailed user
-  case_number       BigInt? // Incremented for each case per guild via a trigger/function
+  case_user_roles   BigInt[]  @default([])
+  case_number       BigInt?
   case_created_at   DateTime? @default(now())
-  case_expires_at   DateTime? // For temporary bans and timeouts
+  case_expires_at   DateTime?
   guild_id          BigInt
   guild             Guild     @relation(fields: [guild_id], references: [guild_id])
 
@@ -108,9 +79,9 @@ model Snippet {
   snippet_user_id    BigInt
   snippet_created_at DateTime @default(now())
   guild_id           BigInt
-  guild              Guild    @relation(fields: [guild_id], references: [guild_id])
   uses               BigInt   @default(0)
   locked             Boolean  @default(false)
+  guild              Guild    @relation(fields: [guild_id], references: [guild_id])
 
   @@unique([snippet_name, guild_id])
   @@index([snippet_name, guild_id])
@@ -122,7 +93,7 @@ model Note {
   note_created_at   DateTime @default(now())
   note_moderator_id BigInt
   note_user_id      BigInt
-  note_number       BigInt? // Incremented for each note per guild via a trigger/function
+  note_number       BigInt?
   guild_id          BigInt
   guild             Guild    @relation(fields: [guild_id], references: [guild_id])
 
@@ -135,7 +106,7 @@ model Reminder {
   reminder_content    String
   reminder_created_at DateTime @default(now())
   reminder_expires_at DateTime
-  reminder_channel_id BigInt // Channel to send the reminder to if direct message fails
+  reminder_channel_id BigInt
   reminder_user_id    BigInt
   guild_id            BigInt
   guild               Guild    @relation(fields: [guild_id], references: [guild_id])
@@ -154,4 +125,45 @@ model AFKModel {
 
   @@unique([member_id, guild_id])
   @@index([member_id])
+}
+
+model Starboard {
+  guild_id             BigInt @id @unique
+  starboard_channel_id BigInt
+  starboard_emoji      String
+  starboard_threshold  Int
+  Guild                Guild  @relation(fields: [guild_id], references: [guild_id])
+
+  @@index([guild_id])
+}
+
+model StarboardMessage {
+  message_id           BigInt   @id
+  message_content      String
+  message_created_at   DateTime @default(now())
+  message_expires_at   DateTime
+  message_channel_id   BigInt
+  message_user_id      BigInt
+  message_guild_id     BigInt
+  star_count           Int      @default(0)
+  starboard_message_id BigInt
+  Guild                Guild    @relation(fields: [message_guild_id], references: [guild_id])
+
+  @@unique([message_id, message_guild_id])
+  @@index([message_id, message_guild_id])
+}
+
+enum CaseType {
+  BAN
+  UNBAN
+  HACKBAN
+  TEMPBAN
+  KICK
+  SNIPPETBAN
+  TIMEOUT
+  UNTIMEOUT
+  WARN
+  JAIL
+  UNJAIL
+  SNIPPETUNBAN
 }

@@ -5,6 +5,7 @@ from .guild_config import GuildConfigController
 from .note import NoteController
 from .reminder import ReminderController
 from .snippet import SnippetController
+from .starboard import StarboardController, StarboardMessageController
 
 
 class DatabaseController:
@@ -16,3 +17,5 @@ class DatabaseController:
         self.guild = GuildController()
         self.guild_config = GuildConfigController()
         self.afk = AfkController()
+        self.starboard = StarboardController()
+        self.starboard_message = StarboardMessageController()
