@@ -23,17 +23,23 @@ class AFK(commands.Cog):
         target = ctx.author
         assert isinstance(target, discord.Member)  # only hit if inside a guild
 
+        if await self.db.is_afk(target.id, guild_id=ctx.guild.id):
+            return await ctx.send("You are already afk!", ephemeral=True)
+
         max_name_limit = 32 - 6  # accounts for "[AFK] "
-        if len(target.display_name) <= max_name_limit:
-            nickname = target.display_name
-        elif len(target.name) <= max_name_limit:
-            nickname = target.name
-        else:
+        if len(target.display_name) >= max_name_limit:
             return await ctx.send("Your name is too long!", ephemeral=True)
 
-        await self.db.insert_afk(target.id, nickname, reason, ctx.guild.id)
-        await target.edit(nick=f"[AFK] {nickname}")
-        return await ctx.send("\N{SLEEPING SYMBOL} || You are now afk! " + f"Reason: `{reason}`")
+        await self.db.insert_afk(target.id, target.display_name, reason, ctx.guild.id)
+        await target.edit(nick=f"[AFK] {target.display_name}")
+        return await ctx.send(
+            content="\N{SLEEPING SYMBOL} || You are now afk! " + f"Reason: `{reason}`",
+            allowed_mentions=discord.AllowedMentions(
+                users=False,
+                everyone=False,
+                roles=False,
+            ),
+        )
 
     @commands.Cog.listener("on_message")
     async def remove_afk(self, message: discord.Message):
@@ -70,10 +76,10 @@ class AFK(commands.Cog):
         if not afks_mentioned:
             return
 
-        msgs = [
-            f"{mentioned.mention} is currently AFK: `{afk.reason}`"
-            for mentioned, afk in zip(message.mentions, afks_mentioned, strict=False)
-        ]
+        msgs: list[str] = []
+        for mentioned, afk in zip(message.mentions, afks_mentioned, strict=False):
+            msgs.append(f"{mentioned.mention} is currently AFK: `{afk.reason}` (<t:{int(afk.since.timestamp())}:R>)")
+
         await message.reply(
             content="\n".join(msgs),
             allowed_mentions=discord.AllowedMentions(
