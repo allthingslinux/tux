@@ -100,33 +100,38 @@ class Starboard(commands.Cog):
             logger.error(f"Error removing starboard configuration: {e!s}")
             await ctx.send(f"An error occurred while removing the starboard configuration: {e!s}")
 
-    @commands.Cog.listener("on_reaction_add")
-    async def starboard_check(self, reaction: discord.Reaction, user: discord.User) -> None:
-        if not reaction.message.guild:
+    @commands.Cog.listener("on_raw_reaction_add")
+    async def starboard_check(self, payload: discord.RawReactionActionEvent) -> None:
+        user_id = payload.user_id
+        reaction = payload.emoji
+        channel = self.bot.get_channel(payload.channel_id)
+
+        assert isinstance(channel, discord.TextChannel)
+        message = await channel.fetch_message(payload.message_id)
+
+        if not message.guild or not user_id:
             return
 
         try:
-            starboard = await self.starboard_controller.get_starboard_by_guild_id(reaction.message.guild.id)
+            starboard = await self.starboard_controller.get_starboard_by_guild_id(message.guild.id)
             if not starboard:
                 return
 
-            if str(reaction.emoji) != starboard.starboard_emoji:
+            if str(reaction) != starboard.starboard_emoji:
                 logger.debug(
-                    f"Reaction emoji {reaction.emoji} does not match starboard emoji {starboard.starboard_emoji}",
+                    f"Reaction emoji {reaction} does not match starboard emoji {starboard.starboard_emoji}",
                 )
                 return
 
             # The message author cannot star their own message
-            if user.id == reaction.message.author.id:
-                logger.debug(f"User {user.id} tried to star their own message")
+            if message.author.id == user_id:
+                logger.debug(f"User {user_id} tried to star their own message")
                 return
 
-            reaction_count = sum(
-                r.count for r in reaction.message.reactions if str(r.emoji) == starboard.starboard_emoji
-            )
+            reaction_count = sum(r.count for r in message.reactions if str(r.emoji) == starboard.starboard_emoji)
 
             if reaction_count >= starboard.starboard_threshold:
-                starboard_channel = reaction.message.guild.get_channel(starboard.starboard_channel_id)
+                starboard_channel = message.guild.get_channel(starboard.starboard_channel_id)
                 logger.info(f"Starboard channel: {starboard_channel}")
 
                 if not isinstance(starboard_channel, discord.TextChannel):
@@ -135,7 +140,7 @@ class Starboard(commands.Cog):
                     )
                     return
 
-                await self.create_or_update_starboard_message(starboard_channel, reaction.message, reaction_count)
+                await self.create_or_update_starboard_message(starboard_channel, message, reaction_count)
         except Exception as e:
             logger.error(f"Error in starboard_check: {e!s}")
 
