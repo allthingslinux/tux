@@ -7,6 +7,7 @@ from discord.ext import commands
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.ui.views.config import ConfigSetChannels, ConfigSetPrivateLogs, ConfigSetPublicLogs
+from tux.utils.embeds import EmbedCreator
 
 # TODO: Add onboarding setup to ensure all required channels, logs, and roles are set up
 # TODO: Figure out how to handle using our custom checks because the current checks would result in a lock out
@@ -318,6 +319,36 @@ class Config(commands.Cog):
         embed.add_field(name="Dev Log", value=dev_log, inline=True)
 
         await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
+
+    @config.command(name="set_prefix")
+    @app_commands.guild_only()
+    @app_commands.checks.has_permissions(administrator=True)
+    async def config_set_prefix(
+        self,
+        interaction: discord.Interaction,
+        prefix: str,
+    ) -> None:
+        """
+        Get the prefix for the guild.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        """
+
+        assert interaction.guild
+
+        await self.db.update_guild_prefix(interaction.guild.id, prefix)
+
+        await interaction.response.send_message(
+            embed=EmbedCreator.create_success_embed(
+                title="Prefix Set",
+                description=f"Prefix set to {prefix}.",
+                interaction=interaction,
+            ),
+            ephemeral=True,
+        )
 
 
 async def setup(bot: Tux) -> None:
