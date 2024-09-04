@@ -343,11 +343,10 @@ class Config(commands.Cog):
 
         await interaction.response.send_message(
             embed=EmbedCreator.create_success_embed(
-                title="Prefix Set",
-                description=f"Prefix set to {prefix}.",
+                title="Guild Config",
+                description=f"The prefix was updated to `{prefix}`",
                 interaction=interaction,
             ),
-            ephemeral=True,
         )
 
 
