@@ -1,7 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
 import discord
-import emojis
 from discord.ext import commands
 from loguru import logger
 
@@ -42,35 +41,39 @@ class Starboard(commands.Cog):
         emoji: str,
         threshold: int,
     ) -> None:
-        """
-        Configure the starboard for this server.
+        assert ctx.guild
 
-        Parameters
-        ----------
-        channel: discord.TextChannel
-            The channel to configure the starboard for
-        emoji: str
-            The emoji to use for the starboard
-        threshold: int
-            The threshold for the starboard
-        """
-        if not ctx.guild:
-            await ctx.send("This command can only be used in a server.")
+        if len(emoji) != 1 or not emoji.isprintable():
+            await ctx.send(
+                embed=EmbedCreator.create_error_embed(
+                    title="Invalid Emoji",
+                    description="Please use a single default Discord emoji.",
+                    ctx=ctx,
+                ),
+            )
+            return
+
+        if threshold < 1:
+            await ctx.send(
+                embed=EmbedCreator.create_error_embed(
+                    title="Invalid Threshold",
+                    description="Threshold must be at least 1.",
+                    ctx=ctx,
+                ),
+            )
+            return
+
+        if not channel.permissions_for(ctx.guild.me).send_messages:
+            await ctx.send(
+                embed=EmbedCreator.create_error_embed(
+                    title="Permission Denied",
+                    description=f"I don't have permission to send messages in {channel.mention}.",
+                    ctx=ctx,
+                ),
+            )
             return
 
         try:
-            if not emojis.count(emoji, unique=True) or emojis.count(emoji, unique=True) > 1:  # type: ignore
-                await ctx.send("Invalid emoji. Please use a single default Discord emoji.")
-                return
-
-            if threshold < 1:
-                await ctx.send("Threshold must be at least 1.")
-                return
-
-            if not channel.permissions_for(ctx.guild.me).send_messages:
-                await ctx.send(f"I don't have permission to send messages in {channel.mention}.")
-                return
-
             await self.starboard_controller.create_or_update_starboard(ctx.guild.id, channel.id, emoji, threshold)
             embed = EmbedCreator.create_success_embed(
                 title="Starboard Setup",
@@ -81,10 +84,9 @@ class Starboard(commands.Cog):
             embed.add_field(name="Emoji", value=emoji)
             embed.add_field(name="Threshold", value=threshold)
             await ctx.send(embed=embed)
-
         except Exception as e:
-            logger.error(f"Error configuring starboard: {e!s}")
-            await ctx.send(f"An error occurred while configuring the starboard: {e!s}")
+            logger.error(f"Error configuring starboard: {e}")
+            await ctx.send(f"An error occurred while configuring the starboard: {e}")
 
     @starboard.command(
         name="remove",
@@ -94,81 +96,51 @@ class Starboard(commands.Cog):
     )
     @commands.has_permissions(manage_guild=True)
     async def remove_starboard(self, ctx: commands.Context[Tux]) -> None:
-        """
-        Remove the starboard configuration for this server.
-
-        Parameters
-        ----------
-        ctx: commands.Context[Tux]
-            The context of the command
-        """
-        if not ctx.guild:
-            await ctx.send("This command can only be used in a server.")
-            return
+        assert ctx.guild
 
         try:
             result = await self.starboard_controller.delete_starboard_by_guild_id(ctx.guild.id)
-            if result:
-                embed = EmbedCreator.create_success_embed(
+            embed = (
+                EmbedCreator.create_success_embed(
                     title="Starboard Removed",
                     description="Starboard configuration removed successfully.",
                     ctx=ctx,
                 )
-            else:
-                embed = EmbedCreator.create_error_embed(
+                if result
+                else EmbedCreator.create_error_embed(
                     title="No Starboard Found",
                     description="No starboard configuration found for this server.",
                     ctx=ctx,
                 )
-
+            )
             await ctx.send(embed=embed)
-
         except Exception as e:
-            logger.error(f"Error removing starboard configuration: {e!s}")
-            await ctx.send(f"An error occurred while removing the starboard configuration: {e!s}")
+            logger.error(f"Error removing starboard configuration: {e}")
+            await ctx.send(f"An error occurred while removing the starboard configuration: {e}")
 
     @commands.Cog.listener("on_raw_reaction_add")
     async def starboard_check(self, payload: discord.RawReactionActionEvent) -> None:
-        """
-        Check if a message should be added to the starboard.
+        if not payload.guild_id or not payload.member:
+            return
 
-        Parameters
-        ----------
-        payload: discord.RawReactionActionEvent
-            The payload of the reaction event
-        """
-        user_id = payload.user_id
-        reaction = payload.emoji
         channel = self.bot.get_channel(payload.channel_id)
-
-        assert isinstance(channel, discord.TextChannel)
-        message = await channel.fetch_message(payload.message_id)
-
-        if not message.guild or not user_id:
+        if not isinstance(channel, discord.TextChannel):
             return
 
         try:
-            starboard = await self.starboard_controller.get_starboard_by_guild_id(message.guild.id)
-            if not starboard:
+            message = await channel.fetch_message(payload.message_id)
+            starboard = await self.starboard_controller.get_starboard_by_guild_id(payload.guild_id)
+
+            if not starboard or str(payload.emoji) != starboard.starboard_emoji:
                 return
 
-            if str(reaction) != starboard.starboard_emoji:
-                logger.debug(
-                    f"Reaction emoji {reaction} does not match starboard emoji {starboard.starboard_emoji}",
-                )
-                return
-
-            # The message author cannot star their own message
-            if message.author.id == user_id:
-                logger.debug(f"User {user_id} tried to star their own message")
+            if message.author.id == payload.user_id:
                 return
 
             reaction_count = sum(r.count for r in message.reactions if str(r.emoji) == starboard.starboard_emoji)
 
             if reaction_count >= starboard.starboard_threshold:
-                starboard_channel = message.guild.get_channel(starboard.starboard_channel_id)
-                logger.info(f"Starboard channel: {starboard_channel}")
-
+                starboard_channel = channel.guild.get_channel(starboard.starboard_channel_id)
                 if not isinstance(starboard_channel, discord.TextChannel):
                     logger.error(
                         f"Starboard channel {starboard.starboard_channel_id} not found or is not a text channel",
@@ -177,40 +149,26 @@ class Starboard(commands.Cog):
 
                 await self.create_or_update_starboard_message(starboard_channel, message, reaction_count)
         except Exception as e:
-            logger.error(f"Error in starboard_check: {e!s}")
+            logger.error(f"Error in starboard_check: {e}")
 
     async def get_existing_starboard_message(
         self,
         starboard_channel: discord.TextChannel,
         original_message: discord.Message,
     ) -> discord.Message | None:
-        """
-        Get the existing starboard message for the original message.
-
-        Parameters
-        ----------
-        starboard_channel: discord.TextChannel
-            The channel to check for the starboard message
-        original_message: discord.Message
-            The original message to check for
-
-        Returns
-        -------
-        discord.Message | None
-            The existing starboard message for the original message
-        """
         assert original_message.guild
         try:
             starboard_message = await self.starboard_message_controller.get_starboard_message_by_id(
                 original_message.id,
                 original_message.guild.id,
             )
-            logger.info(f"Starboard message: {starboard_message}")
-            if starboard_message:
-                return await starboard_channel.fetch_message(starboard_message.starboard_message_id)
+            return (
+                await starboard_channel.fetch_message(starboard_message.starboard_message_id)
+                if starboard_message
+                else None
+            )
         except Exception as e:
-            logger.error(f"Error while fetching starboard message: {e!s}")
-
+            logger.error(f"Error while fetching starboard message: {e}")
         return None
 
     async def create_or_update_starboard_message(
@@ -219,25 +177,14 @@ class Starboard(commands.Cog):
         original_message: discord.Message,
         reaction_count: int,
     ) -> None:
-        """
-        Create or update the starboard message for the original message.
-
-        Parameters
-        ----------
-        starboard_channel: discord.TextChannel
-            The channel to send the starboard message to
-        original_message: discord.Message
-            The original message to send to the starboard
-        reaction_count: int
-            The number of reactions the original message has
-        """
         if not original_message.guild:
             logger.error("Original message has no guild")
             return
 
         try:
             starboard = await self.starboard_controller.get_starboard_by_guild_id(original_message.guild.id)
-            assert starboard
+            if not starboard:
+                return
 
             embed = discord.Embed(
                 description=original_message.content,
@@ -261,7 +208,6 @@ class Starboard(commands.Cog):
             else:
                 starboard_message = await starboard_channel.send(embed=embed)
 
-            # Create or update the starboard message entry in the database
             await self.starboard_message_controller.create_or_update_starboard_message(
                 message_id=original_message.id,
                 message_content=original_message.content,
@@ -272,9 +218,8 @@ class Starboard(commands.Cog):
                 star_count=reaction_count,
                 starboard_message_id=starboard_message.id,
             )
-
         except Exception as e:
-            logger.error(f"Error while creating or updating starboard message: {e!s}")
+            logger.error(f"Error while creating or updating starboard message: {e}")
 
 
 async def setup(bot: Tux) -> None:
