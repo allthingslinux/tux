@@ -47,6 +47,7 @@ model Guild {
   notes           Note[]
   reminders       Reminder[]
   guild_config    GuildConfig[]
+  Starboard       Starboard[]
 
   @@unique([guild_id])
   @@index([guild_id])
@@ -141,4 +142,16 @@ model Reminder {
 
   @@unique([reminder_id, guild_id])
   @@index([reminder_id, guild_id])
+}
+
+model Starboard {
+  starboard_id         BigInt @id @default(autoincrement())
+  starboard_channel_id BigInt
+  starboard_emoji      String
+  starboard_threshold  Int
+  guild_id             BigInt
+  guild                Guild  @relation(fields: [guild_id], references: [guild_id])
+
+  @@unique([starboard_id, guild_id])
+  @@index([starboard_id, guild_id])
 }
