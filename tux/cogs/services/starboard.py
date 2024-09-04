@@ -22,7 +22,7 @@ class Starboard(commands.Cog):
         description="Configure the starboard for this server",
     )
     @commands.guild_only()
-    @checks.has_pl(5)  # admin & up
+    @checks.has_pl(5)
     async def starboard(self, ctx: commands.Context[Tux]) -> None:
         if ctx.invoked_subcommand is None:
             await ctx.send_help("starboard")
@@ -31,16 +31,28 @@ class Starboard(commands.Cog):
         name="setup",
         aliases=["s"],
         usage="starboard setup <channel> <emoji> <threshold>",
-        description="Configure the starboard for this server",
     )
     @commands.has_permissions(manage_guild=True)
-    async def configure_starboard(
+    async def setup_starboard(
         self,
         ctx: commands.Context[Tux],
         channel: discord.TextChannel,
         emoji: str,
         threshold: int,
     ) -> None:
+        """
+        Configure the starboard for this server.
+
+        Parameters
+        ----------
+        channel : discord.TextChannel
+            The channel to use for the starboard.
+        emoji : str
+            The emoji to use for the starboard.
+        threshold : int
+            The number of reactions required to trigger the starboard.
+        """
+
         assert ctx.guild
 
         if len(emoji) != 1 or not emoji.isprintable():
@@ -75,6 +87,7 @@ class Starboard(commands.Cog):
 
         try:
             await self.starboard_controller.create_or_update_starboard(ctx.guild.id, channel.id, emoji, threshold)
+
             embed = EmbedCreator.create_success_embed(
                 title="Starboard Setup",
                 description="Starboard configured successfully.",
@@ -83,7 +96,9 @@ class Starboard(commands.Cog):
             embed.add_field(name="Channel", value=channel.mention)
             embed.add_field(name="Emoji", value=emoji)
             embed.add_field(name="Threshold", value=threshold)
+
             await ctx.send(embed=embed)
+
         except Exception as e:
             logger.error(f"Error configuring starboard: {e}")
             await ctx.send(f"An error occurred while configuring the starboard: {e}")
@@ -92,14 +107,18 @@ class Starboard(commands.Cog):
         name="remove",
         aliases=["r"],
         usage="starboard remove",
-        description="Remove the starboard configuration for this server",
     )
     @commands.has_permissions(manage_guild=True)
     async def remove_starboard(self, ctx: commands.Context[Tux]) -> None:
+        """
+        Remove the starboard configuration for this server.
+        """
+
         assert ctx.guild
 
         try:
             result = await self.starboard_controller.delete_starboard_by_guild_id(ctx.guild.id)
+
             embed = (
                 EmbedCreator.create_success_embed(
                     title="Starboard Removed",
@@ -113,13 +132,24 @@ class Starboard(commands.Cog):
                     ctx=ctx,
                 )
             )
+
             await ctx.send(embed=embed)
+
         except Exception as e:
             logger.error(f"Error removing starboard configuration: {e}")
             await ctx.send(f"An error occurred while removing the starboard configuration: {e}")
 
     @commands.Cog.listener("on_raw_reaction_add")
     async def starboard_check(self, payload: discord.RawReactionActionEvent) -> None:
+        """
+        Check if a message should be added to the starboard
+
+        Parameters
+        ----------
+        payload : discord.RawReactionActionEvent
+            The payload of the reaction event.
+        """
+
         if not payload.guild_id or not payload.member:
             return
 
@@ -129,18 +159,18 @@ class Starboard(commands.Cog):
 
         try:
             message = await channel.fetch_message(payload.message_id)
-            starboard = await self.starboard_controller.get_starboard_by_guild_id(payload.guild_id)
-
-            if not starboard or str(payload.emoji) != starboard.starboard_emoji:
+            if message.author.id == payload.user_id:
                 return
 
-            if message.author.id == payload.user_id:
+            starboard = await self.starboard_controller.get_starboard_by_guild_id(payload.guild_id)
+            if not starboard or str(payload.emoji) != starboard.starboard_emoji:
                 return
 
             reaction_count = sum(r.count for r in message.reactions if str(r.emoji) == starboard.starboard_emoji)
 
             if reaction_count >= starboard.starboard_threshold:
                 starboard_channel = channel.guild.get_channel(starboard.starboard_channel_id)
+
                 if not isinstance(starboard_channel, discord.TextChannel):
                     logger.error(
                         f"Starboard channel {starboard.starboard_channel_id} not found or is not a text channel",
@@ -148,6 +178,7 @@ class Starboard(commands.Cog):
                     return
 
                 await self.create_or_update_starboard_message(starboard_channel, message, reaction_count)
+
         except Exception as e:
             logger.error(f"Error in starboard_check: {e}")
 
@@ -156,19 +187,34 @@ class Starboard(commands.Cog):
         starboard_channel: discord.TextChannel,
         original_message: discord.Message,
     ) -> discord.Message | None:
+        """
+        Get the existing starboard message for a given original message.
+
+        Parameters
+        ----------
+        starboard_channel : discord.TextChannel
+            The starboard channel.
+        original_message : discord.Message
+            The original message.
+        """
+
         assert original_message.guild
+
         try:
             starboard_message = await self.starboard_message_controller.get_starboard_message_by_id(
                 original_message.id,
                 original_message.guild.id,
             )
+
             return (
                 await starboard_channel.fetch_message(starboard_message.starboard_message_id)
                 if starboard_message
                 else None
             )
+
         except Exception as e:
             logger.error(f"Error while fetching starboard message: {e}")
+
         return None
 
     async def create_or_update_starboard_message(
@@ -177,6 +223,19 @@ class Starboard(commands.Cog):
         original_message: discord.Message,
         reaction_count: int,
     ) -> None:
+        """
+        Create or update a starboard message.
+
+        Parameters
+        ----------
+        starboard_channel : discord.TextChannel
+            The starboard channel.
+        original_message : discord.Message
+            The original message.
+        reaction_count : int
+            The number of reactions on the original message.
+        """
+
         if not original_message.guild:
             logger.error("Original message has no guild")
             return
@@ -218,6 +277,7 @@ class Starboard(commands.Cog):
                 star_count=reaction_count,
                 starboard_message_id=starboard_message.id,
             )
+
         except Exception as e:
             logger.error(f"Error while creating or updating starboard message: {e}")
 
