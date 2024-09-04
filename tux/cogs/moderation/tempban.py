@@ -113,7 +113,7 @@ class TempBan(ModerationCogBase):
                                 guild_bans = guild.bans()
                                 async for ban_entry in guild_bans:
                                     if ban_entry.user.id == case.case_user_id:
-                                        await guild.unban(ban_entry.user)
+                                        await guild.unban(ban_entry.user, reason="Tempban expired")
 
                             except (discord.Forbidden, discord.HTTPException) as e:
                                 logger.error(
