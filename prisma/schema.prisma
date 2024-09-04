@@ -40,14 +40,15 @@ enum CaseType {
 // Docs: https://www.prisma.io/docs/orm/prisma-schema/data-model/models#defining-models
 // Docs: https://www.prisma.io/docs/orm/prisma-schema/data-model/models#defining-attributes
 model Guild {
-  guild_id        BigInt        @id
-  guild_joined_at DateTime?     @default(now())
-  cases           Case[]
-  snippets        Snippet[]
-  notes           Note[]
-  reminders       Reminder[]
-  guild_config    GuildConfig[]
-  Starboard       Starboard[]
+  guild_id         BigInt             @id
+  guild_joined_at  DateTime?          @default(now())
+  cases            Case[]
+  snippets         Snippet[]
+  notes            Note[]
+  reminders        Reminder[]
+  guild_config     GuildConfig[]
+  Starboard        Starboard[]
+  StarboardMessage StarboardMessage[]
 
   @@unique([guild_id])
   @@index([guild_id])
@@ -153,4 +154,20 @@ model Starboard {
 
   @@unique([guild_id])
   @@index([guild_id])
+}
+
+model StarboardMessage {
+  message_id           BigInt   @id
+  message_content      String
+  message_created_at   DateTime @default(now())
+  message_expires_at   DateTime
+  message_channel_id   BigInt
+  message_user_id      BigInt
+  message_guild_id     BigInt
+  star_count           Int      @default(0)
+  starboard_message_id BigInt
+  guild                Guild    @relation(fields: [message_guild_id], references: [guild_id])
+
+  @@unique([message_id, message_guild_id])
+  @@index([message_id, message_guild_id])
 }

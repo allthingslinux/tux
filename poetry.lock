@@ -680,6 +680,17 @@ files = [
 ]
 
 [[package]]
+name = "emojis"
+version = "0.7.0"
+description = "Emojis for Python"
+optional = false
+python-versions = "*"
+files = [
+    {file = "emojis-0.7.0-py3-none-any.whl", hash = "sha256:a777926d8ab0bfdd51250e899a3b3524a1e969275ac8e747b4a05578fa597367"},
+    {file = "emojis-0.7.0.tar.gz", hash = "sha256:5f437674da878170239af9a8196e50240b5922d6797124928574008442196b52"},
+]
+
+[[package]]
 name = "filelock"
 version = "3.15.4"
 description = "A platform independent file lock."
@@ -2425,4 +2436,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12,<4"
-content-hash = "bbac8f5b09eb56eaa68724e6abfabfd587e57f38d101c5a421ee80c62c2e04dc"
+content-hash = "ff3627917ae2897246db3ffc167ff5dcb45f550119ee7116f453fd5091bac646"
