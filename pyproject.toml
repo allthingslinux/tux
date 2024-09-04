@@ -37,6 +37,7 @@ sentry-sdk = {extras = ["httpx", "loguru"], version = "^2.7.0"}
 types-aiofiles = "^24.1.0.20240626"
 types-psutil = "^6.0.0.20240621"
 typing-extensions = "^4.12.2"
+emojis = "^0.7.0"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.30"
