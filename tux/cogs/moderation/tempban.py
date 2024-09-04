@@ -90,14 +90,12 @@ class TempBan(ModerationCogBase):
         for tempban in tempbans:
             for cases in tempbans:
                 for case in cases:
-
                     # Check if the case has expired
                     if case.case_expires_at < datetime.now(UTC):
                         # Get the guild, if that doesnt work then fetch it instead
 
                         guild = self.bot.get_guild(case.guild_id)
                         if guild is None:
-
                             try:
                                 guild = await self.bot.fetch_guild(case.guild_id)
 
