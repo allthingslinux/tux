@@ -76,7 +76,7 @@ class TempBan(ModerationCogBase):
             case_reason=flags.reason,
             guild_id=ctx.guild.id,
             case_expires_at=expires_at,
-            case_tempban_expired=False
+            case_tempban_expired=False,
         )
 
         await self.handle_case_response(ctx, CaseType.TEMPBAN, case.case_number, flags.reason, member)
@@ -87,20 +87,20 @@ class TempBan(ModerationCogBase):
         expired_temp_bans = await self.db.case.get_expired_tempbans()
         logger.debug(f"Checking {len(expired_temp_bans)} expired tempbans. {expired_temp_bans}")
         for temp_ban in expired_temp_bans:
-            #Debug Print
+            # Debug Print
             logger.debug(f"Unbanning user with ID {temp_ban.case_user_id} | Case number {temp_ban.case_number}")
             guild = self.bot.get_guild(temp_ban.guild_id)
 
             if guild is None:
-                #Debug Print
+                # Debug Print
                 logger.debug(f"Fetching guild with ID {temp_ban.guild_id}")
                 try:
                     guild = await self.bot.fetch_guild(temp_ban.guild_id)
 
                 except (discord.Forbidden, discord.HTTPException) as e:
                     logger.error(
-                            f"Failed to unban user with ID  {temp_ban.case_user_id} | Case number {temp_ban.case_number} | Issue: Failed to get guild with ID {temp_ban.guild_id}. {e}",
-                        )
+                        f"Failed to unban user with ID  {temp_ban.case_user_id} | Case number {temp_ban.case_number} | Issue: Failed to get guild with ID {temp_ban.guild_id}. {e}",
+                    )
                     return
             else:
                 logger.debug(f"Found guild with ID {temp_ban.guild_id}")
@@ -117,9 +117,8 @@ class TempBan(ModerationCogBase):
                         f"Faile+d to unban user with ID  {temp_ban.case_user_id} | Case number {temp_ban.case_number} Issue: Failed to unban user. {e}",
                     )
                     return
-                #Debug Print
+                # Debug Print
                 logger.debug(f"Unbanned user with ID {temp_ban.case_user_id} | Case number {temp_ban.case_number}")
-
 
 
 async def setup(bot: Tux) -> None:

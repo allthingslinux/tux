@@ -325,9 +325,10 @@ class CaseController:
             where={
                 "case_type": CaseType.TEMPBAN,
                 "case_expires_at": {"lt": datetime.now()},
-                "case_tempban_expired": False
-            }
+                "case_tempban_expired": False,
+            },
         )
+
     async def set_tempban_expired(self, case_number: int, guild_id: int) -> Case | None:
         """
         Set a tempban case as expired.
@@ -345,6 +346,5 @@ class CaseController:
             The case if found and deleted, otherwise None.
         """
         return await self.table.update(
-            where={"case_number": case_number, "guild_id": guild_id},
-            data={"case_tempban_expired": True}
+            where={"case_number": case_number, "guild_id": guild_id}, data={"case_tempban_expired": True},
         )
