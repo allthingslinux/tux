@@ -110,6 +110,14 @@ class Starboard(commands.Cog):
 
     @commands.Cog.listener("on_raw_reaction_add")
     async def starboard_check(self, payload: discord.RawReactionActionEvent) -> None:
+        """
+        Check if a message should be added to the starboard.
+
+        Parameters
+        ----------
+        payload: discord.RawReactionActionEvent
+            The payload of the reaction event
+        """
         user_id = payload.user_id
         reaction = payload.emoji
         channel = self.bot.get_channel(payload.channel_id)
@@ -157,6 +165,21 @@ class Starboard(commands.Cog):
         starboard_channel: discord.TextChannel,
         original_message: discord.Message,
     ) -> discord.Message | None:
+        """
+        Get the existing starboard message for the original message.
+
+        Parameters
+        ----------
+        starboard_channel: discord.TextChannel
+            The channel to check for the starboard message
+        original_message: discord.Message
+            The original message to check for
+
+        Returns
+        -------
+        discord.Message | None
+            The existing starboard message for the original message
+        """
         assert original_message.guild
         try:
             starboard_message = await self.starboard_message_controller.get_starboard_message_by_id(
@@ -177,6 +200,18 @@ class Starboard(commands.Cog):
         original_message: discord.Message,
         reaction_count: int,
     ) -> None:
+        """
+        Create or update the starboard message for the original message.
+
+        Parameters
+        ----------
+        starboard_channel: discord.TextChannel
+            The channel to send the starboard message to
+        original_message: discord.Message
+            The original message to send to the starboard
+        reaction_count: int
+            The number of reactions the original message has
+        """
         if not original_message.guild:
             logger.error("Original message has no guild")
             return
