@@ -421,7 +421,7 @@ class Cases(ModerationCogBase):
             else ":interrobang: :interrobang:"
         )
         case_date = discord.utils.format_dt(case.case_created_at, "R") if case.case_created_at else ":interrobang:"
-        case_number = f"{case.case_number:04d}"
+        case_number = case.case_number
 
         return f"{case_status_emoji} `{case_number}`\u2002\u2002 {case_type_and_action} \u2002\u2002__{case_date}__\n"
 

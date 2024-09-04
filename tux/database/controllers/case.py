@@ -30,6 +30,45 @@ class CaseController:
             return await self.guild_table.create(data={"guild_id": guild_id})
         return guild
 
+    async def get_next_case_number(self, guild_id: int) -> int:
+        """
+        Get the next case number for a guild.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to get the next case number for.
+
+        Returns
+        -------
+        int
+            The next case number for the guild.
+        """
+
+        guild = await self.ensure_guild_exists(guild_id)
+        return (guild.case_count or 0) + 1
+
+    async def increment_case_count(self, guild_id: int) -> Guild | None:
+        """
+        Increment the case count for a guild.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to increment the case count for.
+
+        Returns
+        -------
+        Guild | None
+            The updated guild database object, or None if the guild does not exist.
+        """
+        guild = await self.ensure_guild_exists(guild_id)
+
+        return await self.guild_table.update(
+            where={"guild_id": guild_id},
+            data={"case_count": (guild.case_count or 0) + 1},
+        )
+
     """
     CREATE
     """
@@ -70,10 +109,12 @@ class CaseController:
             The case database object.
         """
         await self.ensure_guild_exists(guild_id)
+        await self.increment_case_count(guild_id)
 
         return await self.table.create(
             data={
                 "guild_id": guild_id,
+                "case_number": await self.get_next_case_number(guild_id),
                 "case_user_id": case_user_id,
                 "case_moderator_id": case_moderator_id,
                 "case_type": case_type,
