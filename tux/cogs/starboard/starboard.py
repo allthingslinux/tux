@@ -116,10 +116,10 @@ class Starboard(commands.Cog):
                 )
                 return
 
-            # # Check if the user is not the author of the message
-            # if user.id == reaction.message.author.id:
-            #     logger.debug(f"User {user.id} tried to star their own message")
-            #     return
+            # The message author cannot star their own message
+            if user.id == reaction.message.author.id:
+                logger.debug(f"User {user.id} tried to star their own message")
+                return
 
             reaction_count = sum(
                 r.count for r in reaction.message.reactions if str(r.emoji) == starboard.starboard_emoji
@@ -170,9 +170,7 @@ class Starboard(commands.Cog):
 
         try:
             starboard = await self.starboard_controller.get_starboard_by_guild_id(original_message.guild.id)
-            if not starboard:
-                logger.error(f"No starboard configuration found for guild {original_message.guild.id}")
-                return
+            assert starboard
 
             embed = discord.Embed(
                 description=original_message.content,
@@ -184,7 +182,7 @@ class Starboard(commands.Cog):
                 icon_url=original_message.author.avatar.url if original_message.author.avatar else None,
             )
             embed.add_field(name="Source", value=f"[Jump to message]({original_message.jump_url})")
-            embed.set_footer(text=f"Star count: {reaction_count} {starboard.starboard_emoji}")
+            embed.set_footer(text=f"{reaction_count} {starboard.starboard_emoji}")
 
             if original_message.attachments:
                 embed.set_image(url=original_message.attachments[0].url)
