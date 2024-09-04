@@ -54,7 +54,7 @@ class TempBan(ModerationCogBase):
             return
 
         moderator = ctx.author
-        duration = parse_time_string(f"{flags.expires_at}m")
+        duration = parse_time_string(f"{flags.expires_at}d")
         expires_at = datetime.now(UTC) + duration
 
         if not await self.check_conditions(ctx, member, moderator, "temporarily ban"):
