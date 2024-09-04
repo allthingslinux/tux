@@ -27,15 +27,16 @@ class Ping(commands.Cog):
         discord_ping = round(self.bot.latency * 1000)
 
         # Get the CPU usage and RAM usage of the bot
-        cpu_usage = psutil.cpu_percent()
+        cpu_usage = psutil.Process().cpu_percent()
         # Get the amount of RAM used by the bot
-        ram_amount = psutil.virtual_memory().used
+        ram_amount_in_bytes = psutil.Process().memory_info().rss
+        ram_amount_in_mb = ram_amount_in_bytes / (1024 * 1024)
 
-        # Format the RAM usage to be in GB or MB
-        if ram_amount >= 1024**3:
-            ram_amount_formatted = f"{ram_amount // (1024**3)}GB"
+        # Format the RAM usage to be in GB or MB, rounded to nearest integer
+        if ram_amount_in_mb >= 1024:
+            ram_amount_formatted = f"{round(ram_amount_in_mb / 1024)}GB"
         else:
-            ram_amount_formatted = f"{ram_amount // (1024**2)}MB"
+            ram_amount_formatted = f"{round(ram_amount_in_mb)}MB"
 
         embed = EmbedCreator.create_success_embed(
             title="Pong!",
