@@ -321,10 +321,10 @@ class Config(commands.GroupCog, group_name="config"):
 
         await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
 
-    @prefix.command(name="configure")
+    @prefix.command(name="set")
     @app_commands.guild_only()
     @app_commands.checks.has_permissions(administrator=True)
-    async def config_configure_prefix(
+    async def config_set_prefix(
         self,
         interaction: discord.Interaction,
         prefix: str,
@@ -352,10 +352,10 @@ class Config(commands.GroupCog, group_name="config"):
             ),
         )
 
-    @prefix.command(name="reset")
+    @prefix.command(name="clear")
     @app_commands.guild_only()
     @app_commands.checks.has_permissions(administrator=True)
-    async def config_reset_prefix(
+    async def config_clear_prefix(
         self,
         interaction: discord.Interaction,
     ) -> None:
