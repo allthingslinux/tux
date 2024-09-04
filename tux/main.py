@@ -12,6 +12,10 @@ from tux.bot import Tux
 from tux.utils.constants import Constants as CONST
 
 
+async def get_prefix(bot: Tux, message: discord.Message) -> str:
+    return CONST.DEFAULT_PREFIX
+
+
 async def main() -> None:
     if not CONST.TOKEN:
         logger.critical("No token provided, exiting.")
@@ -31,7 +35,7 @@ async def main() -> None:
     logger.info(f"Sentry setup intitalized: {sentry_sdk.is_initialized()}")
 
     bot = Tux(
-        command_prefix=CONST.DEFAULT_PREFIX,
+        command_prefix=get_prefix,
         strip_after_prefix=True,
         case_insensitive=True,
         intents=discord.Intents.all(),
