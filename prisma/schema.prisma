@@ -145,13 +145,12 @@ model Reminder {
 }
 
 model Starboard {
-  starboard_id         BigInt @id @default(autoincrement())
+  guild_id             BigInt @id
   starboard_channel_id BigInt
   starboard_emoji      String
   starboard_threshold  Int
-  guild_id             BigInt
   guild                Guild  @relation(fields: [guild_id], references: [guild_id])
 
-  @@unique([starboard_id, guild_id])
-  @@index([starboard_id, guild_id])
+  @@unique([guild_id])
+  @@index([guild_id])
 }
