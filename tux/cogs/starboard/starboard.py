@@ -22,7 +22,7 @@ class Starboard(commands.Cog):
         description="Configure the starboard for this server",
     )
     @commands.guild_only()
-    @checks.has_pl(7)  # server owner only
+    @checks.has_pl(5)  # admin & up
     async def starboard(self, ctx: commands.Context[Tux]) -> None:
         if ctx.invoked_subcommand is None:
             await ctx.send_help("starboard")
@@ -86,6 +86,14 @@ class Starboard(commands.Cog):
     )
     @commands.has_permissions(manage_guild=True)
     async def remove_starboard(self, ctx: commands.Context[Tux]) -> None:
+        """
+        Remove the starboard configuration for this server.
+
+        Parameters
+        ----------
+        ctx: commands.Context[Tux]
+            The context of the command
+        """
         if not ctx.guild:
             await ctx.send("This command can only be used in a server.")
             return
