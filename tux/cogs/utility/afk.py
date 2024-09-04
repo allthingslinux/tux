@@ -1,3 +1,6 @@
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+
 import discord
 from discord.ext import commands
 
@@ -44,14 +47,14 @@ class AFK(commands.Cog):
 
     @commands.Cog.listener("on_message")
     async def remove_afk(self, message: discord.Message):
-        if not message.guild:
-            return
-
-        if message.author.bot:
+        if not message.guild or message.author.bot:
             return
 
         entry = await self.db.get_afk_member(message.author.id, guild_id=message.guild.id)
         if not entry:
+            return
+
+        if entry.since + timedelta(seconds=10) > datetime.now(ZoneInfo("UTC")):
             return
 
         assert isinstance(message.author, discord.Member)
