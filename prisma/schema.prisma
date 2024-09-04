@@ -11,13 +11,14 @@ datasource db {
 }
 
 model Guild {
-  guild_id         BigInt             @id @unique
+  guild_id         BigInt             @id
   guild_joined_at  DateTime?          @default(now())
   cases            Case[]
-  guild_config     GuildConfig?
+  snippets         Snippet[]
   notes            Note[]
   reminders        Reminder[]
-  snippets         Snippet[]
+  guild_config     GuildConfig[]
+  AFK              AFKModel[]
   Starboard        Starboard?
   StarboardMessage StarboardMessage[]
   case_count       BigInt             @default(0)
@@ -112,6 +113,18 @@ model Reminder {
 
   @@unique([reminder_id, guild_id])
   @@index([reminder_id, guild_id])
+}
+
+model AFKModel {
+  member_id BigInt   @id
+  nickname  String
+  reason    String
+  since     DateTime @default(now())
+  guild_id  BigInt
+  guild     Guild    @relation(fields: [guild_id], references: [guild_id])
+
+  @@unique([member_id, guild_id])
+  @@index([member_id])
 }
 
 model Starboard {
