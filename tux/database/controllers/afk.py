@@ -9,8 +9,10 @@ class AfkController:
 
     async def ensure_guild_exists(self, guild_id: int) -> Guild:
         guild = await self.guild.find_first(where={"guild_id": guild_id})
+
         if guild is None:
             return await self.guild.create(data={"guild_id": guild_id})
+
         return guild
 
     async def get_afk_member(self, member_id: int, *, guild_id: int) -> AFKModel | None:
@@ -22,6 +24,7 @@ class AfkController:
 
     async def insert_afk(self, member_id: int, nickname: str, reason: str, guild_id: int) -> AFKModel:
         await self.ensure_guild_exists(guild_id)
+
         return await self.table.create(
             data={
                 "member_id": member_id,
