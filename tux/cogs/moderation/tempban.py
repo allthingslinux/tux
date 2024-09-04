@@ -87,7 +87,6 @@ class TempBan(ModerationCogBase):
         tempbans = [await self.db.case.get_all_cases_by_type(guild.guild_id, CaseType.TEMPBAN) for guild in guilds]
         # Here, we have 3 nested for loops because for some odd reason, tempbans is a list of a list of lists, very confusing ikr
 
-
         for tempban in tempbans:
             for cases in tempbans:
                 for case in cases:
