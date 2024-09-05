@@ -36,7 +36,7 @@ class TuxHelp(commands.HelpCommand):
             The prefix used to invoke the bot.
         """
 
-        return (await self.context.bot.get_prefix(self.context.message))[0] or CONST.PREFIX
+        return self.context.clean_prefix or CONST.DEFAULT_PREFIX
 
     def _embed_base(self, title: str, description: str | None = None) -> discord.Embed:
         """
