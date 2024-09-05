@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from prisma.enums import CaseType
 from prisma.models import Case, Guild
@@ -324,12 +324,12 @@ class CaseController:
         return await self.table.find_many(
             where={
                 "case_type": CaseType.TEMPBAN,
-                "case_expires_at": {"lt": datetime.now()},
+                "case_expires_at": {"lt": datetime.now(UTC)},
                 "case_tempban_expired": False,
             },
         )
 
-    async def set_tempban_expired(self, case_number: int, guild_id: int) -> Case | None:
+    async def set_tempban_expired(self, case_number: int, guild_id: int) -> int:
         """
         Set a tempban case as expired.
 
@@ -342,9 +342,10 @@ class CaseController:
 
         Returns
         -------
-        Case | None
-            The case if found and deleted, otherwise None.
+        int
+            The total number of Case records that were updated.
         """
-        return await self.table.update(
-            where={"case_number": case_number, "guild_id": guild_id}, data={"case_tempban_expired": True},
+        return await self.table.update_many(
+            where={"case_number": case_number, "guild_id": guild_id},
+            data={"case_tempban_expired": True},
         )

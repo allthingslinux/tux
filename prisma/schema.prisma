@@ -11,13 +11,14 @@ datasource db {
 }
 
 model Guild {
-  guild_id         BigInt             @id @unique
+  guild_id         BigInt             @id
   guild_joined_at  DateTime?          @default(now())
   cases            Case[]
-  guild_config     GuildConfig?
+  snippets         Snippet[]
   notes            Note[]
   reminders        Reminder[]
-  snippets         Snippet[]
+  guild_config     GuildConfig[]
+  AFK              AFKModel[]
   Starboard        Starboard?
   StarboardMessage StarboardMessage[]
   case_count       BigInt             @default(0)
@@ -54,19 +55,19 @@ model GuildConfig {
 }
 
 model Case {
-  case_id           BigInt    @id @default(autoincrement())
-  case_status       Boolean?  @default(true)
-  case_type         CaseType
-  case_reason       String
-  case_moderator_id BigInt
-  case_user_id      BigInt
-  case_user_roles   BigInt[]  @default([])
-  case_number       BigInt?
-  case_created_at   DateTime? @default(now())
-  case_expires_at   DateTime?
+  case_id              BigInt    @id @default(autoincrement())
+  case_status          Boolean?  @default(true)
+  case_type            CaseType
+  case_reason          String
+  case_moderator_id    BigInt
+  case_user_id         BigInt
+  case_user_roles      BigInt[]  @default([])
+  case_number          BigInt?
+  case_created_at      DateTime? @default(now())
+  case_expires_at      DateTime?
   case_tempban_expired Boolean?  @default(false)
-  guild_id          BigInt
-  guild             Guild     @relation(fields: [guild_id], references: [guild_id])
+  guild_id             BigInt
+  guild                Guild     @relation(fields: [guild_id], references: [guild_id])
 
   @@unique([case_number, guild_id])
   @@index([case_number, guild_id])
@@ -115,6 +116,18 @@ model Reminder {
   @@index([reminder_id, guild_id])
 }
 
+model AFKModel {
+  member_id BigInt   @id
+  nickname  String
+  reason    String
+  since     DateTime @default(now())
+  guild_id  BigInt
+  guild     Guild    @relation(fields: [guild_id], references: [guild_id])
+
+  @@unique([member_id, guild_id])
+  @@index([member_id])
+}
+
 model Starboard {
   guild_id             BigInt @id @unique
   starboard_channel_id BigInt
@@ -154,4 +167,5 @@ enum CaseType {
   JAIL
   UNJAIL
   SNIPPETUNBAN
+  UNTEMPBAN
 }

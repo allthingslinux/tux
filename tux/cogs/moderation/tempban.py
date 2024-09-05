@@ -81,44 +81,51 @@ class TempBan(ModerationCogBase):
 
         await self.handle_case_response(ctx, CaseType.TEMPBAN, case.case_number, flags.reason, member)
 
-    @tasks.loop(seconds=30)
+    @tasks.loop(hours=1)
     async def tempban_check(self) -> None:
         # Get all expired tempbans
         expired_temp_bans = await self.db.case.get_expired_tempbans()
-        logger.debug(f"Checking {len(expired_temp_bans)} expired tempbans. {expired_temp_bans}")
-        for temp_ban in expired_temp_bans:
-            # Debug Print
-            logger.debug(f"Unbanning user with ID {temp_ban.case_user_id} | Case number {temp_ban.case_number}")
-            guild = self.bot.get_guild(temp_ban.guild_id)
 
+        for temp_ban in expired_temp_bans:
+            # This make sure that if get_guild doesnt work, we can instead fetch it from the api
+
+            guild = self.bot.get_guild(temp_ban.guild_id)
             if guild is None:
-                # Debug Print
-                logger.debug(f"Fetching guild with ID {temp_ban.guild_id}")
                 try:
                     guild = await self.bot.fetch_guild(temp_ban.guild_id)
-
                 except (discord.Forbidden, discord.HTTPException) as e:
                     logger.error(
                         f"Failed to unban user with ID  {temp_ban.case_user_id} | Case number {temp_ban.case_number} | Issue: Failed to get guild with ID {temp_ban.guild_id}. {e}",
                     )
                     return
             else:
-                logger.debug(f"Found guild with ID {temp_ban.guild_id}")
                 try:
-                    # Unban the user
+                    # Unban the user by fetching all the bans and if they exist, unban them
 
                     guild_bans = guild.bans()
                     async for ban_entry in guild_bans:
                         if ban_entry.user.id == temp_ban.case_user_id:
                             await guild.unban(ban_entry.user, reason="Tempban expired")
+
+                            # This just avoids some linting errors
+                            assert isinstance(temp_ban.case_number, int)
+
+                            # If the unban goes through, set the tempban as expired and create an untempban case
                             await self.db.case.set_tempban_expired(temp_ban.case_number, temp_ban.guild_id)
-                except (discord.Forbidden, discord.HTTPException) as e:
+                            await self.db.case.insert_case(
+                                guild_id=temp_ban.guild_id,
+                                case_user_id=temp_ban.case_user_id,
+                                case_moderator_id=temp_ban.case_moderator_id,
+                                case_type=CaseType.UNTEMPBAN,
+                                case_reason="Expired tempban",
+                                case_tempban_expired=True,
+                            )
+
+                except (discord.Forbidden, discord.HTTPException, discord.NotFound) as e:
                     logger.error(
-                        f"Faile+d to unban user with ID  {temp_ban.case_user_id} | Case number {temp_ban.case_number} Issue: Failed to unban user. {e}",
+                        f"Failed to unban user with ID  {temp_ban.case_user_id} | Case number {temp_ban.case_number} Issue: Failed to unban user. {e}",
                     )
                     return
-                # Debug Print
-                logger.debug(f"Unbanned user with ID {temp_ban.case_user_id} | Case number {temp_ban.case_number}")
 
 
 async def setup(bot: Tux) -> None:
