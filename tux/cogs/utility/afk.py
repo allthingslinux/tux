@@ -8,6 +8,7 @@ from discord.ext import commands
 from prisma.models import AFKModel
 from tux.bot import Tux
 from tux.database.controllers import AfkController
+from tux.utils.constants import Constants as CONST
 
 
 class AFK(commands.Cog):
@@ -45,10 +46,8 @@ class AFK(commands.Cog):
         if await self.db.is_afk(target.id, guild_id=ctx.guild.id):
             return await ctx.send("You are already afk!", ephemeral=True)
 
-        max_name_limit = 32
-
-        if len(target.display_name) >= max_name_limit - 6:
-            truncated_name = f"{target.display_name[:max_name_limit - 9]}..."
+        if len(target.display_name) >= CONST.NICKNAME_MAX_LENGTH - 6:
+            truncated_name = f"{target.display_name[:CONST.NICKNAME_MAX_LENGTH - 9]}..."
             new_name = f"[AFK] {truncated_name}"
         else:
             new_name = f"[AFK] {target.display_name}"

@@ -84,6 +84,8 @@ class Constants:
     EMBED_TOTAL_MAX = 6000
     EMBED_FIELD_VALUE_LENGTH = 1024
 
+    NICKNAME_MAX_LENGTH = 32
+
     # Interaction constants
     ACTION_ROW_MAX_ITEMS = 5
     SELECTS_MAX_OPTIONS = 25
