@@ -43,10 +43,13 @@ class ImgEffect(commands.Cog):
         if image.content_type not in self.allowed_mimetypes:
             logger.error("The file is not a permitted image.")
 
-            embed = EmbedCreator.create_error_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=interaction.user.name,
+                user_display_avatar=interaction.user.display_avatar.url,
                 title="Invalid File",
                 description="The file must be an image. Allowed types are PNG, JPEG, and JPG.",
-                interaction=interaction,
             )
 
             await interaction.response.send_message(embed=embed, ephemeral=True)

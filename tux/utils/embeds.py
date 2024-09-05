@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 
 import discord
+from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
@@ -109,3 +110,25 @@ class EmbedCreator:
 
         else:
             return (text, user_display_avatar or "https://i.imgur.com/4sblrd0.png")
+
+
+def create_embed_footer(
+    ctx: commands.Context[Tux] | None = None,
+    interaction: discord.Interaction | None = None,
+    fallback_text: str = "tux@atl $",
+    fallback_icon_url: str = "https://i.imgur.com/4sblrd0.png",
+) -> tuple[str, str | None]:
+    user: discord.User | discord.Member | None = None
+    latency = None
+    if ctx:
+        user = ctx.author
+        latency = round(ctx.bot.latency * 1000)
+    elif interaction:
+        user = interaction.user
+        latency = round(interaction.client.latency * 1000)
+    if isinstance(user, discord.User | discord.Member):
+        return (
+            f"{user.name}@atl $ {latency}ms",
+            str(user.avatar.url) if user.avatar else fallback_icon_url,
+        )
+    return (fallback_text, fallback_icon_url)

@@ -316,10 +316,13 @@ class RoleCount(commands.Cog):
             The created embed.
         """
 
-        return EmbedCreator.create_info_embed(
+        return EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.INFO,
+            user_name=interaction.user.name,
+            user_display_avatar=interaction.user.display_avatar.url,
             title=f"{which.name} Roles",
             description="Number of users in each role",
-            interaction=interaction,
         )
 
     async def _send_response(

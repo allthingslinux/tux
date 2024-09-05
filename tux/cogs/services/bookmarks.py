@@ -54,7 +54,9 @@ class Bookmarks(commands.Cog):
         if len(message.content) > CONST.EMBED_MAX_DESC_LENGTH:
             message.content = f"{message.content[:CONST.EMBED_MAX_DESC_LENGTH - 3]}..."
 
-        embed = EmbedCreator.create_info_embed(
+        embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.INFO,
             title="Message Bookmarked",
             description=f"> {message.content}",
         )

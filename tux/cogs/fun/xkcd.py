@@ -123,7 +123,9 @@ class Xkcd(commands.Cog):
             else:
                 comic = self.client.get_random_comic(raw_comic_image=True)
 
-            embed = EmbedCreator.create_success_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.INFO,
                 title="",
                 description=f"\n\n> {comic.description.strip()}" if comic.description else "",
             )
@@ -134,7 +136,9 @@ class Xkcd(commands.Cog):
 
         except xkcd.HttpError:
             logger.error("HTTP error occurred while fetching xkcd comic")
-            embed = EmbedCreator.create_error_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
                 title="Error",
                 description="I couldn't find the xkcd comic. Please try again later.",
             )
@@ -143,7 +147,9 @@ class Xkcd(commands.Cog):
 
         except Exception as e:
             logger.error(f"Error getting xkcd comic: {e}")
-            embed = EmbedCreator.create_error_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
                 title="Error",
                 description="An error occurred while fetching the xkcd comic",
             )

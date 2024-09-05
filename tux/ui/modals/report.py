@@ -42,10 +42,13 @@ class ReportModal(discord.ui.Modal):
             logger.error("Guild is None")
             return
 
-        embed = EmbedCreator.create_log_embed(
+        embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.INFO,
+            user_name=interaction.user.name,
+            user_display_avatar=interaction.user.display_avatar.url,
             title=(f"Anonymous report for {self.short.value}"),  # type: ignore
             description=self.long.value,  # type: ignore
-            interaction=None,
         )
 
         try:

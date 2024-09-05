@@ -38,7 +38,11 @@ class Export(commands.Cog):
         valid_flags = ["user", "display", "id", "reason", "mention", "created"]
 
         if not bans:
-            embed = EmbedCreator.create_success_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.INFO,
+                user_name=interaction.user.name,
+                user_display_avatar=interaction.user.display_avatar.url,
                 title=f"{interaction.guild} Banned Users",
                 description="There are no banned users in this server.",
             )

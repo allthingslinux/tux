@@ -442,10 +442,13 @@ class Git(commands.Cog):
         try:
             repo = await self.github.get_repo()
 
-            embed = EmbedCreator.create_info_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.INFO,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 title="Tux",
                 description="",
-                ctx=ctx,
             )
             embed.add_field(name="Description", value=repo.description, inline=False)
             embed.add_field(name="Stars", value=repo.stargazers_count)
@@ -485,10 +488,13 @@ class Git(commands.Cog):
         try:
             created_issue = await self.github.create_issue(title, body)
 
-            embed = EmbedCreator.create_success_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.SUCCESS,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 title="Issue Created",
                 description="The issue has been created successfully.",
-                ctx=ctx,
             )
             embed.add_field(name="Issue Number", value=created_issue.number, inline=False)
             embed.add_field(name="Title", value=title, inline=False)
@@ -524,10 +530,13 @@ class Git(commands.Cog):
         try:
             issue = await self.github.get_issue(issue_number)
 
-            embed = EmbedCreator.create_info_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.INFO,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 title=issue.title,
                 description=str(issue.body) if issue.body is not None else "",
-                ctx=ctx,
             )
             embed.add_field(name="State", value=issue.state, inline=False)
             embed.add_field(name="Number", value=issue.number, inline=False)

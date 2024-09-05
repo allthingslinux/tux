@@ -119,14 +119,24 @@ class Wiki(commands.Cog):
         title: tuple[str, str] = self.query_arch_wiki(query)
 
         if title[0] == "error":
-            embed = EmbedCreator.create_error_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 title="Error",
                 description="No search results found.",
-                ctx=ctx,
             )
 
         else:
-            embed = EmbedCreator.create_info_embed(title=title[0], description=title[1], ctx=ctx)
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.INFO,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                title=title[0],
+                description=title[1],
+            )
 
         await ctx.send(embed=embed)
 
@@ -149,14 +159,24 @@ class Wiki(commands.Cog):
         title: tuple[str, str] = self.query_atl_wiki(query)
 
         if title[0] == "error":
-            embed = EmbedCreator.create_error_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 title="Error",
                 description="No search results found.",
-                ctx=ctx,
             )
 
         else:
-            embed = EmbedCreator.create_info_embed(title=title[0], description=title[1], ctx=ctx)
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.INFO,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                title=title[0],
+                description=title[1],
+            )
 
         await ctx.send(embed=embed)
 

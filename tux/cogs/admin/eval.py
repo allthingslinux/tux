@@ -108,19 +108,25 @@ class Eval(commands.Cog):
             # Evaluate the function
             evaluated = await eval(f"{fn_name}()", env)
 
-            embed = EmbedCreator.create_success_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.SUCCESS,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 title="Success!",
                 description=f"```py\n{evaluated}```",
-                ctx=ctx,
             )
 
             logger.info(f"{ctx.author} ran an expression: {cmd}")
 
         except Exception as error:
-            embed = EmbedCreator.create_error_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 title="Error!",
                 description=f"```py\n{error}```",
-                ctx=ctx,
             )
 
             logger.error(f"An error occurred while running an expression: {error}")

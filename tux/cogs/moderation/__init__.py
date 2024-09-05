@@ -8,7 +8,7 @@ from prisma.enums import CaseType
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.utils.constants import Constants as CONST
-from tux.utils.embeds import create_embed_footer, create_error_embed
+from tux.utils.embeds import EmbedCreator, create_embed_footer
 
 
 class ModerationCogBase(commands.Cog):
@@ -155,17 +155,38 @@ class ModerationCogBase(commands.Cog):
         assert ctx.guild
 
         if user == ctx.author:
-            embed = create_error_embed(f"You cannot {action} yourself.")
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                title="You cannot self-moderate",
+                description=f"You cannot {action} yourself.",
+            )
             await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             return False
 
         if isinstance(moderator, discord.Member) and user.top_role >= moderator.top_role:
-            embed = create_error_embed(f"You cannot {action} a user with a higher or equal role.")
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                title="You cannot self-moderate",
+                description=f"You cannot {action} a user with a higher or equal role.",
+            )
             await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             return False
 
         if user == ctx.guild.owner:
-            embed = create_error_embed(f"You cannot {action} the server owner.")
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                title="You cannot self-moderate",
+                description=f"You cannot {action} the server owner.",
+            )
             await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             return False
 
