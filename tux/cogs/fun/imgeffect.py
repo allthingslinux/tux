@@ -39,13 +39,16 @@ class ImgEffect(commands.Cog):
 
         # check if the image is a image
         logger.info(f"Content type: {image.content_type}, Filename: {image.filename}, URL: {image.url}")
+
         if image.content_type not in self.allowed_mimetypes:
             logger.error("The file is not a permitted image.")
+
             embed = EmbedCreator.create_error_embed(
                 title="Invalid File",
                 description="The file must be an image. Allowed types are PNG, JPEG, and JPG.",
                 interaction=interaction,
             )
+
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
@@ -57,6 +60,7 @@ class ImgEffect(commands.Cog):
         logger.info("Opening image with PIL and HTTPX...")
         async with httpx.AsyncClient() as client:
             response = await client.get(image.url)
+
         pil_image = Image.open(io.BytesIO(response.content))
         pil_image = pil_image.convert("RGB")
         logger.info("Image opened with PIL.")
@@ -78,9 +82,7 @@ class ImgEffect(commands.Cog):
 
         colours = ((254, 0, 2), (255, 255, 15))
         r = ImageOps.colorize(r, colours[0], colours[1])
-
         pil_image = Image.blend(pil_image, r, 0.75)
-
         logger.info("Color adjustment complete.")
 
         # send image

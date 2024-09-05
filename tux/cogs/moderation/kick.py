@@ -48,9 +48,7 @@ class Kick(ModerationCogBase):
             If an error occurs while kicking the user.
         """
 
-        if ctx.guild is None:
-            logger.warning("Kick command used outside of a guild context.")
-            return
+        assert ctx.guild
 
         moderator = ctx.author
 

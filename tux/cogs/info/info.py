@@ -36,8 +36,7 @@ class Info(commands.Cog):
             The context object associated with the command.
         """
         guild = ctx.guild
-        if not guild:
-            return
+        assert guild
 
         embed: discord.Embed = (
             discord.Embed(
@@ -118,8 +117,7 @@ class Info(commands.Cog):
             The context object associated with the command.
         """
         guild = ctx.guild
-        if not guild:
-            return
+        assert guild
 
         roles: list[str] = [role.mention for role in guild.roles]
 
@@ -136,8 +134,7 @@ class Info(commands.Cog):
             The context object associated with the command.
         """
         guild = ctx.guild
-        if not guild:
-            return
+        assert guild
 
         emotes: list[str] = [str(emote) for emote in guild.emojis]
         await self.paginated_embed(ctx, "Server Emotes", "emotes", guild.name, emotes, 128)
@@ -183,7 +180,17 @@ class Info(commands.Cog):
             page_embed.description = f"{list_type.capitalize()} list for {guild_name}:\n{' '.join(chunk)}"
             menu.add_page(page_embed)
 
-        self._add_buttons_to_menu(menu)
+        buttons = [
+            ViewButton.go_to_first_page(),
+            ViewButton.back(),
+            ViewButton.next(),
+            ViewButton.go_to_last_page(),
+            ViewButton.end_session(),
+        ]
+
+        for button in buttons:
+            menu.add_button(button)
+
         await menu.start()
 
     def _chunks(self, it: Iterator[str], size: int) -> Generator[list[str], None, None]:
@@ -212,32 +219,6 @@ class Info(commands.Cog):
                 chunk = []
         if chunk:
             yield chunk
-
-    def _add_buttons_to_menu(self, menu: ViewMenu) -> ViewMenu:
-        """
-        Add buttons to the menu.
-
-        Parameters
-        ----------
-        menu : ViewMenu
-            The menu to add buttons to.
-
-        Returns
-        -------
-        ViewMenu
-            The menu with buttons added.
-        """
-        buttons = [
-            ViewButton.go_to_first_page(),
-            ViewButton.back(),
-            ViewButton.next(),
-            ViewButton.go_to_last_page(),
-            ViewButton.end_session(),
-        ]
-
-        for button in buttons:
-            menu.add_button(button)
-        return menu
 
 
 async def setup(bot: Tux) -> None:

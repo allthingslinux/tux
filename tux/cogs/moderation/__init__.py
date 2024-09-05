@@ -82,12 +82,13 @@ class ModerationCogBase(commands.Cog):
             The type of log to send the embed to.
         """
 
-        if ctx.guild:
-            log_channel_id = await self.config.get_log_channel(ctx.guild.id, log_type)
-            if log_channel_id:
-                log_channel = ctx.guild.get_channel(log_channel_id)
-                if isinstance(log_channel, discord.TextChannel):
-                    await log_channel.send(embed=embed)
+        assert ctx.guild
+
+        log_channel_id = await self.config.get_log_channel(ctx.guild.id, log_type)
+        if log_channel_id:
+            log_channel = ctx.guild.get_channel(log_channel_id)
+            if isinstance(log_channel, discord.TextChannel):
+                await log_channel.send(embed=embed)
 
     async def send_dm(
         self,
@@ -151,22 +152,20 @@ class ModerationCogBase(commands.Cog):
             Whether the conditions are met.
         """
 
-        if ctx.guild is None:
-            logger.warning(f"{action.capitalize()} command used outside of a guild context.")
-            return False
+        assert ctx.guild
 
         if user == ctx.author:
-            embed = create_error_embed("You cannot {action} yourself.")
+            embed = create_error_embed(f"You cannot {action} yourself.")
             await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             return False
 
         if isinstance(moderator, discord.Member) and user.top_role >= moderator.top_role:
-            embed = create_error_embed("You cannot {action} a user with a higher or equal role.")
+            embed = create_error_embed(f"You cannot {action} a user with a higher or equal role.")
             await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             return False
 
         if user == ctx.guild.owner:
-            embed = create_error_embed("You cannot {action} the server owner.")
+            embed = create_error_embed(f"You cannot {action} the server owner.")
             await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             return False
 
@@ -192,10 +191,7 @@ class ModerationCogBase(commands.Cog):
         tuple
             A tuple containing a boolean indicating success, the jail role, and the jail channel.
         """
-
-        if not ctx.guild:
-            logger.warning("Jail command used outside of a guild context.")
-            return False, None, None
+        assert ctx.guild
 
         jail_role_id = await self.config.get_jail_role_id(ctx.guild.id)
         jail_role = ctx.guild.get_role(jail_role_id) if jail_role_id else None

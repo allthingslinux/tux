@@ -40,8 +40,7 @@ class Purge(commands.Cog):
             If an error occurs while deleting messages.
         """
 
-        if interaction.guild is None:
-            return logger.warning("Purge command used outside of a guild context.")
+        assert interaction.guild
 
         # Check if the limit is within the valid range
         if limit < 1 or limit > 500:
@@ -85,7 +84,7 @@ class Purge(commands.Cog):
         channel: discord.TextChannel | discord.Thread | None = None,
     ) -> None:
         """
-        Purge a specified number of messages from a channel.
+        Deletes a set number of messages in a channel.
 
         Parameters
         ----------
@@ -104,9 +103,7 @@ class Purge(commands.Cog):
             If an error occurs while deleting messages.
         """
 
-        if ctx.guild is None:
-            logger.warning("Purge command used outside of a guild context.")
-            return
+        assert ctx.guild
 
         # Check if the limit is within the valid range
         if limit < 1 or limit > 500:

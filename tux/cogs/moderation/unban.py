@@ -48,9 +48,7 @@ class Unban(ModerationCogBase):
             If an error occurs while unbanning the user.
         """
 
-        if ctx.guild is None:
-            logger.warning("Unban command used outside of a guild context.")
-            return
+        assert ctx.guild
 
         # Get the list of banned users in the guild
         banned_users = [ban.user async for ban in ctx.guild.bans()]

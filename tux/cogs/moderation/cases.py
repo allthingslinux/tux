@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
 from prisma.enums import CaseType
@@ -75,9 +74,7 @@ class Cases(ModerationCogBase):
             The flags for the command. (type, user, moderator)
         """
 
-        if ctx.guild is None:
-            logger.warning("Cases view command used outside of a guild context.")
-            return
+        assert ctx.guild
 
         if number is not None:
             await self._view_single_case(ctx, number)
@@ -110,9 +107,7 @@ class Cases(ModerationCogBase):
             The flags for the command. (status, reason)
         """
 
-        if ctx.guild is None:
-            logger.warning("Cases modify command used outside of a guild context.")
-            return
+        assert ctx.guild
 
         # If the command is used via prefix, let the user know to use the slash command
         if ctx.message.content.startswith(str(ctx.prefix)):
@@ -144,9 +139,7 @@ class Cases(ModerationCogBase):
             The number of the case to view.
         """
 
-        if ctx.guild is None:
-            logger.warning("Cases view command used outside of a guild context.")
-            return
+        assert ctx.guild
 
         case = await self.db.case.get_case_by_number(ctx.guild.id, number)
         if not case:
@@ -175,9 +168,7 @@ class Cases(ModerationCogBase):
             The flags for the command. (type, user, moderator)
         """
 
-        if ctx.guild is None:
-            logger.warning("Cases view command used outside of a guild context.")
-            return
+        assert ctx.guild
 
         options: CaseWhereInput = {}
 
@@ -216,9 +207,7 @@ class Cases(ModerationCogBase):
             The flags for the command. (status, reason)
         """
 
-        if ctx.guild is None:
-            logger.warning("Cases modify command used outside of a guild context.")
-            return
+        assert ctx.guild
 
         if case.case_number is None:
             await ctx.send("Failed to update case.", delete_after=30, ephemeral=True)
@@ -394,14 +383,20 @@ class Cases(ModerationCogBase):
         return None
 
     def _get_case_action_emoji(self, case_type: CaseType) -> discord.Emoji | None:
-        action = (
-            "added"
-            if case_type
-            in [CaseType.BAN, CaseType.KICK, CaseType.TIMEOUT, CaseType.WARN, CaseType.JAIL, CaseType.SNIPPETBAN]
-            else "removed"
-            if case_type in [CaseType.UNBAN, CaseType.UNTIMEOUT, CaseType.UNJAIL, CaseType.SNIPPETUNBAN]
-            else None
-        )
+        action = None
+
+        if case_type in [
+            CaseType.BAN,
+            CaseType.KICK,
+            CaseType.TIMEOUT,
+            CaseType.WARN,
+            CaseType.JAIL,
+            CaseType.SNIPPETBAN,
+        ]:
+            action = "added"
+        elif case_type in [CaseType.UNBAN, CaseType.UNTIMEOUT, CaseType.UNJAIL, CaseType.SNIPPETUNBAN]:
+            action = "removed"
+
         if action is not None:
             emoji_id = emojis.get(action)
             if emoji_id is not None:

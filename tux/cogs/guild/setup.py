@@ -28,8 +28,7 @@ class Setup(commands.Cog):
             The discord interaction object.
         """
 
-        if interaction.guild is None:
-            return
+        assert interaction.guild
 
         jail_role_id = await self.config.get_guild_config_field_value(interaction.guild.id, "jail_role_id")
         if not jail_role_id:
@@ -60,8 +59,7 @@ class Setup(commands.Cog):
         jail_role: discord.Role,
         jail_channel_id: int,
     ) -> None:
-        if interaction.guild is None:
-            return
+        assert interaction.guild
 
         for channel in interaction.guild.channels:
             if not isinstance(channel, discord.TextChannel | discord.VoiceChannel | discord.ForumChannel):

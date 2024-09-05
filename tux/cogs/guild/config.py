@@ -104,8 +104,7 @@ class Config(commands.Cog):
             The role to set for the permission level.
         """
 
-        if interaction.guild is None:
-            return
+        assert interaction.guild
 
         await self.db.update_perm_level_role(
             interaction.guild.id,
@@ -150,8 +149,7 @@ class Config(commands.Cog):
             The role to set.
         """
 
-        if interaction.guild is None:
-            return
+        assert interaction.guild
 
         if setting.value == "jail_role_id":
             await self.db.update_jail_role_id(interaction.guild.id, role.id)
@@ -178,8 +176,7 @@ class Config(commands.Cog):
             The discord interaction object.
         """
 
-        if interaction.guild is None:
-            return
+        assert interaction.guild
 
         embed = discord.Embed(
             title="Config - Roles",
@@ -210,8 +207,7 @@ class Config(commands.Cog):
             The discord interaction object.
         """
 
-        if interaction.guild is None:
-            return
+        assert interaction.guild
 
         embed = discord.Embed(
             title="Config - Permission Level Roles",
@@ -244,8 +240,7 @@ class Config(commands.Cog):
             The discord interaction object.
         """
 
-        if interaction.guild is None:
-            return
+        assert interaction.guild
 
         embed = discord.Embed(
             title="Config - Channels",
@@ -284,8 +279,7 @@ class Config(commands.Cog):
             The discord interaction object.
         """
 
-        if interaction.guild is None:
-            return
+        assert interaction.guild
 
         embed = discord.Embed(
             title="Config - Logs",

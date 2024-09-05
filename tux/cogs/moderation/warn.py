@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from loguru import logger
 
 from prisma.enums import CaseType
 from tux.bot import Tux
@@ -41,9 +40,7 @@ class Warn(ModerationCogBase):
             The flags for the command. (reason: str, silent: bool)
         """
 
-        if ctx.guild is None:
-            logger.warning("Warn command used outside of a guild context.")
-            return
+        assert ctx.guild
 
         moderator = ctx.author
 

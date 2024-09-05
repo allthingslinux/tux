@@ -49,7 +49,6 @@ class Poll(commands.Cog):
                 and reaction.emoji not in [f"{num + 1}\u20e3" for num in range(9)]
             ):
                 await reaction.remove(user)
-                return
 
     @app_commands.command(name="poll", description="Creates a poll.")
     @app_commands.describe(title="Title of the poll", options="Poll options, comma separated")

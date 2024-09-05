@@ -41,9 +41,7 @@ class Jail(ModerationCogBase):
             The flags for the command. (reason: str, silent: bool)
         """
 
-        if not ctx.guild:
-            logger.warning("Jail command used outside of a guild context.")
-            return
+        assert ctx.guild
 
         moderator = ctx.author
 
@@ -105,7 +103,7 @@ class Jail(ModerationCogBase):
         Returns
         -------
         list[discord.Role]
-            The roles that can be managed by the bot.
+            A list of roles that can be managed by the bot.
         """
 
         return [
