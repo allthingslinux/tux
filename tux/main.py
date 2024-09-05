@@ -8,8 +8,8 @@ from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.integrations.loguru import LoguruIntegration
 
 from tux.bot import Tux
-from tux.help import TuxHelp
 from tux.database.controllers.guild_config import GuildConfigController
+from tux.help import TuxHelp
 
 # from tux.utils.console import Console
 from tux.utils.constants import Constants as CONST
