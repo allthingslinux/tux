@@ -77,23 +77,6 @@ class EmbedCreator:
             return embed
 
     @staticmethod
-    def create_error_embed(
-        bot: Tux | None = None,
-        error: str = "An error occurred",
-    ) -> discord.Embed:
-        try:
-            embed: discord.Embed = EmbedCreator.create_embed(
-                bot=bot,
-                embed_type=EmbedType.ERROR,
-                description=f"<:tux_error:1273494919897681930> {error}",
-            )
-        except Exception as e:
-            logger.debug("Error in create_error_embed", exc_info=e)
-            raise
-        else:
-            return embed
-
-    @staticmethod
     def get_footer(
         bot: Tux | None = None,
         user_name: str | None = None,
