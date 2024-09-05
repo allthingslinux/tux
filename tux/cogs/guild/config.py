@@ -327,7 +327,7 @@ class Config(commands.GroupCog, group_name="config"):
     async def config_set_prefix(
         self,
         interaction: discord.Interaction,
-        prefix: str,
+        prefix: app_commands.Range[str, 1, 10],
     ) -> None:
         """
         Set the prefix for the guild.
