@@ -91,9 +91,9 @@ class TempBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ",
         default=MISSING,
     )
     expires_at: int = commands.flag(
-        name="expires_at",
+        name="duration",
         description="Number of days the ban will last for.",
-        aliases=["t", "d", "e", "duration", "expires", "time"],
+        aliases=["t", "d", "e", "expires", "time"],
     )
     purge_days: int = commands.flag(
         name="purge_days",

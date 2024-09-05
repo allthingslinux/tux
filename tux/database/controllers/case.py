@@ -329,23 +329,35 @@ class CaseController:
             },
         )
 
-    async def set_tempban_expired(self, case_number: int, guild_id: int) -> int:
+    async def set_tempban_expired(self, case_number: int | None, guild_id: int) -> int | None:
         """
         Set a tempban case as expired.
 
         Parameters
         ----------
         case_number : int
-            The number of the case to delete.
+            The number of the case to update.
         guild_id : int
-            The ID of the guild to delete the case in.
+            The ID of the guild the case belongs to.
 
         Returns
         -------
-        int
-            The total number of Case records that were updated.
+        Optional[int]
+            The number of Case records updated (1) if successful, None if no records were found,
+            or raises an exception if multiple records were affected.
         """
-        return await self.table.update_many(
+        if case_number is None:
+            msg = "Case number not found"
+            raise ValueError(msg)
+
+        result = await self.table.update_many(
             where={"case_number": case_number, "guild_id": guild_id},
             data={"case_tempban_expired": True},
         )
+        if result == 1:
+            return result
+        if result == 0:
+            return None
+
+        msg = f"Multiple records ({result}) were affected when updating case {case_number} in guild {guild_id}"
+        raise ValueError(msg)
