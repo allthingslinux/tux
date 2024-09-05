@@ -39,7 +39,15 @@ class EmbedCreator:
         user_display_avatar: str | None = None,
         message_timestamp: datetime | None = None,
         custom_footer: tuple[str, str | None] | None = None,
+        custom_author_text: str | None = None,
+        custom_author_icon_url: str | None = None,
+        custom_color: int | None = None,
     ) -> discord.Embed:
+        """
+        Create an embed with the given type and settings.
+
+        Note: if custom_* arguments are passed, their respective fields in type_settings are overridden.
+        """
         try:
             embed: discord.Embed = discord.Embed(title=title, description=description)
 
@@ -54,11 +62,11 @@ class EmbedCreator:
                 EmbedType.NOTE: (CONST.EMBED_COLORS["NOTE"], CONST.EMBED_ICONS["NOTE"], "Note"),
             }
 
-            embed.color = type_settings[embed_type][0]
+            embed.color = custom_color or type_settings[embed_type][0]
 
             embed.set_author(
-                name=type_settings[embed_type][2],
-                icon_url=type_settings[embed_type][1],
+                name=custom_author_text or type_settings[embed_type][2],
+                icon_url=custom_author_icon_url or type_settings[embed_type][1],
             )
 
             if custom_footer:
