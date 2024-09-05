@@ -70,7 +70,7 @@ class EmbedCreator:
             embed.timestamp = message_timestamp or discord.utils.utcnow()
 
         except Exception as e:
-            logger.debug(f"Error in create_embed: {e!r}")
+            logger.debug("Error in create_embed", exc_info=e)
             raise
 
         else:
@@ -88,7 +88,7 @@ class EmbedCreator:
                 description=f"<:tux_error:1273494919897681930> {error}",
             )
         except Exception as e:
-            logger.debug(f"Error in create_error_embed: {e!r}")
+            logger.debug("Error in create_error_embed", exc_info=e)
             raise
         else:
             return embed
@@ -104,7 +104,7 @@ class EmbedCreator:
             text += f" {round(bot.latency * 1000)}ms" if bot else ""
 
         except Exception as e:
-            logger.debug(f"Error in get_footer: {e!r}")
+            logger.debug("Error in get_footer", exc_info=e)
             raise
 
         else:
