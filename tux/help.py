@@ -492,7 +492,7 @@ class TuxHelp(commands.HelpCommand):
         logger.error(f"An error occurred while sending a help message: {error}")
 
         embed = EmbedCreator.create_embed(
-            embed_type=EmbedCreator.ERROR,
+            EmbedCreator.ERROR,
             user_name=self.context.author.name,
             user_display_avatar=self.context.author.display_avatar.url,
             description=error,

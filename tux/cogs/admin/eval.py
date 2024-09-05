@@ -109,29 +109,25 @@ class Eval(commands.Cog):
             evaluated = await eval(f"{fn_name}()", env)
 
             embed = EmbedCreator.create_embed(
+                EmbedCreator.SUCCESS,
                 bot=self.bot,
-                embed_type=EmbedCreator.SUCCESS,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Success!",
                 description=f"```py\n{evaluated}```",
             )
-
+            await ctx.reply(embed=embed, ephemeral=True, delete_after=30)
             logger.info(f"{ctx.author} ran an expression: {cmd}")
 
         except Exception as error:
             embed = EmbedCreator.create_embed(
+                EmbedCreator.ERROR,
                 bot=self.bot,
-                embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
                 description=f"```py\n{error}```",
             )
-
+            await ctx.reply(embed=embed, ephemeral=True, delete_after=30)
             logger.error(f"An error occurred while running an expression: {error}")
-
-        else:
-            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
 
 
 async def setup(bot: Tux) -> None:
