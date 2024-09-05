@@ -7,8 +7,8 @@ from loguru import logger
 from prisma.enums import CaseType
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
+from tux.ui.embeds import EmbedCreator
 from tux.utils.constants import Constants as CONST
-from tux.utils.embeds import EmbedCreator
 
 
 class ModerationCogBase(commands.Cog):

@@ -6,9 +6,9 @@ from prisma.enums import CaseType
 from prisma.models import Case
 from prisma.types import CaseWhereInput
 from tux.bot import Tux
+from tux.ui.embeds import EmbedCreator
 from tux.utils import checks
 from tux.utils.constants import Constants as CONST
-from tux.utils.embeds import EmbedCreator
 from tux.utils.flags import CaseModifyFlags, CasesViewFlags, generate_usage
 
 from . import ModerationCogBase

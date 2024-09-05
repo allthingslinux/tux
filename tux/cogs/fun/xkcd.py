@@ -4,7 +4,7 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.ui.buttons import XkcdButtons
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 from tux.wrappers import xkcd
 
 

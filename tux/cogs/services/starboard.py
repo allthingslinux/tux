@@ -6,8 +6,8 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.database.controllers.starboard import StarboardController, StarboardMessageController
+from tux.ui.embeds import EmbedCreator
 from tux.utils import checks
-from tux.utils.embeds import EmbedCreator
 
 
 class Starboard(commands.Cog):

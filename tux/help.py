@@ -11,8 +11,8 @@ from reactionmenu import ViewButton, ViewMenu
 from reactionmenu.abc import Page
 from reactionmenu.views_menu import ViewSelect
 
+from tux.ui.embeds import EmbedCreator
 from tux.utils.constants import Constants as CONST
-from tux.utils.embeds import EmbedCreator
 
 
 class TuxHelp(commands.HelpCommand):

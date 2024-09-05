@@ -5,8 +5,8 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
+from tux.ui.embeds import EmbedCreator
 from tux.utils import checks
-from tux.utils.embeds import EmbedCreator
 
 
 def insert_returns(body: list[ast.stmt]) -> None:

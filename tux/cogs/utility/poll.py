@@ -4,7 +4,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 
 # TODO: Create option inputs for the poll command instead of using a comma separated string
 

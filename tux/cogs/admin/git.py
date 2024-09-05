@@ -390,9 +390,9 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.ui.buttons import GithubButton
+from tux.ui.embeds import EmbedCreator
 from tux.utils import checks
 from tux.utils.constants import Constants as CONST
-from tux.utils.embeds import EmbedCreator
 from tux.wrappers.github import GithubService
 
 

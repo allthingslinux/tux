@@ -12,9 +12,9 @@ from prisma.enums import CaseType
 from prisma.models import Snippet
 from tux.bot import Tux
 from tux.database.controllers import CaseController, DatabaseController
+from tux.ui.embeds import EmbedCreator
 from tux.utils import checks
 from tux.utils.constants import Constants as CONST
-from tux.utils.embeds import EmbedCreator
 
 
 class Snippets(commands.Cog):
@@ -63,7 +63,6 @@ class Snippets(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="No snippets found.",
             )
             await ctx.send(embed=embed, delete_after=30)
@@ -146,7 +145,6 @@ class Snippets(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="No snippets found.",
             )
             await ctx.send(embed=embed, delete_after=30)
@@ -203,7 +201,6 @@ class Snippets(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="Snippet not found.",
             )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
@@ -216,7 +213,6 @@ class Snippets(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="This snippet is locked and cannot be deleted. If you are a moderator you can use the `forcedeletesnippet` command.",
             )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
@@ -230,7 +226,6 @@ class Snippets(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="You can only delete your own snippets.",
             )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
@@ -270,7 +265,6 @@ class Snippets(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="Snippet not found.",
             )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
@@ -311,7 +305,6 @@ class Snippets(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="Snippet not found. Did you mean to use `-` instead of `_`? Due to a recent change, `_` is no longer allowed in snippet names.",
             )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
@@ -322,7 +315,6 @@ class Snippets(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="Snippet not found.",
             )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
@@ -368,7 +360,6 @@ class Snippets(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="Snippet not found.",
             )
             await ctx.send(embed=embed, delete_after=30)
@@ -432,7 +423,6 @@ class Snippets(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="Please provide a name and content for the snippet.",
             )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
@@ -451,7 +441,6 @@ class Snippets(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="Snippet already exists.",
             )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
@@ -466,7 +455,6 @@ class Snippets(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="Snippet name must be alphanumeric (allows dashes and underscores) and less than 20 characters.",
             )
             await ctx.send(embed=embed)
@@ -510,7 +498,6 @@ class Snippets(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="Please provide a name and content for the snippet.",
             )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
@@ -527,7 +514,6 @@ class Snippets(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="Snippet not found.",
             )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
@@ -551,7 +537,6 @@ class Snippets(commands.Cog):
                     embed_type=EmbedCreator.ERROR,
                     user_name=ctx.author.name,
                     user_display_avatar=ctx.author.display_avatar.url,
-                    title="Error",
                     description="This snippet is locked and cannot be edited. If you are a moderator you can use the `forcedeletesnippet` command.",
                 )
                 await ctx.send(embed=embed, delete_after=30, ephemeral=True)
@@ -566,7 +551,6 @@ class Snippets(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="You can only edit your own snippets.",
             )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
@@ -609,7 +593,6 @@ class Snippets(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="Snippet not found.",
             )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
@@ -623,7 +606,6 @@ class Snippets(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="No return value from locking the snippet. It may still have been locked.",
             )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)

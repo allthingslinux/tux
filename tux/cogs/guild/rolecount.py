@@ -4,7 +4,7 @@ from discord.ext import commands
 from reactionmenu import ViewButton, ViewMenu
 
 from tux.bot import Tux
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 
 des_ids = [
     [1175177565086953523, "_kde"],

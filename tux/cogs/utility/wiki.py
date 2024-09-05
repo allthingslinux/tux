@@ -3,7 +3,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 
 
 class Wiki(commands.Cog):
@@ -124,7 +124,6 @@ class Wiki(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="No search results found.",
             )
 
@@ -164,7 +163,6 @@ class Wiki(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="No search results found.",
             )
 

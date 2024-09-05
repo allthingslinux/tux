@@ -3,8 +3,8 @@ from discord import app_commands
 from discord.ext import commands
 
 from tux.bot import Tux
+from tux.ui.embeds import EmbedCreator
 from tux.utils import checks, exports
-from tux.utils.embeds import EmbedCreator
 
 
 class Export(commands.Cog):

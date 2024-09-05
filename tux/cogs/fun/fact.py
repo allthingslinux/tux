@@ -3,7 +3,7 @@ import random
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 
 
 class Fact(commands.Cog):

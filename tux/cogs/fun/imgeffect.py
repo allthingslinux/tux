@@ -8,7 +8,7 @@ from loguru import logger
 from PIL import Image, ImageEnhance, ImageOps
 
 from tux.bot import Tux
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 
 
 class ImgEffect(commands.Cog):

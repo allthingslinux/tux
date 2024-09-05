@@ -5,7 +5,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 
 
 class Tldr(commands.Cog):

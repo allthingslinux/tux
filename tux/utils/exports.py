@@ -4,7 +4,7 @@ import io
 
 import discord
 
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 
 _flags = {
     "user": "User",

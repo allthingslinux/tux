@@ -3,7 +3,7 @@ import re
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 from tux.wrappers import godbolt
 
 ansi_re = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
