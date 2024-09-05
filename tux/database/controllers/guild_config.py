@@ -36,6 +36,10 @@ class GuildConfigController:
     async def get_guild_config(self, guild_id: int) -> GuildConfig | None:
         return await self.table.find_first(where={"guild_id": guild_id})
 
+    async def get_guild_prefix(self, guild_id: int) -> str | None:
+        config = await self.table.find_first(where={"guild_id": guild_id})
+        return None if config is None else config.prefix
+
     async def get_log_channel(self, guild_id: int, log_type: str) -> int | None:
         log_channel_ids: dict[str, GuildConfigScalarFieldKeys] = {
             "mod": "mod_log_id",
@@ -143,6 +147,20 @@ class GuildConfigController:
     """
     UPDATE
     """
+
+    async def update_guild_prefix(
+        self,
+        guild_id: int,
+        prefix: str,
+    ) -> GuildConfig | None:
+        await self.ensure_guild_exists(guild_id)
+        return await self.table.upsert(
+            where={"guild_id": guild_id},
+            data={
+                "create": {"guild_id": guild_id, "prefix": prefix},
+                "update": {"prefix": prefix},
+            },
+        )
 
     async def update_perm_level_role(
         self,
@@ -401,3 +419,6 @@ class GuildConfigController:
 
     async def delete_guild_config(self, guild_id: int) -> None:
         await self.table.delete(where={"guild_id": guild_id})
+
+    async def delete_guild_prefix(self, guild_id: int) -> None:
+        await self.table.update(where={"guild_id": guild_id}, data={"prefix": None})
