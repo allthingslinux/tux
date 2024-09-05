@@ -37,6 +37,8 @@ class EmbedCreator:
         description: str | None = None,
         user_name: str | None = None,
         user_display_avatar: str | None = None,
+        image_url: str | None = None,
+        thumbnail_url: str | None = None,
         message_timestamp: datetime | None = None,
         custom_footer_text: str | None = None,
         custom_footer_icon_url: str | None = None,
@@ -45,12 +47,26 @@ class EmbedCreator:
         custom_color: int | None = None,
     ) -> discord.Embed:
         """
-        Create an embed with the given type and settings.
-        If no user_name is passed, the bot's username is used.
-        At least one of title or description should be provided to avoid empty embeds.
+        Create a customized Discord embed based on the specified type and parameters.
 
-        Note: bot can be passed to display the latency in the footer field.
-        Note: if custom_* arguments are passed, their respective fields that are automatically generated are overridden.
+        Args:
+            embed_type (EmbedType): Determines the default color and icon for the embed.
+            bot (Tux | None): If provided, used to display bot latency in the footer.
+            title (str | None): The embed's title. At least one of title or description should be provided.
+            description (str | None): The embed's main content. At least one of title or description should be provided.
+            user_name (str | None): Used in footer if provided, otherwise defaults to bot's username.
+            user_display_avatar (str | None): User's avatar URL for the footer icon.
+            image_url (str | None): URL for the embed's main image.
+            thumbnail_url (str | None): URL for the embed's thumbnail image.
+            message_timestamp (datetime | None): Custom timestamp for the embed.
+            custom_footer_text (str | None): Overrides default footer text if provided.
+            custom_footer_icon_url (str | None): Overrides default footer icon if provided.
+            custom_author_text (str | None): Overrides default author text if provided.
+            custom_author_icon_url (str | None): Overrides default author icon if provided.
+            custom_color (int | None): Overrides default color for the embed type if provided.
+
+        Note:
+            Custom parameters (prefixed with 'custom_') override default values.
         """
         try:
             embed: discord.Embed = discord.Embed(title=title, description=description)
@@ -78,6 +94,12 @@ class EmbedCreator:
             else:
                 footer: tuple[str, str | None] = EmbedCreator.get_footer(bot, user_name, user_display_avatar)
                 embed.set_footer(text=footer[0], icon_url=footer[1])
+
+            if image_url:
+                embed.set_image(url=image_url)
+
+            if thumbnail_url:
+                embed.set_thumbnail(url=thumbnail_url)
 
             embed.timestamp = message_timestamp or discord.utils.utcnow()
 
