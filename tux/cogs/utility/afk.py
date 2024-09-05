@@ -1,3 +1,4 @@
+import contextlib
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -30,7 +31,9 @@ class AFK(commands.Cog):
 
         Parameters
         ----------
-        reason : str
+        ctx : commands.Context[Tux]
+            The context of the command.
+        reason : str, optional
             The reason you are AFK.
         """
 
@@ -51,7 +54,9 @@ class AFK(commands.Cog):
             new_name = f"[AFK] {target.display_name}"
 
         await self.db.insert_afk(target.id, target.display_name, reason, ctx.guild.id)
-        await target.edit(nick=new_name)
+
+        with contextlib.suppress(discord.Forbidden):
+            await target.edit(nick=new_name)
 
         return await ctx.send(
             content="\N{SLEEPING SYMBOL} || You are now afk! " + f"Reason: `{reason}`",
@@ -88,7 +93,9 @@ class AFK(commands.Cog):
         await self.db.remove_afk(message.author.id)
 
         await message.reply("Welcome back!", delete_after=5)
-        await message.author.edit(nick=entry.nickname)
+
+        with contextlib.suppress(discord.Forbidden):
+            await message.author.edit(nick=entry.nickname)
 
     @commands.Cog.listener("on_message")
     async def check_afk(self, message: discord.Message) -> None:
