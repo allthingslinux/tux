@@ -99,7 +99,11 @@ class Snippets(commands.Cog):
         if ctx.guild:
             embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon)
 
-        footer_text, footer_icon_url = EmbedCreator.create_embed_footer(ctx)
+        footer_text, footer_icon_url = EmbedCreator.get_footer(
+            bot=ctx.bot,
+            user_name=ctx.author.name,
+            user_display_avatar=ctx.author.display_avatar.url,
+        )
         embed.set_footer(text=footer_text, icon_url=footer_icon_url)
         embed.timestamp = ctx.message.created_at
 
@@ -372,15 +376,12 @@ class Snippets(commands.Cog):
 
         author = self.bot.get_user(snippet.snippet_user_id)
 
-        latency = round(int(ctx.bot.latency * 1000))
-
-        embed: discord.Embed = EmbedCreator.custom_footer_embed(
+        embed: discord.Embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.DEFAULT,
+            user_name=ctx.author.name,
+            user_display_avatar=ctx.author.display_avatar.url,
             title="Snippet Information",
-            ctx=ctx,
-            latency=f"{latency}ms",
-            interaction=None,
-            state="DEFAULT",
-            user=author or ctx.author,
         )
 
         embed.add_field(name="Name", value=snippet.snippet_name, inline=False)

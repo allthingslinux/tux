@@ -8,7 +8,7 @@ from prisma.enums import CaseType
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.utils.constants import Constants as CONST
-from tux.utils.embeds import EmbedCreator, create_embed_footer
+from tux.utils.embeds import EmbedCreator
 
 
 class ModerationCogBase(commands.Cog):
@@ -55,7 +55,11 @@ class ModerationCogBase(commands.Cog):
         embed.set_author(name=title, icon_url=icon_url)
         embed.set_thumbnail(url=thumbnail_url)
 
-        footer_text, footer_icon_url = create_embed_footer(ctx)
+        footer_text, footer_icon_url = EmbedCreator.get_footer(
+            bot=self.bot,
+            user_name=ctx.author.name,
+            user_display_avatar=ctx.author.display_avatar.url,
+        )
         embed.set_footer(text=footer_text, icon_url=footer_icon_url)
 
         for name, value, inline in fields:

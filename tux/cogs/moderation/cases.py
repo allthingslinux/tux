@@ -8,7 +8,7 @@ from prisma.types import CaseWhereInput
 from tux.bot import Tux
 from tux.utils import checks
 from tux.utils.constants import Constants as CONST
-from tux.utils.embeds import create_embed_footer
+from tux.utils.embeds import EmbedCreator
 from tux.utils.flags import CaseModifyFlags, CasesViewFlags, generate_usage
 
 from . import ModerationCogBase
@@ -346,7 +346,11 @@ class Cases(ModerationCogBase):
         if ctx.guild:
             embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon)
 
-        footer_text, footer_icon_url = create_embed_footer(ctx)
+        footer_text, footer_icon_url = EmbedCreator.get_footer(
+            bot=self.bot,
+            user_name=ctx.author.name,
+            user_display_avatar=ctx.author.display_avatar.url,
+        )
         embed.set_footer(text=footer_text, icon_url=footer_icon_url)
 
         for case in cases:

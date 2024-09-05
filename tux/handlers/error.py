@@ -173,7 +173,6 @@ class ErrorHandler(commands.Cog):
         embed = EmbedCreator.create_embed(
             bot=self.bot,
             embed_type=EmbedCreator.ERROR,
-            title="Error",
             description=error_message,
         )
 
@@ -220,7 +219,6 @@ class ErrorHandler(commands.Cog):
             embed = EmbedCreator.create_embed(
                 bot=self.bot,
                 embed_type=EmbedCreator.ERROR,
-                title="Error",
                 description=message,
             )
             await ctx.send(embed=embed, ephemeral=True, delete_after=30)
@@ -245,7 +243,6 @@ class ErrorHandler(commands.Cog):
         embed = EmbedCreator.create_embed(
             bot=self.bot,
             embed_type=EmbedCreator.ERROR,
-            title="Error",
             description=message,
         )
         await ctx.send(embed=embed, ephemeral=True, delete_after=30)
