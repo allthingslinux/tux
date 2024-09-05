@@ -1,247 +1,111 @@
 from datetime import datetime
+from enum import Enum
 
 import discord
-from discord.ext import commands
+from loguru import logger
 
+from tux.bot import Tux
 from tux.utils.constants import Constants as CONST
 
-# TODO: Refactor this to reduce code duplication
 
-
-def create_embed_footer(
-    ctx: commands.Context[commands.Bot] | None = None,
-    interaction: discord.Interaction | None = None,
-    fallback_text: str = "tux@atl $",
-    fallback_icon_url: str = "https://i.imgur.com/4sblrd0.png",
-) -> tuple[str, str | None]:
-    user: discord.User | discord.Member | None = None
-    latency = None
-    if ctx:
-        user = ctx.author
-        latency = round(ctx.bot.latency * 1000)
-    elif interaction:
-        user = interaction.user
-        latency = round(interaction.client.latency * 1000)
-    if isinstance(user, discord.User | discord.Member):
-        return (
-            f"{user.name}@atl $ {latency}ms",
-            str(user.avatar.url) if user.avatar else fallback_icon_url,
-        )
-    return (fallback_text, fallback_icon_url)
-
-
-@staticmethod
-def create_error_embed(error: str) -> discord.Embed:
-    embed = discord.Embed()
-    embed.color = CONST.EMBED_COLORS["ERROR"]
-    embed.description = f"<:tux_error:1273494919897681930> {error}"
-    return embed
+class EmbedType(Enum):
+    DEFAULT = 1
+    INFO = 2
+    ERROR = 3
+    WARNING = 4
+    SUCCESS = 5
+    POLL = 6
+    CASE = 7
+    NOTE = 8
 
 
 class EmbedCreator:
+    DEFAULT = EmbedType.DEFAULT
+    INFO = EmbedType.INFO
+    ERROR = EmbedType.ERROR
+    WARNING = EmbedType.WARNING
+    SUCCESS = EmbedType.SUCCESS
+    POLL = EmbedType.POLL
+    CASE = EmbedType.CASE
+    NOTE = EmbedType.NOTE
+
     @staticmethod
-    def get_timestamp(
-        ctx: commands.Context[commands.Bot] | None,
-        interaction: discord.Interaction | None,
-    ) -> datetime:
-        if ctx and ctx.message:
-            return ctx.message.created_at
-        return interaction.created_at if interaction else discord.utils.utcnow()
+    def create_embed(
+        embed_type: EmbedType,
+        bot: Tux | None = None,
+        title: str | None = None,
+        description: str | None = None,
+        user_name: str | None = None,
+        user_display_avatar: str | None = None,
+        message_timestamp: datetime | None = None,
+        custom_footer: tuple[str, str | None] | None = None,
+    ) -> discord.Embed:
+        try:
+            embed = discord.Embed(title=title, description=description)
+
+            type_settings = {
+                EmbedType.DEFAULT: (CONST.EMBED_COLORS["DEFAULT"], CONST.EMBED_ICONS["DEFAULT"], "Default"),
+                EmbedType.INFO: (CONST.EMBED_COLORS["INFO"], CONST.EMBED_ICONS["INFO"], "Info"),
+                EmbedType.ERROR: (CONST.EMBED_COLORS["ERROR"], CONST.EMBED_ICONS["ERROR"], "Error"),
+                EmbedType.WARNING: (CONST.EMBED_COLORS["WARNING"], CONST.EMBED_ICONS["DEFAULT"], "Warning"),
+                EmbedType.SUCCESS: (CONST.EMBED_COLORS["SUCCESS"], CONST.EMBED_ICONS["SUCCESS"], "Success"),
+                EmbedType.POLL: (CONST.EMBED_COLORS["POLL"], CONST.EMBED_ICONS["POLL"], "Poll"),
+                EmbedType.CASE: (CONST.EMBED_COLORS["CASE"], CONST.EMBED_ICONS["CASE"], "Case"),
+                EmbedType.NOTE: (CONST.EMBED_COLORS["NOTE"], CONST.EMBED_ICONS["NOTE"], "Note"),
+            }
+
+            embed.color = type_settings[embed_type][0]
+
+            embed.set_author(
+                name=type_settings[embed_type][2],
+                icon_url=type_settings[embed_type][1],
+            )
+
+            if custom_footer:
+                embed.set_footer(text=custom_footer[0], icon_url=custom_footer[1])
+            else:
+                footer = EmbedCreator.get_footer(bot, user_name, user_display_avatar)
+                embed.set_footer(text=footer[0], icon_url=footer[1])
+
+            embed.timestamp = message_timestamp or discord.utils.utcnow()
+
+        except Exception as e:
+            logger.debug(f"Error in create_embed: {e!r}")
+            raise
+
+        else:
+            return embed
+
+    @staticmethod
+    def create_error_embed(
+        bot: Tux | None = None,
+        error: str = "An error occurred",
+    ) -> discord.Embed:
+        try:
+            embed = EmbedCreator.create_embed(
+                bot=bot,
+                embed_type=EmbedType.ERROR,
+                description=f"<:tux_error:1273494919897681930> {error}",
+            )
+        except Exception as e:
+            logger.debug(f"Error in create_error_embed: {e!r}")
+            raise
+        else:
+            return embed
 
     @staticmethod
     def get_footer(
-        ctx: commands.Context[commands.Bot] | None,
-        interaction: discord.Interaction | None,
+        bot: Tux | None = None,
+        user_name: str | None = None,
+        user_display_avatar: str | None = None,
     ) -> tuple[str, str | None]:
-        user: discord.User | discord.Member | None = None
-        latency = None
+        try:
+            text = f"{user_name}@atl $" if user_name else "tux@atl $"
+            text += f" {round(bot.latency * 1000)}ms" if bot else ""
 
-        if ctx:
-            user = ctx.author
-            latency = round(ctx.bot.latency * 1000)
-        elif interaction:
-            user = interaction.user
-            latency = round(interaction.client.latency * 1000)
+        except Exception as e:
+            logger.debug(f"Error in get_footer: {e!r}")
+            raise
 
-        if isinstance(user, discord.User | discord.Member):
-            return (
-                f"{user.name}@atl $ {latency}ms",
-                str(user.avatar.url) if user.avatar else None,
-            )
-
-        if ctx is None and interaction is None:
-            return ("tux@atl $", "https://i.imgur.com/4sblrd0.png")
-
-        return ("", None)
-
-    @staticmethod
-    def add_author(embed: discord.Embed, name: str, icon_url: str) -> None:
-        embed.set_author(name=name, icon_url=icon_url)
-
-    @staticmethod
-    def add_field(embed: discord.Embed, name: str, value: str, inline: bool = True) -> None:
-        embed.add_field(name=name, value=value, inline=inline)
-
-    @staticmethod
-    def base_embed(
-        ctx: commands.Context[commands.Bot] | None,
-        interaction: discord.Interaction | None,
-        state: str,
-    ) -> discord.Embed:
-        footer: tuple[str, str | None] = EmbedCreator.get_footer(ctx, interaction)
-        timestamp: datetime = EmbedCreator.get_timestamp(ctx, interaction)
-
-        embed = discord.Embed()
-
-        embed.color = CONST.EMBED_COLORS[state]
-
-        embed.set_author(
-            name=state.capitalize() if state else "Info",
-            icon_url=CONST.EMBED_ICONS[state] if state else CONST.EMBED_ICONS["DEFAULT"],
-        )
-
-        embed.set_footer(text=footer[0], icon_url=footer[1])
-
-        embed.timestamp = timestamp
-
-        return embed
-
-    # requests a custom user and latency for the footer
-    @staticmethod
-    def custom_footer_embed(
-        ctx: commands.Context[commands.Bot] | None,
-        interaction: discord.Interaction | None,
-        state: str,
-        user: discord.User | discord.Member,
-        latency: str,
-        content: str = "",
-        title: str = "",
-    ) -> discord.Embed:
-        timestamp: datetime = EmbedCreator.get_timestamp(ctx, interaction)
-
-        embed = discord.Embed()
-
-        embed.color = CONST.EMBED_COLORS[state]
-
-        embed.description = content
-
-        embed.title = title
-
-        embed.set_author(
-            name=state.capitalize() if state else "Info",
-            icon_url=CONST.EMBED_ICONS[state] if state else CONST.EMBED_ICONS["DEFAULT"],
-        )
-
-        embed.set_footer(
-            text=f"{user.name}@atl $ {latency}",
-            icon_url=str(user.avatar.url) if user.avatar else None,
-        )
-
-        embed.timestamp = timestamp
-
-        return embed
-
-    @classmethod
-    def create_embed(
-        cls,
-        ctx: commands.Context[commands.Bot] | None,
-        interaction: discord.Interaction | None,
-        state: str,
-        title: str,
-        description: str = "",
-    ) -> discord.Embed:
-        embed = cls.base_embed(ctx, interaction, state)
-        embed.title = title
-        embed.description = description
-
-        return embed
-
-    @classmethod
-    def create_default_embed(
-        cls,
-        title: str,
-        description: str,
-        ctx: commands.Context[commands.Bot] | None = None,
-        interaction: discord.Interaction | None = None,
-    ) -> discord.Embed:
-        return cls.create_embed(ctx, interaction, "DEFAULT", title, description)
-
-    @classmethod
-    def create_info_embed(
-        cls,
-        title: str,
-        description: str,
-        ctx: commands.Context[commands.Bot] | None = None,
-        interaction: discord.Interaction | None = None,
-    ) -> discord.Embed:
-        return cls.create_embed(ctx, interaction, "INFO", title, description)
-
-    @classmethod
-    def create_error_embed(
-        cls,
-        title: str,
-        description: str,
-        ctx: commands.Context[commands.Bot] | None = None,
-        interaction: discord.Interaction | None = None,
-    ) -> discord.Embed:
-        return cls.create_embed(ctx, interaction, "ERROR", title, description)
-
-    @classmethod
-    def create_warning_embed(
-        cls,
-        title: str,
-        description: str,
-        ctx: commands.Context[commands.Bot] | None = None,
-        interaction: discord.Interaction | None = None,
-    ) -> discord.Embed:
-        return cls.create_embed(ctx, interaction, "WARNING", title, description)
-
-    @classmethod
-    def create_success_embed(
-        cls,
-        title: str,
-        description: str,
-        ctx: commands.Context[commands.Bot] | None = None,
-        interaction: discord.Interaction | None = None,
-    ) -> discord.Embed:
-        return cls.create_embed(ctx, interaction, "SUCCESS", title, description)
-
-    @classmethod
-    def create_poll_embed(
-        cls,
-        title: str,
-        description: str,
-        ctx: commands.Context[commands.Bot] | None = None,
-        interaction: discord.Interaction | None = None,
-    ) -> discord.Embed:
-        return cls.create_embed(ctx, interaction, "POLL", title, description)
-
-    @classmethod
-    def create_log_embed(
-        cls,
-        title: str,
-        description: str,
-        ctx: commands.Context[commands.Bot] | None = None,
-        interaction: discord.Interaction | None = None,
-    ) -> discord.Embed:
-        return cls.create_embed(ctx, interaction, "DEFAULT", title, description)
-
-    @classmethod
-    def create_infraction_embed(
-        cls,
-        title: str,
-        description: str,
-        ctx: commands.Context[commands.Bot] | None = None,
-        interaction: discord.Interaction | None = None,
-    ) -> discord.Embed:
-        return cls.create_embed(ctx, interaction, "INFRACTION", title, description)
-
-    @classmethod
-    def create_note_embed(
-        cls,
-        title: str,
-        description: str,
-        ctx: commands.Context[commands.Bot] | None = None,
-        interaction: discord.Interaction | None = None,
-    ) -> discord.Embed:
-        return cls.create_embed(ctx, interaction, "NOTE", title, description)
+        else:
+            return (text, user_display_avatar or "https://i.imgur.com/4sblrd0.png")
