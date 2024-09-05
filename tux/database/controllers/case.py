@@ -109,8 +109,8 @@ class CaseController:
             The case database object.
         """
         await self.ensure_guild_exists(guild_id)
-        await self.increment_case_count(guild_id)
         case_number = await self.get_next_case_number(guild_id)
+        await self.increment_case_count(guild_id)
 
         return await self.table.create(
             data={
