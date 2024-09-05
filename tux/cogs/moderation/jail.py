@@ -21,7 +21,7 @@ class Jail(ModerationCogBase):
     )
     @commands.guild_only()
     @checks.has_pl(2)
-    async def jail(
+    async def jail(  # noqa: PLR0911
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
@@ -48,22 +48,42 @@ class Jail(ModerationCogBase):
         if not await self.check_conditions(ctx, member, moderator, "jail"):
             return
 
-        is_valid, jail_role, jail_channel = await self.check_jail_conditions(ctx, member)
-        if not is_valid:
+        jail_role_id = await self.config.get_jail_role_id(ctx.guild.id)
+        if jail_role_id is None:
+            await ctx.send("The jail role has not been set up.", delete_after=30, ephemeral=True)
             return
-        assert jail_role is not None
-        assert jail_channel is not None
+
+        jail_role = ctx.guild.get_role(jail_role_id) if jail_role_id else None
+        if jail_role is None:
+            await ctx.send("The jail role cannot be found.", delete_after=30, ephemeral=True)
+
+        assert jail_role
+
+        jail_channel_id = await self.config.get_jail_channel_id(ctx.guild.id)
+        if jail_channel_id is None:
+            await ctx.send("The jail channel has not been set up.", delete_after=30, ephemeral=True)
+            return
+
+        jail_channel = ctx.guild.get_channel(jail_channel_id) if jail_channel_id else None
+        if jail_channel is None:
+            await ctx.send("The jail channel cannot be found.", delete_after=30, ephemeral=True)
+            return
+
+        if jail_role in member.roles:
+            await ctx.send("The user is already jailed.", delete_after=30, ephemeral=True)
+            return
 
         user_roles: list[discord.Role] = self._get_manageable_roles(member, jail_role)
+
         case_user_roles = [role.id for role in user_roles]
 
         try:
             case = await self.db.case.insert_case(
+                guild_id=ctx.guild.id,
                 case_user_id=member.id,
                 case_moderator_id=ctx.author.id,
                 case_type=CaseType.JAIL,
                 case_reason=flags.reason,
-                guild_id=ctx.guild.id,
                 case_user_roles=case_user_roles,
             )
 
@@ -75,7 +95,7 @@ class Jail(ModerationCogBase):
         try:
             if user_roles:
                 await member.remove_roles(*user_roles, reason=flags.reason, atomic=False)
-                await member.add_roles(jail_role, reason=flags.reason)
+            await member.add_roles(jail_role, reason=flags.reason)
 
         except (discord.Forbidden, discord.HTTPException) as e:
             logger.error(f"Failed to jail {member}. {e}")

@@ -110,11 +110,12 @@ class CaseController:
         """
         await self.ensure_guild_exists(guild_id)
         await self.increment_case_count(guild_id)
+        case_number = await self.get_next_case_number(guild_id)
 
         return await self.table.create(
             data={
                 "guild_id": guild_id,
-                "case_number": await self.get_next_case_number(guild_id),
+                "case_number": case_number,
                 "case_user_id": case_user_id,
                 "case_moderator_id": case_moderator_id,
                 "case_type": case_type,
