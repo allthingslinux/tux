@@ -20,14 +20,14 @@ class EmbedType(Enum):
 
 
 class EmbedCreator:
-    DEFAULT = EmbedType.DEFAULT
-    INFO = EmbedType.INFO
-    ERROR = EmbedType.ERROR
-    WARNING = EmbedType.WARNING
-    SUCCESS = EmbedType.SUCCESS
-    POLL = EmbedType.POLL
-    CASE = EmbedType.CASE
-    NOTE = EmbedType.NOTE
+    DEFAULT: EmbedType = EmbedType.DEFAULT
+    INFO: EmbedType = EmbedType.INFO
+    ERROR: EmbedType = EmbedType.ERROR
+    WARNING: EmbedType = EmbedType.WARNING
+    SUCCESS: EmbedType = EmbedType.SUCCESS
+    POLL: EmbedType = EmbedType.POLL
+    CASE: EmbedType = EmbedType.CASE
+    NOTE: EmbedType = EmbedType.NOTE
 
     @staticmethod
     def create_embed(
@@ -41,9 +41,9 @@ class EmbedCreator:
         custom_footer: tuple[str, str | None] | None = None,
     ) -> discord.Embed:
         try:
-            embed = discord.Embed(title=title, description=description)
+            embed: discord.Embed = discord.Embed(title=title, description=description)
 
-            type_settings = {
+            type_settings: dict[EmbedType, tuple[int, str, str]] = {
                 EmbedType.DEFAULT: (CONST.EMBED_COLORS["DEFAULT"], CONST.EMBED_ICONS["DEFAULT"], "Default"),
                 EmbedType.INFO: (CONST.EMBED_COLORS["INFO"], CONST.EMBED_ICONS["INFO"], "Info"),
                 EmbedType.ERROR: (CONST.EMBED_COLORS["ERROR"], CONST.EMBED_ICONS["ERROR"], "Error"),
@@ -64,7 +64,7 @@ class EmbedCreator:
             if custom_footer:
                 embed.set_footer(text=custom_footer[0], icon_url=custom_footer[1])
             else:
-                footer = EmbedCreator.get_footer(bot, user_name, user_display_avatar)
+                footer: tuple[str, str | None] = EmbedCreator.get_footer(bot, user_name, user_display_avatar)
                 embed.set_footer(text=footer[0], icon_url=footer[1])
 
             embed.timestamp = message_timestamp or discord.utils.utcnow()
@@ -82,7 +82,7 @@ class EmbedCreator:
         error: str = "An error occurred",
     ) -> discord.Embed:
         try:
-            embed = EmbedCreator.create_embed(
+            embed: discord.Embed = EmbedCreator.create_embed(
                 bot=bot,
                 embed_type=EmbedType.ERROR,
                 description=f"<:tux_error:1273494919897681930> {error}",
@@ -100,7 +100,7 @@ class EmbedCreator:
         user_display_avatar: str | None = None,
     ) -> tuple[str, str | None]:
         try:
-            text = f"{user_name}@atl $" if user_name else "tux@atl $"
+            text: str = f"{user_name}@atl $" if user_name else "tux@atl $"
             text += f" {round(bot.latency * 1000)}ms" if bot else ""
 
         except Exception as e:
