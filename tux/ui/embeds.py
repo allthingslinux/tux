@@ -38,15 +38,19 @@ class EmbedCreator:
         user_name: str | None = None,
         user_display_avatar: str | None = None,
         message_timestamp: datetime | None = None,
-        custom_footer: tuple[str, str | None] | None = None,
+        custom_footer_text: str | None = None,
+        custom_footer_icon_url: str | None = None,
         custom_author_text: str | None = None,
         custom_author_icon_url: str | None = None,
         custom_color: int | None = None,
     ) -> discord.Embed:
         """
         Create an embed with the given type and settings.
+        If no user_name is passed, the bot's username is used.
+        At least one of title or description should be provided to avoid empty embeds.
 
-        Note: if custom_* arguments are passed, their respective fields in type_settings are overridden.
+        Note: bot can be passed to display the latency in the footer field.
+        Note: if custom_* arguments are passed, their respective fields that are automatically generated are overridden.
         """
         try:
             embed: discord.Embed = discord.Embed(title=title, description=description)
@@ -69,8 +73,8 @@ class EmbedCreator:
                 icon_url=custom_author_icon_url or type_settings[embed_type][1],
             )
 
-            if custom_footer:
-                embed.set_footer(text=custom_footer[0], icon_url=custom_footer[1])
+            if custom_footer_text:
+                embed.set_footer(text=custom_footer_text, icon_url=custom_footer_icon_url)
             else:
                 footer: tuple[str, str | None] = EmbedCreator.get_footer(bot, user_name, user_display_avatar)
                 embed.set_footer(text=footer[0], icon_url=footer[1])
