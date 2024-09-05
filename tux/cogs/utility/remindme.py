@@ -52,13 +52,12 @@ class RemindMe(commands.Cog):
 
         if user is not None:
             embed = EmbedCreator.create_embed(
-                ctx=None,
-                interaction=None,
-                state="SUCCESS",
-                user=user,
-                latency="N/A",
-                content=reminder.reminder_content,
+                bot=self.bot,
+                embed_type=EmbedCreator.INFO,
+                user_name=user.name,
+                user_display_avatar=user.display_avatar.url,
                 title="Reminder",
+                description=reminder.reminder_content,
             )
 
             try:
