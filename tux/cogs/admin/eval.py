@@ -125,7 +125,6 @@ class Eval(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error!",
                 description=f"```py\n{error}```",
             )
 

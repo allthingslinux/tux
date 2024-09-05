@@ -46,7 +46,6 @@ class Query(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
-                title="Error",
                 description="An error occurred while processing your request. (DDG Provided a non-200 status code)",
             )
             return
@@ -85,7 +84,6 @@ class Query(commands.Cog):
                         embed_type=EmbedCreator.ERROR,
                         user_name=ctx.author.name,
                         user_display_avatar=ctx.author.display_avatar.url,
-                        title="Error",
                         description="An error occurred while processing your request. (DDG Provided a non-200 status code)",
                     )
                     return
@@ -97,7 +95,6 @@ class Query(commands.Cog):
                     embed_type=EmbedCreator.ERROR,
                     user_name=ctx.author.name,
                     user_display_avatar=ctx.author.display_avatar.url,
-                    title="Error",
                     description="No results found for the search term.",
                 )
                 await ctx.send(embed=embed, delete_after=30, ephemeral=True)

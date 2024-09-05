@@ -139,7 +139,6 @@ class Xkcd(commands.Cog):
             embed = EmbedCreator.create_embed(
                 bot=self.bot,
                 embed_type=EmbedCreator.ERROR,
-                title="Error",
                 description="I couldn't find the xkcd comic. Please try again later.",
             )
             ephemeral = True
@@ -150,7 +149,6 @@ class Xkcd(commands.Cog):
             embed = EmbedCreator.create_embed(
                 bot=self.bot,
                 embed_type=EmbedCreator.ERROR,
-                title="Error",
                 description="An error occurred while fetching the xkcd comic",
             )
             ephemeral = True

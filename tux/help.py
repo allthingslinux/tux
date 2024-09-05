@@ -495,7 +495,6 @@ class TuxHelp(commands.HelpCommand):
             embed_type=EmbedCreator.ERROR,
             user_name=self.context.author.name,
             user_display_avatar=self.context.author.display_avatar.url,
-            title="Error!",
             description=error,
         )
 

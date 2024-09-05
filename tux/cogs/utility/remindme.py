@@ -201,7 +201,6 @@ class RemindMe(commands.Cog):
                 embed_type=EmbedCreator.ERROR,
                 user_name=interaction.user.name,
                 user_display_avatar=interaction.user.display_avatar.url,
-                title="Error",
                 description="There was an error creating the reminder.",
             )
 
