@@ -2,14 +2,25 @@ import asyncio
 
 import discord
 import sentry_sdk
+from discord.ext import commands
 from loguru import logger
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.integrations.loguru import LoguruIntegration
 
 from tux.bot import Tux
+from tux.database.controllers.guild_config import GuildConfigController
 
 # from tux.utils.console import Console
 from tux.utils.constants import Constants as CONST
+
+
+async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
+    prefix: str | None = None
+
+    if message.guild:
+        prefix = await GuildConfigController().get_guild_prefix(message.guild.id)
+
+    return commands.when_mentioned_or(prefix or CONST.DEFAULT_PREFIX)(bot, message)
 
 
 async def main() -> None:
@@ -31,7 +42,7 @@ async def main() -> None:
     logger.info(f"Sentry setup intitalized: {sentry_sdk.is_initialized()}")
 
     bot = Tux(
-        command_prefix=CONST.PREFIX,
+        command_prefix=get_prefix,
         strip_after_prefix=True,
         case_insensitive=True,
         intents=discord.Intents.all(),

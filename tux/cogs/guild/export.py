@@ -32,9 +32,7 @@ class Export(commands.Cog):
             The flags for the command.
         """
 
-        if interaction.guild is None:
-            msg = "Interaction does not have a guild attribute."
-            raise ValueError(msg)
+        assert interaction.guild
 
         bans = [entry async for entry in interaction.guild.bans(limit=10000)]
         valid_flags = ["user", "display", "id", "reason", "mention", "created"]
@@ -82,9 +80,7 @@ class Export(commands.Cog):
             The flags for the command.
         """
 
-        if interaction.guild is None:
-            msg = "Interaction does not have a guild attribute."
-            raise ValueError(msg)
+        assert interaction.guild
 
         members = list(interaction.guild.members)
         valid_flags = ["user", "display", "id", "mention", "created"]

@@ -21,8 +21,7 @@ class MemberCount(commands.Cog):
             The discord interaction object.
         """
 
-        if not interaction.guild:
-            return
+        assert interaction.guild
 
         # Get the member count for the server (total members)
         members = interaction.guild.member_count

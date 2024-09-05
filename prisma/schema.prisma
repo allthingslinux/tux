@@ -27,6 +27,7 @@ model Guild {
 }
 
 model GuildConfig {
+  prefix               String?
   mod_log_id           BigInt?
   audit_log_id         BigInt?
   join_log_id          BigInt?

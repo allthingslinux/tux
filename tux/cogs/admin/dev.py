@@ -60,9 +60,7 @@ class Dev(commands.Cog):
             If a guild is not specified.
         """
 
-        if ctx.guild is None:
-            await ctx.send("This command can only be used in a server.", ephemeral=True, delete_after=30)
-            return
+        assert ctx.guild
 
         # Copy the global tree to the guild
         self.bot.tree.copy_global_to(guild=ctx.guild)
@@ -92,9 +90,7 @@ class Dev(commands.Cog):
             If the user does not have the required permissions.
         """
 
-        if ctx.guild is None:
-            await ctx.send("This command can only be used in a guild.", ephemeral=True, delete_after=30)
-            return
+        assert ctx.guild
 
         # Clear the slash command tree for the guild.
         self.bot.tree.clear_commands(guild=ctx.guild)
@@ -236,6 +232,7 @@ class Dev(commands.Cog):
         await ctx.send(
             "Stopping the bot...\n-# Note: if Tux is running with Docker Compose, this will restart the container.",
         )
+
         await self.bot.shutdown()
 
 

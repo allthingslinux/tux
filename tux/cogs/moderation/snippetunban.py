@@ -43,9 +43,7 @@ class SnippetUnban(ModerationCogBase):
             The flags for the command. (reason: str, silent: bool)
         """
 
-        if ctx.guild is None:
-            logger.warning("Snippet ban command used outside of a guild context.")
-            return
+        assert ctx.guild
 
         if not await self.is_snippetbanned(ctx.guild.id, member.id):
             await ctx.send("User is not snippet banned.", delete_after=30, ephemeral=True)

@@ -45,9 +45,7 @@ class Ban(ModerationCogBase):
             If an error occurs while banning the user.
         """
 
-        if ctx.guild is None:
-            logger.warning("Ban command used outside of a guild context.")
-            return
+        assert ctx.guild
 
         moderator = ctx.author
 

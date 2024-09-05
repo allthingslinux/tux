@@ -19,13 +19,13 @@ class Constants:
 
     # Production env constants
     PROD_TOKEN: Final[str] = os.getenv("PROD_TOKEN", "")
-    PROD_PREFIX: Final[str] = config["PREFIX"]["PROD"]
+    DEFAULT_PROD_PREFIX: Final[str] = config["DEFAULT_PREFIX"]["PROD"]
     PROD_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("PROD_COG_IGNORE_LIST", "").split(","))
 
     # Dev env constants
     DEV: Final[str | None] = os.getenv("DEV")
     DEV_TOKEN: Final[str] = os.getenv("DEV_TOKEN", "")
-    DEV_PREFIX: Final[str] = config["PREFIX"]["DEV"]
+    DEFAULT_DEV_PREFIX: Final[str] = config["DEFAULT_PREFIX"]["DEV"]
     DEV_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("DEV_COG_IGNORE_LIST", "").split(","))
 
     # Debug env constants
@@ -33,7 +33,7 @@ class Constants:
 
     # Final env constants
     TOKEN: Final[str] = DEV_TOKEN if DEV and DEV.lower() == "true" else PROD_TOKEN
-    PREFIX: Final[str] = DEV_PREFIX if DEV and DEV.lower() == "true" else PROD_PREFIX
+    DEFAULT_PREFIX: Final[str] = DEFAULT_DEV_PREFIX if DEV and DEV.lower() == "true" else DEFAULT_PROD_PREFIX
     COG_IGNORE_LIST: Final[set[str]] = DEV_COG_IGNORE_LIST if DEV and DEV.lower() == "true" else PROD_COG_IGNORE_LIST
 
     # Sentry-related constants
@@ -83,6 +83,8 @@ class Constants:
     EMBED_MAX_FIELDS = 25
     EMBED_TOTAL_MAX = 6000
     EMBED_FIELD_VALUE_LENGTH = 1024
+
+    NICKNAME_MAX_LENGTH = 32
 
     # Interaction constants
     ACTION_ROW_MAX_ITEMS = 5

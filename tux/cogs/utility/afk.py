@@ -1,3 +1,4 @@
+import contextlib
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -7,6 +8,7 @@ from discord.ext import commands
 from prisma.models import AFKModel
 from tux.bot import Tux
 from tux.database.controllers import AfkController
+from tux.utils.constants import Constants as CONST
 
 
 class AFK(commands.Cog):
@@ -30,7 +32,9 @@ class AFK(commands.Cog):
 
         Parameters
         ----------
-        reason : str
+        ctx : commands.Context[Tux]
+            The context of the command.
+        reason : str, optional
             The reason you are AFK.
         """
 
@@ -42,16 +46,16 @@ class AFK(commands.Cog):
         if await self.db.is_afk(target.id, guild_id=ctx.guild.id):
             return await ctx.send("You are already afk!", ephemeral=True)
 
-        max_name_limit = 32
-
-        if len(target.display_name) >= max_name_limit - 6:
-            truncated_name = f"{target.display_name[:max_name_limit - 9]}..."
+        if len(target.display_name) >= CONST.NICKNAME_MAX_LENGTH - 6:
+            truncated_name = f"{target.display_name[:CONST.NICKNAME_MAX_LENGTH - 9]}..."
             new_name = f"[AFK] {truncated_name}"
         else:
             new_name = f"[AFK] {target.display_name}"
 
         await self.db.insert_afk(target.id, target.display_name, reason, ctx.guild.id)
-        await target.edit(nick=new_name)
+
+        with contextlib.suppress(discord.Forbidden):
+            await target.edit(nick=new_name)
 
         return await ctx.send(
             content="\N{SLEEPING SYMBOL} || You are now afk! " + f"Reason: `{reason}`",
@@ -88,7 +92,9 @@ class AFK(commands.Cog):
         await self.db.remove_afk(message.author.id)
 
         await message.reply("Welcome back!", delete_after=5)
-        await message.author.edit(nick=entry.nickname)
+
+        with contextlib.suppress(discord.Forbidden):
+            await message.author.edit(nick=entry.nickname)
 
     @commands.Cog.listener("on_message")
     async def check_afk(self, message: discord.Message) -> None:

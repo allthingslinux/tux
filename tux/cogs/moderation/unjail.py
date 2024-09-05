@@ -21,7 +21,7 @@ class Unjail(ModerationCogBase):
     )
     @commands.guild_only()
     @checks.has_pl(2)
-    async def unjail(  # noqa: PLR0911
+    async def unjail(
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
@@ -41,9 +41,7 @@ class Unjail(ModerationCogBase):
             The flags for the command. (reason: str, silent: bool)
         """
 
-        if not ctx.guild:
-            logger.warning("Unjail command used outside of a guild context.")
-            return
+        assert ctx.guild
 
         moderator = ctx.author
 

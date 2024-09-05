@@ -38,10 +38,10 @@ class Slowmode(commands.Cog):
             Either the delay, channel or 'get' command.
         """
 
-        if not ctx.guild:
-            return
+        assert ctx.guild
 
         action, channel = await self._parse_arguments(ctx, first_arg, second_arg)
+
         if not action or not channel:
             await ctx.send(
                 "Invalid command usage. Please provide a valid delay or 'get' command.",
@@ -86,13 +86,18 @@ class Slowmode(commands.Cog):
     def _get_channel(self, ctx: commands.Context[Tux]) -> discord.TextChannel | discord.Thread | None:
         return ctx.channel if isinstance(ctx.channel, discord.TextChannel | discord.Thread) else None
 
-    async def _get_slowmode(self, ctx: commands.Context[Tux], channel: discord.TextChannel | discord.Thread) -> None:
+    async def _get_slowmode(
+        self,
+        ctx: commands.Context[Tux],
+        channel: discord.TextChannel | discord.Thread,
+    ) -> None:
         try:
             await ctx.send(
                 f"The slowmode for {channel.mention} is {channel.slowmode_delay} seconds.",
                 delete_after=30,
                 ephemeral=True,
             )
+
         except Exception as error:
             await ctx.send(f"Failed to get slowmode. Error: {error}", delete_after=30, ephemeral=True)
             logger.error(f"Failed to get slowmode. Error: {error}")
@@ -104,6 +109,7 @@ class Slowmode(commands.Cog):
         delay: str,
     ) -> None:
         delay_seconds = self._parse_delay(delay)
+
         if delay_seconds is None:
             await ctx.send("Invalid delay value, must be an integer.", delete_after=30, ephemeral=True)
             return
@@ -118,11 +124,13 @@ class Slowmode(commands.Cog):
 
         try:
             await channel.edit(slowmode_delay=delay_seconds)
+
             await ctx.send(
                 f"Slowmode set to {delay_seconds} seconds in {channel.mention}.",
                 delete_after=30,
                 ephemeral=True,
             )
+
         except Exception as error:
             await ctx.send(f"Failed to set slowmode. Error: {error}", delete_after=30, ephemeral=True)
             logger.error(f"Failed to set slowmode. Error: {error}")
@@ -135,6 +143,7 @@ class Slowmode(commands.Cog):
                 delay = delay[:-1]
                 return int(delay) * 60
             return int(delay)
+
         except ValueError:
             return None
 
