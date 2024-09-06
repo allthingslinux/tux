@@ -171,45 +171,6 @@ class ModerationCogBase(commands.Cog):
 
         return True
 
-    async def check_jail_conditions(
-        self,
-        ctx: commands.Context[Tux],
-        user: discord.Member,
-    ) -> tuple[bool, discord.Role | None, discord.abc.GuildChannel | None]:
-        """
-        Validate jail role and channel existence and member condition.
-
-        Parameters
-        ----------
-        ctx : commands.Context[Tux]
-            The context of the command.
-        user : discord.Member
-            The member to jail.
-
-        Returns
-        -------
-        tuple
-            A tuple containing a boolean indicating success, the jail role, and the jail channel.
-        """
-        assert ctx.guild
-
-        jail_role_id = await self.config.get_jail_role_id(ctx.guild.id)
-        jail_role = ctx.guild.get_role(jail_role_id) if jail_role_id else None
-        jail_channel_id = await self.config.get_jail_channel_id(ctx.guild.id)
-        jail_channel = ctx.guild.get_channel(jail_channel_id) if jail_channel_id else None
-
-        if jail_role is None:
-            await ctx.send("The jail role has been deleted or not set up.", delete_after=30, ephemeral=True)
-            return False, None, None
-        if jail_channel is None:
-            await ctx.send("The jail channel has been deleted or not set up.", delete_after=30, ephemeral=True)
-            return False, None, None
-        if jail_role in user.roles:
-            await ctx.send("The user is already jailed.", delete_after=30, ephemeral=True)
-            return False, None, None
-
-        return True, jail_role, jail_channel
-
     async def handle_case_response(
         self,
         ctx: commands.Context[Tux],

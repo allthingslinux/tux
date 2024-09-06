@@ -411,7 +411,7 @@ class Snippets(commands.Cog):
         )
 
         await ctx.send("Snippet created.", delete_after=30, ephemeral=True)
-        logger.info(f"{ctx.author} created a snippet with the name {name} and content {content}.")
+        logger.info(f"{ctx.author} created a snippet with the name {name}.")
 
     @commands.command(
         name="editsnippet",
@@ -456,7 +456,7 @@ class Snippets(commands.Cog):
         # check if the snippet is locked
         if snippet.locked:
             logger.info(
-                f"{ctx.author} is trying to edit a snippet with the name {name} and content {content}. Checking if they have the permission level to edit locked snippets.",
+                f"{ctx.author} is trying to edit a snippet with the name {name}. Checking if they have the permission level to edit locked snippets.",
             )
             # dont make the check send its own error message
             try:
@@ -481,8 +481,8 @@ class Snippets(commands.Cog):
             snippet_content=content,
         )
 
-        await ctx.send("Snippet Edited.", delete_after=30, ephemeral=True)  # Correct indentation
-        logger.info(f"{ctx.author} Edited a snippet with the name {name} and content {content}.")  # Correct indentation
+        await ctx.send("Snippet Edited.", delete_after=30, ephemeral=True)
+        logger.info(f"{ctx.author} Edited a snippet with the name {name}.")
 
     @commands.command(
         name="togglesnippetlock",
