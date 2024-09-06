@@ -39,7 +39,7 @@ class TempBan(ModerationCogBase):
         member : discord.Member
             The member to ban.
         flags : TempBanFlags
-            The flags for the command.
+            The flags for the command. (reason: str, silent: bool, expires_at: int, purge_days: int)
 
         Raises
         ------
@@ -48,19 +48,19 @@ class TempBan(ModerationCogBase):
         discord.HTTPException
             If an error occurs while banning the user.
         """
-        if not ctx.guild:
-            logger.warning("Ban command used outside of a guild context.")
-            return
 
-        if not await self.check_conditions(ctx, member, ctx.author, "temporarily ban"):
+        assert ctx.guild
+
+        if not await self.check_conditions(ctx, member, ctx.author, "temp ban"):
             return
 
         duration = parse_time_string(f"{flags.expires_at}d")
         expires_at = datetime.now(UTC) + duration
 
         try:
-            await self.send_dm(ctx, flags.silent, member, flags.reason, action="temporarily banned")
+            await self.send_dm(ctx, flags.silent, member, flags.reason, action="temp banned")
             await ctx.guild.ban(member, reason=flags.reason, delete_message_days=flags.purge_days)
+
         except (discord.Forbidden, discord.HTTPException) as e:
             logger.error(f"Failed to temporarily ban {member}. {e}")
             await ctx.send(f"Failed to temporarily ban {member}. {e}", delete_after=30, ephemeral=True)
@@ -83,6 +83,7 @@ class TempBan(ModerationCogBase):
         expired_temp_bans = await self.db.case.get_expired_tempbans()
 
         for temp_ban in expired_temp_bans:
+            # Get the guild from the cache or fetch it from the API
             guild = self.bot.get_guild(temp_ban.guild_id) or await self.bot.fetch_guild(temp_ban.guild_id)
             if not guild:
                 logger.error(f"Failed to get guild with ID {temp_ban.guild_id} for tempban check.")
@@ -90,9 +91,11 @@ class TempBan(ModerationCogBase):
 
             try:
                 ban_entry = await guild.fetch_ban(discord.Object(id=temp_ban.case_user_id))
+
                 await guild.unban(ban_entry.user, reason=f"Tempban expired | Case number: {temp_ban.case_number}")
 
                 await self.db.case.set_tempban_expired(temp_ban.case_number, temp_ban.guild_id)
+
                 await self.db.case.insert_case(
                     guild_id=temp_ban.guild_id,
                     case_user_id=temp_ban.case_user_id,
@@ -101,6 +104,7 @@ class TempBan(ModerationCogBase):
                     case_reason="Expired tempban",
                     case_tempban_expired=True,
                 )
+
                 logger.debug(f"Unbanned user with ID {temp_ban.case_user_id} | Case number {temp_ban.case_number}")
 
             except (discord.Forbidden, discord.HTTPException, discord.NotFound) as e:
