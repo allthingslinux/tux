@@ -56,18 +56,19 @@ model GuildConfig {
 }
 
 model Case {
-  case_id           BigInt    @id @default(autoincrement())
-  case_status       Boolean?  @default(true)
-  case_type         CaseType
-  case_reason       String
-  case_moderator_id BigInt
-  case_user_id      BigInt
-  case_user_roles   BigInt[]  @default([])
-  case_number       BigInt?
-  case_created_at   DateTime? @default(now())
-  case_expires_at   DateTime?
-  guild_id          BigInt
-  guild             Guild     @relation(fields: [guild_id], references: [guild_id])
+  case_id              BigInt    @id @default(autoincrement())
+  case_status          Boolean?  @default(true)
+  case_type            CaseType
+  case_reason          String
+  case_moderator_id    BigInt
+  case_user_id         BigInt
+  case_user_roles      BigInt[]  @default([])
+  case_number          BigInt?
+  case_created_at      DateTime? @default(now())
+  case_expires_at      DateTime?
+  case_tempban_expired Boolean?  @default(false)
+  guild_id             BigInt
+  guild                Guild     @relation(fields: [guild_id], references: [guild_id])
 
   @@unique([case_number, guild_id])
   @@index([case_number, guild_id])
@@ -167,4 +168,5 @@ enum CaseType {
   JAIL
   UNJAIL
   SNIPPETUNBAN
+  UNTEMPBAN
 }

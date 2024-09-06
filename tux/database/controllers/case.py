@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from prisma.enums import CaseType
 from prisma.models import Case, Guild
@@ -82,6 +82,7 @@ class CaseController:
         case_reason: str,
         case_user_roles: list[int] | None = None,
         case_expires_at: datetime | None = None,
+        case_tempban_expired: bool = False,
     ) -> Case:
         """
         Insert a case into the database.
@@ -102,6 +103,8 @@ class CaseController:
             The roles of the target of the case.
         case_expires_at : datetime | None
             The expiration date of the case.
+        case_tempban_expired : bool
+            Whether the tempban has expired (Use only for tempbans).
 
         Returns
         -------
@@ -122,6 +125,7 @@ class CaseController:
                 "case_reason": case_reason,
                 "case_expires_at": case_expires_at,
                 "case_user_roles": case_user_roles if case_user_roles is not None else [],
+                "case_tempban_expired": case_tempban_expired,
             },
         )
 
@@ -308,3 +312,53 @@ class CaseController:
         if case is not None:
             return await self.table.delete(where={"case_id": case.case_id})
         return None
+
+    async def get_expired_tempbans(self) -> list[Case]:
+        """
+        Get all cases that have expired tempbans.
+
+        Returns
+        -------
+        list[Case]
+            A list of cases of the type in the guild.
+        """
+        return await self.table.find_many(
+            where={
+                "case_type": CaseType.TEMPBAN,
+                "case_expires_at": {"lt": datetime.now(UTC)},
+                "case_tempban_expired": False,
+            },
+        )
+
+    async def set_tempban_expired(self, case_number: int | None, guild_id: int) -> int | None:
+        """
+        Set a tempban case as expired.
+
+        Parameters
+        ----------
+        case_number : int
+            The number of the case to update.
+        guild_id : int
+            The ID of the guild the case belongs to.
+
+        Returns
+        -------
+        Optional[int]
+            The number of Case records updated (1) if successful, None if no records were found,
+            or raises an exception if multiple records were affected.
+        """
+        if case_number is None:
+            msg = "Case number not found"
+            raise ValueError(msg)
+
+        result = await self.table.update_many(
+            where={"case_number": case_number, "guild_id": guild_id},
+            data={"case_tempban_expired": True},
+        )
+        if result == 1:
+            return result
+        if result == 0:
+            return None
+
+        msg = f"Multiple records ({result}) were affected when updating case {case_number} in guild {guild_id}"
+        raise ValueError(msg)
