@@ -10,7 +10,7 @@ from loguru import logger
 from prisma.models import Reminder
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 from tux.utils.functions import convert_to_seconds
 
 
@@ -51,14 +51,13 @@ class RemindMe(commands.Cog):
         user = self.bot.get_user(reminder.reminder_user_id)
 
         if user is not None:
-            embed = EmbedCreator.custom_footer_embed(
-                ctx=None,
-                interaction=None,
-                state="SUCCESS",
-                user=user,
-                latency="N/A",
-                content=reminder.reminder_content,
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.INFO,
+                user_name=user.name,
+                user_display_avatar=user.display_avatar.url,
                 title="Reminder",
+                description=reminder.reminder_content,
             )
 
             try:
@@ -181,10 +180,13 @@ class RemindMe(commands.Cog):
                 guild_id=interaction.guild_id or 0,
             )
 
-            embed = EmbedCreator.create_success_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.SUCCESS,
+                user_name=interaction.user.name,
+                user_display_avatar=interaction.user.display_avatar.url,
                 title="Reminder Set",
                 description=f"Reminder set for <t:{int(seconds.timestamp())}:f>.",
-                interaction=interaction,
             )
 
             embed.add_field(
@@ -193,10 +195,12 @@ class RemindMe(commands.Cog):
             )
 
         except Exception as e:
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=interaction.user.name,
+                user_display_avatar=interaction.user.display_avatar.url,
                 description="There was an error creating the reminder.",
-                interaction=interaction,
             )
 
             logger.error(f"Error creating reminder: {e}")

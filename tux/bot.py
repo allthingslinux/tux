@@ -6,7 +6,6 @@ from loguru import logger
 
 from tux.cog_loader import CogLoader
 from tux.database.client import db
-from tux.help import TuxHelp
 
 
 class Tux(commands.Bot):
@@ -14,7 +13,6 @@ class Tux(commands.Bot):
         super().__init__(*args, **kwargs)
         self.setup_task = asyncio.create_task(self.setup())
         self.is_shutting_down = False
-        self.help_command = TuxHelp()
 
     async def setup(self) -> None:
         """

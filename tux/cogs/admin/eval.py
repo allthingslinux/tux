@@ -5,8 +5,8 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
+from tux.ui.embeds import EmbedCreator
 from tux.utils import checks
-from tux.utils.embeds import EmbedCreator
 
 
 def insert_returns(body: list[ast.stmt]) -> None:
@@ -108,25 +108,26 @@ class Eval(commands.Cog):
             # Evaluate the function
             evaluated = await eval(f"{fn_name}()", env)
 
-            embed = EmbedCreator.create_success_embed(
-                title="Success!",
+            embed = EmbedCreator.create_embed(
+                EmbedCreator.SUCCESS,
+                bot=self.bot,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 description=f"```py\n{evaluated}```",
-                ctx=ctx,
             )
-
+            await ctx.reply(embed=embed, ephemeral=True, delete_after=30)
             logger.info(f"{ctx.author} ran an expression: {cmd}")
 
         except Exception as error:
-            embed = EmbedCreator.create_error_embed(
-                title="Error!",
+            embed = EmbedCreator.create_embed(
+                EmbedCreator.ERROR,
+                bot=self.bot,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 description=f"```py\n{error}```",
-                ctx=ctx,
             )
-
+            await ctx.reply(embed=embed, ephemeral=True, delete_after=30)
             logger.error(f"An error occurred while running an expression: {error}")
-
-        else:
-            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
 
 
 async def setup(bot: Tux) -> None:

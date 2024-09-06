@@ -3,7 +3,7 @@ import re
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 from tux.wrappers import godbolt
 
 ansi_re = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
@@ -109,10 +109,13 @@ class Run(commands.Cog):
         cleaned_code = "\n".join(cleaned_code.splitlines()[1:])
 
         if normalized_lang not in compiler_map:
-            embed = EmbedCreator.create_error_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 title="Fatal exception occurred!",
                 description="Bad Formatting",
-                ctx=ctx,
             )
             await ctx.send(embed=embed)
             return ("", "", "")
@@ -121,10 +124,13 @@ class Run(commands.Cog):
         output = godbolt.getoutput(cleaned_code, compiler_id, options)
 
         if output is None:
-            embed = EmbedCreator.create_error_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 title="Fatal exception occurred!",
                 description="failed to get output from the compiler",
-                ctx=ctx,
             )
             await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             return ("", "", "")
@@ -167,10 +173,13 @@ class Run(commands.Cog):
         cleaned_code = "\n".join(cleaned_code.splitlines()[1:])
 
         if normalized_lang not in compiler_map:
-            embed = EmbedCreator.create_error_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 title="Fatal exception occurred!",
                 description="Bad Formatting",
-                ctx=ctx,
             )
             await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             return ("", "", "")
@@ -179,10 +188,13 @@ class Run(commands.Cog):
         output = godbolt.generateasm(cleaned_code, compiler_id, options)
 
         if output is None:
-            embed = EmbedCreator.create_error_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 title="Fatal exception occurred!",
                 description="failed to get output from the compiler",
-                ctx=ctx,
             )
             await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             return ("", "", "")
@@ -222,10 +234,13 @@ class Run(commands.Cog):
             The language of the code.
         """
 
-        embed = EmbedCreator.create_info_embed(
+        embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.INFO,
+            user_name=ctx.author.name,
+            user_display_avatar=ctx.author.display_avatar.url,
             title="Compilation provided by https://godbolt.org/",
             description=f"```{lang}\n{output}\n```",
-            ctx=ctx,
         )
 
         await ctx.send(embed=embed)
@@ -292,10 +307,13 @@ class Run(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             desc = f"Missing required argument: `{error.param.name}`"
 
-        embed = EmbedCreator.create_error_embed(
+        embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.ERROR,
+            user_name=ctx.author.name,
+            user_display_avatar=ctx.author.display_avatar.url,
             title="Fatal exception occurred!",
             description=str(desc),
-            ctx=ctx,
         )
 
         await ctx.send(embed=embed, ephemeral=True, delete_after=30)
@@ -315,10 +333,13 @@ class Run(commands.Cog):
             The context in which the command is invoked.
         """
 
-        embed = EmbedCreator.create_info_embed(
+        embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.INFO,
+            user_name=ctx.author.name,
+            user_display_avatar=ctx.author.display_avatar.url,
             title="Supported Languages",
             description=f"```{', '.join(compiler_map.keys())}```",
-            ctx=ctx,
         )
 
         await ctx.send(embed=embed)

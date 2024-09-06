@@ -9,6 +9,7 @@ from sentry_sdk.integrations.loguru import LoguruIntegration
 
 from tux.bot import Tux
 from tux.database.controllers.guild_config import GuildConfigController
+from tux.help import TuxHelp
 
 # from tux.utils.console import Console
 from tux.utils.constants import Constants as CONST
@@ -48,6 +49,7 @@ async def main() -> None:
         intents=discord.Intents.all(),
         owner_ids=[*CONST.SYSADMIN_IDS, CONST.BOT_OWNER_ID],
         allowed_mentions=discord.AllowedMentions(everyone=False),
+        help_command=TuxHelp(),
     )
 
     # Initialize the console and console task

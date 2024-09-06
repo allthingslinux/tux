@@ -1,11 +1,10 @@
-import discord
 import httpx
 from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
+from tux.ui.embeds import EmbedCreator
 from tux.utils.constants import Constants as CONST
-from tux.utils.embeds import EmbedCreator
 
 
 class Query(commands.Cog):
@@ -42,10 +41,12 @@ class Query(commands.Cog):
 
         # Check if the request was successful
         if response.status_code != 200:
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 description="An error occurred while processing your request. (DDG Provided a non-200 status code)",
-                ctx=ctx,
             )
             return
 
@@ -78,28 +79,34 @@ class Query(commands.Cog):
                     logger.info(f"GET request to http://api.duckduckgo.com/ with params {params}")
 
                 if response.status_code != 200:
-                    embed = EmbedCreator.create_error_embed(
-                        title="Error",
+                    embed = EmbedCreator.create_embed(
+                        bot=self.bot,
+                        embed_type=EmbedCreator.ERROR,
+                        user_name=ctx.author.name,
+                        user_display_avatar=ctx.author.display_avatar.url,
                         description="An error occurred while processing your request. (DDG Provided a non-200 status code)",
-                        ctx=ctx,
                     )
                     return
 
                 data = response.json()
             else:
-                embed = EmbedCreator.create_error_embed(
-                    title="Error",
+                embed = EmbedCreator.create_embed(
+                    bot=self.bot,
+                    embed_type=EmbedCreator.ERROR,
+                    user_name=ctx.author.name,
+                    user_display_avatar=ctx.author.display_avatar.url,
                     description="No results found for the search term.",
-                    ctx=ctx,
                 )
                 await ctx.send(embed=embed, delete_after=30, ephemeral=True)
                 return
 
-        embed = discord.Embed(
+        embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.INFO,
+            user_name=ctx.author.name,
+            user_display_avatar=ctx.author.display_avatar.url,
             title=f'Answer to "{search_term}"',
             description=f"{data['Abstract']}\n\nData from **{data['AbstractURL']}**",
-            color=CONST.EMBED_COLORS["INFO"],
-            timestamp=EmbedCreator.get_timestamp(ctx, None),
         )
 
         embed.set_author(

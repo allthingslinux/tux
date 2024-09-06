@@ -12,9 +12,9 @@ from prisma.enums import CaseType
 from prisma.models import Snippet
 from tux.bot import Tux
 from tux.database.controllers import CaseController, DatabaseController
+from tux.ui.embeds import EmbedCreator
 from tux.utils import checks
 from tux.utils.constants import Constants as CONST
-from tux.utils.embeds import EmbedCreator, create_embed_footer, create_error_embed
 
 
 class Snippets(commands.Cog):
@@ -58,10 +58,12 @@ class Snippets(commands.Cog):
 
         # If there are no snippets, send an error message
         if not snippets:
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 description="No snippets found.",
-                ctx=ctx,
             )
             await ctx.send(embed=embed, delete_after=30)
             return
@@ -96,7 +98,11 @@ class Snippets(commands.Cog):
         if ctx.guild:
             embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon)
 
-        footer_text, footer_icon_url = create_embed_footer(ctx)
+        footer_text, footer_icon_url = EmbedCreator.get_footer(
+            bot=ctx.bot,
+            user_name=ctx.author.name,
+            user_display_avatar=ctx.author.display_avatar.url,
+        )
         embed.set_footer(text=footer_text, icon_url=footer_icon_url)
         embed.timestamp = ctx.message.created_at
 
@@ -134,10 +140,12 @@ class Snippets(commands.Cog):
 
         # If there are no snippets, send an error message
         if not snippets:
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 description="No snippets found.",
-                ctx=ctx,
             )
             await ctx.send(embed=embed, delete_after=30)
             return
@@ -188,14 +196,24 @@ class Snippets(commands.Cog):
         snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
-            embed = create_error_embed(error="Snippet not found.")
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                description="Snippet not found.",
+            )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
         # check if the snippet is locked
         if snippet.locked:
-            embed = create_error_embed(
-                error="This snippet is locked and cannot be deleted. If you are a moderator you can use the `forcedeletesnippet` command.",
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                description="This snippet is locked and cannot be deleted. If you are a moderator you can use the `forcedeletesnippet` command.",
             )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
@@ -203,7 +221,13 @@ class Snippets(commands.Cog):
         # Check if the author of the snippet is the same as the user who wants to delete it and if theres no author don't allow deletion
         author_id = snippet.snippet_user_id or 0
         if author_id != ctx.author.id:
-            embed = create_error_embed(error="You can only delete your own snippets.")
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                description="You can only delete your own snippets.",
+            )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
@@ -236,7 +260,13 @@ class Snippets(commands.Cog):
         snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
-            embed = create_error_embed(error="Snippet not found.")
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                description="Snippet not found.",
+            )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
@@ -270,13 +300,23 @@ class Snippets(commands.Cog):
         if "_" in name:
             snippet = None  # this is a bad fix, but it works for now
         if snippet is None and "_" in name:
-            embed = create_error_embed(
-                error="Snippet not found. Did you mean to use `-` instead of `_`? Due to a recent change, `_` is no longer allowed in snippet names.",
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                description="Snippet not found. Did you mean to use `-` instead of `_`? Due to a recent change, `_` is no longer allowed in snippet names.",
             )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
         if snippet is None:
-            embed = create_error_embed(error="Snippet not found.")
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                description="Snippet not found.",
+            )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
@@ -315,21 +355,24 @@ class Snippets(commands.Cog):
         snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
-            embed = create_error_embed(error="Snippet not found.")
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                description="Snippet not found.",
+            )
             await ctx.send(embed=embed, delete_after=30)
             return
 
         author = self.bot.get_user(snippet.snippet_user_id)
 
-        latency = round(int(ctx.bot.latency * 1000))
-
-        embed: discord.Embed = EmbedCreator.custom_footer_embed(
+        embed: discord.Embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.DEFAULT,
+            user_name=ctx.author.name,
+            user_display_avatar=ctx.author.display_avatar.url,
             title="Snippet Information",
-            ctx=ctx,
-            latency=f"{latency}ms",
-            interaction=None,
-            state="DEFAULT",
-            user=author or ctx.author,
         )
 
         embed.add_field(name="Name", value=snippet.snippet_name, inline=False)
@@ -375,7 +418,13 @@ class Snippets(commands.Cog):
 
         args = arg.split(" ")
         if len(args) < 2:
-            embed = create_error_embed(error="Please provide a name and content for the snippet.")
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                description="Please provide a name and content for the snippet.",
+            )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
@@ -387,7 +436,13 @@ class Snippets(commands.Cog):
 
         # Check if the snippet already exists
         if await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id) is not None:
-            embed = create_error_embed(error="Snippet already exists.")
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                description="Snippet already exists.",
+            )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
@@ -395,10 +450,13 @@ class Snippets(commands.Cog):
         rules = set(string.ascii_letters + string.digits + "-")
 
         if len(name) > 20 or any(char not in rules for char in name):
-            embed = create_error_embed(
-                error="Snippet name must be alphanumeric (allows dashes and underscores) and less than 20 characters.",
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                description="Snippet name must be alphanumeric (allows dashes and underscores) and less than 20 characters.",
             )
-
             await ctx.send(embed=embed)
             return
 
@@ -435,7 +493,13 @@ class Snippets(commands.Cog):
 
         args = arg.split(" ")
         if len(args) < 2:
-            embed = create_error_embed(error="Please provide a name and content for the snippet.")
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                description="Please provide a name and content for the snippet.",
+            )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
@@ -445,7 +509,13 @@ class Snippets(commands.Cog):
         snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
-            embed = create_error_embed(error="Snippet not found.")
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                description="Snippet not found.",
+            )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
@@ -462,8 +532,12 @@ class Snippets(commands.Cog):
             try:
                 await checks.has_pl(2).predicate(ctx)
             except commands.CheckFailure:
-                embed = create_error_embed(
-                    error="This snippet is locked and cannot be edited. If you are a moderator you can use the `forcedeletesnippet` command.",
+                embed = EmbedCreator.create_embed(
+                    bot=self.bot,
+                    embed_type=EmbedCreator.ERROR,
+                    user_name=ctx.author.name,
+                    user_display_avatar=ctx.author.display_avatar.url,
+                    description="This snippet is locked and cannot be edited. If you are a moderator you can use the `forcedeletesnippet` command.",
                 )
                 await ctx.send(embed=embed, delete_after=30, ephemeral=True)
                 return
@@ -472,7 +546,13 @@ class Snippets(commands.Cog):
         # Check if the author of the snippet is the same as the user who wants to edit it and if theres no author don't allow editing
         author_id = snippet.snippet_user_id or 0
         if author_id != ctx.author.id:
-            embed = create_error_embed(error="You can only edit your own snippets.")
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                description="You can only edit your own snippets.",
+            )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
@@ -508,14 +588,26 @@ class Snippets(commands.Cog):
         snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
-            embed = create_error_embed(error="Snippet not found.")
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                description="Snippet not found.",
+            )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
         status = await self.db.toggle_snippet_lock_by_id(snippet.snippet_id)
 
         if status is None:
-            embed = create_error_embed(error="No return value from locking the snippet. It may still have been locked.")
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                description="No return value from locking the snippet. It may still have been locked.",
+            )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
