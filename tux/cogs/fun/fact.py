@@ -3,7 +3,7 @@ import random
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 
 
 class Fact(commands.Cog):
@@ -46,10 +46,13 @@ class Fact(commands.Cog):
         ctx : commands.Context[Tux]
             The context object for the command.
         """
-        embed = EmbedCreator.create_info_embed(
+        embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.INFO,
+            user_name=ctx.author.name,
+            user_display_avatar=ctx.author.display_avatar.url,
             title="Fun Fact",
             description=random.choice(self.facts),
-            ctx=ctx,
         )
 
         # set author

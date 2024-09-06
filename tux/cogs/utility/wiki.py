@@ -3,7 +3,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 
 
 class Wiki(commands.Cog):
@@ -119,14 +119,23 @@ class Wiki(commands.Cog):
         title: tuple[str, str] = self.query_arch_wiki(query)
 
         if title[0] == "error":
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 description="No search results found.",
-                ctx=ctx,
             )
 
         else:
-            embed = EmbedCreator.create_info_embed(title=title[0], description=title[1], ctx=ctx)
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.INFO,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                title=title[0],
+                description=title[1],
+            )
 
         await ctx.send(embed=embed)
 
@@ -149,14 +158,23 @@ class Wiki(commands.Cog):
         title: tuple[str, str] = self.query_atl_wiki(query)
 
         if title[0] == "error":
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 description="No search results found.",
-                ctx=ctx,
             )
 
         else:
-            embed = EmbedCreator.create_info_embed(title=title[0], description=title[1], ctx=ctx)
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.INFO,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                title=title[0],
+                description=title[1],
+            )
 
         await ctx.send(embed=embed)
 

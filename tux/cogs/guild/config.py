@@ -6,9 +6,9 @@ from discord.ext import commands
 
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
+from tux.ui.embeds import EmbedCreator
 from tux.ui.views.config import ConfigSetChannels, ConfigSetPrivateLogs, ConfigSetPublicLogs
 from tux.utils.constants import CONST
-from tux.utils.embeds import EmbedCreator
 
 # TODO: Add onboarding setup to ensure all required channels, logs, and roles are set up
 # TODO: Figure out how to handle using our custom checks because the current checks would result in a lock out
@@ -339,10 +339,13 @@ class Config(commands.GroupCog, group_name="config"):
         await self.db.update_guild_prefix(interaction.guild.id, prefix)
 
         await interaction.response.send_message(
-            embed=EmbedCreator.create_success_embed(
+            embed=EmbedCreator.create_embed(
+                bot=self.bot,
+                user_name=interaction.user.name,
+                user_display_avatar=interaction.user.display_avatar.url,
+                embed_type=EmbedCreator.SUCCESS,
                 title="Guild Config",
                 description=f"The prefix was updated to `{prefix}`",
-                interaction=interaction,
             ),
         )
 
@@ -367,10 +370,13 @@ class Config(commands.GroupCog, group_name="config"):
         await self.db.delete_guild_prefix(interaction.guild.id)
 
         await interaction.response.send_message(
-            embed=EmbedCreator.create_success_embed(
+            embed=EmbedCreator.create_embed(
+                bot=self.bot,
+                user_name=interaction.user.name,
+                user_display_avatar=interaction.user.display_avatar.url,
+                embed_type=EmbedCreator.SUCCESS,
                 title="Guild Config",
                 description=f"The prefix was reset to `{CONST.DEFAULT_PREFIX}`",
-                interaction=interaction,
             ),
         )
 

@@ -11,8 +11,8 @@ from reactionmenu import ViewButton, ViewMenu
 from reactionmenu.abc import Page
 from reactionmenu.views_menu import ViewSelect
 
+from tux.ui.embeds import EmbedCreator
 from tux.utils.constants import Constants as CONST
-from tux.utils.embeds import EmbedCreator
 
 
 class TuxHelp(commands.HelpCommand):
@@ -491,8 +491,10 @@ class TuxHelp(commands.HelpCommand):
 
         logger.error(f"An error occurred while sending a help message: {error}")
 
-        embed = EmbedCreator.create_error_embed(
-            title="An error occurred while sending help message.",
+        embed = EmbedCreator.create_embed(
+            EmbedCreator.ERROR,
+            user_name=self.context.author.name,
+            user_display_avatar=self.context.author.display_avatar.url,
             description=error,
         )
 

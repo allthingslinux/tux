@@ -5,7 +5,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 
 
 class Tldr(commands.Cog):
@@ -60,10 +60,13 @@ class Tldr(commands.Cog):
 
         tldr_page = self.get_tldr_page(command)
 
-        embed = EmbedCreator.create_info_embed(
+        embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.INFO,
+            user_name=interaction.user.name,
+            user_display_avatar=interaction.user.display_avatar.url,
             title=f"TLDR for {command}",
             description=tldr_page,
-            interaction=interaction,
         )
 
         await interaction.response.send_message(embed=embed)
@@ -88,10 +91,13 @@ class Tldr(commands.Cog):
 
         tldr_page = self.get_tldr_page(command)
 
-        embed = EmbedCreator.create_info_embed(
+        embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.INFO,
+            user_name=ctx.author.name,
+            user_display_avatar=ctx.author.display_avatar.url,
             title=f"TLDR for {command}",
             description=tldr_page,
-            ctx=ctx,
         )
 
         await ctx.send(embed=embed)

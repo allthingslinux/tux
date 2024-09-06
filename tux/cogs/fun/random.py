@@ -3,7 +3,7 @@ import random
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 
 
 class Random(commands.Cog):
@@ -174,10 +174,13 @@ class Random(commands.Cog):
             await ctx.send(content="The dice must have at least 2 sides.", ephemeral=True, delete_after=30)
             return
 
-        embed = EmbedCreator.create_info_embed(
+        embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.INFO,
+            user_name=ctx.author.name,
+            user_display_avatar=ctx.author.display_avatar.url,
             title=f"Dice Roll (D{sides})",
             description=f"You rolled a {random.randint(1, sides)}!",
-            ctx=ctx,
         )
 
         await ctx.send(embed=embed)

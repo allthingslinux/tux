@@ -4,7 +4,7 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.ui.buttons import XkcdButtons
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 from tux.wrappers import xkcd
 
 
@@ -123,7 +123,9 @@ class Xkcd(commands.Cog):
             else:
                 comic = self.client.get_random_comic(raw_comic_image=True)
 
-            embed = EmbedCreator.create_success_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.INFO,
                 title="",
                 description=f"\n\n> {comic.description.strip()}" if comic.description else "",
             )
@@ -134,8 +136,9 @@ class Xkcd(commands.Cog):
 
         except xkcd.HttpError:
             logger.error("HTTP error occurred while fetching xkcd comic")
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
                 description="I couldn't find the xkcd comic. Please try again later.",
             )
             ephemeral = True
@@ -143,8 +146,9 @@ class Xkcd(commands.Cog):
 
         except Exception as e:
             logger.error(f"Error getting xkcd comic: {e}")
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
                 description="An error occurred while fetching the xkcd comic",
             )
             ephemeral = True

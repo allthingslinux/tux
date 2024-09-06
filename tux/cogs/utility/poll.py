@@ -4,7 +4,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 
 # TODO: Create option inputs for the poll command instead of using a comma separated string
 
@@ -74,10 +74,13 @@ class Poll(commands.Cog):
 
         # Check if the options count is between 2-9
         if len(options_list) < 2 or len(options_list) > 9:
-            embed = EmbedCreator.create_error_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=interaction.user.name,
+                user_display_avatar=interaction.user.display_avatar.url,
                 title="Invalid options count",
                 description=f"Poll options count needs to be between 2-9, you provided {len(options_list)} options.",
-                interaction=interaction,
             )
 
             await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
@@ -88,10 +91,13 @@ class Poll(commands.Cog):
             [f"{num + 1}\u20e3 {option}" for num, option in enumerate(options_list)],
         )
 
-        embed = EmbedCreator.create_poll_embed(
+        embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.POLL,
+            user_name=interaction.user.name,
+            user_display_avatar=interaction.user.display_avatar.url,
             title=title,
             description=description,
-            interaction=interaction,
         )
 
         await interaction.response.send_message(embed=embed)

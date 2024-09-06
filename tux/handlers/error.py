@@ -7,7 +7,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
-from tux.utils.embeds import create_error_embed
+from tux.ui.embeds import EmbedCreator
 from tux.utils.exceptions import AppCommandPermissionLevelError, PermissionLevelError
 
 """
@@ -170,7 +170,11 @@ class ErrorHandler(commands.Cog):
 
         error_message = error_map.get(type(error), self.error_message).format(error=error)
 
-        embed = create_error_embed(error_message)
+        embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.ERROR,
+            description=error_message,
+        )
 
         if interaction.response.is_done():
             await interaction.followup.send(embed=embed, ephemeral=True)
@@ -212,7 +216,11 @@ class ErrorHandler(commands.Cog):
         if isinstance(error, commands.CheckFailure):
             message = error_map.get(type(error), self.error_message).format(error=error, ctx=ctx)
             # await ctx.send(content=message, ephemeral=True, delete_after=30)
-            embed = create_error_embed(message)
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                description=message,
+            )
             await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             sentry_sdk.capture_exception(error)
             return
@@ -232,7 +240,11 @@ class ErrorHandler(commands.Cog):
 
         # await ctx.send(content=message, ephemeral=True, delete_after=30)
 
-        embed = create_error_embed(message)
+        embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.ERROR,
+            description=message,
+        )
         await ctx.send(embed=embed, ephemeral=True, delete_after=30)
 
         # Log the error traceback if it's not in the error map

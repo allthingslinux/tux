@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 
 
 class MemberCount(commands.Cog):
@@ -33,10 +33,13 @@ class MemberCount(commands.Cog):
         staff_role = discord.utils.get(interaction.guild.roles, name="%wheel")
         staff = len(staff_role.members) if staff_role else 0
 
-        embed = EmbedCreator.create_info_embed(
+        embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.INFO,
+            user_name=interaction.user.name,
+            user_display_avatar=interaction.user.display_avatar.url,
             title="Member Count",
             description="Here is the member count for the server.",
-            interaction=interaction,
         )
 
         embed.add_field(name="Members", value=str(members), inline=False)

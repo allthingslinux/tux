@@ -6,8 +6,8 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.database.controllers.starboard import StarboardController, StarboardMessageController
+from tux.ui.embeds import EmbedCreator
 from tux.utils import checks
-from tux.utils.embeds import EmbedCreator
 
 
 class Starboard(commands.Cog):
@@ -57,30 +57,39 @@ class Starboard(commands.Cog):
 
         if len(emoji) != 1 or not emoji.isprintable():
             await ctx.send(
-                embed=EmbedCreator.create_error_embed(
+                embed=EmbedCreator.create_embed(
+                    bot=self.bot,
+                    embed_type=EmbedCreator.ERROR,
+                    user_name=ctx.author.name,
+                    user_display_avatar=ctx.author.display_avatar.url,
                     title="Invalid Emoji",
                     description="Please use a single default Discord emoji.",
-                    ctx=ctx,
                 ),
             )
             return
 
         if threshold < 1:
             await ctx.send(
-                embed=EmbedCreator.create_error_embed(
+                embed=EmbedCreator.create_embed(
+                    bot=self.bot,
+                    embed_type=EmbedCreator.ERROR,
+                    user_name=ctx.author.name,
+                    user_display_avatar=ctx.author.display_avatar.url,
                     title="Invalid Threshold",
                     description="Threshold must be at least 1.",
-                    ctx=ctx,
                 ),
             )
             return
 
         if not channel.permissions_for(ctx.guild.me).send_messages:
             await ctx.send(
-                embed=EmbedCreator.create_error_embed(
+                embed=EmbedCreator.create_embed(
+                    bot=self.bot,
+                    embed_type=EmbedCreator.ERROR,
+                    user_name=ctx.author.name,
+                    user_display_avatar=ctx.author.display_avatar.url,
                     title="Permission Denied",
                     description=f"I don't have permission to send messages in {channel.mention}.",
-                    ctx=ctx,
                 ),
             )
             return
@@ -88,10 +97,13 @@ class Starboard(commands.Cog):
         try:
             await self.starboard_controller.create_or_update_starboard(ctx.guild.id, channel.id, emoji, threshold)
 
-            embed = EmbedCreator.create_success_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.INFO,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 title="Starboard Setup",
                 description="Starboard configured successfully.",
-                ctx=ctx,
             )
             embed.add_field(name="Channel", value=channel.mention)
             embed.add_field(name="Emoji", value=emoji)
@@ -120,16 +132,22 @@ class Starboard(commands.Cog):
             result = await self.starboard_controller.delete_starboard_by_guild_id(ctx.guild.id)
 
             embed = (
-                EmbedCreator.create_success_embed(
+                EmbedCreator.create_embed(
+                    bot=self.bot,
+                    embed_type=EmbedCreator.INFO,
+                    user_name=ctx.author.name,
+                    user_display_avatar=ctx.author.display_avatar.url,
                     title="Starboard Removed",
                     description="Starboard configuration removed successfully.",
-                    ctx=ctx,
                 )
                 if result
-                else EmbedCreator.create_error_embed(
+                else EmbedCreator.create_embed(
+                    bot=self.bot,
+                    embed_type=EmbedCreator.ERROR,
+                    user_name=ctx.author.name,
+                    user_display_avatar=ctx.author.display_avatar.url,
                     title="No Starboard Found",
                     description="No starboard configuration found for this server.",
-                    ctx=ctx,
                 )
             )
 

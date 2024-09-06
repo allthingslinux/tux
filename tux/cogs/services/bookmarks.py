@@ -5,8 +5,8 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
+from tux.ui.embeds import EmbedCreator
 from tux.utils.constants import Constants as CONST
-from tux.utils.embeds import EmbedCreator
 
 
 class Bookmarks(commands.Cog):
@@ -54,7 +54,9 @@ class Bookmarks(commands.Cog):
         if len(message.content) > CONST.EMBED_MAX_DESC_LENGTH:
             message.content = f"{message.content[:CONST.EMBED_MAX_DESC_LENGTH - 3]}..."
 
-        embed = EmbedCreator.create_info_embed(
+        embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.INFO,
             title="Message Bookmarked",
             description=f"> {message.content}",
         )

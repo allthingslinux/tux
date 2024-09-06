@@ -4,7 +4,7 @@ import io
 
 import discord
 
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 
 _flags = {
     "user": "User",
@@ -66,7 +66,8 @@ async def get_help_embed(
     """
     valid_flags.sort()
 
-    return EmbedCreator.create_info_embed(
+    return EmbedCreator.create_embed(
+        embed_type=EmbedCreator.INFO,
         title=title,
         description="Use any combination of the following flags to "
         + f"export a list of {data_description} to a CSV file:"
