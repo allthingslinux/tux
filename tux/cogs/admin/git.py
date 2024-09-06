@@ -101,7 +101,8 @@ class Git(commands.Cog):
         """
 
         try:
-            created_issue = await self.github.create_issue(title, body)
+            issue_body = body + "\n\nAuthor: " + str(ctx.author)
+            created_issue = await self.github.create_issue(title, issue_body)
 
             embed = EmbedCreator.create_embed(
                 EmbedCreator.SUCCESS,
@@ -113,7 +114,7 @@ class Git(commands.Cog):
             )
             embed.add_field(name="Issue Number", value=created_issue.number, inline=False)
             embed.add_field(name="Title", value=title, inline=False)
-            embed.add_field(name="Body", value=body, inline=False)
+            embed.add_field(name="Body", value=issue_body, inline=False)
 
         except Exception as e:
             await ctx.send(f"Error creating issue: {e}", delete_after=30, ephemeral=True)
