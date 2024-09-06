@@ -1,6 +1,6 @@
 ## Description
 
-Please include a summary of the changes and the related issue. Please also include relevant motivation and context. List any dependencies that are required for this change. If this change fixes any issues please put "Fixes #XX" in the description. Please also ensure to add the appropiate labels to the PR.
+Please include a summary of the changes and the related issue. Please also include relevant motivation and context. List any dependencies that are required for this change. If this change fixes any issues please put "Fixes #XX" in the description. Please also ensure to add the appropriate labels to the PR.
 
 ## Guidelines
 
@@ -11,7 +11,7 @@ Please include a summary of the changes and the related issue. Please also inclu
 - My changes generate no new warnings
 - I have tested this change
 - Any dependent changes have been merged and published in downstream modules
-- I have added all appropiate labels to this PR
+- I have added all appropriate labels to this PR
 
 - [ ] I have followed all of these guidelines.
 
