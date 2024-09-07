@@ -23,8 +23,10 @@ class Info(commands.Cog):
         aliases=["i"],
     )
     @commands.guild_only()
-    @commands.hybrid_group(name="info", aliases=["i"], usage="info <subcommand>")
-    async def info(self, ctx: commands.Context[Tux]) -> None:
+    async def info(
+        self,
+        ctx: commands.Context[Tux],
+    ) -> None:
         """
         Information commands.
 
@@ -42,7 +44,6 @@ class Info(commands.Cog):
         aliases=["s"],
     )
     @commands.guild_only()
-    @info.command(name="server", aliases=["s"], usage="info server")
     async def server(self, ctx: commands.Context[Tux]) -> None:
         """
         Show information about the server.
@@ -87,7 +88,6 @@ class Info(commands.Cog):
         aliases=["m", "user", "u"],
     )
     @commands.guild_only()
-    @info.command(name="member", aliases=["m", "user", "u"], usage="info member [member]")
     async def member(self, ctx: commands.Context[Tux], member: discord.Member) -> None:
         """
         Show information about a member.
@@ -136,7 +136,6 @@ class Info(commands.Cog):
         aliases=["r"],
     )
     @commands.guild_only()
-    @info.command(name="roles", aliases=["r"], usage="info roles")
     async def roles(self, ctx: commands.Context[Tux]) -> None:
         """
         List all roles in the server.
