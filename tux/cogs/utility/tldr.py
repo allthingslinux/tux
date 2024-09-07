@@ -6,11 +6,13 @@ from discord.ext import commands
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
+from tux.utils.flags import generate_usage
 
 
 class Tldr(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
+        self.prefix_tldr.usage = generate_usage(self.prefix_tldr)
 
     async def get_autocomplete(
         self,
@@ -74,7 +76,6 @@ class Tldr(commands.Cog):
     @commands.command(
         name="tldr",
         aliases=["man"],
-        usage="tldr [command]",
     )
     @commands.guild_only()
     async def prefix_tldr(self, ctx: commands.Context[Tux], command: str) -> None:

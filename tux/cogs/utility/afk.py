@@ -9,16 +9,17 @@ from prisma.models import AFKModel
 from tux.bot import Tux
 from tux.database.controllers import AfkController
 from tux.utils.constants import Constants as CONST
+from tux.utils.flags import generate_usage
 
 
 class AFK(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.db = AfkController()
+        self.afk.usage = generate_usage(self.afk)
 
     @commands.hybrid_command(
         name="afk",
-        usage="afk [reason]",
     )
     @commands.guild_only()
     async def afk(
