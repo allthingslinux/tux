@@ -45,8 +45,9 @@ class EmbedCreator:
         custom_author_text: str | None = None,
         custom_author_text_url: str | None = None,
         custom_author_icon_url: str | None = None,
-        hide_author: bool = False,
         custom_color: int | discord.Colour | None = None,
+        hide_author: bool = False,
+        hide_timestamp: bool = False,
     ) -> discord.Embed:
         """
         Create a customized Discord embed based on the specified type and parameters.
@@ -107,7 +108,8 @@ class EmbedCreator:
             if thumbnail_url:
                 embed.set_thumbnail(url=thumbnail_url)
 
-            embed.timestamp = message_timestamp or discord.utils.utcnow()
+            if not hide_timestamp:
+                embed.timestamp = message_timestamp or discord.utils.utcnow()
 
         except Exception as e:
             logger.debug("Error in create_embed", exc_info=e)
