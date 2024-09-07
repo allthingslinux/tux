@@ -31,13 +31,13 @@ emojis: dict[str, int] = {
 class Cases(ModerationCogBase):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
+        self.cases.usage = generate_usage(self.cases)
         self.cases_view.usage = generate_usage(self.cases_view, CasesViewFlags)
         self.cases_modify.usage = generate_usage(self.cases_modify, CaseModifyFlags)
 
     @commands.hybrid_group(
         name="cases",
         aliases=["c"],
-        usage="cases <subcommand>",
     )
     @commands.guild_only()
     @checks.has_pl(2)
