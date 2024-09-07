@@ -49,15 +49,28 @@ def generate_usage(
         # Determine if the parameter is required
         is_required = param.default == inspect.Parameter.empty
         # Add the parameter to the usage string with required or optional wrapping
-        usage += f" [{param_name}]" if is_required else f" <{param_name}>"
+        usage += f" <{param_name}>" if is_required else f" [{param_name}]"
 
     # Add flag arguments to the usage string
+    # Separate required and optional flags
+    required_flags: list[str] = []
+    optional_flags: list[str] = []
     for flag_name, flag_obj in flags.items():
-        # Determine if the flag is required or optional
+        # Use the first alias if available, otherwise use the flag name
+        # flag_alias = flag_obj.aliases[0] if flag_obj.aliases else flag_name
+        flag_alias = flag_name
         if flag_obj.required:
-            usage += f" {flag_prefix}[{flag_name}]"
+            required_flags.append(f"{flag_prefix}{flag_alias}")
         else:
-            usage += f" {flag_prefix}<{flag_name}>"
+            optional_flags.append(f"{flag_prefix}{flag_alias}")
+
+    # Add required flags first
+    for flag in required_flags:
+        usage += f" {flag}"
+
+    # Add optional flags individually
+    for flag in optional_flags:
+        usage += f" [{flag}]"
 
     return usage
 
