@@ -371,7 +371,8 @@ class Snippets(commands.Cog):
 
         if len(name) > 20 or any(char not in rules for char in name):
             await self.send_snippet_error(
-                ctx, description="Snippet name must be alphanumeric (allows dashes only) and less than 20 characters.",
+                ctx,
+                description="Snippet name must be alphanumeric (allows dashes only) and less than 20 characters.",
             )
             return
 
@@ -485,7 +486,8 @@ class Snippets(commands.Cog):
 
         if status is None:
             await self.send_snippet_error(
-                ctx, "No return value from locking the snippet. It may still have been locked.",
+                ctx,
+                "No return value from locking the snippet. It may still have been locked.",
             )
             return
 

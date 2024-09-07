@@ -89,7 +89,10 @@ class EventHandler(commands.Cog):
                 msg = f"<:tux_notify:1274504953666474025> **New support thread created** - help is appreciated!\n{thread.mention} by {owner_mention}"
 
             embed = EmbedCreator.create_embed(
-                embed_type=EmbedType.INFO, description=msg, custom_color=discord.Color.random(), hide_author=True,
+                embed_type=EmbedType.INFO,
+                description=msg,
+                custom_color=discord.Color.random(),
+                hide_author=True,
             )
 
             general_chat = 1172245377395728467
