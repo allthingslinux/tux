@@ -811,13 +811,13 @@ dev = ["flake8", "markdown", "twine", "wheel"]
 
 [[package]]
 name = "githubkit"
-version = "0.11.8"
+version = "0.11.9"
 description = "GitHub SDK for Python"
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "githubkit-0.11.8-py3-none-any.whl", hash = "sha256:fb6cf775ef38c21d38226565219606009cecd67358e46db99c2499199ab3b94b"},
-    {file = "githubkit-0.11.8.tar.gz", hash = "sha256:e6114f66cd1fcf9fa1c58987366ce75b98325d5ea708a0108533ab7417701c8f"},
+    {file = "githubkit-0.11.9-py3-none-any.whl", hash = "sha256:68933ff9867467418c90176e2ea77c7623fa7ab8fbf64723c2ca56c09b14a0f6"},
+    {file = "githubkit-0.11.9.tar.gz", hash = "sha256:d25da1a667cce32f3d1ab0f33cf52fa328a55e85a6916e19da2765b0602c472a"},
 ]
 
 [package.dependencies]
