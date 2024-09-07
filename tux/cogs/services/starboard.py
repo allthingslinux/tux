@@ -6,7 +6,7 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.database.controllers.starboard import StarboardController, StarboardMessageController
-from tux.ui.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 
 
@@ -263,11 +263,12 @@ class Starboard(commands.Cog):
             if not starboard:
                 return
 
-            embed = discord.Embed(
-                description=original_message.content,
-                color=discord.Color.gold(),
-                timestamp=original_message.created_at,
+            embed = EmbedCreator.create_embed(
+                embed_type=EmbedType.INFO,
+                custom_color=discord.Color.gold(),
+                message_timestamp=original_message.created_at,
             )
+
             embed.set_author(
                 name=original_message.author.display_name,
                 icon_url=original_message.author.avatar.url if original_message.author.avatar else None,

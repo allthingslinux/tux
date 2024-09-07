@@ -12,9 +12,8 @@ from prisma.enums import CaseType
 from prisma.models import Snippet
 from tux.bot import Tux
 from tux.database.controllers import CaseController, DatabaseController
-from tux.ui.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
-from tux.utils.constants import Constants as CONST
 
 
 class Snippets(commands.Cog):
@@ -56,16 +55,9 @@ class Snippets(commands.Cog):
         # Remove snippets that are not in the current server
         snippets = [snippet for snippet in snippets if snippet.guild_id == ctx.guild.id]
 
-        # If there are no snippets, send an error message
-        if not snippets:
-            embed = EmbedCreator.create_embed(
-                bot=self.bot,
-                embed_type=EmbedCreator.ERROR,
-                user_name=ctx.author.name,
-                user_display_avatar=ctx.author.display_avatar.url,
-                description="No snippets found.",
-            )
-            await ctx.send(embed=embed, delete_after=30)
+        # If there are no snippets, return
+        no_snippets = await self.no_snippets_found(ctx, snippets)
+        if no_snippets:
             return
 
         menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed)
@@ -89,22 +81,9 @@ class Snippets(commands.Cog):
         snippets: list[Snippet],
         total_snippets: int,
     ) -> discord.Embed:
-        embed = discord.Embed(
-            title=f"Total Snippets ({total_snippets})",
-            description="",
-            color=CONST.EMBED_COLORS["DEFAULT"],
-        )
 
-        if ctx.guild:
-            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon)
-
-        footer_text, footer_icon_url = EmbedCreator.get_footer(
-            bot=ctx.bot,
-            user_name=ctx.author.name,
-            user_display_avatar=ctx.author.display_avatar.url,
-        )
-        embed.set_footer(text=footer_text, icon_url=footer_icon_url)
-        embed.timestamp = ctx.message.created_at
+        assert ctx.guild
+        assert ctx.guild.icon
 
         description = "```\n"
 
@@ -114,9 +93,22 @@ class Snippets(commands.Cog):
 
         description += "```"
 
-        embed.description = description
+        footer_text, footer_icon_url = EmbedCreator.get_footer(
+            bot=ctx.bot,
+            user_name=ctx.author.name,
+            user_display_avatar=ctx.author.display_avatar.url,
+        )
 
-        return embed
+        return EmbedCreator.create_embed(
+            embed_type=EmbedType.DEFAULT,
+            title=f"Total Snippets ({total_snippets})",
+            description=description,
+            custom_author_text=ctx.guild.name,
+            custom_author_icon_url=ctx.guild.icon.url,
+            message_timestamp=ctx.message.created_at,
+            custom_footer_text=footer_text,
+            custom_footer_icon_url=footer_icon_url,
+        )
 
     @commands.command(
         name="topsnippets",
@@ -138,16 +130,9 @@ class Snippets(commands.Cog):
         # find the top 10 snippets by uses
         snippets: list[Snippet] = await self.db.get_all_snippets_by_guild_id(ctx.guild.id)
 
-        # If there are no snippets, send an error message
-        if not snippets:
-            embed = EmbedCreator.create_embed(
-                bot=self.bot,
-                embed_type=EmbedCreator.ERROR,
-                user_name=ctx.author.name,
-                user_display_avatar=ctx.author.display_avatar.url,
-                description="No snippets found.",
-            )
-            await ctx.send(embed=embed, delete_after=30)
+        # If there are no snippets, return
+        no_snippets = await self.no_snippets_found(ctx, snippets)
+        if no_snippets:
             return
 
         # sort the snippets by uses
@@ -165,10 +150,11 @@ class Snippets(commands.Cog):
         text += "```"
 
         # only show top 10, no pagination
-        embed = discord.Embed(
+        embed = EmbedCreator.create_embed(
+            embed_type=EmbedType.DEFAULT,
             title="Top Snippets",
             description=text,
-            color=CONST.EMBED_COLORS["DEFAULT"],
+            hide_author=True,
         )
 
         await ctx.send(embed=embed)
@@ -626,6 +612,36 @@ Snippets are usually locked by moderators if they are important to usual use of 
         await ctx.send("Snippet lock toggled.", delete_after=30, ephemeral=True)
         logger.info(f"{ctx.author} toggled the lock of the snippet with the name {name}.")
 
+    async def no_snippets_found(self, ctx: commands.Context[Tux], snippets: list[Snippet]) -> bool:
+        """
+        Check if there are no snippets found.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context object.
+        snippets : list[Snippet]
+            The list of snippets.
+
+        Returns
+        -------
+        True
+            If there are no snippets found.
+            And sends an error message to the channel.
+        False
+            If there are snippets found.
+        """
+        if not snippets:
+            embed = EmbedCreator.create_embed(
+                    bot=self.bot,
+                    embed_type=EmbedCreator.ERROR,
+                    user_name=ctx.author.name,
+                    user_display_avatar=ctx.author.display_avatar.url,
+                    description="No snippets found.",
+                )
+            await ctx.send(embed=embed, delete_after=30)
+            return True
+        return False
 
 async def setup(bot: Tux) -> None:
     await bot.add_cog(Snippets(bot))

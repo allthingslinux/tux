@@ -6,9 +6,10 @@ from discord.ext import commands
 
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
-from tux.ui.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.ui.views.config import ConfigSetChannels, ConfigSetPrivateLogs, ConfigSetPublicLogs
 from tux.utils.constants import CONST
+
 
 # TODO: Add onboarding setup to ensure all required channels, logs, and roles are set up
 # TODO: Figure out how to handle using our custom checks because the current checks would result in a lock out
@@ -183,10 +184,12 @@ class Config(commands.GroupCog, group_name="config"):
 
         assert interaction.guild
 
-        embed = discord.Embed(
+
+        embed = EmbedCreator.create_embed(
             title="Config - Roles",
-            color=discord.Color.blue(),
-            timestamp=discord.utils.utcnow(),
+            embed_type=EmbedType.INFO,
+            custom_color=discord.Color.blue(),
+            message_timestamp=discord.utils.utcnow(),
         )
 
         jail_role_id = await self.db.get_jail_role_id(interaction.guild.id)
@@ -213,10 +216,12 @@ class Config(commands.GroupCog, group_name="config"):
 
         assert interaction.guild
 
-        embed = discord.Embed(
+
+        embed = EmbedCreator.create_embed(
+            embed_type=EmbedType.INFO,
+            custom_color=discord.Color.blue(),
             title="Config - Permission Level Roles",
-            color=discord.Color.blue(),
-            timestamp=discord.utils.utcnow(),
+            message_timestamp=discord.utils.utcnow(),
         )
 
         for i in range(8):
@@ -245,10 +250,12 @@ class Config(commands.GroupCog, group_name="config"):
 
         assert interaction.guild
 
-        embed = discord.Embed(
+
+        embed = EmbedCreator.create_embed(
             title="Config - Channels",
-            color=discord.Color.blue(),
-            timestamp=discord.utils.utcnow(),
+            embed_type=EmbedType.INFO,
+            custom_color=discord.Color.blue(),
+            message_timestamp=discord.utils.utcnow(),
         )
 
         jail_channel_id = await self.db.get_jail_channel_id(interaction.guild.id)
@@ -283,10 +290,12 @@ class Config(commands.GroupCog, group_name="config"):
 
         assert interaction.guild
 
-        embed = discord.Embed(
+
+        embed = EmbedCreator.create_embed(
             title="Config - Logs",
-            color=discord.Color.blue(),
-            timestamp=discord.utils.utcnow(),
+            embed_type=EmbedType.INFO,
+            custom_color=discord.Color.blue(),
+            message_timestamp=discord.utils.utcnow(),
         )
 
         join_log_id = await self.db.get_join_log_id(interaction.guild.id)

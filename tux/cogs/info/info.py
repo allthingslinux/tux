@@ -5,6 +5,7 @@ from discord.ext import commands
 from reactionmenu import ViewButton, ViewMenu
 
 from tux.bot import Tux
+from tux.ui.embeds import EmbedCreator, EmbedType
 
 
 class Info(commands.Cog):
@@ -166,7 +167,9 @@ class Info(commands.Cog):
         chunk_size : int
             The size of each chunk for pagination.
         """
-        embed: discord.Embed = discord.Embed(title=title, color=discord.Color.blurple())
+        embed: discord.Embed = EmbedCreator.create_embed(
+            embed_type=EmbedType.INFO, title=title, custom_color=discord.Color.blurple()
+        )
         chunks: list[list[str]] = list(self._chunks(iter(items), chunk_size))
 
         if not chunks:

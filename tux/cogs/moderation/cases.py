@@ -6,7 +6,7 @@ from prisma.enums import CaseType
 from prisma.models import Case
 from prisma.types import CaseWhereInput
 from tux.bot import Tux
-from tux.ui.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.constants import Constants as CONST
 from tux.utils.flags import CaseModifyFlags, CasesViewFlags, generate_usage
@@ -276,10 +276,11 @@ class Cases(ModerationCogBase):
             )
             embed.set_thumbnail(url=user.avatar)
         else:
-            embed = discord.Embed(
+
+            embed = EmbedCreator.create_embed(
+                embed_type=EmbedType.ERROR,
                 title=f"Case {action}",
                 description="Failed to find case.",
-                color=CONST.EMBED_COLORS["ERROR"],
             )
 
         await ctx.send(embed=embed, delete_after=30, ephemeral=True)
@@ -293,10 +294,10 @@ class Cases(ModerationCogBase):
         menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed, all_can_click=True, delete_on_timeout=True)
 
         if not cases:
-            embed = discord.Embed(
+            embed = EmbedCreator.create_embed(
+                embed_type=EmbedType.ERROR,
                 title="Cases",
                 description="No cases found.",
-                color=CONST.EMBED_COLORS["ERROR"],
             )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
@@ -337,10 +338,11 @@ class Cases(ModerationCogBase):
         cases: list[Case],
         total_cases: int,
     ) -> discord.Embed:
-        embed = discord.Embed(
+
+        embed = EmbedCreator.create_embed(
             title=f"Total Cases ({total_cases})",
             description="",
-            color=CONST.EMBED_COLORS["CASE"],
+            embed_type=EmbedType.CASE,
         )
 
         if ctx.guild:
