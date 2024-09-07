@@ -11,7 +11,7 @@ from tux.utils.converters import CaseTypeConverter
 
 def generate_usage(
     command: commands.Command[Any, Any, Any],
-    flag_converter: type[commands.FlagConverter],
+    flag_converter: type[commands.FlagConverter] | None = None,
 ) -> str:
     """
     Generate a usage string for a command with flags.
@@ -39,7 +39,7 @@ def generate_usage(
     parameters: dict[str, commands.Parameter] = command.clean_params
 
     flag_prefix = getattr(flag_converter, "__commands_flag_prefix__", "-")
-    flags: dict[str, commands.Flag] = flag_converter.get_flags()
+    flags: dict[str, commands.Flag] = flag_converter.get_flags() if flag_converter else {}
 
     # Add non-flag arguments to the usage string
     for param_name, param in parameters.items():
@@ -56,13 +56,10 @@ def generate_usage(
     required_flags: list[str] = []
     optional_flags: list[str] = []
     for flag_name, flag_obj in flags.items():
-        # Use the first alias if available, otherwise use the flag name
-        # flag_alias = flag_obj.aliases[0] if flag_obj.aliases else flag_name
-        flag_alias = flag_name
         if flag_obj.required:
-            required_flags.append(f"{flag_prefix}{flag_alias}")
+            required_flags.append(f"{flag_prefix}{flag_name}")
         else:
-            optional_flags.append(f"{flag_prefix}{flag_alias}")
+            optional_flags.append(f"{flag_prefix}{flag_name}")
 
     # Add required flags first
     for flag in required_flags:
