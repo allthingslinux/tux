@@ -7,7 +7,7 @@ from loguru import logger
 from prisma.enums import CaseType
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
-from tux.ui.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils.constants import Constants as CONST
 
 
@@ -17,6 +17,7 @@ class ModerationCogBase(commands.Cog):
         self.db = DatabaseController()
         self.config = DatabaseController().guild_config
 
+    # TODO: Get rid of create_embed in the ModerationCogBase command as its only being used once and is replacable
     def create_embed(
         self,
         ctx: commands.Context[Tux],
@@ -50,17 +51,22 @@ class ModerationCogBase(commands.Cog):
         discord.Embed
             The embed for the moderation action.
         """
-
-        embed = discord.Embed(color=color, timestamp=timestamp or ctx.message.created_at)
-        embed.set_author(name=title, icon_url=icon_url)
-        embed.set_thumbnail(url=thumbnail_url)
-
         footer_text, footer_icon_url = EmbedCreator.get_footer(
             bot=self.bot,
             user_name=ctx.author.name,
             user_display_avatar=ctx.author.display_avatar.url,
         )
-        embed.set_footer(text=footer_text, icon_url=footer_icon_url)
+
+        embed = EmbedCreator.create_embed(
+            embed_type=EmbedType.INFO,
+            custom_color=color,
+            message_timestamp=timestamp or ctx.message.created_at,
+            custom_author_text=title,
+            custom_author_icon_url=icon_url,
+            thumbnail_url=thumbnail_url,
+            custom_footer_text=footer_text,
+            custom_footer_icon_url=footer_icon_url,
+        )
 
         for name, value, inline in fields:
             embed.add_field(name=name, value=value, inline=inline)

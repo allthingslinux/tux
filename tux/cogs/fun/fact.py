@@ -53,14 +53,17 @@ class Fact(commands.Cog):
             user_display_avatar=ctx.author.display_avatar.url,
             title="Fun Fact",
             description=random.choice(self.facts),
+            custom_author_text="Click here to submit more facts here!",
+            custom_author_text_url="https://github.com/allthingslinux/tux/blob/main/tux/cogs/fun/fact.py",
+            custom_author_icon_url="https://github.com/allthingslinux/tux/blob/main/assets/emojis/tux_info.png?raw=true",
         )
 
-        # set author
-        embed.set_author(
-            name="Submit more facts here!",
-            url="https://github.com/allthingslinux/tux/blob/main/tux/cogs/fun/fact.py",
-            icon_url="https://github.com/allthingslinux/tux/blob/main/assets/emojis/tux_info.png?raw=true",
-        )
+        # # set author
+        # embed.set_author(
+        #     name="Submit more facts here!",
+        #     url="https://github.com/allthingslinux/tux/blob/main/tux/cogs/fun/fact.py",
+        #     icon_url="https://github.com/allthingslinux/tux/blob/main/assets/emojis/tux_info.png?raw=true",
+        # )
 
         await ctx.send(embed=embed)
 

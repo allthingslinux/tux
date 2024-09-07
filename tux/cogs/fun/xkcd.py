@@ -128,10 +128,10 @@ class Xkcd(commands.Cog):
                 embed_type=EmbedCreator.INFO,
                 title="",
                 description=f"\n\n> {comic.description.strip()}" if comic.description else "",
+                custom_author_text=f"xkcd {comic.id} - {comic.title}",
+                image_url=comic.image_url,
             )
 
-            embed.set_author(name=f"xkcd {comic.id} - {comic.title}")
-            embed.set_image(url=comic.image_url)
             ephemeral = False
 
         except xkcd.HttpError:
