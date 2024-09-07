@@ -338,22 +338,24 @@ class Cases(ModerationCogBase):
         cases: list[Case],
         total_cases: int,
     ) -> discord.Embed:
-
-        embed = EmbedCreator.create_embed(
-            title=f"Total Cases ({total_cases})",
-            description="",
-            embed_type=EmbedType.CASE,
-        )
-
-        if ctx.guild:
-            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon)
+        assert ctx.guild
+        assert ctx.guild.icon
 
         footer_text, footer_icon_url = EmbedCreator.get_footer(
             bot=self.bot,
             user_name=ctx.author.name,
             user_display_avatar=ctx.author.display_avatar.url,
         )
-        embed.set_footer(text=footer_text, icon_url=footer_icon_url)
+
+        embed = EmbedCreator.create_embed(
+            title=f"Total Cases ({total_cases})",
+            description="",
+            embed_type=EmbedType.CASE,
+            custom_author_text=ctx.guild.name,
+            custom_author_icon_url=ctx.guild.icon.url,
+            custom_footer_text=footer_text,
+            custom_footer_icon_url=footer_icon_url,
+        )
 
         for case in cases:
             self._add_case_to_embed(embed, case)

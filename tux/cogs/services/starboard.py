@@ -267,17 +267,13 @@ class Starboard(commands.Cog):
                 embed_type=EmbedType.INFO,
                 custom_color=discord.Color.gold(),
                 message_timestamp=original_message.created_at,
+                custom_author_text=original_message.author.display_name,
+                custom_author_icon_url=original_message.author.avatar.url if original_message.author.avatar else None,
+                custom_footer_text=f"{reaction_count} {starboard.starboard_emoji}",
+                image_url=original_message.attachments[0].url if original_message.attachments else None,
             )
 
-            embed.set_author(
-                name=original_message.author.display_name,
-                icon_url=original_message.author.avatar.url if original_message.author.avatar else None,
-            )
             embed.add_field(name="Source", value=f"[Jump to message]({original_message.jump_url})")
-            embed.set_footer(text=f"{reaction_count} {starboard.starboard_emoji}")
-
-            if original_message.attachments:
-                embed.set_image(url=original_message.attachments[0].url)
 
             starboard_message = await self.get_existing_starboard_message(starboard_channel, original_message)
 

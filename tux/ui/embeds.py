@@ -43,6 +43,7 @@ class EmbedCreator:
         custom_footer_text: str | None = None,
         custom_footer_icon_url: str | None = None,
         custom_author_text: str | None = None,
+        custom_author_text_url: str | None = None,
         custom_author_icon_url: str | None = None,
         hide_author: bool = False,
         custom_color: int | discord.Colour | None = None,
@@ -63,6 +64,7 @@ class EmbedCreator:
             custom_footer_text (str | None): Overrides default footer text if provided.
             custom_footer_icon_url (str | None): Overrides default footer icon if provided.
             custom_author_text (str | None): Overrides default author text if provided.
+            custom_author_text_url (str | None): Adds author URL if provided.
             custom_author_icon_url (str | None): Overrides default author icon if provided.
             hide_author (bool): If True, removes the author from the embed.
             custom_color (int | Colour |None): Overrides default color for the embed type if provided.
@@ -90,6 +92,7 @@ class EmbedCreator:
                 embed.set_author(
                     name=custom_author_text or type_settings[embed_type][2],
                     icon_url=custom_author_icon_url or type_settings[embed_type][1],
+                    url=custom_author_text_url,
                 )
 
             if custom_footer_text:

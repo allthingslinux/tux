@@ -107,17 +107,14 @@ class Query(commands.Cog):
             user_display_avatar=ctx.author.display_avatar.url,
             title=f'Answer to "{search_term}"',
             description=f"{data['Abstract']}\n\nData from **{data['AbstractURL']}**",
+            custom_footer_text="Data via DuckDuckGo API.",
+            custom_footer_icon_url="https://duckduckgo.com/favicon.png",
         )
 
         embed.set_author(
             name=data["Heading"],
             url=data["AbstractURL"],
             icon_url=f"https://duckduckgo.com{data['Image']}" if data["Image"] else CONST.EMBED_ICONS["DEFAULT"],
-        )
-
-        embed.set_footer(
-            text="Data via DuckDuckGo API.",
-            icon_url="https://duckduckgo.com/favicon.png",
         )
 
         if redirect:
