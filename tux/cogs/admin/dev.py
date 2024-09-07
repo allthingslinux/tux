@@ -4,16 +4,22 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.utils import checks
+from tux.utils.flags import generate_usage
 
 
 class Dev(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
+        self.sync_tree.usage = generate_usage(self.sync_tree)
+        self.clear_tree.usage = generate_usage(self.clear_tree)
+        self.load_cog.usage = generate_usage(self.load_cog)
+        self.unload_cog.usage = generate_usage(self.unload_cog)
+        self.reload_cog.usage = generate_usage(self.reload_cog)
+        self.stop.usage = generate_usage(self.stop)
 
     @commands.hybrid_group(
         name="dev",
         aliases=["d"],
-        usage="dev <subcommand>",
     )
     @commands.guild_only()
     @checks.has_pl(8)
@@ -39,7 +45,6 @@ class Dev(commands.Cog):
     @dev.command(
         name="sync_tree",
         aliases=["st", "sync", "s"],
-        usage="dev sync_tree [guild]",
     )
     @commands.guild_only()
     @checks.has_pl(8)
@@ -71,7 +76,6 @@ class Dev(commands.Cog):
     @dev.command(
         name="clear_tree",
         aliases=["ct", "clear", "c"],
-        usage="dev clear_tree",
     )
     @commands.guild_only()
     @checks.has_pl(8)
@@ -104,7 +108,6 @@ class Dev(commands.Cog):
     @dev.command(
         name="load_cog",
         aliases=["lc", "load", "l"],
-        usage="dev load_cog [cog]",
     )
     @commands.guild_only()
     @checks.has_pl(8)
@@ -145,7 +148,6 @@ class Dev(commands.Cog):
     @dev.command(
         name="unload_cog",
         aliases=["uc", "unload", "u"],
-        usage="dev unload_cog [cog]",
     )
     @commands.guild_only()
     @checks.has_pl(8)
@@ -180,7 +182,6 @@ class Dev(commands.Cog):
     @dev.command(
         name="reload_cog",
         aliases=["rc", "reload", "r"],
-        usage="dev reload_cog [cog]",
     )
     @commands.guild_only()
     @checks.has_pl(8)
@@ -215,7 +216,6 @@ class Dev(commands.Cog):
 
     @dev.command(
         name="stop",
-        usage="dev stop",
     )
     @commands.guild_only()
     @checks.has_pl(8)

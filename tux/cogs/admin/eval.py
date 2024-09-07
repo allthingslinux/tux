@@ -7,6 +7,7 @@ from loguru import logger
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
 from tux.utils import checks
+from tux.utils.flags import generate_usage
 
 
 def insert_returns(body: list[ast.stmt]) -> None:
@@ -41,15 +42,15 @@ def insert_returns(body: list[ast.stmt]) -> None:
 class Eval(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
+        self.eval.usage = generate_usage(self.eval)
 
     @commands.command(
         name="eval",
         aliases=["e"],
-        usage="eval [expression]",
     )
     @commands.guild_only()
     @checks.has_pl(8)  # sysadmin or higher
-    async def eval(self, ctx: commands.Context[Tux], *, cmd: str) -> None:
+    async def eval(self, ctx: commands.Context[Tux], *, expression: str) -> None:
         """
         Evaluate a Python expression. (Owner only)
 
@@ -57,9 +58,10 @@ class Eval(commands.Cog):
         ----------
         ctx : commands.Context[Tux]
             The context in which the command is being invoked.
-        cmd : str
+        expression : str
             The Python expression to evaluate.
         """
+        cmd = expression
 
         # Check if the user is in the discord.py owner_ids list in the bot instance
         if self.bot.owner_ids is None:
