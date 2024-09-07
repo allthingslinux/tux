@@ -69,12 +69,7 @@ async def get_help_embed(
     return EmbedCreator.create_embed(
         embed_type=EmbedCreator.INFO,
         title=title,
-        description="Use any combination of the following flags to "
-        + f"export a list of {data_description} to a CSV file:"
-        + "\n```"
-        + "\n--all\n"
-        + "\n".join([f"--{flag}" for flag in valid_flags])
-        + "\n```",
+        description=f"Use any combination of the following flags to export a list of {data_description} to a CSV file:\n```--all\n{'\n'.join([f'--{flag}' for flag in valid_flags])}```",
     )
 
 

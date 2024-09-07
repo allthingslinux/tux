@@ -6,6 +6,7 @@ from reactionmenu import ViewButton, ViewMenu
 
 from tux.bot import Tux
 from tux.utils.flags import generate_usage
+from tux.ui.embeds import EmbedCreator, EmbedType
 
 
 class Info(commands.Cog):
@@ -21,6 +22,8 @@ class Info(commands.Cog):
         name="info",
         aliases=["i"],
     )
+    @commands.guild_only()
+    @commands.hybrid_group(name="info", aliases=["i"], usage="info <subcommand>")
     async def info(self, ctx: commands.Context[Tux]) -> None:
         """
         Information commands.
@@ -38,6 +41,8 @@ class Info(commands.Cog):
         name="server",
         aliases=["s"],
     )
+    @commands.guild_only()
+    @info.command(name="server", aliases=["s"], usage="info server")
     async def server(self, ctx: commands.Context[Tux]) -> None:
         """
         Show information about the server.
@@ -49,14 +54,18 @@ class Info(commands.Cog):
         """
         guild = ctx.guild
         assert guild
+        assert guild.icon
 
         embed: discord.Embed = (
-            discord.Embed(
+            EmbedCreator.create_embed(
+                embed_type=EmbedType.INFO,
                 title=guild.name,
                 description=guild.description or "No description available.",
-                color=discord.Color.blurple(),
+                custom_color=discord.Color.blurple(),
+                custom_author_text="Server Information",
+                custom_author_icon_url=guild.icon.url,
+                custom_footer_text=f"ID: {guild.id} | Created: {guild.created_at.strftime('%B %d, %Y')}",
             )
-            .set_author(name="Server Information", icon_url=guild.icon)
             .add_field(name="Owner", value=str(guild.owner.mention) if guild.owner else "Unknown")
             .add_field(name="Vanity URL", value=guild.vanity_url_code or "None")
             .add_field(name="Boosts", value=guild.premium_subscription_count)
@@ -69,7 +78,6 @@ class Info(commands.Cog):
             .add_field(name="Humans", value=sum(not member.bot for member in guild.members))
             .add_field(name="Bots", value=sum(member.bot for member in guild.members))
             .add_field(name="Bans", value=len([entry async for entry in guild.bans(limit=2000)]))
-            .set_footer(text=f"ID: {guild.id} | Created: {guild.created_at.strftime('%B %d, %Y')}")
         )
 
         await ctx.send(embed=embed)
@@ -78,6 +86,8 @@ class Info(commands.Cog):
         name="member",
         aliases=["m", "user", "u"],
     )
+    @commands.guild_only()
+    @info.command(name="member", aliases=["m", "user", "u"], usage="info member [member]")
     async def member(self, ctx: commands.Context[Tux], member: discord.Member) -> None:
         """
         Show information about a member.
@@ -89,15 +99,15 @@ class Info(commands.Cog):
         member : discord.Member
             The member to get information about.
         """
+        user = await self.bot.fetch_user(member.id)
         embed: discord.Embed = (
-            discord.Embed(
+            EmbedCreator.create_embed(
+                embed_type=EmbedType.INFO,
                 title=member.display_name,
+                custom_color=discord.Color.blurple(),
                 description="Here is some information about the member.",
-                color=discord.Color.blurple(),
-            )
-            .set_thumbnail(url=member.display_avatar.url)
-            .set_image(
-                url=(await self.bot.fetch_user(member.id)).banner,  # Fetched member's banner
+                thumbnail_url=member.display_avatar.url,
+                image_url=user.banner.url if user.banner else None,
             )
             .add_field(name="Bot?", value="✅" if member.bot else "❌", inline=False)
             .add_field(name="Username", value=member.name, inline=False)
@@ -125,6 +135,8 @@ class Info(commands.Cog):
         name="roles",
         aliases=["r"],
     )
+    @commands.guild_only()
+    @info.command(name="roles", aliases=["r"], usage="info roles")
     async def roles(self, ctx: commands.Context[Tux]) -> None:
         """
         List all roles in the server.
@@ -187,7 +199,11 @@ class Info(commands.Cog):
         chunk_size : int
             The size of each chunk for pagination.
         """
-        embed: discord.Embed = discord.Embed(title=title, color=discord.Color.blurple())
+        embed: discord.Embed = EmbedCreator.create_embed(
+            embed_type=EmbedType.INFO,
+            title=title,
+            custom_color=discord.Color.blurple(),
+        )
         chunks: list[list[str]] = list(self._chunks(iter(items), chunk_size))
 
         if not chunks:

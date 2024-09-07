@@ -6,7 +6,7 @@ from prisma.enums import CaseType
 from prisma.models import Case
 from prisma.types import CaseWhereInput
 from tux.bot import Tux
-from tux.ui.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.constants import Constants as CONST
 from tux.utils.flags import CaseModifyFlags, CasesViewFlags, generate_usage
@@ -276,10 +276,10 @@ class Cases(ModerationCogBase):
             )
             embed.set_thumbnail(url=user.avatar)
         else:
-            embed = discord.Embed(
+            embed = EmbedCreator.create_embed(
+                embed_type=EmbedType.ERROR,
                 title=f"Case {action}",
                 description="Failed to find case.",
-                color=CONST.EMBED_COLORS["ERROR"],
             )
 
         await ctx.send(embed=embed, delete_after=30, ephemeral=True)
@@ -293,10 +293,10 @@ class Cases(ModerationCogBase):
         menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed, all_can_click=True, delete_on_timeout=True)
 
         if not cases:
-            embed = discord.Embed(
+            embed = EmbedCreator.create_embed(
+                embed_type=EmbedType.ERROR,
                 title="Cases",
                 description="No cases found.",
-                color=CONST.EMBED_COLORS["ERROR"],
             )
             await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
@@ -337,21 +337,24 @@ class Cases(ModerationCogBase):
         cases: list[Case],
         total_cases: int,
     ) -> discord.Embed:
-        embed = discord.Embed(
-            title=f"Total Cases ({total_cases})",
-            description="",
-            color=CONST.EMBED_COLORS["CASE"],
-        )
-
-        if ctx.guild:
-            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon)
+        assert ctx.guild
+        assert ctx.guild.icon
 
         footer_text, footer_icon_url = EmbedCreator.get_footer(
             bot=self.bot,
             user_name=ctx.author.name,
             user_display_avatar=ctx.author.display_avatar.url,
         )
-        embed.set_footer(text=footer_text, icon_url=footer_icon_url)
+
+        embed = EmbedCreator.create_embed(
+            title=f"Total Cases ({total_cases})",
+            description="",
+            embed_type=EmbedType.CASE,
+            custom_author_text=ctx.guild.name,
+            custom_author_icon_url=ctx.guild.icon.url,
+            custom_footer_text=footer_text,
+            custom_footer_icon_url=footer_icon_url,
+        )
 
         for case in cases:
             self._add_case_to_embed(embed, case)

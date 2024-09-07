@@ -43,8 +43,11 @@ class EmbedCreator:
         custom_footer_text: str | None = None,
         custom_footer_icon_url: str | None = None,
         custom_author_text: str | None = None,
+        custom_author_text_url: str | None = None,
         custom_author_icon_url: str | None = None,
-        custom_color: int | None = None,
+        custom_color: int | discord.Colour | None = None,
+        hide_author: bool = False,
+        hide_timestamp: bool = False,
     ) -> discord.Embed:
         """
         Create a customized Discord embed based on the specified type and parameters.
@@ -62,8 +65,10 @@ class EmbedCreator:
             custom_footer_text (str | None): Overrides default footer text if provided.
             custom_footer_icon_url (str | None): Overrides default footer icon if provided.
             custom_author_text (str | None): Overrides default author text if provided.
+            custom_author_text_url (str | None): Adds author URL if provided.
             custom_author_icon_url (str | None): Overrides default author icon if provided.
-            custom_color (int | None): Overrides default color for the embed type if provided.
+            hide_author (bool): If True, removes the author from the embed.
+            custom_color (int | Colour |None): Overrides default color for the embed type if provided.
 
         Note:
             Custom parameters (prefixed with 'custom_') override default values.
@@ -84,10 +89,12 @@ class EmbedCreator:
 
             embed.color = custom_color or type_settings[embed_type][0]
 
-            embed.set_author(
-                name=custom_author_text or type_settings[embed_type][2],
-                icon_url=custom_author_icon_url or type_settings[embed_type][1],
-            )
+            if not hide_author:
+                embed.set_author(
+                    name=custom_author_text or type_settings[embed_type][2],
+                    icon_url=custom_author_icon_url or type_settings[embed_type][1],
+                    url=custom_author_text_url,
+                )
 
             if custom_footer_text:
                 embed.set_footer(text=custom_footer_text, icon_url=custom_footer_icon_url)
@@ -101,7 +108,8 @@ class EmbedCreator:
             if thumbnail_url:
                 embed.set_thumbnail(url=thumbnail_url)
 
-            embed.timestamp = message_timestamp or discord.utils.utcnow()
+            if not hide_timestamp:
+                embed.timestamp = message_timestamp or discord.utils.utcnow()
 
         except Exception as e:
             logger.debug("Error in create_embed", exc_info=e)
