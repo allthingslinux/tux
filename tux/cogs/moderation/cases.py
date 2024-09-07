@@ -276,7 +276,6 @@ class Cases(ModerationCogBase):
             )
             embed.set_thumbnail(url=user.avatar)
         else:
-
             embed = EmbedCreator.create_embed(
                 embed_type=EmbedType.ERROR,
                 title=f"Case {action}",

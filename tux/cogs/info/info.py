@@ -168,7 +168,7 @@ class Info(commands.Cog):
             The size of each chunk for pagination.
         """
         embed: discord.Embed = EmbedCreator.create_embed(
-            embed_type=EmbedType.INFO, title=title, custom_color=discord.Color.blurple()
+            embed_type=EmbedType.INFO, title=title, custom_color=discord.Color.blurple(),
         )
         chunks: list[list[str]] = list(self._chunks(iter(items), chunk_size))
 

@@ -10,7 +10,6 @@ from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.ui.views.config import ConfigSetChannels, ConfigSetPrivateLogs, ConfigSetPublicLogs
 from tux.utils.constants import CONST
 
-
 # TODO: Add onboarding setup to ensure all required channels, logs, and roles are set up
 # TODO: Figure out how to handle using our custom checks because the current checks would result in a lock out
 # TODO: Add a command to reset the guild config to default values
@@ -184,7 +183,6 @@ class Config(commands.GroupCog, group_name="config"):
 
         assert interaction.guild
 
-
         embed = EmbedCreator.create_embed(
             title="Config - Roles",
             embed_type=EmbedType.INFO,
@@ -215,7 +213,6 @@ class Config(commands.GroupCog, group_name="config"):
         """
 
         assert interaction.guild
-
 
         embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
@@ -249,7 +246,6 @@ class Config(commands.GroupCog, group_name="config"):
         """
 
         assert interaction.guild
-
 
         embed = EmbedCreator.create_embed(
             title="Config - Channels",
@@ -289,7 +285,6 @@ class Config(commands.GroupCog, group_name="config"):
         """
 
         assert interaction.guild
-
 
         embed = EmbedCreator.create_embed(
             title="Config - Logs",

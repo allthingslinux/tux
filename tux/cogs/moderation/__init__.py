@@ -17,7 +17,7 @@ class ModerationCogBase(commands.Cog):
         self.db = DatabaseController()
         self.config = DatabaseController().guild_config
 
-    #TODO: Get rid of create_embed in the ModerationCogBase command as its only being used once and is replacable
+    # TODO: Get rid of create_embed in the ModerationCogBase command as its only being used once and is replacable
     def create_embed(
         self,
         ctx: commands.Context[Tux],

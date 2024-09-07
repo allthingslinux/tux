@@ -3,8 +3,8 @@ from discord.ext import commands
 
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
-from tux.utils.functions import is_harmful, strip_formatting
 from tux.ui.embeds import EmbedCreator, EmbedType
+from tux.utils.functions import is_harmful, strip_formatting
 
 
 class EventHandler(commands.Cog):
@@ -88,8 +88,9 @@ class EventHandler(commands.Cog):
             else:
                 msg = f"<:tux_notify:1274504953666474025> **New support thread created** - help is appreciated!\n{thread.mention} by {owner_mention}"
 
-            embed = EmbedCreator.create_embed(embed_type=EmbedType.INFO, description=msg, custom_color=discord.Color.random(), hide_author=True)
-
+            embed = EmbedCreator.create_embed(
+                embed_type=EmbedType.INFO, description=msg, custom_color=discord.Color.random(), hide_author=True,
+            )
 
             general_chat = 1172245377395728467
             channel = self.bot.get_channel(general_chat)
