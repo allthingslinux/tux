@@ -14,7 +14,6 @@ from tux.bot import Tux
 from tux.database.controllers import CaseController, DatabaseController
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
-from tux.utils.constants import Constants as CONST
 from tux.utils.flags import generate_usage
 
 

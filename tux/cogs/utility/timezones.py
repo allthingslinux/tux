@@ -6,8 +6,8 @@ from discord.ext import commands
 from reactionmenu import Page, ViewButton, ViewMenu, ViewSelect
 
 from tux.bot import Tux
-from tux.utils.flags import generate_usage
 from tux.ui.embeds import EmbedCreator, EmbedType
+from tux.utils.flags import generate_usage
 
 timezones = {
     "North America": [
