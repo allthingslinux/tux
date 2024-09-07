@@ -11,6 +11,7 @@ from tux.ui.embeds import EmbedCreator, EmbedType
 class Info(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
+
     @commands.guild_only()
     @commands.hybrid_group(name="info", aliases=["i"], usage="info <subcommand>")
     async def info(self, ctx: commands.Context[Tux]) -> None:
@@ -25,6 +26,7 @@ class Info(commands.Cog):
 
         if ctx.invoked_subcommand is None:
             await ctx.send_help("info")
+
     @commands.guild_only()
     @info.command(name="server", aliases=["s"], usage="info server")
     async def server(self, ctx: commands.Context[Tux]) -> None:
@@ -65,6 +67,7 @@ class Info(commands.Cog):
         )
 
         await ctx.send(embed=embed)
+
     @commands.guild_only()
     @info.command(name="member", aliases=["m", "user", "u"], usage="info member [member]")
     async def member(self, ctx: commands.Context[Tux], member: discord.Member) -> None:
@@ -109,6 +112,7 @@ class Info(commands.Cog):
         )
 
         await ctx.send(embed=embed)
+
     @commands.guild_only()
     @info.command(name="roles", aliases=["r"], usage="info roles")
     async def roles(self, ctx: commands.Context[Tux]) -> None:
