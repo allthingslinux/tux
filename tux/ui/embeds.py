@@ -52,27 +52,42 @@ class EmbedCreator:
         """
         Create a customized Discord embed based on the specified type and parameters.
 
-        Args:
-            embed_type (EmbedType): Determines the default color and icon for the embed.
-            bot (Tux | None): If provided, used to display bot latency in the footer.
-            title (str | None): The embed's title. At least one of title or description should be provided.
-            description (str | None): The embed's main content. At least one of title or description should be provided.
-            user_name (str | None): Used in footer if provided, otherwise defaults to bot's username.
-            user_display_avatar (str | None): User's avatar URL for the footer icon.
-            image_url (str | None): URL for the embed's main image.
-            thumbnail_url (str | None): URL for the embed's thumbnail image.
-            message_timestamp (datetime | None): Custom timestamp for the embed.
-            custom_footer_text (str | None): Overrides default footer text if provided.
-            custom_footer_icon_url (str | None): Overrides default footer icon if provided.
-            custom_author_text (str | None): Overrides default author text if provided.
-            custom_author_text_url (str | None): Adds author URL if provided.
-            custom_author_icon_url (str | None): Overrides default author icon if provided.
-            hide_author (bool): If True, removes the author from the embed.
-            custom_color (int | Colour |None): Overrides default color for the embed type if provided.
-
-        Note:
-            Custom parameters (prefixed with 'custom_') override default values.
+        Parameters
+        ----------
+        embed_type : EmbedType
+            Determines the default color and icon for the embed.
+        bot : Tux, optional
+            If provided, used to display bot latency in the footer.
+        title : str, optional
+            The embed's title. At least one of `title` or `description` should be provided.
+        description : str, optional
+            The embed's main content. At least one of `title` or `description` should be provided.
+        user_name : str, optional
+            Used in footer if provided, otherwise defaults to bot's username.
+        user_display_avatar : str, optional
+            User's avatar URL for the footer icon.
+        image_url : str, optional
+            URL for the embed's main image.
+        thumbnail_url : str, optional
+            URL for the embed's thumbnail image.
+        message_timestamp : datetime, optional
+            Custom timestamp for the embed.
+        custom_footer_text : str, optional
+            Overrides default footer text if provided.
+        custom_footer_icon_url : str, optional
+            Overrides default footer icon if provided.
+        custom_author_text : str, optional
+            Overrides default author text if provided.
+        custom_author_text_url : str, optional
+            Adds author URL if provided.
+        custom_author_icon_url : str, optional
+            Overrides default author icon if provided.
+        hide_author : bool, default=False
+            If True, removes the author from the embed.
+        custom_color : int or Colour, optional
+            Overrides default color for the embed type if provided.
         """
+
         try:
             embed: discord.Embed = discord.Embed(title=title, description=description)
 
@@ -133,4 +148,8 @@ class EmbedCreator:
             raise
 
         else:
-            return (text, user_display_avatar or "https://i.imgur.com/4sblrd0.png")
+            return (
+                text,
+                user_display_avatar
+                or "https://github.com/allthingslinux/tux/blob/main/assets/branding/avatar.png?raw=true",
+            )
