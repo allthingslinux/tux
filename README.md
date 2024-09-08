@@ -152,4 +152,12 @@ See [LICENSE](LICENSE.md) for details.
 
 ## Metrics
 
-![Alt](https://repobeats.axiom.co/api/embed/b988ba04401b7c68edf9def00f5132cd2a7f3735.svg "Repobeats analytics image")
+<sub>Made with [Repobeats](https://repobeats.axiom.co).</sub>
+
+![Metrics](https://repobeats.axiom.co/api/embed/b988ba04401b7c68edf9def00f5132cd2a7f3735.svg)
+
+## Contributors
+
+<sub>Made with [contrib.rocks](https://contrib.rocks).</sub>
+
+[![Contributors](https://contrib.rocks/image?repo=allthingslinux/tux)](https://github.com/allthingslinux/tux/graphs/contributors)
