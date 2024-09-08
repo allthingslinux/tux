@@ -88,4 +88,9 @@ class ReportModal(discord.ui.Modal):
             delete_after=30,
         )
 
-        await report_log_channel.send(embed=embed)
+        message = await report_log_channel.send(embed=embed)
+        await report_log_channel.create_thread(
+            name=f"Anonymous report for {self.short.value}",  # type: ignore
+            message=message,
+            auto_archive_duration=10080,
+        )
