@@ -29,9 +29,8 @@ Below is the hierarchy of permission levels available in Tux:
 - **4: Senior Moderator**
 - **5: Administrator**
 - **6: Head Administrator**
-- **7: Server Owner**
-- **8: Sys Admin** (User ID list in `config.json`)
-- **9: Bot Owner** (User ID in `config.json`)
+- **7: Server Owner** (Not the actual discord assigned server owner)
+- **8: Sys Admin** (User ID list in `config/settings.yml`)
+- **9: Bot Owner** (User ID in `config/settings.yml`)
 
-By leveraging these permission levels, Tux provides a robust and adaptable way to manage who can execute specific commands,
-making it suitable for various server environments.
+By leveraging these permission levels, Tux provides a robust and adaptable way to manage who can execute specific commands, making it suitable for various server environments.
