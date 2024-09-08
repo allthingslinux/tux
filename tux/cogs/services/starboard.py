@@ -212,7 +212,7 @@ class Starboard(commands.Cog):
         ----------
         starboard_channel : discord.TextChannel
             The starboard channel.
-        original_message : discord.Message
+        original_message : discord.Message`
             The original message.
         """
 
@@ -272,6 +272,9 @@ class Starboard(commands.Cog):
                 custom_footer_text=f"{reaction_count} {starboard.starboard_emoji}",
                 image_url=original_message.attachments[0].url if original_message.attachments else None,
             )
+
+            if original_message.content:
+                embed.description = original_message.content
 
             embed.add_field(name="Source", value=f"[Jump to message]({original_message.jump_url})")
 
