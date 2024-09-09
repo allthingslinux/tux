@@ -158,7 +158,7 @@ class Starboard(commands.Cog):
             await ctx.send(f"An error occurred while removing the starboard configuration: {e}")
 
     @commands.Cog.listener("on_raw_reaction_add")
-    async def starboard_check(self, payload: discord.RawReactionActionEvent) -> None:
+    async def starboard_on_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
         """
         Check if a message should be added to the starboard
 
@@ -171,6 +171,10 @@ class Starboard(commands.Cog):
         if not payload.guild_id or not payload.member:
             return
 
+        starboard = await self.starboard_controller.get_starboard_by_guild_id(payload.guild_id)
+        if not starboard or str(payload.emoji) != starboard.starboard_emoji:
+            return
+
         channel = self.bot.get_channel(payload.channel_id)
         if not isinstance(channel, discord.TextChannel):
             return
@@ -180,7 +184,6 @@ class Starboard(commands.Cog):
             if message.author.id == payload.user_id:
                 return
 
-            starboard = await self.starboard_controller.get_starboard_by_guild_id(payload.guild_id)
             if not starboard or str(payload.emoji) != starboard.starboard_emoji:
                 return
 
