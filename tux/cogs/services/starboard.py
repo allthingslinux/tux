@@ -357,6 +357,35 @@ class Starboard(commands.Cog):
         except Exception as e:
             logger.error(f"Error in starboard_on_reaction_clear: {e}")
 
+    @commands.Cog.listener("on_raw_reaction_clear_emoji")
+    async def starboard_on_reaction_clear_emoji(self, payload: discord.RawReactionClearEmojiEvent) -> None:
+        """Remove the starboard message when the starboard emoji is cleared from the original message"""
+        if not payload.guild_id:
+            return
+
+        try:
+            channel = self.bot.get_channel(payload.channel_id)
+            assert isinstance(channel, discord.TextChannel)
+
+            message = await channel.fetch_message(payload.message_id)
+            assert isinstance(message, discord.Message)
+
+            starboard = await self.starboard_controller.get_starboard_by_guild_id(payload.guild_id)
+
+            if not starboard or str(payload.emoji) != starboard.starboard_emoji:
+                return
+
+            starboard_channel = channel.guild.get_channel(starboard.starboard_channel_id)
+            if not isinstance(starboard_channel, discord.TextChannel):
+                return
+
+            starboard_message = await self.get_existing_starboard_message(starboard_channel, message)
+            if starboard_message:
+                await starboard_message.delete()
+
+        except Exception as e:
+            logger.error(f"Error in starboard_on_reaction_clear_emoji: {e}")
+
 
 async def setup(bot: Tux) -> None:
     await bot.add_cog(Starboard(bot))
