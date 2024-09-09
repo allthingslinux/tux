@@ -159,16 +159,8 @@ class Starboard(commands.Cog):
 
     @commands.Cog.listener("on_raw_reaction_add")
     async def starboard_on_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
-        """
-        Check if a message should be added to the starboard
-
-        Parameters
-        ----------
-        payload : discord.RawReactionActionEvent
-            The payload of the reaction event.
-        """
-
-        if not payload.guild_id or not payload.member:
+        """Check if a message should be added to the starboard"""
+        if not payload.guild_id or not payload.member or payload.member.bot:
             return
 
         starboard = await self.starboard_controller.get_starboard_by_guild_id(payload.guild_id)
@@ -184,24 +176,18 @@ class Starboard(commands.Cog):
             if message.author.id == payload.user_id:
                 return
 
-            if not starboard or str(payload.emoji) != starboard.starboard_emoji:
+            reaction = discord.utils.get(message.reactions, emoji=starboard.starboard_emoji)
+            if not reaction or reaction.count < starboard.starboard_threshold:
                 return
 
-            reaction_count = sum(r.count for r in message.reactions if str(r.emoji) == starboard.starboard_emoji)
+            starboard_channel = channel.guild.get_channel(starboard.starboard_channel_id)
+            if not isinstance(starboard_channel, discord.TextChannel):
+                return
 
-            if reaction_count >= starboard.starboard_threshold:
-                starboard_channel = channel.guild.get_channel(starboard.starboard_channel_id)
-
-                if not isinstance(starboard_channel, discord.TextChannel):
-                    logger.error(
-                        f"Starboard channel {starboard.starboard_channel_id} not found or is not a text channel",
-                    )
-                    return
-
-                await self.create_or_update_starboard_message(starboard_channel, message, reaction_count)
+            await self.create_or_update_starboard_message(starboard_channel, message, reaction.count)
 
         except Exception as e:
-            logger.error(f"Error in starboard_check: {e}")
+            logger.error(f"Unexpected error in starboard_check: {e}")
 
     async def get_existing_starboard_message(
         self,
