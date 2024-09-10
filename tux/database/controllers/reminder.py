@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from prisma.models import Guild, Reminder
 from tux.database.client import db
@@ -22,7 +22,8 @@ class ReminderController:
         return await self.table.find_first(where={"reminder_id": reminder_id})
 
     async def get_unsent_reminders(self) -> list[Reminder]:
-        return await self.table.find_many(where={"reminder_sent": False})
+        now = datetime.now(UTC)
+        return await self.table.find_many(where={"reminder_sent": False, "reminder_expires_at": {"lte": now}})
 
     async def insert_reminder(
         self,

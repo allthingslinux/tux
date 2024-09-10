@@ -19,16 +19,14 @@ class RemindMe(commands.Cog):
         self.db = DatabaseController().reminder
         self.check_reminders.start()
 
-    @tasks.loop(minutes=5)
+    @tasks.loop(seconds=120)
     async def check_reminders(self):
-        now = datetime.datetime.now(datetime.UTC)
         reminders = await self.db.get_unsent_reminders()
 
         for reminder in reminders:
-            if not reminder.reminder_sent and reminder.reminder_expires_at <= now:
-                await self.send_reminder(reminder)
-                await self.db.update_reminder_status(reminder.reminder_id, sent=True)
-                logger.debug(f'Status of reminder {reminder.reminder_id} updated to "sent".')
+            await self.send_reminder(reminder)
+            await self.db.update_reminder_status(reminder.reminder_id, sent=True)
+            logger.debug(f'Status of reminder {reminder.reminder_id} updated to "sent".')
 
     async def send_reminder(self, reminder: Reminder) -> None:
         user = self.bot.get_user(reminder.reminder_user_id)
@@ -106,8 +104,8 @@ class RemindMe(commands.Cog):
 
             embed.add_field(
                 name="Note",
-                value="- If you have DMs closed, we will attempt to send it in this channel instead, however it is not guaranteed.\n"
-                "- The reminder may be delayed by a few minutes due to the way Tux works.",
+                value="- If you have DMs closed, we will attempt to send it in this channel instead.\n"
+                "- The reminder may be delayed by up to 120 seconds due to the way Tux works.",
             )
 
         except Exception as e:
