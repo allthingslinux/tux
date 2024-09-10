@@ -252,7 +252,12 @@ class Starboard(commands.Cog):
             starboard_message = await self.get_existing_starboard_message(starboard_channel, original_message)
 
             if starboard_message:
-                await starboard_message.edit(embed=embed)
+                if starboard_message.embeds:
+                    existing_embed = starboard_message.embeds[0]
+                    if existing_embed.footer != embed.footer:
+                        await starboard_message.edit(embed=embed)
+                    else:
+                        return
             else:
                 starboard_message = await starboard_channel.send(embed=embed)
 
