@@ -69,13 +69,16 @@ def get_matching_string(arg: str) -> str:
     """
     Matches the given argument to a specific string based on common usage.
 
-    Args:
-      arg: The argument to match.
+    Parameters
+    ----------
+    arg : str
+        The argument to match.
 
-    Returns:
-      The matching string, or None if no match is found.
+    Returns
+    -------
+    str
+        The matching string, or None if no match is found.
     """
-
     match arg:
         case "user" | "target" | "member" | "name" | "username":
             return "@member"
