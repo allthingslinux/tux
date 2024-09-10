@@ -1,5 +1,4 @@
 import inspect
-import random
 from typing import Any
 
 import discord
@@ -81,7 +80,7 @@ def get_matching_string(arg: str) -> str:
         case "user" | "target" | "member" | "name" | "username":
             return "@member"
         case "number" | "num" | "n" | "limit":
-            return str(random.randint(1, 20))
+            return "14"
         case "search_term":
             return "CIA"
         case "channel":
