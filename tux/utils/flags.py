@@ -1,4 +1,5 @@
 import inspect
+import random
 from typing import Any
 
 import discord
@@ -26,50 +27,69 @@ def generate_usage(
     Returns
     -------
     str
-        The usage string for the command. Example: "ban [target] -[reason] -<silent>"
+        The usage string for the command. Example: ">ban @target -reason [-silent | -purge_days]"
     """
 
-    # Get the name of the command
     command_name = command.qualified_name
-
-    # Start the usage string with the command name
     usage = f"{command_name}"
 
-    # Get the parameters of the command (excluding the `ctx` and `flags` parameters)
     parameters: dict[str, commands.Parameter] = command.clean_params
-
     flag_prefix = getattr(flag_converter, "__commands_flag_prefix__", "-")
     flags: dict[str, commands.Flag] = flag_converter.get_flags() if flag_converter else {}
 
-    # Add non-flag arguments to the usage string
     for param_name, param in parameters.items():
-        # Ignore these parameters
         if param_name in ["ctx", "flags"]:
             continue
-        # Determine if the parameter is required
         is_required = param.default == inspect.Parameter.empty
-        # Add the parameter to the usage string with required or optional wrapping
-        usage += f" <{param_name}>" if is_required else f" [{param_name}]"
+        matching_string = get_matching_string(param_name)
 
-    # Add flag arguments to the usage string
-    # Separate required and optional flags
+        if matching_string == param_name and is_required:
+            matching_string = f"<{param_name}>"
+
+        usage += f" {matching_string}" if is_required else f" [{matching_string}]"
+
     required_flags: list[str] = []
     optional_flags: list[str] = []
     for flag_name, flag_obj in flags.items():
+        flag = f"{flag_prefix}{flag_name}"
         if flag_obj.required:
-            required_flags.append(f"{flag_prefix}{flag_name}")
+            required_flags.append(flag)
         else:
-            optional_flags.append(f"{flag_prefix}{flag_name}")
+            optional_flags.append(flag)
 
-    # Add required flags first
     for flag in required_flags:
         usage += f" {flag}"
 
-    # Add optional flags individually
-    for flag in optional_flags:
-        usage += f" [{flag}]"
+    if optional_flags:
+        usage += f" [{' | '.join(optional_flags)}]"
 
     return usage
+
+
+def get_matching_string(arg: str) -> str:
+    """
+    Matches the given argument to a specific string based on common usage.
+
+    Args:
+      arg: The argument to match.
+
+    Returns:
+      The matching string, or None if no match is found.
+    """
+
+    match arg:
+        case "user" | "target" | "member" | "name" | "username":
+            return "@member"
+        case "number" | "num" | "n" | "limit":
+            return str(random.randint(1, 20))
+        case "search_term":
+            return "CIA"
+        case "channel":
+            return "#general"
+        case "comic_id":
+            return "1337"
+        case _:
+            return arg
 
 
 class BanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
