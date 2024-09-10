@@ -38,6 +38,7 @@ class ReminderController:
                 "reminder_expires_at": reminder_expires_at,
                 "reminder_channel_id": reminder_channel_id,
                 "guild_id": guild_id,
+                "reminder_sent": False,
             },
         )
 
@@ -52,4 +53,20 @@ class ReminderController:
         return await self.table.update(
             where={"reminder_id": reminder_id},
             data={"reminder_content": reminder_content},
+        )
+
+    async def update_reminder_status(self, reminder_id: int, sent: bool = True) -> None:
+        """
+        Update the status of a reminder. This sets the value "reminder_sent" to True by default.
+
+        Parameters
+        ----------
+        reminder_id : int
+            The ID of the reminder to update.
+        sent : bool
+            The new status of the reminder.
+        """
+        await self.table.update(
+            where={"reminder_id": reminder_id},
+            data={"reminder_sent": sent},
         )
