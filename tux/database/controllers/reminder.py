@@ -21,6 +21,9 @@ class ReminderController:
     async def get_reminder_by_id(self, reminder_id: int) -> Reminder | None:
         return await self.table.find_first(where={"reminder_id": reminder_id})
 
+    async def get_unsent_reminders(self) -> list[Reminder]:
+        return await self.table.find_many(where={"reminder_sent": False})
+
     async def insert_reminder(
         self,
         reminder_user_id: int,
