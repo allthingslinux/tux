@@ -57,11 +57,13 @@ class RemindMe(commands.Cog):
 
                 else:
                     logger.error(
-                        f"Failed to send reminder to {user.id}, DMs closed and channel not found.",
+                        f"Failed to send reminder {reminder.reminder_id}, DMs closed and channel not found.",
                     )
 
         else:
-            logger.error(f"Failed to send reminder to {reminder.reminder_user_id}, user not found.")
+            logger.error(
+                f"Failed to send reminder {reminder.reminder_id}, user with ID {reminder.reminder_user_id} not found.",
+            )
 
     @check_reminders.before_loop
     async def before_check_reminders(self):
