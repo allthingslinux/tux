@@ -110,6 +110,7 @@ model Reminder {
   reminder_expires_at DateTime
   reminder_channel_id BigInt
   reminder_user_id    BigInt
+  reminder_sent       Boolean  @default(false)
   guild_id            BigInt
   guild               Guild    @relation(fields: [guild_id], references: [guild_id])
 
