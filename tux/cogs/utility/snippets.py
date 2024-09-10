@@ -14,6 +14,7 @@ from tux.bot import Tux
 from tux.database.controllers import CaseController, DatabaseController
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
+from tux.utils.flags import generate_usage
 
 
 class Snippets(commands.Cog):
@@ -22,6 +23,15 @@ class Snippets(commands.Cog):
         self.db = DatabaseController().snippet
         self.config = DatabaseController().guild_config
         self.case_controller = CaseController()
+        self.list_snippets.usage = generate_usage(self.list_snippets)
+        self.top_snippets.usage = generate_usage(self.top_snippets)
+        self.delete_snippet.usage = generate_usage(self.delete_snippet)
+        self.force_delete_snippet.usage = generate_usage(self.force_delete_snippet)
+        self.get_snippet.usage = generate_usage(self.get_snippet)
+        self.get_snippet_info.usage = generate_usage(self.get_snippet_info)
+        self.create_snippet.usage = generate_usage(self.create_snippet)
+        self.edit_snippet.usage = generate_usage(self.edit_snippet)
+        self.toggle_snippet_lock.usage = generate_usage(self.toggle_snippet_lock)
 
     async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
         ban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETBAN)
@@ -35,7 +45,6 @@ class Snippets(commands.Cog):
     @commands.command(
         name="snippets",
         aliases=["ls"],
-        usage="snippets",
     )
     @commands.guild_only()
     async def list_snippets(self, ctx: commands.Context[Tux]) -> None:
@@ -111,7 +120,6 @@ class Snippets(commands.Cog):
     @commands.command(
         name="topsnippets",
         aliases=["ts"],
-        usage="topsnippets",
     )
     @commands.guild_only()
     async def top_snippets(self, ctx: commands.Context[Tux]) -> None:
@@ -160,7 +168,6 @@ class Snippets(commands.Cog):
     @commands.command(
         name="deletesnippet",
         aliases=["ds"],
-        usage="deletesnippet [name]",
     )
     @commands.guild_only()
     async def delete_snippet(self, ctx: commands.Context[Tux], name: str) -> None:
@@ -205,7 +212,6 @@ class Snippets(commands.Cog):
     @commands.command(
         name="forcedeletesnippet",
         aliases=["fds"],
-        usage="forcedeletesnippet [name]",
     )
     @commands.guild_only()
     @checks.has_pl(2)
@@ -237,7 +243,6 @@ class Snippets(commands.Cog):
     @commands.command(
         name="snippet",
         aliases=["s"],
-        usage="snippet [name]",
     )
     @commands.guild_only()
     async def get_snippet(self, ctx: commands.Context[Tux], name: str) -> None:
@@ -280,7 +285,6 @@ class Snippets(commands.Cog):
     @commands.command(
         name="snippetinfo",
         aliases=["si"],
-        usage="snippetinfo [name]",
     )
     @commands.guild_only()
     async def get_snippet_info(self, ctx: commands.Context[Tux], name: str) -> None:
@@ -329,7 +333,6 @@ class Snippets(commands.Cog):
     @commands.command(
         name="createsnippet",
         aliases=["cs"],
-        usage="createsnippet [name] [content]",
     )
     @commands.guild_only()
     async def create_snippet(self, ctx: commands.Context[Tux], *, arg: str) -> None:
@@ -390,7 +393,6 @@ class Snippets(commands.Cog):
     @commands.command(
         name="editsnippet",
         aliases=["es"],
-        usage="editsnippet [name] [content]",
     )
     @commands.guild_only()
     async def edit_snippet(self, ctx: commands.Context[Tux], *, arg: str) -> None:
@@ -458,7 +460,6 @@ class Snippets(commands.Cog):
     @commands.command(
         name="togglesnippetlock",
         aliases=["tsl"],
-        usage="togglesnippetlock [name]",
     )
     @commands.guild_only()
     @checks.has_pl(2)

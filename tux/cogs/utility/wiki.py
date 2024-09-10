@@ -4,6 +4,7 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
+from tux.utils.flags import generate_usage
 
 
 class Wiki(commands.Cog):
@@ -11,6 +12,9 @@ class Wiki(commands.Cog):
         self.bot = bot
         self.arch_wiki_base_url = "https://wiki.archlinux.org/api.php"
         self.atl_wiki_base_url = "https://atl.wiki/api.php"
+        self.wiki.usage = generate_usage(self.wiki)
+        self.arch_wiki.usage = generate_usage(self.arch_wiki)
+        self.atl_wiki.usage = generate_usage(self.atl_wiki)
 
     def query_arch_wiki(self, search_term: str) -> tuple[str, str]:
         """
@@ -84,7 +88,6 @@ class Wiki(commands.Cog):
 
     @commands.hybrid_group(
         name="wiki",
-        usage="wiki [arch|atl]",
         aliases=["wk"],
     )
     async def wiki(self, ctx: commands.Context[Tux]) -> None:
@@ -102,7 +105,6 @@ class Wiki(commands.Cog):
 
     @wiki.command(
         name="arch",
-        usage="wiki arch [query]",
     )
     async def arch_wiki(self, ctx: commands.Context[Tux], query: str) -> None:
         """
@@ -141,7 +143,6 @@ class Wiki(commands.Cog):
 
     @wiki.command(
         name="atl",
-        usage="wiki atl [query]",
     )
     async def atl_wiki(self, ctx: commands.Context[Tux], query: str) -> None:
         """

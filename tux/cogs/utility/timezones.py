@@ -7,6 +7,7 @@ from reactionmenu import Page, ViewButton, ViewMenu, ViewSelect
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator, EmbedType
+from tux.utils.flags import generate_usage
 
 timezones = {
     "North America": [
@@ -90,11 +91,11 @@ continent_emojis = {
 class Timezones(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
+        self.timezones.usage = generate_usage(self.timezones)
 
     @commands.hybrid_command(
         name="timezones",
         aliases=["tz"],
-        usage="timezones",
     )
     async def timezones(self, ctx: commands.Context[Tux]) -> None:
         utc_now = datetime.now(UTC)

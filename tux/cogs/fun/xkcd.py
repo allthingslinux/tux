@@ -5,6 +5,7 @@ from loguru import logger
 from tux.bot import Tux
 from tux.ui.buttons import XkcdButtons
 from tux.ui.embeds import EmbedCreator
+from tux.utils.flags import generate_usage
 from tux.wrappers import xkcd
 
 
@@ -12,11 +13,14 @@ class Xkcd(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.client = xkcd.Client()
+        self.xkcd.usage = generate_usage(self.xkcd)
+        self.latest.usage = generate_usage(self.latest)
+        self.random.usage = generate_usage(self.random)
+        self.specific.usage = generate_usage(self.specific)
 
     @commands.hybrid_group(
         name="xkcd",
         aliases=["xk"],
-        usage="xkcd <subcommand>",
     )
     @commands.guild_only()
     async def xkcd(self, ctx: commands.Context[Tux], comic_id: int | None = None) -> None:
@@ -39,7 +43,6 @@ class Xkcd(commands.Cog):
     @xkcd.command(
         name="latest",
         aliases=["l", "new", "n"],
-        usage="xkcd latest",
     )
     @commands.guild_only()
     async def latest(self, ctx: commands.Context[Tux]) -> None:
@@ -62,7 +65,6 @@ class Xkcd(commands.Cog):
     @xkcd.command(
         name="random",
         aliases=["rand", "r"],
-        usage="xkcd random",
     )
     @commands.guild_only()
     async def random(self, ctx: commands.Context[Tux]) -> None:
@@ -85,7 +87,6 @@ class Xkcd(commands.Cog):
     @xkcd.command(
         name="specific",
         aliases=["s", "id", "num"],
-        usage="xkcd specific [comic_id]",
     )
     @commands.guild_only()
     async def specific(self, ctx: commands.Context[Tux], comic_id: int) -> None:

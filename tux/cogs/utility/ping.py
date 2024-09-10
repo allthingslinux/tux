@@ -3,15 +3,16 @@ from discord.ext import commands
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
+from tux.utils.flags import generate_usage
 
 
 class Ping(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
+        self.ping.usage = generate_usage(self.ping)
 
     @commands.hybrid_command(
         name="ping",
-        usage="ping",
     )
     async def ping(self, ctx: commands.Context[Tux]) -> None:
         """

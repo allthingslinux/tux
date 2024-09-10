@@ -45,8 +45,7 @@ class ReportModal(discord.ui.Modal):
         embed = EmbedCreator.create_embed(
             bot=self.bot,
             embed_type=EmbedCreator.INFO,
-            user_name=interaction.user.name,
-            user_display_avatar=interaction.user.display_avatar.url,
+            user_name="tux",
             title=(f"Anonymous report for {self.short.value}"),  # type: ignore
             description=self.long.value,  # type: ignore
         )
@@ -89,4 +88,9 @@ class ReportModal(discord.ui.Modal):
             delete_after=30,
         )
 
-        await report_log_channel.send(embed=embed)
+        message = await report_log_channel.send(embed=embed)
+        await report_log_channel.create_thread(
+            name=f"Anonymous report for {self.short.value}",  # type: ignore
+            message=message,
+            auto_archive_duration=10080,
+        )
