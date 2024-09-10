@@ -67,11 +67,11 @@ class Unjail(ModerationCogBase):
         try:
             previous_roles = [await commands.RoleConverter().convert(ctx, str(role)) for role in case.case_user_roles]
             if previous_roles:
-                await member.remove_roles(jail_role, reason=flags.reason, atomic=True)
+                await member.remove_roles(jail_role, reason=flags.reason)
                 await member.add_roles(*previous_roles, reason=flags.reason, atomic=True)
             else:
                 await ctx.send("No previous roles found for the member.", delete_after=30, ephemeral=True)
-                return
+                await member.remove_roles(jail_role, reason=flags.reason)
 
         except (discord.Forbidden, discord.HTTPException) as e:
             logger.error(f"Failed to unjail member {member}. {e}")
@@ -86,7 +86,9 @@ class Unjail(ModerationCogBase):
             case_reason=flags.reason,
         )
 
-        await self.handle_case_response(ctx, CaseType.UNJAIL, unjail_case.case_number, flags.reason, member)
+        dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "unjailed")
+
+        await self.handle_case_response(ctx, CaseType.UNJAIL, unjail_case.case_number, flags.reason, member, dm_sent)
 
 
 async def setup(bot: Tux) -> None:

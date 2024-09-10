@@ -47,8 +47,6 @@ class Warn(ModerationCogBase):
         if not await self.check_conditions(ctx, member, moderator, "warn"):
             return
 
-        await self.send_dm(ctx, flags.silent, member, flags.reason, "warned")
-
         case = await self.db.case.insert_case(
             case_user_id=member.id,
             case_moderator_id=ctx.author.id,
@@ -57,7 +55,8 @@ class Warn(ModerationCogBase):
             guild_id=ctx.guild.id,
         )
 
-        await self.handle_case_response(ctx, CaseType.WARN, case.case_number, flags.reason, member)
+        dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "warn")
+        await self.handle_case_response(ctx, CaseType.WARN, case.case_number, flags.reason, member, dm_sent)
 
 
 async def setup(bot: Tux) -> None:

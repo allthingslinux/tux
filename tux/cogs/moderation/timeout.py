@@ -77,8 +77,17 @@ class Timeout(ModerationCogBase):
             guild_id=ctx.guild.id,
         )
 
-        await self.send_dm(ctx, flags.silent, member, flags.reason, f"timed out for {flags.duration}")
-        await self.handle_case_response(ctx, CaseType.TIMEOUT, case.case_number, flags.reason, member, flags.duration)
+        dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, f"timed out for {flags.duration}")
+
+        await self.handle_case_response(
+            ctx,
+            CaseType.TIMEOUT,
+            case.case_number,
+            flags.reason,
+            member,
+            dm_sent,
+            flags.duration,
+        )
 
 
 async def setup(bot: Tux) -> None:
