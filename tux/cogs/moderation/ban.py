@@ -53,7 +53,7 @@ class Ban(ModerationCogBase):
             return
 
         try:
-            await self.send_dm(ctx, flags.silent, member, flags.reason, action="banned")
+            dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "banned")
             await ctx.guild.ban(member, reason=flags.reason, delete_message_days=flags.purge_days)
 
         except (discord.Forbidden, discord.HTTPException) as e:
@@ -69,7 +69,7 @@ class Ban(ModerationCogBase):
             guild_id=ctx.guild.id,
         )
 
-        await self.handle_case_response(ctx, CaseType.BAN, case.case_number, flags.reason, member)
+        await self.handle_case_response(ctx, CaseType.BAN, case.case_number, flags.reason, member, dm_sent)
 
 
 async def setup(bot: Tux) -> None:

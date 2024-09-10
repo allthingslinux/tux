@@ -58,7 +58,7 @@ class TempBan(ModerationCogBase):
         expires_at = datetime.now(UTC) + duration
 
         try:
-            await self.send_dm(ctx, flags.silent, member, flags.reason, action="temp banned")
+            dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, action="temp banned")
             await ctx.guild.ban(member, reason=flags.reason, delete_message_days=flags.purge_days)
 
         except (discord.Forbidden, discord.HTTPException) as e:
@@ -76,7 +76,7 @@ class TempBan(ModerationCogBase):
             case_tempban_expired=False,
         )
 
-        await self.handle_case_response(ctx, CaseType.TEMPBAN, case.case_number, flags.reason, member)
+        await self.handle_case_response(ctx, CaseType.TEMPBAN, case.case_number, flags.reason, member, dm_sent)
 
     @tasks.loop(hours=1)
     async def tempban_check(self) -> None:

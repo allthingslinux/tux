@@ -102,8 +102,8 @@ class Jail(ModerationCogBase):
             await ctx.send(f"Failed to jail {member}. {e}", delete_after=30, ephemeral=True)
             return
 
-        await self.send_dm(ctx, flags.silent, member, flags.reason, "jailed")
-        await self.handle_case_response(ctx, CaseType.JAIL, case.case_number, flags.reason, member)
+        dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "jailed")
+        await self.handle_case_response(ctx, CaseType.JAIL, case.case_number, flags.reason, member, dm_sent)
 
     def _get_manageable_roles(
         self,

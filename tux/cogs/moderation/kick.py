@@ -56,7 +56,8 @@ class Kick(ModerationCogBase):
             return
 
         try:
-            await self.send_dm(ctx, flags.silent, member, flags.reason, "kicked")
+            dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "kicked")
+
             await ctx.guild.kick(member, reason=flags.reason)
 
         except (discord.Forbidden, discord.HTTPException) as e:
@@ -72,7 +73,7 @@ class Kick(ModerationCogBase):
             guild_id=ctx.guild.id,
         )
 
-        await self.handle_case_response(ctx, CaseType.KICK, case.case_number, flags.reason, member)
+        await self.handle_case_response(ctx, CaseType.KICK, case.case_number, flags.reason, member, dm_sent)
 
 
 async def setup(bot: Tux) -> None:

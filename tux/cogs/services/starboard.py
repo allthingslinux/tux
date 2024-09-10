@@ -1,3 +1,4 @@
+import contextlib
 from datetime import UTC, datetime, timedelta
 
 import discord
@@ -19,6 +20,22 @@ class Starboard(commands.Cog):
         self.starboard.usage = generate_usage(self.starboard)
         self.setup_starboard.usage = generate_usage(self.setup_starboard)
         self.remove_starboard.usage = generate_usage(self.remove_starboard)
+
+    @commands.Cog.listener("on_raw_reaction_add")
+    async def starboard_on_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
+        await self.handle_starboard_reaction(payload)
+
+    @commands.Cog.listener("on_raw_reaction_remove")
+    async def starboard_on_reaction_remove(self, payload: discord.RawReactionActionEvent) -> None:
+        await self.handle_starboard_reaction(payload)
+
+    @commands.Cog.listener("on_raw_reaction_clear")
+    async def starboard_on_reaction_clear(self, payload: discord.RawReactionClearEvent) -> None:
+        await self.handle_reaction_clear(payload)
+
+    @commands.Cog.listener("on_raw_reaction_clear_emoji")
+    async def starboard_on_reaction_clear_emoji(self, payload: discord.RawReactionClearEmojiEvent) -> None:
+        await self.handle_reaction_clear(payload, payload.emoji)
 
     @commands.hybrid_group(
         name="starboard",
@@ -160,49 +177,6 @@ class Starboard(commands.Cog):
             logger.error(f"Error removing starboard configuration: {e}")
             await ctx.send(f"An error occurred while removing the starboard configuration: {e}")
 
-    @commands.Cog.listener("on_raw_reaction_add")
-    async def starboard_check(self, payload: discord.RawReactionActionEvent) -> None:
-        """
-        Check if a message should be added to the starboard
-
-        Parameters
-        ----------
-        payload : discord.RawReactionActionEvent
-            The payload of the reaction event.
-        """
-
-        if not payload.guild_id or not payload.member:
-            return
-
-        channel = self.bot.get_channel(payload.channel_id)
-        if not isinstance(channel, discord.TextChannel):
-            return
-
-        try:
-            message = await channel.fetch_message(payload.message_id)
-            if message.author.id == payload.user_id:
-                return
-
-            starboard = await self.starboard_controller.get_starboard_by_guild_id(payload.guild_id)
-            if not starboard or str(payload.emoji) != starboard.starboard_emoji:
-                return
-
-            reaction_count = sum(r.count for r in message.reactions if str(r.emoji) == starboard.starboard_emoji)
-
-            if reaction_count >= starboard.starboard_threshold:
-                starboard_channel = channel.guild.get_channel(starboard.starboard_channel_id)
-
-                if not isinstance(starboard_channel, discord.TextChannel):
-                    logger.error(
-                        f"Starboard channel {starboard.starboard_channel_id} not found or is not a text channel",
-                    )
-                    return
-
-                await self.create_or_update_starboard_message(starboard_channel, message, reaction_count)
-
-        except Exception as e:
-            logger.error(f"Error in starboard_check: {e}")
-
     async def get_existing_starboard_message(
         self,
         starboard_channel: discord.TextChannel,
@@ -268,6 +242,7 @@ class Starboard(commands.Cog):
 
             embed = EmbedCreator.create_embed(
                 embed_type=EmbedType.INFO,
+                description=original_message.content,
                 custom_color=discord.Color.gold(),
                 message_timestamp=original_message.created_at,
                 custom_author_text=original_message.author.display_name,
@@ -275,16 +250,17 @@ class Starboard(commands.Cog):
                 custom_footer_text=f"{reaction_count} {starboard.starboard_emoji}",
                 image_url=original_message.attachments[0].url if original_message.attachments else None,
             )
-
-            if original_message.content:
-                embed.description = original_message.content
-
             embed.add_field(name="Source", value=f"[Jump to message]({original_message.jump_url})")
 
             starboard_message = await self.get_existing_starboard_message(starboard_channel, original_message)
 
             if starboard_message:
-                await starboard_message.edit(embed=embed)
+                if starboard_message.embeds:
+                    existing_embed = starboard_message.embeds[0]
+                    if existing_embed.footer != embed.footer:
+                        await starboard_message.edit(embed=embed)
+                    else:
+                        return
             else:
                 starboard_message = await starboard_channel.send(embed=embed)
 
@@ -301,6 +277,77 @@ class Starboard(commands.Cog):
 
         except Exception as e:
             logger.error(f"Error while creating or updating starboard message: {e}")
+
+    async def handle_starboard_reaction(self, payload: discord.RawReactionActionEvent) -> None:
+        """Handle starboard reaction add or remove"""
+        if not payload.guild_id:
+            return
+
+        starboard = await self.starboard_controller.get_starboard_by_guild_id(payload.guild_id)
+        if not starboard or str(payload.emoji) != starboard.starboard_emoji:
+            return
+
+        channel = self.bot.get_channel(payload.channel_id)
+        if not isinstance(channel, discord.TextChannel):
+            return
+
+        try:
+            message = await channel.fetch_message(payload.message_id)
+            reaction = discord.utils.get(message.reactions, emoji=starboard.starboard_emoji)
+            reaction_count = reaction.count if reaction else 0
+
+            if reaction:
+                async for user in reaction.users():
+                    if user.id == message.author.id:
+                        reaction_count -= 1
+                        with contextlib.suppress(Exception):
+                            await message.remove_reaction(starboard.starboard_emoji, message.author)
+
+            starboard_channel = channel.guild.get_channel(starboard.starboard_channel_id)
+            if not isinstance(starboard_channel, discord.TextChannel):
+                return
+
+            if reaction_count >= starboard.starboard_threshold:
+                await self.create_or_update_starboard_message(starboard_channel, message, reaction_count)
+
+            else:
+                existing_starboard_message = await self.get_existing_starboard_message(starboard_channel, message)
+                if existing_starboard_message:
+                    await existing_starboard_message.delete()
+
+        except Exception as e:
+            logger.error(f"Unexpected error in handle_starboard_reaction: {e}")
+
+    async def handle_reaction_clear(
+        self,
+        payload: discord.RawReactionClearEvent | discord.RawReactionClearEmojiEvent,
+        emoji: discord.PartialEmoji | None = None,
+    ) -> None:
+        """Handle reaction clear for all emojis or a specific emoji"""
+        if not payload.guild_id:
+            return
+
+        try:
+            channel = self.bot.get_channel(payload.channel_id)
+            if not isinstance(channel, discord.TextChannel):
+                return
+
+            message = await channel.fetch_message(payload.message_id)
+            starboard = await self.starboard_controller.get_starboard_by_guild_id(payload.guild_id)
+
+            if not starboard or (emoji and str(emoji) != starboard.starboard_emoji):
+                return
+
+            starboard_channel = channel.guild.get_channel(starboard.starboard_channel_id)
+            if not isinstance(starboard_channel, discord.TextChannel):
+                return
+
+            starboard_message = await self.get_existing_starboard_message(starboard_channel, message)
+            if starboard_message:
+                await starboard_message.delete()
+
+        except Exception as e:
+            logger.error(f"Error in handle_reaction_clear: {e}")
 
 
 async def setup(bot: Tux) -> None:

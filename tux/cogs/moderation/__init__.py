@@ -107,7 +107,7 @@ class ModerationCogBase(commands.Cog):
         user: discord.Member,
         reason: str,
         action: str,
-    ) -> None:
+    ) -> bool:
         """
         Send a DM to the target user.
 
@@ -127,13 +127,15 @@ class ModerationCogBase(commands.Cog):
 
         if not silent:
             try:
-                await user.send(
-                    f"You have been {action} from {ctx.guild} for the following reason:\n> {reason}",
-                )
+                await user.send(f"You have been {action} from {ctx.guild} for the following reason:\n> {reason}")
 
             except (discord.Forbidden, discord.HTTPException) as e:
                 logger.warning(f"Failed to send DM to {user}. {e}")
-                await ctx.send(f"Failed to send DM to {user}. {e}", delete_after=30, ephemeral=True)
+                return False
+            else:
+                return True
+        else:
+            return False
 
     async def check_conditions(
         self,
@@ -209,6 +211,7 @@ class ModerationCogBase(commands.Cog):
         case_number: int | None,
         reason: str,
         user: discord.Member | discord.User,
+        dm_sent: bool,
         duration: str | None = None,
     ):
         moderator = ctx.author
@@ -239,6 +242,11 @@ class ModerationCogBase(commands.Cog):
                 color=CONST.EMBED_COLORS["CASE"],
                 icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
             )
+
+        if dm_sent:
+            embed.description = "A DM has been sent to the user."
+        else:
+            embed.description = "DMs are disabled for this user."
 
         await self.send_embed(ctx, embed, log_type="mod")
         await ctx.send(embed=embed, delete_after=30, ephemeral=True)
