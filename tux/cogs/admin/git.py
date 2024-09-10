@@ -6,6 +6,7 @@ from tux.ui.buttons import GithubButton
 from tux.ui.embeds import EmbedCreator
 from tux.utils import checks
 from tux.utils.constants import Constants as CONST
+from tux.utils.flags import generate_usage
 from tux.wrappers.github import GithubService
 
 # TODO: Rewrite this cog to use the new hybrid command system.
@@ -16,11 +17,14 @@ class Git(commands.Cog):
         self.bot = bot
         self.github = GithubService()
         self.repo_url = CONST.GITHUB_REPO_URL
+        self.git.usage = generate_usage(self.git)
+        self.get_repo.usage = generate_usage(self.get_repo)
+        self.create_issue.usage = generate_usage(self.create_issue)
+        self.get_issue.usage = generate_usage(self.get_issue)
 
     @commands.hybrid_group(
         name="git",
         aliases=["g"],
-        usage="git <subcommand>",
     )
     @commands.guild_only()
     @checks.has_pl(8)
@@ -40,7 +44,6 @@ class Git(commands.Cog):
     @git.command(
         name="get_repo",
         aliases=["r"],
-        usage="git get_repo",
     )
     @commands.guild_only()
     @checks.has_pl(8)
@@ -81,7 +84,6 @@ class Git(commands.Cog):
     @git.command(
         name="create_issue",
         aliases=["ci"],
-        usage="git create_issue [title] [body]",
     )
     @commands.guild_only()
     # @checks.has_pl(8)
@@ -127,7 +129,6 @@ class Git(commands.Cog):
     @git.command(
         name="get_issue",
         aliases=["gi", "issue", "i"],
-        usage="git get_issue [issue_number]",
     )
     @commands.guild_only()
     @checks.has_pl(8)

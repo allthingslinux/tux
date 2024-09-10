@@ -15,7 +15,7 @@ class Slowmode(commands.Cog):
     @commands.hybrid_command(
         name="slowmode",
         aliases=["sm"],
-        usage="slowmode <delay|get> [channel] or slowmode [channel] <delay|get>",
+        usage="slowmode <delay|get> [channel]\nor slowmode [channel] <delay|get>",  # only place where generate_usage shouldn't be used
     )
     @commands.guild_only()
     @checks.has_pl(2)

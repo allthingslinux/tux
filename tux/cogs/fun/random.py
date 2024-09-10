@@ -4,16 +4,21 @@ from discord.ext import commands
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
+from tux.utils.flags import generate_usage
 
 
 class Random(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
+        self.random.usage = generate_usage(self.random)
+        self.coinflip.usage = generate_usage(self.coinflip)
+        self.eight_ball.usage = generate_usage(self.eight_ball)
+        self.dice.usage = generate_usage(self.dice)
+        self.random_number.usage = generate_usage(self.random_number)
 
     @commands.hybrid_group(
         name="random",
         aliases=["rand"],
-        usage="random <subcommand>",
     )
     @commands.guild_only()
     async def random(self, ctx: commands.Context[Tux]) -> None:
@@ -31,7 +36,6 @@ class Random(commands.Cog):
     @random.command(
         name="coinflip",
         aliases=["cf"],
-        usage="random coinflip",
     )
     @commands.guild_only()
     async def coinflip(self, ctx: commands.Context[Tux]) -> None:
@@ -51,7 +55,6 @@ class Random(commands.Cog):
     @random.command(
         name="8ball",
         aliases=["eightball", "8b"],
-        usage="random 8ball [question]",
     )
     @commands.guild_only()
     async def eight_ball(self, ctx: commands.Context[Tux], *, question: str, cow: bool = False) -> None:
@@ -155,7 +158,6 @@ class Random(commands.Cog):
     @random.command(
         name="dice",
         aliases=["d"],
-        usage="random dice <sides>",
     )
     @commands.guild_only()
     async def dice(self, ctx: commands.Context[Tux], sides: int = 6) -> None:
@@ -188,7 +190,6 @@ class Random(commands.Cog):
     @random.command(
         name="number",
         aliases=["n"],
-        usage="random number <min> <max>",
     )
     @commands.guild_only()
     async def random_number(

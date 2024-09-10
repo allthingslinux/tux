@@ -6,15 +6,27 @@ from reactionmenu import ViewButton, ViewMenu
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator, EmbedType
+from tux.utils.flags import generate_usage
 
 
 class Info(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
+        self.info.usage = generate_usage(self.info)
+        self.server.usage = generate_usage(self.server)
+        self.member.usage = generate_usage(self.member)
+        self.roles.usage = generate_usage(self.roles)
+        self.emotes.usage = generate_usage(self.emotes)
 
+    @commands.hybrid_group(
+        name="info",
+        aliases=["i"],
+    )
     @commands.guild_only()
-    @commands.hybrid_group(name="info", aliases=["i"], usage="info <subcommand>")
-    async def info(self, ctx: commands.Context[Tux]) -> None:
+    async def info(
+        self,
+        ctx: commands.Context[Tux],
+    ) -> None:
         """
         Information commands.
 
@@ -27,8 +39,11 @@ class Info(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.send_help("info")
 
+    @info.command(
+        name="server",
+        aliases=["s"],
+    )
     @commands.guild_only()
-    @info.command(name="server", aliases=["s"], usage="info server")
     async def server(self, ctx: commands.Context[Tux]) -> None:
         """
         Show information about the server.
@@ -68,8 +83,11 @@ class Info(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @info.command(
+        name="member",
+        aliases=["m", "user", "u"],
+    )
     @commands.guild_only()
-    @info.command(name="member", aliases=["m", "user", "u"], usage="info member [member]")
     async def member(self, ctx: commands.Context[Tux], member: discord.Member) -> None:
         """
         Show information about a member.
@@ -113,8 +131,11 @@ class Info(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @info.command(
+        name="roles",
+        aliases=["r"],
+    )
     @commands.guild_only()
-    @info.command(name="roles", aliases=["r"], usage="info roles")
     async def roles(self, ctx: commands.Context[Tux]) -> None:
         """
         List all roles in the server.
@@ -131,7 +152,10 @@ class Info(commands.Cog):
 
         await self.paginated_embed(ctx, "Server Roles", "roles", guild.name, roles, 32)
 
-    @info.command(name="emotes", aliases=["e"], usage="info emotes")
+    @info.command(
+        name="emotes",
+        aliases=["e"],
+    )
     async def emotes(self, ctx: commands.Context[Tux]) -> None:
         """
         List all emotes in the server.
