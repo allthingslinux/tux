@@ -1,79 +1,38 @@
-import base64
-import os
-from pathlib import Path
 from typing import Final
-
-import yaml
-from dotenv import load_dotenv, set_key
-
-load_dotenv(verbose=True)
-
-config_file = Path("config/settings.yml")
-config = yaml.safe_load(config_file.read_text())
 
 
 class Constants:
-    # Permission constants
-    BOT_OWNER_ID: Final[int] = config["USER_IDS"]["BOT_OWNER"]
-    SYSADMIN_IDS: Final[list[int]] = config["USER_IDS"]["SYSADMINS"]
-
-    # env constants
-    DEV: Final[str | None] = os.getenv("DEV")
-    TOKEN: Final[str] = os.getenv("TUX_TOKEN", "")
-
-    # Prefix constants
-    DEFAULT_PROD_PREFIX: Final[str] = config["DEFAULT_PREFIX"]["PROD"]
-    DEFAULT_DEV_PREFIX: Final[str] = config["DEFAULT_PREFIX"]["DEV"]
-    DEFAULT_PREFIX: Final[str] = DEFAULT_DEV_PREFIX if DEV and DEV.lower() == "true" else DEFAULT_PROD_PREFIX
-
-    # Cog ignore list constants
-    PROD_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("PROD_COG_IGNORE_LIST", "").split(","))
-    DEV_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("DEV_COG_IGNORE_LIST", "").split(","))
-    COG_IGNORE_LIST: Final[set[str]] = DEV_COG_IGNORE_LIST if DEV and DEV.lower() == "true" else PROD_COG_IGNORE_LIST
-
-    # Database constants
-    POSTGRES_PASSWORD: Final[str] = os.getenv("POSTGRES_PASSWORD", "tux")
-    POSTGRES_PORT: Final[str] = os.getenv("POSTGRES_PORT", "5432")
-
-    # Set final database string in .env
-    DATABASE_URL: Final[str] = f"postgresql://postgres:{POSTGRES_PASSWORD}@db:{POSTGRES_PORT}/postgres"
-    set_key(".env", "DATABASE_URL", DATABASE_URL)
-
-    # Debug env constants
-    DEBUG: Final[bool] = bool(os.getenv("DEBUG", "True"))
-
-    # Sentry-related constants
-    SENTRY_URL: Final[str | None] = os.getenv("SENTRY_URL", "")
-
-    # GitHub constants
-    GITHUB_REPO_URL: Final[str] = os.getenv("GITHUB_REPO_URL", "")
-    GITHUB_REPO_OWNER: Final[str] = os.getenv("GITHUB_REPO_OWNER", "")
-    GITHUB_REPO: Final[str] = os.getenv("GITHUB_REPO", "")
-    GITHUB_TOKEN: Final[str] = os.getenv("GITHUB_TOKEN", "")
-    GITHUB_APP_ID: Final[int] = int(os.getenv("GITHUB_APP_ID") or "0")
-    GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID", "")
-    GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET", "")
-    GITHUB_PUBLIC_KEY = os.getenv("GITHUB_PUBLIC_KEY", "")
-    GITHUB_INSTALLATION_ID: Final[str] = os.getenv("GITHUB_INSTALLATION_ID") or "0"
-    GITHUB_PRIVATE_KEY: str = (
-        base64.b64decode(os.getenv("GITHUB_PRIVATE_KEY_BASE64", "")).decode("utf-8")
-        if os.getenv("GITHUB_PRIVATE_KEY_BASE64")
-        else ""
-    )
-
-    # Mailcow constants
-    MAILCOW_API_KEY: Final[str] = os.getenv("MAILCOW_API_KEY", "")
-    MAILCOW_API_URL: Final[str] = os.getenv("MAILCOW_API_URL", "")
-
-    # Temp VC constants
-    TEMPVC_CATEGORY_ID: Final[str | None] = config["TEMPVC_CATEGORY_ID"]
-    TEMPVC_CHANNEL_ID: Final[str | None] = config["TEMPVC_CHANNEL_ID"]
-
     # Color constants
-    EMBED_COLORS: Final[dict[str, int]] = config["EMBED_COLORS"]
+    EMBED_COLORS: Final[dict[str, int]] = {
+        "DEFAULT": 16044058,
+        "INFO": 12634869,
+        "WARNING": 16634507,
+        "ERROR": 16067173,
+        "SUCCESS": 10407530,
+        "POLL": 14724968,
+        "CASE": 16217742,
+        "NOTE": 16752228,
+    }
 
     # Icon constants
-    EMBED_ICONS: Final[dict[str, str]] = config["EMBED_ICONS"]
+    EMBED_ICONS: Final[dict[str, str]] = {
+        "DEFAULT": "https://i.imgur.com/owW4EZk.png",
+        "INFO": "https://i.imgur.com/8GRtR2G.png",
+        "SUCCESS": "https://i.imgur.com/JsNbN7D.png",
+        "ERROR": "https://i.imgur.com/zZjuWaU.png",
+        "CASE": "https://i.imgur.com/c43cwnV.png",
+        "NOTE": "https://i.imgur.com/VqPFbil.png",
+        "POLL": "https://i.imgur.com/pkPeG5q.png",
+        "ACTIVE_CASE": "https://github.com/allthingslinux/tux/blob/main/assets/embeds/active_case.png?raw=true",
+        "INACTIVE_CASE": "https://github.com/allthingslinux/tux/blob/main/assets/embeds/inactive_case.png?raw=true",
+        "ADD": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/added.png?raw=true",
+        "REMOVE": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/removed.png?raw=true",
+        "BAN": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/ban.png?raw=true",
+        "JAIL": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/jail.png?raw=true",
+        "KICK": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/kick.png?raw=true",
+        "TIMEOUT": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/timeout.png?raw=true",
+        "WARN": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/warn.png?raw=true",
+    }
 
     # Embed limit constants
     EMBED_MAX_NAME_LENGTH = 256
