@@ -1,0 +1,44 @@
+services:
+  tux:
+    build: .
+    container_name: tux
+    restart: always
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app/
+          ignore:
+            - .venv/
+    env_file:
+      - path: ./.env
+        required: true
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres
+    container_name: tux-db
+    restart: always
+    shm_size: 128mb
+    env_file:
+      - path: ./.env
+        required: true
+    volumes:
+      - tux_data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  adminer:
+    image: adminer
+    container_name: tux-adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+volumes:
+  tux_data:

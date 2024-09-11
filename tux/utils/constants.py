@@ -17,35 +17,33 @@ class Constants:
     BOT_OWNER_ID: Final[int] = config["USER_IDS"]["BOT_OWNER"]
     SYSADMIN_IDS: Final[list[int]] = config["USER_IDS"]["SYSADMINS"]
 
-    # Production env constants
-    PROD_TOKEN: Final[str] = os.getenv("PROD_TOKEN", "")
-    DEFAULT_PROD_PREFIX: Final[str] = config["DEFAULT_PREFIX"]["PROD"]
-    PROD_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("PROD_COG_IGNORE_LIST", "").split(","))
-
-    # Dev env constants
+    # env constants
     DEV: Final[str | None] = os.getenv("DEV")
-    DEV_TOKEN: Final[str] = os.getenv("DEV_TOKEN", "")
+    TOKEN: Final[str] = os.getenv("TUX_TOKEN", "")
+
+    # Prefix constants
+    DEFAULT_PROD_PREFIX: Final[str] = config["DEFAULT_PREFIX"]["PROD"]
     DEFAULT_DEV_PREFIX: Final[str] = config["DEFAULT_PREFIX"]["DEV"]
+    DEFAULT_PREFIX: Final[str] = DEFAULT_DEV_PREFIX if DEV and DEV.lower() == "true" else DEFAULT_PROD_PREFIX
+
+    # Cog ignore list constants
+    PROD_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("PROD_COG_IGNORE_LIST", "").split(","))
     DEV_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("DEV_COG_IGNORE_LIST", "").split(","))
+    COG_IGNORE_LIST: Final[set[str]] = DEV_COG_IGNORE_LIST if DEV and DEV.lower() == "true" else PROD_COG_IGNORE_LIST
+
+    # Database constants
+    POSTGRES_PASSWORD: Final[str] = os.getenv("POSTGRES_PASSWORD", "tux")
+    POSTGRES_PORT: Final[str] = os.getenv("POSTGRES_PORT", "5432")
+
+    # Set final database string in .env
+    DATABASE_URL: Final[str] = f"postgresql://postgres:{POSTGRES_PASSWORD}@db:{POSTGRES_PORT}/postgres"
+    set_key(".env", "DATABASE_URL", DATABASE_URL)
 
     # Debug env constants
     DEBUG: Final[bool] = bool(os.getenv("DEBUG", "True"))
 
-    # Final env constants
-    TOKEN: Final[str] = DEV_TOKEN if DEV and DEV.lower() == "true" else PROD_TOKEN
-    DEFAULT_PREFIX: Final[str] = DEFAULT_DEV_PREFIX if DEV and DEV.lower() == "true" else DEFAULT_PROD_PREFIX
-    COG_IGNORE_LIST: Final[set[str]] = DEV_COG_IGNORE_LIST if DEV and DEV.lower() == "true" else PROD_COG_IGNORE_LIST
-
     # Sentry-related constants
     SENTRY_URL: Final[str | None] = os.getenv("SENTRY_URL", "")
-
-    # Database constants
-    PROD_DATABASE_URL: Final[str] = os.getenv("PROD_DATABASE_URL", "")
-    DEV_DATABASE_URL: Final[str] = os.getenv("DEV_DATABASE_URL", "")
-
-    DATABASE_URL: Final[str] = DEV_DATABASE_URL if DEV and DEV.lower() == "true" else PROD_DATABASE_URL
-
-    set_key(".env", "DATABASE_URL", DATABASE_URL)
 
     # GitHub constants
     GITHUB_REPO_URL: Final[str] = os.getenv("GITHUB_REPO_URL", "")
