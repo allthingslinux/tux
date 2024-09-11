@@ -157,6 +157,12 @@ ENV/
 env.bak/
 venv.bak/
 .env.old
+.env.dev
+.env.development
+.env.test
+.env.local
+.env.production
+.env.prod
 
 # Sensitive files
 github-private-key.pem
