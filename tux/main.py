@@ -10,9 +10,9 @@ from sentry_sdk.integrations.loguru import LoguruIntegration
 from tux.bot import Tux
 from tux.database.controllers.guild_config import GuildConfigController
 from tux.help import TuxHelp
+from tux.utils.config import CONFIG
 
 # from tux.utils.console import Console
-from tux.utils.constants import Constants as CONST
 
 
 async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
@@ -21,19 +21,19 @@ async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
     if message.guild:
         prefix = await GuildConfigController().get_guild_prefix(message.guild.id)
 
-    return commands.when_mentioned_or(prefix or CONST.DEFAULT_PREFIX)(bot, message)
+    return commands.when_mentioned_or(prefix or CONFIG.DEFAULT_PREFIX)(bot, message)
 
 
 async def main() -> None:
-    if not CONST.TOKEN:
+    if not CONFIG.TUX_TOKEN:
         logger.critical("No token provided, exiting.")
         return
 
     logger.info("Setting up Sentry...")
 
     sentry_sdk.init(
-        dsn=CONST.SENTRY_URL,
-        environment="dev" if CONST.DEV == "True" else "prod",
+        dsn=CONFIG.SENTRY_URL,
+        environment="dev" if CONFIG.TUX_ENV == "dev" else "prod",
         traces_sample_rate=1.0,
         profiles_sample_rate=1.0,
         enable_tracing=True,
@@ -47,7 +47,7 @@ async def main() -> None:
         strip_after_prefix=True,
         case_insensitive=True,
         intents=discord.Intents.all(),
-        owner_ids=[*CONST.SYSADMIN_IDS, CONST.BOT_OWNER_ID],
+        owner_ids=[*CONFIG.SYSADMIN_IDS, CONFIG.BOT_OWNER_ID],
         allowed_mentions=discord.AllowedMentions(everyone=False),
         help_command=TuxHelp(),
     )
@@ -59,7 +59,7 @@ async def main() -> None:
         # console = Console(bot)
         # console_task = asyncio.create_task(console.run_console())
 
-        await bot.start(token=CONST.TOKEN, reconnect=True)
+        await bot.start(token=CONFIG.TUX_TOKEN, reconnect=True)
 
     except KeyboardInterrupt:
         logger.info("KeyboardInterrupt received, shutting down.")
