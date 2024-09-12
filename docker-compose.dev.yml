@@ -1,12 +1,13 @@
 name: tux
 
 services:
+
   bot:
     build: .
     container_name: tux-bot
     restart: always
-    # environment:
-    #   - TUX_ENV=dev
+    environment:
+      - TUX_ENV=dev
     develop:
       watch:
         - action: sync
@@ -14,14 +15,18 @@ services:
           target: /app/
           ignore:
             - .venv/
+            - .cache/
+        - action: rebuild
+          path: pyproject.toml
+        - action: rebuild
+          path: poetry.lock
     env_file:
-      - path: ./.env.dev
+      - path: .env.dev
         required: true
-    volumes:
-      - .:/app
     depends_on:
       db:
         condition: service_healthy
+    command: ["sh", "-c", "poetry install --no-root && poetry run prisma db push && poetry run prisma generate && poetry run python tux/main.py"]
 
   db:
     image: postgres
@@ -29,24 +34,57 @@ services:
     restart: always
     shm_size: 128mb
     env_file:
-      - path: ./.env.dev
+      - path: .env.dev
         required: true
     volumes:
       - tux_data:/var/lib/postgresql/data
-      - ./scripts/postgres-init.sh:/docker-entrypoint-initdb.d/postgres-init.sh
-    entrypoint: ["/docker-entrypoint-initdb.d/postgres-init.sh"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 10s
       retries: 5
 
-  # adminer:
-  #   image: adminer
-  #   container_name: tux-adminer
-  #   restart: always
-  #   ports:
-  #     - 8080:8080
+  adminer:
+    image: adminer
+    container_name: tux-adminer
+    restart: always
+    ports:
+      - 8080:8080
+    env_file:
+      - path: .env.dev
+        required: true
+    environment:
+      ADMINER_DEFAULT_DRIVER: "pgsql"
+      ADMINER_DEFAULT_SERVER: "db"
+      ADMINER_DEFAULT_DB: postgres
+      ADMINER_DEFAULT_USERNAME: postgres
+      ADMINER_DEFAULT_PASSWORD: tux
+      ADMINER_DESIGN: "hydra"
+    command: ["sh", "-c", "php -S 0.0.0.0:8080 -t /var/www/html"]
+    configs:
+      - source: adminer-index.php
+        target: /var/www/html/index.php
+    depends_on:
+      db:
+        condition: service_healthy
+      bot:
+        condition: service_started
+
+configs:
+  adminer-index.php:
+    content: |
+      <?php
+        if(!count($$_GET)) {
+          $$_POST['auth'] = [
+            'server' => $$_ENV['ADMINER_DEFAULT_SERVER'],
+            'username' => $$_ENV['ADMINER_DEFAULT_USERNAME'],
+            'password' => $$_ENV['ADMINER_DEFAULT_PASSWORD'],
+            'driver' => $$_ENV['ADMINER_DEFAULT_DRIVER'],
+            'db'    => $$_ENV['ADMINER_DEFAULT_DB'],
+          ];
+        }
+        include './adminer.php';
+      ?>
 
 volumes:
   tux_data:
