@@ -7,7 +7,7 @@ import yaml
 from dotenv import load_dotenv, set_key
 
 # Load shared environment variables from .env
-load_dotenv(dotenv_path=".env")
+load_dotenv()
 
 # Determine which environment file to load based on TUX_ENV
 env = os.getenv("TUX_ENV", "dev").lower()
@@ -26,12 +26,13 @@ class Config:
     TUX_ENV: Final[str] = os.getenv("TUX_ENV", "dev")
     TUX_TOKEN: Final[str] = os.getenv("TUX_TOKEN", "")
 
-    POSTGRES_PASSWORD: Final[str] = os.getenv("POSTGRES_PASSWORD", "tux")
+    POSTGRES_DB: Final[str] = os.getenv("POSTGRES_DB", "postgres")
     POSTGRES_PORT: Final[str] = os.getenv("POSTGRES_PORT", "5432")
+    POSTGRES_USER: Final[str] = os.getenv("POSTGRES_USER", "postgres")
+    POSTGRES_PASSWORD: Final[str] = os.getenv("POSTGRES_PASSWORD", "tux")
 
     # Derived settings
-    DATABASE_URL: Final[str] = f"postgresql://postgres:{POSTGRES_PASSWORD}@db:{POSTGRES_PORT}/postgres"
-
+    DATABASE_URL: Final[str] = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@db:{POSTGRES_PORT}/{POSTGRES_DB}"
     set_key(".env", "DATABASE_URL", DATABASE_URL)
 
     # Cog ignore list constants
