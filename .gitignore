@@ -154,8 +154,7 @@ prisma/database.db
 env/
 venv/
 ENV/
-env.bak/
-venv.bak/
+.env.bak
 .env.old
 .env.dev
 .env.development
