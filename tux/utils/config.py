@@ -4,17 +4,10 @@ from pathlib import Path
 from typing import ClassVar, Final
 
 import yaml
-from dotenv import load_dotenv, set_key
+from dotenv import load_dotenv
 
-# Load shared environment variables from .env
+# Load environment variables from the single .env file
 load_dotenv()
-
-# Determine which environment file to load based on TUX_ENV
-env = os.getenv("TUX_ENV", "dev").lower()
-
-# Load the environment-specific .env file
-env_file = ".env.prod" if env == "prod" else ".env.dev"
-load_dotenv(dotenv_path=env_file)
 
 # Load YAML configuration
 settings_file_path = Path("config/settings.yml")
@@ -32,8 +25,7 @@ class Config:
     POSTGRES_PASSWORD: Final[str] = os.getenv("POSTGRES_PASSWORD", "tux")
 
     # Derived settings
-    DATABASE_URL: Final[str] = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@db:{POSTGRES_PORT}/{POSTGRES_DB}"
-    set_key(".env", "DATABASE_URL", DATABASE_URL)
+    DATABASE_URL: Final[str] = os.getenv("DATABASE_URL", "")
 
     # Cog ignore list constants
     COG_IGNORE_LIST: ClassVar[set[str]] = set(os.getenv("COG_IGNORE_LIST", "").split(","))
@@ -75,4 +67,5 @@ class Config:
     TEMPVC_CHANNEL_ID: Final[str | None] = settings["TEMPVC_CHANNEL_ID"]
 
 
+# Load the updated environment variables into the current environment
 CONFIG = Config()
