@@ -34,9 +34,7 @@ RUN pip install poetry && \
 # Copy the remaining project files
 COPY . /app
 
-RUN mkdir -p /app/.cache/prisma && chmod +x /app/.cache/prisma
-
 # Set PYTHONPATH environment variable to /app
 ENV PYTHONPATH=/app
 
-CMD ["sh", "-c", "ls && poetry run prisma py fetch && poetry run prisma generate && poetry run python tux/main.py"]
+CMD ["sh", "-c", "poetry run prisma generate && poetry run python tux/main.py"]

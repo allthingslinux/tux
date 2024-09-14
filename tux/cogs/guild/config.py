@@ -8,7 +8,7 @@ from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.ui.views.config import ConfigSetChannels, ConfigSetPrivateLogs, ConfigSetPublicLogs
-from tux.utils.constants import CONST
+from tux.utils.config import CONFIG
 
 # TODO: Add onboarding setup to ensure all required channels, logs, and roles are set up
 # TODO: Figure out how to handle using our custom checks because the current checks would result in a lock out
@@ -380,7 +380,7 @@ class Config(commands.GroupCog, group_name="config"):
                 user_display_avatar=interaction.user.display_avatar.url,
                 embed_type=EmbedCreator.SUCCESS,
                 title="Guild Config",
-                description=f"The prefix was reset to `{CONST.DEFAULT_PREFIX}`",
+                description=f"The prefix was reset to `{CONFIG.DEFAULT_PREFIX}`",
             ),
         )
 

@@ -2,7 +2,8 @@
 [tool.poetry]
 authors = ["kaizen <admin@kaizen.wtf>"]
 description = "All Things Linux Discord Bot"
-name = "tux"
+name = "Tux"
+package-mode = false
 readme = "README.md"
 repository = "https://github.com/allthingslinux/tux"
 version = "0.1.0"
@@ -15,6 +16,7 @@ asynctempfile = "^0.5.0"
 cairosvg = "^2.7.1"
 dateparser = "^1.2.0"
 discord-py = "^2.4.0"
+emojis = "^0.7.0"
 githubkit = {extras = ["auth-app"], version = "^0.11.3"}
 httpx = "^0.27.0"
 jishaku = "^2.5.2"
@@ -37,7 +39,6 @@ sentry-sdk = {extras = ["httpx", "loguru"], version = "^2.7.0"}
 types-aiofiles = "^24.1.0.20240626"
 types-psutil = "^6.0.0.20240621"
 typing-extensions = "^4.12.2"
-emojis = "^0.7.0"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.30"
@@ -48,6 +49,7 @@ requires = ["poetry-core"]
 
 # Ruff Configuration
 [tool.ruff]
+cache-dir = ".cache/ruff"
 exclude = [
   ".bzr",
   ".direnv",
@@ -171,3 +173,8 @@ reportShadowedImports = false
 typeCheckingMode = "strict"
 venv = ".venv"
 venvPath = "."
+
+[tool.prisma]
+binary_cache_dir = '.cache/prisma'
+nodeenv_cache_dir = '.cache/nodeenv'
+use_global_node = false

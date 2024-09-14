@@ -12,7 +12,8 @@ from reactionmenu.abc import Page
 from reactionmenu.views_menu import ViewSelect
 
 from tux.ui.embeds import EmbedCreator
-from tux.utils.constants import Constants as CONST
+from tux.utils.config import CONFIG
+from tux.utils.constants import CONST
 
 
 class TuxHelp(commands.HelpCommand):
@@ -36,7 +37,7 @@ class TuxHelp(commands.HelpCommand):
             The prefix used to invoke the bot.
         """
 
-        return self.context.clean_prefix or CONST.DEFAULT_PREFIX
+        return self.context.clean_prefix or CONFIG.DEFAULT_PREFIX
 
     def _embed_base(self, title: str, description: str | None = None) -> discord.Embed:
         """

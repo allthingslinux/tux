@@ -5,7 +5,7 @@ from tux.bot import Tux
 from tux.ui.buttons import GithubButton
 from tux.ui.embeds import EmbedCreator
 from tux.utils import checks
-from tux.utils.constants import Constants as CONST
+from tux.utils.config import CONFIG
 from tux.utils.flags import generate_usage
 from tux.wrappers.github import GithubService
 
@@ -16,7 +16,7 @@ class Git(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.github = GithubService()
-        self.repo_url = CONST.GITHUB_REPO_URL
+        self.repo_url = CONFIG.GITHUB_REPO_URL
         self.git.usage = generate_usage(self.git)
         self.get_repo.usage = generate_usage(self.get_repo)
         self.create_issue.usage = generate_usage(self.create_issue)

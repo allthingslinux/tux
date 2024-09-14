@@ -6,13 +6,13 @@ import aiofiles.os
 from discord.ext import commands
 from loguru import logger
 
-from tux.utils.constants import Constants as CONST
+from tux.utils.config import CONFIG
 
 
 class CogLoader(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.cog_ignore_list: set[str] = CONST.COG_IGNORE_LIST
+        self.cog_ignore_list: set[str] = CONFIG.COG_IGNORE_LIST
 
     async def is_cog_eligible(self, filepath: Path) -> bool:
         """

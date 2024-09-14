@@ -8,7 +8,7 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.utils import checks
-from tux.utils.constants import Constants as CONST
+from tux.utils.config import CONFIG
 
 MailboxData = dict[str, str | list[str]]
 
@@ -16,12 +16,12 @@ MailboxData = dict[str, str | list[str]]
 class Mail(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
-        self.api_url = CONST.MAILCOW_API_URL
+        self.api_url = CONFIG.MAILCOW_API_URL
         self.headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "X-API-Key": CONST.MAILCOW_API_KEY,
-            "Authorization": f"Bearer {CONST.MAILCOW_API_KEY}",
+            "X-API-Key": CONFIG.MAILCOW_API_KEY,
+            "Authorization": f"Bearer {CONFIG.MAILCOW_API_KEY}",
         }
         self.default_options: dict[str, str | list[str]] = {
             "active": "1",
