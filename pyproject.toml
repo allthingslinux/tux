@@ -15,6 +15,7 @@ asynctempfile = "^0.5.0"
 cairosvg = "^2.7.1"
 dateparser = "^1.2.0"
 discord-py = "^2.4.0"
+emojis = "^0.7.0"
 githubkit = {extras = ["auth-app"], version = "^0.11.3"}
 httpx = "^0.27.0"
 jishaku = "^2.5.2"
@@ -35,9 +36,11 @@ rsa = "^4.9"
 ruff = "^0.6.0"
 sentry-sdk = {extras = ["httpx", "loguru"], version = "^2.7.0"}
 types-aiofiles = "^24.1.0.20240626"
+types-dateparser = "^1.2.0.20240420"
 types-psutil = "^6.0.0.20240621"
+types-pytz = "^2024.2.0.20240913"
+types-pyyaml = "^6.0.12.20240808"
 typing-extensions = "^4.12.2"
-emojis = "^0.7.0"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.30"
@@ -49,37 +52,10 @@ requires = ["poetry-core"]
 # Ruff Configuration
 [tool.ruff]
 exclude = [
-  ".bzr",
-  ".direnv",
-  ".eggs",
-  ".git",
-  ".git-rewrite",
-  ".hg",
-  ".ipynb_checkpoints",
-  ".mypy_cache",
-  ".nox",
-  ".pants.d",
-  ".pyenv",
-  ".pytest_cache",
-  ".pytype",
-  ".ruff_cache",
-  ".svn",
-  ".tox",
   ".venv",
-  ".vscode",
-  "__pypackages__",
-  "_build",
-  "buck-out",
-  "build",
-  "dist",
-  "node_modules",
-  "site-packages",
-  "venv",
   "examples",
-  "tmp",
   "tests",
   ".archive",
-  "stubs",
   "typings/**",
 ]
 
@@ -133,41 +109,25 @@ skip-magic-trailing-comma = false
 # Pyright Configuration
 [tool.pyright]
 defineConstant = {DEBUG = true}
+enableReachabilityAnalysis = true
 exclude = [
-  ".direnv",
-  ".eggs",
-  ".git",
-  ".hg",
-  ".ipynb_checkpoints",
-  ".mypy_cache",
-  ".nox",
-  ".pants.d",
-  ".pyenv",
-  ".pytest_cache",
-  ".pytype",
-  ".svn",
-  ".tox",
-  ".venv",
-  ".vscode",
   "__pypackages__",
   "_build",
-  "buck-out",
-  "build",
-  "dist",
-  "node_modules",
-  "site-packages",
-  "venv",
   "examples",
   "tests",
   ".archive",
-  "stubs",
   "typings/**",
+]
+ignore = [
+  ".venv",
 ]
 include = ["tux"]
 pythonPlatform = "Linux"
 pythonVersion = "3.12"
-reportMissingTypeStubs = true
-reportShadowedImports = false
+reportImportCycles = true
+strictDictionaryInference = true
+strictListInference = true
+strictSetInference = true
 typeCheckingMode = "strict"
 venv = ".venv"
 venvPath = "."
