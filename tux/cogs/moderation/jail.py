@@ -103,7 +103,7 @@ class Jail(ModerationCogBase):
             return
 
         dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "jailed")
-        await self.handle_case_response(ctx, CaseType.JAIL, case.case_number, flags.reason, member, dm_sent)
+        await self.handle_case_response(ctx, CaseType.JAIL, case.case_number, flags.reason, member, dm_sent, False)
 
     def _get_manageable_roles(
         self,

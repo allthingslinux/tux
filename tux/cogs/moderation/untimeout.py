@@ -72,7 +72,15 @@ class Untimeout(ModerationCogBase):
         )
 
         dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "untimed out")
-        await self.handle_case_response(ctx, CaseType.UNTIMEOUT, case.case_number, flags.reason, member, dm_sent)
+        await self.handle_case_response(
+            ctx,
+            CaseType.UNTIMEOUT,
+            case.case_number,
+            flags.reason,
+            member,
+            dm_sent,
+            silent_action=False,
+        )
 
 
 async def setup(bot: Tux) -> None:

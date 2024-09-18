@@ -73,7 +73,7 @@ class Kick(ModerationCogBase):
             guild_id=ctx.guild.id,
         )
 
-        await self.handle_case_response(ctx, CaseType.KICK, case.case_number, flags.reason, member, dm_sent)
+        await self.handle_case_response(ctx, CaseType.KICK, case.case_number, flags.reason, member, dm_sent, False)
 
 
 async def setup(bot: Tux) -> None:

@@ -76,7 +76,7 @@ class TempBan(ModerationCogBase):
             case_tempban_expired=False,
         )
 
-        await self.handle_case_response(ctx, CaseType.TEMPBAN, case.case_number, flags.reason, member, dm_sent)
+        await self.handle_case_response(ctx, CaseType.TEMPBAN, case.case_number, flags.reason, member, dm_sent, False)
 
     @tasks.loop(hours=1)
     async def tempban_check(self) -> None:

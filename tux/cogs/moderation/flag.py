@@ -10,7 +10,7 @@ from tux.utils.flags import FlagFlags, generate_usage
 from . import ModerationCogBase
 
 
-class Flag(ModerationCogBase):
+class Unflag(ModerationCogBase):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
         self.case_controller = CaseController()
@@ -61,7 +61,7 @@ class Flag(ModerationCogBase):
             guild_id=ctx.guild.id,
         )
 
-        await self.handle_case_response(ctx, CaseType.FLAG, case.case_number, flags.reason, member, False)
+        await self.handle_case_response(ctx, CaseType.FLAG, case.case_number, flags.reason, member, False, True)
 
     async def is_flagged(self, guild_id: int, user_id: int) -> bool:
         """
@@ -90,4 +90,4 @@ class Flag(ModerationCogBase):
 
 
 async def setup(bot: Tux) -> None:
-    await bot.add_cog(Flag(bot))
+    await bot.add_cog(Unflag(bot))
