@@ -25,6 +25,8 @@ emojis: dict[str, int] = {
     "jail": 1268115750392954880,
     "snippetban": 1277174953950576681,
     "snippetunban": 1277174953292337222,
+    "flag": 1275782294363312172,
+    "unflag": 1275782294363312172,
 }
 
 
@@ -381,6 +383,8 @@ class Cases(ModerationCogBase):
             CaseType.UNJAIL: "jail",
             CaseType.SNIPPETBAN: "snippetban",
             CaseType.SNIPPETUNBAN: "snippetunban",
+            CaseType.FLAG: "flag",
+            CaseType.UNFLAG: "unflag",
         }
         emoji_name = emoji_map.get(case_type)
         if emoji_name is not None:
