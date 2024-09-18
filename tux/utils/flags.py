@@ -309,3 +309,21 @@ class SnippetUnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter
         aliases=["s", "quiet"],
         default=False,
     )
+
+
+class FlagFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    reason: str = commands.flag(
+        name="reason",
+        description="Reason for the user flag.",
+        aliases=["r"],
+        default=MISSING,
+    )
+
+
+class UnFlagFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    reason: str = commands.flag(
+        name="reason",
+        description="Reason for the user unflag.",
+        aliases=["r"],
+        default=MISSING,
+    )
