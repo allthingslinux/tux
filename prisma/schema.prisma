@@ -169,4 +169,6 @@ enum CaseType {
   UNJAIL
   SNIPPETUNBAN
   UNTEMPBAN
+  FLAG
+  UNFLAG
 }
