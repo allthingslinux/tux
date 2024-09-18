@@ -71,7 +71,7 @@ class SnippetUnban(ModerationCogBase):
             flags.reason,
             member,
             dm_sent,
-            False,
+            silent_action=False,
         )
 
     async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:

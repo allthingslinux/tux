@@ -61,7 +61,15 @@ class Unflag(ModerationCogBase):
             guild_id=ctx.guild.id,
         )
 
-        await self.handle_case_response(ctx, CaseType.FLAG, case.case_number, flags.reason, member, False, True)
+        await self.handle_case_response(
+            ctx,
+            CaseType.FLAG,
+            case.case_number,
+            flags.reason,
+            member,
+            dm_sent=False,
+            silent_action=True,
+        )
 
     async def is_flagged(self, guild_id: int, user_id: int) -> bool:
         """

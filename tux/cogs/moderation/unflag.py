@@ -67,7 +67,7 @@ class Flag(ModerationCogBase):
             case.case_number,
             flags.reason,
             member,
-            False,
+            dm_sent=False,
             silent_action=True,
         )
 
