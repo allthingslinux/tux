@@ -1,14 +1,10 @@
 import asyncio
-<<<<<<< HEAD
 from collections import defaultdict
 from time import time
-=======
 from typing import DefaultDict
 
 from tux.utils.constants import Constants as CONST
 from tux.bot import Tux
-
->>>>>>> 28393dc (Make Pyright a bit happier about my code)
 
 import discord
 from discord.ext import commands, tasks
