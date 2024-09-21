@@ -1,7 +1,7 @@
 import asyncio
 from collections import defaultdict
 from time import time
-from typing import DefaultDict
+from typing import defaultdict
 
 from tux.utils.constants import Constants as CONST
 from tux.bot import Tux
@@ -56,9 +56,11 @@ class GifLimiter(commands.Cog):
 
     # Deletes the message passed as an argument, and creates a self-deleting message explaining the reason
     async def delete_message(self, message: discord.Message, epilogue: str) -> None:
-        channel: discord.MessageableChannel = message.channel
+        channel: Union[TextChannel, StageChannel, VoiceChannel, Thread, DMChannel, GroupChannel, PartialMessageable]
+        = message.channel
+
         await message.delete()
-        sent_message = await channel.send("-# GIF ratelimit exceeded " + epilogue)
+        sent_message: discord.Message = await channel.send("-# GIF ratelimit exceeded " + epilogue)
         await asyncio.sleep(3)
         await sent_message.delete()
 
