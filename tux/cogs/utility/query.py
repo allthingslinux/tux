@@ -5,16 +5,17 @@ from loguru import logger
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
 from tux.utils.constants import Constants as CONST
+from tux.utils.flags import generate_usage
 
 
 class Query(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
+        self.query.usage = generate_usage(self.query)
 
     @commands.hybrid_command(
         name="query",
         aliases=["q"],
-        usage="query [search_term]",
     )
     async def query(self, ctx: commands.Context[Tux], *, search_term: str) -> None:
         """

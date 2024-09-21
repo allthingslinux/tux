@@ -4,6 +4,7 @@ from discord.ext import commands
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
+from tux.utils.flags import generate_usage
 from tux.wrappers import godbolt
 
 ansi_re = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
@@ -42,6 +43,8 @@ compiler_map = {
 class Run(commands.Cog):
     def __init__(self, bot: Tux):
         self.bot = bot
+        self.run.usage = generate_usage(self.run)
+        self.languages.usage = generate_usage(self.languages)
 
     def remove_ansi(self, ansi: str) -> str:
         """
@@ -248,7 +251,6 @@ class Run(commands.Cog):
     @commands.command(
         name="run",
         aliases=["compile", "exec"],
-        usage="run [code]",
     )
     async def run(
         self,
@@ -321,7 +323,6 @@ class Run(commands.Cog):
     @commands.command(
         name="languages",
         aliases=["langs"],
-        usage="languages",
     )
     async def languages(self, ctx: commands.Context[Tux]) -> None:
         """

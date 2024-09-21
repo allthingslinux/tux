@@ -126,7 +126,7 @@ class TuxHelp(commands.HelpCommand):
             The formatted flag name.
         """
 
-        return f"-[{flag.name}]" if flag.required else f"-<{flag.name}>"
+        return f"-{flag.name}" if flag.required else f"[-{flag.name}]"
 
     def _format_flag_details(self, command: commands.Command[Any, Any, Any]) -> str:
         """

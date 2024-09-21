@@ -7,6 +7,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from tux.bot import Tux
+from tux.utils.flags import generate_usage
 
 client = httpx.AsyncClient()
 
@@ -14,6 +15,7 @@ client = httpx.AsyncClient()
 class Avatar(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
+        self.prefix_avatar.usage = generate_usage(self.prefix_avatar)
 
     @app_commands.command(name="avatar")
     @app_commands.guild_only()
@@ -38,7 +40,6 @@ class Avatar(commands.Cog):
     @commands.command(
         name="avatar",
         aliases=["av"],
-        usage="avatar <member>",
     )
     @commands.guild_only()
     async def prefix_avatar(

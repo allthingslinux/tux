@@ -9,6 +9,7 @@ from tux.bot import Tux
 from tux.database.controllers.starboard import StarboardController, StarboardMessageController
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
+from tux.utils.flags import generate_usage
 
 
 class Starboard(commands.Cog):
@@ -16,6 +17,9 @@ class Starboard(commands.Cog):
         self.bot = bot
         self.starboard_controller = StarboardController()
         self.starboard_message_controller = StarboardMessageController()
+        self.starboard.usage = generate_usage(self.starboard)
+        self.setup_starboard.usage = generate_usage(self.setup_starboard)
+        self.remove_starboard.usage = generate_usage(self.remove_starboard)
 
     @commands.Cog.listener("on_raw_reaction_add")
     async def starboard_on_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
@@ -35,19 +39,19 @@ class Starboard(commands.Cog):
 
     @commands.hybrid_group(
         name="starboard",
-        usage="starboard <subcommand>",
-        description="Configure the starboard for this server",
     )
     @commands.guild_only()
     @checks.has_pl(5)
     async def starboard(self, ctx: commands.Context[Tux]) -> None:
+        """
+        Configure the starboard for this server.
+        """
         if ctx.invoked_subcommand is None:
             await ctx.send_help("starboard")
 
     @starboard.command(
         name="setup",
         aliases=["s"],
-        usage="starboard setup <channel> <emoji> <threshold>",
     )
     @commands.has_permissions(manage_guild=True)
     async def setup_starboard(
@@ -135,7 +139,6 @@ class Starboard(commands.Cog):
     @starboard.command(
         name="remove",
         aliases=["r"],
-        usage="starboard remove",
     )
     @commands.has_permissions(manage_guild=True)
     async def remove_starboard(self, ctx: commands.Context[Tux]) -> None:

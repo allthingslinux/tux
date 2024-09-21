@@ -153,10 +153,8 @@ prisma/database.db
 .venv
 env/
 venv/
-ENV/
-env.bak/
-venv.bak/
-.env.old
+env.bak
+.env.*
 
 # Sensitive files
 github-private-key.pem

@@ -5,11 +5,13 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.utils import checks
+from tux.utils.flags import generate_usage
 
 
 class Purge(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
+        self.prefix_purge.usage = generate_usage(self.prefix_purge)
 
     @app_commands.command(name="purge")
     @app_commands.guild_only()
@@ -73,7 +75,6 @@ class Purge(commands.Cog):
     @commands.command(
         name="purge",
         aliases=["p"],
-        usage="purge [limit] <channel>",
     )
     @commands.guild_only()
     @checks.has_pl(2)
