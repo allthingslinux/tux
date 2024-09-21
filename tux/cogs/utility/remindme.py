@@ -23,10 +23,14 @@ class RemindMe(commands.Cog):
     async def check_reminders(self):
         reminders = await self.db.get_unsent_reminders()
 
-        for reminder in reminders:
-            await self.send_reminder(reminder)
-            await self.db.update_reminder_status(reminder.reminder_id, sent=True)
-            logger.debug(f'Status of reminder {reminder.reminder_id} updated to "sent".')
+        try:
+            for reminder in reminders:
+                await self.send_reminder(reminder)
+                await self.db.update_reminder_status(reminder.reminder_id, sent=True)
+                logger.debug(f'Status of reminder {reminder.reminder_id} updated to "sent".')
+
+        except Exception as e:
+            logger.error(f"Error sending reminders: {e}")
 
     async def send_reminder(self, reminder: Reminder) -> None:
         user = self.bot.get_user(reminder.reminder_user_id)
