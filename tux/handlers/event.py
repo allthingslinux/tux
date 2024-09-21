@@ -20,7 +20,8 @@ class EventHandler(commands.Cog):
     async def on_guild_remove(self, guild: discord.Guild) -> None:
         await self.db.guild.delete_guild_by_id(guild.id)
 
-    async def handle_harmful_message(self, message: discord.Message) -> None:
+    @staticmethod
+    async def handle_harmful_message(message: discord.Message) -> None:
         if message.author.bot:
             return
 
