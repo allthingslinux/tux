@@ -6,7 +6,6 @@ from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils.functions import is_harmful, strip_formatting
 
-
 class EventHandler(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot

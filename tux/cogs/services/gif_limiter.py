@@ -1,6 +1,14 @@
 import asyncio
+<<<<<<< HEAD
 from collections import defaultdict
 from time import time
+=======
+from typing import DefaultDict
+
+from tux.utils.constants import Constants as CONST
+from tux.bot import Tux
+
+>>>>>>> 28393dc (Make Pyright a bit happier about my code)
 
 import discord
 from discord.ext import commands, tasks
@@ -52,7 +60,7 @@ class GifLimiter(commands.Cog):
 
     # Deletes the message passed as an argument, and creates a self-deleting message explaining the reason
     async def delete_message(self, message: discord.Message, epilogue: str) -> None:
-        channel: discord.TextChannel = message.channel
+        channel: discord.MessageableChannel = message.channel
         await message.delete()
         sent_message = await channel.send("-# GIF ratelimit exceeded " + epilogue)
         await asyncio.sleep(3)
@@ -89,14 +97,14 @@ class GifLimiter(commands.Cog):
             return
 
         # If it doesn't, add it to recent GIFs
-        current_time: float = time()
+        current_time: int = int(time())
         self.recent_gifs_by_channel[channel].append(current_time)
         self.recent_gifs_by_user[user].append(current_time)
 
     # Function regularly cleans GIF lists and only keeps the most recent ones
     @tasks.loop(seconds=20)
     async def old_gif_remover(self) -> None:
-        current_time: float = time()
+        current_time: int = int(time())
 
         for channel_id, timestamps in self.recent_gifs_by_channel.items():
             self.recent_gifs_by_channel[channel_id] = [t for t in timestamps if current_time - t < self.recent_gif_age]

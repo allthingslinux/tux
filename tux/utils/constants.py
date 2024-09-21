@@ -77,6 +77,13 @@ class Constants:
     # Icon constants
     EMBED_ICONS: Final[dict[str, str]] = config["EMBED_ICONS"]
 
+    # GIF ratelimit constants
+    RECENT_GIF_AGE: Final[int] = config["RECENT_GIF_AGE"]
+    GIF_LIMIT_EXCLUDE: Final[list[int]] = config["GIF_LIMIT_EXCLUDE"]
+    # Ideally would be int, int but YAML doesn't support integer keys
+    GIF_LIMITS: Final[dict[str, int]] = config["GIF_LIMITS_USER"]
+    GIF_LIMITS_CHANNEL: Final[dict[str, int]] = config["GIF_LIMITS_CHANNEL"]
+
     # Embed limit constants
     EMBED_MAX_NAME_LENGTH = 256
     EMBED_MAX_DESC_LENGTH = 4096
