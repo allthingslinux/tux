@@ -110,12 +110,10 @@ class GifLimiter(commands.Cog):
         current_time: int = int(time())
 
         for channel_id, timestamps in self.recent_gifs_by_channel.items():
-            self.recent_gifs_by_channel[channel_id] = (
-                [t for t in timestamps if current_time - t < self.recent_gif_age])
+            self.recent_gifs_by_channel[channel_id] = [t for t in timestamps if current_time - t < self.recent_gif_age]
 
         for user_id, timestamps in self.recent_gifs_by_user.items():
-            self.recent_gifs_by_user[user_id] = (
-                [t for t in timestamps if current_time - t < self.recent_gif_age])
+            self.recent_gifs_by_user[user_id] = [t for t in timestamps if current_time - t < self.recent_gif_age]
 
             # Delete user key if no GIF has recently been sent by them
             if len(self.recent_gifs_by_user[user_id]) == 0:
