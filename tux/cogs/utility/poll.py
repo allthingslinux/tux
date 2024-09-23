@@ -80,7 +80,9 @@ class Poll(commands.Cog):
 
 
         """
-        assert interaction
+        assert interaction.guild_id is int
+        assert interaction.user.id is int
+
         # Split the options by comma
         options_list = options.split(",")
 
