@@ -80,7 +80,7 @@ class Poll(commands.Cog):
 
 
         """
-
+        assert interaction
         # Split the options by comma
         options_list = options.split(",")
 
