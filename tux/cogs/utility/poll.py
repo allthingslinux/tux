@@ -65,13 +65,7 @@ class Poll(commands.Cog):
 
     @app_commands.command(name="poll", description="Creates a poll.")
     @app_commands.describe(title="Title of the poll", options="Poll options, comma separated")
-    async def poll(
-        self,
-        interaction: discord.Interaction,
-        title: str,
-        options: str,
-        ctx: commands.Context[Tux],
-    ) -> None:
+    async def poll(self, interaction: discord.Interaction, title: str, options: str) -> None:
         """
         Create a poll with a title and options.
 
@@ -83,8 +77,9 @@ class Poll(commands.Cog):
             The title of the poll.
         options : str
             The options for the poll, separated by commas.
+
+
         """
-        assert ctx.guild
 
         # Split the options by comma
         options_list = options.split(",")
@@ -92,8 +87,16 @@ class Poll(commands.Cog):
         # Remove any leading or trailing whitespaces from the options
         options_list = [option.strip() for option in options_list]
 
-        if await self.is_pollbanned(ctx.guild.id, ctx.author.id):
-            await ctx.send("You are banned from making polls.")
+        if await self.is_pollbanned(interaction.guild_id, interaction.user.id):
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=interaction.user.name,
+                user_display_avatar=interaction.user.display_avatar.url,
+                title="Poll Banned",
+                description="you are banned from making polls. think about what you have done.",
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
             return
         # Check if the options count is between 2-9
         if len(options_list) < 2 or len(options_list) > 9:

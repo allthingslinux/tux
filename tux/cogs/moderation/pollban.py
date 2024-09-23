@@ -31,7 +31,7 @@ class PollBan(ModerationCogBase):
         flags: PollBanFlags,
     ) -> None:
         """
-        Ban a user from creating polls using tux..
+        Ban a user from creating polls using tux.
 
         Parameters
         ----------
