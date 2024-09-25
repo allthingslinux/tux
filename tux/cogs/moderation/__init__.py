@@ -212,6 +212,7 @@ class ModerationCogBase(commands.Cog):
         reason: str,
         user: discord.Member | discord.User,
         dm_sent: bool,
+        silent_action: bool,
         duration: str | None = None,
     ):
         moderator = ctx.author
@@ -246,7 +247,9 @@ class ModerationCogBase(commands.Cog):
         if dm_sent:
             embed.description = "A DM has been sent to the user."
         else:
-            embed.description = "DMs are disabled for this user."
+            embed.description = "DMs are disabled for this user or the silent flag was used."
 
-        await self.send_embed(ctx, embed, log_type="mod")
+        if not silent_action:
+            await self.send_embed(ctx, embed, log_type="mod")
+
         await ctx.send(embed=embed, delete_after=30, ephemeral=True)

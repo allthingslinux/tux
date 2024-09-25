@@ -86,6 +86,7 @@ class Timeout(ModerationCogBase):
             flags.reason,
             member,
             dm_sent,
+            False,
             flags.duration,
         )
 

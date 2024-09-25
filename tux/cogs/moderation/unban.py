@@ -74,7 +74,15 @@ class Unban(ModerationCogBase):
             case_reason=flags.reason,
         )
 
-        await self.handle_case_response(ctx, CaseType.UNBAN, case.case_number, flags.reason, user, dm_sent=False)
+        await self.handle_case_response(
+            ctx,
+            CaseType.UNBAN,
+            case.case_number,
+            flags.reason,
+            user,
+            dm_sent=False,
+            silent_action=False,
+        )
 
 
 async def setup(bot: Tux) -> None:
