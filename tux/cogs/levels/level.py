@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.database.controllers.levelling import LevelsController
+from tux.database.controllers.levels import LevelsController
 from tux.utils.flags import generate_usage
 
 

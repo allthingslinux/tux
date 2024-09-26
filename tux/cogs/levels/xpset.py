@@ -2,21 +2,21 @@ import discord
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.database.controllers.levelling import LevelsController
+from tux.database.controllers.levels import LevelsController
 from tux.utils import checks
 from tux.utils.flags import generate_usage
 
 
-class LevelSet(commands.Cog):
+class XPSet(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.levels_controller = LevelsController()
-        self.level_set.usage = generate_usage(self.level_set)
+        self.xp_set.usage = generate_usage(self.xp_set)
 
     @commands.guild_only()
     @checks.has_pl(2)
-    @commands.hybrid_command(name="levelset", aliases=["rankset", "lvlset"])
-    async def level_set(self, ctx: commands.Context[Tux], user: discord.User, new_level: int) -> None:
+    @commands.hybrid_command(name="xpset")
+    async def xp_set(self, ctx: commands.Context[Tux], user: discord.User, xp_amount: int) -> None:
         """
         Sets the xp of a user.
 
@@ -35,21 +35,20 @@ class LevelSet(commands.Cog):
         guild_id = ctx.guild.id
         user_id = user.id
         old_level = await self.levels_controller.get_level(user_id, guild_id)
-        old_xp = await self.levels_controller.get_xp(user_id, guild_id)
+        xp = await self.levels_controller.get_xp(user_id, guild_id)
 
-        member = ctx.guild.get_member(user_id)
-        guild = ctx.guild
-
+        member = ctx.guild.get_member(user.id)
         if member is None:
-            await ctx.send("User is not a member of the guild.")
+            await ctx.send("User is not a member of this guild.")
             return
 
-        await self.levels_controller.set_level(user_id, guild_id, new_level, member, guild)
-        new_xp = await self.levels_controller.get_xp(user_id, guild_id)
+        await self.levels_controller.set_xp(user_id, guild_id, xp_amount, member, ctx.guild)
+
+        new_level: int = await self.levels_controller.calculate_level(user_id, guild_id, member, ctx.guild)
         await ctx.send(
-            f"{user.mention} has had their level changed from {old_level} to {new_level}. Their XP has been changed from {old_xp}XP to {new_xp}XP.",
+            f"{user.mention} has had their XP set from {xp}XP to {xp_amount}XP. Their level has been changed from {old_level} to {new_level}.",
         )
 
 
 async def setup(bot: Tux) -> None:
-    await bot.add_cog(LevelSet(bot))
+    await bot.add_cog(XPSet(bot))
