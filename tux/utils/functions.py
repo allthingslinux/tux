@@ -3,6 +3,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import discord
+from loguru import logger
 
 harmful_command_pattern = r"(?:sudo\s+|doas\s+|run0\s+)?rm\s+(-[frR]*|--force|--recursive|--no-preserve-root|\s+)*([/\∕~]\s*|\*|/bin|/boot|/etc|/lib|/proc|/root|/sbin|/sys|/tmp|/usr|/var|/var/log|/network.|/system)(\s+--no-preserve-root|\s+\*)*|:\(\)\{ :|:& \};:"  # noqa: RUF001
 
@@ -300,3 +301,19 @@ def extract_member_attrs(member: discord.Member) -> dict[str, Any]:
         "status": member.status,
         "activity": member.activity,
     }
+
+
+def convert_dict_str_to_int(original_dict: dict[str, int]) -> dict[int, int]:
+    """Helper function used for GIF Limiter constants.
+    Required as YAML keys are str. Channel and user IDs are int."""
+
+    converted_dict: dict[int, int] = {}
+
+    for key, value in original_dict.items():
+        try:
+            int_key: int = int(key)
+            converted_dict[int_key] = value
+        except ValueError:
+            logger.exception(f"An error occurred when loading the GIF ratelimiter configuration at key {key}")
+
+    return converted_dict
