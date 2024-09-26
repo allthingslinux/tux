@@ -46,7 +46,8 @@ class Run(commands.Cog):
         self.run.usage = generate_usage(self.run)
         self.languages.usage = generate_usage(self.languages)
 
-    def remove_ansi(self, ansi: str) -> str:
+    @staticmethod
+    def remove_ansi(ansi: str) -> str:
         """
         Converts ANSI encoded text into non-ANSI.
 
@@ -63,7 +64,8 @@ class Run(commands.Cog):
 
         return ansi_re.sub("", ansi)
 
-    def remove_backticks(self, st: str) -> str:
+    @staticmethod
+    def remove_backticks(st: str) -> str:
         """
         Removes backticks from the provided string.
 
@@ -277,7 +279,7 @@ class Run(commands.Cog):
             code,
         )
         await msg.delete()
-        if filtered_output == "" and gen_one == "" and normalized_lang == "":
+        if not filtered_output and not gen_one and not normalized_lang:
             return
         await self.send_embedded_reply(
             ctx,
@@ -340,7 +342,7 @@ class Run(commands.Cog):
             user_name=ctx.author.name,
             user_display_avatar=ctx.author.display_avatar.url,
             title="Supported Languages",
-            description=f"```{', '.join(compiler_map.keys())}```",
+            description=f"```{", ".join(compiler_map.keys())}```",
         )
 
         await ctx.send(embed=embed)

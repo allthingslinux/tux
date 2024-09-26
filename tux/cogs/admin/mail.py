@@ -99,7 +99,8 @@ class Mail(commands.Cog):
                 delete_after=30,
             )
 
-    def _generate_password(self) -> str:
+    @staticmethod
+    def _generate_password() -> str:
         password = "changeme" + "".join(str(random.randint(0, 9)) for _ in range(6))
         password += "".join(random.choice("!@#$%^&*") for _ in range(4))
         return password
@@ -161,7 +162,8 @@ class Mail(commands.Cog):
                 delete_after=30,
             )
 
-    def _extract_mailbox_info(self, result: list[dict[str, str | None]]) -> str | None:
+    @staticmethod
+    def _extract_mailbox_info(result: list[dict[str, str | None]]) -> str | None:
         for item in result:
             if "msg" in item:
                 msg = item["msg"]
@@ -173,8 +175,8 @@ class Mail(commands.Cog):
 
         return None
 
+    @staticmethod
     async def _send_dm(
-        self,
         interaction: discord.Interaction,
         member: discord.Member,
         mailbox_info: str,

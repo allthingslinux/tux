@@ -100,8 +100,8 @@ class ModerationCogBase(commands.Cog):
             if isinstance(log_channel, discord.TextChannel):
                 await log_channel.send(embed=embed)
 
+    @staticmethod
     async def send_dm(
-        self,
         ctx: commands.Context[Tux],
         silent: bool,
         user: discord.Member,

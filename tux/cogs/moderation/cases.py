@@ -319,8 +319,8 @@ class Cases(ModerationCogBase):
 
         await menu.start()
 
+    @staticmethod
     def _create_case_fields(
-        self,
         moderator: discord.Member,
         user: discord.Member | discord.User,
         reason: str,
@@ -361,7 +361,8 @@ class Cases(ModerationCogBase):
 
         return embed
 
-    def _format_emoji(self, emoji: discord.Emoji | None) -> str:
+    @staticmethod
+    def _format_emoji(emoji: discord.Emoji | None) -> str:
         return f"<:{emoji.name}:{emoji.id}>" if emoji else ""
 
     def _get_case_status_emoji(self, case_status: bool | None) -> discord.Emoji | None:
@@ -392,16 +393,16 @@ class Cases(ModerationCogBase):
     def _get_case_action_emoji(self, case_type: CaseType) -> discord.Emoji | None:
         action = None
 
-        if case_type in [
+        if case_type in {
             CaseType.BAN,
             CaseType.KICK,
             CaseType.TIMEOUT,
             CaseType.WARN,
             CaseType.JAIL,
             CaseType.SNIPPETBAN,
-        ]:
+        }:
             action = "added"
-        elif case_type in [CaseType.UNBAN, CaseType.UNTIMEOUT, CaseType.UNJAIL, CaseType.SNIPPETUNBAN]:
+        elif case_type in {CaseType.UNBAN, CaseType.UNTIMEOUT, CaseType.UNJAIL, CaseType.SNIPPETUNBAN}:
             action = "removed"
 
         if action is not None:
@@ -410,8 +411,8 @@ class Cases(ModerationCogBase):
                 return self.bot.get_emoji(emoji_id)
         return None
 
+    @staticmethod
     def _get_case_description(
-        self,
         case: Case,
         case_status_emoji: str,
         case_type_emoji: str,

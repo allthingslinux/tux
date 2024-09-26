@@ -105,8 +105,8 @@ class Jail(ModerationCogBase):
         dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "jailed")
         await self.handle_case_response(ctx, CaseType.JAIL, case.case_number, flags.reason, member, dm_sent)
 
+    @staticmethod
     def _get_manageable_roles(
-        self,
         member: discord.Member,
         jail_role: discord.Role,
     ) -> list[discord.Role]:
