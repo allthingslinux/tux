@@ -52,8 +52,6 @@ class Poll(commands.Cog):
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User) -> None:
         # Block any reactions that are not numbers for the poll
-        # NOTE: Today we observed in amazing detail that the pure will of 1 too many dedicated discord members can make
-        # the bot freak out whenever trying to remove reactions. Is there a better solution for this?
         if reaction.message.embeds:
             embed = reaction.message.embeds[0]
             if (
