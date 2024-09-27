@@ -55,15 +55,13 @@ class GifLimiter(commands.Cog):
 
             if (
                     channel in self.channelwide_gif_limits
-                    and channel in self.recent_gifs_by_channel
                     and len(self.recent_gifs_by_channel[channel]) >= self.channelwide_gif_limits[channel]
             ):
                 await self._delete_message(message, "for channel")
                 return
 
             if (
-                    user in self.recent_gifs_by_user
-                    and channel in self.user_gif_limits
+                    channel in self.user_gif_limits
                     and len(self.recent_gifs_by_user[user]) >= self.user_gif_limits[channel]
             ):
                 await self._delete_message(message, "for user")
@@ -94,14 +92,15 @@ class GifLimiter(commands.Cog):
         current_time: int = int(time())
 
         async with self.gif_lock:
-            for channel_id, timestamps in self.recent_gifs_by_channel.items():
+
+            for channel_id, timestamps in list(self.recent_gifs_by_channel.items()):
                 self.recent_gifs_by_channel[channel_id] = [t for t in timestamps if current_time - t < self.recent_gif_age]
 
-            for user_id, timestamps in self.recent_gifs_by_user.items():
-                self.recent_gifs_by_user[user_id] = [t for t in timestamps if current_time - t < self.recent_gif_age]
-
-                # Delete user key if no GIF has recently been sent by them
-                if len(self.recent_gifs_by_user[user_id]) == 0:
+            for user_id, timestamps in list(self.recent_gifs_by_user.items()):
+                filtered_timestamps = [t for t in timestamps if current_time - t < self.recent_gif_age]
+                if filtered_timestamps:
+                    self.recent_gifs_by_user[user_id] = filtered_timestamps
+                else:
                     del self.recent_gifs_by_user[user_id]
 
 async def setup(bot: Tux) -> None:
