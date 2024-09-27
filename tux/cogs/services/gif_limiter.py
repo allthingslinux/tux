@@ -15,6 +15,7 @@ class GifLimiter(commands.Cog):
     It keeps a list of GIF send times and routinely removes old times.
     It will prevent people from posting GIFs if the quotas are exceeded.
     """
+
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
@@ -42,28 +43,27 @@ class GifLimiter(commands.Cog):
         self.old_gif_remover.start()
 
     async def _should_process_message(self, message: discord.Message) -> bool:
-        """ Checks if a message contains a GIF and was not sent in a blacklisted channel """
-        return not (len(message.embeds) == 0
-                    or "gif" not in message.content.lower()
-                    or message.channel.id in self.gif_limit_exclude)
+        """Checks if a message contains a GIF and was not sent in a blacklisted channel"""
+        return not (
+            len(message.embeds) == 0
+            or "gif" not in message.content.lower()
+            or message.channel.id in self.gif_limit_exclude
+        )
 
     async def _handle_gif_message(self, message: discord.Message) -> None:
-        """ Checks for ratelimit infringements """
+        """Checks for ratelimit infringements"""
         async with self.gif_lock:
             channel: int = message.channel.id
             user: int = message.author.id
 
             if (
-                    channel in self.channelwide_gif_limits
-                    and len(self.recent_gifs_by_channel[channel]) >= self.channelwide_gif_limits[channel]
+                channel in self.channelwide_gif_limits
+                and len(self.recent_gifs_by_channel[channel]) >= self.channelwide_gif_limits[channel]
             ):
                 await self._delete_message(message, "for channel")
                 return
 
-            if (
-                    channel in self.user_gif_limits
-                    and len(self.recent_gifs_by_user[user]) >= self.user_gif_limits[channel]
-            ):
+            if channel in self.user_gif_limits and len(self.recent_gifs_by_user[user]) >= self.user_gif_limits[channel]:
                 await self._delete_message(message, "for user")
                 return
 
@@ -82,8 +82,8 @@ class GifLimiter(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Checks for GIFs in every sent message"""
-        
-        if (await self._should_process_message(message)):
+
+        if await self._should_process_message(message):
             await self._handle_gif_message(message)
 
     @tasks.loop(seconds=20)
@@ -92,9 +92,10 @@ class GifLimiter(commands.Cog):
         current_time: int = int(time())
 
         async with self.gif_lock:
-
             for channel_id, timestamps in list(self.recent_gifs_by_channel.items()):
-                self.recent_gifs_by_channel[channel_id] = [t for t in timestamps if current_time - t < self.recent_gif_age]
+                self.recent_gifs_by_channel[channel_id] = [
+                    t for t in timestamps if current_time - t < self.recent_gif_age
+                ]
 
             for user_id, timestamps in list(self.recent_gifs_by_user.items()):
                 filtered_timestamps = [t for t in timestamps if current_time - t < self.recent_gif_age]
@@ -102,6 +103,7 @@ class GifLimiter(commands.Cog):
                     self.recent_gifs_by_user[user_id] = filtered_timestamps
                 else:
                     del self.recent_gifs_by_user[user_id]
+
 
 async def setup(bot: Tux) -> None:
     await bot.add_cog(GifLimiter(bot))
