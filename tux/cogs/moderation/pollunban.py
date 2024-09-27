@@ -66,31 +66,6 @@ class PollUnban(ModerationCogBase):
         dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "poll unbanned")
         await self.handle_case_response(ctx, CaseType.POLLUNBAN, case.case_number, flags.reason, member, dm_sent)
 
-    async def is_pollbanned(self, guild_id: int, user_id: int) -> bool:
-        """
-        Check if a user is poll banned.
-
-        Parameters
-        ----------
-        guild_id : int
-            The ID of the guild to check in.
-        user_id : int
-            The ID of the user to check.
-
-        Returns
-        -------
-        bool
-            True if the user is snippet banned, False otherwise.
-        """
-
-        ban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.POLLBAN)
-        unban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.POLLUNBAN)
-
-        ban_count = sum(case.case_user_id == user_id for case in ban_cases)
-        unban_count = sum(case.case_user_id == user_id for case in unban_cases)
-
-        return ban_count > unban_count
-
 
 async def setup(bot: Tux) -> None:
     await bot.add_cog(PollUnban(bot))
