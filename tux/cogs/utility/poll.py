@@ -96,7 +96,7 @@ class Poll(commands.Cog):
                 user_name=interaction.user.name,
                 user_display_avatar=interaction.user.display_avatar.url,
                 title="Poll Banned",
-                description="you are banned from making polls. think about what you have done.",
+                description="You are poll banned and cannot create a poll.",
             )
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
