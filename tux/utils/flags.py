@@ -309,3 +309,33 @@ class SnippetUnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter
         aliases=["s", "quiet"],
         default=False,
     )
+
+
+class PollBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    reason: str = commands.flag(
+        name="reason",
+        description="Reason for the poll ban.",
+        aliases=["r"],
+        default=MISSING,
+    )
+    silent: bool = commands.flag(
+        name="silent",
+        description="Do not send a DM to the target.",
+        aliases=["s", "quiet"],
+        default=False,
+    )
+
+
+class PollUnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    reason: str = commands.flag(
+        name="reason",
+        description="Reason for the poll unban",
+        aliases=["r"],
+        default=MISSING,
+    )
+    silent: bool = commands.flag(
+        name="silent",
+        description="Do not send a DM to the target.",
+        aliases=["s", "quiet"],
+        default=False,
+    )
