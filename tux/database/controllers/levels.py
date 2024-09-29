@@ -25,6 +25,14 @@ class LevelsController:
         self.xp_multipliers = {role["role_id"]: role["multiplier"] for role in settings["XP_MULTIPLIERS"]}
 
     async def ensure_guild_exists(self, guild_id: int) -> Guild:
+        """
+        Ensure that a guild exists in the database.
+        
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild.
+        """
         guild = await self.guild.find_first(where={"guild_id": guild_id})
 
         if guild is None:
