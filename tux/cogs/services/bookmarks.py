@@ -52,7 +52,7 @@ class Bookmarks(commands.Cog):
         message: discord.Message,
     ) -> discord.Embed:
         if len(message.content) > CONST.EMBED_MAX_DESC_LENGTH:
-            message.content = f"{message.content[:CONST.EMBED_MAX_DESC_LENGTH - 3]}..."
+            message.content = f"{message.content[: CONST.EMBED_MAX_DESC_LENGTH - 3]}..."
 
         embed = EmbedCreator.create_embed(
             bot=self.bot,
@@ -71,8 +71,8 @@ class Bookmarks(commands.Cog):
 
         return embed
 
+    @staticmethod
     async def _send_bookmark(
-        self,
         user: discord.User,
         message: discord.Message,
         embed: discord.Embed,

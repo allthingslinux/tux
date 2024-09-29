@@ -37,7 +37,7 @@ def generate_usage(
     flags: dict[str, commands.Flag] = flag_converter.get_flags() if flag_converter else {}
 
     for param_name, param in parameters.items():
-        if param_name in ["ctx", "flags"]:
+        if param_name in {"ctx", "flags"}:
             continue
         is_required = param.default == inspect.Parameter.empty
         matching_string = get_matching_string(param_name)
@@ -60,7 +60,7 @@ def generate_usage(
         usage += f" {flag}"
 
     if optional_flags:
-        usage += f" [{' | '.join(optional_flags)}]"
+        usage += f" [{" | ".join(optional_flags)}]"
 
     return usage
 
@@ -300,6 +300,36 @@ class SnippetUnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter
     reason: str = commands.flag(
         name="reason",
         description="Reason for the snippet unban.",
+        aliases=["r"],
+        default=MISSING,
+    )
+    silent: bool = commands.flag(
+        name="silent",
+        description="Do not send a DM to the target.",
+        aliases=["s", "quiet"],
+        default=False,
+    )
+
+
+class PollBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    reason: str = commands.flag(
+        name="reason",
+        description="Reason for the poll ban.",
+        aliases=["r"],
+        default=MISSING,
+    )
+    silent: bool = commands.flag(
+        name="silent",
+        description="Do not send a DM to the target.",
+        aliases=["s", "quiet"],
+        default=False,
+    )
+
+
+class PollUnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    reason: str = commands.flag(
+        name="reason",
+        description="Reason for the poll unban",
         aliases=["r"],
         default=MISSING,
     )

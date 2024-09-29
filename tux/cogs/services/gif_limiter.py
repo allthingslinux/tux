@@ -96,7 +96,6 @@ class GifLimiter(commands.Cog):
                 self.recent_gifs_by_channel[channel_id] = [
                     t for t in timestamps if current_time - t < self.recent_gif_age
                 ]
-
             for user_id, timestamps in list(self.recent_gifs_by_user.items()):
                 filtered_timestamps = [t for t in timestamps if current_time - t < self.recent_gif_age]
                 if filtered_timestamps:

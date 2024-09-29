@@ -57,7 +57,13 @@ class Random(commands.Cog):
         aliases=["eightball", "8b"],
     )
     @commands.guild_only()
-    async def eight_ball(self, ctx: commands.Context[Tux], *, question: str, cow: bool = False) -> None:
+    async def eight_ball(
+        self,
+        ctx: commands.Context[Tux],
+        *,
+        question: str,
+        cow: bool = False,
+    ) -> None:
         """
         Ask the magic 8ball a question.
 

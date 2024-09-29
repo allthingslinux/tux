@@ -65,7 +65,7 @@ class Info(commands.Cog):
                 custom_color=discord.Color.blurple(),
                 custom_author_text="Server Information",
                 custom_author_icon_url=guild.icon.url,
-                custom_footer_text=f"ID: {guild.id} | Created: {guild.created_at.strftime('%B %d, %Y')}",
+                custom_footer_text=f"ID: {guild.id} | Created: {guild.created_at.strftime("%B %d, %Y")}",
             )
             .add_field(name="Owner", value=str(guild.owner.mention) if guild.owner else "Unknown")
             .add_field(name="Vanity URL", value=guild.vanity_url_code or "None")
@@ -73,7 +73,7 @@ class Info(commands.Cog):
             .add_field(name="Text Channels", value=len(guild.text_channels))
             .add_field(name="Voice Channels", value=len(guild.voice_channels))
             .add_field(name="Forum Channels", value=len(guild.forums))
-            .add_field(name="Emojis", value=f"{len(guild.emojis)}/{2*guild.emoji_limit}")
+            .add_field(name="Emojis", value=f"{len(guild.emojis)}/{2 * guild.emoji_limit}")
             .add_field(name="Stickers", value=f"{len(guild.stickers)}/{guild.sticker_limit}")
             .add_field(name="Roles", value=len(guild.roles))
             .add_field(name="Humans", value=sum(not member.bot for member in guild.members))
@@ -213,7 +213,7 @@ class Info(commands.Cog):
         menu: ViewMenu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed)
         for chunk in chunks:
             page_embed: discord.Embed = embed.copy()
-            page_embed.description = f"{list_type.capitalize()} list for {guild_name}:\n{' '.join(chunk)}"
+            page_embed.description = f"{list_type.capitalize()} list for {guild_name}:\n{" ".join(chunk)}"
             menu.add_page(page_embed)
 
         buttons = [
@@ -229,7 +229,8 @@ class Info(commands.Cog):
 
         await menu.start()
 
-    def _chunks(self, it: Iterator[str], size: int) -> Generator[list[str], None, None]:
+    @staticmethod
+    def _chunks(it: Iterator[str], size: int) -> Generator[list[str], None, None]:
         """
         Split an iterator into chunks of a specified size.
 

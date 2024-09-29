@@ -3,7 +3,9 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+from prisma.enums import CaseType
 from tux.bot import Tux
+from tux.database.controllers import CaseController
 from tux.ui.embeds import EmbedCreator
 
 # TODO: Create option inputs for the poll command instead of using a comma separated string
@@ -12,6 +14,35 @@ from tux.ui.embeds import EmbedCreator
 class Poll(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
+        self.case_controller = CaseController()
+
+    # TODO: for the moment this is duplicated code from ModerationCogBase in a attempt to get the code out sooner
+    async def is_pollbanned(self, guild_id: int, user_id: int) -> bool:
+        """
+        Check if a user is poll banned.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to check in.
+        user_id : int
+            The ID of the user to check.
+
+        Returns
+        -------
+        bool
+            True if the user is poll banned, False otherwise.
+        """
+
+        ban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.POLLBAN)
+        unban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.POLLUNBAN)
+
+        ban_count = sum(case.case_user_id == user_id for case in ban_cases)
+        unban_count = sum(case.case_user_id == user_id for case in unban_cases)
+
+        return (
+            ban_count > unban_count
+        )  # TODO: this implementation is flawed, if someone bans and unbans the same user multiple times, this will not work as expected
 
     @commands.Cog.listener()  # listen for messages
     async def on_message(self, message: discord.Message) -> None:
@@ -40,7 +71,6 @@ class Poll(commands.Cog):
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User) -> None:
         # Block any reactions that are not numbers for the poll
-
         if reaction.message.embeds:
             embed = reaction.message.embeds[0]
             if (
@@ -64,7 +94,12 @@ class Poll(commands.Cog):
             The title of the poll.
         options : str
             The options for the poll, separated by commas.
+
+
         """
+        if interaction.guild_id is None:
+            await interaction.response.send_message("This command can only be used in a server.", ephemeral=True)
+            return
 
         # Split the options by comma
         options_list = options.split(",")
@@ -72,6 +107,17 @@ class Poll(commands.Cog):
         # Remove any leading or trailing whitespaces from the options
         options_list = [option.strip() for option in options_list]
 
+        if await self.is_pollbanned(interaction.guild_id, interaction.user.id):
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=interaction.user.name,
+                user_display_avatar=interaction.user.display_avatar.url,
+                title="Poll Banned",
+                description="You are poll banned and cannot create a poll.",
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
         # Check if the options count is between 2-9
         if len(options_list) < 2 or len(options_list) > 9:
             embed = EmbedCreator.create_embed(

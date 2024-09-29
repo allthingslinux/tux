@@ -17,7 +17,6 @@ class Fact(commands.Cog):
             "Linus Torvalds was around 22 years old when he started work on the Linux Kernel in 1991. In the same year, he also released prototypes of the kernel publicly.",
             "Linux's 1.0 release was in March 1994.",
             "Less than 1% of the latest kernel release includes code written by Linus Torvalds.",
-            "Linux is used by every major space programme in the world.",
             "Approximately 13.3% of the latest Linux kernel is made up of blank lines.",
             "Vim has various easter eggs. A notable one is found by typing :help 42 into the command bar.",
             "Slackware is the oldest active linux distribution being released on the 17th July 1993.",

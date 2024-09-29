@@ -15,7 +15,8 @@ class Slowmode(commands.Cog):
     @commands.hybrid_command(
         name="slowmode",
         aliases=["sm"],
-        usage="slowmode <delay|get> [channel]\nor slowmode [channel] <delay|get>",  # only place where generate_usage shouldn't be used
+        # only place where generate_usage shouldn't be used:
+        usage="slowmode <delay|get> [channel]\nor slowmode [channel] <delay|get>",
     )
     @commands.guild_only()
     @checks.has_pl(2)
@@ -83,11 +84,12 @@ class Slowmode(commands.Cog):
 
         return action, channel
 
-    def _get_channel(self, ctx: commands.Context[Tux]) -> discord.TextChannel | discord.Thread | None:
+    @staticmethod
+    def _get_channel(ctx: commands.Context[Tux]) -> discord.TextChannel | discord.Thread | None:
         return ctx.channel if isinstance(ctx.channel, discord.TextChannel | discord.Thread) else None
 
+    @staticmethod
     async def _get_slowmode(
-        self,
         ctx: commands.Context[Tux],
         channel: discord.TextChannel | discord.Thread,
     ) -> None:
@@ -135,7 +137,8 @@ class Slowmode(commands.Cog):
             await ctx.send(f"Failed to set slowmode. Error: {error}", delete_after=30, ephemeral=True)
             logger.error(f"Failed to set slowmode. Error: {error}")
 
-    def _parse_delay(self, delay: str) -> int | None:
+    @staticmethod
+    def _parse_delay(delay: str) -> int | None:
         try:
             if delay.endswith("s"):
                 delay = delay[:-1]

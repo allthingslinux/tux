@@ -13,7 +13,8 @@ class ActivityHandler(commands.Cog):
         self.delay = delay
         self.activities = self.build_activity_list()
 
-    def build_activity_list(self) -> list[discord.Activity | discord.Streaming]:
+    @staticmethod
+    def build_activity_list() -> list[discord.Activity | discord.Streaming]:
         activity_data = [
             {"type": discord.ActivityType.watching, "name": "{member_count} members"},
             {"type": discord.ActivityType.watching, "name": "All Things Linux"},

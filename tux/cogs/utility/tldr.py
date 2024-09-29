@@ -135,7 +135,8 @@ class Tldr(commands.Cog):
 
         return self._run_subprocess(["tldr", "--list"], "No TLDR pages found.").split("\n")
 
-    def _run_subprocess(self, command_list: list[str], default_response: str) -> str:
+    @staticmethod
+    def _run_subprocess(command_list: list[str], default_response: str) -> str:
         """
         Helper method to run subprocesses for CLI interactions.
 
