@@ -34,7 +34,7 @@ class LevelsController:
 
     async def calculate_level(self, user_id: int, guild_id: int, member: discord.Member, guild: discord.Guild) -> int:
         """
-        Calculate the level based on XP.
+        Calculate the level based on XP and assign the appropriate role and remove old roles.
 
         Parameters
         ----------
@@ -64,7 +64,33 @@ class LevelsController:
                 where={"user_id_guild_id": {"user_id": user_id, "guild_id": guild_id}},
                 data={"level": new_user_level},
             )
-            await self.assign_role_based_on_level(member, guild)
+
+            # Assign the appropriate role based on the new level
+            role_id = None
+            for lvl, rid in sorted(self.xp_roles.items()):
+                if new_user_level >= lvl:
+                    role_id = rid
+                else:
+                    break
+
+            if role_id:
+                role = guild.get_role(role_id)
+                if role:
+                    await self.try_assign_role(member, role)
+
+                    for other_role_id in self.xp_roles.values():
+                        if other_role_id != role_id:
+                            other_role = guild.get_role(other_role_id)
+                            if other_role in member.roles:
+                                await member.remove_roles(other_role)
+                else:
+                    logger.error(f"Role ID {role_id} not found in guild {guild.name}")
+            else:
+                for other_role_id in self.xp_roles.values():
+                    other_role = guild.get_role(other_role_id)
+                    if other_role in member.roles:
+                        await member.remove_roles(other_role)
+
             return new_user_level
         return 0
 
@@ -289,12 +315,7 @@ class LevelsController:
         guild: discord.Guild,
     ) -> None:
         try:
-            level = 0
-            while True:
-                required_xp = math.ceil(500 * (level + 1) ** self.levels_exponent / 5**self.levels_exponent)
-                if xp_amount < required_xp:
-                    break
-                level += 1
+            level = await self.calculate_level(user_id, guild_id, member, guild)
             await db.levels.update(
                 where={"user_id_guild_id": {"user_id": user_id, "guild_id": guild_id}},
                 data={"xp": xp_amount, "level": level},
@@ -321,7 +342,7 @@ class LevelsController:
         except Exception as e:
             logger.error(f"Error setting XP for user_id: {user_id}, guild_id: {guild_id}: {e}")
 
-        await self.assign_role_based_on_level(member, guild)
+        await self.calculate_level(user_id, guild_id, member, guild)
 
     @staticmethod
     async def try_assign_role(member: discord.Member, role: discord.Role) -> None:
@@ -340,44 +361,3 @@ class LevelsController:
             await member.add_roles(role)
         except Exception as error:
             logger.error(f"Failed to assign role {role.name} to {member}: {error}")
-
-    async def assign_role_based_on_level(self, member: discord.Member, guild: discord.Guild) -> None:
-        """
-        Assign the appropriate role to a member based on their level and remove any other roles that don't apply.
-
-        Parameters
-        ----------
-        member : discord.Member
-            The member to assign the role to.
-        guild : discord.Guild
-            The guild where the member is located.
-        """
-        user_id = member.id
-        guild_id = guild.id
-
-        level = await self.get_level(user_id, guild_id)
-
-        role_id = None
-        for lvl, rid in sorted(self.xp_roles.items()):
-            if level >= lvl:
-                role_id = rid
-            else:
-                break
-
-        if role_id:
-            role = guild.get_role(role_id)
-            if role:
-                await self.try_assign_role(member, role)
-
-                for other_role_id in self.xp_roles.values():
-                    if other_role_id != role_id:
-                        other_role = guild.get_role(other_role_id)
-                        if other_role in member.roles:
-                            await member.remove_roles(other_role)
-            else:
-                logger.error(f"Role ID {role_id} not found in guild {guild.name}")
-        else:
-            for other_role_id in self.xp_roles.values():
-                other_role = guild.get_role(other_role_id)
-                if other_role in member.roles:
-                    await member.remove_roles(other_role)
