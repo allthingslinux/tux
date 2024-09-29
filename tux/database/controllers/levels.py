@@ -71,7 +71,7 @@ class LevelsController:
     async def update_roles(self, member: discord.Member, guild: discord.Guild, new_user_level: int) -> None:
         """
         Update the roles for a user based on their level.
-        
+
         Parameters
         ----------
         member : discord.Member
@@ -328,7 +328,7 @@ class LevelsController:
     ) -> None:
         """
         Set the XP for a user in a guild.
-        
+
         Parameters
         ----------
         user_id : int
@@ -363,7 +363,7 @@ class LevelsController:
     ) -> None:
         """
         Set the level for a user in a guild.
-        
+
         Parameters
         ----------
         user_id : int
