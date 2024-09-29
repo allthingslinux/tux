@@ -64,8 +64,11 @@ class LevelsController:
                 where={"user_id_guild_id": {"user_id": user_id, "guild_id": guild_id}},
                 data={"level": new_user_level},
             )
-
-            # Assign the appropriate role based on the new level
+            await self.assign_roles(member, guild, new_user_level)
+            return new_user_level
+        return 0
+    
+    async def assign_roles(self, member: discord.Member, guild: discord.Guild, new_user_level: int) -> None:
             role_id = None
             for lvl, rid in sorted(self.xp_roles.items()):
                 if new_user_level >= lvl:
@@ -90,10 +93,7 @@ class LevelsController:
                     other_role = guild.get_role(other_role_id)
                     if other_role in member.roles:
                         await member.remove_roles(other_role)
-
-            return new_user_level
-        return 0
-
+                        
     async def increment_xp(self, user_id: int, guild_id: int, member: discord.Member, guild: discord.Guild) -> None:
         await self.ensure_guild_exists(guild_id)
         """
