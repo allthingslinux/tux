@@ -69,6 +69,18 @@ class LevelsController:
         return 0
 
     async def update_roles(self, member: discord.Member, guild: discord.Guild, new_user_level: int) -> None:
+        """
+        Update the roles for a user based on their level.
+        
+        Parameters
+        ----------
+        member : discord.Member
+            The member to assign the role to.
+        guild : discord.Guild
+            The guild where the member is located.
+        new_user_level : int
+            The new level of the member to process.
+        """
         role_id = None
         for lvl, rid in sorted(self.xp_roles.items()):
             if new_user_level >= lvl:
@@ -314,6 +326,22 @@ class LevelsController:
         member: discord.Member,
         guild: discord.Guild,
     ) -> None:
+        """
+        Set the XP for a user in a guild.
+        
+        Parameters
+        ----------
+        user_id : int
+            The ID of the user.
+        guild_id : int
+            The ID of the guild.
+        xp_amount : int
+            The amount of XP to set the user to.
+        member : discord.Member
+            The member to assign the role to.
+        guild : discord.Guild
+            The guild where the member is located.
+        """
         try:
             level = await self.calculate_level(user_id, guild_id, member, guild)
             await db.levels.update(
@@ -333,6 +361,22 @@ class LevelsController:
         member: discord.Member,
         guild: discord.Guild,
     ) -> None:
+        """
+        Set the level for a user in a guild.
+        
+        Parameters
+        ----------
+        user_id : int
+            The ID of the user.
+        guild_id : int
+            The ID of the guild.
+        new_level : int
+            The level to set the user to.
+        member : discord.Member
+            The member to assign the role to.
+        guild : discord.Guild
+            The guild where the member is located.
+        """
         try:
             xp = math.ceil(500 * (new_level / 5) ** self.levels_exponent)
             await db.levels.update(
