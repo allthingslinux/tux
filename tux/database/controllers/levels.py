@@ -34,7 +34,7 @@ class LevelsController:
 
     async def calculate_level(self, user_id: int, guild_id: int, member: discord.Member, guild: discord.Guild) -> int:
         """
-        Calculate the level based on XP and assign the appropriate role and remove old roles.
+        Calculate the level based on XP.
 
         Parameters
         ----------
@@ -64,11 +64,11 @@ class LevelsController:
                 where={"user_id_guild_id": {"user_id": user_id, "guild_id": guild_id}},
                 data={"level": new_user_level},
             )
-            await self.assign_roles(member, guild, new_user_level)
+            await self.update_roles(member, guild, new_user_level)
             return new_user_level
         return 0
 
-    async def assign_roles(self, member: discord.Member, guild: discord.Guild, new_user_level: int) -> None:
+    async def update_roles(self, member: discord.Member, guild: discord.Guild, new_user_level: int) -> None:
         role_id = None
         for lvl, rid in sorted(self.xp_roles.items()):
             if new_user_level >= lvl:
