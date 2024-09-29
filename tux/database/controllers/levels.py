@@ -67,33 +67,33 @@ class LevelsController:
             await self.assign_roles(member, guild, new_user_level)
             return new_user_level
         return 0
-    
+
     async def assign_roles(self, member: discord.Member, guild: discord.Guild, new_user_level: int) -> None:
-            role_id = None
-            for lvl, rid in sorted(self.xp_roles.items()):
-                if new_user_level >= lvl:
-                    role_id = rid
-                else:
-                    break
-
-            if role_id:
-                role = guild.get_role(role_id)
-                if role:
-                    await self.try_assign_role(member, role)
-
-                    for other_role_id in self.xp_roles.values():
-                        if other_role_id != role_id:
-                            other_role = guild.get_role(other_role_id)
-                            if other_role in member.roles:
-                                await member.remove_roles(other_role)
-                else:
-                    logger.error(f"Role ID {role_id} not found in guild {guild.name}")
+        role_id = None
+        for lvl, rid in sorted(self.xp_roles.items()):
+            if new_user_level >= lvl:
+                role_id = rid
             else:
+                break
+
+        if role_id:
+            role = guild.get_role(role_id)
+            if role:
+                await self.try_assign_role(member, role)
+
                 for other_role_id in self.xp_roles.values():
-                    other_role = guild.get_role(other_role_id)
-                    if other_role in member.roles:
-                        await member.remove_roles(other_role)
-                        
+                    if other_role_id != role_id:
+                        other_role = guild.get_role(other_role_id)
+                        if other_role in member.roles:
+                            await member.remove_roles(other_role)
+            else:
+                logger.error(f"Role ID {role_id} not found in guild {guild.name}")
+        else:
+            for other_role_id in self.xp_roles.values():
+                other_role = guild.get_role(other_role_id)
+                if other_role in member.roles:
+                    await member.remove_roles(other_role)
+
     async def increment_xp(self, user_id: int, guild_id: int, member: discord.Member, guild: discord.Guild) -> None:
         await self.ensure_guild_exists(guild_id)
         """
