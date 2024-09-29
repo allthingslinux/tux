@@ -27,12 +27,12 @@ class LevelsController:
     async def ensure_guild_exists(self, guild_id: int) -> Guild:
         """
         Ensure that a guild exists in the database.
-        
+
         Parameters
         ----------
         guild_id : int
             The ID of the guild.
-            
+
         Returns
         -------
         Guild
@@ -286,7 +286,7 @@ class LevelsController:
             The ID of the user.
         guild_id : int
             The ID of the guild.
-            
+
         Returns
         -------
         bool
