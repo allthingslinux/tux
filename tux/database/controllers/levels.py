@@ -32,6 +32,11 @@ class LevelsController:
         ----------
         guild_id : int
             The ID of the guild.
+            
+        Returns
+        -------
+        Guild
+            The guild object.
         """
         guild = await self.guild.find_first(where={"guild_id": guild_id})
 
@@ -184,7 +189,7 @@ class LevelsController:
 
         Returns
         -------
-        int
+        xp.xp : float
             The XP of the user.
         """
         try:
@@ -209,7 +214,7 @@ class LevelsController:
 
         Returns
         -------
-        int
+        level.level : int
             The level of the user.
         """
         try:
@@ -281,6 +286,11 @@ class LevelsController:
             The ID of the user.
         guild_id : int
             The ID of the guild.
+            
+        Returns
+        -------
+        bool
+            Is the user blacklisted?
         """
         try:
             blacklisted = await db.levels.find_first(where={"user_id": user_id, "guild_id": guild_id})
