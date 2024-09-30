@@ -191,11 +191,13 @@ class LevelsController:
             if await self.is_blacklisted(user_id, guild_id):
                 return
 
-            multiplier = 1.0
+            multiplier = 1
             for role in member.roles:
                 if role.id in self.xp_multipliers:
                     multiplier = max(multiplier, self.xp_multipliers[role.id])
-
+                else:
+                    multiplier = 1
+                    
             xp_increment = 1 * multiplier
             await db.levels.update(
                 where={"user_id_guild_id": {"user_id": user_id, "guild_id": guild_id}},
