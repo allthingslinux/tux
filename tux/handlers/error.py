@@ -273,7 +273,8 @@ class ErrorHandler(commands.Cog):
 
         return error_map.get(type(error), self.error_message).format(error=error)
 
-    def log_error_traceback(self, error: Exception) -> None:
+    @staticmethod
+    def log_error_traceback(error: Exception) -> None:
         """
         Log the error traceback.
 

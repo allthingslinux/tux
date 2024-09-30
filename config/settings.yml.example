@@ -64,3 +64,14 @@ EMBED_ICONS:
   KICK: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/kick.png?raw=true"
   TIMEOUT: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/timeout.png?raw=true"
   WARN: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/warn.png?raw=true"
+
+GIF_LIMITER:
+  RECENT_GIF_AGE: 60
+
+  GIF_LIMIT_EXCLUDE:
+    - 123456789012345
+
+  GIF_LIMITS_USER:
+    "123456789012345": 2
+  GIF_LIMITS_CHANNEL:
+    "123456789012345": 3

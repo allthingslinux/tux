@@ -152,7 +152,7 @@ class Snippets(commands.Cog):
 
         text = "```\n"
         for i, snippet in enumerate(snippets[:10]):
-            text += f"{i+1}. {snippet.snippet_name.ljust(20)} | uses: {snippet.uses}\n"
+            text += f"{i + 1}. {snippet.snippet_name.ljust(20)} | uses: {snippet.uses}\n"
         text += "```"
 
         # only show top 10, no pagination
@@ -321,7 +321,7 @@ class Snippets(commands.Cog):
         embed.add_field(name="Name", value=snippet.snippet_name, inline=False)
         embed.add_field(
             name="Author",
-            value=f"{author.mention if author else f'<@!{snippet.snippet_user_id}>'}",
+            value=f"{author.mention if author else f"<@!{snippet.snippet_user_id}>"}",
             inline=False,
         )
         embed.add_field(name="Content", value=f"> {snippet.snippet_content}", inline=False)
@@ -495,7 +495,7 @@ class Snippets(commands.Cog):
         if author := self.bot.get_user(snippet.snippet_user_id):
             with contextlib.suppress(discord.Forbidden):
                 await author.send(
-                    f"""Your snippet `{snippet.snippet_name}` has been {'locked' if status.locked else 'unlocked'}.
+                    f"""Your snippet `{snippet.snippet_name}` has been {"locked" if status.locked else "unlocked"}.
 
 **What does this mean?**
 If a snippet is locked, it cannot be edited by anyone other than moderators. This means that you can no longer edit this snippet.
