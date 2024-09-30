@@ -69,8 +69,7 @@ class LevelsController:
             xp = await db.levels.find_first(where={"user_id": user_id, "guild_id": guild_id})
             if xp is None:
                 return 0
-            else:
-                return xp.xp
+            return xp.xp
         except Exception as e:
             logger.error(f"Error querying XP for user_id: {user_id}, guild_id: {guild_id}: {e}")
             return 0
@@ -95,8 +94,7 @@ class LevelsController:
             level = await db.levels.find_first(where={"user_id": user_id, "guild_id": guild_id})
             if level is None:
                 return 0
-            else:
-                return level.level
+            return level.level
         except Exception as e:
             logger.error(f"Error querying level for user_id: {user_id}, guild_id: {guild_id}: {e}")
             return 0
@@ -196,9 +194,9 @@ class LevelsController:
             multiplier = 1
             for role in member.roles:
                 multiplier = max(multiplier, self.xp_multipliers[role.id]) if role.id in self.xp_multipliers else 1
-                
+
             xp_increment = 1 * multiplier
-            
+
             await db.levels.update(
                 where={"user_id_guild_id": {"user_id": user_id, "guild_id": guild_id}},
                 data={
