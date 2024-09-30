@@ -305,7 +305,7 @@ class LevelsController:
 
         new_user_level = int((user_xp / 500) ** (1 / self.levels_exponent) * 5)
 
-        if new_user_level > current_user_level:
+        if new_user_level != current_user_level:
             await db.levels.update(
                 where={"user_id_guild_id": {"user_id": user_id, "guild_id": guild_id}},
                 data={"level": new_user_level},
