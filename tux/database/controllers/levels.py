@@ -194,10 +194,10 @@ class LevelsController:
                 return
 
             multiplier = 1
-                for role in member.roles:
-                    multiplier = max(multiplier, self.xp_multipliers[role.id]) if role.id in self.xp_multipliers else 1
+            for role in member.roles:
+                multiplier = max(multiplier, self.xp_multipliers[role.id]) if role.id in self.xp_multipliers else 1
                 
-                xp_increment = 1 * multiplier
+            xp_increment = 1 * multiplier
             
             await db.levels.update(
                 where={"user_id_guild_id": {"user_id": user_id, "guild_id": guild_id}},
