@@ -240,11 +240,6 @@ class LevelsController:
                 where={"user_id_guild_id": {"user_id": user_id, "guild_id": guild_id}},
                 data={"xp": xp_amount},
             )
-            level = await self.calculate_level(user_id, guild_id, member, guild)
-            await db.levels.update(
-                where={"user_id_guild_id": {"user_id": user_id, "guild_id": guild_id}},
-                data={"level": level},
-            )
         except Exception as e:
             logger.error(f"Error setting XP for user_id: {user_id}, guild_id: {guild_id}: {e}")
 
@@ -308,18 +303,16 @@ class LevelsController:
         user_xp = await self.get_xp(user_id, guild_id)
         current_user_level = await self.get_level(user_id, guild_id)
 
-        required_xp = math.ceil(500 * ((current_user_level + 1) / 5) ** self.levels_exponent)
-        if user_xp < required_xp:
-            return current_user_level
-        if user_xp >= required_xp:
-            new_user_level = current_user_level + 1
+        new_user_level = int((user_xp / 500) ** (1 / self.levels_exponent) * 5)
+
+        if new_user_level > current_user_level:
             await db.levels.update(
                 where={"user_id_guild_id": {"user_id": user_id, "guild_id": guild_id}},
                 data={"level": new_user_level},
             )
             await self.update_roles(member, guild, new_user_level)
-            return new_user_level
-        return 0
+
+        return new_user_level
 
     async def update_roles(self, member: discord.Member, guild: discord.Guild, new_user_level: int) -> None:
         """
