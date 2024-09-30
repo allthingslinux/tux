@@ -120,7 +120,8 @@ class LevelsController:
             return False
 
         last_message_naive = last_message_time.last_message.replace(tzinfo=None)
-        time_between_messages = datetime.datetime.fromtimestamp(time.time(), tz=datetime.UTC) - last_message_naive
+        last_message_aware = last_message_naive.replace(tzinfo=datetime.UTC)
+        time_between_messages = datetime.datetime.fromtimestamp(time.time(), tz=datetime.UTC) - last_message_aware
 
         cooldown_period = datetime.timedelta(seconds=self.xp_cooldown)
 
