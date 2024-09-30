@@ -236,10 +236,14 @@ class LevelsController:
             The guild where the member is located.
         """
         try:
+            await db.levels.update(
+                where={"user_id_guild_id": {"user_id": user_id, "guild_id": guild_id}},
+                data={"xp": xp_amount},
+            )
             level = await self.calculate_level(user_id, guild_id, member, guild)
             await db.levels.update(
                 where={"user_id_guild_id": {"user_id": user_id, "guild_id": guild_id}},
-                data={"xp": xp_amount, "level": level},
+                data={"level": level},
             )
         except Exception as e:
             logger.error(f"Error setting XP for user_id: {user_id}, guild_id: {guild_id}: {e}")
