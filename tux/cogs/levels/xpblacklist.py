@@ -3,6 +3,7 @@ from discord.ext import commands
 
 from tux.bot import Tux
 from tux.database.controllers.levels import LevelsController
+from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.flags import generate_usage
 
@@ -39,15 +40,14 @@ class XpBlacklist(commands.Cog):
         user_id = user.id
 
         state = await self.levels_controller.toggle_blacklist(user_id, guild_id)
-        const embed = new EmbedBuilder()
-             .setAuthor({
-                name: "Tux",
-            })
-            .setTitle("EXP Blacklist Confirm")
-            .setDescription("{user_id} has been (un)blacklisted from gaining exp!");
+        embed: discord.Embed = EmbedCreator.create_embed(
+            embed_type=EmbedType.INFO,
+            title=f"XP Set - {user}",
+            description=f"{user} has been {'blacklisted' if state else 'unblacklisted'} from gaining XP.",
+            custom_color=discord.Color.blurple(),
+        )
 
-await message.reply({ embeds: [embed] });
-
+        await ctx.send(embed=embed)
 
 
 async def setup(bot: Tux) -> None:
