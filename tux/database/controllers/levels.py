@@ -65,6 +65,8 @@ class LevelsController:
         xp.xp : float
             The XP of the user.
         """
+        await self.ensure_guild_exists(guild_id)
+
         try:
             xp = await db.levels.find_first(where={"user_id": user_id, "guild_id": guild_id})
             if xp is None:
@@ -90,6 +92,8 @@ class LevelsController:
         level.level : int
             The level of the user.
         """
+        await self.ensure_guild_exists(guild_id)
+
         try:
             level = await db.levels.find_first(where={"user_id": user_id, "guild_id": guild_id})
             if level is None:
@@ -115,6 +119,8 @@ class LevelsController:
         bool
             Is the user on cooldown?
         """
+        await self.ensure_guild_exists(guild_id)
+
         last_message_time = await db.levels.find_first(where={"user_id": user_id, "guild_id": guild_id})
         if last_message_time is None:
             return False
@@ -143,6 +149,8 @@ class LevelsController:
         bool
             Is the user blacklisted?
         """
+        await self.ensure_guild_exists(guild_id)
+
         blacklisted = await db.levels.find_first(where={"user_id": user_id, "guild_id": guild_id})
         if blacklisted is None:
             return False
@@ -153,7 +161,6 @@ class LevelsController:
     """
 
     async def increment_xp(self, user_id: int, guild_id: int, member: discord.Member, guild: discord.Guild) -> None:
-        await self.ensure_guild_exists(guild_id)
         """
         Increment the XP for a user in a guild.
 
@@ -168,6 +175,8 @@ class LevelsController:
         guild : discord.Guild
             The guild where the member is located.
         """
+        await self.ensure_guild_exists(guild.id)
+
         try:
             xp = await db.levels.find_first(where={"user_id": user_id, "guild_id": guild_id})
 
@@ -233,6 +242,8 @@ class LevelsController:
         guild : discord.Guild
             The guild where the member is located.
         """
+        await self.ensure_guild_exists(guild.id)
+
         try:
             await db.levels.update(
                 where={"user_id_guild_id": {"user_id": user_id, "guild_id": guild_id}},
@@ -267,6 +278,8 @@ class LevelsController:
         guild : discord.Guild
             The guild where the member is located.
         """
+        await self.ensure_guild_exists(guild.id)
+
         try:
             xp = math.ceil(500 * (new_level / 5) ** self.levels_exponent)
             await db.levels.update(
@@ -298,6 +311,8 @@ class LevelsController:
         int
             The level of the user.
         """
+        await self.ensure_guild_exists(guild.id)
+
         user_xp = await self.get_xp(user_id, guild_id)
         current_user_level = await self.get_level(user_id, guild_id)
 
@@ -325,6 +340,8 @@ class LevelsController:
         new_user_level : int
             The new level of the member to process.
         """
+        await self.ensure_guild_exists(guild.id)
+
         role_id = None
         for lvl, rid in sorted(self.xp_roles.items()):
             if new_user_level >= lvl:
@@ -384,6 +401,8 @@ class LevelsController:
         bool
             Is the user blacklisted?
         """
+        await self.ensure_guild_exists(guild_id)
+
         try:
             blacklisted = await db.levels.find_first(where={"user_id": user_id, "guild_id": guild_id})
             if blacklisted is None:
