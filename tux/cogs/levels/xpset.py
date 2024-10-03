@@ -6,6 +6,7 @@ from tux.database.controllers.levels import LevelsController
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.flags import generate_usage
+from tux.utils.functions import valid_xplevel_input
 
 
 class XPSet(commands.Cog):
@@ -31,6 +32,11 @@ class XPSet(commands.Cog):
         """
         if ctx.guild is None:
             await ctx.send("This command can only be executed within a guild.")
+            return
+
+        embed_result: discord.Embed | None = valid_xplevel_input(xp_amount) or discord.Embed()
+        if embed_result:
+            await ctx.send(embed=embed_result)
             return
 
         guild_id = ctx.guild.id
