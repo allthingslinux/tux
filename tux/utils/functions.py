@@ -1,9 +1,12 @@
+import math
 import re
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import discord
 from loguru import logger
+
+from tux.ui.embeds import EmbedCreator, EmbedType
 
 harmful_command_pattern = r"(?:sudo\s+|doas\s+|run0\s+)?rm\s+(-[frR]*|--force|--recursive|--no-preserve-root|\s+)*([/\∕~]\s*|\*|/bin|/boot|/etc|/lib|/proc|/root|/sbin|/sys|/tmp|/usr|/var|/var/log|/network.|/system)(\s+--no-preserve-root|\s+\*)*|:\(\)\{ :|:& \};:"  # noqa: RUF001
 
@@ -317,3 +320,36 @@ def convert_dict_str_to_int(original_dict: dict[str, int]) -> dict[int, int]:
             logger.exception(f"An error occurred when loading the GIF ratelimiter configuration at key {key}")
 
     return converted_dict
+
+
+def valid_xplevel_input(user_input: int) -> discord.Embed | None:
+    """
+    Check if the input is valid.
+
+    Parameters
+    ----------
+    input : int
+        The input to check.
+
+    Returns
+    -------
+    discord.Embed | None
+        A string if the input is valid, or a discord. Embed if there is an error.
+    """
+    if user_input >= 2**63 - 1:
+        embed: discord.Embed = EmbedCreator.create_embed(
+            embed_type=EmbedType.ERROR,
+            title="Error",
+            description="Input must be less than the integer limit (2^63).",
+        )
+        return embed
+
+    if user_input < 0 or not math.isnan(user_input):
+        embed: discord.Embed = EmbedCreator.create_embed(
+            embed_type=EmbedType.ERROR,
+            title="Error",
+            description="Input must be a positive integer.",
+        )
+        return embed
+
+    return None
