@@ -13,7 +13,7 @@ with settings_path.open() as file:
     settings = yaml.safe_load(file)
 
 
-class Levelling(commands.Cog):
+class LevelsService(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.levels_controller = LevelsController()
@@ -40,10 +40,8 @@ class Levelling(commands.Cog):
         if member is None:
             return
 
-        guild = message.guild
-
-        await self.levels_controller.increment_xp(member.id, guild.id, member, guild)
+        await self.levels_controller.increment_xp(member.id, message.guild.id, member, message.guild)
 
 
 async def setup(bot: Tux) -> None:
-    await bot.add_cog(Levelling(bot))
+    await bot.add_cog(LevelsService(bot))

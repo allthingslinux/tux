@@ -17,10 +17,10 @@ class LevelSet(commands.Cog):
 
     @commands.guild_only()
     @checks.has_pl(2)
-    @commands.hybrid_command(name="levelset", aliases=["rankset", "lvlset"])
-    async def level_set(self, ctx: commands.Context[Tux], user: discord.User, new_level: int) -> None:
+    @commands.hybrid_command(name="levelset", aliases=["lvlset"])
+    async def level_set(self, ctx: commands.Context[Tux], member: discord.Member, new_level: int) -> None:
         """
-        Sets the xp of a user.
+        Sets the xp of a member.
 
         Parameters
         ----------
@@ -30,34 +30,27 @@ class LevelSet(commands.Cog):
         member : discord.Member
             The member to set the XP for.
         """
+
         if ctx.guild is None:
             await ctx.send("This command can only be executed within a guild.")
             return
 
-        guild_id = ctx.guild.id
-        user_id = user.id
-        old_level = await self.levels_controller.get_level(user_id, guild_id)
-        old_xp = await self.levels_controller.get_xp(user_id, guild_id)
-
-        member = ctx.guild.get_member(user_id)
-        guild = ctx.guild
-
-        if member is None:
-            await ctx.send("User is not a member of the guild.")
-            return
+        old_level = await self.levels_controller.get_level(member.id, ctx.guild.id)
+        old_xp = await self.levels_controller.get_xp(member.id, ctx.guild.id)
 
         embed_result: discord.Embed | None = valid_xplevel_input(new_level) or discord.Embed()
         if embed_result:
             await ctx.send(embed=embed_result)
             return
 
-        await self.levels_controller.set_level(user_id, guild_id, new_level, member, guild)
-        new_xp = await self.levels_controller.get_xp(user_id, guild_id)
+        await self.levels_controller.set_level(member.id, ctx.guild.id, new_level, member, ctx.guild)
+
+        new_xp = await self.levels_controller.get_xp(member.id, ctx.guild.id)
 
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
-            title=f"Level Set - {user}",
-            description=f"{user}'s level has been updated from **{old_level}** to **{new_level}**\nTheir XP has been updated from **{old_xp}** to **{new_xp}**",
+            title=f"Level Set - {member}",
+            description=f"{member}'s level has been updated from **{old_level}** to **{new_level}**\nTheir XP has been updated from **{old_xp}** to **{new_xp}**",
             custom_color=discord.Color.blurple(),
         )
 

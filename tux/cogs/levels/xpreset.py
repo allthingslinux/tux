@@ -16,10 +16,10 @@ class XpReset(commands.Cog):
 
     @commands.guild_only()
     @checks.has_pl(2)
-    @commands.hybrid_command(name="xpreset", aliases=["rankreset", "levelreset", "lvlreset"])
-    async def xp_reset(self, ctx: commands.Context[Tux], user: discord.User) -> None:
+    @commands.hybrid_command(name="xpreset", aliases=["levelreset", "lvlreset"])
+    async def xp_reset(self, ctx: commands.Context[Tux], member: discord.Member) -> None:
         """
-        Resets the xp and level of a user.
+        Resets the xp and level of a member.
 
         Parameters
         ----------
@@ -27,26 +27,18 @@ class XpReset(commands.Cog):
             The context object for the command.
 
         member : discord.Member
-            The user to reset the XP for.
+            The member to reset the XP for.
         """
         if ctx.guild is None:
             await ctx.send("This command can only be executed within a guild.")
             return
 
-        guild_id = ctx.guild.id
-        user_id = user.id
-
-        xp = await self.levels_controller.get_xp(user_id, guild_id)
-
-        member = ctx.guild.get_member(user_id)
-        if member is None:
-            await ctx.send("User not found in the guild.")
-            return
+        xp = await self.levels_controller.get_xp(member.id, ctx.guild.id)
 
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
-            title=f"XP Set - {user}",
-            description=f"{user}'s XP has been reset from **{xp}**",
+            title=f"XP Set - {member}",
+            description=f"{member}'s XP has been reset from **{xp}** to **0**",
             custom_color=discord.Color.blurple(),
         )
 

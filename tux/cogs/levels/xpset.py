@@ -18,9 +18,9 @@ class XPSet(commands.Cog):
     @commands.guild_only()
     @checks.has_pl(2)
     @commands.hybrid_command(name="xpset")
-    async def xp_set(self, ctx: commands.Context[Tux], user: discord.User, xp_amount: int) -> None:
+    async def xp_set(self, ctx: commands.Context[Tux], member: discord.Member, xp_amount: int) -> None:
         """
-        Sets the xp of a user.
+        Sets the xp of a member.
 
         Parameters
         ----------
@@ -39,24 +39,17 @@ class XPSet(commands.Cog):
             await ctx.send(embed=embed_result)
             return
 
-        guild_id = ctx.guild.id
-        user_id = user.id
-        old_level = await self.levels_controller.get_level(user_id, guild_id)
-        xp = await self.levels_controller.get_xp(user_id, guild_id)
+        old_level = await self.levels_controller.get_level(member.id, ctx.guild.id)
+        xp = await self.levels_controller.get_xp(member.id, ctx.guild.id)
 
-        member = ctx.guild.get_member(user.id)
-        if member is None:
-            await ctx.send("User is not a member of this guild.")
-            return
+        await self.levels_controller.set_xp(member.id, ctx.guild.id, xp_amount, member, ctx.guild)
 
-        await self.levels_controller.set_xp(user_id, guild_id, xp_amount, member, ctx.guild)
-
-        new_level: int = await self.levels_controller.calculate_level(user_id, guild_id, member, ctx.guild)
+        new_level: int = await self.levels_controller.calculate_level(member.id, ctx.guild.id, member, ctx.guild)
 
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
-            title=f"XP Set - {user}",
-            description=f"{user}'s XP has been updated from **{xp}** to **{xp_amount}**\nTheir level has been updated from **{old_level}** to **{new_level}**",
+            title=f"XP Set - {member}",
+            description=f"{member}'s XP has been updated from **{xp}** to **{xp_amount}**\nTheir level has been updated from **{old_level}** to **{new_level}**",
             custom_color=discord.Color.blurple(),
         )
 
