@@ -6,6 +6,7 @@ from tux.database.controllers.levels import LevelsController
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.flags import generate_usage
+from tux.utils.functions import valid_xplevel_input
 
 
 class LevelSet(commands.Cog):
@@ -43,6 +44,11 @@ class LevelSet(commands.Cog):
 
         if member is None:
             await ctx.send("User is not a member of the guild.")
+            return
+
+        embed_result: discord.Embed | None = valid_xplevel_input(new_level) or discord.Embed()
+        if embed_result:
+            await ctx.send(embed=embed_result)
             return
 
         await self.levels_controller.set_level(user_id, guild_id, new_level, member, guild)
