@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+import EmbedBuilder
 
 from tux.bot import Tux
 from tux.database.controllers.levels import LevelsController
@@ -46,9 +47,15 @@ class LevelSet(commands.Cog):
 
         await self.levels_controller.set_level(user_id, guild_id, new_level, member, guild)
         new_xp = await self.levels_controller.get_xp(user_id, guild_id)
-        await ctx.send(
-            f"{user.mention} has had their level changed from {old_level} to {new_level}. Their XP has been changed from {old_xp}XP to {new_xp}XP.",
-        )
+        const embed = new EmbedBuilder()
+            .setAuthor({
+                name: "Tux",
+            })
+        .setTitle("Level Set!")
+        .setDescription("{member}'s level has been set to {level}!");
+
+await message.reply({ embeds: [embed] });
+
 
 
 async def setup(bot: Tux) -> None:

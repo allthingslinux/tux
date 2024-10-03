@@ -45,9 +45,15 @@ class XPSet(commands.Cog):
         await self.levels_controller.set_xp(user_id, guild_id, xp_amount, member, ctx.guild)
 
         new_level: int = await self.levels_controller.calculate_level(user_id, guild_id, member, ctx.guild)
-        await ctx.send(
-            f"{user.mention} has had their XP set from {xp}XP to {xp_amount}XP. Their level has been changed from {old_level} to {new_level}.",
-        )
+        const embed = new EmbedBuilder()
+            .setAuthor({
+               name: "Tux",
+             })
+         .setTitle("Level Set!")
+         .setDescription("{user}'s level has been set to [LEVEL]!");
+
+await message.reply({ embeds: [embed] });
+
 
 
 async def setup(bot: Tux) -> None:

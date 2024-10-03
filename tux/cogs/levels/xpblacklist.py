@@ -39,7 +39,15 @@ class XpBlacklist(commands.Cog):
         user_id = user.id
 
         state = await self.levels_controller.toggle_blacklist(user_id, guild_id)
-        await ctx.send(f"{user.mention} has been {'unblacklisted' if state else 'blacklisted'}.")
+        const embed = new EmbedBuilder()
+             .setAuthor({
+                name: "Tux",
+            })
+            .setTitle("EXP Blacklist Confirm")
+            .setDescription("{user_id} has been (un)blacklisted from gaining exp!");
+
+await message.reply({ embeds: [embed] });
+
 
 
 async def setup(bot: Tux) -> None:
