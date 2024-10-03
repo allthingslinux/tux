@@ -18,9 +18,9 @@ class Level(commands.Cog):
         name="level",
         aliases=["lvl", "rank", "xp"],
     )
-    async def level(self, ctx: commands.Context[Tux], user: discord.User | discord.Member | None = None) -> None:
+    async def level(self, ctx: commands.Context[Tux], member: discord.Member | None = None) -> None:
         """
-        Fetches the XP and level for a user and sends it back using a file.
+        Fetches the XP and level for a member and sends it back using a file.
 
         Parameters
         ----------
@@ -35,18 +35,16 @@ class Level(commands.Cog):
             await ctx.send("This command can only be executed within a guild.")
             return
 
-        if user is None:
-            user = ctx.author
+        if member is None:
+            member = ctx.author if isinstance(ctx.author, discord.Member) else None
+            assert member
 
-        guild_id = ctx.guild.id
-        user_id = user.id
-
-        xp = await self.levels_controller.get_xp(user_id, guild_id)
-        level = await self.levels_controller.get_level(user_id, guild_id)
+        xp = await self.levels_controller.get_xp(member.id, ctx.guild.id)
+        level = await self.levels_controller.get_level(member.id, ctx.guild.id)
 
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
-            title=f"Level - {user}",
+            title=f"Level - {member}",
             description=f"Level: **{level}** \nXP: **{xp}**",
             custom_color=discord.Color.blurple(),
         )

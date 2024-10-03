@@ -18,11 +18,11 @@ class XpBlacklist(commands.Cog):
     @checks.has_pl(2)
     @commands.hybrid_command(
         name="xpblacklist",
-        aliases=["rankblacklist", "levelblacklist", "rankbl", "levelbl", "xpbl"],
+        aliases=["levelblacklist", "levelbl", "xpbl"],
     )
-    async def xp_blacklist(self, ctx: commands.Context[Tux], user: discord.User) -> None:
+    async def xp_blacklist(self, ctx: commands.Context[Tux], member: discord.Member) -> None:
         """
-        Blacklists or unblacklists a user from levelling.
+        Blacklists or unblacklists a member from levelling.
 
         Parameters
         ----------
@@ -32,18 +32,17 @@ class XpBlacklist(commands.Cog):
         member : discord.Member
             The member to XP blacklist.
         """
+
         if ctx.guild is None:
             await ctx.send("This command can only be executed within a guild.")
             return
 
-        guild_id = ctx.guild.id
-        user_id = user.id
+        state = await self.levels_controller.toggle_blacklist(member.id, ctx.guild.id)
 
-        state = await self.levels_controller.toggle_blacklist(user_id, guild_id)
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
-            title=f"XP Set - {user}",
-            description=f"{user} has been {'blacklisted' if state else 'unblacklisted'} from gaining XP.",
+            title=f"XP Set - {member}",
+            description=f"{member} has been {"blacklisted" if state else "unblacklisted"} from gaining XP.",
             custom_color=discord.Color.blurple(),
         )
 
