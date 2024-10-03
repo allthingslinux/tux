@@ -43,7 +43,15 @@ class XpReset(commands.Cog):
             return
 
         await self.levels_controller.reset_xp(user_id, guild_id, member, ctx.guild)
-        await ctx.send(f"{user.mention} has had their XP reset from {xp}XP.")
+        const embed = new EmbedBuilder()
+             .setAuthor({
+                  name: "Tux",
+             })
+             .setTitle("EXP Reset")
+             .setDescription("{member}'s EXP has been reset back to 0!");
+
+await message.reply({ embeds: [embed] });
+
 
 
 async def setup(bot: Tux) -> None:

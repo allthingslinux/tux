@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+import EmbedBuilder
 
 from tux.bot import Tux
 from tux.database.controllers.levels import LevelsController
@@ -40,9 +41,20 @@ class Level(commands.Cog):
         guild_id = ctx.guild.id
         user_id = user.id
 
+
+
         xp = await self.levels_controller.get_xp(user_id, guild_id)
         level = await self.levels_controller.get_level(user_id, guild_id)
-        await ctx.send(f"XP: {xp}\nLevel: {level}")
+
+        const embed = new EmbedBuilder()
+            .setAuthor({
+                name: "Tux",
+            })
+        .setTitle("Experience")
+        .setDescription("Your Level: {level}\nYour Exp: {xp}");
+
+        await message.reply({ embeds: [embed] });
+
 
 
 async def setup(bot: Tux) -> None:
