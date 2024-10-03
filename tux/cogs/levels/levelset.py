@@ -1,9 +1,9 @@
 import discord
 from discord.ext import commands
-import EmbedBuilder
 
 from tux.bot import Tux
 from tux.database.controllers.levels import LevelsController
+from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.flags import generate_usage
 
@@ -47,15 +47,15 @@ class LevelSet(commands.Cog):
 
         await self.levels_controller.set_level(user_id, guild_id, new_level, member, guild)
         new_xp = await self.levels_controller.get_xp(user_id, guild_id)
-        const embed = new EmbedBuilder()
-            .setAuthor({
-                name: "Tux",
-            })
-        .setTitle("Level Set!")
-        .setDescription("{member}'s level has been set to {level}!");
 
-await message.reply({ embeds: [embed] });
+        embed: discord.Embed = EmbedCreator.create_embed(
+            embed_type=EmbedType.INFO,
+            title=f"Level Set - {user}",
+            description=f"{user}'s level has been updated from **{old_level}** to **{new_level}**\nTheir XP has been updated from **{old_xp}** to **{new_xp}**",
+            custom_color=discord.Color.blurple(),
+        )
 
+        await ctx.send(embed=embed)
 
 
 async def setup(bot: Tux) -> None:
