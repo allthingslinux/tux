@@ -158,15 +158,16 @@ model StarboardMessage {
 }
 
 model Levels {
-  user_id        BigInt    @id  
-  xp             Float     @default(0) 
-  level          BigInt    @default(0)
-  blacklisted    Boolean   @default(false)
-  last_message   DateTime  @default(now())
-  guild_id       BigInt
-  guild          Guild     @relation(fields: [guild_id], references: [guild_id])
-  @@unique([user_id, guild_id])
-  @@index([user_id])
+  member_id    BigInt   @id
+  xp           Float    @default(0)
+  level        BigInt   @default(0)
+  blacklisted  Boolean  @default(false)
+  last_message DateTime @default(now())
+  guild_id     BigInt
+  guild        Guild    @relation(fields: [guild_id], references: [guild_id])
+
+  @@unique([member_id, guild_id])
+  @@index([member_id])
 }
 
 enum CaseType {
