@@ -3,6 +3,7 @@ from discord.ext import commands
 
 from tux.bot import Tux
 from tux.database.controllers.levels import LevelsController
+from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.flags import generate_usage
 
@@ -45,15 +46,15 @@ class XPSet(commands.Cog):
         await self.levels_controller.set_xp(user_id, guild_id, xp_amount, member, ctx.guild)
 
         new_level: int = await self.levels_controller.calculate_level(user_id, guild_id, member, ctx.guild)
-        const embed = new EmbedBuilder()
-            .setAuthor({
-               name: "Tux",
-             })
-         .setTitle("XP Set!")
-         .setDescription("{user}'s XP has been set to [LEVEL]!");
 
-await message.reply({ embeds: [embed] });
+        embed: discord.Embed = EmbedCreator.create_embed(
+            embed_type=EmbedType.INFO,
+            title=f"XP Set - {user}",
+            description=f"{user}'s XP has been updated from **{xp}** to **{xp_amount}**\nTheir level has been updated from **{old_level}** to **{new_level}**",
+            custom_color=discord.Color.blurple(),
+        )
 
+        await ctx.send(embed=embed)
 
 
 async def setup(bot: Tux) -> None:
