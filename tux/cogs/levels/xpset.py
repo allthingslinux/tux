@@ -49,8 +49,8 @@ class XPSet(commands.Cog):
             .setAuthor({
                name: "Tux",
              })
-         .setTitle("Level Set!")
-         .setDescription("{user}'s level has been set to [LEVEL]!");
+         .setTitle("XP Set!")
+         .setDescription("{user}'s XP has been set to [LEVEL]!");
 
 await message.reply({ embeds: [embed] });
 
