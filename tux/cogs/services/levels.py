@@ -171,10 +171,6 @@ class LevelsService(commands.Cog):
                 logger.debug(
                     f"Assigned role {highest_role.name} to member {member} and removed roles {', '.join(r.name for r in roles_to_remove)}",
                 )
-            else:
-                logger.error(
-                    f"Highest role is None for member {member} at level {new_level} in guild {guild.name} | {roles_to_assign}",
-                )
         else:
             roles_to_remove = [r for rid in self.xp_roles.values() if (r := guild.get_role(rid))]
             await member.remove_roles(*roles_to_remove, reason="Tux Level Service")
