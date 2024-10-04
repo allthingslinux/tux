@@ -1,18 +1,19 @@
+import datetime
+
 import discord
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.database.controllers.levels import LevelsController
+from tux.cogs.services.levels import LevelsService
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.flags import generate_usage
-from tux.utils.functions import valid_xplevel_input
 
 
 class XPSet(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
-        self.levels_controller = LevelsController()
+        self.levels_service = LevelsService(bot)
         self.xp_set.usage = generate_usage(self.xp_set)
 
     @commands.guild_only()
@@ -34,22 +35,27 @@ class XPSet(commands.Cog):
             await ctx.send("This command can only be executed within a guild.")
             return
 
-        embed_result: discord.Embed | None = valid_xplevel_input(xp_amount) or discord.Embed()
-        if embed_result:
+        # The condition here was incorrect
+        if embed_result := self.levels_service.valid_xplevel_input(xp_amount):
             await ctx.send(embed=embed_result)
             return
 
-        old_level = await self.levels_controller.get_level(member.id, ctx.guild.id)
-        xp = await self.levels_controller.get_xp(member.id, ctx.guild.id)
+        old_level = await self.levels_service.levels_controller.get_level(member.id, ctx.guild.id)
+        old_xp = await self.levels_service.levels_controller.get_xp(member.id, ctx.guild.id)
 
-        await self.levels_controller.set_xp(member.id, ctx.guild.id, xp_amount, member, ctx.guild)
-
-        new_level: int = await self.levels_controller.calculate_level(member.id, ctx.guild.id, member, ctx.guild)
+        new_level = self.levels_service.calculate_level(xp_amount)
+        await self.levels_service.levels_controller.update_xp_and_level(
+            member.id,
+            ctx.guild.id,
+            xp_amount,
+            new_level,
+            datetime.datetime.now(datetime.UTC),
+        )
 
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
             title=f"XP Set - {member}",
-            description=f"{member}'s XP has been updated from **{xp}** to **{xp_amount}**\nTheir level has been updated from **{old_level}** to **{new_level}**",
+            description=f"{member}'s XP has been updated from **{old_xp}** to **{xp_amount}**\nTheir level has been updated from **{old_level}** to **{new_level}**",
             custom_color=discord.Color.blurple(),
         )
 

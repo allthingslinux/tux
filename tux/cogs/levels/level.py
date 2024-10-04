@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.database.controllers.levels import LevelsController
+from tux.cogs.services.levels import LevelsService
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils.flags import generate_usage
 
@@ -10,7 +10,7 @@ from tux.utils.flags import generate_usage
 class Level(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
-        self.levels_controller = LevelsController()
+        self.levels_service = LevelsService(bot)
         self.level.usage = generate_usage(self.level)
 
     @commands.guild_only()
@@ -39,8 +39,8 @@ class Level(commands.Cog):
             member = ctx.author if isinstance(ctx.author, discord.Member) else None
             assert member
 
-        xp = await self.levels_controller.get_xp(member.id, ctx.guild.id)
-        level = await self.levels_controller.get_level(member.id, ctx.guild.id)
+        xp = await self.levels_service.levels_controller.get_xp(member.id, ctx.guild.id)
+        level = await self.levels_service.levels_controller.get_level(member.id, ctx.guild.id)
 
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,

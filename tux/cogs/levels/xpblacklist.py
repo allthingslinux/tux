@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.database.controllers.levels import LevelsController
+from tux.cogs.services.levels import LevelsService
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.flags import generate_usage
@@ -11,7 +11,7 @@ from tux.utils.flags import generate_usage
 class XpBlacklist(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
-        self.levels_controller = LevelsController()
+        self.levels_service = LevelsService(bot)
         self.xp_blacklist.usage = generate_usage(self.xp_blacklist)
 
     @commands.guild_only()
@@ -37,12 +37,12 @@ class XpBlacklist(commands.Cog):
             await ctx.send("This command can only be executed within a guild.")
             return
 
-        state = await self.levels_controller.toggle_blacklist(member.id, ctx.guild.id)
+        state = await self.levels_service.levels_controller.toggle_blacklist(member.id, ctx.guild.id)
 
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
-            title=f"XP Set - {member}",
-            description=f"{member} has been {"blacklisted" if state else "unblacklisted"} from gaining XP.",
+            title=f"XP Blacklist - {member}",
+            description=f"{member} has been {'blacklisted' if state else 'unblacklisted'} from gaining XP.",
             custom_color=discord.Color.blurple(),
         )
 

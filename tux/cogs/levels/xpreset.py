@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.database.controllers.levels import LevelsController
+from tux.cogs.services.levels import LevelsService
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.flags import generate_usage
@@ -11,7 +11,7 @@ from tux.utils.flags import generate_usage
 class XpReset(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
-        self.levels_controller = LevelsController()
+        self.levels_service = LevelsService(bot)
         self.xp_reset.usage = generate_usage(self.xp_reset)
 
     @commands.guild_only()
@@ -33,12 +33,13 @@ class XpReset(commands.Cog):
             await ctx.send("This command can only be executed within a guild.")
             return
 
-        xp = await self.levels_controller.get_xp(member.id, ctx.guild.id)
+        old_xp = await self.levels_service.levels_controller.get_xp(member.id, ctx.guild.id)
+        await self.levels_service.levels_controller.reset_xp(member.id, ctx.guild.id)
 
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
-            title=f"XP Set - {member}",
-            description=f"{member}'s XP has been reset from **{xp}** to **0**",
+            title=f"XP Reset - {member}",
+            description=f"{member}'s XP has been reset from **{old_xp}** to **0**",
             custom_color=discord.Color.blurple(),
         )
 

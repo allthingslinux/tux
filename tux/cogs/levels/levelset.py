@@ -1,18 +1,19 @@
+import datetime
+
 import discord
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.database.controllers.levels import LevelsController
+from tux.cogs.services.levels import LevelsService
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.flags import generate_usage
-from tux.utils.functions import valid_xplevel_input
 
 
 class LevelSet(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
-        self.levels_controller = LevelsController()
+        self.levels_service = LevelsService(bot)
         self.level_set.usage = generate_usage(self.level_set)
 
     @commands.guild_only()
@@ -20,7 +21,7 @@ class LevelSet(commands.Cog):
     @commands.hybrid_command(name="levelset", aliases=["lvlset"])
     async def level_set(self, ctx: commands.Context[Tux], member: discord.Member, new_level: int) -> None:
         """
-        Sets the xp of a member.
+        Sets the level of a member.
 
         Parameters
         ----------
@@ -28,24 +29,28 @@ class LevelSet(commands.Cog):
             The context object for the command.
 
         member : discord.Member
-            The member to set the XP for.
+            The member to set the level for.
         """
 
         if ctx.guild is None:
             await ctx.send("This command can only be executed within a guild.")
             return
 
-        old_level = await self.levels_controller.get_level(member.id, ctx.guild.id)
-        old_xp = await self.levels_controller.get_xp(member.id, ctx.guild.id)
+        old_level = await self.levels_service.levels_controller.get_level(member.id, ctx.guild.id)
+        old_xp = await self.levels_service.levels_controller.get_xp(member.id, ctx.guild.id)
 
-        embed_result: discord.Embed | None = valid_xplevel_input(new_level) or discord.Embed()
-        if embed_result:
+        if embed_result := self.levels_service.valid_xplevel_input(new_level) or discord.Embed():
             await ctx.send(embed=embed_result)
             return
 
-        await self.levels_controller.set_level(member.id, ctx.guild.id, new_level, member, ctx.guild)
-
-        new_xp = await self.levels_controller.get_xp(member.id, ctx.guild.id)
+        new_xp = self.levels_service.calculate_xp_for_level(new_level)
+        await self.levels_service.levels_controller.update_xp_and_level(
+            member.id,
+            ctx.guild.id,
+            new_xp,
+            new_level,
+            datetime.datetime.now(datetime.UTC),
+        )
 
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
