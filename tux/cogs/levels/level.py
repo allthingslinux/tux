@@ -42,11 +42,17 @@ class Level(commands.Cog):
         xp = await self.levels_service.levels_controller.get_xp(member.id, ctx.guild.id)
         level = await self.levels_service.levels_controller.get_level(member.id, ctx.guild.id)
 
+        xp_progress, xp_required = self.levels_service.get_level_progress(xp, level)
+        progress_bar = self.levels_service.generate_progress_bar(xp_progress, xp_required)
+
         embed: discord.Embed = EmbedCreator.create_embed(
-            embed_type=EmbedType.INFO,
-            title=f"Level - {member}",
-            description=f"Level: **{level}** \nXP: **{round(xp)}**",
+            embed_type=EmbedType.DEFAULT,
+            title=f"Level {level}",
+            description=f"Progress to Next Level:\n{progress_bar}",
             custom_color=discord.Color.blurple(),
+            custom_author_text=f"{member.name}",
+            custom_author_icon_url=member.display_avatar.url,
+            custom_footer_text=f"Total XP: {round(xp)}",
         )
 
         await ctx.send(embed=embed)

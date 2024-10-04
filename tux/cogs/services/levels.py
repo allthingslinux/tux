@@ -243,6 +243,51 @@ class LevelsService(commands.Cog):
 
         return None
 
+    @staticmethod
+    def generate_progress_bar(
+        current_value: int,
+        target_value: int,
+        bar_length: int = 10,
+    ) -> str:
+        """
+        Generates an XP progress bar based on the current level and XP.
+
+        Args:
+            current_value (int): The current XP value.
+            target_value (int): The target XP value.
+            bar_length (int, optional): The length of the progress bar. Defaults to 10.
+
+        Returns:
+            str: The formatted progress bar.
+        """
+        progress: float = current_value / target_value
+        filled_length: int = int(bar_length * progress)
+        empty_length: int = bar_length - filled_length
+        bar: str = "▰" * filled_length + "▱" * empty_length
+        return f"`{bar}` {current_value}/{target_value}"
+
+    def get_level_progress(self, xp: float, level: int) -> tuple[int, int]:
+        """
+        Get the progress towards the next level.
+
+        Parameters
+        ----------
+        xp : float
+            The current XP.
+        level : int
+            The current level.
+
+        Returns
+        -------
+        tuple[int, int]
+            A tuple containing the XP progress within the current level and the XP required for the next level.
+        """
+        current_level_xp = self.calculate_xp_for_level(level)
+        next_level_xp = self.calculate_xp_for_level(level + 1)
+        xp_progress = int(xp - current_level_xp)
+        xp_required = int(next_level_xp - current_level_xp)
+        return xp_progress, xp_required
+
 
 async def setup(bot: Tux) -> None:
     await bot.add_cog(LevelsService(bot))
