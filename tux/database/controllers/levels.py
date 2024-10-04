@@ -80,6 +80,31 @@ class LevelsController:
         else:
             return level.level if level else 0
 
+    async def get_xp_and_level(self, member_id: int, guild_id: int) -> tuple[float, int]:
+        """
+        Get the XP and level of a member in a guild.
+
+        Parameters
+        ----------
+        member_id : int
+            The ID of the member.
+        guild_id : int
+            The ID of the guild.
+
+        Returns
+        -------
+        tuple[float, int]
+            A tuple containing the XP and level of the member.
+        """
+        await self.ensure_guild_exists(guild_id)
+        try:
+            record = await self.levels_table.find_first(where={"member_id": member_id, "guild_id": guild_id})
+        except Exception as e:
+            logger.error(f"Error querying XP and level for member_id: {member_id}, guild_id: {guild_id}: {e}")
+            return 0.0, 0
+        else:
+            return (record.xp, record.level) if record else (0.0, 0)
+
     async def get_last_message_time(self, member_id: int, guild_id: int) -> datetime.datetime | None:
         """
         Get the last message time of a member in a guild.

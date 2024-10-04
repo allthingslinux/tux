@@ -67,8 +67,7 @@ class LevelsService(commands.Cog):
         if last_message_time and self.is_on_cooldown(last_message_time):
             return
 
-        current_xp = await self.levels_controller.get_xp(member.id, guild.id)
-        current_level = await self.levels_controller.get_level(member.id, guild.id)
+        current_xp, current_level = await self.levels_controller.get_xp_and_level(member.id, guild.id)
 
         xp_increment = self.calculate_xp_increment(member)
         new_xp = current_xp + xp_increment
@@ -234,7 +233,6 @@ class LevelsService(commands.Cog):
             )
             return embed
 
-        # The condition here was incorrect
         if user_input < 0:
             embed: discord.Embed = EmbedCreator.create_embed(
                 embed_type=EmbedCreator.ERROR,
