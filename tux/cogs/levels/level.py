@@ -45,15 +45,25 @@ class Level(commands.Cog):
         xp_progress, xp_required = self.levels_service.get_level_progress(xp, level)
         progress_bar = self.levels_service.generate_progress_bar(xp_progress, xp_required)
 
-        embed: discord.Embed = EmbedCreator.create_embed(
-            embed_type=EmbedType.DEFAULT,
-            title=f"Level {level}",
-            description=f"Progress to Next Level:\n{progress_bar}",
-            custom_color=discord.Color.blurple(),
-            custom_author_text=f"{member.name}",
-            custom_author_icon_url=member.display_avatar.url,
-            custom_footer_text=f"Total XP: {round(xp)}",
-        )
+        if self.levels_service.settings.get("SHOW_XP_PROGRESS"):
+            embed: discord.Embed = EmbedCreator.create_embed(
+                embed_type=EmbedType.DEFAULT,
+                title=f"Level {level}",
+                description=f"Progress to Next Level:\n{progress_bar}",
+                custom_color=discord.Color.blurple(),
+                custom_author_text=f"{member.name}",
+                custom_author_icon_url=member.display_avatar.url,
+                custom_footer_text=f"Total XP: {round(xp)}",
+            )
+        else:
+            embed: discord.Embed = EmbedCreator.create_embed(
+                embed_type=EmbedType.DEFAULT,
+                title=f"Level {level}",
+                custom_color=discord.Color.blurple(),
+                custom_author_text=f"{member.name}",
+                custom_author_icon_url=member.display_avatar.url,
+                custom_footer_text=f"Total XP: {round(xp)}",
+            )
 
         await ctx.send(embed=embed)
 

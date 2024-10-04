@@ -12,19 +12,19 @@ from tux.database.controllers.levels import LevelsController
 from tux.main import get_prefix
 from tux.ui.embeds import EmbedCreator
 
-settings_path = Path("config/settings.yml")
-with settings_path.open() as file:
-    settings = yaml.safe_load(file)
-
 
 class LevelsService(commands.Cog):
     def __init__(self, bot: Tux) -> None:
+        settings_path = Path("config/settings.yml")
+        with settings_path.open() as file:
+            self.settings = yaml.safe_load(file)
+
         self.bot = bot
         self.levels_controller = LevelsController()
-        self.xp_cooldown = settings.get("XP_COOLDOWN")
-        self.levels_exponent = settings.get("LEVELS_EXPONENT")
-        self.xp_roles = {role["level"]: role["role_id"] for role in settings["XP_ROLES"]}
-        self.xp_multipliers = {role["role_id"]: role["multiplier"] for role in settings["XP_MULTIPLIERS"]}
+        self.xp_cooldown = self.settings.get("XP_COOLDOWN")
+        self.levels_exponent = self.settings.get("LEVELS_EXPONENT")
+        self.xp_roles = {role["level"]: role["role_id"] for role in self.settings["XP_ROLES"]}
+        self.xp_multipliers = {role["role_id"]: role["multiplier"] for role in self.settings["XP_MULTIPLIERS"]}
 
     @commands.Cog.listener("on_message")
     async def xp_listener(self, message: discord.Message) -> None:
@@ -36,7 +36,7 @@ class LevelsService(commands.Cog):
         message : discord.Message
             The message object.
         """
-        if message.author.bot or message.guild is None or message.channel.id in settings["XP_BLACKLIST_CHANNEL"]:
+        if message.author.bot or message.guild is None or message.channel.id in self.settings["XP_BLACKLIST_CHANNEL"]:
             return
 
         prefixes = await get_prefix(self.bot, message)
