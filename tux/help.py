@@ -460,7 +460,7 @@ class TuxHelp(commands.HelpCommand):
         )
         embed.add_field(
             name="Aliases",
-            value=(f"`{", ".join(command.aliases)}`" if command.aliases else "No aliases."),
+            value=(f"`{", ".join(command.aliases)}`" if command.aliases else "No aliases"),
             inline=False,
         )
 

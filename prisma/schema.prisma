@@ -22,6 +22,7 @@ model Guild {
   Starboard        Starboard?
   StarboardMessage StarboardMessage[]
   case_count       BigInt             @default(0)
+  levels           Levels[]
 
   @@index([guild_id])
 }
@@ -154,6 +155,19 @@ model StarboardMessage {
 
   @@unique([message_id, message_guild_id])
   @@index([message_id, message_guild_id])
+}
+
+model Levels {
+  member_id    BigInt   @id
+  xp           Float    @default(0)
+  level        BigInt   @default(0)
+  blacklisted  Boolean  @default(false)
+  last_message DateTime @default(now())
+  guild_id     BigInt
+  guild        Guild    @relation(fields: [guild_id], references: [guild_id])
+
+  @@unique([member_id, guild_id])
+  @@index([member_id])
 }
 
 enum CaseType {
