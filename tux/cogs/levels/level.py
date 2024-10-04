@@ -58,11 +58,10 @@ class Level(commands.Cog):
         else:
             embed: discord.Embed = EmbedCreator.create_embed(
                 embed_type=EmbedType.DEFAULT,
-                title=f"Level {level}",
+                description=f"**Level {level}** - `XP: {round(xp)}`",
                 custom_color=discord.Color.blurple(),
                 custom_author_text=f"{member.name}",
                 custom_author_icon_url=member.display_avatar.url,
-                custom_footer_text=f"Total XP: {round(xp)}",
             )
 
         await ctx.send(embed=embed)
