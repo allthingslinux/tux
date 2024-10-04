@@ -163,18 +163,17 @@ class LevelsService(commands.Cog):
         new_level : int
             The new level of the member.
         """
-        if roles_to_assign := [guild.get_role(rid) for lvl, rid in sorted(self.xp_roles.items()) if new_level >= lvl]:
-            if highest_role := roles_to_assign[-1]:
-                await self.try_assign_role(member, highest_role)
-                roles_to_remove = [r for r in member.roles if r in roles_to_assign and r != highest_role]
-                await member.remove_roles(*roles_to_remove)
-                logger.debug(
-                    f"Assigned role {highest_role.name} to member {member} and removed roles {', '.join(r.name for r in roles_to_remove)}",
-                )
-        else:
-            roles_to_remove = [r for rid in self.xp_roles.values() if (r := guild.get_role(rid))]
-            await member.remove_roles(*roles_to_remove, reason="Tux Level Service")
-            logger.debug(f"Removed roles {', '.join(r.name for r in roles_to_remove)} from member {member}")
+        roles_to_assign = [guild.get_role(rid) for lvl, rid in sorted(self.xp_roles.items()) if new_level >= lvl]
+        highest_role = roles_to_assign[-1] if roles_to_assign else None
+
+        if highest_role:
+            await self.try_assign_role(member, highest_role)
+
+        roles_to_remove = [r for r in member.roles if r.id in self.xp_roles.values() and r != highest_role]
+        await member.remove_roles(*roles_to_remove)
+        logger.debug(
+            f"Assigned role {highest_role.name if highest_role else 'None'} to member {member} and removed roles {', '.join(r.name for r in roles_to_remove)}",
+        )
 
     @staticmethod
     async def try_assign_role(member: discord.Member, role: discord.Role) -> None:
