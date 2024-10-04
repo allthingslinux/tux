@@ -141,7 +141,7 @@ class LevelsService(commands.Cog):
         roles_to_remove = [r for r in member.roles if r.id in self.xp_roles.values() and r != highest_role]
         await member.remove_roles(*roles_to_remove)
         logger.debug(
-            f"Assigned role {highest_role.name if highest_role else 'None'} to member {member} and removed roles {', '.join(r.name for r in roles_to_remove)}",
+            f"Assigned role {highest_role.name if highest_role else "None"} to member {member} and removed roles {", ".join(r.name for r in roles_to_remove)}",
         )
 
     @staticmethod
@@ -209,11 +209,10 @@ class LevelsService(commands.Cog):
         """
         return int((xp / 500) ** (1 / self.levels_exponent) * 5)
 
+    # *NOTE* Do not move this function to utils.py, as this results in a circular import.
     def valid_xplevel_input(self, user_input: int) -> discord.Embed | None:
         """
         Check if the input is valid.
-
-        Do not move this function to utils.py, as this results in a circular import.
 
         Parameters
         ----------
