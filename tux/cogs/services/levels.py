@@ -149,6 +149,7 @@ class LevelsService(commands.Cog):
             The new level of the member.
         """
         await self.update_roles(member, guild, new_level)
+        # we can add more to this like level announcements etc. That's why I keep this function in between.
 
     async def update_roles(self, member: discord.Member, guild: discord.Guild, new_level: int) -> None:
         """
