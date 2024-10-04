@@ -82,6 +82,7 @@ class LevelsService(commands.Cog):
         )
 
         if new_level > current_level:
+            logger.debug(f"User {member.name} leveled up from {current_level} to {new_level} in guild {guild.name}")
             await self.handle_level_up(member, guild, new_level)
 
     def is_on_cooldown(self, last_message_time: datetime.datetime) -> bool:
@@ -162,19 +163,22 @@ class LevelsService(commands.Cog):
         new_level : int
             The new level of the member.
         """
-        if role_id := next(
-            (rid for lvl, rid in sorted(self.xp_roles.items()) if new_level >= lvl),
-            None,
-        ):
-            if role := guild.get_role(role_id):
-                await self.try_assign_role(member, role)
-                roles_to_remove = [
-                    r for rid in self.xp_roles.values() if (r := guild.get_role(rid)) and r.id != role_id
-                ]
+        if roles_to_assign := [guild.get_role(rid) for lvl, rid in sorted(self.xp_roles.items()) if new_level >= lvl]:
+            if highest_role := roles_to_assign[-1]:
+                await self.try_assign_role(member, highest_role)
+                roles_to_remove = [r for r in member.roles if r in roles_to_assign and r != highest_role]
                 await member.remove_roles(*roles_to_remove)
+                logger.debug(
+                    f"Assigned role {highest_role.name} to member {member} and removed roles {', '.join(r.name for r in roles_to_remove)}",
+                )
+            else:
+                logger.error(
+                    f"Highest role is None for member {member} at level {new_level} in guild {guild.name} | {roles_to_assign}",
+                )
         else:
             roles_to_remove = [r for rid in self.xp_roles.values() if (r := guild.get_role(rid))]
             await member.remove_roles(*roles_to_remove, reason="Tux Level Service")
+            logger.debug(f"Removed roles {', '.join(r.name for r in roles_to_remove)} from member {member}")
 
     @staticmethod
     async def try_assign_role(member: discord.Member, role: discord.Role) -> None:
