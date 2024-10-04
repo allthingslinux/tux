@@ -39,7 +39,7 @@ class XpReset(commands.Cog):
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
             title=f"XP Reset - {member}",
-            description=f"{member}'s XP has been reset from **{old_xp}** to **0**",
+            description=f"{member}'s XP has been reset from **{round(old_xp)}** to **0**",
             custom_color=discord.Color.blurple(),
         )
 

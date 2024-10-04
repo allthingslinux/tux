@@ -55,7 +55,7 @@ class LevelSet(commands.Cog):
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
             title=f"Level Set - {member}",
-            description=f"{member}'s level has been updated from **{old_level}** to **{new_level}**\nTheir XP has been updated from **{old_xp}** to **{new_xp}**",
+            description=f"{member}'s level has been updated from **{old_level}** to **{new_level}**\nTheir XP has been updated from **{round(old_xp)}** to **{round(new_xp)}**",
             custom_color=discord.Color.blurple(),
         )
 

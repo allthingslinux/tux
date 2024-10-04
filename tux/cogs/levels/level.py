@@ -45,7 +45,7 @@ class Level(commands.Cog):
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
             title=f"Level - {member}",
-            description=f"Level: **{level}** \nXP: **{xp}**",
+            description=f"Level: **{level}** \nXP: **{round(xp)}**",
             custom_color=discord.Color.blurple(),
         )
 

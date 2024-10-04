@@ -103,38 +103,6 @@ class LevelsService(commands.Cog):
             seconds=self.xp_cooldown,
         )
 
-    def calculate_xp_increment(self, member: discord.Member) -> float:
-        """
-        Calculates the XP increment for a member.
-
-        Parameters
-        ----------
-        member : discord.Member
-            The member gaining XP.
-
-        Returns
-        -------
-        float
-            The XP increment.
-        """
-        return max((self.xp_multipliers.get(role.id, 1) for role in member.roles), default=1)
-
-    def calculate_level(self, xp: float) -> int:
-        """
-        Calculates the level based on XP.
-
-        Parameters
-        ----------
-        xp : float
-            The XP amount.
-
-        Returns
-        -------
-        int
-            The calculated level.
-        """
-        return int((xp / 500) ** (1 / self.levels_exponent) * 5)
-
     async def handle_level_up(self, member: discord.Member, guild: discord.Guild, new_level: int) -> None:
         """
         Handles the level up process for a member.
@@ -208,6 +176,38 @@ class LevelsService(commands.Cog):
             The XP required for the level.
         """
         return 500 * (level / 5) ** self.levels_exponent
+
+    def calculate_xp_increment(self, member: discord.Member) -> float:
+        """
+        Calculates the XP increment for a member.
+
+        Parameters
+        ----------
+        member : discord.Member
+            The member gaining XP.
+
+        Returns
+        -------
+        float
+            The XP increment.
+        """
+        return max((self.xp_multipliers.get(role.id, 1) for role in member.roles), default=1)
+
+    def calculate_level(self, xp: float) -> int:
+        """
+        Calculates the level based on XP.
+
+        Parameters
+        ----------
+        xp : float
+            The XP amount.
+
+        Returns
+        -------
+        int
+            The calculated level.
+        """
+        return int((xp / 500) ** (1 / self.levels_exponent) * 5)
 
     def valid_xplevel_input(self, user_input: int) -> discord.Embed | None:
         """
