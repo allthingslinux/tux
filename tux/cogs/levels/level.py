@@ -42,10 +42,10 @@ class Level(commands.Cog):
         xp = await self.levels_service.levels_controller.get_xp(member.id, ctx.guild.id)
         level = await self.levels_service.levels_controller.get_level(member.id, ctx.guild.id)
 
-        xp_progress, xp_required = self.levels_service.get_level_progress(xp, level)
-        progress_bar = self.levels_service.generate_progress_bar(xp_progress, xp_required)
-
         if self.levels_service.settings.get("SHOW_XP_PROGRESS"):
+            xp_progress, xp_required = self.levels_service.get_level_progress(xp, level)
+            progress_bar = self.levels_service.generate_progress_bar(xp_progress, xp_required)
+
             embed: discord.Embed = EmbedCreator.create_embed(
                 embed_type=EmbedType.DEFAULT,
                 title=f"Level {level}",
