@@ -335,6 +335,7 @@ class Snippets(commands.Cog):
         aliases=["cs"],
     )
     @commands.guild_only()
+    @commands.has_role(1290368764470231092)
     async def create_snippet(self, ctx: commands.Context[Tux], *, arg: str) -> None:
         """
         Create a snippet.
