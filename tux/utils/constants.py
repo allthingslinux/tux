@@ -30,6 +30,9 @@ class Constants:
     DEFAULT_DEV_PREFIX: Final[str] = config["DEFAULT_PREFIX"]["DEV"]
     DEV_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("DEV_COG_IGNORE_LIST", "").split(","))
 
+    # Redis constants
+    REDIS_URL: Final[str] = os.getenv("REDIS_URL", "redis://localhost:6379")
+
     # Debug env constants
     DEBUG: Final[bool] = bool(os.getenv("DEBUG", "True"))
 

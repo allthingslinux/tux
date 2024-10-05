@@ -25,6 +25,7 @@ class LevelsService(commands.Cog):
         self.levels_exponent = self.settings.get("LEVELS_EXPONENT")
         self.xp_roles = {role["level"]: role["role_id"] for role in self.settings["XP_ROLES"]}
         self.xp_multipliers = {role["role_id"]: role["multiplier"] for role in self.settings["XP_MULTIPLIERS"]}
+        self.redis = bot.redis
 
     @commands.Cog.listener("on_message")
     async def xp_listener(self, message: discord.Message) -> None:
@@ -63,7 +64,7 @@ class LevelsService(commands.Cog):
         if await self.levels_controller.is_blacklisted(member.id, guild.id):
             return
 
-        last_message_time = await self.levels_controller.get_last_message_time(member.id, guild.id)
+        last_message_time = await self.get_last_message_time(member.id, guild.id)
         if last_message_time and self.is_on_cooldown(last_message_time):
             return
 
@@ -73,17 +74,47 @@ class LevelsService(commands.Cog):
         new_xp = current_xp + xp_increment
         new_level = self.calculate_level(new_xp)
 
+        await self.update_xp_and_level(member.id, guild.id, new_xp, new_level)
+
+        if new_level > current_level:
+            logger.debug(f"User {member.name} leveled up from {current_level} to {new_level} in guild {guild.name}")
+            await self.handle_level_up(member, guild, new_level)
+
+    async def get_last_message_time(self, user_id: int, guild_id: int) -> datetime.datetime | None:
+        """
+        Retrieves the last message time for a member from Redis.
+
+        Parameters
+        ----------
+        user_id : int
+            The ID of the member.
+        guild_id : int
+            The ID of the guild.
+
+        Returns
+        -------
+        datetime.datetime | None
+            The last message time if cached, otherwise None.
+        """
+        cache_key = f"last_message_time:{user_id}:{guild_id}"
+        cached_time = await self.redis.get(cache_key)
+
+        if cached_time and cached_time != "None":
+            return datetime.datetime.fromtimestamp(float(cached_time), tz=datetime.UTC)
+
+        return None
+
+    async def update_xp_and_level(self, user_id: int, guild_id: int, new_xp: float, new_level: int) -> None:
         await self.levels_controller.update_xp_and_level(
-            member.id,
-            guild.id,
+            user_id,
+            guild_id,
             new_xp,
             new_level,
             datetime.datetime.fromtimestamp(time.time(), tz=datetime.UTC),
         )
 
-        if new_level > current_level:
-            logger.debug(f"User {member.name} leveled up from {current_level} to {new_level} in guild {guild.name}")
-            await self.handle_level_up(member, guild, new_level)
+        last_message_time_key = f"last_message_time:{user_id}:{guild_id}"
+        await self.redis.set(last_message_time_key, str(time.time()), expiration=self.xp_cooldown)
 
     def is_on_cooldown(self, last_message_time: datetime.datetime) -> bool:
         """
@@ -141,7 +172,7 @@ class LevelsService(commands.Cog):
         roles_to_remove = [r for r in member.roles if r.id in self.xp_roles.values() and r != highest_role]
         await member.remove_roles(*roles_to_remove)
         logger.debug(
-            f"Assigned role {highest_role.name if highest_role else "None"} to member {member} and removed roles {", ".join(r.name for r in roles_to_remove)}",
+            f"Assigned role {highest_role.name if highest_role else 'None'} to member {member} and removed roles {', '.join(r.name for r in roles_to_remove)}",
         )
 
     @staticmethod

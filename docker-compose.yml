@@ -13,3 +13,15 @@ services:
             - .venv/
     env_file:
       - .env
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data: {}
