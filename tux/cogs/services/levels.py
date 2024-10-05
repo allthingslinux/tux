@@ -25,6 +25,7 @@ class LevelsService(commands.Cog):
         self.levels_exponent = self.settings.get("LEVELS_EXPONENT")
         self.xp_roles = {role["level"]: role["role_id"] for role in self.settings["XP_ROLES"]}
         self.xp_multipliers = {role["role_id"]: role["multiplier"] for role in self.settings["XP_MULTIPLIERS"]}
+        self.max_level = max(item["level"] for item in self.settings["XP_ROLES"])
 
     @commands.Cog.listener("on_message")
     async def xp_listener(self, message: discord.Message) -> None:
@@ -63,15 +64,19 @@ class LevelsService(commands.Cog):
         if await self.levels_controller.is_blacklisted(member.id, guild.id):
             return
 
+        current_xp, current_level = await self.levels_controller.get_xp_and_level(member.id, guild.id)
+
+        # Check if the member has already reached the maximum level
+        if current_level >= self.max_level:
+            return
+
         last_message_time = await self.levels_controller.get_last_message_time(member.id, guild.id)
         if last_message_time and self.is_on_cooldown(last_message_time):
             return
 
-        current_xp, current_level = await self.levels_controller.get_xp_and_level(member.id, guild.id)
-
         xp_increment = self.calculate_xp_increment(member)
         new_xp = current_xp + xp_increment
-        new_level = self.calculate_level(new_xp)
+        new_level = min(self.calculate_level(new_xp), self.max_level)
 
         await self.levels_controller.update_xp_and_level(
             member.id,
@@ -195,7 +200,7 @@ class LevelsService(commands.Cog):
 
     def calculate_level(self, xp: float) -> int:
         """
-        Calculates the level based on XP.
+        Calculates the level based on XP, capped at the maximum level.
 
         Parameters
         ----------
@@ -205,9 +210,10 @@ class LevelsService(commands.Cog):
         Returns
         -------
         int
-            The calculated level.
+            The calculated level, capped at the maximum level.
         """
-        return int((xp / 500) ** (1 / self.levels_exponent) * 5)
+        calculated_level = int((xp / 500) ** (1 / self.levels_exponent) * 5)
+        return min(calculated_level, self.max_level)
 
     # *NOTE* Do not move this function to utils.py, as this results in a circular import.
     def valid_xplevel_input(self, user_input: int) -> discord.Embed | None:
