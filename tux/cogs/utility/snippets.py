@@ -335,7 +335,6 @@ class Snippets(commands.Cog):
         aliases=["cs"],
     )
     @commands.guild_only()
-    @commands.has_role(1290368764470231092)
     async def create_snippet(self, ctx: commands.Context[Tux], *, arg: str) -> None:
         """
         Create a snippet.
@@ -348,7 +347,18 @@ class Snippets(commands.Cog):
             The name and content of the snippet.
         """
 
+        # TODO: Remove hardcoded role ids
+
+        # If user does not have any of the access level roles, return
+        access_level_role_ids = [1290368656441872535, 1290368813627346995]
+
         assert ctx.guild
+
+        if isinstance(ctx.author, discord.Member) and all(
+            role.id not in access_level_role_ids for role in ctx.author.roles
+        ):
+            await ctx.send("You do not have the permission to use this command.")
+            return
 
         if await self.is_snippetbanned(ctx.guild.id, ctx.author.id):
             await ctx.send("You are banned from using snippets.")
