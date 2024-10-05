@@ -25,7 +25,7 @@ class LevelsService(commands.Cog):
         self.levels_exponent = self.settings.get("LEVELS_EXPONENT")
         self.xp_roles = {role["level"]: role["role_id"] for role in self.settings["XP_ROLES"]}
         self.xp_multipliers = {role["role_id"]: role["multiplier"] for role in self.settings["XP_MULTIPLIERS"]}
-        self.redis = bot.redis
+        self.redis = bot.redis.interface
 
     @commands.Cog.listener("on_message")
     async def xp_listener(self, message: discord.Message) -> None:
@@ -108,7 +108,7 @@ class LevelsService(commands.Cog):
         )
 
         cooldown_key = f"xp_cooldown:{user_id}:{guild_id}"
-        await self.redis.set(cooldown_key, "1", expiration=self.xp_cooldown)
+        await self.redis.set(cooldown_key, "1", ex=self.xp_cooldown)
 
     async def handle_level_up(self, member: discord.Member, guild: discord.Guild, new_level: int) -> None:
         """

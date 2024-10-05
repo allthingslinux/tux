@@ -35,9 +35,12 @@ class Tux(commands.Bot):
 
         except Exception as e:
             logger.critical(f"An error occurred while connecting to the database: {e}")
-            return
+            # You might want to exit the program here if the database connection fails
+            import sys
 
-        # Load Jishaku for debuggings
+            sys.exit(1)
+
+        # Load Jishaku for debugging
         await self.load_extension("jishaku")
         # Load cogs via CogLoader
         await self.load_cogs()
@@ -89,7 +92,7 @@ class Tux(commands.Bot):
         try:
             logger.info("Closing database connections.")
             await db.disconnect()
-            await self.redis.disconnect()
+            await self.redis.interface.close()
 
         except Exception as e:
             logger.critical(f"Error during database disconnection: {e}")
