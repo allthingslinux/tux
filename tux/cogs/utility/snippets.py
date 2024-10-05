@@ -1,8 +1,10 @@
 import contextlib
 import datetime
 import string
+from pathlib import Path
 
 import discord
+import yaml
 from discord import AllowedMentions
 from discord.ext import commands
 from loguru import logger
@@ -32,6 +34,11 @@ class Snippets(commands.Cog):
         self.create_snippet.usage = generate_usage(self.create_snippet)
         self.edit_snippet.usage = generate_usage(self.edit_snippet)
         self.toggle_snippet_lock.usage = generate_usage(self.toggle_snippet_lock)
+
+        settings_path = Path("config/settings.yml")
+        with settings_path.open() as file:
+            self.settings = yaml.safe_load(file)
+        self.level_15_role_id = self.settings["XP_ROLES"][2]["role_id"]
 
     async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
         ban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETBAN)
@@ -348,6 +355,14 @@ class Snippets(commands.Cog):
         """
 
         assert ctx.guild
+
+        # TODO: Figure out how to abstract ATL style check from being hardcoded here
+
+        if isinstance(ctx.author, discord.Member) and self.level_15_role_id not in [
+            role.id for role in ctx.author.roles
+        ]:
+            await ctx.send("You are not allowed to create snippets.")
+            return
 
         if await self.is_snippetbanned(ctx.guild.id, ctx.author.id):
             await ctx.send("You are banned from using snippets.")
