@@ -32,6 +32,7 @@ class Constants:
 
     # Redis constants
     REDIS_URL: Final[str] = os.getenv("REDIS_URL", "redis://localhost:6379")
+    REDIS_DEBUG_LOG: Final[bool] = os.getenv("REDIS_DEBUG_LOG", "false").lower() == "true"
 
     # Debug env constants
     DEBUG: Final[bool] = bool(os.getenv("DEBUG", "True"))
