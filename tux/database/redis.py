@@ -9,7 +9,7 @@ from tux.utils.constants import CONST
 
 class RedisManager:
     def __init__(self):
-        self.redis: redis.Redis | None = None
+        self.redis: redis.Redis = redis.Redis()
         self.is_connected: bool = False
         self.debug_log: Callable[[str], None] = logger.debug if CONST.REDIS_DEBUG_LOG else lambda msg: None
 
@@ -159,6 +159,28 @@ class RedisManager:
             return result
         self.debug_log(f"Failed to retrieve range from sorted set '{key}' from '{start}' to '{end}'")
         return []
+
+    async def exists(self, key: str) -> bool:
+        """
+        Check if a key exists in Redis.
+
+        Parameters
+        ----------
+        key : str
+            The key to check for existence.
+
+        Returns
+        -------
+        bool
+            True if the key exists, False otherwise.
+        """
+        if self.redis and self.is_connected:
+            exists = await self.redis.exists(key)
+            self.debug_log(f"Checked existence of key '{key}', exists: {exists}")
+            return exists > 0
+
+        self.debug_log(f"Failed to check existence of key '{key}'")
+        return False
 
 
 redis_manager = RedisManager()

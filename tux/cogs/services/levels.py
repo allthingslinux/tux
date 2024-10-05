@@ -64,8 +64,7 @@ class LevelsService(commands.Cog):
         if await self.levels_controller.is_blacklisted(member.id, guild.id):
             return
 
-        last_message_time = await self.get_last_message_time(member.id, guild.id)
-        if last_message_time and self.is_on_cooldown(last_message_time):
+        if await self.is_on_cooldown(member.id, guild.id):
             return
 
         current_xp, current_level = await self.levels_controller.get_xp_and_level(member.id, guild.id)
@@ -80,9 +79,9 @@ class LevelsService(commands.Cog):
             logger.debug(f"User {member.name} leveled up from {current_level} to {new_level} in guild {guild.name}")
             await self.handle_level_up(member, guild, new_level)
 
-    async def get_last_message_time(self, user_id: int, guild_id: int) -> datetime.datetime | None:
+    async def is_on_cooldown(self, user_id: int, guild_id: int) -> bool:
         """
-        Retrieves the last message time for a member from Redis.
+        Checks if the member is on cooldown.
 
         Parameters
         ----------
@@ -93,16 +92,11 @@ class LevelsService(commands.Cog):
 
         Returns
         -------
-        datetime.datetime | None
-            The last message time if cached, otherwise None.
+        bool
+            True if the member is on cooldown, False otherwise.
         """
-        cache_key = f"last_message_time:{user_id}:{guild_id}"
-        cached_time = await self.redis.get(cache_key)
-
-        if cached_time and cached_time != "None":
-            return datetime.datetime.fromtimestamp(float(cached_time), tz=datetime.UTC)
-
-        return None
+        cache_key = f"xp_cooldown:{user_id}:{guild_id}"
+        return await self.redis.exists(cache_key)
 
     async def update_xp_and_level(self, user_id: int, guild_id: int, new_xp: float, new_level: int) -> None:
         await self.levels_controller.update_xp_and_level(
@@ -113,26 +107,8 @@ class LevelsService(commands.Cog):
             datetime.datetime.fromtimestamp(time.time(), tz=datetime.UTC),
         )
 
-        last_message_time_key = f"last_message_time:{user_id}:{guild_id}"
-        await self.redis.set(last_message_time_key, str(time.time()), expiration=self.xp_cooldown)
-
-    def is_on_cooldown(self, last_message_time: datetime.datetime) -> bool:
-        """
-        Checks if the member is on cooldown.
-
-        Parameters
-        ----------
-        last_message_time : datetime.datetime
-            The time of the last message.
-
-        Returns
-        -------
-        bool
-            True if the member is on cooldown, False otherwise.
-        """
-        return (datetime.datetime.fromtimestamp(time.time(), tz=datetime.UTC) - last_message_time) < datetime.timedelta(
-            seconds=self.xp_cooldown,
-        )
+        cooldown_key = f"xp_cooldown:{user_id}:{guild_id}"
+        await self.redis.set(cooldown_key, "1", expiration=self.xp_cooldown)
 
     async def handle_level_up(self, member: discord.Member, guild: discord.Guild, new_level: int) -> None:
         """
