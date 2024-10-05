@@ -41,6 +41,7 @@ types-psutil = "^6.0.0.20240621"
 types-pytz = "^2024.2.0.20240913"
 types-pyyaml = "^6.0.12.20240808"
 typing-extensions = "^4.12.2"
+redis = "^5.1.1"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.30"

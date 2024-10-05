@@ -6,6 +6,8 @@ from loguru import logger
 
 from tux.cog_loader import CogLoader
 from tux.database.client import db
+from tux.database.redis import redis_manager
+from tux.utils.constants import CONST
 
 
 class Tux(commands.Bot):
@@ -13,6 +15,7 @@ class Tux(commands.Bot):
         super().__init__(*args, **kwargs)
         self.setup_task = asyncio.create_task(self.setup())
         self.is_shutting_down = False
+        self.redis = redis_manager
 
     async def setup(self) -> None:
         """
@@ -26,9 +29,16 @@ class Tux(commands.Bot):
             logger.info(f"Prisma client connected: {db.is_connected()}")
             logger.info(f"Prisma client registered: {db.is_registered()}")
 
+            # Connect to Redis
+            logger.info("Setting up Redis client...")
+            await self.redis.connect(CONST.REDIS_URL)
+
         except Exception as e:
             logger.critical(f"An error occurred while connecting to the database: {e}")
-            return
+            # You might want to exit the program here if the database connection fails
+            import sys
+
+            sys.exit(1)
 
         # Load Jishaku for debugging
         await self.load_extension("jishaku")
@@ -82,6 +92,7 @@ class Tux(commands.Bot):
         try:
             logger.info("Closing database connections.")
             await db.disconnect()
+            await self.redis.interface.close()
 
         except Exception as e:
             logger.critical(f"Error during database disconnection: {e}")

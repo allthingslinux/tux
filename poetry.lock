@@ -1906,6 +1906,21 @@ files = [
 "discord.py" = ">=2.0.0"
 
 [[package]]
+name = "redis"
+version = "5.1.1"
+description = "Python client for Redis database and key-value store"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "redis-5.1.1-py3-none-any.whl", hash = "sha256:f8ea06b7482a668c6475ae202ed8d9bcaa409f6e87fb77ed1043d912afd62e24"},
+    {file = "redis-5.1.1.tar.gz", hash = "sha256:f6c997521fedbae53387307c5d0bf784d9acc28d9f1d058abeac566ec4dbed72"},
+]
+
+[package.extras]
+hiredis = ["hiredis (>=3.0.0)"]
+ocsp = ["cryptography (>=36.0.1)", "pyopenssl (==23.2.1)", "requests (>=2.31.0)"]
+
+[[package]]
 name = "regex"
 version = "2024.9.11"
 description = "Alternative regular expression module, to replace re."
@@ -2494,4 +2509,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12,<4"
-content-hash = "6ab3fe78575b8027fe7032997cebda8a035a760dc57e21a4ed0a7325d46be874"
+content-hash = "ea9d242987cee0e9b5b6227acdefe0212e4a68f9abd291c665c395459134bc77"
