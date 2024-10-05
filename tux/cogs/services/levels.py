@@ -12,8 +12,6 @@ from tux.database.controllers.levels import LevelsController
 from tux.main import get_prefix
 from tux.ui.embeds import EmbedCreator
 
-# TODO: I had to hot fix this commit because of a config error unrelated but this may suggest possible refactoring due to performance issues seen testing.
-
 
 class LevelsService(commands.Cog):
     def __init__(self, bot: Tux) -> None:
@@ -27,23 +25,6 @@ class LevelsService(commands.Cog):
         self.levels_exponent = self.settings.get("LEVELS_EXPONENT")
         self.xp_roles = {role["level"]: role["role_id"] for role in self.settings["XP_ROLES"]}
         self.xp_multipliers = {role["role_id"]: role["multiplier"] for role in self.settings["XP_MULTIPLIERS"]}
-
-    def determine_highest_multiplier(self, member: discord.Member) -> float:
-        """
-        Determines the highest XP multiplier based on the member's roles.
-
-        Parameters
-        ----------
-        member : discord.Member
-            The member whose roles to check.
-
-        Returns
-        -------
-        float
-            The highest multiplier applicable to the member.
-        """
-        multipliers = [multiplier for role_id, multiplier in self.xp_multipliers.items() if member.get_role(role_id)]
-        return max(multipliers, default=1.0)
 
     @commands.Cog.listener("on_message")
     async def xp_listener(self, message: discord.Message) -> None:
@@ -141,21 +122,27 @@ class LevelsService(commands.Cog):
     async def update_roles(self, member: discord.Member, guild: discord.Guild, new_level: int) -> None:
         """
         Updates the roles of a member based on their new level.
+
+        Parameters
+        ----------
+        member : discord.Member
+            The member whose roles are being updated.
+        guild : discord.Guild
+            The guild where the member's roles are being updated.
+        new_level : int
+            The new level of the member.
         """
-        if roles_to_assign := [guild.get_role(rid) for lvl, rid in sorted(self.xp_roles.items()) if new_level >= lvl]:
-            highest_role = roles_to_assign[-1]
-            if highest_role is not None:
-                logger.debug(f"Assigning role: {highest_role.name} to member {member.name}")
-        else:
-            highest_role = None
+        roles_to_assign = [guild.get_role(rid) for lvl, rid in sorted(self.xp_roles.items()) if new_level >= lvl]
+        highest_role = roles_to_assign[-1] if roles_to_assign else None
 
-        if highest_role is not None:
+        if highest_role:
             await self.try_assign_role(member, highest_role)
-            logger.debug(f"Assigned role: {highest_role.name} to member {member.name}")
 
-        if roles_to_remove := [r for r in member.roles if r.id in self.xp_roles.values() and r != highest_role]:
-            await member.remove_roles(*roles_to_remove)
-            logger.debug(f"Removed roles: {", ".join(r.name for r in roles_to_remove)} from member {member.name}")
+        roles_to_remove = [r for r in member.roles if r.id in self.xp_roles.values() and r != highest_role]
+        await member.remove_roles(*roles_to_remove)
+        logger.debug(
+            f"Assigned role {highest_role.name if highest_role else "None"} to member {member} and removed roles {", ".join(r.name for r in roles_to_remove)}",
+        )
 
     @staticmethod
     async def try_assign_role(member: discord.Member, role: discord.Role) -> None:
@@ -171,7 +158,6 @@ class LevelsService(commands.Cog):
         """
         try:
             await member.add_roles(role)
-            logger.debug(f"Assigned role {role.name} to member {member.name}")
         except Exception as error:
             logger.error(f"Failed to assign role {role.name} to {member}: {error}")
 
