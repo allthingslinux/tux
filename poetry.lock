@@ -811,17 +811,17 @@ dev = ["flake8", "markdown", "twine", "wheel"]
 
 [[package]]
 name = "githubkit"
-version = "0.11.11"
+version = "0.11.12"
 description = "GitHub SDK for Python"
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "githubkit-0.11.11-py3-none-any.whl", hash = "sha256:1296548278c8e2a9aeff21f2415d1cbd7cb1aca337730789947c486bcaf580a8"},
-    {file = "githubkit-0.11.11.tar.gz", hash = "sha256:575a601a80d2d2a4d1bb75f63a27f0e1c316d8f0d3e8bea8613af2681a4bf6fb"},
+    {file = "githubkit-0.11.12-py3-none-any.whl", hash = "sha256:7bf4d47cff2db3baea05c701155fda9c28e690eeb8874090ff00f44442b06ead"},
+    {file = "githubkit-0.11.12.tar.gz", hash = "sha256:f7f82998a04ac8d2606c26e87e3b2cd44adbf3838fcb99ddd654576503bba6ba"},
 ]
 
 [package.dependencies]
-hishel = ">=0.0.21,<=0.0.32"
+hishel = ">=0.0.21,<=0.0.33"
 httpx = ">=0.23.0,<1.0.0"
 pydantic = ">=1.9.1,<2.5.0 || >2.5.0,<2.5.1 || >2.5.1,<3.0.0"
 PyJWT = {version = ">=2.4.0,<3.0.0", extras = ["crypto"], optional = true, markers = "extra == \"jwt\" or extra == \"auth-app\" or extra == \"auth\" or extra == \"all\""}
