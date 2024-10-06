@@ -36,6 +36,8 @@ XP_MULTIPLIERS:
 XP_COOLDOWN: 1 # In seconds
 LEVELS_EXPONENT: 1
 SHOW_XP_PROGRESS: false
+
+# if true, XP will still be counted, but not shown beyond the cap in the level command
 ENABLE_XP_CAP: false
 
 EMBED_COLORS:

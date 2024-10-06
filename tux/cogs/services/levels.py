@@ -65,15 +65,11 @@ class LevelsService(commands.Cog):
         if await self.levels_controller.is_blacklisted(member.id, guild.id):
             return
 
-        current_xp, current_level = await self.levels_controller.get_xp_and_level(member.id, guild.id)
-
-        # Check if the member has already reached the maximum level and level cap is enabled
-        if self.enable_xp_cap and current_level >= self.max_level:
-            return
-
         last_message_time = await self.levels_controller.get_last_message_time(member.id, guild.id)
         if last_message_time and self.is_on_cooldown(last_message_time):
             return
+
+        current_xp, current_level = await self.levels_controller.get_xp_and_level(member.id, guild.id)
 
         xp_increment = self.calculate_xp_increment(member)
         new_xp = current_xp + xp_increment
@@ -201,7 +197,7 @@ class LevelsService(commands.Cog):
 
     def calculate_level(self, xp: float) -> int:
         """
-        Calculates the level based on XP, capped at the maximum level if enabled.
+        Calculates the level based on XP.
 
         Parameters
         ----------
@@ -211,12 +207,9 @@ class LevelsService(commands.Cog):
         Returns
         -------
         int
-            The calculated level, capped at the maximum level if enabled.
+            The calculated level.
         """
-        calculated_level = int((xp / 500) ** (1 / self.levels_exponent) * 5)
-        if self.enable_xp_cap:
-            return min(calculated_level, self.max_level)
-        return calculated_level
+        return int((xp / 500) ** (1 / self.levels_exponent) * 5)
 
     # *NOTE* Do not move this function to utils.py, as this results in a circular import.
     def valid_xplevel_input(self, user_input: int) -> discord.Embed | None:
