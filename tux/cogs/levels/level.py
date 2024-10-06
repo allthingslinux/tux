@@ -4,6 +4,7 @@ from discord.ext import commands
 from tux.bot import Tux
 from tux.cogs.services.levels import LevelsService
 from tux.ui.embeds import EmbedCreator, EmbedType
+from tux.utils.config import CONFIG
 from tux.utils.flags import generate_usage
 
 
@@ -50,7 +51,7 @@ class Level(commands.Cog):
             level_display = level
             xp_display = f"{round(xp)}"
 
-        if self.levels_service.settings.get("SHOW_XP_PROGRESS"):
+        if CONFIG.SHOW_XP_PROGRESS:
             xp_progress, xp_required = self.levels_service.get_level_progress(xp, level)
             progress_bar = self.levels_service.generate_progress_bar(xp_progress, xp_required)
 
