@@ -6,7 +6,7 @@ from typing import Final
 import yaml
 from dotenv import load_dotenv, set_key
 
-from tux.utils.functions import convert_dict_str_to_int
+from tux.utils.functions import dict_str_to_int, dict_to_tuple_list
 
 load_dotenv(verbose=True)
 
@@ -83,8 +83,14 @@ class Constants:
     RECENT_GIF_AGE: Final[int] = config["GIF_LIMITER"]["RECENT_GIF_AGE"]
     GIF_LIMIT_EXCLUDE: Final[list[int]] = config["GIF_LIMITER"]["GIF_LIMIT_EXCLUDE"]
 
-    GIF_LIMITS: Final[dict[int, int]] = convert_dict_str_to_int(config["GIF_LIMITER"]["GIF_LIMITS_USER"])
-    GIF_LIMITS_CHANNEL: Final[dict[int, int]] = convert_dict_str_to_int(config["GIF_LIMITER"]["GIF_LIMITS_CHANNEL"])
+    GIF_LIMITS = dict_str_to_int(config["GIF_LIMITER"]["GIF_LIMITS_USER"])
+    GIF_LIMITS_CHANNEL = dict_str_to_int(config["GIF_LIMITER"]["GIF_LIMITS_CHANNEL"])
+
+    # Adaptive slowmode constants
+    AUTOSLOWMODE_INTERVAL: Final[int] = config["AUTO_SLOWMODE"]["MESSAGE_COUNTING_INTERVAL"]
+    AUTOSLOWMODE_DEFAULT: Final[int] = config["AUTO_SLOWMODE"]["SLOWMODE_DEFAULT"]
+    AUTOSLOWMODE_CHANNELS = dict_str_to_int(config["AUTO_SLOWMODE"]["CHANNEL_MULTIPLIERS"])
+    AUTOSLOWMODE_THRESHOLDS: Final[list[tuple[int, int]]] = dict_to_tuple_list(config["AUTO_SLOWMODE"]["THRESHOLDS"])
 
     # Embed limit constants
     EMBED_MAX_NAME_LENGTH = 256

@@ -23,9 +23,9 @@ class GifLimiter(commands.Cog):
         self.recent_gif_age: int = CONST.RECENT_GIF_AGE
 
         # Max number of GIFs sent recently in a channel
-        self.channelwide_gif_limits: dict[int, int] = CONST.GIF_LIMITS_CHANNEL
+        self.channelwide_gif_limits = CONST.GIF_LIMITS_CHANNEL
         # Max number of GIFs sent recently by a user to be able to post one in specified channels
-        self.user_gif_limits: dict[int, int] = CONST.GIF_LIMITS
+        self.user_gif_limits = CONST.GIF_LIMITS
 
         # list of channels in which not to count GIFs
         self.gif_limit_exclude: list[int] = CONST.GIF_LIMIT_EXCLUDE

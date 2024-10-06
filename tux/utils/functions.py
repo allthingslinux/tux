@@ -1,6 +1,6 @@
 import re
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, Union
 
 import discord
 from loguru import logger
@@ -303,17 +303,49 @@ def extract_member_attrs(member: discord.Member) -> dict[str, Any]:
     }
 
 
-def convert_dict_str_to_int(original_dict: dict[str, int]) -> dict[int, int]:
-    """Helper function used for GIF Limiter constants.
-    Required as YAML keys are str. Channel and user IDs are int."""
+def dict_str_to_int(original_dict: dict[str, int]) -> dict[int, float] | dict[int, int]:
+    """Helper function to convert str YAML keys to int"""
 
-    converted_dict: dict[int, int] = {}
+    converted_dict: dict[int, int] | dict[int, float] = {}
 
     for key, value in original_dict.items():
         try:
             int_key: int = int(key)
             converted_dict[int_key] = value
         except ValueError:
-            logger.exception(f"An error occurred when loading the GIF ratelimiter configuration at key {key}")
+            logger.exception(f"An error occurred when converting key {key} to int")
 
     return converted_dict
+
+
+def dict_to_tuple_list(input_dict: dict[str, int]) -> list[tuple[int, int]]:
+    """
+    Helper function used for auto slowmode thresholds
+
+    Parameters:
+    ----------
+    input_dict: Dict[str, int]
+        The threshold dictionary parsed from settings.yml
+
+    Returns
+    -------
+    List[Tuple[int, int]]
+        Sorted list of threshold : slowmode tuples.
+    """
+
+    # Create an empty list to store tuples
+    tuple_list: list[tuple[int, int]] = []
+
+    for key, value in input_dict.items():
+        try:
+            int_key: int = int(key)
+
+            item_tuple: tuple[int, int] = (int_key, value)
+
+            tuple_list.append(item_tuple)
+        except ValueError:
+            logger.exception(f"An error occurred when loading the autoslowmode configuration at key {key}")
+
+    sorted_list = sorted(tuple_list)
+    sorted_list.reverse()
+    return sorted_list
