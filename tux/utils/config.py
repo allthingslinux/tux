@@ -85,8 +85,8 @@ class Config:
     XP_MULTIPLIERS: Final[list[dict[str, int | float]]] = config["XP"]["XP_MULTIPLIERS"]
     XP_COOLDOWN: Final[int] = config["XP"]["XP_COOLDOWN"]
     LEVELS_EXPONENT: Final[int] = config["XP"]["LEVELS_EXPONENT"]
-    SHOW_XP_PROGRESS: Final[bool] = config["XP"]["SHOW_XP_PROGRESS", False]
-    ENABLE_XP_CAP: Final[bool] = config["XP"]["ENABLE_XP_CAP", True]
+    SHOW_XP_PROGRESS: Final[bool] = config["XP"].get("SHOW_XP_PROGRESS", False)
+    ENABLE_XP_CAP: Final[bool] = config["XP"].get("ENABLE_XP_CAP", True)
 
 
 CONFIG = Config()
