@@ -1,6 +1,6 @@
 import re
 from datetime import UTC, datetime, timedelta
-from typing import Any, Union
+from typing import Any
 
 import discord
 from loguru import logger

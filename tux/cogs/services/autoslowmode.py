@@ -10,7 +10,7 @@ from tux.utils.constants import CONST
 
 class SlowmodeHandler(commands.Cog):
     """
-    This class is an automatic slowmode handler. 
+    This class is an automatic slowmode handler.
     It counts each message, and every so often sets the slowmode for configured channels.
     """
 
@@ -22,7 +22,6 @@ class SlowmodeHandler(commands.Cog):
         self.channel_converter = commands.TextChannelConverter()
 
         self.set_slowmode.start()
-
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -45,7 +44,7 @@ class SlowmodeHandler(commands.Cog):
                 if threshold[0] <= messages:
                     slowmode_secs = threshold[1] * CONST.AUTOSLOWMODE_CHANNELS[channel_id]
                     break
-            
+
             slowmode_secs = int(slowmode_secs)
 
             channel = self.bot.get_channel(channel_id)
@@ -56,6 +55,6 @@ class SlowmodeHandler(commands.Cog):
             logger.info(f"slowmode updated to {slowmode_secs}")
         self.message_counts.clear()
 
+
 async def setup(bot: Tux) -> None:
     await bot.add_cog(SlowmodeHandler(bot))
-
