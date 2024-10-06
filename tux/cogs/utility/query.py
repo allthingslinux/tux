@@ -4,7 +4,7 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
-from tux.utils.constants import Constants as CONST
+from tux.utils.constants import CONST
 from tux.utils.flags import generate_usage
 
 
@@ -49,6 +49,8 @@ class Query(commands.Cog):
                 user_display_avatar=ctx.author.display_avatar.url,
                 description="An error occurred while processing your request. (DDG Provided a non-200 status code)",
             )
+
+            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
             return
 
         data = response.json()
@@ -87,6 +89,8 @@ class Query(commands.Cog):
                         user_display_avatar=ctx.author.display_avatar.url,
                         description="An error occurred while processing your request. (DDG Provided a non-200 status code)",
                     )
+
+                    await ctx.send(embed=embed, delete_after=30, ephemeral=True)
                     return
 
                 data = response.json()
@@ -107,7 +111,7 @@ class Query(commands.Cog):
             user_name=ctx.author.name,
             user_display_avatar=ctx.author.display_avatar.url,
             title=f'Answer to "{search_term}"',
-            description=f"{data['Abstract']}\n\nData from **{data['AbstractURL']}**",
+            description=f"{data["Abstract"]}\n\nData from **{data["AbstractURL"]}**",
             custom_footer_text="Data via DuckDuckGo API.",
             custom_footer_icon_url="https://duckduckgo.com/favicon.png",
         )
@@ -115,7 +119,7 @@ class Query(commands.Cog):
         embed.set_author(
             name=data["Heading"],
             url=data["AbstractURL"],
-            icon_url=f"https://duckduckgo.com{data['Image']}" if data["Image"] else CONST.EMBED_ICONS["DEFAULT"],
+            icon_url=f"https://duckduckgo.com{data["Image"]}" if data["Image"] else CONST.EMBED_ICONS["DEFAULT"],
         )
 
         if redirect:

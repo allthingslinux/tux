@@ -6,7 +6,7 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
-from tux.utils.constants import Constants as CONST
+from tux.utils.constants import CONST
 
 
 class Bookmarks(commands.Cog):

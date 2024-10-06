@@ -5,7 +5,7 @@ import discord
 from loguru import logger
 
 from tux.bot import Tux
-from tux.utils.constants import Constants as CONST
+from tux.utils.constants import CONST
 
 
 class EmbedType(Enum):

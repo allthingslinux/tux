@@ -12,7 +12,8 @@ from reactionmenu.abc import Page
 from reactionmenu.views_menu import ViewSelect
 
 from tux.ui.embeds import EmbedCreator
-from tux.utils.constants import Constants as CONST
+from tux.utils.config import CONFIG
+from tux.utils.constants import CONST
 
 
 class TuxHelp(commands.HelpCommand):
@@ -28,7 +29,7 @@ class TuxHelp(commands.HelpCommand):
 
     async def _get_prefix(self) -> str:
         """
-        Dynamically fetches the prefix from the context or uses a default prefix constant.
+        Dynamically fetches the prefix from the context or uses a default prefix CONFIGant.
 
         Returns
         -------
@@ -36,7 +37,7 @@ class TuxHelp(commands.HelpCommand):
             The prefix used to invoke the bot.
         """
 
-        return self.context.clean_prefix or CONST.DEFAULT_PREFIX
+        return self.context.clean_prefix or CONFIG.DEFAULT_PREFIX
 
     @staticmethod
     def _embed_base(title: str, description: str | None = None) -> discord.Embed:

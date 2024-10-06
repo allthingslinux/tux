@@ -8,7 +8,7 @@ from discord.ext import commands
 from prisma.models import AFKModel
 from tux.bot import Tux
 from tux.database.controllers import AfkController
-from tux.utils.constants import Constants as CONST
+from tux.utils.constants import CONST
 from tux.utils.flags import generate_usage
 
 
@@ -48,7 +48,7 @@ class AFK(commands.Cog):
             return await ctx.send("You are already afk!", ephemeral=True)
 
         if len(target.display_name) >= CONST.NICKNAME_MAX_LENGTH - 6:
-            truncated_name = f"{target.display_name[:CONST.NICKNAME_MAX_LENGTH - 9]}..."
+            truncated_name = f"{target.display_name[: CONST.NICKNAME_MAX_LENGTH - 9]}..."
             new_name = f"[AFK] {truncated_name}"
         else:
             new_name = f"[AFK] {target.display_name}"

@@ -8,7 +8,7 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
-from tux.utils.constants import CONST
+from tux.utils.config import CONFIG
 from tux.utils.exceptions import AppCommandPermissionLevelError, PermissionLevelError
 
 db = DatabaseController().guild_config
@@ -42,8 +42,8 @@ async def has_permission(
     if isinstance(author, discord.Member) and any(role in [r.id for r in author.roles] for role in roles):
         return True
 
-    return (8 in range(lower_bound, higher_bound + 1) and author.id in CONST.SYSADMIN_IDS) or (
-        9 in range(lower_bound, higher_bound + 1) and author.id == CONST.BOT_OWNER_ID
+    return (8 in range(lower_bound, higher_bound + 1) and author.id in CONFIG.SYSADMIN_IDS) or (
+        9 in range(lower_bound, higher_bound + 1) and author.id == CONFIG.BOT_OWNER_ID
     )
 
 

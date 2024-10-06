@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.utils.constants import Constants as CONST
+from tux.utils.config import CONFIG
 
 
 class TempVc(commands.Cog):
@@ -31,9 +31,9 @@ class TempVc(commands.Cog):
             The voice state after the event.
         """
 
-        # Ensure constants are set correctly
-        temp_channel_id = int(CONST.TEMPVC_CHANNEL_ID or "0")
-        temp_category_id = int(CONST.TEMPVC_CATEGORY_ID or "0")
+        # Ensure CONFIGants are set correctly
+        temp_channel_id = int(CONFIG.TEMPVC_CHANNEL_ID or "0")
+        temp_category_id = int(CONFIG.TEMPVC_CATEGORY_ID or "0")
         if temp_channel_id == 0 or temp_category_id == 0:
             return
 
