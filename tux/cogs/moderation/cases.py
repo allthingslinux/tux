@@ -8,7 +8,7 @@ from prisma.types import CaseWhereInput
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
-from tux.utils.constants import Constants as CONST
+from tux.utils.constants import CONST
 from tux.utils.flags import CaseModifyFlags, CasesViewFlags, generate_usage
 
 from . import ModerationCogBase

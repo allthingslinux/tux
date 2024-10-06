@@ -8,26 +8,26 @@ from githubkit.versions.latest.models import (
 )
 from loguru import logger
 
-from tux.utils.constants import Constants as CONST
+from tux.utils.config import CONFIG
 
 
 class GithubService:
     def __init__(self) -> None:
         self.github = GitHub(
             AppInstallationAuthStrategy(
-                CONST.GITHUB_APP_ID,
-                CONST.GITHUB_PRIVATE_KEY,
-                int(CONST.GITHUB_INSTALLATION_ID),
-                CONST.GITHUB_CLIENT_ID,
-                CONST.GITHUB_CLIENT_SECRET,
+                CONFIG.GITHUB_APP_ID,
+                CONFIG.GITHUB_PRIVATE_KEY,
+                int(CONFIG.GITHUB_INSTALLATION_ID),
+                CONFIG.GITHUB_CLIENT_ID,
+                CONFIG.GITHUB_CLIENT_SECRET,
             ),
         )
 
     async def get_repo(self) -> FullRepository:
         try:
             response: Response[FullRepository] = await self.github.rest.repos.async_get(
-                CONST.GITHUB_REPO_OWNER,
-                CONST.GITHUB_REPO,
+                CONFIG.GITHUB_REPO_OWNER,
+                CONFIG.GITHUB_REPO,
             )
 
             repo: FullRepository = response.parsed_data
@@ -42,8 +42,8 @@ class GithubService:
     async def create_issue(self, title: str, body: str) -> Issue:
         try:
             response: Response[Issue] = await self.github.rest.issues.async_create(
-                CONST.GITHUB_REPO_OWNER,
-                CONST.GITHUB_REPO,
+                CONFIG.GITHUB_REPO_OWNER,
+                CONFIG.GITHUB_REPO,
                 title=title,
                 body=body,
             )
@@ -60,8 +60,8 @@ class GithubService:
     async def create_issue_comment(self, issue_number: int, body: str) -> IssueComment:
         try:
             response: Response[IssueComment] = await self.github.rest.issues.async_create_comment(
-                CONST.GITHUB_REPO_OWNER,
-                CONST.GITHUB_REPO,
+                CONFIG.GITHUB_REPO_OWNER,
+                CONFIG.GITHUB_REPO,
                 issue_number,
                 body=body,
             )
@@ -78,8 +78,8 @@ class GithubService:
     async def close_issue(self, issue_number: int) -> Issue:
         try:
             response: Response[Issue] = await self.github.rest.issues.async_update(
-                CONST.GITHUB_REPO_OWNER,
-                CONST.GITHUB_REPO,
+                CONFIG.GITHUB_REPO_OWNER,
+                CONFIG.GITHUB_REPO,
                 issue_number,
                 state="closed",
             )
@@ -96,8 +96,8 @@ class GithubService:
     async def get_issue(self, issue_number: int) -> Issue:
         try:
             response: Response[Issue] = await self.github.rest.issues.async_get(
-                CONST.GITHUB_REPO_OWNER,
-                CONST.GITHUB_REPO,
+                CONFIG.GITHUB_REPO_OWNER,
+                CONFIG.GITHUB_REPO,
                 issue_number,
             )
 
@@ -113,8 +113,8 @@ class GithubService:
     async def get_open_issues(self) -> list[Issue]:
         try:
             response: Response[list[Issue]] = await self.github.rest.issues.async_list_for_repo(
-                CONST.GITHUB_REPO_OWNER,
-                CONST.GITHUB_REPO,
+                CONFIG.GITHUB_REPO_OWNER,
+                CONFIG.GITHUB_REPO,
                 state="open",
             )
 
@@ -130,8 +130,8 @@ class GithubService:
     async def get_closed_issues(self) -> list[Issue]:
         try:
             response: Response[list[Issue]] = await self.github.rest.issues.async_list_for_repo(
-                CONST.GITHUB_REPO_OWNER,
-                CONST.GITHUB_REPO,
+                CONFIG.GITHUB_REPO_OWNER,
+                CONFIG.GITHUB_REPO,
                 state="closed",
             )
 
@@ -147,8 +147,8 @@ class GithubService:
     async def get_open_pulls(self) -> list[PullRequestSimple]:
         try:
             response: Response[list[PullRequestSimple]] = await self.github.rest.pulls.async_list(
-                CONST.GITHUB_REPO_OWNER,
-                CONST.GITHUB_REPO,
+                CONFIG.GITHUB_REPO_OWNER,
+                CONFIG.GITHUB_REPO,
                 state="open",
             )
 
@@ -164,8 +164,8 @@ class GithubService:
     async def get_closed_pulls(self) -> list[PullRequestSimple]:
         try:
             response: Response[list[PullRequestSimple]] = await self.github.rest.pulls.async_list(
-                CONST.GITHUB_REPO_OWNER,
-                CONST.GITHUB_REPO,
+                CONFIG.GITHUB_REPO_OWNER,
+                CONFIG.GITHUB_REPO,
                 state="closed",
             )
 
@@ -181,8 +181,8 @@ class GithubService:
     async def get_pull(self, pr_number: int) -> PullRequest:
         try:
             response: Response[PullRequest] = await self.github.rest.pulls.async_get(
-                CONST.GITHUB_REPO_OWNER,
-                CONST.GITHUB_REPO,
+                CONFIG.GITHUB_REPO_OWNER,
+                CONFIG.GITHUB_REPO,
                 pr_number,
             )
 

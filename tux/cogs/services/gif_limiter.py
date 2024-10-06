@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands, tasks
 
 from tux.bot import Tux
-from tux.utils.constants import CONST
+from tux.utils.config import CONFIG
 
 
 class GifLimiter(commands.Cog):
@@ -20,15 +20,15 @@ class GifLimiter(commands.Cog):
         self.bot = bot
 
         # Max age for a GIF to be considered a recent post
-        self.recent_gif_age: int = CONST.RECENT_GIF_AGE
+        self.recent_gif_age: int = CONFIG.RECENT_GIF_AGE
 
         # Max number of GIFs sent recently in a channel
-        self.channelwide_gif_limits: dict[int, int] = CONST.GIF_LIMITS_CHANNEL
+        self.channelwide_gif_limits: dict[int, int] = CONFIG.GIF_LIMITS_CHANNEL
         # Max number of GIFs sent recently by a user to be able to post one in specified channels
-        self.user_gif_limits: dict[int, int] = CONST.GIF_LIMITS
+        self.user_gif_limits: dict[int, int] = CONFIG.GIF_LIMITS
 
         # list of channels in which not to count GIFs
-        self.gif_limit_exclude: list[int] = CONST.GIF_LIMIT_EXCLUDE
+        self.gif_limit_exclude: list[int] = CONFIG.GIF_LIMIT_EXCLUDE
 
         # Timestamps for recently-sent GIFs for the server, and channels
 
@@ -97,8 +97,7 @@ class GifLimiter(commands.Cog):
                     t for t in timestamps if current_time - t < self.recent_gif_age
                 ]
             for user_id, timestamps in list(self.recent_gifs_by_user.items()):
-                filtered_timestamps = [t for t in timestamps if current_time - t < self.recent_gif_age]
-                if filtered_timestamps:
+                if filtered_timestamps := [t for t in timestamps if current_time - t < self.recent_gif_age]:
                     self.recent_gifs_by_user[user_id] = filtered_timestamps
                 else:
                     del self.recent_gifs_by_user[user_id]

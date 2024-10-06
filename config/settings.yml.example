@@ -13,60 +13,33 @@ USER_IDS:
 TEMPVC_CATEGORY_ID: 123456789012345679
 TEMPVC_CHANNEL_ID: 123456789012345679
 
-XP_BLACKLIST_CHANNEL:
-  - 123456789012345679
-  - 123456789012345679
 
-XP_ROLES:
-  - level: 5
-    role_id: 123456789012345679
-  - level: 10
-    role_id: 123456789012345679
-  - level: 15
-    role_id: 123456789012345679
-  - level: 20
-    role_id: 123456789012345679
-  - level: 25
-    role_id: 123456789012345679
+XP:
+  XP_BLACKLIST_CHANNELS:
+    - 123456789012345679
+    - 123456789012345679
+  XP_ROLES:
+    - level: 5
+      role_id: 123456789012345679
+    - level: 10
+      role_id: 123456789012345679
+    - level: 15
+      role_id: 123456789012345679
+    - level: 20
+      role_id: 123456789012345679
+    - level: 25
+      role_id: 123456789012345679
 
-XP_MULTIPLIERS:
-  - role_id: 123456789012345679
-    multiplier: 1.5
+  XP_MULTIPLIERS:
+    - role_id: 123456789012345679
+      multiplier: 1.5
 
-XP_COOLDOWN: 1 # In seconds
-LEVELS_EXPONENT: 1
-SHOW_XP_PROGRESS: false
+  XP_COOLDOWN: 1 # In seconds
 
-# if true, XP will still be counted, but not shown beyond the cap in the level command
-ENABLE_XP_CAP: false
-
-EMBED_COLORS:
-  DEFAULT: 16044058
-  INFO: 12634869
-  WARNING: 16634507
-  ERROR: 16067173
-  SUCCESS: 10407530
-  POLL: 14724968
-  CASE: 16217742
-  NOTE: 16752228
-
-EMBED_ICONS:
-  DEFAULT: "https://i.imgur.com/owW4EZk.png"
-  INFO: "https://i.imgur.com/8GRtR2G.png"
-  SUCCESS: "https://i.imgur.com/JsNbN7D.png"
-  ERROR: "https://i.imgur.com/zZjuWaU.png"
-  CASE: "https://i.imgur.com/c43cwnV.png"
-  NOTE: "https://i.imgur.com/VqPFbil.png"
-  POLL: "https://i.imgur.com/pkPeG5q.png"
-  ACTIVE_CASE: "https://github.com/allthingslinux/tux/blob/main/assets/embeds/active_case.png?raw=true"
-  INACTIVE_CASE: "https://github.com/allthingslinux/tux/blob/main/assets/embeds/inactive_case.png?raw=true"
-  ADD: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/added.png?raw=true"
-  REMOVE: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/removed.png?raw=true"
-  BAN: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/ban.png?raw=true"
-  JAIL: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/jail.png?raw=true"
-  KICK: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/kick.png?raw=true"
-  TIMEOUT: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/timeout.png?raw=true"
-  WARN: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/warn.png?raw=true"
+  LEVELS_EXPONENT: 1
+  SHOW_XP_PROGRESS: false
+  # if true, XP will still be counted, but not shown beyond the cap in the level command
+  ENABLE_XP_CAP: false
 
 GIF_LIMITER:
   RECENT_GIF_AGE: 60
