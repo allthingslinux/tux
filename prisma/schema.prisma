@@ -13,16 +13,16 @@ datasource db {
 model Guild {
   guild_id         BigInt             @id
   guild_joined_at  DateTime?          @default(now())
+  case_count       BigInt             @default(0)
+  AFK              AFKModel[]
   cases            Case[]
-  snippets         Snippet[]
+  guild_config     GuildConfig?
+  levels           Levels[]
   notes            Note[]
   reminders        Reminder[]
-  guild_config     GuildConfig[]
-  AFK              AFKModel[]
+  snippets         Snippet[]
   Starboard        Starboard?
   StarboardMessage StarboardMessage[]
-  case_count       BigInt             @default(0)
-  levels           Levels[]
 
   @@index([guild_id])
 }
@@ -158,7 +158,7 @@ model StarboardMessage {
 }
 
 model Levels {
-  member_id    BigInt   @id
+  member_id    BigInt
   xp           Float    @default(0)
   level        BigInt   @default(0)
   blacklisted  Boolean  @default(false)
@@ -166,6 +166,7 @@ model Levels {
   guild_id     BigInt
   guild        Guild    @relation(fields: [guild_id], references: [guild_id])
 
+  @@id([member_id, guild_id])
   @@unique([member_id, guild_id])
   @@index([member_id])
 }
