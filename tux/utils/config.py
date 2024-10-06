@@ -80,5 +80,13 @@ class Config:
     GIF_LIMITS: Final[dict[int, int]] = convert_dict_str_to_int(config["GIF_LIMITER"]["GIF_LIMITS_USER"])
     GIF_LIMITS_CHANNEL: Final[dict[int, int]] = convert_dict_str_to_int(config["GIF_LIMITER"]["GIF_LIMITS_CHANNEL"])
 
+    XP_BLACKLIST_CHANNELS: Final[list[int]] = config["XP"]["XP_BLACKLIST_CHANNELS"]
+    XP_ROLES: Final[list[dict[str, int]]] = config["XP"]["XP_ROLES"]
+    XP_MULTIPLIERS: Final[list[dict[str, int | float]]] = config["XP"]["XP_MULTIPLIERS"]
+    XP_COOLDOWN: Final[int] = config["XP"]["XP_COOLDOWN"]
+    LEVELS_EXPONENT: Final[int] = config["XP"]["LEVELS_EXPONENT"]
+    SHOW_XP_PROGRESS: Final[bool] = config["XP"]["SHOW_XP_PROGRESS", False]
+    ENABLE_XP_CAP: Final[bool] = config["XP"]["ENABLE_XP_CAP", True]
+
 
 CONFIG = Config()
