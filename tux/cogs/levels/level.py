@@ -44,8 +44,10 @@ class Level(commands.Cog):
 
         if self.levels_service.enable_xp_cap and level >= self.levels_service.max_level:
             max_xp = self.levels_service.calculate_xp_for_level(self.levels_service.max_level)
+            level_display = self.levels_service.max_level
             xp_display = f"{round(max_xp)} (limit reached)"
         else:
+            level_display = level
             xp_display = f"{round(xp)}"
 
         if self.levels_service.settings.get("SHOW_XP_PROGRESS"):
@@ -54,7 +56,7 @@ class Level(commands.Cog):
 
             embed: discord.Embed = EmbedCreator.create_embed(
                 embed_type=EmbedType.DEFAULT,
-                title=f"Level {level}",
+                title=f"Level {level_display}",
                 description=f"Progress to Next Level:\n{progress_bar}",
                 custom_color=discord.Color.blurple(),
                 custom_author_text=f"{member.name}",
@@ -64,7 +66,7 @@ class Level(commands.Cog):
         else:
             embed: discord.Embed = EmbedCreator.create_embed(
                 embed_type=EmbedType.DEFAULT,
-                description=f"**Level {level}** - `XP: {xp_display}`",
+                description=f"**Level {level_display}** - `XP: {xp_display}`",
                 custom_color=discord.Color.blurple(),
                 custom_author_text=f"{member.name}",
                 custom_author_icon_url=member.display_avatar.url,
