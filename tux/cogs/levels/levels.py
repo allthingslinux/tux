@@ -57,7 +57,7 @@ class Levels(commands.Cog):
         old_level = await self.levels_service.levels_controller.get_level(member.id, ctx.guild.id)
         old_xp = await self.levels_service.levels_controller.get_xp(member.id, ctx.guild.id)
 
-        if embed_result := self.levels_service.valid_xplevel_input(new_level) or discord.Embed():
+        if embed_result := self.levels_service.valid_xplevel_input(new_level):
             await ctx.send(embed=embed_result)
             return
 
@@ -69,6 +69,9 @@ class Levels(commands.Cog):
             new_level,
             datetime.datetime.now(datetime.UTC),
         )
+
+        # Update roles based on the new level
+        await self.levels_service.update_roles(member, ctx.guild, new_level)
 
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
@@ -96,7 +99,6 @@ class Levels(commands.Cog):
         """
         assert ctx.guild
 
-        # The condition here was incorrect
         if embed_result := self.levels_service.valid_xplevel_input(xp_amount):
             await ctx.send(embed=embed_result)
             return
@@ -112,6 +114,9 @@ class Levels(commands.Cog):
             new_level,
             datetime.datetime.now(datetime.UTC),
         )
+
+        # Update roles based on the new level
+        await self.levels_service.update_roles(member, ctx.guild, new_level)
 
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
