@@ -13,16 +13,16 @@ datasource db {
 model Guild {
   guild_id         BigInt             @id
   guild_joined_at  DateTime?          @default(now())
+  case_count       BigInt             @default(0)
+  AFK              AFKModel[]
   cases            Case[]
-  snippets         Snippet[]
+  guild_config     GuildConfig?
+  levels           Levels[]
   notes            Note[]
   reminders        Reminder[]
-  guild_config     GuildConfig[]
-  AFK              AFKModel[]
+  snippets         Snippet[]
   Starboard        Starboard?
   StarboardMessage StarboardMessage[]
-  case_count       BigInt             @default(0)
-  levels           Levels[]
 
   @@index([guild_id])
 }
