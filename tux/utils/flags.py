@@ -80,7 +80,7 @@ def get_matching_string(arg: str) -> str:
         The matching string, or None if no match is found.
     """
     match arg:
-        case "user" | "target" | "member" | "name" | "username":
+        case "user" | "target" | "member" | "username":
             return "@member"
         case "number" | "num" | "n" | "limit":
             return "14"
