@@ -335,7 +335,7 @@ class Snippets(commands.Cog):
         aliases=["cs"],
     )
     @commands.guild_only()
-    async def create_snippet(self, ctx: commands.Context[Tux], *, arg: str) -> None:
+    async def create_snippet(self, ctx: commands.Context[Tux], name: str, *, content: str) -> None:
         """
         Create a snippet.
 
@@ -343,8 +343,10 @@ class Snippets(commands.Cog):
         ----------
         ctx : commands.Context[Tux]
             The context object.
-        arg : str
-            The name and content of the snippet.
+        name : str
+            The name of the snippet.
+        content : str
+            The content of the snippet.
         """
 
         # TODO: Remove hardcoded role ids
@@ -364,13 +366,6 @@ class Snippets(commands.Cog):
             await ctx.send("You are banned from using snippets.")
             return
 
-        args = arg.split(" ")
-        if len(args) < 2:
-            await self.send_snippet_error(ctx, description="Please provide a name and content for the snippet.")
-            return
-
-        name = args[0]
-        content = " ".join(args[1:])
         created_at = datetime.datetime.now(datetime.UTC)
         author_id = ctx.author.id
         server_id = ctx.guild.id
@@ -406,7 +401,7 @@ class Snippets(commands.Cog):
         aliases=["es"],
     )
     @commands.guild_only()
-    async def edit_snippet(self, ctx: commands.Context[Tux], *, arg: str) -> None:
+    async def edit_snippet(self, ctx: commands.Context[Tux], name: str, *, content: str) -> None:
         """
         Edit a snippet.
 
@@ -414,20 +409,14 @@ class Snippets(commands.Cog):
         ----------
         ctx : commands.Context[Tux]
             The context object.
-        arg : str
-            The name and content of the snippet.
+        name : str
+            The name of the snippet.
+        content : str
+            The new content of the snippet.
         """
 
         assert ctx.guild
 
-        args = arg.split(" ")
-        if len(args) < 2:
-            await self.send_snippet_error(ctx, description="Please provide a name and content for the snippet.")
-            return
-
-        name = args[0]
-        content = " ".join(args[1:])
-        author_id = ctx.author.id
         snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
