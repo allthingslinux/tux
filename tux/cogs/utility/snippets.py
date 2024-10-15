@@ -352,7 +352,7 @@ class Snippets(commands.Cog):
         # TODO: Remove hardcoded role ids
 
         # If user does not have any of the access level roles, return
-        access_level_role_ids = [1290368656441872535, 1290368813627346995]
+        access_level_role_ids = [1290368764470231092, 1290368813627346995]
 
         assert ctx.guild
 
