@@ -33,7 +33,7 @@ pytz = "^2024.1"
 pyyaml = "^6.0.2"
 reactionmenu = "^3.1.7"
 rsa = "^4.9"
-ruff = "^0.6.0"
+ruff = "^0.7.0"
 sentry-sdk = {extras = ["httpx", "loguru"], version = "^2.7.0"}
 types-aiofiles = "^24.1.0.20240626"
 types-dateparser = "^1.2.0.20240420"
