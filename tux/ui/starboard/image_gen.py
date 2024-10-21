@@ -193,5 +193,5 @@ def get_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
     except OSError:
         try:
             return ImageFont.truetype("DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf", size)
-        except OSError:  # noqa: TRY302
+        except OSError:  # noqa: TRY203
             raise
