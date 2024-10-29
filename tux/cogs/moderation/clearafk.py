@@ -47,7 +47,7 @@ class ClearAFK(commands.Cog):
 
         await self.db.remove_afk(member.id)
 
-        if entry:
+        if entry and entry.nickname:
             with contextlib.suppress(discord.Forbidden):
                 await member.edit(nick=entry.nickname)  # Reset nickname to original
 
