@@ -1,4 +1,5 @@
 import contextlib
+import textwrap
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -53,13 +54,14 @@ class AFK(commands.Cog):
         else:
             new_name = f"[AFK] {target.display_name}"
 
-        await self.db.insert_afk(target.id, target.display_name, reason, ctx.guild.id)
+        shortened_reason = textwrap.shorten(reason, width=100, placeholder="...")
+        await self.db.insert_afk(target.id, target.display_name, shortened_reason, ctx.guild.id)
 
         with contextlib.suppress(discord.Forbidden):
             await target.edit(nick=new_name)
 
         return await ctx.send(
-            content="\N{SLEEPING SYMBOL} || You are now afk! " + f"Reason: `{reason}`",
+            content="\N{SLEEPING SYMBOL} || You are now afk! " + f"Reason: `{shortened_reason}`",
             allowed_mentions=discord.AllowedMentions(
                 users=False,
                 everyone=False,
