@@ -1,6 +1,7 @@
 import contextlib
 import textwrap
 from datetime import datetime, timedelta
+from typing import cast
 from zoneinfo import ZoneInfo
 
 import discord
@@ -116,19 +117,19 @@ class AFK(commands.Cog):
         if message.author.bot:
             return
 
-        afks_mentioned: list[AFKModel] = []
+        afks_mentioned: list[tuple[discord.Member, AFKModel]] = []
 
         for mentioned in message.mentions:
             entry = await self.db.get_afk_member(mentioned.id, guild_id=message.guild.id)
             if entry:
-                afks_mentioned.append(entry)
+                afks_mentioned.append((cast(discord.Member, mentioned), entry))
 
         if not afks_mentioned:
             return
 
         msgs: list[str] = [
             f"{mentioned.mention} is currently AFK: `{afk.reason}` (<t:{int(afk.since.timestamp())}:R>)"
-            for mentioned, afk in zip(message.mentions, afks_mentioned, strict=False)
+            for mentioned, afk in afks_mentioned
         ]
 
         await message.reply(
