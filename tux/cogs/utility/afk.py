@@ -1,5 +1,7 @@
 import contextlib
+import textwrap
 from datetime import datetime, timedelta
+from typing import cast
 from zoneinfo import ZoneInfo
 
 import discord
@@ -53,13 +55,14 @@ class AFK(commands.Cog):
         else:
             new_name = f"[AFK] {target.display_name}"
 
-        await self.db.insert_afk(target.id, target.display_name, reason, ctx.guild.id)
+        shortened_reason = textwrap.shorten(reason, width=100, placeholder="...")
+        await self.db.insert_afk(target.id, target.display_name, shortened_reason, ctx.guild.id)
 
         with contextlib.suppress(discord.Forbidden):
             await target.edit(nick=new_name)
 
         return await ctx.send(
-            content="\N{SLEEPING SYMBOL} || You are now afk! " + f"Reason: `{reason}`",
+            content="\N{SLEEPING SYMBOL} || You are now afk! " + f"Reason: `{shortened_reason}`",
             allowed_mentions=discord.AllowedMentions(
                 users=False,
                 everyone=False,
@@ -114,19 +117,19 @@ class AFK(commands.Cog):
         if message.author.bot:
             return
 
-        afks_mentioned: list[AFKModel] = []
+        afks_mentioned: list[tuple[discord.Member, AFKModel]] = []
 
         for mentioned in message.mentions:
             entry = await self.db.get_afk_member(mentioned.id, guild_id=message.guild.id)
             if entry:
-                afks_mentioned.append(entry)
+                afks_mentioned.append((cast(discord.Member, mentioned), entry))
 
         if not afks_mentioned:
             return
 
         msgs: list[str] = [
             f"{mentioned.mention} is currently AFK: `{afk.reason}` (<t:{int(afk.since.timestamp())}:R>)"
-            for mentioned, afk in zip(message.mentions, afks_mentioned, strict=False)
+            for mentioned, afk in afks_mentioned
         ]
 
         await message.reply(
