@@ -52,6 +52,8 @@ class Ban(ModerationCogBase):
         if not await self.check_conditions(ctx, member, moderator, "ban"):
             return
 
+        await ctx.defer(ephemeral=True)
+
         try:
             dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "banned")
             await ctx.guild.ban(member, reason=flags.reason, delete_message_days=flags.purge_days)
