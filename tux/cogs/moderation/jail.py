@@ -48,6 +48,8 @@ class Jail(ModerationCogBase):
         if not await self.check_conditions(ctx, member, moderator, "jail"):
             return
 
+        await ctx.defer(ephemeral=True)
+
         jail_role_id = await self.config.get_jail_role_id(ctx.guild.id)
         if jail_role_id is None:
             await ctx.send("The jail role has not been set up.", delete_after=30, ephemeral=True)
@@ -55,7 +57,9 @@ class Jail(ModerationCogBase):
 
         jail_role = ctx.guild.get_role(jail_role_id) if jail_role_id else None
         if jail_role is None:
-            await ctx.send("The jail role cannot be found.", delete_after=30, ephemeral=True)
+            message = "The jail role cannot be found."
+            await ctx.send(message, delete_after=30)
+            return
 
         assert jail_role
 

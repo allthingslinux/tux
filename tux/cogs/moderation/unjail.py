@@ -48,11 +48,14 @@ class Unjail(ModerationCogBase):
         if not await self.check_conditions(ctx, member, moderator, "unjail"):
             return
 
+        await ctx.defer(ephemeral=True)
+
         jail_role_id = await self.config.get_jail_role_id(ctx.guild.id)
         jail_role = ctx.guild.get_role(jail_role_id) if jail_role_id else None
 
         if not jail_role:
-            await ctx.send("The jail role has been deleted or not set up.", delete_after=30, ephemeral=True)
+            message = "The jail role has been deleted or not set up."
+            await ctx.send(message, delete_after=30)
             return
 
         if jail_role not in member.roles:
@@ -61,7 +64,7 @@ class Unjail(ModerationCogBase):
 
         case = await self.db.case.get_last_jail_case_by_user_id(ctx.guild.id, member.id)
         if not case:
-            await ctx.send("No jail case found for this member.", delete_after=30, ephemeral=True)
+            await ctx.send("No jail case found for this member.", delete_after=30)
             return
 
         try:
@@ -74,8 +77,9 @@ class Unjail(ModerationCogBase):
                 await member.remove_roles(jail_role, reason=flags.reason)
 
         except (discord.Forbidden, discord.HTTPException) as e:
-            logger.error(f"Failed to unjail member {member}. {e}")
-            await ctx.send(f"Failed to unjail member {member}. {e}", delete_after=30, ephemeral=True)
+            message = f"Failed to unjail member {member}. {e}"
+            logger.error(message)
+            await ctx.send(message, delete_after=30)
             return
 
         unjail_case = await self.db.case.insert_case(
