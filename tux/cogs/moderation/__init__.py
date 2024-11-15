@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 
 import discord
@@ -99,8 +100,8 @@ class ModerationCogBase(commands.Cog):
             if isinstance(log_channel, discord.TextChannel):
                 await log_channel.send(embed=embed)
 
-    @staticmethod
     async def send_dm(
+        self,
         ctx: commands.Context[Tux],
         silent: bool,
         user: discord.Member,
@@ -123,11 +124,9 @@ class ModerationCogBase(commands.Cog):
         action : str
             The action being performed.
         """
-
         if not silent:
             try:
                 await user.send(f"You have been {action} from {ctx.guild} for the following reason:\n> {reason}")
-
             except (discord.Forbidden, discord.HTTPException) as e:
                 logger.warning(f"Failed to send DM to {user}. {e}")
                 return False
@@ -247,8 +246,7 @@ class ModerationCogBase(commands.Cog):
         else:
             embed.description = "DMs are disabled for this user."
 
-        await self.send_embed(ctx, embed, log_type="mod")
-        await ctx.send(embed=embed, ephemeral=True)
+        await asyncio.gather(self.send_embed(ctx, embed, log_type="mod"), ctx.send(embed=embed, ephemeral=True))
 
     async def is_pollbanned(self, guild_id: int, user_id: int) -> bool:
         """

@@ -1,3 +1,5 @@
+import asyncio
+
 import discord
 from discord.ext import commands
 from loguru import logger
@@ -21,7 +23,7 @@ class Jail(ModerationCogBase):
     )
     @commands.guild_only()
     @checks.has_pl(2)
-    async def jail(  # noqa: PLR0911
+    async def jail(
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
@@ -50,35 +52,24 @@ class Jail(ModerationCogBase):
 
         await ctx.defer(ephemeral=True)
 
-        jail_role_id = await self.config.get_jail_role_id(ctx.guild.id)
-        if jail_role_id is None:
-            await ctx.send("The jail role has not been set up.", ephemeral=True)
+        jail_role_id, jail_channel_id = await asyncio.gather(
+            self.config.get_jail_role_id(ctx.guild.id),
+            self.config.get_jail_channel_id(ctx.guild.id),
+        )
+
+        if jail_role_id is None or (jail_role := ctx.guild.get_role(jail_role_id)) is None:
+            await ctx.send("The jail role has not been set up or cannot be found.", ephemeral=True)
             return
 
-        jail_role = ctx.guild.get_role(jail_role_id) if jail_role_id else None
-        if jail_role is None:
-            message = "The jail role cannot be found."
-            await ctx.send(message, ephemeral=True)
-            return
-
-        assert jail_role
-
-        jail_channel_id = await self.config.get_jail_channel_id(ctx.guild.id)
-        if jail_channel_id is None:
-            await ctx.send("The jail channel has not been set up.", ephemeral=True)
-            return
-
-        jail_channel = ctx.guild.get_channel(jail_channel_id) if jail_channel_id else None
-        if jail_channel is None:
-            await ctx.send("The jail channel cannot be found.", ephemeral=True)
+        if jail_channel_id is None or ctx.guild.get_channel(jail_channel_id) is None:
+            await ctx.send("The jail channel has not been set up or cannot be found.", ephemeral=True)
             return
 
         if jail_role in member.roles:
             await ctx.send("The user is already jailed.", ephemeral=True)
             return
 
-        user_roles: list[discord.Role] = self._get_manageable_roles(member, jail_role)
-
+        user_roles = self._get_manageable_roles(member, jail_role)
         case_user_roles = [role.id for role in user_roles]
 
         try:
@@ -91,16 +82,16 @@ class Jail(ModerationCogBase):
                 case_user_roles=case_user_roles,
             )
 
+            if user_roles:
+                await member.remove_roles(*user_roles, reason=flags.reason, atomic=False)
+
         except Exception as e:
             logger.error(f"Failed to jail {member}. {e}")
             await ctx.send(f"Failed to jail {member}. {e}", ephemeral=True)
             return
 
         try:
-            if user_roles:
-                await member.remove_roles(*user_roles, reason=flags.reason, atomic=False)
             await member.add_roles(jail_role, reason=flags.reason)
-
         except (discord.Forbidden, discord.HTTPException) as e:
             logger.error(f"Failed to jail {member}. {e}")
             await ctx.send(f"Failed to jail {member}. {e}", ephemeral=True)

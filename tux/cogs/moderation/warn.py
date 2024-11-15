@@ -1,5 +1,8 @@
+import asyncio
+
 import discord
 from discord.ext import commands
+from loguru import logger
 
 from prisma.enums import CaseType
 from tux.bot import Tux
@@ -48,15 +51,23 @@ class Warn(ModerationCogBase):
         if not await self.check_conditions(ctx, member, moderator, "warn"):
             return
 
-        case = await self.db.case.insert_case(
-            case_user_id=member.id,
-            case_moderator_id=ctx.author.id,
-            case_type=CaseType.WARN,
-            case_reason=flags.reason,
-            guild_id=ctx.guild.id,
-        )
+        try:
+            # Insert case and send DM concurrently
+            case, dm_sent = await asyncio.gather(
+                self.db.case.insert_case(
+                    case_user_id=member.id,
+                    case_moderator_id=ctx.author.id,
+                    case_type=CaseType.WARN,
+                    case_reason=flags.reason,
+                    guild_id=ctx.guild.id,
+                ),
+                self.send_dm(ctx, flags.silent, member, flags.reason, "warned"),
+            )
+        except Exception as e:
+            logger.error(f"Failed to warn {member}. {e}")
+            await ctx.send(f"Failed to warn {member}. {e}", ephemeral=True)
+            return
 
-        dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "warn")
         await self.handle_case_response(ctx, CaseType.WARN, case.case_number, flags.reason, member, dm_sent)
 
 

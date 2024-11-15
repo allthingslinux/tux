@@ -73,7 +73,6 @@ class Unjail(ModerationCogBase):
                 await member.remove_roles(jail_role, reason=flags.reason)
                 await member.add_roles(*previous_roles, reason=flags.reason, atomic=True)
             else:
-                await ctx.send("No previous roles found for the member.", ephemeral=True)
                 await member.remove_roles(jail_role, reason=flags.reason)
 
         except (discord.Forbidden, discord.HTTPException) as e:
