@@ -47,13 +47,14 @@ class Config(commands.GroupCog, group_name="config"):
         category : Literal["Public", "Private"]
             The category of logs to configure.
         """
+        await interaction.response.defer(ephemeral=True)
 
         if category == "Public":
             view = ConfigSetPublicLogs()
         elif category == "Private":
             view = ConfigSetPrivateLogs()
 
-        await interaction.response.send_message(view=view, ephemeral=True)
+        await interaction.followup.send(view=view, ephemeral=True)
 
     @channels.command(name="set")
     @app_commands.guild_only()
@@ -70,9 +71,9 @@ class Config(commands.GroupCog, group_name="config"):
         interaction : discord.Interaction
             The discord interaction object.
         """
-
+        await interaction.response.defer(ephemeral=True)
         view = ConfigSetChannels()
-        await interaction.response.send_message(view=view, ephemeral=True)
+        await interaction.followup.send(view=view, ephemeral=True)
 
     @perms.command(name="set")
     @app_commands.guild_only()
@@ -112,6 +113,7 @@ class Config(commands.GroupCog, group_name="config"):
         """
 
         assert interaction.guild
+        await interaction.response.defer(ephemeral=True)
 
         await self.db.update_perm_level_role(
             interaction.guild.id,
@@ -119,10 +121,9 @@ class Config(commands.GroupCog, group_name="config"):
             role.id,
         )
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             f"Perm level {setting.value} role set to {role.mention}.",
             ephemeral=True,
-            delete_after=30,
         )
 
     @roles.command(name="set")
@@ -156,13 +157,13 @@ class Config(commands.GroupCog, group_name="config"):
         """
 
         assert interaction.guild
+        await interaction.response.defer(ephemeral=True)
 
         if setting.value == "jail_role_id":
             await self.db.update_jail_role_id(interaction.guild.id, role.id)
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"{setting.value} role set to {role.mention}.",
                 ephemeral=True,
-                delete_after=30,
             )
 
     @roles.command(name="get")
@@ -182,6 +183,7 @@ class Config(commands.GroupCog, group_name="config"):
         """
 
         assert interaction.guild
+        await interaction.response.defer(ephemeral=True)
 
         embed = EmbedCreator.create_embed(
             title="Config - Roles",
@@ -194,7 +196,7 @@ class Config(commands.GroupCog, group_name="config"):
         jail_role = f"<@&{jail_role_id}>" if jail_role_id else "Not set"
         embed.add_field(name="Jail Role", value=jail_role, inline=False)
 
-        await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
+        await interaction.followup.send(embed=embed, ephemeral=True)
 
     @perms.command(name="get")
     @app_commands.guild_only()
@@ -213,6 +215,7 @@ class Config(commands.GroupCog, group_name="config"):
         """
 
         assert interaction.guild
+        await interaction.response.defer(ephemeral=True)
 
         embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
@@ -227,7 +230,7 @@ class Config(commands.GroupCog, group_name="config"):
             role = f"<@&{role_id}>" if role_id else "Not set"
             embed.add_field(name=f"Perm Level {i}", value=role, inline=True)
 
-        await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
+        await interaction.followup.send(embed=embed, ephemeral=True)
 
     @channels.command(name="get")
     @app_commands.guild_only()
@@ -246,6 +249,7 @@ class Config(commands.GroupCog, group_name="config"):
         """
 
         assert interaction.guild
+        await interaction.response.defer(ephemeral=True)
 
         embed = EmbedCreator.create_embed(
             title="Config - Channels",
@@ -266,7 +270,7 @@ class Config(commands.GroupCog, group_name="config"):
         general_channel = f"<#{general_channel_id}>" if general_channel_id else "Not set"
         embed.add_field(name="General Channel", value=general_channel, inline=False)
 
-        await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
+        await interaction.followup.send(embed=embed, ephemeral=True)
 
     @logs.command(name="get")
     @app_commands.guild_only()
@@ -285,6 +289,7 @@ class Config(commands.GroupCog, group_name="config"):
         """
 
         assert interaction.guild
+        await interaction.response.defer(ephemeral=True)
 
         embed = EmbedCreator.create_embed(
             title="Config - Logs",
@@ -317,7 +322,7 @@ class Config(commands.GroupCog, group_name="config"):
         dev_log = f"<#{dev_log_id}>" if dev_log_id else "Not set"
         embed.add_field(name="Dev Log", value=dev_log, inline=True)
 
-        await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
+        await interaction.followup.send(embed=embed, ephemeral=True)
 
     @prefix.command(name="set")
     @app_commands.guild_only()
@@ -339,10 +344,11 @@ class Config(commands.GroupCog, group_name="config"):
         """
 
         assert interaction.guild
+        await interaction.response.defer(ephemeral=True)
 
         await self.db.update_guild_prefix(interaction.guild.id, prefix)
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             embed=EmbedCreator.create_embed(
                 bot=self.bot,
                 user_name=interaction.user.name,
@@ -370,10 +376,11 @@ class Config(commands.GroupCog, group_name="config"):
         """
 
         assert interaction.guild
+        await interaction.response.defer(ephemeral=True)
 
         await self.db.delete_guild_prefix(interaction.guild.id)
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             embed=EmbedCreator.create_embed(
                 bot=self.bot,
                 user_name=interaction.user.name,
