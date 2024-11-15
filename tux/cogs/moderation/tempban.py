@@ -65,7 +65,7 @@ class TempBan(ModerationCogBase):
 
         except (discord.Forbidden, discord.HTTPException) as e:
             logger.error(f"Failed to temporarily ban {member}. {e}")
-            await ctx.send(f"Failed to temporarily ban {member}. {e}", delete_after=30, ephemeral=True)
+            await ctx.send(f"Failed to temporarily ban {member}. {e}", ephemeral=True)
             return
 
         case = await self.db.case.insert_case(

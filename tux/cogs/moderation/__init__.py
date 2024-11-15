@@ -174,7 +174,7 @@ class ModerationCogBase(commands.Cog):
                 title="You cannot self-moderate",
                 description=f"You cannot {action} yourself.",
             )
-            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
+            await ctx.send(embed=embed, ephemeral=True)
             return False
 
         if isinstance(moderator, discord.Member) and user.top_role >= moderator.top_role:
@@ -186,7 +186,7 @@ class ModerationCogBase(commands.Cog):
                 title="You cannot self-moderate",
                 description=f"You cannot {action} a user with a higher or equal role.",
             )
-            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
+            await ctx.send(embed=embed, ephemeral=True)
             return False
 
         if user == ctx.guild.owner:
@@ -198,7 +198,7 @@ class ModerationCogBase(commands.Cog):
                 title="You cannot self-moderate",
                 description=f"You cannot {action} the server owner.",
             )
-            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
+            await ctx.send(embed=embed, ephemeral=True)
             return False
 
         return True
@@ -248,7 +248,7 @@ class ModerationCogBase(commands.Cog):
             embed.description = "DMs are disabled for this user."
 
         await self.send_embed(ctx, embed, log_type="mod")
-        await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+        await ctx.send(embed=embed, ephemeral=True)
 
     async def is_pollbanned(self, guild_id: int, user_id: int) -> bool:
         """

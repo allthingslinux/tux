@@ -48,7 +48,7 @@ class SnippetUnban(ModerationCogBase):
         await ctx.defer(ephemeral=True)
 
         if not await self.is_snippetbanned(ctx.guild.id, member.id):
-            await ctx.send("User is not snippet banned.", delete_after=30, ephemeral=True)
+            await ctx.send("User is not snippet banned.", ephemeral=True)
             return
 
         try:
@@ -62,7 +62,7 @@ class SnippetUnban(ModerationCogBase):
 
         except Exception as e:
             logger.error(f"Failed to snippet unban {member}. {e}")
-            await ctx.send(f"Failed to snippet unban {member}. {e}", delete_after=30, ephemeral=True)
+            await ctx.send(f"Failed to snippet unban {member}. {e}", ephemeral=True)
             return
 
         dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "snippet unbanned")

@@ -54,13 +54,13 @@ class Untimeout(ModerationCogBase):
             return
 
         if not member.is_timed_out():
-            await ctx.send(f"{member} is not currently timed out.", delete_after=30, ephemeral=True)
+            await ctx.send(f"{member} is not currently timed out.", ephemeral=True)
 
         try:
             # By passing `None` as the duration, the timeout is removed
             await member.timeout(None, reason=flags.reason)
         except discord.DiscordException as e:
-            await ctx.send(f"Failed to untimeout {member}. {e}", delete_after=30, ephemeral=True)
+            await ctx.send(f"Failed to untimeout {member}. {e}", ephemeral=True)
             return
 
         case = await self.db.case.insert_case(

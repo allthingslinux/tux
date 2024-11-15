@@ -42,7 +42,6 @@ class Roles(commands.Cog):
                 f"Removed role {role.mention} from {user.mention}",
                 allowed_mentions=discord.AllowedMentions.none(),
                 ephemeral=True,
-                delete_after=30,
             )
 
             logger.info(f"{interaction.user} removed role {role.name} from {user}.")
@@ -54,7 +53,6 @@ class Roles(commands.Cog):
                 f"Added role {role.mention} to {user.mention}",
                 allowed_mentions=discord.AllowedMentions.none(),
                 ephemeral=True,
-                delete_after=30,
             )
 
             logger.info(f"{interaction.user} added role {role.name} to {user}.")

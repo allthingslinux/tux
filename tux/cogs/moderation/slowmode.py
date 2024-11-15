@@ -46,7 +46,6 @@ class Slowmode(commands.Cog):
         if not action or not channel:
             await ctx.send(
                 "Invalid command usage. Please provide a valid delay or 'get' command.",
-                delete_after=30,
                 ephemeral=True,
             )
             return
@@ -96,12 +95,11 @@ class Slowmode(commands.Cog):
         try:
             await ctx.send(
                 f"The slowmode for {channel.mention} is {channel.slowmode_delay} seconds.",
-                delete_after=30,
                 ephemeral=True,
             )
 
         except Exception as error:
-            await ctx.send(f"Failed to get slowmode. Error: {error}", delete_after=30, ephemeral=True)
+            await ctx.send(f"Failed to get slowmode. Error: {error}", ephemeral=True)
             logger.error(f"Failed to get slowmode. Error: {error}")
 
     async def _set_slowmode(
@@ -113,13 +111,12 @@ class Slowmode(commands.Cog):
         delay_seconds = self._parse_delay(delay)
 
         if delay_seconds is None:
-            await ctx.send("Invalid delay value, must be an integer.", delete_after=30, ephemeral=True)
+            await ctx.send("Invalid delay value, must be an integer.", ephemeral=True)
             return
 
         if not (0 <= delay_seconds <= 21600):
             await ctx.send(
                 "The slowmode delay must be between 0 and 21600 seconds.",
-                delete_after=30,
                 ephemeral=True,
             )
             return
@@ -129,12 +126,11 @@ class Slowmode(commands.Cog):
 
             await ctx.send(
                 f"Slowmode set to {delay_seconds} seconds in {channel.mention}.",
-                delete_after=30,
                 ephemeral=True,
             )
 
         except Exception as error:
-            await ctx.send(f"Failed to set slowmode. Error: {error}", delete_after=30, ephemeral=True)
+            await ctx.send(f"Failed to set slowmode. Error: {error}", ephemeral=True)
             logger.error(f"Failed to set slowmode. Error: {error}")
 
     @staticmethod

@@ -111,13 +111,13 @@ class Cases(ModerationCogBase):
 
         # If the command is used via prefix, let the user know to use the slash command
         if ctx.message.content.startswith(str(ctx.prefix)):
-            await ctx.send("Please use the slash command for this command.", delete_after=30, ephemeral=True)
+            await ctx.send("Please use the slash command for this command.", ephemeral=True)
             return
 
         case = await self.db.case.get_case_by_number(ctx.guild.id, number)
 
         if not case:
-            await ctx.send("Case not found.", delete_after=30, ephemeral=True)
+            await ctx.send("Case not found.", ephemeral=True)
             return
 
         if case.case_number is not None:
@@ -143,7 +143,7 @@ class Cases(ModerationCogBase):
 
         case = await self.db.case.get_case_by_number(ctx.guild.id, number)
         if not case:
-            await ctx.send("Case not found.", delete_after=30)
+            await ctx.send("Case not found.", ephemeral=True)
             return
 
         user = self.bot.get_user(case.case_user_id)
@@ -183,7 +183,7 @@ class Cases(ModerationCogBase):
         total_cases = await self.db.case.get_all_cases(ctx.guild.id)
 
         if not cases:
-            await ctx.send("No cases found.")
+            await ctx.send("No cases found.", ephemeral=True)
             return
 
         await self._handle_case_list_response(ctx, cases, len(total_cases))
@@ -210,7 +210,7 @@ class Cases(ModerationCogBase):
         assert ctx.guild
 
         if case.case_number is None:
-            await ctx.send("Failed to update case.", delete_after=30, ephemeral=True)
+            await ctx.send("Failed to update case.", ephemeral=True)
             return
 
         updated_case = await self.db.case.update_case(
@@ -221,7 +221,7 @@ class Cases(ModerationCogBase):
         )
 
         if updated_case is None:
-            await ctx.send("Failed to update case.", delete_after=30, ephemeral=True)
+            await ctx.send("Failed to update case.", ephemeral=True)
             return
 
         user = await commands.UserConverter().convert(ctx, str(case.case_user_id))
@@ -282,7 +282,7 @@ class Cases(ModerationCogBase):
                 description="Failed to find case.",
             )
 
-        await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+        await ctx.send(embed=embed, ephemeral=True)
 
     async def _handle_case_list_response(
         self,
@@ -298,7 +298,7 @@ class Cases(ModerationCogBase):
                 title="Cases",
                 description="No cases found.",
             )
-            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+            await ctx.send(embed=embed, ephemeral=True)
             return
 
         cases_per_page = 10

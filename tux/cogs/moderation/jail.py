@@ -52,29 +52,29 @@ class Jail(ModerationCogBase):
 
         jail_role_id = await self.config.get_jail_role_id(ctx.guild.id)
         if jail_role_id is None:
-            await ctx.send("The jail role has not been set up.", delete_after=30, ephemeral=True)
+            await ctx.send("The jail role has not been set up.", ephemeral=True)
             return
 
         jail_role = ctx.guild.get_role(jail_role_id) if jail_role_id else None
         if jail_role is None:
             message = "The jail role cannot be found."
-            await ctx.send(message, delete_after=30)
+            await ctx.send(message, ephemeral=True)
             return
 
         assert jail_role
 
         jail_channel_id = await self.config.get_jail_channel_id(ctx.guild.id)
         if jail_channel_id is None:
-            await ctx.send("The jail channel has not been set up.", delete_after=30, ephemeral=True)
+            await ctx.send("The jail channel has not been set up.", ephemeral=True)
             return
 
         jail_channel = ctx.guild.get_channel(jail_channel_id) if jail_channel_id else None
         if jail_channel is None:
-            await ctx.send("The jail channel cannot be found.", delete_after=30, ephemeral=True)
+            await ctx.send("The jail channel cannot be found.", ephemeral=True)
             return
 
         if jail_role in member.roles:
-            await ctx.send("The user is already jailed.", delete_after=30, ephemeral=True)
+            await ctx.send("The user is already jailed.", ephemeral=True)
             return
 
         user_roles: list[discord.Role] = self._get_manageable_roles(member, jail_role)
@@ -93,7 +93,7 @@ class Jail(ModerationCogBase):
 
         except Exception as e:
             logger.error(f"Failed to jail {member}. {e}")
-            await ctx.send(f"Failed to jail {member}. {e}", delete_after=30, ephemeral=True)
+            await ctx.send(f"Failed to jail {member}. {e}", ephemeral=True)
             return
 
         try:
@@ -103,7 +103,7 @@ class Jail(ModerationCogBase):
 
         except (discord.Forbidden, discord.HTTPException) as e:
             logger.error(f"Failed to jail {member}. {e}")
-            await ctx.send(f"Failed to jail {member}. {e}", delete_after=30, ephemeral=True)
+            await ctx.send(f"Failed to jail {member}. {e}", ephemeral=True)
             return
 
         dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "jailed")

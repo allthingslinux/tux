@@ -47,7 +47,7 @@ class PollBan(ModerationCogBase):
         await ctx.defer(ephemeral=True)
 
         if await self.is_pollbanned(ctx.guild.id, member.id):
-            await ctx.send("User is already poll banned.", delete_after=30, ephemeral=True)
+            await ctx.send("User is already poll banned.", ephemeral=True)
             return
 
         try:
@@ -61,7 +61,7 @@ class PollBan(ModerationCogBase):
 
         except Exception as e:
             logger.error(f"Failed to ban {member}. {e}")
-            await ctx.send(f"Failed to ban {member}. {e}", delete_after=30)
+            await ctx.send(f"Failed to ban {member}. {e}", ephemeral=True)
             return
 
         dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "poll banned")
