@@ -45,6 +45,8 @@ class SnippetUnban(ModerationCogBase):
 
         assert ctx.guild
 
+        await ctx.defer(ephemeral=True)
+
         if not await self.is_snippetbanned(ctx.guild.id, member.id):
             await ctx.send("User is not snippet banned.", delete_after=30, ephemeral=True)
             return

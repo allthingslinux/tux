@@ -49,6 +49,7 @@ class Unban(ModerationCogBase):
         """
 
         assert ctx.guild
+        await ctx.defer(ephemeral=True)
 
         # Get the list of banned users in the guild
         banned_users = [ban.user async for ban in ctx.guild.bans()]

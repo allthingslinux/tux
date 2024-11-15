@@ -44,6 +44,7 @@ class PollUnban(ModerationCogBase):
         """
 
         assert ctx.guild
+        await ctx.defer(ephemeral=True)
 
         if not await self.is_pollbanned(ctx.guild.id, member.id):
             await ctx.send("User is not poll banned.", delete_after=30, ephemeral=True)

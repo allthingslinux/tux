@@ -46,6 +46,7 @@ class Untimeout(ModerationCogBase):
         """
 
         assert ctx.guild
+        await ctx.defer(ephemeral=True)
 
         moderator = ctx.author
 

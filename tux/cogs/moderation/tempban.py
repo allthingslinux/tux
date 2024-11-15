@@ -51,6 +51,8 @@ class TempBan(ModerationCogBase):
 
         assert ctx.guild
 
+        await ctx.defer(ephemeral=True)
+
         if not await self.check_conditions(ctx, member, ctx.author, "temp ban"):
             return
 
