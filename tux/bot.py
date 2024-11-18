@@ -6,11 +6,16 @@ from loguru import logger
 
 from tux.cog_loader import CogLoader
 from tux.database.client import db
+from tux.mentionable_tree import MentionableTree
 
 
 class Tux(commands.Bot):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            *args,
+            **kwargs,
+            tree_cls=MentionableTree,
+        )
         self.setup_task = asyncio.create_task(self.setup())
         self.is_shutting_down = False
 
