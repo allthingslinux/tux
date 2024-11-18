@@ -212,11 +212,32 @@ class ModerationCogBase(commands.Cog):
         dm_sent: bool,
         duration: str | None = None,
     ):
+        """
+        Handle the response for a case.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context of the command.
+        case_type : CaseType
+            The type of case.
+        case_number : int | None
+            The case number.
+        reason : str
+            The reason for the case.
+        user : discord.Member | discord.User
+            The target of the case.
+        dm_sent : bool
+            Whether the DM was sent.
+        duration : str | None, optional
+            The duration of the case, by default None.
+        """
+
         moderator = ctx.author
 
         fields = [
-            ("Moderator", f"__{moderator}__\n`{moderator.id}`", True),
-            ("Target", f"__{user}__\n`{user.id}`", True),
+            ("Moderator", f"{moderator}\n`{moderator.id}`", True),
+            ("Target", f"{user}\n`{user.id}`", True),
             ("Reason", f"> {reason}", False),
         ]
 
@@ -241,10 +262,7 @@ class ModerationCogBase(commands.Cog):
                 icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
             )
 
-        if dm_sent:
-            embed.description = "A DM has been sent to the user."
-        else:
-            embed.description = "DMs are disabled for this user."
+        embed.description = "DM successful" if dm_sent else "DM unsuccessful"
 
         await asyncio.gather(self.send_embed(ctx, embed, log_type="mod"), ctx.send(embed=embed, ephemeral=True))
 
@@ -264,9 +282,6 @@ class ModerationCogBase(commands.Cog):
         bool
             True if the user is poll banned, False otherwise.
         """
-
-        # ban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.POLLBAN)
-        # unban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.POLLUNBAN)
 
         ban_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.POLLBAN)
         unban_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.POLLUNBAN)
