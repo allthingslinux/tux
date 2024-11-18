@@ -44,9 +44,10 @@ class SnippetBan(ModerationCogBase):
         """
 
         assert ctx.guild
+        await ctx.defer(ephemeral=True)
 
         if await self.is_snippetbanned(ctx.guild.id, member.id):
-            await ctx.send("User is already snippet banned.", delete_after=30, ephemeral=True)
+            await ctx.send("User is already snippet banned.", ephemeral=True)
             return
 
         try:
@@ -60,7 +61,7 @@ class SnippetBan(ModerationCogBase):
 
         except Exception as e:
             logger.error(f"Failed to ban {member}. {e}")
-            await ctx.send(f"Failed to ban {member}. {e}", delete_after=30)
+            await ctx.send(f"Failed to ban {member}. {e}", ephemeral=True)
             return
 
         dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "snippet banned")
