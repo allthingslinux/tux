@@ -236,8 +236,8 @@ class ModerationCogBase(commands.Cog):
         moderator = ctx.author
 
         fields = [
-            ("Moderator", f"{moderator}\n`{moderator.id}`", True),
-            ("Target", f"{user}\n`{user.id}`", True),
+            ("Moderator", f"**{moderator}**\n`{moderator.id}`", True),
+            ("Target", f"**{user}**\n`{user.id}`", True),
             ("Reason", f"> {reason}", False),
         ]
 
@@ -262,7 +262,7 @@ class ModerationCogBase(commands.Cog):
                 icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
             )
 
-        embed.description = "DM successful" if dm_sent else "DM unsuccessful"
+        embed.description = "-# DM successful" if dm_sent else "-# DM unsuccessful"
 
         await asyncio.gather(self.send_embed(ctx, embed, log_type="mod"), ctx.send(embed=embed, ephemeral=True))
 
