@@ -41,11 +41,14 @@ class Cases(ModerationCogBase):
     )
     @commands.guild_only()
     @checks.has_pl(2)
-    async def cases(self, ctx: commands.Context[Tux]) -> None:
+    async def cases(self, ctx: commands.Context[Tux], case_number: int | None) -> None:
         """
         Manage moderation cases in the server.
         """
-        if ctx.invoked_subcommand is None:
+        if case_number is not None:
+            await ctx.invoke(self.cases_view, number=case_number, flags=CasesViewFlags())
+
+        if case_number is None and ctx.subcommand_passed is None:
             await ctx.send_help("cases")
 
     @cases.command(
@@ -326,8 +329,8 @@ class Cases(ModerationCogBase):
         reason: str,
     ) -> list[tuple[str, str, bool]]:
         return [
-            ("Moderator", f"__{moderator}__\n`{moderator.id}`", True),
-            ("User", f"__{user}__\n`{user.id}`", True),
+            ("Moderator", f"**{moderator}**\n`{moderator.id}`", True),
+            ("User", f"**{user}**\n`{user.id}`", True),
             ("Reason", f"> {reason}", False),
         ]
 
