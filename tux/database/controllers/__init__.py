@@ -17,5 +17,6 @@ class DatabaseController:
         self.guild = GuildController()
         self.guild_config = GuildConfigController()
         self.afk = AfkController()
+        self.permafk = AfkController()
         self.starboard = StarboardController()
         self.starboard_message = StarboardMessageController()
