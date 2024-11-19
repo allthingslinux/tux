@@ -1,15 +1,13 @@
 # fmt: off
 import contextlib
 from collections.abc import Generator
-from logging import getLogger
 from typing import Any
 
 import discord
 from discord import app_commands
 from discord.ext import commands
+from loguru import logger
 
-__all__ = ("MentionableTree",)
-_log = getLogger(__name__)
 
 class MentionableTree(app_commands.CommandTree):
     def __init__(self, *args: Any, **kwargs: Any):
@@ -134,4 +132,4 @@ class MentionableTree(app_commands.CommandTree):
                 if mention:
                     yield command, mention
                 else:
-                    _log.warning("Could not find a mention for command %s in the API. Are you out of sync?", command)
+                    logger.warning("Could not find a mention for command %s in the API. Are you out of sync?", command)
