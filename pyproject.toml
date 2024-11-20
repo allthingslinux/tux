@@ -41,6 +41,7 @@ types-psutil = "^6.0.0.20240621"
 types-pytz = "^2024.2.0.20240913"
 types-pyyaml = "^6.0.12.20240808"
 typing-extensions = "^4.12.2"
+audioop-lts = "^0.2.1"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.30"
@@ -61,7 +62,7 @@ exclude = [
 
 indent-width = 4
 line-length = 120
-target-version = "py312"
+target-version = "py313"
 
 # Ruff Linting Configuration
 [tool.ruff.lint]
@@ -123,7 +124,7 @@ ignore = [
 ]
 include = ["tux"]
 pythonPlatform = "Linux"
-pythonVersion = "3.12"
+pythonVersion = "3.13"
 reportImportCycles = true
 strictDictionaryInference = true
 strictListInference = true

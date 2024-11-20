@@ -1,10 +1,11 @@
 import datetime
-import imghdr
 import json
 import random
+from io import BytesIO
 from typing import Any
 
 import httpx
+from PIL import Image, UnidentifiedImageError
 
 
 class HttpError(Exception):
@@ -81,7 +82,14 @@ class Comic:
         str | None
             The extension of the image.
         """
-        return f".{imghdr.what(None, h=self.image)}" if self.image else None
+
+        if self.image:
+            try:
+                image = Image.open(BytesIO(self.image))
+                return f".{image.format.lower()}" if image.format else None
+            except (OSError, UnidentifiedImageError):
+                return None
+        return None
 
     def update_raw_image(self, raw_image: bytes) -> None:
         """
