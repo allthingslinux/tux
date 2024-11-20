@@ -1,6 +1,7 @@
+import asyncio
 import os
 import re
-from collections.abc import Mapping
+from collections.abc import Awaitable, Mapping
 from pathlib import Path
 from typing import Any, get_type_hints
 
@@ -26,11 +27,17 @@ class TuxHelp(commands.HelpCommand):
                 "usage": "$help <command> or <sub-command>",
             },
         )
+        self._prefix_cache: dict[int | None, str] = {}
 
-    # Helpers for Prefix and Embeds
     async def _get_prefix(self) -> str:
-        """Dynamically fetches the prefix from the context or uses a default prefix."""
-        return self.context.clean_prefix or CONFIG.DEFAULT_PREFIX
+        """Fetches and caches the prefix for each guild."""
+        guild_id = self.context.guild.id if self.context.guild else None
+
+        if guild_id not in self._prefix_cache:
+            # Fetch and cache the prefix specific to the guild
+            self._prefix_cache[guild_id] = self.context.clean_prefix or CONFIG.DEFAULT_PREFIX
+
+        return self._prefix_cache[guild_id]
 
     def _embed_base(self, title: str, description: str | None = None) -> discord.Embed:
         """Creates a base embed with uniform styling."""
@@ -98,28 +105,43 @@ class TuxHelp(commands.HelpCommand):
         cog_groups: list[str],
         menu: ViewMenu,
     ) -> dict[discord.SelectOption, list[Page]]:
-        """Creates select options for each command category."""
         select_options: dict[discord.SelectOption, list[Page]] = {}
 
-        for index, cog_group in enumerate(cog_groups, start=1):
-            if cog_group in command_categories and any(command_categories[cog_group].values()):
-                embed = self._embed_base(f"{cog_group.capitalize()} Commands")
-                embed.set_footer(
-                    text=f"Use {await self._get_prefix()}help <command> or <subcommand> to learn about it.",
-                )
+        prefix: str = await self._get_prefix()
 
-                description = ""
-                sorted_commands = sorted(command_categories[cog_group].items())
-                for cmd, command_list in sorted_commands:
-                    cmd_desc = f"**`{await self._get_prefix()}{cmd}`** | {command_list}\n"
-                    description += cmd_desc
+        tasks: list[Awaitable[tuple[str, Page]]] = [
+            self._create_page(cog_group, command_categories, menu, prefix)
+            for cog_group in cog_groups
+            if cog_group in command_categories and any(command_categories[cog_group].values())
+        ]
 
-                embed.description = description
-                page = Page(embed=embed)
-                menu.add_page(embed)
-                select_options[discord.SelectOption(label=cog_group.capitalize(), emoji=f"{index}️⃣")] = [page]
+        select_options_data: list[tuple[str, Page]] = await asyncio.gather(*tasks)
+
+        for index, (cog_group, page) in enumerate(select_options_data, start=1):
+            select_options[discord.SelectOption(label=cog_group.capitalize(), emoji=f"{index}️⃣")] = [page]
 
         return select_options
+
+    async def _create_page(
+        self,
+        cog_group: str,
+        command_categories: dict[str, dict[str, str]],
+        menu: ViewMenu,
+        prefix: str,
+    ) -> tuple[str, Page]:
+        embed: discord.Embed = self._embed_base(f"{cog_group.capitalize()} Commands")
+        embed.set_footer(
+            text=f"Use {prefix}help <command> or <subcommand> to learn about it.",
+        )
+
+        sorted_commands: list[tuple[str, str]] = sorted(command_categories[cog_group].items())
+        description: str = "\n".join(f"**`{prefix}{cmd}`** | {command_list}" for cmd, command_list in sorted_commands)
+
+        embed.description = description
+        page: Page = Page(embed=embed)
+        menu.add_page(embed)
+
+        return cog_group, page
 
     @staticmethod
     def _add_navigation_and_selection(menu: ViewMenu, select_options: dict[discord.SelectOption, list[Page]]) -> None:
