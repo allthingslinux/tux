@@ -10,7 +10,7 @@ from tux.utils.constants import CONST
 from tux.utils.flags import generate_usage
 
 
-class PERMAFK(commands.Cog):
+class PermAfk(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.db = AfkController()
@@ -51,7 +51,7 @@ class PERMAFK(commands.Cog):
         with contextlib.suppress(discord.Forbidden):
             await target.edit(nick=new_name)
         return await ctx.send(
-            content="\N{SLEEPING SYMBOL} || You are now permanently afk! To remove afk run this command again."
+            content="\N{SLEEPING SYMBOL} || You are now permanently afk! To remove afk run this command again. "
             + f"Reason: `{shortened_reason}`",
             allowed_mentions=discord.AllowedMentions(
                 users=False,
@@ -62,4 +62,4 @@ class PERMAFK(commands.Cog):
 
 
 async def setup(bot: Tux):
-    await bot.add_cog(PERMAFK(bot))
+    await bot.add_cog(PermAfk(bot))

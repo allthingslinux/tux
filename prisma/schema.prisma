@@ -125,7 +125,7 @@ model AFKModel {
   reason    String
   since     DateTime @default(now())
   guild_id  BigInt
-  perma_afk Boolean  @default(false)
+  perm_afk Boolean  @default(false)
   guild     Guild    @relation(fields: [guild_id], references: [guild_id])
 
   @@unique([member_id, guild_id])

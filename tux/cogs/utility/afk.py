@@ -90,7 +90,7 @@ class Afk(commands.Cog):
 
         if entry.since + timedelta(seconds=10) > datetime.now(ZoneInfo("UTC")):
             return
-        if await self.db.is_perma_afk(message.author.id, guild_id=message.guild.id):
+        if await self.db.is_perm_afk(message.author.id, guild_id=message.guild.id):
             return
         assert isinstance(message.author, discord.Member)
 
