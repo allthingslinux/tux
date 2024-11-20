@@ -107,10 +107,11 @@ class TuxHelp(commands.HelpCommand):
         """Creates select options for each command category."""
         select_options: dict[discord.SelectOption, list[Page]] = {}
 
+        prefix = await self._get_prefix()
+
         for index, cog_group in enumerate(cog_groups, start=1):
             if cog_group in command_categories and any(command_categories[cog_group].values()):
                 embed = self._embed_base(f"{cog_group.capitalize()} Commands")
-                prefix = await self._get_prefix()
                 embed.set_footer(
                     text=f"Use {prefix}help <command> or <subcommand> to learn about it.",
                 )
