@@ -118,8 +118,19 @@ class TuxHelp(commands.HelpCommand):
 
         select_options_data: list[tuple[str, Page]] = await asyncio.gather(*tasks)
 
-        for index, (cog_group, page) in enumerate(select_options_data, start=1):
-            select_options[discord.SelectOption(label=cog_group.capitalize(), emoji=f"{index}️⃣")] = [page]
+        category_emoji_map = {
+            "info": "🔍",
+            "moderation": "🛡",
+            "utility": "🔧",
+            "admin": "👑",
+            "fun": "🎉",
+            "levels": "📈",
+            "services": "🔌",
+        }
+
+        for cog_group, page in select_options_data:
+            emoji = category_emoji_map.get(cog_group, "❓")
+            select_options[discord.SelectOption(label=cog_group.capitalize(), emoji=emoji)] = [page]
 
         return select_options
 
