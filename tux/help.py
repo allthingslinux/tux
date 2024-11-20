@@ -26,11 +26,17 @@ class TuxHelp(commands.HelpCommand):
                 "usage": "$help <command> or <sub-command>",
             },
         )
+        self._prefix_cache: dict[int | None, str] = {}
 
-    # Helpers for Prefix and Embeds
     async def _get_prefix(self) -> str:
-        """Dynamically fetches the prefix from the context or uses a default prefix."""
-        return self.context.clean_prefix or CONFIG.DEFAULT_PREFIX
+        """Fetches and caches the prefix for each guild."""
+        guild_id = self.context.guild.id if self.context.guild else None
+
+        if guild_id not in self._prefix_cache:
+            # Fetch and cache the prefix specific to the guild
+            self._prefix_cache[guild_id] = self.context.clean_prefix or CONFIG.DEFAULT_PREFIX
+
+        return self._prefix_cache[guild_id]
 
     def _embed_base(self, title: str, description: str | None = None) -> discord.Embed:
         """Creates a base embed with uniform styling."""
