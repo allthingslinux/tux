@@ -44,9 +44,10 @@ class PollUnban(ModerationCogBase):
         """
 
         assert ctx.guild
+        await ctx.defer(ephemeral=True)
 
         if not await self.is_pollbanned(ctx.guild.id, member.id):
-            await ctx.send("User is not poll banned.", delete_after=30, ephemeral=True)
+            await ctx.send("User is not poll banned.", ephemeral=True)
             return
 
         try:
@@ -60,7 +61,7 @@ class PollUnban(ModerationCogBase):
 
         except Exception as e:
             logger.error(f"Failed to poll unban {member}. {e}")
-            await ctx.send(f"Failed to poll unban {member}. {e}", delete_after=30, ephemeral=True)
+            await ctx.send(f"Failed to poll unban {member}. {e}", ephemeral=True)
             return
 
         dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "poll unbanned")

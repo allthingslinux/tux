@@ -49,13 +49,14 @@ class Unban(ModerationCogBase):
         """
 
         assert ctx.guild
+        await ctx.defer(ephemeral=True)
 
         # Get the list of banned users in the guild
         banned_users = [ban.user async for ban in ctx.guild.bans()]
         user = await commands.UserConverter().convert(ctx, username_or_id)
 
         if user not in banned_users:
-            await ctx.send(f"{user} was not found in the guild ban list.", delete_after=30, ephemeral=True)
+            await ctx.send(f"{user} was not found in the guild ban list.", ephemeral=True)
             return
 
         try:
@@ -63,7 +64,7 @@ class Unban(ModerationCogBase):
 
         except (discord.Forbidden, discord.HTTPException, discord.NotFound) as e:
             logger.error(f"Failed to unban {user}. {e}")
-            await ctx.send(f"Failed to unban {user}. {e}", delete_after=30, ephemeral=True)
+            await ctx.send(f"Failed to unban {user}. {e}", ephemeral=True)
             return
 
         case = await self.db.case.insert_case(

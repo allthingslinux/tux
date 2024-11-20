@@ -56,7 +56,7 @@ class Timeout(ModerationCogBase):
             return
 
         if member.is_timed_out():
-            await ctx.send(f"{member} is already timed out.", delete_after=30, ephemeral=True)
+            await ctx.send(f"{member} is already timed out.", ephemeral=True)
             return
 
         duration = parse_time_string(flags.duration)
@@ -65,7 +65,7 @@ class Timeout(ModerationCogBase):
             await member.timeout(duration, reason=flags.reason)
 
         except discord.DiscordException as e:
-            await ctx.send(f"Failed to timeout {member}. {e}", delete_after=30, ephemeral=True)
+            await ctx.send(f"Failed to timeout {member}. {e}", ephemeral=True)
             return
 
         case = await self.db.case.insert_case(

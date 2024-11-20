@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 
 import discord
@@ -99,8 +100,8 @@ class ModerationCogBase(commands.Cog):
             if isinstance(log_channel, discord.TextChannel):
                 await log_channel.send(embed=embed)
 
-    @staticmethod
     async def send_dm(
+        self,
         ctx: commands.Context[Tux],
         silent: bool,
         user: discord.Member,
@@ -123,11 +124,9 @@ class ModerationCogBase(commands.Cog):
         action : str
             The action being performed.
         """
-
         if not silent:
             try:
                 await user.send(f"You have been {action} from {ctx.guild} for the following reason:\n> {reason}")
-
             except (discord.Forbidden, discord.HTTPException) as e:
                 logger.warning(f"Failed to send DM to {user}. {e}")
                 return False
@@ -174,7 +173,7 @@ class ModerationCogBase(commands.Cog):
                 title="You cannot self-moderate",
                 description=f"You cannot {action} yourself.",
             )
-            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
+            await ctx.send(embed=embed, ephemeral=True)
             return False
 
         if isinstance(moderator, discord.Member) and user.top_role >= moderator.top_role:
@@ -186,7 +185,7 @@ class ModerationCogBase(commands.Cog):
                 title="You cannot self-moderate",
                 description=f"You cannot {action} a user with a higher or equal role.",
             )
-            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
+            await ctx.send(embed=embed, ephemeral=True)
             return False
 
         if user == ctx.guild.owner:
@@ -198,7 +197,7 @@ class ModerationCogBase(commands.Cog):
                 title="You cannot self-moderate",
                 description=f"You cannot {action} the server owner.",
             )
-            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
+            await ctx.send(embed=embed, ephemeral=True)
             return False
 
         return True
@@ -213,11 +212,32 @@ class ModerationCogBase(commands.Cog):
         dm_sent: bool,
         duration: str | None = None,
     ):
+        """
+        Handle the response for a case.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context of the command.
+        case_type : CaseType
+            The type of case.
+        case_number : int | None
+            The case number.
+        reason : str
+            The reason for the case.
+        user : discord.Member | discord.User
+            The target of the case.
+        dm_sent : bool
+            Whether the DM was sent.
+        duration : str | None, optional
+            The duration of the case, by default None.
+        """
+
         moderator = ctx.author
 
         fields = [
-            ("Moderator", f"__{moderator}__\n`{moderator.id}`", True),
-            ("Target", f"__{user}__\n`{user.id}`", True),
+            ("Moderator", f"**{moderator}**\n`{moderator.id}`", True),
+            ("Target", f"**{user}**\n`{user.id}`", True),
             ("Reason", f"> {reason}", False),
         ]
 
@@ -242,13 +262,9 @@ class ModerationCogBase(commands.Cog):
                 icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
             )
 
-        if dm_sent:
-            embed.description = "A DM has been sent to the user."
-        else:
-            embed.description = "DMs are disabled for this user."
+        embed.description = "-# DM successful" if dm_sent else "-# DM unsuccessful"
 
-        await self.send_embed(ctx, embed, log_type="mod")
-        await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+        await asyncio.gather(self.send_embed(ctx, embed, log_type="mod"), ctx.send(embed=embed, ephemeral=True))
 
     async def is_pollbanned(self, guild_id: int, user_id: int) -> bool:
         """
@@ -266,9 +282,6 @@ class ModerationCogBase(commands.Cog):
         bool
             True if the user is poll banned, False otherwise.
         """
-
-        # ban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.POLLBAN)
-        # unban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.POLLUNBAN)
 
         ban_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.POLLBAN)
         unban_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.POLLUNBAN)

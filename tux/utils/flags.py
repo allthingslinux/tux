@@ -1,5 +1,5 @@
 import inspect
-from typing import Any
+from typing import Any, Union, get_args, get_origin
 
 import discord
 from discord.ext import commands
@@ -9,26 +9,19 @@ from prisma.enums import CaseType
 from tux.utils.converters import CaseTypeConverter
 
 
+def is_optional_param(param: commands.Parameter) -> bool:
+    if param.default is not inspect.Parameter.empty:
+        return True
+    param_type = param.annotation
+    if get_origin(param_type) is Union:
+        return type(None) in get_args(param_type)
+    return False
+
+
 def generate_usage(
     command: commands.Command[Any, Any, Any],
     flag_converter: type[commands.FlagConverter] | None = None,
 ) -> str:
-    """
-    Generate a usage string for a command with flags.
-
-    Parameters
-    ----------
-    command : commands.Command
-        The command for which to generate the usage string.
-    flag_converter : type[commands.FlagConverter]
-        The flag converter class for the command.
-
-    Returns
-    -------
-    str
-        The usage string for the command. Example: ">ban @target -reason [-silent | -purge_days]"
-    """
-
     command_name = command.qualified_name
     usage = f"{command_name}"
 
@@ -39,7 +32,7 @@ def generate_usage(
     for param_name, param in parameters.items():
         if param_name in {"ctx", "flags"}:
             continue
-        is_required = param.default == inspect.Parameter.empty
+        is_required = not is_optional_param(param)
         matching_string = get_matching_string(param_name)
 
         if matching_string == param_name and is_required:
@@ -60,7 +53,7 @@ def generate_usage(
         usage += f" {flag}"
 
     if optional_flags:
-        usage += f" [{" | ".join(optional_flags)}]"
+        usage += f" [{' | '.join(optional_flags)}]"
 
     return usage
 

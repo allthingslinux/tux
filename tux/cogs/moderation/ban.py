@@ -52,13 +52,15 @@ class Ban(ModerationCogBase):
         if not await self.check_conditions(ctx, member, moderator, "ban"):
             return
 
+        await ctx.defer(ephemeral=True)
+
         try:
             dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "banned")
             await ctx.guild.ban(member, reason=flags.reason, delete_message_days=flags.purge_days)
 
         except (discord.Forbidden, discord.HTTPException) as e:
             logger.error(f"Failed to ban {member}. {e}")
-            await ctx.send(f"Failed to ban {member}. {e}", delete_after=30, ephemeral=True)
+            await ctx.send(f"Failed to ban {member}. {e}", ephemeral=True)
             return
 
         case = await self.db.case.insert_case(
