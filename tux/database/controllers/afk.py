@@ -44,7 +44,7 @@ class AfkController:
                 "nickname": nickname,
                 "reason": reason,
                 "guild_id": guild_id,
-                "perma_afk": perm_afk,
+                "perm_afk": perm_afk,
             },
         )
 
