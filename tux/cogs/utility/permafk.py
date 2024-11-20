@@ -22,6 +22,16 @@ class PERMAFK(commands.Cog):
     @commands.hybrid_command(name="permafk")
     @commands.guild_only()
     async def permafk(self, ctx: commands.Context[Tux], *, reason: str = "No reason.") -> discord.Message:
+        """
+        Set yourself permanently AFK so it doesnt remove your afk status if you send a message.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context of the command.
+        reason : str, optional
+            The reason you are AFK.
+        """
         target = ctx.author
         assert ctx.guild
         assert isinstance(target, discord.Member)
