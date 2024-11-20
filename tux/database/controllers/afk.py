@@ -26,9 +26,7 @@ class AfkController:
         is_user_perma_afk = await self.table.find_first(
             where={"member_id": member_id, "guild_id": guild_id, "perma_afk": True},
         )
-        if is_user_perma_afk is None:
-            return is_user_perma_afk is not None
-        return True
+        return is_user_perma_afk is not None
 
     async def insert_afk(
         self,
