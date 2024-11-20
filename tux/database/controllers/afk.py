@@ -24,7 +24,7 @@ class AfkController:
 
     async def is_perm_afk(self, member_id: int, *, guild_id: int) -> bool:
         is_user_perm_afk = await self.table.find_first(
-            where={"member_id": member_id, "guild_id": guild_id, "perma_afk": True},
+            where={"member_id": member_id, "guild_id": guild_id, "perm_afk": True},
         )
         return is_user_perm_afk is not None
 
