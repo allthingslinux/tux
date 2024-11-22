@@ -23,7 +23,7 @@ class PermAfk(commands.Cog):
     @commands.guild_only()
     async def permafk(self, ctx: commands.Context[Tux], *, reason: str = "No reason.") -> discord.Message:
         """
-        Set yourself permanently AFK so it doesnt remove your afk status if you send a message.
+        Set yourself permanently AFK until you rerun the command.
 
         Parameters
         ----------
@@ -32,16 +32,21 @@ class PermAfk(commands.Cog):
         reason : str, optional
             The reason you are AFK.
         """
+
         target = ctx.author
+
         assert ctx.guild
         assert isinstance(target, discord.Member)
+
         if await self.db.is_afk(target.id, guild_id=ctx.guild.id):
             await self.remove_afk(target.id)
+
             return await ctx.send("Welcome back!")
 
         if len(target.display_name) >= CONST.NICKNAME_MAX_LENGTH - 6:
             truncated_name = f"{target.display_name[: CONST.NICKNAME_MAX_LENGTH - 9]}..."
             new_name = f"[AFK] {truncated_name}"
+
         else:
             new_name = f"[AFK] {target.display_name}"
 
@@ -50,6 +55,7 @@ class PermAfk(commands.Cog):
 
         with contextlib.suppress(discord.Forbidden):
             await target.edit(nick=new_name)
+
         return await ctx.send(
             content="\N{SLEEPING SYMBOL} || You are now permanently afk! To remove afk run this command again. "
             + f"Reason: `{shortened_reason}`",
