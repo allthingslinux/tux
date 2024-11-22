@@ -14,7 +14,7 @@ from tux.utils.constants import CONST
 from tux.utils.flags import generate_usage
 
 
-class AFK(commands.Cog):
+class Afk(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.db = AfkController()
@@ -90,7 +90,8 @@ class AFK(commands.Cog):
 
         if entry.since + timedelta(seconds=10) > datetime.now(ZoneInfo("UTC")):
             return
-
+        if await self.db.is_perm_afk(message.author.id, guild_id=message.guild.id):
+            return
         assert isinstance(message.author, discord.Member)
 
         await self.db.remove_afk(message.author.id)
@@ -143,4 +144,4 @@ class AFK(commands.Cog):
 
 
 async def setup(bot: Tux):
-    await bot.add_cog(AFK(bot))
+    await bot.add_cog(Afk(bot))
