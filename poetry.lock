@@ -812,27 +812,27 @@ dev = ["flake8", "markdown", "twine", "wheel"]
 
 [[package]]
 name = "githubkit"
-version = "0.11.14"
+version = "0.12.0"
 description = "GitHub SDK for Python"
 optional = false
-python-versions = "<4.0,>=3.8"
+python-versions = "<4.0,>=3.9"
 files = [
-    {file = "githubkit-0.11.14-py3-none-any.whl", hash = "sha256:780f346515f68f9f27db1b486f83fd64fe4142ad42a75b79423064d3e99ece97"},
-    {file = "githubkit-0.11.14.tar.gz", hash = "sha256:a62af8a9e3c98e202c6fd2d56ea106f238aebf03a8282c34b757eba6eaeab72c"},
+    {file = "githubkit-0.12.0-py3-none-any.whl", hash = "sha256:34c42602aa5bf32a27606118531efdab24e8a1bce808b88c13e777718e567b6a"},
+    {file = "githubkit-0.12.0.tar.gz", hash = "sha256:79090357b860cf7bcbf3b2f198cc5fc89560819e061c92a615467affe11856a5"},
 ]
 
 [package.dependencies]
-hishel = ">=0.0.21,<=0.0.33"
+anyio = ">=3.6.1,<5.0.0"
+hishel = ">=0.0.21,<=0.2.0"
 httpx = ">=0.23.0,<1.0.0"
 pydantic = ">=1.9.1,<2.5.0 || >2.5.0,<2.5.1 || >2.5.1,<3.0.0"
 PyJWT = {version = ">=2.4.0,<3.0.0", extras = ["crypto"], optional = true, markers = "extra == \"jwt\" or extra == \"auth-app\" or extra == \"auth\" or extra == \"all\""}
-typing-extensions = ">=4.3.0,<5.0.0"
+typing-extensions = ">=4.6.0,<5.0.0"
 
 [package.extras]
-all = ["PyJWT[crypto] (>=2.4.0,<3.0.0)", "anyio (>=3.6.1,<5.0.0)"]
-auth = ["PyJWT[crypto] (>=2.4.0,<3.0.0)", "anyio (>=3.6.1,<5.0.0)"]
+all = ["PyJWT[crypto] (>=2.4.0,<3.0.0)"]
+auth = ["PyJWT[crypto] (>=2.4.0,<3.0.0)"]
 auth-app = ["PyJWT[crypto] (>=2.4.0,<3.0.0)"]
-auth-oauth-device = ["anyio (>=3.6.1,<5.0.0)"]
 jwt = ["PyJWT[crypto] (>=2.4.0,<3.0.0)"]
 
 [[package]]
@@ -2594,4 +2594,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12,<3.13"
-content-hash = "3fa9a8b26c7ed616f673a4ba305611fac2be240311826156d30e515eb01a489f"
+content-hash = "c3326765f6be0a302fb9a339be06d35470a2e73d623d4a1f51e49fb49b9c6a78"
