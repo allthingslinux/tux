@@ -17,7 +17,7 @@ dateparser = "^1.2.0"
 discord-py = "^2.4.0"
 emojis = "^0.7.0"
 githubkit = {extras = ["auth-app"], version = "^0.11.3"}
-httpx = "^0.27.0"
+httpx = "^0.28.0"
 jishaku = "^2.5.2"
 loguru = "^0.7.2"
 pillow = ">=10.3.0,<11.0.0"
