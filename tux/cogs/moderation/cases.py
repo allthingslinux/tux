@@ -257,7 +257,7 @@ class Cases(ModerationCogBase):
         """
 
         if case is not None:
-            moderator = ctx.author
+            moderator = await commands.MemberConverter().convert(ctx, str(case.case_moderator_id))
 
             if isinstance(moderator, discord.Member):
                 fields = self._create_case_fields(moderator, user, reason)
