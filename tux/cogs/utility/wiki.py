@@ -31,6 +31,8 @@ class Wiki(commands.Cog):
             The title and URL of the first search result.
         """
 
+        search_term = search_term.capitalize()
+
         params: dict[str, str] = {
             "action": "opensearch",
             "format": "json",
@@ -65,6 +67,8 @@ class Wiki(commands.Cog):
         tuple[str, str]
             The title and URL of the first search result.
         """
+
+        search_term = search_term.capitalize()
 
         params: dict[str, str] = {
             "action": "opensearch",
