@@ -16,5 +16,5 @@ They are typically not directly interacted with by users, but rather provide add
 
 - **Auto Welcome**: Sends a welcome message to new members when they join the server.
 - **Auto Role**: Assigns a role to new members when they join the server.
-- **Auto Mod**: Automatically moderates the server by enforcing rules and restrictions
-- **Auto Unban**: Automatically unbans users after a specified duration
+- **Auto Mod**: Automatically moderates the server by enforcing rules and restrictions.
+- **Auto Unban**: Automatically unbans users after a specified duration.
