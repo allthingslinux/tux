@@ -136,10 +136,10 @@ Further detailed instructions can be found in the [development guide](docs/devel
 ## Development Notes
 
 > [!NOTE]
-Make sure to add your discord ID to the sys admin list if you are testing locally.
+Make sure to add your Discord User ID to the sys admin list if you are testing locally.
 
 > [!NOTE]
-Make sure to set the prisma schema database ENV variable to the DEV database URL.
+Make sure to set the Prisma schema database ENV variable to the DEV database URL.
 
 > [!NOTE]
 If you want to develop Tux using Docker Compose, we recommend using `docker compose up --watch` for hot reloading.
