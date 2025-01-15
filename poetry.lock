@@ -1858,13 +1858,13 @@ tests = ["hypothesis (>=3.27.0)", "pytest (>=3.2.1,!=3.3.0)"]
 
 [[package]]
 name = "pyright"
-version = "1.1.391"
+version = "1.1.392"
 description = "Command line wrapper for pyright"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pyright-1.1.391-py3-none-any.whl", hash = "sha256:54fa186f8b3e8a55a44ebfa842636635688670c6896dcf6cf4a7fc75062f4d15"},
-    {file = "pyright-1.1.391.tar.gz", hash = "sha256:66b2d42cdf5c3cbab05f2f4b76e8bec8aa78e679bfa0b6ad7b923d9e027cadb2"},
+    {file = "pyright-1.1.392-py3-none-any.whl", hash = "sha256:a3cc6e36ea41ac295c65464b7282c577b64bf490e758165ac3a1a284d6796d96"},
+    {file = "pyright-1.1.392.tar.gz", hash = "sha256:cd5e94fee18b1ab69729965a9166b1ec666aa3a0393a3b1bb261f42020f41eb6"},
 ]
 
 [package.dependencies]
