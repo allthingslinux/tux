@@ -1,42 +1,47 @@
-FROM python:3.12-slim
+FROM python:3.12-slim AS builder
 
+# Set the working directory
 WORKDIR /app
 
-# Install dependencies for cairo and other utilities
+# Install dependencies for building and runtime
 RUN apt-get update && \
-  apt-get install -y \
-  build-essential \
-  curl \
-  libcairo2 \
-  libffi-dev \
-  libgdk-pixbuf2.0-0 \
-  libpango1.0-0 \
-  libpangocairo-1.0-0 \
-  shared-mime-info && \
-  apt-get clean && \
-  rm -rf /var/lib/apt/lists/*
-
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    git \
+    libcairo2 \
+    libffi-dev \
+    libgdk-pixbuf2.0-0 \
+    libpango1.0-0 \
+    libpangocairo-1.0-0 \
+    shared-mime-info && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install Rust and Cargo
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y && \
+    echo 'export PATH="/root/.cargo/bin:$PATH"' >> /etc/profile.d/cargo.sh
 
 # Install tealdeer and update tldr cache
-RUN cargo install tealdeer
-RUN tldr -u
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN cargo install tealdeer && tldr -u
+
 
 # Copy Poetry files and install dependencies
 COPY pyproject.toml poetry.lock /app/
-RUN pip install poetry && \
-  poetry config virtualenvs.create false && \
-  poetry install --no-interaction --no-ansi
+RUN pip install --no-cache-dir poetry && \
+    poetry config virtualenvs.create false && \
+    poetry install --no-interaction --no-ansi
 
 # Copy the remaining project files
 COPY . /app
 
-RUN mkdir -p /app/.cache/prisma && chmod +x /app/.cache/prisma
+# Create a non-root user and switch to it
+RUN useradd -m appuser
+USER appuser
 
 # Set PYTHONPATH environment variable to /app
 ENV PYTHONPATH=/app
 
+# Command to run the application
 CMD ["sh", "-c", "ls && poetry run prisma py fetch && poetry run prisma generate && poetry run python tux/main.py"]
