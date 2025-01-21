@@ -1,104 +1,99 @@
-# Poetry Configuration
-[tool.poetry]
-authors = ["kaizen <admin@kaizen.wtf>"]
-description = "All Things Linux Discord Bot"
+[project]
 name = "tux"
-readme = "README.md"
-repository = "https://github.com/allthingslinux/tux"
 version = "0.1.0"
-package-mode = false
+description = "All Things Linux Discord Bot"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+urls = { "repository" = "https://github.com/allthingslinux/tux" }
 
-[tool.poetry.dependencies]
-aiocache = "^0.12.2"
-aioconsole = "^0.8.0"
-aiofiles = "^24.1.0"
-asynctempfile = "^0.5.0"
-cairosvg = "^2.7.1"
-dateparser = "^1.2.0"
-discord-py = "^2.4.0"
-emojis = "^0.7.0"
-githubkit = {extras = ["auth-app"], version = "^0.12.0"}
-httpx = "^0.28.0"
-jishaku = "^2.5.2"
-loguru = "^0.7.2"
-pillow = ">=10.3.0,<11.0.0"
-pre-commit = "^4.0.0"
-prisma = "^0.15.0"
-psutil = "^6.0.0"
-pydantic = "^2.8.2"
-pynacl = "^1.5.0"
-pyright = "^1.1.358"
-python = ">=3.12,<3.13"
-python-dotenv = "^1.0.1"
-pytz = "^2024.1"
-pyyaml = "^6.0.2"
-reactionmenu = "^3.1.7"
-rsa = "^4.9"
-ruff = "^0.8.0"
-sentry-sdk = {extras = ["httpx", "loguru"], version = "^2.7.0"}
-types-aiofiles = "^24.1.0.20240626"
-types-dateparser = "^1.2.0.20240420"
-types-psutil = "^6.0.0.20240621"
-types-pytz = "^2024.2.0.20240913"
-types-pyyaml = "^6.0.12.20240808"
-typing-extensions = "^4.12.2"
+dependencies = [
+    "aiocache>=0.12.2",
+    "aioconsole>=0.8.0",
+    "aiofiles>=24.1.0",
+    "asynctempfile>=0.5.0",
+    "cairosvg>=2.7.1",
+    "dateparser>=1.2.0",
+    "discord-py>=2.4.0",
+    "emojis>=0.7.0",
+    "githubkit[auth-app]>=0.12.0",
+    "httpx>=0.28.0",
+    "jishaku>=2.5.2",
+    "loguru>=0.7.2",
+    "pillow>=10.3.0,<11.0.0",
+    "pre-commit>=4.0.0",
+    "prisma>=0.15.0",
+    "psutil>=6.0.0",
+    "pydantic>=2.8.2",
+    "pynacl>=1.5.0",
+    "pyright>=1.1.358",
+    "python-dotenv>=1.0.1",
+    "pytz>=2024.1",
+    "pyyaml>=6.0.2",
+    "reactionmenu>=3.1.7",
+    "rsa>=4.9",
+    "ruff>=0.8.0",
+    "sentry-sdk[httpx,loguru]>=2.7.0",
+    "types-aiofiles>=24.1.0.20240626",
+    "types-dateparser>=1.2.0.20240420",
+    "types-psutil>=6.0.0.20240621",
+    "types-pytz>=2024.2.0.20240913",
+    "types-pyyaml>=6.0.12.20240808",
+    "typing-extensions>=4.12.2"
+]
+
+[build-system]
+requires = ["poetry-core>=2.0"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.30"
 
-[build-system]
-build-backend = "poetry.core.masonry.api"
-requires = ["poetry-core"]
-
-# Ruff Configuration
 [tool.ruff]
 exclude = [
-  ".venv",
-  "examples",
-  "tests",
-  ".archive",
-  "typings/**",
+    ".venv",
+    "examples",
+    "tests",
+    ".archive",
+    "typings/**",
 ]
 
 indent-width = 4
 line-length = 120
 target-version = "py312"
 
-# Ruff Linting Configuration
 [tool.ruff.lint]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 fixable = ["ALL"]
 ignore = ["E501", "N814", "PLR0913", "PLR2004"]
 select = [
-  "I", # isort
-  "E", # pycodestyle-error
-  "F", # pyflakes
-  "PERF", # perflint
-  "N", # pep8-naming
-  "TRY", # tryceratops
-  "UP", # pyupgrade
-  "FURB", # refurb
-  "PL", # pylint
-  "B", # flake8-bugbear
-  "SIM", # flake8-simplify
-  "ASYNC", # flake8-async
-  "A", # flake8-builtins
-  "C4", # flake8-comprehensions
-  "DTZ", # flake8-datetimez
-  "EM", # flake8-errmsg
-  "PIE", # flake8-pie
-  "T20", # flake8-print
-  "Q", # flake8-quotes
-  "RET", # flake8-return
-  "PTH", # flake8-use-pathlib
-  "INP", # flake8-no-pep420
-  "RSE", # flake8-raise
-  "ICN", # flake8-import-conventions
-  "RUF", # ruff
+    "I",  # isort
+    "E",  # pycodestyle-error
+    "F",  # pyflakes
+    "PERF",  # perflint
+    "N",  # pep8-naming
+    "TRY",  # tryceratops
+    "UP",  # pyupgrade
+    "FURB",  # refurb
+    "PL",  # pylint
+    "B",  # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "ASYNC",  # flake8-async
+    "A",  # flake8-builtins
+    "C4",  # flake8-comprehensions
+    "DTZ",  # flake8-datetimez
+    "EM",  # flake8-errmsg
+    "PIE",  # flake8-pie
+    "T20",  # flake8-print
+    "Q",  # flake8-quotes
+    "RET",  # flake8-return
+    "PTH",  # flake8-use-pathlib
+    "INP",  # flake8-no-pep420
+    "RSE",  # flake8-raise
+    "ICN",  # flake8-import-conventions
+    "RUF",  # ruff
 ]
 unfixable = []
 
-# Ruff Formatting Configuration
 [tool.ruff.format]
 docstring-code-format = true
 docstring-code-line-length = "dynamic"
@@ -107,20 +102,19 @@ line-ending = "lf"
 quote-style = "double"
 skip-magic-trailing-comma = false
 
-# Pyright Configuration
 [tool.pyright]
 defineConstant = {DEBUG = true}
 enableReachabilityAnalysis = true
 exclude = [
-  "__pypackages__",
-  "_build",
-  "examples",
-  "tests",
-  ".archive",
-  "typings/**",
+    "__pypackages__",
+    "_build",
+    "examples",
+    "tests",
+    ".archive",
+    "typings/**",
 ]
 ignore = [
-  ".venv",
+    ".venv",
 ]
 include = ["tux"]
 pythonPlatform = "Linux"

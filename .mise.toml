@@ -1,2 +1,3 @@
 [tools]
+poetry = "latest"
 python = "3.12"
