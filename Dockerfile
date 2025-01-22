@@ -33,10 +33,6 @@ RUN pip install --no-cache-dir poetry && \
     poetry config virtualenvs.create false && \
     poetry install --no-interaction --no-ansi
 
-# Create a non-root user and switch to it
-RUN useradd -m appuser
-USER appuser
-
 # Set PYTHONPATH environment variable to /app
 ENV PYTHONPATH=/app
 
