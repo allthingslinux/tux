@@ -342,7 +342,7 @@ class Run(commands.Cog):
             user_name=ctx.author.name,
             user_display_avatar=ctx.author.display_avatar.url,
             title="Supported Languages",
-            description=f"```{", ".join(compiler_map.keys())}```",
+            description=f"```{', '.join(compiler_map.keys())}```",
         )
 
         await ctx.send(embed=embed)

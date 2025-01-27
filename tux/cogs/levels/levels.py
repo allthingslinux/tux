@@ -179,7 +179,7 @@ class Levels(commands.Cog):
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
             title=f"XP Blacklist - {member}",
-            description=f"{member} has been {"blacklisted" if state else "unblacklisted"} from gaining XP.",
+            description=f"{member} has been {'blacklisted' if state else 'unblacklisted'} from gaining XP.",
             custom_color=discord.Color.blurple(),
         )
 

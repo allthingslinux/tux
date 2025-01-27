@@ -321,7 +321,7 @@ class Snippets(commands.Cog):
         embed.add_field(name="Name", value=snippet.snippet_name, inline=False)
         embed.add_field(
             name="Author",
-            value=f"{author.mention if author else f"<@!{snippet.snippet_user_id}>"}",
+            value=f"{author.mention if author else f'<@!{snippet.snippet_user_id}>'}",
             inline=False,
         )
         embed.add_field(name="Content", value=f"> {snippet.snippet_content}", inline=False)

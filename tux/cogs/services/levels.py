@@ -138,7 +138,7 @@ class LevelsService(commands.Cog):
         roles_to_remove = [r for r in member.roles if r.id in self.xp_roles.values() and r != highest_role]
         await member.remove_roles(*roles_to_remove)
         logger.debug(
-            f"Assigned role {highest_role.name if highest_role else "None"} to member {member} and removed roles {", ".join(r.name for r in roles_to_remove)}",
+            f"Assigned role {highest_role.name if highest_role else 'None'} to member {member} and removed roles {', '.join(r.name for r in roles_to_remove)}",
         )
 
     @staticmethod

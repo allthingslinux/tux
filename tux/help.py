@@ -65,8 +65,8 @@ class TuxHelp(commands.HelpCommand):
             for flag in param_annotation.__commands_flags__.values():
                 flag_str = self._format_flag_name(flag)
                 if flag.aliases:
-                    flag_str += f" ({", ".join(flag.aliases)})"
-                flag_str += f"\n\t{flag.description or "No description provided"}"
+                    flag_str += f" ({', '.join(flag.aliases)})"
+                flag_str += f"\n\t{flag.description or 'No description provided'}"
                 if flag.default is not discord.utils.MISSING:
                     flag_str += f"\n\tDefault: {flag.default}"
                 flag_details.append(flag_str)
@@ -82,10 +82,10 @@ class TuxHelp(commands.HelpCommand):
     async def _add_command_help_fields(self, embed: discord.Embed, command: commands.Command[Any, Any, Any]) -> None:
         """Adds fields with usage and alias information for a command to an embed."""
         prefix = await self._get_prefix()
-        embed.add_field(name="Usage", value=f"`{prefix}{command.usage or "No usage"}`", inline=False)
+        embed.add_field(name="Usage", value=f"`{prefix}{command.usage or 'No usage'}`", inline=False)
         embed.add_field(
             name="Aliases",
-            value=(f"`{", ".join(command.aliases)}`" if command.aliases else "No aliases"),
+            value=(f"`{', '.join(command.aliases)}`" if command.aliases else "No aliases"),
             inline=False,
         )
 
@@ -95,7 +95,7 @@ class TuxHelp(commands.HelpCommand):
         command_aliases = ", ".join(command.aliases) if command.aliases else "No aliases"
         embed.add_field(
             name=f"{prefix}{command.qualified_name} ({command_aliases})",
-            value=f"> {command.short_doc or "No documentation summary"}",
+            value=f"> {command.short_doc or 'No documentation summary'}",
             inline=False,
         )
 
@@ -281,7 +281,7 @@ class TuxHelp(commands.HelpCommand):
 
         embed = self._embed_base(
             title=f"{prefix}{command.qualified_name}",
-            description=f"> {command.help or "No documentation available."}",
+            description=f"> {command.help or 'No documentation available.'}",
         )
 
         await self._add_command_help_fields(embed, command)
@@ -295,7 +295,7 @@ class TuxHelp(commands.HelpCommand):
         """Sends a help message for a specific command group."""
         prefix = await self._get_prefix()
 
-        embed = self._embed_base(f"{group.name}", f"> {group.help or "No documentation available."}")
+        embed = self._embed_base(f"{group.name}", f"> {group.help or 'No documentation available.'}")
 
         await self._add_command_help_fields(embed, group)
         for command in group.commands:

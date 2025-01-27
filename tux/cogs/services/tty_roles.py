@@ -55,7 +55,7 @@ class TtyRoles(commands.Cog):
 
         exponent = int(math.floor(math.log2(user_count)))
 
-        return f"{self.base_role_name}{2 ** exponent}"
+        return f"{self.base_role_name}{2**exponent}"
 
     @staticmethod
     async def try_create_role(member: discord.Member, role_name: str) -> discord.Role | None:
