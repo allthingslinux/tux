@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.22.0
+    rev: v8.23.2
     hooks:
       - id: gitleaks
 
@@ -12,7 +12,7 @@ repos:
       - id: check-toml
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.4
+    rev: v0.9.3
     hooks:
       # Run the linter.
       - id: ruff
