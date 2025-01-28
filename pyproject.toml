@@ -20,30 +20,32 @@ dependencies = [
     "jishaku>=2.5.2",
     "loguru>=0.7.2",
     "pillow>=10.3.0,<11.0.0",
-    "pre-commit>=4.0.0",
     "prisma>=0.15.0",
     "psutil>=6.0.0",
     "pydantic>=2.8.2",
     "pynacl>=1.5.0",
-    "pyright>=1.1.358",
     "python-dotenv>=1.0.1",
     "pytz>=2024.1",
     "pyyaml>=6.0.2",
     "reactionmenu>=3.1.7",
     "rsa>=4.9",
-    "ruff>=0.8.0",
     "sentry-sdk[httpx,loguru]>=2.7.0",
-    "types-aiofiles>=24.1.0.20240626",
-    "types-dateparser>=1.2.0.20240420",
-    "types-psutil>=6.0.0.20240621",
-    "types-pytz>=2024.2.0.20240913",
-    "types-pyyaml>=6.0.12.20240808",
     "typing-extensions>=4.12.2"
 ]
 
 [build-system]
 requires = ["poetry-core>=2.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = ">=4.0.0"
+pyright = ">=1.1.358"
+ruff = ">=0.8.0"
+types-aiofiles = ">=24.1.0.20240626"
+types-dateparser = ">=1.2.0.20240420"
+types-psutil = ">=6.0.0.20240621"
+types-pytz = ">=2024.2.0.20240913"
+types-pyyaml = ">=6.0.12.20240808"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.30"
