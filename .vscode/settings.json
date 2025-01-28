@@ -1,0 +1,27 @@
+{
+  "ruff.nativeServer": "on",
+  "ruff.lint.enable": true,
+  "ruff.lint.preview": false,
+  "ruff.format.preview": true,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "charliermarsh.ruff",
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.ruff": "always",
+    "source.fixAll": "always"
+  },
+  "python.languageServer": "Pylance",
+  "python.analysis.autoFormatStrings": true,
+  "python.analysis.completeFunctionParens": true,
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.inlayHints.functionReturnTypes": true,
+  "python.analysis.inlayHints.variableTypes": true,
+  "python.analysis.inlayHints.callArgumentNames": "all",
+  "python.terminal.activateEnvInCurrentTerminal": true,
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/pycache": true
+  },
+  "git.autofetch": true,
+  "editor.inlayHints.enabled": "offUnlessPressed"
+}
