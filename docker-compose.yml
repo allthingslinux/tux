@@ -3,7 +3,7 @@ services:
     build:
       context: .
       target: dev
-    image: allthingslinux/tux:latest
+    image: ghcr.io/allthingslinux/tux:latest
     container_name: tux
     restart: always
     develop:
