@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "Tux is an all in one bot for the All Things Linux discord server."
 authors = [{ name = "All Things Linux", email = "tux@allthingslinux.org" }]
 requires-python = ">=3.13,<3.14"
-license = { file = "LICENSE.md" }
 readme = "README.md"
 urls = { repository = "https://github.com/allthingslinux/tux" }
 dynamic = ["dependencies"]
