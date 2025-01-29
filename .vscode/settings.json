@@ -10,6 +10,7 @@
     "source.fixAll": "always"
   },
   "python.languageServer": "Pylance",
+  "python.analysis.typeCheckingMode": "strict",
   "python.analysis.autoFormatStrings": true,
   "python.analysis.completeFunctionParens": true,
   "python.analysis.autoImportCompletions": true,
@@ -23,8 +24,5 @@
     "**/pycache": true
   },
   "git.autofetch": true,
-  "editor.inlayHints.enabled": "offUnlessPressed",
-  "[toml]": {
-    "editor.defaultFormatter": "tamasfe.even-better-toml"
-  }
+  "editor.inlayHints.enabled": "offUnlessPressed"
 }

@@ -26,7 +26,7 @@ It is designed to provide a variety of features to the server, including moderat
 
 ## Tech Stack
 
-- Python 3.12 alongside the Discord.py library
+- Python 3.13 alongside the Discord.py library
 - Poetry for dependency management
 - Docker and Docker Compose for development and deployment
 - Strict typing with Pyright and type hints
@@ -54,7 +54,7 @@ It is designed to provide a variety of features to the server, including moderat
 
 ### Prerequisites
 
-- Python 3.12
+- Python 3.13
 - [Poetry](https://python-poetry.org/docs/)
 - [Supabase](https://supabase.io/)
 - Optional: [Docker](https://docs.docker.com/get-docker/)

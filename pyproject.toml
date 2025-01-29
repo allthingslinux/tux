@@ -7,33 +7,7 @@ requires-python = ">=3.13,<3.14"
 license = { file = "LICENSE.md" }
 readme = "README.md"
 urls = { repository = "https://github.com/allthingslinux/tux" }
-
-dependencies = [
-  "aiocache>=0.12.2",
-  "aioconsole>=0.8.0",
-  "aiofiles>=24.1.0",
-  "asynctempfile>=0.5.0",
-  "cairosvg>=2.7.1",
-  "dateparser>=1.2.0",
-  "discord-py>=2.4.0",
-  "emojis>=0.7.0",
-  "githubkit[auth-app]>=0.12.0",
-  "httpx>=0.28.0",
-  "jishaku>=2.5.2",
-  "loguru>=0.7.2",
-  "pillow>=10.3.0,<11.0.0",
-  "prisma>=0.15.0",
-  "psutil>=6.0.0",
-  "pydantic>=2.8.2",
-  "pynacl>=1.5.0",
-  "python-dotenv>=1.0.1",
-  "pytz>=2024.1",
-  "pyyaml>=6.0.2",
-  "reactionmenu>=3.1.7",
-  "rsa>=4.9",
-  "sentry-sdk[httpx,loguru]>=2.7.0",
-  "typing-extensions>=4.12.2",
-]
+dynamic = ["dependencies"]
 
 [build-system]
 requires = ["poetry-core>=2.0"]
@@ -49,6 +23,31 @@ packages = [{ include = "tux" }]
 
 [tool.poetry.dependencies]
 python = ">=3.13,<3.14"
+aiocache = ">=0.12.2"
+aioconsole = ">=0.8.0"
+aiofiles = ">=24.1.0"
+asynctempfile = ">=0.5.0"
+cairosvg = ">=2.7.1"
+dateparser = ">=1.2.0"
+"discord-py" = ">=2.4.0"
+emojis = ">=0.7.0"
+githubkit = { version = ">=0.12.0", extras = ["auth-app"] }
+httpx = ">=0.28.0"
+jishaku = ">=2.5.2"
+loguru = ">=0.7.2"
+pillow = ">=10.3.0,<11.0.0"
+prisma = ">=0.15.0"
+psutil = ">=6.0.0"
+pydantic = ">=2.8.2"
+pynacl = ">=1.5.0"
+python-dotenv = ">=1.0.1"
+pytz = ">=2024.1"
+pyyaml = ">=6.0.2"
+reactionmenu = ">=3.1.7"
+rsa = ">=4.9"
+sentry-sdk = { version = ">=2.7.0", extras = ["httpx", "loguru"] }
+typing-extensions = ">=4.12.2"
+audioop-lts = "^0.2.1"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = ">=4.0.0"
