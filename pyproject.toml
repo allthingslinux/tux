@@ -3,7 +3,7 @@ name = "tux"
 version = "0.1.0"
 description = "All Things Linux Discord Bot"
 readme = "README.md"
-requires-python = ">=3.12,<3.13"
+requires-python = "<=3.13"
 urls = { "repository" = "https://github.com/allthingslinux/tux" }
 
 dependencies = [
@@ -55,7 +55,7 @@ exclude = [".venv", "examples", "tests", ".archive", "typings/**"]
 
 indent-width = 4
 line-length = 120
-target-version = "py312"
+target-version = "py313"
 
 [tool.ruff.lint]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
@@ -112,7 +112,7 @@ exclude = [
 ignore = [".venv"]
 include = ["tux"]
 pythonPlatform = "Linux"
-pythonVersion = "3.12"
+pythonVersion = "3.13"
 reportImportCycles = true
 strictDictionaryInference = true
 strictListInference = true
