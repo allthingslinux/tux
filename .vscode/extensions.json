@@ -1,0 +1,14 @@
+{
+  "recommendations": [
+    "ms-vscode-remote.remote-containers",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-azuretools.vscode-docker",
+    "charliermarsh.ruff",
+    "prisma.prisma",
+    "mikestead.dotenv",
+    "usernamehw.errorlens",
+    "sourcery.sourcery",
+    "redhat.vscode-yaml"
+  ]
+}

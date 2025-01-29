@@ -257,16 +257,12 @@ class Cases(ModerationCogBase):
         """
 
         if case is not None:
-            moderator = ctx.author
+            try:
+                moderator = await commands.MemberConverter().convert(ctx, str(case.case_moderator_id))
+            except commands.errors.MemberNotFound:
+                moderator = await commands.UserConverter().convert(ctx, str(case.case_moderator_id))
 
-            if isinstance(moderator, discord.Member):
-                fields = self._create_case_fields(moderator, user, reason)
-            else:
-                fields = self._create_case_fields(
-                    await commands.MemberConverter().convert(ctx, str(case.case_moderator_id)),
-                    user,
-                    reason,
-                )
+            fields = self._create_case_fields(moderator, user, reason)
 
             embed = self.create_embed(
                 ctx,
@@ -324,7 +320,7 @@ class Cases(ModerationCogBase):
 
     @staticmethod
     def _create_case_fields(
-        moderator: discord.Member,
+        moderator: discord.Member | discord.User,
         user: discord.Member | discord.User,
         reason: str,
     ) -> list[tuple[str, str, bool]]:

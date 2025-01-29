@@ -141,9 +141,6 @@ tux/logs/
 # PyCharm
 .idea/
 
-# VS Code
-.vscode/
-
 # Prisma
 .binaries/
 prisma/database.db

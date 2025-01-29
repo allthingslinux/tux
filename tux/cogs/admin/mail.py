@@ -38,7 +38,6 @@ class Mail(commands.Cog):
     mail = app_commands.Group(name="mail", description="Mail commands.")
 
     @mail.command(name="register")
-    @app_commands.checks.has_any_role("Root", "Admin", "Mod")
     @checks.ac_has_pl(5)
     async def register(
         self,

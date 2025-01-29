@@ -28,6 +28,7 @@ class TuxHelp(commands.HelpCommand):
             },
         )
         self._prefix_cache: dict[int | None, str] = {}
+        self._category_cache: dict[str, dict[str, str]] = {}
 
     async def _get_prefix(self) -> str:
         """Fetches and caches the prefix for each guild."""
@@ -117,8 +118,19 @@ class TuxHelp(commands.HelpCommand):
 
         select_options_data: list[tuple[str, Page]] = await asyncio.gather(*tasks)
 
-        for index, (cog_group, page) in enumerate(select_options_data, start=1):
-            select_options[discord.SelectOption(label=cog_group.capitalize(), emoji=f"{index}️⃣")] = [page]
+        category_emoji_map = {
+            "info": "🔍",
+            "moderation": "🛡",
+            "utility": "🔧",
+            "admin": "👑",
+            "fun": "🎉",
+            "levels": "📈",
+            "services": "🔌",
+        }
+
+        for cog_group, page in select_options_data:
+            emoji = category_emoji_map.get(cog_group, "❓")
+            select_options[discord.SelectOption(label=cog_group.capitalize(), emoji=emoji)] = [page]
 
         return select_options
 
@@ -166,6 +178,9 @@ class TuxHelp(commands.HelpCommand):
         mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]],
     ) -> dict[str, dict[str, str]]:
         """Retrieves the command categories and their corresponding commands."""
+        if self._category_cache:
+            return self._category_cache  # Return cached categories if available
+
         command_categories: dict[str, dict[str, str]] = {}
 
         for cog, mapping_commands in mapping.items():
@@ -179,6 +194,7 @@ class TuxHelp(commands.HelpCommand):
                         cmd_aliases = "`No aliases`"
                     command_categories[cog_group][command.name] = cmd_aliases
 
+        self._category_cache = command_categories  # Cache the results
         return command_categories
 
     @staticmethod

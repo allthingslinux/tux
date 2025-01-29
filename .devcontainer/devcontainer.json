@@ -1,0 +1,14 @@
+{
+  "name": "Tux Development Container",
+  "dockerFile": "../Dockerfile",
+  "context": "..",
+  "forwardPorts": [
+    3000
+  ],
+  "remoteUser": "appuser",
+  "runArgs": [
+    "--init",
+    "--env-file",
+    ".env"
+  ]
+}

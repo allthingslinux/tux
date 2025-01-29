@@ -8,4 +8,4 @@ Currently only the latest stable release will be supported with security updates
 
 If you find a Vulnerability please report it to `tux@allthingslinux.com` and someone will get back ASAP.
 
-**Please note that outlook does not like our email server so emails will not work with it.**
+**Please note that Outlook does not like our email server so emails will not work with it.**

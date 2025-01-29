@@ -22,7 +22,20 @@ class AfkController:
         entry = await self.get_afk_member(member_id, guild_id=guild_id)
         return entry is not None
 
-    async def insert_afk(self, member_id: int, nickname: str, reason: str, guild_id: int) -> AFKModel:
+    async def is_perm_afk(self, member_id: int, *, guild_id: int) -> bool:
+        is_user_perm_afk = await self.table.find_first(
+            where={"member_id": member_id, "guild_id": guild_id, "perm_afk": True},
+        )
+        return is_user_perm_afk is not None
+
+    async def insert_afk(
+        self,
+        member_id: int,
+        nickname: str,
+        reason: str,
+        guild_id: int,
+        perm_afk: bool = False,
+    ) -> AFKModel:
         await self.ensure_guild_exists(guild_id)
 
         return await self.table.create(
@@ -31,6 +44,7 @@ class AfkController:
                 "nickname": nickname,
                 "reason": reason,
                 "guild_id": guild_id,
+                "perm_afk": perm_afk,
             },
         )
 

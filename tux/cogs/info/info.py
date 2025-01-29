@@ -65,7 +65,7 @@ class Info(commands.Cog):
                 custom_color=discord.Color.blurple(),
                 custom_author_text="Server Information",
                 custom_author_icon_url=guild.icon.url,
-                custom_footer_text=f"ID: {guild.id} | Created: {guild.created_at.strftime("%B %d, %Y")}",
+                custom_footer_text=f"ID: {guild.id} | Created: {guild.created_at.strftime('%B %d, %Y')}",
             )
             .add_field(name="Owner", value=str(guild.owner.mention) if guild.owner else "Unknown")
             .add_field(name="Vanity URL", value=guild.vanity_url_code or "None")
@@ -213,7 +213,7 @@ class Info(commands.Cog):
         menu: ViewMenu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed)
         for chunk in chunks:
             page_embed: discord.Embed = embed.copy()
-            page_embed.description = f"{list_type.capitalize()} list for {guild_name}:\n{" ".join(chunk)}"
+            page_embed.description = f"{list_type.capitalize()} list for {guild_name}:\n{' '.join(chunk)}"
             menu.add_page(page_embed)
 
         buttons = [
