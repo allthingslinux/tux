@@ -230,7 +230,7 @@ class Info(commands.Cog):
         await menu.start()
 
     @staticmethod
-    def _chunks(it: Iterator[str], size: int) -> Generator[list[str], None, None]:
+    def _chunks(it: Iterator[str], size: int) -> Generator[list[str]]:
         """
         Split an iterator into chunks of a specified size.
 
