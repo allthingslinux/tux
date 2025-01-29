@@ -3,7 +3,7 @@ name = "tux"
 version = "0.1.0"
 description = "All Things Linux Discord Bot"
 readme = "README.md"
-requires-python = "<=3.13"
+requires-python = ">=3.13,<3.14"
 urls = { "repository" = "https://github.com/allthingslinux/tux" }
 
 dependencies = [
