@@ -2,13 +2,17 @@
   "name": "Tux Development Container",
   "dockerFile": "../Dockerfile",
   "context": "..",
-  "forwardPorts": [
-    3000
-  ],
-  "remoteUser": "appuser",
   "runArgs": [
     "--init",
     "--env-file",
     ".env"
-  ]
+  ],
+  "forwardPorts": [
+    3000
+  ],
+  "remoteUser": "appuser",
+  "features": {
+    "github-cli": "latest",
+    "ghcr.io/devcontainers-contrib/features/pre-commit:2": {}
+  }
 }
