@@ -1,10 +1,12 @@
 [project]
 name = "tux"
 version = "0.1.0"
-description = "All Things Linux Discord Bot"
-readme = "README.md"
+description = "Tux is an all in one bot for the All Things Linux discord server."
+authors = [{ name = "All Things Linux", email = "tux@allthingslinux.org" }]
 requires-python = ">=3.13,<3.14"
-urls = { "repository" = "https://github.com/allthingslinux/tux" }
+license = { file = "LICENSE.md" }
+readme = "README.md"
+urls = { repository = "https://github.com/allthingslinux/tux" }
 
 dependencies = [
   "aiocache>=0.12.2",
@@ -37,6 +39,17 @@ dependencies = [
 requires = ["poetry-core>=2.0"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.poetry]
+name = "tux"
+version = "0.1.0"
+description = "Tux is an all in one bot for the All Things Linux discord server."
+authors = ["All Things Linux <tux@allthingslinux.org>"]
+readme = "README.md"
+packages = [{ include = "tux" }]
+
+[tool.poetry.dependencies]
+python = ">=3.13,<3.14"
+
 [tool.poetry.group.dev.dependencies]
 pre-commit = ">=4.0.0"
 pyright = ">=1.1.358"
@@ -52,7 +65,6 @@ mkdocs-material = "^9.5.30"
 
 [tool.ruff]
 exclude = [".venv", "examples", "tests", ".archive", "typings/**"]
-
 indent-width = 4
 line-length = 120
 target-version = "py313"
