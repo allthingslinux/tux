@@ -14,6 +14,7 @@ from tux.bot import Tux
 from tux.database.controllers import CaseController, DatabaseController
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
+from tux.utils.config import Config
 from tux.utils.flags import generate_usage
 
 
@@ -349,17 +350,17 @@ class Snippets(commands.Cog):
             The content of the snippet.
         """
 
-        # TODO: Remove hardcoded role ids
-
-        # If user does not have any of the access level roles, return
-        access_level_role_ids = [1290368764470231092, 1290368813627346995]
-
         assert ctx.guild
 
-        if isinstance(ctx.author, discord.Member) and all(
-            role.id not in access_level_role_ids for role in ctx.author.roles
+        if (
+            Config.LIMIT_TO_ROLE_IDS
+            and isinstance(ctx.author, discord.Member)
+            and not any(role.id in Config.ACCESS_ROLE_IDS for role in ctx.author.roles)
         ):
-            await ctx.send("You do not have the permission to use this command.")
+            await ctx.send(
+                f"You do not have a role that allows you to create snippets. Accepted roles: {format(', '.join([f'<@&{role_id}>' for role_id in Config.ACCESS_ROLE_IDS]))}",
+                allowed_mentions=AllowedMentions.none(),
+            )
             return
 
         if await self.is_snippetbanned(ctx.guild.id, ctx.author.id):
