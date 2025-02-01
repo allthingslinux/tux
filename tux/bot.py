@@ -1,11 +1,13 @@
 import asyncio
 from typing import Any
 
+from colorama import Back, Fore, Style
 from discord.ext import commands
 from loguru import logger
 
 from tux.cog_loader import CogLoader
 from tux.database.client import db
+from tux.utils.config import Config
 
 
 class Tux(commands.Bot):
@@ -48,7 +50,14 @@ class Tux(commands.Bot):
         """
         Executes actions when the bot is ready, such as connecting to Discord and running tasks.
         """
-        logger.info("Bot has connected to Discord!")
+        logger.info(f"""
+    .--.      {Back.WHITE}{Fore.BLACK}{Config.BOT_NAME} (Tux) version {Config.BOT_VERSION} has started!{Style.RESET_ALL}
+   |o_o |     Bot ID: {Style.DIM}{self.user.id if self.user else "Unknown"}{Style.RESET_ALL}
+   |:_/ |     Watching {Style.DIM}{len(self.guilds)}{Style.RESET_ALL} servers with {Style.DIM}{len(self.users)}{Style.RESET_ALL} users
+  //   \\ \\    Prefix: {Style.DIM}{Config.DEFAULT_PREFIX}{Style.RESET_ALL}
+ (|     | )   Running in {f"{Fore.RED}Development" if Config.DEV else f"{Fore.GREEN}Production"}{Style.RESET_ALL} mode
+/'\\_   _/`\\
+\\___)=(___/ """)
 
         if not self.setup_task.done():
             await self.setup_task
@@ -71,16 +80,16 @@ class Tux(commands.Bot):
         await self.close()
 
         if tasks := [task for task in asyncio.all_tasks() if task is not asyncio.current_task()]:
-            logger.debug(f"Cancelling {len(tasks)} outstanding tasks.")
+            logger.debug(f"Cancelling {len(tasks)} outstanding tasks: {', '.join([task.get_name() for task in tasks])}")
 
             for task in tasks:
                 task.cancel()
 
             await asyncio.gather(*tasks, return_exceptions=True)
-            logger.debug("All tasks cancelled.")
+            logger.debug("All tasks cancelled!")
 
         try:
-            logger.info("Closing database connections.")
+            logger.debug("Closing database connections.")
             await db.disconnect()
 
         except Exception as e:
