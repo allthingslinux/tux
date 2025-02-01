@@ -21,14 +21,19 @@ class Config:
 
     # Production env
     PROD_TOKEN: Final[str] = os.getenv("PROD_TOKEN", "")
-    DEFAULT_PROD_PREFIX: Final[str] = config["DEFAULT_PREFIX"]["PROD"]
+    DEFAULT_PROD_PREFIX: Final[str] = config["BOT_INFO"]["PROD_PREFIX"]
     PROD_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("PROD_COG_IGNORE_LIST", "").split(","))
 
     # Dev env
     DEV: Final[str | None] = os.getenv("DEV")
     DEV_TOKEN: Final[str] = os.getenv("DEV_TOKEN", "")
-    DEFAULT_DEV_PREFIX: Final[str] = config["DEFAULT_PREFIX"]["DEV"]
+    DEFAULT_DEV_PREFIX: Final[str] = config["BOT_INFO"]["DEV_PREFIX"]
     DEV_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("DEV_COG_IGNORE_LIST", "").split(","))
+
+    # Bot info
+    BOT_NAME: Final[str] = config["BOT_INFO"]["BOT_NAME"]
+    BOT_VERSION: Final[str] = config["BOT_INFO"]["BOT_VERSION"]
+    ACTIVITIES: Final[str] = config["BOT_INFO"]["ACTIVITIES"]
 
     # Debug env
     DEBUG: Final[bool] = bool(os.getenv("DEBUG", "True"))
@@ -87,6 +92,10 @@ class Config:
     LEVELS_EXPONENT: Final[int] = config["XP"]["LEVELS_EXPONENT"]
     SHOW_XP_PROGRESS: Final[bool] = config["XP"].get("SHOW_XP_PROGRESS", False)
     ENABLE_XP_CAP: Final[bool] = config["XP"].get("ENABLE_XP_CAP", True)
+
+    # Snippet stuff
+    LIMIT_TO_ROLE_IDS: Final[bool] = config["SNIPPETS"]["LIMIT_TO_ROLE_IDS"]
+    ACCESS_ROLE_IDS: Final[list[int]] = config["SNIPPETS"]["ACCESS_ROLE_IDS"]
 
 
 CONFIG = Config()

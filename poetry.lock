@@ -582,7 +582,6 @@ files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
-markers = {main = "platform_system == \"Windows\" or sys_platform == \"win32\""}
 
 [[package]]
 name = "cryptography"
@@ -2719,4 +2718,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<3.14"
-content-hash = "c432cea31451d32cc34164efa9dd7d2ef952ad64f0452f3ed1bffb6ef875a1e4"
+content-hash = "47f6c7b8c6b723b1476a0279f69e85f97d71e0899dbf487954caf1354cbea1d7"

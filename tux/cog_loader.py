@@ -31,6 +31,9 @@ class CogLoader(commands.Cog):
 
         cog_name: str = filepath.stem
 
+        if cog_name in self.cog_ignore_list:
+            logger.warning(f"Skipping {cog_name} as it is in the ignore list.")
+
         return (
             filepath.suffix == ".py"
             and cog_name not in self.cog_ignore_list

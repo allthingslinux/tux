@@ -47,6 +47,7 @@ rsa = ">=4.9"
 sentry-sdk = { version = ">=2.7.0", extras = ["httpx", "loguru"] }
 typing-extensions = ">=4.12.2"
 audioop-lts = "^0.2.1"
+colorama = "^0.4.6"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = ">=4.0.0"
