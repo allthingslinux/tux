@@ -34,6 +34,7 @@ class Config:
     BOT_NAME: Final[str] = config["BOT_INFO"]["BOT_NAME"]
     BOT_VERSION: Final[str] = config["BOT_INFO"]["BOT_VERSION"]
     ACTIVITIES: Final[str] = config["BOT_INFO"]["ACTIVITIES"]
+    HIDE_BOT_OWNER: Final[bool] = config["BOT_INFO"]["HIDE_BOT_OWNER"]
 
     # Debug env
     DEBUG: Final[bool] = bool(os.getenv("DEBUG", "True"))
