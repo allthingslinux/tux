@@ -1,13 +1,16 @@
 # Base stage:
 # - Pin the Python base image for all stages
-# - Install only the common runtime dependencies
-#   - git
-#   - tealdeer
+# - Install only the common runtime dependencies and shared libraries
 FROM python:3.13-slim AS base
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         git \
+        libcairo2 \
+        libgdk-pixbuf2.0-0 \
+        libpango1.0-0 \
+        libpangocairo-1.0-0 \
+        shared-mime-info \
         tealdeer && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
@@ -21,23 +24,17 @@ ENV PYTHONUNBUFFERED=1 \
 
 # Build stage:
 # - Install build tools (for packages with native dependencies)
+# - Install dev headers for packages with native dependencies
 # - Install poetry (for managing app's dependencies)
 # - Install app's main dependencies
 # - Install the application itself
 # - Generate Prisma client
 FROM base AS build
 
-# TODO: Are these needed?
-# - curl
-# - libgdk-pixbuf2.0-0
-# - libpango1.0-0
-# - libpangocairo-1.0-0
-# - shared-mime-info
-
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         build-essential \
-        libcairo2 \
+        libcairo2-dev \
         libffi-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
