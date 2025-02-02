@@ -1,0 +1,12 @@
+generator client {
+  provider             = "prisma-client-py"
+  recursive_type_depth = "-1"
+  interface            = "asyncio"
+  previewFeatures = ["prismaSchemaFolder"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL")
+}
