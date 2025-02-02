@@ -16,11 +16,11 @@
 </div>
 
 > [!WARNING]
-**This bot (without plenty of tweaking) is not ready for production use, we suggest against using it until announced. Join our support server: [atl.dev](https://discord.gg/gpmSjcjQxg) for more info!**
+**This bot is still a work in progress and issues are expected. If you self-host our bot please join our support server [here](https://discord.gg/gpmSjcjQxg) for announcements and support.**
 
 ## About
 
-Tux is an all in one Discord bot for the All Things Linux Discord server.
+Tux is an all in one Discord bot originally designed for the All Things Linux Discord server.
 
 It is designed to provide a variety of features to the server, including moderation, support, utility, and various fun commands.
 
@@ -31,7 +31,6 @@ It is designed to provide a variety of features to the server, including moderat
 - Docker and Docker Compose for development and deployment
 - Strict typing with Pyright and type hints
 - Type safe ORM using Prisma
-- PostgreSQL database with Supabase
 - Linting and formatting via Ruff and Pre-commit
 - Justfile for easy CLI commands
 - Beautiful logging with Loguru
@@ -56,7 +55,7 @@ It is designed to provide a variety of features to the server, including moderat
 
 - Python 3.13
 - [Poetry](https://python-poetry.org/docs/)
-- [Supabase](https://supabase.io/)
+- [Supabase](https://supabase.io/) or any PostgreSQL database
 - Optional: [Docker](https://docs.docker.com/get-docker/)
 - Optional: [Docker Compose](https://docs.docker.com/compose/install/) (see the [development notes](#development-notes) for more information)
 - Optional: [Just](https://github.com/casey/just/)
@@ -73,35 +72,31 @@ Further detailed instructions can be found in the [development guide](docs/devel
    git clone https://github.com/allthingslinux/tux && cd tux
    ```
 
-2. Install the project's dependencies
+2. Install the project's dependencies and set up the virtual environment
 
     ```bash
     poetry install
+    poetry env use 3.13
     ```
 
-3. Activate the virtual environment
-
-    ```bash
-    poetry shell
-    ```
-
-4. Install the pre-commit hooks
+3. Install the pre-commit hooks (optional unless you are contributing)
 
     ```bash
     pre-commit install
     ```
 
-5. Generate the prisma client
+4. Generate the prisma client and push the database schema
 
     ```bash
     prisma generate
+    prisma db push
     ```
 
     Currently, you will need to have a Supabase database set up and the URL set in the `DATABASE_URL` environment variable.
 
     In the future, we will provide a way to use a local database. We can provide a dev database on request.
 
-6. Copy the `.env.example` file to `.env` and fill in the required values.
+5. Copy the `.env.example` file to `.env` and fill in the required values.
 
     ```bash
     cp .env.example .env
@@ -111,7 +106,7 @@ Further detailed instructions can be found in the [development guide](docs/devel
 
     We offer dev tokens on request in our Discord server.
 
-7. Copy the `config/settings.yml.example` file to `config/settings.yml` and fill in the required values.
+6. Copy the `config/settings.yml.example` file to `config/settings.yml` and fill in the required values.
 
     ```bash
     cp config/settings.yml.example config/settings.yml
@@ -121,16 +116,16 @@ Further detailed instructions can be found in the [development guide](docs/devel
 
     You can also add your custom prefix here.
 
-8. Start the bot!
+7. Start the bot!
 
     ```bash
     poetry run python tux/main.py
     ```
 
-9. Run the sync command in the server to sync the slash command tree.
+8. Run the clear tree command in the server to sync the slash command tree.
 
    ```bash
-   {prefix}dev sync <server id>
+   {prefix}dev ct
    ```
 
 ## Development Notes
