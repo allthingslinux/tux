@@ -220,10 +220,18 @@ class TuxHelp(commands.HelpCommand):
             show_page_director=False,
         )
 
-        embed = self._embed_base(
-            "Hello! Welcome to the help command.",
-            "Tux is an all-in-one bot for the All Things Linux Discord server. The bot is written in Python 3.12 using discord.py, and we are actively seeking contributors!",
-        )
+        # TODO: Make help command more customizable
+        if CONFIG.BOT_NAME != "Tux":
+            logger.info("Bot name is not Tux, using different help message.")
+            embed = self._embed_base(
+                "Hello! Welcome to the help command.",
+                f"{CONFIG.BOT_NAME} is an self hosted instance of Tux. The bot is written in Python using discord.py.\n\nIf you enjoy using {CONFIG.BOT_NAME}, consider contributing to the original project.",
+            )
+        else:
+            embed = self._embed_base(
+                "Hello! Welcome to the help command.",
+                "Tux is an all-in-one bot by the All Things Linux Discord server. The bot is written in Python using discord.py, and we are actively seeking contributors.",
+            )
 
         await self._add_bot_help_fields(embed)
         menu.add_page(embed)
@@ -259,6 +267,12 @@ class TuxHelp(commands.HelpCommand):
             name="GitHub Repository",
             value="[Help contribute! View Repo](https://github.com/allthingslinux/tux)",
             inline=True,
+        )
+        embed.add_field(
+            name="Bot Info",
+            value=f"""Running {"Tux" if CONFIG.BOT_NAME == "Tux" else CONFIG.BOT_NAME + "(Tux)"} version {CONFIG.BOT_VERSION} in {"Development" if CONFIG.DEV else "Production"} mode.
+{f"This tux instance is administrated by <@{CONFIG.BOT_OWNER_ID}>" if not CONFIG.HIDE_BOT_OWNER and CONFIG.BOT_OWNER_ID else ""}""",
+            inline=False,
         )
 
     async def send_cog_help(self, cog: commands.Cog) -> None:

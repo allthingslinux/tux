@@ -6,6 +6,10 @@ from reactionmenu import ViewButton, ViewMenu
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
 
+# FIXME: THIS IS A ALL THINGS LINUX SPECIFIC FILE
+# This will be moved to a plugin as soon as possible
+# Please do not enable this cog in your bot if you are not All Things Linux
+
 des_ids = [
     [1175177565086953523, "_kde"],
     [1175177703066968114, "_gnome"],

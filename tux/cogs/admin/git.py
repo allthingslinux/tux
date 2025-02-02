@@ -86,8 +86,7 @@ class Git(commands.Cog):
         aliases=["ci"],
     )
     @commands.guild_only()
-    # @checks.has_pl(8)
-    @commands.has_any_role("Root", "Admin", "Contributor", "Tux Contributor", "Tux Beta Tester", "%wheel")
+    @checks.has_pl(8)
     async def create_issue(self, ctx: commands.Context[Tux], title: str, body: str) -> None:
         """
         Create an issue.
