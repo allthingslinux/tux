@@ -1,24 +1,67 @@
-# config/settings.yml
+# This is a example configuration file for Tux
+# Change the values to your liking and rename the file to settings.yml
 
-DEFAULT_PREFIX:
-  PROD: "$"
-  DEV: "~"
+BOT_INFO:
+  PROD_PREFIX: "$"
+  DEV_PREFIX: "~" # You can enable dev mode in .env
+  BOT_NAME: "Tux" # This may not apply everywhere, WIP (Best to keep it as Tux for now). Help command will be changed to be less Tux-specific if you change this.
+  BOT_VERSION: "git" # vX.Y.Z or git
+  HIDE_BOT_OWNER: false # Hide bot owner and sysadmin from help command
+  # Available substitutions:
+  # {member_count} - total member count of all guilds
+  # {guild_count} - total guild count
+  # {bot_name} - bot name
+  # {bot_version} - bot version
+  # {prefix} - bot prefix
+  ACTIVITIES: |
+    [
+      {"type": "watching", "name": "{member_count} members"},
+      {"type": "listening", "name": "{guild_count} guilds"},
+      {"type": "playing", "name": "{bot_name} {bot_version}"},
+      {"type": "watching", "name": "All Things Linux"},
+      {"type": "playing", "name": "with fire"},
+      {"type": "watching", "name": "linux tech tips"},
+      {"type": "listening", "name": "mpd"},
+      {"type": "watching", "name": "a vast field of grain"},
+      {"type": "playing", "name": "i am calling about your car's extended warranty"},
+      {"type": "playing", "name": "SuperTuxKart"},
+      {"type": "playing", "name": "SuperTux 2"},
+      {"type": "watching", "name": "Gentoo compile..."},
+      {"type": "watching", "name": "Brodie Robertson"},
+      {"type": "listening", "name": "Terry Davis on YouTube"},
+      {"type": "playing", "name": "with Puffy"},
+      {"type": "watching", "name": "the stars"},
+      {"type": "watching", "name": "VLC"},
+      {"type": "streaming", "name": "SuperTuxKart", "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
+    ]
+
 
 USER_IDS:
-  SYSADMINS:
+  SYSADMINS: # WARNING! This grants dangerous permissions such as eval and jsk which can be used to execute arbitrary code.
     - 123456789012345679
     - 123456789012345679
-  BOT_OWNER: 123456789012345679
+  BOT_OWNER: 123456789012345679 # This is the user who has the highest level of control over the bot. Only one user can be the bot owner.
 
+# This adds a temporary voice channel feature to the bot, you can join the channel to create a channel called /tmp/<username> and move to it.
+# Channels are deleted when the last person leaves them.
+# Set this to the category ID where you want the temporary voice channels to be created.
+# Temporary channels will be put at the bottom of the category.
 TEMPVC_CATEGORY_ID: 123456789012345679
+# Set this to the channel ID where you want the temporary voice channels to be created.
 TEMPVC_CHANNEL_ID: 123456789012345679
 
 
+SNIPPETS:
+  LIMIT_TO_ROLE_IDS: false # Only allow users with the specified role IDs to use the snippet command
+  ACCESS_ROLE_IDS:
+    - 123456789012345679
+    - 123456789012345679
+
 XP:
-  XP_BLACKLIST_CHANNELS:
+  XP_BLACKLIST_CHANNELS: # Channels where XP will not be counted
     - 123456789012345679
     - 123456789012345679
-  XP_ROLES:
+  XP_ROLES: # Roles that will be given to users when they reach a certain level
     - level: 5
       role_id: 123456789012345679
     - level: 10
@@ -30,18 +73,17 @@ XP:
     - level: 25
       role_id: 123456789012345679
 
-  XP_MULTIPLIERS:
+  XP_MULTIPLIERS: # Multipliers for certain roles
     - role_id: 123456789012345679
       multiplier: 1.5
 
-  XP_COOLDOWN: 1 # In seconds
+  XP_COOLDOWN: 1 # Delay in seconds between XP messages
 
-  LEVELS_EXPONENT: 1
-  SHOW_XP_PROGRESS: false
-  # if true, XP will still be counted, but not shown beyond the cap in the level command
-  ENABLE_XP_CAP: false
+  LEVELS_EXPONENT: 1 # Exponent for the level formula
+  SHOW_XP_PROGRESS: false # Shows required XP for the next level in the level command
+  ENABLE_XP_CAP: false # if true, XP will still be counted, but not shown beyond the cap in the level command
 
-GIF_LIMITER:
+GIF_LIMITER: # Limits the amount of gifs a user can send in a channel
   RECENT_GIF_AGE: 60
 
   GIF_LIMIT_EXCLUDE:
