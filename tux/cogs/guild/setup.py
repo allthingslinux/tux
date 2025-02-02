@@ -13,7 +13,7 @@ class Setup(commands.Cog):
         self.db = DatabaseController()
         self.config = DatabaseController().guild_config
 
-    setup = app_commands.Group(name="setup", description="Set up Tux for your server.")
+    setup = app_commands.Group(name="setup", description="Set this bot up for your server.")
 
     @setup.command(name="jail")
     @commands.guild_only()
