@@ -6,6 +6,7 @@ BOT_INFO:
   DEV_PREFIX: "~" # You can enable dev mode in .env
   BOT_NAME: "Tux" # This may not apply everywhere, WIP (Best to keep it as Tux for now). Help command will be changed to be less Tux-specific if you change this.
   BOT_VERSION: "git" # vX.Y.Z or git
+  HIDE_BOT_OWNER: false # Hide bot owner and sysadmin from help command
   # Available substitutions:
   # {member_count} - total member count of all guilds
   # {guild_count} - total guild count
