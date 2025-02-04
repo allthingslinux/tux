@@ -28,8 +28,6 @@ class ActivityHandler(commands.Cog):
     @staticmethod
     def build_activity_list() -> list[discord.Activity | discord.Streaming]:
         """Parses Config.ACTIVITIES as JSON and returns a list of activity objects."""
-        # Debug output to see the config value
-        logger.info(f"Config.ACTIVITIES: {Config.ACTIVITIES!r}")
 
         if not Config.ACTIVITIES or not Config.ACTIVITIES.strip():
             logger.warning("Config.ACTIVITIES is empty or None. Returning an empty list.")

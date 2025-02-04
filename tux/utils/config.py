@@ -8,10 +8,22 @@ from dotenv import load_dotenv, set_key
 
 from tux.utils.functions import convert_dict_str_to_int
 
+# Load environment variables from both .env files
 load_dotenv(verbose=True)
 
-config_file = Path("config/settings.yml")
+# if os.getenv("DEV", "").lower() == "true":
+#     load_dotenv(".env.dev", override=True)
+
+# Get the workspace root directory
+workspace_root = Path(__file__).parent.parent.parent
+
+config_file = workspace_root / "config/settings.yml"
 config = yaml.safe_load(config_file.read_text())
+
+# Ensure .env file exists
+env_file = workspace_root / ".env"
+if not env_file.exists():
+    env_file.touch()
 
 
 class Config:
@@ -51,9 +63,14 @@ class Config:
     PROD_DATABASE_URL: Final[str] = os.getenv("PROD_DATABASE_URL", "")
     DEV_DATABASE_URL: Final[str] = os.getenv("DEV_DATABASE_URL", "")
 
-    DATABASE_URL: Final[str] = DEV_DATABASE_URL if DEV and DEV.lower() == "true" else PROD_DATABASE_URL
+    DATABASE_URL: Final[str] = DEV_DATABASE_URL if os.getenv("DEV", "").lower() == "true" else PROD_DATABASE_URL
 
-    set_key(".env", "DATABASE_URL", DATABASE_URL)
+    if not DATABASE_URL:
+        msg = "No database URL configured. Please set either PROD_DATABASE_URL or DEV_DATABASE_URL in your environment."
+        raise ValueError(msg)
+
+    os.environ["DATABASE_URL"] = DATABASE_URL
+    set_key(env_file, "DATABASE_URL", DATABASE_URL)
 
     # GitHub
     GITHUB_REPO_URL: Final[str] = os.getenv("GITHUB_REPO_URL", "")

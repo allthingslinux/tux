@@ -21,7 +21,15 @@
   "files.exclude": {
     "**/__pycache__": true,
     "**/*.pyc": true,
-    "**/pycache": true
+    "**/pycache": true,
+    ".archive": true
+  },
+  "python.analysis.exclude": [
+    ".archive/**"
+  ],
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportIncompatibleMethodOverride": "none",
+    "reportGeneralTypeIssues": "information"
   },
   "git.autofetch": true,
   "editor.inlayHints.enabled": "offUnlessPressed"

@@ -38,20 +38,25 @@ class HotReload(commands.Cog):
                 logger.error(f"File not found for extension {extension} at {path}")
                 continue
 
-            if self.last_modified_time.get(extension) == modification_time:
+            last_time = self.last_modified_time.get(extension)
+
+            # Skip if we haven't seen this extension before or if it hasn't changed
+            if last_time is None:
+                self.last_modified_time[extension] = modification_time
                 continue
 
-            # Reload the extension if it has been modified
-            self.last_modified_time[extension] = modification_time
+            if last_time == modification_time:
+                continue
 
+            # Only update the time if we successfully reload
             try:
                 await self.bot.reload_extension(extension)
+                self.last_modified_time[extension] = modification_time
+                logger.info(f"Reloaded {extension}")
             except commands.ExtensionNotLoaded:
                 pass
             except commands.ExtensionError as e:
                 logger.error(f"Failed to reload extension {extension}: {e}")
-            else:
-                logger.info(f"Reloaded {extension}")
 
     @hot_reload_loop.before_loop
     async def cache_last_modified_time(self) -> None:
@@ -64,11 +69,9 @@ class HotReload(commands.Cog):
 
             try:
                 modification_time: float = path.stat().st_mtime
+                self.last_modified_time[extension] = modification_time
             except FileNotFoundError:
                 logger.error(f"File not found for extension {extension} at {path}")
-                continue
-
-            self.last_modified_time[extension] = modification_time
 
 
 async def setup(bot: Tux) -> None:
