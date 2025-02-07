@@ -5,6 +5,7 @@ import discord
 from loguru import logger
 
 from tux.bot import Tux
+from tux.utils.config import Config
 from tux.utils.constants import CONST
 
 
@@ -140,7 +141,9 @@ class EmbedCreator:
         user_display_avatar: str | None = None,
     ) -> tuple[str, str | None]:
         try:
-            text: str = f"{user_name}@atl $" if user_name else "tux@atl $"
+            text: str = (
+                f"{user_name}@discord $" if user_name else f"{Config.BOT_NAME.lower()}@discord $"
+            )  # TODO: Make this configurable with the new config system.
             text += f" {round(bot.latency * 1000)}ms" if bot else ""
 
         except Exception as e:
