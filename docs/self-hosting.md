@@ -4,7 +4,7 @@
 
 ## Prerequisites
 - Docker and Docker Compose
-- A working Postgres database and the url in the format `postgres://postgres.user:password@url (if supabase use pooler url):5432/postgres`
+- A working Postgres database and the URL in the format `postgres://[username]:[password]@host:port/database`. For Supabase users, ensure you use the provided pooler URL in the same format.
 - Discord bot token with intents enabled
 - Sentry URL for error tracking (optional)
 
