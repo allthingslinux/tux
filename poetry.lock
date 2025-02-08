@@ -2475,14 +2475,14 @@ files = [
 
 [[package]]
 name = "types-dateparser"
-version = "1.2.0.20240420"
+version = "1.2.0.20250208"
 description = "Typing stubs for dateparser"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "types-dateparser-1.2.0.20240420.tar.gz", hash = "sha256:8f813ddf5ef41b32cabe6167138ae833ada10c22811e42220a1e38a0be7adbdc"},
-    {file = "types_dateparser-1.2.0.20240420-py3-none-any.whl", hash = "sha256:bf3695ddfbadfdfc875064895a51d926fd80b04da1a44364c6c1a9703db7b194"},
+    {file = "types_dateparser-1.2.0.20250208-py3-none-any.whl", hash = "sha256:bfe9d2f36fca22900797bfdd240e3175d885b9541237447ddd7161ea1be2ff77"},
+    {file = "types_dateparser-1.2.0.20250208.tar.gz", hash = "sha256:11ad024b43a655bcab564f21b172a117e6a09d0fc2e8a8131f52e5b68a59a2a6"},
 ]
 
 [[package]]
