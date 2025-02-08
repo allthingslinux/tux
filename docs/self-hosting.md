@@ -37,7 +37,7 @@
 6. Push the database schema
 
     ```bash
-    docker-compose exec tux prisma db push
+    docker exec -it tux prisma db push
     ```
 
     > [!NOTE]
