@@ -59,6 +59,19 @@ class Setup(commands.Cog):
         jail_role: discord.Role,
         jail_channel_id: int,
     ) -> None:
+        """
+        Set up the permissions for the jail role in the jail channel.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        jail_role : discord.Role
+            The jail role to set permissions for.
+        jail_channel_id : int
+            The ID of the jail channel.
+        """
+
         assert interaction.guild
 
         for channel in interaction.guild.channels:

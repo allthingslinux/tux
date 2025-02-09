@@ -24,6 +24,14 @@ class GithubService:
         )
 
     async def get_repo(self) -> FullRepository:
+        """
+        Get the repository.
+
+        Returns
+        -------
+        FullRepository
+            The repository.
+        """
         try:
             response: Response[FullRepository] = await self.github.rest.repos.async_get(
                 CONFIG.GITHUB_REPO_OWNER,
@@ -40,6 +48,21 @@ class GithubService:
             return repo
 
     async def create_issue(self, title: str, body: str) -> Issue:
+        """
+        Create an issue.
+
+        Parameters
+        ----------
+        title : str
+            The title of the issue.
+        body : str
+            The body of the issue.
+
+        Returns
+        -------
+        Issue
+            The created issue.
+        """
         try:
             response: Response[Issue] = await self.github.rest.issues.async_create(
                 CONFIG.GITHUB_REPO_OWNER,
@@ -58,6 +81,21 @@ class GithubService:
             return created_issue
 
     async def create_issue_comment(self, issue_number: int, body: str) -> IssueComment:
+        """
+        Create an issue comment.
+
+        Parameters
+        ----------
+        issue_number : int
+            The number of the issue.
+        body : str
+            The body of the comment.
+
+        Returns
+        -------
+        IssueComment
+            The created issue comment.
+        """
         try:
             response: Response[IssueComment] = await self.github.rest.issues.async_create_comment(
                 CONFIG.GITHUB_REPO_OWNER,
@@ -76,6 +114,19 @@ class GithubService:
             return created_issue_comment
 
     async def close_issue(self, issue_number: int) -> Issue:
+        """
+        Close an issue.
+
+        Parameters
+        ----------
+        issue_number : int
+            The number of the issue.
+
+        Returns
+        -------
+        Issue
+            The closed issue.
+        """
         try:
             response: Response[Issue] = await self.github.rest.issues.async_update(
                 CONFIG.GITHUB_REPO_OWNER,
@@ -94,6 +145,20 @@ class GithubService:
             return closed_issue
 
     async def get_issue(self, issue_number: int) -> Issue:
+        """
+        Get an issue.
+
+        Parameters
+        ----------
+        issue_number : int
+            The number of the issue.
+
+        Returns
+        -------
+        Issue
+            The issue.
+        """
+
         try:
             response: Response[Issue] = await self.github.rest.issues.async_get(
                 CONFIG.GITHUB_REPO_OWNER,
@@ -111,6 +176,15 @@ class GithubService:
             return issue
 
     async def get_open_issues(self) -> list[Issue]:
+        """
+        Get all open issues.
+
+        Returns
+        -------
+        list[Issue]
+            The list of open issues.
+        """
+
         try:
             response: Response[list[Issue]] = await self.github.rest.issues.async_list_for_repo(
                 CONFIG.GITHUB_REPO_OWNER,
@@ -128,6 +202,15 @@ class GithubService:
             return open_issues
 
     async def get_closed_issues(self) -> list[Issue]:
+        """
+        Get all closed issues.
+
+        Returns
+        -------
+        list[Issue]
+            The list of closed issues.
+        """
+
         try:
             response: Response[list[Issue]] = await self.github.rest.issues.async_list_for_repo(
                 CONFIG.GITHUB_REPO_OWNER,
@@ -145,6 +228,15 @@ class GithubService:
             return closed_issues
 
     async def get_open_pulls(self) -> list[PullRequestSimple]:
+        """
+        Get all open pulls.
+
+        Returns
+        -------
+        list[PullRequestSimple]
+            The list of open pulls.
+        """
+
         try:
             response: Response[list[PullRequestSimple]] = await self.github.rest.pulls.async_list(
                 CONFIG.GITHUB_REPO_OWNER,
@@ -162,6 +254,15 @@ class GithubService:
             return open_pulls
 
     async def get_closed_pulls(self) -> list[PullRequestSimple]:
+        """
+        Get all closed pulls.
+
+        Returns
+        -------
+        list[PullRequestSimple]
+            The list of closed pulls.
+        """
+
         try:
             response: Response[list[PullRequestSimple]] = await self.github.rest.pulls.async_list(
                 CONFIG.GITHUB_REPO_OWNER,
@@ -179,6 +280,20 @@ class GithubService:
             return closed_pulls
 
     async def get_pull(self, pr_number: int) -> PullRequest:
+        """
+        Get a pull request.
+
+        Parameters
+        ----------
+        pr_number : int
+            The number of the pull request.
+
+        Returns
+        -------
+        PullRequest
+            The pull request.
+        """
+
         try:
             response: Response[PullRequest] = await self.github.rest.pulls.async_get(
                 CONFIG.GITHUB_REPO_OWNER,

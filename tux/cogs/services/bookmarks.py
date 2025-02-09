@@ -15,6 +15,19 @@ class Bookmarks(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
+        """
+        Handle the addition of a reaction to a message.
+
+        Parameters
+        ----------
+        payload : discord.RawReactionActionEvent
+            The payload of the reaction event.
+
+        Returns
+        -------
+        None
+        """
+
         if str(payload.emoji) != "🔖":
             return
 

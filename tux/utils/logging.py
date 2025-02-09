@@ -22,12 +22,17 @@ T = TypeVar("T")
 
 
 def highlight(style: str) -> dict[str, Callable[[Text], Text]]:
-    """Create a highlighter function for the given style.
+    """
+    Create a highlighter function for the given style.
 
-    Args:
-        style: The style to apply to the text
+    Parameters
+    ----------
+    style : str
+        The style to apply to the text
 
-    Returns:
+    Returns
+    -------
+    dict[str, Callable[[Text], Text]]
         A dict containing the highlighter function
     """
 
@@ -38,26 +43,55 @@ def highlight(style: str) -> dict[str, Callable[[Text], Text]]:
 
 
 class RichHandlerProtocol(Protocol):
-    """Protocol defining the interface for RichHandler."""
-
     _log_render: LogRender
     formatter: Formatter | None
     console: Console
 
     def __init__(self, *args: Any, **kwargs: Any) -> None: ...
 
+    """
+    Initialize the Rich handler.
+
+    Parameters
+    ----------
+    *args : Any
+        The arguments to pass to the RichHandler constructor
+    **kwargs : Any
+        The keyword arguments to pass to the RichHandler constructor
+    """
+
     def render_message(self, record: LogRecord, message: str) -> ConsoleRenderable: ...
 
 
 class LoguruRichHandler(RichHandler, RichHandlerProtocol):
-    """Enhanced Rich handler for loguru that supports better styling and formatting."""
+    """
+    Enhanced Rich handler for loguru that supports better styling and formatting.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """
+        Initialize the Rich handler.
+
+        Parameters
+        ----------
+        *args : Any
+            The arguments to pass to the RichHandler constructor
+        **kwargs : Any
+            The keyword arguments to pass to the RichHandler constructor
+        """
         super().__init__(*args, **kwargs)
         self._last_time: Text | None = None
 
     def emit(self, record: LogRecord) -> None:
-        """Override emit to handle formatting and line endings."""
+        """
+        Emit a log record.
+
+        Parameters
+        ----------
+        record : LogRecord
+            The log record to emit.
+        """
+
         try:
             # Get the formatted message
             message = self.format(record)
@@ -86,6 +120,7 @@ class LoguruRichHandler(RichHandler, RichHandlerProtocol):
                 "success": "[bold green]█[/]",  # Green block for success
                 "trace": "[dim]█[/]",  # Dim block for trace
             }
+
             symbol = level_symbols.get(level_name, "[bright_black]█[/]")  # Gray block for default
             level_str = f"{record.levelname:<7}"  # Reduced padding by 1
 
@@ -130,10 +165,9 @@ class LoguruRichHandler(RichHandler, RichHandlerProtocol):
 
 def setup_logging() -> None:
     """Set up global logging configuration."""
-    # Create console for rich output with custom theme
     console = Console(
         force_terminal=True,
-        color_system="truecolor",  # Enable full color support
+        color_system="truecolor",
         theme=Theme(
             {
                 "logging.level.success": "bold green",
@@ -144,7 +178,7 @@ def setup_logging() -> None:
                 "logging.level.error": "bold red",
                 "logging.level.critical": "bold red reverse",
                 "log.time": "bold bright_white",
-                "log.bracket": "bold bright_black",  # Subtle brackets
+                "log.bracket": "bold bright_black",
             },
         ),
     )

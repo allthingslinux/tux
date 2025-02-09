@@ -135,11 +135,33 @@ class DatabaseConnectionError(RuntimeError):
 class Tux(commands.Bot):
     """Main bot class implementing core functionality and task management.
 
-    This class extends discord.py's Bot class to add:
+    The Tux class extends discord.py's Bot class to provide additional functionality
+    for managing the bot's lifecycle and resources.
+
+    Attributes
+    ----------
+    is_shutting_down : bool
+        Flag indicating if the bot is in shutdown process
+    setup_complete : bool
+        Flag indicating if initial setup is complete
+    start_time : float | None
+        Timestamp when the bot started, or None if not started
+    setup_task : asyncio.Task[None] | None
+        Task handling the bot setup process
+    task_start_times : dict[str, float]
+        Mapping of task names to their start times
+    task_frame_times : dict[str, tuple[str, float]]
+        Mapping of task names to their current frame location and time
+    console : Console
+        Rich console for formatted output
+
+    Notes
+    -----
+    The bot implements several key features:
     - Database connection management
-    - Cog loading
-    - Task monitoring and management
-    - Graceful shutdown
+    - Cog loading and management
+    - Task monitoring and cleanup
+    - Graceful shutdown handling
     """
 
     _monitor_tasks: ClassVar[TaskLoop]  # type: ignore[name-defined]
@@ -147,9 +169,17 @@ class Tux(commands.Bot):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the bot and start setup process.
 
-        Args:
-            *args: Arguments passed to commands.Bot
-            **kwargs: Keyword arguments passed to commands.Bot
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments passed to commands.Bot
+        **kwargs : Any
+            Keyword arguments passed to commands.Bot
+
+        Notes
+        -----
+        This initializes core state variables and starts the setup process
+        as a background task.
         """
         super().__init__(*args, **kwargs)
 
@@ -175,7 +205,18 @@ class Tux(commands.Bot):
     # ------------------------------
 
     async def setup(self) -> None:
-        """Set up the bot by connecting to database and loading cogs."""
+        """Set up the bot by connecting to database and loading cogs.
+
+        This method handles the core initialization sequence:
+        1. Database connection setup
+        2. Extension loading
+        3. Task monitoring initialization
+
+        Raises
+        ------
+        Exception
+            If any part of the setup process fails
+        """
         try:
             await self._setup_database()
             await self._load_extensions()
@@ -186,7 +227,14 @@ class Tux(commands.Bot):
             raise
 
     async def _setup_database(self) -> None:
-        """Set up database connection."""
+        """Set up database connection.
+
+        Initializes and validates the Prisma client connection.
+
+        Notes
+        -----
+        Logs connection status and registration state.
+        """
         logger.info("Setting up Prisma client...")
         await db.connect()
         self._validate_db_connection()
@@ -194,7 +242,17 @@ class Tux(commands.Bot):
         logger.info(f"Prisma client registered: {db.is_registered()}")
 
     async def _load_extensions(self) -> None:
-        """Load bot extensions and cogs."""
+        """Load bot extensions and cogs.
+
+        Attempts to load:
+        1. Jishaku debugging extension
+        2. All configured cogs
+
+        Notes
+        -----
+        Failures to load jishaku are logged but don't prevent other extensions
+        from loading.
+        """
         try:
             await self.load_extension("jishaku")
         except commands.ExtensionError as e:
@@ -203,21 +261,37 @@ class Tux(commands.Bot):
         await self.load_cogs()
 
     def _start_monitoring(self) -> None:
-        """Start task monitoring loop."""
+        """Start task monitoring loop.
+
+        Initializes the background task that monitors running tasks
+        and their states.
+        """
         self._monitor_tasks.start()
         logger.debug("Task monitoring started")
 
     @staticmethod
     def _validate_db_connection() -> None:
-        """Validate database connection status."""
+        """Validate database connection status.
+
+        Raises
+        ------
+        DatabaseConnectionError
+            If database is not connected or not properly registered
+        """
         if not db.is_connected() or not db.is_registered():
             raise DatabaseConnectionError(DatabaseConnectionError.CONNECTION_FAILED)
 
     def _setup_callback(self, task: asyncio.Task[None]) -> None:
         """Handle setup task completion.
 
-        Args:
-            task: The completed setup task
+        Parameters
+        ----------
+        task : asyncio.Task[None]
+            The completed setup task
+
+        Notes
+        -----
+        Updates setup_complete flag and logs completion status.
         """
         try:
             task.result()
@@ -232,7 +306,17 @@ class Tux(commands.Bot):
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
-        """Handle bot ready event."""
+        """Handle bot ready event.
+
+        Performs initialization tasks when the bot connects to Discord:
+        1. Records start time if not set
+        2. Logs startup banner
+        3. Ensures setup is complete
+
+        Notes
+        -----
+        Will wait for setup to complete if it hasn't finished.
+        """
         if not self.start_time:
             self.start_time = discord.utils.utcnow().timestamp()
 
@@ -245,7 +329,15 @@ class Tux(commands.Bot):
         logger.warning("Bot has disconnected from Discord.")
 
     async def _log_startup_banner(self) -> None:
-        """Log bot startup information."""
+        """Log bot startup information.
+
+        Displays a formatted banner containing:
+        - Bot name and version
+        - Bot ID
+        - Guild and user counts
+        - Prefix configuration
+        - Development mode status
+        """
         # Log startup message before banner
         logger.info("Bot is starting up")
 
@@ -266,7 +358,12 @@ class Tux(commands.Bot):
         console.print()
 
     async def _wait_for_setup(self) -> None:
-        """Wait for setup to complete if not already done."""
+        """Wait for setup to complete if not already done.
+
+        Notes
+        -----
+        If setup fails during this wait, initiates shutdown sequence.
+        """
         if self.setup_task and not self.setup_task.done():
             try:
                 await self.setup_task
@@ -279,19 +376,55 @@ class Tux(commands.Bot):
 
     @discord_tasks.loop(seconds=60)
     async def _monitor_tasks(self) -> None:
-        """Monitor active tasks and their states."""
-        current_time = time.time()
-        all_tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
-        tasks_by_type = self._categorize_tasks(all_tasks)
+        """Monitor and manage running tasks in the bot.
 
-        self._log_task_counts(tasks_by_type)
-        await self._monitor_task_states(tasks_by_type, current_time)
+        Performs the following operations every 60 seconds:
+        1. Categorizes all running tasks
+        2. Logs task counts and states
+        3. Monitors for stuck tasks
+        4. Cleans up finished tasks
+        5. Updates tracking information
+
+        Raises
+        ------
+        RuntimeError
+            If monitoring encounters critical issues affecting bot stability
+
+        Notes
+        -----
+        Task categories include:
+        - Event handlers
+        - Command invocations
+        - Background tasks
+        - Internal discord.py tasks
+        """
+        try:
+            # Get all tasks and categorize them
+            all_tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+            tasks_by_type = self._categorize_tasks(all_tasks)
+
+            current_time = time.time()
+
+            # Log task information
+            self._log_task_counts(tasks_by_type)
+            await self._monitor_task_states(tasks_by_type, current_time)
+
+            # Clean up finished tasks
+            active_task_names = {t.get_name() for tasks in tasks_by_type.values() for t in tasks}
+            self._cleanup_finished_tasks(active_task_names)
+
+        except Exception as e:
+            logger.error(f"Task monitoring failed: {e}")
+            msg = "Critical failure in task monitoring system"
+            raise RuntimeError(msg) from e
 
     def _log_task_counts(self, tasks_by_type: dict[str, list[asyncio.Task[Any]]]) -> None:
         """Log current task counts.
 
-        Args:
-            tasks_by_type: Dictionary of tasks categorized by type
+        Parameters
+        ----------
+        tasks_by_type : dict[str, list[asyncio.Task[Any]]]
+            Dictionary mapping task types to lists of tasks
         """
         total_tasks = sum(len(tasks) for tasks in tasks_by_type.values())
         logger.debug(
@@ -308,9 +441,16 @@ class Tux(commands.Bot):
     ) -> None:
         """Monitor states of active tasks.
 
-        Args:
-            tasks_by_type: Dictionary of tasks categorized by type
-            current_time: Current timestamp
+        Parameters
+        ----------
+        tasks_by_type : dict[str, list[asyncio.Task[Any]]]
+            Dictionary mapping task types to lists of tasks
+        current_time : float
+            Current timestamp for tracking task duration
+
+        Notes
+        -----
+        Updates task tracking information and checks for stuck tasks.
         """
         active_task_names: set[str] = set()
 
@@ -336,11 +476,18 @@ class Tux(commands.Bot):
     def _categorize_tasks(self, tasks: list[asyncio.Task[Any]]) -> dict[str, list[asyncio.Task[Any]]]:
         """Categorize tasks by their type.
 
-        Args:
-            tasks: List of tasks to categorize
+        Parameters
+        ----------
+        tasks : list[asyncio.Task[Any]]
+            List of tasks to categorize
 
-        Returns:
-            Dictionary mapping task types to lists of tasks
+        Returns
+        -------
+        dict[str, list[asyncio.Task[Any]]]
+            Dictionary mapping task types to lists of tasks:
+            - discord_tasks: Tasks from discord.ext.tasks
+            - gateway_tasks: Discord gateway/connection tasks
+            - internal_tasks: Asyncio internal tasks
         """
         tasks_by_type: dict[str, list[asyncio.Task[Any]]] = {
             "discord_tasks": [],  # Tasks from discord.ext.tasks
@@ -368,9 +515,16 @@ class Tux(commands.Bot):
     def _update_task_tracking(self, name: str, current_time: float) -> None:
         """Update task start time tracking.
 
-        Args:
-            name: Task name
-            current_time: Current timestamp
+        Parameters
+        ----------
+        name : str
+            Task name to track
+        current_time : float
+            Current timestamp to record
+
+        Notes
+        -----
+        Only records start time for new tasks not already being tracked.
         """
         if name not in self.task_start_times:
             self.task_start_times[name] = current_time
@@ -378,11 +532,21 @@ class Tux(commands.Bot):
     def _check_stuck_task(self, task_type: str, name: str, location: str, current_time: float) -> None:
         """Check if a task is stuck and log warnings.
 
-        Args:
-            task_type: Type of task
-            name: Task name
-            location: Current code location
-            current_time: Current timestamp
+        Parameters
+        ----------
+        task_type : str
+            Type of task being checked
+        name : str
+            Name of the task
+        location : str
+            Current code location of the task
+        current_time : float
+            Current timestamp for duration calculation
+
+        Notes
+        -----
+        Logs warnings for tasks that remain at the same location for over 300 seconds.
+        Gateway tasks are excluded from stuck detection.
         """
         if name in self.task_frame_times:
             old_location, frame_start = self.task_frame_times[name]
@@ -401,11 +565,20 @@ class Tux(commands.Bot):
     def _log_task_status(self, task_type: str, name: str, location: str, current_time: float) -> None:
         """Log periodic task status updates.
 
-        Args:
-            task_type: Type of task
-            name: Task name
-            location: Current code location
-            current_time: Current timestamp
+        Parameters
+        ----------
+        task_type : str
+            Type of task being logged
+        name : str
+            Name of the task
+        location : str
+            Current code location of the task
+        current_time : float
+            Current timestamp for duration calculation
+
+        Notes
+        -----
+        Logs status updates for long-running tasks (over 1 hour).
         """
         task_duration = current_time - self.task_start_times[name]
         if task_duration > 3600:  # Log every hour
@@ -414,8 +587,14 @@ class Tux(commands.Bot):
     def _cleanup_finished_tasks(self, active_task_names: set[str]) -> None:
         """Clean up tracking data for finished tasks.
 
-        Args:
-            active_task_names: Set of currently active task names
+        Parameters
+        ----------
+        active_task_names : set[str]
+            Set of names of currently active tasks
+
+        Notes
+        -----
+        Removes tracking data for tasks that are no longer active.
         """
         finished_tasks = {name for name in self.task_start_times if name not in active_task_names}
         for name in finished_tasks:
@@ -427,7 +606,17 @@ class Tux(commands.Bot):
     # ----------------
 
     async def shutdown(self) -> None:
-        """Gracefully shut down the bot and clean up resources."""
+        """Gracefully shut down the bot and clean up resources.
+
+        Performs shutdown sequence:
+        1. Handles setup task cleanup
+        2. Stops and cancels running tasks
+        3. Closes connections
+
+        Notes
+        -----
+        Prevents multiple shutdown attempts from running simultaneously.
+        """
         if self.is_shutting_down:
             logger.info("Shutdown already in progress. Exiting.")
             return
@@ -442,14 +631,29 @@ class Tux(commands.Bot):
         logger.info("Shutdown complete.")
 
     async def _handle_setup_task(self) -> None:
-        """Handle setup task during shutdown."""
+        """Handle setup task during shutdown.
+
+        Notes
+        -----
+        Cancels setup task if it's still running during shutdown.
+        """
         if self.setup_task and not self.setup_task.done():
             self.setup_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await self.setup_task
 
     async def _cleanup_tasks(self) -> None:
-        """Clean up all running tasks."""
+        """Clean up all running tasks.
+
+        Performs cleanup in order:
+        1. Stops task loops
+        2. Categorizes remaining tasks
+        3. Cancels tasks by category
+
+        Notes
+        -----
+        Logs any errors encountered during cleanup but continues process.
+        """
         try:
             await self._stop_task_loops()
             all_tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
@@ -459,7 +663,14 @@ class Tux(commands.Bot):
             logger.error(f"Error during task cleanup: {e}")
 
     async def _stop_task_loops(self) -> None:
-        """Stop all task loops in cogs."""
+        """Stop all task loops in cogs.
+
+        Notes
+        -----
+        Attempts to stop:
+        - All task loops in loaded cogs
+        - The task monitoring loop
+        """
         for cog_name in self.cogs:
             cog = self.get_cog(cog_name)
             if not cog:
@@ -480,8 +691,14 @@ class Tux(commands.Bot):
     async def _cancel_tasks(self, tasks_by_type: dict[str, list[asyncio.Task[Any]]]) -> None:
         """Cancel tasks in order of priority.
 
-        Args:
-            tasks_by_type: Dictionary of tasks categorized by type
+        Parameters
+        ----------
+        tasks_by_type : dict[str, list[asyncio.Task[Any]]]
+            Dictionary mapping task types to lists of tasks
+
+        Notes
+        -----
+        Logs cancellation progress for each task type.
         """
         for task_type, tasks in tasks_by_type.items():
             if not tasks:
@@ -496,7 +713,13 @@ class Tux(commands.Bot):
             logger.info(f"Cancelled {task_type.replace('_', ' ')}")
 
     async def _close_connections(self) -> None:
-        """Close Discord and database connections."""
+        """Close Discord and database connections.
+
+        Notes
+        -----
+        Attempts to close both Discord and database connections,
+        logging any errors encountered.
+        """
         try:
             await self.close()
         except Exception as e:
@@ -512,7 +735,17 @@ class Tux(commands.Bot):
     # --------------
 
     async def load_cogs(self) -> None:
-        """Load cogs using CogLoader."""
+        """Load cogs using CogLoader.
+
+        Raises
+        ------
+        Exception
+            If cog loading fails
+
+        Notes
+        -----
+        Uses CogLoader to handle cog discovery and loading.
+        """
         logger.info("Loading cogs...")
         try:
             await CogLoader.setup(self)

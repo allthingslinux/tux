@@ -34,8 +34,8 @@ class CogLoader(commands.Cog):
         # Define load order priorities (higher number = higher priority)
         self.load_priorities = {
             "handlers": 100,
-            "admin": 90,
-            "services": 80,
+            "services": 90,
+            "admin": 80,
             "levels": 70,
             "moderation": 60,
             "guild": 50,
@@ -81,17 +81,21 @@ class CogLoader(commands.Cog):
             If the cog fails to load.
         """
         start_time = time.perf_counter()
-        relative_path: Path = path.relative_to(Path(__file__).parent)
-        module: str = str(relative_path).replace("/", ".").replace("\\", ".")[:-3]
-
         try:
+            # Get the path relative to the tux package
+            relative_path = path.relative_to(Path(__file__).parent)
+
+            # Convert path to module format (e.g., tux.cogs.admin.dev)
+            module = f"tux.{str(relative_path).replace('/', '.').replace('\\', '.')[:-3]}"
+
             await self.bot.load_extension(name=module)
             load_time = time.perf_counter() - start_time
             self.load_times[module] = load_time
             logger.debug(f"Successfully loaded cog {module} in {load_time * 1000:.0f}ms")
-
         except Exception as e:
-            error_msg = f"Failed to load cog {module}. Error: {e}\n{traceback.format_exc()}"
+            # Initialize module_name before the try block to avoid unbound variable
+            module_name = str(path)
+            error_msg = f"Failed to load cog {module_name}. Error: {e}\n{traceback.format_exc()}"
             logger.error(error_msg)
             raise CogLoadError(error_msg) from e
 

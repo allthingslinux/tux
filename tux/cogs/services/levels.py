@@ -248,13 +248,19 @@ class LevelsService(commands.Cog):
         """
         Generates an XP progress bar based on the current level and XP.
 
-        Args:
-            current_value (int): The current XP value.
-            target_value (int): The target XP value.
-            bar_length (int, optional): The length of the progress bar. Defaults to 10.
+        Parameters
+        ----------
+        current_value : int
+            The current XP value.
+        target_value : int
+            The target XP value.
+        bar_length : int, optional
+            The length of the progress bar. Defaults to 10.
 
-        Returns:
-            str: The formatted progress bar.
+        Returns
+        -------
+        str
+            The formatted progress bar.
         """
         progress: float = current_value / target_value
         filled_length: int = int(bar_length * progress)

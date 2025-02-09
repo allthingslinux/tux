@@ -43,7 +43,20 @@ class GifLimiter(commands.Cog):
         self.old_gif_remover.start()
 
     async def _should_process_message(self, message: discord.Message) -> bool:
-        """Checks if a message contains a GIF and was not sent in a blacklisted channel"""
+        """
+        Checks if a message contains a GIF and was not sent in a blacklisted channel
+
+        Parameters
+        ----------
+        message : discord.Message
+            The message to check.
+
+        Returns
+        -------
+        bool
+            True if the message contains a GIF and was not sent in a blacklisted channel, False otherwise.
+        """
+
         return not (
             len(message.embeds) == 0
             or "gif" not in message.content.lower()
@@ -51,7 +64,14 @@ class GifLimiter(commands.Cog):
         )
 
     async def _handle_gif_message(self, message: discord.Message) -> None:
-        """Checks for ratelimit infringements"""
+        """
+        Checks for ratelimit infringements
+
+        Parameters
+        ----------
+        message : discord.Message
+            The message to check.
+        """
         async with self.gif_lock:
             channel: int = message.channel.id
             user: int = message.author.id
@@ -75,20 +95,41 @@ class GifLimiter(commands.Cog):
     async def _delete_message(self, message: discord.Message, epilogue: str) -> None:
         """
         Deletes the message passed as an argument, and sends a self-deleting message with the reason
+
+        Parameters
+        ----------
+        message : discord.Message
+            The message to delete.
+        epilogue : str
+            The reason for the deletion.
         """
         await message.delete()
         await message.channel.send(f"-# GIF ratelimit exceeded {epilogue}", delete_after=3)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
-        """Checks for GIFs in every sent message"""
+        """
+        Checks for GIFs in every sent message
+
+        Parameters
+        ----------
+        message : discord.Message
+            The message to check.
+        """
 
         if await self._should_process_message(message):
             await self._handle_gif_message(message)
 
     @tasks.loop(seconds=20)
     async def old_gif_remover(self) -> None:
-        """Regularly cleans old GIF timestamps"""
+        """
+        Regularly cleans old GIF timestamps
+
+        Parameters
+        ----------
+        self : GifLimiter
+            The GifLimiter instance.
+        """
         current_time: int = int(time())
 
         async with self.gif_lock:

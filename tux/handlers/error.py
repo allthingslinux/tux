@@ -267,6 +267,11 @@ class ErrorHandler(commands.Cog):
             The error that occurred.
         ctx : commands.Context[Tux], optional
             The discord context object, by default None
+
+        Returns
+        -------
+        str
+            The error message.
         """
         if ctx:
             return error_map.get(type(error), self.error_message).format(error=error, ctx=ctx)

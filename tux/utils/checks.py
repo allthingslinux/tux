@@ -1,3 +1,24 @@
+"""Permission checking utilities for command access control.
+
+This module provides utilities for checking and managing command permission levels
+in both traditional prefix commands and slash commands.
+
+Permission Levels
+-----------------
+The permission system uses numeric levels from 0 to 9, each with an associated role:
+
+0. Member (default)
+1. Support
+2. Junior Moderator
+3. Moderator
+4. Senior Moderator
+5. Administrator
+6. Head Administrator
+7. Server Owner
+8. Sys Admin
+9. Bot Owner
+"""
+
 from collections.abc import Callable, Coroutine
 from typing import Any, TypeVar
 
@@ -17,7 +38,19 @@ T = TypeVar("T", bound=commands.Context[Tux] | discord.Interaction)
 
 
 async def fetch_guild_config(guild_id: int) -> dict[str, Any]:
-    """Fetch all relevant guild config data in a single DB call."""
+    """Fetch all relevant guild config data in a single DB call.
+
+    Parameters
+    ----------
+    guild_id : int
+        The Discord guild ID to fetch configuration for.
+
+    Returns
+    -------
+    dict[str, Any]
+        Dictionary mapping permission level role keys to their corresponding role IDs.
+        Keys are in format 'perm_level_{i}_role_id' where i ranges from 0 to 7.
+    """
     config = await db.get_guild_config(guild_id)
     return {f"perm_level_{i}_role_id": getattr(config, f"perm_level_{i}_role_id", None) for i in range(8)}
 
@@ -27,7 +60,29 @@ async def has_permission(
     lower_bound: int,
     higher_bound: int | None = None,
 ) -> bool:
-    """Check if the source has the required permission level."""
+    """Check if the source has the required permission level.
+
+    Parameters
+    ----------
+    source : commands.Context[Tux] | discord.Interaction
+        The context or interaction to check permissions for.
+    lower_bound : int
+        The minimum permission level required.
+    higher_bound : int | None, optional
+        The maximum permission level to check up to, by default None.
+        If None, only checks for exact match with lower_bound.
+
+    Returns
+    -------
+    bool
+        True if the user has the required permission level, False otherwise.
+
+    Notes
+    -----
+    - Permission level 8 is reserved for system administrators
+    - Permission level 9 is reserved for the bot owner
+    - In DMs, only permission level 0 commands are allowed
+    """
     higher_bound = higher_bound or lower_bound
 
     if source.guild is None:
@@ -52,7 +107,28 @@ async def level_to_name(
     level: int,
     or_higher: bool = False,
 ) -> str:
-    """Get the name of the permission level."""
+    """Get the name of the permission level.
+
+    Parameters
+    ----------
+    source : commands.Context[Tux] | discord.Interaction
+        The context or interaction to get the role name from.
+    level : int
+        The permission level to get the name for.
+    or_higher : bool, optional
+        Whether to append "or higher" to the role name, by default False.
+
+    Returns
+    -------
+    str
+        The name of the permission level, either from the guild's role
+        or from the default names if no role is set.
+
+    Notes
+    -----
+    Special levels 8 and 9 always return "Sys Admin" and "Bot Owner" respectively,
+    regardless of guild configuration.
+    """
     if level in {8, 9}:
         return "Sys Admin" if level == 8 else "Bot Owner"
 
@@ -84,9 +160,41 @@ def permission_check(
     level: int,
     or_higher: bool = True,
 ) -> Callable[[commands.Context[Tux] | discord.Interaction], Coroutine[Any, Any, bool]]:
-    """Generic permission check for both prefix and slash commands."""
+    """Generic permission check for both prefix and slash commands.
+
+    Parameters
+    ----------
+    level : int
+        The minimum permission level required.
+    or_higher : bool, optional
+        Whether to allow higher permission levels, by default True.
+
+    Returns
+    -------
+    Callable[[commands.Context[Tux] | discord.Interaction], Coroutine[Any, Any, bool]]
+        A coroutine function that checks the permission level.
+
+    Raises
+    ------
+    PermissionLevelError | AppCommandPermissionLevelError
+        If the user doesn't have the required permission level.
+    """
 
     async def predicate(ctx: commands.Context[Tux] | discord.Interaction) -> bool:
+        """
+        Check if the user has the required permission level.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux] | discord.Interaction
+            The context or interaction to check permissions for.
+
+        Returns
+        -------
+        bool
+            True if the user has the required permission level, False otherwise.
+        """
+
         if not await has_permission(ctx, level, 9 if or_higher else None):
             name = await level_to_name(ctx, level, or_higher)
             logger.info(
@@ -103,9 +211,41 @@ def permission_check(
 
 
 def has_pl(level: int, or_higher: bool = True):
-    """Check for traditional "prefix" commands."""
+    """Check for traditional "prefix" commands.
+
+    Parameters
+    ----------
+    level : int
+        The minimum permission level required.
+    or_higher : bool, optional
+        Whether to allow higher permission levels, by default True.
+
+    Returns
+    -------
+    Callable
+        A command check that verifies the user's permission level.
+
+    Raises
+    ------
+    PermissionLevelError
+        If used with an Interaction instead of Context.
+    """
 
     async def wrapper(ctx: commands.Context[Tux]) -> bool:
+        """
+        Check if the user has the required permission level.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context to check permissions for.
+
+        Returns
+        -------
+        bool
+            True if the user has the required permission level, False otherwise.
+        """
+
         if isinstance(ctx, discord.Interaction):
             msg = "Incorrect checks decorator used. Please use ac_has_pl instead and report this as an issue."
             raise PermissionLevelError(msg)
@@ -115,9 +255,40 @@ def has_pl(level: int, or_higher: bool = True):
 
 
 def ac_has_pl(level: int, or_higher: bool = True):
-    """Check for application "slash" commands."""
+    """Check for application "slash" commands.
+
+    Parameters
+    ----------
+    level : int
+        The minimum permission level required.
+    or_higher : bool, optional
+        Whether to allow higher permission levels, by default True.
+
+    Returns
+    -------
+    Callable
+        An application command check that verifies the user's permission level.
+
+    Raises
+    ------
+    AppCommandPermissionLevelError
+        If used with a Context instead of Interaction.
+    """
 
     async def wrapper(interaction: discord.Interaction) -> bool:
+        """
+        Check if the user has the required permission level.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction to check permissions for.
+
+        Returns
+        -------
+        bool
+            True if the user has the required permission level, False otherwise.
+        """
         if isinstance(interaction, commands.Context):
             msg = "Incorrect checks decorator used. Please use has_pl instead and report this as an issue."
             raise AppCommandPermissionLevelError(msg)

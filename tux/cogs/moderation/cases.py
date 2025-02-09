@@ -289,6 +289,19 @@ class Cases(ModerationCogBase):
         cases: list[Case],
         total_cases: int,
     ) -> None:
+        """
+        Handle the response for a case list.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context in which the command is being invoked.
+        cases : list[Case]
+            The cases to handle the response for.
+        total_cases : int
+            The total number of cases.
+        """
+
         menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed, all_can_click=True, delete_on_timeout=True)
 
         if not cases:
@@ -324,6 +337,24 @@ class Cases(ModerationCogBase):
         user: discord.Member | discord.User,
         reason: str,
     ) -> list[tuple[str, str, bool]]:
+        """
+        Create the fields for a case.
+
+        Parameters
+        ----------
+        moderator : discord.Member | discord.User
+            The moderator of the case.
+        user : discord.Member | discord.User
+            The user of the case.
+        reason : str
+            The reason for the case.
+
+        Returns
+        -------
+        list[tuple[str, str, bool]]
+            The fields for the case.
+        """
+
         return [
             ("Moderator", f"**{moderator}**\n`{moderator.id}`", True),
             ("User", f"**{user}**\n`{user.id}`", True),
@@ -336,6 +367,24 @@ class Cases(ModerationCogBase):
         cases: list[Case],
         total_cases: int,
     ) -> discord.Embed:
+        """
+        Create the embed for a case list.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context in which the command is being invoked.
+        cases : list[Case]
+            The cases to create the embed for.
+        total_cases : int
+            The total number of cases.
+
+        Returns
+        -------
+        discord.Embed
+            The embed for the case list.
+        """
+
         assert ctx.guild
         assert ctx.guild.icon
 
@@ -362,14 +411,56 @@ class Cases(ModerationCogBase):
 
     @staticmethod
     def _format_emoji(emoji: discord.Emoji | None) -> str:
+        """
+        Format an emoji to a string.
+
+        Parameters
+        ----------
+        emoji : discord.Emoji | None
+            The emoji to format.
+
+        Returns
+        -------
+        str
+            The formatted emoji.
+        """
+
         return f"<:{emoji.name}:{emoji.id}>" if emoji else ""
 
     def _get_case_status_emoji(self, case_status: bool | None) -> discord.Emoji | None:
+        """
+        Get the emoji for a case status.
+
+        Parameters
+        ----------
+        case_status : bool | None
+            The status of the case.
+
+        Returns
+        -------
+        discord.Emoji | None
+            The emoji for the case status.
+        """
+
         if case_status is None:
             return None
         return self.bot.get_emoji(emojis["active_case_emoji" if case_status else "inactive_case_emoji"])
 
     def _get_case_type_emoji(self, case_type: CaseType) -> discord.Emoji | None:
+        """
+        Get the emoji for a case type.
+
+        Parameters
+        ----------
+        case_type : CaseType
+            The type of the case.
+
+        Returns
+        -------
+        discord.Emoji | None
+            The emoji for the case type.
+        """
+
         emoji_map = {
             CaseType.BAN: "ban",
             CaseType.UNBAN: "ban",
@@ -390,6 +481,20 @@ class Cases(ModerationCogBase):
         return None
 
     def _get_case_action_emoji(self, case_type: CaseType) -> discord.Emoji | None:
+        """
+        Get the emoji for a case action.
+
+        Parameters
+        ----------
+        case_type : CaseType
+            The type of the case.
+
+        Returns
+        -------
+        discord.Emoji | None
+            The emoji for the case action.
+        """
+
         action = None
 
         if case_type in {
@@ -417,6 +522,26 @@ class Cases(ModerationCogBase):
         case_type_emoji: str,
         case_action_emoji: str,
     ) -> str:
+        """
+        Get the description for a case.
+
+        Parameters
+        ----------
+        case : Case
+            The case to get the description for.
+        case_status_emoji : str
+            The emoji for the case status.
+        case_type_emoji : str
+            The emoji for the case type.
+        case_action_emoji : str
+            The emoji for the case action.
+
+        Returns
+        -------
+        str
+            The description for the case.
+        """
+
         case_type_and_action = (
             f"{case_action_emoji} {case_type_emoji}"
             if case_action_emoji and case_type_emoji

@@ -10,6 +10,20 @@ from tux.utils.converters import CaseTypeConverter
 
 
 def is_optional_param(param: commands.Parameter) -> bool:
+    """
+    Check if a parameter is optional.
+
+    Parameters
+    ----------
+    param : commands.Parameter
+        The parameter to check.
+
+    Returns
+    -------
+    bool
+        True if the parameter is optional, False otherwise.
+    """
+
     if param.default is not inspect.Parameter.empty:
         return True
     param_type = param.annotation
@@ -22,16 +36,34 @@ def generate_usage(
     command: commands.Command[Any, Any, Any],
     flag_converter: type[commands.FlagConverter] | None = None,
 ) -> str:
+    """
+    Generate the usage string for a command.
+
+    Parameters
+    ----------
+    command : commands.Command[Any, Any, Any]
+        The command to generate the usage string for.
+    flag_converter : type[commands.FlagConverter] | None
+        The flag converter to use.
+
+    Returns
+    -------
+    str
+        The usage string for the command.
+    """
+
     command_name = command.qualified_name
     usage = f"{command_name}"
 
     parameters: dict[str, commands.Parameter] = command.clean_params
+
     flag_prefix = getattr(flag_converter, "__commands_flag_prefix__", "-")
     flags: dict[str, commands.Flag] = flag_converter.get_flags() if flag_converter else {}
 
     for param_name, param in parameters.items():
         if param_name in {"ctx", "flags"}:
             continue
+
         is_required = not is_optional_param(param)
         matching_string = get_matching_string(param_name)
 
@@ -42,8 +74,10 @@ def generate_usage(
 
     required_flags: list[str] = []
     optional_flags: list[str] = []
+
     for flag_name, flag_obj in flags.items():
         flag = f"{flag_prefix}{flag_name}"
+
         if flag_obj.required:
             required_flags.append(flag)
         else:
@@ -152,7 +186,7 @@ class KickFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", pr
 class TimeoutFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     duration: str = commands.flag(
         name="duration",
-        description="Duration of the timeout. (e.g. 1d, 1h, 1m)",
+        description="Duration of the timeout. (e.g. 1d, 1h)",
         aliases=["d"],
         default=MISSING,
     )

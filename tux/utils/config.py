@@ -6,7 +6,22 @@ from typing import Final
 import yaml
 from dotenv import load_dotenv, set_key
 
-from tux.utils.functions import convert_dict_str_to_int
+
+def convert_dict_str_to_int(original_dict: dict[str, int]) -> dict[int, int]:
+    """Convert a dictionary with string keys to one with integer keys.
+
+    Parameters
+    ----------
+    original_dict : dict[str, int]
+        The original dictionary with string keys.
+
+    Returns
+    -------
+    dict[int, int]
+        The new dictionary with integer keys.
+    """
+    return {int(k): v for k, v in original_dict.items()}
+
 
 # Load environment variables from both .env files
 load_dotenv(verbose=True)

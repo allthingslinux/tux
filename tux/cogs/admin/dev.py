@@ -39,6 +39,7 @@ class Dev(commands.Cog):
         commands.CommandInvokeError
             If the subcommand is not found.
         """
+
         if ctx.invoked_subcommand is None:
             await ctx.send_help("dev")
 

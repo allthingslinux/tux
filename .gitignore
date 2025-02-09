@@ -84,9 +84,6 @@ target/
 profile_default/
 ipython_config.py
 
-# Pyenv
-.python-version
-
 # Pipenv
 Pipfile.lock
 
@@ -163,3 +160,5 @@ config/settings.yml
 
 # MacOS
 .DS_Store
+
+docs-build/

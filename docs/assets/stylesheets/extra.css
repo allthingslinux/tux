@@ -1,0 +1,636 @@
+.md-grid {
+  max-width: 1440px;
+}
+
+/* Mark external links as such. */
+a.external::after,
+a.autorefs-external::after {
+  /* https://primer.style/octicons/arrow-up-right-24 */
+  mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18.25 15.5a.75.75 0 00.75-.75v-9a.75.75 0 00-.75-.75h-9a.75.75 0 000 1.5h7.19L6.22 16.72a.75.75 0 101.06 1.06L17.5 7.56v7.19c0 .414.336.75.75.75z"></path></svg>');
+  -webkit-mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18.25 15.5a.75.75 0 00.75-.75v-9a.75.75 0 00-.75-.75h-9a.75.75 0 000 1.5h7.19L6.22 16.72a.75.75 0 101.06 1.06L17.5 7.56v7.19c0 .414.336.75.75.75z"></path></svg>');
+  content: ' ';
+
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+
+  height: 1em;
+  width: 1em;
+  background-color: currentColor;
+}
+
+a.external:hover::after,
+a.autorefs-external:hover::after {
+  background-color: var(--md-accent-fg-color);
+}
+
+/* Indentation. */
+div.doc-contents:not(.first) {
+  padding-left: 25px;
+  border-left: .05rem solid var(--md-typeset-table-color);
+}
+
+/* Function names and class names */
+.doc-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.8em;
+}
+
+/* Function/method name */
+.doc-object-name {
+  font-size: 1.1em;
+  color: var(--md-primary-fg-color);
+}
+
+/* Method heading container */
+.doc-method {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 1em 0;
+}
+
+/* Method names within classes */
+.doc-label-method-heading {
+  font-size: 1.1em !important;
+  color: var(--md-primary-fg-color--dark) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Function description */
+.doc-contents {
+  font-size: 0.95em;
+  line-height: 1.4;
+  margin: 0.6em 0;
+  color: var(--md-typeset-color);
+}
+
+/* Parameters section */
+.doc-labels {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+}
+
+/* Individual parameter */
+.doc-label {
+  margin: 0.6em 0;
+  padding-bottom: 0.6em;
+  border-bottom: 1px solid var(--md-primary-fg-color--lightest);
+}
+
+.doc-label:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* Parameter names */
+.doc-label-name {
+  font-size: 0.95em;
+  font-weight: 600;
+  font-family: var(--md-code-font-family);
+  color: var(--md-code-hl-keyword-color);
+  background: var(--md-code-bg-color);
+  padding: 0.15em 0.3em;
+  border-radius: 3px;
+  margin-right: 0.3em;
+}
+
+/* Parameter types */
+.doc-label-type {
+  font-size: 0.9em;
+  font-family: var(--md-code-font-family);
+  color: var(--md-code-hl-function-color);
+  padding: 0.1em 0;
+}
+
+/* Parameter descriptions */
+.doc-label-description {
+  margin-top: 0.4em;
+  line-height: 1.4;
+  color: var(--md-typeset-color);
+  padding-left: 0.6em;
+  border-left: 2px solid var(--md-primary-fg-color--lightest);
+  font-size: 0.9em;
+}
+
+/* Source code blocks */
+.doc-source {
+  margin: 1em 0;
+}
+
+.doc-source .highlight {
+  padding: 0.3em;
+  border-radius: 4px;
+  background-color: var(--md-code-bg-color);
+  font-size: 0.9em;
+}
+
+/* Code block line height */
+.doc-source .highlight pre {
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Code block table */
+.doc-source .highlighttable {
+  margin: 0;
+  padding: 0;
+}
+
+/* Line numbers column */
+.doc-source .linenodiv pre {
+  padding: 0 0.5em;
+  margin: 0;
+  color: var(--md-code-hl-number-color);
+  opacity: 0.7;
+  text-align: right;
+}
+
+/* Actual code column */
+.doc-source .code pre {
+  padding: 0 0.5em;
+  margin: 0;
+}
+
+/* Section headings (Parameters, Returns, etc) */
+.doc-section-header {
+  font-size: 1em !important;
+  font-weight: 600;
+  color: var(--md-primary-fg-color);
+  margin: 1em 0 0.4em 0;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Function signature */
+.doc-signature {
+  display: block;
+  margin: 0.4em 0;
+  font-family: var(--md-code-font-family);
+  font-size: 1em;
+  line-height: 1.2;
+  background: var(--md-code-bg-color);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  border-left: 2px solid var(--md-code-hl-function-color);
+}
+
+/* Function signature code block */
+.doc-signature pre {
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
+}
+
+/* Function signature parts */
+.doc-signature .nf {
+  font-size: 0.95em;
+  color: var(--md-code-hl-function-color);
+}
+
+.doc-signature .p {
+  color: var(--md-code-hl-punctuation-color);
+  margin: 0 0.1em;
+  opacity: 0.8;
+}
+
+/* Fancier color for operators such as * and |. */
+.doc-signature .o {
+  color: var(--md-code-hl-operator-color);
+  opacity: 0.8;
+}
+
+.doc-signature .n {
+  color: var(--md-code-hl-name-color);
+  font-size: 0.95em;
+}
+
+/* Tables in docstring sections */
+.doc-contents table {
+  display: table;
+  width: 100%;
+  margin: 0.8em 0;
+  border-collapse: collapse;
+  background: var(--md-code-bg-color);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  font-size: 0.9em;
+}
+
+.doc-contents table th {
+  background-color: var(--md-primary-fg-color);
+  color: var(--md-primary-bg-color);
+  font-weight: 600;
+  text-align: left;
+  padding: 0.6em;
+  font-size: 0.95em;
+}
+
+.doc-contents table td {
+  padding: 0.6em;
+  border-bottom: 1px solid var(--md-primary-fg-color--lightest);
+  line-height: 1.4;
+}
+
+.doc-contents table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Method decorators */
+.doc-decorator {
+  color: var(--md-code-hl-special-color);
+  font-family: var(--md-code-font-family);
+  font-size: 0.75em;
+  padding: 0.1em 0.25em;
+  background: var(--md-code-bg-color);
+  border-radius: 3px;
+  margin-right: 0.5em;
+  opacity: 0.8;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+/* Specific styling for async decorator */
+.doc-decorator[title="async"] {
+  font-size: 0.5em;
+  background: transparent;
+  color: var(--md-code-hl-special-color);
+  opacity: 0.5;
+  padding: 0;
+  margin: 0 0 0 0.8em;
+  font-weight: normal;
+  text-transform: lowercase;
+  order: 2;
+}
+
+/* Remove any existing margin/padding from method headings */
+.doc-heading {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Reset other decorator styles for non-async */
+.doc-decorator:not([title="async"]) {
+  font-size: 0.75em;
+  padding: 0.1em 0.25em;
+  background: var(--md-code-bg-color);
+  border-radius: 3px;
+  margin-right: 0.5em;
+  opacity: 0.8;
+}
+
+/* Function names and class names - adjust spacing when async is present */
+.doc-heading:has(+ .doc-decorator[title="async"]) {
+  margin-right: 0.2em;
+}
+
+/* Ensure proper vertical alignment with function name */
+.doc-decorator[title="async"] + .doc-heading,
+.doc-heading + .doc-decorator[title="async"] {
+  display: inline-block;
+  vertical-align: baseline;
+}
+
+/* Add more spacing after decorators */
+.doc-decorator + .doc-label-name,
+.doc-decorator + .doc-heading {
+  margin-left: 0.3em;
+}
+
+/* Source code links */
+a.doc-source-link::before {
+  content: "[";
+  color: var(--md-typeset-color);
+}
+
+a.doc-source-link::after {
+  content: "]";
+  color: var(--md-typeset-color);
+}
+
+/* Async label specific styling */
+.doc-label-async {
+  font-size: 0.9em;
+  opacity: 0.6;
+  margin: 0;
+  padding: 0;
+}
+
+.doc-label-async code {
+  background: transparent;
+  padding: 0;
+  font-family: var(--md-code-font-family);
+  color: var(--md-code-hl-special-color);
+}
+
+/* Remove any background from code elements inside labels */
+.doc-label code {
+  background: transparent;
+}
+
+/* Parameters section container */
+.doc-contents {
+  margin: 1em 0;
+}
+
+/* Parameter type annotations */
+.doc-contents p {
+  margin: 0.4em 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  line-height: 1.5;
+}
+
+/* Parameter name styling */
+.doc-contents p > code:first-child {
+  font-family: var(--md-code-font-family);
+  font-size: 0.9em;
+  color: var(--md-code-hl-keyword-color);
+  background: var(--md-code-bg-color);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-weight: 600;
+  min-width: 80px;
+}
+
+/* Parameter type styling */
+.doc-contents p > code:nth-child(2) {
+  font-family: var(--md-code-font-family);
+  font-size: 0.9em;
+  color: var(--md-code-hl-function-color);
+  background: transparent;
+  padding: 0;
+  font-weight: normal;
+}
+
+/* Parameter description styling */
+.doc-contents p > code:nth-child(2) ~ text {
+  color: var(--md-typeset-color);
+  font-size: 0.95em;
+  flex: 1;
+  margin-left: 0.5em;
+}
+
+/* Section headers (Parameters, Returns, etc) */
+.doc-contents h6 {
+  font-size: 0.8em !important;
+  font-weight: 600;
+  color: var(--md-primary-fg-color);
+  margin: 1.5em 0 0.75em 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Parameter and return type containers */
+.doc-contents h6 + p,
+.doc-contents h6 + p ~ p {
+  margin: 0 0 0.5em 0;
+  padding: 0.6em;
+  background: var(--md-code-bg-color);
+  border-radius: 4px;
+  font-family: var(--md-code-font-family);
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 0.8em;
+  align-items: baseline;
+  border-left: 2px solid var(--md-code-hl-keyword-color);
+}
+
+/* Last parameter in the section */
+.doc-contents h6 + p:last-of-type,
+.doc-contents h6 + p ~ p:last-of-type {
+  margin-bottom: 0;
+}
+
+/* Return type container - special styling */
+.doc-contents h6[id$="returns"] + p {
+  border-left-color: var(--md-code-hl-function-color);
+  background: var(--md-code-bg-color);
+}
+
+/* Parameter name */
+.doc-contents h6 + p > code:first-child,
+.doc-contents h6 + p ~ p > code:first-child {
+  color: var(--md-code-hl-keyword-color);
+  font-weight: 600;
+  font-size: 0.9em;
+  min-width: 80px;
+}
+
+/* Parameter type */
+.doc-contents h6 + p > code:nth-child(2),
+.doc-contents h6 + p ~ p > code:nth-child(2) {
+  color: var(--md-code-hl-function-color);
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+/* Parameter description */
+.doc-contents h6 + p > code:nth-child(2) ~ text,
+.doc-contents h6 + p ~ p > code:nth-child(2) ~ text {
+  color: var(--md-typeset-color);
+  font-family: var(--md-typeset-font-family);
+  font-size: 0.9em;
+  line-height: 1.4;
+}
+
+/* Remove duplicate rules */
+.doc-contents h6 + p + p {
+  margin-top: 0;
+}
+
+/* Parameters section */
+.doc-contents h6 + p {
+  white-space: pre-wrap;
+  font-family: var(--md-code-font-family);
+  margin: 0;
+  padding: 0;
+}
+
+/* Split parameters into separate blocks */
+.doc-contents h6[id*="parameters"] + p {
+  display: block;
+  white-space: pre-wrap;
+}
+
+/* Individual parameter lines */
+.doc-contents h6[id*="parameters"] + p {
+  line-height: 1.6;
+}
+
+/* Parameter name and type */
+.doc-contents h6[id*="parameters"] + p > code {
+  display: inline-block;
+  padding: 0.2em 0.4em;
+  margin: 0.2em 0;
+  background: var(--md-code-bg-color);
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+/* Parameter name */
+.doc-contents h6[id*="parameters"] + p > code:first-of-type {
+  color: var(--md-code-hl-keyword-color);
+  font-weight: 600;
+  min-width: 80px;
+}
+
+/* Parameter type */
+.doc-contents h6[id*="parameters"] + p > code:nth-of-type(2) {
+  color: var(--md-code-hl-function-color);
+  margin-left: 0.3em;
+}
+
+/* Parameter description */
+.doc-contents h6[id*="parameters"] + p {
+  position: relative;
+  padding: 0.6em;
+  background: var(--md-code-bg-color);
+  border-radius: 4px;
+  border-left: 2px solid var(--md-code-hl-keyword-color);
+  margin-bottom: 0.5em;
+}
+
+/* Returns section */
+.doc-contents h6[id*="returns"] + p {
+  white-space: pre-wrap;
+  font-family: var(--md-code-font-family);
+  padding: 0.6em;
+  margin: 0;
+  background: var(--md-code-bg-color);
+  border-radius: 4px;
+  border-left: 2px solid var(--md-code-hl-function-color);
+}
+
+/* Section headers */
+.doc-contents h6 {
+  font-size: 0.8em !important;
+  font-weight: 600;
+  color: var(--md-primary-fg-color);
+  margin: 1.5em 0 0.75em 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Parameter syntax highlighting */
+.doc-contents h6[id*="parameters"] + p {
+  position: relative;
+  padding: 0.6em;
+  background: var(--md-code-bg-color);
+  border-radius: 4px;
+  border-left: 2px solid var(--md-code-hl-keyword-color);
+  margin-bottom: 0.5em;
+}
+
+/* Parameter name coloring */
+.doc-contents h6[id*="parameters"] + p > code:first-of-type {
+  color: var(--md-code-hl-keyword-color);
+  font-weight: 600;
+}
+
+/* Type annotation coloring */
+.doc-contents h6[id*="parameters"] + p > code:nth-of-type(2) {
+  color: var(--md-code-hl-function-color);
+}
+
+/* Special type highlighting */
+.doc-contents code .n {
+  color: var(--md-code-hl-name-color);
+}
+
+.doc-contents code .p {
+  color: var(--md-code-hl-punctuation-color);
+}
+
+.doc-contents code .k,
+.doc-contents code .kt {
+  color: var(--md-code-hl-keyword-color);
+}
+
+.doc-contents code .s {
+  color: var(--md-code-hl-string-color);
+}
+
+.doc-contents code .na {
+  color: var(--md-code-hl-name-color);
+}
+
+.doc-contents code .o {
+  color: var(--md-code-hl-operator-color);
+}
+
+.doc-contents code .kc {
+  color: var(--md-code-hl-constant-color);
+}
+
+/* Function signature syntax highlighting */
+.doc-signature {
+  padding: 0.6em;
+}
+
+.doc-signature .nf {
+  color: var(--md-code-hl-function-color);
+}
+
+/* Function name */
+.doc-signature .p {
+  color: var(--md-code-hl-punctuation-color);
+}
+
+/* Punctuation */
+.doc-signature .o {
+  color: var(--md-code-hl-operator-color);
+}
+
+/* Operators */
+.doc-signature .n {
+  color: var(--md-code-hl-name-color);
+}
+
+/* Fancier color for built-in types (only useful when cross-references are used). */
+.doc-signature .n > a[href^="https://docs.python.org/"][href*="/functions.html#"],
+.doc-signature .n > a[href^="https://docs.python.org/"][href*="/stdtypes.html#"] {
+  color: var(--md-code-hl-constant-color);
+}
+
+/* Names */
+.doc-signature .kt {
+  color: var(--md-code-hl-keyword-color);
+}
+
+/* Type keywords */
+.doc-signature .kc {
+  color: var(--md-code-hl-constant-color);
+}
+
+/* Constants */
+.doc-signature .s {
+  color: var(--md-code-hl-string-color);
+}
+
+/* Strings */
+
+/* Return type highlighting */
+.doc-contents h6[id*="returns"] + p {
+  background: var(--md-code-bg-color);
+  padding: 0.6em;
+  border-radius: 4px;
+  border-left: 2px solid var(--md-code-hl-function-color);
+}
+
+.doc-contents h6[id*="returns"] + p > code:first-of-type {
+  color: var(--md-code-hl-keyword-color);
+  font-weight: 600;
+}
+
+.doc-contents h6[id*="returns"] + p > code:nth-of-type(2) {
+  color: var(--md-code-hl-function-color);
+}

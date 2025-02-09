@@ -1,6 +1,214 @@
 # yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 
-site_name: Tux
+site_name: Tux Documentation
+site_url: http://localhost:8000
+
+repo_url: https://github.com/allthingslinux/tux
+repo_name: allthingslinux/tux
+
+edit_uri: edit/main/docs/
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/allthingslinux/tux
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/gpmSjcjQxg
 
 theme:
+  language: en
+
   name: material
+
+  icon:
+    repo: fontawesome/brands/github
+
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+  features:
+    ### Navigation
+
+    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#instant-loading
+    - navigation.instant
+    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#progress-indicator
+    - navigation.instant.progress
+    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#anchor-tracking
+    - navigation.tracking
+    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#navigation-expansion
+    # - navigation.expand
+    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#section-index-pages-without
+    - navigation.indexes
+    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#back-to-top-button
+    - navigation.top
+    - navigation.tabs
+    - navigation.tabs.sticky
+
+    ### Table of Contents
+
+    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#anchor-following
+    - toc.follow
+
+    ### Search
+
+    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-site-search/#search-suggestions
+    - search.suggest
+    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-site-search/#search-highlighting
+    - search.highlight
+    # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#code-actions
+    - content.action.edit
+    - content.code.copy
+
+  ### Styling
+
+  custom_dir: docs/overrides
+  font:
+    text: Inter
+    code: JetBrains Mono
+
+extra_css:
+  - assets/stylesheets/extra.css
+
+plugins:
+  # https://squidfunk.github.io/mkdocs-material/setup/setting-up-site-search/#built-in-search-plugin
+  - search:
+
+  # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#revisioning
+  - git-revision-date-localized:
+      enable_creation_date: false
+
+  # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#document-contributors
+  - git-committers:
+      repository: allthingslinux/tux
+      branch: main
+
+  # https://mkdocstrings.github.io/autorefs/#non-unique-headings
+  - autorefs:
+      resolve_closest: true
+
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          load_external_modules: true
+          inventories:
+            - url: https://docs.python.org/3.13/objects.inv
+              domains: [std, py]
+          import:
+            - https://docs.python.org/3/objects.inv
+          custom_templates: docs/overrides/python/material
+          options:
+            # Griffe
+            extensions:
+              - griffe_generics
+              - griffe_inherited_docstrings
+            # Misc
+            members_order: source
+            filters: ["!^_"]
+            allow_inspection: true
+            find_stubs_package: true
+            show_bases: true
+            show_source: true
+            # Categories/Headings/Symbols
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            show_root_heading: true
+            show_root_toc_entry: true
+            heading_level: 1
+            show_category_heading: true
+            group_by_category: true
+            show_submodules: true
+            show_labels: true
+            # Paths
+            show_root_full_path: false
+            show_root_members_full_path: false
+            show_object_full_path: false
+            # Signatures
+            annotations_path: source
+            separate_signature: true
+            line_length: 80
+            show_signature: true
+            show_signature_annotations: true
+            unwrap_annotated: false
+            # Docstrings
+            docstring_style: numpy
+            docstring_section_style: table
+            docstring_options:
+              ignore_init_summary: false
+              trim_doctest_flags: true
+              returns_multiple_items: true
+            merge_init_into_class: true
+            show_docstring_functions: true
+            show_docstring_attributes: true
+            show_docstring_classes: true
+            show_docstring_raises: true
+            show_docstring_returns: true
+            show_docstring_yields: true
+            show_docstring_receives: true
+            show_docstring_modules: true
+            show_docstring_warns: true
+            show_docstring_description: true
+            show_docstring_examples: true
+            show_docstring_other_parameters: true
+            show_docstring_parameters: true
+            # summary: true
+
+  - api-autonav:
+      modules: ["tux"]
+      nav_section_title: "API Reference"
+      api_root_uri: "reference"
+      exclude_private: true
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - User Guide:
+      - Getting Started: user-guide/getting-started.md
+      - Commands: commands.md
+      - Permissions: permissions.md
+  - Developer Guide:
+      - Setup: development.md
+      - Architecture: developer-guide/architecture.md
+      - Contributing: developer-guide/contributing.md
+      - CLI Tools: cli.md
+  # - API Reference:
+  #     - Bot: reference/bot.md
+  #     - Cogs: reference/cogs.md
+  #     - Utils:
+  #         - Config: reference/utils/config.md
+  #         - Checks: reference/utils/checks.md
+  #         - Constants: reference/utils/constants.md
+  #         - Flags: reference/utils/flags.md
+  #         - Functions: reference/utils/functions.md
+  #         - Logging: reference/utils/logging.md
+  #         - Regex: reference/utils/regex.md
+  #     - Handlers: reference/handlers.md
+  #     - Database: reference/database.md
+  #     - UI Components: reference/ui.md
+  - Deployment:
+      - Docker: deployment/docker.md
+      - Services: services.md

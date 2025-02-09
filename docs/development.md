@@ -8,7 +8,7 @@ It is assumed that the reader has a basic understanding of the project and its g
 
 ## Getting Started
 
-To get started with the development of the project, refer to the installation instructions in the project [README](../README.md).
+To get started with the development of the project, refer to the installation instructions in the project README.
 
 ## Installation
 

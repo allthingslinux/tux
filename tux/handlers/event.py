@@ -22,6 +22,19 @@ class EventHandler(commands.Cog):
 
     @staticmethod
     async def handle_harmful_message(message: discord.Message) -> None:
+        """
+        This function detects harmful linux commands and replies to the user with a warning.
+
+        Parameters
+        ----------
+        message : discord.Message
+            The message to check.
+
+        Returns
+        -------
+        None
+        """
+
         if message.author.bot:
             return
 

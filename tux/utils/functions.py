@@ -3,26 +3,92 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import discord
-from loguru import logger
 
-harmful_command_pattern = r"(?:sudo\s+|doas\s+|run0\s+)?rm\s+(-[frR]*|--force|--recursive|--no-preserve-root|\s+)*([/\∕~]\s*|\*|/bin|/boot|/etc|/lib|/proc|/root|/sbin|/sys|/tmp|/usr|/var|/var/log|/network.|/system)(\s+--no-preserve-root|\s+\*)*|:\(\)\{ :|:& \};:"  # noqa: RUF001
+DANGEROUS_RM_COMMANDS = (
+    # Privilege escalation prefixes
+    r"(?:sudo\s+|doas\s+|run0\s+)?"
+    # rm command
+    r"rm\s+"
+    # rm options
+    r"(?:-[frR]+|--force|--recursive|--no-preserve-root|\s+)*"
+    # Root/home indicators
+    r"(?:[/\∕~]\s*|\*|"  # noqa: RUF001
+    # Critical system paths
+    r"/(?:bin|boot|etc|lib|proc|root|sbin|sys|tmp|usr|var(?:/log)?|network\.|system))"
+    # Additional dangerous flags
+    r"(?:\s+--no-preserve-root|\s+\*)*"
+)
+
+FORK_BOMB_PATTERNS = [":(){:&};:", ":(){:|:&};:"]
+
+DANGEROUS_DD_COMMANDS = r"dd\s+.*of=/dev/([hs]d[a-z]|nvme\d+n\d+)"
+
+FORMAT_COMMANDS = r"mkfs\..*\s+/dev/([hs]d[a-z]|nvme\d+n\d+)"
 
 
 def is_harmful(command: str) -> bool:
-    first_test: bool = re.search(harmful_command_pattern, command, re.IGNORECASE) is not None
-    second_test: bool = re.search(r"rm.{0,5}[rfRF]", command, re.IGNORECASE) is not None
-    return first_test and second_test
+    # sourcery skip: assign-if-exp, boolean-if-exp-identity, reintroduce-else
+    """
+    Check if a command is potentially harmful to the system.
+
+    Parameters
+    ----------
+    command : str
+        The command to check.
+
+    Returns
+    -------
+    bool
+        True if the command is harmful, False otherwise.
+    """
+    # Normalize command by removing all whitespace for fork bomb check
+    normalized = "".join(command.strip().lower().split())
+    if normalized in FORK_BOMB_PATTERNS:
+        return True
+
+    # Check for dangerous rm commands
+    if re.search(DANGEROUS_RM_COMMANDS, command, re.IGNORECASE):
+        return True
+
+    # Check for dangerous dd commands
+    if re.search(DANGEROUS_DD_COMMANDS, command, re.IGNORECASE):
+        return True
+
+    # Check for format commands
+    if re.search(FORMAT_COMMANDS, command, re.IGNORECASE):
+        return True
+
+    # Check for simple but dangerous rm patterns
+    if re.search(r"rm.{0,5}[rfRF]", command, re.IGNORECASE):  # noqa: SIM103
+        return True
+
+    return False
 
 
 def strip_formatting(content: str) -> str:
-    # Remove triple backtick blocks considering any spaces and platform-specific newlines
-    content = re.sub(r"`/```(.*)```/", "", content, flags=re.DOTALL)
-    # Remove inline code snippets preserving their content only
-    content = re.sub(r"`([^`]*)`", r"\1", content)
+    """
+    Strip formatting from a string.
+
+    Parameters
+    ----------
+    content : str
+        The string to strip formatting from.
+
+    Returns
+    -------
+    str
+        The string with formatting stripped.
+    """
+    # Remove triple backtick blocks
+    content = re.sub(r"```[\s\S]*?```", "", content)
+    # Remove single backtick code blocks
+    content = re.sub(r"`[^`]+`", "", content)
     # Remove Markdown headers
     content = re.sub(r"^#+\s+", "", content, flags=re.MULTILINE)
-    # Remove other common markdown symbols
-    content = re.sub(r"[\*_~|>]", "", content)
+    # Remove markdown formatting characters, but preserve |
+    content = re.sub(r"[\*_~>]", "", content)
+    # Remove extra whitespace
+    content = re.sub(r"\s+", " ", content)
 
     return content.strip()
 
@@ -279,41 +345,25 @@ def extract_guild_attrs(guild: discord.Guild) -> dict[str, Any]:
 
 
 def extract_member_attrs(member: discord.Member) -> dict[str, Any]:
-    """
-    Extracts relevant attributes from a discord.Member and returns them as a dictionary.
+    """Extract relevant attributes from a member object.
 
     Parameters
     ----------
     member : discord.Member
-        The discord.Member instance to extract attributes from.
+        The member object to extract attributes from.
 
     Returns
     -------
-    dict
-        A dictionary containing the extracted attributes of the member.
+    dict[str, Any]
+        A dictionary containing the extracted attributes.
     """
-
     return {
         "name": member.name,
-        "nick": member.nick,
-        "roles": member.roles,
+        "id": member.id,
+        "discriminator": member.discriminator,
+        "display_name": member.display_name,
+        "roles": [role.name for role in member.roles],
         "joined_at": member.joined_at,
-        "status": member.status,
-        "activity": member.activity,
+        "status": str(member.status),
+        "activity": str(member.activity) if member.activity else None,
     }
-
-
-def convert_dict_str_to_int(original_dict: dict[str, int]) -> dict[int, int]:
-    """Helper function used for GIF Limiter constants.
-    Required as YAML keys are str. Channel and user IDs are int."""
-
-    converted_dict: dict[int, int] = {}
-
-    for key, value in original_dict.items():
-        try:
-            int_key: int = int(key)
-            converted_dict[int_key] = value
-        except ValueError:
-            logger.exception(f"An error occurred when loading the GIF ratelimiter configuration at key {key}")
-
-    return converted_dict

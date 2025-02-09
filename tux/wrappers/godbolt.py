@@ -41,7 +41,21 @@ client = httpx.Client(timeout=15)
 url = "https://godbolt.org"
 
 
-def checkresponse(res: httpx.Response):
+def checkresponse(res: httpx.Response) -> str | None:
+    """
+    Check the response from the Godbolt API.
+
+    Parameters
+    ----------
+    res : httpx.Response
+        The response from the Godbolt API.
+
+    Returns
+    -------
+    str | None
+        The response from the Godbolt API if successful, otherwise None.
+    """
+
     try:
         return res.text if res.status_code == httpx.codes.OK else None
     except httpx.ReadTimeout:
@@ -49,6 +63,20 @@ def checkresponse(res: httpx.Response):
 
 
 def sendresponse(url: str) -> str | None:
+    """
+    Send the response from the Godbolt API.
+
+    Parameters
+    ----------
+    url : str
+        The URL to send the response from.
+
+    Returns
+    -------
+    str | None
+        The response from the Godbolt API if successful, otherwise None.
+    """
+
     try:
         response = client.get(url)
         response.raise_for_status()
@@ -59,16 +87,47 @@ def sendresponse(url: str) -> str | None:
 
 
 def getlanguages() -> str | None:
+    """
+    Get the languages from the Godbolt API.
+
+    Returns
+    -------
+    str | None
+        The languages from the Godbolt API if successful, otherwise None.
+    """
     url_lang = f"{url}/api/languages"
     return sendresponse(url_lang)
 
 
 def getcompilers() -> str | None:
+    """
+    Get the compilers from the Godbolt API.
+
+    Returns
+    -------
+    str | None
+        The compilers from the Godbolt API if successful, otherwise None.
+    """
+
     url_comp = f"{url}/api/compilers"
     return sendresponse(url_comp)
 
 
 def getspecificcompiler(lang: str) -> str | None:
+    """
+    Get the specific compiler from the Godbolt API.
+
+    Parameters
+    ----------
+    lang : str
+        The language to get the specific compiler for.
+
+    Returns
+    -------
+    str | None
+        The specific compiler from the Godbolt API if successful, otherwise None.
+    """
+
     url_comp = f"{url}/api/compilers/{lang}"
     return sendresponse(url_comp)
 

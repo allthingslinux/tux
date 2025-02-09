@@ -1,16 +1,27 @@
-"""Main entry point for Tux bot."""
+"""Main entry point for Tux bot.
+
+This module contains the main entry point and setup functions for the Tux Discord bot.
+It handles initialization of logging, Sentry integration, bot configuration, and graceful
+shutdown procedures.
+
+Notes
+-----
+The module should be run directly as a script to start the bot:
+    $ poetry run [dev|start]
+"""
 
 # Initialize logging first, before any other imports that might log
 import asyncio
 import signal
 from types import FrameType
+from typing import cast
 
 import discord
 import sentry_sdk
 from discord.ext import commands
 from loguru import logger
-from sentry_sdk.integrations.asyncio import AsyncioIntegration
-from sentry_sdk.integrations.loguru import LoguruIntegration
+from sentry_sdk.integrations import asyncio as sentry_asyncio  # type: ignore
+from sentry_sdk.integrations import loguru as sentry_loguru  # type: ignore
 
 from tux.bot import Tux
 from tux.database.controllers.guild_config import GuildConfigController
@@ -22,7 +33,25 @@ setup_logging()
 
 
 async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
-    """Get the command prefix for a guild or default prefix."""
+    """Get the command prefix for a guild or default prefix.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance
+    message : discord.Message
+        The message to get the prefix for
+
+    Returns
+    -------
+    list[str]
+        List of valid prefixes for the message, including mentions
+
+    Notes
+    -----
+    If getting the guild prefix fails, falls back to the default prefix.
+    Always includes bot mention as a valid prefix.
+    """
     prefix: str | None = None
 
     if message.guild:
@@ -36,7 +65,17 @@ async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
 
 
 def setup_sentry() -> None:
-    """Initialize Sentry with proper configuration."""
+    """Initialize Sentry with proper configuration.
+
+    Notes
+    -----
+    Configures Sentry with:
+    - Environment based on CONFIG.DEV
+    - Full tracing and profiling
+    - Asyncio and Loguru integrations
+
+    If no Sentry URL is configured, logs a warning and skips setup.
+    """
     if not CONFIG.SENTRY_URL:
         logger.warning("No Sentry URL configured, skipping Sentry setup")
         return
@@ -50,7 +89,10 @@ def setup_sentry() -> None:
             traces_sample_rate=1.0,
             profiles_sample_rate=1.0,
             enable_tracing=True,
-            integrations=(AsyncioIntegration(), LoguruIntegration()),
+            integrations=[
+                sentry_asyncio.AsyncioIntegration(),
+                sentry_loguru.LoguruIntegration(),
+            ],
         )
         logger.info(f"Sentry initialized: {sentry_sdk.is_initialized()}")
     except Exception as e:
@@ -58,13 +100,51 @@ def setup_sentry() -> None:
 
 
 def handle_sigterm(signum: int, frame: FrameType | None) -> None:
-    """Handle SIGTERM by raising KeyboardInterrupt."""
+    """Handle SIGTERM by raising KeyboardInterrupt.
+
+    Parameters
+    ----------
+    signum : int
+        Signal number received
+    frame : FrameType | None
+        Current stack frame
+
+    Notes
+    -----
+    This handler converts SIGTERM into a KeyboardInterrupt to trigger
+    graceful shutdown through the same path as Ctrl+C.
+    """
     logger.info(f"Received signal {signum}")
     raise KeyboardInterrupt
 
 
 async def main() -> None:
-    """Main entry point for the bot."""
+    """Main entry point for the bot.
+
+    This function handles the complete lifecycle of the bot:
+    1. Configuration validation
+    2. Sentry setup
+    3. Signal handlers
+    4. Bot initialization and startup
+    5. Error handling
+    6. Graceful shutdown
+
+    Raises
+    ------
+    discord.LoginFailure
+        If the bot token is invalid
+    discord.PrivilegedIntentsRequired
+        If required intents are not enabled
+    KeyboardInterrupt
+        If shutdown is triggered by signal or Ctrl+C
+
+    Notes
+    -----
+    The function ensures proper cleanup in all cases:
+    - Graceful bot shutdown
+    - Sentry cleanup
+    - Final logging
+    """
     if not CONFIG.TOKEN:
         logger.critical("No token provided. Set TOKEN in your environment or .env file.")
         return
@@ -72,8 +152,8 @@ async def main() -> None:
     setup_sentry()
 
     # Set up signal handlers early
-    signal.signal(signal.SIGTERM, handle_sigterm)
-    signal.signal(signal.SIGINT, handle_sigterm)
+    signal.signal(cast(int, signal.SIGTERM), handle_sigterm)
+    signal.signal(cast(int, signal.SIGINT), handle_sigterm)
 
     intents = discord.Intents.all()
     allowed_mentions = discord.AllowedMentions(everyone=False)
@@ -116,10 +196,37 @@ async def main() -> None:
         logger.info("Shutdown complete")
 
 
-if __name__ == "__main__":
+def run() -> None:
+    """Synchronous entry point for the bot.
+
+    This function serves as the main entry point when running the bot through Poetry scripts.
+    It wraps the async main() function in asyncio.run().
+
+    Notes
+    -----
+    This is the function that gets called when using:
+        $ poetry run start
+    """
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
         pass  # Already handled in main()
     finally:
         logger.info("Exiting")
+
+
+def dev() -> None:
+    """Development entry point for the bot.
+
+    This function serves as the development entry point when running the bot through Poetry scripts.
+    Currently identical to run(), but can be modified to include development-specific setup.
+
+    Notes
+    -----
+    This is the function that gets called when using: $ poetry run dev
+    """
+    run()
+
+
+if __name__ == "__main__":
+    run()

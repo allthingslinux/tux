@@ -27,7 +27,14 @@ class ActivityHandler(commands.Cog):
 
     @staticmethod
     def build_activity_list() -> list[discord.Activity | discord.Streaming]:
-        """Parses Config.ACTIVITIES as JSON and returns a list of activity objects."""
+        """
+        Parses Config.ACTIVITIES as JSON and returns a list of activity objects
+
+        Returns
+        -------
+        list[discord.Activity | discord.Streaming]
+            A list of activity objects.
+        """
 
         if not Config.ACTIVITIES or not Config.ACTIVITIES.strip():
             logger.warning("Config.ACTIVITIES is empty or None. Returning an empty list.")
@@ -53,14 +60,34 @@ class ActivityHandler(commands.Cog):
         return activities
 
     def _get_member_count(self) -> int:
-        """Returns the total member count of all guilds the bot is in."""
+        """
+        Returns the total member count of all guilds the bot is in.
+
+        Returns
+        -------
+        int
+            The total member count of all guilds the bot is in.
+        """
         return sum(guild.member_count for guild in self.bot.guilds if guild.member_count is not None)
 
     async def handle_substitution(
         self,
         activity: discord.Activity | discord.Streaming,
     ) -> discord.Activity | discord.Streaming:
-        """Replaces multiple placeholders in the activity name."""
+        """
+        Replaces multiple placeholders in the activity name.
+
+        Parameters
+        ----------
+        activity : discord.Activity | discord.Streaming
+            The activity to handle substitutions for.
+
+        Returns
+        -------
+        discord.Activity | discord.Streaming
+            The activity with substitutions applied.
+        """
+
         # Available substitutions:
         # {member_count} - total member count of all guilds
         # {guild_count} - total guild count
@@ -82,7 +109,19 @@ class ActivityHandler(commands.Cog):
         return activity
 
     async def run(self) -> NoReturn:
-        """Loops through activities and updates bot presence periodically."""
+        """
+        Loops through activities and updates bot presence periodically.
+
+        Parameters
+        ----------
+        self : ActivityHandler
+            The ActivityHandler instance.
+
+        Returns
+        -------
+        NoReturn
+        """
+
         while True:
             for activity in self.activities:
                 substituted_activity = await self.handle_substitution(activity)
@@ -91,7 +130,19 @@ class ActivityHandler(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
-        """Runs the activity loop when the bot is ready."""
+        """
+        Runs the activity loop when the bot is ready.
+
+        Parameters
+        ----------
+        self : ActivityHandler
+            The ActivityHandler instance.
+
+        Returns
+        -------
+        None
+        """
+
         await asyncio.sleep(5)
         activity_task = asyncio.create_task(self.run())
         await asyncio.gather(activity_task)

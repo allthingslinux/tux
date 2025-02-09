@@ -1,5 +1,4 @@
 {
-  "ruff.nativeServer": "on",
   "ruff.lint.enable": true,
   "ruff.lint.preview": false,
   "ruff.format.preview": true,
@@ -21,16 +20,35 @@
   "files.exclude": {
     "**/__pycache__": true,
     "**/*.pyc": true,
-    "**/pycache": true,
-    ".archive": true
+    "**/pycache": true
+  },
+  "search.exclude": {
+    ".archive/**": true,
+    "docs-build/**": true
   },
   "python.analysis.exclude": [
-    ".archive/**"
+    ".archive/**",
+    "docs-build/**"
   ],
   "python.analysis.diagnosticSeverityOverrides": {
     "reportIncompatibleMethodOverride": "none",
     "reportGeneralTypeIssues": "information"
   },
   "git.autofetch": true,
-  "editor.inlayHints.enabled": "offUnlessPressed"
+  "editor.inlayHints.enabled": "offUnlessPressed",
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "yaml.schemas": {
+    "https://squidfunk.github.io/mkdocs-material/schema.json": "mkdocs.yml"
+  },
+  "yaml.customTags": [
+    "!ENV scalar",
+    "!ENV sequence",
+    "!relative scalar",
+    "tag:yaml.org,2002:python/name:material.extensions.emoji.to_svg",
+    "tag:yaml.org,2002:python/name:material.extensions.emoji.twemoji",
+    "tag:yaml.org,2002:python/name:pymdownx.superfences.fence_code_format",
+    "tag:yaml.org,2002:python/object/apply:pymdownx.slugs.slugify mapping"
+  ]
 }

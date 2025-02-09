@@ -10,6 +10,7 @@ from tux.bot import Tux
 def path_from_extension(extension: str) -> Path:
     """Convert an extension notation to a file path."""
     base_dir = Path(__file__).parent.parent
+    extension = extension.replace("tux.", "", 1)
     relative_path = extension.replace(".", os.sep) + ".py"
     return (base_dir / relative_path).resolve()
 
@@ -25,7 +26,15 @@ class HotReload(commands.Cog):
 
     @tasks.loop(seconds=3)
     async def hot_reload_loop(self) -> None:
-        """Loop to check for changes in extension files and reload them if modified."""
+        """
+        Loop to check for changes in extension files and reload them if modified.
+
+        Parameters
+        ----------
+        self : HotReload
+            The HotReload instance.
+        """
+
         for extension in list(self.bot.extensions.keys()):
             if extension == "jishaku":
                 continue
@@ -60,7 +69,14 @@ class HotReload(commands.Cog):
 
     @hot_reload_loop.before_loop
     async def cache_last_modified_time(self) -> None:
-        """Cache the last modified time of all extensions before the loop starts."""
+        """
+        Cache the last modified time of all extensions before the loop starts.
+
+        Parameters
+        ----------
+        self : HotReload
+            The HotReload instance.
+        """
         for extension in self.bot.extensions:
             if extension == "jishaku":
                 continue

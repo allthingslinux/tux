@@ -144,6 +144,11 @@ class Starboard(commands.Cog):
     async def remove_starboard(self, ctx: commands.Context[Tux]) -> None:
         """
         Remove the starboard configuration for this server.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context of the command.
         """
 
         assert ctx.guild
@@ -191,6 +196,11 @@ class Starboard(commands.Cog):
             The starboard channel.
         original_message : discord.Message`
             The original message.
+
+        Returns
+        -------
+        discord.Message | None
+            The existing starboard message or None if it does not exist.
         """
 
         assert original_message.guild
@@ -323,7 +333,16 @@ class Starboard(commands.Cog):
         payload: discord.RawReactionClearEvent | discord.RawReactionClearEmojiEvent,
         emoji: discord.PartialEmoji | None = None,
     ) -> None:
-        """Handle reaction clear for all emojis or a specific emoji"""
+        """
+        Handle reaction clear for all emojis or a specific emoji
+
+        Parameters
+        ----------
+        payload : discord.RawReactionClearEvent | discord.RawReactionClearEmojiEvent
+            The payload of the reaction clear event.
+        emoji : discord.PartialEmoji | None
+            The emoji to handle the reaction clear for.
+        """
         if not payload.guild_id:
             return
 

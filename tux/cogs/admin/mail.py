@@ -100,6 +100,14 @@ class Mail(commands.Cog):
 
     @staticmethod
     def _generate_password() -> str:
+        """
+        Generates a random password for the mailbox.
+
+        Returns
+        -------
+        str
+            The generated password.
+        """
         password = "changeme" + "".join(str(random.randint(0, 9)) for _ in range(6))
         password += "".join(random.choice("!@#$%^&*") for _ in range(4))
         return password
@@ -110,6 +118,18 @@ class Mail(commands.Cog):
         password: str,
         member_id: int,
     ) -> MailboxData:
+        """
+        Prepares the mailbox data for the API request.
+
+        Parameters
+        ----------
+        username : str
+            The username to register for mail.
+        password : str
+            The password to register for mail.
+        member_id : int
+            The ID of the member to register for mail.
+        """
         mailbox_data = self.default_options.copy()
 
         mailbox_data.update(
@@ -133,6 +153,20 @@ class Mail(commands.Cog):
         member: discord.Member,
         password: str,
     ) -> None:
+        """
+        Handles the response from the API request.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object for the command.
+        response : httpx.Response
+            The response from the API request.
+        member : discord.Member
+            The member to register for mail.
+        password : str
+            The password to register for mail.
+        """
         if response.status_code == 200:
             result: list[dict[str, str | None]] = response.json()
             logger.info(f"Response JSON: {result}")
@@ -163,6 +197,19 @@ class Mail(commands.Cog):
 
     @staticmethod
     def _extract_mailbox_info(result: list[dict[str, str | None]]) -> str | None:
+        """
+        Extracts the mailbox information from the response.
+
+        Parameters
+        ----------
+        result : list[dict[str, str | None]]
+            The response from the API request.
+
+        Returns
+        -------
+        str | None
+            The mailbox information.
+        """
         for item in result:
             if "msg" in item:
                 msg = item["msg"]
@@ -181,6 +228,20 @@ class Mail(commands.Cog):
         mailbox_info: str,
         password: str,
     ) -> None:
+        """
+        Sends a DM to the member with the mailbox information.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object for the command.
+        member : discord.Member
+            The member to send the DM to.
+        mailbox_info : str
+            The mailbox information to send to the member.
+        password : str
+            The password to send to the member.
+        """
         dm_message = f"""
 **Your mailbox has been successfully registered!**
 
@@ -190,7 +251,7 @@ class Mail(commands.Cog):
 
 **Please change your password after logging in for the first time.**
 
-After changing, you can also set up your mailbox on your mobile device or email client following the instructions provided on the mail server. Alternatively, feel free to use our webmail interface available at [mail.atl.tools/SOGo](https://mail.atl.tools/SOGo/).
+After changing, you Ban also set up your mailbox on your mobile device or email client following the instructions provided on the mail server. Alternatively, feel free to use our webmail interface available at [mail.atl.tools/SOGo](https://mail.atl.tools/SOGo/).
 
 If you have any questions or need assistance, please feel free to reach out to the server staff. Enjoy your new mailbox! 📬
         """
