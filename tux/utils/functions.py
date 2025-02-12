@@ -55,14 +55,7 @@ def is_harmful(command: str) -> bool:
         return True
 
     # Check for format commands
-    if re.search(FORMAT_COMMANDS, command, re.IGNORECASE):
-        return True
-
-    # Check for simple but dangerous rm patterns
-    if re.search(r"rm.{0,5}[rfRF]", command, re.IGNORECASE):  # noqa: SIM103
-        return True
-
-    return False
+    return bool(re.search(FORMAT_COMMANDS, command, re.IGNORECASE))
 
 
 def strip_formatting(content: str) -> str:
