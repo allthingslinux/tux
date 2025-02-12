@@ -1,6 +1,5 @@
 import asyncio
 import os
-import re
 from collections.abc import Awaitable, Mapping
 from pathlib import Path
 from typing import Any, get_type_hints
@@ -103,17 +102,21 @@ class TuxHelp(commands.HelpCommand):
     async def _create_select_options(
         self,
         command_categories: dict[str, dict[str, str]],
-        cog_groups: list[str],
         menu: ViewMenu,
     ) -> dict[discord.SelectOption, list[Page]]:
+        """
+        Creates select options for the help menu by iterating over the keys in the
+        cached command categories. This approach ensures that even categories without
+        a corresponding folder (e.g. "extra") are included.
+        """
         select_options: dict[discord.SelectOption, list[Page]] = {}
-
         prefix: str = await self._get_prefix()
 
+        # Iterate over the keys in command_categories
         tasks: list[Awaitable[tuple[str, Page]]] = [
             self._create_page(cog_group, command_categories, menu, prefix)
-            for cog_group in cog_groups
-            if cog_group in command_categories and any(command_categories[cog_group].values())
+            for cog_group in command_categories
+            if any(command_categories[cog_group].values())
         ]
 
         select_options_data: list[tuple[str, Page]] = await asyncio.gather(*tasks)
@@ -132,6 +135,9 @@ class TuxHelp(commands.HelpCommand):
             emoji = category_emoji_map.get(cog_group, "❓")
             select_options[discord.SelectOption(label=cog_group.capitalize(), emoji=emoji)] = [page]
 
+        logger.info(f"Select options: {select_options}")
+        logger.info(f"Cached categories: {self._category_cache}")
+
         return select_options
 
     async def _create_page(
@@ -148,7 +154,6 @@ class TuxHelp(commands.HelpCommand):
 
         sorted_commands: list[tuple[str, str]] = sorted(command_categories[cog_group].items())
         description: str = "\n".join(f"**`{prefix}{cmd}`** | {command_list}" for cmd, command_list in sorted_commands)
-
         embed.description = description
         page: Page = Page(embed=embed)
         menu.add_page(embed)
@@ -169,8 +174,8 @@ class TuxHelp(commands.HelpCommand):
     ) -> None:
         """Adds pages for each cog category to the help menu."""
         command_categories = await self._get_command_categories(mapping)
-        cog_groups = self._get_cog_groups()
-        select_options = await self._create_select_options(command_categories, cog_groups, menu)
+        # Instead of using filesystem folders, iterate over cached categories.
+        select_options = await self._create_select_options(command_categories, menu)
         self._add_navigation_and_selection(menu, select_options)
 
     async def _get_command_categories(
@@ -185,6 +190,7 @@ class TuxHelp(commands.HelpCommand):
 
         for cog, mapping_commands in mapping.items():
             if cog and len(mapping_commands) > 0:
+                # Attempt to extract the group using the cog's module name.
                 cog_group = self._extract_cog_group(cog) or "extra"
                 command_categories.setdefault(cog_group, {})
                 for command in mapping_commands:
@@ -204,9 +210,15 @@ class TuxHelp(commands.HelpCommand):
 
     @staticmethod
     def _extract_cog_group(cog: commands.Cog) -> str | None:
-        """Extracts the cog group from a cog's string representation."""
-        if match := re.search(r"<cogs\.([^\.]+)\..*>", str(cog)):
-            return match[1]
+        """
+        Extracts the cog group using the cog's module attribute.
+        For example, if a cog's module is 'tux.cogs.admin.some_cog', this returns 'admin'.
+        """
+        module = getattr(cog, "__module__", "")
+        parts = module.split(".")
+        # Assuming the structure is: tux.cogs.<group>...
+        if len(parts) >= 3 and parts[1].lower() == "cogs":
+            return parts[2].lower()
         return None
 
     # Sending Help Messages

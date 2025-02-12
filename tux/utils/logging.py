@@ -17,8 +17,6 @@ from rich.logging import RichHandler
 from rich.text import Text
 from rich.theme import Theme
 
-from tux.utils.config import Config
-
 T = TypeVar("T")
 
 
@@ -73,6 +71,11 @@ class LoguruRichHandler(RichHandler, RichHandlerProtocol):
             # Get the formatted message from loguru's formatter.
             message = self.format(record)
 
+            # If there is exception info (or the message contains newlines),
+            # delegate to the base class so that Rich can render tracebacks properly.
+            if record.exc_info or "\n" in message:
+                return super().emit(record)
+
             # --- Time formatting ---
             time_format: str | Callable[[datetime], Text] | None = (
                 None if self.formatter is None else self.formatter.datefmt
@@ -114,12 +117,6 @@ class LoguruRichHandler(RichHandler, RichHandlerProtocol):
 
             # --- Build the continued prefix ---
             # We want the continued prefix to have the same plain-text width as the normal one.
-            # The normal prefix width (plain) is:
-            #   len(symbol + " ") + (len(log_time_str) + 2) + (LEVEL_FIELD_WIDTH + 2)
-            # For the continued prefix we print "CONTINUED" (padded) in a single bracket:
-            #   Total width = len(symbol + " ") + (continued_field_width + 2)
-            # Setting these equal gives:
-            #   continued_field_width = len(log_time_str) + LEVEL_FIELD_WIDTH + 2
             continued_field_width = len(log_time_str) + level_field_width
             continued_prefix_markup = (
                 f"{symbol} "
@@ -138,34 +135,27 @@ class LoguruRichHandler(RichHandler, RichHandlerProtocol):
             source_info_plain = Text.from_markup(source_info).plain
 
             # --- Total width ---
-            # Use the console's actual width if available.
             total_width = (self.console.size.width or self.console.width) or 80
 
             # Convert the formatted message to plain text.
             plain_message = Text.from_markup(message).plain
 
             # --- One-line vs two-line decision ---
-            # For one-line messages, the available space is the total width
-            # minus the widths of the normal prefix and the source info.
             available_for_message = total_width - len(first_prefix_plain) - len(source_info_plain)
             if len(plain_message) <= available_for_message:
-                # The message fits on one line.
                 padded_msg = plain_message.ljust(available_for_message)
                 full_line = first_prefix_markup + padded_msg + source_info
                 self.console.print(full_line, markup=True, highlight=False)
             else:
-                # --- Two-line (continued) layout ---
-                # First line: Reserve all space after the normal prefix.
+                # Two-line (continued) layout
                 first_line_area = total_width - len(first_prefix_plain)
-                first_line_msg = plain_message[:first_line_area]  # Simply cut off without ellipsis
+                first_line_msg = plain_message[:first_line_area]  # Cut off without ellipsis
 
-                # Second line: use the continued prefix and reserve space for the source info.
                 second_line_area = total_width - len(continued_prefix_plain) - len(source_info_plain)
-                # The remainder of the message is everything after what was printed on the first line.
-                remainder_start = first_line_area  # Adjusted to not account for ellipsis
+                remainder_start = first_line_area
                 second_line_msg = plain_message[remainder_start:]
                 if len(second_line_msg) > second_line_area:
-                    second_line_msg = second_line_msg[:second_line_area]  # Simply cut off without ellipsis
+                    second_line_msg = second_line_msg[:second_line_area]  # Cut off without ellipsis
                 padded_second_line_msg = second_line_msg.ljust(second_line_area)
                 self.console.print(first_prefix_markup + first_line_msg, markup=True, highlight=False)
                 self.console.print(
@@ -211,7 +201,7 @@ def setup_logging() -> None:
                     highlighter=None,
                 ),
                 "format": "{message}",
-                "level": "DEBUG" if Config.DEV else "INFO",
+                "level": "DEBUG",
             },
         ],
     )
