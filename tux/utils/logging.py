@@ -91,7 +91,6 @@ class LoguruRichHandler(RichHandler, RichHandlerProtocol):
         record : LogRecord
             The log record to emit.
         """
-
         try:
             # Get the formatted message
             message = self.format(record)
@@ -120,42 +119,23 @@ class LoguruRichHandler(RichHandler, RichHandlerProtocol):
                 "success": "[bold green]█[/]",  # Green block for success
                 "trace": "[dim]█[/]",  # Dim block for trace
             }
-
             symbol = level_symbols.get(level_name, "[bright_black]█[/]")  # Gray block for default
             level_str = f"{record.levelname:<7}"  # Reduced padding by 1
 
-            # Format source info
+            # Format source info and display it as part of the log prefix (before the actual message)
             source_info = (
                 f"[dim]{record.funcName}[bright_black] @ [/bright_black]{record.filename}:{record.lineno}[/dim]"
             )
 
-            # Get the main log message part
-            log_prefix = f"{symbol} [log.time]{log_time_str}[/][log.bracket][[/][logging.level.{level_name}]{level_str}[/][log.bracket]][/] "
+            log_prefix = (
+                f"{symbol} [log.time]{log_time_str}[/]"
+                f"[log.bracket][[/][logging.level.{level_name}]{level_str}[/][log.bracket]][/] "
+                f"{source_info} "
+            )
 
-            # Calculate available width for the message
-            terminal_width = self.console.width or 120
-            source_info_length = (
-                len(record.funcName) + len(record.filename) + len(str(record.lineno)) + 2
-            )  # +2 for @ and :
-            available_width = (
-                terminal_width - len(Text.from_markup(log_prefix).plain) - source_info_length - 2
-            )  # -2 for spacing
-
-            # Truncate message if needed and add ellipsis
-            if len(message) > available_width - 3:  # -3 for ...
-                message = f"{message[: available_width - 3]}..."
-
-            # Right align the source info
+            # Print the complete log line with the source info preceding the actual log message.
             self.console.print(
                 f"{log_prefix}{message}",
-                end="",
-                markup=True,
-                highlight=False,
-            )
-            self.console.print(
-                source_info,
-                justify="right",
-                width=terminal_width - len(Text.from_markup(f"{log_prefix}{message}").plain),
                 markup=True,
                 highlight=False,
             )
