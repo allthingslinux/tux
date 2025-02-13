@@ -5,12 +5,14 @@ Thank you for your interest in contributing to Tux! This guide will help you get
 ## Development Setup
 
 1. **Clone the Repository**
+
    ```bash
    git clone https://github.com/your-username/tux.git
    cd tux
    ```
 
 2. **Set Up Development Environment**
+
    ```bash
    # Using Poetry (recommended)
    poetry env use 3.13
@@ -21,6 +23,7 @@ Thank you for your interest in contributing to Tux! This guide will help you get
    ```
 
 3. **Configure Environment**
+
    ```bash
    # Copy example environment file
    cp .env.example .env
@@ -29,6 +32,7 @@ Thank you for your interest in contributing to Tux! This guide will help you get
    ```
 
 4. **Database Setup**
+
    ```bash
    # Generate Prisma client
    poetry run prisma generate
@@ -40,6 +44,7 @@ Thank you for your interest in contributing to Tux! This guide will help you get
 ## Development Workflow
 
 1. **Create a New Branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -50,11 +55,13 @@ Thank you for your interest in contributing to Tux! This guide will help you get
    - Update documentation as needed
 
 3. **Run Tests**
+
    ```bash
    poetry run pytest
    ```
 
 4. **Format and Lint**
+
    ```bash
    # Format code
    poetry run ruff format .
@@ -64,11 +71,12 @@ Thank you for your interest in contributing to Tux! This guide will help you get
    ```
 
 5. **Commit Your Changes**
+
    ```bash
    git add .
    git commit -m "feat: add new feature"
    ```
-   
+
    Follow [Conventional Commits](https://www.conventionalcommits.org/) format:
    - `feat:` for new features
    - `fix:` for bug fixes
@@ -136,4 +144,4 @@ Please read and follow our [Code of Conduct](../../CODE_OF_CONDUCT.md). We expec
 
 ## License
 
-By contributing to Tux, you agree that your contributions will be licensed under the project's license. 
+By contributing to Tux, you agree that your contributions will be licensed under the project's license.

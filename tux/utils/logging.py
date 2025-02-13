@@ -5,6 +5,7 @@ This module sets up global logging configuration using loguru with Rich formatti
 It should be imported and initialized at the start of the application.
 """  # noqa: A005
 
+import re
 from collections.abc import Callable
 from datetime import UTC, datetime
 from logging import Formatter, LogRecord
@@ -67,25 +68,25 @@ class LoguruRichHandler(RichHandler, RichHandlerProtocol):
         self._last_time: Text | None = None
 
     def emit(self, record: LogRecord) -> None:
+        """Handle log record emission with custom formatting.
+
+        Parameters
+        ----------
+        record : LogRecord
+            The log record to emit
+
+        Notes
+        -----
+        Formats log records with:
+        - Colored level indicator
+        - Timestamp
+        - Level name
+        - Source location
+        - Message
+        """
         try:
-            # Get the formatted message from loguru's formatter.
+            # Format the message
             message = self.format(record)
-
-            # If there is exception info (or the message contains newlines),
-            # delegate to the base class so that Rich can render tracebacks properly.
-            if record.exc_info or "\n" in message:
-                return super().emit(record)
-
-            # --- Time formatting ---
-            time_format: str | Callable[[datetime], Text] | None = (
-                None if self.formatter is None else self.formatter.datefmt
-            )
-            time_format = time_format or self._log_render.time_format
-            log_time = datetime.fromtimestamp(record.created, tz=UTC)
-            if callable(time_format):
-                log_time_str = str(time_format(log_time))
-            else:
-                log_time_str = log_time.strftime(time_format or "[%X]")
 
             # --- Level symbol and text ---
             level_name = record.levelname.lower()
@@ -98,71 +99,56 @@ class LoguruRichHandler(RichHandler, RichHandlerProtocol):
                 "success": "[bold green]█[/]",  # Green block for success
                 "trace": "[dim]█[/]",  # Dim block for trace
             }
-            symbol = level_symbols.get(level_name, "[bright_black]█[/]")  # Default gray block
 
             # --- Constants ---
-            level_field_width = 10  # Adjust as needed
+            level_field_width = 7  # Adjust as needed
+            symbol = level_symbols.get(level_name, "[bright_black]█[/]")
 
-            # --- Build the normal prefix ---
-            # Example: "█ [02:06:55][INFO      ]"
+            # --- First prefix ---
             first_prefix_markup = (
                 f"{symbol} "
-                + f"[log.time]{log_time_str}[/]"
+                + f"[log.time][{datetime.fromtimestamp(record.created, tz=UTC).strftime('%H:%M:%S')}][/]"
                 + "[log.bracket][[/]"
                 + f"[logging.level.{level_name}]{record.levelname.upper().ljust(level_field_width)}[/]"
                 + "[log.bracket]][/]"
                 + " "
             )
-            first_prefix_plain = Text.from_markup(first_prefix_markup).plain
-
-            # --- Build the continued prefix ---
-            # We want the continued prefix to have the same plain-text width as the normal one.
-            continued_field_width = len(log_time_str) + level_field_width
-            continued_prefix_markup = (
-                f"{symbol} "
-                + "[log.bracket][[/]"
-                + f"[logging.level.info]{'CONTINUED'.ljust(continued_field_width)}[/]"
-                + "[log.bracket]][/]"
-                + " "
-            )
-            continued_prefix_plain = Text.from_markup(continued_prefix_markup).plain
 
             # --- Source info ---
             # For example: "run @ main.py:215"
             source_info = (
                 f"[dim]{record.funcName}[bright_black] @ [/bright_black]{record.filename}:{record.lineno}[/dim]"
             )
-            source_info_plain = Text.from_markup(source_info).plain
 
-            # --- Total width ---
-            total_width = (self.console.size.width or self.console.width) or 80
+            # --- Continued prefix ---
+            continued_prefix_markup = (
+                f"{symbol} [log.bracket][[/]"
+                + f"[logging.level.info]{'CONTINUED'.ljust(level_field_width + 13)}[/]"
+                + "[log.bracket]][/]"
+                + " "
+            )
 
             # Convert the formatted message to plain text.
             plain_message = Text.from_markup(message).plain
 
-            # --- One-line vs two-line decision ---
-            available_for_message = total_width - len(first_prefix_plain) - len(source_info_plain)
-            if len(plain_message) <= available_for_message:
-                padded_msg = plain_message.ljust(available_for_message)
-                full_line = first_prefix_markup + padded_msg + source_info
-                self.console.print(full_line, markup=True, highlight=False)
-            else:
-                # Two-line (continued) layout
-                first_line_area = total_width - len(first_prefix_plain)
-                first_line_msg = plain_message[:first_line_area]  # Cut off without ellipsis
+            # Clean up task names in messages
+            if "discord-ext-tasks: " in plain_message:
+                # First remove the discord-ext-tasks prefix
+                plain_message = plain_message.replace("discord-ext-tasks: ", "")
+                # Then trim everything after the dots in task names
+                plain_message = re.sub(r"(\w+)\.\w+", r"\1", plain_message)
 
-                second_line_area = total_width - len(continued_prefix_plain) - len(source_info_plain)
-                remainder_start = first_line_area
-                second_line_msg = plain_message[remainder_start:]
-                if len(second_line_msg) > second_line_area:
-                    second_line_msg = second_line_msg[:second_line_area]  # Cut off without ellipsis
-                padded_second_line_msg = second_line_msg.ljust(second_line_area)
-                self.console.print(first_prefix_markup + first_line_msg, markup=True, highlight=False)
-                self.console.print(
-                    continued_prefix_markup + padded_second_line_msg + source_info,
-                    markup=True,
-                    highlight=False,
-                )
+            # Print first line with source info after log type
+            first_line = first_prefix_markup + source_info + " " + plain_message
+            self.console.print(first_line, markup=True, highlight=False)
+
+            # If message is long, print continued lines
+            if len(plain_message) > 100:  # Arbitrary threshold for line continuation
+                continued_message = plain_message[100:]
+                while continued_message:
+                    chunk, continued_message = continued_message[:100], continued_message[100:]
+                    self.console.print(continued_prefix_markup + chunk, markup=True, highlight=False)
+
         except Exception:
             self.handleError(record)
 
@@ -172,6 +158,7 @@ def setup_logging() -> None:
     console = Console(
         force_terminal=True,
         color_system="truecolor",
+        width=200,
         theme=Theme(
             {
                 "logging.level.success": "bold green",

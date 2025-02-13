@@ -60,7 +60,7 @@ MD012:
 # MD013/line-length : Line length : https://github.com/DavidAnson/markdownlint/blob/v0.34.0/doc/md013.md
 MD013:
   # Number of characters
-  line_length: 200
+  line_length: 300
   # Number of characters for headings
   heading_line_length: 80
   # Number of characters for code blocks
@@ -125,9 +125,7 @@ MD027: true
 MD028: false
 
 # MD029/ol-prefix : Ordered list item prefix : https://github.com/DavidAnson/markdownlint/blob/v0.34.0/doc/md029.md
-MD029:
-  # List style
-  style: "one_or_ordered"
+MD029: false
 
 # MD030/list-marker-space : Spaces after list markers : https://github.com/DavidAnson/markdownlint/blob/v0.34.0/doc/md030.md
 MD030:

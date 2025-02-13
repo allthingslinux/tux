@@ -54,7 +54,7 @@ def check() -> int:
 
 def docs() -> int:
     """Serve documentation locally."""
-    return run_command(["mkdocs", "serve"])
+    return run_command(["mkdocs", "serve", "-f", "docs/mkdocs.yml"])
 
 
 def docs_build() -> int:

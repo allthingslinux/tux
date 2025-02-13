@@ -37,6 +37,9 @@ Style: AnsiStyle
 # Type hint for discord.ext.tasks.Loop
 type TaskLoop = Loop[Callable[[], Coroutine[Any, Any, None]]]
 
+# Type alias for task state tracking
+type TaskState = tuple[str, float, list[str], int]
+
 
 def create_banner(
     bot_name: str,
@@ -150,7 +153,7 @@ class Tux(commands.Bot):
         Task handling the bot setup process
     task_start_times : dict[str, float]
         Mapping of task names to their start times
-    task_frame_times : dict[str, tuple[str, float]]
+    task_frame_times : dict[str, TaskState]
         Mapping of task names to their current frame location and time
     console : Console
         Rich console for formatted output
@@ -191,7 +194,7 @@ class Tux(commands.Bot):
         # Task management
         self.setup_task: asyncio.Task[None] | None = None
         self.task_start_times: dict[str, float] = {}
-        self.task_frame_times: dict[str, tuple[str, float]] = {}
+        self.task_frame_times: dict[str, TaskState] = {}
 
         # Create console for rich output
         self.console = Console(stderr=True, force_terminal=True)
@@ -545,22 +548,66 @@ class Tux(commands.Bot):
 
         Notes
         -----
-        Logs warnings for tasks that remain at the same location for over 300 seconds.
-        Gateway tasks are excluded from stuck detection.
+        Intelligently detects stuck tasks by analyzing their behavior patterns:
+        - Tasks in sleep/wait states are not considered stuck
+        - Tasks with regular location changes are not stuck
+        - Only unexpected blocking patterns trigger warnings
         """
-        if name in self.task_frame_times:
-            old_location, frame_start = self.task_frame_times[name]
-            frame_duration = current_time - frame_start
+        # Skip gateway tasks entirely as they have their own monitoring
+        if task_type == "gateway_tasks":
+            return
 
-            if old_location == location:
-                if frame_duration > 300 and task_type != "gateway_tasks":
-                    logger.warning(
-                        f"Task potentially stuck - {task_type}: {name} at {location} for {frame_duration:.1f}s",
-                    )
-            else:
-                self.task_frame_times[name] = (location, current_time)
-        else:
-            self.task_frame_times[name] = (location, current_time)
+        # Initialize or get task state
+        if name not in self.task_frame_times:
+            self.task_frame_times[name] = (location, current_time, [], 0)
+            return
+
+        old_location, frame_start, location_history, alert_count = self.task_frame_times[name]
+        frame_duration = current_time - frame_start
+
+        # Check if we're in a known wait location
+        is_wait_location = any(
+            wait_pattern in location.lower()
+            for wait_pattern in [
+                "sleep",
+                "wait",
+                "check",
+                "lock",
+                "event.wait",
+                "queue.get",
+                "asyncio.sleep",
+            ]
+        )
+
+        # Update location history (keep last 5 locations)
+        new_history = location_history.copy()
+        if old_location != location:
+            new_history = ([*location_history, location])[-5:]
+            frame_start = current_time
+            alert_count = 0  # Reset alert count on location change
+
+        # Analyze task behavior
+        unique_locations = set(new_history)
+        is_repeating_pattern = len(unique_locations) <= 2 and len(new_history) >= 3
+        is_normal_behavior = is_wait_location or is_repeating_pattern
+
+        # Only warn if:
+        # 1. Task has been in same non-wait location for over 5 minutes
+        # 2. Location doesn't indicate intentional waiting
+        # 3. Task isn't showing a normal repeating pattern
+        # 4. Haven't warned about this specific stuck instance recently
+        if (
+            frame_duration > 300
+            and not is_normal_behavior
+            and alert_count < 3  # Limit alerts for the same stuck instance
+        ):
+            logger.warning(
+                f"Task potentially stuck - {name} at {location} for {frame_duration:.1f}s (non-wait location)",
+            )
+            alert_count += 1
+
+        # Update task state
+        self.task_frame_times[name] = (location, frame_start, new_history, alert_count)
 
     def _log_task_status(self, task_type: str, name: str, location: str, current_time: float) -> None:
         """Log periodic task status updates.

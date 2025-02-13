@@ -8,6 +8,8 @@ repo_name: allthingslinux/tux
 
 edit_uri: edit/main/docs/
 
+docs_dir: ./content
+
 extra:
   social:
     - icon: fontawesome/brands/github
@@ -72,7 +74,8 @@ theme:
 
   ### Styling
 
-  custom_dir: docs/overrides
+  custom_dir: overrides
+
   font:
     text: Inter
     code: JetBrains Mono
@@ -107,7 +110,7 @@ plugins:
               domains: [std, py]
           import:
             - https://docs.python.org/3/objects.inv
-          custom_templates: docs/overrides/python/material
+          custom_templates: overrides/python/material
           options:
             # Griffe
             extensions:
@@ -165,7 +168,7 @@ plugins:
             # summary: true
 
   - api-autonav:
-      modules: ["tux"]
+      modules: ["../tux"]
       nav_section_title: "API Reference"
       api_root_uri: "reference"
       exclude_private: true
@@ -186,29 +189,7 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - User Guide:
-      - Getting Started: user-guide/getting-started.md
-      - Commands: commands.md
-      - Permissions: permissions.md
-  - Developer Guide:
-      - Setup: development.md
-      - Architecture: developer-guide/architecture.md
-      - Contributing: developer-guide/contributing.md
-      - CLI Tools: cli.md
-  # - API Reference:
-  #     - Bot: reference/bot.md
-  #     - Cogs: reference/cogs.md
-  #     - Utils:
-  #         - Config: reference/utils/config.md
-  #         - Checks: reference/utils/checks.md
-  #         - Constants: reference/utils/constants.md
-  #         - Flags: reference/utils/flags.md
-  #         - Functions: reference/utils/functions.md
-  #         - Logging: reference/utils/logging.md
-  #         - Regex: reference/utils/regex.md
-  #     - Handlers: reference/handlers.md
-  #     - Database: reference/database.md
-  #     - UI Components: reference/ui.md
-  - Deployment:
-      - Docker: deployment/docker.md
-      - Services: services.md
+  - Development:
+      - Environment: dev/environment.md
+      - Architecture: dev/architecture.md
+      - Contributing: dev/contributing.md
