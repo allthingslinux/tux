@@ -155,6 +155,8 @@ class Tux(commands.Bot):
         Mapping of task names to their start times
     task_frame_times : dict[str, TaskState]
         Mapping of task names to their current frame location and time
+    task_last_logged : dict[str, float]
+        Track when we last logged each task's status
     console : Console
         Rich console for formatted output
 
@@ -195,6 +197,7 @@ class Tux(commands.Bot):
         self.setup_task: asyncio.Task[None] | None = None
         self.task_start_times: dict[str, float] = {}
         self.task_frame_times: dict[str, TaskState] = {}
+        self.task_last_logged: dict[str, float] = {}  # Track when we last logged each task's status
 
         # Create console for rich output
         self.console = Console(stderr=True, force_terminal=True)
@@ -625,11 +628,20 @@ class Tux(commands.Bot):
 
         Notes
         -----
-        Logs status updates for long-running tasks (over 1 hour).
+        Logs status updates for long-running tasks once per hour.
         """
         task_duration = current_time - self.task_start_times[name]
-        if task_duration > 3600:  # Log every hour
-            logger.info(f"Task status - {task_type}: {name} running for {task_duration / 3600:.1f}h at {location}")
+        last_log_time = self.task_last_logged.get(name, 0)
+        time_since_last_log = current_time - last_log_time
+
+        # Only log if:
+        # 1. Task has been running for over an hour
+        # 2. We haven't logged in the last hour
+        if task_duration > 3600 and time_since_last_log > 3600:
+            # Clean up the location path to be more readable
+            clean_location = location.replace("/app/.venv/lib/python3.13/site-packages/", "")
+            logger.info(f"Task status - {name} running for {task_duration / 3600:.1f}h at {clean_location}")
+            self.task_last_logged[name] = current_time
 
     def _cleanup_finished_tasks(self, active_task_names: set[str]) -> None:
         """Clean up tracking data for finished tasks.
@@ -647,6 +659,7 @@ class Tux(commands.Bot):
         for name in finished_tasks:
             self.task_start_times.pop(name, None)
             self.task_frame_times.pop(name, None)
+            self.task_last_logged.pop(name, None)  # Clean up logging tracking too
             logger.debug(f"Task completed and cleaned up: {name}")
 
     # Shutdown handling
