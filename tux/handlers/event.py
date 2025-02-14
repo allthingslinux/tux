@@ -38,11 +38,32 @@ class EventHandler(commands.Cog):
         if message.author.bot:
             return
 
-        stripped_content = strip_formatting(message.content)
+        stripped_content = strip_formatting(
+            message.content,
+        )  # pretty sure we have message.clean_content to replace strip_formatting, might be wrong though -Dainis
 
         if is_harmful(stripped_content):
             await message.reply(
                 "-# ⚠️ **This command is likely harmful. By running it, all directory contents will be deleted. There is no undo. Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it.**",
+            )
+
+    def breaks_no_hello(self, message: discord.Message) -> bool:
+        if message.author.bot:
+            return False
+
+        support_channel_id = 1172312674298761216
+        return message.channel.id == support_channel_id and (
+            "hello" in message.content.lower() or "hi" in message.content.lower()
+        )
+
+    async def handle_no_hello_message(self, message: discord.Message) -> None:
+        if message.author.bot:
+            return
+
+        if self.breaks_no_hello(message):
+            await message.reply(
+                "-# Please make sure to adhere to https://nohello.net/en/ and https://discord.com/channels/1172245377395728464/1283783542911926293!",
+                delete_after=10,
             )
 
     @commands.Cog.listener()
@@ -53,6 +74,7 @@ class EventHandler(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         await self.handle_harmful_message(message)
+        await self.handle_no_hello_message(message)
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
