@@ -197,7 +197,8 @@ class Tux(commands.Bot):
         self.setup_task: asyncio.Task[None] | None = None
         self.task_start_times: dict[str, float] = {}
         self.task_frame_times: dict[str, TaskState] = {}
-        self.task_last_logged: dict[str, float] = {}  # Track when we last logged each task's status
+        self.task_last_logged: dict[str, float] = {}
+        self.last_task_counts: dict[str, int] = {}  # Track previous task counts
 
         # Create console for rich output
         self.console = Console(stderr=True, force_terminal=True)
@@ -425,20 +426,25 @@ class Tux(commands.Bot):
             raise RuntimeError(msg) from e
 
     def _log_task_counts(self, tasks_by_type: dict[str, list[asyncio.Task[Any]]]) -> None:
-        """Log current task counts.
+        """Log task counts only when they change.
 
         Parameters
         ----------
         tasks_by_type : dict[str, list[asyncio.Task[Any]]]
             Dictionary mapping task types to lists of tasks
         """
-        total_tasks = sum(len(tasks) for tasks in tasks_by_type.values())
-        logger.debug(
-            f"Task Monitor - Total: {total_tasks} "
-            f"(Discord: {len(tasks_by_type['discord_tasks'])}, "
-            f"Gateway: {len(tasks_by_type['gateway_tasks'])}, "
-            f"Internal: {len(tasks_by_type['internal_tasks'])})",
-        )
+        current_counts = {task_type: len(tasks) for task_type, tasks in tasks_by_type.items()}
+
+        # Only log if counts have changed
+        if current_counts != self.last_task_counts:
+            total_tasks = sum(current_counts.values())
+            logger.debug(
+                f"Task counts changed - Total: {total_tasks} "
+                f"(Discord: {current_counts['discord_tasks']}, "
+                f"Gateway: {current_counts['gateway_tasks']}, "
+                f"Internal: {current_counts['internal_tasks']})",
+            )
+            self.last_task_counts = current_counts.copy()
 
     async def _monitor_task_states(
         self,
@@ -764,7 +770,16 @@ class Tux(commands.Bot):
             if not tasks:
                 continue
 
-            names = ", ".join(t.get_name() for t in tasks)
+            # Get task names or coroutine names for unnamed tasks
+            task_names: list[str] = []
+            for t in tasks:
+                name = t.get_name() or "unnamed"
+                if name in ("None", "unnamed"):
+                    coro = t.get_coro()
+                    name = getattr(coro, "__qualname__", str(coro))
+                task_names.append(name)
+
+            names = ", ".join(task_names)
             logger.info(f"Cancelling {len(tasks)} {task_type.replace('_', ' ')}: {names}")
 
             for task in tasks:
