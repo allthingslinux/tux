@@ -880,30 +880,15 @@ python-dateutil = ">=2.8.1"
 dev = ["flake8", "markdown", "twine", "wheel"]
 
 [[package]]
-name = "gitdb"
-version = "4.0.12"
-description = "Git Object Database"
-optional = false
-python-versions = ">=3.7"
-groups = ["docs"]
-files = [
-    {file = "gitdb-4.0.12-py3-none-any.whl", hash = "sha256:67073e15955400952c6565cc3e707c554a4eea2e428946f7a4c162fab9bd9bcf"},
-    {file = "gitdb-4.0.12.tar.gz", hash = "sha256:5ef71f855d191a3326fcfbc0d5da835f26b13fbcba60c32c21091c349ffdb571"},
-]
-
-[package.dependencies]
-smmap = ">=3.0.1,<6"
-
-[[package]]
 name = "githubkit"
-version = "0.12.6"
+version = "0.12.7"
 description = "GitHub SDK for Python"
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["main"]
 files = [
-    {file = "githubkit-0.12.6-py3-none-any.whl", hash = "sha256:eb7e121b7c7ef0e2e8d9267d9d3e26f2345410297704bf15a1a4a713e14b4114"},
-    {file = "githubkit-0.12.6.tar.gz", hash = "sha256:ad46df360961c1800af1b077748c52d3d6f9acab3bf833397fbc92a3d2b05945"},
+    {file = "githubkit-0.12.7-py3-none-any.whl", hash = "sha256:26278e97feb68b1bde47b309c95885edccab9a27042375d7fa0b6ccebc870a7c"},
+    {file = "githubkit-0.12.7.tar.gz", hash = "sha256:770378423c4a5ee5c035705822bb67ab6cccdf7e914e7b773827282ccd9f04a7"},
 ]
 
 [package.dependencies]
@@ -919,106 +904,6 @@ all = ["PyJWT[crypto] (>=2.4.0,<3.0.0)"]
 auth = ["PyJWT[crypto] (>=2.4.0,<3.0.0)"]
 auth-app = ["PyJWT[crypto] (>=2.4.0,<3.0.0)"]
 jwt = ["PyJWT[crypto] (>=2.4.0,<3.0.0)"]
-
-[[package]]
-name = "gitpython"
-version = "3.1.44"
-description = "GitPython is a Python library used to interact with Git repositories"
-optional = false
-python-versions = ">=3.7"
-groups = ["docs"]
-files = [
-    {file = "GitPython-3.1.44-py3-none-any.whl", hash = "sha256:9e0e10cda9bed1ee64bc9a6de50e7e38a9c9943241cd7f585f6df3ed28011110"},
-    {file = "gitpython-3.1.44.tar.gz", hash = "sha256:c87e30b26253bf5418b01b0660f818967f3c503193838337fe5e573331249269"},
-]
-
-[package.dependencies]
-gitdb = ">=4.0.1,<5"
-
-[package.extras]
-doc = ["sphinx (>=7.1.2,<7.2)", "sphinx-autodoc-typehints", "sphinx_rtd_theme"]
-test = ["coverage[toml]", "ddt (>=1.1.1,!=1.4.3)", "mock", "mypy", "pre-commit", "pytest (>=7.3.1)", "pytest-cov", "pytest-instafail", "pytest-mock", "pytest-sugar", "typing-extensions"]
-
-[[package]]
-name = "griffe"
-version = "1.5.7"
-description = "Signatures for entire Python programs. Extract the structure, the frame, the skeleton of your project, to generate API documentation or find breaking changes in your API."
-optional = false
-python-versions = ">=3.9"
-groups = ["docs"]
-files = [
-    {file = "griffe-1.5.7-py3-none-any.whl", hash = "sha256:4af8ec834b64de954d447c7b6672426bb145e71605c74a4e22d510cc79fe7d8b"},
-    {file = "griffe-1.5.7.tar.gz", hash = "sha256:465238c86deaf1137761f700fb343edd8ffc846d72f6de43c3c345ccdfbebe92"},
-]
-
-[package.dependencies]
-colorama = ">=0.4"
-
-[[package]]
-name = "griffe-generics"
-version = "1.0.13"
-description = "A Griffe extension that resolves generic type parameters as bound types in subclasses"
-optional = false
-python-versions = ">=3.8"
-groups = ["docs"]
-files = [
-    {file = "griffe_generics-1.0.13-py3-none-any.whl", hash = "sha256:e8139e485d256d0eba97ab310368c8800048918f0d5c7257817d769bba76ac94"},
-    {file = "griffe_generics-1.0.13.tar.gz", hash = "sha256:00cfd1f1a940fb1566b382a24dbb40b288a694d313e41363cfc3e30093c358b3"},
-]
-
-[package.dependencies]
-griffe = "*"
-typing-extensions = "*"
-
-[package.extras]
-dev = ["mypy", "pytest", "rich", "ruff"]
-tests = ["pytest"]
-
-[[package]]
-name = "griffe-inherited-docstrings"
-version = "1.1.1"
-description = "Griffe extension for inheriting docstrings."
-optional = false
-python-versions = ">=3.9"
-groups = ["docs"]
-files = [
-    {file = "griffe_inherited_docstrings-1.1.1-py3-none-any.whl", hash = "sha256:0cb613ade70793b3589c706269a2cc4ceb91cbc4cfdc651037839cb9506eabe6"},
-    {file = "griffe_inherited_docstrings-1.1.1.tar.gz", hash = "sha256:d179b6a6b7dc260fb892ad5b857837afd6f9de6193fc26d14463c4e9975a0cd3"},
-]
-
-[package.dependencies]
-griffe = ">=0.49"
-
-[[package]]
-name = "griffe-inherited-method-crossrefs"
-version = "0.0.1.4"
-description = "Griffe extension to replace docstrings of inherited methods with cross-references to parent"
-optional = false
-python-versions = ">=3.9"
-groups = ["docs"]
-files = [
-    {file = "griffe_inherited_method_crossrefs-0.0.1.4-py3-none-any.whl", hash = "sha256:def4567780fb311922b8e3869c9305b957f04a633b0eed0f5959b66661556bf2"},
-    {file = "griffe_inherited_method_crossrefs-0.0.1.4.tar.gz", hash = "sha256:cf488f11c1f569abffdebdaa865a01e71ef8e57dda045322b672b82db5421e80"},
-]
-
-[package.dependencies]
-griffe = ">=0.38"
-
-[[package]]
-name = "griffe-typingdoc"
-version = "0.2.7"
-description = "Griffe extension for PEP 727 – Documentation Metadata in Typing."
-optional = false
-python-versions = ">=3.8"
-groups = ["docs"]
-files = [
-    {file = "griffe_typingdoc-0.2.7-py3-none-any.whl", hash = "sha256:74a825df32fc87fcae2f221df5c5524dca23155cd3c04ec9fa46493669d3cf54"},
-    {file = "griffe_typingdoc-0.2.7.tar.gz", hash = "sha256:800841e99f8844ea3c1fae80b19bede7d8eed4195a2586f5db753f7a73f4931d"},
-]
-
-[package.dependencies]
-griffe = ">=0.49"
-typing-extensions = ">=4.7"
 
 [[package]]
 name = "h11"
@@ -1227,31 +1112,6 @@ docs = ["mdx-gh-links (>=0.2)", "mkdocs (>=1.5)", "mkdocs-gen-files", "mkdocs-li
 testing = ["coverage", "pyyaml"]
 
 [[package]]
-name = "markdown-it-py"
-version = "3.0.0"
-description = "Python port of markdown-it. Markdown parsing, done right!"
-optional = false
-python-versions = ">=3.8"
-groups = ["main"]
-files = [
-    {file = "markdown-it-py-3.0.0.tar.gz", hash = "sha256:e3f60a94fa066dc52ec76661e37c851cb232d92f9886b15cb560aaada2df8feb"},
-    {file = "markdown_it_py-3.0.0-py3-none-any.whl", hash = "sha256:355216845c60bd96232cd8d8c40e8f9765cc86f46880e43a8fd22dc1a1a8cab1"},
-]
-
-[package.dependencies]
-mdurl = ">=0.1,<1.0"
-
-[package.extras]
-benchmarking = ["psutil", "pytest", "pytest-benchmark"]
-code-style = ["pre-commit (>=3.0,<4.0)"]
-compare = ["commonmark (>=0.9,<1.0)", "markdown (>=3.4,<4.0)", "mistletoe (>=1.0,<2.0)", "mistune (>=2.0,<3.0)", "panflute (>=2.3,<3.0)"]
-linkify = ["linkify-it-py (>=1,<3)"]
-plugins = ["mdit-py-plugins"]
-profiling = ["gprof2dot"]
-rtd = ["jupyter_sphinx", "mdit-py-plugins", "myst-parser", "pyyaml", "sphinx", "sphinx-copybutton", "sphinx-design", "sphinx_book_theme"]
-testing = ["coverage", "pytest", "pytest-cov", "pytest-regressions"]
-
-[[package]]
 name = "markupsafe"
 version = "3.0.2"
 description = "Safely add untrusted strings to HTML/XML markup."
@@ -1323,18 +1183,6 @@ files = [
 ]
 
 [[package]]
-name = "mdurl"
-version = "0.1.2"
-description = "Markdown URL utilities"
-optional = false
-python-versions = ">=3.7"
-groups = ["main"]
-files = [
-    {file = "mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8"},
-    {file = "mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba"},
-]
-
-[[package]]
 name = "mergedeep"
 version = "1.3.4"
 description = "A deep merge function for 🐍."
@@ -1378,39 +1226,6 @@ i18n = ["babel (>=2.9.0)"]
 min-versions = ["babel (==2.9.0)", "click (==7.0)", "colorama (==0.4)", "ghp-import (==1.0)", "importlib-metadata (==4.4)", "jinja2 (==2.11.1)", "markdown (==3.3.6)", "markupsafe (==2.0.1)", "mergedeep (==1.3.4)", "mkdocs-get-deps (==0.2.0)", "packaging (==20.5)", "pathspec (==0.11.1)", "pyyaml (==5.1)", "pyyaml-env-tag (==0.1)", "watchdog (==2.0)"]
 
 [[package]]
-name = "mkdocs-api-autonav"
-version = "0.1.2"
-description = "Autogenerate API docs with mkdocstrings, including nav"
-optional = false
-python-versions = ">=3.9"
-groups = ["docs"]
-files = [
-    {file = "mkdocs_api_autonav-0.1.2-py3-none-any.whl", hash = "sha256:369e9e21730d22487be55db899dced2c63c37f56087044081911e494a2f6a4b6"},
-    {file = "mkdocs_api_autonav-0.1.2.tar.gz", hash = "sha256:50d69f0440cc28918e151d9317f5643b11baea023876673155445c8d32ec2add"},
-]
-
-[package.dependencies]
-mkdocs = ">=1.6"
-mkdocstrings-python = ">=1.11.0"
-
-[[package]]
-name = "mkdocs-autorefs"
-version = "1.3.1"
-description = "Automatically link across pages in MkDocs."
-optional = false
-python-versions = ">=3.9"
-groups = ["docs"]
-files = [
-    {file = "mkdocs_autorefs-1.3.1-py3-none-any.whl", hash = "sha256:18c504ae4d3ee7f344369bb26cb31d4105569ee252aab7d75ec2734c2c8b0474"},
-    {file = "mkdocs_autorefs-1.3.1.tar.gz", hash = "sha256:a6d30cbcccae336d622a66c2418a3c92a8196b69782774529ad441abb23c0902"},
-]
-
-[package.dependencies]
-Markdown = ">=3.3"
-markupsafe = ">=2.0.1"
-mkdocs = ">=1.1"
-
-[[package]]
 name = "mkdocs-get-deps"
 version = "0.2.0"
 description = "MkDocs extension that lists all dependencies according to a mkdocs.yml file"
@@ -1426,46 +1241,6 @@ files = [
 mergedeep = ">=1.3.4"
 platformdirs = ">=2.2.0"
 pyyaml = ">=5.1"
-
-[[package]]
-name = "mkdocs-git-committers-plugin-2"
-version = "2.5.0"
-description = "An MkDocs plugin to create a list of contributors on the page. The git-committers plugin will seed the template context with a list of GitHub or GitLab committers and other useful GIT info such as last modified date"
-optional = false
-python-versions = "<4,>=3.8"
-groups = ["docs"]
-files = [
-    {file = "mkdocs_git_committers_plugin_2-2.5.0-py3-none-any.whl", hash = "sha256:1778becf98ccdc5fac809ac7b62cf01d3c67d6e8432723dffbb823307d1193c4"},
-    {file = "mkdocs_git_committers_plugin_2-2.5.0.tar.gz", hash = "sha256:a01f17369e79ca28651681cddf212770e646e6191954bad884ca3067316aae60"},
-]
-
-[package.dependencies]
-gitpython = "*"
-mkdocs = ">=1.0.3"
-requests = "*"
-
-[[package]]
-name = "mkdocs-git-revision-date-localized-plugin"
-version = "1.3.0"
-description = "Mkdocs plugin that enables displaying the localized date of the last git modification of a markdown file."
-optional = false
-python-versions = ">=3.8"
-groups = ["docs"]
-files = [
-    {file = "mkdocs_git_revision_date_localized_plugin-1.3.0-py3-none-any.whl", hash = "sha256:c99377ee119372d57a9e47cff4e68f04cce634a74831c06bc89b33e456e840a1"},
-    {file = "mkdocs_git_revision_date_localized_plugin-1.3.0.tar.gz", hash = "sha256:439e2f14582204050a664c258861c325064d97cdc848c541e48bb034a6c4d0cb"},
-]
-
-[package.dependencies]
-babel = ">=2.7.0"
-GitPython = "*"
-mkdocs = ">=1.0"
-pytz = "*"
-
-[package.extras]
-all = ["GitPython", "babel (>=2.7.0)", "click", "codecov", "mkdocs (>=1.0)", "mkdocs-gen-files", "mkdocs-git-authors-plugin", "mkdocs-material", "mkdocs-static-i18n", "pytest", "pytest-cov", "pytz"]
-base = ["GitPython", "babel (>=2.7.0)", "mkdocs (>=1.0)", "pytz"]
-dev = ["click", "codecov", "mkdocs-gen-files", "mkdocs-git-authors-plugin", "mkdocs-material", "mkdocs-static-i18n", "pytest", "pytest-cov"]
 
 [[package]]
 name = "mkdocs-material"
@@ -1508,49 +1283,6 @@ files = [
     {file = "mkdocs_material_extensions-1.3.1-py3-none-any.whl", hash = "sha256:adff8b62700b25cb77b53358dad940f3ef973dd6db797907c49e3c2ef3ab4e31"},
     {file = "mkdocs_material_extensions-1.3.1.tar.gz", hash = "sha256:10c9511cea88f568257f960358a467d12b970e1f7b2c0e5fb2bb48cab1928443"},
 ]
-
-[[package]]
-name = "mkdocstrings"
-version = "0.28.0"
-description = "Automatic documentation from sources, for MkDocs."
-optional = false
-python-versions = ">=3.9"
-groups = ["docs"]
-files = [
-    {file = "mkdocstrings-0.28.0-py3-none-any.whl", hash = "sha256:84cf3dc910614781fe0fee46ce8006fde7df6cc7cca2e3f799895fb8a9170b39"},
-    {file = "mkdocstrings-0.28.0.tar.gz", hash = "sha256:df20afef1eafe36ba466ae20732509ecb74237653a585f5061937e54b553b4e0"},
-]
-
-[package.dependencies]
-Jinja2 = ">=2.11.1"
-Markdown = ">=3.6"
-MarkupSafe = ">=1.1"
-mkdocs = ">=1.4"
-mkdocs-autorefs = ">=1.3"
-mkdocs-get-deps = ">=0.2"
-pymdown-extensions = ">=6.3"
-
-[package.extras]
-crystal = ["mkdocstrings-crystal (>=0.3.4)"]
-python = ["mkdocstrings-python (>=0.5.2)"]
-python-legacy = ["mkdocstrings-python-legacy (>=0.2.1)"]
-
-[[package]]
-name = "mkdocstrings-python"
-version = "1.15.0"
-description = "A Python handler for mkdocstrings."
-optional = false
-python-versions = ">=3.9"
-groups = ["docs"]
-files = [
-    {file = "mkdocstrings_python-1.15.0-py3-none-any.whl", hash = "sha256:77aced1bb28840d7d3510f77353319eeb450961880d87f9c53fdab331ba0120d"},
-    {file = "mkdocstrings_python-1.15.0.tar.gz", hash = "sha256:2bfecbbe1252c67281408a6567d59545f4979931110f01ab625aa8c227c06edc"},
-]
-
-[package.dependencies]
-griffe = ">=0.49"
-mkdocs-autorefs = ">=1.2"
-mkdocstrings = ">=0.28"
 
 [[package]]
 name = "multidict"
@@ -2146,7 +1878,7 @@ version = "2.19.1"
 description = "Pygments is a syntax highlighting package written in Python."
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "docs"]
+groups = ["docs"]
 files = [
     {file = "pygments-2.19.1-py3-none-any.whl", hash = "sha256:9ea1544ad55cecf4b8242fab6dd35a93bbce657034b0611ee383099054ab6d8c"},
     {file = "pygments-2.19.1.tar.gz", hash = "sha256:61c16d2a8576dc0649d9f39e089b5f02bcd27fba10d8fb4dcc28173f7a45151f"},
@@ -2279,7 +2011,7 @@ version = "2025.1"
 description = "World timezone definitions, modern and historical"
 optional = false
 python-versions = "*"
-groups = ["main", "docs"]
+groups = ["main"]
 files = [
     {file = "pytz-2025.1-py2.py3-none-any.whl", hash = "sha256:89dd22dca55b46eac6eda23b2d72721bf1bdfef212645d81513ef5d03038de57"},
     {file = "pytz-2025.1.tar.gz", hash = "sha256:c2db42be2a2518b28e65f9207c4d05e6ff547d1efa4086469ef855e4ab70178e"},
@@ -2505,25 +2237,6 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
-name = "rich"
-version = "13.9.4"
-description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
-optional = false
-python-versions = ">=3.8.0"
-groups = ["main"]
-files = [
-    {file = "rich-13.9.4-py3-none-any.whl", hash = "sha256:6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90"},
-    {file = "rich-13.9.4.tar.gz", hash = "sha256:439594978a49a09530cff7ebc4b5c7103ef57baf48d5ea3184f21d9a2befa098"},
-]
-
-[package.dependencies]
-markdown-it-py = ">=2.2.0"
-pygments = ">=2.13.0,<3.0.0"
-
-[package.extras]
-jupyter = ["ipywidgets (>=7.5.1,<9)"]
-
-[[package]]
 name = "rsa"
 version = "4.9"
 description = "Pure-Python RSA implementation"
@@ -2634,18 +2347,6 @@ groups = ["main", "docs"]
 files = [
     {file = "six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"},
     {file = "six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81"},
-]
-
-[[package]]
-name = "smmap"
-version = "5.0.2"
-description = "A pure Python implementation of a sliding window memory map manager"
-optional = false
-python-versions = ">=3.7"
-groups = ["docs"]
-files = [
-    {file = "smmap-5.0.2-py3-none-any.whl", hash = "sha256:b30115f0def7d7531d22a0fb6502488d879e75b260a9db4d0819cfb25403af5e"},
-    {file = "smmap-5.0.2.tar.gz", hash = "sha256:26ea65a03958fa0c8a1c7e8c7a58fdc77221b8910f6be2131affade476898ad5"},
 ]
 
 [[package]]
@@ -2772,7 +2473,7 @@ version = "4.12.2"
 description = "Backported and Experimental Type Hints for Python 3.8+"
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "dev", "docs"]
+groups = ["main", "dev"]
 files = [
     {file = "typing_extensions-4.12.2-py3-none-any.whl", hash = "sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d"},
     {file = "typing_extensions-4.12.2.tar.gz", hash = "sha256:1a7ead55c7e559dd4dee8856e3a88b41225abfe1ce8df57b7c13915fe121ffb8"},
@@ -3019,4 +2720,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<3.14"
-content-hash = "3a2e00ae91f603de6a8b9d7db5023cde20b69edf3f813083ab7df4e09d241e27"
+content-hash = "47f6c7b8c6b723b1476a0279f69e85f97d71e0899dbf487954caf1354cbea1d7"
