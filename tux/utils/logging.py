@@ -100,6 +100,15 @@ class LoguruRichHandler(RichHandler, RichHandlerProtocol):
                 "trace": "[dim]█[/]",  # Dim block for trace
             }
 
+            # Get current time
+            now = datetime.now(UTC)
+            time_text = Text(now.strftime("%H:%M:%S"))
+            time_text.stylize("bold")
+
+            # Format level name
+            level_text = Text(f"[{level_name.upper():<8}]")
+            level_text.stylize(f"bold {level_name}")
+
             # --- Constants ---
             level_field_width = 7  # Adjust as needed
             symbol = level_symbols.get(level_name, "[bright_black]█[/]")
