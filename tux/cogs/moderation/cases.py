@@ -13,6 +13,8 @@ from tux.utils.flags import CaseModifyFlags, CasesViewFlags, generate_usage
 
 from . import ModerationCogBase
 
+# TODO: Migrate emoji usage to application based emojis via discord.dev interface
+
 emojis: dict[str, int] = {
     "active_case_emoji": 1268115730344443966,
     "inactive_case_emoji": 1268115712627441715,
@@ -41,7 +43,7 @@ class Cases(ModerationCogBase):
     )
     @commands.guild_only()
     @checks.has_pl(2)
-    async def cases(self, ctx: commands.Context[Tux], case_number: int | None) -> None:
+    async def cases(self, ctx: commands.Context[Tux], case_number: str | None) -> None:
         """
         Manage moderation cases in the server.
         """
@@ -60,7 +62,7 @@ class Cases(ModerationCogBase):
     async def cases_view(
         self,
         ctx: commands.Context[Tux],
-        number: int | None,
+        number: str | None,
         *,
         flags: CasesViewFlags,
     ) -> None:
@@ -71,7 +73,7 @@ class Cases(ModerationCogBase):
         ----------
         ctx : commands.Context[Tux]
             The context in which the command is being invoked.
-        number : int | None
+        number : str | None
             The case number to view.
         flags : CasesViewFlags
             The flags for the command. (type, user, moderator)
@@ -93,7 +95,7 @@ class Cases(ModerationCogBase):
     async def cases_modify(
         self,
         ctx: commands.Context[Tux],
-        number: int,
+        number: str,
         *,
         flags: CaseModifyFlags,
     ) -> None:
@@ -104,7 +106,7 @@ class Cases(ModerationCogBase):
         ----------
         ctx : commands.Context[Tux]
             The context in which the command is being invoked.
-        number : int
+        number : str
             The case number to modify.
         flags : CaseModifyFlags
             The flags for the command. (status, reason)
@@ -112,24 +114,48 @@ class Cases(ModerationCogBase):
 
         assert ctx.guild
 
-        # If the command is used via prefix, let the user know to use the slash command
-        if ctx.message.content.startswith(str(ctx.prefix)):
-            await ctx.send("Please use the slash command for this command.", ephemeral=True)
+        try:
+            case_number = int(number)
+        except ValueError:
+            await ctx.send("Case number must be a valid integer.", ephemeral=True)
             return
 
-        case = await self.db.case.get_case_by_number(ctx.guild.id, number)
+        case = await self.db.case.get_case_by_number(ctx.guild.id, case_number)
 
         if not case:
             await ctx.send("Case not found.", ephemeral=True)
             return
 
         if case.case_number is not None:
+            # If no flags were provided, raise an error
+            if flags.status is None and flags.reason is None:
+                msg = "Status or reason must be provided."
+                raise commands.FlagError(msg)
+
+            # If status flag is provided but not a valid boolean
+            if flags.status is not None:
+                try:
+                    flags.status = bool(flags.status)
+                except ValueError:
+                    await ctx.send("Status must be a boolean value (true/false).", ephemeral=True)
+                    return
+
+            # If status flag = current status, do nothing
+            if flags.status is not None and flags.status == case.case_status:
+                await ctx.send("No changes were made to the case.", ephemeral=True, delete_after=5)
+                return
+
+            # If reason flag = current reason, do nothing
+            if flags.reason is not None and flags.reason == case.case_reason:
+                await ctx.send("No changes were made to the case.", ephemeral=True, delete_after=5)
+                return
+
             await self._update_case(ctx, case, flags)
 
     async def _view_single_case(
         self,
         ctx: commands.Context[Tux],
-        number: int,
+        number: str,
     ) -> None:
         """
         View a single case by its number.
@@ -138,18 +164,25 @@ class Cases(ModerationCogBase):
         ----------
         ctx : commands.Context[Tux]
             The context in which the command is being invoked.
-        number : int
+        number : str
             The number of the case to view.
         """
 
         assert ctx.guild
 
-        case = await self.db.case.get_case_by_number(ctx.guild.id, number)
+        try:
+            case_number = int(number)
+        except ValueError:
+            await ctx.send("Case number must be a valid integer.", ephemeral=True)
+            return
+
+        case = await self.db.case.get_case_by_number(ctx.guild.id, case_number)
         if not case:
             await ctx.send("Case not found.", ephemeral=True)
             return
 
         user = self.bot.get_user(case.case_user_id)
+
         if user is None:
             user = await self.bot.fetch_user(case.case_user_id)
 
@@ -183,6 +216,7 @@ class Cases(ModerationCogBase):
             options["case_moderator_id"] = flags.moderator.id
 
         cases = await self.db.case.get_cases_by_options(ctx.guild.id, options)
+
         total_cases = await self.db.case.get_all_cases(ctx.guild.id)
 
         if not cases:
@@ -261,6 +295,8 @@ class Cases(ModerationCogBase):
                 moderator = await commands.MemberConverter().convert(ctx, str(case.case_moderator_id))
             except commands.errors.MemberNotFound:
                 moderator = await commands.UserConverter().convert(ctx, str(case.case_moderator_id))
+            except commands.errors.UserNotFound:
+                moderator = await self.bot.fetch_user(case.case_moderator_id)
 
             fields = self._create_case_fields(moderator, user, reason)
 
@@ -333,7 +369,7 @@ class Cases(ModerationCogBase):
 
     @staticmethod
     def _create_case_fields(
-        moderator: discord.Member | discord.User,
+        moderator: discord.Member | discord.User | None,
         user: discord.Member | discord.User,
         reason: str,
     ) -> list[tuple[str, str, bool]]:
@@ -356,7 +392,7 @@ class Cases(ModerationCogBase):
         """
 
         return [
-            ("Moderator", f"**{moderator}**\n`{moderator.id}`", True),
+            ("Moderator", f"**{moderator}**\n`{moderator.id if moderator else 'Unknown'}`", True),
             ("User", f"**{user}**\n`{user.id}`", True),
             ("Reason", f"> {reason}", False),
         ]
@@ -515,8 +551,8 @@ class Cases(ModerationCogBase):
                 return self.bot.get_emoji(emoji_id)
         return None
 
-    @staticmethod
     def _get_case_description(
+        self,
         case: Case,
         case_status_emoji: str,
         case_type_emoji: str,
@@ -542,16 +578,21 @@ class Cases(ModerationCogBase):
             The description for the case.
         """
 
+        case_number = f"{case.case_number:04d}" if case.case_number is not None else "0000"
+
         case_type_and_action = (
             f"{case_action_emoji} {case_type_emoji}"
             if case_action_emoji and case_type_emoji
             else ":interrobang: :interrobang:"
         )
+
         case_date = discord.utils.format_dt(case.case_created_at, "R") if case.case_created_at else ":interrobang:"
 
-        case_number = f"{case.case_number:04d}" if case.case_number is not None else "0000"
+        case_user = f"`{case.case_user_id}`"
 
-        return f"{case_status_emoji} `{case_number}`\u2002\u2002 {case_type_and_action} \u2002\u2002__{case_date}__\n"
+        return (
+            f"{case_status_emoji} `{case_number}`\u2003 {case_type_and_action} \u2003__{case_date}__\u2003{case_user}\n"
+        )
 
     def _add_case_to_embed(self, embed: discord.Embed, case: Case) -> None:
         case_status_emoji = self._format_emoji(self._get_case_status_emoji(case.case_status))
@@ -559,7 +600,9 @@ class Cases(ModerationCogBase):
         case_action_emoji = self._format_emoji(self._get_case_action_emoji(case.case_type))
 
         if not embed.description:
-            embed.description = "**Case**\u2002\u2002\u2002\u2002\u2002**Type**\u2002\u2002\u2002**Date**\n"
+            embed.description = (
+                "**Case**\u2003\u2003\u2003**Type**\u2003\u2002**Date**\u2003\u2003\u2003\u2003\u2003\u2002**User**\n"
+            )
 
         embed.description += self._get_case_description(case, case_status_emoji, case_type_emoji, case_action_emoji)
 
