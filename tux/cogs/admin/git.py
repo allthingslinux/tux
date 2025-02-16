@@ -9,8 +9,6 @@ from tux.utils.config import CONFIG
 from tux.utils.flags import generate_usage
 from tux.wrappers.github import GithubService
 
-# TODO: Rewrite this cog to use the new hybrid command system.
-
 
 class Git(commands.Cog):
     def __init__(self, bot: Tux) -> None:
