@@ -321,10 +321,8 @@ class Tux(commands.Bot):
             dev_mode=bool(Config.DEV),
         )
 
-        # Print banner with proper spacing
-        console.print()
+        # Print banner without extra newlines
         console.print(banner)
-        console.print()
 
     async def _wait_for_setup(self) -> None:
         """Wait for setup to complete if not already done.

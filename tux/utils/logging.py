@@ -8,12 +8,11 @@ It should be imported and initialized at the start of the application.
 import re
 from collections.abc import Callable
 from datetime import UTC, datetime
-from logging import Formatter, LogRecord
+from logging import LogRecord
 from typing import Any, Protocol, TypeVar
 
 from loguru import logger
-from rich._log_render import LogRender
-from rich.console import Console, ConsoleRenderable
+from rich.console import Console
 from rich.logging import RichHandler
 from rich.text import Text
 from rich.theme import Theme
@@ -33,13 +32,9 @@ def highlight(style: str) -> dict[str, Callable[[Text], Text]]:
 
 
 class RichHandlerProtocol(Protocol):
-    _log_render: LogRender
-    formatter: Formatter | None
-    console: Console
+    """Protocol for Rich handler."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None: ...
-
-    def render_message(self, record: LogRecord, message: str) -> ConsoleRenderable: ...
+    def emit(self, record: LogRecord) -> None: ...
 
 
 class LoguruRichHandler(RichHandler, RichHandlerProtocol):
@@ -91,13 +86,13 @@ class LoguruRichHandler(RichHandler, RichHandlerProtocol):
             # --- Level symbol and text ---
             level_name = record.levelname.lower()
             level_symbols = {
-                "debug": "[bold cyan]█[/]",  # Cyan block for debug
-                "info": "[bold blue]█[/]",  # Blue block for info
-                "warning": "[bold yellow]█[/]",  # Yellow block for warning
-                "error": "[bold red]█[/]",  # Red block for error
-                "critical": "[bold red on red]█[/]",  # Red block on red background for critical
-                "success": "[bold green]█[/]",  # Green block for success
-                "trace": "[dim]█[/]",  # Dim block for trace
+                "debug": "[bold bright_black]█[/]",  # Muted gray for debug
+                "info": "[bold bright_blue]█[/]",  # Bright blue for info
+                "warning": "[bold #FFA500]█[/]",  # Orange for warning
+                "error": "[bold #FF453A]█[/]",  # Apple red for error
+                "critical": "[bold #FF453A on #800000]█[/]",  # Red on dark red for critical
+                "success": "[bold #32CD32]█[/]",  # Lime green for success
+                "trace": "[dim #808080]█[/]",  # Gray for trace
             }
 
             # Get current time
@@ -110,15 +105,15 @@ class LoguruRichHandler(RichHandler, RichHandlerProtocol):
             level_text.stylize(f"bold {level_name}")
 
             # --- Constants ---
-            level_field_width = 7  # Adjust as needed
+            level_field_width = 4  # Adjust as needed
             symbol = level_symbols.get(level_name, "[bright_black]█[/]")
 
             # --- First prefix ---
             first_prefix_markup = (
-                f"{symbol} "
+                f"{symbol}"
                 + f"[log.time][{datetime.fromtimestamp(record.created, tz=UTC).strftime('%H:%M:%S')}][/]"
                 + "[log.bracket][[/]"
-                + f"[logging.level.{level_name}]{record.levelname.upper().ljust(level_field_width)}[/]"
+                + f"[logging.level.{level_name}]{record.levelname.upper()[:4].ljust(level_field_width)}[/]"
                 + "[log.bracket]][/]"
                 + " "
             )
@@ -132,13 +127,13 @@ class LoguruRichHandler(RichHandler, RichHandlerProtocol):
             # --- Continued prefix ---
             continued_prefix_markup = (
                 f"{symbol} [log.bracket][[/]"
-                + f"[logging.level.info]{'CONTINUED'.ljust(level_field_width + 13)}[/]"
+                + f"[logging.level.info]{'CONTINUED'.ljust(level_field_width)}[/]"
                 + "[log.bracket]][/]"
                 + " "
             )
 
-            # Convert the formatted message to plain text.
-            plain_message = Text.from_markup(message).plain
+            # Convert the formatted message to plain text and strip all whitespace
+            plain_message = Text.from_markup(message).plain.strip()
 
             # Clean up task names in messages
             if "discord-ext-tasks: " in plain_message:
@@ -148,15 +143,16 @@ class LoguruRichHandler(RichHandler, RichHandlerProtocol):
                 plain_message = re.sub(r"(\w+)\.\w+", r"\1", plain_message)
 
             # Print first line with source info after log type
-            first_line = first_prefix_markup + source_info + " " + plain_message
+            first_line = (first_prefix_markup + source_info + " " + plain_message).rstrip()
             self.console.print(first_line, markup=True, highlight=False)
 
             # If message is long, print continued lines
-            if len(plain_message) > 100:  # Arbitrary threshold for line continuation
-                continued_message = plain_message[100:]
+            if len(plain_message) > 120:  # Arbitrary threshold for line continuation
+                continued_message = plain_message[120:]
                 while continued_message:
-                    chunk, continued_message = continued_message[:100], continued_message[100:]
-                    self.console.print(continued_prefix_markup + chunk, markup=True, highlight=False)
+                    chunk, continued_message = continued_message[:120], continued_message[120:]
+                    line = (continued_prefix_markup + chunk).rstrip()
+                    self.console.print(line, markup=True, highlight=False)
 
         except Exception:
             self.handleError(record)
@@ -170,15 +166,15 @@ def setup_logging() -> None:
         width=200,
         theme=Theme(
             {
-                "logging.level.success": "bold green",
-                "logging.level.trace": "dim",
-                "logging.level.debug": "bold cyan",
-                "logging.level.info": "bold blue",
-                "logging.level.warning": "bold yellow",
-                "logging.level.error": "bold red",
-                "logging.level.critical": "bold red reverse",
-                "log.time": "bold bright_white",
-                "log.bracket": "bold bright_black",
+                "logging.level.success": "bold #32CD32",  # Lime green
+                "logging.level.trace": "dim #808080",  # Gray
+                "logging.level.debug": "bold bright_black",  # Muted gray
+                "logging.level.info": "bold bright_blue",  # Bright blue
+                "logging.level.warning": "bold #FFA500",  # Orange
+                "logging.level.error": "bold #FF453A",  # Apple red
+                "logging.level.critical": "bold #FF453A reverse",  # Reversed apple red
+                "log.time": "bold bright_white",  # Keep time bright white
+                "log.bracket": "bold bright_black",  # Keep brackets muted
             },
         ),
     )
