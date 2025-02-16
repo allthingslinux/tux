@@ -25,6 +25,7 @@ class Kick(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
+        reason: str | None = None,
         *,
         flags: KickFlags,
     ) -> None:
@@ -37,8 +38,10 @@ class Kick(ModerationCogBase):
             The context in which the command is being invoked.
         member : discord.Member
             The member to kick.
-        flags : KickFlags
-            The flags for the command. (reason: str, silent: bool)
+        reason : str | None
+            The reason for the kick.
+        flags : KickFlags | None
+            The flags for the command. (silent: bool)
 
         Raises
         ------
@@ -55,10 +58,12 @@ class Kick(ModerationCogBase):
         if not await self.check_conditions(ctx, member, moderator, "kick"):
             return
 
-        try:
-            dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "kicked")
+        final_reason = reason or "No reason provided"
+        silent = flags.silent if flags else False
 
-            await ctx.guild.kick(member, reason=flags.reason)
+        try:
+            dm_sent = await self.send_dm(ctx, silent, member, final_reason, "kicked")
+            await ctx.guild.kick(member, reason=final_reason)
 
         except (discord.Forbidden, discord.HTTPException) as e:
             logger.error(f"Failed to kick {member}. {e}")
@@ -69,11 +74,11 @@ class Kick(ModerationCogBase):
             case_user_id=member.id,
             case_moderator_id=ctx.author.id,
             case_type=CaseType.KICK,
-            case_reason=flags.reason,
+            case_reason=final_reason,
             guild_id=ctx.guild.id,
         )
 
-        await self.handle_case_response(ctx, CaseType.KICK, case.case_number, flags.reason, member, dm_sent)
+        await self.handle_case_response(ctx, CaseType.KICK, case.case_number, final_reason, member, dm_sent)
 
 
 async def setup(bot: Tux) -> None:

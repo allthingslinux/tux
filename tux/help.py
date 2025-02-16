@@ -266,7 +266,7 @@ class TuxHelp(commands.HelpCommand):
         )
         embed.add_field(
             name="Flag Help",
-            value=f"Flags in `[]` are optional. Most flags have aliases that can be used.\n> e.g. `{prefix}ban @user -reason spamming` or `{prefix}b @user -r spamming`",
+            value=f"Flags in `[]` are optional. Most flags have aliases that can be used.\n> e.g. `{prefix}ban @user spamming` or `{prefix}b @user spamming -silent true`",
             inline=False,
         )
         embed.add_field(

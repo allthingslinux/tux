@@ -27,6 +27,7 @@ class Warn(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
+        reason: str | None = None,
         *,
         flags: WarnFlags,
     ) -> None:
@@ -39,8 +40,10 @@ class Warn(ModerationCogBase):
             The context in which the command is being invoked.
         member : discord.Member
             The member to warn.
-        flags : WarnFlags
-            The flags for the command. (reason: str, silent: bool)
+        reason : str | None
+            The reason for the warning.
+        flags : WarnFlags | None
+            The flags for the command. (silent: bool)
         """
 
         assert ctx.guild
@@ -51,6 +54,9 @@ class Warn(ModerationCogBase):
         if not await self.check_conditions(ctx, member, moderator, "warn"):
             return
 
+        final_reason = reason or "No reason provided"
+        silent = flags.silent if flags else False
+
         try:
             # Insert case and send DM concurrently
             case, dm_sent = await asyncio.gather(
@@ -58,17 +64,17 @@ class Warn(ModerationCogBase):
                     case_user_id=member.id,
                     case_moderator_id=ctx.author.id,
                     case_type=CaseType.WARN,
-                    case_reason=flags.reason,
+                    case_reason=final_reason,
                     guild_id=ctx.guild.id,
                 ),
-                self.send_dm(ctx, flags.silent, member, flags.reason, "warned"),
+                self.send_dm(ctx, silent, member, final_reason, "warned"),
             )
         except Exception as e:
             logger.error(f"Failed to warn {member}. {e}")
             await ctx.send(f"Failed to warn {member}. {e}", ephemeral=True)
             return
 
-        await self.handle_case_response(ctx, CaseType.WARN, case.case_number, flags.reason, member, dm_sent)
+        await self.handle_case_response(ctx, CaseType.WARN, case.case_number, final_reason, member, dm_sent)
 
 
 async def setup(bot: Tux) -> None:

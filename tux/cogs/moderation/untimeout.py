@@ -24,29 +24,31 @@ class Untimeout(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
+        reason: str | None = None,
         *,
         flags: UntimeoutFlags,
     ) -> None:
         """
-        Untimeout a member from the server.
+        Remove timeout from a member.
 
         Parameters
         ----------
         ctx : commands.Context[Tux]
             The context in which the command is being invoked.
         member : discord.Member
-            The member to untimeout.
+            The member to remove timeout from.
+        reason : str | None
+            The reason for removing the timeout.
         flags : UntimeoutFlags
-            The flags for the command (reason: str, silent: bool).
+            The flags for the command. (silent: bool)
 
         Raises
         ------
         discord.DiscordException
-            If an error occurs while timing out the user.
+            If an error occurs while removing the timeout.
         """
 
         assert ctx.guild
-        await ctx.defer(ephemeral=True)
 
         moderator = ctx.author
 
@@ -54,26 +56,37 @@ class Untimeout(ModerationCogBase):
             return
 
         if not member.is_timed_out():
-            await ctx.send(f"{member} is not currently timed out.", ephemeral=True)
+            await ctx.send(f"{member} is not timed out.", ephemeral=True)
+            return
+
+        final_reason: str = reason if reason is not None else "No reason provided"
+        silent: bool = flags.silent
 
         try:
-            # By passing `None` as the duration, the timeout is removed
-            await member.timeout(None, reason=flags.reason)
+            await member.timeout(None, reason=final_reason)
+
         except discord.DiscordException as e:
-            await ctx.send(f"Failed to untimeout {member}. {e}", ephemeral=True)
+            await ctx.send(f"Failed to remove timeout from {member}. {e}", ephemeral=True)
             return
 
         case = await self.db.case.insert_case(
             case_user_id=member.id,
             case_moderator_id=ctx.author.id,
             case_type=CaseType.UNTIMEOUT,
-            case_reason=flags.reason,
-            case_expires_at=None,
+            case_reason=final_reason,
             guild_id=ctx.guild.id,
         )
 
-        dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "untimed out")
-        await self.handle_case_response(ctx, CaseType.UNTIMEOUT, case.case_number, flags.reason, member, dm_sent)
+        dm_sent = await self.send_dm(ctx, silent, member, final_reason, "removed from timeout")
+
+        await self.handle_case_response(
+            ctx,
+            CaseType.UNTIMEOUT,
+            case.case_number,
+            final_reason,
+            member,
+            dm_sent,
+        )
 
 
 async def setup(bot: Tux) -> None:

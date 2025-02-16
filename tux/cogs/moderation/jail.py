@@ -1,5 +1,3 @@
-import asyncio
-
 import discord
 from discord.ext import commands
 from loguru import logger
@@ -17,6 +15,47 @@ class Jail(ModerationCogBase):
         super().__init__(bot)
         self.jail.usage = generate_usage(self.jail, JailFlags)
 
+    async def get_jail_role(self, guild: discord.Guild) -> discord.Role | None:
+        """
+        Get the jail role for the guild.
+
+        Parameters
+        ----------
+        guild : discord.Guild
+            The guild to get the jail role for.
+
+        Returns
+        -------
+        discord.Role | None
+            The jail role, or None if not found.
+        """
+        jail_role_id = await self.config.get_jail_role_id(guild.id)
+        return None if jail_role_id is None else guild.get_role(jail_role_id)
+
+    async def is_jailed(self, guild_id: int, user_id: int) -> bool:
+        """
+        Check if a user is jailed.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to check in.
+        user_id : int
+            The ID of the user to check.
+
+        Returns
+        -------
+        bool
+            True if the user is jailed, False otherwise.
+        """
+        jail_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.JAIL)
+        unjail_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.UNJAIL)
+
+        jail_count = sum(case.case_user_id == user_id for case in jail_cases)
+        unjail_count = sum(case.case_user_id == user_id for case in unjail_cases)
+
+        return jail_count > unjail_count
+
     @commands.hybrid_command(
         name="jail",
         aliases=["j"],
@@ -27,47 +66,50 @@ class Jail(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
+        reason: str | None = None,
         *,
         flags: JailFlags,
     ) -> None:
         """
-        Jail a user in the server.
+        Jail a member in the server.
 
         Parameters
         ----------
         ctx : commands.Context[Tux]
-            The discord context object.
+            The context in which the command is being invoked.
         member : discord.Member
             The member to jail.
+        reason : str | None
+            The reason for the jail.
         flags : JailFlags
-            The flags for the command. (reason: str, silent: bool)
+            The flags for the command. (silent: bool)
+
+        Raises
+        ------
+        discord.Forbidden
+            If the bot is unable to jail the user.
+        discord.HTTPException
+            If an error occurs while jailing the user.
         """
 
         assert ctx.guild
 
-        moderator = ctx.author
-
-        if not await self.check_conditions(ctx, member, moderator, "jail"):
-            return
-
         await ctx.defer(ephemeral=True)
 
-        jail_role_id, jail_channel_id = await asyncio.gather(
-            self.config.get_jail_role_id(ctx.guild.id),
-            self.config.get_jail_channel_id(ctx.guild.id),
-        )
-
-        if jail_role_id is None or (jail_role := ctx.guild.get_role(jail_role_id)) is None:
-            await ctx.send("The jail role has not been set up or cannot be found.", ephemeral=True)
+        jail_role = await self.get_jail_role(ctx.guild)
+        if not jail_role:
+            await ctx.send("No jail role found.", ephemeral=True)
             return
 
-        if jail_channel_id is None or ctx.guild.get_channel(jail_channel_id) is None:
-            await ctx.send("The jail channel has not been set up or cannot be found.", ephemeral=True)
+        if await self.is_jailed(ctx.guild.id, member.id):
+            await ctx.send("User is already jailed.", ephemeral=True)
             return
 
-        if jail_role in member.roles:
-            await ctx.send("The user is already jailed.", ephemeral=True)
+        if not await self.check_conditions(ctx, member, ctx.author, "jail"):
             return
+
+        final_reason: str = reason if reason is not None else "No reason provided"
+        silent: bool = flags.silent
 
         user_roles = self._get_manageable_roles(member, jail_role)
         case_user_roles = [role.id for role in user_roles]
@@ -78,12 +120,12 @@ class Jail(ModerationCogBase):
                 case_user_id=member.id,
                 case_moderator_id=ctx.author.id,
                 case_type=CaseType.JAIL,
-                case_reason=flags.reason,
+                case_reason=final_reason,
                 case_user_roles=case_user_roles,
             )
 
             if user_roles:
-                await member.remove_roles(*user_roles, reason=flags.reason, atomic=False)
+                await member.remove_roles(*user_roles, reason=final_reason, atomic=False)
 
         except Exception as e:
             logger.error(f"Failed to jail {member}. {e}")
@@ -91,14 +133,14 @@ class Jail(ModerationCogBase):
             return
 
         try:
-            await member.add_roles(jail_role, reason=flags.reason)
+            await member.add_roles(jail_role, reason=final_reason)
         except (discord.Forbidden, discord.HTTPException) as e:
             logger.error(f"Failed to jail {member}. {e}")
             await ctx.send(f"Failed to jail {member}. {e}", ephemeral=True)
             return
 
-        dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "jailed")
-        await self.handle_case_response(ctx, CaseType.JAIL, case.case_number, flags.reason, member, dm_sent)
+        dm_sent = await self.send_dm(ctx, silent, member, final_reason, "jailed")
+        await self.handle_case_response(ctx, CaseType.JAIL, case.case_number, final_reason, member, dm_sent)
 
     @staticmethod
     def _get_manageable_roles(

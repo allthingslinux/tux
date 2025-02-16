@@ -22,6 +22,7 @@ class Ban(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
+        reason: str | None = None,
         *,
         flags: BanFlags,
     ) -> None:
@@ -34,8 +35,10 @@ class Ban(ModerationCogBase):
             The context in which the command is being invoked.
         member : discord.Member
             The member to ban.
+        reason : str | None
+            The reason for the ban.
         flags : BanFlags
-            The flags for the command. (reason: str, purge_days: int (< 7), silent: bool)
+            The flags for the command. (purge_days: int (< 7), silent: bool)
 
         Raises
         ------
@@ -54,9 +57,14 @@ class Ban(ModerationCogBase):
 
         await ctx.defer(ephemeral=True)
 
+        # Use provided reason or default
+        final_reason: str = reason if reason is not None else "No reason provided"
+        purge_days: int = flags.purge_days
+        silent: bool = flags.silent
+
         try:
-            dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "banned")
-            await ctx.guild.ban(member, reason=flags.reason, delete_message_days=flags.purge_days)
+            dm_sent = await self.send_dm(ctx, silent, member, final_reason, "banned")
+            await ctx.guild.ban(member, reason=final_reason, delete_message_days=purge_days)
 
         except (discord.Forbidden, discord.HTTPException) as e:
             logger.error(f"Failed to ban {member}. {e}")
@@ -67,11 +75,11 @@ class Ban(ModerationCogBase):
             case_user_id=member.id,
             case_moderator_id=ctx.author.id,
             case_type=CaseType.BAN,
-            case_reason=flags.reason,
+            case_reason=final_reason,
             guild_id=ctx.guild.id,
         )
 
-        await self.handle_case_response(ctx, CaseType.BAN, case.case_number, flags.reason, member, dm_sent)
+        await self.handle_case_response(ctx, CaseType.BAN, case.case_number, final_reason, member, dm_sent)
 
 
 async def setup(bot: Tux) -> None:

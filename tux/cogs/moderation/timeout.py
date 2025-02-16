@@ -19,7 +19,7 @@ class Timeout(ModerationCogBase):
 
     @commands.hybrid_command(
         name="timeout",
-        aliases=["t", "to", "mute"],
+        aliases=["t", "to", "mute", "m"],
     )
     @commands.guild_only()
     @checks.has_pl(2)
@@ -27,6 +27,7 @@ class Timeout(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
+        reason: str | None = None,
         *,
         flags: TimeoutFlags,
     ) -> None:
@@ -39,8 +40,10 @@ class Timeout(ModerationCogBase):
             The context in which the command is being invoked.
         member : discord.Member
             The member to timeout.
+        reason : str | None
+            The reason for the timeout.
         flags : TimeoutFlags
-            The flags for the command (duration: str, reason: str, silent: bool).
+            The flags for the command (duration: str, silent: bool).
 
         Raises
         ------
@@ -60,9 +63,11 @@ class Timeout(ModerationCogBase):
             return
 
         duration = parse_time_string(flags.duration)
+        final_reason: str = reason if reason is not None else "No reason provided"
+        silent: bool = flags.silent
 
         try:
-            await member.timeout(duration, reason=flags.reason)
+            await member.timeout(duration, reason=final_reason)
 
         except discord.DiscordException as e:
             await ctx.send(f"Failed to timeout {member}. {e}", ephemeral=True)
@@ -72,18 +77,18 @@ class Timeout(ModerationCogBase):
             case_user_id=member.id,
             case_moderator_id=ctx.author.id,
             case_type=CaseType.TIMEOUT,
-            case_reason=flags.reason,
+            case_reason=final_reason,
             case_expires_at=datetime.now(UTC) + duration,
             guild_id=ctx.guild.id,
         )
 
-        dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, f"timed out for {flags.duration}")
+        dm_sent = await self.send_dm(ctx, silent, member, final_reason, f"timed out for {flags.duration}")
 
         await self.handle_case_response(
             ctx,
             CaseType.TIMEOUT,
             case.case_number,
-            flags.reason,
+            final_reason,
             member,
             dm_sent,
             flags.duration,

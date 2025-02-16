@@ -17,6 +17,30 @@ class PollUnban(ModerationCogBase):
         self.case_controller = CaseController()
         self.poll_unban.usage = generate_usage(self.poll_unban, PollUnbanFlags)
 
+    async def is_pollbanned(self, guild_id: int, user_id: int) -> bool:
+        """
+        Check if a user is poll banned.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to check in.
+        user_id : int
+            The ID of the user to check.
+
+        Returns
+        -------
+        bool
+            True if the user is poll banned, False otherwise.
+        """
+        ban_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.POLLBAN)
+        unban_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.POLLUNBAN)
+
+        ban_count = sum(case.case_user_id == user_id for case in ban_cases)
+        unban_count = sum(case.case_user_id == user_id for case in unban_cases)
+
+        return ban_count > unban_count
+
     @commands.hybrid_command(
         name="pollunban",
         aliases=["pub"],
@@ -27,20 +51,23 @@ class PollUnban(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
+        reason: str | None = None,
         *,
         flags: PollUnbanFlags,
-    ):
+    ) -> None:
         """
-        Unban a user from creating snippets.
+        Remove a poll ban from a user.
 
         Parameters
         ----------
         ctx : commands.Context[Tux]
             The context object.
         member : discord.Member
-            The member to snippet unban.
+            The member to remove poll ban from.
+        reason : str | None
+            The reason for removing the poll ban.
         flags : PollUnbanFlags
-            The flags for the command. (reason: str, silent: bool)
+            The flags for the command. (silent: bool)
         """
 
         assert ctx.guild
@@ -50,22 +77,28 @@ class PollUnban(ModerationCogBase):
             await ctx.send("User is not poll banned.", ephemeral=True)
             return
 
+        if not await self.check_conditions(ctx, member, ctx.author, "poll unban"):
+            return
+
+        final_reason: str = reason if reason is not None else "No reason provided"
+        silent: bool = flags.silent
+
         try:
             case = await self.db.case.insert_case(
                 case_user_id=member.id,
                 case_moderator_id=ctx.author.id,
                 case_type=CaseType.POLLUNBAN,
-                case_reason=flags.reason,
+                case_reason=final_reason,
                 guild_id=ctx.guild.id,
             )
 
         except Exception as e:
-            logger.error(f"Failed to poll unban {member}. {e}")
-            await ctx.send(f"Failed to poll unban {member}. {e}", ephemeral=True)
+            logger.error(f"Failed to unban {member}. {e}")
+            await ctx.send(f"Failed to unban {member}. {e}", ephemeral=True)
             return
 
-        dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "poll unbanned")
-        await self.handle_case_response(ctx, CaseType.POLLUNBAN, case.case_number, flags.reason, member, dm_sent)
+        dm_sent = await self.send_dm(ctx, silent, member, final_reason, "removed from poll ban")
+        await self.handle_case_response(ctx, CaseType.POLLUNBAN, case.case_number, final_reason, member, dm_sent)
 
 
 async def setup(bot: Tux) -> None:

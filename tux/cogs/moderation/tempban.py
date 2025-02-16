@@ -26,6 +26,7 @@ class TempBan(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
+        reason: str | None = None,
         *,
         flags: TempBanFlags,
     ) -> None:
@@ -38,8 +39,10 @@ class TempBan(ModerationCogBase):
             The context in which the command is being invoked.
         member : discord.Member
             The member to ban.
+        reason : str | None
+            The reason for the ban.
         flags : TempBanFlags
-            The flags for the command. (reason: str, silent: bool, expires_at: int, purge_days: int)
+            The flags for the command. (duration: int, purge_days: int (< 7), silent: bool)
 
         Raises
         ------
@@ -58,10 +61,13 @@ class TempBan(ModerationCogBase):
 
         duration = parse_time_string(f"{flags.expires_at}d")
         expires_at = datetime.now(UTC) + duration
+        final_reason: str = reason if reason is not None else "No reason provided"
+        silent: bool = flags.silent
+        purge_days: int = flags.purge_days
 
         try:
-            dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, action="temp banned")
-            await ctx.guild.ban(member, reason=flags.reason, delete_message_days=flags.purge_days)
+            dm_sent = await self.send_dm(ctx, silent, member, final_reason, action="temp banned")
+            await ctx.guild.ban(member, reason=final_reason, delete_message_days=purge_days)
 
         except (discord.Forbidden, discord.HTTPException) as e:
             logger.error(f"Failed to temporarily ban {member}. {e}")
@@ -72,47 +78,53 @@ class TempBan(ModerationCogBase):
             case_user_id=member.id,
             case_moderator_id=ctx.author.id,
             case_type=CaseType.TEMPBAN,
-            case_reason=flags.reason,
+            case_reason=final_reason,
             guild_id=ctx.guild.id,
             case_expires_at=expires_at,
             case_tempban_expired=False,
         )
 
-        await self.handle_case_response(ctx, CaseType.TEMPBAN, case.case_number, flags.reason, member, dm_sent)
+        await self.handle_case_response(
+            ctx,
+            CaseType.TEMPBAN,
+            case.case_number,
+            final_reason,
+            member,
+            dm_sent,
+            f"{flags.expires_at}d",
+        )
 
-    @tasks.loop(hours=1)
+    @tasks.loop(minutes=1)
     async def tempban_check(self) -> None:
-        expired_temp_bans = await self.db.case.get_expired_tempbans()
+        """Check for expired tempbans."""
+        try:
+            expired_cases = await self.db.case.get_expired_tempbans()
+            for case in expired_cases:
+                guild = self.bot.get_guild(case.guild_id)
+                if not guild:
+                    continue
 
-        for temp_ban in expired_temp_bans:
-            # Get the guild from the cache or fetch it from the API
-            guild = self.bot.get_guild(temp_ban.guild_id) or await self.bot.fetch_guild(temp_ban.guild_id)
-            if not guild:
-                logger.error(f"Failed to get guild with ID {temp_ban.guild_id} for tempban check.")
-                continue
+                try:
+                    await guild.unban(
+                        discord.Object(id=case.case_user_id),
+                        reason="Temporary ban expired.",
+                    )
+                    await self.db.case.set_tempban_expired(case.case_id, case.guild_id)
 
-            try:
-                ban_entry = await guild.fetch_ban(discord.Object(id=temp_ban.case_user_id))
+                except (discord.Forbidden, discord.HTTPException, discord.NotFound) as e:
+                    logger.error(f"Failed to unban {case.case_user_id} in {guild.id}. {e}")
 
-                await guild.unban(ban_entry.user, reason=f"Tempban expired | Case number: {temp_ban.case_number}")
+        except Exception as e:
+            logger.error(f"Failed to check tempbans. {e}")
 
-                await self.db.case.set_tempban_expired(temp_ban.case_number, temp_ban.guild_id)
+    @tempban_check.before_loop
+    async def before_tempban_check(self) -> None:
+        """Wait for the bot to be ready before starting the loop."""
+        await self.bot.wait_until_ready()
 
-                await self.db.case.insert_case(
-                    guild_id=temp_ban.guild_id,
-                    case_user_id=temp_ban.case_user_id,
-                    case_moderator_id=temp_ban.case_moderator_id,
-                    case_type=CaseType.UNTEMPBAN,
-                    case_reason="Expired tempban",
-                    case_tempban_expired=True,
-                )
-
-                logger.debug(f"Unbanned user with ID {temp_ban.case_user_id} | Case number {temp_ban.case_number}")
-
-            except (discord.Forbidden, discord.HTTPException, discord.NotFound) as e:
-                logger.error(
-                    f"Failed to unban user with ID {temp_ban.case_user_id} | Case number {temp_ban.case_number}. Error: {e}",
-                )
+    async def cog_unload(self) -> None:
+        """Cancel the tempban check loop when the cog is unloaded."""
+        self.tempban_check.cancel()
 
 
 async def setup(bot: Tux) -> None:

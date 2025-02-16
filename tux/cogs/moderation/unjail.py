@@ -3,6 +3,7 @@ from discord.ext import commands
 from loguru import logger
 
 from prisma.enums import CaseType
+from prisma.models import Case
 from tux.bot import Tux
 from tux.utils import checks
 from tux.utils.flags import UnjailFlags, generate_usage
@@ -15,6 +16,67 @@ class Unjail(ModerationCogBase):
         super().__init__(bot)
         self.unjail.usage = generate_usage(self.unjail, UnjailFlags)
 
+    async def get_jail_role(self, guild: discord.Guild) -> discord.Role | None:
+        """
+        Get the jail role for the guild.
+
+        Parameters
+        ----------
+        guild : discord.Guild
+            The guild to get the jail role for.
+
+        Returns
+        -------
+        discord.Role | None
+            The jail role, or None if not found.
+        """
+        jail_role_id = await self.config.get_jail_role_id(guild.id)
+        return None if jail_role_id is None else guild.get_role(jail_role_id)
+
+    async def is_jailed(self, guild_id: int, user_id: int) -> bool:
+        """
+        Check if a user is jailed.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to check in.
+        user_id : int
+            The ID of the user to check.
+
+        Returns
+        -------
+        bool
+            True if the user is jailed, False otherwise.
+        """
+        jail_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.JAIL)
+        unjail_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.UNJAIL)
+
+        jail_count = sum(case.case_user_id == user_id for case in jail_cases)
+        unjail_count = sum(case.case_user_id == user_id for case in unjail_cases)
+
+        return jail_count > unjail_count
+
+    async def get_latest_jail_case(self, guild_id: int, user_id: int) -> Case | None:
+        """
+        Get the latest jail case for a user.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to check in.
+        user_id : int
+            The ID of the user to check.
+
+        Returns
+        -------
+        Case | None
+            The latest jail case, or None if not found.
+        """
+        cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.JAIL)
+        user_cases = [case for case in cases if case.case_user_id == user_id]
+        return user_cases[-1] if user_cases else None
+
     @commands.hybrid_command(
         name="unjail",
         aliases=["uj"],
@@ -25,73 +87,87 @@ class Unjail(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
+        reason: str | None = None,
         *,
         flags: UnjailFlags,
     ) -> None:
         """
-        Unjail a member in the server.
+        Remove a member from jail.
 
         Parameters
         ----------
         ctx : commands.Context[Tux]
-            The discord context object.
+            The context in which the command is being invoked.
         member : discord.Member
             The member to unjail.
+        reason : str | None
+            The reason for removing from jail.
         flags : UnjailFlags
-            The flags for the command. (reason: str, silent: bool)
+            The flags for the command. (silent: bool)
+
+        Raises
+        ------
+        discord.Forbidden
+            If the bot is unable to unjail the user.
+        discord.HTTPException
+            If an error occurs while unjailing the user.
         """
 
         assert ctx.guild
 
-        moderator = ctx.author
-
-        if not await self.check_conditions(ctx, member, moderator, "unjail"):
-            return
-
         await ctx.defer(ephemeral=True)
 
-        jail_role_id = await self.config.get_jail_role_id(ctx.guild.id)
-        jail_role = ctx.guild.get_role(jail_role_id) if jail_role_id else None
-
+        jail_role = await self.get_jail_role(ctx.guild)
         if not jail_role:
-            message = "The jail role has been deleted or not set up."
-            await ctx.send(message, ephemeral=True)
+            await ctx.send("No jail role found.", ephemeral=True)
             return
 
-        if jail_role not in member.roles:
-            await ctx.send("The member is not jailed.", ephemeral=True)
+        if not await self.is_jailed(ctx.guild.id, member.id):
+            await ctx.send("User is not jailed.", ephemeral=True)
             return
 
-        case = await self.db.case.get_last_jail_case_by_user_id(ctx.guild.id, member.id)
-        if not case:
-            await ctx.send("No jail case found for this member.", ephemeral=True)
+        if not await self.check_conditions(ctx, member, ctx.author, "unjail"):
             return
+
+        final_reason: str = reason if reason is not None else "No reason provided"
+        silent: bool = flags.silent
 
         try:
-            previous_roles = [await commands.RoleConverter().convert(ctx, str(role)) for role in case.case_user_roles]
-            if previous_roles:
-                await member.remove_roles(jail_role, reason=flags.reason)
-                await member.add_roles(*previous_roles, reason=flags.reason, atomic=True)
-            else:
-                await member.remove_roles(jail_role, reason=flags.reason)
+            case = await self.get_latest_jail_case(ctx.guild.id, member.id)
+            if not case:
+                await ctx.send("No jail case found.", ephemeral=True)
+                return
+
+            await member.remove_roles(jail_role, reason=final_reason)
+
+            if case.case_user_roles:
+                roles = [role for role_id in case.case_user_roles if (role := ctx.guild.get_role(role_id)) is not None]
+                if roles:
+                    await member.add_roles(*roles, reason=final_reason, atomic=False)
 
         except (discord.Forbidden, discord.HTTPException) as e:
-            message = f"Failed to unjail member {member}. {e}"
-            logger.error(message)
-            await ctx.send(message, ephemeral=True)
+            logger.error(f"Failed to unjail {member}. {e}")
+            await ctx.send(f"Failed to unjail {member}. {e}", ephemeral=True)
             return
 
-        unjail_case = await self.db.case.insert_case(
-            guild_id=ctx.guild.id,
+        case = await self.db.case.insert_case(
             case_user_id=member.id,
             case_moderator_id=ctx.author.id,
             case_type=CaseType.UNJAIL,
-            case_reason=flags.reason,
+            case_reason=final_reason,
+            guild_id=ctx.guild.id,
         )
 
-        dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "unjailed")
+        dm_sent = await self.send_dm(ctx, silent, member, final_reason, "removed from jail")
 
-        await self.handle_case_response(ctx, CaseType.UNJAIL, unjail_case.case_number, flags.reason, member, dm_sent)
+        await self.handle_case_response(
+            ctx,
+            CaseType.UNJAIL,
+            case.case_number,
+            final_reason,
+            member,
+            dm_sent,
+        )
 
 
 async def setup(bot: Tux) -> None:

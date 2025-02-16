@@ -122,12 +122,6 @@ def get_matching_string(arg: str) -> str:
 
 
 class BanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    reason: str = commands.flag(
-        name="reason",
-        description="Reason for the ban.",
-        aliases=["r"],
-        default=MISSING,
-    )
     purge_days: int = commands.flag(
         name="purge_days",
         description="Number of days in messages. (< 7)",
@@ -143,12 +137,6 @@ class BanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", pre
 
 
 class TempBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    reason: str = commands.flag(
-        name="reason",
-        description="Reason for the temp ban.",
-        aliases=["r"],
-        default=MISSING,
-    )
     expires_at: int = commands.flag(
         name="duration",
         description="Number of days the ban will last for.",
@@ -169,12 +157,6 @@ class TempBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ",
 
 
 class KickFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    reason: str = commands.flag(
-        name="reason",
-        description="Reason for the kick.",
-        aliases=["r"],
-        default=MISSING,
-    )
     silent: bool = commands.flag(
         name="silent",
         description="Do not send a DM to the target.",
@@ -190,12 +172,6 @@ class TimeoutFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ",
         aliases=["d"],
         default=MISSING,
     )
-    reason: str = commands.flag(
-        name="reason",
-        description="Reason for the timeout.",
-        aliases=["r"],
-        default=MISSING,
-    )
     silent: bool = commands.flag(
         name="silent",
         description="Do not send a DM to the target.",
@@ -205,12 +181,6 @@ class TimeoutFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ",
 
 
 class UntimeoutFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    reason: str = commands.flag(
-        name="reason",
-        description="Reason for the untimeout.",
-        aliases=["r"],
-        default=MISSING,
-    )
     silent: bool = commands.flag(
         name="silent",
         description="Do not send a DM to the target.",
@@ -220,21 +190,10 @@ class UntimeoutFlags(commands.FlagConverter, case_insensitive=True, delimiter=" 
 
 
 class UnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    reason: str = commands.flag(
-        name="reason",
-        description="Reason for the unban.",
-        aliases=["r"],
-        default=MISSING,
-    )
+    pass
 
 
 class JailFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    reason: str = commands.flag(
-        name="reason",
-        description="Reason for the jail.",
-        aliases=["r"],
-        default=MISSING,
-    )
     silent: bool = commands.flag(
         name="silent",
         description="Do not send a DM to the target.",
@@ -244,12 +203,6 @@ class JailFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", pr
 
 
 class UnjailFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    reason: str = commands.flag(
-        name="reason",
-        description="Reason for the unjail.",
-        aliases=["r"],
-        default=MISSING,
-    )
     silent: bool = commands.flag(
         name="silent",
         description="Do not send a DM to the target.",
@@ -285,11 +238,14 @@ class CaseModifyFlags(commands.FlagConverter, case_insensitive=True, delimiter="
     def convert_bool(x: str | None) -> bool | None:
         if x is None:
             return None
+
         x = str(x).lower()
-        if x in {"true", "t", "yes", "y", "1", "on"}:
+
+        if x in {"true", "t", "yes", "y", "1", "on", "active", "enable"}:
             return True
-        if x in {"false", "f", "no", "n", "0", "off"}:
+        if x in {"false", "f", "no", "n", "0", "off", "inactive", "disable"}:
             return False
+
         msg = f"Status must be a boolean value (true/false, yes/no, 1/0, on/off), not {x}"
         raise commands.BadArgument(msg)
 
@@ -314,12 +270,6 @@ class CaseModifyFlags(commands.FlagConverter, case_insensitive=True, delimiter="
 
 
 class WarnFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    reason: str = commands.flag(
-        name="reason",
-        description="Reason for the warn.",
-        aliases=["r"],
-        default=MISSING,
-    )
     silent: bool = commands.flag(
         name="silent",
         description="Do not send a DM to the target.",
@@ -329,12 +279,6 @@ class WarnFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", pr
 
 
 class SnippetBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    reason: str = commands.flag(
-        name="reason",
-        description="Reason for the snippet ban.",
-        aliases=["r"],
-        default=MISSING,
-    )
     silent: bool = commands.flag(
         name="silent",
         description="Do not send a DM to the target.",
@@ -344,12 +288,6 @@ class SnippetBanFlags(commands.FlagConverter, case_insensitive=True, delimiter="
 
 
 class SnippetUnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    reason: str = commands.flag(
-        name="reason",
-        description="Reason for the snippet unban.",
-        aliases=["r"],
-        default=MISSING,
-    )
     silent: bool = commands.flag(
         name="silent",
         description="Do not send a DM to the target.",
@@ -359,12 +297,6 @@ class SnippetUnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter
 
 
 class PollBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    reason: str = commands.flag(
-        name="reason",
-        description="Reason for the poll ban.",
-        aliases=["r"],
-        default=MISSING,
-    )
     silent: bool = commands.flag(
         name="silent",
         description="Do not send a DM to the target.",
@@ -374,12 +306,6 @@ class PollBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ",
 
 
 class PollUnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    reason: str = commands.flag(
-        name="reason",
-        description="Reason for the poll unban",
-        aliases=["r"],
-        default=MISSING,
-    )
     silent: bool = commands.flag(
         name="silent",
         description="Do not send a DM to the target.",

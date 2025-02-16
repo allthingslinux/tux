@@ -25,6 +25,7 @@ class Unban(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         username_or_id: str,
+        reason: str | None = None,
         *,
         flags: UnbanFlags,
     ) -> None:
@@ -37,8 +38,10 @@ class Unban(ModerationCogBase):
             The context object for the command.
         username_or_id : str
             The username or ID of the user to unban.
+        reason : str | None
+            The reason for the unban.
         flags : UnbanFlags
-            The flags for the command (reason: str).
+            The flags for the command.
 
         Raises
         ------
@@ -59,8 +62,10 @@ class Unban(ModerationCogBase):
             await ctx.send(f"{user} was not found in the guild ban list.", ephemeral=True)
             return
 
+        final_reason: str = reason if reason is not None else "No reason provided"
+
         try:
-            await ctx.guild.unban(user, reason=flags.reason)
+            await ctx.guild.unban(user, reason=final_reason)
 
         except (discord.Forbidden, discord.HTTPException, discord.NotFound) as e:
             logger.error(f"Failed to unban {user}. {e}")
@@ -72,10 +77,10 @@ class Unban(ModerationCogBase):
             case_user_id=user.id,
             case_moderator_id=ctx.author.id,
             case_type=CaseType.UNBAN,
-            case_reason=flags.reason,
+            case_reason=final_reason,
         )
 
-        await self.handle_case_response(ctx, CaseType.UNBAN, case.case_number, flags.reason, user, dm_sent=False)
+        await self.handle_case_response(ctx, CaseType.UNBAN, case.case_number, final_reason, user, dm_sent=False)
 
 
 async def setup(bot: Tux) -> None:
