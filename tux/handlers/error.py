@@ -127,14 +127,22 @@ error_map: dict[type[Exception], str] = {
     commands.MissingRole: "User not in sudoers file. This incident will be reported. (Missing Role)",
     commands.MissingAnyRole: "User not in sudoers file. This incident will be reported. (Missing Roles)",
     commands.MissingPermissions: "User not in sudoers file. This incident will be reported. (Missing Permissions)",
-    commands.FlagError: "An error occurred with the flags:\n`{error}`",
-    commands.MissingRequiredFlag: "Missing argument: {error}. Correct usage:\n`{ctx.prefix}{ctx.command.usage}`",
+    commands.FlagError: "{error}\nCorrect usage: `{ctx.prefix}{ctx.command.usage}`",
+    commands.BadFlagArgument: "Invalid value provided for flag: {error}\nCorrect usage:\n`{ctx.prefix}{ctx.command.usage}`",
+    commands.MissingRequiredFlag: "Missing required flag: {error}\nCorrect usage:\n`{ctx.prefix}{ctx.command.usage}`",
     commands.CheckFailure: "User not in sudoers file. This incident will be reported. (Permission Check Failed)",
     commands.CommandOnCooldown: "This command is on cooldown. Try again in {error.retry_after:.2f} seconds.",
     commands.MissingRequiredArgument: "Missing required argument. Correct usage:\n`{ctx.prefix}{ctx.command.usage}`",
     commands.TooManyArguments: "Too many arguments passed. Correct usage:\n`{ctx.prefix}{ctx.command.usage}`",
     commands.NotOwner: "User not in sudoers file. This incident will be reported. (Not Owner)",
     commands.BotMissingPermissions: "User not in sudoers file. This incident will be reported. (Bot Missing Permissions)",
+    commands.BadArgument: "An error occurred with your provided arguments:\n`{error}`",
+    commands.MemberNotFound: "Could not find member `{error.argument}` in this server.",
+    commands.UserNotFound: "Could not find user `{error.argument}` in this server.",
+    commands.ChannelNotFound: "Could not find channel `{error.argument}` in this server.",
+    commands.RoleNotFound: "Could not find role `{error.argument}` in this server.",
+    commands.EmojiNotFound: "Could not find emoji `{error.argument}` in this server.",
+    commands.GuildNotFound: "Could not find guild `{error.argument}`.",
     # Custom errors
     PermissionLevelError: "User not in sudoers file. This incident will be reported. (Missing required permission: {error.permission})",
     AppCommandPermissionLevelError: "User not in sudoers file. This incident will be reported. (Missing required permission: {error.permission})",
@@ -203,24 +211,15 @@ class ErrorHandler(commands.Cog):
             The error that occurred.
         """
 
-        # If the command has its own error handler, return
-        # if hasattr(ctx.command, "on_error"):
-        #     logger.debug(f"Command {ctx.command} has its own error handler.")
-        #     return
-
-        # If the cog has its own error handler, return
-        # if ctx.cog and ctx.cog._get_overridden_method(ctx.cog.cog_command_error) is not None:
-        #     logger.debug(f"Cog {ctx.cog} has its own error handler.")
-        #     return
-
         if isinstance(error, commands.CheckFailure):
             message = error_map.get(type(error), self.error_message).format(error=error, ctx=ctx)
-            # await ctx.send(content=message, ephemeral=True, delete_after=30)
+
             embed = EmbedCreator.create_embed(
                 bot=self.bot,
                 embed_type=EmbedCreator.ERROR,
                 description=message,
             )
+
             await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             sentry_sdk.capture_exception(error)
             return
@@ -238,13 +237,12 @@ class ErrorHandler(commands.Cog):
         # Get the error message and send it to the user
         message: str = self.get_error_message(error, ctx)
 
-        # await ctx.send(content=message, ephemeral=True, delete_after=30)
-
         embed = EmbedCreator.create_embed(
             bot=self.bot,
             embed_type=EmbedCreator.ERROR,
             description=message,
         )
+
         await ctx.send(embed=embed, ephemeral=True, delete_after=30)
 
         # Log the error traceback if it's not in the error map
