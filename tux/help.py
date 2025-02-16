@@ -135,9 +135,6 @@ class TuxHelp(commands.HelpCommand):
             emoji = category_emoji_map.get(cog_group, "❓")
             select_options[discord.SelectOption(label=cog_group.capitalize(), emoji=emoji)] = [page]
 
-        logger.info(f"Select options: {select_options}")
-        logger.info(f"Cached categories: {self._category_cache}")
-
         return select_options
 
     async def _create_page(
@@ -174,6 +171,7 @@ class TuxHelp(commands.HelpCommand):
     ) -> None:
         """Adds pages for each cog category to the help menu."""
         command_categories = await self._get_command_categories(mapping)
+
         # Instead of using filesystem folders, iterate over cached categories.
         select_options = await self._create_select_options(command_categories, menu)
         self._add_navigation_and_selection(menu, select_options)
@@ -216,6 +214,7 @@ class TuxHelp(commands.HelpCommand):
         """
         module = getattr(cog, "__module__", "")
         parts = module.split(".")
+
         # Assuming the structure is: tux.cogs.<group>...
         if len(parts) >= 3 and parts[1].lower() == "cogs":
             return parts[2].lower()
