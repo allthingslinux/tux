@@ -1,13 +1,11 @@
 """Discord bot implementation for Tux.
 
 This module contains the main bot class and implements core functionality
-including setup, task monitoring, and graceful shutdown.
+including setup and graceful shutdown.
 """
 
 import asyncio
 import contextlib
-import time
-import types
 from collections.abc import Callable, Coroutine
 from typing import Any, ClassVar
 
@@ -36,9 +34,6 @@ Style: AnsiStyle
 
 # Type hint for discord.ext.tasks.Loop
 type TaskLoop = Loop[Callable[[], Coroutine[Any, Any, None]]]
-
-# Type alias for task state tracking
-type TaskState = tuple[str, float, list[str], int]
 
 
 def create_banner(
@@ -136,7 +131,7 @@ class DatabaseConnectionError(RuntimeError):
 
 
 class Tux(commands.Bot):
-    """Main bot class implementing core functionality and task management.
+    """Main bot class implementing core functionality.
 
     The Tux class extends discord.py's Bot class to provide additional functionality
     for managing the bot's lifecycle and resources.
@@ -151,54 +146,21 @@ class Tux(commands.Bot):
         Timestamp when the bot started, or None if not started
     setup_task : asyncio.Task[None] | None
         Task handling the bot setup process
-    task_start_times : dict[str, float]
-        Mapping of task names to their start times
-    task_frame_times : dict[str, TaskState]
-        Mapping of task names to their current frame location and time
-    task_last_logged : dict[str, float]
-        Track when we last logged each task's status
     console : Console
         Rich console for formatted output
-
-    Notes
-    -----
-    The bot implements several key features:
-    - Database connection management
-    - Cog loading and management
-    - Task monitoring and cleanup
-    - Graceful shutdown handling
     """
 
     _monitor_tasks: ClassVar[TaskLoop]  # type: ignore[name-defined]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the bot and start setup process.
-
-        Parameters
-        ----------
-        *args : Any
-            Positional arguments passed to commands.Bot
-        **kwargs : Any
-            Keyword arguments passed to commands.Bot
-
-        Notes
-        -----
-        This initializes core state variables and starts the setup process
-        as a background task.
-        """
+        """Initialize the bot and start setup process."""
         super().__init__(*args, **kwargs)
 
         # Core state
         self.is_shutting_down: bool = False
         self.setup_complete: bool = False
         self.start_time: float | None = None
-
-        # Task management
         self.setup_task: asyncio.Task[None] | None = None
-        self.task_start_times: dict[str, float] = {}
-        self.task_frame_times: dict[str, TaskState] = {}
-        self.task_last_logged: dict[str, float] = {}
-        self.last_task_counts: dict[str, int] = {}  # Track previous task counts
 
         # Create console for rich output
         self.console = Console(stderr=True, force_terminal=True)
@@ -385,126 +347,24 @@ class Tux(commands.Bot):
     async def _monitor_tasks(self) -> None:
         """Monitor and manage running tasks in the bot.
 
-        Performs the following operations every 60 seconds:
-        1. Categorizes all running tasks
-        2. Logs task counts and states
-        3. Monitors for stuck tasks
-        4. Cleans up finished tasks
-        5. Updates tracking information
-
-        Raises
-        ------
-        RuntimeError
-            If monitoring encounters critical issues affecting bot stability
-
-        Notes
-        -----
-        Task categories include:
-        - Event handlers
-        - Command invocations
-        - Background tasks
-        - Internal discord.py tasks
+        Performs basic task cleanup every 60 seconds.
         """
         try:
-            # Get all tasks and categorize them
             all_tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
             tasks_by_type = self._categorize_tasks(all_tasks)
-
-            current_time = time.time()
-
-            # Log task information
-            self._log_task_counts(tasks_by_type)
-            await self._monitor_task_states(tasks_by_type, current_time)
-
-            # Clean up finished tasks
-            active_task_names = {t.get_name() for tasks in tasks_by_type.values() for t in tasks}
-            self._cleanup_finished_tasks(active_task_names)
-
+            await self._cancel_finished_tasks(tasks_by_type)
         except Exception as e:
             logger.error(f"Task monitoring failed: {e}")
             msg = "Critical failure in task monitoring system"
             raise RuntimeError(msg) from e
 
-    def _log_task_counts(self, tasks_by_type: dict[str, list[asyncio.Task[Any]]]) -> None:
-        """Log task counts only when they change.
-
-        Parameters
-        ----------
-        tasks_by_type : dict[str, list[asyncio.Task[Any]]]
-            Dictionary mapping task types to lists of tasks
-        """
-        current_counts = {task_type: len(tasks) for task_type, tasks in tasks_by_type.items()}
-
-        # Only log if counts have changed
-        if current_counts != self.last_task_counts:
-            total_tasks = sum(current_counts.values())
-            logger.debug(
-                f"Task counts changed - Total: {total_tasks} "
-                f"(Discord: {current_counts['discord_tasks']}, "
-                f"Gateway: {current_counts['gateway_tasks']}, "
-                f"Internal: {current_counts['internal_tasks']})",
-            )
-            self.last_task_counts = current_counts.copy()
-
-    async def _monitor_task_states(
-        self,
-        tasks_by_type: dict[str, list[asyncio.Task[Any]]],
-        current_time: float,
-    ) -> None:
-        """Monitor states of active tasks.
-
-        Parameters
-        ----------
-        tasks_by_type : dict[str, list[asyncio.Task[Any]]]
-            Dictionary mapping task types to lists of tasks
-        current_time : float
-            Current timestamp for tracking task duration
-
-        Notes
-        -----
-        Updates task tracking information and checks for stuck tasks.
-        """
-        active_task_names: set[str] = set()
-
-        for task_type, task_list in tasks_by_type.items():
-            for task in task_list:
-                if task.done():
-                    continue
-
-                name = task.get_name()
-                active_task_names.add(name)
-                self._update_task_tracking(name, current_time)
-
-                coro = task._coro  # type: ignore
-                if isinstance(coro, types.CoroutineType) and coro.cr_frame:
-                    frame = coro.cr_frame
-                    if frame.f_code:
-                        location = f"{frame.f_code.co_filename}:{frame.f_lineno}"
-                        self._check_stuck_task(task_type, name, location, current_time)
-                        self._log_task_status(task_type, name, location, current_time)
-
-        self._cleanup_finished_tasks(active_task_names)
-
     def _categorize_tasks(self, tasks: list[asyncio.Task[Any]]) -> dict[str, list[asyncio.Task[Any]]]:
-        """Categorize tasks by their type.
-
-        Parameters
-        ----------
-        tasks : list[asyncio.Task[Any]]
-            List of tasks to categorize
-
-        Returns
-        -------
-        dict[str, list[asyncio.Task[Any]]]
-            Dictionary mapping task types to lists of tasks:
-            - discord_tasks: Tasks from discord.ext.tasks
-            - gateway_tasks: Discord gateway/connection tasks
-            - internal_tasks: Asyncio internal tasks
-        """
+        """Categorize tasks by their type."""
         tasks_by_type: dict[str, list[asyncio.Task[Any]]] = {
-            "discord_tasks": [],  # Tasks from discord.ext.tasks
-            "gateway_tasks": [],  # Discord gateway/connection tasks
-            "internal_tasks": [],  # Asyncio internal tasks
+            "SCHEDULED": [],  # Tasks from discord.ext.tasks
+            "GATEWAY": [],  # Discord gateway/connection tasks
+            "SYSTEM": [],  # Asyncio internal tasks
+            "COMMAND": [],  # Command invocation tasks
         }
 
         for task in tasks:
@@ -513,176 +373,29 @@ class Tux(commands.Bot):
 
             name = task.get_name()
             if name.startswith("discord-ext-tasks:"):
-                tasks_by_type["discord_tasks"].append(task)
-                if name not in self.task_start_times:
-                    task_name = name.replace("discord-ext-tasks: ", "")
-                    logger.info(f"New discord task started: {task_name}")
+                tasks_by_type["SCHEDULED"].append(task)
             elif name.startswith(("discord.py:", "discord-voice-", "discord-gateway-")):
-                tasks_by_type["gateway_tasks"].append(task)
+                tasks_by_type["GATEWAY"].append(task)
+            elif "command_" in name.lower():
+                tasks_by_type["COMMAND"].append(task)
             else:
-                tasks_by_type["internal_tasks"].append(task)
+                tasks_by_type["SYSTEM"].append(task)
 
         return tasks_by_type
 
-    def _update_task_tracking(self, name: str, current_time: float) -> None:
-        """Update task start time tracking.
-
-        Parameters
-        ----------
-        name : str
-            Task name to track
-        current_time : float
-            Current timestamp to record
-
-        Notes
-        -----
-        Only records start time for new tasks not already being tracked.
-        """
-        if name not in self.task_start_times:
-            self.task_start_times[name] = current_time
-
-    def _check_stuck_task(self, task_type: str, name: str, location: str, current_time: float) -> None:
-        """Check if a task is stuck and log warnings.
-
-        Parameters
-        ----------
-        task_type : str
-            Type of task being checked
-        name : str
-            Name of the task
-        location : str
-            Current code location of the task
-        current_time : float
-            Current timestamp for duration calculation
-
-        Notes
-        -----
-        Intelligently detects stuck tasks by analyzing their behavior patterns:
-        - Tasks in sleep/wait states are not considered stuck
-        - Tasks with regular location changes are not stuck
-        - Only unexpected blocking patterns trigger warnings
-        """
-        # Skip gateway tasks entirely as they have their own monitoring
-        if task_type == "gateway_tasks":
-            return
-
-        # Initialize or get task state
-        if name not in self.task_frame_times:
-            self.task_frame_times[name] = (location, current_time, [], 0)
-            return
-
-        old_location, frame_start, location_history, alert_count = self.task_frame_times[name]
-        frame_duration = current_time - frame_start
-
-        # Check if we're in a known wait location
-        is_wait_location = any(
-            wait_pattern in location.lower()
-            for wait_pattern in [
-                "sleep",
-                "wait",
-                "check",
-                "lock",
-                "event.wait",
-                "queue.get",
-                "asyncio.sleep",
-            ]
-        )
-
-        # Update location history (keep last 5 locations)
-        new_history = location_history.copy()
-        if old_location != location:
-            new_history = ([*location_history, location])[-5:]
-            frame_start = current_time
-            alert_count = 0  # Reset alert count on location change
-
-        # Analyze task behavior
-        unique_locations = set(new_history)
-        is_repeating_pattern = len(unique_locations) <= 2 and len(new_history) >= 3
-        is_normal_behavior = is_wait_location or is_repeating_pattern
-
-        # Only warn if:
-        # 1. Task has been in same non-wait location for over 5 minutes
-        # 2. Location doesn't indicate intentional waiting
-        # 3. Task isn't showing a normal repeating pattern
-        # 4. Haven't warned about this specific stuck instance recently
-        if (
-            frame_duration > 300
-            and not is_normal_behavior
-            and alert_count < 3  # Limit alerts for the same stuck instance
-        ):
-            logger.warning(
-                f"Task potentially stuck - {name} at {location} for {frame_duration:.1f}s (non-wait location)",
-            )
-            alert_count += 1
-
-        # Update task state
-        self.task_frame_times[name] = (location, frame_start, new_history, alert_count)
-
-    def _log_task_status(self, task_type: str, name: str, location: str, current_time: float) -> None:
-        """Log periodic task status updates.
-
-        Parameters
-        ----------
-        task_type : str
-            Type of task being logged
-        name : str
-            Name of the task
-        location : str
-            Current code location of the task
-        current_time : float
-            Current timestamp for duration calculation
-
-        Notes
-        -----
-        Logs status updates for long-running tasks once per hour.
-        """
-        task_duration = current_time - self.task_start_times[name]
-        last_log_time = self.task_last_logged.get(name, 0)
-        time_since_last_log = current_time - last_log_time
-
-        # Only log if:
-        # 1. Task has been running for over an hour
-        # 2. We haven't logged in the last hour
-        if task_duration > 3600 and time_since_last_log > 3600:
-            # Clean up the location path to be more readable
-            clean_location = location.replace("/app/.venv/lib/python3.13/site-packages/", "")
-            logger.info(f"Task status - {name} running for {task_duration / 3600:.1f}h at {clean_location}")
-            self.task_last_logged[name] = current_time
-
-    def _cleanup_finished_tasks(self, active_task_names: set[str]) -> None:
-        """Clean up tracking data for finished tasks.
-
-        Parameters
-        ----------
-        active_task_names : set[str]
-            Set of names of currently active tasks
-
-        Notes
-        -----
-        Removes tracking data for tasks that are no longer active.
-        """
-        finished_tasks = {name for name in self.task_start_times if name not in active_task_names}
-        for name in finished_tasks:
-            self.task_start_times.pop(name, None)
-            self.task_frame_times.pop(name, None)
-            self.task_last_logged.pop(name, None)  # Clean up logging tracking too
-            logger.debug(f"Task completed and cleaned up: {name}")
+    async def _cancel_finished_tasks(self, tasks_by_type: dict[str, list[asyncio.Task[Any]]]) -> None:
+        """Cancel and clean up finished tasks."""
+        for task_list in tasks_by_type.values():
+            for task in task_list:
+                if task.done():
+                    with contextlib.suppress(asyncio.CancelledError):
+                        await task
 
     # Shutdown handling
     # ----------------
 
     async def shutdown(self) -> None:
-        """Gracefully shut down the bot and clean up resources.
-
-        Performs shutdown sequence:
-        1. Handles setup task cleanup
-        2. Stops and cancels running tasks
-        3. Closes connections
-
-        Notes
-        -----
-        Prevents multiple shutdown attempts from running simultaneously.
-        """
+        """Gracefully shut down the bot and clean up resources."""
         if self.is_shutting_down:
             logger.info("Shutdown already in progress. Exiting.")
             return
@@ -697,29 +410,14 @@ class Tux(commands.Bot):
         logger.info("Shutdown complete.")
 
     async def _handle_setup_task(self) -> None:
-        """Handle setup task during shutdown.
-
-        Notes
-        -----
-        Cancels setup task if it's still running during shutdown.
-        """
+        """Handle setup task during shutdown."""
         if self.setup_task and not self.setup_task.done():
             self.setup_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await self.setup_task
 
     async def _cleanup_tasks(self) -> None:
-        """Clean up all running tasks.
-
-        Performs cleanup in order:
-        1. Stops task loops
-        2. Categorizes remaining tasks
-        3. Cancels tasks by category
-
-        Notes
-        -----
-        Logs any errors encountered during cleanup but continues process.
-        """
+        """Clean up all running tasks."""
         try:
             await self._stop_task_loops()
             all_tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
@@ -729,14 +427,7 @@ class Tux(commands.Bot):
             logger.error(f"Error during task cleanup: {e}")
 
     async def _stop_task_loops(self) -> None:
-        """Stop all task loops in cogs.
-
-        Notes
-        -----
-        Attempts to stop:
-        - All task loops in loaded cogs
-        - The task monitoring loop
-        """
+        """Stop all task loops in cogs."""
         for cog_name in self.cogs:
             cog = self.get_cog(cog_name)
             if not cog:
@@ -752,25 +443,13 @@ class Tux(commands.Bot):
 
         if hasattr(self, "_monitor_tasks") and self._monitor_tasks.is_running():
             self._monitor_tasks.stop()
-            logger.debug("Stopped task monitoring")
 
     async def _cancel_tasks(self, tasks_by_type: dict[str, list[asyncio.Task[Any]]]) -> None:
-        """Cancel tasks in order of priority.
-
-        Parameters
-        ----------
-        tasks_by_type : dict[str, list[asyncio.Task[Any]]]
-            Dictionary mapping task types to lists of tasks
-
-        Notes
-        -----
-        Logs cancellation progress for each task type.
-        """
+        """Cancel tasks by category."""
         for task_type, tasks in tasks_by_type.items():
             if not tasks:
                 continue
 
-            # Get task names or coroutine names for unnamed tasks
             task_names: list[str] = []
             for t in tasks:
                 name = t.get_name() or "unnamed"
@@ -780,21 +459,15 @@ class Tux(commands.Bot):
                 task_names.append(name)
 
             names = ", ".join(task_names)
-            logger.info(f"Cancelling {len(tasks)} {task_type.replace('_', ' ')}: {names}")
+            logger.info(f"Cancelling {len(tasks)} {task_type}: {names}")
 
             for task in tasks:
                 task.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
-            logger.info(f"Cancelled {task_type.replace('_', ' ')}")
+            logger.info(f"Cancelled {task_type}")
 
     async def _close_connections(self) -> None:
-        """Close Discord and database connections.
-
-        Notes
-        -----
-        Attempts to close both Discord and database connections,
-        logging any errors encountered.
-        """
+        """Close Discord and database connections."""
         try:
             await self.close()
         except Exception as e:
