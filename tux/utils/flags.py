@@ -281,16 +281,36 @@ class CasesViewFlags(commands.FlagConverter, case_insensitive=True, delimiter=" 
 
 
 class CaseModifyFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    @staticmethod
+    def convert_bool(x: str | None) -> bool | None:
+        if x is None:
+            return None
+        x = str(x).lower()
+        if x in {"true", "t", "yes", "y", "1", "on"}:
+            return True
+        if x in {"false", "f", "no", "n", "0", "off"}:
+            return False
+        msg = f"Status must be a boolean value (true/false, yes/no, 1/0, on/off), not {x}"
+        raise commands.BadArgument(msg)
+
     status: bool | None = commands.flag(
         name="status",
         description="Status of the case.",
         aliases=["s"],
+        default=None,
+        converter=convert_bool,
     )
     reason: str | None = commands.flag(
         name="reason",
         description="Modified reason.",
         aliases=["r"],
+        default=None,
     )
+
+    def __init__(self):
+        if all(value is None for value in (self.status, self.reason)):
+            msg = "Status or reason must be provided."
+            raise commands.FlagError(msg)
 
 
 class WarnFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
