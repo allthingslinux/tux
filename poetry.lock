@@ -1006,14 +1006,14 @@ griffe = ">=0.38"
 
 [[package]]
 name = "griffe-typingdoc"
-version = "0.2.7"
+version = "0.2.8"
 description = "Griffe extension for PEP 727 – Documentation Metadata in Typing."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 groups = ["docs"]
 files = [
-    {file = "griffe_typingdoc-0.2.7-py3-none-any.whl", hash = "sha256:74a825df32fc87fcae2f221df5c5524dca23155cd3c04ec9fa46493669d3cf54"},
-    {file = "griffe_typingdoc-0.2.7.tar.gz", hash = "sha256:800841e99f8844ea3c1fae80b19bede7d8eed4195a2586f5db753f7a73f4931d"},
+    {file = "griffe_typingdoc-0.2.8-py3-none-any.whl", hash = "sha256:a4ed3dd73b9d48311b138d8b317916a0589325a73c525236bf5969a8fe2626b1"},
+    {file = "griffe_typingdoc-0.2.8.tar.gz", hash = "sha256:36f2c2f2568240a5d0ab462153d1f3cfec01a9cc56b2291f16ce7869f0f7af05"},
 ]
 
 [package.dependencies]
