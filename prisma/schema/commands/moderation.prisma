@@ -29,6 +29,16 @@ model Case {
 
   @@unique([case_number, guild_id])
   @@index([case_number, guild_id])
+
+  @@index([guild_id, case_user_id])
+
+  @@index([guild_id, case_moderator_id])
+
+  @@index([guild_id, case_type])
+
+  @@index([case_type, case_expires_at, case_tempban_expired])
+
+  @@index([case_created_at(sort: Desc)])
 }
 
 enum CaseType {
