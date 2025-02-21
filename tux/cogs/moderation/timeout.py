@@ -1,5 +1,3 @@
-from datetime import UTC, datetime
-
 import discord
 from discord.ext import commands
 
@@ -50,48 +48,30 @@ class Timeout(ModerationCogBase):
         discord.DiscordException
             If an error occurs while timing out the user.
         """
-
         assert ctx.guild
 
-        moderator = ctx.author
-
-        if not await self.check_conditions(ctx, member, moderator, "timeout"):
-            return
-
+        # Check if member is already timed out
         if member.is_timed_out():
             await ctx.send(f"{member} is already timed out.", ephemeral=True)
             return
 
-        duration = parse_time_string(flags.duration)
-        final_reason: str = reason if reason is not None else "No reason provided"
-        silent: bool = flags.silent
-
-        try:
-            await member.timeout(duration, reason=final_reason)
-
-        except discord.DiscordException as e:
-            await ctx.send(f"Failed to timeout {member}. {e}", ephemeral=True)
+        # Check if moderator has permission to timeout the member
+        if not await self.check_conditions(ctx, member, ctx.author, "timeout"):
             return
 
-        case = await self.db.case.insert_case(
-            case_user_id=member.id,
-            case_moderator_id=ctx.author.id,
+        final_reason = reason or self.DEFAULT_REASON
+        duration = parse_time_string(flags.duration)
+
+        # Execute timeout with case creation and DM
+        await self.execute_mod_action(
+            ctx=ctx,
             case_type=CaseType.TIMEOUT,
-            case_reason=final_reason,
-            case_expires_at=datetime.now(UTC) + duration,
-            guild_id=ctx.guild.id,
-        )
-
-        dm_sent = await self.send_dm(ctx, silent, member, final_reason, f"timed out for {flags.duration}")
-
-        await self.handle_case_response(
-            ctx,
-            CaseType.TIMEOUT,
-            case.case_number,
-            final_reason,
-            member,
-            dm_sent,
-            flags.duration,
+            user=member,
+            final_reason=final_reason,
+            silent=flags.silent,
+            dm_action=f"timed out for {flags.duration}",
+            actions=[(member.timeout(duration, reason=final_reason), type(None))],
+            duration=flags.duration,
         )
 
 

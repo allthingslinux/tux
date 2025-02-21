@@ -1,8 +1,5 @@
-import asyncio
-
 import discord
 from discord.ext import commands
-from loguru import logger
 
 from prisma.enums import CaseType
 from tux.bot import Tux
@@ -42,39 +39,28 @@ class Warn(ModerationCogBase):
             The member to warn.
         reason : str | None
             The reason for the warning.
-        flags : WarnFlags | None
+        flags : WarnFlags
             The flags for the command. (silent: bool)
         """
-
         assert ctx.guild
-        await ctx.defer(ephemeral=True)
 
-        moderator = ctx.author
-
-        if not await self.check_conditions(ctx, member, moderator, "warn"):
+        # Check if moderator has permission to warn the member
+        if not await self.check_conditions(ctx, member, ctx.author, "warn"):
             return
 
-        final_reason = reason or "No reason provided"
-        silent = flags.silent if flags else False
+        final_reason = reason or self.DEFAULT_REASON
 
-        try:
-            # Insert case and send DM concurrently
-            case, dm_sent = await asyncio.gather(
-                self.db.case.insert_case(
-                    case_user_id=member.id,
-                    case_moderator_id=ctx.author.id,
-                    case_type=CaseType.WARN,
-                    case_reason=final_reason,
-                    guild_id=ctx.guild.id,
-                ),
-                self.send_dm(ctx, silent, member, final_reason, "warned"),
-            )
-        except Exception as e:
-            logger.error(f"Failed to warn {member}. {e}")
-            await ctx.send(f"Failed to warn {member}. {e}", ephemeral=True)
-            return
-
-        await self.handle_case_response(ctx, CaseType.WARN, case.case_number, final_reason, member, dm_sent)
+        # Execute warn with case creation and DM
+        await self.execute_mod_action(
+            ctx=ctx,
+            case_type=CaseType.WARN,
+            user=member,
+            final_reason=final_reason,
+            silent=flags.silent,
+            dm_action="warned",
+            # Use dummy coroutine for actions that don't need Discord API calls
+            actions=[(self._dummy_action(), type(None))],
+        )
 
 
 async def setup(bot: Tux) -> None:

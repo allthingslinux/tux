@@ -1,5 +1,3 @@
-from datetime import UTC, datetime
-
 import discord
 from discord.ext import commands, tasks
 from loguru import logger
@@ -8,7 +6,6 @@ from prisma.enums import CaseType
 from tux.bot import Tux
 from tux.utils import checks
 from tux.utils.flags import TempBanFlags, generate_usage
-from tux.utils.functions import parse_time_string
 
 from . import ModerationCogBase
 
@@ -54,61 +51,54 @@ class TempBan(ModerationCogBase):
 
         assert ctx.guild
 
-        await ctx.defer(ephemeral=True)
-
+        # Check if moderator has permission to temp ban the member
         if not await self.check_conditions(ctx, member, ctx.author, "temp ban"):
             return
 
-        duration = parse_time_string(f"{flags.expires_at}d")
-        expires_at = datetime.now(UTC) + duration
-        final_reason: str = reason if reason is not None else "No reason provided"
-        silent: bool = flags.silent
-        purge_days: int = flags.purge_days
+        final_reason = reason or self.DEFAULT_REASON
+        duration_str = f"{flags.expires_at}d"
 
-        try:
-            dm_sent = await self.send_dm(ctx, silent, member, final_reason, action="temp banned")
-            await ctx.guild.ban(member, reason=final_reason, delete_message_days=purge_days)
-
-        except (discord.Forbidden, discord.HTTPException) as e:
-            logger.error(f"Failed to temporarily ban {member}. {e}")
-            await ctx.send(f"Failed to temporarily ban {member}. {e}", ephemeral=True)
-            return
-
-        case = await self.db.case.insert_case(
-            case_user_id=member.id,
-            case_moderator_id=ctx.author.id,
+        # Execute tempban with case creation and DM
+        await self.execute_mod_action(
+            ctx=ctx,
             case_type=CaseType.TEMPBAN,
-            case_reason=final_reason,
-            guild_id=ctx.guild.id,
-            case_expires_at=expires_at,
-            case_tempban_expired=False,
-        )
-
-        await self.handle_case_response(
-            ctx,
-            CaseType.TEMPBAN,
-            case.case_number,
-            final_reason,
-            member,
-            dm_sent,
-            f"{flags.expires_at}d",
+            user=member,
+            final_reason=final_reason,
+            silent=flags.silent,
+            dm_action="temp banned",
+            actions=[(ctx.guild.ban(member, reason=final_reason, delete_message_days=flags.purge_days), type(None))],
+            duration=duration_str,
         )
 
     @tasks.loop(minutes=1)
     async def tempban_check(self) -> None:
-        """Check for expired tempbans."""
+        """
+        Check for expired tempbans at a set interval and unban the user if the ban has expired.
+
+        Raises
+        ------
+        Exception
+            If an error occurs while checking for expired tempbans.
+        """
+
         try:
+            # Get expired tempbans
             expired_cases = await self.db.case.get_expired_tempbans()
+
             for case in expired_cases:
+                # Get guild
                 guild = self.bot.get_guild(case.guild_id)
                 if not guild:
                     continue
 
                 try:
+                    # Unban user
                     await guild.unban(
                         discord.Object(id=case.case_user_id),
                         reason="Temporary ban expired.",
                     )
+
+                    # Set case as expired
                     await self.db.case.set_tempban_expired(case.case_id, case.guild_id)
 
                 except (discord.Forbidden, discord.HTTPException, discord.NotFound) as e:
