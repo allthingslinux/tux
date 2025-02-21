@@ -27,6 +27,7 @@ emojis: dict[str, int] = {
     "jail": 1268115750392954880,
     "snippetban": 1277174953950576681,
     "snippetunban": 1277174953292337222,
+    "transparent": 1227090229639250032,
 }
 
 
@@ -581,18 +582,14 @@ class Cases(ModerationCogBase):
         case_number = f"{case.case_number:04d}" if case.case_number is not None else "0000"
 
         case_type_and_action = (
-            f"{case_action_emoji} {case_type_emoji}"
+            f"{case_action_emoji}{case_type_emoji}"
             if case_action_emoji and case_type_emoji
-            else ":interrobang: :interrobang:"
+            else ":interrobang::interrobang:"
         )
 
         case_date = discord.utils.format_dt(case.case_created_at, "R") if case.case_created_at else ":interrobang:"
 
-        case_user = f"`{case.case_user_id}`"
-
-        return (
-            f"{case_status_emoji} `{case_number}`\u2003 {case_type_and_action} \u2003__{case_date}__\u2003{case_user}\n"
-        )
+        return f"{case_status_emoji}`{case_number}`\u2003 {case_type_and_action} \u2003__{case_date}__\n"
 
     def _add_case_to_embed(self, embed: discord.Embed, case: Case) -> None:
         case_status_emoji = self._format_emoji(self._get_case_status_emoji(case.case_status))
@@ -600,9 +597,7 @@ class Cases(ModerationCogBase):
         case_action_emoji = self._format_emoji(self._get_case_action_emoji(case.case_type))
 
         if not embed.description:
-            embed.description = (
-                "**Case**\u2003\u2003\u2003**Type**\u2003\u2002**Date**\u2003\u2003\u2003\u2003\u2003\u2002**User**\n"
-            )
+            embed.description = "**Case**\u2003\u2003\u2002**Type**\u2003\u2002**Date**\n"
 
         embed.description += self._get_case_description(case, case_status_emoji, case_type_emoji, case_action_emoji)
 
