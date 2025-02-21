@@ -53,7 +53,7 @@ class Starboard(commands.Cog):
         name="setup",
         aliases=["s"],
     )
-    @commands.has_permissions(manage_guild=True)
+    @checks.has_pl(5)
     async def setup_starboard(
         self,
         ctx: commands.Context[Tux],
@@ -140,7 +140,7 @@ class Starboard(commands.Cog):
         name="remove",
         aliases=["r"],
     )
-    @commands.has_permissions(manage_guild=True)
+    @checks.has_pl(5)
     async def remove_starboard(self, ctx: commands.Context[Tux]) -> None:
         """
         Remove the starboard configuration for this server.
