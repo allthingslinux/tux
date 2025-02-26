@@ -122,7 +122,7 @@ def get_matching_string(arg: str) -> str:
 
 
 class BanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    purge_days: int = commands.flag(
+    purge_days: commands.Range[int, 1, 7] = commands.flag(
         name="purge_days",
         description="Number of days in messages. (< 7)",
         aliases=["p", "purge"],
@@ -142,7 +142,7 @@ class TempBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ",
         description="Number of days the ban will last for.",
         aliases=["t", "d", "e", "expires", "time"],
     )
-    purge_days: int = commands.flag(
+    purge_days: commands.Range[int, 1, 7] = commands.flag(
         name="purge_days",
         description="Number of days in messages. (< 7)",
         aliases=["p"],
