@@ -1381,14 +1381,14 @@ min-versions = ["babel (==2.9.0)", "click (==7.0)", "colorama (==0.4)", "ghp-imp
 
 [[package]]
 name = "mkdocs-api-autonav"
-version = "0.1.2"
+version = "0.1.3"
 description = "Autogenerate API docs with mkdocstrings, including nav"
 optional = false
 python-versions = ">=3.9"
 groups = ["docs"]
 files = [
-    {file = "mkdocs_api_autonav-0.1.2-py3-none-any.whl", hash = "sha256:369e9e21730d22487be55db899dced2c63c37f56087044081911e494a2f6a4b6"},
-    {file = "mkdocs_api_autonav-0.1.2.tar.gz", hash = "sha256:50d69f0440cc28918e151d9317f5643b11baea023876673155445c8d32ec2add"},
+    {file = "mkdocs_api_autonav-0.1.3-py3-none-any.whl", hash = "sha256:89b19e9a0e7da1abbb7583ed1f89aed7e6971a22f7e82838b6c1bc3ae8eee82e"},
+    {file = "mkdocs_api_autonav-0.1.3.tar.gz", hash = "sha256:c2812fab13ceba36082f2b2d52b72a1ab78100755f7d1b083d0420af41e7a0a3"},
 ]
 
 [package.dependencies]
