@@ -117,29 +117,34 @@ class Unjail(ModerationCogBase):
 
         await ctx.defer(ephemeral=True)
 
+        # Get jail role
         jail_role = await self.get_jail_role(ctx.guild)
         if not jail_role:
             await ctx.send("No jail role found.", ephemeral=True)
             return
 
+        # Check if user is jailed
         if not await self.is_jailed(ctx.guild.id, member.id):
             await ctx.send("User is not jailed.", ephemeral=True)
             return
 
+        # Check if moderator has permission to unjail the member
         if not await self.check_conditions(ctx, member, ctx.author, "unjail"):
             return
 
-        final_reason: str = reason if reason is not None else "No reason provided"
-        silent: bool = flags.silent
+        final_reason = reason or self.DEFAULT_REASON
 
         try:
+            # Get latest jail case
             case = await self.get_latest_jail_case(ctx.guild.id, member.id)
             if not case:
                 await ctx.send("No jail case found.", ephemeral=True)
                 return
 
+            # Remove jail role from member
             await member.remove_roles(jail_role, reason=final_reason)
 
+            # Add roles back to member
             if case.case_user_roles:
                 roles = [role for role_id in case.case_user_roles if (role := ctx.guild.get_role(role_id)) is not None]
                 if roles:
@@ -150,6 +155,7 @@ class Unjail(ModerationCogBase):
             await ctx.send(f"Failed to unjail {member}. {e}", ephemeral=True)
             return
 
+        # Insert unjail case into database
         case = await self.db.case.insert_case(
             case_user_id=member.id,
             case_moderator_id=ctx.author.id,
@@ -158,8 +164,10 @@ class Unjail(ModerationCogBase):
             guild_id=ctx.guild.id,
         )
 
-        dm_sent = await self.send_dm(ctx, silent, member, final_reason, "removed from jail")
+        # Send DM to member
+        dm_sent = await self.send_dm(ctx, flags.silent, member, final_reason, "removed from jail")
 
+        # Handle case response
         await self.handle_case_response(
             ctx,
             CaseType.UNJAIL,

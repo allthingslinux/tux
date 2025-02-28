@@ -1,10 +1,8 @@
 import discord
 from discord.ext import commands
-from loguru import logger
 
 from prisma.enums import CaseType
 from tux.bot import Tux
-from tux.database.controllers.case import CaseController
 from tux.utils import checks
 from tux.utils.flags import PollBanFlags, generate_usage
 
@@ -14,32 +12,7 @@ from . import ModerationCogBase
 class PollBan(ModerationCogBase):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
-        self.case_controller = CaseController()
         self.poll_ban.usage = generate_usage(self.poll_ban, PollBanFlags)
-
-    async def is_pollbanned(self, guild_id: int, user_id: int) -> bool:
-        """
-        Check if a user is poll banned.
-
-        Parameters
-        ----------
-        guild_id : int
-            The ID of the guild to check in.
-        user_id : int
-            The ID of the user to check.
-
-        Returns
-        -------
-        bool
-            True if the user is poll banned, False otherwise.
-        """
-        ban_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.POLLBAN)
-        unban_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.POLLUNBAN)
-
-        ban_count = sum(case.case_user_id == user_id for case in ban_cases)
-        unban_count = sum(case.case_user_id == user_id for case in unban_cases)
-
-        return ban_count > unban_count
 
     @commands.hybrid_command(
         name="pollban",
@@ -69,36 +42,30 @@ class PollBan(ModerationCogBase):
         flags : PollBanFlags
             The flags for the command. (silent: bool)
         """
-
         assert ctx.guild
-        await ctx.defer(ephemeral=True)
 
+        # Check if user is already poll banned
         if await self.is_pollbanned(ctx.guild.id, member.id):
             await ctx.send("User is already poll banned.", ephemeral=True)
             return
 
+        # Check if moderator has permission to poll ban the member
         if not await self.check_conditions(ctx, member, ctx.author, "poll ban"):
             return
 
-        final_reason: str = reason if reason is not None else "No reason provided"
-        silent: bool = flags.silent
+        final_reason = reason or self.DEFAULT_REASON
 
-        try:
-            case = await self.db.case.insert_case(
-                case_user_id=member.id,
-                case_moderator_id=ctx.author.id,
-                case_type=CaseType.POLLBAN,
-                case_reason=final_reason,
-                guild_id=ctx.guild.id,
-            )
-
-        except Exception as e:
-            logger.error(f"Failed to ban {member}. {e}")
-            await ctx.send(f"Failed to ban {member}. {e}", ephemeral=True)
-            return
-
-        dm_sent = await self.send_dm(ctx, silent, member, final_reason, "poll banned")
-        await self.handle_case_response(ctx, CaseType.POLLBAN, case.case_number, final_reason, member, dm_sent)
+        # Execute poll ban with case creation and DM
+        await self.execute_mod_action(
+            ctx=ctx,
+            case_type=CaseType.POLLBAN,
+            user=member,
+            final_reason=final_reason,
+            silent=flags.silent,
+            dm_action="poll banned",
+            # Use dummy coroutine for actions that don't need Discord API calls
+            actions=[(self._dummy_action(), type(None))],
+        )
 
 
 async def setup(bot: Tux) -> None:

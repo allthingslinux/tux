@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from loguru import logger
 
 from prisma.enums import CaseType
 from tux.bot import Tux
@@ -50,36 +49,22 @@ class Ban(ModerationCogBase):
 
         assert ctx.guild
 
-        moderator = ctx.author
-
-        if not await self.check_conditions(ctx, member, moderator, "ban"):
+        # Check if moderator has permission to ban the member
+        if not await self.check_conditions(ctx, member, ctx.author, "ban"):
             return
 
-        await ctx.defer(ephemeral=True)
+        final_reason = reason or self.DEFAULT_REASON
 
-        # Use provided reason or default
-        final_reason: str = reason if reason is not None else "No reason provided"
-        purge_days: int = flags.purge_days
-        silent: bool = flags.silent
-
-        try:
-            dm_sent = await self.send_dm(ctx, silent, member, final_reason, "banned")
-            await ctx.guild.ban(member, reason=final_reason, delete_message_days=purge_days)
-
-        except (discord.Forbidden, discord.HTTPException) as e:
-            logger.error(f"Failed to ban {member}. {e}")
-            await ctx.send(f"Failed to ban {member}. {e}", ephemeral=True)
-            return
-
-        case = await self.db.case.insert_case(
-            case_user_id=member.id,
-            case_moderator_id=ctx.author.id,
+        # Execute ban with case creation and DM
+        await self.execute_mod_action(
+            ctx=ctx,
             case_type=CaseType.BAN,
-            case_reason=final_reason,
-            guild_id=ctx.guild.id,
+            user=member,
+            final_reason=final_reason,
+            silent=flags.silent,
+            dm_action="banned",
+            actions=[(ctx.guild.ban(member, reason=final_reason, delete_message_days=flags.purge_days), type(None))],
         )
-
-        await self.handle_case_response(ctx, CaseType.BAN, case.case_number, final_reason, member, dm_sent)
 
 
 async def setup(bot: Tux) -> None:

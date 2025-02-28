@@ -1,5 +1,7 @@
 import asyncio
+from collections.abc import Sequence
 from datetime import datetime
+from typing import Any, TypeVar
 
 import discord
 from discord.ext import commands
@@ -10,13 +12,127 @@ from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils.constants import CONST
+from tux.utils.exceptions import handle_case_result, handle_gather_result
+
+T = TypeVar("T")
 
 
 class ModerationCogBase(commands.Cog):
+    DEFAULT_REASON = "No reason provided"
+
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.db = DatabaseController()
         self.config = DatabaseController().guild_config
+
+    async def _dummy_action(self) -> None:
+        """
+        Dummy coroutine for moderation actions that only create a case without performing Discord API actions.
+        Used by commands like warn, pollban, snippetban etc. that only need case creation.
+        """
+        return
+
+    async def execute_mod_action(
+        self,
+        ctx: commands.Context[Tux],
+        case_type: CaseType,
+        user: discord.Member | discord.User,
+        final_reason: str,
+        silent: bool,
+        dm_action: str,
+        actions: Sequence[tuple[Any, type[T]]] = (),
+        duration: str | None = None,
+    ) -> None:
+        """
+        Execute a moderation action with case creation, DM sending, and additional actions.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context of the command.
+        case_type : CaseType
+            The type of case to create.
+        user : discord.Member | discord.User
+            The target user of the moderation action.
+        final_reason : str
+            The reason for the moderation action.
+        silent : bool
+            Whether to send a DM to the user.
+        dm_action : str
+            The action description for the DM.
+        actions : Sequence[tuple[Any, type[T]]]
+            Additional actions to execute and their expected return types.
+        duration : str | None
+            The duration of the action, if applicable.
+        """
+
+        assert ctx.guild
+
+        dm_task = self.send_dm(ctx, silent, user, final_reason, dm_action)
+
+        case_task = self.db.case.insert_case(
+            case_user_id=user.id,
+            case_moderator_id=ctx.author.id,
+            case_type=case_type,
+            case_reason=final_reason,
+            guild_id=ctx.guild.id,
+        )
+        action_tasks = [action[0] for action in actions]
+
+        try:
+            dm_result = await asyncio.wait_for(dm_task, timeout=2.0)
+            dm_sent = self._handle_dm_result(user, dm_result)
+        except TimeoutError:
+            logger.warning(f"DM to {user} timed out")
+            dm_sent = False
+        except Exception as e:
+            logger.warning(f"Failed to send DM to {user}: {e}")
+            dm_sent = False
+
+        # Then execute case creation and actions concurrently
+        all_results = await asyncio.gather(case_task, *action_tasks, return_exceptions=True)
+        case_result, *action_results = all_results
+
+        # Handle case result
+        case_result = handle_case_result(case_result)
+
+        # Handle action results
+        for result, (_, expected_type) in zip(action_results, actions, strict=False):
+            handle_gather_result(result, expected_type)
+
+        # Handle case response
+        await self.handle_case_response(
+            ctx,
+            case_type,
+            case_result.case_number,
+            final_reason,
+            user,
+            dm_sent,
+            duration,
+        )
+
+    def _handle_dm_result(self, user: discord.Member | discord.User, dm_result: Any) -> bool:
+        """
+        Handle the result of sending a DM.
+
+        Parameters
+        ----------
+        user : discord.Member | discord.User
+            The user the DM was sent to.
+        dm_result : Any
+            The result of the DM sending operation.
+
+        Returns
+        -------
+        bool
+            Whether the DM was successfully sent.
+        """
+
+        if isinstance(dm_result, Exception):
+            logger.warning(f"Failed to send DM to {user}: {dm_result}")
+            return False
+
+        return dm_result if isinstance(dm_result, bool) else False
 
     def create_embed(
         self,
@@ -51,6 +167,7 @@ class ModerationCogBase(commands.Cog):
         discord.Embed
             The embed for the moderation action.
         """
+
         footer_text, footer_icon_url = EmbedCreator.get_footer(
             bot=self.bot,
             user_name=ctx.author.name,
@@ -104,7 +221,7 @@ class ModerationCogBase(commands.Cog):
         self,
         ctx: commands.Context[Tux],
         silent: bool,
-        user: discord.Member,
+        user: discord.Member | discord.User,
         reason: str,
         action: str,
     ) -> bool:
@@ -117,13 +234,19 @@ class ModerationCogBase(commands.Cog):
             The context of the command.
         silent : bool
             Whether the command is silent.
-        user : discord.Member
+        user : discord.Member | discord.User
             The target of the moderation action.
         reason : str
             The reason for the moderation action.
         action : str
             The action being performed.
+
+        Returns
+        -------
+        bool
+            Whether the DM was successfully sent.
         """
+
         if not silent:
             try:
                 await user.send(f"You have been {action} from {ctx.guild} for the following reason:\n> {reason}")
@@ -138,7 +261,7 @@ class ModerationCogBase(commands.Cog):
     async def check_conditions(
         self,
         ctx: commands.Context[Tux],
-        user: discord.Member,
+        user: discord.Member | discord.User,
         moderator: discord.Member | discord.User,
         action: str,
     ) -> bool:
@@ -164,41 +287,28 @@ class ModerationCogBase(commands.Cog):
 
         assert ctx.guild
 
-        if user == ctx.author:
-            embed = EmbedCreator.create_embed(
-                bot=self.bot,
-                embed_type=EmbedCreator.ERROR,
-                user_name=ctx.author.name,
-                user_display_avatar=ctx.author.display_avatar.url,
-                title="You cannot self-moderate",
-                description=f"You cannot {action} yourself.",
-            )
-            await ctx.send(embed=embed, ephemeral=True)
-            return False
+        error_conditions = [
+            (user == ctx.author, f"You cannot {action} yourself."),
+            (
+                isinstance(moderator, discord.Member)
+                and isinstance(user, discord.Member)
+                and user.top_role >= moderator.top_role,
+                f"You cannot {action} a user with a higher or equal role.",
+            ),
+            (user == ctx.guild.owner, f"You cannot {action} the server owner."),
+        ]
 
-        if isinstance(moderator, discord.Member) and user.top_role >= moderator.top_role:
-            embed = EmbedCreator.create_embed(
-                bot=self.bot,
-                embed_type=EmbedCreator.ERROR,
-                user_name=ctx.author.name,
-                user_display_avatar=ctx.author.display_avatar.url,
-                title="You cannot self-moderate",
-                description=f"You cannot {action} a user with a higher or equal role.",
-            )
-            await ctx.send(embed=embed, ephemeral=True)
-            return False
-
-        if user == ctx.guild.owner:
-            embed = EmbedCreator.create_embed(
-                bot=self.bot,
-                embed_type=EmbedCreator.ERROR,
-                user_name=ctx.author.name,
-                user_display_avatar=ctx.author.display_avatar.url,
-                title="You cannot self-moderate",
-                description=f"You cannot {action} the server owner.",
-            )
-            await ctx.send(embed=embed, ephemeral=True)
-            return False
+        for condition, error_message in error_conditions:
+            if condition:
+                embed = EmbedCreator.create_embed(
+                    bot=self.bot,
+                    embed_type=EmbedCreator.ERROR,
+                    user_name=ctx.author.name,
+                    user_display_avatar=ctx.author.display_avatar.url,
+                    description=error_message,
+                )
+                await ctx.send(embed=embed, ephemeral=True)
+                return False
 
         return True
 
@@ -211,7 +321,7 @@ class ModerationCogBase(commands.Cog):
         user: discord.Member | discord.User,
         dm_sent: bool,
         duration: str | None = None,
-    ):
+    ) -> None:
         """
         Handle the response for a case.
 
@@ -251,6 +361,7 @@ class ModerationCogBase(commands.Cog):
                 color=CONST.EMBED_COLORS["CASE"],
                 icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
             )
+
             embed.set_thumbnail(url=user.avatar)
 
         else:
@@ -282,11 +393,38 @@ class ModerationCogBase(commands.Cog):
         bool
             True if the user is poll banned, False otherwise.
         """
+        # Get latest case for this user
+        latest_case = await self.db.case.get_latest_case_by_user(
+            guild_id=guild_id,
+            user_id=user_id,
+            case_types=[CaseType.POLLBAN, CaseType.POLLUNBAN],
+        )
 
-        ban_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.POLLBAN)
-        unban_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.POLLUNBAN)
+        # If no cases exist or latest case is an unban, user is not banned
+        return bool(latest_case and latest_case.case_type != CaseType.POLLUNBAN)
 
-        ban_count = sum(case.case_user_id == user_id for case in ban_cases)
-        unban_count = sum(case.case_user_id == user_id for case in unban_cases)
+    async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
+        """
+        Check if a user is snippet banned.
 
-        return ban_count > unban_count
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to check in.
+        user_id : int
+            The ID of the user to check.
+
+        Returns
+        -------
+        bool
+            True if the user is snippet banned, False otherwise.
+        """
+        # Get latest case for this user
+        latest_case = await self.db.case.get_latest_case_by_user(
+            guild_id=guild_id,
+            user_id=user_id,
+            case_types=[CaseType.SNIPPETBAN, CaseType.SNIPPETUNBAN],
+        )
+
+        # If no cases exist or latest case is an unban, user is not banned
+        return bool(latest_case and latest_case.case_type != CaseType.SNIPPETUNBAN)

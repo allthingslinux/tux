@@ -1,6 +1,4 @@
-import discord
 from discord.ext import commands
-from loguru import logger
 
 from prisma.enums import CaseType
 from tux.bot import Tux
@@ -50,37 +48,41 @@ class Unban(ModerationCogBase):
         discord.HTTPException
             If an error occurs while unbanning the user.
         """
-
         assert ctx.guild
-        await ctx.defer(ephemeral=True)
 
         # Get the list of banned users in the guild
         banned_users = [ban.user async for ban in ctx.guild.bans()]
-        user = await commands.UserConverter().convert(ctx, username_or_id)
 
+        # Convert the username_or_id to a user object
+        try:
+            user = await commands.UserConverter().convert(ctx, username_or_id)
+        except commands.UserNotFound:
+            await ctx.send(f"{username_or_id} was not found.", ephemeral=True)
+            return
+
+        # Check if the user is banned
         if user not in banned_users:
             await ctx.send(f"{user} was not found in the guild ban list.", ephemeral=True)
             return
 
-        final_reason: str = reason if reason is not None else "No reason provided"
-
-        try:
-            await ctx.guild.unban(user, reason=final_reason)
-
-        except (discord.Forbidden, discord.HTTPException, discord.NotFound) as e:
-            logger.error(f"Failed to unban {user}. {e}")
-            await ctx.send(f"Failed to unban {user}. {e}", ephemeral=True)
+        # Check if moderator has permission to unban the user
+        if not await self.check_conditions(ctx, user, ctx.author, "unban"):
             return
 
-        case = await self.db.case.insert_case(
-            guild_id=ctx.guild.id,
-            case_user_id=user.id,
-            case_moderator_id=ctx.author.id,
-            case_type=CaseType.UNBAN,
-            case_reason=final_reason,
-        )
+        final_reason = reason or self.DEFAULT_REASON
 
-        await self.handle_case_response(ctx, CaseType.UNBAN, case.case_number, final_reason, user, dm_sent=False)
+        # Execute unban with case creation
+        await self.execute_mod_action(
+            ctx=ctx,
+            case_type=CaseType.UNBAN,
+            user=user,
+            final_reason=final_reason,
+            # No DM for unbans due to user not being in the guild
+            silent=True,
+            # No DM for unbans due to user not being in the guild
+            dm_action="",
+            actions=[(ctx.guild.unban(user, reason=final_reason), type(None))],
+        )
 
 
 async def setup(bot: Tux) -> None:

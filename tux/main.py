@@ -170,7 +170,7 @@ async def main() -> None:
 
     try:
         # Start the bot without context manager to handle shutdown manually
-        await bot.start(CONFIG.TOKEN)
+        await bot.start(CONFIG.TOKEN, reconnect=True)
     except KeyboardInterrupt:
         logger.info("Initiating shutdown...")
     except discord.LoginFailure:

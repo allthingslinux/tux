@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
 from prisma.enums import CaseType
-from prisma.models import Case, Guild
+from prisma.models import Case
 from prisma.types import CaseWhereInput
 from tux.database.client import db
 
@@ -10,25 +10,6 @@ class CaseController:
     def __init__(self):
         self.table = db.case
         self.guild_table = db.guild
-
-    async def ensure_guild_exists(self, guild_id: int) -> Guild:
-        """
-        Ensure a guild exists in the database and return the found or created object.
-
-        Parameters
-        ----------
-        guild_id : int
-            The ID of the guild to ensure exists.
-
-        Returns
-        -------
-        Guild
-            The guild database object.
-        """
-        guild = await self.guild_table.find_first(where={"guild_id": guild_id})
-        if guild is None:
-            return await self.guild_table.create(data={"guild_id": guild_id})
-        return guild
 
     async def get_next_case_number(self, guild_id: int) -> int:
         """
@@ -45,33 +26,21 @@ class CaseController:
             The next case number for the guild.
         """
 
-        guild = await self.ensure_guild_exists(guild_id)
-        return (guild.case_count or 0) + 1
-
-    async def increment_case_count(self, guild_id: int) -> Guild | None:
-        """
-        Increment the case count for a guild.
-
-        Parameters
-        ----------
-        guild_id : int
-            The ID of the guild to increment the case count for.
-
-        Returns
-        -------
-        Guild | None
-            The updated guild database object, or None if the guild does not exist.
-        """
-        guild = await self.ensure_guild_exists(guild_id)
-
-        return await self.guild_table.update(
+        # Try to update existing guild's case count
+        guild = await self.guild_table.update(
             where={"guild_id": guild_id},
-            data={"case_count": (guild.case_count or 0) + 1},
+            data={"case_count": {"increment": 1}},
         )
 
-    """
-    CREATE
-    """
+        if guild is not None:
+            return guild.case_count
+
+        # If guild doesn't exist, create it with case_count = 1
+        guild = await self.guild_table.create(
+            data={"guild_id": guild_id, "case_count": 1},
+        )
+
+        return guild.case_count
 
     async def insert_case(
         self,
@@ -111,13 +80,12 @@ class CaseController:
         Case
             The case database object.
         """
-        await self.ensure_guild_exists(guild_id)
-        case_number = await self.get_next_case_number(guild_id)
-        await self.increment_case_count(guild_id)
 
+        case_number = await self.get_next_case_number(guild_id)
+
+        # Create the case with the atomically incremented case number
         return await self.table.create(
             data={
-                "guild_id": guild_id,
                 "case_number": case_number,
                 "case_user_id": case_user_id,
                 "case_moderator_id": case_moderator_id,
@@ -126,12 +94,16 @@ class CaseController:
                 "case_expires_at": case_expires_at,
                 "case_user_roles": case_user_roles if case_user_roles is not None else [],
                 "case_tempban_expired": case_tempban_expired,
+                "guild": {
+                    "connect": {
+                        "guild_id": guild_id,
+                    },
+                },
+            },
+            include={
+                "guild": True,
             },
         )
-
-    """
-    READ
-    """
 
     async def get_all_cases(self, guild_id: int) -> list[Case]:
         """
@@ -147,7 +119,11 @@ class CaseController:
         list[Case]
             A list of cases for the guild.
         """
-        return await self.table.find_many(where={"guild_id": guild_id}, order={"case_created_at": "desc"})
+
+        return await self.table.find_many(
+            where={"guild_id": guild_id},
+            order={"case_created_at": "desc"},
+        )
 
     async def get_cases_by_options(
         self,
@@ -169,6 +145,7 @@ class CaseController:
         list[Case] | None
             A list of cases for the guild if found, otherwise None.
         """
+
         return await self.table.find_many(
             where={"guild_id": guild_id, **options},
             order={"case_created_at": "desc"},
@@ -190,7 +167,10 @@ class CaseController:
         Case | None
             The case if found, otherwise None.
         """
-        return await self.table.find_first(where={"guild_id": guild_id, "case_number": case_number})
+
+        return await self.table.find_first(
+            where={"guild_id": guild_id, "case_number": case_number},
+        )
 
     async def get_all_cases_by_user_id(
         self,
@@ -212,12 +192,17 @@ class CaseController:
         list[Case]
             A list of cases for the target in the guild.
         """
+
         return await self.table.find_many(
             where={"guild_id": guild_id, "case_user_id": case_user_id},
             order={"case_created_at": "desc"},
         )
 
-    async def get_all_cases_by_moderator_id(self, guild_id: int, case_moderator_id: int) -> list[Case]:
+    async def get_all_cases_by_moderator_id(
+        self,
+        guild_id: int,
+        case_moderator_id: int,
+    ) -> list[Case]:
         """
         Get all cases for a moderator in a guild.
 
@@ -233,6 +218,7 @@ class CaseController:
         list[Case]
             A list of cases for the moderator in the guild.
         """
+
         return await self.table.find_many(
             where={"guild_id": guild_id, "case_moderator_id": case_moderator_id},
             order={"case_created_at": "desc"},
@@ -254,6 +240,7 @@ class CaseController:
         list[Case]
             A list of cases of the type in the guild.
         """
+
         return await self.table.find_many(
             where={"guild_id": guild_id, "case_type": case_type},
             order={"case_created_at": "desc"},
@@ -264,14 +251,26 @@ class CaseController:
         guild_id: int,
         case_user_id: int,
     ) -> Case | None:
+        """
+        Get the last jail case for a user.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to get the case in.
+        case_user_id : int
+            The ID of the user to get the case for.
+
+        Returns
+        -------
+        Case | None
+            The case if found, otherwise None.
+        """
+
         return await self.table.find_first(
             where={"guild_id": guild_id, "case_user_id": case_user_id, "case_type": CaseType.JAIL},
             order={"case_created_at": "desc"},
         )
-
-    """
-    UPDATE
-    """
 
     async def update_case(
         self,
@@ -280,17 +279,73 @@ class CaseController:
         case_reason: str,
         case_status: bool | None = None,
     ) -> Case | None:
-        case = await self.table.find_first(where={"guild_id": guild_id, "case_number": case_number})
+        """
+        Update a case.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to update the case in.
+        case_number : int
+            The number of the case to update.
+        case_reason : str
+            The new reason for the case.
+        case_status : bool | None
+            The new status for the case.
+
+        Returns
+        -------
+        Case | None
+            The updated case if found, otherwise None.
+        """
+
+        case = await self.table.find_first(
+            where={"guild_id": guild_id, "case_number": case_number},
+        )
+
         if case is None:
             return None
+
         return await self.table.update(
             where={"case_id": case.case_id},
             data={"case_reason": case_reason, "case_status": case_status},
         )
 
-    """
-    DELETE
-    """
+    async def get_latest_case_by_user(
+        self,
+        guild_id: int,
+        user_id: int,
+        case_types: list[CaseType],
+    ) -> Case | None:
+        """
+        Get the latest case for a user with specified case types.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to get the case in.
+        user_id : int
+            The ID of the user to get the case for.
+        case_types : list[CaseType]
+            The types of cases to search for.
+
+        Returns
+        -------
+        Case | None
+            The latest case if found, otherwise None.
+        """
+
+        cases = await self.table.find_many(
+            where={"guild_id": guild_id, "case_user_id": user_id},
+            order={"case_created_at": "desc"},
+            take=1,
+        )
+        if not cases:
+            return None
+
+        case = cases[0]
+
+        return case if case.case_type in case_types else None
 
     async def delete_case_by_number(self, guild_id: int, case_number: int) -> Case | None:
         """
@@ -308,9 +363,14 @@ class CaseController:
         Case | None
             The case if found and deleted, otherwise None.
         """
-        case = await self.table.find_first(where={"guild_id": guild_id, "case_number": case_number})
+
+        case = await self.table.find_first(
+            where={"guild_id": guild_id, "case_number": case_number},
+        )
+
         if case is not None:
             return await self.table.delete(where={"case_id": case.case_id})
+
         return None
 
     async def get_expired_tempbans(self) -> list[Case]:
@@ -322,6 +382,7 @@ class CaseController:
         list[Case]
             A list of cases of the type in the guild.
         """
+
         return await self.table.find_many(
             where={
                 "case_type": CaseType.TEMPBAN,
@@ -347,6 +408,7 @@ class CaseController:
             The number of Case records updated (1) if successful, None if no records were found,
             or raises an exception if multiple records were affected.
         """
+
         if case_number is None:
             msg = "Case number not found"
             raise ValueError(msg)
@@ -355,10 +417,12 @@ class CaseController:
             where={"case_number": case_number, "guild_id": guild_id},
             data={"case_tempban_expired": True},
         )
+
         if result == 1:
             return result
         if result == 0:
             return None
 
         msg = f"Multiple records ({result}) were affected when updating case {case_number} in guild {guild_id}"
+
         raise ValueError(msg)

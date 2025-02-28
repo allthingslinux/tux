@@ -96,24 +96,30 @@ class Jail(ModerationCogBase):
 
         await ctx.defer(ephemeral=True)
 
+        # Get jail role
         jail_role = await self.get_jail_role(ctx.guild)
         if not jail_role:
             await ctx.send("No jail role found.", ephemeral=True)
             return
 
+        # Check if user is already jailed
         if await self.is_jailed(ctx.guild.id, member.id):
             await ctx.send("User is already jailed.", ephemeral=True)
             return
 
+        # Check if moderator has permission to jail the member
         if not await self.check_conditions(ctx, member, ctx.author, "jail"):
             return
 
-        final_reason: str = reason if reason is not None else "No reason provided"
-        silent: bool = flags.silent
+        final_reason = reason or self.DEFAULT_REASON
 
+        # Get roles that can be managed by the bot
         user_roles = self._get_manageable_roles(member, jail_role)
+
+        # Convert roles to IDs
         case_user_roles = [role.id for role in user_roles]
 
+        # Insert case into database
         try:
             case = await self.db.case.insert_case(
                 guild_id=ctx.guild.id,
@@ -124,6 +130,7 @@ class Jail(ModerationCogBase):
                 case_user_roles=case_user_roles,
             )
 
+            # Remove roles from member
             if user_roles:
                 await member.remove_roles(*user_roles, reason=final_reason, atomic=False)
 
@@ -132,14 +139,19 @@ class Jail(ModerationCogBase):
             await ctx.send(f"Failed to jail {member}. {e}", ephemeral=True)
             return
 
+        # Add jail role to member
         try:
             await member.add_roles(jail_role, reason=final_reason)
+
         except (discord.Forbidden, discord.HTTPException) as e:
             logger.error(f"Failed to jail {member}. {e}")
             await ctx.send(f"Failed to jail {member}. {e}", ephemeral=True)
             return
 
-        dm_sent = await self.send_dm(ctx, silent, member, final_reason, "jailed")
+        # Send DM to member
+        dm_sent = await self.send_dm(ctx, flags.silent, member, final_reason, "jailed")
+
+        # Handle case response
         await self.handle_case_response(ctx, CaseType.JAIL, case.case_number, final_reason, member, dm_sent)
 
     @staticmethod

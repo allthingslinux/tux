@@ -47,45 +47,28 @@ class Untimeout(ModerationCogBase):
         discord.DiscordException
             If an error occurs while removing the timeout.
         """
-
         assert ctx.guild
 
-        moderator = ctx.author
-
-        if not await self.check_conditions(ctx, member, moderator, "untimeout"):
-            return
-
+        # Check if member is timed out
         if not member.is_timed_out():
             await ctx.send(f"{member} is not timed out.", ephemeral=True)
             return
 
-        final_reason: str = reason if reason is not None else "No reason provided"
-        silent: bool = flags.silent
-
-        try:
-            await member.timeout(None, reason=final_reason)
-
-        except discord.DiscordException as e:
-            await ctx.send(f"Failed to remove timeout from {member}. {e}", ephemeral=True)
+        # Check if moderator has permission to untimeout the member
+        if not await self.check_conditions(ctx, member, ctx.author, "untimeout"):
             return
 
-        case = await self.db.case.insert_case(
-            case_user_id=member.id,
-            case_moderator_id=ctx.author.id,
+        final_reason = reason or self.DEFAULT_REASON
+
+        # Execute untimeout with case creation and DM
+        await self.execute_mod_action(
+            ctx=ctx,
             case_type=CaseType.UNTIMEOUT,
-            case_reason=final_reason,
-            guild_id=ctx.guild.id,
-        )
-
-        dm_sent = await self.send_dm(ctx, silent, member, final_reason, "removed from timeout")
-
-        await self.handle_case_response(
-            ctx,
-            CaseType.UNTIMEOUT,
-            case.case_number,
-            final_reason,
-            member,
-            dm_sent,
+            user=member,
+            final_reason=final_reason,
+            silent=flags.silent,
+            dm_action="removed from timeout",
+            actions=[(member.timeout(None, reason=final_reason), type(None))],
         )
 
 

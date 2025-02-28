@@ -1,10 +1,8 @@
 import discord
 from discord.ext import commands
-from loguru import logger
 
 from prisma.enums import CaseType
 from tux.bot import Tux
-from tux.database.controllers.case import CaseController
 from tux.utils import checks
 from tux.utils.flags import SnippetBanFlags, generate_usage
 
@@ -14,32 +12,7 @@ from . import ModerationCogBase
 class SnippetBan(ModerationCogBase):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
-        self.case_controller = CaseController()
         self.snippet_ban.usage = generate_usage(self.snippet_ban, SnippetBanFlags)
-
-    async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
-        """
-        Check if a user is snippet banned.
-
-        Parameters
-        ----------
-        guild_id : int
-            The ID of the guild to check in.
-        user_id : int
-            The ID of the user to check.
-
-        Returns
-        -------
-        bool
-            True if the user is snippet banned, False otherwise.
-        """
-        ban_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.SNIPPETBAN)
-        unban_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.SNIPPETUNBAN)
-
-        ban_count = sum(case.case_user_id == user_id for case in ban_cases)
-        unban_count = sum(case.case_user_id == user_id for case in unban_cases)
-
-        return ban_count > unban_count
 
     @commands.hybrid_command(
         name="snippetban",
@@ -56,7 +29,7 @@ class SnippetBan(ModerationCogBase):
         flags: SnippetBanFlags,
     ) -> None:
         """
-        Ban a user from creating snippets.
+        Ban a member from creating snippets.
 
         Parameters
         ----------
@@ -69,36 +42,30 @@ class SnippetBan(ModerationCogBase):
         flags : SnippetBanFlags
             The flags for the command. (silent: bool)
         """
-
         assert ctx.guild
-        await ctx.defer(ephemeral=True)
 
+        # Check if user is already snippet banned
         if await self.is_snippetbanned(ctx.guild.id, member.id):
             await ctx.send("User is already snippet banned.", ephemeral=True)
             return
 
+        # Check if moderator has permission to snippet ban the member
         if not await self.check_conditions(ctx, member, ctx.author, "snippet ban"):
             return
 
-        final_reason: str = reason if reason is not None else "No reason provided"
-        silent: bool = flags.silent
+        final_reason = reason or self.DEFAULT_REASON
 
-        try:
-            case = await self.db.case.insert_case(
-                case_user_id=member.id,
-                case_moderator_id=ctx.author.id,
-                case_type=CaseType.SNIPPETBAN,
-                case_reason=final_reason,
-                guild_id=ctx.guild.id,
-            )
-
-        except Exception as e:
-            logger.error(f"Failed to ban {member}. {e}")
-            await ctx.send(f"Failed to ban {member}. {e}", ephemeral=True)
-            return
-
-        dm_sent = await self.send_dm(ctx, silent, member, final_reason, "snippet banned")
-        await self.handle_case_response(ctx, CaseType.SNIPPETBAN, case.case_number, final_reason, member, dm_sent)
+        # Execute snippet ban with case creation and DM
+        await self.execute_mod_action(
+            ctx=ctx,
+            case_type=CaseType.SNIPPETBAN,
+            user=member,
+            final_reason=final_reason,
+            silent=flags.silent,
+            dm_action="snippet banned",
+            # Use dummy coroutine for actions that don't need Discord API calls
+            actions=[(self._dummy_action(), type(None))],
+        )
 
 
 async def setup(bot: Tux) -> None:

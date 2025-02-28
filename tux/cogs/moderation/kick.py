@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from loguru import logger
 
 from prisma.enums import CaseType
 from tux.bot import Tux
@@ -30,7 +29,7 @@ class Kick(ModerationCogBase):
         flags: KickFlags,
     ) -> None:
         """
-        Kick a user from the server.
+        Kick a member from the server.
 
         Parameters
         ----------
@@ -40,7 +39,7 @@ class Kick(ModerationCogBase):
             The member to kick.
         reason : str | None
             The reason for the kick.
-        flags : KickFlags | None
+        flags : KickFlags
             The flags for the command. (silent: bool)
 
         Raises
@@ -50,35 +49,24 @@ class Kick(ModerationCogBase):
         discord.HTTPException
             If an error occurs while kicking the user.
         """
-
         assert ctx.guild
 
-        moderator = ctx.author
-
-        if not await self.check_conditions(ctx, member, moderator, "kick"):
+        # Check if moderator has permission to kick the member
+        if not await self.check_conditions(ctx, member, ctx.author, "kick"):
             return
 
-        final_reason = reason or "No reason provided"
-        silent = flags.silent if flags else False
+        final_reason = reason or self.DEFAULT_REASON
 
-        try:
-            dm_sent = await self.send_dm(ctx, silent, member, final_reason, "kicked")
-            await ctx.guild.kick(member, reason=final_reason)
-
-        except (discord.Forbidden, discord.HTTPException) as e:
-            logger.error(f"Failed to kick {member}. {e}")
-            await ctx.send(f"Failed to kick {member}. {e}", ephemeral=True)
-            return
-
-        case = await self.db.case.insert_case(
-            case_user_id=member.id,
-            case_moderator_id=ctx.author.id,
+        # Execute kick with case creation and DM
+        await self.execute_mod_action(
+            ctx=ctx,
             case_type=CaseType.KICK,
-            case_reason=final_reason,
-            guild_id=ctx.guild.id,
+            user=member,
+            final_reason=final_reason,
+            silent=flags.silent,
+            dm_action="kicked",
+            actions=[(ctx.guild.kick(member, reason=final_reason), type(None))],
         )
-
-        await self.handle_case_response(ctx, CaseType.KICK, case.case_number, final_reason, member, dm_sent)
 
 
 async def setup(bot: Tux) -> None:
