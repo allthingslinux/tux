@@ -898,14 +898,14 @@ smmap = ">=3.0.1,<6"
 
 [[package]]
 name = "githubkit"
-version = "0.12.7"
+version = "0.12.8"
 description = "GitHub SDK for Python"
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["main"]
 files = [
-    {file = "githubkit-0.12.7-py3-none-any.whl", hash = "sha256:26278e97feb68b1bde47b309c95885edccab9a27042375d7fa0b6ccebc870a7c"},
-    {file = "githubkit-0.12.7.tar.gz", hash = "sha256:770378423c4a5ee5c035705822bb67ab6cccdf7e914e7b773827282ccd9f04a7"},
+    {file = "githubkit-0.12.8-py3-none-any.whl", hash = "sha256:f90592a0d9e154bde77450daed6b7cd187fcef023a1722b481aa38b082bbb3f6"},
+    {file = "githubkit-0.12.8.tar.gz", hash = "sha256:9339512326d2cc879cd68bf1910aa200c6701b2737bf180f901ca47f76cb6b6d"},
 ]
 
 [package.dependencies]
