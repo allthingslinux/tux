@@ -1,8 +1,6 @@
 import unittest
 from unittest.mock import MagicMock
-
 from tux.tux_events.event_handler import EventHandler
-
 
 class TestEventHandler(unittest.TestCase):
     def setUp(self):
@@ -52,7 +50,6 @@ class TestEventHandler(unittest.TestCase):
 
         # Ensure that bot.add_cog is called with the correct arguments
         mock_add_cog.assert_called_with(EventHandler(self.mock_bot, debug=True))
-
 
 if __name__ == "__main__":
     unittest.main()
