@@ -12,23 +12,12 @@ from tux.utils.config import CONFIG
 class InfluxLogger(commands.Cog):
     def __init__(self, bot: Tux):
         self.bot = bot
-
-    def __init__(self, bot: Tux):
-        self.bot = bot
         if self.init_influx():
             self.logger.start()
         else:
             logger.error("influxdb logger failed to init. check .env")
-            logger.error("influxdb logger failed to init. check .env")
 
-    # def cog_unload(self):
-    #    self.logger.cancel()
-    # def cog_unload(self):
-    #    self.logger.cancel()
     def init_influx(self):
-        influx_token: str = CONFIG.INFLUXDB_TOKEN
-        influx_url: str = CONFIG.INFLUXDB_URL
-        self.influx_org: str = CONFIG.INFLUXDB_ORG
         influx_token: str = CONFIG.INFLUXDB_TOKEN
         influx_url: str = CONFIG.INFLUXDB_URL
         self.influx_org: str = CONFIG.INFLUXDB_ORG
