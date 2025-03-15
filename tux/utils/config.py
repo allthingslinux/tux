@@ -87,6 +87,11 @@ class Config:
     os.environ["DATABASE_URL"] = DATABASE_URL
     set_key(env_file, "DATABASE_URL", DATABASE_URL)
 
+    # InfluxDB
+    INFLUXDB_TOKEN: Final[str] = os.getenv("INFLUXDB_TOKEN", "")
+    INFLUXDB_URL: Final[str] = os.getenv("INFLUXDB_URL", "")
+    INFLUXDB_ORG: Final[str] = os.getenv("INFLUXDB_ORG", "")
+
     # GitHub
     GITHUB_REPO_URL: Final[str] = os.getenv("GITHUB_REPO_URL", "")
     GITHUB_REPO_OWNER: Final[str] = os.getenv("GITHUB_REPO_OWNER", "")
