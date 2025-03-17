@@ -3,7 +3,7 @@ Rich logging configuration for Tux.
 
 This module sets up global logging configuration using loguru with Rich formatting.
 It should be imported and initialized at the start of the application.
-"""  # noqa: A005
+"""
 
 import re
 from collections.abc import Callable
