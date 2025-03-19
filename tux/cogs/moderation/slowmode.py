@@ -12,6 +12,11 @@ class Slowmode(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
+    # Channel type containing a list of all discord channel types that provide the edit() method and have the slowmode_delay attribute
+    editable_channel = (
+        discord.TextChannel | discord.VoiceChannel | discord.Thread | discord.StageChannel | discord.ForumChannel
+    )
+
     @commands.hybrid_command(
         name="slowmode",
         aliases=["sm"],
@@ -60,7 +65,7 @@ class Slowmode(commands.Cog):
         ctx: commands.Context[Tux],
         first_arg: str,
         second_arg: str | None = None,
-    ) -> tuple[str | None, discord.TextChannel | discord.Thread | None]:
+    ) -> tuple[str | None, editable_channel | None]:
         action = None
         channel = None
 
@@ -84,13 +89,24 @@ class Slowmode(commands.Cog):
         return action, channel
 
     @staticmethod
-    def _get_channel(ctx: commands.Context[Tux]) -> discord.TextChannel | discord.Thread | None:
-        return ctx.channel if isinstance(ctx.channel, discord.TextChannel | discord.Thread) else None
+    def _get_channel(ctx: commands.Context[Tux]) -> editable_channel | None:
+        return (
+            ctx.channel
+            if isinstance(
+                ctx.channel,
+                discord.TextChannel
+                | discord.VoiceChannel
+                | discord.Thread
+                | discord.StageChannel
+                | discord.ForumChannel,
+            )
+            else None
+        )
 
     @staticmethod
     async def _get_slowmode(
         ctx: commands.Context[Tux],
-        channel: discord.TextChannel | discord.Thread,
+        channel: editable_channel,
     ) -> None:
         try:
             await ctx.send(
@@ -105,7 +121,7 @@ class Slowmode(commands.Cog):
     async def _set_slowmode(
         self,
         ctx: commands.Context[Tux],
-        channel: discord.TextChannel | discord.Thread,
+        channel: editable_channel,
         delay: str,
     ) -> None:
         delay_seconds = self._parse_delay(delay)
