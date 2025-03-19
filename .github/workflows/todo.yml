@@ -32,5 +32,5 @@ jobs:
 
           # Optional useful settings
           ESCAPE: true
-          IGNORE: ".github/,node_modules/,dist/,build/,vendor/"
+          IGNORE: ".github/,node_modules/,dist/,build/,vendor/poetry.lock"
           PROJECTS_SECRET: ${{ secrets.ADMIN_PAT }}
