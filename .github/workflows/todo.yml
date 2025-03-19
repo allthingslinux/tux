@@ -2,6 +2,8 @@ name: "TODO to Issue"
 
 on:
   push:
+    branches:
+      - main # Or your default branch
   workflow_dispatch:
     inputs:
       MANUAL_COMMIT_REF:
@@ -13,16 +15,22 @@ on:
 
 jobs:
   build:
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-latest
     steps:
       - uses: "actions/checkout@v4"
-      - name: "TODO to Issue"
-        uses: "alstr/todo-to-issue-action@master"
-        env:
-          MANUAL_COMMIT_REF: ${{ inputs.MANUAL_COMMIT_REF }}
-          MANUAL_BASE_REF: ${{ inputs.MANUAL_BASE_REF }}
         with:
+          fetch-depth: 0 # This ensures all history is fetched for proper diff
+      - name: "TODO to Issue"
+        uses: "alstr/todo-to-issue-action@v5.1.10"
+        with:
+          # Properly supported parameters
+          CLOSE_ISSUES: true # Instead of AUTO_CLOSE
+          INSERT_ISSUE_URLS: true # Helps avoid duplicates
+          AUTO_ASSIGN: true # Auto-assign to committer
+          IDENTIFIERS: '[{"name": "TODO", "labels": ["enhancement"]}, {"name": "FIXME", "labels": ["bug"]}]' # Instead of LABEL
+          LANGUAGES: "https://raw.githubusercontent.com/github/linguist/master/lib/linguist/languages.yml" # Add support for more filetypes
+
+          # Optional useful settings
+          ESCAPE: true
+          IGNORE: ".github/,node_modules/,dist/,build/,vendor/"
           PROJECTS_SECRET: ${{ secrets.ADMIN_PAT }}
-          AUTO_CLOSE: true  # recommended
-          IGNORE_COMMENTS: false
-          LABEL: "auto-todos"
