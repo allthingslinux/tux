@@ -1,7 +1,7 @@
 # Base stage:
 # - Pin the Python base image for all stages
 # - Install only the common runtime dependencies and shared libraries
-FROM python:3.13-slim AS base
+FROM python:3.13.2-slim AS base
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -39,7 +39,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-ENV POETRY_VERSION=2.0.1 \
+ENV POETRY_VERSION=2.1.1 \
     POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_CREATE=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \

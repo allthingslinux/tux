@@ -26,7 +26,7 @@ It is designed to provide a variety of features to the server, including moderat
 
 ## Tech Stack
 
-- Python 3.13 alongside the Discord.py library
+- Python 3.13.2 alongside the Discord.py library
 - Poetry for dependency management
 - Docker and Docker Compose for development and deployment
 - Strict typing with Pyright and type hints
@@ -53,7 +53,7 @@ It is designed to provide a variety of features to the server, including moderat
 
 ### Prerequisites
 
-- Python 3.13
+- Python 3.13.2
 - [Poetry](https://python-poetry.org/docs/)
 - [Supabase](https://supabase.io/) or any PostgreSQL database
 - Optional: [Docker](https://docs.docker.com/get-docker/)
@@ -76,7 +76,7 @@ Further detailed instructions can be found in the [development guide](docs/devel
 
     ```bash
     poetry install
-    poetry env use 3.13
+    poetry env use 3.13.2
     ```
 
 3. Install the pre-commit hooks (optional unless you are contributing)

@@ -4,7 +4,7 @@ This guide will help you get started with setting up your development environmen
 
 ## Prerequisites
 
-- Python 3.13+
+- Python 3.13.2+
 - Poetry 2.0.1+
 
 ## Installation

@@ -3,7 +3,7 @@ name = "tux"
 version = "0.1.0"
 description = "Tux is an all in one bot for the All Things Linux discord server."
 authors = [{ name = "All Things Linux", email = "tux@allthingslinux.org" }]
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.13.2,<3.14"
 readme = "README.md"
 urls = { repository = "https://github.com/allthingslinux/tux" }
 dynamic = ["dependencies"]
@@ -21,7 +21,7 @@ readme = "README.md"
 packages = [{ include = "tux" }]
 
 [tool.poetry.dependencies]
-python = ">=3.13,<3.14"
+python = ">=3.13.2,<3.14"
 aiocache = ">=0.12.2"
 aioconsole = ">=0.8.0"
 aiofiles = ">=24.1.0"

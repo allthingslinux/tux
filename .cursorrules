@@ -139,7 +139,7 @@
   },
   "project_configuration": {
     "language": "Python",
-    "version": "3.13",
+    "version": "3.13.2",
     "dependencies": {
       "management_tool": "Poetry",
       "libraries": [
