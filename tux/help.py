@@ -1,5 +1,4 @@
 import asyncio
-import os
 from collections.abc import Awaitable, Mapping
 from pathlib import Path
 from typing import Any, get_type_hints
@@ -204,7 +203,8 @@ class TuxHelp(commands.HelpCommand):
     @staticmethod
     def _get_cog_groups() -> list[str]:
         """Retrieves a list of cog groups from the 'cogs' folder."""
-        return [d for d in os.listdir("./tux/cogs") if Path(f"./tux/cogs/{d}").is_dir() and d != "__pycache__"]
+        cogs_path = Path("./tux/cogs")
+        return [d.name for d in cogs_path.iterdir() if d.is_dir() and d.name != "__pycache__"]
 
     @staticmethod
     def _extract_cog_group(cog: commands.Cog) -> str | None:

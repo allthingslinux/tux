@@ -53,7 +53,7 @@ class TtyRoles(commands.Cog):
         if 1 <= user_count <= 128:
             return f"{self.base_role_name}0"
 
-        exponent = int(math.floor(math.log2(user_count)))
+        exponent = math.floor(math.log2(user_count))
 
         return f"{self.base_role_name}{2**exponent}"
 

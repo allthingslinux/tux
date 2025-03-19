@@ -27,7 +27,7 @@ from tux.bot import Tux
 from tux.database.controllers.guild_config import GuildConfigController
 from tux.help import TuxHelp
 from tux.utils.config import CONFIG
-from tux.utils.logging import setup_logging
+from tux.utils.logger import setup_logging
 
 setup_logging()
 
