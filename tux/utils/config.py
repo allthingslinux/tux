@@ -63,6 +63,9 @@ class Config:
     ACTIVITIES: Final[str] = config["BOT_INFO"]["ACTIVITIES"]
     HIDE_BOT_OWNER: Final[bool] = config["BOT_INFO"]["HIDE_BOT_OWNER"]
 
+    # Status Roles
+    STATUS_ROLES: Final[list[dict[str, int]]] = config["STATUS_ROLES"]
+
     # Debug env
     DEBUG: Final[bool] = bool(os.getenv("DEBUG", "True"))
 
