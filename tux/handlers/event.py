@@ -39,20 +39,21 @@ class EventHandler(commands.Cog):
             return
 
         stripped_content = strip_formatting(message.content)
+        harmful = is_harmful(stripped_content)
 
-        if is_harmful(stripped_content) == "RM_COMMAND":
+        if harmful == "RM_COMMAND":
             await message.reply(
                 "-# ⚠️ **This command is likely harmful. By running it, all directory contents will be deleted. There is no undo. Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it.**",
             )
-        if is_harmful(stripped_content) == "FORK_BOMB":
+        if harmful == "FORK_BOMB":
             await message.reply(
                 "-# ⚠️ **This command is likely harmful. By running it, all the memory in your system will be used. Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it.**",
             )
-        if is_harmful(stripped_content) == "DD_COMMAND":
+        if harmful == "DD_COMMAND":
             await message.reply(
                 "-# ⚠️ **This command is likely harmful. By running it, your disk will be overwritten or erased irreversibly. Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it.**",
             )
-        if is_harmful(stripped_content) == "FORMAT_COMMAND":
+        if harmful == "FORMAT_COMMAND":
             await message.reply(
                 "-# ⚠️ **This command is likely harmful. By running it, your disk will be formatted. Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it.**",
             )

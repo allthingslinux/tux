@@ -26,7 +26,7 @@ DANGEROUS_DD_COMMANDS = r"dd\s+.*of=/dev/([hs]d[a-z]|nvme\d+n\d+)"
 FORMAT_COMMANDS = r"mkfs\..*\s+/dev/([hs]d[a-z]|nvme\d+n\d+)"
 
 
-def is_harmful(command: str) -> str:
+def is_harmful(command: str) -> str | None:
     # sourcery skip: assign-if-exp, boolean-if-exp-identity, reintroduce-else
     """
     Check if a command is potentially harmful to the system.
