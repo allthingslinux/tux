@@ -26,7 +26,7 @@ DANGEROUS_DD_COMMANDS = r"dd\s+.*of=/dev/([hs]d[a-z]|nvme\d+n\d+)"
 FORMAT_COMMANDS = r"mkfs\..*\s+/dev/([hs]d[a-z]|nvme\d+n\d+)"
 
 
-def is_harmful(command: str) -> bool:
+def is_harmful(command: str) -> str | None:
     # sourcery skip: assign-if-exp, boolean-if-exp-identity, reintroduce-else
     """
     Check if a command is potentially harmful to the system.
@@ -44,18 +44,20 @@ def is_harmful(command: str) -> bool:
     # Normalize command by removing all whitespace for fork bomb check
     normalized = "".join(command.strip().lower().split())
     if normalized in FORK_BOMB_PATTERNS:
-        return True
+        return "FORK_BOMB"
 
     # Check for dangerous rm commands
     if re.search(DANGEROUS_RM_COMMANDS, command, re.IGNORECASE):
-        return True
+        return "RM_COMMAND"
 
     # Check for dangerous dd commands
     if re.search(DANGEROUS_DD_COMMANDS, command, re.IGNORECASE):
-        return True
+        return "DD_COMMAND"
 
     # Check for format commands
-    return bool(re.search(FORMAT_COMMANDS, command, re.IGNORECASE))
+    if bool(re.search(FORMAT_COMMANDS, command, re.IGNORECASE)):
+        return "FORMAT_COMMAND"
+    return None
 
 
 def strip_formatting(content: str) -> str:
