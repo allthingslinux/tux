@@ -966,14 +966,14 @@ test = ["coverage[toml]", "ddt (>=1.1.1,!=1.4.3)", "mock ; python_version < \"3.
 
 [[package]]
 name = "griffe"
-version = "1.6.1"
+version = "1.7.0"
 description = "Signatures for entire Python programs. Extract the structure, the frame, the skeleton of your project, to generate API documentation or find breaking changes in your API."
 optional = false
 python-versions = ">=3.9"
 groups = ["docs"]
 files = [
-    {file = "griffe-1.6.1-py3-none-any.whl", hash = "sha256:b0131670db16834f82383bcf4f788778853c9bf4dc7a1a2b708bb0808ca56a98"},
-    {file = "griffe-1.6.1.tar.gz", hash = "sha256:ff0acf706b2680f8c721412623091c891e752b2c61b7037618f7b77d06732cf5"},
+    {file = "griffe-1.7.0-py3-none-any.whl", hash = "sha256:6b44efc53a3f290d42c4da521f42235177b3bd107877dd55955318a37930c572"},
+    {file = "griffe-1.7.0.tar.gz", hash = "sha256:72e9c1593c7af92a387906293fc4a318c2e8e8aef501c64678c809794b4bdca4"},
 ]
 
 [package.dependencies]
