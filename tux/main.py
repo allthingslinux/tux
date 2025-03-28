@@ -1,18 +1,6 @@
-"""Main entry point for Tux bot.
-
-This module contains the main entry point and setup functions for the Tux Discord bot.
-It handles initialization of logging, Sentry integration, bot configuration, and graceful
-shutdown procedures.
-
-Notes
------
-The module should be run directly as a script to start the bot:
-    $ poetry run [dev|start]
-"""
-
-# Initialize logging first, before any other imports that might log
 import asyncio
 import signal
+import sys
 from types import FrameType
 from typing import cast
 
@@ -20,8 +8,8 @@ import discord
 import sentry_sdk
 from discord.ext import commands
 from loguru import logger
-from sentry_sdk.integrations import asyncio as sentry_asyncio  # type: ignore
-from sentry_sdk.integrations import loguru as sentry_loguru  # type: ignore
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration
 
 from tux.bot import Tux
 from tux.database.controllers.guild_config import GuildConfigController
@@ -52,6 +40,7 @@ async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
     If getting the guild prefix fails, falls back to the default prefix.
     Always includes bot mention as a valid prefix.
     """
+
     prefix: str | None = None
 
     if message.guild:
@@ -59,7 +48,6 @@ async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
             prefix = await GuildConfigController().get_guild_prefix(message.guild.id)
         except Exception as e:
             logger.error(f"Error getting guild prefix: {e}")
-            # Fall back to default prefix
 
     return commands.when_mentioned_or(prefix or CONFIG.DEFAULT_PREFIX)(bot, message)
 
@@ -90,11 +78,12 @@ def setup_sentry() -> None:
             profiles_sample_rate=1.0,
             enable_tracing=True,
             integrations=[
-                sentry_asyncio.AsyncioIntegration(),
-                sentry_loguru.LoguruIntegration(),
+                AsyncioIntegration(),
+                LoggingIntegration(),
             ],
         )
         logger.info(f"Sentry initialized: {sentry_sdk.is_initialized()}")
+
     except Exception as e:
         logger.error(f"Failed to initialize Sentry: {e}")
 
@@ -145,6 +134,7 @@ async def main() -> None:
     - Sentry cleanup
     - Final logging
     """
+
     if not CONFIG.TOKEN:
         logger.critical("No token provided. Set TOKEN in your environment or .env file.")
         return
@@ -155,22 +145,19 @@ async def main() -> None:
     signal.signal(cast(int, signal.SIGTERM), handle_sigterm)
     signal.signal(cast(int, signal.SIGINT), handle_sigterm)
 
-    intents = discord.Intents.all()
-    allowed_mentions = discord.AllowedMentions(everyone=False)
-
     bot = Tux(
         command_prefix=get_prefix,
         strip_after_prefix=True,
         case_insensitive=True,
-        intents=intents,
+        intents=discord.Intents.all(),
         owner_ids={CONFIG.BOT_OWNER_ID, *CONFIG.SYSADMIN_IDS},
-        allowed_mentions=allowed_mentions,
+        allowed_mentions=discord.AllowedMentions(everyone=False),
         help_command=TuxHelp(),
     )
 
     try:
-        # Start the bot without context manager to handle shutdown manually
         await bot.start(CONFIG.TOKEN, reconnect=True)
+
     except KeyboardInterrupt:
         logger.info("Initiating shutdown...")
     except discord.LoginFailure:
@@ -180,53 +167,48 @@ async def main() -> None:
     except Exception as e:
         logger.critical(f"Unexpected error during startup: {e}")
         sentry_sdk.capture_exception(e)
+
     finally:
-        # Ensure bot is properly shut down
         try:
             if not bot.is_closed():
                 await bot.shutdown()
+
         except Exception as e:
             logger.error(f"Error during shutdown: {e}")
 
-        # Close Sentry client
         if sentry_sdk.is_initialized():
             sentry_sdk.flush()
-            await asyncio.sleep(0.1)  # Give tasks a moment to finish logging
+            await asyncio.sleep(0.1)
 
         logger.info("Shutdown complete")
 
 
-def run() -> None:
+def run() -> int:
     """Synchronous entry point for the bot.
 
-    This function serves as the main entry point when running the bot through Poetry scripts.
+    This function serves as the main entry point when running the bot through the CLI.
     It wraps the async main() function in asyncio.run().
 
     Notes
     -----
     This is the function that gets called when using:
-        $ poetry run start
+        $ poetry run tux start
+        $ poetry run tux dev
+
+    Returns
+    -------
+    int
+        Exit code (0 for success, non-zero for failure)
     """
+
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        pass  # Already handled in main()
+        pass
     finally:
         logger.info("Exiting")
-
-
-def dev() -> None:
-    """Development entry point for the bot.
-
-    This function serves as the development entry point when running the bot through Poetry scripts.
-    Currently identical to run(), but can be modified to include development-specific setup.
-
-    Notes
-    -----
-    This is the function that gets called when using: $ poetry run dev
-    """
-    run()
+    return 0
 
 
 if __name__ == "__main__":
-    run()
+    sys.exit(run())

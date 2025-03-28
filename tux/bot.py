@@ -245,7 +245,7 @@ class Tux(commands.Bot):
             guild_count=len(self.guilds),
             user_count=len(self.users),
             prefix=Config.DEFAULT_PREFIX,
-            dev_mode=bool(Config.DEV),
+            dev_mode=bool(Config.DEV and Config.DEV.lower() == "true"),
         )
 
         console.print(banner)

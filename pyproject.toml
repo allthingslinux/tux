@@ -75,33 +75,8 @@ griffe-inherited-method-crossrefs = "^0.0.1.4"
 griffe-inherited-docstrings = "^1.1.1"
 mkdocs-api-autonav = "^0.2.0"
 
-
 [tool.poetry.scripts]
-# Bot commands
-start = "tux.main:run"
-dev = "tux.main:dev"
-
-# Development tools
-lint = "scripts:lint"
-lint-fix = "scripts:lint_fix"
-format = "scripts:format_code"
-typecheck = "scripts:typecheck"
-check = "scripts:check"
-
-# Documentation
-docs = "scripts:docs"
-docs-build = "scripts:docs_build"
-
-# Database
-db-generate = "scripts:db_generate"
-db-push = "scripts:db_push"
-db-pull = "scripts:db_pull"
-db-migrate = "scripts:db_migrate"
-db-reset = "scripts:db_reset"
-
-# Testing
-test = "scripts:test"
-test-cov = "scripts:test_cov"
+tux = "tux.cli:main"
 
 [tool.ruff]
 exclude = [".venv", "examples", "tests", ".archive", "typings/**"]

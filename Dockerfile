@@ -35,7 +35,11 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         build-essential \
         libcairo2-dev \
-        libffi-dev && \
+        libffi-dev \
+        curl && \
+    # Install Node.js
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -73,7 +77,7 @@ WORKDIR /app
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
     poetry install --only dev --no-root --no-directory
 
-CMD ["sh", "-c", "ls && poetry run prisma generate && exec poetry run python tux/main.py"]
+CMD ["sh", "-c", "ls && poetry run prisma generate && exec poetry run tux dev"]
 
 
 # Production stage:
@@ -92,5 +96,5 @@ ENV VIRTUAL_ENV=/app/.venv \
 
 COPY --from=build --chown=nonroot:nonroot /app ./
 
-ENTRYPOINT ["python"]
-CMD ["-m", "tux.main"]
+ENTRYPOINT ["python", "-m", "tux"]
+CMD ["start"]
