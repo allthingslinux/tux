@@ -177,7 +177,7 @@ class Cases(ModerationCogBase):
             return
 
         # Validate flags
-        if not flags.status and not flags.reason:
+        if flags.status is None and not flags.reason:
             await ctx.send("You must provide either a new status or reason.", ephemeral=True)
             return
 
