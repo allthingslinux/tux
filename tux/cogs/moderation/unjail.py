@@ -27,35 +27,11 @@ class Unjail(ModerationCogBase):
 
         Returns
         -------
-        discord.Role | None
+        Optional[discord.Role]
             The jail role, or None if not found.
         """
         jail_role_id = await self.config.get_jail_role_id(guild.id)
         return None if jail_role_id is None else guild.get_role(jail_role_id)
-
-    async def is_jailed(self, guild_id: int, user_id: int) -> bool:
-        """
-        Check if a user is jailed.
-
-        Parameters
-        ----------
-        guild_id : int
-            The ID of the guild to check in.
-        user_id : int
-            The ID of the user to check.
-
-        Returns
-        -------
-        bool
-            True if the user is jailed, False otherwise.
-        """
-        jail_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.JAIL)
-        unjail_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.UNJAIL)
-
-        jail_count = sum(case.case_user_id == user_id for case in jail_cases)
-        unjail_count = sum(case.case_user_id == user_id for case in unjail_cases)
-
-        return jail_count > unjail_count
 
     async def get_latest_jail_case(self, guild_id: int, user_id: int) -> Case | None:
         """
@@ -70,12 +46,82 @@ class Unjail(ModerationCogBase):
 
         Returns
         -------
-        Case | None
+        Optional[Case]
             The latest jail case, or None if not found.
         """
-        cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.JAIL)
-        user_cases = [case for case in cases if case.case_user_id == user_id]
-        return user_cases[-1] if user_cases else None
+        return await self.db.case.get_latest_case_by_user(
+            guild_id=guild_id,
+            user_id=user_id,
+            case_types=[CaseType.JAIL],
+        )
+
+    async def restore_roles(
+        self,
+        member: discord.Member,
+        role_ids: list[int],
+        reason: str,
+    ) -> tuple[bool, list[discord.Role]]:
+        """
+        Restore roles to a member with error handling.
+
+        Parameters
+        ----------
+        member : discord.Member
+            The member to restore roles to.
+        role_ids : List[int]
+            The IDs of the roles to restore.
+        reason : str
+            The reason for restoring the roles.
+
+        Returns
+        -------
+        Tuple[bool, List[discord.Role]]
+            A tuple containing whether the operation was successful and which roles were restored.
+        """
+        if not role_ids:
+            return True, []
+
+        # Filter out roles that no longer exist or can't be assigned
+        guild = member.guild
+        roles_to_add: list[discord.Role] = []
+        skipped_roles: list[int] = []
+
+        for role_id in role_ids:
+            role = guild.get_role(role_id)
+            if role and role.is_assignable():
+                roles_to_add.append(role)
+            else:
+                skipped_roles.append(role_id)
+
+        if skipped_roles:
+            logger.warning(
+                f"Skipping {len(skipped_roles)} roles that don't exist or can't be assigned: {skipped_roles}",
+            )
+
+        if not roles_to_add:
+            return True, []
+
+        # Try to add all roles at once
+        try:
+            await member.add_roles(*roles_to_add, reason=reason)
+        except discord.Forbidden:
+            logger.error(f"No permission to add roles to {member}")
+            return False, []
+        except discord.HTTPException as e:
+            # If bulk add fails, try one by one
+            logger.warning(f"Bulk role add failed for {member}, trying one by one: {e}")
+            successful_roles: list[discord.Role] = []
+
+            for role in roles_to_add:
+                try:
+                    await member.add_roles(role, reason=reason)
+                    successful_roles.append(role)
+                except Exception as role_e:
+                    logger.error(f"Failed to add role {role} to {member}: {role_e}")
+
+            return bool(successful_roles), successful_roles
+        else:
+            return True, roles_to_add
 
     @commands.hybrid_command(
         name="unjail",
@@ -100,7 +146,7 @@ class Unjail(ModerationCogBase):
             The context in which the command is being invoked.
         member : discord.Member
             The member to unjail.
-        reason : str | None
+        reason : Optional[str]
             The reason for removing from jail.
         flags : UnjailFlags
             The flags for the command. (silent: bool)
@@ -120,12 +166,12 @@ class Unjail(ModerationCogBase):
         # Get jail role
         jail_role = await self.get_jail_role(ctx.guild)
         if not jail_role:
-            await ctx.send("No jail role found.", ephemeral=True)
+            await self.send_error_response(ctx, "No jail role found.")
             return
 
         # Check if user is jailed
         if not await self.is_jailed(ctx.guild.id, member.id):
-            await ctx.send("User is not jailed.", ephemeral=True)
+            await self.send_error_response(ctx, "User is not jailed.")
             return
 
         # Check if moderator has permission to unjail the member
@@ -134,48 +180,78 @@ class Unjail(ModerationCogBase):
 
         final_reason = reason or self.DEFAULT_REASON
 
-        try:
+        # Use lock to prevent race conditions
+        async def perform_unjail() -> None:
+            nonlocal ctx, member, jail_role, final_reason, flags
+
+            guild_id = ctx.guild.id if ctx.guild else 0  # Guild is already asserted above
+
             # Get latest jail case
-            case = await self.get_latest_jail_case(ctx.guild.id, member.id)
+            case = await self.get_latest_jail_case(guild_id, member.id)
             if not case:
-                await ctx.send("No jail case found.", ephemeral=True)
+                await self.send_error_response(ctx, "No jail case found.")
                 return
 
-            # Remove jail role from member
-            await member.remove_roles(jail_role, reason=final_reason)
+            try:
+                # Remove jail role from member
+                assert jail_role is not None, "Jail role should not be None at this point"
+                await member.remove_roles(jail_role, reason=final_reason)
 
-            # Add roles back to member
-            if case.case_user_roles:
-                roles = [role for role_id in case.case_user_roles if (role := ctx.guild.get_role(role_id)) is not None]
-                if roles:
-                    await member.add_roles(*roles, reason=final_reason, atomic=False)
+                # Add roles back to member
+                if case.case_user_roles:
+                    success, restored_roles = await self.restore_roles(member, case.case_user_roles, final_reason)
 
-        except (discord.Forbidden, discord.HTTPException) as e:
-            logger.error(f"Failed to unjail {member}. {e}")
-            await ctx.send(f"Failed to unjail {member}. {e}", ephemeral=True)
-            return
+                    if success and restored_roles:
+                        logger.info(f"Restored {len(restored_roles)} roles to {member}")
 
-        # Insert unjail case into database
-        case = await self.db.case.insert_case(
-            case_user_id=member.id,
-            case_moderator_id=ctx.author.id,
-            case_type=CaseType.UNJAIL,
-            case_reason=final_reason,
-            guild_id=ctx.guild.id,
-        )
+                        # Verify if all roles were successfully added back
+                        if ctx.guild and case.case_user_roles:
+                            member_role_ids = {role.id for role in member.roles}
 
-        # Send DM to member
-        dm_sent = await self.send_dm(ctx, flags.silent, member, final_reason, "removed from jail")
+                            # Check for missing roles in a simpler way
+                            missing_roles: list[str] = []
+                            for role_id in case.case_user_roles:
+                                if role_id not in member_role_ids:
+                                    role = ctx.guild.get_role(role_id)
+                                    role_name = role.name if role else str(role_id)
+                                    missing_roles.append(role_name)
 
-        # Handle case response
-        await self.handle_case_response(
-            ctx,
-            CaseType.UNJAIL,
-            case.case_number,
-            final_reason,
-            member,
-            dm_sent,
-        )
+                            if missing_roles:
+                                missing_str = ", ".join(missing_roles)
+                                logger.warning(f"Failed to restore roles for {member}: {missing_str}")
+                                await ctx.send(f"Note: Some roles couldn't be restored: {missing_str}", ephemeral=True)
+                    elif not restored_roles:
+                        logger.warning(f"No roles to restore for {member}")
+            except discord.Forbidden:
+                await self.send_error_response(ctx, f"No permission to manage roles for {member}")
+                return
+            except discord.HTTPException as e:
+                await self.send_error_response(ctx, f"Failed to unjail {member}", e)
+                return
+
+            # Insert unjail case into database
+            case_result = await self.db.case.insert_case(
+                case_user_id=member.id,
+                case_moderator_id=ctx.author.id,
+                case_type=CaseType.UNJAIL,
+                case_reason=final_reason,
+                guild_id=guild_id,
+            )
+
+            # Send DM to member
+            dm_sent = await self.send_dm(ctx, flags.silent, member, final_reason, "removed from jail")
+
+            # Handle case response
+            await self.handle_case_response(
+                ctx,
+                CaseType.UNJAIL,
+                case_result.case_number,
+                final_reason,
+                member,
+                dm_sent,
+            )
+
+        await self.execute_user_action_with_lock(member.id, perform_unjail)
 
 
 async def setup(bot: Tux) -> None:

@@ -1,3 +1,5 @@
+import datetime
+
 import discord
 from discord.ext import commands
 
@@ -60,7 +62,24 @@ class Timeout(ModerationCogBase):
             return
 
         final_reason = reason or self.DEFAULT_REASON
-        duration = parse_time_string(flags.duration)
+
+        # Parse and validate duration
+        try:
+            duration = parse_time_string(flags.duration)
+
+            # Discord maximum timeout duration is 28 days
+            max_duration = datetime.timedelta(days=28)
+            if duration > max_duration:
+                await ctx.send(
+                    "Timeout duration exceeds Discord's maximum of 28 days. Setting timeout to maximum allowed (28 days).",
+                    ephemeral=True,
+                )
+                duration = max_duration
+                # Update the display duration for consistency
+                flags.duration = "28d"
+        except ValueError as e:
+            await ctx.send(f"Invalid duration format: {e}", ephemeral=True)
+            return
 
         # Execute timeout with case creation and DM
         await self.execute_mod_action(

@@ -77,10 +77,22 @@ class TuxHelp(commands.HelpCommand):
         return f"-{flag.name}" if flag.required else f"[-{flag.name}]"
 
     # Command Fields and Mapping
+    def _generate_default_usage(self, command: commands.Command[Any, Any, Any]) -> str:
+        """Generates a default usage string based on command parameters when custom usage is missing."""
+        signature = command.signature.strip()
+        if not signature:
+            return command.qualified_name
+
+        # Format the signature to look more like Discord's native format
+        # Replace things like [optional] with <optional>
+        formatted_signature = signature.replace("[", "<").replace("]", ">")
+        return f"{command.qualified_name} {formatted_signature}"
+
     async def _add_command_help_fields(self, embed: discord.Embed, command: commands.Command[Any, Any, Any]) -> None:
         """Adds fields with usage and alias information for a command to an embed."""
         prefix = await self._get_prefix()
-        embed.add_field(name="Usage", value=f"`{prefix}{command.usage or 'No usage'}`", inline=False)
+        usage = command.usage or self._generate_default_usage(command)
+        embed.add_field(name="Usage", value=f"`{prefix}{usage}`", inline=False)
         embed.add_field(
             name="Aliases",
             value=(f"`{', '.join(command.aliases)}`" if command.aliases else "No aliases"),
@@ -320,13 +332,55 @@ class TuxHelp(commands.HelpCommand):
         """Sends a help message for a specific command group."""
         prefix = await self._get_prefix()
 
-        embed = self._embed_base(f"{group.name}", f"> {group.help or 'No documentation available.'}")
+        # Create a menu for pagination
+        menu = ViewMenu(
+            self.context,
+            menu_type=ViewMenu.TypeEmbed,
+            delete_on_timeout=True,
+            timeout=180,
+            show_page_director=False,
+        )
 
-        await self._add_command_help_fields(embed, group)
-        for command in group.commands:
-            self._add_command_field(embed, command, prefix)
+        # Create the main embed for the group command itself
+        main_embed = self._embed_base(f"{group.name}", f"> {group.help or 'No documentation available.'}")
+        await self._add_command_help_fields(main_embed, group)
 
-        await self.get_destination().send(embed=embed)
+        # Add the main embed as the first page
+        menu.add_page(main_embed)
+
+        # Create separate embeds for subcommands, with a maximum of 24 fields per embed
+        # (leaving room for potentially adding a navigation hint field)
+        commands_list = list(group.commands)
+        total_commands = len(commands_list)
+
+        if total_commands > 0:
+            # If few commands, add them to the main embed
+            if total_commands <= 24:
+                for command in commands_list:
+                    self._add_command_field(main_embed, command, prefix)
+            else:
+                # Create multiple pages for subcommands
+                for i in range(0, total_commands, 24):
+                    batch = commands_list[i : i + 24]
+                    subcommand_embed = self._embed_base(
+                        f"{group.name} Subcommands (Page {i // 24 + 1})",
+                        f"Showing subcommands {i + 1}-{min(i + 24, total_commands)} of {total_commands}",
+                    )
+
+                    for command in batch:
+                        self._add_command_field(subcommand_embed, command, prefix)
+
+                    menu.add_page(subcommand_embed)
+
+        # Always add at least the end session button first
+        menu.add_button(ViewButton.end_session())
+
+        # Add navigation buttons only if we have multiple pages
+        if hasattr(menu, "pages") and menu.pages is not None and len(menu.pages) > 1:
+            menu.add_button(ViewButton.back())
+            menu.add_button(ViewButton.next())
+
+        await menu.start()
 
     async def send_error_message(self, error: str) -> None:
         """Sends an error message."""

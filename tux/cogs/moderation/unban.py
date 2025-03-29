@@ -1,3 +1,6 @@
+from contextlib import suppress
+
+import discord
 from discord.ext import commands
 
 from prisma.enums import CaseType
@@ -12,6 +15,47 @@ class Unban(ModerationCogBase):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
         self.unban.usage = generate_usage(self.unban, UnbanFlags)
+
+    async def resolve_user_from_ban_list(self, ctx: commands.Context[Tux], identifier: str) -> discord.User | None:
+        """
+        Resolve a user from the ban list using username, ID, or partial info.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context of the command.
+        identifier : str
+            The username, ID, or partial identifier to resolve.
+
+        Returns
+        -------
+        Optional[discord.User]
+            The user if found, None otherwise.
+        """
+        assert ctx.guild
+
+        # Get the list of banned users
+        banned_users = [ban.user async for ban in ctx.guild.bans()]
+
+        # Try ID first
+        with suppress(ValueError):
+            user_id = int(identifier)
+            for user in banned_users:
+                if user.id == user_id:
+                    return user
+
+        # Try exact username or username#discriminator matching
+        for user in banned_users:
+            if user.name.lower() == identifier.lower():
+                return user
+            if str(user).lower() == identifier.lower():
+                return user
+
+        # Try partial name matching
+        identifier_lower = identifier.lower()
+        matches = [user for user in banned_users if identifier_lower in user.name.lower()]
+
+        return matches[0] if len(matches) == 1 else None
 
     @commands.hybrid_command(
         name="unban",
@@ -36,7 +80,7 @@ class Unban(ModerationCogBase):
             The context object for the command.
         username_or_id : str
             The username or ID of the user to unban.
-        reason : str | None
+        reason : Optional[str]
             The reason for the unban.
         flags : UnbanFlags
             The flags for the command.
@@ -50,19 +94,26 @@ class Unban(ModerationCogBase):
         """
         assert ctx.guild
 
-        # Get the list of banned users in the guild
-        banned_users = [ban.user async for ban in ctx.guild.bans()]
+        await ctx.defer(ephemeral=True)
 
-        # Convert the username_or_id to a user object
+        # First, try standard user conversion
         try:
             user = await commands.UserConverter().convert(ctx, username_or_id)
         except commands.UserNotFound:
-            await ctx.send(f"{username_or_id} was not found.", ephemeral=True)
-            return
+            # If that fails, try more flexible ban list matching
+            user = await self.resolve_user_from_ban_list(ctx, username_or_id)
+            if not user:
+                await self.send_error_response(
+                    ctx,
+                    f"Could not find '{username_or_id}' in the ban list. Try using the exact username or ID.",
+                )
+                return
 
         # Check if the user is banned
-        if user not in banned_users:
-            await ctx.send(f"{user} was not found in the guild ban list.", ephemeral=True)
+        try:
+            await ctx.guild.fetch_ban(user)
+        except discord.NotFound:
+            await self.send_error_response(ctx, f"{user} is not banned.")
             return
 
         # Check if moderator has permission to unban the user
@@ -70,19 +121,33 @@ class Unban(ModerationCogBase):
             return
 
         final_reason = reason or self.DEFAULT_REASON
+        guild = ctx.guild
 
-        # Execute unban with case creation
-        await self.execute_mod_action(
-            ctx=ctx,
-            case_type=CaseType.UNBAN,
-            user=user,
-            final_reason=final_reason,
-            # No DM for unbans due to user not being in the guild
-            silent=True,
-            # No DM for unbans due to user not being in the guild
-            dm_action="",
-            actions=[(ctx.guild.unban(user, reason=final_reason), type(None))],
-        )
+        # Use the lock to prevent race conditions
+        async def perform_unban() -> None:
+            nonlocal guild, user, final_reason
+
+            # Execute unban with case creation
+            # We already checked that user is not None, and it's verified above
+            assert user is not None, "User cannot be None at this point"
+            await self.execute_mod_action(
+                ctx=ctx,
+                case_type=CaseType.UNBAN,
+                user=user,
+                final_reason=final_reason,
+                # No DM for unbans due to user not being in the guild
+                silent=True,
+                # No DM for unbans due to user not being in the guild
+                dm_action="",
+                actions=[(guild.unban(user, reason=final_reason), type(None))],
+            )
+
+        try:
+            await self.execute_user_action_with_lock(user.id, perform_unban)
+        except discord.NotFound:
+            await self.send_error_response(ctx, f"{user} is no longer banned.")
+        except discord.HTTPException as e:
+            await self.send_error_response(ctx, f"Failed to unban {user}", e)
 
 
 async def setup(bot: Tux) -> None:

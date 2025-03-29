@@ -48,13 +48,15 @@ class Jail(ModerationCogBase):
         bool
             True if the user is jailed, False otherwise.
         """
-        jail_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.JAIL)
-        unjail_cases = await self.db.case.get_all_cases_by_type(guild_id, CaseType.UNJAIL)
+        # Get latest case for this user (more efficient than counting all cases)
+        latest_case = await self.db.case.get_latest_case_by_user(
+            guild_id=guild_id,
+            user_id=user_id,
+            case_types=[CaseType.JAIL, CaseType.UNJAIL],
+        )
 
-        jail_count = sum(case.case_user_id == user_id for case in jail_cases)
-        unjail_count = sum(case.case_user_id == user_id for case in unjail_cases)
-
-        return jail_count > unjail_count
+        # If no cases exist or latest case is an unjail, user is not jailed
+        return bool(latest_case and latest_case.case_type == CaseType.JAIL)
 
     @commands.hybrid_command(
         name="jail",
@@ -119,8 +121,9 @@ class Jail(ModerationCogBase):
         # Convert roles to IDs
         case_user_roles = [role.id for role in user_roles]
 
-        # Insert case into database
+        # Use a transaction-like pattern to ensure consistency
         try:
+            # First create the case - if this fails, no role changes are made
             case = await self.db.case.insert_case(
                 guild_id=ctx.guild.id,
                 case_user_id=member.id,
@@ -130,29 +133,64 @@ class Jail(ModerationCogBase):
                 case_user_roles=case_user_roles,
             )
 
-            # Remove roles from member
-            if user_roles:
-                await member.remove_roles(*user_roles, reason=final_reason, atomic=False)
+            # Now perform the role changes in a single API call if possible
+            await self._perform_jail_role_changes(member, user_roles, jail_role, final_reason)
+
+            # Send DM to member
+            dm_sent = await self.send_dm(ctx, flags.silent, member, final_reason, "jailed")
+
+            # Handle case response
+            await self.handle_case_response(ctx, CaseType.JAIL, case.case_number, final_reason, member, dm_sent)
 
         except Exception as e:
-            logger.error(f"Failed to jail {member}. {e}")
-            await ctx.send(f"Failed to jail {member}. {e}", ephemeral=True)
+            logger.error(f"Failed to jail {member}: {e}")
+            await ctx.send(f"Failed to jail {member}: {e}", ephemeral=True)
             return
 
-        # Add jail role to member
+    async def _perform_jail_role_changes(
+        self,
+        member: discord.Member,
+        roles_to_remove: list[discord.Role],
+        jail_role: discord.Role,
+        reason: str,
+    ) -> None:
+        """
+        Perform jail role changes in the safest order possible.
+
+        Parameters
+        ----------
+        member : discord.Member
+            The member to modify roles for
+        roles_to_remove : list[discord.Role]
+            The roles to remove from the member
+        jail_role : discord.Role
+            The jail role to add
+        reason : str
+            The reason for the role changes
+        """
+        # First add jail role to ensure the user is jailed even if role removal fails
         try:
-            await member.add_roles(jail_role, reason=final_reason)
+            await member.add_roles(jail_role, reason=reason)
+        except Exception as e:
+            logger.error(f"Failed to add jail role to {member}: {e}")
+            raise
 
-        except (discord.Forbidden, discord.HTTPException) as e:
-            logger.error(f"Failed to jail {member}. {e}")
-            await ctx.send(f"Failed to jail {member}. {e}", ephemeral=True)
-            return
-
-        # Send DM to member
-        dm_sent = await self.send_dm(ctx, flags.silent, member, final_reason, "jailed")
-
-        # Handle case response
-        await self.handle_case_response(ctx, CaseType.JAIL, case.case_number, final_reason, member, dm_sent)
+        # Then remove roles if there are any to remove
+        if roles_to_remove:
+            try:
+                # Try to remove all at once for efficiency
+                await member.remove_roles(*roles_to_remove, reason=reason)
+            except Exception as e:
+                logger.warning(
+                    f"Failed to remove all roles at once from {member}, falling back to individual removal: {e}",
+                )
+                # Fall back to removing one by one
+                for role in roles_to_remove:
+                    try:
+                        await member.remove_roles(role, reason=reason)
+                    except Exception as role_e:
+                        logger.error(f"Failed to remove role {role} from {member}: {role_e}")
+                        # Continue with other roles even if one fails
 
     @staticmethod
     def _get_manageable_roles(

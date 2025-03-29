@@ -1,5 +1,8 @@
+from typing import Any, Protocol
+
 import discord
 from discord.ext import commands
+from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
 from prisma.enums import CaseType
@@ -13,9 +16,8 @@ from tux.utils.flags import CaseModifyFlags, CasesViewFlags, generate_usage
 
 from . import ModerationCogBase
 
-# TODO: Migrate emoji usage to application based emojis via discord.dev interface
-
-emojis: dict[str, int] = {
+# Dictionary of emoji IDs for various case types and statuses
+EMOJIS = {
     "active_case_emoji": 1268115730344443966,
     "inactive_case_emoji": 1268115712627441715,
     "added": 1268115639914987562,
@@ -29,6 +31,57 @@ emojis: dict[str, int] = {
     "snippetunban": 1277174953292337222,
     "transparent": 1227090229639250032,
 }
+
+# Maps case types to their corresponding emoji keys
+CASE_TYPE_EMOJI_MAP = {
+    CaseType.BAN: "ban",
+    CaseType.UNBAN: "ban",
+    CaseType.KICK: "kick",
+    CaseType.TIMEOUT: "timeout",
+    CaseType.UNTIMEOUT: "timeout",
+    CaseType.WARN: "warn",
+    CaseType.JAIL: "jail",
+    CaseType.UNJAIL: "jail",
+    CaseType.SNIPPETBAN: "snippetban",
+    CaseType.SNIPPETUNBAN: "snippetunban",
+}
+
+# Maps case types to their action (added/removed)
+CASE_ACTION_MAP = {
+    CaseType.BAN: "added",
+    CaseType.KICK: "added",
+    CaseType.TIMEOUT: "added",
+    CaseType.WARN: "added",
+    CaseType.JAIL: "added",
+    CaseType.SNIPPETBAN: "added",
+    CaseType.UNBAN: "removed",
+    CaseType.UNTIMEOUT: "removed",
+    CaseType.UNJAIL: "removed",
+    CaseType.SNIPPETUNBAN: "removed",
+}
+
+
+# Define a protocol for user-like objects
+class UserLike(Protocol):
+    id: int
+    name: str
+    avatar: Any
+
+    def __str__(self) -> str: ...
+
+
+# Mock user object for when a user cannot be found
+class MockUser:
+    """A mock user object for cases where we can't find the real user."""
+
+    def __init__(self, user_id: int) -> None:
+        self.id = user_id
+        self.name = "Unknown User"
+        self.discriminator = "0000"
+        self.avatar = None
+
+    def __str__(self) -> str:
+        return f"{self.name}#{self.discriminator}"
 
 
 class Cases(ModerationCogBase):
@@ -44,14 +97,13 @@ class Cases(ModerationCogBase):
     )
     @commands.guild_only()
     @checks.has_pl(2)
-    async def cases(self, ctx: commands.Context[Tux], case_number: str | None) -> None:
+    async def cases(self, ctx: commands.Context[Tux], case_number: str | None = None) -> None:
         """
         Manage moderation cases in the server.
         """
         if case_number is not None:
             await ctx.invoke(self.cases_view, number=case_number, flags=CasesViewFlags())
-
-        if case_number is None and ctx.subcommand_passed is None:
+        elif ctx.subcommand_passed is None:
             await ctx.send_help("cases")
 
     @cases.command(
@@ -63,7 +115,7 @@ class Cases(ModerationCogBase):
     async def cases_view(
         self,
         ctx: commands.Context[Tux],
-        number: str | None,
+        number: str | None = None,
         *,
         flags: CasesViewFlags,
     ) -> None:
@@ -74,12 +126,11 @@ class Cases(ModerationCogBase):
         ----------
         ctx : commands.Context[Tux]
             The context in which the command is being invoked.
-        number : str | None
+        number : Optional[str]
             The case number to view.
         flags : CasesViewFlags
             The flags for the command. (type, user, moderator)
         """
-
         assert ctx.guild
 
         if number is not None:
@@ -112,7 +163,6 @@ class Cases(ModerationCogBase):
         flags : CaseModifyFlags
             The flags for the command. (status, reason)
         """
-
         assert ctx.guild
 
         try:
@@ -122,36 +172,33 @@ class Cases(ModerationCogBase):
             return
 
         case = await self.db.case.get_case_by_number(ctx.guild.id, case_number)
-
         if not case:
             await ctx.send("Case not found.", ephemeral=True)
             return
 
-        if case.case_number is not None:
-            # If no flags were provided, raise an error
-            if flags.status is None and flags.reason is None:
-                msg = "Status or reason must be provided."
-                raise commands.FlagError(msg)
+        # Validate flags
+        if not flags.status and not flags.reason:
+            await ctx.send("You must provide either a new status or reason.", ephemeral=True)
+            return
 
-            # If status flag is provided but not a valid boolean
-            if flags.status is not None:
-                try:
-                    flags.status = bool(flags.status)
-                except ValueError:
-                    await ctx.send("Status must be a boolean value (true/false).", ephemeral=True)
+        # Check if status is valid
+        if flags.status is not None:
+            try:
+                flags.status = bool(flags.status)
+                if flags.status == case.case_status:
+                    await ctx.send("Status is already set to that value.", ephemeral=True)
                     return
-
-            # If status flag = current status, do nothing
-            if flags.status is not None and flags.status == case.case_status:
-                await ctx.send("No changes were made to the case.", ephemeral=True, delete_after=5)
+            except ValueError:
+                await ctx.send("Status must be a boolean value (true/false).", ephemeral=True)
                 return
 
-            # If reason flag = current reason, do nothing
-            if flags.reason is not None and flags.reason == case.case_reason:
-                await ctx.send("No changes were made to the case.", ephemeral=True, delete_after=5)
-                return
+        # Check if reason is the same
+        if flags.reason is not None and flags.reason == case.case_reason:
+            await ctx.send("Reason is already set to that value.", ephemeral=True)
+            return
 
-            await self._update_case(ctx, case, flags)
+        # If we get here, we have valid changes to make
+        await self._update_case(ctx, case, flags)
 
     async def _view_single_case(
         self,
@@ -168,25 +215,20 @@ class Cases(ModerationCogBase):
         number : str
             The number of the case to view.
         """
-
         assert ctx.guild
 
         try:
             case_number = int(number)
         except ValueError:
-            await ctx.send("Case number must be a valid integer.", ephemeral=True)
+            await self.send_error_response(ctx, "Case number must be a valid integer.")
             return
 
         case = await self.db.case.get_case_by_number(ctx.guild.id, case_number)
         if not case:
-            await ctx.send("Case not found.", ephemeral=True)
+            await self.send_error_response(ctx, "Case not found.")
             return
 
-        user = self.bot.get_user(case.case_user_id)
-
-        if user is None:
-            user = await self.bot.fetch_user(case.case_user_id)
-
+        user = await self._resolve_user(case.case_user_id)
         await self._handle_case_response(ctx, case, "viewed", case.case_reason, user)
 
     async def _view_cases_with_flags(
@@ -204,11 +246,9 @@ class Cases(ModerationCogBase):
         flags : CasesViewFlags
             The flags for the command. (type, user, moderator)
         """
-
         assert ctx.guild
 
         options: CaseWhereInput = {}
-
         if flags.type:
             options["case_type"] = flags.type
         if flags.user:
@@ -217,13 +257,11 @@ class Cases(ModerationCogBase):
             options["case_moderator_id"] = flags.moderator.id
 
         cases = await self.db.case.get_cases_by_options(ctx.guild.id, options)
-
-        total_cases = await self.db.case.get_all_cases(ctx.guild.id)
-
         if not cases:
             await ctx.send("No cases found.", ephemeral=True)
             return
 
+        total_cases = await self.db.case.get_all_cases(ctx.guild.id)
         await self._handle_case_list_response(ctx, cases, len(total_cases))
 
     async def _update_case(
@@ -244,12 +282,8 @@ class Cases(ModerationCogBase):
         flags : CaseModifyFlags
             The flags for the command. (status, reason)
         """
-
         assert ctx.guild
-
-        if case.case_number is None:
-            await ctx.send("Failed to update case.", ephemeral=True)
-            return
+        assert case.case_number is not None
 
         updated_case = await self.db.case.update_case(
             ctx.guild.id,
@@ -258,13 +292,57 @@ class Cases(ModerationCogBase):
             case_status=flags.status if flags.status is not None else case.case_status,
         )
 
-        if updated_case is None:
-            await ctx.send("Failed to update case.", ephemeral=True)
+        if not updated_case:
+            await self.send_error_response(ctx, "Failed to update case.")
             return
 
-        user = await commands.UserConverter().convert(ctx, str(case.case_user_id))
-
+        user = await self._resolve_user(case.case_user_id)
         await self._handle_case_response(ctx, updated_case, "updated", updated_case.case_reason, user)
+
+    async def _resolve_user(self, user_id: int) -> discord.User | MockUser:
+        """
+        Resolve a user ID to a User object or MockUser if not found.
+
+        Parameters
+        ----------
+        user_id : int
+            The ID of the user to resolve.
+
+        Returns
+        -------
+        Union[discord.User, MockUser]
+            The resolved user or a mock user if not found.
+        """
+        if user := self.bot.get_user(user_id):
+            return user
+
+        # If not in cache, try fetching
+        try:
+            return await self.bot.fetch_user(user_id)
+        except discord.NotFound:
+            logger.warning(f"Could not find user with ID {user_id}")
+            return MockUser(user_id)
+        except Exception as e:
+            logger.exception(f"Error resolving user with ID {user_id}: {e}")
+            return MockUser(user_id)
+
+    async def _resolve_moderator(self, moderator_id: int) -> discord.User | MockUser:
+        """
+        Resolve a moderator ID to a User object or MockUser if not found.
+        We use a separate function to potentially add admin-specific
+        resolution in the future.
+
+        Parameters
+        ----------
+        moderator_id : int
+            The ID of the moderator to resolve.
+
+        Returns
+        -------
+        Union[discord.User, MockUser]
+            The resolved moderator or a mock user if not found.
+        """
+        return await self._resolve_user(moderator_id)
 
     async def _handle_case_response(
         self,
@@ -272,7 +350,7 @@ class Cases(ModerationCogBase):
         case: Case | None,
         action: str,
         reason: str,
-        user: discord.Member | discord.User,
+        user: discord.User | MockUser,
     ) -> None:
         """
         Handle the response for a case.
@@ -281,42 +359,38 @@ class Cases(ModerationCogBase):
         ----------
         ctx : commands.Context[Tux]
             The context in which the command is being invoked.
-        case : Case | None
+        case : Optional[Case]
             The case to handle the response for.
         action : str
             The action being performed on the case.
         reason : str
             The reason for the case.
-        user : discord.Member | discord.User
+        user : Union[discord.User, MockUser]
             The target of the case.
         """
-
-        if case is not None:
-            try:
-                moderator = await commands.MemberConverter().convert(ctx, str(case.case_moderator_id))
-            except commands.errors.MemberNotFound:
-                moderator = await commands.UserConverter().convert(ctx, str(case.case_moderator_id))
-            except commands.errors.UserNotFound:
-                moderator = await self.bot.fetch_user(case.case_moderator_id)
-
-            fields = self._create_case_fields(moderator, user, reason)
-
-            embed = self.create_embed(
-                ctx,
-                title=f"Case #{case.case_number} ({case.case_type}) {action}",
-                fields=fields,
-                color=CONST.EMBED_COLORS["CASE"],
-                icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"]
-                if case.case_status is True
-                else CONST.EMBED_ICONS["INACTIVE_CASE"],
-            )
-            embed.set_thumbnail(url=user.avatar)
-        else:
+        if not case:
             embed = EmbedCreator.create_embed(
                 embed_type=EmbedType.ERROR,
                 title=f"Case {action}",
                 description="Failed to find case.",
             )
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
+        moderator = await self._resolve_moderator(case.case_moderator_id)
+        fields = self._create_case_fields(moderator, user, reason)
+
+        embed = self.create_embed(
+            ctx,
+            title=f"Case #{case.case_number} ({case.case_type}) {action}",
+            fields=fields,
+            color=CONST.EMBED_COLORS["CASE"],
+            icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"] if case.case_status else CONST.EMBED_ICONS["INACTIVE_CASE"],
+        )
+
+        # Safe avatar access that works with MockUser
+        if hasattr(user, "avatar") and user.avatar:
+            embed.set_thumbnail(url=user.avatar.url)
 
         await ctx.send(embed=embed, ephemeral=True)
 
@@ -338,9 +412,6 @@ class Cases(ModerationCogBase):
         total_cases : int
             The total number of cases.
         """
-
-        menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed, all_can_click=True, delete_on_timeout=True)
-
         if not cases:
             embed = EmbedCreator.create_embed(
                 embed_type=EmbedType.ERROR,
@@ -350,28 +421,29 @@ class Cases(ModerationCogBase):
             await ctx.send(embed=embed, ephemeral=True)
             return
 
+        menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed, all_can_click=True, delete_on_timeout=True)
+
+        # Paginate cases
         cases_per_page = 10
         for i in range(0, len(cases), cases_per_page):
             embed = self._create_case_list_embed(ctx, cases[i : i + cases_per_page], total_cases)
             menu.add_page(embed)
 
-        menu.add_button(
+        menu_buttons = [
             ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_GO_TO_FIRST_PAGE, emoji="⏮️"),
-        )
-        menu.add_button(
             ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_PREVIOUS_PAGE, emoji="⏪"),
-        )
-        menu.add_button(ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_NEXT_PAGE, emoji="⏩"))
-        menu.add_button(
+            ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_NEXT_PAGE, emoji="⏩"),
             ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_GO_TO_LAST_PAGE, emoji="⏭️"),
-        )
+        ]
+
+        menu.add_buttons(menu_buttons)
 
         await menu.start()
 
     @staticmethod
     def _create_case_fields(
-        moderator: discord.Member | discord.User | None,
-        user: discord.Member | discord.User,
+        moderator: discord.User | MockUser,
+        user: discord.User | MockUser,
         reason: str,
     ) -> list[tuple[str, str, bool]]:
         """
@@ -379,9 +451,9 @@ class Cases(ModerationCogBase):
 
         Parameters
         ----------
-        moderator : discord.Member | discord.User
+        moderator : Union[discord.User, MockUser]
             The moderator of the case.
-        user : discord.Member | discord.User
+        user : Union[discord.User, MockUser]
             The user of the case.
         reason : str
             The reason for the case.
@@ -391,9 +463,8 @@ class Cases(ModerationCogBase):
         list[tuple[str, str, bool]]
             The fields for the case.
         """
-
         return [
-            ("Moderator", f"**{moderator}**\n`{moderator.id if moderator else 'Unknown'}`", True),
+            ("Moderator", f"**{moderator}**\n`{moderator.id if hasattr(moderator, 'id') else 'Unknown'}`", True),
             ("User", f"**{user}**\n`{user.id}`", True),
             ("Reason", f"> {reason}", False),
         ]
@@ -421,7 +492,6 @@ class Cases(ModerationCogBase):
         discord.Embed
             The embed for the case list.
         """
-
         assert ctx.guild
         assert ctx.guild.icon
 
@@ -441,165 +511,56 @@ class Cases(ModerationCogBase):
             custom_footer_icon_url=footer_icon_url,
         )
 
+        # Header row for the list
+        embed.description = "**Case**\u2003\u2003\u2002**Type**\u2003\u2002**Date**\n"
+
+        # Add each case to the embed
         for case in cases:
-            self._add_case_to_embed(embed, case)
+            # Get emojis for this case
+            status_emoji = self._get_emoji("active_case_emoji" if case.case_status else "inactive_case_emoji")
+            type_emoji = self._get_emoji(CASE_TYPE_EMOJI_MAP.get(case.case_type, ""))
+            action_emoji = self._get_emoji(CASE_ACTION_MAP.get(case.case_type, ""))
+
+            # Format the case number
+            case_number = f"{case.case_number:04}" if case.case_number is not None else "0000"
+
+            # Format type and action
+            case_type_and_action = (
+                f"{action_emoji}{type_emoji}" if action_emoji and type_emoji else ":interrobang::interrobang:"
+            )
+
+            # Format date
+            case_date = discord.utils.format_dt(case.case_created_at, "R") if case.case_created_at else ":interrobang:"
+
+            # Add the line to the embed
+            embed.description += f"{status_emoji}`{case_number}`\u2003 {case_type_and_action} \u2003__{case_date}__\n"
 
         return embed
 
-    @staticmethod
-    def _format_emoji(emoji: discord.Emoji | None) -> str:
+    def _get_emoji(self, emoji_key: str) -> str:
+        # sourcery skip: assign-if-exp, reintroduce-else
         """
-        Format an emoji to a string.
+        Get a formatted emoji string from a key in the EMOJIS dict.
 
         Parameters
         ----------
-        emoji : discord.Emoji | None
-            The emoji to format.
+        emoji_key : str
+            The key of the emoji in the EMOJIS dict.
 
         Returns
         -------
         str
-            The formatted emoji.
+            The formatted emoji string or empty string if not found.
         """
+        emoji_id = EMOJIS.get(emoji_key)
+        if not emoji_id:
+            return ""
 
-        return f"<:{emoji.name}:{emoji.id}>" if emoji else ""
+        emoji = self.bot.get_emoji(emoji_id)
+        if not emoji:
+            return ""
 
-    def _get_case_status_emoji(self, case_status: bool | None) -> discord.Emoji | None:
-        """
-        Get the emoji for a case status.
-
-        Parameters
-        ----------
-        case_status : bool | None
-            The status of the case.
-
-        Returns
-        -------
-        discord.Emoji | None
-            The emoji for the case status.
-        """
-
-        if case_status is None:
-            return None
-        return self.bot.get_emoji(emojis["active_case_emoji" if case_status else "inactive_case_emoji"])
-
-    def _get_case_type_emoji(self, case_type: CaseType) -> discord.Emoji | None:
-        """
-        Get the emoji for a case type.
-
-        Parameters
-        ----------
-        case_type : CaseType
-            The type of the case.
-
-        Returns
-        -------
-        discord.Emoji | None
-            The emoji for the case type.
-        """
-
-        emoji_map = {
-            CaseType.BAN: "ban",
-            CaseType.UNBAN: "ban",
-            CaseType.KICK: "kick",
-            CaseType.TIMEOUT: "timeout",
-            CaseType.UNTIMEOUT: "timeout",
-            CaseType.WARN: "warn",
-            CaseType.JAIL: "jail",
-            CaseType.UNJAIL: "jail",
-            CaseType.SNIPPETBAN: "snippetban",
-            CaseType.SNIPPETUNBAN: "snippetunban",
-        }
-        emoji_name = emoji_map.get(case_type)
-        if emoji_name is not None:
-            emoji_id = emojis.get(emoji_name)
-            if emoji_id is not None:
-                return self.bot.get_emoji(emoji_id)
-        return None
-
-    def _get_case_action_emoji(self, case_type: CaseType) -> discord.Emoji | None:
-        """
-        Get the emoji for a case action.
-
-        Parameters
-        ----------
-        case_type : CaseType
-            The type of the case.
-
-        Returns
-        -------
-        discord.Emoji | None
-            The emoji for the case action.
-        """
-
-        action = None
-
-        if case_type in {
-            CaseType.BAN,
-            CaseType.KICK,
-            CaseType.TIMEOUT,
-            CaseType.WARN,
-            CaseType.JAIL,
-            CaseType.SNIPPETBAN,
-        }:
-            action = "added"
-        elif case_type in {CaseType.UNBAN, CaseType.UNTIMEOUT, CaseType.UNJAIL, CaseType.SNIPPETUNBAN}:
-            action = "removed"
-
-        if action is not None:
-            emoji_id = emojis.get(action)
-            if emoji_id is not None:
-                return self.bot.get_emoji(emoji_id)
-        return None
-
-    def _get_case_description(
-        self,
-        case: Case,
-        case_status_emoji: str,
-        case_type_emoji: str,
-        case_action_emoji: str,
-    ) -> str:
-        """
-        Get the description for a case.
-
-        Parameters
-        ----------
-        case : Case
-            The case to get the description for.
-        case_status_emoji : str
-            The emoji for the case status.
-        case_type_emoji : str
-            The emoji for the case type.
-        case_action_emoji : str
-            The emoji for the case action.
-
-        Returns
-        -------
-        str
-            The description for the case.
-        """
-
-        case_number = f"{case.case_number:04d}" if case.case_number is not None else "0000"
-
-        case_type_and_action = (
-            f"{case_action_emoji}{case_type_emoji}"
-            if case_action_emoji and case_type_emoji
-            else ":interrobang::interrobang:"
-        )
-
-        case_date = discord.utils.format_dt(case.case_created_at, "R") if case.case_created_at else ":interrobang:"
-
-        return f"{case_status_emoji}`{case_number}`\u2003 {case_type_and_action} \u2003__{case_date}__\n"
-
-    def _add_case_to_embed(self, embed: discord.Embed, case: Case) -> None:
-        case_status_emoji = self._format_emoji(self._get_case_status_emoji(case.case_status))
-        case_type_emoji = self._format_emoji(self._get_case_type_emoji(case.case_type))
-        case_action_emoji = self._format_emoji(self._get_case_action_emoji(case.case_type))
-
-        if not embed.description:
-            embed.description = "**Case**\u2003\u2003\u2002**Type**\u2003\u2002**Date**\n"
-
-        embed.description += self._get_case_description(case, case_status_emoji, case_type_emoji, case_action_emoji)
+        return f"<:{emoji.name}:{emoji.id}>"
 
 
 async def setup(bot: Tux) -> None:

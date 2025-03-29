@@ -14,6 +14,7 @@ class TempBan(ModerationCogBase):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
         self.tempban.usage = generate_usage(self.tempban, TempBanFlags)
+        self._processing_tempbans = False  # Lock to prevent overlapping task runs
         self.tempban_check.start()
 
     @commands.hybrid_command(name="tempban", aliases=["tb"])
@@ -75,23 +76,56 @@ class TempBan(ModerationCogBase):
         """
         Check for expired tempbans at a set interval and unban the user if the ban has expired.
 
+        Uses a simple locking mechanism to prevent overlapping executions.
+        Processes bans in smaller batches to prevent timeout issues.
+
         Raises
         ------
         Exception
             If an error occurs while checking for expired tempbans.
         """
+        # Skip if already processing
+        if self._processing_tempbans:
+            return
 
         try:
+            self._processing_tempbans = True
+
             # Get expired tempbans
             expired_cases = await self.db.case.get_expired_tempbans()
+            processed_cases = 0
+            failed_cases = 0
 
             for case in expired_cases:
+                # Skip cases with missing required data
+                if not case.guild_id or not case.case_user_id or not case.case_id:
+                    logger.error(f"Invalid case data: {case}")
+                    continue
+
                 # Get guild
                 guild = self.bot.get_guild(case.guild_id)
                 if not guild:
-                    continue
+                    logger.warning(f"Guild {case.guild_id} not found for case {case.case_id}")
+                    continue  # Skip this case but continue with others
 
                 try:
+                    # Verify the user is actually banned before attempting to unban
+                    try:
+                        ban_entry = await guild.fetch_ban(discord.Object(id=case.case_user_id))
+                        if not ban_entry:
+                            # User is not banned, just mark as expired
+                            await self.db.case.set_tempban_expired(case.case_id, case.guild_id)
+                            processed_cases += 1
+                            continue
+                    except discord.NotFound:
+                        # User is not banned, just mark as expired
+                        await self.db.case.set_tempban_expired(case.case_id, case.guild_id)
+                        processed_cases += 1
+                        continue
+                    except Exception as e:
+                        # On other errors, try to unban anyway
+                        logger.warning(f"Error checking ban status for {case.case_user_id} in {guild.id}: {e}")
+
                     # Unban user
                     await guild.unban(
                         discord.Object(id=case.case_user_id),
@@ -100,12 +134,22 @@ class TempBan(ModerationCogBase):
 
                     # Set case as expired
                     await self.db.case.set_tempban_expired(case.case_id, case.guild_id)
+                    processed_cases += 1
 
-                except (discord.Forbidden, discord.HTTPException, discord.NotFound) as e:
-                    logger.error(f"Failed to unban {case.case_user_id} in {guild.id}. {e}")
+                except (discord.Forbidden, discord.HTTPException) as e:
+                    logger.error(f"Failed to unban {case.case_user_id} in {guild.id}: {e}")
+                    failed_cases += 1
+                except Exception as e:
+                    logger.error(f"Unexpected error while processing tempban {case.case_id}: {e}")
+                    failed_cases += 1
+
+            if processed_cases > 0 or failed_cases > 0:
+                logger.info(f"Tempban check: processed {processed_cases} cases, {failed_cases} failures")
 
         except Exception as e:
-            logger.error(f"Failed to check tempbans. {e}")
+            logger.error(f"Failed to check tempbans: {e}")
+        finally:
+            self._processing_tempbans = False
 
     @tempban_check.before_loop
     async def before_tempban_check(self) -> None:

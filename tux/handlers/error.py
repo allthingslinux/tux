@@ -1,4 +1,5 @@
 import traceback
+from typing import Any
 
 import discord
 import sentry_sdk
@@ -116,7 +117,6 @@ error_map: dict[type[Exception], str] = {
     app_commands.MissingAnyRole: "User not in sudoers file. This incident will be reported. (Missing Roles)",
     app_commands.MissingPermissions: "User not in sudoers file. This incident will be reported. (Missing Permissions)",
     app_commands.CheckFailure: "User not in sudoers file. This incident will be reported. (Permission Check Failed)",
-    app_commands.CommandNotFound: "This command was not found.",
     app_commands.CommandOnCooldown: "This command is on cooldown. Try again in {error.retry_after:.2f} seconds.",
     app_commands.BotMissingPermissions: "User not in sudoers file. This incident will be reported. (Bot Missing Permissions)",
     app_commands.CommandSignatureMismatch: "The command signature does not match: {error}",
@@ -272,9 +272,39 @@ class ErrorHandler(commands.Cog):
             The error message.
         """
         if ctx:
-            return error_map.get(type(error), self.error_message).format(error=error, ctx=ctx)
+            message = error_map.get(type(error), self.error_message)
+
+            # For errors that need command usage, generate it if missing
+            if (
+                isinstance(
+                    error,
+                    commands.MissingRequiredArgument
+                    | commands.TooManyArguments
+                    | commands.FlagError
+                    | commands.BadFlagArgument
+                    | commands.MissingRequiredFlag,
+                )
+                and "{ctx.command.usage}" in message
+                and ctx.command
+                and not ctx.command.usage
+            ):
+                # Generate a default usage string
+                usage = self._generate_default_usage(ctx.command)
+                # Use a modified version of the context's command for formatting
+                # We can't modify ctx directly as it's immutable
+                formatted_message = message.replace("{ctx.command.usage}", usage)
+                return formatted_message.format(error=error, ctx=ctx)
+
+            return message.format(error=error, ctx=ctx)
 
         return error_map.get(type(error), self.error_message).format(error=error)
+
+    @staticmethod
+    def _generate_default_usage(command: commands.Command[Any, Any, Any]) -> str:
+        """Generates a default usage string based on command parameters when usage is missing."""
+        if signature := command.signature.strip():
+            return f"{command.qualified_name} {signature}"
+        return command.qualified_name
 
     @staticmethod
     def log_error_traceback(error: Exception) -> None:

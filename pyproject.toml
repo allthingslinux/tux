@@ -138,6 +138,7 @@ exclude = [
 ]
 ignore = [".venv"]
 include = ["tux"]
+stubPath = "typings"
 pythonPlatform = "Linux"
 pythonVersion = "3.13"
 reportImportCycles = true

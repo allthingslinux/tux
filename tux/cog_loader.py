@@ -33,7 +33,6 @@ class CogLoader(commands.Cog):
         self.load_times: defaultdict[str, float] = defaultdict(float)
         # Define load order priorities (higher number = higher priority)
         self.load_priorities = {
-            "handlers": 100,
             "services": 90,
             "admin": 80,
             "levels": 70,
