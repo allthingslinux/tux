@@ -457,8 +457,8 @@ class ModerationCogBase(commands.Cog):
         moderator = ctx.author
 
         fields = [
-            ("Moderator", f"**{moderator}**\n`{moderator.id}`", True),
-            ("Target", f"**{user}**\n`{user.id}`", True),
+            ("Moderator", f"-# **{moderator}**\n`{moderator.id}` xxxxxxxx", True),
+            ("Target", f"-# **{user}**\n`{user.id}`", True),
             ("Reason", f"> {reason}", False),
         ]
 

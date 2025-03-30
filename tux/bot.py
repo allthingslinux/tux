@@ -4,6 +4,8 @@ This module contains the main bot class and implements core functionality
 including setup and graceful shutdown.
 """
 
+from __future__ import annotations
+
 import asyncio
 import contextlib
 from collections.abc import Callable, Coroutine
@@ -59,6 +61,8 @@ class Tux(commands.Bot):
         Task handling the bot setup process
     console : Console
         Rich console for formatted output
+    cog_watcher : Any
+        Reference to the cog watcher for hot reloading
     """
 
     _monitor_tasks: ClassVar[TaskLoop]  # type: ignore[name-defined]
@@ -73,6 +77,7 @@ class Tux(commands.Bot):
         self.setup_complete: bool = False
         self.start_time: float | None = None
         self.setup_task: asyncio.Task[None] | None = None
+        self.cog_watcher: Any = None
 
         # Create console for rich output
         self.console = Console(stderr=True, force_terminal=True)
@@ -205,6 +210,7 @@ class Tux(commands.Bot):
         1. Records start time if not set
         2. Logs startup banner
         3. Ensures setup is complete
+        4. Starts hot reloading for cogs (loaded as separate cog)
 
         Notes
         -----
@@ -216,6 +222,13 @@ class Tux(commands.Bot):
 
         await self._log_startup_banner()
         await self._wait_for_setup()
+
+        # Start hot reloading - import at function level to avoid circular imports
+        try:
+            await self.load_extension("tux.utils.hot_reload")
+            logger.info("Hot reloading enabled")
+        except Exception as e:
+            logger.warning(f"Failed to enable hot reloading: {e}")
 
     @commands.Cog.listener()
     async def on_disconnect(self) -> None:

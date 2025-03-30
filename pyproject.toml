@@ -48,6 +48,7 @@ sentry-sdk = { version = ">=2.7.0", extras = ["httpx", "loguru"] }
 audioop-lts = "^0.2.1"
 colorama = "^0.4.6"
 rich = "^13.9.4"
+watchdog = "^6.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
