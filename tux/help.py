@@ -171,8 +171,10 @@ class TuxHelp(commands.HelpCommand):
     @staticmethod
     def _add_navigation_and_selection(menu: ViewMenu, select_options: dict[discord.SelectOption, list[Page]]) -> None:
         """Adds navigation buttons and select options to the help menu."""
-        menu.add_select(ViewSelect(title="Command Categories", options=select_options))
-        menu.add_button(ViewButton.end_session())
+        menu.add_select(ViewSelect(title="🗃️ Select a category", options=select_options))
+        menu.add_button(
+            ViewButton(label="Close Menu", style=discord.ButtonStyle.danger, custom_id=ViewButton.ID_END_SESSION),
+        )
 
     # Cogs and Command Categories
     async def _add_cog_pages(
@@ -389,7 +391,8 @@ class TuxHelp(commands.HelpCommand):
 
     async def send_error_message(self, error: str) -> None:
         """Sends an error message."""
-        logger.error(f"An error occurred while sending a help message: {error}")
+
+        logger.warning(f"An error occurred while sending a help message: {error}")
 
         embed = EmbedCreator.create_embed(
             EmbedCreator.ERROR,
