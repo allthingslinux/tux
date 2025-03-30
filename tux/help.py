@@ -238,6 +238,7 @@ class TuxHelp(commands.HelpCommand):
         menu = ViewMenu(
             self.context,
             menu_type=ViewMenu.TypeEmbed,
+            all_can_click=True,
             delete_on_timeout=True,
             timeout=180,
             show_page_director=False,
@@ -283,18 +284,22 @@ class TuxHelp(commands.HelpCommand):
         )
         embed.add_field(
             name="Support Server",
-            value="[Need support? Join Server](https://discord.gg/gpmSjcjQxg)",
+            value="-# [Need support? Join Server](https://discord.gg/gpmSjcjQxg)",
             inline=True,
         )
         embed.add_field(
             name="GitHub Repository",
-            value="[Help contribute! View Repo](https://github.com/allthingslinux/tux)",
+            value="-# [Help contribute! View Repo](https://github.com/allthingslinux/tux)",
             inline=True,
         )
+
+        bot_name_display = "Tux" if CONFIG.BOT_NAME == "Tux" else f"{CONFIG.BOT_NAME} (Tux)"
+        environment = "dev" if CONFIG.DEV else "prod"
+        owner_info = f"Bot Owner: <@{CONFIG.BOT_OWNER_ID}>" if not CONFIG.HIDE_BOT_OWNER and CONFIG.BOT_OWNER_ID else ""
+
         embed.add_field(
-            name="Bot Info",
-            value=f"""Running {"Tux" if CONFIG.BOT_NAME == "Tux" else f"{CONFIG.BOT_NAME} (Tux)"} version {CONFIG.BOT_VERSION} in {"Development" if CONFIG.DEV else "Production"} mode.
-{f"This tux instance is administrated by <@{CONFIG.BOT_OWNER_ID}>" if not CONFIG.HIDE_BOT_OWNER and CONFIG.BOT_OWNER_ID else ""}""",
+            name="Bot Instance",
+            value=f"-# Running {bot_name_display} version `{CONFIG.BOT_VERSION}` in `{environment}` mode | {owner_info}",
             inline=False,
         )
 
