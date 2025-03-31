@@ -1,6 +1,5 @@
 {
-  # TODO: make an actually good desc lol
-  description = "A flake for the development and installation of the All Thing's Linux discord server's bot tux";
+  description = "All Thing's Linux discord bot - Tux";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
