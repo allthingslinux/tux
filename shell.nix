@@ -7,8 +7,8 @@ pkgs.mkShell {
   ];
 
   shellHook = ''
-    # enters the user's preferred shell
-    $(grep $USER /etc/passwd | sed 's|.*:||g' | tr -d '\n')
+    # enters the user's preferred shell using a more robust method
+    $(getent passwd $(id -un) | cut -d: -f7 | tr -d '\n')
 
     # exits after child shell exits
     exit
