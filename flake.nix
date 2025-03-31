@@ -1,8 +1,11 @@
 {
   description = "All Thing's Linux discord bot - Tux";
 
-  inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+  inputs.nixpkgs = {
+    type = "github";
+    owner = "NixOS";
+    repo = "nixpkgs";
+    ref = "nixos-unstable";
   };
 
   outputs = { self, nixpkgs }: let
