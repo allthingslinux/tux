@@ -77,7 +77,7 @@ WORKDIR /app
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
     poetry install --only dev --no-root --no-directory
 
-CMD ["sh", "-c", "ls && poetry run prisma generate && exec poetry run tux dev"]
+CMD ["sh", "-c", "ls && poetry run prisma generate && exec poetry run python tux/main.py"]
 
 
 # Production stage:
@@ -96,5 +96,6 @@ ENV VIRTUAL_ENV=/app/.venv \
 
 COPY --from=build --chown=nonroot:nonroot /app ./
 
-ENTRYPOINT ["python", "-m", "tux"]
-CMD ["start"]
+
+ENTRYPOINT ["python"]
+CMD ["-m", "tux.main"]
