@@ -75,21 +75,21 @@ Further detailed instructions can be found in the [development guide](docs/devel
 2. Install the project's dependencies and set up the virtual environment
 
     ```bash
-    poetry install
     poetry env use 3.13.2
+    poetry install
     ```
 
 3. Install the pre-commit hooks (optional unless you are contributing)
 
     ```bash
-    pre-commit install
+    poetry run pre-commit install
     ```
 
 4. Generate the prisma client and push the database schema
 
     ```bash
-    prisma generate
-    prisma db push
+    poetry run prisma generate
+    poetry run prisma db push
     ```
 
     Currently, you will need to have a Supabase database set up and the URL set in the `DATABASE_URL` environment variable.
