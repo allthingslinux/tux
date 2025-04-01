@@ -21,7 +21,6 @@ class Ban(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
-        reason: str | None = None,
         *,
         flags: BanFlags,
     ) -> None:
@@ -34,10 +33,8 @@ class Ban(ModerationCogBase):
             The context in which the command is being invoked.
         member : discord.Member
             The member to ban.
-        reason : str | None
-            The reason for the ban.
         flags : BanFlags
-            The flags for the command. (purge_days: int (< 7), silent: bool)
+            The flags for the command. (reason: str, purge: int (< 7), silent: bool)
 
         Raises
         ------
@@ -53,17 +50,15 @@ class Ban(ModerationCogBase):
         if not await self.check_conditions(ctx, member, ctx.author, "ban"):
             return
 
-        final_reason = reason or self.DEFAULT_REASON
-
         # Execute ban with case creation and DM
         await self.execute_mod_action(
             ctx=ctx,
             case_type=CaseType.BAN,
             user=member,
-            final_reason=final_reason,
+            reason=flags.reason,
             silent=flags.silent,
             dm_action="banned",
-            actions=[(ctx.guild.ban(member, reason=final_reason, delete_message_days=flags.purge_days), type(None))],
+            actions=[(ctx.guild.ban(member, reason=flags.reason, delete_message_days=flags.purge), type(None))],
         )
 
 

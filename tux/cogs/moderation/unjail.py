@@ -142,7 +142,6 @@ class Unjail(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
-        reason: str | None = None,
         *,
         flags: UnjailFlags,
     ) -> None:
@@ -155,10 +154,8 @@ class Unjail(ModerationCogBase):
             The context in which the command is being invoked.
         member : discord.Member
             The member to unjail.
-        reason : Optional[str]
-            The reason for removing from jail.
         flags : UnjailFlags
-            The flags for the command. (silent: bool)
+            The flags for the command. (reason: str, silent: bool)
 
         Raises
         ------
@@ -187,11 +184,9 @@ class Unjail(ModerationCogBase):
         if not await self.check_conditions(ctx, member, ctx.author, "unjail"):
             return
 
-        final_reason = reason or self.DEFAULT_REASON
-
         # Use lock to prevent race conditions
         async def perform_unjail() -> None:
-            nonlocal ctx, member, jail_role, final_reason, flags
+            nonlocal ctx, member, jail_role, flags
 
             guild_id = ctx.guild.id if ctx.guild else 0  # Guild is already asserted above
 
@@ -204,33 +199,33 @@ class Unjail(ModerationCogBase):
             try:
                 # Remove jail role from member
                 assert jail_role is not None, "Jail role should not be None at this point"
-                await member.remove_roles(jail_role, reason=final_reason)
+                await member.remove_roles(jail_role, reason=flags.reason)
 
                 # Insert unjail case into database
                 case_result = await self.db.case.insert_case(
                     case_user_id=member.id,
                     case_moderator_id=ctx.author.id,
                     case_type=CaseType.UNJAIL,
-                    case_reason=final_reason,
+                    case_reason=flags.reason,
                     guild_id=guild_id,
                 )
 
                 # Send DM to member
-                dm_sent = await self.send_dm(ctx, flags.silent, member, final_reason, "removed from jail")
+                dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "removed from jail")
 
                 # Handle case response - send embed immediately
                 await self.handle_case_response(
                     ctx,
                     CaseType.UNJAIL,
                     case_result.case_number,
-                    final_reason,
+                    flags.reason,
                     member,
                     dm_sent,
                 )
 
                 # Add roles back to member after sending the response
                 if case.case_user_roles:
-                    success, restored_roles = await self.restore_roles(member, case.case_user_roles, final_reason)
+                    success, restored_roles = await self.restore_roles(member, case.case_user_roles, flags.reason)
 
                     if success and restored_roles:
                         logger.info(f"Restored {len(restored_roles)} roles to {member}")

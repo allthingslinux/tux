@@ -20,7 +20,6 @@ R = TypeVar("R")  # Return type for generic functions
 
 
 class ModerationCogBase(commands.Cog):
-    DEFAULT_REASON: ClassVar[str] = "No reason provided"
     # Actions that remove users from the server, requiring DM to be sent first
     REMOVAL_ACTIONS: ClassVar[set[CaseType]] = {CaseType.BAN, CaseType.KICK, CaseType.TEMPBAN}
 
@@ -91,7 +90,7 @@ class ModerationCogBase(commands.Cog):
         ctx: commands.Context[Tux],
         case_type: CaseType,
         user: discord.Member | discord.User,
-        final_reason: str,
+        reason: str,
         silent: bool,
         dm_action: str,
         actions: Sequence[tuple[Any, type[R]]] = (),
@@ -126,7 +125,7 @@ class ModerationCogBase(commands.Cog):
         if case_type in self.REMOVAL_ACTIONS and not silent:
             try:
                 # Attempt to send DM before banning/kicking
-                dm_sent = await asyncio.wait_for(self.send_dm(ctx, silent, user, final_reason, dm_action), timeout=2.0)
+                dm_sent = await asyncio.wait_for(self.send_dm(ctx, silent, user, reason, dm_action), timeout=2.0)
             except TimeoutError:
                 logger.warning(f"DM to {user} timed out before {case_type}")
                 dm_sent = False
@@ -151,7 +150,7 @@ class ModerationCogBase(commands.Cog):
         # For actions that don't remove users, send DM after action is taken
         if case_type not in self.REMOVAL_ACTIONS and not silent:
             try:
-                dm_task = self.send_dm(ctx, silent, user, final_reason, dm_action)
+                dm_task = self.send_dm(ctx, silent, user, reason, dm_action)
                 dm_result = await asyncio.wait_for(dm_task, timeout=2.0)
                 dm_sent = self._handle_dm_result(user, dm_result)
             except TimeoutError:
@@ -167,7 +166,7 @@ class ModerationCogBase(commands.Cog):
                 case_user_id=user.id,
                 case_moderator_id=ctx.author.id,
                 case_type=case_type,
-                case_reason=final_reason,
+                case_reason=reason,
                 guild_id=ctx.guild.id,
             )
             case_result = handle_case_result(case_result)
@@ -181,7 +180,7 @@ class ModerationCogBase(commands.Cog):
             ctx,
             case_type,
             case_result.case_number if case_result else None,
-            final_reason,
+            reason,
             user,
             dm_sent,
             duration,
@@ -457,9 +456,9 @@ class ModerationCogBase(commands.Cog):
         moderator = ctx.author
 
         fields = [
-            ("Moderator", f"-# **{moderator}**\n`{moderator.id}` xxxxxxxx", True),
-            ("Target", f"-# **{user}**\n`{user.id}`", True),
-            ("Reason", f"> {reason}", False),
+            ("Moderator", f"-# **{moderator}**\n-# `{moderator.id}`", True),
+            ("Target", f"-# **{user}**\n-# `{user.id}`", True),
+            ("Reason", f"-# > {reason}", False),
         ]
 
         title = self._format_case_title(case_type, case_number, duration)
@@ -470,10 +469,9 @@ class ModerationCogBase(commands.Cog):
             fields=fields,
             color=CONST.EMBED_COLORS["CASE"],
             icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"],
-            thumbnail_url=getattr(user, "avatar", None),
         )
 
-        embed.description = "-# DM successful" if dm_sent else "-# DM unsuccessful"
+        embed.description = "-# DM sent" if dm_sent else "-# DM not sent"
 
         await asyncio.gather(self.send_embed(ctx, embed, log_type="mod"), ctx.send(embed=embed, ephemeral=True))
 

@@ -6,6 +6,7 @@ from discord.ext import commands
 from prisma.enums import CaseType
 from tux.bot import Tux
 from tux.utils import checks
+from tux.utils.constants import CONST
 from tux.utils.flags import UnbanFlags, generate_usage
 
 from . import ModerationCogBase
@@ -120,7 +121,7 @@ class Unban(ModerationCogBase):
         if not await self.check_conditions(ctx, user, ctx.author, "unban"):
             return
 
-        final_reason = reason or self.DEFAULT_REASON
+        final_reason = reason or CONST.DEFAULT_REASON
         guild = ctx.guild
 
         # Use the lock to prevent race conditions
@@ -134,7 +135,7 @@ class Unban(ModerationCogBase):
                 ctx=ctx,
                 case_type=CaseType.UNBAN,
                 user=user,
-                final_reason=final_reason,
+                reason=final_reason,
                 # No DM for unbans due to user not being in the guild
                 silent=True,
                 # No DM for unbans due to user not being in the guild

@@ -68,7 +68,6 @@ class Jail(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
-        reason: str | None = None,
         *,
         flags: JailFlags,
     ) -> None:
@@ -81,10 +80,8 @@ class Jail(ModerationCogBase):
             The context in which the command is being invoked.
         member : discord.Member
             The member to jail.
-        reason : str | None
-            The reason for the jail.
         flags : JailFlags
-            The flags for the command. (silent: bool)
+            The flags for the command. (reason: str, silent: bool)
 
         Raises
         ------
@@ -113,8 +110,6 @@ class Jail(ModerationCogBase):
         if not await self.check_conditions(ctx, member, ctx.author, "jail"):
             return
 
-        final_reason = reason or self.DEFAULT_REASON
-
         # Use a transaction-like pattern to ensure consistency
         try:
             # Get roles that can be managed by the bot
@@ -129,24 +124,24 @@ class Jail(ModerationCogBase):
                 case_user_id=member.id,
                 case_moderator_id=ctx.author.id,
                 case_type=CaseType.JAIL,
-                case_reason=final_reason,
+                case_reason=flags.reason,
                 case_user_roles=case_user_roles,
             )
 
             # Add jail role immediately - this is the most important part
-            await member.add_roles(jail_role, reason=final_reason)
+            await member.add_roles(jail_role, reason=flags.reason)
 
             # Send DM to member
-            dm_sent = await self.send_dm(ctx, flags.silent, member, final_reason, "jailed")
+            dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "jailed")
 
             # Handle case response - send embed immediately
-            await self.handle_case_response(ctx, CaseType.JAIL, case.case_number, final_reason, member, dm_sent)
+            await self.handle_case_response(ctx, CaseType.JAIL, case.case_number, flags.reason, member, dm_sent)
 
             # Remove old roles in the background after sending the response
             if user_roles:
                 try:
                     # Try to remove all at once for efficiency
-                    await member.remove_roles(*user_roles, reason=final_reason, atomic=False)
+                    await member.remove_roles(*user_roles, reason=flags.reason, atomic=False)
                 except Exception as e:
                     logger.warning(
                         f"Failed to remove all roles at once from {member}, falling back to individual removal: {e}",
@@ -154,7 +149,7 @@ class Jail(ModerationCogBase):
                     # Fall back to removing one by one
                     for role in user_roles:
                         try:
-                            await member.remove_roles(role, reason=final_reason)
+                            await member.remove_roles(role, reason=flags.reason)
                         except Exception as role_e:
                             logger.error(f"Failed to remove role {role} from {member}: {role_e}")
                             # Continue with other roles even if one fails

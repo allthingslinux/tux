@@ -24,7 +24,6 @@ class TempBan(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
-        reason: str | None = None,
         *,
         flags: TempBanFlags,
     ) -> None:
@@ -37,10 +36,8 @@ class TempBan(ModerationCogBase):
             The context in which the command is being invoked.
         member : discord.Member
             The member to ban.
-        reason : str | None
-            The reason for the ban.
         flags : TempBanFlags
-            The flags for the command. (duration: int, purge_days: int (< 7), silent: bool)
+            The flags for the command. (duration: str, purge: int (< 7), silent: bool)
 
         Raises
         ------
@@ -56,18 +53,17 @@ class TempBan(ModerationCogBase):
         if not await self.check_conditions(ctx, member, ctx.author, "temp ban"):
             return
 
-        final_reason = reason or self.DEFAULT_REASON
-        duration_str = f"{flags.expires_at}d"
+        duration_str = f"{flags.duration}d"
 
         # Execute tempban with case creation and DM
         await self.execute_mod_action(
             ctx=ctx,
             case_type=CaseType.TEMPBAN,
             user=member,
-            final_reason=final_reason,
+            reason=flags.reason,
             silent=flags.silent,
             dm_action="temp banned",
-            actions=[(ctx.guild.ban(member, reason=final_reason, delete_message_days=flags.purge_days), type(None))],
+            actions=[(ctx.guild.ban(member, reason=flags.reason, delete_message_days=flags.purge), type(None))],
             duration=duration_str,
         )
 

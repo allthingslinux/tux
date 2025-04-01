@@ -27,7 +27,6 @@ class Timeout(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
-        reason: str | None = None,
         *,
         flags: TimeoutFlags,
     ) -> None:
@@ -40,8 +39,6 @@ class Timeout(ModerationCogBase):
             The context in which the command is being invoked.
         member : discord.Member
             The member to timeout.
-        reason : str | None
-            The reason for the timeout.
         flags : TimeoutFlags
             The flags for the command (duration: str, silent: bool).
 
@@ -60,8 +57,6 @@ class Timeout(ModerationCogBase):
         # Check if moderator has permission to timeout the member
         if not await self.check_conditions(ctx, member, ctx.author, "timeout"):
             return
-
-        final_reason = reason or self.DEFAULT_REASON
 
         # Parse and validate duration
         try:
@@ -86,10 +81,10 @@ class Timeout(ModerationCogBase):
             ctx=ctx,
             case_type=CaseType.TIMEOUT,
             user=member,
-            final_reason=final_reason,
+            reason=flags.reason,
             silent=flags.silent,
             dm_action=f"timed out for {flags.duration}",
-            actions=[(member.timeout(duration, reason=final_reason), type(None))],
+            actions=[(member.timeout(duration, reason=flags.reason), type(None))],
             duration=flags.duration,
         )
 

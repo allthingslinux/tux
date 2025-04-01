@@ -62,7 +62,7 @@ class TuxHelp(commands.HelpCommand):
 
             for flag in param_annotation.__commands_flags__.values():
                 flag_str = self._format_flag_name(flag)
-                if flag.aliases:
+                if flag.aliases and not getattr(flag, "positional", False):
                     flag_str += f" ({', '.join(flag.aliases)})"
                 flag_str += f"\n\t{flag.description or 'No description provided'}"
                 if flag.default is not discord.utils.MISSING:
@@ -73,7 +73,9 @@ class TuxHelp(commands.HelpCommand):
 
     @staticmethod
     def _format_flag_name(flag: commands.Flag) -> str:
-        """Formats the flag name based on whether it is required."""
+        """Formats the flag name based on whether it is required and positional."""
+        if getattr(flag, "positional", False):
+            return f"<{flag.name}>" if flag.required else f"[{flag.name}]"
         return f"-{flag.name}" if flag.required else f"[-{flag.name}]"
 
     # Command Fields and Mapping

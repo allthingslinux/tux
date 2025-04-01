@@ -55,5 +55,7 @@ class Constants:
     SLASH_CMD_MAX_OPTIONS = 25
     SLASH_OPTION_NAME_LENGTH = 100
 
+    DEFAULT_REASON = "No reason provided"
+
 
 CONST = Constants()
