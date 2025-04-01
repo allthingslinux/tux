@@ -16,4 +16,5 @@ services:
     env_file:
       - .env
     volumes:
-      - .:/app
+      - ./config/:/app/config
+      - ./tux/:/app/tux
