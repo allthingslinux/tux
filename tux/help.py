@@ -281,8 +281,8 @@ class TuxHelp(commands.HelpCommand):
         )
         embed.add_field(
             name="Bot Info",
-            value=f"""Running {"Tux" if CONFIG.BOT_NAME == "Tux" else f"{CONFIG.BOT_NAME} (Tux)"} version {CONFIG.BOT_VERSION} in {"Development" if CONFIG.DEV else "Production"} mode.
-{f"This tux instance is administrated by <@{CONFIG.BOT_OWNER_ID}>" if not CONFIG.HIDE_BOT_OWNER and CONFIG.BOT_OWNER_ID else ""}""",
+            value=f"""Running {"Tux" if CONFIG.BOT_NAME == "Tux" else f"{CONFIG.BOT_NAME} (Based on Tux)"} version {CONFIG.BOT_VERSION} in {"Development" if CONFIG.DEV else "Production"} mode.
+{f"This Tux instance is administrated by <@{CONFIG.BOT_OWNER_ID}>" if not CONFIG.HIDE_BOT_OWNER and CONFIG.BOT_OWNER_ID else ""}""",
             inline=False,
         )
 
