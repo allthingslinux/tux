@@ -32,7 +32,12 @@ class Cowsay(commands.Cog):
     )
     @commands.guild_only()
     async def cowsay(
-        self, ctx: commands.Context[Tux], message: str, creature: str = "cow", eyes: str = "o", curviness: bool = True,
+        self,
+        ctx: commands.Context[Tux],
+        message: str,
+        creature: str = "cow",
+        eyes: str = "o",
+        curviness: bool = True,
     ) -> None:
         """
         cowsay command
@@ -50,6 +55,8 @@ class Cowsay(commands.Cog):
         eyes: str
             What char to use for the eyes
         """
+
+        # Creature dict. "?" will be replaced with the user-specified eye character.
         creatures = {
             "cow": r"""
     \   ^__^
@@ -68,8 +75,7 @@ class Cowsay(commands.Cog):
      \___)=(___/""",
             "puffy": r"""
     \
-     \
-               |    .
+     \         |    .
            .   |L  /|
        _ . |\ _| \--+._/| .
       / ||\| Y J  )   / |/| ./
