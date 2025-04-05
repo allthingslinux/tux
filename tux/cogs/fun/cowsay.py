@@ -12,15 +12,16 @@ class Cowsay(commands.Cog):
         self.cowsay.usage = generate_usage(self.cowsay)
 
     # Helper function that word-wraps text and surrounds it with an ascii art box
-    async def draw_textbox(self, message: str) -> str:
+    async def draw_textbox(self, message: str, curviness: bool) -> str:
         message_lines = wrap(message, 40)
         max_line_length = max(len(line) for line in message_lines)
-        border = f"/{'-' * (max_line_length + 2)}\\\n"
+        corners = ["╭", "╮", "╰", "╯"] if curviness else ["/", "\\", "\\", "/"]
+        border = f"{corners[0]}{'-' * (max_line_length + 2)}{corners[1]}\n"
 
         message_box_lines = [
             border,
             *[f"| {line}{' ' * (max_line_length - len(line))} |\n" for line in message_lines],
-            f"\\{'-' * (max_line_length + 2)}/",
+            f"{corners[2]}{'-' * (max_line_length + 2)}{corners[3]}",
         ]
 
         return "".join(message_box_lines)
@@ -30,7 +31,9 @@ class Cowsay(commands.Cog):
         aliases=["cow"],
     )
     @commands.guild_only()
-    async def cowsay(self, ctx: commands.Context[Tux], message: str, creature: str = "cow") -> None:
+    async def cowsay(
+        self, ctx: commands.Context[Tux], message: str, creature: str = "cow", eyes: str = "o", curviness: bool = True
+    ) -> None:
         """
         cowsay command
 
@@ -42,26 +45,27 @@ class Cowsay(commands.Cog):
             The message to encode
         creature : str
             Which creature to use for the drawing
+        curviness: bool
+            whether to use slashes or curves for the box corners
+        eyes: str
+            What char to use for the eyes
         """
         creatures = {
             "cow": r"""
     \   ^__^
-     \  (oo)\_______
+     \  (??)\_______
         (__)\       )\/\
             ||----w |
-            ||     ||
-                """,
+            ||     ||""",
             "tux": r"""
     \
-     \
-         .--.
-        |o_o |
+     \   .--.
+        |?_? |
         |:_/ |
        //   \ \
       (|     | )
      /'\_   _/`\
-     \___)=(___/
-                """,
+     \___)=(___/""",
             "puffy": r"""
     \
      \
@@ -72,8 +76,8 @@ class Cowsay(commands.Cog):
      J  |)'( |        ` F`.'/
    -<|  F         __     .-<
      | /       .-'. `.  /-. L___
-     J \      <    \  | | O\|.-'
-   _J \  .-    \/ O | | \  |F
+     J \      <    \  | | ?\|.-'
+   _J \  .-    \/ ? | | \  |F
   '-F  -<_.     \   .-'  `-' L__
  __J  _   _.     >-'  )._.   |-'
  `-|.'   /_.           \_|   F
@@ -85,9 +89,9 @@ class Cowsay(commands.Cog):
     |/`. `-.     `._)
        / .-.\
  VK    \ (  `\
-        `.\
-            """,
+        `.\ """,
         }
+
         if message == "":
             await ctx.send("Error! Message is empty!")
             return
@@ -105,8 +109,8 @@ class Cowsay(commands.Cog):
             await ctx.send(f"Error! Message too long! ({len(message)} > 250)")
             return
 
-        textbox = await self.draw_textbox(message)
-        await ctx.send(f"```{textbox}{creatures[creature]}```")
+        textbox = await self.draw_textbox(message, curviness)
+        await ctx.send(f"```{textbox}{creatures[creature].replace('?', eyes[0])}```")
 
 
 async def setup(bot: Tux) -> None:
