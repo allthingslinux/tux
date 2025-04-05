@@ -11,15 +11,18 @@ class Cowsay(commands.Cog):
         self.bot = bot
         self.cowsay.usage = generate_usage(self.cowsay)
 
+    # Helper function that word-wraps text and surrounds it with an ascii art box
     async def draw_textbox(self, message: str) -> str:
         message_lines = wrap(message, 40)
         max_line_length = max(len(line) for line in message_lines)
-        message_box_lines: list[str] = []
-        message_box_lines.append("/" + ("-" * (max_line_length + 2)) + "\\\n")
-        for line in message_lines:
-            box_line = "| " + line + (" " * (max_line_length - len(line))) + " |\n"
-            message_box_lines.append(box_line)
-        message_box_lines.append("\\" + ("-" * (max_line_length + 2)) + "/")
+        border = f"/{'-' * (max_line_length + 2)}\\\n"
+
+        message_box_lines = [
+            border,
+            *[f"| {line}{' ' * (max_line_length - len(line))} |\n" for line in message_lines],
+            f"\\{'-' * (max_line_length + 2)}/",
+        ]
+
         return "".join(message_box_lines)
 
     @commands.hybrid_group(
@@ -29,7 +32,7 @@ class Cowsay(commands.Cog):
     @commands.guild_only()
     async def cowsay(self, ctx: commands.Context[Tux], message: str, creature: str = "cow") -> None:
         """
-        xkcd related commands.
+        cowsay command
 
         Parameters
         ----------
@@ -85,17 +88,15 @@ class Cowsay(commands.Cog):
         `.\
             """,
         }
+        if message == "":
+            await ctx.send("Error! Message is empty!")
+            return
 
         if creature not in creatures:
-            valid_creatures: list[str] = []
-            for idx, key in enumerate(creatures.keys()):
-                if idx < len(creatures) - 1:
-                    valid_creatures.append(f"{key}, ")
-                else:
-                    valid_creatures.append(f" and {key}")
-
+            keys = list(creatures.keys())
+            valid_creatures = ", ".join(keys[:-1]) + " and " + keys[-1] if len(keys) > 1 else keys[0]
             await ctx.send(
-                f'Error: "{creature}" is not a valid creature! valid creatures are: {"".join(valid_creatures)}',
+                f'Error: "{creature}" is not a valid creature! Valid creatures are: {valid_creatures}',
                 ephemeral=True,
             )
             return
@@ -105,7 +106,7 @@ class Cowsay(commands.Cog):
             return
 
         textbox = await self.draw_textbox(message)
-        await ctx.send("```" + textbox + creatures[creature] + "```")
+        await ctx.send(f"```{textbox}{creatures[creature]}```")
 
 
 async def setup(bot: Tux) -> None:
