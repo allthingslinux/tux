@@ -32,7 +32,7 @@ class Cowsay(commands.Cog):
     )
     @commands.guild_only()
     async def cowsay(
-        self, ctx: commands.Context[Tux], message: str, creature: str = "cow", eyes: str = "o", curviness: bool = True
+        self, ctx: commands.Context[Tux], message: str, creature: str = "cow", eyes: str = "o", curviness: bool = True,
     ) -> None:
         """
         cowsay command
