@@ -70,7 +70,7 @@ class Afk(commands.Cog):
             await self.db.remove_afk(target.id)
             await self.db.insert_afk(target.id, entry.nickname, shortened_reason, ctx.guild.id)
             return await ctx.send(
-                f"You are already afk, updating AFK reason to `{shortened_reason}` :3",
+                f"You are already afk, updating AFK reason to `{shortened_reason}`",
                 ephemeral=True,
             )
 
