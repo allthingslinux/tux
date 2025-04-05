@@ -8,6 +8,7 @@ from .afk import AfkController
 from .case import CaseController
 from .guild import GuildController
 from .guild_config import GuildConfigController
+from .levels import LevelsController
 from .note import NoteController
 from .reminder import ReminderController
 from .snippet import SnippetController
@@ -40,6 +41,8 @@ class DatabaseController:
         Controller for starboard functionality
     starboard_message : StarboardMessageController
         Controller for starboard messages
+    levels : LevelsController
+        Controller for member levels and XP
 
     Examples
     --------
@@ -61,3 +64,4 @@ class DatabaseController:
         self.afk = AfkController()
         self.starboard = StarboardController()
         self.starboard_message = StarboardMessageController()
+        self.levels = LevelsController()
