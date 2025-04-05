@@ -140,7 +140,21 @@ def main() -> NoReturn:
 
     # Set environment before importing any app code
     # For standard commands
-    set_environment(dev_mode=(cmd == "dev"))
+    set_environment(
+        dev_mode=(
+            cmd
+            in {
+                "dev",
+                "typecheck",
+                "lint",
+                "lint-fix",
+                "format",
+                "check",
+                "docs",
+                "docs-build",
+            }
+        ),
+    )
 
     # Now import commands
     commands = import_commands()

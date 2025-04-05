@@ -12,7 +12,7 @@ from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 from tux.bot import Tux
-from tux.database.controllers.guild_config import GuildConfigController
+from tux.database.controllers import DatabaseController
 from tux.help import TuxHelp
 from tux.utils.config import CONFIG
 from tux.utils.logger import setup_logging
@@ -45,7 +45,7 @@ async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
 
     if message.guild:
         try:
-            prefix = await GuildConfigController().get_guild_prefix(message.guild.id)
+            prefix = await DatabaseController().guild_config.get_guild_prefix(message.guild.id)
         except Exception as e:
             logger.error(f"Error getting guild prefix: {e}")
 

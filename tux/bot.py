@@ -124,12 +124,12 @@ class Tux(commands.Bot):
         Logs connection status and registration state.
         """
 
-        logger.info("Setting up Prisma client...")
+        logger.info("Setting up database connection...")
         await db.connect()
 
         self._validate_db_connection()
-        logger.info(f"Prisma client connected: {db.is_connected()}")
-        logger.info(f"Prisma client registered: {db.is_registered()}")
+        logger.info(f"Database connected: {db.is_connected()}")
+        logger.info(f"Database models registered: {db.is_registered()}")
 
     async def _load_extensions(self) -> None:
         """
@@ -433,8 +433,11 @@ class Tux(commands.Bot):
 
         try:
             logger.debug("Closing database connections.")
-            await db.disconnect()
-            logger.debug("Database connections closed.")
+            if db.is_connected():
+                await db.disconnect()
+                logger.debug("Database connections closed.")
+            else:
+                logger.debug("Database was not connected, no disconnect needed.")
 
         except Exception as e:
             logger.critical(f"Error during database disconnection: {e}")
