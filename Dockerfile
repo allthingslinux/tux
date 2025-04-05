@@ -36,7 +36,8 @@ RUN apt-get update && \
         build-essential \
         libcairo2-dev \
         libffi-dev \
-        curl && \
+        curl \
+        ffmpeg && \
     # Install Node.js
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
