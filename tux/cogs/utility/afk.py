@@ -19,6 +19,24 @@ class Afk(commands.Cog):
         self.bot = bot
         self.db = AfkController()
         self.afk.usage = generate_usage(self.afk)
+        self.permafk.usage = generate_usage(self.permafk)
+
+    async def add_afk(self, reason: str, target: discord.Member, guild_id: int, is_perm: bool):
+        if len(target.display_name) >= CONST.NICKNAME_MAX_LENGTH - 6:
+            truncated_name = f"{target.display_name[: CONST.NICKNAME_MAX_LENGTH - 9]}..."
+            new_name = f"[AFK] {truncated_name}"
+        else:
+            new_name = f"[AFK] {target.display_name}"
+
+        await self.db.insert_afk(target.id, target.display_name, reason, guild_id, is_perm)
+
+        with contextlib.suppress(discord.Forbidden):
+            await target.edit(nick=new_name)
+
+    async def del_afk(self, target: discord.Member, nickname: str) -> None:
+        await self.db.remove_afk(target.id)
+        with contextlib.suppress(discord.Forbidden):
+            await target.edit(nick=nickname)
 
     @commands.hybrid_command(
         name="afk",
@@ -42,27 +60,59 @@ class Afk(commands.Cog):
         """
 
         target = ctx.author
+        shortened_reason = textwrap.shorten(reason, width=100, placeholder="...")
 
         assert ctx.guild
         assert isinstance(target, discord.Member)
 
-        if await self.db.is_afk(target.id, guild_id=ctx.guild.id):
-            return await ctx.send("You are already afk!", ephemeral=True)
+        entry = await self.db.get_afk_member(target.id, guild_id=ctx.guild.id)
+        if entry is not None:
+            await self.db.remove_afk(target.id)
+            await self.db.insert_afk(target.id, entry.nickname, shortened_reason, ctx.guild.id)
+            return await ctx.send(
+                f"You are already afk, updating AFK reason to `{shortened_reason}` :3", ephemeral=True
+            )
 
-        if len(target.display_name) >= CONST.NICKNAME_MAX_LENGTH - 6:
-            truncated_name = f"{target.display_name[: CONST.NICKNAME_MAX_LENGTH - 9]}..."
-            new_name = f"[AFK] {truncated_name}"
-        else:
-            new_name = f"[AFK] {target.display_name}"
-
-        shortened_reason = textwrap.shorten(reason, width=100, placeholder="...")
-        await self.db.insert_afk(target.id, target.display_name, shortened_reason, ctx.guild.id)
-
-        with contextlib.suppress(discord.Forbidden):
-            await target.edit(nick=new_name)
-
+        await self.add_afk(shortened_reason, target, ctx.guild.id, False)
         return await ctx.send(
             content="\N{SLEEPING SYMBOL} || You are now afk! " + f"Reason: `{shortened_reason}`",
+            allowed_mentions=discord.AllowedMentions(
+                users=False,
+                everyone=False,
+                roles=False,
+            ),
+        )
+
+    @commands.hybrid_command(name="permafk")
+    @commands.guild_only()
+    async def permafk(self, ctx: commands.Context[Tux], *, reason: str = "No reason.") -> discord.Message:
+        """
+        Set yourself permanently AFK until you rerun the command.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context of the command.
+        reason : str, optional
+            The reason you are AFK.
+        """
+
+        target = ctx.author
+
+        assert ctx.guild
+        assert isinstance(target, discord.Member)
+
+        entry = await self.db.get_afk_member(target.id, guild_id=ctx.guild.id)
+        if entry is not None:
+            await self.del_afk(target, entry.nickname)
+            return await ctx.send("Welcome back!")
+
+        shortened_reason = textwrap.shorten(reason, width=100, placeholder="...")
+        await self.add_afk(shortened_reason, target, ctx.guild.id, True)
+
+        return await ctx.send(
+            content="\N{SLEEPING SYMBOL} || You are now permanently afk! To remove afk run this command again. "
+            + f"Reason: `{shortened_reason}`",
             allowed_mentions=discord.AllowedMentions(
                 users=False,
                 everyone=False,
