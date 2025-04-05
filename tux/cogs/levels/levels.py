@@ -5,6 +5,7 @@ from discord.ext import commands
 
 from tux.bot import Tux
 from tux.cogs.services.levels import LevelsService
+from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.flags import generate_usage
@@ -14,6 +15,7 @@ class Levels(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.levels_service = LevelsService(bot)
+        self.db = DatabaseController()
         self.levels.usage = generate_usage(self.levels)
         self.set.usage = generate_usage(self.set)
         self.reset.usage = generate_usage(self.reset)
@@ -54,15 +56,15 @@ class Levels(commands.Cog):
 
         assert ctx.guild
 
-        old_level = await self.levels_service.levels_controller.get_level(member.id, ctx.guild.id)
-        old_xp = await self.levels_service.levels_controller.get_xp(member.id, ctx.guild.id)
+        old_level: int = await self.db.levels.get_level(member.id, ctx.guild.id)
+        old_xp: float = await self.db.levels.get_xp(member.id, ctx.guild.id)
 
         if embed_result := self.levels_service.valid_xplevel_input(new_level):
             await ctx.send(embed=embed_result)
             return
 
-        new_xp = self.levels_service.calculate_xp_for_level(new_level)
-        await self.levels_service.levels_controller.update_xp_and_level(
+        new_xp: float = self.levels_service.calculate_xp_for_level(new_level)
+        await self.db.levels.update_xp_and_level(
             member.id,
             ctx.guild.id,
             new_xp,
@@ -103,14 +105,14 @@ class Levels(commands.Cog):
             await ctx.send(embed=embed_result)
             return
 
-        old_level = await self.levels_service.levels_controller.get_level(member.id, ctx.guild.id)
-        old_xp = await self.levels_service.levels_controller.get_xp(member.id, ctx.guild.id)
+        old_level: int = await self.db.levels.get_level(member.id, ctx.guild.id)
+        old_xp: float = await self.db.levels.get_xp(member.id, ctx.guild.id)
 
-        new_level = self.levels_service.calculate_level(xp_amount)
-        await self.levels_service.levels_controller.update_xp_and_level(
+        new_level: int = self.levels_service.calculate_level(xp_amount)
+        await self.db.levels.update_xp_and_level(
             member.id,
             ctx.guild.id,
-            xp_amount,
+            float(xp_amount),
             new_level,
             datetime.datetime.now(datetime.UTC),
         )
@@ -144,8 +146,8 @@ class Levels(commands.Cog):
         """
         assert ctx.guild
 
-        old_xp = await self.levels_service.levels_controller.get_xp(member.id, ctx.guild.id)
-        await self.levels_service.levels_controller.reset_xp(member.id, ctx.guild.id)
+        old_xp: float = await self.db.levels.get_xp(member.id, ctx.guild.id)
+        await self.db.levels.reset_xp(member.id, ctx.guild.id)
 
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
@@ -174,7 +176,7 @@ class Levels(commands.Cog):
 
         assert ctx.guild
 
-        state = await self.levels_service.levels_controller.toggle_blacklist(member.id, ctx.guild.id)
+        state: bool = await self.db.levels.toggle_blacklist(member.id, ctx.guild.id)
 
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
