@@ -26,7 +26,7 @@ class ModerationCogBase(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.db = DatabaseController()
-        self.config = DatabaseController().guild_config
+
         # Dictionary to store locks per user for concurrent operation protection
         self._user_action_locks: dict[int, Lock] = {}
 
@@ -75,6 +75,7 @@ class ModerationCogBase(commands.Cog):
             The result of the action function.
         """
         lock = await self.get_user_lock(user_id)
+
         async with lock:
             return await action_func(*args, **kwargs)
 
@@ -107,7 +108,7 @@ class ModerationCogBase(commands.Cog):
             The type of case to create.
         user : Union[discord.Member, discord.User]
             The target user of the moderation action.
-        final_reason : str
+        reason : str
             The reason for the moderation action.
         silent : bool
             Whether to send a DM to the user.
@@ -163,13 +164,15 @@ class ModerationCogBase(commands.Cog):
         # Create the case in the database
         try:
             case_result = await self.db.case.insert_case(
+                guild_id=ctx.guild.id,
                 case_user_id=user.id,
                 case_moderator_id=ctx.author.id,
                 case_type=case_type,
                 case_reason=reason,
-                guild_id=ctx.guild.id,
             )
+
             case_result = handle_case_result(case_result)
+
         except Exception as e:
             logger.error(f"Failed to create case for {user}: {e}")
             # Continue execution to at least notify the moderator
@@ -321,9 +324,11 @@ class ModerationCogBase(commands.Cog):
 
         assert ctx.guild
 
-        log_channel_id = await self.config.get_log_channel(ctx.guild.id, log_type)
+        log_channel_id = await self.db.guild_config.get_log_channel(ctx.guild.id, log_type)
+
         if log_channel_id:
             log_channel = ctx.guild.get_channel(log_channel_id)
+
             if isinstance(log_channel, discord.TextChannel):
                 await log_channel.send(embed=embed)
 
