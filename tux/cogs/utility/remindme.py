@@ -16,17 +16,17 @@ from tux.utils.functions import convert_to_seconds
 class RemindMe(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
-        self.db = DatabaseController().reminder
+        self.db = DatabaseController()
         self.check_reminders.start()
 
     @tasks.loop(seconds=120)
     async def check_reminders(self):
-        reminders = await self.db.get_unsent_reminders()
+        reminders = await self.db.reminder.find_many(where={"reminder_sent": False})
 
         try:
             for reminder in reminders:
                 await self.send_reminder(reminder)
-                await self.db.update_reminder_status(reminder.reminder_id, sent=True)
+                await self.db.reminder.update(where={"reminder_id": reminder.reminder_id}, data={"reminder_sent": True})
                 logger.debug(f'Status of reminder {reminder.reminder_id} updated to "sent".')
 
         except Exception as e:
@@ -91,12 +91,14 @@ class RemindMe(commands.Cog):
         expires_at = datetime.datetime.now(datetime.UTC) + datetime.timedelta(seconds=seconds)
 
         try:
-            await self.db.insert_reminder(
-                reminder_user_id=interaction.user.id,
-                reminder_content=reminder,
-                reminder_expires_at=expires_at,
-                reminder_channel_id=interaction.channel_id or 0,
-                guild_id=interaction.guild_id or 0,
+            await self.db.reminder.create(
+                data={
+                    "reminder_user_id": interaction.user.id,
+                    "reminder_content": reminder,
+                    "reminder_expires_at": expires_at,
+                    "reminder_channel_id": interaction.channel_id or 0,
+                    "guild_id": interaction.guild_id or 0,
+                },
             )
 
             embed = EmbedCreator.create_embed(
