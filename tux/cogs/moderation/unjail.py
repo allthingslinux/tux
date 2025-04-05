@@ -33,7 +33,7 @@ class Unjail(ModerationCogBase):
             The jail role, or None if not found.
         """
 
-        jail_role_id = await self.config.get_jail_role_id(guild.id)
+        jail_role_id = await self.db.guild_config.get_jail_role_id(guild.id)
         return None if jail_role_id is None else guild.get_role(jail_role_id)
 
     async def get_latest_jail_case(self, guild_id: int, user_id: int) -> Case | None:
