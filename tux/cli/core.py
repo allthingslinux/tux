@@ -40,8 +40,10 @@ def cli(ctx: Context, env_dev: bool, env_prod: bool) -> None:
     # --prod takes precedence over --dev if both somehow passed
     if env_prod:
         configure_env_from_args(["--prod"])
+
     elif env_dev:
         configure_env_from_args(["--dev"])
+
     else:
         # Default environment determination if no flags given
         # Pass sys.argv to let the util figure it out based on command
@@ -75,6 +77,7 @@ def command_registration_decorator(
 
             # Echo environment mode and command info
             command_header(group_name, cmd_name)
+
             # Display env info unconditionally now, as it's globally set
             info(f"Running in {get_current_env()} mode")
 
@@ -86,6 +89,7 @@ def command_registration_decorator(
                 command_result(success)
                 # Return the actual result from the function
                 return result  # noqa: TRY300
+
             except Exception as e:
                 error(f"Command failed: {e!s}")
                 logger.exception("An error occurred during command execution.")

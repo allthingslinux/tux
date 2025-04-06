@@ -8,7 +8,7 @@ bot_group = create_group("bot", "Discord bot commands")
 
 @command_registration_decorator(bot_group, name="start")
 def start() -> int:
-    """Start the Tux Discord bot."""
+    """Start the Discord bot"""
 
     from tux.main import run
 

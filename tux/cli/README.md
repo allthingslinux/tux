@@ -30,11 +30,11 @@ tux                       # Main entry point (defined in cli/core.py)
 │   ├── push              # Push schema changes
 │   └── reset             # Reset database
 ├── dev                   # Development tools (defined in cli/dev.py)
-│   ├── check             # Run all checks
-│   ├── format            # Format code
 │   ├── lint              # Run linters
 │   ├── lint-fix          # Fix linting issues
-│   └── typecheck         # Check types
+│   ├── format            # Format code
+│   ├── type-check        # Check types
+│   └── pre-commit        # Run pre-commit checks
 ├── docker                # Docker commands (defined in cli/docker.py)
 │   ├── build             # Build Docker image
 │   ├── up                # Start Docker services

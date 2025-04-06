@@ -2,23 +2,21 @@
 
 from tux.cli.core import command_registration_decorator, create_group
 
-# Create the documentation command group
-docs_group = create_group("docs", "Documentation tools and commands")
+# Create the docs command group
+docs_group = create_group("docs", "Documentation related commands")
 
 
 @command_registration_decorator(docs_group, name="serve")
-def serve() -> int:
-    """View documentation in browser."""
+def docs_serve() -> int:
+    """Serve documentation locally."""
+    from tux.cli.impl.docs import docs_serve as run_docs_serve
 
-    from tux.cli.impl.dev import docs as run_docs
-
-    return run_docs()
+    return run_docs_serve()
 
 
 @command_registration_decorator(docs_group, name="build")
-def build() -> int:
-    """Build documentation."""
-
-    from tux.cli.impl.dev import docs_build as run_docs_build
+def docs_build() -> int:
+    """Build documentation site."""
+    from tux.cli.impl.docs import docs_build as run_docs_build
 
     return run_docs_build()

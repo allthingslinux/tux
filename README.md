@@ -32,7 +32,7 @@ It is designed to provide a variety of features to the server, including moderat
 - Strict typing with `pyright` and type hints
 - Type safe ORM using `prisma`
 - Linting and formatting via `ruff`
-- Make/Just style CLI via `click` and `poetry` scripts
+- Custom CLI via `click` and `poetry` scripts
 - Rich logging with `loguru`
 - Exception handling with `sentry-sdk`
 - Request handling with `httpx`

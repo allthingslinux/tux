@@ -4,42 +4,30 @@ from tux.cli.impl.core import run_command
 
 
 def lint() -> int:
-    """Run Ruff linter."""
+    """Run linting with Ruff."""
 
     return run_command(["ruff", "check", "."])
 
 
 def lint_fix() -> int:
-    """Run Ruff linter with auto-fix."""
+    """Run linting with Ruff and apply fixes."""
 
     return run_command(["ruff", "check", "--fix", "."])
 
 
 def format_code() -> int:
-    """Format the codebase using Ruff."""
+    """Format code with Ruff."""
 
     return run_command(["ruff", "format", "."])
 
 
-def typecheck() -> int:
-    """Run Pyright type checker."""
+def type_check() -> int:
+    """Check types with Pyright."""
 
     return run_command(["pyright"])
 
 
-def check() -> int:
+def pre_commit() -> int:
     """Run pre-commit checks."""
 
     return run_command(["pre-commit", "run", "--all-files"])
-
-
-def docs() -> int:
-    """Serve documentation locally."""
-
-    return run_command(["mkdocs", "serve", "-f", "docs/mkdocs.yml"])
-
-
-def docs_build() -> int:
-    """Build documentation site."""
-
-    return run_command(["mkdocs", "build"])

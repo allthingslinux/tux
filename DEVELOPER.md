@@ -181,7 +181,7 @@ Run these checks directly on your host machine using the `dev` command group. No
     This will type check the project using Pyright.
 
     ```bash
-    poetry run tux dev typecheck
+    poetry run tux dev type-check
     ```
 
 * **Run all checks:**
@@ -189,7 +189,7 @@ Run these checks directly on your host machine using the `dev` command group. No
     This will run all pre-commit hooks.
 
     ```bash
-    poetry run tux dev check
+    poetry run tux dev pre-commit
     ```
 
 ## Docker-based Development (Optional)

@@ -47,9 +47,9 @@ async def update_entity(self, entity_id: int, data: dict[str, Any]) -> Entity | 
         entity = await self.find_unique(where={"id": entity_id})
         if entity is None:
             return None
-        
+
         return await self.update(where={"id": entity_id}, data=data)
-        
+
     return await self.execute_transaction(update_tx)
 ```
 
@@ -130,12 +130,12 @@ async def update_score(self, user_id: int, points: int) -> User | None:
         user = await self.find_unique(where={"id": user_id})
         if user is None:
             return None
-        
+
         current_score = self.safe_get_attr(user, "score", 0)
         return await self.update(
             where={"id": user_id},
             data={"score": current_score + points},
         )
-        
+
     return await self.execute_transaction(update_tx)
 ```
