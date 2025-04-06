@@ -23,6 +23,7 @@ from tux.cog_loader import CogLoader
 from tux.database.client import db
 from tux.utils.banner import create_banner
 from tux.utils.config import Config
+from tux.utils.env import is_dev_mode
 
 # Create console for rich output
 console = Console(stderr=True, force_terminal=True)
@@ -160,8 +161,8 @@ class Tux(commands.Bot):
         Initializes the background task that monitors running tasks
         and their states.
         """
-        self._monitor_tasks.start()
 
+        self._monitor_tasks.start()
         logger.debug("Task monitoring started")
 
     @staticmethod
@@ -173,6 +174,7 @@ class Tux(commands.Bot):
         DatabaseConnectionError
             If database is not connected or not properly registered
         """
+
         if not db.is_connected() or not db.is_registered():
             raise DatabaseConnectionError(DatabaseConnectionError.CONNECTION_FAILED)
 
@@ -193,12 +195,10 @@ class Tux(commands.Bot):
         try:
             task.result()
             self.setup_complete = True
-
             logger.info("Bot setup completed successfully")
 
         except Exception as e:
             logger.critical(f"Setup failed: {e}")
-
             self.setup_complete = False
 
     @commands.Cog.listener()
@@ -208,9 +208,9 @@ class Tux(commands.Bot):
 
         Performs initialization tasks when the bot connects to Discord:
         1. Records start time if not set
-        2. Logs startup banner
-        3. Ensures setup is complete
-        4. Starts hot reloading for cogs (loaded as separate cog)
+        2. Ensures setup is complete
+        3. Starts hot reloading for cogs (loaded as separate cog)
+        4. Logs startup banner
 
         Notes
         -----
@@ -220,48 +220,23 @@ class Tux(commands.Bot):
         if not self.start_time:
             self.start_time = discord.utils.utcnow().timestamp()
 
-        await self._log_startup_banner()
         await self._wait_for_setup()
 
         # Start hot reloading - import at function level to avoid circular imports
         try:
             await self.load_extension("tux.utils.hot_reload")
             logger.info("Hot reloading enabled")
+
         except Exception as e:
             logger.warning(f"Failed to enable hot reloading: {e}")
+
+        # Log banner after other setup steps are done
+        await self._log_startup_banner()
 
     @commands.Cog.listener()
     async def on_disconnect(self) -> None:
         """Handle bot disconnect event."""
         logger.warning("Bot has disconnected from Discord.")
-
-    async def _log_startup_banner(self) -> None:
-        """
-        Log bot startup information.
-
-        Displays a formatted banner containing:
-        - Bot name and version
-        - Bot ID
-        - Guild and user counts
-        - Prefix configuration
-        - Development mode status
-        """
-
-        # Log startup message before banner
-        logger.info("Bot is starting up")
-
-        # Create and display banner
-        banner = create_banner(
-            bot_name=Config.BOT_NAME,
-            version=Config.BOT_VERSION,
-            bot_id=str(self.user.id) if self.user else None,
-            guild_count=len(self.guilds),
-            user_count=len(self.users),
-            prefix=Config.DEFAULT_PREFIX,
-            dev_mode=bool(Config.DEV and Config.DEV.lower() == "true"),
-        )
-
-        console.print(banner)
 
     async def _wait_for_setup(self) -> None:
         """
@@ -464,3 +439,28 @@ class Tux(commands.Bot):
         except Exception as e:
             logger.critical(f"Error loading cogs: {e}")
             raise
+
+    async def _log_startup_banner(self) -> None:
+        """
+        Log bot startup information.
+
+        Displays a formatted banner containing:
+        - Bot name and version
+        - Bot ID
+        - Guild and user counts
+        - Prefix configuration
+        - Development mode status
+        """
+
+        # Create and display banner
+        banner = create_banner(
+            bot_name=Config.BOT_NAME,
+            version=Config.BOT_VERSION,
+            bot_id=str(self.user.id) if self.user else None,
+            guild_count=len(self.guilds),
+            user_count=len(self.users),
+            prefix=Config.DEFAULT_PREFIX,
+            dev_mode=is_dev_mode(),
+        )
+
+        console.print(banner)
