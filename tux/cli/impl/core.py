@@ -1,4 +1,4 @@
-"""Core utilities for Tux scripts."""
+"""Core utilities for Tux CLI implementations."""
 
 import subprocess
 from typing import Any
