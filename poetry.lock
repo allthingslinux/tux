@@ -2742,6 +2742,18 @@ test = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "ini2toml[lite] (>=
 type = ["importlib_metadata (>=7.0.2) ; python_version < \"3.10\"", "jaraco.develop (>=7.21) ; sys_platform != \"cygwin\"", "mypy (==1.14.*)", "pytest-mypy"]
 
 [[package]]
+name = "single-source"
+version = "0.4.0"
+description = "Access to the project version in Python code for PEP 621-style projects"
+optional = false
+python-versions = "<4.0,>=3.8"
+groups = ["main"]
+files = [
+    {file = "single_source-0.4.0-py3-none-any.whl", hash = "sha256:38880b16e6e0ca2e012f85dc3820eb31999ace5f1d9a588395ea38f8bd0775f5"},
+    {file = "single_source-0.4.0.tar.gz", hash = "sha256:7917aa113bda60072f01952e2966cd7247f0ec16fe52a1555f3c066b553e98b4"},
+]
+
+[[package]]
 name = "six"
 version = "1.17.0"
 description = "Python 2 and 3 compatibility utilities"
@@ -3163,4 +3175,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13.2,<3.14"
-content-hash = "51187f256b892827dcc03cf5df63f1066265b40384482e257ef5b921ab93a159"
+content-hash = "c5b53eaf447f91bf3f3bad84133316ec7f2579020a86ae1f29ed7d819ee3c024"

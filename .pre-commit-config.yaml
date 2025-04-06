@@ -1,9 +1,9 @@
-repos:
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.24.2
-    hooks:
-      - id: gitleaks
+exclude: '(^\.archive|/typings)/'
 
+default_language_version:
+  python: "3.13.2"
+
+repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
@@ -11,14 +11,11 @@ repos:
       - id: check-json
       - id: check-toml
 
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.2
+  - repo: https://github.com/abravalheri/validate-pyproject
+    rev: v0.24.1
     hooks:
-      # Run the linter.
-      - id: ruff
-        args: [--fix]
-      # Run the formatter.
-      - id: ruff-format
+      - id: validate-pyproject
+        additional_dependencies: ["validate-pyproject-schema-store[all]"]
 
   - repo: https://github.com/asottile/add-trailing-comma
     rev: v3.1.0
@@ -30,4 +27,16 @@ repos:
     hooks:
       - id: pyupgrade
 
-exclude: '(^\.archive|/typings)/'
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.2
+    hooks:
+      # Run the linter.
+      - id: ruff
+        args: [--fix]
+      # Run the formatter.
+      - id: ruff-format
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.2
+    hooks:
+      - id: gitleaks

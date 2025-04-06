@@ -6,6 +6,7 @@ from typing import Final
 import yaml
 from dotenv import load_dotenv
 
+from tux import __version__ as app_version
 from tux.utils.env import get_database_url, is_dev_mode
 
 
@@ -52,7 +53,7 @@ class Config:
 
     # Bot info
     BOT_NAME: Final[str] = config["BOT_INFO"]["BOT_NAME"]
-    BOT_VERSION: Final[str] = config["BOT_INFO"]["BOT_VERSION"]
+    BOT_VERSION: Final[str] = app_version or "0.0.0"
     ACTIVITIES: Final[str] = config["BOT_INFO"]["ACTIVITIES"]
     HIDE_BOT_OWNER: Final[bool] = config["BOT_INFO"]["HIDE_BOT_OWNER"]
 
