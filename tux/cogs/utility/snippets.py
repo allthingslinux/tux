@@ -325,7 +325,6 @@ class Snippets(commands.Cog):
             value=f"{author.mention if author else f'<@!{snippet.snippet_user_id}>'}",
             inline=False,
         )
-        embed.add_field(name="Content", value=f"> {snippet.snippet_content}", inline=False)
         embed.add_field(name="Uses", value=snippet.uses, inline=False)
         embed.add_field(name="Locked", value="Yes" if snippet.locked else "No", inline=False)
 
@@ -383,6 +382,15 @@ class Snippets(commands.Cog):
             await self.send_snippet_error(
                 ctx,
                 description="Snippet name must be alphanumeric (allows dashes only) and less than 20 characters.",
+            )
+            return
+
+        # The message placed before the snippet text adds 20 characters plus the name.
+        # Check the snippet and make sure this doesn't push it over discord's 2000 character limit.
+        if len(content) > 1980 - len(name):
+            await self.send_snippet_error(
+                ctx,
+                description=f"Snippet and name must be less than 1980 characters in length! (length: {len(content)})",
             )
             return
 
