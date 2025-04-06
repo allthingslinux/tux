@@ -20,128 +20,71 @@
 
 ## About
 
-Tux is an all in one Discord bot originally designed for the All Things Linux Discord server.
+Tux is an all-in-one Discord bot originally designed for the All Things Linux Discord server.
 
 It is designed to provide a variety of features to the server, including moderation, support, utility, and various fun commands.
 
 ## Tech Stack
 
-- Python 3.13.2 alongside the Discord.py library
+- Python 3.13+ alongside the `discord.py` library
 - Poetry for dependency management
-- Docker and Docker Compose for development and deployment
-- Strict typing with Pyright and type hints
-- Type safe ORM using Prisma
-- Linting and formatting via Ruff and Pre-commit
-- Justfile for easy CLI commands
-- Beautiful logging with Loguru
-- Exception handling with Sentry
-- Request handling with HTTPX
+- Docker and Docker Compose for optional containerized environments
+- Strict typing with `pyright` and type hints
+- Type safe ORM using `prisma`
+- Linting and formatting via `ruff`
+- Make/Just style CLI via `click` and `poetry` scripts
+- Rich logging with `loguru`
+- Exception handling with `sentry-sdk`
+- Request handling with `httpx`
+- Custom dynamic environment management with `python-dotenv`
 
 ## Bot Features
 
 - Asynchronous codebase
 - Hybrid command system with both slash commands and traditional commands
-- Cog loading system with hot reloading
+- Automatic cog loading system
+- Hot-reloading for local development changes
 - Branded embeds and messages
 - Robust error handling
 - Activity rotation
 - Custom help command
-- Configuration system
+- Configuration system (`config/settings.yml`)
 - Dynamic role-based (access level) permission system
 
-## Installation
+## Installation and Development
 
 ### Prerequisites
 
-- Python 3.13.2
+- Python 3.13+
 - [Poetry](https://python-poetry.org/docs/)
-- [Supabase](https://supabase.io/) or any PostgreSQL database
-- Optional: [Docker](https://docs.docker.com/get-docker/)
-- Optional: [Docker Compose](https://docs.docker.com/compose/install/) (see the [development notes](#development-notes) for more information)
-- Optional: [Just](https://github.com/casey/just/)
+- A PostgreSQL database (e.g. via [Supabase](https://supabase.io/) or local installation)
+- Optional: [Docker](https://docs.docker.com/get-docker/) & [Docker Compose](https://docs.docker.com/compose/install/)
 
-### Steps to Install
+### Setup & Workflow
 
-Assuming you have the prerequisites installed, follow these steps to get started with the development of the project:
-
-Further detailed instructions can be found in the [development guide](docs/development.md).
-
-1. Clone the repository
-
-   ```bash
-   git clone https://github.com/allthingslinux/tux && cd tux
-   ```
-
-2. Install the project's dependencies and set up the virtual environment
+1. **Clone the repository:**
 
     ```bash
-    poetry install
-    poetry env use 3.13.2
+    git clone https://github.com/allthingslinux/tux && cd tux
     ```
 
-3. Install the pre-commit hooks (optional unless you are contributing)
+2. **Follow the Developer Guide:**
 
-    ```bash
-    pre-commit install
-    ```
+    For detailed instructions on setting up:
+    - your environment (local or Docker)
+    - installing dependencies
+    - configuring `.env` and `settings.yml`
+    - managing the database
+    - running the bot
+    - using hot-reloading
+    - linting/formatting
+    - understanding the `tux` CLI commands
 
-4. Generate the prisma client and push the database schema
-
-    ```bash
-    prisma generate
-    prisma db push
-    ```
-
-    Currently, you will need to have a Supabase database set up and the URL set in the `DATABASE_URL` environment variable.
-
-    In the future, we will provide a way to use a local database. We can provide a dev database on request.
-
-5. Copy the `.env.example` file to `.env` and fill in the required values.
-
-    ```bash
-    cp .env.example .env
-    ```
-
-    You'll need to fill in your Discord bot token here, as well as the Sentry DSN if you want to use Sentry for error tracking.
-
-    We offer dev tokens on request in our Discord server.
-
-6. Copy the `config/settings.yml.example` file to `config/settings.yml` and fill in the required values.
-
-    ```bash
-    cp config/settings.yml.example config/settings.yml
-    ```
-
-    Be sure to add your Discord user ID to the `BOT_OWNER` key in the settings file.
-
-    You can also add your custom prefix here.
-
-7. Start the bot!
-
-    ```bash
-    poetry run python tux/main.py
-    ```
-
-8. Run the clear tree command in the server to sync the slash command tree.
-
-   ```bash
-   {prefix}dev ct
-   ```
-
-## Development Notes
-
-> [!NOTE]
-Make sure to add your Discord User ID to the sys admin list if you are testing locally.
-
-> [!NOTE]
-Make sure to set the Prisma schema database ENV variable to the DEV database URL.
-
-> [!NOTE]
-If you want to develop Tux using Docker Compose, we recommend using `docker compose up --watch` for hot reloading.
+   ### Please refer to the **[DEVELOPER.md](DEVELOPER.md)** guide
 
 ## License
 
-This project is licensed under the terms of the The GNU General Public License v3.0.
+This project is licensed under the terms of The GNU General Public License v3.0.
 
 See [LICENSE](LICENSE.md) for details.
 
