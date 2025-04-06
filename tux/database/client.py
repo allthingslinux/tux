@@ -72,6 +72,11 @@ class DatabaseClient:
 
         This method establishes the database connection and performs
         any necessary initialization.
+
+        Notes
+        -----
+        The DATABASE_URL environment variable should be set before calling
+        this method, which is handled by the tux.utils.env module.
         """
         if self._client is not None:
             logger.warning(CLIENT_ALREADY_CONNECTED)
