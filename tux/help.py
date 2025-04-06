@@ -13,6 +13,7 @@ from reactionmenu.views_menu import ViewSelect
 from tux.ui.embeds import EmbedCreator
 from tux.utils.config import CONFIG
 from tux.utils.constants import CONST
+from tux.utils.env import get_current_env
 
 
 class TuxHelp(commands.HelpCommand):
@@ -21,7 +22,7 @@ class TuxHelp(commands.HelpCommand):
         super().__init__(
             command_attrs={
                 "help": "Lists all commands and sub-commands.",
-                "aliases": ["h"],
+                "aliases": ["h", "commands"],
                 "usage": "$help <command> or <sub-command>",
             },
         )
@@ -298,7 +299,7 @@ class TuxHelp(commands.HelpCommand):
         )
 
         bot_name_display = "Tux" if CONFIG.BOT_NAME == "Tux" else f"{CONFIG.BOT_NAME} (Tux)"
-        environment = "dev" if CONFIG.DEV else "prod"
+        environment = get_current_env()
         owner_info = f"Bot Owner: <@{CONFIG.BOT_OWNER_ID}>" if not CONFIG.HIDE_BOT_OWNER and CONFIG.BOT_OWNER_ID else ""
 
         embed.add_field(
