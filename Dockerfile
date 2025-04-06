@@ -4,22 +4,22 @@
 FROM python:3.13.2-slim AS base
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        git \
-        libcairo2 \
-        libgdk-pixbuf2.0-0 \
-        libpango1.0-0 \
-        libpangocairo-1.0-0 \
-        shared-mime-info \
-        tealdeer && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    tldr -u
+  apt-get install -y --no-install-recommends \
+  git \
+  libcairo2 \
+  libgdk-pixbuf2.0-0 \
+  libpango1.0-0 \
+  libpangocairo-1.0-0 \
+  shared-mime-info \
+  tealdeer && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/* && \
+  tldr -u
 
 # Tweak Python to run better in Docker
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=on
+  PYTHONDONTWRITEBYTECODE=1 \
+  PIP_DISABLE_PIP_VERSION_CHECK=on
 
 
 # Build stage:
@@ -31,23 +31,22 @@ ENV PYTHONUNBUFFERED=1 \
 # - Generate Prisma client
 FROM base AS build
 
+# Install build dependencies (excluding Node.js)
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        build-essential \
-        libcairo2-dev \
-        libffi-dev \
-        curl && \
-    # Install Node.js
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+  apt-get install -y --no-install-recommends \
+  build-essential \
+  libcairo2-dev \
+  libffi-dev \
+  && apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
+# Node.js installation removed - prisma-client-py handles its own
 
 ENV POETRY_VERSION=2.1.1 \
-    POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_CREATE=1 \
-    POETRY_VIRTUALENVS_IN_PROJECT=1 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache
+  POETRY_NO_INTERACTION=1 \
+  POETRY_VIRTUALENVS_CREATE=1 \
+  POETRY_VIRTUALENVS_IN_PROJECT=1 \
+  POETRY_CACHE_DIR=/tmp/poetry_cache
 
 RUN --mount=type=cache,target=/root/.cache pip install poetry==$POETRY_VERSION
 
@@ -56,28 +55,30 @@ WORKDIR /app
 # Copy only the metadata files to increase build cache hit rate
 COPY pyproject.toml poetry.lock ./
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
-    poetry install --only main --no-root --no-directory
+  poetry install --only main --no-root --no-directory
 
 # Now install the application itself
 COPY . .
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
-    --mount=type=cache,target=/root/.cache \
-    poetry install --only main && \
-    poetry run prisma py fetch && \
-    poetry run prisma generate
+  --mount=type=cache,target=/root/.cache \
+  poetry install --only main && \
+  poetry run prisma py fetch && \
+  poetry run prisma generate
 
 
-# Dev stage (used by docker-compose):
+# Dev stage (used by docker-compose.dev.yml):
 # - Install extra tools for development (pre-commit, ruff, pyright, types, etc.)
-# - Re-generate Prisma client on every run
+# - Re-generate Prisma client on every run (CMD handles this)
+
 FROM build AS dev
 
 WORKDIR /app
 
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
-    poetry install --only dev --no-root --no-directory
+  poetry install --only dev --no-root --no-directory
 
-CMD ["sh", "-c", "ls && poetry run prisma generate && exec poetry run python tux/main.py"]
+# Ensure Prisma client is regenerated on start, then run bot via CLI with --dev flag
+CMD ["sh", "-c", "poetry run prisma generate && exec poetry run python -m tux --dev bot start"]
 
 
 # Production stage:
@@ -92,10 +93,9 @@ USER nonroot
 WORKDIR /app
 
 ENV VIRTUAL_ENV=/app/.venv \
-    PATH="/app/.venv/bin:$PATH"
+  PATH="/app/.venv/bin:$PATH"
 
 COPY --from=build --chown=nonroot:nonroot /app ./
 
-
-ENTRYPOINT ["python"]
-CMD ["-m", "tux.main"]
+ENTRYPOINT ["python", "-m", "tux"]
+CMD ["bot", "start", "--prod"]
