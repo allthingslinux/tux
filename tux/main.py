@@ -15,9 +15,8 @@ from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.help import TuxHelp
 from tux.utils.config import CONFIG
+from tux.utils.env import get_current_env, setup_database_url
 from tux.utils.logger import setup_logging
-
-setup_logging()
 
 
 async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
@@ -73,15 +72,16 @@ def setup_sentry() -> None:
     try:
         sentry_sdk.init(
             dsn=CONFIG.SENTRY_URL,
-            environment="dev" if CONFIG.DEV == "True" else "prod",
+            environment=get_current_env(),
+            enable_tracing=True,
             traces_sample_rate=1.0,
             profiles_sample_rate=1.0,
-            enable_tracing=True,
             integrations=[
                 AsyncioIntegration(),
                 LoggingIntegration(),
             ],
         )
+
         logger.info(f"Sentry initialized: {sentry_sdk.is_initialized()}")
 
     except Exception as e:
@@ -103,6 +103,7 @@ def handle_sigterm(signum: int, frame: FrameType | None) -> None:
     This handler converts SIGTERM into a KeyboardInterrupt to trigger
     graceful shutdown through the same path as Ctrl+C.
     """
+
     logger.info(f"Received signal {signum}")
     raise KeyboardInterrupt
 
@@ -134,6 +135,10 @@ async def main() -> None:
     - Sentry cleanup
     - Final logging
     """
+
+    # Explicitly setup environment and logging for direct bot run
+    setup_logging()
+    setup_database_url()
 
     if not CONFIG.TOKEN:
         logger.critical("No token provided. Set TOKEN in your environment or .env file.")
@@ -184,16 +189,10 @@ async def main() -> None:
 
 
 def run() -> int:
-    """Synchronous entry point for the bot.
+    """Entry point for the bot.
 
     This function serves as the main entry point when running the bot through the CLI.
     It wraps the async main() function in asyncio.run().
-
-    Notes
-    -----
-    This is the function that gets called when using:
-        $ poetry run tux start
-        $ poetry run tux dev
 
     Returns
     -------
