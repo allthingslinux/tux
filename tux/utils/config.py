@@ -7,7 +7,7 @@ import yaml
 from dotenv import load_dotenv
 
 from tux import __version__ as app_version
-from tux.utils.env import get_database_url, is_dev_mode
+from tux.utils.env import get_bot_token, get_database_url, is_dev_mode
 
 
 def convert_dict_str_to_int(original_dict: dict[str, int]) -> dict[int, int]:
@@ -42,12 +42,10 @@ class Config:
     SYSADMIN_IDS: Final[list[int]] = config["USER_IDS"]["SYSADMINS"]
 
     # Production env
-    PROD_TOKEN: Final[str] = os.getenv("PROD_TOKEN", "")
     DEFAULT_PROD_PREFIX: Final[str] = config["BOT_INFO"]["PROD_PREFIX"]
     PROD_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("PROD_COG_IGNORE_LIST", "").split(","))
 
     # Dev env
-    DEV_TOKEN: Final[str] = os.getenv("DEV_TOKEN", "")
     DEFAULT_DEV_PREFIX: Final[str] = config["BOT_INFO"]["DEV_PREFIX"]
     DEV_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("DEV_COG_IGNORE_LIST", "").split(","))
 
@@ -61,7 +59,6 @@ class Config:
     DEBUG: Final[bool] = bool(os.getenv("DEBUG", "True"))
 
     # Final env - use the env module to determine development vs production
-    TOKEN: Final[str] = DEV_TOKEN if is_dev_mode() else PROD_TOKEN
     DEFAULT_PREFIX: Final[str] = DEFAULT_DEV_PREFIX if is_dev_mode() else DEFAULT_PROD_PREFIX
     COG_IGNORE_LIST: Final[set[str]] = DEV_COG_IGNORE_LIST if is_dev_mode() else PROD_COG_IGNORE_LIST
 
@@ -69,7 +66,20 @@ class Config:
     SENTRY_URL: Final[str | None] = os.getenv("SENTRY_URL", "")
 
     # Database - use the env module to get the appropriate URL
-    DATABASE_URL: Final[str] = get_database_url()
+    @property
+    def DATABASE_URL(self) -> str:  # noqa: N802
+        """Get the database URL for the current environment."""
+        # The environment mode is assumed to be set by the CLI entry point
+        # before this property is accessed.
+        return get_database_url()  # Get URL based on manager's current env
+
+    # Bot Token - use the env module to get the appropriate token
+    @property
+    def BOT_TOKEN(self) -> str:  # noqa: N802
+        """Get the bot token for the current environment."""
+        # The environment mode is assumed to be set by the CLI entry point
+        # before this property is accessed.
+        return get_bot_token()  # Get token based on manager's current env
 
     # InfluxDB
     INFLUXDB_TOKEN: Final[str] = os.getenv("INFLUXDB_TOKEN", "")

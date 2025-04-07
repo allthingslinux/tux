@@ -4,6 +4,7 @@ This module provides the main Click command group and utilities for the CLI.
 """
 
 import importlib
+import os
 import sys
 from collections.abc import Callable
 from functools import update_wrapper
@@ -14,7 +15,11 @@ from click import Command, Context, Group
 from loguru import logger
 
 from tux.cli.ui import command_header, command_result, error, info, warning
-from tux.utils.env import configure_env_from_args, get_current_env
+from tux.utils.env import (
+    configure_environment,
+    get_current_env,
+    get_database_url,
+)
 from tux.utils.logger import setup_logging
 
 # Type definitions
@@ -23,6 +28,9 @@ CommandFunction = Callable[..., int]
 
 # Help text suffix for groups
 GROUP_HELP_SUFFIX = ""
+
+# Commands/groups that do not require database access
+NO_DB_COMMANDS = {"dev", "docs", "docker"}
 
 
 # Initialize interface CLI group
@@ -33,21 +41,33 @@ GROUP_HELP_SUFFIX = ""
 @click.pass_context
 def cli(ctx: Context, env_dev: bool, env_prod: bool) -> None:
     """Tux CLI"""
+
     # Initialize context object
     ctx.ensure_object(dict)
 
-    # Configure environment based on global flags
-    # --prod takes precedence over --dev if both somehow passed
-    if env_prod:
-        configure_env_from_args(["--prod"])
+    # Determine and configure the environment mode.
+    # Production mode (--prod) takes precedence over development (--dev).
+    # Defaults to development if neither flag is provided.
+    is_dev = not env_prod  # True if --prod is NOT set
+    configure_environment(dev_mode=is_dev)
 
-    elif env_dev:
-        configure_env_from_args(["--dev"])
+    # Conditionally set DATABASE_URL for commands that require it
+    invoked_command = ctx.invoked_subcommand
 
-    else:
-        # Default environment determination if no flags given
-        # Pass sys.argv to let the util figure it out based on command
-        configure_env_from_args(sys.argv[1:])
+    if invoked_command is not None and invoked_command not in NO_DB_COMMANDS:
+        logger.trace(f"Command '{invoked_command}' may require database access. Setting DATABASE_URL.")
+        try:
+            db_url = get_database_url()
+            os.environ["DATABASE_URL"] = db_url
+            logger.trace("Set DATABASE_URL environment variable for Prisma.")
+        except Exception as e:
+            # Log critical error and exit if URL couldn't be determined for a required command.
+            logger.critical(f"Command '{invoked_command}' requires a database, but failed to configure URL: {e}")
+            logger.critical("Ensure DEV_DATABASE_URL or PROD_DATABASE_URL is set in your .env file or environment.")
+            sys.exit(1)  # Exit with a non-zero status code
+    elif invoked_command:
+        logger.trace(f"Command '{invoked_command}' does not require database access. Skipping DATABASE_URL setup.")
+    # else: invoked_command is None (e.g., `tux --help`), no DB needed.
 
 
 def command_registration_decorator(
