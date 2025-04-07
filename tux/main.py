@@ -1,6 +1,5 @@
 import asyncio
 import signal
-import sys
 from types import FrameType
 from typing import cast
 
@@ -15,8 +14,7 @@ from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.help import TuxHelp
 from tux.utils.config import CONFIG
-from tux.utils.env import get_current_env, setup_database_url
-from tux.utils.logger import setup_logging
+from tux.utils.env import get_current_env
 
 
 async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
@@ -136,12 +134,8 @@ async def main() -> None:
     - Final logging
     """
 
-    # Explicitly setup environment and logging for direct bot run
-    setup_logging()
-    setup_database_url()
-
-    if not CONFIG.TOKEN:
-        logger.critical("No token provided. Set TOKEN in your environment or .env file.")
+    if not CONFIG.BOT_TOKEN:
+        logger.critical("No bot token provided. Set DEV_BOT_TOKEN or PROD_BOT_TOKEN in your .env file.")
         return
 
     setup_sentry()
@@ -161,7 +155,7 @@ async def main() -> None:
     )
 
     try:
-        await bot.start(CONFIG.TOKEN, reconnect=True)
+        await bot.start(CONFIG.BOT_TOKEN, reconnect=True)
 
     except KeyboardInterrupt:
         logger.info("Initiating shutdown...")
@@ -207,7 +201,3 @@ def run() -> int:
     finally:
         logger.info("Exiting")
     return 0
-
-
-if __name__ == "__main__":
-    sys.exit(run())
