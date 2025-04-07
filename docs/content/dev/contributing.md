@@ -27,8 +27,16 @@ Thank you for your interest in contributing to Tux! This guide will help you get
    ```bash
    # Copy example environment file
    cp .env.example .env
+
+   # Edit .env with your own values for:
    
-   # Edit .env with your Discord bot token and other settings
+   DEV_BOT_TOKEN   
+   DEV_DATABASE_URL
+
+   PROD_BOT_TOKEN
+   PROD_DATABASE_URL
+
+   # Add any other settings you need
    ```
 
 4. **Database Setup**

@@ -50,10 +50,14 @@ Before you begin, ensure you have the following installed:
 
     Edit the `.env` file and fill out the required variables. The `.env` file is used for both local and Docker development.
 
+    At a minimum, you will need to fill in the `DEV_BOT_TOKEN` and `DEV_DATABASE_URL` variables for local development when using the CLI to start the bot with `poetry run tux --dev bot start`.
+
     ```bash
-    DEV_TOKEN=your_discord_token
+    DEV_BOT_TOKEN=your_dev_discord_token
+    PROD_BOT_TOKEN=your_prod_discord_token
+
     DEV_DATABASE_URL=postgresql://username:password@localhost:5432/database_name
-    # and more...
+    PROD_DATABASE_URL=postgresql://username:password@localhost:5432/database_name
     ```
 
     **Do not commit the `.env` file.**
@@ -93,8 +97,9 @@ This is the simplest and recommended way to get started and develop Tux.
     ```
 
     This command will:
-    * Parse the `.env` file for the `DEV_DATABASE_URL` and `DEV_TOKEN` variables.
+    * Parse the `.env` file for the `DEV_DATABASE_URL` and `DEV_BOT_TOKEN` variables.
     * Map the `DEV_DATABASE_URL` to the `DATABASE_URL` in the Prisma client.
+    * Use the `DEV_BOT_TOKEN` to authenticate with Discord.
     * Load all cogs.
     * Start the Discord bot.
     * Enable the built-in **Hot Reloading** system.
