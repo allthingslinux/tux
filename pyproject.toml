@@ -77,7 +77,6 @@ griffe-inherited-docstrings = "^1.1.1"
 mkdocs-api-autonav = "^0.2.0"
 
 [tool.ruff]
-cache-dir = ".cache/ruff"
 exclude = [".venv", "examples", "tests", ".archive", "typings/**"]
 indent-width = 4
 line-length = 120
@@ -147,7 +146,3 @@ strictSetInference = true
 typeCheckingMode = "strict"
 venv = ".venv"
 venvPath = "."
-
-[tool.prisma]
-binary_cache_dir = ".cache/prisma"
-nodeenv_cache_dir = ".cache/nodeenv"
