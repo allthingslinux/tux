@@ -7,7 +7,7 @@ Welcome to the Tux developer guide! This guide provides instructions for setting
 Before you begin, ensure you have the following installed:
 
 * **Git:** For version control.
-* **Python:** Version 3.11+ recommended.
+* **Python:** Version 3.13+ recommended.
 * **Poetry:** For Python dependency management (version 1.2+ recommended).
 * **(Optional) Docker:** Only required if you prefer a containerized development environment (includes Docker Compose V2).
 
@@ -21,13 +21,23 @@ Before you begin, ensure you have the following installed:
 
 2. **Install Dependencies:**
 
-    Use Poetry to set up a virtual environment and install all project dependencies, including development tools:
+    Use Poetry to set up a virtual environment and install all project dependencies, including development tools.
 
-    Activates or creates a new virtualenv for the current project:
+    Assuming you have Poetry installed and python 3.13.2 installed, activate or create a new virtualenv for the current project:
 
     ```bash
     poetry env use 3.13.2
     ```
+
+    If you don't have python 3.13.2 installed, you can install it using the following command:
+
+    ```bash
+    poetry python install 3.13.2
+    ```
+
+    * Note that this is an experimental feature and may not be as reliable as other methods.
+    * We recommend using something like [mise](https://mise.jdx.dev/) to install python and manage your environment.
+    * Other options include using `pyenv` or `asdf`. Last but not least, you can search your package manager.
 
     Install all project dependencies:
 
@@ -98,7 +108,7 @@ This is the simplest and recommended way to get started and develop Tux.
 
     This command will:
     * Parse the `.env` file for the `DEV_DATABASE_URL` and `DEV_BOT_TOKEN` variables.
-    * Map the `DEV_DATABASE_URL` to the `DATABASE_URL` in the Prisma client.
+    * Use the `DEV_DATABASE_URL` to connect to the development database.
     * Use the `DEV_BOT_TOKEN` to authenticate with Discord.
     * Load all cogs.
     * Start the Discord bot.
