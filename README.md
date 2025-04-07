@@ -82,6 +82,8 @@ It is designed to provide a variety of features to the server, including moderat
 
    ### Please refer to the **[DEVELOPER.md](DEVELOPER.md)** guide
 
+   Any documentation found in the `docs` directory is currently outdated and will be updated soon.
+
 ## License
 
 This project is licensed under the terms of The GNU General Public License v3.0.
