@@ -7,6 +7,7 @@ model Guild {
   reminders        Reminder[]
   guild_config     GuildConfig[]
   AFK              AFKModel[]
+  SelfTimeout      SelfTimeoutModel[]
   Starboard        Starboard?
   StarboardMessage StarboardMessage[]
   case_count       BigInt             @default(0)
