@@ -54,8 +54,10 @@ class Snippets(commands.Cog):
         description = "```\n"
 
         for snippet in snippets:
+            icon = "→" if snippet.alias else " "
+            icon += "🔒" if snippet.locked else " "
             author = self.bot.get_user(snippet.snippet_user_id) or "Unknown"
-            description += f"{snippet.snippet_name.ljust(20)} | by: {author}\n"
+            description += f"{icon}|{snippet.snippet_name.ljust(20)} | by: {author}\n"
 
         description += "```"
 
