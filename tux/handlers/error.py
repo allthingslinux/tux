@@ -919,17 +919,27 @@ class ErrorHandler(commands.Cog):
                 )
                 return
 
-            # Modify the footer of the first embed.
+            # --- Modify Description instead of Footer --- #
             original_embed = fetched_message.embeds[0]
-            new_footer = f"Error ID: {sentry_event_id}"
-            if original_embed.footer.text:
-                new_footer = f"{original_embed.footer.text} | Error ID: {sentry_event_id}"
+            # Use Discord's Subtext markdown format
+            sentry_id_text = f"\n-# Error ID: {sentry_event_id}"
+            new_description = (original_embed.description or "") + sentry_id_text
 
-            original_embed.set_footer(text=new_footer, icon_url=original_embed.footer.icon_url)
+            # Check length limit (4096 chars for embed description)
+            if len(new_description) > 4096:
+                logger.bind(**log_context).warning(
+                    f"Could not add Sentry ID {sentry_event_id} to message {sent_message.id}: New description would exceed 4096 characters.",
+                )
+                return  # Don't attempt edit if it will fail due to length
+
+            original_embed.description = new_description
+            # -------------------------------------------- #
 
             # Edit the message.
             await fetched_message.edit(embed=original_embed)
-            logger.bind(**log_context).debug(f"Added Sentry Event ID {sentry_event_id} to message {sent_message.id}")
+            logger.bind(**log_context).debug(
+                f"Added Sentry Event ID {sentry_event_id} to message {sent_message.id} description",
+            )
 
         except discord.NotFound:
             logger.bind(**log_context).warning(
@@ -940,6 +950,7 @@ class ErrorHandler(commands.Cog):
                 f"Could not add Sentry ID {sentry_event_id}: Missing permissions to edit message {sent_message.id}.",
             )
         except discord.HTTPException as edit_exc:
+            # Log potential length errors here too, although checked above
             logger.bind(**log_context).error(
                 f"Failed to edit message {sent_message.id} with Sentry ID {sentry_event_id}: {edit_exc}",
             )
