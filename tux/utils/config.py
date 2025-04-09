@@ -63,7 +63,7 @@ class Config:
     COG_IGNORE_LIST: Final[set[str]] = DEV_COG_IGNORE_LIST if is_dev_mode() else PROD_COG_IGNORE_LIST
 
     # Sentry-related
-    SENTRY_URL: Final[str | None] = os.getenv("SENTRY_URL", "")
+    SENTRY_DSN: Final[str | None] = os.getenv("SENTRY_DSN", "")
 
     # Database - use the env module to get the appropriate URL
     @property

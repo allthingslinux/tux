@@ -391,7 +391,13 @@ class Tux(commands.Bot):
             for task in tasks:
                 task.cancel()
 
-            await asyncio.gather(*tasks, return_exceptions=True)
+            # Wait for tasks to finish cancellation and retrieve results/exceptions
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+
+            # Log any exceptions that occurred during cancellation
+            for result in results:
+                if isinstance(result, Exception) and not isinstance(result, asyncio.CancelledError):
+                    logger.error(f"Exception during task cancellation for {task_type}: {result!r}")
 
             logger.debug(f"Cancelled {task_type}")
 

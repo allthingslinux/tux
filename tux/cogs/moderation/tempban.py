@@ -63,7 +63,9 @@ class TempBan(ModerationCogBase):
             reason=flags.reason,
             silent=flags.silent,
             dm_action="temp banned",
-            actions=[(ctx.guild.ban(member, reason=flags.reason, delete_message_days=flags.purge), type(None))],
+            actions=[
+                (ctx.guild.ban(member, reason=flags.reason, delete_message_seconds=flags.purge * 86400), type(None)),
+            ],
             duration=duration_str,
         )
 

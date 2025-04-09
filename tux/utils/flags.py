@@ -178,9 +178,9 @@ class BanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", pre
         default=CONST.DEFAULT_REASON,
         positional=True,
     )
-    purge: commands.Range[int, 1, 7] = commands.flag(
+    purge: commands.Range[int, 0, 7] = commands.flag(
         name="purge",
-        description="Num of days in messages. (< 7)",
+        description="Number of days of messages to delete (0-7).",
         aliases=["p"],
         default=0,
     )
@@ -205,9 +205,9 @@ class TempBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ",
         description="Length of the ban. (e.g. 1d, 1h)",
         aliases=["t", "d", "e"],
     )
-    purge: commands.Range[int, 1, 7] = commands.flag(
+    purge: commands.Range[int, 0, 7] = commands.flag(
         name="purge",
-        description="Num of days in messages. (< 7)",
+        description="Number of days of messages to delete (0-7).",
         aliases=["p"],
         default=0,
     )

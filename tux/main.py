@@ -10,6 +10,7 @@ from loguru import logger
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
+from tux import __version__ as app_version
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.help import TuxHelp
@@ -61,7 +62,7 @@ def setup_sentry() -> None:
 
     If no Sentry URL is configured, logs a warning and skips setup.
     """
-    if not CONFIG.SENTRY_URL:
+    if not CONFIG.SENTRY_DSN:
         logger.warning("No Sentry URL configured, skipping Sentry setup")
         return
 
@@ -69,9 +70,12 @@ def setup_sentry() -> None:
 
     try:
         sentry_sdk.init(
-            dsn=CONFIG.SENTRY_URL,
+            dsn=CONFIG.SENTRY_DSN,
+            release=app_version,
             environment=get_current_env(),
             enable_tracing=True,
+            attach_stacktrace=True,
+            send_default_pii=False,
             traces_sample_rate=1.0,
             profiles_sample_rate=1.0,
             integrations=[
