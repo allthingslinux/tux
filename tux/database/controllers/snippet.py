@@ -58,6 +58,26 @@ class SnippetController:
             },
         )
 
+    async def create_snippet_alias(
+        self,
+        snippet_name: str,
+        snippet_alias: str,
+        snippet_created_at: datetime.datetime,
+        snippet_user_id: int,
+        guild_id: int,
+    ) -> Snippet:
+        await self.ensure_guild_exists(guild_id)
+
+        return await self.table.create(
+            data={
+                "snippet_name": snippet_name,
+                "alias": snippet_alias,
+                "snippet_created_at": snippet_created_at,
+                "snippet_user_id": snippet_user_id,
+                "guild_id": guild_id,
+            },
+        )
+
     async def delete_snippet_by_id(self, snippet_id: int) -> None:
         await self.table.delete(where={"snippet_id": snippet_id})
 
