@@ -12,7 +12,7 @@ import contextlib
 import traceback
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any
 
 import discord
 import Levenshtein
@@ -64,7 +64,8 @@ ContextOrInteraction = commands.Context[Tux] | discord.Interaction
 ErrorDetailExtractor = Callable[[Exception], dict[str, Any]]
 
 # Signature for the application command error handler expected by `discord.py`.
-AppCommandErrorHandler = Callable[[discord.Interaction, app_commands.AppCommandError], Coroutine[Any, Any, None]]
+# Note: Interaction is parameterized with the Bot type (Tux).
+AppCommandErrorHandler = Callable[[discord.Interaction[Tux], app_commands.AppCommandError], Coroutine[Any, Any, None]]
 
 
 @dataclass
@@ -435,7 +436,7 @@ class ErrorHandler(commands.Cog):
         # Stores the original application command error handler so it can be restored
         # when the cog is unloaded. This prevents conflicts if other cogs or the
         # main bot file define their own `tree.on_error`.
-        self._old_tree_error: AppCommandErrorHandler | None = None
+        self._old_tree_error = None
 
     async def cog_load(self) -> None:
         """
@@ -448,7 +449,7 @@ class ErrorHandler(commands.Cog):
         # Store the potentially existing handler.
         # Using typing.cast for static analysis clarity, assuming the existing handler
         # conforms to the expected AppCommandErrorHandler signature.
-        self._old_tree_error = cast(AppCommandErrorHandler, tree.on_error)
+        self._old_tree_error = tree.on_error
         # Replace the tree's error handler with this cog's handler.
         tree.on_error = self.on_app_command_error
         logger.info("ErrorHandler: Application command error handler registered.")
@@ -1162,7 +1163,11 @@ class ErrorHandler(commands.Cog):
         logger.bind(**log_context).debug(f"Handling prefix command error via global handler: {type(error).__name__}")
         await self._handle_error(ctx, error)
 
-    async def on_app_command_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError) -> None:
+    async def on_app_command_error(
+        self,
+        interaction: discord.Interaction[Tux],
+        error: app_commands.AppCommandError,
+    ) -> None:
         """
         The error handler for application (slash) commands, registered via `tree.on_error`.
 
@@ -1173,7 +1178,7 @@ class ErrorHandler(commands.Cog):
 
         Parameters
         ----------
-        interaction : discord.Interaction
+        interaction : discord.Interaction[Tux]
             The interaction where the error occurred.
         error : app_commands.AppCommandError
             The error that was raised.
