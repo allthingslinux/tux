@@ -49,20 +49,24 @@ class Snippets(commands.Cog):
         total_snippets: int,
         search_query: str | None = None,
     ) -> discord.Embed:
+        """
+        Create an embed for displaying a list of snippets.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context object.
+        snippets : list[Snippet]
+            The snippets to display on this page.
+        total_snippets : int
+            The total number of snippets across all pages.
+        search_query : str | None
+            The search query used to filter snippets (for title display).
+        """
         assert ctx.guild
         assert ctx.guild.icon
 
-        # if the search query exists filter the snippets
-        # this will search both by name and content
-        if search_query:
-            snippets = [
-                snippet
-                for snippet in snippets
-                if search_query.lower() in (snippet.snippet_name or "").lower()
-                or search_query.lower() in (snippet.snippet_content or "").lower()
-            ]
-
-        # if there are no snippets, return
+        # Snippets are already filtered by the time they reach this function
         if not snippets:
             return EmbedCreator.create_embed(
                 bot=self.bot,
@@ -90,7 +94,7 @@ class Snippets(commands.Cog):
 
         return EmbedCreator.create_embed(
             embed_type=EmbedType.DEFAULT,
-            title=f'Snippets ({len(snippets)}) | Searching for "{search_query if search_query else "All Snippets"}"',
+            title=f'Snippets ({total_snippets}) | Searching for "{search_query if search_query else "All Snippets"}"',
             description=description,
             custom_author_text=ctx.guild.name,
             custom_author_icon_url=ctx.guild.icon.url,
@@ -195,21 +199,35 @@ class Snippets(commands.Cog):
         ----------
         ctx : commands.Context[Tux]
             The context object.
+        search_query : str | None
+            Optional search query to filter snippets.
         """
-
         assert ctx.guild
 
+        # Fetch all snippets sorted by creation date
         snippets: list[Snippet] = await self.db.get_all_snippets_sorted(newestfirst=True)
 
-        # Remove snippets that are not in the current server
+        # Filter snippets by guild
         snippets = [snippet for snippet in snippets if snippet.guild_id == ctx.guild.id]
 
-        # If there are no snippets, return
+        # Apply search filter if a query is provided
+        if search_query:
+            snippets = [
+                snippet
+                for snippet in snippets
+                if search_query.lower() in (snippet.snippet_name or "").lower()
+                or search_query.lower() in (snippet.snippet_content or "").lower()
+            ]
+
+        # If no snippets found after filtering, return early
         if not snippets:
             await self.send_snippet_error(ctx, description="No snippets found.")
             return
+
+        # Set up pagination menu
         menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed)
 
+        # Add pages based on filtered snippets
         snippets_per_page = 10
         for i in range(0, len(snippets), snippets_per_page):
             embed = self._create_snippets_list_embed(
@@ -220,6 +238,7 @@ class Snippets(commands.Cog):
             )
             menu.add_page(embed)
 
+        # Add navigation buttons
         menu.add_button(ViewButton.go_to_first_page())
         menu.add_button(ViewButton.back())
         menu.add_button(ViewButton.next())
