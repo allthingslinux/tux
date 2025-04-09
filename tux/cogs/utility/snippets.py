@@ -47,9 +47,30 @@ class Snippets(commands.Cog):
         ctx: commands.Context[Tux],
         snippets: list[Snippet],
         total_snippets: int,
+        search_query: str | None = None,
     ) -> discord.Embed:
         assert ctx.guild
         assert ctx.guild.icon
+
+        # if the search query exists filter the snippets
+        # this will search both by name and content
+        if search_query:
+            snippets = [
+                snippet
+                for snippet in snippets
+                if search_query.lower() in (snippet.snippet_name or "").lower()
+                or search_query.lower() in (snippet.snippet_content or "").lower()
+            ]
+
+        # if there are no snippets, return
+        if not snippets:
+            return EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedType.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                description="No snippets found.",
+            )
 
         description = "```\n"
 
@@ -69,7 +90,7 @@ class Snippets(commands.Cog):
 
         return EmbedCreator.create_embed(
             embed_type=EmbedType.DEFAULT,
-            title=f"Total Snippets ({total_snippets})",
+            title=f'Snippets ({len(snippets)}) | Searching for "{search_query if search_query else "All Snippets"}"',
             description=description,
             custom_author_text=ctx.guild.name,
             custom_author_icon_url=ctx.guild.icon.url,
@@ -82,6 +103,9 @@ class Snippets(commands.Cog):
         try:
             await checks.has_pl(2).predicate(ctx)
         except commands.CheckFailure:
+            return False
+        except Exception as e:
+            logger.error(f"Unexpected error in check_if_user_has_mod_override: {e}")
             return False
         else:
             return True
@@ -163,7 +187,7 @@ class Snippets(commands.Cog):
         aliases=["ls"],
     )
     @commands.guild_only()
-    async def list_snippets(self, ctx: commands.Context[Tux]) -> None:
+    async def list_snippets(self, ctx: commands.Context[Tux], *, search_query: str | None = None) -> None:
         """
         List snippets by pagination.
 
@@ -188,7 +212,12 @@ class Snippets(commands.Cog):
 
         snippets_per_page = 10
         for i in range(0, len(snippets), snippets_per_page):
-            embed = self._create_snippets_list_embed(ctx, snippets[i : i + snippets_per_page], len(snippets))
+            embed = self._create_snippets_list_embed(
+                ctx,
+                snippets[i : i + snippets_per_page],
+                len(snippets),
+                search_query,
+            )
             menu.add_page(embed)
 
         menu.add_button(ViewButton.go_to_first_page())
