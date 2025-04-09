@@ -432,7 +432,11 @@ class Snippets(commands.Cog):
             value=f"{author.mention if author else f'<@!{snippet.snippet_user_id}>'}",
             inline=False,
         )
-        embed.add_field(name="Content", value=f"> {snippet.snippet_content}", inline=False)
+        embed.add_field(
+            name=f"{'Alias' if snippet.alias else 'Content'}",
+            value=f"> {snippet.alias if snippet.alias else snippet.snippet_content}",
+            inline=False,
+        )
         embed.add_field(name="Uses", value=snippet.uses, inline=False)
         embed.add_field(name="Locked", value="Yes" if snippet.locked else "No", inline=False)
 
