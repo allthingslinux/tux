@@ -50,6 +50,7 @@ watchdog = "^6.0.0"
 arrow = "^1.3.0"
 click = "^8.1.8"
 single-source = "^0.4.0"
+levenshtein = "^0.27.1"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = ">=4.0.0"
