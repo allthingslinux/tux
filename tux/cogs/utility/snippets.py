@@ -377,8 +377,6 @@ class Snippets(commands.Cog):
             text = f"`{snippet.snippet_name}.txt -> {aliased_snippet.snippet_name}.txt` "
             if aliased_snippet.locked:
                 text += "🔒 "
-            if snippet.locked:
-                text += "🔒 "
             text += f"|| {aliased_snippet.snippet_content}"
         else:
             # example text:
