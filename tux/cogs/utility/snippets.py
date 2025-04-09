@@ -27,7 +27,6 @@ class Snippets(commands.Cog):
         self.list_snippets.usage = generate_usage(self.list_snippets)
         self.top_snippets.usage = generate_usage(self.top_snippets)
         self.delete_snippet.usage = generate_usage(self.delete_snippet)
-        self.force_delete_snippet.usage = generate_usage(self.force_delete_snippet)
         self.get_snippet.usage = generate_usage(self.get_snippet)
         self.get_snippet_info.usage = generate_usage(self.get_snippet_info)
         self.create_snippet.usage = generate_usage(self.create_snippet)
@@ -42,6 +41,120 @@ class Snippets(commands.Cog):
         unban_count = sum(case.case_user_id == user_id for case in unban_cases)
 
         return ban_count > unban_count
+
+    def _create_snippets_list_embed(
+        self,
+        ctx: commands.Context[Tux],
+        snippets: list[Snippet],
+        total_snippets: int,
+    ) -> discord.Embed:
+        assert ctx.guild
+        assert ctx.guild.icon
+
+        description = "```\n"
+
+        for snippet in snippets:
+            author = self.bot.get_user(snippet.snippet_user_id) or "Unknown"
+            description += f"{snippet.snippet_name.ljust(20)} | by: {author}\n"
+
+        description += "```"
+
+        footer_text, footer_icon_url = EmbedCreator.get_footer(
+            bot=ctx.bot,
+            user_name=ctx.author.name,
+            user_display_avatar=ctx.author.display_avatar.url,
+        )
+
+        return EmbedCreator.create_embed(
+            embed_type=EmbedType.DEFAULT,
+            title=f"Total Snippets ({total_snippets})",
+            description=description,
+            custom_author_text=ctx.guild.name,
+            custom_author_icon_url=ctx.guild.icon.url,
+            message_timestamp=ctx.message.created_at,
+            custom_footer_text=footer_text,
+            custom_footer_icon_url=footer_icon_url,
+        )
+
+    async def check_if_user_has_mod_override(self, ctx: commands.Context[Tux]) -> bool:
+        try:
+            await checks.has_pl(2).predicate(ctx)
+        except commands.CheckFailure:
+            return False
+        else:
+            return True
+
+    async def snippet_check(
+        self,
+        ctx: commands.Context[Tux],
+        snippet_locked: bool = False,
+        snippet_user_id: int = 0,
+    ) -> tuple[bool, str]:
+        """
+        Check if the user can create, edit, or delete snippets. This handles mod overrides, lock checks, user checks, ban checks, and role checks.
+        Returns whether the user can create snippets and a reason.
+
+        Snippet locked is only checked when editing or deleting snippets so leave it as false if you don't want to check it.
+        Snippet user id is only checked when editing or deleting snippets so leave it as 0 if you don't want to check it.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context object.
+        snippet_locked : bool
+            Whether the snippet is locked or not. Defaults to False.
+        snippet_user_id : int
+            The user id of the snippet author. Defaults to 0.
+        """
+
+        assert ctx.guild
+
+        # Check for mod override
+        if await self.check_if_user_has_mod_override(ctx):
+            return True, "Mod override granted."
+
+        # Check for bans
+        if await self.is_snippetbanned(ctx.guild.id, ctx.author.id):
+            return False, "You are banned from using snippets."
+
+        # Check for role permissions
+        if (
+            Config.LIMIT_TO_ROLE_IDS
+            and isinstance(ctx.author, discord.Member)
+            and not any(role.id in Config.ACCESS_ROLE_IDS for role in ctx.author.roles)
+        ):
+            return (
+                False,
+                f"You do not have a role that allows you to create snippets. Accepted roles: {format(', '.join([f'<@&{role_id}>' for role_id in Config.ACCESS_ROLE_IDS]))}",
+            )
+
+        # Check for snippet locked
+        if snippet_locked:
+            return False, "This snippet is locked. You cannot edit or delete it."
+
+        # Check for snippet author
+        if snippet_user_id not in (0, ctx.author.id):
+            return False, "You can only edit or delete your own snippets."
+
+        return True, "All checks passed."
+
+    async def send_snippet_error(self, ctx: commands.Context[Tux], description: str) -> None:
+        """
+        Send an error message to the channel if there are no snippets found.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context object.
+        """
+        embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.ERROR,
+            user_name=ctx.author.name,
+            user_display_avatar=ctx.author.display_avatar.url,
+            description=description,
+        )
+        await ctx.send(embed=embed, delete_after=30)
 
     @commands.command(
         name="snippets",
@@ -84,40 +197,6 @@ class Snippets(commands.Cog):
 
         await menu.start()
 
-    def _create_snippets_list_embed(
-        self,
-        ctx: commands.Context[Tux],
-        snippets: list[Snippet],
-        total_snippets: int,
-    ) -> discord.Embed:
-        assert ctx.guild
-        assert ctx.guild.icon
-
-        description = "```\n"
-
-        for snippet in snippets:
-            author = self.bot.get_user(snippet.snippet_user_id) or "Unknown"
-            description += f"{snippet.snippet_name.ljust(20)} | by: {author}\n"
-
-        description += "```"
-
-        footer_text, footer_icon_url = EmbedCreator.get_footer(
-            bot=ctx.bot,
-            user_name=ctx.author.name,
-            user_display_avatar=ctx.author.display_avatar.url,
-        )
-
-        return EmbedCreator.create_embed(
-            embed_type=EmbedType.DEFAULT,
-            title=f"Total Snippets ({total_snippets})",
-            description=description,
-            custom_author_text=ctx.guild.name,
-            custom_author_icon_url=ctx.guild.icon.url,
-            message_timestamp=ctx.message.created_at,
-            custom_footer_text=footer_text,
-            custom_footer_icon_url=footer_icon_url,
-        )
-
     @commands.command(
         name="topsnippets",
         aliases=["ts"],
@@ -136,27 +215,19 @@ class Snippets(commands.Cog):
 
         # find the top 10 snippets by uses
         snippets: list[Snippet] = await self.db.get_all_snippets_by_guild_id(ctx.guild.id)
-
-        # If there are no snippets, return
         if not snippets:
             await self.send_snippet_error(ctx, description="No snippets found.")
             return
-
-        # sort the snippets by uses
         snippets.sort(key=lambda x: x.uses, reverse=True)
 
-        # print in this format
-        # 1. snippet_name | uses: 10
-        # 2. snippet_name | uses: 9
-        # 3. snippet_name | uses: 8
-        # ...
-
+        # Format the text
         text = "```\n"
         for i, snippet in enumerate(snippets[:10]):
             text += f"{i + 1}. {snippet.snippet_name.ljust(20)} | uses: {snippet.uses}\n"
         text += "```"
 
         # only show top 10, no pagination
+        # TODO: add pagination
         embed = EmbedCreator.create_embed(
             embed_type=EmbedType.DEFAULT,
             title="Top Snippets",
@@ -191,55 +262,20 @@ class Snippets(commands.Cog):
             await self.send_snippet_error(ctx, description="Snippet not found.")
             return
 
-        # check if the snippet is locked
-        if snippet.locked:
-            await self.send_snippet_error(
-                ctx,
-                description="This snippet is locked and cannot be deleted. If you are a moderator you can use the `forcedeletesnippet` command.",
-            )
-            return
-
-        # Check if the author of the snippet is the same as the user who wants to delete it and if theres no author don't allow deletion
-        author_id = snippet.snippet_user_id or 0
-        if author_id != ctx.author.id:
-            await self.send_snippet_error(ctx, description="You can only delete your own snippets.")
+        # perm check
+        check = await self.snippet_check(
+            ctx,
+            snippet_locked=snippet.locked,
+            snippet_user_id=snippet.snippet_user_id,
+        )
+        if not check[0]:
+            await self.send_snippet_error(ctx, description=check[1])
             return
 
         await self.db.delete_snippet_by_id(snippet.snippet_id)
 
         await ctx.send("Snippet deleted.", delete_after=30, ephemeral=True)
-        logger.info(f"{ctx.author} deleted the snippet with the name {name}.")
-
-    @commands.command(
-        name="forcedeletesnippet",
-        aliases=["fds"],
-    )
-    @commands.guild_only()
-    @checks.has_pl(2)
-    async def force_delete_snippet(self, ctx: commands.Context[Tux], name: str) -> None:
-        """
-        Force delete a snippet by name.
-
-        Parameters
-        ----------
-        ctx : commands.Context[Tux]
-            The context object.
-        name : str
-            The name of the snippet.
-        """
-
-        assert ctx.guild
-
-        snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
-
-        if snippet is None:
-            await self.send_snippet_error(ctx, description="Snippet not found.")
-            return
-
-        await self.db.delete_snippet_by_id(snippet.snippet_id)
-
-        await ctx.send("Snippet deleted.", delete_after=30, ephemeral=True)
-        logger.info(f"{ctx.author} force deleted the snippet with the name {name}.")
+        logger.info(f"{ctx.author} deleted the snippet with the name {name}. {check[1]}")
 
     @commands.command(
         name="snippet",
@@ -274,12 +310,31 @@ class Snippets(commands.Cog):
             return
         await self.db.increment_snippet_uses(snippet.snippet_id)
 
-        # example text:
-        # `/snippets/name.txt` [if locked put '🔒 ' icon]|| [content]
-        text = f"`/snippets/{snippet.snippet_name}.txt` "
-        if snippet.locked:
-            text += "🔒 "
-        text += f"|| {snippet.snippet_content}"
+        # check if the snippet is an alias
+        if snippet.alias:
+            # if it is an alias, get the snippet by name and guild id
+            aliased_snippet = await self.db.get_snippet_by_name_and_guild_id(snippet.alias, ctx.guild.id)
+            if aliased_snippet is None:
+                # delete the alias if it points to a non-existent snippet
+                await self.db.delete_snippet_by_id(snippet.snippet_id)
+                await self.send_snippet_error(
+                    ctx,
+                    description="Alias pointing to a non-existent snippet. Deleting alias.",
+                )
+                return
+            text = f"`{snippet.snippet_name}.txt -> {aliased_snippet.snippet_name}.txt` "
+            if aliased_snippet.locked:
+                text += "🔒 "
+            if snippet.locked:
+                text += "🔒 "
+            text += f"|| {aliased_snippet.snippet_content}"
+        else:
+            # example text:
+            # `/snippets/name.txt` [if locked put '🔒 ' icon]|| [content]
+            text = f"`/snippets/{snippet.snippet_name}.txt` "
+            if snippet.locked:
+                text += "🔒 "
+            text += f"|| {snippet.snippet_content}"
 
         await ctx.send(text, allowed_mentions=AllowedMentions.none())
 
@@ -338,7 +393,7 @@ class Snippets(commands.Cog):
     @commands.guild_only()
     async def create_snippet(self, ctx: commands.Context[Tux], name: str, *, content: str) -> None:
         """
-        Create a snippet.
+        Create a snippet. You can use the name of another snippet as the content, and it will automatically create an alias to that snippet.
 
         Parameters
         ----------
@@ -352,19 +407,10 @@ class Snippets(commands.Cog):
 
         assert ctx.guild
 
-        if (
-            Config.LIMIT_TO_ROLE_IDS
-            and isinstance(ctx.author, discord.Member)
-            and not any(role.id in Config.ACCESS_ROLE_IDS for role in ctx.author.roles)
-        ):
-            await ctx.send(
-                f"You do not have a role that allows you to create snippets. Accepted roles: {format(', '.join([f'<@&{role_id}>' for role_id in Config.ACCESS_ROLE_IDS]))}",
-                allowed_mentions=AllowedMentions.none(),
-            )
-            return
-
-        if await self.is_snippetbanned(ctx.guild.id, ctx.author.id):
-            await ctx.send("You are banned from using snippets.")
+        # perm check
+        check = await self.snippet_check(ctx)
+        if not check[0]:
+            await self.send_snippet_error(ctx, description=check[1])
             return
 
         created_at = datetime.datetime.now(datetime.UTC)
@@ -384,6 +430,24 @@ class Snippets(commands.Cog):
                 ctx,
                 description="Snippet name must be alphanumeric (allows dashes only) and less than 20 characters.",
             )
+            return
+
+        # check if snippet content is just the name of another snippet e.g if the content is support will auto alias to support
+        snippet = await self.db.get_snippet_by_name_and_guild_id(content, ctx.guild.id)
+        if snippet:
+            await self.db.create_snippet_alias(
+                snippet_name=name,
+                snippet_alias=content,
+                snippet_created_at=created_at,
+                snippet_user_id=author_id,
+                guild_id=server_id,
+            )
+            await ctx.send(
+                f"Snippet created as an alias to `{content}` automatically because the content was the same as another snippet.",
+                delete_after=30,
+                ephemeral=True,
+            )
+            logger.info(f"{ctx.author} created a snippet with the name {name} as an alias to {content}.")
             return
 
         await self.db.create_snippet(
@@ -415,7 +479,6 @@ class Snippets(commands.Cog):
         content : str
             The new content of the snippet.
         """
-
         assert ctx.guild
 
         snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
@@ -424,31 +487,15 @@ class Snippets(commands.Cog):
             await self.send_snippet_error(ctx, description="Snippet not found.")
             return
 
-        if await self.is_snippetbanned(ctx.guild.id, ctx.author.id):
-            await ctx.send("You are banned from using snippets.")
+        # perm check
+        check = await self.snippet_check(
+            ctx,
+            snippet_locked=snippet.locked,
+            snippet_user_id=snippet.snippet_user_id,
+        )
+        if not check[0]:
+            await self.send_snippet_error(ctx, description=check[1])
             return
-
-        # check if the snippet is locked
-        if snippet.locked:
-            logger.info(
-                f"{ctx.author} is trying to edit a snippet with the name {name}. Checking if they have the permission level to edit locked snippets.",
-            )
-            # dont make the check send its own error message
-            try:
-                await checks.has_pl(2).predicate(ctx)
-            except commands.CheckFailure:
-                await self.send_snippet_error(
-                    ctx,
-                    description="This snippet is locked and cannot be edited. If you are a moderator you can use the `forcedeletesnippet` command.",
-                )
-                return
-            logger.info(f"{ctx.author} has the permission level to edit locked snippets.")
-        else:
-            # Check if the author of the snippet is the same as the user who wants to edit it and if theres no author don't allow editing
-            author_id = snippet.snippet_user_id or 0
-            if author_id != ctx.author.id:
-                await self.send_snippet_error(ctx, description="You can only edit your own snippets.")
-                return
 
         await self.db.update_snippet_by_id(
             snippet.snippet_id,
@@ -456,7 +503,8 @@ class Snippets(commands.Cog):
         )
 
         await ctx.send("Snippet Edited.", delete_after=30, ephemeral=True)
-        logger.info(f"{ctx.author} Edited a snippet with the name {name}.")
+
+        logger.info(f"{ctx.author} edited the snippet with the name {name}. {check[1]}")
 
     @commands.command(
         name="togglesnippetlock",
@@ -507,24 +555,6 @@ Snippets are usually locked by moderators if they are important to usual use of 
 
         await ctx.send("Snippet lock toggled.", delete_after=30, ephemeral=True)
         logger.info(f"{ctx.author} toggled the lock of the snippet with the name {name}.")
-
-    async def send_snippet_error(self, ctx: commands.Context[Tux], description: str) -> None:
-        """
-        Send an error message to the channel if there are no snippets found.
-
-        Parameters
-        ----------
-        ctx : commands.Context[Tux]
-            The context object.
-        """
-        embed = EmbedCreator.create_embed(
-            bot=self.bot,
-            embed_type=EmbedCreator.ERROR,
-            user_name=ctx.author.name,
-            user_display_avatar=ctx.author.display_avatar.url,
-            description=description,
-        )
-        await ctx.send(embed=embed, delete_after=30)
 
 
 async def setup(bot: Tux) -> None:
