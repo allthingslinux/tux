@@ -81,8 +81,7 @@ class Snippets(commands.Cog):
         for snippet in snippets:
             icon = "→" if snippet.alias else " "
             icon += "🔒" if snippet.locked else " "
-            author = self.bot.get_user(snippet.snippet_user_id) or "Unknown"
-            description += f"{icon}|{snippet.snippet_name.ljust(20)} | by: {author}\n"
+            description += f"{icon}|{snippet.snippet_name.ljust(20)} | uses: {snippet.uses}\n"
 
         description += "```"
 
@@ -206,6 +205,9 @@ class Snippets(commands.Cog):
 
         # Fetch all snippets sorted by creation date
         snippets: list[Snippet] = await self.db.get_all_snippets_sorted(newestfirst=True)
+
+        # sort by uses
+        snippets.sort(key=lambda x: x.uses, reverse=True)
 
         # Filter snippets by guild
         snippets = [snippet for snippet in snippets if snippet.guild_id == ctx.guild.id]
