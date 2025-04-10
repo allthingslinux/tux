@@ -288,16 +288,16 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
     ),
     # Error related to command flags (discord.ext.flags).
     commands.FlagError: ErrorHandlerConfig(
-        message_format="Error processing command flags: {error}\\nUsage: `{ctx.prefix}{usage}`",
+        message_format="Error processing command flags: {error}\nUsage: `{ctx.prefix}{usage}`",
         send_to_sentry=False,
     ),
     commands.BadFlagArgument: ErrorHandlerConfig(
-        message_format="Invalid value for flag `{flag_name}`: {original_cause}\\nUsage: `{ctx.prefix}{usage}`",
+        message_format="Invalid value for flag `{flag_name}`: {original_cause}\nUsage: `{ctx.prefix}{usage}`",
         detail_extractor=_extract_bad_flag_argument_details,
         send_to_sentry=False,
     ),
     commands.MissingRequiredFlag: ErrorHandlerConfig(
-        message_format="Missing required flag: `{flag_name}`\\nUsage: `{ctx.prefix}{usage}`",
+        message_format="Missing required flag: `{flag_name}`\nUsage: `{ctx.prefix}{usage}`",
         detail_extractor=_extract_missing_flag_details,
         send_to_sentry=False,
     ),
@@ -311,12 +311,12 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         send_to_sentry=False,
     ),
     commands.MissingRequiredArgument: ErrorHandlerConfig(
-        message_format="Missing required argument: `{param_name}`\\nUsage: `{ctx.prefix}{usage}`",
+        message_format="Missing required argument: `{param_name}`\nUsage: `{ctx.prefix}{usage}`",
         detail_extractor=_extract_missing_argument_details,
         send_to_sentry=False,
     ),
     commands.TooManyArguments: ErrorHandlerConfig(
-        message_format="You provided too many arguments.\\nUsage: `{ctx.prefix}{usage}`",
+        message_format="You provided too many arguments.\nUsage: `{ctx.prefix}{usage}`",
         send_to_sentry=False,
     ),
     commands.NotOwner: ErrorHandlerConfig(
@@ -330,7 +330,10 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         send_to_sentry=True,
     ),
     # Generic bad argument error.
-    commands.BadArgument: ErrorHandlerConfig(message_format="Invalid argument provided: {error}", send_to_sentry=False),
+    commands.BadArgument: ErrorHandlerConfig(
+        message_format="Invalid argument provided: {error}",
+        send_to_sentry=False,
+    ),
     # Errors for when specific Discord entities are not found.
     commands.MemberNotFound: ErrorHandlerConfig(
         message_format="Could not find member: {error.argument}.",
