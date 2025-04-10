@@ -58,6 +58,27 @@ class Unban(ModerationCogBase):
 
         return matches[0] if len(matches) == 1 else None
 
+    # New private method extracted from the nested function
+    async def _perform_unban(
+        self,
+        ctx: commands.Context[Tux],
+        user: discord.User,
+        final_reason: str,
+        guild: discord.Guild,  # Pass guild explicitly
+    ) -> None:
+        """Executes the core unban action and case creation."""
+        # We already checked that user is not None in the main command
+        assert user is not None, "User cannot be None at this point"
+        await self.execute_mod_action(
+            ctx=ctx,
+            case_type=CaseType.UNBAN,
+            user=user,
+            reason=final_reason,
+            silent=True,  # No DM for unbans due to user not being in the guild
+            dm_action="",  # No DM for unbans
+            actions=[(guild.unban(user, reason=final_reason), type(None))],  # Use passed guild
+        )
+
     @commands.hybrid_command(
         name="unban",
         aliases=["ub"],
@@ -124,30 +145,17 @@ class Unban(ModerationCogBase):
         final_reason = reason or CONST.DEFAULT_REASON
         guild = ctx.guild
 
-        # Use the lock to prevent race conditions
-        async def perform_unban() -> None:
-            nonlocal guild, user, final_reason
-
-            # Execute unban with case creation
-            # We already checked that user is not None, and it's verified above
-            assert user is not None, "User cannot be None at this point"
-            await self.execute_mod_action(
-                ctx=ctx,
-                case_type=CaseType.UNBAN,
-                user=user,
-                reason=final_reason,
-                # No DM for unbans due to user not being in the guild
-                silent=True,
-                # No DM for unbans due to user not being in the guild
-                dm_action="",
-                actions=[(guild.unban(user, reason=final_reason), type(None))],
-            )
-
         try:
-            await self.execute_user_action_with_lock(user.id, perform_unban)
+            # Call the lock executor with a lambda referencing the new private method
+            await self.execute_user_action_with_lock(
+                user.id,
+                lambda: self._perform_unban(ctx, user, final_reason, guild),
+            )
         except discord.NotFound:
+            # This might occur if the user was unbanned between the fetch_ban check and the lock acquisition
             await self.send_error_response(ctx, f"{user} is no longer banned.")
         except discord.HTTPException as e:
+            # Catch potential errors during the unban action forwarded by execute_mod_action
             await self.send_error_response(ctx, f"Failed to unban {user}", e)
 
 
