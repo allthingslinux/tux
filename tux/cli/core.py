@@ -5,6 +5,7 @@ This module provides the main Click command group and utilities for the CLI.
 
 import importlib
 import os
+import subprocess
 import sys
 from collections.abc import Callable
 from functools import update_wrapper
@@ -31,6 +32,32 @@ GROUP_HELP_SUFFIX = ""
 
 # Commands/groups that do not require database access
 NO_DB_COMMANDS = {"dev", "docs", "docker"}
+
+
+def run_command(cmd: list[str], **kwargs: Any) -> int:
+    """Run a command and return its exit code.
+
+    Parameters
+    ----------
+    cmd : list[str]
+        Command to run as a list of strings
+    **kwargs : Any
+        Additional arguments to pass to subprocess.run
+
+    Returns
+    -------
+    int
+        Exit code of the command (0 for success)
+    """
+
+    try:
+        subprocess.run(cmd, check=True, **kwargs)
+
+    except subprocess.CalledProcessError as e:
+        return e.returncode
+
+    else:
+        return 0
 
 
 # Initialize interface CLI group

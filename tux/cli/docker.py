@@ -1,8 +1,24 @@
 """Docker commands for the Tux CLI."""
 
 import click
+from loguru import logger
 
-from tux.cli.core import command_registration_decorator, create_group
+from tux.cli.core import (
+    command_registration_decorator,
+    create_group,
+    run_command,
+)
+from tux.utils.env import is_dev_mode
+
+
+# Helper function moved from impl/docker.py
+def _get_compose_base_cmd() -> list[str]:
+    """Get the base docker compose command with appropriate -f flags."""
+    base = ["docker", "compose", "-f", "docker-compose.yml"]
+    if is_dev_mode():
+        base.extend(["-f", "docker-compose.dev.yml"])
+    return base
+
 
 # Create the docker command group
 docker_group = create_group("docker", "Docker management commands")
@@ -14,9 +30,8 @@ def build() -> int:
 
     Runs `docker compose build`.
     """
-    from tux.cli.impl.docker import docker_build
-
-    return docker_build()
+    cmd = [*_get_compose_base_cmd(), "build"]
+    return run_command(cmd)
 
 
 @command_registration_decorator(docker_group, name="up")
@@ -28,9 +43,12 @@ def up(detach: bool, build: bool) -> int:
     Runs `docker compose up`.
     Can optionally build images first with --build.
     """
-    from tux.cli.impl.docker import docker_up
-
-    return docker_up(detach=detach, build=build)
+    cmd = [*_get_compose_base_cmd(), "up"]
+    if build:
+        cmd.append("--build")
+    if detach:
+        cmd.append("-d")
+    return run_command(cmd)
 
 
 @command_registration_decorator(docker_group, name="down")
@@ -39,9 +57,8 @@ def down() -> int:
 
     Runs `docker compose down`.
     """
-    from tux.cli.impl.docker import docker_down
-
-    return docker_down()
+    cmd = [*_get_compose_base_cmd(), "down"]
+    return run_command(cmd)
 
 
 @command_registration_decorator(docker_group, name="logs")
@@ -52,9 +69,11 @@ def logs(follow: bool, service: str) -> int:
 
     Runs `docker compose logs [service]`.
     """
-    from tux.cli.impl.docker import docker_logs
-
-    return docker_logs(follow=follow, service=service)
+    cmd = [*_get_compose_base_cmd(), "logs"]
+    if follow:
+        cmd.append("-f")
+    cmd.append(service)
+    return run_command(cmd)
 
 
 @command_registration_decorator(docker_group, name="ps")
@@ -63,9 +82,8 @@ def ps() -> int:
 
     Runs `docker compose ps`.
     """
-    from tux.cli.impl.docker import docker_ps
-
-    return docker_ps()
+    cmd = [*_get_compose_base_cmd(), "ps"]
+    return run_command(cmd)
 
 
 @command_registration_decorator(docker_group, name="exec")
@@ -76,6 +94,9 @@ def exec_cmd(service: str, command: tuple[str, ...]) -> int:
 
     Runs `docker compose exec [service] [command]`.
     """
-    from tux.cli.impl.docker import docker_exec
+    if not command:
+        logger.error("Error: No command provided to execute.")
+        return 1
 
-    return docker_exec(service, *command)
+    cmd = [*_get_compose_base_cmd(), "exec", service, *command]
+    return run_command(cmd)
