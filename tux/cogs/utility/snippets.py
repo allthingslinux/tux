@@ -110,7 +110,7 @@ class Snippets(commands.Cog):
         count = 0  # Initialize count
 
         description = "\n".join(
-            f"`{i + 1}`. {snippet.snippet_name} (`{snippet.uses}` uses) {'🔒' if snippet.locked else ''}"
+            f"`{'🔒' if snippet.locked else ' '}{'→' if snippet.alias else ' '}{i + 1}`. {snippet.snippet_name} (`{snippet.uses}` uses)"
             for i, snippet in enumerate(snippets)
         )
         count = len(snippets)
