@@ -3,6 +3,7 @@ from discord.ext import commands, tasks
 from loguru import logger
 
 from prisma.enums import CaseType
+from prisma.models import Case
 from tux.bot import Tux
 from tux.utils import checks
 from tux.utils.flags import TempBanFlags, generate_usage
@@ -69,6 +70,49 @@ class TempBan(ModerationCogBase):
             duration=duration_str,
         )
 
+    async def _process_tempban_case(self, case: Case) -> tuple[int, int]:
+        """Process an individual tempban case. Returns (processed_cases, failed_cases)."""
+
+        # Check for essential data first
+        if not (case.guild_id and case.case_user_id and case.case_id):
+            logger.error(f"Invalid case data: {case}")
+            return 0, 0
+
+        guild = self.bot.get_guild(case.guild_id)
+        if not guild:
+            logger.warning(f"Guild {case.guild_id} not found for case {case.case_id}")
+            return 0, 0
+
+        # Check ban status
+        try:
+            await guild.fetch_ban(discord.Object(id=case.case_user_id))
+            # If fetch_ban succeeds without error, the user IS banned.
+        except discord.NotFound:
+            # User is not banned. Mark expired and consider processed.
+            await self.db.case.set_tempban_expired(case.case_id, case.guild_id)
+            return 1, 0
+        except Exception as e:
+            # Log error during ban check, but proceed to attempt unban anyway
+            # This matches the original logic's behavior.
+            logger.warning(f"Error checking ban status for {case.case_user_id} in {guild.id}: {e}")
+
+        # Attempt to unban (runs if user was found banned or if ban check failed)
+        try:
+            await guild.unban(
+                discord.Object(id=case.case_user_id),
+                reason="Temporary ban expired.",
+            )
+            await self.db.case.set_tempban_expired(case.case_id, case.guild_id)
+        except (discord.Forbidden, discord.HTTPException) as e:
+            logger.error(f"Failed to unban {case.case_user_id} in {guild.id}: {e}")
+            return 0, 1  # Failed
+        except Exception as e:
+            logger.error(f"Unexpected error while processing tempban {case.case_id}: {e}")
+            return 0, 1  # Failed
+        else:
+            # Successfully unbanned and marked expired
+            return 1, 0  # Succeeded
+
     @tasks.loop(minutes=1)
     async def tempban_check(self) -> None:
         """
@@ -95,51 +139,10 @@ class TempBan(ModerationCogBase):
             failed_cases = 0
 
             for case in expired_cases:
-                # Skip cases with missing required data
-                if not case.guild_id or not case.case_user_id or not case.case_id:
-                    logger.error(f"Invalid case data: {case}")
-                    continue
-
-                # Get guild
-                guild = self.bot.get_guild(case.guild_id)
-                if not guild:
-                    logger.warning(f"Guild {case.guild_id} not found for case {case.case_id}")
-                    continue  # Skip this case but continue with others
-
-                try:
-                    # Verify the user is actually banned before attempting to unban
-                    try:
-                        ban_entry = await guild.fetch_ban(discord.Object(id=case.case_user_id))
-                        if not ban_entry:
-                            # User is not banned, just mark as expired
-                            await self.db.case.set_tempban_expired(case.case_id, case.guild_id)
-                            processed_cases += 1
-                            continue
-                    except discord.NotFound:
-                        # User is not banned, just mark as expired
-                        await self.db.case.set_tempban_expired(case.case_id, case.guild_id)
-                        processed_cases += 1
-                        continue
-                    except Exception as e:
-                        # On other errors, try to unban anyway
-                        logger.warning(f"Error checking ban status for {case.case_user_id} in {guild.id}: {e}")
-
-                    # Unban user
-                    await guild.unban(
-                        discord.Object(id=case.case_user_id),
-                        reason="Temporary ban expired.",
-                    )
-
-                    # Set case as expired
-                    await self.db.case.set_tempban_expired(case.case_id, case.guild_id)
-                    processed_cases += 1
-
-                except (discord.Forbidden, discord.HTTPException) as e:
-                    logger.error(f"Failed to unban {case.case_user_id} in {guild.id}: {e}")
-                    failed_cases += 1
-                except Exception as e:
-                    logger.error(f"Unexpected error while processing tempban {case.case_id}: {e}")
-                    failed_cases += 1
+                # Process each case using the helper method
+                processed, failed = await self._process_tempban_case(case)
+                processed_cases += processed
+                failed_cases += failed
 
             if processed_cases > 0 or failed_cases > 0:
                 logger.info(f"Tempban check: processed {processed_cases} cases, {failed_cases} failures")
