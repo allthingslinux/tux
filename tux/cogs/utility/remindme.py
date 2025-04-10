@@ -2,7 +2,6 @@ import contextlib
 import datetime
 
 import discord
-from discord import app_commands
 from discord.ext import commands, tasks
 from loguru import logger
 
@@ -10,23 +9,25 @@ from prisma.models import Reminder
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator
+from tux.utils.flags import generate_usage
 from tux.utils.functions import convert_to_seconds
 
 
 class RemindMe(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
-        self.db = DatabaseController()
+        self.db = DatabaseController().reminder
         self.check_reminders.start()
+        self.remindme.usage = generate_usage(self.remindme)
 
     @tasks.loop(seconds=120)
     async def check_reminders(self):
-        reminders = await self.db.reminder.find_many(where={"reminder_sent": False})
+        reminders = await self.db.get_unsent_reminders()
 
         try:
             for reminder in reminders:
                 await self.send_reminder(reminder)
-                await self.db.reminder.update(where={"reminder_id": reminder.reminder_id}, data={"reminder_sent": True})
+                await self.db.update_reminder_status(reminder.reminder_id, sent=True)
                 logger.debug(f'Status of reminder {reminder.reminder_id} updated to "sent".')
 
         except Exception as e:
@@ -73,15 +74,36 @@ class RemindMe(commands.Cog):
     async def before_check_reminders(self):
         await self.bot.wait_until_ready()
 
-    @app_commands.command(
+    @commands.hybrid_command(
         name="remindme",
-        description="Reminds you after a certain amount of time.",
     )
-    async def remindme(self, interaction: discord.Interaction, time: str, *, reminder: str) -> None:
+    async def remindme(self, ctx: commands.Context[Tux], time: str, *, reminder: str) -> None:
+        """
+        Set a reminder for yourself.
+        The time format is `[number][M/w/d/h/m/s]` where:
+        - M = months
+        - w = weeks
+        - d = days
+        - h = hours
+        - m = minutes
+        - s = seconds
+
+        Example: `!remindme 1h30m "Take a break"` will remind you in 1 hour and 30 minutes.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context of the command.
+        time : str
+            The time to set the reminder for.
+        reminder : str
+            The reminder message.
+
+        """
         seconds = convert_to_seconds(time)
 
         if seconds == 0:
-            await interaction.response.send_message(
+            await ctx.reply(
                 "Invalid time format. Please use the format `[number][M/w/d/h/m/s]`.",
                 ephemeral=True,
                 delete_after=30,
@@ -91,21 +113,19 @@ class RemindMe(commands.Cog):
         expires_at = datetime.datetime.now(datetime.UTC) + datetime.timedelta(seconds=seconds)
 
         try:
-            await self.db.reminder.create(
-                data={
-                    "reminder_user_id": interaction.user.id,
-                    "reminder_content": reminder,
-                    "reminder_expires_at": expires_at,
-                    "reminder_channel_id": interaction.channel_id or 0,
-                    "guild_id": interaction.guild_id or 0,
-                },
+            await self.db.insert_reminder(
+                reminder_user_id=ctx.author.id,
+                reminder_content=reminder,
+                reminder_expires_at=expires_at,
+                reminder_channel_id=ctx.channel.id if ctx.channel else 0,
+                guild_id=ctx.guild.id if ctx.guild else 0,
             )
 
             embed = EmbedCreator.create_embed(
                 bot=self.bot,
                 embed_type=EmbedCreator.SUCCESS,
-                user_name=interaction.user.name,
-                user_display_avatar=interaction.user.display_avatar.url,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 title="Reminder Set",
                 description=f"Reminder set for <t:{int(expires_at.timestamp())}:f>.",
             )
@@ -120,14 +140,14 @@ class RemindMe(commands.Cog):
             embed = EmbedCreator.create_embed(
                 bot=self.bot,
                 embed_type=EmbedCreator.ERROR,
-                user_name=interaction.user.name,
-                user_display_avatar=interaction.user.display_avatar.url,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 description="There was an error creating the reminder.",
             )
 
             logger.error(f"Error creating reminder: {e}")
 
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await ctx.reply(embed=embed, ephemeral=True)
 
 
 async def setup(bot: Tux) -> None:
