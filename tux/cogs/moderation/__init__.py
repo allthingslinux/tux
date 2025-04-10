@@ -9,6 +9,7 @@ from discord.ext import commands
 from loguru import logger
 
 from prisma.enums import CaseType
+from prisma.models import Case
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator, EmbedType
@@ -122,6 +123,7 @@ class ModerationCogBase(commands.Cog):
         dm_action: str,
         actions: Sequence[tuple[Any, type[R]]] = (),
         duration: str | None = None,
+        expires_at: datetime | None = None,
     ) -> None:
         """
         Execute a moderation action with case creation, DM sending, and additional actions.
@@ -143,7 +145,9 @@ class ModerationCogBase(commands.Cog):
         actions : Sequence[tuple[Any, type[R]]]
             Additional actions to execute and their expected return types.
         duration : Optional[str]
-            The duration of the action, if applicable.
+            The duration of the action, if applicable (for display/logging).
+        expires_at : Optional[datetime]
+            The specific expiration time, if applicable.
         """
 
         assert ctx.guild
@@ -195,9 +199,10 @@ class ModerationCogBase(commands.Cog):
                 case_moderator_id=ctx.author.id,
                 case_type=case_type,
                 case_reason=reason,
+                case_expires_at=expires_at,
             )
 
-            case_result = handle_case_result(case_result)
+            case_result: Case | None = handle_case_result(case_result)
 
         except Exception as e:
             logger.error(f"Failed to create case for {user}: {e}")

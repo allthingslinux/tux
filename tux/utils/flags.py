@@ -6,7 +6,7 @@ from discord.ext import commands
 
 from prisma.enums import CaseType
 from tux.utils.constants import CONST
-from tux.utils.converters import CaseTypeConverter, convert_bool
+from tux.utils.converters import CaseTypeConverter, TimeConverter, convert_bool
 
 # TODO: Figure out how to use boolean flags with empty values
 
@@ -168,10 +168,11 @@ class TempBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ",
         default=CONST.DEFAULT_REASON,
         positional=True,
     )
-    duration: str = commands.flag(
+    duration: float = commands.flag(
         name="duration",
-        description="Length of the ban. (e.g. 1d, 1h)",
+        description="Length of the ban (e.g., 1d, 1h30m, 5s).",
         aliases=["t", "d", "e"],
+        converter=TimeConverter,
     )
     purge: commands.Range[int, 0, 7] = commands.flag(
         name="purge",

@@ -1,3 +1,5 @@
+from datetime import UTC, datetime, timedelta
+
 import discord
 from discord.ext import commands, tasks
 from loguru import logger
@@ -38,7 +40,7 @@ class TempBan(ModerationCogBase):
         member : discord.Member
             The member to ban.
         flags : TempBanFlags
-            The flags for the command. (duration: str, purge: int (< 7), silent: bool)
+            The flags for the command. (duration: float (via converter), purge: int (< 7), silent: bool)
 
         Raises
         ------
@@ -54,7 +56,12 @@ class TempBan(ModerationCogBase):
         if not await self.check_conditions(ctx, member, ctx.author, "temp ban"):
             return
 
-        duration_str = f"{flags.duration}d"
+        # Calculate expiration datetime from duration in seconds
+        expires_at = datetime.now(UTC) + timedelta(seconds=flags.duration)
+
+        # Create a simple duration string for logging/display
+        # TODO: Implement a more robust human-readable duration formatter
+        duration_display_str = str(timedelta(seconds=int(flags.duration)))  # Simple representation
 
         # Execute tempban with case creation and DM
         await self.execute_mod_action(
@@ -67,7 +74,8 @@ class TempBan(ModerationCogBase):
             actions=[
                 (ctx.guild.ban(member, reason=flags.reason, delete_message_seconds=flags.purge * 86400), type(None)),
             ],
-            duration=duration_str,
+            duration=duration_display_str,  # Pass readable string for logging
+            expires_at=expires_at,  # Pass calculated expiration datetime
         )
 
     async def _process_tempban_case(self, case: Case) -> tuple[int, int]:
@@ -97,21 +105,51 @@ class TempBan(ModerationCogBase):
             logger.warning(f"Error checking ban status for {case.case_user_id} in {guild.id}: {e}")
 
         # Attempt to unban (runs if user was found banned or if ban check failed)
+        processed_count, failed_count = 0, 0
         try:
+            # Perform the unban
             await guild.unban(
                 discord.Object(id=case.case_user_id),
                 reason="Temporary ban expired.",
             )
-            await self.db.case.set_tempban_expired(case.case_id, case.guild_id)
         except (discord.Forbidden, discord.HTTPException) as e:
+            # Discord API unban failed
             logger.error(f"Failed to unban {case.case_user_id} in {guild.id}: {e}")
-            return 0, 1  # Failed
+            failed_count = 1
         except Exception as e:
-            logger.error(f"Unexpected error while processing tempban {case.case_id}: {e}")
-            return 0, 1  # Failed
+            # Catch other potential errors during unban
+            logger.error(
+                f"Unexpected error during unban attempt for tempban {case.case_id} (user {case.case_user_id}, guild {guild.id}): {e}",
+            )
+            failed_count = 1
         else:
-            # Successfully unbanned and marked expired
-            return 1, 0  # Succeeded
+            # Unban successful, now update the database
+            try:
+                update_result = await self.db.case.set_tempban_expired(case.case_id, case.guild_id)
+
+                if update_result == 1:
+                    logger.info(
+                        f"Successfully unbanned user {case.case_user_id} and marked case {case.case_id} as expired in guild {guild.id}.",
+                    )
+                    processed_count = 1
+                elif update_result is None:
+                    logger.info(
+                        f"Successfully unbanned user {case.case_user_id} in guild {guild.id} (case {case.case_id} was already marked expired).",
+                    )
+                    processed_count = 1  # Still count as success
+                else:
+                    logger.error(
+                        f"Unexpected update result ({update_result}) when marking case {case.case_id} as expired for user {case.case_user_id} in guild {guild.id}.",
+                    )
+                    failed_count = 1
+            except Exception as e:
+                # Catch errors during DB update
+                logger.error(
+                    f"Unexpected error during DB update for tempban {case.case_id} (user {case.case_user_id}, guild {guild.id}): {e}",
+                )
+                failed_count = 1
+
+        return processed_count, failed_count
 
     @tasks.loop(minutes=1)
     async def tempban_check(self) -> None:
