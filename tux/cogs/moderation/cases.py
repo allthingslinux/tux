@@ -538,7 +538,6 @@ class Cases(ModerationCogBase):
         return embed
 
     def _get_emoji(self, emoji_key: str) -> str:
-        # sourcery skip: assign-if-exp, reintroduce-else
         """
         Get a formatted emoji string from a key in the EMOJIS dict.
 
@@ -557,10 +556,8 @@ class Cases(ModerationCogBase):
             return ""
 
         emoji = self.bot.get_emoji(emoji_id)
-        if not emoji:
-            return ""
 
-        return f"<:{emoji.name}:{emoji.id}>"
+        return f"<:{emoji.name}:{emoji.id}>" if emoji else ""
 
 
 async def setup(bot: Tux) -> None:
