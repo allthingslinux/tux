@@ -21,7 +21,7 @@ class InfluxLogger(commands.Cog):
         if self.init_influx():
             self.logger.start()
         else:
-            logger.error("InfluxDB logger failed to init. Check .env configuration.")
+            logger.warning("InfluxDB logger failed to init. Check .env configuration if you want to use it.")
 
     def init_influx(self) -> bool:
         """Initialize InfluxDB client for metrics logging.
