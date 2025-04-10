@@ -6,7 +6,7 @@ from discord.ext import commands
 
 from prisma.enums import CaseType
 from tux.utils.constants import CONST
-from tux.utils.converters import CaseTypeConverter
+from tux.utils.converters import CaseTypeConverter, convert_bool
 
 # TODO: Figure out how to use boolean flags with empty values
 
@@ -137,38 +137,6 @@ def get_matching_string(arg: str) -> str:
             return "1337"
         case _:
             return arg
-
-
-def convert_bool(x: str | None) -> bool | None:
-    """Convert a string to a boolean value.
-
-    Parameters
-    ----------
-    x : str | None
-        The string to convert.
-
-    Returns
-    -------
-    bool | None
-        The converted boolean value, or None if x is None.
-
-    Raises
-    ------
-    commands.BadArgument
-        If the string cannot be converted to a boolean.
-    """
-    if x is None:
-        return None
-
-    x = str(x).lower()
-
-    if x in {"true", "t", "yes", "y", "1", "on", "active", "enable", "enabled"}:
-        return True
-    if x in {"false", "f", "no", "n", "0", "off", "inactive", "disable", "disabled"}:
-        return False
-
-    msg = f"{x} must be a boolean value (e.g. true/false, yes/no)"
-    raise commands.BadArgument(msg)
 
 
 class BanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
