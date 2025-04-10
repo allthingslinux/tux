@@ -5,34 +5,184 @@ from typing import Any, Generic, TypeVar
 
 from loguru import logger
 
+from prisma.models import (
+    AFKModel,
+    Case,
+    Guild,
+    GuildConfig,
+    Levels,
+    Note,
+    Reminder,
+    Snippet,
+    Starboard,
+    StarboardMessage,
+)
 from tux.database.client import db
 
-ModelType = TypeVar("ModelType")
+# Explicitly define ModelType to cover all potential models used by controllers
+ModelType = TypeVar(
+    "ModelType",
+    Case,
+    Guild,
+    Note,
+    Reminder,
+    Snippet,
+    Starboard,
+    StarboardMessage,
+    GuildConfig,
+    AFKModel,
+    Levels,
+)
+
 RelationType = TypeVar("RelationType")
 
 
 class BaseController(Generic[ModelType]):
-    """Base controller class providing common database functionality.
+    """Provides a base interface for database table controllers.
 
-    This class serves as a foundation for all database controllers,
-    providing shared functionality and standardized error handling.
+    This generic class offers common CRUD (Create, Read, Update, Delete)
+    operations and utility methods for interacting with a specific Prisma model
+    table. It standardizes database interactions and error handling.
 
     Attributes
     ----------
     table : Any
-        The Prisma model table this controller operates on
+        The Prisma client's model instance for the specific table.
+    table_name : str
+        The name of the database table this controller manages.
     """
 
     def __init__(self, table_name: str) -> None:
-        """Initialize the controller with a specific table.
+        """Initializes the BaseController for a specific table.
 
         Parameters
         ----------
         table_name : str
-            The name of the Prisma model table to use
+            The name of the Prisma model table (e.g., 'case', 'guild').
+            This name must match an attribute on the Prisma client instance.
         """
         self.table: Any = getattr(db.client, table_name)
         self.table_name = table_name
+
+    # --- Private Helper Methods ---
+
+    async def _execute_query(
+        self,
+        operation: Callable[[], Any],
+        error_msg: str,
+    ) -> Any:
+        """Executes a database query with standardized error logging.
+
+        Wraps the Prisma client operation call in a try-except block,
+        logging any exceptions with a contextual error message.
+
+        Parameters
+        ----------
+        operation : Callable[[], Any]
+            A zero-argument function (e.g., a lambda) that performs the database call.
+        error_msg : str
+            The base error message to log if an exception occurs.
+
+        Returns
+        -------
+        Any
+            The result of the database operation.
+
+        Raises
+        ------
+        Exception
+            Re-raises any exception caught during the database operation.
+        """
+        try:
+            return await operation()
+        except Exception as e:
+            logger.error(f"{error_msg}: {e}")
+            raise
+
+    def _add_include_arg_if_present(self, args: dict[str, Any], include: dict[str, bool] | None) -> None:
+        """Adds the 'include' argument to a dictionary if it is not None."""
+        if include:
+            args["include"] = include
+
+    def _build_find_args(
+        self,
+        where: dict[str, Any],
+        include: dict[str, bool] | None = None,
+        order: dict[str, str] | None = None,
+        take: int | None = None,
+        skip: int | None = None,
+        cursor: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Constructs the keyword arguments dictionary for Prisma find operations."""
+        args: dict[str, Any] = {"where": where}
+        self._add_include_arg_if_present(args, include)
+        if order:
+            args["order"] = order
+        if take is not None:
+            args["take"] = take
+        if skip is not None:
+            args["skip"] = skip
+        if cursor is not None:
+            args["cursor"] = cursor
+        return args
+
+    def _build_simple_args(
+        self,
+        key_name: str,
+        key_value: dict[str, Any],
+        include: dict[str, bool] | None = None,
+    ) -> dict[str, Any]:
+        """Constructs simple keyword arguments for Prisma (e.g., create, delete)."""
+        args = {key_name: key_value}
+        self._add_include_arg_if_present(args, include)
+        return args
+
+    def _build_create_args(
+        self,
+        data: dict[str, Any],
+        include: dict[str, bool] | None = None,
+    ) -> dict[str, Any]:
+        """Constructs keyword arguments for Prisma create operations."""
+        return self._build_simple_args("data", data, include)
+
+    def _build_update_args(
+        self,
+        where: dict[str, Any],
+        data: dict[str, Any],
+        include: dict[str, bool] | None = None,
+    ) -> dict[str, Any]:
+        """Constructs keyword arguments for Prisma update operations."""
+        args = {"where": where, "data": data}
+        self._add_include_arg_if_present(args, include)
+        return args
+
+    def _build_delete_args(
+        self,
+        where: dict[str, Any],
+        include: dict[str, bool] | None = None,
+    ) -> dict[str, Any]:
+        """Constructs keyword arguments for Prisma delete operations."""
+        return self._build_simple_args("where", where, include)
+
+    def _build_upsert_args(
+        self,
+        where: dict[str, Any],
+        create: dict[str, Any],
+        update: dict[str, Any],
+        include: dict[str, bool] | None = None,
+    ) -> dict[str, Any]:
+        """Constructs keyword arguments for Prisma upsert operations."""
+        args = {
+            "where": where,
+            "data": {
+                "create": create,
+                "update": update,
+            },
+        }
+        self._add_include_arg_if_present(args, include)
+        return args
+
+    # --- Public CRUD Methods ---
 
     async def find_one(
         self,
@@ -40,63 +190,52 @@ class BaseController(Generic[ModelType]):
         include: dict[str, bool] | None = None,
         order: dict[str, str] | None = None,
     ) -> ModelType | None:
-        """Find a single record matching the given criteria.
+        """Finds the first record matching specified criteria.
 
         Parameters
         ----------
         where : dict[str, Any]
-            The search criteria
-        include : dict[str, bool] | None
-            Optional relations to include
-        order : dict[str, str] | None
-            Optional ordering criteria
+            Query conditions to match.
+        include : dict[str, bool], optional
+            Specifies relations to include in the result.
+        order : dict[str, str], optional
+            Specifies the field and direction for ordering.
 
         Returns
         -------
         ModelType | None
-            The found record or None if not found
+            The found record or None if no match exists.
         """
-        try:
-            find_args: dict[str, Any] = {"where": where}
-            if include:
-                find_args["include"] = include
-            if order:
-                find_args["order"] = order
-            return await self.table.find_first(**find_args)
-        except Exception as e:
-            logger.error(f"Failed to find record in {self.table_name} with criteria {where}: {e}")
-            raise
+        find_args = self._build_find_args(where=where, include=include, order=order)
+        return await self._execute_query(
+            lambda: self.table.find_first(**find_args),
+            f"Failed to find record in {self.table_name} with criteria {where}",
+        )
 
     async def find_unique(
         self,
         where: dict[str, Any],
         include: dict[str, bool] | None = None,
     ) -> ModelType | None:
-        """Find a single record by unique constraint.
-
-        This method is optimized for looking up records by unique fields
-        like primary keys or unique indexes.
+        """Finds a single record by a unique constraint (e.g., ID).
 
         Parameters
         ----------
         where : dict[str, Any]
-            The unique search criteria
-        include : dict[str, bool] | None
-            Optional relations to include
+            Unique query conditions (e.g., {'id': 1}).
+        include : dict[str, bool], optional
+            Specifies relations to include in the result.
 
         Returns
         -------
         ModelType | None
-            The found record or None if not found
+            The found record or None if no match exists.
         """
-        try:
-            find_args: dict[str, Any] = {"where": where}
-            if include:
-                find_args["include"] = include
-            return await self.table.find_unique(**find_args)
-        except Exception as e:
-            logger.error(f"Failed to find unique record in {self.table_name} with criteria {where}: {e}")
-            raise
+        find_args = self._build_find_args(where=where, include=include)  # Order not applicable for find_unique
+        return await self._execute_query(
+            lambda: self.table.find_unique(**find_args),
+            f"Failed to find unique record in {self.table_name} with criteria {where}",
+        )
 
     async def find_many(
         self,
@@ -107,94 +246,86 @@ class BaseController(Generic[ModelType]):
         skip: int | None = None,
         cursor: dict[str, Any] | None = None,
     ) -> list[ModelType]:
-        """Find multiple records matching the given criteria.
+        """Finds multiple records matching specified criteria.
 
         Parameters
         ----------
         where : dict[str, Any]
-            The search criteria
-        include : dict[str, bool] | None
-            Optional relations to include
-        order : dict[str, str] | None
-            Optional ordering criteria
-        take : int | None
-            Optional limit on number of records to return
-        skip : int | None
-            Optional number of records to skip
-        cursor : dict[str, Any] | None
-            Optional cursor for pagination
+            Query conditions to match.
+        include : dict[str, bool], optional
+            Specifies relations to include in the results.
+        order : dict[str, str], optional
+            Specifies the field and direction for ordering.
+        take : int, optional
+            Maximum number of records to return.
+        skip : int, optional
+            Number of records to skip (for pagination).
+        cursor : dict[str, Any], optional
+            Cursor for pagination based on a unique field.
 
         Returns
         -------
         list[ModelType]
-            List of found records
+            A list of found records, potentially empty.
         """
-        try:
-            find_args: dict[str, Any] = {"where": where}
-            if include:
-                find_args["include"] = include
-            if order:
-                find_args["order"] = order
-            if take is not None:
-                find_args["take"] = take
-            if skip is not None:
-                find_args["skip"] = skip
-            if cursor is not None:
-                find_args["cursor"] = cursor
-            return await self.table.find_many(**find_args)
-        except Exception as e:
-            logger.error(f"Failed to find records in {self.table_name} with criteria {where}: {e}")
-            raise
+        find_args = self._build_find_args(
+            where=where,
+            include=include,
+            order=order,
+            take=take,
+            skip=skip,
+            cursor=cursor,
+        )
+        return await self._execute_query(
+            lambda: self.table.find_many(**find_args),
+            f"Failed to find records in {self.table_name} with criteria {where}",
+        )
 
     async def count(
         self,
         where: dict[str, Any],
     ) -> int:
-        """Count records matching the given criteria.
+        """Counts records matching the specified criteria.
 
         Parameters
         ----------
         where : dict[str, Any]
-            The search criteria
+            Query conditions to match.
 
         Returns
         -------
         int
-            The number of matching records
+            The total number of matching records.
         """
-        try:
-            return await self.table.count(where=where)
-        except Exception as e:
-            logger.error(f"Failed to count records in {self.table_name} with criteria {where}: {e}")
-            raise
+        return await self._execute_query(
+            lambda: self.table.count(where=where),
+            f"Failed to count records in {self.table_name} with criteria {where}",
+        )
 
     async def create(
         self,
         data: dict[str, Any],
         include: dict[str, bool] | None = None,
     ) -> ModelType:
-        """Create a new record.
+        """Creates a new record in the table.
 
         Parameters
         ----------
         data : dict[str, Any]
-            The data to create the record with
-        include : dict[str, bool] | None
-            Optional relations to include in the response
+            The data for the new record.
+        include : dict[str, bool], optional
+            Specifies relations to include in the returned record.
 
         Returns
         -------
         ModelType
-            The created record
+            The newly created record.
         """
-        try:
-            create_args: dict[str, Any] = {"data": data}
-            if include:
-                create_args["include"] = include
-            return await self.table.create(**create_args)
-        except Exception as e:
-            logger.error(f"Failed to create record in {self.table_name} with data {data}: {e}")
-            raise
+        create_args = self._build_create_args(data=data, include=include)
+        return await self._execute_query(
+            lambda: self.table.create(**create_args),
+            f"Failed to create record in {self.table_name} with data {data}",
+        )
 
     async def update(
         self,
@@ -202,58 +333,52 @@ class BaseController(Generic[ModelType]):
         data: dict[str, Any],
         include: dict[str, bool] | None = None,
     ) -> ModelType | None:
-        """Update an existing record.
+        """Updates a single existing record matching the criteria.
 
         Parameters
         ----------
         where : dict[str, Any]
-            The criteria to find the record to update
+            Query conditions to find the record to update.
         data : dict[str, Any]
-            The data to update the record with
-        include : dict[str, bool] | None
-            Optional relations to include in the response
+            The data to update the record with.
+        include : dict[str, bool], optional
+            Specifies relations to include in the returned record.
 
         Returns
         -------
         ModelType | None
-            The updated record or None if not found
+            The updated record, or None if no matching record was found.
         """
-        try:
-            update_args: dict[str, Any] = {"where": where, "data": data}
-            if include:
-                update_args["include"] = include
-            return await self.table.update(**update_args)
-        except Exception as e:
-            logger.error(f"Failed to update record in {self.table_name} with criteria {where} and data {data}: {e}")
-            raise
+        update_args = self._build_update_args(where=where, data=data, include=include)
+        return await self._execute_query(
+            lambda: self.table.update(**update_args),
+            f"Failed to update record in {self.table_name} with criteria {where} and data {data}",
+        )
 
     async def delete(
         self,
         where: dict[str, Any],
         include: dict[str, bool] | None = None,
     ) -> ModelType | None:
-        """Delete a record matching the given criteria.
+        """Deletes a single record matching the criteria.
 
         Parameters
         ----------
         where : dict[str, Any]
-            The criteria to find the record to delete
-        include : dict[str, bool] | None
-            Optional relations to include in the response
+            Query conditions to find the record to delete.
+        include : dict[str, bool], optional
+            Specifies relations to include in the returned deleted record.
 
         Returns
         -------
         ModelType | None
-            The deleted record or None if not found
+            The deleted record, or None if no matching record was found.
         """
-        try:
-            delete_args: dict[str, Any] = {"where": where}
-            if include:
-                delete_args["include"] = include
-            return await self.table.delete(**delete_args)
-        except Exception as e:
-            logger.error(f"Failed to delete record in {self.table_name} with criteria {where}: {e}")
-            raise
+        delete_args = self._build_delete_args(where=where, include=include)
+        return await self._execute_query(
+            lambda: self.table.delete(**delete_args),
+            f"Failed to delete record in {self.table_name} with criteria {where}",
+        )
 
     async def upsert(
         self,
@@ -262,105 +387,120 @@ class BaseController(Generic[ModelType]):
         update: dict[str, Any],
         include: dict[str, bool] | None = None,
     ) -> ModelType:
-        """Create or update a record.
+        """Updates a record if it exists, otherwise creates it.
 
         Parameters
         ----------
         where : dict[str, Any]
-            The criteria to find an existing record
+            Query conditions to find the existing record.
         create : dict[str, Any]
-            The data to create a new record with if none exists
+            Data to use if creating a new record.
         update : dict[str, Any]
-            The data to update an existing record with
-        include : dict[str, bool] | None
-            Optional relations to include in the response
+            Data to use if updating an existing record.
+        include : dict[str, bool], optional
+            Specifies relations to include in the returned record.
 
         Returns
         -------
         ModelType
-            The created or updated record
+            The created or updated record.
         """
-        try:
-            upsert_args: dict[str, Any] = {
-                "where": where,
-                "data": {
-                    "create": create,
-                    "update": update,
-                },
-            }
-            if include:
-                upsert_args["include"] = include
-            return await self.table.upsert(**upsert_args)
-        except Exception as e:
-            logger.error(
-                f"Failed to upsert record in {self.table_name} with where={where}, create={create}, update={update}: {e}",
-            )
-            raise
+        upsert_args = self._build_upsert_args(where=where, create=create, update=update, include=include)
+        return await self._execute_query(
+            lambda: self.table.upsert(**upsert_args),
+            f"Failed to upsert record in {self.table_name} with where={where}, create={create}, update={update}",
+        )
 
     async def update_many(
         self,
         where: dict[str, Any],
         data: dict[str, Any],
     ) -> int:
-        """Update multiple records.
+        """Updates multiple records matching the criteria.
 
         Parameters
         ----------
         where : dict[str, Any]
-            The criteria to find records to update
+            Query conditions to find the records to update.
         data : dict[str, Any]
-            The data to update the records with
+            The data to update the records with.
 
         Returns
         -------
         int
-            The number of records updated
+            The number of records updated.
+
+        Raises
+        ------
+        ValueError
+            If the database operation does not return a valid count.
         """
-        try:
-            result = await self.table.update_many(where=where, data=data)
-            return result.count if hasattr(result, "count") else 0
-        except Exception as e:
-            logger.error(f"Failed to update records in {self.table_name} with criteria {where} and data {data}: {e}")
-            raise
+        result = await self._execute_query(
+            lambda: self.table.update_many(where=where, data=data),
+            f"Failed to update records in {self.table_name} with criteria {where} and data {data}",
+        )
+        # Validate and return count
+        count_val = getattr(result, "count", None)
+        if count_val is None or not isinstance(count_val, int):
+            msg = f"Update operation for {self.table_name} did not return a valid count, got: {count_val}"
+            raise ValueError(msg)
+        return count_val
 
     async def delete_many(
         self,
         where: dict[str, Any],
     ) -> int:
-        """Delete multiple records.
+        """Deletes multiple records matching the criteria.
 
         Parameters
         ----------
         where : dict[str, Any]
-            The criteria to find records to delete
+            Query conditions to find the records to delete.
 
         Returns
         -------
         int
-            The number of records deleted
+            The number of records deleted.
+
+        Raises
+        ------
+        ValueError
+            If the database operation does not return a valid count.
         """
-        try:
-            result = await self.table.delete_many(where=where)
-            return result.count if hasattr(result, "count") else 0
-        except Exception as e:
-            logger.error(f"Failed to delete records in {self.table_name} with criteria {where}: {e}")
-            raise
+        result = await self._execute_query(
+            lambda: self.table.delete_many(where=where),
+            f"Failed to delete records in {self.table_name} with criteria {where}",
+        )
+        # Validate and return count
+        count_val = getattr(result, "count", None)
+        if count_val is None or not isinstance(count_val, int):
+            msg = f"Delete operation for {self.table_name} did not return a valid count, got: {count_val}"
+            raise ValueError(msg)
+        return count_val
+
+    # --- Other Utility Methods ---
 
     async def execute_transaction(self, callback: Callable[[], Any]) -> Any:
-        """Execute operations in a transaction.
+        """Executes a series of database operations within a transaction.
 
-        This ensures all database operations in the callback are atomic.
-        If any operation fails, all changes are rolled back.
+        Ensures atomicity: all operations succeed or all fail and roll back.
+        Note: Does not use _execute_query internally to preserve specific
+              transaction context in error messages.
 
         Parameters
         ----------
         callback : Callable[[], Any]
-            The function containing database operations to execute
+            An async function containing the database operations to execute.
 
         Returns
         -------
         Any
-            The result of the callback function
+            The result returned by the callback function.
+
+        Raises
+        ------
+        Exception
+            Re-raises any exception that occurs during the transaction.
         """
         try:
             async with db.transaction():
@@ -375,27 +515,28 @@ class BaseController(Generic[ModelType]):
         model_id: Any,
         create_data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Create a connect_or_create relation object.
+        """Builds a Prisma 'connect_or_create' relation structure.
 
-        This is a utility method to simplify creating connect_or_create relations.
+        Simplifies linking or creating related records during create/update operations.
 
         Parameters
         ----------
         id_field : str
-            The name of the ID field to use in the where clause
+            The name of the ID field used for connection (e.g., 'guild_id').
         model_id : Any
-            The ID value to connect to
-        create_data : dict[str, Any] | None
-            Additional data to include when creating a new record
+            The ID value of the record to connect to.
+        create_data : dict[str, Any], optional
+            Additional data required if creating the related record.
+            Must include at least the `id_field` and `model_id`.
 
         Returns
         -------
         dict[str, Any]
-            A connect_or_create relation object
+            A dictionary formatted for Prisma's connect_or_create.
         """
         where = {id_field: model_id}
+        # Create data must contain the ID field for the new record
         create = {id_field: model_id}
-
         if create_data:
             create |= create_data
 
@@ -408,20 +549,20 @@ class BaseController(Generic[ModelType]):
 
     @staticmethod
     def safe_get_attr(obj: Any, attr: str, default: Any = None) -> Any:
-        """Safely get an attribute from an object.
+        """Safely retrieves an attribute from an object, returning a default if absent.
 
         Parameters
         ----------
         obj : Any
-            The object to get the attribute from
+            The object to retrieve the attribute from.
         attr : str
-            The name of the attribute to get
-        default : Any
-            The default value to return if the attribute doesn't exist
+            The name of the attribute.
+        default : Any, optional
+            The value to return if the attribute is not found. Defaults to None.
 
         Returns
         -------
         Any
-            The attribute value or default
+            The attribute's value or the default value.
         """
         return getattr(obj, attr, default)
