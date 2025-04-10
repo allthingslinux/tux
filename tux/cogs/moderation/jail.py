@@ -32,6 +32,14 @@ class Jail(ModerationCogBase):
         jail_role_id = await self.db.guild_config.get_jail_role_id(guild.id)
         return None if jail_role_id is None else guild.get_role(jail_role_id)
 
+    async def get_jail_channel(self, guild: discord.Guild) -> discord.TextChannel | None:
+        """
+        Get the jail channel for the guild.
+        """
+        jail_channel_id = await self.db.guild_config.get_jail_channel_id(guild.id)
+        channel = guild.get_channel(jail_channel_id) if jail_channel_id is not None else None
+        return channel if isinstance(channel, discord.TextChannel) else None
+
     async def is_jailed(self, guild_id: int, user_id: int) -> bool:
         """
         Check if a user is jailed.
@@ -99,6 +107,12 @@ class Jail(ModerationCogBase):
         jail_role = await self.get_jail_role(ctx.guild)
         if not jail_role:
             await ctx.send("No jail role found.", ephemeral=True)
+            return
+
+        # Get jail channel
+        jail_channel = await self.get_jail_channel(ctx.guild)
+        if not jail_channel:
+            await ctx.send("No jail channel found.", ephemeral=True)
             return
 
         # Check if user is already jailed

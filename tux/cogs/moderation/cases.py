@@ -249,6 +249,7 @@ class Cases(ModerationCogBase):
         assert ctx.guild
 
         options: CaseWhereInput = {}
+
         if flags.type:
             options["case_type"] = flags.type
         if flags.user:
@@ -257,11 +258,13 @@ class Cases(ModerationCogBase):
             options["case_moderator_id"] = flags.moderator.id
 
         cases = await self.db.case.get_cases_by_options(ctx.guild.id, options)
+
         if not cases:
             await ctx.send("No cases found.", ephemeral=True)
             return
 
         total_cases = await self.db.case.get_all_cases(ctx.guild.id)
+
         await self._handle_case_list_response(ctx, cases, len(total_cases))
 
     async def _update_case(

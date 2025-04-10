@@ -138,7 +138,10 @@ class CaseController(BaseController[Case]):
         list[Case]
             A list of cases for the guild.
         """
-        return await self.find_many(where={"guild_id": guild_id})
+        return await self.find_many(
+            where={"guild_id": guild_id},
+            order={"case_created_at": "desc"},
+        )
 
     async def get_cases_by_options(
         self,
@@ -159,7 +162,7 @@ class CaseController(BaseController[Case]):
         list[Case]
             A list of cases for the guild matching the criteria.
         """
-        return await self.find_many(where={"guild_id": guild_id, **options})
+        return await self.find_many(where={"guild_id": guild_id, **options}, order={"case_created_at": "desc"})
 
     async def get_case_by_number(self, guild_id: int, case_number: int, include_guild: bool = False) -> Case | None:
         """Get a case by its number in a guild.
@@ -211,6 +214,7 @@ class CaseController(BaseController[Case]):
             where={"guild_id": guild_id, "case_user_id": case_user_id},
             include=include,
             take=limit,
+            order={"case_created_at": "desc"},
         )
 
     async def get_all_cases_by_moderator_id(
@@ -235,7 +239,11 @@ class CaseController(BaseController[Case]):
         list[Case]
             A list of cases for the moderator in the guild.
         """
-        return await self.find_many(where={"guild_id": guild_id, "case_moderator_id": case_moderator_id}, take=limit)
+        return await self.find_many(
+            where={"guild_id": guild_id, "case_moderator_id": case_moderator_id},
+            take=limit,
+            order={"case_created_at": "desc"},
+        )
 
     async def get_latest_case_by_user(
         self,

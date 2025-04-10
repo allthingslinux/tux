@@ -148,7 +148,7 @@ class BanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", pre
     )
     purge: commands.Range[int, 0, 7] = commands.flag(
         name="purge",
-        description="Number of days of messages to delete (0-7).",
+        description="Days of messages to delete (0-7).",
         aliases=["p"],
         default=0,
     )
@@ -175,7 +175,7 @@ class TempBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ",
     )
     purge: commands.Range[int, 0, 7] = commands.flag(
         name="purge",
-        description="Number of days of messages to delete (0-7).",
+        description="Days of messages to delete (0-7).",
         aliases=["p"],
         default=0,
     )
