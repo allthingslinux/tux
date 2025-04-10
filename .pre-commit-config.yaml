@@ -48,7 +48,6 @@ repos:
     rev: 2.1.2 # Use the latest tag from the repo
     hooks:
       - id: poetry-check
-      - id: poetry-lock
 
     # 6. Security Check
   - repo: https://github.com/gitleaks/gitleaks
