@@ -48,7 +48,7 @@ It is designed to provide a variety of features to the server, including moderat
 - Robust error handling
 - Activity rotation
 - Custom help command
-- Configuration system (`config/settings.yml`)
+- Configuration system (`config/settings.yml.example`)
 - Dynamic role-based (access level) permission system
 
 ## Installation and Development
@@ -86,7 +86,7 @@ It is designed to provide a variety of features to the server, including moderat
 
 ## License
 
-This project is licensed under the terms of The GNU General Public License v3.0.
+This project is licensed under the GNU General Public License v3.0.
 
 See [LICENSE](LICENSE.md) for details.
 
