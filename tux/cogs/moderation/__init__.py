@@ -27,12 +27,15 @@ class ModerationCogBase(commands.Cog):
         self.bot = bot
         self.db = DatabaseController()
 
-        # Dictionary to store locks per user for concurrent operation protection
+        # Dictionary to store locks per user
         self._user_action_locks: dict[int, Lock] = {}
+        # Threshold to trigger cleanup of unused user locks
+        self._lock_cleanup_threshold: int = 100  # Sourcery suggestion
 
     async def get_user_lock(self, user_id: int) -> Lock:
         """
         Get or create a lock for operations on a specific user.
+        If the number of stored locks exceeds the cleanup threshold, unused locks are removed.
 
         Parameters
         ----------
@@ -44,9 +47,32 @@ class ModerationCogBase(commands.Cog):
         Lock
             The lock for the user.
         """
+        # Cleanup check
+        if len(self._user_action_locks) > self._lock_cleanup_threshold:
+            await self.clean_user_locks()
+
         if user_id not in self._user_action_locks:
             self._user_action_locks[user_id] = Lock()
         return self._user_action_locks[user_id]
+
+    # New method for cleaning locks
+    async def clean_user_locks(self) -> None:
+        """
+        Remove locks for users that are not currently in use.
+        Iterates through the locks and removes any that are not currently locked.
+        """
+        # Create a list of user_ids to avoid RuntimeError for changing dict size during iteration.
+        unlocked_users: list[int] = []
+        unlocked_users.extend(user_id for user_id, lock in self._user_action_locks.items() if not lock.locked())
+        removed_count = 0
+        for user_id in unlocked_users:
+            if user_id in self._user_action_locks:
+                del self._user_action_locks[user_id]
+                removed_count += 1
+
+        if removed_count > 0:
+            remaining_locks = len(self._user_action_locks)
+            logger.debug(f"Cleaned up {removed_count} unused user action locks. {remaining_locks} locks remaining.")
 
     async def execute_user_action_with_lock(
         self,
