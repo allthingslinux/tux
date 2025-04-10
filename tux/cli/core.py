@@ -34,6 +34,37 @@ GROUP_HELP_SUFFIX = ""
 NO_DB_COMMANDS = {"dev", "docs", "docker"}
 
 
+# Custom Group to handle global options (--dev/--prod) regardless of position
+class GlobalOptionGroup(click.Group):
+    def parse_args(self, ctx: Context, args: list[str]) -> list[str]:
+        """
+        Parses arguments, extracting global --dev/--prod flags first.
+
+        Stores the determined environment mode in ctx.meta['is_dev'].
+        Removes the flags from the args list before standard parsing.
+        """
+        is_dev = True  # Default to development mode
+        remaining_args: list[str] = []
+        args_iterator = iter(args)
+
+        for arg in args_iterator:
+            if arg == "--dev":
+                is_dev = True  # Explicitly set, though already default
+            elif arg == "--prod":
+                is_dev = False
+            else:
+                remaining_args.append(arg)
+
+        # Store the determined mode in the context metadata
+        ctx.meta["is_dev"] = is_dev
+
+        # Call the default parser with the modified arguments
+        return super().parse_args(ctx, remaining_args)
+
+    # Override group help to show global options if needed, although Click
+    # might handle version_option separately. Keeping this simple for now.
+
+
 def run_command(cmd: list[str], **kwargs: Any) -> int:
     """Run a command and return its exit code.
 
@@ -60,22 +91,19 @@ def run_command(cmd: list[str], **kwargs: Any) -> int:
         return 0
 
 
-# Initialize interface CLI group
-@click.group()
-@click.version_option(prog_name="Tux")
-@click.option("--dev", "env_dev", is_flag=True, help="Run in development mode (default)")
-@click.option("--prod", "env_prod", is_flag=True, help="Run in production mode")
+# Initialize interface CLI group using the custom class
+@click.group(cls=GlobalOptionGroup)
+@click.version_option(prog_name="Tux")  # Keep version option separate
 @click.pass_context
-def cli(ctx: Context, env_dev: bool, env_prod: bool) -> None:
+def cli(ctx: Context) -> None:  # Remove env_dev and env_prod params
     """Tux CLI"""
 
     # Initialize context object
-    ctx.ensure_object(dict)
+    ctx.ensure_object(dict)  # Still useful for subcommands if they use ctx.obj
+    ctx.meta.setdefault("is_dev", True)  # Ensure 'is_dev' exists even if parse_args wasn't fully run (e.g., --help)
 
-    # Determine and configure the environment mode.
-    # Production mode (--prod) takes precedence over development (--dev).
-    # Defaults to development if neither flag is provided.
-    is_dev = not env_prod  # True if --prod is NOT set
+    # Retrieve the environment mode set by GlobalOptionGroup.parse_args
+    is_dev = ctx.meta["is_dev"]
     configure_environment(dev_mode=is_dev)
 
     # Conditionally set DATABASE_URL for commands that require it
@@ -167,7 +195,7 @@ def create_group(name: str, help_text: str) -> Group:
 def register_commands() -> None:
     """Load and register all CLI commands."""
 
-    modules = ["bot", "database", "dev", "docs", "docker"]
+    modules = ["database", "dev", "docs", "docker"]
 
     for module_name in modules:
         try:
@@ -191,3 +219,13 @@ def main() -> int:
     # We need to ensure commands are registered before cli() is called.
     register_commands()
     return cli() or 0  # Return 0 if cli() returns None
+
+
+# Register the start command directly under the main cli group
+@command_registration_decorator(cli, name="start")
+def start() -> int:
+    """Start the Discord bot"""
+
+    from tux.main import run
+
+    return run()

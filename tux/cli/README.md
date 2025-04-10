@@ -21,8 +21,7 @@ The CLI uses command groups for organization. A simplified view:
 ```bash
 tux                       # Main entry point (defined in cli/core.py)
 ├── --dev / --prod        # Global environment flags
-├── bot                   # Bot commands (defined in cli/bot.py)
-│   └── start             # Starts the bot
+├── start                 # Starts the bot (defined in cli/core.py)
 ├── db                    # Database commands (defined in cli/database.py)
 │   ├── generate          # Generate Prisma client
 │   ├── migrate           # Run migrations
@@ -49,42 +48,49 @@ tux                       # Main entry point (defined in cli/core.py)
 
 ## Using the CLI
 
-The CLI is intended to be run via Poetry from the project root:
+The CLI is intended to be run via Poetry from the project root. The global environment flags `--dev` or `--prod` can be placed either before or after the command name.
 
 ```bash
-poetry run tux [GLOBAL OPTIONS] [GROUP] [COMMAND] [ARGS...]
+poetry run tux [GLOBAL OPTIONS] [COMMAND/GROUP] [SUBCOMMAND] [ARGS...]
+# or
+poetry run tux [COMMAND/GROUP] [SUBCOMMAND] [ARGS...] [GLOBAL OPTIONS]
 ```
 
 **Examples:**
 
 ```bash
 # Start the bot (defaults to development mode)
-poetry run tux bot start
+poetry run tux start
 
-# Explicitly start in production mode
-poetry run tux --prod bot start
+# Explicitly start in production mode (flag before command)
+poetry run tux --prod start
+
+# Explicitly start in production mode (flag after command)
+poetry run tux start --prod
 
 # Lint the code (defaults to development mode)
 poetry run tux dev lint
 
-# Push database changes (defaults to development mode)
-poetry run tux db push
-
-# Push database changes using the production database URL
+# Push database changes using the production database URL (flag before command)
 poetry run tux --prod db push
 
-# Run docker compose up using development settings
-poetry run tux --dev docker up --build
+# Push database changes using the production database URL (flag after command)
+poetry run tux db push --prod
+
+# Run docker compose up using development settings (flag after command)
+poetry run tux docker up --build --dev
 ```
 
 ## Environment Handling
 
-Environment mode (`development` or `production`) is determined globally when the `tux` command starts:
+Environment mode (`development` or `production`) is determined by the presence of the `--dev` or `--prod` flag anywhere in the command arguments.
 
-- If `--prod` is passed (e.g., `tux --prod ...`), the mode is set to `production`.
+- If `--prod` is passed, the mode is set to `production`.
 - Otherwise (no flag or `--dev` passed), the mode defaults to `development`.
 
-This ensures the entire command execution uses the correct context (e.g., database URL). The core logic resides in `tux/utils/env.py`. The `command_registration_decorator` in `cli/core.py` handles displaying the current mode and basic UI.
+The custom `GlobalOptionGroup` in `cli/core.py` handles parsing these flags regardless of their position. This ensures the entire command execution uses the correct context (e.g., database URL).
+
+The core logic resides in `tux/utils/env.py`. The `command_registration_decorator` in `cli/core.py` handles displaying the current mode and basic UI.
 
 ## Adding New Commands
 
