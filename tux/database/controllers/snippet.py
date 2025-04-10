@@ -190,6 +190,7 @@ class SnippetController(BaseController[Snippet]):
             The deleted snippet if found, None otherwise
         """
         return await self.delete(where={"snippet_id": snippet_id})
+
     async def create_snippet_alias(
         self,
         snippet_name: str,
