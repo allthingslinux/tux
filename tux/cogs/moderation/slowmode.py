@@ -221,7 +221,6 @@ class Slowmode(commands.Cog):
 
     @staticmethod
     def _parse_delay(delay: str) -> int | None:
-        # sourcery skip: assign-if-exp, reintroduce-else
         """
         Parse a delay string into seconds.
 
@@ -244,6 +243,7 @@ class Slowmode(commands.Cog):
             if delay.endswith("m"):
                 return int(delay[:-1]) * 60
             if delay.endswith("h"):
+                # sourcery skip: assign-if-exp, reintroduce-else
                 return int(delay[:-1]) * 3600
             return int(delay)
         except ValueError:
