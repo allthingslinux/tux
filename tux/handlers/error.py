@@ -68,6 +68,9 @@ ErrorDetailExtractor = Callable[[Exception], dict[str, Any]]
 AppCommandErrorHandler = Callable[[discord.Interaction[Tux], app_commands.AppCommandError], Coroutine[Any, Any, None]]
 
 
+# --- Error Handler Configuration ---
+
+
 @dataclass
 class ErrorHandlerConfig:
     """Stores configuration for handling a specific type of exception."""
@@ -92,6 +95,47 @@ class ErrorHandlerConfig:
 def _format_list(items: list[str]) -> str:
     """Formats a list of strings into a user-friendly, comma-separated list of code blocks."""
     return ", ".join(f"`{item}`" for item in items) if items else "(none)"
+
+
+# New helper function for unwrapping errors
+def _unwrap_error(error: Any) -> Exception:
+    """Unwraps nested errors (like CommandInvokeError) to find the root cause."""
+    current = error
+    loops = 0
+    max_loops = 10  # Safety break
+    while hasattr(current, "original") and loops < max_loops:
+        next_error = current.original
+        if next_error is current:  # Prevent self-referential loops
+            logger.warning("Detected self-referential loop in error unwrapping.")
+            break
+        current = next_error
+        loops += 1
+    if loops >= max_loops:
+        logger.warning(f"Error unwrapping exceeded max depth ({max_loops}).")
+
+    # If unwrapping resulted in something other than an Exception, wrap it.
+    if not isinstance(current, Exception):
+        logger.warning(f"Unwrapped error is not an Exception: {type(current).__name__}. Wrapping in ValueError.")
+        return ValueError(f"Non-exception error encountered after unwrapping: {current!r}")
+    return current
+
+
+# New helper function for fallback message formatting
+def _fallback_format_message(message_format: str, error: Exception) -> str:
+    """Attempts fallback formatting if the primary format call fails."""
+
+    # Fallback 1: Try formatting with only {error} if it seems possible.
+    with contextlib.suppress(Exception):
+        # Heuristic: Check if only {error...} seems to be the placeholder used.
+        if "{error" in message_format and "{" not in message_format.replace("{error", ""):
+            return message_format.format(error=error)
+
+    # Fallback 2: Use the global default message, adding the error string.
+    try:
+        return f"{DEFAULT_ERROR_MESSAGE} ({error!s})"
+    except Exception:
+        # Fallback 3: Absolute last resort.
+        return DEFAULT_ERROR_MESSAGE
 
 
 # --- Error Detail Extractors ---
@@ -452,7 +496,7 @@ class ErrorHandler(commands.Cog):
         self._old_tree_error = tree.on_error
         # Replace the tree's error handler with this cog's handler.
         tree.on_error = self.on_app_command_error
-        logger.info("ErrorHandler: Application command error handler registered.")
+        logger.info("Application command error handler mapped.")
 
     async def cog_unload(self) -> None:
         """
@@ -464,10 +508,10 @@ class ErrorHandler(commands.Cog):
         if self._old_tree_error:
             # Restore the previously stored handler.
             self.bot.tree.on_error = self._old_tree_error
-            logger.info("ErrorHandler unloaded: Previous app command error handler restored.")
+            logger.info("Application command error handler restored.")
         else:
             # This might happen if cog_load failed or was never called.
-            logger.warning("ErrorHandler unloaded: No previous app command error handler found to restore.")
+            logger.warning("Application command error handler not restored: No previous handler found.")
 
     # --- Core Error Processing Logic ---
 
@@ -492,91 +536,54 @@ class ErrorHandler(commands.Cog):
         error : Exception
             The exception object caught by the listener or tree handler.
         """
-        # Step 1: Unwrap nested errors to find the true root cause.
-        # Loops until it finds an error without an '.original' attribute or reaches the initial error.
-        # Start with the initially caught error.
-        current_error: Any = error  # Use Any initially as type might change during unwrapping
-        while hasattr(current_error, "original"):
-            next_error: Any = current_error.original
-            # Prevent infinite loops if .original points back to itself somehow
-            if next_error is current_error:
-                logger.warning("Detected potential infinite loop in error unwrapping. Stopping.")
-                break
-            current_error = next_error
+        # Step 1: Unwrap nested errors using the helper function.
+        root_error = _unwrap_error(error)
 
-        # Assign the final unwrapped error (which might be non-Exception)
-        final_unwrapped_error: Any = current_error
-
-        # Step 2: Validate that the resolved error is an actual Exception instance.
-        # Handles rare cases where a non-exception might be raised or wrapped.
-        if not isinstance(final_unwrapped_error, Exception):
-            user = self._get_user_from_source(source)
-            # Use the initially caught error for context if unwrapping led to non-exception.
-            log_context = self._get_log_context(source, user, error)
-            log_context["original_value"] = repr(final_unwrapped_error)
-            log_context["final_unwrapped_type"] = type(final_unwrapped_error).__name__
-
-            logger.bind(**log_context).error("Non-exception error encountered after unwrapping.")
-            # Report this unusual situation to Sentry, wrapping the original value if possible.
-            reportable_error = ValueError(f"Non-exception error encountered: {final_unwrapped_error!r}")
-            self._capture_exception_with_context(
-                reportable_error,
-                log_context,
-                "ERROR",
-                tags={"error_type": "non_exception"},
-            )
-            return  # Stop processing if it's not a standard exception.
-
-        # Cast the unwrapped error back to Exception now that we know it is one.
-        root_error: Exception = final_unwrapped_error
+        # NOTE: _unwrap_error ensures the result is an Exception,
+        # so the original Step 2 validation is now handled within the helper.
 
         # Step 3: Gather context using the resolved root error.
         error_type: type[Exception] = type(root_error)
         user = self._get_user_from_source(source)
         log_context = self._get_log_context(source, user, root_error)
-        # Add the initially caught error type to context for debugging unwrapping issues.
-        log_context["initial_error_type"] = type(error).__name__
+        log_context["initial_error_type"] = type(error).__name__  # Keep initial error type for context
 
-        # Step 4: Determine handling configuration based on the root error type.
+        # Step 4: Determine handling configuration.
         config = ERROR_CONFIG_MAP.get(error_type)
 
-        # Step 5: Format the user-facing message using the root error.
+        # Step 5: Format the user-facing message.
         message = self._get_formatted_message(source, root_error, config)
 
-        # Step 6: Create the standardized error embed.
+        # Step 6: Create the error embed.
         embed = EmbedCreator.create_embed(
             bot=self.bot,
             embed_type=EmbedCreator.ERROR,
             description=message,
         )
 
-        # Step 7: Send the initial response to the user, handling potential send failures.
+        # Step 7: Send response.
         sent_message: discord.Message | None = None
         try:
             sent_message = await self._send_error_response(source, embed)
         except discord.HTTPException as http_exc:
-            # Log failure specifically related to Discord API communication.
             log_context["send_error"] = str(http_exc)
-            logger.bind(**log_context).error("Failed to send error message to user due to HTTP exception.")
+            logger.bind(**log_context).error("Failed to send error message due to HTTP exception.")
         except Exception as send_exc:
-            # Catch any other unexpected error during the send operation.
             log_context["send_error"] = str(send_exc)
             log_context["send_error_type"] = type(send_exc).__name__
             logger.bind(**log_context).exception("Unexpected failure during error message sending.")
-            # Report this internal sending failure to Sentry.
             self._capture_exception_with_context(
                 send_exc,
                 log_context,
                 "ERROR",
                 tags={"failure_point": "send_response"},
             )
-            # Cannot proceed to edit if sending failed.
             return
 
-        # Step 8 & 9: Log the error and report to Sentry (delegated).
+        # Step 8 & 9: Log and report.
         sentry_event_id = self._log_and_report_error(root_error, error_type, log_context, config)
 
-        # Step 10: Attempt to add Sentry ID to the sent message (delegated).
+        # Step 10: Attempt edit with Sentry ID.
         await self._try_edit_message_with_sentry_id(sent_message, sentry_event_id, log_context)
 
     @staticmethod
@@ -587,8 +594,8 @@ class ErrorHandler(commands.Cog):
         # If not Interaction, it must be Context.
         return source.author
 
-    @staticmethod
     def _get_log_context(
+        self,
         source: ContextOrInteraction,
         user: discord.User | discord.Member,
         error: Exception,
@@ -596,8 +603,7 @@ class ErrorHandler(commands.Cog):
         """
         Builds a dictionary containing structured context information about the error event.
 
-        This context is used for enriching log messages and Sentry reports,
-        making debugging and analysis significantly easier.
+        Includes information about invocation type (prefix/app) and definition type (hybrid/prefix_only/app_only).
 
         Parameters
         ----------
@@ -613,7 +619,6 @@ class ErrorHandler(commands.Cog):
         dict[str, Any]
             A dictionary with context keys like user_id, command_name, guild_id, etc.
         """
-        # Start with common context
         context: dict[str, Any] = {
             "user_id": user.id,
             "user_name": str(user),
@@ -621,37 +626,54 @@ class ErrorHandler(commands.Cog):
             "error_type": type(error).__name__,
         }
 
-        # Add context specific to Application Commands (Interactions).
+        # Determine invocation method first using ternary operator
+        invoked_via_interaction: bool = (
+            True if isinstance(source, discord.Interaction) else source.interaction is not None
+        )
+
+        # Set command_type based on invocation method
+        context["command_type"] = "app" if invoked_via_interaction else "prefix"
+        context["invoked_via_interaction"] = invoked_via_interaction
+
+        # Add specific details based on source type
         if isinstance(source, discord.Interaction):
             context["interaction_id"] = source.id
             context["channel_id"] = source.channel_id
-            context["guild_id"] = source.guild_id  # Correct for Interaction
+            context["guild_id"] = source.guild_id
+            # Determine definition type for app invocation
             if source.command:
                 context["command_name"] = source.command.qualified_name
-                context["command_type"] = "app"
-            # No specific handling needed if source.command is None for interactions here
+                prefix_command = self.bot.get_command(source.command.qualified_name)
+                if prefix_command and isinstance(prefix_command, commands.HybridCommand | commands.HybridGroup):
+                    context["command_definition"] = "hybrid"
+                else:
+                    context["command_definition"] = "app"
+            else:
+                context["command_definition"] = "unknown"
 
-        # Add context specific to Traditional Commands (Context).
-        else:
+        else:  # Source is commands.Context
             context["message_id"] = source.message.id
-            context["channel_id"] = source.channel.id  # Correct for Context
-            context["guild_id"] = source.guild.id if source.guild else None  # Correct for Context
+            context["channel_id"] = source.channel.id
+            context["guild_id"] = source.guild.id if source.guild else None
+            # Determine definition type for prefix invocation
             if source.command:
                 context["command_name"] = source.command.qualified_name
                 context["command_prefix"] = source.prefix
                 context["command_invoked_with"] = source.invoked_with
-                context["command_type"] = "prefix"
+                if isinstance(source.command, commands.HybridCommand | commands.HybridGroup):
+                    context["command_definition"] = "hybrid"
+                else:
+                    context["command_definition"] = "prefix"
             else:
-                # Handle cases like CommandNotFound where source.command is None.
                 context["command_invoked_with"] = source.invoked_with
-                context["command_type"] = "prefix (not found)"
+                context["command_definition"] = "unknown"
 
         return context
 
     def _get_formatted_message(
         self,
         source: ContextOrInteraction,
-        error: Exception,
+        error: Exception,  # Changed to accept the root error directly
         config: ErrorHandlerConfig | None,
     ) -> str:
         """
@@ -677,64 +699,39 @@ class ErrorHandler(commands.Cog):
             The formatted error message ready to be displayed to the user.
         """
         error_type = type(error)
-        # Use the configured format string or the global default.
         message_format = config.message_format if config else DEFAULT_ERROR_MESSAGE
-
-        # Prepare keyword arguments for .format(). Start with the error itself.
         kwargs: dict[str, Any] = {"error": error}
 
-        # Add context-specific kwargs if the source is a traditional command context.
         if isinstance(source, commands.Context):
             kwargs["ctx"] = source
-            # Generate usage string only if needed by the format string and if a command exists.
             usage = "(unknown command)"
             if source.command and "{usage}" in message_format:
                 usage = source.command.usage or self._generate_default_usage(source.command)
             kwargs["usage"] = usage
 
-        # Inject additional details using the configured extractor function, if provided.
         if config and config.detail_extractor:
             try:
                 specific_details = config.detail_extractor(error)
-                # Merge the extracted details into the main kwargs dictionary.
                 kwargs |= specific_details
             except Exception as ext_exc:
-                # Log if the detail extractor itself fails.
                 log_context = self._get_log_context(source, self._get_user_from_source(source), error)
                 log_context["extractor_error"] = str(ext_exc)
                 logger.bind(**log_context).warning(
                     f"Failed to extract details for {error_type.__name__} using {config.detail_extractor.__name__}",
                 )
-                # Continue without specific details; the base message might still be formattable.
 
-        # Attempt the final formatting with multiple robust fallbacks.
+        # Attempt primary formatting.
         try:
-            # Primary attempt: Format using all collected kwargs.
             return message_format.format(**kwargs)
         except Exception as fmt_exc:
-            # Log the primary formatting failure.
+            # If primary formatting fails, use the fallback helper.
             log_context = self._get_log_context(source, self._get_user_from_source(source), error)
             log_context["format_error"] = str(fmt_exc)
             logger.bind(**log_context).warning(
                 f"Failed to format error message for {error_type.__name__}. Using fallback.",
             )
-
-            # Fallback 1: Try formatting with only {error} if it seems possible.
-            # This handles cases where a detail extractor failed or wasn't present,
-            # but the base message format relies only on {error}.
-            with contextlib.suppress(Exception):  # Ignore errors during this fallback attempt.
-                # Heuristic: Check if only {error...} seems to be the placeholder used.
-                if "{error" in message_format and "{" not in message_format.replace("{error", ""):
-                    return message_format.format(error=error)
-
-            # Fallback 2: Use the global default message format string, adding the error string representation.
-            try:
-                return f"{DEFAULT_ERROR_MESSAGE} ({error!s})"
-            except Exception as final_fallback_exc:
-                # Fallback 3: Absolute last resort if even string conversion of the error fails.
-                log_context["final_fallback_error"] = str(final_fallback_exc)
-                logger.bind(**log_context).error("Final fallback formatting failed catastrophically.")
-                return DEFAULT_ERROR_MESSAGE  # Return the static default message.
+            # Use the new fallback helper function
+            return _fallback_format_message(message_format, error)
 
     @staticmethod
     def _generate_default_usage(command: commands.Command[Any, ..., Any]) -> str:
@@ -845,11 +842,13 @@ class ErrorHandler(commands.Cog):
                 # --- Add specific tags for better filtering/searching --- #
                 scope.set_tag("command_name", log_context.get("command_name", "Unknown"))
                 scope.set_tag("command_type", log_context.get("command_type", "Unknown"))
+                scope.set_tag("command_definition", log_context.get("command_definition", "Unknown"))
+                # Add new tag for interaction check
+                scope.set_tag("invoked_via_interaction", str(log_context.get("invoked_via_interaction", False)).lower())
 
                 # Handle potential None for guild_id (e.g., in DMs)
                 guild_id = log_context.get("guild_id")
                 scope.set_tag("guild_id", str(guild_id) if guild_id else "DM")
-                # ---------------------------------------------------------- #
 
                 # Add any custom tags provided when calling this function.
                 if tags:
@@ -861,15 +860,13 @@ class ErrorHandler(commands.Cog):
 
                 # Debug log indicating successful reporting.
                 if event_id:
-                    logger.debug(
-                        f"Reported exception {type(error).__name__} to Sentry (ID: {event_id}) with level {level}",
-                    )
+                    logger.debug(f"Reported {type(error).__name__} to Sentry ({event_id})")
                 else:
-                    logger.warning(f"Captured exception {type(error).__name__} but Sentry returned no event ID.")
+                    logger.warning(f"Captured {type(error).__name__} but Sentry returned no ID.")
 
         except Exception as sentry_exc:
             # Log if reporting to Sentry fails, but don't let it stop the error handler.
-            logger.error(f"Failed to report exception to Sentry: {sentry_exc}")
+            logger.error(f"Failed to report {type(error).__name__} to Sentry: {sentry_exc}")
 
         return event_id  # Return the event ID (or None if capture failed)
 
@@ -937,9 +934,6 @@ class ErrorHandler(commands.Cog):
 
             # Edit the message.
             await fetched_message.edit(embed=original_embed)
-            logger.bind(**log_context).debug(
-                f"Added Sentry Event ID {sentry_event_id} to message {sent_message.id} description",
-            )
 
         except discord.NotFound:
             logger.bind(**log_context).warning(
@@ -1171,7 +1165,18 @@ class ErrorHandler(commands.Cog):
             return
 
         # If no local handlers intercepted the error, process it globally.
-        logger.bind(**log_context).debug(f"Handling prefix command error via global handler: {type(error).__name__}")
+        log_context = self._get_log_context(ctx, ctx.author, error)  # Regenerate context *after* CommandNotFound check
+
+        # Check if this originated from a slash command interaction
+        was_interaction = ctx.interaction is not None
+
+        # Refined log message
+        if was_interaction:
+            log_message = f"Handling slash-invoked hybrid command error via prefix listener: {type(error).__name__}"
+        else:
+            log_message = f"Handling prefix command error via global handler: {type(error).__name__}"
+
+        logger.bind(**log_context).debug(log_message)
         await self._handle_error(ctx, error)
 
     async def on_app_command_error(
@@ -1211,4 +1216,5 @@ class ErrorHandler(commands.Cog):
 
 async def setup(bot: Tux) -> None:
     """Standard setup function to add the ErrorHandler cog to the bot."""
+    logger.info("Setting up ErrorHandler")
     await bot.add_cog(ErrorHandler(bot))
