@@ -1,6 +1,6 @@
 import contextlib
-import datetime
 import string
+from datetime import UTC, datetime
 
 import discord
 from discord import AllowedMentions
@@ -9,9 +9,9 @@ from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
 from prisma.enums import CaseType
-from prisma.models import Snippet
+from prisma.models import Case, Snippet
 from tux.bot import Tux
-from tux.database.controllers import CaseController, DatabaseController
+from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.config import Config
@@ -21,9 +21,7 @@ from tux.utils.flags import generate_usage
 class Snippets(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
-        self.db = DatabaseController().snippet
-        self.config = DatabaseController().guild_config
-        self.case_controller = CaseController()
+        self.db = DatabaseController()
         self.list_snippets.usage = generate_usage(self.list_snippets)
         self.top_snippets.usage = generate_usage(self.top_snippets)
         self.delete_snippet.usage = generate_usage(self.delete_snippet)
@@ -34,13 +32,45 @@ class Snippets(commands.Cog):
         self.toggle_snippet_lock.usage = generate_usage(self.toggle_snippet_lock)
 
     async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
-        ban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETBAN)
-        unban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.SNIPPETUNBAN)
+        """Check if a user is snippet banned."""
+        # Get SnippetBan and SnippetUnban cases for the user
+        ban_cases: list[Case] = await self.db.case.get_cases_by_options(
+            guild_id=guild_id,
+            options={"case_user_id": user_id, "case_type": CaseType.SNIPPETBAN},
+        )
+        unban_cases: list[Case] = await self.db.case.get_cases_by_options(
+            guild_id=guild_id,
+            options={"case_user_id": user_id, "case_type": CaseType.SNIPPETUNBAN},
+        )
 
-        ban_count = sum(case.case_user_id == user_id for case in ban_cases)
-        unban_count = sum(case.case_user_id == user_id for case in unban_cases)
+        # Check if the user has any ban cases
+        if not ban_cases:
+            return False
 
-        return ban_count > unban_count
+        # If there are unban cases, check if the latest ban is more recent than the latest unban
+        if unban_cases:
+            latest_ban_time: datetime | None = None
+            latest_unban_time: datetime | None = None
+
+            with contextlib.suppress(ValueError):
+                # Get the latest ban time, filtering out potential None values
+                latest_ban_time = max(case.case_created_at for case in ban_cases if case.case_created_at)
+            with contextlib.suppress(ValueError):
+                # Get the latest unban time, filtering out potential None values
+                latest_unban_time = max(case.case_created_at for case in unban_cases if case.case_created_at)
+            # Check if we could determine both times
+            if latest_ban_time is None or latest_unban_time is None:
+                # If we only found ban times but no unban times, they are banned
+                if latest_ban_time is not None:
+                    return True
+                # Otherwise (no ban times, or no times at all), log warning and assume banned defensively
+                logger.warning(f"Could not determine latest ban/unban time for user {user_id} in guild {guild_id}")
+                return True
+
+            return latest_ban_time > latest_unban_time
+
+        # If there are ban cases but no unban cases, the user is banned
+        return True
 
     def _create_snippets_list_embed(
         self,
@@ -76,14 +106,19 @@ class Snippets(commands.Cog):
                 description="No snippets found.",
             )
 
-        description = "```\n"
+        description = ""  # Initialize description
+        count = 0  # Initialize count
 
-        for snippet in snippets:
-            icon = "→" if snippet.alias else " "
-            icon += "🔒" if snippet.locked else " "
-            description += f"{icon}|{snippet.snippet_name.ljust(20)} | uses: {snippet.uses}\n"
+        description = "\n".join(
+            f"`{i + 1}`. {snippet.snippet_name} (`{snippet.uses}` uses) {'🔒' if snippet.locked else ''}"
+            for i, snippet in enumerate(snippets)
+        )
+        count = len(snippets)
 
-        description += "```"
+        # Use or for default value
+        total_snippets = total_snippets or 0
+
+        embed_title = f"Snippets ({count}/{total_snippets})"
 
         footer_text, footer_icon_url = EmbedCreator.get_footer(
             bot=ctx.bot,
@@ -92,9 +127,11 @@ class Snippets(commands.Cog):
         )
 
         return EmbedCreator.create_embed(
-            embed_type=EmbedType.DEFAULT,
-            title=f'Snippets ({total_snippets}) | Searching for "{search_query if search_query else "All Snippets"}"',
-            description=description,
+            embed_type=EmbedType.INFO,
+            user_name=ctx.author.name,
+            user_display_avatar=ctx.author.display_avatar.url,
+            title=embed_title,
+            description=description or "No snippets found.",  # Use or for default value
             custom_author_text=ctx.guild.name,
             custom_author_icon_url=ctx.guild.icon.url,
             message_timestamp=ctx.message.created_at,
@@ -150,7 +187,7 @@ class Snippets(commands.Cog):
         if (
             Config.LIMIT_TO_ROLE_IDS
             and isinstance(ctx.author, discord.Member)
-            and not any(role.id in Config.ACCESS_ROLE_IDS for role in ctx.author.roles)
+            and all(role.id not in Config.ACCESS_ROLE_IDS for role in ctx.author.roles)
         ):
             return (
                 False,
@@ -204,7 +241,7 @@ class Snippets(commands.Cog):
         assert ctx.guild
 
         # Fetch all snippets sorted by creation date
-        snippets: list[Snippet] = await self.db.get_all_snippets_sorted(newestfirst=True)
+        snippets: list[Snippet] = await self.db.snippet.get_all_snippets_sorted(newestfirst=True)
 
         # sort by uses
         snippets.sort(key=lambda x: x.uses, reverse=True)
@@ -266,7 +303,7 @@ class Snippets(commands.Cog):
         assert ctx.guild
 
         # find the top 10 snippets by uses
-        snippets: list[Snippet] = await self.db.get_all_snippets_by_guild_id(ctx.guild.id)
+        snippets: list[Snippet] = await self.db.snippet.get_all_snippets_by_guild_id(ctx.guild.id)
         if not snippets:
             await self.send_snippet_error(ctx, description="No snippets found.")
             return
@@ -308,7 +345,7 @@ class Snippets(commands.Cog):
 
         assert ctx.guild
 
-        snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
+        snippet = await self.db.snippet.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
             await self.send_snippet_error(ctx, description="Snippet not found.")
@@ -324,7 +361,7 @@ class Snippets(commands.Cog):
             await self.send_snippet_error(ctx, description=check[1])
             return
 
-        await self.db.delete_snippet_by_id(snippet.snippet_id)
+        await self.db.snippet.delete_snippet_by_id(snippet.snippet_id)
 
         await ctx.send("Snippet deleted.", delete_after=30, ephemeral=True)
         logger.info(f"{ctx.author} deleted the snippet with the name {name}. {check[1]}")
@@ -348,7 +385,7 @@ class Snippets(commands.Cog):
 
         assert ctx.guild
 
-        snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
+        snippet = await self.db.snippet.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         # check if the name contains an underscore
         if "_" in name:
@@ -360,15 +397,15 @@ class Snippets(commands.Cog):
         if snippet is None:
             await self.send_snippet_error(ctx, description="No snippets found.")
             return
-        await self.db.increment_snippet_uses(snippet.snippet_id)
+        await self.db.snippet.increment_snippet_uses(snippet.snippet_id)
 
         # check if the snippet is an alias
         if snippet.alias:
             # if it is an alias, get the snippet by name and guild id
-            aliased_snippet = await self.db.get_snippet_by_name_and_guild_id(snippet.alias, ctx.guild.id)
+            aliased_snippet = await self.db.snippet.get_snippet_by_name_and_guild_id(snippet.alias, ctx.guild.id)
             if aliased_snippet is None:
                 # delete the alias if it points to a non-existent snippet
-                await self.db.delete_snippet_by_id(snippet.snippet_id)
+                await self.db.snippet.delete_snippet_by_id(snippet.snippet_id)
                 await self.send_snippet_error(
                     ctx,
                     description="Alias pointing to a non-existent snippet. Deleting alias.",
@@ -407,7 +444,7 @@ class Snippets(commands.Cog):
 
         assert ctx.guild
 
-        snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
+        snippet = await self.db.snippet.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
             await self.send_snippet_error(ctx, description="Snippet not found.")
@@ -421,7 +458,7 @@ class Snippets(commands.Cog):
             user_name=ctx.author.name,
             user_display_avatar=ctx.author.display_avatar.url,
             title="Snippet Information",
-            message_timestamp=snippet.snippet_created_at or datetime.datetime.fromtimestamp(0, datetime.UTC),
+            message_timestamp=snippet.snippet_created_at or datetime.fromtimestamp(0, UTC),
         )
 
         embed.add_field(name="Name", value=snippet.snippet_name, inline=False)
@@ -432,7 +469,7 @@ class Snippets(commands.Cog):
         )
         embed.add_field(
             name=f"{'Alias' if snippet.alias else 'Content'}",
-            value=f"> {snippet.alias if snippet.alias else snippet.snippet_content}",
+            value=f"> {snippet.alias or snippet.snippet_content}",
             inline=False,
         )
         embed.add_field(name="Uses", value=snippet.uses, inline=False)
@@ -467,12 +504,12 @@ class Snippets(commands.Cog):
             await self.send_snippet_error(ctx, description=check[1])
             return
 
-        created_at = datetime.datetime.now(datetime.UTC)
+        created_at = datetime.now(UTC)
         author_id = ctx.author.id
         server_id = ctx.guild.id
 
         # Check if the snippet already exists
-        if await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id) is not None:
+        if await self.db.snippet.get_snippet_by_name_and_guild_id(name, ctx.guild.id) is not None:
             await self.send_snippet_error(ctx, description="Snippet already exists.")
             return
 
@@ -487,9 +524,9 @@ class Snippets(commands.Cog):
             return
 
         # check if snippet content is just the name of another snippet e.g if the content is support will auto alias to support
-        snippet = await self.db.get_snippet_by_name_and_guild_id(content, ctx.guild.id)
+        snippet = await self.db.snippet.get_snippet_by_name_and_guild_id(content, ctx.guild.id)
         if snippet:
-            await self.db.create_snippet_alias(
+            await self.db.snippet.create_snippet_alias(
                 snippet_name=name,
                 snippet_alias=content,
                 snippet_created_at=created_at,
@@ -504,7 +541,7 @@ class Snippets(commands.Cog):
             logger.info(f"{ctx.author} created a snippet with the name {name} as an alias to {content}.")
             return
 
-        await self.db.create_snippet(
+        await self.db.snippet.create_snippet(
             snippet_name=name,
             snippet_content=content,
             snippet_created_at=created_at,
@@ -535,7 +572,7 @@ class Snippets(commands.Cog):
         """
         assert ctx.guild
 
-        snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
+        snippet = await self.db.snippet.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
             await self.send_snippet_error(ctx, description="Snippet not found.")
@@ -551,7 +588,7 @@ class Snippets(commands.Cog):
             await self.send_snippet_error(ctx, description=check[1])
             return
 
-        await self.db.update_snippet_by_id(
+        await self.db.snippet.update_snippet_by_id(
             snippet.snippet_id,
             snippet_content=content,
         )
@@ -580,13 +617,13 @@ class Snippets(commands.Cog):
 
         assert ctx.guild
 
-        snippet = await self.db.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
+        snippet = await self.db.snippet.get_snippet_by_name_and_guild_id(name, ctx.guild.id)
 
         if snippet is None:
             await self.send_snippet_error(ctx, description="Snippet not found.")
             return
 
-        status = await self.db.toggle_snippet_lock_by_id(snippet.snippet_id)
+        status = await self.db.snippet.toggle_snippet_lock_by_id(snippet.snippet_id)
 
         if status is None:
             await self.send_snippet_error(

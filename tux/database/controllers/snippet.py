@@ -190,6 +190,7 @@ class SnippetController(BaseController[Snippet]):
             The deleted snippet if found, None otherwise
         """
         return await self.delete(where={"snippet_id": snippet_id})
+
     async def create_snippet_alias(
         self,
         snippet_name: str,
@@ -198,20 +199,39 @@ class SnippetController(BaseController[Snippet]):
         snippet_user_id: int,
         guild_id: int,
     ) -> Snippet:
-        await self.ensure_guild_exists(guild_id)
+        """Create a new snippet alias.
 
-        return await self.table.create(
+        Parameters
+        ----------
+        snippet_name : str
+            The name of the snippet this is an alias for.
+        snippet_alias : str
+            The alias name.
+        snippet_created_at : datetime.datetime
+            The creation time of the alias.
+        snippet_user_id : int
+            The ID of the user creating the alias.
+        guild_id : int
+            The ID of the guild the alias belongs to.
+
+        Returns
+        -------
+        Snippet
+            The created snippet alias record.
+        """
+        # Use connect_or_create pattern for guild relation
+        return await self.create(
             data={
                 "snippet_name": snippet_name,
-                "alias": snippet_alias,
+                "alias": snippet_alias,  # Assuming 'alias' is the correct field name
                 "snippet_created_at": snippet_created_at,
                 "snippet_user_id": snippet_user_id,
-                "guild_id": guild_id,
+                "guild": self.connect_or_create_relation("guild_id", guild_id),
+                "uses": 0,  # Set default values
+                "locked": False,
             },
+            include={"guild": True},
         )
-
-    async def delete_snippet_by_id(self, snippet_id: int) -> None:
-        await self.table.delete(where={"snippet_id": snippet_id})
 
     async def update_snippet_by_id(self, snippet_id: int, snippet_content: str) -> Snippet | None:
         """Update a snippet's content.
