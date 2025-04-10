@@ -13,9 +13,7 @@ from typing import Any, ClassVar
 
 import discord
 from colorama.ansi import AnsiBack, AnsiFore, AnsiStyle
-from discord.ext import commands
-from discord.ext import tasks as discord_tasks
-from discord.ext.tasks import Loop
+from discord.ext import commands, tasks
 from loguru import logger
 from rich.console import Console
 
@@ -34,7 +32,7 @@ Fore: AnsiFore
 Style: AnsiStyle
 
 # Type hint for discord.ext.tasks.Loop
-type TaskLoop = Loop[Callable[[], Coroutine[Any, Any, None]]]
+type TaskLoop = tasks.Loop[Callable[[], Coroutine[Any, Any, None]]]
 
 
 class DatabaseConnectionError(RuntimeError):
@@ -255,7 +253,7 @@ class Tux(commands.Bot):
                 logger.critical(f"Setup failed during on_ready: {e}")
                 await self.shutdown()
 
-    @discord_tasks.loop(seconds=60)
+    @tasks.loop(seconds=60)
     async def _monitor_tasks(self) -> None:
         """
         Monitor and manage running tasks in the bot. Performs basic task cleanup every 60 seconds.
@@ -358,7 +356,7 @@ class Tux(commands.Bot):
                 continue
 
             for name, value in cog.__dict__.items():
-                if isinstance(value, Loop):
+                if isinstance(value, tasks.Loop):
                     try:
                         value.stop()
                         logger.debug(f"Stopped task loop {cog_name}.{name}")
@@ -372,13 +370,13 @@ class Tux(commands.Bot):
     async def _cancel_tasks(self, tasks_by_type: dict[str, list[asyncio.Task[Any]]]) -> None:
         """Cancel tasks by category."""
 
-        for task_type, tasks in tasks_by_type.items():
-            if not tasks:
+        for task_type, task_list in tasks_by_type.items():
+            if not task_list:
                 continue
 
             task_names: list[str] = []
 
-            for t in tasks:
+            for t in task_list:
                 name = t.get_name() or "unnamed"
                 if name in ("None", "unnamed"):
                     coro = t.get_coro()
@@ -386,15 +384,13 @@ class Tux(commands.Bot):
                 task_names.append(name)
             names = ", ".join(task_names)
 
-            logger.debug(f"Cancelling {len(tasks)} {task_type}: {names}")
+            logger.debug(f"Cancelling {len(task_list)} {task_type}: {names}")
 
-            for task in tasks:
+            for task in task_list:
                 task.cancel()
 
-            # Wait for tasks to finish cancellation and retrieve results/exceptions
-            results = await asyncio.gather(*tasks, return_exceptions=True)
+            results = await asyncio.gather(*task_list, return_exceptions=True)
 
-            # Log any exceptions that occurred during cancellation
             for result in results:
                 if isinstance(result, Exception) and not isinstance(result, asyncio.CancelledError):
                     logger.error(f"Exception during task cancellation for {task_type}: {result!r}")
@@ -418,7 +414,7 @@ class Tux(commands.Bot):
                 await db.disconnect()
                 logger.debug("Database connections closed.")
             else:
-                logger.debug("Database was not connected, no disconnect needed.")
+                logger.warning("Database was not connected, no disconnect needed.")
 
         except Exception as e:
             logger.critical(f"Error during database disconnection: {e}")
