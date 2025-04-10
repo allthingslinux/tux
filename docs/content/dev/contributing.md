@@ -7,7 +7,7 @@ Thank you for your interest in contributing to Tux! This guide will help you get
 1. **Clone the Repository**
 
    ```bash
-   git clone https://github.com/your-username/tux.git
+   git clone https://github.com/allthingslinux/tux.git
    cd tux
    ```
 
@@ -19,7 +19,7 @@ Thank you for your interest in contributing to Tux! This guide will help you get
    poetry install
    
    # Set up pre-commit hooks
-   pre-commit install
+   poetry run pre-commit install
    ```
 
 3. **Configure Environment**
@@ -27,26 +27,23 @@ Thank you for your interest in contributing to Tux! This guide will help you get
    ```bash
    # Copy example environment file
    cp .env.example .env
-
-   # Edit .env with your own values for:
-   
-   DEV_BOT_TOKEN   
-   DEV_DATABASE_URL
-
-   PROD_BOT_TOKEN
-   PROD_DATABASE_URL
-
-   # Add any other settings you need
    ```
+
+   Edit .env with your own values for:
+
+   - DEV_BOT_TOKEN
+   - DEV_DATABASE_URL
+   - PROD_BOT_TOKEN
+   - PROD_DATABASE_URL
 
 4. **Database Setup**
 
    ```bash
    # Generate Prisma client
-   poetry run prisma generate
-   
-   # Run migrations
-   poetry run prisma migrate dev
+   poetry run tux db generate
+
+   # Push the db
+   poetry run tux db push
    ```
 
 ## Development Workflow
