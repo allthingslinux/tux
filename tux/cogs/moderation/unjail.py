@@ -188,18 +188,22 @@ class Unjail(ModerationCogBase):
         async def perform_unjail() -> None:
             nonlocal ctx, member, jail_role, flags
 
-            guild_id = ctx.guild.id if ctx.guild else 0  # Guild is already asserted above
+            # Re-assert guild is not None inside the nested function for type safety
+            assert ctx.guild is not None, "Guild context should exist here"
+            guild_id = ctx.guild.id
 
-            # Get latest jail case
+            # Get latest jail case *before* modifying roles
             case = await self.get_latest_jail_case(guild_id, member.id)
             if not case:
                 await self.send_error_response(ctx, "No jail case found.")
                 return
 
+            # Wrap core actions in try/except as suggested
             try:
                 # Remove jail role from member
                 assert jail_role is not None, "Jail role should not be None at this point"
                 await member.remove_roles(jail_role, reason=flags.reason)
+                logger.info(f"Removed jail role from {member} by {ctx.author}")
 
                 # Insert unjail case into database
                 case_result = await self.db.case.insert_case(
@@ -226,14 +230,15 @@ class Unjail(ModerationCogBase):
                 # Add roles back to member after sending the response
                 if case.case_user_roles:
                     success, restored_roles = await self.restore_roles(member, case.case_user_roles, flags.reason)
-
                     if success and restored_roles:
                         logger.info(f"Restored {len(restored_roles)} roles to {member}")
 
+                        # Restore the role verification logic here
                         # Shorter wait time for roles to be applied by Discord
                         await asyncio.sleep(0.5)
 
                         # Verify if all roles were successfully added back
+                        # Check ctx.guild again for safety within this block
                         if ctx.guild and case.case_user_roles:
                             # Check for missing roles in a simpler way
                             member_role_ids = {role.id for role in member.roles}
@@ -248,19 +253,29 @@ class Unjail(ModerationCogBase):
                             if missing_roles:
                                 missing_str = ", ".join(missing_roles)
                                 logger.warning(f"Failed to restore roles for {member}: {missing_str}")
-                                await ctx.send(f"Note: Some roles couldn't be restored: {missing_str}", ephemeral=True)
+                                # Optionally notify moderator/user if roles failed to restore
+                                # Example: await ctx.send(f"Note: Some roles couldn't be restored: {missing_str}", ephemeral=True)
 
                     elif not restored_roles:
-                        logger.warning(f"No roles to restore for {member}")
+                        logger.warning(
+                            f"No roles to restore for {member} or restore action failed partially/completely.",
+                        )
 
-            except discord.Forbidden:
-                await self.send_error_response(ctx, f"No permission to manage roles for {member}")
-                return
+            except (discord.Forbidden, discord.HTTPException) as e:
+                # Specific Discord API errors during role removal or subsequent actions
+                error_message = f"Failed to unjail {member}: Discord API error."
+                logger.error(f"{error_message} Details: {e}")
+                await self.send_error_response(ctx, error_message, e)
+                # No specific rollback needed, but ensure case is not created/logged incorrectly if needed
 
-            except discord.HTTPException as e:
-                await self.send_error_response(ctx, f"Failed to unjail {member}", e)
-                return
+            except Exception as e:
+                # Catch any other unexpected error
+                error_message = f"An unexpected error occurred while unjailing {member}."
+                logger.exception(f"{error_message}", exc_info=e)  # Use logger.exception for traceback
+                await self.send_error_response(ctx, error_message)
+                # No specific rollback needed
 
+        # Execute the locked action
         await self.execute_user_action_with_lock(member.id, perform_unjail)
 
 
