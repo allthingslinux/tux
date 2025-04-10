@@ -57,7 +57,10 @@ class Purge(commands.Cog):
         if channel is None:
             # Check if the current channel is a text channel
             if not isinstance(interaction.channel, discord.TextChannel | discord.Thread | discord.VoiceChannel):
-                await interaction.followup.send("Invalid channel type, must be a text channel.", ephemeral=True)
+                await interaction.followup.send(
+                    "Invalid channel type, must be a text channel, thread, or voice channel.",
+                    ephemeral=True,
+                )
                 return
 
             channel = interaction.channel
@@ -149,7 +152,10 @@ class Purge(commands.Cog):
         if channel is None:
             # Check if the current channel is a text channel
             if not isinstance(ctx.channel, discord.TextChannel | discord.Thread | discord.VoiceChannel):
-                await ctx.send("Invalid channel type, must be a text channel.", ephemeral=True)
+                await ctx.send(
+                    "Invalid channel type, must be a text channel, thread, or voice channel.",
+                    ephemeral=True,
+                )
                 return
 
             channel = ctx.channel
