@@ -74,7 +74,7 @@ class StarboardController(BaseController[Starboard]):
                 "starboard_channel_id": starboard_channel_id,
                 "starboard_emoji": starboard_emoji,
                 "starboard_threshold": starboard_threshold,
-                "guild": self.connect_or_create_relation("guild_id", guild_id),
+                "guild_id": guild_id,
             },
             update={
                 "starboard_channel_id": starboard_channel_id,
@@ -192,7 +192,6 @@ class StarboardMessageController(BaseController[StarboardMessage]):
                     "message_guild_id": message_guild_id,
                     "star_count": star_count,
                     "starboard_message_id": starboard_message_id,
-                    "guild": self.connect_or_create_relation("guild_id", message_guild_id),
                 },
                 update={
                     "message_content": message_content,
