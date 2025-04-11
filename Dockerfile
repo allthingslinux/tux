@@ -78,7 +78,7 @@ RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
   poetry install --only dev --no-root --no-directory
 
 # Ensure Prisma client is regenerated on start, then run bot via CLI with --dev flag
-CMD ["sh", "-c", "poetry run prisma generate && exec poetry run tux --dev bot start"]
+CMD ["sh", "-c", "poetry run prisma generate && exec poetry run tux --dev start"]
 
 
 # Production stage:
@@ -98,4 +98,4 @@ ENV VIRTUAL_ENV=/app/.venv \
 COPY --from=build --chown=nonroot:nonroot /app ./
 
 ENTRYPOINT ["tux"]
-CMD ["--prod", "bot", "start"]
+CMD ["--prod", "start"]
