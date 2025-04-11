@@ -33,15 +33,15 @@ class CogLoader(commands.Cog):
         self.load_times: defaultdict[str, float] = defaultdict(float)
         # Define load order priorities (higher number = higher priority)
         self.load_priorities = {
-            "handlers": 100,
             "services": 90,
             "admin": 80,
             "levels": 70,
             "moderation": 60,
-            "guild": 50,
-            "utility": 40,
-            "info": 30,
-            "fun": 20,
+            "snippets": 50,
+            "guild": 40,
+            "utility": 30,
+            "info": 20,
+            "fun": 10,
         }
 
     async def is_cog_eligible(self, filepath: Path) -> bool:

@@ -5,7 +5,7 @@ from loguru import logger
 
 from prisma.enums import CaseType
 from tux.bot import Tux
-from tux.database.controllers import CaseController
+from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator
 
 # TODO: Create option inputs for the poll command instead of using a comma separated string
@@ -14,7 +14,7 @@ from tux.ui.embeds import EmbedCreator
 class Poll(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
-        self.case_controller = CaseController()
+        self.db = DatabaseController()
 
     # TODO: for the moment this is duplicated code from ModerationCogBase in a attempt to get the code out sooner
     async def is_pollbanned(self, guild_id: int, user_id: int) -> bool:
@@ -34,8 +34,8 @@ class Poll(commands.Cog):
             True if the user is poll banned, False otherwise.
         """
 
-        ban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.POLLBAN)
-        unban_cases = await self.case_controller.get_all_cases_by_type(guild_id, CaseType.POLLUNBAN)
+        ban_cases = await self.db.case.find_many(where={"case_type": CaseType.POLLBAN})
+        unban_cases = await self.db.case.find_many(where={"case_type": CaseType.POLLUNBAN})
 
         ban_count = sum(case.case_user_id == user_id for case in ban_cases)
         unban_count = sum(case.case_user_id == user_id for case in unban_cases)

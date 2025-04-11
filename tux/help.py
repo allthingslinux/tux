@@ -13,6 +13,7 @@ from reactionmenu.views_menu import ViewSelect
 from tux.ui.embeds import EmbedCreator
 from tux.utils.config import CONFIG
 from tux.utils.constants import CONST
+from tux.utils.env import get_current_env
 
 
 class TuxHelp(commands.HelpCommand):
@@ -21,7 +22,7 @@ class TuxHelp(commands.HelpCommand):
         super().__init__(
             command_attrs={
                 "help": "Lists all commands and sub-commands.",
-                "aliases": ["h"],
+                "aliases": ["h", "commands"],
                 "usage": "$help <command> or <sub-command>",
             },
         )
@@ -62,7 +63,7 @@ class TuxHelp(commands.HelpCommand):
 
             for flag in param_annotation.__commands_flags__.values():
                 flag_str = self._format_flag_name(flag)
-                if flag.aliases:
+                if flag.aliases and not getattr(flag, "positional", False):
                     flag_str += f" ({', '.join(flag.aliases)})"
                 flag_str += f"\n\t{flag.description or 'No description provided'}"
                 if flag.default is not discord.utils.MISSING:
@@ -73,14 +74,28 @@ class TuxHelp(commands.HelpCommand):
 
     @staticmethod
     def _format_flag_name(flag: commands.Flag) -> str:
-        """Formats the flag name based on whether it is required."""
+        """Formats the flag name based on whether it is required and positional."""
+        if getattr(flag, "positional", False):
+            return f"<{flag.name}>" if flag.required else f"[{flag.name}]"
         return f"-{flag.name}" if flag.required else f"[-{flag.name}]"
 
     # Command Fields and Mapping
+    def _generate_default_usage(self, command: commands.Command[Any, Any, Any]) -> str:
+        """Generates a default usage string based on command parameters when custom usage is missing."""
+        signature = command.signature.strip()
+        if not signature:
+            return command.qualified_name
+
+        # Format the signature to look more like Discord's native format
+        # Replace things like [optional] with <optional>
+        formatted_signature = signature.replace("[", "<").replace("]", ">")
+        return f"{command.qualified_name} {formatted_signature}"
+
     async def _add_command_help_fields(self, embed: discord.Embed, command: commands.Command[Any, Any, Any]) -> None:
         """Adds fields with usage and alias information for a command to an embed."""
         prefix = await self._get_prefix()
-        embed.add_field(name="Usage", value=f"`{prefix}{command.usage or 'No usage'}`", inline=False)
+        usage = command.usage or self._generate_default_usage(command)
+        embed.add_field(name="Usage", value=f"`{prefix}{usage}`", inline=False)
         embed.add_field(
             name="Aliases",
             value=(f"`{', '.join(command.aliases)}`" if command.aliases else "No aliases"),
@@ -124,6 +139,7 @@ class TuxHelp(commands.HelpCommand):
             "info": "🔍",
             "moderation": "🛡",
             "utility": "🔧",
+            "snippets": "📝",
             "admin": "👑",
             "fun": "🎉",
             "levels": "📈",
@@ -159,8 +175,10 @@ class TuxHelp(commands.HelpCommand):
     @staticmethod
     def _add_navigation_and_selection(menu: ViewMenu, select_options: dict[discord.SelectOption, list[Page]]) -> None:
         """Adds navigation buttons and select options to the help menu."""
-        menu.add_select(ViewSelect(title="Command Categories", options=select_options))
-        menu.add_button(ViewButton.end_session())
+        menu.add_select(ViewSelect(title="🗃️ Select a category", options=select_options))
+        menu.add_button(
+            ViewButton(label="Close Menu", style=discord.ButtonStyle.danger, custom_id=ViewButton.ID_END_SESSION),
+        )
 
     # Cogs and Command Categories
     async def _add_cog_pages(
@@ -226,6 +244,7 @@ class TuxHelp(commands.HelpCommand):
         menu = ViewMenu(
             self.context,
             menu_type=ViewMenu.TypeEmbed,
+            all_can_click=True,
             delete_on_timeout=True,
             timeout=180,
             show_page_director=False,
@@ -271,18 +290,22 @@ class TuxHelp(commands.HelpCommand):
         )
         embed.add_field(
             name="Support Server",
-            value="[Need support? Join Server](https://discord.gg/gpmSjcjQxg)",
+            value="-# [Need support? Join Server](https://discord.gg/gpmSjcjQxg)",
             inline=True,
         )
         embed.add_field(
             name="GitHub Repository",
-            value="[Help contribute! View Repo](https://github.com/allthingslinux/tux)",
+            value="-# [Help contribute! View Repo](https://github.com/allthingslinux/tux)",
             inline=True,
         )
+
+        bot_name_display = "Tux" if CONFIG.BOT_NAME == "Tux" else f"{CONFIG.BOT_NAME} (Tux)"
+        environment = get_current_env()
+        owner_info = f"Bot Owner: <@{CONFIG.BOT_OWNER_ID}>" if not CONFIG.HIDE_BOT_OWNER and CONFIG.BOT_OWNER_ID else ""
+
         embed.add_field(
-            name="Bot Info",
-            value=f"""Running {"Tux" if CONFIG.BOT_NAME == "Tux" else f"{CONFIG.BOT_NAME} (Based on Tux)"} version {CONFIG.BOT_VERSION} in {"Development" if CONFIG.DEV else "Production"} mode.
-{f"This Tux instance is administrated by <@{CONFIG.BOT_OWNER_ID}>" if not CONFIG.HIDE_BOT_OWNER and CONFIG.BOT_OWNER_ID else ""}""",
+            name="Bot Instance",
+            value=f"-# Running {bot_name_display} version `{CONFIG.BOT_VERSION}` in `{environment}` mode | {owner_info}",
             inline=False,
         )
 
@@ -320,17 +343,60 @@ class TuxHelp(commands.HelpCommand):
         """Sends a help message for a specific command group."""
         prefix = await self._get_prefix()
 
-        embed = self._embed_base(f"{group.name}", f"> {group.help or 'No documentation available.'}")
+        # Create a menu for pagination
+        menu = ViewMenu(
+            self.context,
+            menu_type=ViewMenu.TypeEmbed,
+            delete_on_timeout=True,
+            timeout=180,
+            show_page_director=False,
+        )
 
-        await self._add_command_help_fields(embed, group)
-        for command in group.commands:
-            self._add_command_field(embed, command, prefix)
+        # Create the main embed for the group command itself
+        main_embed = self._embed_base(f"{group.name}", f"> {group.help or 'No documentation available.'}")
+        await self._add_command_help_fields(main_embed, group)
 
-        await self.get_destination().send(embed=embed)
+        # Add the main embed as the first page
+        menu.add_page(main_embed)
+
+        # Create separate embeds for subcommands, with a maximum of 24 fields per embed
+        # (leaving room for potentially adding a navigation hint field)
+        commands_list = list(group.commands)
+        total_commands = len(commands_list)
+
+        if total_commands > 0:
+            # If few commands, add them to the main embed
+            if total_commands <= 24:
+                for command in commands_list:
+                    self._add_command_field(main_embed, command, prefix)
+            else:
+                # Create multiple pages for subcommands
+                for i in range(0, total_commands, 24):
+                    batch = commands_list[i : i + 24]
+                    subcommand_embed = self._embed_base(
+                        f"{group.name} Subcommands (Page {i // 24 + 1})",
+                        f"Showing subcommands {i + 1}-{min(i + 24, total_commands)} of {total_commands}",
+                    )
+
+                    for command in batch:
+                        self._add_command_field(subcommand_embed, command, prefix)
+
+                    menu.add_page(subcommand_embed)
+
+        # Always add at least the end session button first
+        menu.add_button(ViewButton.end_session())
+
+        # Add navigation buttons only if we have multiple pages
+        if hasattr(menu, "pages") and menu.pages is not None and len(menu.pages) > 1:
+            menu.add_button(ViewButton.back())
+            menu.add_button(ViewButton.next())
+
+        await menu.start()
 
     async def send_error_message(self, error: str) -> None:
         """Sends an error message."""
-        logger.error(f"An error occurred while sending a help message: {error}")
+
+        logger.warning(f"An error occurred while sending a help message: {error}")
 
         embed = EmbedCreator.create_embed(
             EmbedCreator.ERROR,

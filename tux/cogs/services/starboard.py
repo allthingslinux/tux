@@ -6,7 +6,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
-from tux.database.controllers.starboard import StarboardController, StarboardMessageController
+from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.flags import generate_usage
@@ -15,8 +15,7 @@ from tux.utils.flags import generate_usage
 class Starboard(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
-        self.starboard_controller = StarboardController()
-        self.starboard_message_controller = StarboardMessageController()
+        self.db = DatabaseController()
         self.starboard.usage = generate_usage(self.starboard)
         self.setup_starboard.usage = generate_usage(self.setup_starboard)
         self.remove_starboard.usage = generate_usage(self.remove_starboard)
@@ -116,7 +115,7 @@ class Starboard(commands.Cog):
             return
 
         try:
-            await self.starboard_controller.create_or_update_starboard(ctx.guild.id, channel.id, emoji, threshold)
+            await self.db.starboard.create_or_update_starboard(ctx.guild.id, channel.id, emoji, threshold)
 
             embed = EmbedCreator.create_embed(
                 bot=self.bot,
@@ -154,7 +153,7 @@ class Starboard(commands.Cog):
         assert ctx.guild
 
         try:
-            result = await self.starboard_controller.delete_starboard_by_guild_id(ctx.guild.id)
+            result = await self.db.starboard.delete_starboard_by_guild_id(ctx.guild.id)
 
             embed = (
                 EmbedCreator.create_embed(
@@ -206,7 +205,7 @@ class Starboard(commands.Cog):
         assert original_message.guild
 
         try:
-            starboard_message = await self.starboard_message_controller.get_starboard_message_by_id(
+            starboard_message = await self.db.starboard_message.get_starboard_message_by_id(
                 original_message.id,
                 original_message.guild.id,
             )
@@ -246,7 +245,7 @@ class Starboard(commands.Cog):
             return
 
         try:
-            starboard = await self.starboard_controller.get_starboard_by_guild_id(original_message.guild.id)
+            starboard = await self.db.starboard.get_starboard_by_guild_id(original_message.guild.id)
             if not starboard:
                 return
 
@@ -274,7 +273,7 @@ class Starboard(commands.Cog):
             else:
                 starboard_message = await starboard_channel.send(embed=embed)
 
-            await self.starboard_message_controller.create_or_update_starboard_message(
+            await self.db.starboard_message.create_or_update_starboard_message(
                 message_id=original_message.id,
                 message_content=original_message.content,
                 message_expires_at=datetime.now(UTC) + timedelta(days=30),
@@ -293,7 +292,7 @@ class Starboard(commands.Cog):
         if not payload.guild_id:
             return
 
-        starboard = await self.starboard_controller.get_starboard_by_guild_id(payload.guild_id)
+        starboard = await self.db.starboard.get_starboard_by_guild_id(payload.guild_id)
         if not starboard or str(payload.emoji) != starboard.starboard_emoji:
             return
 
@@ -352,7 +351,7 @@ class Starboard(commands.Cog):
                 return
 
             message = await channel.fetch_message(payload.message_id)
-            starboard = await self.starboard_controller.get_starboard_by_guild_id(payload.guild_id)
+            starboard = await self.db.starboard.get_starboard_by_guild_id(payload.guild_id)
 
             if not starboard or (emoji and str(emoji) != starboard.starboard_emoji):
                 return

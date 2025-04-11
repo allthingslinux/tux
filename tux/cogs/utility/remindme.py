@@ -16,18 +16,18 @@ from tux.utils.functions import convert_to_seconds
 class RemindMe(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
-        self.db = DatabaseController().reminder
+        self.db = DatabaseController()
         self.check_reminders.start()
         self.remindme.usage = generate_usage(self.remindme)
 
     @tasks.loop(seconds=120)
     async def check_reminders(self):
-        reminders = await self.db.get_unsent_reminders()
+        reminders = await self.db.reminder.get_unsent_reminders()
 
         try:
             for reminder in reminders:
                 await self.send_reminder(reminder)
-                await self.db.update_reminder_status(reminder.reminder_id, sent=True)
+                await self.db.reminder.update_reminder_status(reminder.reminder_id, sent=True)
                 logger.debug(f'Status of reminder {reminder.reminder_id} updated to "sent".')
 
         except Exception as e:
@@ -76,10 +76,18 @@ class RemindMe(commands.Cog):
 
     @commands.hybrid_command(
         name="remindme",
+        description="Set a reminder for yourself",
     )
-    async def remindme(self, ctx: commands.Context[Tux], time: str, *, reminder: str) -> None:
+    async def remindme(
+        self,
+        ctx: commands.Context[Tux],
+        time: str,
+        *,
+        reminder: str,
+    ) -> None:
         """
         Set a reminder for yourself.
+
         The time format is `[number][M/w/d/h/m/s]` where:
         - M = months
         - w = weeks
@@ -95,11 +103,11 @@ class RemindMe(commands.Cog):
         ctx : commands.Context[Tux]
             The context of the command.
         time : str
-            The time to set the reminder for.
+            The time to set the reminder for (e.g. 2d, 1h30m).
         reminder : str
             The reminder message.
-
         """
+
         seconds = convert_to_seconds(time)
 
         if seconds == 0:
@@ -113,7 +121,7 @@ class RemindMe(commands.Cog):
         expires_at = datetime.datetime.now(datetime.UTC) + datetime.timedelta(seconds=seconds)
 
         try:
-            await self.db.insert_reminder(
+            await self.db.reminder.insert_reminder(
                 reminder_user_id=ctx.author.id,
                 reminder_content=reminder,
                 reminder_expires_at=expires_at,

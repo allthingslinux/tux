@@ -4,6 +4,8 @@ This module contains the main bot class and implements core functionality
 including setup and graceful shutdown.
 """
 
+from __future__ import annotations
+
 import asyncio
 import contextlib
 from collections.abc import Callable, Coroutine
@@ -11,9 +13,7 @@ from typing import Any, ClassVar
 
 import discord
 from colorama.ansi import AnsiBack, AnsiFore, AnsiStyle
-from discord.ext import commands
-from discord.ext import tasks as discord_tasks
-from discord.ext.tasks import Loop
+from discord.ext import commands, tasks
 from loguru import logger
 from rich.console import Console
 
@@ -21,6 +21,7 @@ from tux.cog_loader import CogLoader
 from tux.database.client import db
 from tux.utils.banner import create_banner
 from tux.utils.config import Config
+from tux.utils.env import is_dev_mode
 
 # Create console for rich output
 console = Console(stderr=True, force_terminal=True)
@@ -31,7 +32,7 @@ Fore: AnsiFore
 Style: AnsiStyle
 
 # Type hint for discord.ext.tasks.Loop
-type TaskLoop = Loop[Callable[[], Coroutine[Any, Any, None]]]
+type TaskLoop = tasks.Loop[Callable[[], Coroutine[Any, Any, None]]]
 
 
 class DatabaseConnectionError(RuntimeError):
@@ -59,6 +60,8 @@ class Tux(commands.Bot):
         Task handling the bot setup process
     console : Console
         Rich console for formatted output
+    cog_watcher : Any
+        Reference to the cog watcher for hot reloading
     """
 
     _monitor_tasks: ClassVar[TaskLoop]  # type: ignore[name-defined]
@@ -73,6 +76,7 @@ class Tux(commands.Bot):
         self.setup_complete: bool = False
         self.start_time: float | None = None
         self.setup_task: asyncio.Task[None] | None = None
+        self.cog_watcher: Any = None
 
         # Create console for rich output
         self.console = Console(stderr=True, force_terminal=True)
@@ -119,12 +123,13 @@ class Tux(commands.Bot):
         Logs connection status and registration state.
         """
 
-        logger.info("Setting up Prisma client...")
-        await db.connect()
+        logger.info("Setting up database connection...")
 
+        await db.connect()
         self._validate_db_connection()
-        logger.info(f"Prisma client connected: {db.is_connected()}")
-        logger.info(f"Prisma client registered: {db.is_registered()}")
+
+        logger.info(f"Database connected: {db.is_connected()}")
+        logger.info(f"Database models registered: {db.is_registered()}")
 
     async def _load_extensions(self) -> None:
         """
@@ -142,6 +147,7 @@ class Tux(commands.Bot):
 
         try:
             await self.load_extension("jishaku")
+            logger.info("Successfully loaded jishaku extension")
 
         except commands.ExtensionError as e:
             logger.warning(f"Failed to load jishaku: {e}")
@@ -155,8 +161,8 @@ class Tux(commands.Bot):
         Initializes the background task that monitors running tasks
         and their states.
         """
-        self._monitor_tasks.start()
 
+        self._monitor_tasks.start()
         logger.debug("Task monitoring started")
 
     @staticmethod
@@ -168,6 +174,7 @@ class Tux(commands.Bot):
         DatabaseConnectionError
             If database is not connected or not properly registered
         """
+
         if not db.is_connected() or not db.is_registered():
             raise DatabaseConnectionError(DatabaseConnectionError.CONNECTION_FAILED)
 
@@ -188,12 +195,10 @@ class Tux(commands.Bot):
         try:
             task.result()
             self.setup_complete = True
-
             logger.info("Bot setup completed successfully")
 
         except Exception as e:
             logger.critical(f"Setup failed: {e}")
-
             self.setup_complete = False
 
     @commands.Cog.listener()
@@ -203,8 +208,9 @@ class Tux(commands.Bot):
 
         Performs initialization tasks when the bot connects to Discord:
         1. Records start time if not set
-        2. Logs startup banner
-        3. Ensures setup is complete
+        2. Ensures setup is complete
+        3. Starts hot reloading for cogs (loaded as separate cog)
+        4. Logs startup banner
 
         Notes
         -----
@@ -214,41 +220,23 @@ class Tux(commands.Bot):
         if not self.start_time:
             self.start_time = discord.utils.utcnow().timestamp()
 
-        await self._log_startup_banner()
         await self._wait_for_setup()
+
+        # Start hot reloading - import at function level to avoid circular imports
+        try:
+            await self.load_extension("tux.utils.hot_reload")
+            logger.info("Hot reloading enabled")
+
+        except Exception as e:
+            logger.warning(f"Failed to enable hot reloading: {e}")
+
+        # Log banner after other setup steps are done
+        await self._log_startup_banner()
 
     @commands.Cog.listener()
     async def on_disconnect(self) -> None:
         """Handle bot disconnect event."""
         logger.warning("Bot has disconnected from Discord.")
-
-    async def _log_startup_banner(self) -> None:
-        """
-        Log bot startup information.
-
-        Displays a formatted banner containing:
-        - Bot name and version
-        - Bot ID
-        - Guild and user counts
-        - Prefix configuration
-        - Development mode status
-        """
-
-        # Log startup message before banner
-        logger.info("Bot is starting up")
-
-        # Create and display banner
-        banner = create_banner(
-            bot_name=Config.BOT_NAME,
-            version=Config.BOT_VERSION,
-            bot_id=str(self.user.id) if self.user else None,
-            guild_count=len(self.guilds),
-            user_count=len(self.users),
-            prefix=Config.DEFAULT_PREFIX,
-            dev_mode=bool(Config.DEV and Config.DEV.lower() == "true"),
-        )
-
-        console.print(banner)
 
     async def _wait_for_setup(self) -> None:
         """
@@ -267,7 +255,7 @@ class Tux(commands.Bot):
                 logger.critical(f"Setup failed during on_ready: {e}")
                 await self.shutdown()
 
-    @discord_tasks.loop(seconds=60)
+    @tasks.loop(seconds=60)
     async def _monitor_tasks(self) -> None:
         """
         Monitor and manage running tasks in the bot. Performs basic task cleanup every 60 seconds.
@@ -370,7 +358,7 @@ class Tux(commands.Bot):
                 continue
 
             for name, value in cog.__dict__.items():
-                if isinstance(value, Loop):
+                if isinstance(value, tasks.Loop):
                     try:
                         value.stop()
                         logger.debug(f"Stopped task loop {cog_name}.{name}")
@@ -384,13 +372,13 @@ class Tux(commands.Bot):
     async def _cancel_tasks(self, tasks_by_type: dict[str, list[asyncio.Task[Any]]]) -> None:
         """Cancel tasks by category."""
 
-        for task_type, tasks in tasks_by_type.items():
-            if not tasks:
+        for task_type, task_list in tasks_by_type.items():
+            if not task_list:
                 continue
 
             task_names: list[str] = []
 
-            for t in tasks:
+            for t in task_list:
                 name = t.get_name() or "unnamed"
                 if name in ("None", "unnamed"):
                     coro = t.get_coro()
@@ -398,12 +386,16 @@ class Tux(commands.Bot):
                 task_names.append(name)
             names = ", ".join(task_names)
 
-            logger.debug(f"Cancelling {len(tasks)} {task_type}: {names}")
+            logger.debug(f"Cancelling {len(task_list)} {task_type}: {names}")
 
-            for task in tasks:
+            for task in task_list:
                 task.cancel()
 
-            await asyncio.gather(*tasks, return_exceptions=True)
+            results = await asyncio.gather(*task_list, return_exceptions=True)
+
+            for result in results:
+                if isinstance(result, Exception) and not isinstance(result, asyncio.CancelledError):
+                    logger.error(f"Exception during task cancellation for {task_type}: {result!r}")
 
             logger.debug(f"Cancelled {task_type}")
 
@@ -420,8 +412,11 @@ class Tux(commands.Bot):
 
         try:
             logger.debug("Closing database connections.")
-            await db.disconnect()
-            logger.debug("Database connections closed.")
+            if db.is_connected():
+                await db.disconnect()
+                logger.debug("Database connections closed.")
+            else:
+                logger.warning("Database was not connected, no disconnect needed.")
 
         except Exception as e:
             logger.critical(f"Error during database disconnection: {e}")
@@ -448,3 +443,28 @@ class Tux(commands.Bot):
         except Exception as e:
             logger.critical(f"Error loading cogs: {e}")
             raise
+
+    async def _log_startup_banner(self) -> None:
+        """
+        Log bot startup information.
+
+        Displays a formatted banner containing:
+        - Bot name and version
+        - Bot ID
+        - Guild and user counts
+        - Prefix configuration
+        - Development mode status
+        """
+
+        # Create and display banner
+        banner = create_banner(
+            bot_name=Config.BOT_NAME,
+            version=Config.BOT_VERSION,
+            bot_id=str(self.user.id) if self.user else None,
+            guild_count=len(self.guilds),
+            user_count=len(self.users),
+            prefix=Config.DEFAULT_PREFIX,
+            dev_mode=is_dev_mode(),
+        )
+
+        console.print(banner)

@@ -1,29 +1,72 @@
+from prisma.actions import GuildActions
 from prisma.models import AFKModel, Guild
 from tux.database.client import db
+from tux.database.controllers.base import BaseController
 
 
-class AfkController:
+class AfkController(BaseController[AFKModel]):
+    """Controller for managing AFK status records.
+
+    This controller provides methods for tracking, checking, and managing
+    AFK (Away From Keyboard) status of guild members.
+    """
+
     def __init__(self) -> None:
-        self.table = db.afkmodel
-        self.guild = db.guild
-
-    async def ensure_guild_exists(self, guild_id: int) -> Guild:
-        guild = await self.guild.find_first(where={"guild_id": guild_id})
-
-        if guild is None:
-            return await self.guild.create(data={"guild_id": guild_id})
-
-        return guild
+        """Initialize the AfkController with the afkmodel table."""
+        super().__init__("afkmodel")
+        self.guild_table: GuildActions[Guild] = db.client.guild
 
     async def get_afk_member(self, member_id: int, *, guild_id: int) -> AFKModel | None:
-        return await self.table.find_first(where={"member_id": member_id, "guild_id": guild_id})
+        """Get the AFK record for a member in a guild.
+
+        Parameters
+        ----------
+        member_id : int
+            The ID of the member to check
+        guild_id : int
+            The ID of the guild to check in
+
+        Returns
+        -------
+        AFKModel | None
+            The AFK record if found, None otherwise
+        """
+        return await self.find_one(where={"member_id": member_id, "guild_id": guild_id})
 
     async def is_afk(self, member_id: int, *, guild_id: int) -> bool:
+        """Check if a member is AFK in a guild.
+
+        Parameters
+        ----------
+        member_id : int
+            The ID of the member to check
+        guild_id : int
+            The ID of the guild to check in
+
+        Returns
+        -------
+        bool
+            True if the member is AFK, False otherwise
+        """
         entry = await self.get_afk_member(member_id, guild_id=guild_id)
         return entry is not None
 
     async def is_perm_afk(self, member_id: int, *, guild_id: int) -> bool:
-        is_user_perm_afk = await self.table.find_first(
+        """Check if a member is permanently AFK in a guild.
+
+        Parameters
+        ----------
+        member_id : int
+            The ID of the member to check
+        guild_id : int
+            The ID of the guild to check in
+
+        Returns
+        -------
+        bool
+            True if the member is permanently AFK, False otherwise
+        """
+        is_user_perm_afk = await self.find_one(
             where={"member_id": member_id, "guild_id": guild_id, "perm_afk": True},
         )
         return is_user_perm_afk is not None
@@ -36,17 +79,78 @@ class AfkController:
         guild_id: int,
         perm_afk: bool = False,
     ) -> AFKModel:
-        await self.ensure_guild_exists(guild_id)
+        """Insert a new AFK record.
 
-        return await self.table.create(
+        Parameters
+        ----------
+        member_id : int
+            The ID of the member to set as AFK
+        nickname : str
+            The nickname of the member
+        reason : str
+            The reason for being AFK
+        guild_id : int
+            The ID of the guild
+        perm_afk : bool
+            Whether the AFK status is permanent
+
+        Returns
+        -------
+        AFKModel
+            The created AFK record
+        """
+        return await self.create(
             data={
                 "member_id": member_id,
                 "nickname": nickname,
                 "reason": reason,
-                "guild_id": guild_id,
                 "perm_afk": perm_afk,
+                "guild": self.connect_or_create_relation("guild_id", guild_id),
             },
+            include={"guild": True},
         )
 
-    async def remove_afk(self, member_id: int) -> None:
-        await self.table.delete(where={"member_id": member_id})
+    async def remove_afk(self, member_id: int) -> AFKModel | None:
+        """Remove an AFK record for a member.
+
+        Parameters
+        ----------
+        member_id : int
+            The ID of the member to remove AFK status from
+
+        Returns
+        -------
+        AFKModel | None
+            The deleted AFK record if found, None otherwise
+        """
+        return await self.delete(where={"member_id": member_id})
+
+    async def count_afk_members(self, guild_id: int) -> int:
+        """Count the number of AFK members in a guild.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to count AFK members for
+
+        Returns
+        -------
+        int
+            The number of AFK members in the guild
+        """
+        return await self.count(where={"guild_id": guild_id})
+
+    async def get_all_afk_members(self, guild_id: int) -> list[AFKModel]:
+        """Get all AFK members in a guild.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to get AFK members for
+
+        Returns
+        -------
+        list[AFKModel]
+            List of AFK members in the guild
+        """
+        return await self.find_many(where={"guild_id": guild_id})

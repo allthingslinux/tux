@@ -1,6 +1,5 @@
 import asyncio
 import signal
-import sys
 from types import FrameType
 from typing import cast
 
@@ -11,13 +10,12 @@ from loguru import logger
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
+from tux import __version__ as app_version
 from tux.bot import Tux
-from tux.database.controllers.guild_config import GuildConfigController
+from tux.database.controllers import DatabaseController
 from tux.help import TuxHelp
 from tux.utils.config import CONFIG
-from tux.utils.logger import setup_logging
-
-setup_logging()
+from tux.utils.env import get_current_env
 
 
 async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
@@ -45,7 +43,7 @@ async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
 
     if message.guild:
         try:
-            prefix = await GuildConfigController().get_guild_prefix(message.guild.id)
+            prefix = await DatabaseController().guild_config.get_guild_prefix(message.guild.id)
         except Exception as e:
             logger.error(f"Error getting guild prefix: {e}")
 
@@ -64,7 +62,7 @@ def setup_sentry() -> None:
 
     If no Sentry URL is configured, logs a warning and skips setup.
     """
-    if not CONFIG.SENTRY_URL:
+    if not CONFIG.SENTRY_DSN:
         logger.warning("No Sentry URL configured, skipping Sentry setup")
         return
 
@@ -72,16 +70,20 @@ def setup_sentry() -> None:
 
     try:
         sentry_sdk.init(
-            dsn=CONFIG.SENTRY_URL,
-            environment="dev" if CONFIG.DEV == "True" else "prod",
+            dsn=CONFIG.SENTRY_DSN,
+            release=app_version,
+            environment=get_current_env(),
+            enable_tracing=True,
+            attach_stacktrace=True,
+            send_default_pii=False,
             traces_sample_rate=1.0,
             profiles_sample_rate=1.0,
-            enable_tracing=True,
             integrations=[
                 AsyncioIntegration(),
                 LoggingIntegration(),
             ],
         )
+
         logger.info(f"Sentry initialized: {sentry_sdk.is_initialized()}")
 
     except Exception as e:
@@ -103,6 +105,7 @@ def handle_sigterm(signum: int, frame: FrameType | None) -> None:
     This handler converts SIGTERM into a KeyboardInterrupt to trigger
     graceful shutdown through the same path as Ctrl+C.
     """
+
     logger.info(f"Received signal {signum}")
     raise KeyboardInterrupt
 
@@ -135,8 +138,8 @@ async def main() -> None:
     - Final logging
     """
 
-    if not CONFIG.TOKEN:
-        logger.critical("No token provided. Set TOKEN in your environment or .env file.")
+    if not CONFIG.BOT_TOKEN:
+        logger.critical("No bot token provided. Set DEV_BOT_TOKEN or PROD_BOT_TOKEN in your .env file.")
         return
 
     setup_sentry()
@@ -156,7 +159,7 @@ async def main() -> None:
     )
 
     try:
-        await bot.start(CONFIG.TOKEN, reconnect=True)
+        await bot.start(CONFIG.BOT_TOKEN, reconnect=True)
 
     except KeyboardInterrupt:
         logger.info("Initiating shutdown...")
@@ -184,16 +187,10 @@ async def main() -> None:
 
 
 def run() -> int:
-    """Synchronous entry point for the bot.
+    """Entry point for the bot.
 
     This function serves as the main entry point when running the bot through the CLI.
     It wraps the async main() function in asyncio.run().
-
-    Notes
-    -----
-    This is the function that gets called when using:
-        $ poetry run tux start
-        $ poetry run tux dev
 
     Returns
     -------
@@ -208,7 +205,3 @@ def run() -> int:
     finally:
         logger.info("Exiting")
     return 0
-
-
-if __name__ == "__main__":
-    sys.exit(run())

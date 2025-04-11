@@ -147,10 +147,10 @@ class LoguruRichHandler(RichHandler, RichHandlerProtocol):
             self.console.print(first_line, markup=True, highlight=False)
 
             # If message is long, print continued lines
-            if len(plain_message) > 120:  # Arbitrary threshold for line continuation
-                continued_message = plain_message[120:]
+            if len(plain_message) > 160:  # Arbitrary threshold for line continuation
+                continued_message = plain_message[160:]
                 while continued_message:
-                    chunk, continued_message = continued_message[:120], continued_message[120:]
+                    chunk, continued_message = continued_message[:160], continued_message[160:]
                     line = (continued_prefix_markup + chunk).rstrip()
                     self.console.print(line, markup=True, highlight=False)
 
@@ -163,7 +163,7 @@ def setup_logging() -> None:
     console = Console(
         force_terminal=True,
         color_system="truecolor",
-        width=200,
+        width=160,
         theme=Theme(
             {
                 "logging.level.success": "bold #32CD32",  # Lime green

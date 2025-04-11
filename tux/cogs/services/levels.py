@@ -6,7 +6,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
-from tux.database.controllers.levels import LevelsController
+from tux.database.controllers import DatabaseController
 from tux.main import get_prefix
 from tux.ui.embeds import EmbedCreator
 from tux.utils.config import CONFIG
@@ -15,7 +15,7 @@ from tux.utils.config import CONFIG
 class LevelsService(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
-        self.levels_controller = LevelsController()
+        self.db = DatabaseController()
         self.xp_cooldown = CONFIG.XP_COOLDOWN
         self.levels_exponent = CONFIG.LEVELS_EXPONENT
         self.xp_roles = {role["level"]: role["role_id"] for role in CONFIG.XP_ROLES}
@@ -57,20 +57,20 @@ class LevelsService(commands.Cog):
         guild : discord.Guild
             The guild where the member is gaining XP.
         """
-        if await self.levels_controller.is_blacklisted(member.id, guild.id):
+        if await self.db.levels.is_blacklisted(member.id, guild.id):
             return
 
-        last_message_time = await self.levels_controller.get_last_message_time(member.id, guild.id)
+        last_message_time = await self.db.levels.get_last_message_time(member.id, guild.id)
         if last_message_time and self.is_on_cooldown(last_message_time):
             return
 
-        current_xp, current_level = await self.levels_controller.get_xp_and_level(member.id, guild.id)
+        current_xp, current_level = await self.db.levels.get_xp_and_level(member.id, guild.id)
 
         xp_increment = self.calculate_xp_increment(member)
         new_xp = current_xp + xp_increment
         new_level = self.calculate_level(new_xp)
 
-        await self.levels_controller.update_xp_and_level(
+        await self.db.levels.update_xp_and_level(
             member.id,
             guild.id,
             new_xp,
@@ -136,10 +136,13 @@ class LevelsService(commands.Cog):
             await self.try_assign_role(member, highest_role)
 
         roles_to_remove = [r for r in member.roles if r.id in self.xp_roles.values() and r != highest_role]
+
         await member.remove_roles(*roles_to_remove)
-        logger.debug(
-            f"Assigned role {highest_role.name if highest_role else 'None'} to member {member} and removed roles {', '.join(r.name for r in roles_to_remove)}",
-        )
+
+        if highest_role or roles_to_remove:
+            logger.debug(
+                f"Updated roles for {member}: {f'Assigned {highest_role.name}' if highest_role else 'No role assigned'}{', Removed: ' + ', '.join(r.name for r in roles_to_remove) if roles_to_remove else ''}",
+            )
 
     @staticmethod
     async def try_assign_role(member: discord.Member, role: discord.Role) -> None:
@@ -263,9 +266,12 @@ class LevelsService(commands.Cog):
             The formatted progress bar.
         """
         progress: float = current_value / target_value
+
         filled_length: int = int(bar_length * progress)
         empty_length: int = bar_length - filled_length
+
         bar: str = "▰" * filled_length + "▱" * empty_length
+
         return f"`{bar}` {current_value}/{target_value}"
 
     def get_level_progress(self, xp: float, level: int) -> tuple[int, int]:
@@ -286,8 +292,10 @@ class LevelsService(commands.Cog):
         """
         current_level_xp = self.calculate_xp_for_level(level)
         next_level_xp = self.calculate_xp_for_level(level + 1)
+
         xp_progress = int(xp - current_level_xp)
         xp_required = int(next_level_xp - current_level_xp)
+
         return xp_progress, xp_required
 
 
