@@ -28,7 +28,7 @@ ENV PYTHONUNBUFFERED=1 \
 # - Install poetry (for managing app's dependencies)
 # - Install app's main dependencies
 # - Install the application itself
-# - Generate Prisma client
+# - Generate Prisma client AND copy binaries
 FROM base AS build
 
 # Install build dependencies (excluding Node.js)
@@ -37,6 +37,7 @@ RUN apt-get update && \
   build-essential \
   libcairo2-dev \
   libffi-dev \
+  findutils \
   && apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
@@ -63,7 +64,18 @@ RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
   --mount=type=cache,target=/root/.cache \
   poetry install --only main && \
   poetry run prisma py fetch && \
-  poetry run prisma generate
+  poetry run prisma generate && \
+  # --- Start: Copy Prisma Binaries ---
+  # Find the actual query engine binary path
+  PRISMA_QUERY_ENGINE_PATH=$(find /root/.cache/prisma-python/binaries -name query-engine-* -type f | head -n 1) && \
+  # Find the actual schema engine binary path (might be needed too)
+  PRISMA_SCHEMA_ENGINE_PATH=$(find /root/.cache/prisma-python/binaries -name schema-engine-* -type f | head -n 1) && \
+  # Create a directory within /app to store them
+  mkdir -p /app/prisma_binaries && \
+  # Copy and make executable
+  if [ -f "$PRISMA_QUERY_ENGINE_PATH" ]; then cp $PRISMA_QUERY_ENGINE_PATH /app/prisma_binaries/query-engine && chmod +x /app/prisma_binaries/query-engine; else echo "Warning: Query engine not found"; fi && \
+  if [ -f "$PRISMA_SCHEMA_ENGINE_PATH" ]; then cp $PRISMA_SCHEMA_ENGINE_PATH /app/prisma_binaries/schema-engine && chmod +x /app/prisma_binaries/schema-engine; else echo "Warning: Schema engine not found"; fi
+# --- End: Copy Prisma Binaries ---
 
 
 # Dev stage (used by docker-compose.dev.yml):
@@ -87,15 +99,26 @@ CMD ["sh", "-c", "poetry run prisma generate && exec poetry run tux --dev start"
 # - Use the packaged self-sufficient application bundle
 FROM base AS production
 
-RUN adduser nonroot
-USER nonroot
+# Create a non-root user and group using standard tools for Debian base
+RUN groupadd --system nonroot && \
+  useradd --system --gid nonroot --no-create-home nonroot
 
 WORKDIR /app
 
 ENV VIRTUAL_ENV=/app/.venv \
-  PATH="/app/.venv/bin:$PATH"
+  PATH="/app/.venv/bin:$PATH" \
+  # --- Start: Point Prisma client to the copied binaries ---
+  PRISMA_QUERY_ENGINE_BINARY="/app/prisma_binaries/query-engine" \
+  PRISMA_SCHEMA_ENGINE_BINARY="/app/prisma_binaries/schema-engine"
+# --- End: Point Prisma client ---
 
-COPY --from=build --chown=nonroot:nonroot /app ./
+
+# Copy the application code, venv, and the prepared prisma_binaries dir
+# Ensure ownership is set to nonroot
+COPY --from=build --chown=nonroot:nonroot /app /app
+
+# Switch to the non-root user
+USER nonroot
 
 ENTRYPOINT ["tux"]
 CMD ["--prod", "start"]
