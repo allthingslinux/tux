@@ -124,9 +124,10 @@ class Tux(commands.Bot):
         """
 
         logger.info("Setting up database connection...")
-        await db.connect()
 
+        await db.connect()
         self._validate_db_connection()
+
         logger.info(f"Database connected: {db.is_connected()}")
         logger.info(f"Database models registered: {db.is_registered()}")
 
@@ -146,6 +147,7 @@ class Tux(commands.Bot):
 
         try:
             await self.load_extension("jishaku")
+            logger.info("Successfully loaded jishaku extension")
 
         except commands.ExtensionError as e:
             logger.warning(f"Failed to load jishaku: {e}")
