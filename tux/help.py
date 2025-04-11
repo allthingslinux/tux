@@ -139,6 +139,7 @@ class TuxHelp(commands.HelpCommand):
             "info": "🔍",
             "moderation": "🛡",
             "utility": "🔧",
+            "snippets": "📝",
             "admin": "👑",
             "fun": "🎉",
             "levels": "📈",
