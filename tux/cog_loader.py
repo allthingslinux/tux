@@ -37,10 +37,11 @@ class CogLoader(commands.Cog):
             "admin": 80,
             "levels": 70,
             "moderation": 60,
-            "guild": 50,
-            "utility": 40,
-            "info": 30,
-            "fun": 20,
+            "snippets": 50,
+            "guild": 40,
+            "utility": 30,
+            "info": 20,
+            "fun": 10,
         }
 
     async def is_cog_eligible(self, filepath: Path) -> bool:
