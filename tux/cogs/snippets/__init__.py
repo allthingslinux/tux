@@ -136,7 +136,7 @@ class SnippetsBaseCog(commands.Cog):
     async def check_if_user_has_mod_override(self, ctx: commands.Context[Tux]) -> bool:
         """Check if the user invoking the command has moderator permissions (PL >= configured level)."""
         try:
-            await checks.has_pl(CONST.MODERATOR_PERMISSION_LEVEL).predicate(ctx)
+            await checks.has_pl(2).predicate(ctx)
         except commands.CheckFailure:
             return False
         except Exception as e:
