@@ -5,7 +5,6 @@ __pycache__/
 
 # Replit
 *.replit
-*.nix
 
 # C extensions
 *.so
@@ -162,3 +161,7 @@ config/settings.yml
 .DS_Store
 
 docs-build/
+
+
+# direnv
+.direnv/
