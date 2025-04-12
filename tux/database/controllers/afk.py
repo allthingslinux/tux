@@ -79,9 +79,9 @@ class AfkController(BaseController[AFKModel]):
         nickname: str,
         reason: str,
         guild_id: int,
+        perm_afk: bool = False,
         until: datetime | None = None,
         enforced: bool = False,
-        perm_afk: bool = False,
     ) -> AFKModel:
         """Insert a new AFK record.
 
