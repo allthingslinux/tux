@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from prisma.actions import GuildActions
 from prisma.models import AFKModel, Guild
 from tux.database.client import db
@@ -77,6 +79,8 @@ class AfkController(BaseController[AFKModel]):
         nickname: str,
         reason: str,
         guild_id: int,
+        until: datetime | None = None,
+        enforced: bool = False,
         perm_afk: bool = False,
     ) -> AFKModel:
         """Insert a new AFK record.
@@ -104,6 +108,8 @@ class AfkController(BaseController[AFKModel]):
                 "member_id": member_id,
                 "nickname": nickname,
                 "reason": reason,
+                "until": until,
+                "enforced": enforced,
                 "perm_afk": perm_afk,
                 "guild": self.connect_or_create_relation("guild_id", guild_id),
             },
