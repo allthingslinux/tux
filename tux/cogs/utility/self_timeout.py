@@ -45,7 +45,11 @@ class SelfTimeout(commands.Cog):
             await target.edit(nick=nickname)
 
     async def request_confirmation(
-        self, member: discord.Member, guild_name: str, duration_readable: str, reason: str
+        self,
+        member: discord.Member,
+        guild_name: str,
+        duration_readable: str,
+        reason: str,
     ) -> bool | NoneType:
         view = ConfirmationDanger()
         try:
