@@ -1,11 +1,12 @@
 import contextlib
 import textwrap
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
+from types import NoneType
 from typing import cast
 from zoneinfo import ZoneInfo
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from prisma.models import AFKModel
 from tux.bot import Tux
@@ -14,14 +15,24 @@ from tux.utils.constants import CONST
 from tux.utils.flags import generate_usage
 
 
+# TODO: add `afk until` command, or add support for providing a timeframe in the regular `afk` and `permafk` commands
 class Afk(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.db = AfkController()
+        self.handle_afk_expiration.start()
         self.afk.usage = generate_usage(self.afk)
         self.permafk.usage = generate_usage(self.permafk)
 
-    async def add_afk(self, reason: str, target: discord.Member, guild_id: int, is_perm: bool):
+    async def add_afk(
+        self,
+        reason: str,
+        target: discord.Member,
+        guild_id: int,
+        is_perm: bool,
+        until: datetime | NoneType | None = None,
+        enforced: bool = False,
+    ):
         if len(target.display_name) >= CONST.NICKNAME_MAX_LENGTH - 6:
             truncated_name = f"{target.display_name[: CONST.NICKNAME_MAX_LENGTH - 9]}..."
             new_name = f"[AFK] {truncated_name}"
@@ -180,7 +191,7 @@ class Afk(commands.Cog):
             return
 
         msgs: list[str] = [
-            f"{mentioned.mention} is currently AFK: `{afk.reason}` (<t:{int(afk.since.timestamp())}:R>)"
+            f'{mentioned.mention} is currently AFK {f"until <t:{int(afk.until.timestamp())}:f>" if afk.until is not None else ""}: "{afk.reason}" [<t:{int(afk.since.timestamp())}:R>]'
             for mentioned, afk in afks_mentioned
         ]
 
@@ -192,6 +203,24 @@ class Afk(commands.Cog):
                 roles=False,
             ),
         )
+
+    @tasks.loop(seconds=120)
+    async def handle_afk_expiration(self):
+        """
+        Check AFK database at a regular interval,
+        Remove AFK from users with an entry that has expired.
+        """
+        guilds = self.bot.guilds
+        for guild in guilds:
+            entries = await self.db.get_all_afk_members(guild.id)
+            for entry in entries:
+                if entry.until is not None and entry.until < datetime.now(UTC):
+                    member = guild.get_member(entry.member_id)
+                    if member is None:
+                        # Handles the edge case of a user leaving the guild while still temp-AFK
+                        await self.db.remove_afk(entry.member_id)
+                    else:
+                        await self.del_afk(member, entry.nickname)
 
 
 async def setup(bot: Tux):

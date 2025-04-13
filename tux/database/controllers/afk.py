@@ -108,10 +108,10 @@ class AfkController(BaseController[AFKModel]):
                 "member_id": member_id,
                 "nickname": nickname,
                 "reason": reason,
-                "until": until,
-                "enforced": enforced,
                 "perm_afk": perm_afk,
                 "guild": self.connect_or_create_relation("guild_id", guild_id),
+                "until": until,
+                "enforced": enforced,
             },
             include={"guild": True},
         )
