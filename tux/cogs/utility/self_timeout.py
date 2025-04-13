@@ -44,6 +44,22 @@ class SelfTimeout(commands.Cog):
         with contextlib.suppress(discord.Forbidden):
             await target.edit(nick=nickname)
 
+    async def request_confirmation(
+        self, member: discord.Member, guild_name: str, duration_readable: str, reason: str
+    ) -> bool | NoneType:
+        view = ConfirmationDanger()
+        try:
+            confirmation_message = await member.send(
+                f'## WARNING\n### You are about to be timed out in the guild "{guild_name}" for {duration_readable} with the reason "{reason}".\nas soon as you confirm this, **you cannot cancel it or remove it early**. There is *no* provision for it to be removed by server staff on request. please think very carefully and make sure you\'ve entered the correct values before you proceed with this command.',
+                view=view,
+            )
+        except discord.Forbidden:
+            return None
+
+        await view.wait()
+        await confirmation_message.delete()
+        return view.value
+
     @commands.hybrid_command(
         name="self_timeout",
         aliases=["sto", "stimeout", "selftimeout"],
@@ -78,6 +94,7 @@ class SelfTimeout(commands.Cog):
 
         if duration_seconds < 300:
             await ctx.send("Error! duration cannot be less than 5 minutes!")
+            return
 
         entry = await self.db.get_afk_member(member.id, guild_id=ctx.guild.id)
         if entry is not None and reason == "No Reason.":
@@ -85,19 +102,12 @@ class SelfTimeout(commands.Cog):
             # assume they want to upgrade their current AFK to a self-timeout and carry the old reason
             reason = entry.reason
 
-        view = ConfirmationDanger()
-        try:
-            confirmation_message = await member.send(
-                f'## WARNING\n### You are about to be timed out in the guild "{ctx.guild.name}" for {duration_readable} with the reason "{reason}".\nas soon as you confirm this, **you cannot cancel it or remove it early**. There is *no* provision for it to be removed by server staff on request. please think very carefully and make sure you\'ve entered the correct values before you proceed with this command.',
-                view=view,
-            )
-        except discord.Forbidden:
-            await ctx.send("Error: Tux was unable to DM you the confirmation message")
+        confirmed = await self.request_confirmation(member, ctx.guild.name, duration_readable, reason)
+        if confirmed is None:
+            await ctx.send("Confirmation failed to send or timed out.")
             return
 
-        await view.wait()
-        await confirmation_message.delete()
-        if view.value:
+        if confirmed:
             await member.send(
                 f'You have timed yourself out in guild {ctx.guild.name} for {duration_readable} with the reason "{reason}".',
             )

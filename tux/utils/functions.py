@@ -205,7 +205,7 @@ def seconds_to_human_readable(seconds: int) -> str:
     for unit, div in units:
         amount, seconds = divmod(int(seconds), div)
         if amount > 0:
-            parts.append("{} {}{}".format(amount, unit, "" if amount == 1 else "s"))
+            parts.append(f"{amount} {unit}{'' if amount == 1 else 's'}")
     return ", ".join(parts)
 
 
