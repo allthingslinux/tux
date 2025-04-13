@@ -76,6 +76,9 @@ class SelfTimeout(commands.Cog):
             await ctx.send("Error! duration cannot be longer than 7 days!")
             return
 
+        if duration_seconds < 300:
+            await ctx.send("Error! duration cannot be less than 5 minutes!")
+
         entry = await self.db.get_afk_member(member.id, guild_id=ctx.guild.id)
         if entry is not None and reason == "No Reason.":
             # If the member is already afk and hasn't provided a reason with this command,
