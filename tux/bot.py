@@ -21,6 +21,7 @@ from tux.cog_loader import CogLoader
 from tux.database.client import db
 from tux.utils.banner import create_banner
 from tux.utils.config import Config
+from tux.utils.emoji import EmojiManager
 from tux.utils.env import is_dev_mode
 
 # Create console for rich output
@@ -78,6 +79,9 @@ class Tux(commands.Bot):
         self.setup_task: asyncio.Task[None] | None = None
         self.cog_watcher: Any = None
 
+        # this needs to be accessed globally
+        self.emoji_manager = EmojiManager(self)
+
         # Create console for rich output
         self.console = Console(stderr=True, force_terminal=True)
 
@@ -104,6 +108,7 @@ class Tux(commands.Bot):
         try:
             await self._setup_database()
             await self._load_extensions()
+            await self.emoji_manager.init()
             self._start_monitoring()
 
         except Exception as e:
@@ -176,7 +181,9 @@ class Tux(commands.Bot):
         """
 
         if not db.is_connected() or not db.is_registered():
-            raise DatabaseConnectionError(DatabaseConnectionError.CONNECTION_FAILED)
+            raise DatabaseConnectionError(
+                DatabaseConnectionError.CONNECTION_FAILED,
+            )
 
     def _setup_callback(self, task: asyncio.Task[None]) -> None:
         """
@@ -364,7 +371,9 @@ class Tux(commands.Bot):
                         logger.debug(f"Stopped task loop {cog_name}.{name}")
 
                     except Exception as e:
-                        logger.error(f"Error stopping task loop {cog_name}.{name}: {e}")
+                        logger.error(
+                            f"Error stopping task loop {cog_name}.{name}: {e}",
+                        )
 
         if hasattr(self, "_monitor_tasks") and self._monitor_tasks.is_running():
             self._monitor_tasks.stop()
@@ -395,7 +404,9 @@ class Tux(commands.Bot):
 
             for result in results:
                 if isinstance(result, Exception) and not isinstance(result, asyncio.CancelledError):
-                    logger.error(f"Exception during task cancellation for {task_type}: {result!r}")
+                    logger.error(
+                        f"Exception during task cancellation for {task_type}: {result!r}",
+                    )
 
             logger.debug(f"Cancelled {task_type}")
 
@@ -416,7 +427,9 @@ class Tux(commands.Bot):
                 await db.disconnect()
                 logger.debug("Database connections closed.")
             else:
-                logger.warning("Database was not connected, no disconnect needed.")
+                logger.warning(
+                    "Database was not connected, no disconnect needed.",
+                )
 
         except Exception as e:
             logger.critical(f"Error during database disconnection: {e}")
