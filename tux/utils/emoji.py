@@ -52,17 +52,20 @@ class EmojiManager:
         return emoji
 
     async def _emoji_exists(self, name: str) -> bool:
-        """Checks if an emoji with the given name already exists.
+        """Checks if an emoji with the given name exists.
 
-        This function retrieves all application emojis and checks if an emoji
-        with the specified name is present.
+        This function first checks the local cache for the emoji. If not found,
+        it fetches all application emojis and checks if the given name exists.
 
         Args:
-            name: The name of the emoji to check for.
+            name: The name of the emoji to check.
 
         Returns:
-            True if an emoji with the given name exists, False otherwise.
+            True if the emoji exists, False otherwise.
         """
+        if self.get(name):
+            return True
+
         existing = await self.bot.fetch_application_emojis()
         return discord.utils.get(existing, name=name) is not None
 
