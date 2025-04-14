@@ -11,7 +11,17 @@ class EmojiManager:
         self.cache: dict[str, discord.Emoji] = {}
         self.emojis_path = Path(__file__).parents[2] / "assets" / "emojis"
 
-    def get(self, name: str) -> discord.Emoji:
+    def get(self, name: str) -> discord.Emoji | None:
+        """Retrieves an emoji from the cache.
+
+        This function retrieves an emoji with the given name from the local cache.
+
+        Args:
+            name: The name of the emoji to retrieve.
+
+        Returns:
+            The discord.Emoji object if found, None otherwise.
+        """
         return self.cache.get(name)
 
     async def init(self) -> dict[str, discord.Emoji]:
@@ -79,8 +89,8 @@ class EmojiManager:
         Returns:
             A list of created discord.Emoji objects.
         """
-        dupes = []
-        created = []
+        dupes: list[Path] = []
+        created: list[discord.Emoji] = []
 
         for file in self.emojis_path.iterdir():
             filename = file.stem
