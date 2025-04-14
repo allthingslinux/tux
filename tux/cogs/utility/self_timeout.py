@@ -22,13 +22,38 @@ class SelfTimeout(commands.Cog):
         self,
         member: discord.Member,
         guild_name: str,
-        duration_readable: str,
+        duration: str,
         reason: str,
     ) -> bool | NoneType:
+        """
+        Send a self-timeout confirmation dialog to a member
+
+        Parameters
+        ----------
+        member:
+            The discord user or member object representing the account to message
+
+        guild_name (str):
+            The name of the guild the confirmation is being sent from
+
+        duration (str) :
+            human readable string describing the duration of the self-timeout
+
+        reason (str):
+            Why the user has stated they are timing themself out
+
+        Returns
+        -------
+        Bool | NoneType
+            True if the user has confirmed
+            False if the user cancelled
+            None if the confirmation message failed to send
+        """
+
         view = ConfirmationDanger()
         try:
             confirmation_message = await member.send(
-                f'## WARNING\n### You are about to be timed out in the guild "{guild_name}" for {duration_readable} with the reason "{reason}".\nas soon as you confirm this, **you cannot cancel it or remove it early**. There is *no* provision for it to be removed by server staff on request. please think very carefully and make sure you\'ve entered the correct values before you proceed with this command.',
+                f'## WARNING\n### You are about to be timed out in the guild "{guild_name}" for {duration} with the reason "{reason}".\nas soon as you confirm this, **you cannot cancel it or remove it early**. There is *no* provision for it to be removed by server staff on request. please think very carefully and make sure you\'ve entered the correct values before you proceed with this command.',
                 view=view,
             )
         except discord.Forbidden:

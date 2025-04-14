@@ -1,6 +1,12 @@
 import discord
 
 
+# Confirmation dialog view:
+# This view is to be used for a confirmation dialog.
+# ideally it should be sent as a DM to ensure the user requesting it is the only one able to interact.
+# The base class implements the buttons themselves,
+# and the subclasses, which are intended to be imported and used in cogs,
+# change the style and labels depending on severity of the action being confirmed.
 class BaseConfirmationView(discord.ui.View):
     confirm_label: str
     confirm_style: discord.ButtonStyle

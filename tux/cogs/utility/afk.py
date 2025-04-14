@@ -15,33 +15,6 @@ from tux.utils.constants import CONST
 from tux.utils.flags import generate_usage
 
 
-async def add_afk(
-    db: AfkController,
-    reason: str,
-    target: discord.Member,
-    guild_id: int,
-    is_perm: bool,
-    until: datetime | NoneType | None = None,
-    enforced: bool = False,
-):
-    if len(target.display_name) >= CONST.NICKNAME_MAX_LENGTH - 6:
-        truncated_name = f"{target.display_name[: CONST.NICKNAME_MAX_LENGTH - 9]}..."
-        new_name = f"[AFK] {truncated_name}"
-    else:
-        new_name = f"[AFK] {target.display_name}"
-
-    await db.insert_afk(target.id, target.display_name, reason, guild_id, is_perm, until, enforced)
-
-    with contextlib.suppress(discord.Forbidden):
-        await target.edit(nick=new_name)
-
-
-async def del_afk(db: AfkController, target: discord.Member, nickname: str) -> None:
-    await db.remove_afk(target.id)
-    with contextlib.suppress(discord.Forbidden):
-        await target.edit(nick=nickname)
-
-
 # TODO: add `afk until` command, or add support for providing a timeframe in the regular `afk` and `permafk` commands
 class Afk(commands.Cog):
     def __init__(self, bot: Tux) -> None:
@@ -227,3 +200,33 @@ class Afk(commands.Cog):
 
 async def setup(bot: Tux):
     await bot.add_cog(Afk(bot))
+
+
+# Shared AFK helper functions
+# These are placed outside the main class in order to allow other cogs to import them.
+# These functions handle all of the logic of adding and removing db entries and "[AFK]" to/from nicknames
+async def add_afk(
+    db: AfkController,
+    reason: str,
+    target: discord.Member,
+    guild_id: int,
+    is_perm: bool,
+    until: datetime | NoneType | None = None,
+    enforced: bool = False,
+):
+    if len(target.display_name) >= CONST.NICKNAME_MAX_LENGTH - 6:
+        truncated_name = f"{target.display_name[: CONST.NICKNAME_MAX_LENGTH - 9]}..."
+        new_name = f"[AFK] {truncated_name}"
+    else:
+        new_name = f"[AFK] {target.display_name}"
+
+    await db.insert_afk(target.id, target.display_name, reason, guild_id, is_perm, until, enforced)
+
+    with contextlib.suppress(discord.Forbidden):
+        await target.edit(nick=new_name)
+
+
+async def del_afk(db: AfkController, target: discord.Member, nickname: str) -> None:
+    await db.remove_afk(target.id)
+    with contextlib.suppress(discord.Forbidden):
+        await target.edit(nick=nickname)
