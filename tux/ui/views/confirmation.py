@@ -1,45 +1,44 @@
 import discord
 
 
-class ConfirmationDanger(discord.ui.View):
+class BaseConfirmationView(discord.ui.View):
+    confirm_label: str
+    confirm_style: discord.ButtonStyle
+
     def __init__(self):
         super().__init__()
-        self.value = None
+        self.value: bool | None = None
 
-    # When the confirm button is pressed, set the inner value to `True` and
-    # stop the View from listening to more input.
-    # We also send the user an ephemeral message that we're confirming their choice.
-    @discord.ui.button(label="I understand and wish to proceed anyway", style=discord.ButtonStyle.danger)
+    @discord.ui.button(label="PLACEHOLDER", style=discord.ButtonStyle.secondary, custom_id="confirm")
     async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):  # type: ignore
         await interaction.response.send_message("Confirming", ephemeral=True)
         self.value = True
         self.stop()
 
-    # This one is similar to the confirmation button except sets the inner value to `False`
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.grey)
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):  # type: ignore
         await interaction.response.send_message("Cancelling", ephemeral=True)
         self.value = False
         self.stop()
 
+    def update_button_styles(self):
+        for item in self.children:
+            if isinstance(item, discord.ui.Button) and item.custom_id == "confirm":
+                item.label = self.confirm_label
+                item.style = self.confirm_style
 
-class ConfirmationNormal(discord.ui.View):
+
+class ConfirmationDanger(BaseConfirmationView):
     def __init__(self):
         super().__init__()
-        self.value = None
+        self.confirm_label = "I understand and wish to proceed anyway"
+        self.confirm_style = discord.ButtonStyle.danger
+        self.update_button_styles()
 
-    # When the confirm button is pressed, set the inner value to `True` and
-    # stop the View from listening to more input.
-    # We also send the user an ephemeral message that we're confirming their choice.
-    @discord.ui.button(label="Confirm", style=discord.ButtonStyle.green)
-    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):  # type: ignore
-        await interaction.response.send_message("Confirming", ephemeral=True)
-        self.value = True
-        self.stop()
 
-    # This one is similar to the confirmation button except sets the inner value to `False`
-    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.grey)
-    async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):  # type: ignore
-        await interaction.response.send_message("Cancelling", ephemeral=True)
-        self.value = False
-        self.stop()
+class ConfirmationNormal(BaseConfirmationView):
+    def __init__(self):
+        super().__init__()
+        self.confirm_label = "Confirm"
+        self.confirm_style = discord.ButtonStyle.green
+        self.update_button_styles()
