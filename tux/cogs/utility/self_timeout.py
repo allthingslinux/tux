@@ -1,4 +1,3 @@
-import contextlib
 from datetime import UTC, datetime, timedelta
 from types import NoneType
 
@@ -6,9 +5,9 @@ import discord
 from discord.ext import commands
 
 from tux.bot import Tux
+from tux.cogs.utility.afk import add_afk, del_afk
 from tux.database.controllers import AfkController
 from tux.ui.views.confirmation import ConfirmationDanger
-from tux.utils.constants import CONST
 from tux.utils.flags import generate_usage
 from tux.utils.functions import convert_to_seconds, seconds_to_human_readable
 
@@ -18,31 +17,6 @@ class SelfTimeout(commands.Cog):
         self.bot = bot
         self.db = AfkController()
         self.self_timeout.usage = generate_usage(self.self_timeout)
-
-    async def add_afk(
-        self,
-        reason: str,
-        target: discord.Member,
-        guild_id: int,
-        is_perm: bool,
-        until: datetime | NoneType | None = None,
-        enforced: bool = False,
-    ):
-        if len(target.display_name) >= CONST.NICKNAME_MAX_LENGTH - 6:
-            truncated_name = f"{target.display_name[: CONST.NICKNAME_MAX_LENGTH - 9]}..."
-            new_name = f"[AFK] {truncated_name}"
-        else:
-            new_name = f"[AFK] {target.display_name}"
-
-        await self.db.insert_afk(target.id, target.display_name, reason, guild_id, is_perm, until, enforced)
-
-        with contextlib.suppress(discord.Forbidden):
-            await target.edit(nick=new_name)
-
-    async def del_afk(self, target: discord.Member, nickname: str) -> None:
-        await self.db.remove_afk(target.id)
-        with contextlib.suppress(discord.Forbidden):
-            await target.edit(nick=nickname)
 
     async def request_confirmation(
         self,
@@ -116,9 +90,10 @@ class SelfTimeout(commands.Cog):
                 f'You have timed yourself out in guild {ctx.guild.name} for {duration_readable} with the reason "{reason}".',
             )
             if entry is not None:
-                await self.del_afk(member, entry.nickname)
+                await del_afk(self.db, member, entry.nickname)
             await member.timeout(timedelta(seconds=float(duration_seconds)), reason="self time-out")
-            await self.add_afk(
+            await add_afk(
+                self.db,
                 reason,
                 member,
                 ctx.guild.id,
