@@ -5,8 +5,8 @@ import discord
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.cogs.utility.afk import add_afk, del_afk
-from tux.database.controllers import AfkController
+from tux.cogs.utility import add_afk, del_afk
+from tux.database.controllers import DatabaseController
 from tux.ui.views.confirmation import ConfirmationDanger
 from tux.utils.flags import generate_usage
 from tux.utils.functions import convert_to_seconds, seconds_to_human_readable
@@ -15,7 +15,7 @@ from tux.utils.functions import convert_to_seconds, seconds_to_human_readable
 class SelfTimeout(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
-        self.db = AfkController()
+        self.db = DatabaseController()
         self.self_timeout.usage = generate_usage(self.self_timeout)
 
     async def request_confirmation(
@@ -51,16 +51,21 @@ class SelfTimeout(commands.Cog):
         """
 
         view = ConfirmationDanger()
+
         try:
+            message_content = f'### WARNING\n### You are about to be timed out in the guild "{guild_name}" for {duration} with the reason "{reason}".\nas soon as you confirm this, **you cannot cancel it or remove it early**. There is *no* provision for it to be removed by server staff on request. please think very carefully and make sure you\'ve entered the correct values before you proceed with this command.'
+
             confirmation_message = await member.send(
-                f'## WARNING\n### You are about to be timed out in the guild "{guild_name}" for {duration} with the reason "{reason}".\nas soon as you confirm this, **you cannot cancel it or remove it early**. There is *no* provision for it to be removed by server staff on request. please think very carefully and make sure you\'ve entered the correct values before you proceed with this command.',
+                content=message_content,
                 view=view,
             )
+
         except discord.Forbidden:
             return None
 
         await view.wait()
         await confirmation_message.delete()
+
         return view.value
 
     @commands.hybrid_command(
@@ -88,6 +93,7 @@ class SelfTimeout(commands.Cog):
         member = ctx.guild.get_member(ctx.author.id)
         if member is None:
             return
+
         duration_seconds: int = convert_to_seconds(duration)
         duration_readable = seconds_to_human_readable(duration_seconds)
 
@@ -99,13 +105,15 @@ class SelfTimeout(commands.Cog):
             await ctx.send("Error! duration cannot be less than 5 minutes!")
             return
 
-        entry = await self.db.get_afk_member(member.id, guild_id=ctx.guild.id)
+        entry = await self.db.afk.get_afk_member(member.id, guild_id=ctx.guild.id)
+
         if entry is not None and reason == "No Reason.":
             # If the member is already afk and hasn't provided a reason with this command,
             # assume they want to upgrade their current AFK to a self-timeout and carry the old reason
             reason = entry.reason
 
         confirmed = await self.request_confirmation(member, ctx.guild.name, duration_readable, reason)
+
         if confirmed is None:
             await ctx.send("Confirmation failed to send or timed out.")
             return
@@ -114,9 +122,12 @@ class SelfTimeout(commands.Cog):
             await member.send(
                 f'You have timed yourself out in guild {ctx.guild.name} for {duration_readable} with the reason "{reason}".',
             )
+
             if entry is not None:
                 await del_afk(self.db, member, entry.nickname)
+
             await member.timeout(timedelta(seconds=float(duration_seconds)), reason="self time-out")
+
             await add_afk(
                 self.db,
                 reason,
