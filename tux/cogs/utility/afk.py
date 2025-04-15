@@ -1,7 +1,6 @@
 import contextlib
 import textwrap
 from datetime import UTC, datetime, timedelta
-from types import NoneType
 from typing import cast
 from zoneinfo import ZoneInfo
 
@@ -10,16 +9,17 @@ from discord.ext import commands, tasks
 
 from prisma.models import AFKModel
 from tux.bot import Tux
-from tux.database.controllers import AfkController
-from tux.utils.constants import CONST
+from tux.cogs.utility import add_afk, del_afk
+from tux.database.controllers import DatabaseController
 from tux.utils.flags import generate_usage
 
-
 # TODO: add `afk until` command, or add support for providing a timeframe in the regular `afk` and `permafk` commands
+
+
 class Afk(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
-        self.db = AfkController()
+        self.db = DatabaseController()
         self.handle_afk_expiration.start()
         self.afk.usage = generate_usage(self.afk)
         self.permafk.usage = generate_usage(self.permafk)
@@ -33,7 +33,7 @@ class Afk(commands.Cog):
         ctx: commands.Context[Tux],
         *,
         reason: str = "No reason.",
-    ) -> discord.Message:
+    ) -> None:
         """
         Set yourself as AFK.
 
@@ -51,17 +51,21 @@ class Afk(commands.Cog):
         assert ctx.guild
         assert isinstance(target, discord.Member)
 
-        entry = await self.db.get_afk_member(target.id, guild_id=ctx.guild.id)
+        entry = await self.db.afk.get_afk_member(target.id, guild_id=ctx.guild.id)
+
         if entry is not None:
-            await self.db.remove_afk(target.id)
-            await self.db.insert_afk(target.id, entry.nickname, shortened_reason, ctx.guild.id)
-            return await ctx.send(
+            await self.db.afk.remove_afk(target.id)
+            await self.db.afk.insert_afk(target.id, entry.nickname, shortened_reason, ctx.guild.id)
+
+            await ctx.send(
                 f"You are already afk, updating AFK reason to `{shortened_reason}`",
                 ephemeral=True,
             )
+            return
 
         await add_afk(self.db, shortened_reason, target, ctx.guild.id, False)
-        return await ctx.send(
+
+        await ctx.send(
             content="\N{SLEEPING SYMBOL} || You are now afk! " + f"Reason: `{shortened_reason}`",
             allowed_mentions=discord.AllowedMentions(
                 users=False,
@@ -72,7 +76,7 @@ class Afk(commands.Cog):
 
     @commands.hybrid_command(name="permafk")
     @commands.guild_only()
-    async def permafk(self, ctx: commands.Context[Tux], *, reason: str = "No reason.") -> discord.Message:
+    async def permafk(self, ctx: commands.Context[Tux], *, reason: str = "No reason.") -> None:
         """
         Set yourself permanently AFK until you rerun the command.
 
@@ -89,15 +93,17 @@ class Afk(commands.Cog):
         assert ctx.guild
         assert isinstance(target, discord.Member)
 
-        entry = await self.db.get_afk_member(target.id, guild_id=ctx.guild.id)
+        entry = await self.db.afk.get_afk_member(target.id, guild_id=ctx.guild.id)
         if entry is not None:
             await del_afk(self.db, target, entry.nickname)
-            return await ctx.send("Welcome back!")
+            await ctx.send("Welcome back!")
+            return
 
         shortened_reason = textwrap.shorten(reason, width=100, placeholder="...")
+
         await add_afk(self.db, shortened_reason, target, ctx.guild.id, True)
 
-        return await ctx.send(
+        await ctx.send(
             content="\N{SLEEPING SYMBOL} || You are now permanently afk! To remove afk run this command again. "
             + f"Reason: `{shortened_reason}`",
             allowed_mentions=discord.AllowedMentions(
@@ -117,24 +123,27 @@ class Afk(commands.Cog):
         message : discord.Message
             The message to check.
         """
+        assert isinstance(message.author, discord.Member)
 
         if not message.guild or message.author.bot:
             return
 
-        entry = await self.db.get_afk_member(message.author.id, guild_id=message.guild.id)
+        entry = await self.db.afk.get_afk_member(message.author.id, guild_id=message.guild.id)
+
         if not entry:
             return
 
         if entry.since + timedelta(seconds=10) > datetime.now(ZoneInfo("UTC")):
             return
-        if await self.db.is_perm_afk(message.author.id, guild_id=message.guild.id):
-            return
-        assert isinstance(message.author, discord.Member)
 
-        await self.db.remove_afk(message.author.id)
+        if await self.db.afk.is_perm_afk(message.author.id, guild_id=message.guild.id):
+            return
+
+        await self.db.afk.remove_afk(message.author.id)
 
         await message.reply("Welcome back!", delete_after=5)
 
+        # Suppress Forbidden errors if the bot doesn't have permission to change the nickname
         with contextlib.suppress(discord.Forbidden):
             await message.author.edit(nick=entry.nickname)
 
@@ -158,7 +167,7 @@ class Afk(commands.Cog):
         afks_mentioned: list[tuple[discord.Member, AFKModel]] = []
 
         for mentioned in message.mentions:
-            entry = await self.db.get_afk_member(mentioned.id, guild_id=message.guild.id)
+            entry = await self.db.afk.get_afk_member(mentioned.id, guild_id=message.guild.id)
             if entry:
                 afks_mentioned.append((cast(discord.Member, mentioned), entry))
 
@@ -185,48 +194,37 @@ class Afk(commands.Cog):
         Check AFK database at a regular interval,
         Remove AFK from users with an entry that has expired.
         """
-        guilds = self.bot.guilds
-        for guild in guilds:
-            entries = await self.db.get_all_afk_members(guild.id)
-            for entry in entries:
-                if entry.until is not None and entry.until < datetime.now(UTC):
-                    member = guild.get_member(entry.member_id)
-                    if member is None:
-                        # Handles the edge case of a user leaving the guild while still temp-AFK
-                        await self.db.remove_afk(entry.member_id)
-                    else:
-                        await del_afk(self.db, member, entry.nickname)
+        for guild in self.bot.guilds:
+            expired_entries = await self._get_expired_afk_entries(guild.id)
+
+            for entry in expired_entries:
+                member = guild.get_member(entry.member_id)
+
+                if member is None:
+                    # Handles the edge case of a user leaving the guild while still temp-AFK
+                    await self.db.afk.remove_afk(entry.member_id)
+                else:
+                    await del_afk(self.db, member, entry.nickname)
+
+    async def _get_expired_afk_entries(self, guild_id: int) -> list[AFKModel]:
+        """
+        Get all expired AFK entries for a guild.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to check.
+
+        Returns
+        -------
+        list[AFKModel]
+            A list of expired AFK entries.
+        """
+        entries = await self.db.afk.get_all_afk_members(guild_id)
+        current_time = datetime.now(UTC)
+
+        return [entry for entry in entries if entry.until is not None and entry.until < current_time]
 
 
-async def setup(bot: Tux):
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Afk(bot))
-
-
-# Shared AFK helper functions
-# These are placed outside the main class in order to allow other cogs to import them.
-# These functions handle all of the logic of adding and removing db entries and "[AFK]" to/from nicknames
-async def add_afk(
-    db: AfkController,
-    reason: str,
-    target: discord.Member,
-    guild_id: int,
-    is_perm: bool,
-    until: datetime | NoneType | None = None,
-    enforced: bool = False,
-):
-    if len(target.display_name) >= CONST.NICKNAME_MAX_LENGTH - 6:
-        truncated_name = f"{target.display_name[: CONST.NICKNAME_MAX_LENGTH - 9]}..."
-        new_name = f"[AFK] {truncated_name}"
-    else:
-        new_name = f"[AFK] {target.display_name}"
-
-    await db.insert_afk(target.id, target.display_name, reason, guild_id, is_perm, until, enforced)
-
-    with contextlib.suppress(discord.Forbidden):
-        await target.edit(nick=new_name)
-
-
-async def del_afk(db: AfkController, target: discord.Member, nickname: str) -> None:
-    await db.remove_afk(target.id)
-    with contextlib.suppress(discord.Forbidden):
-        await target.edit(nick=nickname)
