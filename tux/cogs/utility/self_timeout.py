@@ -36,7 +36,7 @@ class SelfTimeout(commands.Cog):
             The reason why you are timing yourself out
         """
         if ctx.guild is None:
-            await ctx.send("Command must be run in a guild!")
+            await ctx.send("Command must be run in a guild!", ephemeral=True)
             return
 
         member = ctx.guild.get_member(ctx.author.id)
@@ -47,11 +47,11 @@ class SelfTimeout(commands.Cog):
         duration_readable = seconds_to_human_readable(duration_seconds)
 
         if duration_seconds > 604800:
-            await ctx.send("Error! duration cannot be longer than 7 days!")
+            await ctx.reply("Error! duration cannot be longer than 7 days!", ephemeral=True)
             return
 
         if duration_seconds < 300:
-            await ctx.send("Error! duration cannot be less than 5 minutes!")
+            await ctx.reply("Error! duration cannot be less than 5 minutes!", ephemeral=True)
             return
 
         entry = await self.db.afk.get_afk_member(member.id, guild_id=ctx.guild.id)
