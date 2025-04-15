@@ -1,5 +1,4 @@
 from datetime import UTC, datetime, timedelta
-from types import NoneType
 
 import discord
 from discord.ext import commands
@@ -17,56 +16,6 @@ class SelfTimeout(commands.Cog):
         self.bot = bot
         self.db = DatabaseController()
         self.self_timeout.usage = generate_usage(self.self_timeout)
-
-    async def request_confirmation(
-        self,
-        member: discord.Member,
-        guild_name: str,
-        duration: str,
-        reason: str,
-    ) -> bool | NoneType:
-        """
-        Send a self-timeout confirmation dialog to a member
-
-        Parameters
-        ----------
-        member:
-            The discord user or member object representing the account to message
-
-        guild_name (str):
-            The name of the guild the confirmation is being sent from
-
-        duration (str) :
-            human readable string describing the duration of the self-timeout
-
-        reason (str):
-            Why the user has stated they are timing themself out
-
-        Returns
-        -------
-        Bool | NoneType
-            True if the user has confirmed
-            False if the user cancelled
-            None if the confirmation message failed to send
-        """
-
-        view = ConfirmationDanger()
-
-        try:
-            message_content = f'### WARNING\n### You are about to be timed out in the guild "{guild_name}" for {duration} with the reason "{reason}".\nas soon as you confirm this, **you cannot cancel it or remove it early**. There is *no* provision for it to be removed by server staff on request. please think very carefully and make sure you\'ve entered the correct values before you proceed with this command.'
-
-            confirmation_message = await member.send(
-                content=message_content,
-                view=view,
-            )
-
-        except discord.Forbidden:
-            return None
-
-        await view.wait()
-        await confirmation_message.delete()
-
-        return view.value
 
     @commands.hybrid_command(
         name="self_timeout",
@@ -112,16 +61,22 @@ class SelfTimeout(commands.Cog):
             # assume they want to upgrade their current AFK to a self-timeout and carry the old reason
             reason = entry.reason
 
-        confirmed = await self.request_confirmation(member, ctx.guild.name, duration_readable, reason)
-
-        if confirmed is None:
-            await ctx.send("Confirmation failed to send or timed out.")
-            return
+        message_content = f'### WARNING\n### You are about to be timed out in the guild "{ctx.guild.name}" for {duration} with the reason "{reason}".\nas soon as you confirm this, **you cannot cancel it or remove it early**. There is *no* provision for it to be removed by server staff on request. please think very carefully and make sure you\'ve entered the correct values before you proceed with this command.'
+        view = ConfirmationDanger(user=ctx.author.id)
+        confirmation_message = await ctx.reply(message_content, view=view, ephemeral=True)
+        await view.wait()
+        await confirmation_message.delete()
+        confirmed = view.value
 
         if confirmed:
-            await member.send(
-                f'You have timed yourself out in guild {ctx.guild.name} for {duration_readable} with the reason "{reason}".',
-            )
+            try:
+                await ctx.author.send(
+                    f'You have timed yourself out in guild {ctx.guild.name} for {duration_readable} with the reason "{reason}".',
+                )
+            except discord.Forbidden:
+                await ctx.reply(
+                    f'You have timed yourself out for {duration_readable} with the reason "{reason}".',
+                )
 
             if entry is not None:
                 await del_afk(self.db, member, entry.nickname)
