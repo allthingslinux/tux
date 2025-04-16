@@ -20,6 +20,7 @@ from . import ModerationCogBase
 CASE_TYPE_EMOJI_MAP = {
     CaseType.BAN: "ban",
     CaseType.UNBAN: "ban",
+    CaseType.TEMPBAN: "tempban",
     CaseType.KICK: "kick",
     CaseType.TIMEOUT: "timeout",
     CaseType.UNTIMEOUT: "timeout",
@@ -34,6 +35,7 @@ CASE_TYPE_EMOJI_MAP = {
 CASE_ACTION_MAP = {
     CaseType.BAN: "added",
     CaseType.KICK: "added",
+    CaseType.TEMPBAN: "added",
     CaseType.TIMEOUT: "added",
     CaseType.WARN: "added",
     CaseType.JAIL: "added",
@@ -88,8 +90,12 @@ class Cases(ModerationCogBase):
         """
         Manage moderation cases in the server.
         """
+
+        # TODO: Remap base cases command to view all cases if not provided with a case number
+
         if case_number is not None:
             await ctx.invoke(self.cases_view, number=case_number, flags=CasesViewFlags())
+
         elif ctx.subcommand_passed is None:
             await ctx.send_help("cases")
 
@@ -175,6 +181,7 @@ class Cases(ModerationCogBase):
                 if flags.status == case.case_status:
                     await ctx.send("Status is already set to that value.", ephemeral=True)
                     return
+
             except ValueError:
                 await ctx.send("Status must be a boolean value (true/false).", ephemeral=True)
                 return
@@ -309,6 +316,7 @@ class Cases(ModerationCogBase):
         # If not in cache, try fetching
         try:
             return await self.bot.fetch_user(user_id)
+
         except discord.NotFound:
             logger.warning(f"Could not find user with ID {user_id}")
             return MockUser(user_id)
@@ -364,6 +372,7 @@ class Cases(ModerationCogBase):
                 title=f"Case {action}",
                 description="Failed to find case.",
             )
+
             await ctx.send(embed=embed, ephemeral=True)
             return
 
@@ -420,12 +429,14 @@ class Cases(ModerationCogBase):
 
         # Paginate cases
         cases_per_page = 10
+
         for i in range(0, len(cases), cases_per_page):
             embed = self._create_case_list_embed(
                 ctx,
                 cases[i : i + cases_per_page],
                 total_cases,
             )
+
             menu.add_page(embed)
 
         menu_buttons = [
