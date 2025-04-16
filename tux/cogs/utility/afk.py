@@ -51,18 +51,6 @@ class Afk(commands.Cog):
         assert ctx.guild
         assert isinstance(target, discord.Member)
 
-        entry = await self.db.afk.get_afk_member(target.id, guild_id=ctx.guild.id)
-
-        if entry is not None:
-            await self.db.afk.remove_afk(target.id)
-            await self.db.afk.insert_afk(target.id, entry.nickname, shortened_reason, ctx.guild.id)
-
-            await ctx.send(
-                f"You are already afk, updating AFK reason to `{shortened_reason}`",
-                ephemeral=True,
-            )
-            return
-
         await add_afk(self.db, shortened_reason, target, ctx.guild.id, False)
 
         await ctx.send(

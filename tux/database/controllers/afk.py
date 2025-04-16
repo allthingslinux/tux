@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from prisma.actions import GuildActions
 from prisma.models import AFKModel, Guild
@@ -73,7 +73,7 @@ class AfkController(BaseController[AFKModel]):
         )
         return is_user_perm_afk is not None
 
-    async def insert_afk(
+    async def set_afk(
         self,
         member_id: int,
         nickname: str,
@@ -83,7 +83,7 @@ class AfkController(BaseController[AFKModel]):
         until: datetime | None = None,
         enforced: bool = False,
     ) -> AFKModel:
-        """Insert a new AFK record.
+        """Insert or update an AFK record for a member.
 
         Parameters
         ----------
@@ -101,18 +101,31 @@ class AfkController(BaseController[AFKModel]):
         Returns
         -------
         AFKModel
-            The created AFK record
+            The created or updated AFK record
         """
-        return await self.create(
-            data={
-                "member_id": member_id,
-                "nickname": nickname,
-                "reason": reason,
-                "perm_afk": perm_afk,
-                "guild": self.connect_or_create_relation("guild_id", guild_id),
-                "until": until,
-                "enforced": enforced,
-            },
+        create_data = {
+            "member_id": member_id,
+            "nickname": nickname,
+            "reason": reason,
+            "perm_afk": perm_afk,
+            "guild": self.connect_or_create_relation("guild_id", guild_id),
+            "until": until,
+            "enforced": enforced,
+            "since": datetime.now(UTC),
+        }
+        update_data = {
+            "nickname": nickname,
+            "reason": reason,
+            "perm_afk": perm_afk,
+            "until": until,
+            "enforced": enforced,
+            "since": datetime.now(UTC),
+        }
+
+        return await self.upsert(
+            where={"member_id": member_id},
+            create=create_data,
+            update=update_data,
             include={"guild": True},
         )
 
