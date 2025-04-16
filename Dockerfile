@@ -119,7 +119,7 @@ ENV VIRTUAL_ENV=/app/.venv \
 COPY --from=build --chown=nonroot:nonroot /app /app
 
 # Switch to the non-root user
-USER nonroot
+#USER nonroot
 
 ENTRYPOINT ["tux"]
 CMD ["--prod", "start"]
