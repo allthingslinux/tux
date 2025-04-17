@@ -46,6 +46,10 @@ class SelfTimeout(commands.Cog):
         duration_seconds: int = convert_to_seconds(duration)
         duration_readable = seconds_to_human_readable(duration_seconds)
 
+        if duration_seconds == 0:
+            await ctx.reply("Error! Invalid time format")
+            return
+
         if duration_seconds > 604800:
             await ctx.reply("Error! duration cannot be longer than 7 days!", ephemeral=True)
             return

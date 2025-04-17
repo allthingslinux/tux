@@ -152,6 +152,11 @@ class Afk(commands.Cog):
         if message.author.bot:
             return
 
+        # Check if the message is a self-timeout command.
+        # if it is, the member is probably trying to upgrade to a self-timeout, so AFK status should not be removed.
+        if message.content.startswith("$sto"):
+            return
+
         afks_mentioned: list[tuple[discord.Member, AFKModel]] = []
 
         for mentioned in message.mentions:
