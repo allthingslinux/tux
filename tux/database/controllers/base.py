@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from typing import Any, Generic, TypeVar
 
+import sentry_sdk
 from loguru import logger
 
 from prisma.models import (
@@ -93,11 +94,25 @@ class BaseController(Generic[ModelType]):
         Exception
             Re-raises any exception caught during the database operation.
         """
-        try:
-            return await operation()
-        except Exception as e:
-            logger.error(f"{error_msg}: {e}")
-            raise
+        # Create a Sentry span to track database query performance
+        if sentry_sdk.is_initialized():
+            with sentry_sdk.start_span(op="db.query", description=f"Database query: {self.table_name}") as span:
+                span.set_tag("db.table", self.table_name)
+                try:
+                    result = await operation()
+                    span.set_status("ok")
+                    return result  # noqa: TRY300
+                except Exception as e:
+                    span.set_status("internal_error")
+                    span.set_data("error", str(e))
+                    logger.error(f"{error_msg}: {e}")
+                    raise
+        else:
+            try:
+                return await operation()
+            except Exception as e:
+                logger.error(f"{error_msg}: {e}")
+                raise
 
     def _add_include_arg_if_present(self, args: dict[str, Any], include: dict[str, bool] | None) -> None:
         """Adds the 'include' argument to a dictionary if it is not None."""
