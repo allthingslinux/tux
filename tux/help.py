@@ -1,19 +1,85 @@
-import asyncio
-from collections.abc import Awaitable, Mapping
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, get_type_hints
+from typing import Any, TypeVar, get_type_hints
 
 import discord
 from discord.ext import commands
 from loguru import logger
-from reactionmenu import ViewButton, ViewMenu
-from reactionmenu.abc import Page
-from reactionmenu.views_menu import ViewSelect
 
 from tux.ui.embeds import EmbedCreator
 from tux.utils.config import CONFIG
 from tux.utils.constants import CONST
 from tux.utils.env import get_current_env
+
+
+class HelpSelectMenu(discord.ui.Select[discord.ui.View]):
+    def __init__(self, help_command: "TuxHelp", options: list[discord.SelectOption], placeholder: str):
+        super().__init__(
+            placeholder=placeholder,
+            min_values=1,
+            max_values=1,
+            options=options,
+        )
+        self.help_command = help_command
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        value = self.values[0]
+        await self.help_command.on_category_select(interaction, value)
+
+
+class CommandSelectMenu(discord.ui.Select[discord.ui.View]):
+    def __init__(self, help_command: "TuxHelp", options: list[discord.SelectOption], placeholder: str):
+        super().__init__(
+            placeholder=placeholder,
+            min_values=1,
+            max_values=1,
+            options=options,
+        )
+        self.help_command = help_command
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        value = self.values[0]
+        await self.help_command.on_command_select(interaction, value)
+
+
+class BackButton(discord.ui.Button[discord.ui.View]):
+    def __init__(self, help_command: "TuxHelp"):
+        super().__init__(
+            style=discord.ButtonStyle.secondary,
+            label="Back",
+            emoji="↩️",
+            custom_id="back_button",
+        )
+        self.help_command = help_command
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        await self.help_command.on_back_button(interaction)
+
+
+class CloseButton(discord.ui.Button[discord.ui.View]):
+    def __init__(self):
+        super().__init__(
+            style=discord.ButtonStyle.danger,
+            label="Close",
+            emoji="✖️",
+            custom_id="close_button",
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        if interaction.message:
+            await interaction.message.delete()
+
+
+class HelpView(discord.ui.View):
+    def __init__(self, help_command: "TuxHelp", timeout: int = 180):
+        super().__init__(timeout=timeout)
+        self.help_command = help_command
+
+
+CommandT = TypeVar("CommandT", bound=commands.Command[Any, Any, Any])
 
 
 class TuxHelp(commands.HelpCommand):
@@ -28,6 +94,10 @@ class TuxHelp(commands.HelpCommand):
         )
         self._prefix_cache: dict[int | None, str] = {}
         self._category_cache: dict[str, dict[str, str]] = {}
+        self.current_category: str | None = None
+        self.current_page: str = "main"
+        self.message: discord.Message | None = None
+        self.command_mapping: dict[str, dict[str, commands.Command[Any, Any, Any]]] | None = None
 
     async def _get_prefix(self) -> str:
         """Fetches and caches the prefix for each guild."""
@@ -112,29 +182,8 @@ class TuxHelp(commands.HelpCommand):
             inline=False,
         )
 
-    # Pages and Select Options
-    async def _create_select_options(
-        self,
-        command_categories: dict[str, dict[str, str]],
-        menu: ViewMenu,
-    ) -> dict[discord.SelectOption, list[Page]]:
-        """
-        Creates select options for the help menu by iterating over the keys in the
-        cached command categories. This approach ensures that even categories without
-        a corresponding folder (e.g. "extra") are included.
-        """
-        select_options: dict[discord.SelectOption, list[Page]] = {}
-        prefix: str = await self._get_prefix()
-
-        # Iterate over the keys in command_categories
-        tasks: list[Awaitable[tuple[str, Page]]] = [
-            self._create_page(cog_group, command_categories, menu, prefix)
-            for cog_group in command_categories
-            if any(command_categories[cog_group].values())
-        ]
-
-        select_options_data: list[tuple[str, Page]] = await asyncio.gather(*tasks)
-
+    async def _create_category_options(self) -> list[discord.SelectOption]:
+        """Creates select options for the category select menu."""
         category_emoji_map = {
             "info": "🔍",
             "moderation": "🛡",
@@ -144,79 +193,66 @@ class TuxHelp(commands.HelpCommand):
             "fun": "🎉",
             "levels": "📈",
             "services": "🔌",
+            "guild": "🏰",
         }
 
-        for cog_group, page in select_options_data:
-            emoji = category_emoji_map.get(cog_group, "❓")
-            select_options[discord.SelectOption(label=cog_group.capitalize(), emoji=emoji)] = [page]
+        options: list[discord.SelectOption] = []
+        for category in self._category_cache:
+            if any(self._category_cache[category].values()):
+                emoji = category_emoji_map.get(category, "❓")
+                options.append(
+                    discord.SelectOption(
+                        label=category.capitalize(),
+                        value=category,
+                        emoji=emoji,
+                        description=f"View {category.capitalize()} commands",
+                    ),
+                )
 
-        return select_options
+        return sorted(options, key=lambda o: o.label)
 
-    async def _create_page(
-        self,
-        cog_group: str,
-        command_categories: dict[str, dict[str, str]],
-        menu: ViewMenu,
-        prefix: str,
-    ) -> tuple[str, Page]:
-        embed: discord.Embed = self._embed_base(f"{cog_group.capitalize()} Commands")
-        embed.set_footer(
-            text=f"Use {prefix}help <command> or <subcommand> to learn about it.",
-        )
+    async def _create_command_options(self, category: str) -> list[discord.SelectOption]:
+        """Creates select options for commands in the selected category."""
+        options: list[discord.SelectOption] = []
 
-        sorted_commands: list[tuple[str, str]] = sorted(command_categories[cog_group].items())
-        description: str = "\n".join(f"**`{prefix}{cmd}`** | {command_list}" for cmd, command_list in sorted_commands)
-        embed.description = description
-        page: Page = Page(embed=embed)
-        menu.add_page(embed)
+        if self.command_mapping and category in self.command_mapping:
+            for cmd_name, cmd in self.command_mapping[category].items():
+                description = cmd.short_doc or "No description"
+                # Truncate description if too long
+                if len(description) > 100:
+                    description = f"{description[:97]}..."
 
-        return cog_group, page
+                options.append(discord.SelectOption(label=cmd_name, value=cmd_name, description=description))
 
-    @staticmethod
-    def _add_navigation_and_selection(menu: ViewMenu, select_options: dict[discord.SelectOption, list[Page]]) -> None:
-        """Adds navigation buttons and select options to the help menu."""
-        menu.add_select(ViewSelect(title="🗃️ Select a category", options=select_options))
-        menu.add_button(
-            ViewButton(label="Close Menu", style=discord.ButtonStyle.danger, custom_id=ViewButton.ID_END_SESSION),
-        )
+        return sorted(options, key=lambda o: o.label)
 
     # Cogs and Command Categories
-    async def _add_cog_pages(
-        self,
-        menu: ViewMenu,
-        mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]],
-    ) -> None:
-        """Adds pages for each cog category to the help menu."""
-        command_categories = await self._get_command_categories(mapping)
-
-        # Instead of using filesystem folders, iterate over cached categories.
-        select_options = await self._create_select_options(command_categories, menu)
-        self._add_navigation_and_selection(menu, select_options)
-
     async def _get_command_categories(
         self,
         mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]],
-    ) -> dict[str, dict[str, str]]:
+    ) -> tuple[dict[str, dict[str, str]], dict[str, dict[str, commands.Command[Any, Any, Any]]]]:
         """Retrieves the command categories and their corresponding commands."""
         if self._category_cache:
-            return self._category_cache  # Return cached categories if available
+            return self._category_cache, self.command_mapping or {}
 
         command_categories: dict[str, dict[str, str]] = {}
+        command_mapping: dict[str, dict[str, commands.Command[Any, Any, Any]]] = {}
 
         for cog, mapping_commands in mapping.items():
             if cog and len(mapping_commands) > 0:
                 # Attempt to extract the group using the cog's module name.
                 cog_group = self._extract_cog_group(cog) or "extra"
                 command_categories.setdefault(cog_group, {})
+                command_mapping.setdefault(cog_group, {})
                 for command in mapping_commands:
-                    if command.aliases:
-                        cmd_aliases = ", ".join(f"`{alias}`" for alias in command.aliases)
-                    else:
-                        cmd_aliases = "`No aliases`"
-                    command_categories[cog_group][command.name] = cmd_aliases
+                    cmd = command
+                    cmd_aliases = ", ".join(f"`{alias}`" for alias in cmd.aliases) if cmd.aliases else "`No aliases`"
+                    command_categories[cog_group][cmd.name] = cmd_aliases
+                    command_mapping[cog_group][cmd.name] = cmd
 
-        self._category_cache = command_categories  # Cache the results
-        return command_categories
+        self._category_cache = command_categories
+        self.command_mapping = command_mapping
+        return command_categories, command_mapping
 
     @staticmethod
     def _get_cog_groups() -> list[str]:
@@ -238,24 +274,52 @@ class TuxHelp(commands.HelpCommand):
             return parts[2].lower()
         return None
 
-    # Sending Help Messages
-    async def send_bot_help(self, mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]]) -> None:
-        """Sends help messages for the bot with pagination based on the folder it is in."""
-        menu = ViewMenu(
-            self.context,
-            menu_type=ViewMenu.TypeEmbed,
-            all_can_click=True,
-            delete_on_timeout=True,
-            timeout=180,
-            show_page_director=False,
-        )
+    async def _create_main_view(self) -> HelpView:
+        """Creates the main help view with category selection."""
+        view = HelpView(self)
 
-        # TODO: Make help command more customizable
+        # Add category select
+        category_options = await self._create_category_options()
+        category_select = HelpSelectMenu(self, category_options, "Select a category")
+        view.add_item(category_select)
+
+        # Add close button
+        view.add_item(CloseButton())
+
+        return view
+
+    async def _create_category_view(self, category: str) -> HelpView:
+        """Creates a view for a specific category with command selection."""
+        view = HelpView(self)
+
+        # Add command select for this category
+        command_options = await self._create_command_options(category)
+        command_select = CommandSelectMenu(self, command_options, f"Select a {category} command")
+        view.add_item(command_select)
+
+        # Add back button and close button
+        view.add_item(BackButton(self))
+        view.add_item(CloseButton())
+
+        return view
+
+    async def _create_command_view(self) -> HelpView:
+        """Creates a view for command details with back button."""
+        view = HelpView(self)
+
+        # Add back button and close button
+        view.add_item(BackButton(self))
+        view.add_item(CloseButton())
+
+        return view
+
+    async def _create_main_embed(self) -> discord.Embed:
+        """Creates the main help embed."""
         if CONFIG.BOT_NAME != "Tux":
             logger.info("Bot name is not Tux, using different help message.")
             embed = self._embed_base(
                 "Hello! Welcome to the help command.",
-                f"{CONFIG.BOT_NAME} is an self hosted instance of Tux. The bot is written in Python using discord.py.\n\nIf you enjoy using {CONFIG.BOT_NAME}, consider contributing to the original project.",
+                f"{CONFIG.BOT_NAME} is a self-hosted instance of Tux. The bot is written in Python using discord.py.\n\nIf you enjoy using {CONFIG.BOT_NAME}, consider contributing to the original project.",
             )
         else:
             embed = self._embed_base(
@@ -264,10 +328,44 @@ class TuxHelp(commands.HelpCommand):
             )
 
         await self._add_bot_help_fields(embed)
-        menu.add_page(embed)
-        await self._add_cog_pages(menu, mapping)
+        return embed
 
-        await menu.start()
+    async def _create_category_embed(self, category: str) -> discord.Embed:
+        """Creates an embed for a specific category."""
+        prefix = await self._get_prefix()
+        embed = self._embed_base(f"{category.capitalize()} Commands")
+
+        embed.set_footer(
+            text="Select a command from the dropdown to see details.",
+        )
+
+        sorted_commands = sorted(self._category_cache[category].items())
+        description = "\n".join(f"**`{prefix}{cmd}`** | {command_list}" for cmd, command_list in sorted_commands)
+        embed.description = description
+
+        return embed
+
+    async def _create_command_embed(self, command_name: str) -> discord.Embed:
+        """Creates an embed for a specific command."""
+        if not self.current_category or not self.command_mapping:
+            return self._embed_base("Error", "Command not found")
+
+        command = self.command_mapping[self.current_category].get(command_name)
+        if not command:
+            return self._embed_base("Error", "Command not found")
+
+        prefix = await self._get_prefix()
+        embed = self._embed_base(
+            title=f"{prefix}{command.qualified_name}",
+            description=f"> {command.help or 'No documentation available.'}",
+        )
+
+        await self._add_command_help_fields(embed, command)
+
+        if flag_details := self._format_flag_details(command):
+            embed.add_field(name="Flags", value=f"```\n{flag_details}\n```", inline=False)
+
+        return embed
 
     async def _add_bot_help_fields(self, embed: discord.Embed) -> None:
         """Adds additional help information about the bot."""
@@ -280,7 +378,7 @@ class TuxHelp(commands.HelpCommand):
         )
         embed.add_field(
             name="Command Help",
-            value=f"Use `{prefix}help <command>` or `{prefix}help <subcommand>` to learn about a specific command.\n> e.g. `{prefix}help ban` or `{prefix}h dev load_cog`",
+            value="Select a category from the dropdown, then select a command to view details.",
             inline=False,
         )
         embed.add_field(
@@ -308,6 +406,57 @@ class TuxHelp(commands.HelpCommand):
             value=f"-# Running {bot_name_display} version `{CONFIG.BOT_VERSION}` in `{environment}` mode | {owner_info}",
             inline=False,
         )
+
+    # Event handlers for UI components
+    async def on_category_select(self, interaction: discord.Interaction, category: str) -> None:
+        """Handles when a category is selected from the dropdown."""
+        self.current_category = category
+        self.current_page = "category"
+
+        embed = await self._create_category_embed(category)
+        view = await self._create_category_view(category)
+
+        if interaction.message:
+            await interaction.message.edit(embed=embed, view=view)
+
+    async def on_command_select(self, interaction: discord.Interaction, command_name: str) -> None:
+        """Handles when a command is selected from the dropdown."""
+        self.current_page = "command"
+
+        embed = await self._create_command_embed(command_name)
+        view = await self._create_command_view()
+
+        if interaction.message:
+            await interaction.message.edit(embed=embed, view=view)
+
+    async def on_back_button(self, interaction: discord.Interaction) -> None:
+        """Handles when the back button is clicked."""
+        if not interaction.message:
+            return
+
+        if self.current_page == "command" and self.current_category:
+            # Go back to category page
+            self.current_page = "category"
+            embed = await self._create_category_embed(self.current_category)
+            view = await self._create_category_view(self.current_category)
+        else:
+            # Go back to main page
+            self.current_page = "main"
+            self.current_category = None
+            embed = await self._create_main_embed()
+            view = await self._create_main_view()
+
+        await interaction.message.edit(embed=embed, view=view)
+
+    # Sending Help Messages
+    async def send_bot_help(self, mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]]) -> None:
+        """Sends help messages for the bot with custom pagination."""
+        await self._get_command_categories(mapping)
+
+        embed = await self._create_main_embed()
+        view = await self._create_main_view()
+
+        self.message = await self.get_destination().send(embed=embed, view=view)
 
     async def send_cog_help(self, cog: commands.Cog) -> None:
         """Sends a help message for a specific cog."""
@@ -337,67 +486,29 @@ class TuxHelp(commands.HelpCommand):
         if flag_details := self._format_flag_details(command):
             embed.add_field(name="Flags", value=f"```\n{flag_details}\n```", inline=False)
 
-        await self.get_destination().send(embed=embed)
+        view = HelpView(self)
+        view.add_item(CloseButton())
+
+        await self.get_destination().send(embed=embed, view=view)
 
     async def send_group_help(self, group: commands.Group[Any, Any, Any]) -> None:
         """Sends a help message for a specific command group."""
         prefix = await self._get_prefix()
 
-        # Create a menu for pagination
-        menu = ViewMenu(
-            self.context,
-            menu_type=ViewMenu.TypeEmbed,
-            delete_on_timeout=True,
-            timeout=180,
-            show_page_director=False,
-        )
-
         # Create the main embed for the group command itself
-        main_embed = self._embed_base(f"{group.name}", f"> {group.help or 'No documentation available.'}")
-        await self._add_command_help_fields(main_embed, group)
+        embed = self._embed_base(f"{group.name}", f"> {group.help or 'No documentation available.'}")
+        await self._add_command_help_fields(embed, group)
 
-        # Add the main embed as the first page
-        menu.add_page(main_embed)
+        # Add subcommands to the embed
+        for command in sorted(group.commands, key=lambda x: x.name):
+            self._add_command_field(embed, command, prefix)
 
-        # Create separate embeds for subcommands, with a maximum of 24 fields per embed
-        # (leaving room for potentially adding a navigation hint field)
-        commands_list = list(group.commands)
-        total_commands = len(commands_list)
+        view = HelpView(self)
+        view.add_item(CloseButton())
 
-        if total_commands > 0:
-            # If few commands, add them to the main embed
-            if total_commands <= 24:
-                for command in commands_list:
-                    self._add_command_field(main_embed, command, prefix)
-            else:
-                # Create multiple pages for subcommands
-                for i in range(0, total_commands, 24):
-                    batch = commands_list[i : i + 24]
-                    subcommand_embed = self._embed_base(
-                        f"{group.name} Subcommands (Page {i // 24 + 1})",
-                        f"Showing subcommands {i + 1}-{min(i + 24, total_commands)} of {total_commands}",
-                    )
-
-                    for command in batch:
-                        self._add_command_field(subcommand_embed, command, prefix)
-
-                    menu.add_page(subcommand_embed)
-
-        # Always add at least the end session button first
-        menu.add_button(ViewButton.end_session())
-
-        # Add navigation buttons only if we have multiple pages
-        if hasattr(menu, "pages") and menu.pages is not None and len(menu.pages) > 1:
-            menu.add_button(ViewButton.back())
-            menu.add_button(ViewButton.next())
-
-        await menu.start()
+        await self.get_destination().send(embed=embed, view=view)
 
     async def send_error_message(self, error: str) -> None:
-        """Sends an error message."""
-
-        logger.warning(f"An error occurred while sending a help message: {error}")
-
         embed = EmbedCreator.create_embed(
             EmbedCreator.ERROR,
             user_name=self.context.author.name,
@@ -405,4 +516,8 @@ class TuxHelp(commands.HelpCommand):
             description=error,
         )
 
-        await self.get_destination().send(embed=embed, delete_after=30)
+        await self.get_destination().send(embed=embed, delete_after=CONST.DEFAULT_DELETE_AFTER)
+
+        # Only log errors that are not related to command not found
+        if "no command called" not in error.lower():
+            logger.warning(f"An error occurred while sending a help message: {error}")
