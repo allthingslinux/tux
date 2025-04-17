@@ -15,7 +15,6 @@ ACTIVITY_TYPE_MAP = {
     "streaming": discord.ActivityType.streaming,
     "listening": discord.ActivityType.listening,
     "watching": discord.ActivityType.watching,
-    # Add other types if needed
 }
 
 
@@ -124,8 +123,13 @@ class ActivityHandler(commands.Cog):
 
         while True:
             for activity in self.activities:
-                substituted_activity = await self.handle_substitution(activity)
-                await self.bot.change_presence(activity=substituted_activity)
+                try:
+                    substituted_activity = await self.handle_substitution(activity)
+                    await self.bot.change_presence(activity=substituted_activity)
+                except Exception as e:
+                    logger.error(f"Error updating activity: {e}")
+                    # Continue the loop even if an error occurs
+
                 await asyncio.sleep(self.delay)
 
     @commands.Cog.listener()
