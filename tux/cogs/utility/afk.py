@@ -111,10 +111,10 @@ class Afk(commands.Cog):
         message : discord.Message
             The message to check.
         """
-        assert isinstance(message.author, discord.Member)
-
         if not message.guild or message.author.bot:
             return
+
+        assert isinstance(message.author, discord.Member)
 
         entry = await self.db.afk.get_afk_member(message.author.id, guild_id=message.guild.id)
 
