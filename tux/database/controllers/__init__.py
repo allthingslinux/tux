@@ -13,7 +13,7 @@ from tux.database.controllers.levels import LevelsController
 from tux.database.controllers.note import NoteController
 from tux.database.controllers.reminder import ReminderController
 from tux.database.controllers.snippet import SnippetController
-from tux.database.controllers.starboard import StarboardController
+from tux.database.controllers.starboard import StarboardController, StarboardMessageController
 
 # Define a TypeVar that can be any BaseController subclass
 ControllerType = TypeVar("ControllerType")
@@ -46,6 +46,8 @@ class DatabaseController:
         The snippet controller instance.
     _starboard : StarboardController, optional
         The starboard controller instance.
+    _starboard_message : StarboardMessageController, optional
+        The starboard message controller instance.
     """
 
     def __init__(self) -> None:
@@ -60,6 +62,7 @@ class DatabaseController:
         self._reminder: ReminderController | None = None
         self._snippet: SnippetController | None = None
         self._starboard: StarboardController | None = None
+        self._starboard_message: StarboardMessageController | None = None
 
     def _get_controller(self, controller_type: type[ControllerType]) -> ControllerType:
         """
@@ -162,6 +165,7 @@ class DatabaseController:
         "reminder": ReminderController,
         "snippet": SnippetController,
         "starboard": StarboardController,
+        "starboard_message": StarboardMessageController,
     }
 
     def __getattr__(self, name: str) -> Any:
