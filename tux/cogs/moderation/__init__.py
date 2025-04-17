@@ -9,7 +9,6 @@ from discord.ext import commands
 from loguru import logger
 
 from prisma.enums import CaseType
-from prisma.models import Case
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator, EmbedType
@@ -202,7 +201,7 @@ class ModerationCogBase(commands.Cog):
                 case_expires_at=expires_at,
             )
 
-            case_result: Case | None = handle_case_result(case_result)
+            case_result = handle_case_result(case_result) if case_result is not None else None
 
         except Exception as e:
             logger.error(f"Failed to create case for {user}: {e}")
