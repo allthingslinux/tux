@@ -16,26 +16,11 @@ from tux.utils.flags import CaseModifyFlags, CasesViewFlags, generate_usage
 
 from . import ModerationCogBase
 
-# Dictionary of emoji IDs for various case types and statuses
-EMOJIS = {
-    "active_case_emoji": 1268115730344443966,
-    "inactive_case_emoji": 1268115712627441715,
-    "added": 1268115639914987562,
-    "removed": 1268116308927713331,
-    "ban": 1268115779350560799,
-    "kick": 1268115792818470944,
-    "timeout": 1268115809083981886,
-    "warn": 1268115764498399264,
-    "jail": 1268115750392954880,
-    "snippetban": 1277174953950576681,
-    "snippetunban": 1277174953292337222,
-    "transparent": 1227090229639250032,
-}
-
 # Maps case types to their corresponding emoji keys
 CASE_TYPE_EMOJI_MAP = {
     CaseType.BAN: "ban",
     CaseType.UNBAN: "ban",
+    CaseType.TEMPBAN: "tempban",
     CaseType.KICK: "kick",
     CaseType.TIMEOUT: "timeout",
     CaseType.UNTIMEOUT: "timeout",
@@ -50,6 +35,7 @@ CASE_TYPE_EMOJI_MAP = {
 CASE_ACTION_MAP = {
     CaseType.BAN: "added",
     CaseType.KICK: "added",
+    CaseType.TEMPBAN: "added",
     CaseType.TIMEOUT: "added",
     CaseType.WARN: "added",
     CaseType.JAIL: "added",
@@ -89,7 +75,10 @@ class Cases(ModerationCogBase):
         super().__init__(bot)
         self.cases.usage = generate_usage(self.cases)
         self.cases_view.usage = generate_usage(self.cases_view, CasesViewFlags)
-        self.cases_modify.usage = generate_usage(self.cases_modify, CaseModifyFlags)
+        self.cases_modify.usage = generate_usage(
+            self.cases_modify,
+            CaseModifyFlags,
+        )
 
     @commands.hybrid_group(
         name="cases",
@@ -101,8 +90,12 @@ class Cases(ModerationCogBase):
         """
         Manage moderation cases in the server.
         """
+
+        # TODO: Remap base cases command to view all cases if not provided with a case number
+
         if case_number is not None:
             await ctx.invoke(self.cases_view, number=case_number, flags=CasesViewFlags())
+
         elif ctx.subcommand_passed is None:
             await ctx.send_help("cases")
 
@@ -188,6 +181,7 @@ class Cases(ModerationCogBase):
                 if flags.status == case.case_status:
                     await ctx.send("Status is already set to that value.", ephemeral=True)
                     return
+
             except ValueError:
                 await ctx.send("Status must be a boolean value (true/false).", ephemeral=True)
                 return
@@ -322,6 +316,7 @@ class Cases(ModerationCogBase):
         # If not in cache, try fetching
         try:
             return await self.bot.fetch_user(user_id)
+
         except discord.NotFound:
             logger.warning(f"Could not find user with ID {user_id}")
             return MockUser(user_id)
@@ -377,6 +372,7 @@ class Cases(ModerationCogBase):
                 title=f"Case {action}",
                 description="Failed to find case.",
             )
+
             await ctx.send(embed=embed, ephemeral=True)
             return
 
@@ -424,19 +420,46 @@ class Cases(ModerationCogBase):
             await ctx.send(embed=embed, ephemeral=True)
             return
 
-        menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed, all_can_click=True, delete_on_timeout=True)
+        menu = ViewMenu(
+            ctx,
+            menu_type=ViewMenu.TypeEmbed,
+            all_can_click=True,
+            delete_on_timeout=True,
+        )
 
         # Paginate cases
         cases_per_page = 10
+
         for i in range(0, len(cases), cases_per_page):
-            embed = self._create_case_list_embed(ctx, cases[i : i + cases_per_page], total_cases)
+            embed = self._create_case_list_embed(
+                ctx,
+                cases[i : i + cases_per_page],
+                total_cases,
+            )
+
             menu.add_page(embed)
 
         menu_buttons = [
-            ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_GO_TO_FIRST_PAGE, emoji="⏮️"),
-            ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_PREVIOUS_PAGE, emoji="⏪"),
-            ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_NEXT_PAGE, emoji="⏩"),
-            ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_GO_TO_LAST_PAGE, emoji="⏭️"),
+            ViewButton(
+                style=discord.ButtonStyle.secondary,
+                custom_id=ViewButton.ID_GO_TO_FIRST_PAGE,
+                emoji="⏮️",
+            ),
+            ViewButton(
+                style=discord.ButtonStyle.secondary,
+                custom_id=ViewButton.ID_PREVIOUS_PAGE,
+                emoji="⏪",
+            ),
+            ViewButton(
+                style=discord.ButtonStyle.secondary,
+                custom_id=ViewButton.ID_NEXT_PAGE,
+                emoji="⏩",
+            ),
+            ViewButton(
+                style=discord.ButtonStyle.secondary,
+                custom_id=ViewButton.ID_GO_TO_LAST_PAGE,
+                emoji="⏭️",
+            ),
         ]
 
         menu.add_buttons(menu_buttons)
@@ -467,7 +490,11 @@ class Cases(ModerationCogBase):
             The fields for the case.
         """
         return [
-            ("Moderator", f"**{moderator}**\n`{moderator.id if hasattr(moderator, 'id') else 'Unknown'}`", True),
+            (
+                "Moderator",
+                f"**{moderator}**\n`{moderator.id if hasattr(moderator, 'id') else 'Unknown'}`",
+                True,
+            ),
             ("User", f"**{user}**\n`{user.id}`", True),
             ("Reason", f"> {reason}", False),
         ]
@@ -520,47 +547,36 @@ class Cases(ModerationCogBase):
         # Add each case to the embed
         for case in cases:
             # Get emojis for this case
-            status_emoji = self._get_emoji("active_case_emoji" if case.case_status else "inactive_case_emoji")
-            type_emoji = self._get_emoji(CASE_TYPE_EMOJI_MAP.get(case.case_type, ""))
-            action_emoji = self._get_emoji(CASE_ACTION_MAP.get(case.case_type, ""))
+            status_emoji = self.bot.emoji_manager.get(
+                "active_case" if case.case_status else "inactive_case",
+            )
+            type_emoji = self.bot.emoji_manager.get(
+                CASE_TYPE_EMOJI_MAP.get(case.case_type, "tux_error"),
+            )
+            action_emoji = self.bot.emoji_manager.get(
+                CASE_ACTION_MAP.get(case.case_type, "tux_error"),
+            )
 
             # Format the case number
             case_number = f"{case.case_number:04}" if case.case_number is not None else "0000"
 
             # Format type and action
-            case_type_and_action = (
-                f"{action_emoji}{type_emoji}" if action_emoji and type_emoji else ":interrobang::interrobang:"
-            )
+            case_type_and_action = f"{action_emoji}{type_emoji}"
 
             # Format date
-            case_date = discord.utils.format_dt(case.case_created_at, "R") if case.case_created_at else ":interrobang:"
+            case_date = (
+                discord.utils.format_dt(
+                    case.case_created_at,
+                    "R",
+                )
+                if case.case_created_at
+                else f"{self.bot.emoji_manager.get('tux_error')}"
+            )
 
             # Add the line to the embed
             embed.description += f"{status_emoji}`{case_number}`\u2003 {case_type_and_action} \u2003__{case_date}__\n"
 
         return embed
-
-    def _get_emoji(self, emoji_key: str) -> str:
-        """
-        Get a formatted emoji string from a key in the EMOJIS dict.
-
-        Parameters
-        ----------
-        emoji_key : str
-            The key of the emoji in the EMOJIS dict.
-
-        Returns
-        -------
-        str
-            The formatted emoji string or empty string if not found.
-        """
-        emoji_id = EMOJIS.get(emoji_key)
-        if not emoji_id:
-            return ""
-
-        emoji = self.bot.get_emoji(emoji_id)
-
-        return f"<:{emoji.name}:{emoji.id}>" if emoji else ""
 
 
 async def setup(bot: Tux) -> None:
