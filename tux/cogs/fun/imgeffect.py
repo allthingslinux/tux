@@ -51,7 +51,7 @@ class ImgEffect(commands.Cog):
 
     @staticmethod
     def deepfry_image(pil_image: Image.Image) -> Image.Image:
-        pil_image = pil_image.resize((int(pil_image.width * 0.25), int(pil_image.height * 0.25)))
+        pil_image = pil_image.resize((int(pil_image.width * 0.25), int(pil_image.height * 0.25)))  # type: ignore
         pil_image = ImageEnhance.Sharpness(pil_image).enhance(100.0)
 
         r = pil_image.split()[0]
@@ -62,7 +62,7 @@ class ImgEffect(commands.Cog):
         r = ImageOps.colorize(r, colours[0], colours[1])
         pil_image = Image.blend(pil_image, r, 0.75)
 
-        return pil_image.resize((int(pil_image.width * 4), int(pil_image.height * 4)))
+        return pil_image.resize((int(pil_image.width * 4), int(pil_image.height * 4)))  # type: ignore
 
     async def send_invalid_image_response(self, interaction: discord.Interaction) -> None:
         logger.error("The file is not a permitted image.")
