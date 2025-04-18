@@ -83,17 +83,18 @@ class Afk(commands.Cog):
         assert isinstance(target, discord.Member)
 
         entry = await self.db.afk.get_afk_member(target.id, guild_id=ctx.guild.id)
-        if entry is not None:
-            await del_afk(self.db, target, entry.nickname)
-            await ctx.reply("Welcome back!")
-            return
-
         shortened_reason = textwrap.shorten(reason, width=100, placeholder="...")
 
-        if entry is not None and reason == "No reason.":
-            # If the member is already afk and hasn't provided a reason with this command,
-            # assume they want to change the current AFK to a permafk and carry the old reason
-            shortened_reason = entry.reason
+        # if it's not already a permafk, we should upgrade it to permafk instead of un-afk-ing
+        if entry is not None:
+            if entry.perm_afk:
+                await del_afk(self.db, target, entry.nickname)
+                await ctx.reply("Welcome back!")
+                return
+            if reason == "No reason.":
+                # If the member is already afk and hasn't provided a reason with this command,
+                # assume they want to change the current AFK to a permafk and carry the old reason
+                shortened_reason = entry.reason
 
         await add_afk(self.db, shortened_reason, target, ctx.guild.id, True)
 
@@ -168,7 +169,7 @@ class Afk(commands.Cog):
             reason,
             member,
             ctx.guild.id,
-            True,
+            False,
             datetime.now(UTC) + timedelta(seconds=duration_seconds),
             False,
         )
@@ -223,7 +224,6 @@ class Afk(commands.Cog):
 
         if message.author.bot:
             return
-
         # Check if the message is a self-timeout command.
         # if it is, the member is probably trying to upgrade to a self-timeout, so AFK status should not be removed.
         if message.content.startswith("$sto"):
