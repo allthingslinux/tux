@@ -54,7 +54,7 @@ class Afk(commands.Cog):
 
         await add_afk(self.db, shortened_reason, target, ctx.guild.id, False)
 
-        await ctx.send(
+        await ctx.reply(
             content="\N{SLEEPING SYMBOL} || You are now afk! " + f"Reason: `{shortened_reason}`",
             allowed_mentions=discord.AllowedMentions(
                 users=False,
@@ -85,14 +85,19 @@ class Afk(commands.Cog):
         entry = await self.db.afk.get_afk_member(target.id, guild_id=ctx.guild.id)
         if entry is not None:
             await del_afk(self.db, target, entry.nickname)
-            await ctx.send("Welcome back!")
+            await ctx.reply("Welcome back!")
             return
 
         shortened_reason = textwrap.shorten(reason, width=100, placeholder="...")
 
+        if entry is not None and reason == "No reason.":
+            # If the member is already afk and hasn't provided a reason with this command,
+            # assume they want to change the current AFK to a permafk and carry the old reason
+            shortened_reason = entry.reason
+
         await add_afk(self.db, shortened_reason, target, ctx.guild.id, True)
 
-        await ctx.send(
+        await ctx.reply(
             content="\N{SLEEPING SYMBOL} || You are now permanently afk! To remove afk run this command again. "
             + f"Reason: `{shortened_reason}`",
             allowed_mentions=discord.AllowedMentions(
@@ -107,7 +112,7 @@ class Afk(commands.Cog):
         aliases=["afku", "uafk", "afkuntil"],
     )
     @commands.guild_only()
-    async def self_timeout(self, ctx: commands.Context[Tux], duration: str, *, reason: str = "No Reason.") -> None:
+    async def afk_until(self, ctx: commands.Context[Tux], duration: str, *, reason: str = "No Reason.") -> None:
         """
         AFK for a set duration
 
@@ -121,7 +126,7 @@ class Afk(commands.Cog):
             The reason why you are AFK
         """
         if ctx.guild is None:
-            await ctx.send("Command must be run in a guild!", ephemeral=True)
+            await ctx.reply("Command must be run in a guild!", ephemeral=True)
             return
 
         member = ctx.guild.get_member(ctx.author.id)
