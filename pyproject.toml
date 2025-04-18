@@ -61,6 +61,7 @@ types-dateparser = ">=1.2.0.20240420"
 types-psutil = ">=6.0.0.20240621"
 types-pytz = ">=2024.2.0.20240913"
 types-pyyaml = ">=6.0.12.20240808"
+types-pillow = "^10.2.0.20240822"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.30"

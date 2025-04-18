@@ -22,6 +22,7 @@ from tux.cog_loader import CogLoader
 from tux.database.client import db
 from tux.utils.banner import create_banner
 from tux.utils.config import Config
+from tux.utils.emoji import EmojiManager
 from tux.utils.env import is_dev_mode
 from tux.utils.sentry import start_span, start_transaction
 
@@ -83,6 +84,9 @@ class Tux(commands.Bot):
         self.cog_watcher: Any = None
         # Store for tracking Sentry transactions by command/interaction ID
         self.active_sentry_transactions: dict[int, Any] = {}
+
+        # Emoji manager
+        self.emoji_manager = EmojiManager(self)
 
         # Create console for rich output
         self.console = Console(stderr=True, force_terminal=True)
@@ -246,8 +250,9 @@ class Tux(commands.Bot):
         Performs initialization tasks when the bot connects to Discord:
         1. Records start time if not set
         2. Ensures setup is complete
-        3. Starts hot reloading for cogs (loaded as separate cog)
-        4. Logs startup banner
+        3. Initializes emoji manager
+        4. Starts hot reloading for cogs (loaded as separate cog)
+        5. Logs startup banner
 
         Notes
         -----
@@ -263,6 +268,17 @@ class Tux(commands.Bot):
 
             await self._wait_for_setup()
             transaction.set_tag("setup_complete", self.setup_complete)
+
+            # Initialize emoji manager after bot is connected to Discord
+            with start_span("bot.init_emoji_manager", "Initializing emoji manager") as span:
+                try:
+                    await self.emoji_manager.init()
+                    logger.info("Emoji manager initialized")
+                    span.set_tag("emoji_manager.initialized", True)
+                except Exception as e:
+                    logger.warning(f"Failed to initialize emoji manager: {e}")
+                    span.set_tag("emoji_manager.initialized", False)
+                    span.set_data("error", str(e))
 
             # Start hot reloading - import at function level to avoid circular imports
             with start_span("bot.load_hot_reload", "Setting up hot reload") as span:

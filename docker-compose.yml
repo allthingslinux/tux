@@ -1,3 +1,5 @@
+---
+
 # NOTE: This file is used for production deployment.
 
 services:
@@ -11,6 +13,7 @@ services:
     volumes:
       - ./config:/app/config:ro
       - ./tux:/app/tux
+      - ./assets:/app/assets
     env_file:
       - .env
     restart: unless-stopped
