@@ -177,6 +177,38 @@ def convert_to_seconds(time_str: str) -> int:
     return 0 if current_value != 0 else total_seconds
 
 
+def seconds_to_human_readable(seconds: int) -> str:
+    """
+    Converts a number of seconds into a human readable string
+
+    Parameters
+    ----------
+    seconds : int
+        The number of seconds to convert
+
+    Returns
+    -------
+    str
+        A string that breaks the time down by months, weeks, days, hours, minutes, and seconds.
+    """
+    units = (
+        ("month", 2592000),
+        ("week", 604800),
+        ("day", 86400),
+        ("hour", 3600),
+        ("minute", 60),
+        ("second", 1),
+    )
+    if seconds == 0:
+        return "zero seconds"
+    parts: list[str] = []
+    for unit, div in units:
+        amount, seconds = divmod(int(seconds), div)
+        if amount > 0:
+            parts.append(f"{amount} {unit}{'' if amount == 1 else 's'}")
+    return ", ".join(parts)
+
+
 def datetime_to_unix(dt: datetime | None) -> str:
     """
     This function accepts a datetime object or None, converts it into a Unix timestamp
