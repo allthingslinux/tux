@@ -210,6 +210,43 @@ class EmojiManager:
 
         return None
 
+    async def _process_emoji_file(self, file_path: Path) -> tuple[discord.Emoji | None, Path | None]:
+        """Attempts to process a single emoji file.
+
+        Parameters
+        ----------
+        file_path : Path
+            The path to the emoji file to process
+
+        Returns
+        -------
+        tuple[discord.Emoji | None, Path | None]
+            A tuple where the first element is the newly created emoji (if created)
+            and the second element is the file_path if processing failed or was skipped.
+        """
+        if not file_path.is_file():
+            logger.trace(f"Skipping non-file item: {file_path.name}")
+            return None, file_path
+
+        emoji_name = file_path.stem
+
+        if not _is_valid_emoji_name(emoji_name):
+            logger.warning(f"Skipping file with invalid potential emoji name: {file_path.name}")
+            return None, file_path
+
+        if self.get(emoji_name):
+            logger.trace(f"Emoji '{emoji_name}' already exists, skipping.")
+            return None, file_path
+
+        logger.debug(f"Emoji '{emoji_name}' not found in cache, attempting to create from {file_path.name}.")
+
+        if img_bytes := _read_emoji_file(file_path):
+            new_emoji = await self._create_discord_emoji(emoji_name, img_bytes)
+            if new_emoji:
+                return new_emoji, None
+
+        return None, file_path  # Failed creation or read
+
     async def sync_emojis(self) -> tuple[list[discord.Emoji], list[Path]]:
         """Synchronizes emojis from the local assets directory to the application.
 
@@ -248,32 +285,11 @@ class EmojiManager:
             return [], []
 
         for file_path in files_to_process:
-            if not file_path.is_file():
-                logger.trace(f"Skipping non-file item: {file_path.name}")
-                continue
-
-            emoji_name = file_path.stem
-
-            if not _is_valid_emoji_name(emoji_name):
-                logger.warning(f"Skipping file with invalid potential emoji name: {file_path.name}")
-                duplicates_or_failed.append(file_path)
-                continue
-
-            if self.get(emoji_name):
-                logger.trace(f"Emoji '{emoji_name}' already exists, skipping.")
-                duplicates_or_failed.append(file_path)
-                continue
-
-            logger.debug(f"Emoji '{emoji_name}' not found in cache, attempting to create from {file_path.name}.")
-
-            if img_bytes := _read_emoji_file(file_path):
-                new_emoji = await self._create_discord_emoji(emoji_name, img_bytes)
-                if new_emoji:
-                    created_emojis.append(new_emoji)
-                else:
-                    duplicates_or_failed.append(file_path)  # Failed creation
-            else:
-                duplicates_or_failed.append(file_path)  # Failed read
+            emoji, failed_file = await self._process_emoji_file(file_path)
+            if emoji:
+                created_emojis.append(emoji)
+            elif failed_file:
+                duplicates_or_failed.append(failed_file)
 
         logger.info(
             f"Emoji synchronization finished. "
@@ -363,14 +379,8 @@ class EmojiManager:
             logger.error(f"Resync failed for '{name}': Could not find local file.")
             return None
 
-        # Step 4: Read file and create the new emoji
-        img_bytes = _read_emoji_file(local_file_path)
-        if not img_bytes:
-            # Error logged in utility function
-            logger.error(f"Resync failed for '{name}': Could not read local file.")
-            return None
-
-        new_emoji = await self._create_discord_emoji(name, img_bytes)
+        # Step 4: Process the found emoji file
+        new_emoji, _ = await self._process_emoji_file(local_file_path)
 
         if new_emoji:
             logger.info(f"Resync completed successfully for '{name}'. New ID: {new_emoji.id}")
@@ -379,3 +389,56 @@ class EmojiManager:
 
         logger.info(f"Resync process for emoji '{name}' finished.")  # Log finish regardless of success
         return new_emoji
+
+    async def delete_all_emojis(self) -> tuple[list[str], list[str]]:
+        """Delete all application emojis that match names from the emoji assets directory.
+
+        This method:
+        1. Ensures the emoji cache is initialized
+        2. Finds all potential emoji names from the assets directory
+        3. Deletes any matching emojis from Discord and updates the cache
+
+        Returns
+        -------
+        tuple[list[str], list[str]]
+            A tuple containing:
+            - A list of successfully deleted emoji names
+            - A list of emoji names that failed to delete or weren't found
+        """
+        if not await self._ensure_initialized():
+            logger.error("Cannot delete emojis: Cache initialization failed.")
+            return [], []
+
+        logger.info("Starting deletion of all application emojis matching asset directory...")
+
+        # Get all potential emoji names from the asset directory
+        emoji_names_to_delete: set[str] = set()
+        try:
+            for file_path in self.emojis_path.iterdir():
+                if file_path.is_file() and _is_valid_emoji_name(file_path.stem):
+                    emoji_names_to_delete.add(file_path.stem)
+        except OSError as e:
+            logger.error(f"Failed to list files in emoji directory {self.emojis_path}: {e}")
+            return [], []
+
+        if not emoji_names_to_delete:
+            logger.warning(f"No valid emoji names found in directory: {self.emojis_path}")
+            return [], []
+
+        deleted_names: list[str] = []
+        failed_names: list[str] = []
+
+        # Process each emoji name
+        for emoji_name in emoji_names_to_delete:
+            logger.debug(f"Attempting to delete emoji: '{emoji_name}'")
+
+            if await self._delete_discord_emoji(emoji_name):
+                deleted_names.append(emoji_name)
+            else:
+                failed_names.append(emoji_name)
+
+        logger.info(
+            f"Emoji deletion finished. Deleted: {len(deleted_names)}, Failed/Not Found: {len(failed_names)}.",
+        )
+
+        return deleted_names, failed_names
