@@ -102,7 +102,7 @@ FROM base AS production
 
 # Create a non-root user and group using standard tools for Debian base
 RUN groupadd --system nonroot && \
-  useradd --system --gid nonroot --no-create-home nonroot
+  useradd --create-home --system --gid nonroot nonroot
 
 WORKDIR /app
 
@@ -119,7 +119,7 @@ ENV VIRTUAL_ENV=/app/.venv \
 COPY --from=build --chown=nonroot:nonroot /app /app
 
 # Switch to the non-root user
-#USER nonroot
+USER nonroot
 
 ENTRYPOINT ["tux"]
 CMD ["--prod", "start"]
