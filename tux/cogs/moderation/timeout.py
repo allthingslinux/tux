@@ -1,3 +1,5 @@
+import datetime
+
 import discord
 from discord.ext import commands
 
@@ -25,7 +27,6 @@ class Timeout(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
-        reason: str | None = None,
         *,
         flags: TimeoutFlags,
     ) -> None:
@@ -38,8 +39,6 @@ class Timeout(ModerationCogBase):
             The context in which the command is being invoked.
         member : discord.Member
             The member to timeout.
-        reason : str | None
-            The reason for the timeout.
         flags : TimeoutFlags
             The flags for the command (duration: str, silent: bool).
 
@@ -59,18 +58,33 @@ class Timeout(ModerationCogBase):
         if not await self.check_conditions(ctx, member, ctx.author, "timeout"):
             return
 
-        final_reason = reason or self.DEFAULT_REASON
-        duration = parse_time_string(flags.duration)
+        # Parse and validate duration
+        try:
+            duration = parse_time_string(flags.duration)
+
+            # Discord maximum timeout duration is 28 days
+            max_duration = datetime.timedelta(days=28)
+            if duration > max_duration:
+                await ctx.send(
+                    "Timeout duration exceeds Discord's maximum of 28 days. Setting timeout to maximum allowed (28 days).",
+                    ephemeral=True,
+                )
+                duration = max_duration
+                # Update the display duration for consistency
+                flags.duration = "28d"
+        except ValueError as e:
+            await ctx.send(f"Invalid duration format: {e}", ephemeral=True)
+            return
 
         # Execute timeout with case creation and DM
         await self.execute_mod_action(
             ctx=ctx,
             case_type=CaseType.TIMEOUT,
             user=member,
-            final_reason=final_reason,
+            reason=flags.reason,
             silent=flags.silent,
             dm_action=f"timed out for {flags.duration}",
-            actions=[(member.timeout(duration, reason=final_reason), type(None))],
+            actions=[(member.timeout(duration, reason=flags.reason), type(None))],
             duration=flags.duration,
         )
 

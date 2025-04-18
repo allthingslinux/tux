@@ -3,6 +3,7 @@ from discord.ext import commands
 
 from tux.bot import Tux
 from tux.cogs.services.levels import LevelsService
+from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils.config import CONFIG
 from tux.utils.flags import generate_usage
@@ -12,6 +13,7 @@ class Level(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.levels_service = LevelsService(bot)
+        self.db = DatabaseController()
         self.level.usage = generate_usage(self.level)
 
     @commands.guild_only()
@@ -19,7 +21,7 @@ class Level(commands.Cog):
         name="level",
         aliases=["lvl", "rank", "xp"],
     )
-    async def level(self, ctx: commands.Context[Tux], member: discord.Member | None = None) -> None:
+    async def level(self, ctx: commands.Context[Tux], member: discord.User | discord.Member | None = None) -> None:
         """
         Fetches the XP and level for a member (or the person who runs the command if no member is provided).
 
@@ -28,7 +30,7 @@ class Level(commands.Cog):
         ctx : commands.Context[Tux]
             The context object for the command.
 
-        member : discord.Member
+        member : discord.User
             The member to fetch XP and level for.
         """
 
@@ -37,23 +39,24 @@ class Level(commands.Cog):
             return
 
         if member is None:
-            member = ctx.author if isinstance(ctx.author, discord.Member) else None
-            assert member
+            member = ctx.author
 
-        xp = await self.levels_service.levels_controller.get_xp(member.id, ctx.guild.id)
-        level = await self.levels_service.levels_controller.get_level(member.id, ctx.guild.id)
+        xp: float = await self.db.levels.get_xp(member.id, ctx.guild.id)
+        level: int = await self.db.levels.get_level(member.id, ctx.guild.id)
 
         if self.levels_service.enable_xp_cap and level >= self.levels_service.max_level:
-            max_xp = self.levels_service.calculate_xp_for_level(self.levels_service.max_level)
-            level_display = self.levels_service.max_level
-            xp_display = f"{round(max_xp)} (limit reached)"
+            max_xp: float = self.levels_service.calculate_xp_for_level(self.levels_service.max_level)
+            level_display: int = self.levels_service.max_level
+            xp_display: str = f"{round(max_xp)} (limit reached)"
         else:
-            level_display = level
-            xp_display = f"{round(xp)}"
+            level_display: int = level
+            xp_display: str = f"{round(xp)}"
 
         if CONFIG.SHOW_XP_PROGRESS:
+            xp_progress: int
+            xp_required: int
             xp_progress, xp_required = self.levels_service.get_level_progress(xp, level)
-            progress_bar = self.levels_service.generate_progress_bar(xp_progress, xp_required)
+            progress_bar: str = self.levels_service.generate_progress_bar(xp_progress, xp_required)
 
             embed: discord.Embed = EmbedCreator.create_embed(
                 embed_type=EmbedType.DEFAULT,

@@ -24,7 +24,6 @@ class Untimeout(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
-        reason: str | None = None,
         *,
         flags: UntimeoutFlags,
     ) -> None:
@@ -37,10 +36,8 @@ class Untimeout(ModerationCogBase):
             The context in which the command is being invoked.
         member : discord.Member
             The member to remove timeout from.
-        reason : str | None
-            The reason for removing the timeout.
         flags : UntimeoutFlags
-            The flags for the command. (silent: bool)
+            The flags for the command. (reason: str, silent: bool)
 
         Raises
         ------
@@ -58,17 +55,15 @@ class Untimeout(ModerationCogBase):
         if not await self.check_conditions(ctx, member, ctx.author, "untimeout"):
             return
 
-        final_reason = reason or self.DEFAULT_REASON
-
         # Execute untimeout with case creation and DM
         await self.execute_mod_action(
             ctx=ctx,
             case_type=CaseType.UNTIMEOUT,
             user=member,
-            final_reason=final_reason,
+            reason=flags.reason,
             silent=flags.silent,
             dm_action="removed from timeout",
-            actions=[(member.timeout(None, reason=final_reason), type(None))],
+            actions=[(member.timeout(None, reason=flags.reason), type(None))],
         )
 
 
