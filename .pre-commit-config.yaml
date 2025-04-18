@@ -1,5 +1,5 @@
 default_language_version:
-  python: "3.13.2"
+  python: python3.13
 
 repos:
   # 1. Fast File Checks
