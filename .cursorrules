@@ -127,45 +127,13 @@
     },
     "error_handling": {
       "prefer_try_catch": true,
-      "log_errors": true
-    },
-    "naming_conventions": {
-      "variables": "snake_case",
-      "functions": "snake_case",
-      "classes": "PascalCase",
-      "interfaces": "PascalCase",
-      "files": "snake_case"
-    }
-  },
-  "project_configuration": {
-    "language": "Python",
-    "version": "3.13.2",
-    "dependencies": {
-      "management_tool": "Poetry",
-      "libraries": [
-        "discord.py",
-        "pyright",
-        "prisma",
-        "ruff",
-        "loguru",
-        "httpx",
-        "pre-commit",
-        "sentry-sdk",
-        "python-dotenv",
-        "pytz",
-        "pillow",
-        "rich",
-        "aiofiles",
-        "reactionmenu"
-      ]
+      "log_errors": true,
+      "logging_tool": "Loguru",
+      "exception_management": "Sentry and handlers/error.py"
     },
     "development": {
       "environment": "Docker",
       "deployment_tool": "Docker Compose"
-    },
-    "error_handling": {
-      "logging_tool": "Loguru",
-      "exception_management": "Sentry and handlers/error.py"
     }
   }
 }
