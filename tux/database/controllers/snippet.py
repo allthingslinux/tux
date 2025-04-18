@@ -233,6 +233,25 @@ class SnippetController(BaseController[Snippet]):
             include={"guild": True},
         )
 
+    async def get_all_aliases(self, snippet_name: str, guild_id: int) -> list[Snippet]:
+        """Get all aliases for a snippet name within a guild.
+
+        Parameters
+        ----------
+        snippet_name : str
+            The name of the snippet to find aliases for.
+        guild_id : int
+            The ID of the guild to search within.
+
+        Returns
+        -------
+        list[Snippet]
+            A list of Snippet objects representing the aliases.
+        """
+        return await self.find_many(
+            where={"alias": {"equals": snippet_name, "mode": "insensitive"}, "guild_id": guild_id},
+        )
+
     async def update_snippet_by_id(self, snippet_id: int, snippet_content: str) -> Snippet | None:
         """Update a snippet's content.
 

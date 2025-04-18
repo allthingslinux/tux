@@ -26,6 +26,27 @@ DANGEROUS_DD_COMMANDS = r"dd\s+.*of=/dev/([hs]d[a-z]|nvme\d+n\d+)"
 FORMAT_COMMANDS = r"mkfs\..*\s+/dev/([hs]d[a-z]|nvme\d+n\d+)"
 
 
+def truncate(text: str, length: int) -> str:
+    """Truncates a string to a specified length.
+
+    If the string is longer than the specified length, it will be truncated
+    and an ellipsis will be appended. Otherwise, the original string is returned.
+
+    Parameters
+    ----------
+    text : str
+        The string to truncate.
+    length : int
+        The maximum length of the string.
+
+    Returns
+    -------
+    str
+        The truncated string.
+    """
+    return text if len(text) <= length else f"{text[: length - 3]}..."
+
+
 def is_harmful(command: str) -> str | None:
     # sourcery skip: assign-if-exp, boolean-if-exp-identity, reintroduce-else
     """
@@ -175,6 +196,38 @@ def convert_to_seconds(time_str: str) -> int:
             return 0
 
     return 0 if current_value != 0 else total_seconds
+
+
+def seconds_to_human_readable(seconds: int) -> str:
+    """
+    Converts a number of seconds into a human readable string
+
+    Parameters
+    ----------
+    seconds : int
+        The number of seconds to convert
+
+    Returns
+    -------
+    str
+        A string that breaks the time down by months, weeks, days, hours, minutes, and seconds.
+    """
+    units = (
+        ("month", 2592000),
+        ("week", 604800),
+        ("day", 86400),
+        ("hour", 3600),
+        ("minute", 60),
+        ("second", 1),
+    )
+    if seconds == 0:
+        return "zero seconds"
+    parts: list[str] = []
+    for unit, div in units:
+        amount, seconds = divmod(int(seconds), div)
+        if amount > 0:
+            parts.append(f"{amount} {unit}{'' if amount == 1 else 's'}")
+    return ", ".join(parts)
 
 
 def datetime_to_unix(dt: datetime | None) -> str:

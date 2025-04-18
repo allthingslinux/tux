@@ -65,5 +65,9 @@ class Constants:
     # Message timings
     DEFAULT_DELETE_AFTER = 30
 
+    # AFK constants
+    AFK_PREFIX = "[AFK] "
+    AFK_TRUNCATION_SUFFIX = "..."
+
 
 CONST = Constants()

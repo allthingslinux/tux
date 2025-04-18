@@ -11,7 +11,8 @@ RUN apt-get update && \
   libpango1.0-0 \
   libpangocairo-1.0-0 \
   shared-mime-info \
-  tealdeer && \
+  tealdeer \
+  ffmpeg && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* && \
   tldr -u
@@ -101,7 +102,7 @@ FROM base AS production
 
 # Create a non-root user and group using standard tools for Debian base
 RUN groupadd --system nonroot && \
-  useradd --system --gid nonroot --no-create-home nonroot
+  useradd --create-home --system --gid nonroot nonroot
 
 WORKDIR /app
 

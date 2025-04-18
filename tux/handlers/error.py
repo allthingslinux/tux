@@ -67,6 +67,15 @@ ErrorDetailExtractor = Callable[[Exception], dict[str, Any]]
 # Note: Interaction is parameterized with the Bot type (Tux).
 AppCommandErrorHandler = Callable[[discord.Interaction[Tux], app_commands.AppCommandError], Coroutine[Any, Any, None]]
 
+# --- Sentry Status Constants (copied from sentry.py for local use) ---
+SENTRY_STATUS_OK = "ok"
+SENTRY_STATUS_UNKNOWN = "unknown"
+SENTRY_STATUS_INTERNAL_ERROR = "internal_error"
+SENTRY_STATUS_NOT_FOUND = "not_found"
+SENTRY_STATUS_PERMISSION_DENIED = "permission_denied"
+SENTRY_STATUS_INVALID_ARGUMENT = "invalid_argument"
+SENTRY_STATUS_RESOURCE_EXHAUSTED = "resource_exhausted"
+
 
 # --- Error Handler Configuration ---
 
@@ -542,8 +551,9 @@ class ErrorHandler(commands.Cog):
         # Step 1: Unwrap nested errors using the helper function.
         root_error = _unwrap_error(error)
 
-        # NOTE: _unwrap_error ensures the result is an Exception,
-        # so the original Step 2 validation is now handled within the helper.
+        # --- Sentry Transaction Finalization (Added) ---
+        self._finish_sentry_transaction_on_error(source, root_error)
+        # -----------------------------------------------
 
         # Step 3: Gather context using the resolved root error.
         error_type: type[Exception] = type(root_error)
@@ -788,6 +798,7 @@ class ErrorHandler(commands.Cog):
                 # If this is the first response to the interaction.
                 await source.response.send_message(embed=embed, ephemeral=True)
             return None  # Ephemeral messages cannot be reliably edited later
+
         # Send reply for Traditional Commands.
         # `ephemeral` is not available for context-based replies.
         # Use `delete_after` to automatically remove the error message.
@@ -797,6 +808,76 @@ class ErrorHandler(commands.Cog):
             delete_after=COMMAND_ERROR_DELETE_AFTER,
             mention_author=False,  # Avoid potentially annoying pings for errors.
         )
+
+    # --- Sentry Transaction Finalization Logic (Added) ---
+    def _finish_sentry_transaction_on_error(self, source: ContextOrInteraction, root_error: Exception) -> None:
+        """Attempts to find and finish an active Sentry transaction based on the error source."""
+        if not sentry_sdk.is_initialized():
+            return
+
+        transaction: Any | None = None
+        transaction_id: int | None = None
+        command_type: str | None = None
+
+        # Status mapping dictionaries
+        app_command_status_map = {
+            app_commands.CommandNotFound: SENTRY_STATUS_NOT_FOUND,
+            app_commands.CheckFailure: SENTRY_STATUS_PERMISSION_DENIED,
+            app_commands.TransformerError: SENTRY_STATUS_INVALID_ARGUMENT,
+        }
+
+        prefix_command_status_map = {
+            commands.CommandNotFound: SENTRY_STATUS_NOT_FOUND,
+            commands.UserInputError: SENTRY_STATUS_INVALID_ARGUMENT,
+            commands.CheckFailure: SENTRY_STATUS_PERMISSION_DENIED,
+            commands.CommandOnCooldown: SENTRY_STATUS_RESOURCE_EXHAUSTED,
+            commands.MaxConcurrencyReached: SENTRY_STATUS_RESOURCE_EXHAUSTED,
+        }
+
+        # Default status
+        status: str = SENTRY_STATUS_INTERNAL_ERROR
+
+        try:
+            # Determine ID and type based on source
+            if isinstance(source, discord.Interaction):
+                transaction_id = source.id
+                command_type = "app_command"
+
+                # Lookup status in mapping
+                for error_type, error_status in app_command_status_map.items():
+                    if isinstance(root_error, error_type):
+                        status = error_status
+                        break
+
+            elif isinstance(source, commands.Context):  # type: ignore
+                transaction_id = source.message.id
+                command_type = "prefix_command"
+
+                # Lookup status in mapping
+                for error_type, error_status in prefix_command_status_map.items():
+                    if isinstance(root_error, error_type):
+                        status = error_status
+                        break
+
+            else:
+                logger.warning(f"Unknown error source type encountered: {type(source).__name__}")
+                return  # Cannot determine transaction ID
+
+            # Try to pop the transaction from the bot's central store
+            if transaction_id is not None:  # type: ignore
+                transaction = self.bot.active_sentry_transactions.pop(transaction_id, None)
+
+            if transaction:
+                transaction.set_status(status)
+                transaction.finish()
+                logger.trace(
+                    f"Finished Sentry transaction ({status}) for errored {command_type} (ID: {transaction_id})",
+                )
+
+        except Exception as e:
+            logger.exception(f"Error during Sentry transaction finalization for ID {transaction_id}: {e}")
+            # Capture this specific failure to Sentry if needed
+            sentry_sdk.capture_exception(e, hint={"context": "Sentry transaction finalization"})
 
     # --- Sentry Reporting Logic ---
 
@@ -846,6 +927,7 @@ class ErrorHandler(commands.Cog):
                 scope.set_tag("command_name", log_context.get("command_name", "Unknown"))
                 scope.set_tag("command_type", log_context.get("command_type", "Unknown"))
                 scope.set_tag("command_definition", log_context.get("command_definition", "Unknown"))
+
                 # Add new tag for interaction check
                 scope.set_tag("invoked_via_interaction", str(log_context.get("invoked_via_interaction", False)).lower())
 

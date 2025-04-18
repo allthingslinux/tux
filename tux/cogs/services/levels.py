@@ -57,7 +57,9 @@ class LevelsService(commands.Cog):
         guild : discord.Guild
             The guild where the member is gaining XP.
         """
-        if await self.db.levels.is_blacklisted(member.id, guild.id):
+        # Get blacklist status
+        is_blacklisted = await self.db.levels.is_blacklisted(member.id, guild.id)
+        if is_blacklisted:
             return
 
         last_message_time = await self.db.levels.get_last_message_time(member.id, guild.id)

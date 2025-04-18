@@ -21,7 +21,7 @@ class Level(commands.Cog):
         name="level",
         aliases=["lvl", "rank", "xp"],
     )
-    async def level(self, ctx: commands.Context[Tux], member: discord.Member | None = None) -> None:
+    async def level(self, ctx: commands.Context[Tux], member: discord.User | discord.Member | None = None) -> None:
         """
         Fetches the XP and level for a member (or the person who runs the command if no member is provided).
 
@@ -30,7 +30,7 @@ class Level(commands.Cog):
         ctx : commands.Context[Tux]
             The context object for the command.
 
-        member : discord.Member
+        member : discord.User
             The member to fetch XP and level for.
         """
 
@@ -39,8 +39,7 @@ class Level(commands.Cog):
             return
 
         if member is None:
-            member = ctx.author if isinstance(ctx.author, discord.Member) else None
-            assert member
+            member = ctx.author
 
         xp: float = await self.db.levels.get_xp(member.id, ctx.guild.id)
         level: int = await self.db.levels.get_level(member.id, ctx.guild.id)
