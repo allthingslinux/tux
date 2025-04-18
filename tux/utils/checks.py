@@ -202,9 +202,6 @@ def permission_check(
             )
             raise (PermissionLevelError if isinstance(ctx, commands.Context) else AppCommandPermissionLevelError)(name)
 
-        logger.info(
-            f"{ctx.author if isinstance(ctx, commands.Context) else ctx.user} ran command {ctx.command} with perm level {await level_to_name(ctx, level, or_higher)}",
-        )
         return True
 
     return predicate

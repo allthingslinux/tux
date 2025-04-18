@@ -1,9 +1,9 @@
-name: "TODO to Issue"
+name: "Actions - TODO to Issue"
 
 on:
   push:
     branches:
-      - main # Or your default branch
+      - main
   workflow_dispatch:
     inputs:
       MANUAL_COMMIT_REF:
@@ -19,17 +19,15 @@ jobs:
     steps:
       - uses: "actions/checkout@v4"
         with:
-          fetch-depth: 0 # This ensures all history is fetched for proper diff
+          fetch-depth: 0
+
       - name: "TODO to Issue"
         uses: "alstr/todo-to-issue-action@v5.1.10"
         with:
-          # Properly supported parameters
-          CLOSE_ISSUES: true # Instead of AUTO_CLOSE
-          INSERT_ISSUE_URLS: true # Helps avoid duplicates
-          AUTO_ASSIGN: true # Auto-assign to committer
-          IDENTIFIERS: '[{"name": "TODO", "labels": ["enhancement"]}, {"name": "FIXME", "labels": ["bug"]}]' # Instead of LABEL
-
-          # Optional useful settings
+          CLOSE_ISSUES: true
+          INSERT_ISSUE_URLS: true
+          AUTO_ASSIGN: true
+          IDENTIFIERS: '[{"name": "TODO", "labels": ["enhancement"]}, {"name": "FIXME", "labels": ["bug"]}]'
           ESCAPE: true
           IGNORE: ".github/,node_modules/,dist/,build/,vendor/poetry.lock"
           PROJECTS_SECRET: ${{ secrets.ADMIN_PAT }}

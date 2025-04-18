@@ -1,6 +1,6 @@
-name: 'Linting'
+name: "Ruff - Linting and Formatting"
 
-on: [ push, pull_request ]
+on: [push, pull_request]
 
 permissions:
   contents: write
@@ -8,13 +8,13 @@ permissions:
   pull-requests: write
 
 jobs:
-  Linting:
+  Ruff:
     runs-on: ubuntu-24.04
     steps:
-      - name: 'Checkout Repository'
+      - name: "Checkout Repository"
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.ADMIN_PAT || github.token }}
+          token: ${{ github.token }}
 
       # Install Python
       - name: Setup Python
@@ -31,4 +31,4 @@ jobs:
         run: ruff format && ruff check . --fix
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: 'fix: Linting and formatting via Ruff'
+          commit_message: "chore: Linting and formatting via Ruff"

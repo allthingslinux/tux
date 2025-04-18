@@ -24,7 +24,6 @@ class SnippetUnban(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
-        reason: str | None = None,
         *,
         flags: SnippetUnbanFlags,
     ) -> None:
@@ -37,10 +36,8 @@ class SnippetUnban(ModerationCogBase):
             The context object.
         member : discord.Member
             The member to remove snippet ban from.
-        reason : str | None
-            The reason for removing the snippet ban.
         flags : SnippetUnbanFlags
-            The flags for the command. (silent: bool)
+            The flags for the command. (reason: str, silent: bool)
         """
         assert ctx.guild
 
@@ -53,14 +50,12 @@ class SnippetUnban(ModerationCogBase):
         if not await self.check_conditions(ctx, member, ctx.author, "snippet unban"):
             return
 
-        final_reason = reason or self.DEFAULT_REASON
-
         # Execute snippet unban with case creation and DM
         await self.execute_mod_action(
             ctx=ctx,
             case_type=CaseType.SNIPPETUNBAN,
             user=member,
-            final_reason=final_reason,
+            reason=flags.reason,
             silent=flags.silent,
             dm_action="snippet unbanned",
             # Use dummy coroutine for actions that don't need Discord API calls

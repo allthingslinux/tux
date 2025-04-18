@@ -24,7 +24,6 @@ class Kick(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
-        reason: str | None = None,
         *,
         flags: KickFlags,
     ) -> None:
@@ -37,10 +36,8 @@ class Kick(ModerationCogBase):
             The context in which the command is being invoked.
         member : discord.Member
             The member to kick.
-        reason : str | None
-            The reason for the kick.
         flags : KickFlags
-            The flags for the command. (silent: bool)
+            The flags for the command. (reason: str, silent: bool)
 
         Raises
         ------
@@ -55,17 +52,15 @@ class Kick(ModerationCogBase):
         if not await self.check_conditions(ctx, member, ctx.author, "kick"):
             return
 
-        final_reason = reason or self.DEFAULT_REASON
-
         # Execute kick with case creation and DM
         await self.execute_mod_action(
             ctx=ctx,
             case_type=CaseType.KICK,
             user=member,
-            final_reason=final_reason,
+            reason=flags.reason,
             silent=flags.silent,
             dm_action="kicked",
-            actions=[(ctx.guild.kick(member, reason=final_reason), type(None))],
+            actions=[(ctx.guild.kick(member, reason=flags.reason), type(None))],
         )
 
 

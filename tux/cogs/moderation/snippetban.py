@@ -24,7 +24,6 @@ class SnippetBan(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
-        reason: str | None = None,
         *,
         flags: SnippetBanFlags,
     ) -> None:
@@ -37,10 +36,8 @@ class SnippetBan(ModerationCogBase):
             The context object.
         member : discord.Member
             The member to snippet ban.
-        reason : str | None
-            The reason for the snippet ban.
         flags : SnippetBanFlags
-            The flags for the command. (silent: bool)
+            The flags for the command. (reason: str, silent: bool)
         """
         assert ctx.guild
 
@@ -53,14 +50,12 @@ class SnippetBan(ModerationCogBase):
         if not await self.check_conditions(ctx, member, ctx.author, "snippet ban"):
             return
 
-        final_reason = reason or self.DEFAULT_REASON
-
         # Execute snippet ban with case creation and DM
         await self.execute_mod_action(
             ctx=ctx,
             case_type=CaseType.SNIPPETBAN,
             user=member,
-            final_reason=final_reason,
+            reason=flags.reason,
             silent=flags.silent,
             dm_action="snippet banned",
             # Use dummy coroutine for actions that don't need Discord API calls

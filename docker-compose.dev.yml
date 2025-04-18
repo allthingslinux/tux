@@ -1,0 +1,31 @@
+# NOTE: This file is used for local development purposes only.
+
+services:
+  tux:
+    container_name: tux
+    image: tux:dev
+    user: root
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app/
+          ignore:
+            - .venv/
+            - .git/
+            - .cache/
+            - .vscode/
+            - .idea/
+            - "**/__pycache__/"
+            - "**/*.pyc"
+            - "*.log"
+            - ".*.swp"
+            - "*.swp"
+            - "*~"
+    env_file:
+      - .env
+    restart: unless-stopped

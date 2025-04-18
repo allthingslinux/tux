@@ -55,5 +55,19 @@ class Constants:
     SLASH_CMD_MAX_OPTIONS = 25
     SLASH_OPTION_NAME_LENGTH = 100
 
+    DEFAULT_REASON = "No reason provided"
+
+    # Snippet constants
+    SNIPPET_MAX_NAME_LENGTH = 20
+    SNIPPET_ALLOWED_CHARS_REGEX = r"^[a-zA-Z0-9-]+$"
+    SNIPPET_PAGINATION_LIMIT = 10
+
+    # Message timings
+    DEFAULT_DELETE_AFTER = 30
+
+    # AFK constants
+    AFK_PREFIX = "[AFK] "
+    AFK_TRUNCATION_SUFFIX = "..."
+
 
 CONST = Constants()

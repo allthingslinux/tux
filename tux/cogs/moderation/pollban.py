@@ -24,7 +24,6 @@ class PollBan(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
-        reason: str | None = None,
         *,
         flags: PollBanFlags,
     ) -> None:
@@ -37,10 +36,8 @@ class PollBan(ModerationCogBase):
             The context object.
         member : discord.Member
             The member to poll ban.
-        reason : str | None
-            The reason for the poll ban.
         flags : PollBanFlags
-            The flags for the command. (silent: bool)
+            The flags for the command. (reason: str, silent: bool)
         """
         assert ctx.guild
 
@@ -53,14 +50,12 @@ class PollBan(ModerationCogBase):
         if not await self.check_conditions(ctx, member, ctx.author, "poll ban"):
             return
 
-        final_reason = reason or self.DEFAULT_REASON
-
         # Execute poll ban with case creation and DM
         await self.execute_mod_action(
             ctx=ctx,
             case_type=CaseType.POLLBAN,
             user=member,
-            final_reason=final_reason,
+            reason=flags.reason,
             silent=flags.silent,
             dm_action="poll banned",
             # Use dummy coroutine for actions that don't need Discord API calls

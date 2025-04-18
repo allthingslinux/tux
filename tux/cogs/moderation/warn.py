@@ -24,7 +24,6 @@ class Warn(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
-        reason: str | None = None,
         *,
         flags: WarnFlags,
     ) -> None:
@@ -37,10 +36,8 @@ class Warn(ModerationCogBase):
             The context in which the command is being invoked.
         member : discord.Member
             The member to warn.
-        reason : str | None
-            The reason for the warning.
         flags : WarnFlags
-            The flags for the command. (silent: bool)
+            The flags for the command. (reason: str, silent: bool)
         """
         assert ctx.guild
 
@@ -48,14 +45,12 @@ class Warn(ModerationCogBase):
         if not await self.check_conditions(ctx, member, ctx.author, "warn"):
             return
 
-        final_reason = reason or self.DEFAULT_REASON
-
         # Execute warn with case creation and DM
         await self.execute_mod_action(
             ctx=ctx,
             case_type=CaseType.WARN,
             user=member,
-            final_reason=final_reason,
+            reason=flags.reason,
             silent=flags.silent,
             dm_action="warned",
             # Use dummy coroutine for actions that don't need Discord API calls
