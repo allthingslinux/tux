@@ -1,90 +1,64 @@
+"""
+Help command system for Tux.
+
+This module implements an interactive help command with support for:
+- Category browsing
+- Command details
+- Subcommand navigation
+- Pagination for large command groups
+"""
+
+from __future__ import annotations
+
 from collections.abc import Mapping
-from pathlib import Path
+from enum import Enum, auto
 from typing import Any, TypeVar, get_type_hints
 
 import discord
+from discord import SelectOption
 from discord.ext import commands
 from loguru import logger
 
 from tux.ui.embeds import EmbedCreator
+from tux.ui.help_components import (
+    BackButton,
+    CategorySelectMenu,
+    CloseButton,
+    CommandSelectMenu,
+    DirectHelpView,
+    HelpView,
+    NextButton,
+    PrevButton,
+    SubcommandSelectMenu,
+)
 from tux.utils.config import CONFIG
 from tux.utils.constants import CONST
 from tux.utils.env import get_current_env
+from tux.utils.help_utils import (
+    create_cog_category_mapping,
+    format_multiline_description,
+    paginate_items,
+    truncate_description,
+)
 
-
-class HelpSelectMenu(discord.ui.Select[discord.ui.View]):
-    def __init__(self, help_command: "TuxHelp", options: list[discord.SelectOption], placeholder: str):
-        super().__init__(
-            placeholder=placeholder,
-            min_values=1,
-            max_values=1,
-            options=options,
-        )
-        self.help_command = help_command
-
-    async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-        value = self.values[0]
-        await self.help_command.on_category_select(interaction, value)
-
-
-class CommandSelectMenu(discord.ui.Select[discord.ui.View]):
-    def __init__(self, help_command: "TuxHelp", options: list[discord.SelectOption], placeholder: str):
-        super().__init__(
-            placeholder=placeholder,
-            min_values=1,
-            max_values=1,
-            options=options,
-        )
-        self.help_command = help_command
-
-    async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-        value = self.values[0]
-        await self.help_command.on_command_select(interaction, value)
-
-
-class BackButton(discord.ui.Button[discord.ui.View]):
-    def __init__(self, help_command: "TuxHelp"):
-        super().__init__(
-            style=discord.ButtonStyle.secondary,
-            label="Back",
-            emoji="↩️",
-            custom_id="back_button",
-        )
-        self.help_command = help_command
-
-    async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-        await self.help_command.on_back_button(interaction)
-
-
-class CloseButton(discord.ui.Button[discord.ui.View]):
-    def __init__(self):
-        super().__init__(
-            style=discord.ButtonStyle.danger,
-            label="Close",
-            emoji="✖️",
-            custom_id="close_button",
-        )
-
-    async def callback(self, interaction: discord.Interaction):
-        if interaction.message:
-            await interaction.message.delete()
-
-
-class HelpView(discord.ui.View):
-    def __init__(self, help_command: "TuxHelp", timeout: int = 180):
-        super().__init__(timeout=timeout)
-        self.help_command = help_command
-
-
+# Type variables for command generics
 CommandT = TypeVar("CommandT", bound=commands.Command[Any, Any, Any])
 
 
+class HelpState(Enum):
+    """Navigation states for the help command."""
+
+    MAIN = auto()
+    CATEGORY = auto()
+    COMMAND = auto()
+    SUBCOMMAND = auto()
+
+
 class TuxHelp(commands.HelpCommand):
-    def __init__(self):
-        """Initializes the TuxHelp command with necessary attributes."""
+    """Interactive help command for Tux with rich navigation and formatting."""
+
+    def __init__(self) -> None:
+        """Initialize the help command with necessary attributes."""
         super().__init__(
             command_attrs={
                 "help": "Lists all commands and sub-commands.",
@@ -92,15 +66,30 @@ class TuxHelp(commands.HelpCommand):
                 "usage": "$help <command> or <sub-command>",
             },
         )
+        # Caches
         self._prefix_cache: dict[int | None, str] = {}
         self._category_cache: dict[str, dict[str, str]] = {}
+
+        # State tracking
         self.current_category: str | None = None
-        self.current_page: str = "main"
+        self.current_command: str | None = None
+        self.current_page = HelpState.MAIN
+        self.current_subcommand_page: int = 0
+
+        # Message and command tracking
         self.message: discord.Message | None = None
         self.command_mapping: dict[str, dict[str, commands.Command[Any, Any, Any]]] | None = None
+        self.current_command_obj: commands.Command[Any, Any, Any] | None = None
+        self.subcommand_pages: list[list[commands.Command[Any, Any, Any]]] = []
+
+    # Prefix and embed utilities
 
     async def _get_prefix(self) -> str:
-        """Fetches and caches the prefix for each guild."""
+        """Get the guild-specific command prefix.
+
+        Returns:
+            The command prefix for the current guild
+        """
         guild_id = self.context.guild.id if self.context.guild else None
 
         if guild_id not in self._prefix_cache:
@@ -110,22 +99,38 @@ class TuxHelp(commands.HelpCommand):
         return self._prefix_cache[guild_id]
 
     def _embed_base(self, title: str, description: str | None = None) -> discord.Embed:
-        """Creates a base embed with uniform styling."""
+        """Create a base embed with consistent styling.
+
+        Args:
+            title: The embed title
+            description: The embed description (optional)
+
+        Returns:
+            A styled discord.Embed
+        """
         return discord.Embed(
             title=title,
             description=description,
             color=CONST.EMBED_COLORS["DEFAULT"],
         )
 
-    # Flag Formatting
+    # Flag formatting methods
+
     def _format_flag_details(self, command: commands.Command[Any, Any, Any]) -> str:
-        """Formats the details of flags for a command."""
+        """Format the details of command flags.
+
+        Args:
+            command: The command to format flags for
+
+        Returns:
+            Formatted string of flag details
+        """
         flag_details: list[str] = []
 
         try:
             type_hints = get_type_hints(command.callback)
         except Exception:
-            type_hints = {}
+            return ""
 
         for param_annotation in type_hints.values():
             if not isinstance(param_annotation, type) or not issubclass(param_annotation, commands.FlagConverter):
@@ -144,14 +149,29 @@ class TuxHelp(commands.HelpCommand):
 
     @staticmethod
     def _format_flag_name(flag: commands.Flag) -> str:
-        """Formats the flag name based on whether it is required and positional."""
+        """Format a flag name based on its properties.
+
+        Args:
+            flag: The flag to format
+
+        Returns:
+            Formatted flag name string
+        """
         if getattr(flag, "positional", False):
             return f"<{flag.name}>" if flag.required else f"[{flag.name}]"
         return f"-{flag.name}" if flag.required else f"[-{flag.name}]"
 
-    # Command Fields and Mapping
+    # Command usage and fields
+
     def _generate_default_usage(self, command: commands.Command[Any, Any, Any]) -> str:
-        """Generates a default usage string based on command parameters when custom usage is missing."""
+        """Generate a default usage string for a command.
+
+        Args:
+            command: The command to generate usage for
+
+        Returns:
+            Formatted usage string
+        """
         signature = command.signature.strip()
         if not signature:
             return command.qualified_name
@@ -162,7 +182,12 @@ class TuxHelp(commands.HelpCommand):
         return f"{command.qualified_name} {formatted_signature}"
 
     async def _add_command_help_fields(self, embed: discord.Embed, command: commands.Command[Any, Any, Any]) -> None:
-        """Adds fields with usage and alias information for a command to an embed."""
+        """Add usage and alias fields to a command embed.
+
+        Args:
+            embed: The embed to add fields to
+            command: The command to add fields for
+        """
         prefix = await self._get_prefix()
         usage = command.usage or self._generate_default_usage(command)
         embed.add_field(name="Usage", value=f"`{prefix}{usage}`", inline=False)
@@ -174,7 +199,13 @@ class TuxHelp(commands.HelpCommand):
 
     @staticmethod
     def _add_command_field(embed: discord.Embed, command: commands.Command[Any, Any, Any], prefix: str) -> None:
-        """Adds a command's details as a field to an embed."""
+        """Add a command as a field in an embed.
+
+        Args:
+            embed: The embed to add the field to
+            command: The command to add
+            prefix: The command prefix
+        """
         command_aliases = ", ".join(command.aliases) if command.aliases else "No aliases"
         embed.add_field(
             name=f"{prefix}{command.qualified_name} ({command_aliases})",
@@ -182,8 +213,58 @@ class TuxHelp(commands.HelpCommand):
             inline=False,
         )
 
+    # Category and command mapping
+
+    async def _get_command_categories(
+        self,
+        mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]],
+    ) -> tuple[dict[str, dict[str, str]], dict[str, dict[str, commands.Command[Any, Any, Any]]]]:
+        """Get command categories and mapping.
+
+        Args:
+            mapping: Mapping of cogs to their commands
+
+        Returns:
+            Tuple of (category_cache, command_mapping)
+        """
+        if self._category_cache:
+            return self._category_cache, self.command_mapping or {}
+
+        self._category_cache, self.command_mapping = create_cog_category_mapping(mapping)
+        return self._category_cache, self.command_mapping
+
+    # Pagination methods
+
+    def _paginate_subcommands(
+        self,
+        commands_list: list[commands.Command[Any, Any, Any]],
+        preserve_page: bool = False,
+    ) -> None:
+        """Split subcommands into pages for pagination.
+
+        Args:
+            commands_list: List of commands to paginate
+            preserve_page: If True, preserve the current page index
+        """
+        current_page = self.current_subcommand_page if preserve_page else 0
+        self.subcommand_pages = paginate_items(commands_list, 10)
+
+        # Restore or reset page counter
+        if preserve_page:
+            # Make sure the page index is valid for the new pagination
+            self.current_subcommand_page = min(current_page, len(self.subcommand_pages) - 1)
+        else:
+            # Reset to first page when paginating
+            self.current_subcommand_page = 0
+
+    # UI creation methods
+
     async def _create_category_options(self) -> list[discord.SelectOption]:
-        """Creates select options for the category select menu."""
+        """Create select options for category selection.
+
+        Returns:
+            List of SelectOption objects for categories
+        """
         category_emoji_map = {
             "info": "🔍",
             "moderation": "🛡",
@@ -212,109 +293,79 @@ class TuxHelp(commands.HelpCommand):
         return sorted(options, key=lambda o: o.label)
 
     async def _create_command_options(self, category: str) -> list[discord.SelectOption]:
-        """Creates select options for commands in the selected category."""
+        """Create select options for commands in a category.
+
+        Args:
+            category: The category to create options for
+
+        Returns:
+            List of SelectOption objects for commands
+        """
         options: list[discord.SelectOption] = []
 
         if self.command_mapping and category in self.command_mapping:
             for cmd_name, cmd in self.command_mapping[category].items():
-                description = cmd.short_doc or "No description"
-                # Truncate description if too long
-                if len(description) > 100:
-                    description = f"{description[:97]}..."
+                description = truncate_description(cmd.short_doc or "No description")
 
-                options.append(discord.SelectOption(label=cmd_name, value=cmd_name, description=description))
+                # Add an indicator for group commands
+                is_group = isinstance(cmd, commands.Group) and len(cmd.commands) > 0
+                label = f"{cmd_name}{'†' if is_group else ''}"
+
+                options.append(discord.SelectOption(label=label, value=cmd_name, description=description))
+
+        else:
+            logger.warning(f"No commands found for category {category}")
 
         return sorted(options, key=lambda o: o.label)
 
-    # Cogs and Command Categories
-    async def _get_command_categories(
-        self,
-        mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]],
-    ) -> tuple[dict[str, dict[str, str]], dict[str, dict[str, commands.Command[Any, Any, Any]]]]:
-        """Retrieves the command categories and their corresponding commands."""
-        if self._category_cache:
-            return self._category_cache, self.command_mapping or {}
+    async def _create_subcommand_options(self, command: commands.Group[Any, Any, Any]) -> list[SelectOption]:
+        """Create select options for subcommands in a command group.
 
-        command_categories: dict[str, dict[str, str]] = {}
-        command_mapping: dict[str, dict[str, commands.Command[Any, Any, Any]]] = {}
+        Args:
+            command: The command group to create options for
 
-        for cog, mapping_commands in mapping.items():
-            if cog and len(mapping_commands) > 0:
-                # Attempt to extract the group using the cog's module name.
-                cog_group = self._extract_cog_group(cog) or "extra"
-                command_categories.setdefault(cog_group, {})
-                command_mapping.setdefault(cog_group, {})
-                for command in mapping_commands:
-                    cmd = command
-                    cmd_aliases = ", ".join(f"`{alias}`" for alias in cmd.aliases) if cmd.aliases else "`No aliases`"
-                    command_categories[cog_group][cmd.name] = cmd_aliases
-                    command_mapping[cog_group][cmd.name] = cmd
-
-        self._category_cache = command_categories
-        self.command_mapping = command_mapping
-        return command_categories, command_mapping
-
-    @staticmethod
-    def _get_cog_groups() -> list[str]:
-        """Retrieves a list of cog groups from the 'cogs' folder."""
-        cogs_path = Path("./tux/cogs")
-        return [d.name for d in cogs_path.iterdir() if d.is_dir() and d.name != "__pycache__"]
-
-    @staticmethod
-    def _extract_cog_group(cog: commands.Cog) -> str | None:
+        Returns:
+            List of SelectOption objects for subcommands
         """
-        Extracts the cog group using the cog's module attribute.
-        For example, if a cog's module is 'tux.cogs.admin.some_cog', this returns 'admin'.
-        """
-        module = getattr(cog, "__module__", "")
-        parts = module.split(".")
+        # Special handling for jishaku to prevent loading all subcommands
+        if command.name not in {"jsk", "jishaku"}:
+            # Normal handling for other command groups
+            return [
+                SelectOption(
+                    label=subcmd.name,
+                    value=subcmd.name,
+                    description=truncate_description(subcmd.short_doc or "No description"),
+                )
+                for subcmd in sorted(command.commands, key=lambda x: x.name)
+            ]
+        # Only include a few important jishaku commands
+        essential_subcmds = ["py", "shell", "cat", "curl", "pip", "git", "help"]
 
-        # Assuming the structure is: tux.cogs.<group>...
-        if len(parts) >= 3 and parts[1].lower() == "cogs":
-            return parts[2].lower()
-        return None
+        subcommand_options: list[SelectOption] = []
+        for subcmd_name in essential_subcmds:
+            if subcmd := discord.utils.get(command.commands, name=subcmd_name):
+                description = truncate_description(subcmd.short_doc or "No description")
+                subcommand_options.append(SelectOption(label=subcmd.name, value=subcmd.name, description=description))
 
-    async def _create_main_view(self) -> HelpView:
-        """Creates the main help view with category selection."""
-        view = HelpView(self)
+        # Add an option to suggest using jsk help
+        subcommand_options.append(
+            SelectOption(
+                label="See all commands",
+                value="_see_all",
+                description="Use jsk help command for complete list",
+            ),
+        )
 
-        # Add category select
-        category_options = await self._create_category_options()
-        category_select = HelpSelectMenu(self, category_options, "Select a category")
-        view.add_item(category_select)
+        return subcommand_options
 
-        # Add close button
-        view.add_item(CloseButton())
-
-        return view
-
-    async def _create_category_view(self, category: str) -> HelpView:
-        """Creates a view for a specific category with command selection."""
-        view = HelpView(self)
-
-        # Add command select for this category
-        command_options = await self._create_command_options(category)
-        command_select = CommandSelectMenu(self, command_options, f"Select a {category} command")
-        view.add_item(command_select)
-
-        # Add back button and close button
-        view.add_item(BackButton(self))
-        view.add_item(CloseButton())
-
-        return view
-
-    async def _create_command_view(self) -> HelpView:
-        """Creates a view for command details with back button."""
-        view = HelpView(self)
-
-        # Add back button and close button
-        view.add_item(BackButton(self))
-        view.add_item(CloseButton())
-
-        return view
+    # Embed creation methods
 
     async def _create_main_embed(self) -> discord.Embed:
-        """Creates the main help embed."""
+        """Create the main help embed.
+
+        Returns:
+            The main help embed
+        """
         if CONFIG.BOT_NAME != "Tux":
             logger.info("Bot name is not Tux, using different help message.")
             embed = self._embed_base(
@@ -331,7 +382,14 @@ class TuxHelp(commands.HelpCommand):
         return embed
 
     async def _create_category_embed(self, category: str) -> discord.Embed:
-        """Creates an embed for a specific category."""
+        """Create an embed for a specific category.
+
+        Args:
+            category: The category to create an embed for
+
+        Returns:
+            The category embed
+        """
         prefix = await self._get_prefix()
         embed = self._embed_base(f"{category.capitalize()} Commands")
 
@@ -346,29 +404,130 @@ class TuxHelp(commands.HelpCommand):
         return embed
 
     async def _create_command_embed(self, command_name: str) -> discord.Embed:
-        """Creates an embed for a specific command."""
+        """Create an embed for a specific command.
+
+        Args:
+            command_name: The name of the command to create an embed for
+
+        Returns:
+            The command embed
+        """
         if not self.current_category or not self.command_mapping:
+            logger.error(
+                f"Missing category or command mapping. Category: {self.current_category}, Mapping: {bool(self.command_mapping)}",
+            )
             return self._embed_base("Error", "Command not found")
 
         command = self.command_mapping[self.current_category].get(command_name)
         if not command:
+            logger.error(f"Command '{command_name}' not found in category '{self.current_category}'")
             return self._embed_base("Error", "Command not found")
 
+        # Store the current command object for reference
+        self.current_command_obj = command
+        self.current_command = command_name
+
         prefix = await self._get_prefix()
+
+        # Format help text with proper quoting
+        help_text = format_multiline_description(command.help)
+
+        # Create embed
         embed = self._embed_base(
             title=f"{prefix}{command.qualified_name}",
-            description=f"> {command.help or 'No documentation available.'}",
+            description=help_text,
         )
 
+        # Add command fields
         await self._add_command_help_fields(embed, command)
 
+        # Add flag details if present
         if flag_details := self._format_flag_details(command):
+            embed.add_field(name="Flags", value=f"```\n{flag_details}\n```", inline=False)
+
+        # Add subcommands section if this is a group
+        if isinstance(command, commands.Group) and command.commands:
+            sorted_cmds = sorted(command.commands, key=lambda x: x.name)
+
+            # Create paginated lists for navigation
+            self._paginate_subcommands(sorted_cmds, preserve_page=True)
+
+            # For large command groups like JSK, show paginated view
+            if command.name in {"jsk", "jishaku"} or len(sorted_cmds) > 15:
+                # Get the current page of commands to display
+                if self.subcommand_pages and 0 <= self.current_subcommand_page < len(self.subcommand_pages):
+                    current_page_cmds = self.subcommand_pages[self.current_subcommand_page]
+                else:
+                    logger.warning(
+                        f"Invalid page index: {self.current_subcommand_page}, pages: {len(self.subcommand_pages)}",
+                    )
+                    current_page_cmds = sorted_cmds[:10] if sorted_cmds else []
+
+                # Create a formatted list of just this page's commands
+                subcommands_list = "\n".join(
+                    f"• `{c.name}` - {c.short_doc or 'No description'}" for c in current_page_cmds
+                )
+
+                total_count = len(sorted_cmds)
+                page_num = self.current_subcommand_page + 1
+                total_pages = len(self.subcommand_pages) or 1
+
+                embed.add_field(
+                    name=f"Subcommands (Page {page_num}/{total_pages})",
+                    value=f"This command has {total_count} subcommands:\n\n{subcommands_list}\n\nUse the navigation buttons to browse all subcommands.",
+                    inline=False,
+                )
+            else:
+                # For normal sized command groups, show all subcommands
+                subcommands_list = "\n".join(f"• `{c.name}` - {c.short_doc or 'No description'}" for c in sorted_cmds)
+                embed.add_field(
+                    name="Subcommands",
+                    value=f"This command group has the following subcommands:\n\n{subcommands_list}\n\nSelect a subcommand from the dropdown to see more details.",
+                    inline=False,
+                )
+
+        return embed
+
+    async def _create_subcommand_embed(self, subcommand_name: str) -> discord.Embed:
+        """Create an embed for a specific subcommand.
+
+        Args:
+            subcommand_name: The name of the subcommand to create an embed for
+
+        Returns:
+            The subcommand embed
+        """
+        if not self.current_command_obj or not isinstance(self.current_command_obj, commands.Group):
+            return self._embed_base("Error", "Parent command not found")
+
+        # Find the subcommand
+        subcommand = discord.utils.get(self.current_command_obj.commands, name=subcommand_name)
+        if not subcommand:
+            return self._embed_base("Error", "Subcommand not found")
+
+        prefix = await self._get_prefix()
+
+        # Format help text with proper quoting
+        help_text = format_multiline_description(subcommand.help)
+
+        embed = self._embed_base(
+            title=f"{prefix}{subcommand.qualified_name}",
+            description=help_text,
+        )
+
+        await self._add_command_help_fields(embed, subcommand)
+
+        if flag_details := self._format_flag_details(subcommand):
             embed.add_field(name="Flags", value=f"```\n{flag_details}\n```", inline=False)
 
         return embed
 
     async def _add_bot_help_fields(self, embed: discord.Embed) -> None:
-        """Adds additional help information about the bot."""
+        """Add additional help information about the bot.
+
+        Args:
+            embed: The embed to add fields to
+        """
         prefix = await self._get_prefix()
 
         embed.add_field(
@@ -407,11 +566,116 @@ class TuxHelp(commands.HelpCommand):
             inline=False,
         )
 
+    # View creation methods
+
+    async def _create_main_view(self) -> HelpView:
+        """Create the main help view with category selection.
+
+        Returns:
+            HelpView with category selection
+        """
+        view = HelpView(self)
+
+        # Add category select
+        category_options = await self._create_category_options()
+        category_select = CategorySelectMenu(self, category_options, "Select a category")
+        view.add_item(category_select)
+
+        # Add close button
+        view.add_item(CloseButton())
+
+        return view
+
+    async def _create_category_view(self, category: str) -> HelpView:
+        """Create a view for a category with command selection.
+
+        Args:
+            category: The category to create a view for
+
+        Returns:
+            HelpView for the category
+        """
+        view = HelpView(self)
+
+        # Add command select for this category
+        command_options = await self._create_command_options(category)
+        command_select = CommandSelectMenu(self, command_options, f"Select a {category} command")
+        view.add_item(command_select)
+
+        # Add back button and close button
+        view.add_item(BackButton(self))
+        view.add_item(CloseButton())
+
+        return view
+
+    async def _create_command_view(self) -> HelpView:
+        """Create a view for a command with navigation options.
+
+        Returns:
+            HelpView for the command
+        """
+        view = HelpView(self)
+
+        # Add back button first
+        view.add_item(BackButton(self))
+
+        # If this is a command group, handle navigation
+        if (
+            self.current_command_obj
+            and isinstance(self.current_command_obj, commands.Group)
+            and len(self.current_command_obj.commands) > 0
+        ):
+            sorted_cmds = sorted(self.current_command_obj.commands, key=lambda x: x.name)
+
+            # For large command groups like JSK, use pagination buttons instead of dropdown
+            if self.current_command_obj.name in {"jsk", "jishaku"} or len(sorted_cmds) > 15:
+                # Create paginated subcommand lists if not already created
+                if not self.subcommand_pages:
+                    self._paginate_subcommands(sorted_cmds, preserve_page=True)
+
+                # Always add both navigation buttons
+                if len(self.subcommand_pages) > 1:
+                    view.add_item(PrevButton(self))
+                    view.add_item(NextButton(self))
+            else:
+                logger.info(
+                    f"Creating dropdown for command group: {self.current_command_obj.name} with {len(sorted_cmds)} subcommands",
+                )
+
+                if subcommand_options := await self._create_subcommand_options(self.current_command_obj):
+                    subcommand_select = SubcommandSelectMenu(self, subcommand_options, "Select a subcommand")
+                    view.add_item(subcommand_select)
+
+        # Add close button last
+        view.add_item(CloseButton())
+
+        return view
+
+    async def _create_subcommand_view(self) -> HelpView:
+        """Create a view for a subcommand with back navigation.
+
+        Returns:
+            HelpView for the subcommand
+        """
+        view = HelpView(self)
+
+        # Add back buttons and close button
+        view.add_item(BackButton(self))
+        view.add_item(CloseButton())
+
+        return view
+
     # Event handlers for UI components
+
     async def on_category_select(self, interaction: discord.Interaction, category: str) -> None:
-        """Handles when a category is selected from the dropdown."""
+        """Handle when a category is selected from the dropdown.
+
+        Args:
+            interaction: The interaction event
+            category: The selected category
+        """
         self.current_category = category
-        self.current_page = "category"
+        self.current_page = HelpState.CATEGORY
 
         embed = await self._create_category_embed(category)
         view = await self._create_category_view(category)
@@ -420,37 +684,167 @@ class TuxHelp(commands.HelpCommand):
             await interaction.message.edit(embed=embed, view=view)
 
     async def on_command_select(self, interaction: discord.Interaction, command_name: str) -> None:
-        """Handles when a command is selected from the dropdown."""
-        self.current_page = "command"
+        """Handle when a command is selected from the dropdown.
+
+        Args:
+            interaction: The interaction event
+            command_name: The selected command
+        """
+        self.current_page = HelpState.COMMAND
 
         embed = await self._create_command_embed(command_name)
         view = await self._create_command_view()
 
         if interaction.message:
             await interaction.message.edit(embed=embed, view=view)
+        else:
+            logger.warning("Command selection: No message to update")
+
+    async def on_subcommand_select(self, interaction: discord.Interaction, subcommand_name: str) -> None:
+        """Handle when a subcommand is selected from the dropdown.
+
+        Args:
+            interaction: The interaction event
+            subcommand_name: The selected subcommand
+        """
+        # Special handling for the "see all" option in jsk
+        if subcommand_name == "_see_all":
+            embed = discord.Embed(
+                title="Jishaku Help",
+                description="For a complete list of Jishaku commands, please use:\n`jsk help`",
+                color=CONST.EMBED_COLORS["INFO"],
+            )
+            if interaction.message:
+                await interaction.message.edit(embed=embed)
+            return
+
+        self.current_page = HelpState.SUBCOMMAND
+
+        embed = await self._create_subcommand_embed(subcommand_name)
+        view = await self._create_subcommand_view()
+
+        if interaction.message:
+            await interaction.message.edit(embed=embed, view=view)
+        else:
+            logger.warning("Subcommand selection: No message to update")
 
     async def on_back_button(self, interaction: discord.Interaction) -> None:
-        """Handles when the back button is clicked."""
+        """Handle when the back button is clicked.
+
+        Args:
+            interaction: The interaction event
+        """
         if not interaction.message:
             return
 
-        if self.current_page == "command" and self.current_category:
+        if (
+            self.current_page == HelpState.SUBCOMMAND
+            and self.current_command
+            and self.current_category
+            and self.command_mapping
+            and (command := self.command_mapping[self.current_category].get(self.current_command))
+        ):
+            # Go back to command page (parent command)
+            self.current_page = HelpState.COMMAND
+            self.current_command_obj = command
+
+            embed = await self._create_command_embed(self.current_command)
+            view = await self._create_command_view()
+
+            await interaction.message.edit(embed=embed, view=view)
+            return
+
+        # Fallback if we can't find the command or we're not in a subcommand
+        if self.current_page == HelpState.SUBCOMMAND:
+            # Reset to category view
+            self.current_page = HelpState.CATEGORY
+
+        # Reset command tracking
+        self.current_command = None
+        self.current_command_obj = None
+
+        if self.current_page == HelpState.COMMAND and self.current_category:
             # Go back to category page
-            self.current_page = "category"
+            self.current_page = HelpState.CATEGORY
             embed = await self._create_category_embed(self.current_category)
             view = await self._create_category_view(self.current_category)
         else:
             # Go back to main page
-            self.current_page = "main"
+            self.current_page = HelpState.MAIN
             self.current_category = None
             embed = await self._create_main_embed()
             view = await self._create_main_view()
 
         await interaction.message.edit(embed=embed, view=view)
 
-    # Sending Help Messages
+    async def on_next_button(self, interaction: discord.Interaction) -> None:
+        """Handle navigation to the next page of subcommands.
+
+        Args:
+            interaction: The interaction event
+        """
+        if not self.subcommand_pages:
+            logger.warning("Pagination: No subcommand pages available")
+            return
+
+        # Read current page directly from self
+        current_page = self.current_subcommand_page
+        total_pages = len(self.subcommand_pages)
+
+        # Increment the page counter
+        if current_page < total_pages - 1:
+            self.current_subcommand_page = current_page + 1
+        else:
+            logger.info(f"Pagination: Already at last page ({current_page})")
+
+        # Update the embed with the new page
+        if self.current_command:
+            embed = await self._create_command_embed(self.current_command)
+            view = await self._create_command_view()
+
+            if interaction.message:
+                await interaction.message.edit(embed=embed, view=view)
+            else:
+                logger.warning("Pagination: No message to update")
+
+    async def on_prev_button(self, interaction: discord.Interaction) -> None:
+        """Handle navigation to the previous page of subcommands.
+
+        Args:
+            interaction: The interaction event
+        """
+        if not self.subcommand_pages:
+            logger.warning("Pagination: No subcommand pages available")
+            return
+
+        # Read current page directly from self
+        current_page = self.current_subcommand_page
+        # total_pages = len(self.subcommand_pages)
+
+        # Decrement the page counter
+        if current_page > 0:
+            self.current_subcommand_page = current_page - 1
+        else:
+            logger.info(f"Pagination: Already at first page ({current_page})")
+
+        # Update the embed with the new page
+        if self.current_command:
+            embed = await self._create_command_embed(self.current_command)
+            view = await self._create_command_view()
+
+            if interaction.message:
+                await interaction.message.edit(embed=embed, view=view)
+            else:
+                logger.warning("Pagination: No message to update")
+
+    # Help command overrides
+
     async def send_bot_help(self, mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]]) -> None:
-        """Sends help messages for the bot with custom pagination."""
+        """Sends the main help screen with command categories.
+
+        Args:
+            mapping: Mapping of cogs to their commands
+        """
         await self._get_command_categories(mapping)
 
         embed = await self._create_main_embed()
@@ -459,7 +853,11 @@ class TuxHelp(commands.HelpCommand):
         self.message = await self.get_destination().send(embed=embed, view=view)
 
     async def send_cog_help(self, cog: commands.Cog) -> None:
-        """Sends a help message for a specific cog."""
+        """Display help for a specific cog.
+
+        Args:
+            cog: The cog to display help for
+        """
         prefix = await self._get_prefix()
         embed = self._embed_base(f"{cog.qualified_name} Commands")
 
@@ -473,12 +871,19 @@ class TuxHelp(commands.HelpCommand):
         await self.get_destination().send(embed=embed)
 
     async def send_command_help(self, command: commands.Command[Any, Any, Any]) -> None:
-        """Sends a help message for a specific command."""
+        """Display help for a specific command.
+
+        Args:
+            command: The command to display help for
+        """
         prefix = await self._get_prefix()
+
+        # Format help text with proper quoting for all lines
+        help_text = format_multiline_description(command.help)
 
         embed = self._embed_base(
             title=f"{prefix}{command.qualified_name}",
-            description=f"> {command.help or 'No documentation available.'}",
+            description=help_text,
         )
 
         await self._add_command_help_fields(embed, command)
@@ -492,23 +897,72 @@ class TuxHelp(commands.HelpCommand):
         await self.get_destination().send(embed=embed, view=view)
 
     async def send_group_help(self, group: commands.Group[Any, Any, Any]) -> None:
-        """Sends a help message for a specific command group."""
-        prefix = await self._get_prefix()
+        """Display help for a command group.
 
-        # Create the main embed for the group command itself
-        embed = self._embed_base(f"{group.name}", f"> {group.help or 'No documentation available.'}")
-        await self._add_command_help_fields(embed, group)
+        Args:
+            group: The command group to display help for
+        """
+        # For large command groups or JSK, use pagination
+        if group.name in {"jsk", "jishaku"} or len(group.commands) > 15:
+            # Paginate subcommands
+            subcommands = sorted(group.commands, key=lambda x: x.name)
+            pages = paginate_items(subcommands, 8)
 
-        # Add subcommands to the embed
-        for command in sorted(group.commands, key=lambda x: x.name):
-            self._add_command_field(embed, command, prefix)
+            # Create direct help view with navigation
+            view = DirectHelpView(self, group, pages)
+            embed = await view.get_embed()
 
-        view = HelpView(self)
-        view.add_item(CloseButton())
+        else:
+            # For smaller groups, add a dropdown to view individual subcommands
+            prefix = await self._get_prefix()
+
+            # Format help text with proper quoting for all lines
+            help_text = format_multiline_description(group.help)
+
+            embed = self._embed_base(
+                title=f"{prefix}{group.qualified_name}",
+                description=help_text,
+            )
+            await self._add_command_help_fields(embed, group)
+
+            # Add all subcommands non-inline
+            sorted_cmds = sorted(group.commands, key=lambda x: x.name)
+            subcommands_list = "\n".join(f"• `{c.name}` - {c.short_doc or 'No description'}" for c in sorted_cmds)
+
+            embed.add_field(
+                name="Subcommands",
+                value=f"This command group has the following subcommands:\n\n{subcommands_list}\n\nSelect a subcommand from the dropdown to see more details.",
+                inline=False,
+            )
+
+            # Create view with dropdown
+            view = HelpView(self)
+
+            if subcommand_options := [
+                discord.SelectOption(
+                    label=cmd.name,
+                    value=cmd.name,
+                    description=truncate_description(cmd.short_doc or "No description"),
+                )
+                for cmd in sorted_cmds
+            ]:
+                subcommand_select = SubcommandSelectMenu(self, subcommand_options, "View detailed subcommand help")
+                view.add_item(subcommand_select)
+
+            view.add_item(CloseButton())
+
+            # Create a special handler for this message
+            self.current_command = group.name
+            self.current_command_obj = group
 
         await self.get_destination().send(embed=embed, view=view)
 
     async def send_error_message(self, error: str) -> None:
+        """Display an error message.
+
+        Args:
+            error: The error message to display
+        """
         embed = EmbedCreator.create_embed(
             EmbedCreator.ERROR,
             user_name=self.context.author.name,
@@ -521,3 +975,52 @@ class TuxHelp(commands.HelpCommand):
         # Only log errors that are not related to command not found
         if "no command called" not in error.lower():
             logger.warning(f"An error occurred while sending a help message: {error}")
+
+    def to_reference_list(
+        self,
+        ctx: commands.Context[commands.Bot],
+        commands_list: list[commands.Command[Any, Any, Any]],
+        with_groups: bool = True,
+    ) -> list[tuple[commands.Command[Any, Any, Any], str | None]]:
+        """
+        Convert a list of commands to a reference list.
+
+        Parameters
+        ----------
+        ctx : Context[commands.Bot]
+            The context of the command.
+        commands_list : list[Command[Any, ..., Any]]
+            The list of commands to convert.
+        with_groups : bool
+            Whether to include command groups.
+
+        Returns
+        -------
+        list[tuple[Command[Any, ..., Any], Optional[str]]]
+            The reference list of commands.
+        """
+        references: list[tuple[commands.Command[Any, Any, Any], str | None]] = []
+
+        # Helper function to extract cog group from a command
+        def get_command_group(cmd: commands.Command[Any, Any, Any]) -> str | None:
+            """Extract the command's cog group."""
+            if cmd.cog:
+                module = getattr(cmd.cog, "__module__", "")
+                parts = module.split(".")
+                # Assuming the structure is: tux.cogs.<group>...
+                if len(parts) >= 3 and parts[1].lower() == "cogs":
+                    return parts[2].lower()
+            return None
+
+        for cmd in commands_list:
+            if isinstance(cmd, commands.Group) and with_groups and cmd.commands:
+                child_commands = list(cmd.commands)
+                references.append((cmd, get_command_group(cmd)))
+
+                references.extend(
+                    (child_cmd, get_command_group(cmd)) for child_cmd in sorted(child_commands, key=lambda x: x.name)
+                )
+            else:
+                references.append((cmd, get_command_group(cmd)))
+
+        return references

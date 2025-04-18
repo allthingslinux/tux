@@ -13,7 +13,7 @@ from tux.database.controllers.levels import LevelsController
 from tux.database.controllers.note import NoteController
 from tux.database.controllers.reminder import ReminderController
 from tux.database.controllers.snippet import SnippetController
-from tux.database.controllers.starboard import StarboardController
+from tux.database.controllers.starboard import StarboardController, StarboardMessageController
 
 # Define a TypeVar that can be any BaseController subclass
 ControllerType = TypeVar("ControllerType")
@@ -46,6 +46,8 @@ class DatabaseController:
         The snippet controller instance.
     _starboard : StarboardController, optional
         The starboard controller instance.
+    _starboard_message : StarboardMessageController, optional
+        The starboard message controller instance.
     """
 
     def __init__(self) -> None:
@@ -60,6 +62,7 @@ class DatabaseController:
         self._reminder: ReminderController | None = None
         self._snippet: SnippetController | None = None
         self._starboard: StarboardController | None = None
+        self._starboard_message: StarboardMessageController | None = None
 
     def _get_controller(self, controller_type: type[ControllerType]) -> ControllerType:
         """
@@ -101,27 +104,56 @@ class DatabaseController:
         original_method : Any
             The original method to wrap
         """
+        import inspect
 
-        @functools.wraps(original_method)
-        async def wrapped_method(*args: Any, **kwargs: Any) -> Any:
-            controller_name = instance.__class__.__name__
-            with sentry_sdk.start_span(
-                op=f"db.controller.{method_name}",
-                description=f"{controller_name}.{method_name}",
-            ) as span:
-                span.set_tag("db.controller", controller_name)
-                span.set_tag("db.operation", method_name)
-                try:
-                    result = await original_method(*args, **kwargs)
-                except Exception as e:
-                    span.set_status("internal_error")
-                    span.set_data("error", str(e))
-                    raise
-                else:
-                    span.set_status("ok")
-                    return result
+        # Check if the original method is async
+        is_async = inspect.iscoroutinefunction(original_method)
 
-        setattr(instance, method_name, wrapped_method)
+        if is_async:
+
+            @functools.wraps(original_method)
+            async def async_wrapped_method(*args: Any, **kwargs: Any) -> Any:
+                controller_name = instance.__class__.__name__
+                with sentry_sdk.start_span(
+                    op=f"db.controller.{method_name}",
+                    description=f"{controller_name}.{method_name}",
+                ) as span:
+                    span.set_tag("db.controller", controller_name)
+                    span.set_tag("db.operation", method_name)
+                    try:
+                        result = await original_method(*args, **kwargs)
+                    except Exception as e:
+                        span.set_status("internal_error")
+                        span.set_data("error", str(e))
+                        raise
+                    else:
+                        span.set_status("ok")
+                        return result
+
+            setattr(instance, method_name, async_wrapped_method)
+
+        else:
+
+            @functools.wraps(original_method)
+            def sync_wrapped_method(*args: Any, **kwargs: Any) -> Any:
+                controller_name = instance.__class__.__name__
+                with sentry_sdk.start_span(
+                    op=f"db.controller.{method_name}",
+                    description=f"{controller_name}.{method_name}",
+                ) as span:
+                    span.set_tag("db.controller", controller_name)
+                    span.set_tag("db.operation", method_name)
+                    try:
+                        result = original_method(*args, **kwargs)
+                    except Exception as e:
+                        span.set_status("internal_error")
+                        span.set_data("error", str(e))
+                        raise
+                    else:
+                        span.set_status("ok")
+                        return result
+
+            setattr(instance, method_name, sync_wrapped_method)
 
     _controller_mapping: ClassVar[dict[str, type]] = {
         "afk": AfkController,
@@ -133,6 +165,7 @@ class DatabaseController:
         "reminder": ReminderController,
         "snippet": SnippetController,
         "starboard": StarboardController,
+        "starboard_message": StarboardMessageController,
     }
 
     def __getattr__(self, name: str) -> Any:
