@@ -12,6 +12,7 @@ from tux.bot import Tux
 from tux.cogs.utility import add_afk, del_afk
 from tux.database.controllers import DatabaseController
 from tux.utils.flags import generate_usage
+from tux.utils.functions import convert_to_seconds, seconds_to_human_readable
 
 # TODO: add `afk until` command, or add support for providing a timeframe in the regular `afk` and `permafk` commands
 
@@ -99,6 +100,72 @@ class Afk(commands.Cog):
                 everyone=False,
                 roles=False,
             ),
+        )
+
+    @commands.hybrid_command(
+        name="afk_until",
+        aliases=["afku", "uafk", "afkuntil"],
+    )
+    @commands.guild_only()
+    async def self_timeout(self, ctx: commands.Context[Tux], duration: str, *, reason: str = "No Reason.") -> None:
+        """
+        AFK for a set duration
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context of the command
+        duration : str
+            How long the AFK should last for
+        reason : str [optional]
+            The reason why you are AFK
+        """
+        if ctx.guild is None:
+            await ctx.send("Command must be run in a guild!", ephemeral=True)
+            return
+
+        member = ctx.guild.get_member(ctx.author.id)
+        if member is None:
+            return
+
+        duration_seconds: int = convert_to_seconds(duration)
+        duration_readable = seconds_to_human_readable(duration_seconds)
+
+        if duration_seconds == 0:
+            await ctx.reply("Error! Invalid time format", ephemeral=True)
+            return
+
+        if duration_seconds > 604800:
+            await ctx.reply("Error! duration cannot be longer than 7 days!", ephemeral=True)
+            return
+
+        if duration_seconds < 300:
+            await ctx.reply("Error! duration cannot be less than 5 minutes!", ephemeral=True)
+            return
+
+        entry = await self.db.afk.get_afk_member(member.id, guild_id=ctx.guild.id)
+
+        if entry is not None and reason == "No Reason.":
+            # If the member is already afk and hasn't provided a reason with this command,
+            # assume they want to add an expiration to their current AFK and carry the old reason
+            reason = entry.reason
+
+        await ctx.reply(
+            content="\N{SLEEPING SYMBOL} || You are now afk for" + f" {duration_readable}! Reason: `{reason}`",
+            allowed_mentions=discord.AllowedMentions(
+                users=False,
+                everyone=False,
+                roles=False,
+            ),
+        )
+        await add_afk(
+            self.db,
+            reason,
+            member,
+            ctx.guild.id,
+            True,
+            datetime.now(UTC) + timedelta(seconds=duration_seconds),
+            False,
         )
 
     @commands.Cog.listener("on_message")
