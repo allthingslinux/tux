@@ -11,7 +11,8 @@ RUN apt-get update && \
   libpango1.0-0 \
   libpangocairo-1.0-0 \
   shared-mime-info \
-  tealdeer && \
+  tealdeer \
+  ffmpeg && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* && \
   tldr -u
@@ -118,7 +119,7 @@ ENV VIRTUAL_ENV=/app/.venv \
 COPY --from=build --chown=nonroot:nonroot /app /app
 
 # Switch to the non-root user
-USER nonroot
+#USER nonroot
 
 ENTRYPOINT ["tux"]
 CMD ["--prod", "start"]

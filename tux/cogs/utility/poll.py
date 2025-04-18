@@ -68,6 +68,9 @@ class Poll(commands.Cog):
         # delete the message
         await message.delete()
 
+        # Ensure command processing continues for other messages
+        await self.bot.process_commands(message)
+
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User) -> None:
         # Block any reactions that are not numbers for the poll

@@ -238,9 +238,19 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
             self._process_extension_reload(extension, file_path)
             return True
 
+        # Check if a shorter version of this extension is already loaded
+        # This prevents duplicate loading of the same module
+        parts = extension.split(".")
+        for i in range(len(parts) - 1, 0, -1):
+            shorter_ext = ".".join(parts[:i])
+            if shorter_ext in self.bot.extensions:
+                logger.warning(f"Skipping reload of {extension} as parent module {shorter_ext} already loaded")
+                # Still update our path mapping
+                self.path_to_extension[str(file_path)] = shorter_ext
+                return True
+
         # Check parent modules
         parent_ext = extension
-
         while "." in parent_ext:
             parent_ext = parent_ext.rsplit(".", 1)[0]
             if parent_ext in self.bot.extensions:
