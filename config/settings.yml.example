@@ -49,6 +49,11 @@ TEMPVC_CATEGORY_ID: 123456789012345679
 # Set this to the channel ID where you want the temporary voice channels to be created.
 TEMPVC_CHANNEL_ID: 123456789012345679
 
+# This will automatically give people with a status regex a role.
+STATUS_ROLES:
+  #- server_id: 123456789012345679
+  #  status_regex: ".*"
+  #  role_id: 123456789012345679
 
 SNIPPETS:
   LIMIT_TO_ROLE_IDS: false # Only allow users with the specified role IDs to use the snippet command
