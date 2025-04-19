@@ -1,17 +1,19 @@
+---
+
+# NOTE: This file is used for production deployment.
+
 services:
   tux:
+    container_name: tux
+    image: ghcr.io/allthingslinux/tux:latest
     build:
       context: .
-      target: dev
-    image: ghcr.io/allthingslinux/tux:latest
-    container_name: tux
-    restart: always
-    develop:
-      watch:
-        - action: sync
-          path: .
-          target: /app/
-          ignore:
-            - .venv/
+      dockerfile: Dockerfile
+      target: production
+    volumes:
+      - ./config:/app/config:ro
+      - ./tux:/app/tux
+      - ./assets:/app/assets
     env_file:
       - .env
+    restart: unless-stopped

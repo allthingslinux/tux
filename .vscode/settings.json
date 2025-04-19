@@ -1,7 +1,9 @@
 {
   "ruff.lint.enable": true,
-  "ruff.lint.preview": false,
-  "ruff.format.preview": true,
+  "ruff.codeAction.fixViolation": {
+    "enable": true
+  },
+  "ruff.fixAll": true,
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "charliermarsh.ruff",
   "editor.codeActionsOnSave": {
@@ -44,5 +46,11 @@
   },
   "[markdown]": {
     "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+  },
+  "[dockerfile]": {
+    "editor.defaultFormatter": "ms-azuretools.vscode-docker"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
   }
 }

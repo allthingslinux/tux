@@ -202,7 +202,7 @@ When working with these core components:
 
 Core components are configured through environment variables and the `CONFIG` object. Key configuration options include:
 
-- `TOKEN` - Bot authentication token
+- `DEV_BOT_TOKEN` / `PROD_BOT_TOKEN` - Bot authentication tokens for dev/prod environments
 - `SENTRY_URL` - Sentry DSN for error tracking
 - `DEFAULT_PREFIX` - Default command prefix
 - `COG_IGNORE_LIST` - Cogs to exclude from loading

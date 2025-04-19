@@ -1,4 +1,4 @@
-name: Pyright
+name: "Pyright - Static Type Checking"
 
 on: [push, pull_request]
 
@@ -16,8 +16,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
-          cache: 'poetry'
+          python-version: "3.13"
+          cache: "poetry"
 
       - name: Install project
         run: poetry install --no-interaction
