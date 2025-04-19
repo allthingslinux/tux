@@ -50,11 +50,14 @@ class StatusRoles(commands.Cog):
         if not member.activities:
             return None
 
-        for activity in member.activities:
-            if isinstance(activity, discord.CustomActivity) and activity.name:
-                return activity.name
-
-        return None
+        return next(
+            (
+                activity.name
+                for activity in member.activities
+                if isinstance(activity, discord.CustomActivity) and activity.name
+            ),
+            None,
+        )
 
     async def check_and_update_roles(self, member: discord.Member):
         """Check a member's status against configured patterns and update roles accordingly."""
