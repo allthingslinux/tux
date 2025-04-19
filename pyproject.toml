@@ -24,7 +24,7 @@ metadata = true
 dirty = true
 format-jinja = """
     {%- if distance == 0 -%}
-        {{ serialize_pep440(base, stage, revision) }}
+        {{ serialize_pep440(base, stage, revision, metadata=[] + (["dirty"] if dirty else []))) }}
     {%- elif branch == "main" -%}
         {{ serialize_pep440(base, stage, revision, dev=distance, metadata=[commit] + (["dirty"] if dirty else [])) }}
     {%- else -%}
