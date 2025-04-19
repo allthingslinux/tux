@@ -5,7 +5,6 @@ from typing import cast
 
 import discord
 import sentry_sdk
-from discord.ext import commands
 from loguru import logger
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
@@ -35,48 +34,22 @@ async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
     Returns
     -------
     list[str]
-        List of valid prefixes for the message, including mentions
+        List of valid prefixes for the message
 
     Notes
     -----
     If getting the guild prefix fails, falls back to the default prefix.
-    Always includes bot mention as a valid prefix.
     """
-
-    # Add span tags for context
-    if sentry_sdk.is_initialized():
-        current_span = sentry_sdk.get_current_span()
-        if current_span is not None:
-            current_span.set_tag("discord.message.id", message.id)
-            if message.guild:
-                current_span.set_tag("discord.guild.id", message.guild.id)
 
     prefix: str | None = None
 
     if message.guild:
         try:
             prefix = await DatabaseController().guild_config.get_guild_prefix(message.guild.id)
-            if sentry_sdk.is_initialized():
-                current_span = sentry_sdk.get_current_span()
-                if current_span is not None:
-                    current_span.set_data("resolved_prefix", prefix)
-
         except Exception as e:
-            if sentry_sdk.is_initialized():
-                current_span = sentry_sdk.get_current_span()
-                if current_span is not None:
-                    current_span.set_status("internal_error")
-                    current_span.set_data("error", str(e))
             logger.error(f"Error getting guild prefix: {e}")
 
-    result = commands.when_mentioned_or(prefix or CONFIG.DEFAULT_PREFIX)(bot, message)
-
-    if sentry_sdk.is_initialized():
-        current_span = sentry_sdk.get_current_span()
-        if current_span is not None:
-            current_span.set_data("prefix_list_length", len(result))
-
-    return result
+    return [prefix or CONFIG.DEFAULT_PREFIX]
 
 
 def setup_sentry() -> None:
