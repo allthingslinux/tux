@@ -1,6 +1,5 @@
 .devcontainer/
 .env
-.git/
 .github/
 .venv/
 .vscode/
