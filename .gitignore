@@ -162,3 +162,8 @@ config/settings.yml
 .DS_Store
 
 docs-build/
+docs/site/
+
+# extensions
+tux/extensions/*
+!tux/extensions/README.md
