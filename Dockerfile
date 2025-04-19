@@ -57,7 +57,7 @@ WORKDIR /app
 # Copy only the metadata files to increase build cache hit rate
 # .git also needs to be copied for versioning
 COPY pyproject.toml poetry.lock ./
-COPY .git .git
+COPY .git .git ./
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
   poetry install --only main --no-root --no-directory
 
