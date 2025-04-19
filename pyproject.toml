@@ -26,9 +26,9 @@ format-jinja = """
     {%- if distance == 0 -%}
         {{ serialize_pep440(base, stage, revision) }}
     {%- elif branch == "main" -%}
-        {{ serialize_pep440(base, stage, revision, dev=distance, metadata=[commit]) }}
+        {{ serialize_pep440(base, stage, revision, dev=distance, metadata=[commit] + (["dirty"] if dirty else [])) }}
     {%- else -%}
-        {{ serialize_pep440(base, stage, revision, dev=distance, metadata=[commit, branch_escaped]) }}
+        {{ serialize_pep440(base, stage, revision, dev=distance, metadata=[commit, branch_escaped] + (["dirty"] if dirty else [])) }}
     {%- endif -%}
 """
 
