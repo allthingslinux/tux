@@ -55,7 +55,7 @@ RUN --mount=type=cache,target=/root/.cache pip install poetry==$POETRY_VERSION
 WORKDIR /app
 
 # Copy .git for dynamic versioning
-COPY --chown=nonroot:nonroot .git .git
+COPY .git .git ./
 
 # Copy only the metadata files to increase build cache hit rate
 COPY pyproject.toml poetry.lock ./
