@@ -18,4 +18,3 @@ site/
 .gitignore
 .cursorrules
 .editorconfig
-!.git
