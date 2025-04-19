@@ -9,5 +9,5 @@ At the end of the day it is about the same as just adding a cog to the bot manua
 ## Limitations
 Unfortunately using extensions does come with some limitations:
 - Everything is in the same category (Extensions)
-- You cannot add your own data to the database schema (unless you want to modify the code), a solution may be added in the future.
-- You cannot add extra packages (unless you modify the code), a solution may be added in the future.
+- You cannot add your own data to the database schema (unless you want to modify the code), a solution might be added in the future.
+- You cannot add extra packages (unless you modify the code), a solution might be added in the future.
