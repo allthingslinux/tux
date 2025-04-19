@@ -55,6 +55,8 @@ RUN --mount=type=cache,target=/root/.cache pip install poetry==$POETRY_VERSION
 WORKDIR /app
 
 COPY . .
+RUN ls -la 
+RUN ls -la .git/
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
   poetry install --only main --no-root --no-directory
 
