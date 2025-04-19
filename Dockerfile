@@ -54,15 +54,10 @@ RUN --mount=type=cache,target=/root/.cache pip install poetry==$POETRY_VERSION
 
 WORKDIR /app
 
-# Copy only the metadata files to increase build cache hit rate
-# .git also needs to be copied for versioning
-COPY pyproject.toml poetry.lock ./
-COPY .git .git ./
+COPY . .
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
   poetry install --only main --no-root --no-directory
 
-# Now install the application itself
-COPY . .
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
   --mount=type=cache,target=/root/.cache \
   poetry install --only main && \
