@@ -13,7 +13,11 @@ class StatusRoles(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.status_roles = CONFIG.STATUS_ROLES
-        logger.info("StatusRoles cog initialized with %d role configurations", len(self.status_roles))
+        # logger.info("StatusRoles cog initialized with %d role configurations", len(self.status_roles))
+        if self.status_roles:
+            logger.info("StatusRoles cog initialized with %d role configurations", len(self.status_roles))
+        else:
+            logger.warning("StatusRoles cog initialized with no role configurations. Check your config file.")
 
     @commands.Cog.listener()
     async def on_ready(self):
