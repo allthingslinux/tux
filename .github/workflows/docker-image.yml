@@ -52,6 +52,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           context: .
+          provenance: false
           build-args: |
             BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
 
