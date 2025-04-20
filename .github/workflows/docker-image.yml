@@ -3,6 +3,7 @@ name: "GHCR - Build and Push Docker Image"
 on:
   push:
     branches: ["main"]
+    tags: ["*"]
   pull_request:
 
 jobs:
@@ -25,7 +26,7 @@ jobs:
           images: |
             ghcr.io/allthingslinux/tux
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,enable={{is_default_branch}}
             type=ref,event=pr
 
       - name: Set up Docker Buildx
