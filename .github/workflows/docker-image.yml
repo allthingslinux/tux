@@ -25,6 +25,8 @@ jobs:
         with:
           images: |
             ghcr.io/allthingslinux/tux
+          flavor: |
+            latest=${{ github.event_name == 'tag' }}
           tags: |
             type=sha,enable={{is_default_branch}},event=push
             type=pep440,pattern={{version}},event=tag
