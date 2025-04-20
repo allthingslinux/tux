@@ -26,7 +26,8 @@ jobs:
           images: |
             ghcr.io/allthingslinux/tux
           tags: |
-            type=raw,enable={{is_default_branch}}
+            type=sha,enable={{is_default_branch}},event=push
+            type=pep440,event=tag
             type=ref,event=pr
 
       - name: Set up Docker Buildx
