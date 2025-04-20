@@ -22,15 +22,26 @@ version = "0.0.0"
 enable = true
 metadata = true
 dirty = true
+# TODO: dirty causes issues with dockerization and always returns true, disabling for now
+#format-jinja = """
+#    {%- if distance == 0 -%}
+#        {{ serialize_pep440(base, stage, revision, metadata=[] + (["dirty"] if dirty else [])) }}
+#    {%- elif branch == "main" -%}
+#        {{ serialize_pep440(base, stage, revision, dev=distance, metadata=[commit] + (["dirty"] if dirty else [])) }}
+#    {%- else -%}
+#        {{ serialize_pep440(base, stage, revision, dev=distance, metadata=[commit, branch_escaped] + (["dirty"] if dirty else [])) }}
+#    {%- endif -%}
+#"""
 format-jinja = """
-    {%- if distance == 0 -%}
-        {{ serialize_pep440(base, stage, revision, metadata=[] + (["dirty"] if dirty else [])) }}
-    {%- elif branch == "main" -%}
-        {{ serialize_pep440(base, stage, revision, dev=distance, metadata=[commit] + (["dirty"] if dirty else [])) }}
-    {%- else -%}
-        {{ serialize_pep440(base, stage, revision, dev=distance, metadata=[commit, branch_escaped] + (["dirty"] if dirty else [])) }}
-    {%- endif -%}
+   {%- if distance == 0 -%}
+       {{ serialize_pep440(base, stage, revision) }}
+   {%- elif branch == "main" -%}
+       {{ serialize_pep440(base, stage, revision, dev=distance, metadata=[commit]) }}
+   {%- else -%}
+       {{ serialize_pep440(base, stage, revision, dev=distance, metadata=[commit, branch_escaped]) }}
+   {%- endif -%}
 """
+
 
 [tool.poetry.requires-plugins]
 poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
