@@ -1,0 +1,27 @@
+on:
+  workflow_dispatch:
+    inputs:
+        KEEP_AMOUNT:
+            description: "Number of images to keep"
+            required: true
+            default: "10"
+
+jobs:
+  remove-old-images:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Login to GHCR
+        if: github.ref_type == 'tag'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}  
+
+      - name: Remove old images
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: 'tux'
+          package-type: 'container'
+          min-versions-to-keep: 10
