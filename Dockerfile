@@ -1,7 +1,7 @@
 # Base stage:
 # - Pin the Python base image for all stages
 # - Install only the common runtime dependencies and shared libraries
-FROM python:3.13.2-slim AS base
+FROM python:3.13.3-slim AS base
 
 RUN apt-get update && \
   apt-get install -y --no-install-recommends \
