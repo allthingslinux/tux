@@ -155,8 +155,8 @@ github-private-key.pem
 
 # Miscellaneous
 /debug.csv
-config/settings.json
-config/settings.yml
+config/settings*
+!config/settings.yml.example
 
 # MacOS
 .DS_Store
@@ -167,3 +167,6 @@ docs/site/
 # extensions
 tux/extensions/*
 !tux/extensions/README.md
+
+# misc
+slim.report.json
