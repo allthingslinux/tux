@@ -5,6 +5,10 @@ on:
             description: "Number of images to keep"
             required: true
             default: "10"
+        REMOVE_UNTAGGED:
+            description: "Remove untagged images"
+            required: true
+            default: "false"
 
 jobs:
   remove-old-images:
@@ -16,4 +20,5 @@ jobs:
         with:
           package-name: 'tux'
           package-type: 'container'
-          min-versions-to-keep: 10
+          min-versions-to-keep: ${{ github.event.inputs.KEEP_AMOUNT }}
+          delete-only-untagged-versions: ${{ github.event.inputs.REMOVE_UNTAGGED }}
