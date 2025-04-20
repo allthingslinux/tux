@@ -43,15 +43,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run git status
-        run: git status
-
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          context: .
           build-args: |
             BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
       
