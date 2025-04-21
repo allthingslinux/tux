@@ -23,29 +23,36 @@ Before you begin, ensure you have the following installed:
 
     Use Poetry to set up a virtual environment and install all project dependencies, including development tools.
 
-    Assuming you have Poetry installed and python 3.13.2 installed, activate or create a new virtualenv for the current project:
+    First, ensure you have Poetry installed. You can install it using the official installer:
 
     ```bash
-    poetry env use 3.13.2
+    curl -sSL https://install.python-poetry.org | python3 -
     ```
 
-    If you don't have python 3.13.2 installed, you can install it using the following command:
+    This will install Poetry at `~/.local/bin/poetry`. Add this to your PATH if it's not already there.
+
+    ```bash
+    export PATH="$HOME/.local/bin:$PATH"
+    ```
+
+    Refer to the [official Poetry documentation](https://python-poetry.org/docs/#installation) for other installation methods.
+
+    Next, use Poetry to install the required Python version (e.g., 3.13.2) and configure the virtual environment:
 
     ```bash
     poetry python install 3.13.2
+    poetry env use 3.13.2
     ```
 
-    * Note that this is an experimental feature and may not be as reliable as other methods.
-    * We recommend using something like [mise](https://mise.jdx.dev/) to install python and manage your environment.
-    * Other options include using `pyenv` or `asdf`. Last but not least, you can search your package manager.
+    * **Note:** While `poetry python install` is convenient, you can also manage Python versions using external tools like [mise](https://mise.jdx.dev/), `pyenv`, or `asdf`, and then run `poetry env use <python_version>` if you prefer.
 
-    Install all project dependencies:
+    Now, install all project dependencies (this will also install required Poetry plugins if needed):
 
     ```bash
     poetry install
     ```
 
-    Install the `pre-commit` hooks:
+    Finally, install the `pre-commit` hooks:
 
     ```bash
     poetry run pre-commit install
