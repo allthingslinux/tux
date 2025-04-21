@@ -60,7 +60,7 @@ Before you begin, ensure you have the following installed:
 
     Edit the `.env` file and fill out the required variables. The `.env` file is used for both local and Docker development.
 
-    At a minimum, you will need to fill in the `DEV_BOT_TOKEN` and `DEV_DATABASE_URL` variables for local development when using the CLI to start the bot with `poetry run tux --dev bot start`.
+    At a minimum, you will need to fill in the `DEV_BOT_TOKEN` and `DEV_DATABASE_URL` variables for local development when using the CLI to start the bot with `poetry run tux --dev start`.
 
     ```bash
     DEV_BOT_TOKEN=your_dev_discord_token
@@ -103,7 +103,7 @@ This is the simplest and recommended way to get started and develop Tux.
     Start the bot in development mode:
 
     ```bash
-    poetry run tux --dev bot start
+    poetry run tux --dev start
     ```
 
     This command will:
@@ -118,7 +118,7 @@ This is the simplest and recommended way to get started and develop Tux.
 
 The project includes a hot-reloading utility (`tux/utils/hot_reload.py`).
 
-When the bot is running locally via `poetry run tux --dev bot start`, this utility watches for changes in the `tux/cogs/` directory and attempts to automatically reload modified or affected cogs without requiring a full bot restart.
+When the bot is running locally via `poetry run tux --dev start`, this utility watches for changes in the `tux/cogs/` directory and attempts to automatically reload modified or affected cogs without requiring a full bot restart.
 
 This significantly speeds up development for cog-related changes. Note that changes outside the `tux/cogs/` directory (e.g., utility files, core bot logic) may still require a manual restart (`Ctrl+C` and run the start command again).
 
@@ -235,7 +235,7 @@ This method provides a containerized environment, useful for ensuring consistenc
     poetry run tux --dev docker up --build
     ```
 
-    This uses Docker Compose with the development overrides. The `develop: watch:` feature syncs code changes into the container. The container runs `python -m tux --dev bot start`.
+    This uses Docker Compose with the development overrides. The `develop: watch:` feature syncs code changes into the container. The container runs `python -m tux --dev start`.
 
 **Stopping the Docker Environment:**
 
