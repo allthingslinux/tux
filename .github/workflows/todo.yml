@@ -22,7 +22,7 @@ jobs:
           fetch-depth: 0
 
       - name: "TODO to Issue"
-        uses: "alstr/todo-to-issue-action@v5.1.10"
+        uses: "alstr/todo-to-issue-action@v5.1.12"
         with:
           CLOSE_ISSUES: true
           INSERT_ISSUE_URLS: true
