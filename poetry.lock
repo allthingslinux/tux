@@ -953,14 +953,14 @@ smmap = ">=3.0.1,<6"
 
 [[package]]
 name = "githubkit"
-version = "0.12.10"
+version = "0.12.11"
 description = "GitHub SDK for Python"
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["main"]
 files = [
-    {file = "githubkit-0.12.10-py3-none-any.whl", hash = "sha256:3dec36d177c029fbde82747f60bb3278152b90922a021fcee5e4287ef0073cdd"},
-    {file = "githubkit-0.12.10.tar.gz", hash = "sha256:9c4407a65823da13f5603feecfdaeabe70c02dc286eb74a2310930dd2da470b5"},
+    {file = "githubkit-0.12.11-py3-none-any.whl", hash = "sha256:d88b991ac1368065af2d4f81cca8780d8e868db815176a33c100e5d1c6f67219"},
+    {file = "githubkit-0.12.11.tar.gz", hash = "sha256:e9988369b42e7831753d61109e8f4c24ff80731bd8edb150e7ef09ea93f827af"},
 ]
 
 [package.dependencies]
