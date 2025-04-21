@@ -10,6 +10,8 @@ edit_uri: edit/main/docs/
 
 docs_dir: ./content
 
+site_dir: ../build/docs
+
 extra:
   social:
     - icon: fontawesome/brands/github
@@ -174,6 +176,8 @@ plugins:
       exclude_private: true
 
 markdown_extensions:
+  - attr_list
+  - mkdocs-click:
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
@@ -181,7 +185,6 @@ markdown_extensions:
   - pymdownx.superfences
   - admonition
   - pymdownx.details
-  - attr_list
   - md_in_html
   - tables
   - toc:
@@ -193,3 +196,4 @@ nav:
       - Environment: dev/environment.md
       - Architecture: dev/architecture.md
       - Contributing: dev/contributing.md
+  - CLI: cli.md
