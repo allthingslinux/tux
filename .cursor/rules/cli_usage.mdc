@@ -1,6 +1,6 @@
 ---
 description: 
-globs: 
+globs: tux/cli/**,README.md,DEVELOPER.md,pyproject.toml,docs/**
 alwaysApply: false
 ---
 # Tux CLI Usage

@@ -12,7 +12,7 @@ services:
       target: production
     volumes:
       - ./config:/app/config:ro
-      - ./tux:/app/tux
+      - ./tux/extensions:/app/tux/extensions
       - ./assets:/app/assets
     env_file:
       - .env

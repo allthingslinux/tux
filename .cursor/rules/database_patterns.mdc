@@ -1,6 +1,6 @@
 ---
 description: 
-globs: tux/database/**,prisma/**
+globs: tux/database/**,prisma/**,tux/cli/database.py
 alwaysApply: false
 ---
 # Database Interaction Patterns
