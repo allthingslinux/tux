@@ -83,12 +83,7 @@ levenshtein = "^0.27.1"
 pre-commit = ">=4.0.0"
 pyright = ">=1.1.358"
 ruff = ">=0.8.0"
-types-aiofiles = ">=24.1.0.20240626"
-types-dateparser = ">=1.2.0.20240420"
-types-psutil = ">=6.0.0.20240621"
-types-pytz = ">=2024.2.0.20240913"
-types-pyyaml = ">=6.0.12.20240808"
-types-pillow = "^10.2.0.20240822"
+poetry-types = "^0.6.0"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.30"
@@ -104,6 +99,18 @@ griffe-generics = "^1.0.13"
 griffe-inherited-method-crossrefs = "^0.0.1.4"
 griffe-inherited-docstrings = "^1.1.1"
 mkdocs-api-autonav = "^0.2.0"
+mkdocs-click = "^0.9.0"
+
+[tool.poetry.group.types.dependencies]
+types-pytz = "^2025.2.0.20250326"
+types-click = "^7.1.8"
+types-psutil = "^7.0.0.20250401"
+types-dateparser = "^1.2.0.20250408"
+types-pillow = "^10.2.0.20240822"
+types-colorama = "^0.4.15.20240311"
+types-pyyaml = "^6.0.12.20250402"
+types-aiofiles = "^24.1.0.20250326"
+types-influxdb-client = "^1.45.0.20241221"
 
 [tool.ruff]
 exclude = [".venv", "examples", "tests", ".archive", "typings/**"]
