@@ -161,8 +161,10 @@ config/settings*
 # MacOS
 .DS_Store
 
+build/
 docs-build/
 docs/site/
+site/
 
 # extensions
 tux/extensions/*
