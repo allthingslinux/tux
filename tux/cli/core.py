@@ -93,7 +93,7 @@ def run_command(cmd: list[str], **kwargs: Any) -> int:
 
 # Initialize interface CLI group using the custom class
 @click.group(cls=GlobalOptionGroup)
-@click.version_option(prog_name="Tux")  # Keep version option separate
+@click.version_option(prog_name="Tux")  # type: ignore - keep version option separate
 @click.pass_context
 def cli(ctx: Context) -> None:  # Remove env_dev and env_prod params
     """Tux CLI"""
@@ -229,3 +229,7 @@ def start() -> int:
     from tux.main import run
 
     return run()
+
+
+# Ensure commands are registered when this module is imported
+register_commands()
