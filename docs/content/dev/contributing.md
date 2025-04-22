@@ -133,11 +133,15 @@ git push origin main     # Optional: Update your fork's main branch on GitHub
     poetry run tux dev format
 
     # Lint code using Ruff
-    poetry run tux dev lint
+    poetry run tux dev lint (or lint-fix)
 
     # Type-check code using Pyright
     poetry run tux dev type-check
+    ```
 
+    or
+
+    ```bash
     # Run all pre-commit checks (includes formatting, linting, etc.)
     poetry run tux dev pre-commit
     ```
