@@ -66,7 +66,7 @@ Follow these steps to set up your local development environment. For more compre
 
 3. **Configure Environment Variables**
 
-    Copy the example environment file and fill in your details. **Do not commit `.env`**.
+    Copy the example environment file and fill in your details.
 
     ```bash
     cp .env.example .env
