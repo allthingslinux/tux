@@ -1,152 +1,190 @@
 # Contributing to Tux
 
-Thank you for your interest in contributing to Tux! This guide will help you get started with contributing to the project.
+Thank you for your interest in contributing to Tux! This guide details how to set up your environment, follow the development workflow, and submit your contributions.
+
+We welcome contributions of all kinds, from bug fixes and feature implementations to documentation improvements.
+
+## Prerequisites
+
+Before you start, ensure you have:
+
+* Git
+* Python 3.13+
+* [Poetry](https://python-poetry.org/docs/) (1.2+ recommended)
+* A PostgreSQL Database (local or remote)
+* (Optional) Docker & Docker Compose v2
 
 ## Development Setup
 
-1. **Clone the Repository**
+Follow these steps to set up your local development environment. For more comprehensive details, refer to the main [DEVELOPER.md](../../../DEVELOPER.md) guide.
 
-   ```bash
-   git clone https://github.com/allthingslinux/tux.git
-   cd tux
-   ```
+1. **Fork and clone the repository**
 
-2. **Set Up Development Environment**
+    If you do not have direct write access to the `allthingslinux/tux` repository, you'll need to create your own copy (a "fork") on GitHub first. This allows you to make changes in your own workspace before proposing them to the main project via a Pull Request.
 
-   ```bash
-   # Using Poetry (recommended)
-   poetry env use 3.13
-   poetry install
-   
-   # Set up pre-commit hooks
-   poetry run pre-commit install
-   ```
+    * Navigate to the [Tux repository](https://github.com/allthingslinux/tux).
+    * Click the "Fork" button in the upper right corner.
+    * Choose your GitHub account as the owner.
+    * Optionally, uncheck "Copy the `main` branch only" if you need all branches, though usually only the default branch is needed for contributions.
+    * Click "Create fork".
 
-3. **Configure Environment**
+    Once your fork is created (e.g., `https://github.com/yourusername/tux`), clone it to your local machine:
 
-   ```bash
-   # Copy example environment file
-   cp .env.example .env
-   ```
+    ```bash
+    git clone https://github.com/yourusername/tux.git
+    cd tux
+    ```
 
-   Edit .env with your own values for:
+    **Configure `upstream` Remote:**
+    Add the original `allthingslinux/tux` repository as a remote named `upstream`. This makes it easier to fetch changes from the main project.
 
-   - DEV_BOT_TOKEN
-   - DEV_DATABASE_URL
-   - PROD_BOT_TOKEN
-   - PROD_DATABASE_URL
+    ```bash
+    git remote add upstream https://github.com/allthingslinux/tux.git
+    # Verify the remotes
+    git remote -v
+    # Expected output:
+    # origin    https://github.com/yourusername/tux.git (fetch)
+    # origin    https://github.com/yourusername/tux.git (push)
+    # upstream  https://github.com/allthingslinux/tux.git (fetch)
+    # upstream  https://github.com/allthingslinux/tux.git (push)
+    ```
 
-4. **Database Setup**
+2. **Install Dependencies with Poetry**
 
-   ```bash
-   # Generate Prisma client
-   poetry run tux db generate
+    Ensure Poetry is installed and configured to use the correct Python version (e.g., 3.13).
 
-   # Push the db
-   poetry run tux db push
-   ```
+    ```bash
+    # Example: Tell Poetry to use Python 3.13
+    poetry env use 3.13
+
+    # Install project dependencies and dev tools
+    poetry install
+
+    # Install pre-commit hooks for quality checks
+    poetry run pre-commit install
+    ```
+
+3. **Configure Environment Variables**
+
+    Copy the example environment file and fill in your details. **Do not commit `.env`**.
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    Edit `.env` and provide at least:
+    * `DEV_BOT_TOKEN`: Your Discord bot token for development.
+    * `DEV_DATABASE_URL`: Connection string for your development PostgreSQL database (e.g., `postgresql://user:pass@host:port/db_name`).
+
+4. **Configure Bot Settings**
+
+    Copy the example settings file.
+
+    ```bash
+    cp config/settings.yml.example config/settings.yml
+    ```
+
+    Review `config/settings.yml` and customize it.
+
+    **Crucially, add your Discord User ID to the `BOT_OWNER` list.**
+
+5. **Initialize Development Database**
+
+    Push the Prisma schema to your development database. This also generates the Prisma client.
+
+    ```bash
+    # Use --dev or rely on the default development mode
+    poetry run tux --dev db push
+    ```
 
 ## Development Workflow
 
-1. **Create a New Branch**
+**Before starting new work, ensure your local main branch is up-to-date with the upstream repository:**
 
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+```bash
+git checkout main
+git fetch upstream
+git merge upstream/main  # Or rebase: git rebase upstream/main
+git push origin main     # Optional: Update your fork's main branch on GitHub
+```
 
-2. **Make Your Changes**
-   - Write clean, documented code
-   - Add tests for new features
-   - Update documentation as needed
+1. **Create a Feature Branch**
 
-3. **Run Tests**
+    Create a new branch **from your updated `main` branch**.
 
-   ```bash
-   poetry run pytest
-   ```
+    ```bash
+    git checkout main
+    git checkout -b feature/your-descriptive-feature-name
+    ```
 
-4. **Format and Lint**
+2. **Implement Changes**
+    * Write clear, concise, and well-documented code.
+      * Use [Numpy style](https://numpydoc.readthedocs.io/en/latest/format.html) for docstrings.
+      * Use type hints extensively.
+    * Update relevant documentation (`docs/content/`) if necessary.
+    * Test your changes thoroughly.
 
-   ```bash
-   # Format code
-   poetry run ruff format .
-   
-   # Run linter
-   poetry run ruff check .
-   ```
+3. **Run Quality Checks**
 
-5. **Commit Your Changes**
+    Use the `tux` CLI to format, lint, and type-check your code. Running these locally ensures faster feedback before committing.
 
-   ```bash
-   git add .
-   git commit -m "feat: add new feature"
-   ```
+    ```bash
+    # Format code using Ruff
+    poetry run tux dev format
 
-   Follow [Conventional Commits](https://www.conventionalcommits.org/) format:
-   - `feat:` for new features
-   - `fix:` for bug fixes
-   - `docs:` for documentation changes
-   - `refactor:` for code refactoring
-   - `test:` for adding tests
-   - `chore:` for maintenance tasks
+    # Lint code using Ruff
+    poetry run tux dev lint
 
-6. **Submit a Pull Request**
-   - Push your branch to GitHub
-   - Create a Pull Request with a clear description
-   - Link any related issues
+    # Type-check code using Pyright
+    poetry run tux dev type-check
 
-## Code Style Guidelines
+    # Run all pre-commit checks (includes formatting, linting, etc.)
+    poetry run tux dev pre-commit
+    ```
 
-1. **Python Style**
-   - Follow PEP 8 guidelines
-   - Use type hints
-   - Maximum line length: 88 characters
-   - Use docstrings for all public functions/classes
+    Fix any issues reported by these tools.
 
-2. **Documentation**
-   - Keep docstrings up to date
-   - Add examples for complex functionality
-   - Update relevant documentation files
+4. **Commit Your Changes**
 
-3. **Testing**
-   - Write unit tests for new features
-   - Maintain test coverage
-   - Use meaningful test names
+    Stage your changes and write a meaningful commit message following the [Conventional Commits](https://www.conventionalcommits.org/) specification.
 
-## Pull Request Guidelines
+    ```bash
+    git add .
+    git commit -m "feat(command): add user profile command"
+    ```
 
-1. **Before Submitting**
-   - Ensure all tests pass
-   - Run formatters and linters
-   - Update documentation
-   - Test your changes locally
+5. **Push and Create a Pull Request**
+    * Push your feature branch to your fork on GitHub.
 
-2. **PR Description**
-   - Clearly describe the changes
-   - Link related issues
-   - Include screenshots for UI changes
-   - List any breaking changes
+    ```bash
+    git push origin feature/your-descriptive-feature-name
+    ```
 
-3. **Review Process**
-   - Address review comments promptly
-   - Keep the PR focused and small
-   - Be open to feedback
+    * Navigate to the [Tux repository](https://github.com/allthingslinux/tux) on GitHub.
+    * GitHub often shows a prompt to create a Pull Request from your recently pushed branch. You can also navigate to your fork (`https://github.com/yourusername/tux`) and click the "Contribute" button, then "Open a pull request".
+    * Ensure the base repository is `allthingslinux/tux` and the base branch is `main` (or the appropriate target branch).
+    * Ensure the head repository is your fork and the compare branch is your feature branch.
+    * Provide a clear title and description for your PR, linking any relevant issues (e.g., `Closes #123`). Explain *why* the changes are being made.
+    * Click "Create pull request".
+
+## Pull Request Process
+
+1. **Checks:** Ensure your PR passes all automated checks (CI/CD pipeline).
+2. **Review:** Project maintainers will review your PR. Be responsive to feedback and make necessary changes.
+    * Pull requests are discussions. Be prepared to explain your changes or make adjustments based on feedback.
+    * Don't be discouraged if changes are requested or if a PR isn't merged; the feedback process helps improve the project.
+3. **Merge:** Once approved and checks pass, your PR will be merged.
 
 ## Getting Help
 
-- Join our [Discord server](https://discord.gg/your-server) for help
-- Check existing issues and discussions
-- Read our [Architecture Overview](architecture.md)
+* Check the main [DEVELOPER.md](../../../DEVELOPER.md) guide for more in-depth information.
+* Review existing [Issues](https://github.com/allthingslinux/tux/issues).
+* Join the **atl.dev** [Discord server](https://discord.gg/gpmSjcjQxg) and ask in a relevant development channel.
 
 ## Code of Conduct
 
-Please read and follow our [Code of Conduct](../../CODE_OF_CONDUCT.md). We expect all contributors to:
-
-- Be respectful and inclusive
-- Accept constructive criticism
-- Focus on what is best for the community
-- Show empathy towards others
+All contributors are expected to adhere to the project's [Code of Conduct](../../CODE_OF_CONDUCT.md). Be respectful, constructive, and inclusive.
 
 ## License
 
-By contributing to Tux, you agree that your contributions will be licensed under the project's license.
+By contributing to Tux, you agree that your contributions will be licensed under the [GNU General Public License v3.0](../../../LICENSE).
