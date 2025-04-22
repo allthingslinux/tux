@@ -99,22 +99,48 @@ Follow these steps to set up your local development environment. For more compre
 
 ## Development Workflow
 
-**Before starting new work, ensure your local main branch is up-to-date with the upstream repository:**
-
-```bash
-git checkout main
-git fetch upstream
-git merge upstream/main  # Or rebase: git rebase upstream/main
-git push origin main     # Optional: Update your fork's main branch on GitHub
-```
-
 1. **Create a Feature Branch**
 
-    Create a new branch **from your updated `main` branch**.
+    Create a new branch from your local `main` branch with a descriptive name following our conventions:
 
     ```bash
+    # Ensure you're on the main branch
     git checkout main
-    git checkout -b feature/your-descriptive-feature-name
+
+    # Create and switch to your new branch
+    git checkout -b feat/your-feature-name    # For new features
+    # or
+    git checkout -b fix/issue-description     # For bug fixes
+    # or
+    git checkout -b docs/update-section       # For documentation changes
+    ```
+
+    **Keeping Your Branches Updated**
+
+    Regularly sync your local `main` branch with the upstream repository:
+
+    ```bash
+    # Switch to main branch
+    git checkout main
+
+    # Fetch and merge upstream changes
+    git fetch upstream
+    git merge upstream/main
+
+    # Update your fork on GitHub (optional)
+    git push origin main
+    ```
+
+    To update your feature branch with the latest changes:
+
+    ```bash
+    # Option 1: Merge main into your feature branch
+    git checkout feature/your-feature-name
+    git merge main
+
+    # Option 2: Rebase your feature branch on main (cleaner history)
+    git checkout feature/your-feature-name
+    git rebase main
     ```
 
 2. **Implement Changes**
