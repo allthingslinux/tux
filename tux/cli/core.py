@@ -4,6 +4,7 @@ This module provides the main Click command group and utilities for the CLI.
 """
 
 import importlib
+import importlib.metadata
 import os
 import subprocess
 import sys
@@ -23,6 +24,12 @@ from tux.utils.env import (
 )
 from tux.utils.logger import setup_logging
 
+# Fetch version using importlib.metadata with fallback
+try:
+    __version__ = importlib.metadata.version("tux")
+except importlib.metadata.PackageNotFoundError:
+    __version__ = "unknown"
+
 # Type definitions
 T = TypeVar("T")
 CommandFunction = Callable[..., int]
@@ -32,6 +39,32 @@ GROUP_HELP_SUFFIX = ""
 
 # Commands/groups that do not require database access
 NO_DB_COMMANDS = {"dev", "docs", "docker"}
+
+
+def run_command(cmd: list[str], **kwargs: Any) -> int:
+    """Run a command and return its exit code.
+
+    Parameters
+    ----------
+    cmd : list[str]
+        Command to run as a list of strings
+    **kwargs : Any
+        Additional arguments to pass to subprocess.run
+
+    Returns
+    -------
+    int
+        Exit code of the command (0 for success)
+    """
+
+    try:
+        subprocess.run(cmd, check=True, **kwargs)
+
+    except subprocess.CalledProcessError as e:
+        return e.returncode
+
+    else:
+        return 0
 
 
 # Custom Group to handle global options (--dev/--prod) regardless of position
@@ -65,35 +98,9 @@ class GlobalOptionGroup(click.Group):
     # might handle version_option separately. Keeping this simple for now.
 
 
-def run_command(cmd: list[str], **kwargs: Any) -> int:
-    """Run a command and return its exit code.
-
-    Parameters
-    ----------
-    cmd : list[str]
-        Command to run as a list of strings
-    **kwargs : Any
-        Additional arguments to pass to subprocess.run
-
-    Returns
-    -------
-    int
-        Exit code of the command (0 for success)
-    """
-
-    try:
-        subprocess.run(cmd, check=True, **kwargs)
-
-    except subprocess.CalledProcessError as e:
-        return e.returncode
-
-    else:
-        return 0
-
-
 # Initialize interface CLI group using the custom class
 @click.group(cls=GlobalOptionGroup)
-@click.version_option(prog_name="Tux")  # type: ignore - keep version option separate
+@click.version_option(version=__version__, prog_name="Tux")  # type: ignore[misc]
 @click.pass_context
 def cli(ctx: Context) -> None:  # Remove env_dev and env_prod params
     """Tux CLI"""
