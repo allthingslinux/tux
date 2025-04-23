@@ -1,56 +1,224 @@
-# Contributing to Tux 🐧
+# Contributing to Tux
 
-## Topics
+Thank you for your interest in contributing to Tux! This guide details how to set up your environment, follow the development workflow, and submit your contributions.
 
-- [Contributing to Tux 🐧](#contributing-to-tux-)
-  - [Topics](#topics)
-  - [Contributing Flow](#contributing-flow)
-  - [Issues](#issues)
-  - [Branch Naming Conventions](#branch-naming-conventions)
+We welcome contributions of all kinds, from bug fixes and feature implementations to documentation improvements.
 
-## Contributing Flow
+## Prerequisites
 
-1. See [Issues](#issues) topic.
-2. Fork the project.
-3. Create a new branch (please, see [Branch Naming Conventions](#branch-naming-conventions) topic if you don't know our conventions).
+Before you start, ensure you have:
 
-4. After done with modifications, time to commit and push. Example:
+* Git
+* Python 3.13+
+* [Poetry](https://python-poetry.org/docs/) (1.2+ recommended)
+* A PostgreSQL Database (local or remote)
+* (Optional) Docker & Docker Compose v2
 
-   ```bash
-     git add tux/help.py
-     git commit -m "feat(tux): add help command" -m "Help command description"
-     git push origin feat/add-help-command
-     ```
+## Development Setup
 
-5. Send a Pull Request (PR) with the modifications, referencing the `main` branch.
-6. Your contribution will be reviewed by the maintainers.
+Follow these steps to set up your local development environment. For more comprehensive details, refer to the main [DEVELOPER.md](../DEVELOPER.md) guide.
 
-After merge:
+1. **Fork and clone the repository**
 
-- Delete the branch used to commit:
+    If you do not have direct write access to the `allthingslinux/tux` repository, you'll need to create your own copy (a "fork") on GitHub first. This allows you to make changes in your own workspace before proposing them to the main project via a Pull Request.
 
-```bash
-git checkout main
-git push origin --delete feat/add-help-command
-git branch -D feat/add-help-command
-```
+    * Navigate to the [Tux repository](https://github.com/allthingslinux/tux).
+    * Click the "Fork" button in the upper right corner.
+    * Choose your GitHub account as the owner.
+    * Optionally, uncheck "Copy the `main` branch only" if you need all branches, though usually only the default branch is needed for contributions.
+    * Click "Create fork".
 
-- Update your fork:
+    Once your fork is created (e.g., `https://github.com/yourusername/tux`), clone it to your local machine:
 
-```bash
-git remote add upstream https://github.com/allthingslinux/tux.git
-git fetch upstream
-git rebase upstream/main
-git push -f origin main
-```
+    ```bash
+    git clone https://github.com/yourusername/tux.git
+    cd tux
+    ```
 
-## Issues
+    **Configure `upstream` Remote:**
+    Add the original `allthingslinux/tux` repository as a remote named `upstream`. This makes it easier to fetch changes from the main project.
 
-Before submitting a large PR, please open an [issue](https://github.com/allthingslinux/tux/issues/new) so we can discuss the idea.
+    ```bash
+    git remote add upstream https://github.com/allthingslinux/tux.git
+    # Verify the remotes
+    git remote -v
+    # Expected output:
+    # origin    https://github.com/yourusername/tux.git (fetch)
+    # origin    https://github.com/yourusername/tux.git (push)
+    # upstream  https://github.com/allthingslinux/tux.git (fetch)
+    # upstream  https://github.com/allthingslinux/tux.git (push)
+    ```
 
-## Branch Naming Conventions
+2. **Install Dependencies with Poetry**
 
-- Documentation: `git checkout -b docs/contributing`
-- Modifications: `git checkout -b chore/update-dependencies`
-- Features: `git checkout -b feat/add-help-command`
-- Fixing: `git checkout -b fix/help-command`
+    Ensure Poetry is installed and configured to use the correct Python version (e.g., 3.13).
+
+    ```bash
+    # Example: Tell Poetry to use Python 3.13
+    poetry env use 3.13
+
+    # Install project dependencies and dev tools
+    poetry install
+
+    # Install pre-commit hooks for quality checks
+    poetry run pre-commit install
+    ```
+
+3. **Configure Environment Variables**
+
+    Copy the example environment file and fill in your details.
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    Edit `.env` and provide at least:
+    * `DEV_BOT_TOKEN`: Your Discord bot token for development.
+    * `DEV_DATABASE_URL`: Connection string for your development PostgreSQL database (e.g., `postgresql://user:pass@host:port/db_name`).
+
+4. **Configure Bot Settings**
+
+    Copy the example settings file.
+
+    ```bash
+    cp config/settings.yml.example config/settings.yml
+    ```
+
+    Review `config/settings.yml` and customize it.
+
+    **Crucially, add your Discord User ID to the `BOT_OWNER` list.**
+
+5. **Initialize Development Database**
+
+    Push the Prisma schema to your development database. This also generates the Prisma client.
+
+    ```bash
+    # Use --dev or rely on the default development mode
+    poetry run tux --dev db push
+    ```
+
+## Development Workflow
+
+1. **Create a Feature Branch**
+
+    Create a new branch from your local `main` branch with a descriptive name following our conventions:
+
+    ```bash
+    # Ensure you're on the main branch
+    git checkout main
+
+    # Create and switch to your new branch
+    git checkout -b feat/your-feature-name    # For new features
+    # or
+    git checkout -b fix/issue-description     # For bug fixes
+    # or
+    git checkout -b docs/update-section       # For documentation changes
+    ```
+
+    **Keeping Your Branches Updated**
+
+    Regularly sync your local `main` branch with the upstream repository:
+
+    ```bash
+    # Switch to main branch
+    git checkout main
+
+    # Fetch and merge upstream changes
+    # (Combines 'git fetch upstream' and 'git merge upstream/main')
+    git pull upstream main
+
+    # Update your fork on GitHub (optional)
+    git push origin main
+    ```
+
+    To update your feature branch with the latest changes:
+
+    ```bash
+    # Option 1: Merge main into your feature branch
+    git checkout feature/your-feature-name
+    git merge main
+
+    # Option 2: Rebase your feature branch on main (cleaner history)
+    git checkout feature/your-feature-name
+    git rebase main
+    ```
+
+2. **Implement Changes**
+    * Write clear, concise, and well-documented code.
+      * Use [Numpy style](https://numpydoc.readthedocs.io/en/latest/format.html) for docstrings.
+      * Use type hints extensively.
+    * Update relevant documentation (`docs/content/`) if necessary.
+    * Test your changes thoroughly.
+
+3. **Run Quality Checks**
+
+    Use the `tux` CLI to format, lint, and type-check your code. Running these locally ensures faster feedback before committing.
+
+    ```bash
+    # Format code using Ruff
+    poetry run tux dev format
+
+    # Lint code using Ruff
+    poetry run tux dev lint (or lint-fix)
+
+    # Type-check code using Pyright
+    poetry run tux dev type-check
+    ```
+
+    or
+
+    ```bash
+    # Run all pre-commit checks (includes formatting, linting, etc.)
+    poetry run tux dev pre-commit
+    ```
+
+    Fix any issues reported by these tools.
+
+4. **Commit Your Changes**
+
+    Stage your changes and write a meaningful commit message following the [Conventional Commits](https://www.conventionalcommits.org/) specification.
+
+    ```bash
+    git add .
+    git commit -m "feat(command): add user profile command"
+    # or
+    git commit -m "fix(command): fix database connection error"
+    # or
+    git commit -m "docs(readme): update contribution guidelines"
+    ```
+
+5. **Push and Create a Pull Request**
+    * Push your feature branch to your fork on GitHub.
+
+    ```bash
+    git push origin feature/your-descriptive-feature-name
+    ```
+
+    * Navigate to the [Tux repository](https://github.com/allthingslinux/tux) on GitHub.
+    * GitHub often shows a prompt to create a Pull Request from your recently pushed branch. You can also navigate to your fork (`https://github.com/yourusername/tux`) and click the "Contribute" button, then "Open a pull request".
+    * Ensure the base repository is `allthingslinux/tux` and the base branch is `main` (or the appropriate target branch).
+    * Ensure the head repository is your fork and the compare branch is your feature branch.
+    * Provide a clear title and description for your PR, linking any relevant issues (e.g., `Closes #123`). Explain *why* the changes are being made.
+    * Click "Create pull request".
+
+## Pull Request Process
+
+1. **Checks:** Ensure your PR passes all automated checks (CI/CD pipeline).
+2. **Review:** Project maintainers will review your PR. Be responsive to feedback and make necessary changes.
+    * Pull requests are discussions. Be prepared to explain your changes or make adjustments based on feedback.
+    * Don't be discouraged if changes are requested or if a PR isn't merged; the feedback process helps improve the project.
+3. **Merge:** Once approved and checks pass, your PR will be merged.
+
+## Getting Help
+
+* Check the main [DEVELOPER.md](../DEVELOPER.md) guide for more in-depth information.
+* Review existing [Issues](https://github.com/allthingslinux/tux/issues).
+* Join the **atl.dev** [Discord server](https://discord.gg/gpmSjcjQxg) and ask in a relevant development channel.
+
+## Code of Conduct
+
+All contributors are expected to adhere to the project's [Code of Conduct](./CODE_OF_CONDUCT.md). Be respectful, constructive, and inclusive.
+
+## License
+
+By contributing to Tux, you agree that your contributions will be licensed under the [GNU General Public License v3.0](../LICENSE).
