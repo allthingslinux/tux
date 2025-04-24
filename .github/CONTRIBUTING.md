@@ -9,28 +9,31 @@ We welcome contributions of all kinds, from bug fixes and feature implementation
 Before you start, ensure you have:
 
 * Git
-* Python 3.13+
+
+* [Python](https://www.python.org/) (3.13+ recommended)
+  * If you don't have Python installed, we suggest using something like [mise](https://mise.jdx.dev/) or [pyenv](https://github.com/pyenv/pyenv) to manage your Python installations.
+  
 * [Poetry](https://python-poetry.org/docs/) (1.2+ recommended)
-  * If you don't have Poetry installed, you can use one of the official methods. Both create an isolated environment for Poetry:
-
-    * **Using the official installer:**
-
-    After installation and ensuring Poetry is in your PATH, you can verify it by running:
+  * If you don't have Poetry installed, you can use one of the official methods. We recommend using the official installer:
 
     ```bash
     # Linux, macOS, Windows (WSL)
     curl -sSL https://install.python-poetry.org | python3 -
 
-    # Verify installation
+    # After installation and ensuring Poetry is in your PATH, you can verify it by running:
     poetry --version
     ```
 
 * A PostgreSQL Database (local or remote)
+  * We personally use Supabase for our database needs, but any PostgreSQL database will work. Supabase provides a generous free tier and can be set up in minutes.
+
+* (Typically) A Discord bot token
+
 * (Optional) Docker & Docker Compose v2
 
 ## Development Setup
 
-Follow these steps to set up your local development environment. For more comprehensive details, refer to the main [DEVELOPER.md](../DEVELOPER.md) guide.
+Follow these steps to set up your local development environment. For more comprehensive details, refer to the main [DEVELOPER.md](https://github.com/allthingslinux/tux/blob/main/DEVELOPER.md) guide.
 
 1. **Fork and clone the repository**
 
@@ -53,22 +56,18 @@ Follow these steps to set up your local development environment. For more compre
 
     ```bash
     git remote add upstream https://github.com/allthingslinux/tux.git
+    
     # Verify the remotes
     git remote -v
-    # Expected output:
-    # origin    https://github.com/yourusername/tux.git (fetch)
-    # origin    https://github.com/yourusername/tux.git (push)
-    # upstream  https://github.com/allthingslinux/tux.git (fetch)
-    # upstream  https://github.com/allthingslinux/tux.git (push)
     ```
 
 2. **Install Dependencies with Poetry**
 
-    Ensure Poetry is installed and configured to use the correct Python version (e.g., 3.13).
+    Ensure Poetry is installed and configured to use the correct Python version (e.g., 3.13.2).
 
     ```bash
-    # Example: Tell Poetry to use Python 3.13
-    poetry env use 3.13
+    # Create a virtual environment
+    poetry env use 3.13.2
 
     # Install project dependencies and dev tools
     poetry install
@@ -85,7 +84,8 @@ Follow these steps to set up your local development environment. For more compre
 
     Edit `.env` and provide at least:
     * `DEV_BOT_TOKEN`: Your Discord bot token for development.
-    * `DEV_DATABASE_URL`: Connection string for your development PostgreSQL database (e.g., `postgresql://user:pass@host:port/db_name`).
+    * `DEV_DATABASE_URL`: Connection string for your development PostgreSQL database.
+      * Example: `postgresql://user:pass@host:port/db_name`
 
 4. **Configure Bot Settings**
 
@@ -113,14 +113,11 @@ Follow these steps to set up your local development environment. For more compre
     Create a new branch from your local `main` branch with a descriptive name following our conventions:
 
     ```bash
-    # Ensure you're on the main branch
     git checkout main
 
-    # Create and switch to your new branch
+    # Create and switch to your new branch such as:
     git checkout -b feat/your-feature-name    # For new features
-    # or
     git checkout -b fix/issue-description     # For bug fixes
-    # or
     git checkout -b docs/update-section       # For documentation changes
     ```
 
@@ -133,7 +130,6 @@ Follow these steps to set up your local development environment. For more compre
     git checkout main
 
     # Fetch and merge upstream changes
-    # (Combines 'git fetch upstream' and 'git merge upstream/main')
     git pull upstream main
 
     # Update your fork on GitHub (optional)
@@ -168,15 +164,11 @@ Follow these steps to set up your local development environment. For more compre
     poetry run tux dev format
 
     # Lint code using Ruff
-    poetry run tux dev lint (or lint-fix)
+    poetry run tux dev lint-fix
 
     # Type-check code using Pyright
     poetry run tux dev type-check
-    ```
 
-    or
-
-    ```bash
     # Run all pre-commit checks (includes formatting, linting, etc.)
     poetry run tux dev pre-commit
     ```
@@ -218,14 +210,14 @@ Follow these steps to set up your local development environment. For more compre
 
 ## Getting Help
 
-* Check the main [DEVELOPER.md](../DEVELOPER.md) guide for more in-depth information.
+* Check the main [DEVELOPER.md](https://github.com/allthingslinux/tux/blob/main/DEVELOPER.md) guide for more in-depth information.
 * Review existing [Issues](https://github.com/allthingslinux/tux/issues).
 * Join the **atl.dev** [Discord server](https://discord.gg/gpmSjcjQxg) and ask in a relevant development channel.
 
 ## Code of Conduct
 
-All contributors are expected to adhere to the project's [Code of Conduct](./CODE_OF_CONDUCT.md). Be respectful, constructive, and inclusive.
+All contributors are expected to adhere to the project's [Code of Conduct](https://github.com/allthingslinux/tux/blob/main/.github/CODE_OF_CONDUCT.md). Be respectful, constructive, and inclusive.
 
 ## License
 
-By contributing to Tux, you agree that your contributions will be licensed under the [GNU General Public License v3.0](../LICENSE).
+By contributing to Tux, you agree that your contributions will be licensed under the [GNU General Public License v3.0](https://github.com/allthingslinux/tux/blob/main/LICENSE.md).
