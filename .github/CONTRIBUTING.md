@@ -11,6 +11,20 @@ Before you start, ensure you have:
 * Git
 * Python 3.13+
 * [Poetry](https://python-poetry.org/docs/) (1.2+ recommended)
+  * If you don't have Poetry installed, you can use one of the official methods. Both create an isolated environment for Poetry:
+
+    * **Using the official installer:**
+
+        After installation and ensuring Poetry is in your PATH, you can verify it by running:
+
+            ```bash
+            # Linux, macOS, Windows (WSL)
+            curl -sSL https://install.python-poetry.org | python3 -
+
+            # Verify installation
+            poetry --version
+            ```
+
 * A PostgreSQL Database (local or remote)
 * (Optional) Docker & Docker Compose v2
 
@@ -30,47 +44,44 @@ Follow these steps to set up your local development environment. For more compre
 
     Once your fork is created (e.g., `https://github.com/yourusername/tux`), clone it to your local machine:
 
-    ```bash
-    git clone https://github.com/yourusername/tux.git
-    cd tux
-    ```
+        ```bash
+        git clone https://github.com/yourusername/tux.git && cd tux
+        ```
 
     **Configure `upstream` Remote:**
     Add the original `allthingslinux/tux` repository as a remote named `upstream`. This makes it easier to fetch changes from the main project.
 
-    ```bash
-    git remote add upstream https://github.com/allthingslinux/tux.git
-    # Verify the remotes
-    git remote -v
-    # Expected output:
-    # origin    https://github.com/yourusername/tux.git (fetch)
-    # origin    https://github.com/yourusername/tux.git (push)
-    # upstream  https://github.com/allthingslinux/tux.git (fetch)
-    # upstream  https://github.com/allthingslinux/tux.git (push)
-    ```
+        ```bash
+        git remote add upstream https://github.com/allthingslinux/tux.git
+        # Verify the remotes
+        git remote -v
+        # Expected output:
+        # origin    https://github.com/yourusername/tux.git (fetch)
+        # origin    https://github.com/yourusername/tux.git (push)
+        # upstream  https://github.com/allthingslinux/tux.git (fetch)
+        # upstream  https://github.com/allthingslinux/tux.git (push)
+        ```
 
 2. **Install Dependencies with Poetry**
 
     Ensure Poetry is installed and configured to use the correct Python version (e.g., 3.13).
 
-    ```bash
-    # Example: Tell Poetry to use Python 3.13
-    poetry env use 3.13
+        ```bash
+        # Example: Tell Poetry to use Python 3.13
+        poetry env use 3.13
 
-    # Install project dependencies and dev tools
-    poetry install
+        # Install project dependencies and dev tools
+        poetry install
 
-    # Install pre-commit hooks for quality checks
-    poetry run pre-commit install
-    ```
+        # Install pre-commit hooks for quality checks
+        poetry run pre-commit install
+        ```
 
 3. **Configure Environment Variables**
 
     Copy the example environment file and fill in your details.
 
-    ```bash
-    cp .env.example .env
-    ```
+    `cp .env.example .env`
 
     Edit `.env` and provide at least:
     * `DEV_BOT_TOKEN`: Your Discord bot token for development.
@@ -80,9 +91,7 @@ Follow these steps to set up your local development environment. For more compre
 
     Copy the example settings file.
 
-    ```bash
-    cp config/settings.yml.example config/settings.yml
-    ```
+    `cp config/settings.yml.example config/settings.yml`
 
     Review `config/settings.yml` and customize it.
 
@@ -92,10 +101,10 @@ Follow these steps to set up your local development environment. For more compre
 
     Push the Prisma schema to your development database. This also generates the Prisma client.
 
-    ```bash
-    # Use --dev or rely on the default development mode
-    poetry run tux --dev db push
-    ```
+        ```bash
+        # Use --dev or rely on the default development mode
+        poetry run tux --dev db push
+        ```
 
 ## Development Workflow
 
@@ -103,45 +112,45 @@ Follow these steps to set up your local development environment. For more compre
 
     Create a new branch from your local `main` branch with a descriptive name following our conventions:
 
-    ```bash
-    # Ensure you're on the main branch
-    git checkout main
+        ```bash
+        # Ensure you're on the main branch
+        git checkout main
 
-    # Create and switch to your new branch
-    git checkout -b feat/your-feature-name    # For new features
-    # or
-    git checkout -b fix/issue-description     # For bug fixes
-    # or
-    git checkout -b docs/update-section       # For documentation changes
-    ```
+        # Create and switch to your new branch
+        git checkout -b feat/your-feature-name    # For new features
+        # or
+        git checkout -b fix/issue-description     # For bug fixes
+        # or
+        git checkout -b docs/update-section       # For documentation changes
+        ```
 
     **Keeping Your Branches Updated**
 
     Regularly sync your local `main` branch with the upstream repository:
 
-    ```bash
-    # Switch to main branch
-    git checkout main
+        ```bash
+        # Switch to main branch
+        git checkout main
 
-    # Fetch and merge upstream changes
-    # (Combines 'git fetch upstream' and 'git merge upstream/main')
-    git pull upstream main
+        # Fetch and merge upstream changes
+        # (Combines 'git fetch upstream' and 'git merge upstream/main')
+        git pull upstream main
 
-    # Update your fork on GitHub (optional)
-    git push origin main
-    ```
+        # Update your fork on GitHub (optional)
+        git push origin main
+        ```
 
     To update your feature branch with the latest changes:
 
-    ```bash
-    # Option 1: Merge main into your feature branch
-    git checkout feature/your-feature-name
-    git merge main
+        ```bash
+        # Option 1: Merge main into your feature branch
+        git checkout feature/your-feature-name
+        git merge main
 
-    # Option 2: Rebase your feature branch on main (cleaner history)
-    git checkout feature/your-feature-name
-    git rebase main
-    ```
+        # Option 2: Rebase your feature branch on main (cleaner history)
+        git checkout feature/your-feature-name
+        git rebase main
+        ```
 
 2. **Implement Changes**
     * Write clear, concise, and well-documented code.
@@ -154,23 +163,22 @@ Follow these steps to set up your local development environment. For more compre
 
     Use the `tux` CLI to format, lint, and type-check your code. Running these locally ensures faster feedback before committing.
 
-    ```bash
-    # Format code using Ruff
-    poetry run tux dev format
+        ```bash
+        # Format code using Ruff
+        poetry run tux dev format
 
-    # Lint code using Ruff
-    poetry run tux dev lint (or lint-fix)
+        # Lint code using Ruff
+        poetry run tux dev lint (or lint-fix)
 
-    # Type-check code using Pyright
-    poetry run tux dev type-check
-    ```
-
+        # Type-check code using Pyright
+        poetry run tux dev type-check
+        ```
     or
 
-    ```bash
-    # Run all pre-commit checks (includes formatting, linting, etc.)
-    poetry run tux dev pre-commit
-    ```
+        ```bash
+        # Run all pre-commit checks (includes formatting, linting, etc.)
+        poetry run tux dev pre-commit
+        ```
 
     Fix any issues reported by these tools.
 
@@ -178,21 +186,19 @@ Follow these steps to set up your local development environment. For more compre
 
     Stage your changes and write a meaningful commit message following the [Conventional Commits](https://www.conventionalcommits.org/) specification.
 
-    ```bash
-    git add .
-    git commit -m "feat(command): add user profile command"
-    # or
-    git commit -m "fix(command): fix database connection error"
-    # or
-    git commit -m "docs(readme): update contribution guidelines"
-    ```
+        ```bash
+        git add .
+        git commit -m "feat(command): add user profile command"
+        # or
+        git commit -m "fix(command): fix database connection error"
+        # or
+        git commit -m "docs(readme): update contribution guidelines"
+        ```
 
 5. **Push and Create a Pull Request**
     * Push your feature branch to your fork on GitHub.
 
-    ```bash
-    git push origin feature/your-descriptive-feature-name
-    ```
+    `git push origin feature/your-descriptive-feature-name`
 
     * Navigate to the [Tux repository](https://github.com/allthingslinux/tux) on GitHub.
     * GitHub often shows a prompt to create a Pull Request from your recently pushed branch. You can also navigate to your fork (`https://github.com/yourusername/tux`) and click the "Contribute" button, then "Open a pull request".
