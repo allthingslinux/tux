@@ -193,7 +193,10 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Development:
-      - Environment: dev/environment.md
-      - Architecture: dev/architecture.md
       - Contributing: dev/contributing.md
-  - CLI: cli.md
+      - Local Development: dev/local_development.md
+      - Docker Development: dev/docker_development.md
+      - CLI Usage: dev/cli_usage.md
+      - Database: dev/database.md
+      - Database Patterns: dev/database_patterns.md
+  - CLI: dev/cli/index.md
