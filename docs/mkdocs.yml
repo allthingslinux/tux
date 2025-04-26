@@ -28,18 +28,8 @@ theme:
     repo: fontawesome/brands/github
 
   palette:
-    - scheme: default
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-7
-        name: Switch to dark mode
-    - scheme: slate
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-4
-        name: Switch to light mode
+    scheme: custom
+    primary: custom
 
   features:
     ### Navigation
@@ -58,6 +48,7 @@ theme:
     - navigation.top
     - navigation.tabs
     - navigation.tabs.sticky
+    - navigation.sections
 
     ### Table of Contents
 
@@ -81,9 +72,6 @@ theme:
   font:
     text: Inter
     code: JetBrains Mono
-
-extra_css:
-  - assets/stylesheets/extra.css
 
 plugins:
   # https://squidfunk.github.io/mkdocs-material/setup/setting-up-site-search/#built-in-search-plugin
@@ -142,7 +130,7 @@ plugins:
             # Signatures
             annotations_path: source
             separate_signature: true
-            line_length: 80
+            line_length: 100
             show_signature: true
             show_signature_annotations: true
             unwrap_annotated: false
@@ -171,18 +159,26 @@ plugins:
 
   - api-autonav:
       modules: ["../tux"]
-      nav_section_title: "API Reference"
+      nav_section_title: "Code Reference"
       api_root_uri: "reference"
-      exclude_private: true
+      exclude_private: false
+      nav_item_prefix: "<code class='doc-symbol doc-symbol-nav doc-symbol-module'></code>"
+      on_implicit_namespace_packge: raise
 
 markdown_extensions:
   - attr_list
   - mkdocs-click:
   - pymdownx.highlight:
+      use_pygments: true
+      pygments_lang_class: true
+      auto_title: true
+      linenums: true
+      linenums_style: pymdownx-inline
+      line_spans: __span
       anchor_linenums: true
+  - pymdownx.superfences
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - pymdownx.superfences
   - admonition
   - pymdownx.details
   - md_in_html
@@ -196,7 +192,9 @@ nav:
       - Contributing: dev/contributing.md
       - Local Development: dev/local_development.md
       - Docker Development: dev/docker_development.md
-      - CLI Usage: dev/cli_usage.md
       - Database: dev/database.md
       - Database Patterns: dev/database_patterns.md
-  - CLI: dev/cli/index.md
+  - CLI Reference: dev/cli/index.md
+
+extra_css:
+  - assets/stylesheets/extra.css

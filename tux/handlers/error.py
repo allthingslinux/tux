@@ -1212,11 +1212,11 @@ class ErrorHandler(commands.Cog):
         The primary listener for errors occurring in traditional (prefix) commands.
 
         It performs the following checks:
-        1. If the error is `CommandNotFound`, delegates to `_handle_command_not_found`.
-        2. If the command itself has a local error handler (`@command.error`), ignores the error.
-        3. If the command's cog has a local error handler (`Cog.listener('on_cog_command_error')`),
-           ignores the error (unless it's this ErrorHandler cog itself).
-        4. Otherwise, delegates the error to the central `_handle_error` method.
+
+        - If the error is `CommandNotFound`, delegates to `_handle_command_not_found`.
+        - If the command itself has a local error handler (`@command.error`), ignores the error.
+        - If the command's cog has a local error handler (`Cog.listener('on_cog_command_error')`), ignores the error (unless it's this ErrorHandler cog itself).
+        - Otherwise, delegates the error to the central `_handle_error` method.
 
         Parameters
         ----------

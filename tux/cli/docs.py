@@ -41,7 +41,7 @@ def find_mkdocs_config() -> str:
 def docs_serve() -> int:
     """Serve documentation locally."""
     if mkdocs_path := find_mkdocs_config():
-        return run_command(["mkdocs", "serve", "-f", mkdocs_path])
+        return run_command(["mkdocs", "serve", "--dirty", "-f", mkdocs_path])
     return 1
 
 

@@ -83,8 +83,11 @@ Follow these steps to set up your local development environment. For more compre
     `cp .env.example .env`
 
     Edit `.env` and provide at least:
+
     * `DEV_BOT_TOKEN`: Your Discord bot token for development.
+
     * `DEV_DATABASE_URL`: Connection string for your development PostgreSQL database.
+
       * Example: `postgresql://user:pass@host:port/db_name`
 
 4. **Configure Bot Settings**
