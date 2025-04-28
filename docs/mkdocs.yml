@@ -118,8 +118,6 @@ plugins:
       htmlmin_opts:
         remove_comments: true
       cache_safe: true
-      js_files:
-        - overrides/javascript/mkdocstrings.js
       # These are autoloaded so we do not need to add via `extra:`
       css_files:
         - assets/stylesheets/extra.css
