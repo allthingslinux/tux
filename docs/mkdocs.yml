@@ -209,7 +209,7 @@ plugins:
             # https://mkdocstrings.github.io/python/usage/configuration/members/#group_by_category
             group_by_category: true
             # https://mkdocstrings.github.io/python/usage/configuration/members/#show_submodules
-            show_submodules: true
+            show_submodules: false
             # https://mkdocstrings.github.io/python/usage/configuration/members/#summary
             summary: true
             # https://mkdocstrings.github.io/python/usage/configuration/members/#show_labels
