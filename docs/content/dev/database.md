@@ -118,7 +118,7 @@ This section details how to manage the database schema and migrations using the 
 
 (For details on interacting with the database *within the application code* using controllers, see the [Database Controller Patterns](./database_patterns.md) guide).
 
-Commands target the development or production database based on the environment flag used (see [CLI Usage](./cli_usage.md)). Development mode is the default.
+Commands target the development or production database based on the environment flag used (see [CLI Usage](./cli/index.md)). Development mode is the default.
 
 - **Generate Prisma Client:**
     Regenerates the Prisma Python client based on `schema.prisma`. Usually done automatically by other commands, but can be run manually.

@@ -1215,7 +1215,7 @@ class ErrorHandler(commands.Cog):
 
         - If the error is `CommandNotFound`, delegates to `_handle_command_not_found`.
         - If the command itself has a local error handler (`@command.error`), ignores the error.
-        - If the command's cog has a local error handler (`Cog.listener('on_cog_command_error')`), ignores the error (unless it's this ErrorHandler cog itself).
+        - If the command's cog has a local error handler (`Cog.listener('on_cog_command_error')`),ignores the error (unless it's this ErrorHandler cog itself).
         - Otherwise, delegates the error to the central `_handle_error` method.
 
         Parameters

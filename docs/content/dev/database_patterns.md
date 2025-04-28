@@ -6,7 +6,7 @@ This document outlines the core design patterns, best practices, and common meth
 
 ### BaseController Architecture
 
-All controllers extend the `BaseController` class ([`tux/database/controllers/base.py`](../../../tux/database/controllers/base.py)), which provides:
+All controllers extend the `BaseController` class ([`tux/database/controllers/base.py`](https://github.com/allthingslinux/tux/blob/main/tux/database/controllers/base.py)), which provides:
 
 - Common CRUD operations (create, read, update, delete)
 - Standardized error handling

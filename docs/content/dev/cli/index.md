@@ -33,12 +33,12 @@ This default-to-development approach prioritizes safety by preventing accidental
 
 ## Command Groups
 
-*(This section can be expanded with details on each command group and sub-command, potentially referencing the `.github/CONTRIBUTING.md` for basic quality checks and database commands already covered there).* Example:
+*(This section can be expanded with details on each command group and sub-command, potentially referencing the [CONTRIBUTING.md](../contributing.md) for basic quality checks and database commands already covered there).* Example:
 
 * **`bot`**: Commands related to running the bot.
   * `start`: Starts the bot (uses hot-reloading in dev mode).
 * **`db`**: Commands for database management. See [Database Management](../database.md) for details.
-* **`dev`**: Commands for development quality checks (lint, format, type-check). See our [contributing guide](../../../../.github/CONTRIBUTING.md) for basic usage.
+* **`dev`**: Commands for development quality checks (lint, format, type-check). See our [contributing guide](../contributing.md) for basic usage.
 * **`docker`**: Commands for managing the Docker environment. See [Docker Development](../docker_development.md) for details.
 
 ::: mkdocs-click
