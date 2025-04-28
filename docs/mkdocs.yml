@@ -190,9 +190,9 @@ plugins:
             # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_root_full_path
             show_root_full_path: true
             # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_root_members_full_path
-            show_root_members_full_path: true
+            show_root_members_full_path: false
             # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_object_full_path
-            show_object_full_path: true
+            show_object_full_path: false
             # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_category_heading
             show_category_heading: false
             # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_symbol_type_heading
