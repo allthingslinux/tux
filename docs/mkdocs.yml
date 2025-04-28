@@ -29,6 +29,10 @@ extra:
 ### THEME
 #
 
+extra_css:
+  - assets/stylesheets/extra.css
+  - assets/stylesheets/mkdocstrings.css
+
 theme:
   # https://squidfunk.github.io/mkdocs-material/setup/changing-the-language/
   language: en
@@ -113,15 +117,14 @@ plugins:
 
   - minify:
       minify_html: true
-      minify_js: true
+      minify_js: false
       minify_css: true
       htmlmin_opts:
         remove_comments: true
       cache_safe: true
-      # These are autoloaded so we do not need to add via `extra:`
       css_files:
-        - assets/stylesheets/extra.css
         # https://mkdocstrings.github.io/python/usage/customization/#css-classes
+        - assets/stylesheets/extra.css
         - assets/stylesheets/mkdocstrings.css
 
   # https://mkdocstrings.github.io/autorefs/
