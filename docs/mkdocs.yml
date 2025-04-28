@@ -188,11 +188,11 @@ plugins:
             # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_root_toc_entry
             show_root_toc_entry: true
             # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_root_full_path
-            show_root_full_path: false
+            show_root_full_path: true
             # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_root_members_full_path
-            show_root_members_full_path: false
+            show_root_members_full_path: true
             # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_object_full_path
-            show_object_full_path: false
+            show_object_full_path: true
             # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_category_heading
             show_category_heading: false
             # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_symbol_type_heading
@@ -204,12 +204,12 @@ plugins:
 
             # https://mkdocstrings.github.io/python/usage/configuration/members/#members_order
             members_order: source
-            # https://mkdocstrings.github.io/python/usage/configuration/members/#members_order
+            # https://mkdocstrings.github.io/python/usage/configuration/members/#filters
             filters: []
             # https://mkdocstrings.github.io/python/usage/configuration/members/#group_by_category
             group_by_category: true
             # https://mkdocstrings.github.io/python/usage/configuration/members/#show_submodules
-            show_submodules: false
+            show_submodules: true
             # https://mkdocstrings.github.io/python/usage/configuration/members/#summary
             summary: true
             # https://mkdocstrings.github.io/python/usage/configuration/members/#show_labels
@@ -225,11 +225,11 @@ plugins:
               trim_doctest_flags: true
               returns_multiple_items: true
             # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#docstring_section_style
-            docstring_section_style: table
+            docstring_section_style: spacy
             # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#merge_init_into_class
             merge_init_into_class: false
             # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_if_no_docstring
-            show_if_no_docstring: false
+            show_if_no_docstring: true
             # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_docstring_attributes
             show_docstring_attributes: true
             # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_docstring_functions
@@ -276,7 +276,7 @@ plugins:
 
   - api-autonav:
       modules: ["../tux"]
-      nav_section_title: "Code Reference"
+      nav_section_title: "Tux Reference"
       api_root_uri: "reference"
       exclude_private: false
       nav_item_prefix: "<code class='doc-symbol doc-symbol-nav doc-symbol-module'></code>"
@@ -296,6 +296,8 @@ plugins:
 #
 
 markdown_extensions:
+  - attr_list
+  # https://github.com/mkdocs/mkdocs-click
   - mkdocs-click:
   # https://mkdocstrings.github.io/usage/theming/#syntax-highlighting
   - pymdownx.highlight:
@@ -308,7 +310,6 @@ markdown_extensions:
       anchor_linenums: true
   - toc:
       permalink: true
-  - attr_list
   - pymdownx.superfences
   - pymdownx.inlinehilite
   - pymdownx.snippets
