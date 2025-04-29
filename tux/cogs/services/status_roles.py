@@ -108,12 +108,12 @@ class StatusRoles(commands.Cog):
                     logger.info(
                         f"Adding role {role.name} to {member.display_name} (status: '{status_text}' matched '{pattern}')",
                     )
-                    await member.add_roles(role, reason="Status role automation")
+                    await member.add_roles(role)
 
                 elif not matches and has_role:
                     # Remove role if status doesn't match and member has the role
                     logger.info(f"Removing role {role.name} from {member.display_name} (status no longer matches)")
-                    await member.remove_roles(role, reason="Status role automation")
+                    await member.remove_roles(role)
 
             except re.error:
                 logger.exception(f"Invalid regex pattern '{pattern}' in STATUS_ROLES config")
