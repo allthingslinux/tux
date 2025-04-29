@@ -108,6 +108,11 @@ plugins:
   - search:
       enabled: true
 
+  # https://mkdocstrings.github.io/autorefs/
+  - autorefs:
+      # https://mkdocstrings.github.io/autorefs/#non-unique-headings
+      resolve_closest: true
+
   # https://squidfunk.github.io/mkdocs-material/plugins/social/
   - social:
       enabled: true
@@ -127,11 +132,6 @@ plugins:
         - assets/stylesheets/extra.css
         - assets/stylesheets/mkdocstrings.css
 
-  # https://mkdocstrings.github.io/autorefs/
-  - autorefs:
-      # https://mkdocstrings.github.io/autorefs/#non-unique-headings
-      resolve_closest: true
-
   # https://mkdocstrings.github.io/
   - mkdocstrings:
       # https://mkdocstrings.github.io/python/usage/#installation
@@ -148,7 +148,7 @@ plugins:
           inventories:
             # Defaults to latest Python version
             - url: https://docs.python.org/3/objects.inv
-              domains: [std, py]
+            - url: https://discordpy.readthedocs.io/en/stable/objects.inv
           # https://mkdocstrings.github.io/usage/?h=enable_inventory#cross-references-to-other-projects-inventories
           enable_inventory: true
           # https://mkdocstrings.github.io/python/usage/#load_external_modules
@@ -194,7 +194,7 @@ plugins:
             # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_object_full_path
             show_object_full_path: false
             # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_category_heading
-            show_category_heading: false
+            show_category_heading: true
             # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_symbol_type_heading
             show_symbol_type_heading: true
             # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_symbol_type_toc
@@ -225,9 +225,9 @@ plugins:
               trim_doctest_flags: true
               returns_multiple_items: true
             # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#docstring_section_style
-            docstring_section_style: spacy
+            docstring_section_style: table
             # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#merge_init_into_class
-            merge_init_into_class: false
+            merge_init_into_class: true
             # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_if_no_docstring
             show_if_no_docstring: true
             # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_docstring_attributes
@@ -260,15 +260,15 @@ plugins:
             ### Signatures
 
             # https://mkdocstrings.github.io/python/usage/configuration/signatures/#annotations_path
-            annotations_path: source
+            annotations_path: brief
             # https://mkdocstrings.github.io/python/usage/configuration/signatures/#line_length
-            line_length: 100
+            line_length: 80
             # https://mkdocstrings.github.io/python/usage/configuration/signatures/#show_signature
             show_signature: true
             # https://mkdocstrings.github.io/python/usage/configuration/signatures/#show_signature_annotations
             show_signature_annotations: true
             # https://mkdocstrings.github.io/python/usage/configuration/signatures/#separate_signature
-            separate_signature: true
+            separate_signature: false
             # https://mkdocstrings.github.io/python/usage/configuration/signatures/#show_overloads
             show_overloads: true
             # https://mkdocstrings.github.io/python/usage/configuration/signatures/#unwrap_annotated
@@ -279,7 +279,7 @@ plugins:
       nav_section_title: "Tux Reference"
       api_root_uri: "reference"
       exclude_private: false
-      nav_item_prefix: "<code class='doc-symbol doc-symbol-nav doc-symbol-module'></code>"
+      # nav_item_prefix: "<code class='doc-symbol doc-symbol-nav doc-symbol-module'></code>"
       on_implicit_namespace_packge: raise
 
   # # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#revisioning
@@ -312,10 +312,12 @@ markdown_extensions:
       permalink: true
   - pymdownx.superfences
   - pymdownx.inlinehilite
-  - pymdownx.snippets
+  # - pymdownx.snippets
   - admonition
   - pymdownx.details
+  - footnotes
   - md_in_html
+  - def_list
   - tables
 
 #
