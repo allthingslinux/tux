@@ -235,7 +235,8 @@ def start() -> int:
 
     from tux.main import run
 
-    return run()
+    result = run()
+    return 0 if result is None else result
 
 
 # Ensure commands are registered when this module is imported
