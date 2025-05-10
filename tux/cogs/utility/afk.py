@@ -53,13 +53,14 @@ class Afk(commands.Cog):
 
         await add_afk(self.db, shortened_reason, target, ctx.guild.id, False)
 
-        await ctx.send(
+        await ctx.reply(
             content="\N{SLEEPING SYMBOL} || You are now afk! " + f"Reason: `{shortened_reason}`",
             allowed_mentions=discord.AllowedMentions(
                 users=False,
                 everyone=False,
                 roles=False,
             ),
+            ephemeral=True,
         )
 
     @commands.hybrid_command(name="permafk")
@@ -84,7 +85,7 @@ class Afk(commands.Cog):
         entry = await self.db.afk.get_afk_member(target.id, guild_id=ctx.guild.id)
         if entry is not None:
             await del_afk(self.db, target, entry.nickname)
-            await ctx.send("Welcome back!")
+            await ctx.send("Welcome back!", ephemeral=True)
             return
 
         shortened_reason = textwrap.shorten(reason, width=100, placeholder="...")
@@ -99,6 +100,7 @@ class Afk(commands.Cog):
                 everyone=False,
                 roles=False,
             ),
+            ephemeral=True,
         )
 
     @commands.Cog.listener("on_message")

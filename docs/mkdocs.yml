@@ -229,7 +229,7 @@ plugins:
             # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#merge_init_into_class
             merge_init_into_class: true
             # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_if_no_docstring
-            show_if_no_docstring: true
+            show_if_no_docstring: false
             # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_docstring_attributes
             show_docstring_attributes: true
             # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_docstring_functions

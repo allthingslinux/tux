@@ -82,22 +82,25 @@ class Cases(ModerationCogBase):
 
     @commands.hybrid_group(
         name="cases",
-        aliases=["c"],
+        aliases=["case", "c"],
     )
     @commands.guild_only()
     @checks.has_pl(2)
     async def cases(self, ctx: commands.Context[Tux], case_number: str | None = None) -> None:
         """
         Manage moderation cases in the server.
-        """
 
-        # TODO: Remap base cases command to view all cases if not provided with a case number
+        Parameters
+        ----------
+        case_number : str | None
+            The case number to view.
+        """
 
         if case_number is not None:
             await ctx.invoke(self.cases_view, number=case_number, flags=CasesViewFlags())
 
         elif ctx.subcommand_passed is None:
-            await ctx.send_help("cases")
+            await ctx.invoke(self.cases_view, number=None, flags=CasesViewFlags())
 
     @cases.command(
         name="view",
