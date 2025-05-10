@@ -66,7 +66,7 @@ class InfluxLogger(commands.Cog):
                 guild_id = int(guild.guild_id)
 
                 # Collect data by querying controllers
-                starboard_stats = await self.db.starboard.find_many(where={"guild_id": guild_id})
+                starboard_stats = await self.db.starboard_message.find_many(where={"guild_id": guild_id})
 
                 snippet_stats = await self.db.snippet.find_many(where={"guild_id": guild_id})
 

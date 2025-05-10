@@ -5,9 +5,9 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.app import get_prefix
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
-from tux.main import get_prefix
 from tux.ui.embeds import EmbedCreator
 from tux.utils.config import CONFIG
 

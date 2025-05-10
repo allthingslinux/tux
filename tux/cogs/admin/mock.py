@@ -197,6 +197,8 @@ class Mock(commands.Cog):
         error_type : str
             The name of the error to raise (use autocomplete).
 
+        Notes
+        -----
         This command intentionally raises various exceptions based on the input.
         These exceptions will propagate up to the global ErrorHandler cog.
         Requires System Administrator permissions (Level 8).

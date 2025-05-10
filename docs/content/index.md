@@ -1,17 +1,19 @@
-# Welcome to MkDocs
+# Welcome to the Tux Documentation
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+Tux is an open-source Discord bot developed for the All Things Linux community. This documentation serves as a comprehensive resource for:
 
-## Commands
+- **Developers**: Architecture guides, API references, and contribution workflows
+- **Server Administrators**: Setup instructions, configuration options, and self-hosting guides
+- **Users**: Command references, feature explanations, and usage examples
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
+Whether you're looking to contribute to the codebase, deploy your own instance, or simply learn how to use Tux's features, you'll find everything you need in these docs.
 
-## Project layout
+Find the source code on GitHub: [allthingslinux/tux](https://github.com/allthingslinux/tux)
 
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+## Contributing
+
+Interested in contributing? Please read our contribution guidelines. (Link to `CONTRIBUTING.md` or relevant page needed)
+
+---
+
+*These docs are built using [MkDocs](https://www.mkdocs.org/).*

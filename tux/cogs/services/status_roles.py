@@ -1,3 +1,4 @@
+import asyncio
 import re
 
 import discord
@@ -13,11 +14,23 @@ class StatusRoles(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.status_roles = CONFIG.STATUS_ROLES
-        # logger.info("StatusRoles cog initialized with %d role configurations", len(self.status_roles))
-        if self.status_roles:
-            logger.info("StatusRoles cog initialized with %d role configurations", len(self.status_roles))
+        self._unload_task = None  # Store task reference here
+
+        # Check if config exists and is valid
+        if not self.status_roles:
+            logger.warning("No status roles configurations found. Unloading StatusRoles cog.")
+            # Store the task reference
+            self._unload_task = asyncio.create_task(self._unload_self())
         else:
-            logger.warning("StatusRoles cog initialized with no role configurations. Check your config file.")
+            logger.info(f"StatusRoles cog initialized with {len(self.status_roles)} role configurations")
+
+    async def _unload_self(self):
+        """Unload this cog if configuration is missing."""
+        try:
+            await self.bot.unload_extension("tux.cogs.services.status_roles")
+            logger.info("StatusRoles cog has been unloaded due to missing configuration")
+        except Exception as e:
+            logger.error(f"Failed to unload StatusRoles cog: {e}")
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -30,13 +43,13 @@ class StatusRoles(commands.Cog):
     @commands.Cog.listener()
     async def on_presence_update(self, before: discord.Member, after: discord.Member):
         """Event triggered when a user's presence changes."""
-        logger.debug(f"Presence update for {after.display_name}: {before.status} -> {after.status}")
+        logger.trace(f"Presence update for {after.display_name}: {before.status} -> {after.status}")
         # Only process if the custom status changed
         before_status = self.get_custom_status(before)
         after_status = self.get_custom_status(after)
 
         if before_status != after_status or self.has_activity_changed(before, after):
-            logger.debug(f"Status change detected for {after.display_name}: '{before_status}' -> '{after_status}'")
+            logger.trace(f"Status change detected for {after.display_name}: '{before_status}' -> '{after_status}'")
             await self.check_and_update_roles(after)
 
     def has_activity_changed(self, before: discord.Member, after: discord.Member) -> bool:
@@ -95,12 +108,12 @@ class StatusRoles(commands.Cog):
                     logger.info(
                         f"Adding role {role.name} to {member.display_name} (status: '{status_text}' matched '{pattern}')",
                     )
-                    await member.add_roles(role, reason="Status role automation")
+                    await member.add_roles(role)
 
                 elif not matches and has_role:
                     # Remove role if status doesn't match and member has the role
                     logger.info(f"Removing role {role.name} from {member.display_name} (status no longer matches)")
-                    await member.remove_roles(role, reason="Status role automation")
+                    await member.remove_roles(role)
 
             except re.error:
                 logger.exception(f"Invalid regex pattern '{pattern}' in STATUS_ROLES config")
@@ -114,4 +127,3 @@ class StatusRoles(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(StatusRoles(bot))
-    logger.info("Loaded StatusRoles cog")

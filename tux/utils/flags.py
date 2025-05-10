@@ -127,8 +127,6 @@ def get_matching_string(arg: str) -> str:
     match arg:
         case "user" | "target" | "member" | "username":
             return "@member"
-        case "number" | "num" | "n" | "limit":
-            return "14"
         case "search_term":
             return "CIA"
         case "channel":
@@ -170,7 +168,7 @@ class TempBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ",
     )
     duration: float = commands.flag(
         name="duration",
-        description="Length of the ban (e.g., 1d, 1h30m, 5s).",
+        description="Length of the ban (e.g. 1d, 1h).",
         aliases=["t", "d", "e"],
         converter=TimeConverter,
     )
@@ -295,25 +293,34 @@ class UnjailFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", 
 
 
 class CasesViewFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    type: CaseType = commands.flag(
+    type: CaseType | None = commands.flag(
         name="type",
         description="Type of case to view.",
         aliases=["t"],
         default=None,
         converter=CaseTypeConverter,
     )
-    user: discord.User = commands.flag(
+    user: discord.User | None = commands.flag(
         name="user",
         description="User to view cases for.",
-        aliases=["u", "member", "memb", "m", "target"],
+        aliases=["u"],
         default=None,
     )
-    moderator: discord.User = commands.flag(
+    moderator: discord.User | None = commands.flag(
         name="mod",
         description="Moderator to view cases for.",
-        aliases=["moderator"],
+        aliases=["m"],
         default=None,
     )
+
+    def __init__(self, *args: object, **kwargs: object) -> None:
+        super().__init__(*args, **kwargs)
+        if not hasattr(self, "type"):
+            self.type = None
+        if not hasattr(self, "user"):
+            self.user = None
+        if not hasattr(self, "moderator"):
+            self.moderator = None
 
 
 class CaseModifyFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
