@@ -9,11 +9,11 @@ However, be aware that:
 
 **Docker Setup Overview:**
 
-* [`docker-compose.yml`](../../../docker-compose.yml): Defines the base configuration, primarily intended for production deployments.
-* [`docker-compose.dev.yml`](../../../docker-compose.dev.yml): Contains overrides specifically for local development. It:
+* [`docker-compose.yml`](https://github.com/allthingslinux/tux/blob/main/docker-compose.yml): Defines the base configuration, primarily intended for production deployments.
+* [`docker-compose.dev.yml`](https://github.com/allthingslinux/tux/blob/main/docker-compose.dev.yml): Contains overrides specifically for local development. It:
   * Uses the `dev` stage from the `Dockerfile`.
   * Enables file watching/synchronization via `develop: watch:`.
-* [`Dockerfile`](../../../Dockerfile): A multi-stage Dockerfile defining the build process for different environments (development, production).
+* [`Dockerfile`](https://github.com/allthingslinux/tux/blob/main/Dockerfile): A multi-stage Dockerfile defining the build process for different environments (development, production).
 
 **Starting the Docker Environment:**
 
