@@ -121,7 +121,26 @@ class Tldr(commands.Cog):
         if command.startswith("-"):
             return "Invalid command: Command can't start with a dash (-)."
 
-        return self._run_subprocess(["tldr", "-r", command], "No TLDR page found.")
+        output = self._run_subprocess(["tldr", "-r", command], "No TLDR page found.")
+        # Process output: escape leading dashes and inline code
+        lines = output.splitlines()
+        formatted_lines: list[str] = []
+        for i, raw in enumerate(lines):
+            # remove blank between dash and backtick
+            if (
+                not raw.strip()
+                and i > 0
+                and i < len(lines) - 1
+                and lines[i - 1].startswith("-")
+                and lines[i + 1].startswith("`")
+            ):
+                continue
+            line = raw
+            # escape leading dash
+            if line.startswith("-"):
+                line = "\\" + line
+            formatted_lines.append(line)
+        return "\n".join(formatted_lines)
 
     def get_tldrs(self) -> list[str]:
         """
