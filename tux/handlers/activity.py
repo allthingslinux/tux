@@ -19,10 +19,11 @@ ACTIVITY_TYPE_MAP = {
 
 
 class ActivityHandler(commands.Cog):
-    def __init__(self, bot: Tux, delay: int = 5 * 60) -> None:
+    def __init__(self, bot: Tux, delay: int = 30) -> None:
         self.bot = bot
         self.delay = delay
         self.activities = self.build_activity_list()
+        self._activity_task = None
 
     @staticmethod
     def build_activity_list() -> list[discord.Activity | discord.Streaming]:
@@ -134,22 +135,13 @@ class ActivityHandler(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
-        """
-        Runs the activity loop when the bot is ready.
+        if self._activity_task is None or self._activity_task.done():
+            self._activity_task = asyncio.create_task(self._delayed_start())
 
-        Parameters
-        ----------
-        self : ActivityHandler
-            The ActivityHandler instance.
-
-        Returns
-        -------
-        None
-        """
-
-        await asyncio.sleep(5)
-        activity_task = asyncio.create_task(self.run())
-        await asyncio.gather(activity_task)
+    async def _delayed_start(self):
+        await self.bot.wait_until_ready()
+        await asyncio.sleep(5)  # Optional: extra delay for safety
+        await self.run()
 
 
 async def setup(bot: Tux) -> None:

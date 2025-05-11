@@ -9,6 +9,7 @@ from loguru import logger
 # --- Configuration Constants ---
 
 DEFAULT_EMOJI_ASSETS_PATH = Path(__file__).parents[2] / "assets" / "emojis"
+DOCKER_EMOJI_ASSETS_PATH = Path("/app/assets/emojis")
 DEFAULT_EMOJI_CREATE_DELAY = 1.0
 VALID_EMOJI_EXTENSIONS = [".png", ".gif", ".jpg", ".jpeg", ".webp"]
 MIN_EMOJI_NAME_LENGTH = 2
@@ -90,6 +91,11 @@ class EmojiManager:
         self.create_delay = create_delay if create_delay is not None else DEFAULT_EMOJI_CREATE_DELAY
         self._init_lock = asyncio.Lock()
         self._initialized = False
+
+        # If in Docker and no custom path was provided, use the Docker path
+        if not emojis_path and DOCKER_EMOJI_ASSETS_PATH.exists() and DOCKER_EMOJI_ASSETS_PATH.is_dir():
+            logger.info(f"Docker environment detected, using emoji path: {DOCKER_EMOJI_ASSETS_PATH}")
+            self.emojis_path = DOCKER_EMOJI_ASSETS_PATH
 
         # Ensure the emoji path exists and is a directory
         if not self.emojis_path.is_dir():

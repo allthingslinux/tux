@@ -14,8 +14,7 @@ RUN apt-get update && \
   tealdeer \
   ffmpeg && \
   apt-get clean && \
-  rm -rf /var/lib/apt/lists/* && \
-  tldr -u
+  rm -rf /var/lib/apt/lists/*
 
 # Tweak Python to run better in Docker
 ENV PYTHONUNBUFFERED=1 \
@@ -54,13 +53,10 @@ RUN --mount=type=cache,target=/root/.cache pip install poetry==$POETRY_VERSION
 
 WORKDIR /app
 
-# Copy only the metadata files to increase build cache hit rate
-COPY pyproject.toml poetry.lock ./
+COPY . .
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
   poetry install --only main --no-root --no-directory
 
-# Now install the application itself
-COPY . .
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
   --mount=type=cache,target=/root/.cache \
   poetry install --only main && \
@@ -113,13 +109,15 @@ ENV VIRTUAL_ENV=/app/.venv \
   PRISMA_SCHEMA_ENGINE_BINARY="/app/prisma_binaries/schema-engine"
 # --- End: Point Prisma client ---
 
-
 # Copy the application code, venv, and the prepared prisma_binaries dir
 # Ensure ownership is set to nonroot
 COPY --from=build --chown=nonroot:nonroot /app /app
 
 # Switch to the non-root user
 USER nonroot
+
+# tldr stuff
+RUN tldr --update
 
 ENTRYPOINT ["tux"]
 CMD ["--prod", "start"]

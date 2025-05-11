@@ -1,7 +1,3 @@
-.md-grid {
-  max-width: 1440px;
-}
-
 /* Mark external links as such. */
 a.external::after,
 a.autorefs-external::after {
@@ -27,7 +23,7 @@ a.autorefs-external:hover::after {
 /* Indentation. */
 div.doc-contents:not(.first) {
   padding-left: 25px;
-  border-left: .05rem solid var(--md-typeset-table-color);
+  border-left: .05rem solid #292e42;
 }
 
 /* Function names and class names */
@@ -80,7 +76,7 @@ div.doc-contents:not(.first) {
 .doc-label {
   margin: 0.6em 0;
   padding-bottom: 0.6em;
-  border-bottom: 1px solid var(--md-primary-fg-color--lightest);
+  border-bottom: 1px solid #292e42;
 }
 
 .doc-label:last-child {
@@ -114,7 +110,7 @@ div.doc-contents:not(.first) {
   line-height: 1.4;
   color: var(--md-typeset-color);
   padding-left: 0.6em;
-  border-left: 2px solid var(--md-primary-fg-color--lightest);
+  border-left: 2px solid #292e42;
   font-size: 0.9em;
 }
 
@@ -224,8 +220,8 @@ div.doc-contents:not(.first) {
 }
 
 .doc-contents table th {
-  background-color: var(--md-primary-fg-color);
-  color: var(--md-primary-bg-color);
+  background-color: #24283b;
+  color: var(--md-code-fg-color);
   font-weight: 600;
   text-align: left;
   padding: 0.6em;
@@ -234,7 +230,7 @@ div.doc-contents:not(.first) {
 
 .doc-contents table td {
   padding: 0.6em;
-  border-bottom: 1px solid var(--md-primary-fg-color--lightest);
+  border-bottom: 1px solid #292e42;
   line-height: 1.4;
 }
 
@@ -268,12 +264,6 @@ div.doc-contents:not(.first) {
   font-weight: normal;
   text-transform: lowercase;
   order: 2;
-}
-
-/* Remove any existing margin/padding from method headings */
-.doc-heading {
-  margin: 0 !important;
-  padding: 0 !important;
 }
 
 /* Reset other decorator styles for non-async */
@@ -633,4 +623,21 @@ a.doc-source-link::after {
 
 .doc-contents h6[id*="returns"] + p > code:nth-of-type(2) {
   color: var(--md-code-hl-function-color);
+}
+
+/* Add spacing BEFORE major module/class headings */
+.doc-module > h3.doc-heading,
+.doc-class > h3.doc-heading,
+.doc-module > h4.doc-heading,
+/* Cover nested headings too */
+.doc-class > h4.doc-heading {
+  margin-top: 2.5em;
+  /* Adjust value as needed */
+}
+
+/* Reduce excess top margin for the very first heading if it's a major one */
+.doc-children > .doc-object:first-child > h3.doc-heading,
+.doc-children > .doc-object:first-child > h4.doc-heading {
+  margin-top: 1em;
+  /* Adjust to match default or desired top margin */
 }

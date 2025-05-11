@@ -349,6 +349,10 @@ class CogLoader(commands.Cog):
             with start_span("cog.load_regular", "Load regular cogs"):
                 await cog_loader.load_cogs_from_folder(folder_name="cogs")
 
+            # Finally, load cogs from the extensions folder
+            with start_span("cog.load_extensions", "Load extension cogs"):
+                await cog_loader.load_cogs_from_folder(folder_name="extensions")
+
             total_time = time.perf_counter() - start_time
 
             if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
