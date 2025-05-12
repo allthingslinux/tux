@@ -54,7 +54,7 @@ class Wolfram(commands.Cog):
 
         # Build the Simple API endpoint URL with URL-encoded query
         encoded = quote_plus(query)
-        url = f"http://api.wolframalpha.com/v1/simple?appid={CONFIG.WOLFRAM_APP_ID}&i={encoded}"
+        url = f"https://api.wolframalpha.com/v1/simple?appid={CONFIG.WOLFRAM_APP_ID}&i={encoded}"
 
         try:
             # Perform async HTTP GET with a 10-second timeout
