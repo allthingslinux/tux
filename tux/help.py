@@ -413,6 +413,7 @@ class TuxHelp(commands.HelpCommand):
             "levels": "📈",
             "services": "🔌",
             "guild": "🏰",
+            "tools": "🛠",
         }
 
         options: list[discord.SelectOption] = []
