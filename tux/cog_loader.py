@@ -44,6 +44,7 @@ class CogLoader(commands.Cog):
             "utility": 30,
             "info": 20,
             "fun": 10,
+            "tools": 5,
         }
 
     async def is_cog_eligible(self, filepath: Path) -> bool:
@@ -348,6 +349,10 @@ class CogLoader(commands.Cog):
             # Then load regular cogs
             with start_span("cog.load_regular", "Load regular cogs"):
                 await cog_loader.load_cogs_from_folder(folder_name="cogs")
+
+            # Finally, load cogs from the extensions folder
+            with start_span("cog.load_extensions", "Load extension cogs"):
+                await cog_loader.load_cogs_from_folder(folder_name="extensions")
 
             total_time = time.perf_counter() - start_time
 

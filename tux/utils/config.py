@@ -55,6 +55,9 @@ class Config:
     ACTIVITIES: Final[str] = config["BOT_INFO"]["ACTIVITIES"]
     HIDE_BOT_OWNER: Final[bool] = config["BOT_INFO"]["HIDE_BOT_OWNER"]
 
+    # Status Roles
+    STATUS_ROLES: Final[list[dict[str, int]]] = config["STATUS_ROLES"]
+
     # Debug env
     DEBUG: Final[bool] = bool(os.getenv("DEBUG", "True"))
 
@@ -80,6 +83,9 @@ class Config:
         # The environment mode is assumed to be set by the CLI entry point
         # before this property is accessed.
         return get_bot_token()  # Get token based on manager's current env
+
+    # Wolfram
+    WOLFRAM_APP_ID: Final[str] = os.getenv("WOLFRAM_APP_ID", "")
 
     # InfluxDB
     INFLUXDB_TOKEN: Final[str] = os.getenv("INFLUXDB_TOKEN", "")

@@ -6,6 +6,7 @@ from discord.ext import commands
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
 from tux.utils.flags import generate_usage
+from tux.utils.functions import truncate
 
 from . import SnippetsBaseCog
 
@@ -43,9 +44,12 @@ class SnippetInfo(SnippetsBaseCog):
         author = self.bot.get_user(snippet.snippet_user_id)
         author_display = author.mention if author else f"<@!{snippet.snippet_user_id}> (Not found)"
 
+        # Attempt to get aliases if any
+        aliases = [alias.snippet_name for alias in (await self.db.snippet.get_all_aliases(name, ctx.guild.id))]
+
         # Determine content field details
-        content_field_name = "Alias Target" if snippet.alias else "Content"
-        content_field_value = f"> {snippet.alias or snippet.snippet_content}"
+        content_field_name = "Alias Target" if snippet.alias else "Content Preview"
+        content_field_value = f"{snippet.alias or snippet.snippet_content}"
 
         # Create and populate the info embed
         embed: discord.Embed = EmbedCreator.create_embed(
@@ -57,11 +61,17 @@ class SnippetInfo(SnippetsBaseCog):
             message_timestamp=snippet.snippet_created_at or datetime.fromtimestamp(0, UTC),
         )
 
-        embed.add_field(name="Name", value=snippet.snippet_name, inline=False)
-        embed.add_field(name="Author", value=author_display, inline=False)
-        embed.add_field(name=content_field_name, value=content_field_value, inline=False)
-        embed.add_field(name="Uses", value=str(snippet.uses), inline=False)  # Ensure string
-        embed.add_field(name="Locked", value="Yes" if snippet.locked else "No", inline=False)
+        embed.add_field(name="Name", value=snippet.snippet_name, inline=True)
+        embed.add_field(name="Aliases", value=", ".join(f"`{alias}`" for alias in aliases), inline=True)
+        embed.add_field(name="Author", value=author_display, inline=True)
+        embed.add_field(name="Uses", value=str(snippet.uses), inline=True)  # Ensure string
+        embed.add_field(name="Locked", value="Yes" if snippet.locked else "No", inline=True)
+
+        embed.add_field(
+            name=content_field_name,
+            value=f"> -# {truncate(text=content_field_value, length=256)}",
+            inline=False,
+        )
 
         await ctx.send(embed=embed)
 

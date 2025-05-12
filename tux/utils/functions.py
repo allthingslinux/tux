@@ -26,6 +26,27 @@ DANGEROUS_DD_COMMANDS = r"dd\s+.*of=/dev/([hs]d[a-z]|nvme\d+n\d+)"
 FORMAT_COMMANDS = r"mkfs\..*\s+/dev/([hs]d[a-z]|nvme\d+n\d+)"
 
 
+def truncate(text: str, length: int) -> str:
+    """Truncates a string to a specified length.
+
+    If the string is longer than the specified length, it will be truncated
+    and an ellipsis will be appended. Otherwise, the original string is returned.
+
+    Parameters
+    ----------
+    text : str
+        The string to truncate.
+    length : int
+        The maximum length of the string.
+
+    Returns
+    -------
+    str
+        The truncated string.
+    """
+    return text if len(text) <= length else f"{text[: length - 3]}..."
+
+
 def is_harmful(command: str) -> str | None:
     # sourcery skip: assign-if-exp, boolean-if-exp-identity, reintroduce-else
     """

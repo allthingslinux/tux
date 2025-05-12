@@ -1,9 +1,11 @@
 from discord import AllowedMentions
 from discord.ext import commands
+from reactionmenu import ViewButton, ViewMenu
 
 from tux.bot import Tux
 from tux.utils.flags import generate_usage
 
+# from tux.utils.functions import truncate
 from . import SnippetsBaseCog
 
 
@@ -75,7 +77,28 @@ class Snippet(SnippetsBaseCog):
 
             text += f"|| {snippet.snippet_content}"
 
-        await ctx.send(text, allowed_mentions=AllowedMentions.none())
+        # pagination if text > 2000 characters
+        if len(text) <= 2000:
+            await ctx.send(text, allowed_mentions=AllowedMentions.none())
+            return
+
+        menu = ViewMenu(
+            ctx,
+            menu_type=ViewMenu.TypeText,
+            all_can_click=True,
+            show_page_director=False,
+            timeout=180,
+            delete_on_timeout=True,
+        )
+
+        for i in range(0, len(text), 2000):
+            page: str = text[i : i + 2000]
+            menu.add_page(content=page)
+
+        menu.add_button(ViewButton.back())
+        menu.add_button(ViewButton.next())
+
+        await menu.start()
 
 
 async def setup(bot: Tux) -> None:

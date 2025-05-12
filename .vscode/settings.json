@@ -26,11 +26,11 @@
   },
   "search.exclude": {
     ".archive/**": true,
-    "docs-build/**": true
+    "build/**": true
   },
   "python.analysis.exclude": [
     ".archive/**",
-    "docs-build/**"
+    "build/**"
   ],
   "python.analysis.diagnosticSeverityOverrides": {
     "reportIncompatibleMethodOverride": "none",

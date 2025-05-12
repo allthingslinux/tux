@@ -1,4 +1,5 @@
-"""Utility functions for the help command system.
+"""
+Utility functions for the help command system.
 
 This module contains utility functions for formatting, categorizing,
 and navigating help command content.

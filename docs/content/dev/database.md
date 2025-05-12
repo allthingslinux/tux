@@ -111,3 +111,66 @@ posts = await db.user.find_unique(
 3. Use type hints with Prisma-generated types where necessary
 4. Leverage Prisma's built-in filtering and pagination as needed
 5. Handle database connections properly in async contexts
+
+## Database Management
+
+This section details how to manage the database schema and migrations using the `tux` CLI, which internally uses Prisma.
+
+(For details on interacting with the database *within the application code* using controllers, see the [Database Controller Patterns](./database_patterns.md) guide).
+
+Commands target the development or production database based on the environment flag used (see [CLI Usage](./cli/index.md)). Development mode is the default.
+
+- **Generate Prisma Client:**
+    Regenerates the Prisma Python client based on `schema.prisma`. Usually done automatically by other commands, but can be run manually.
+
+    ```bash
+    poetry run tux --dev db generate
+    ```
+
+- **Apply Schema Changes (Dev Only):**
+    Pushes schema changes directly to the database **without** creating SQL migration files. This is suitable only for the development environment as it can lead to data loss if not used carefully.
+
+    ```bash
+    poetry run tux --dev db push
+    ```
+
+- **Create Migrations:**
+    Compares the current `schema.prisma` with the last applied migration and generates a new SQL migration file in `prisma/migrations/` reflecting the changes.
+
+    ```bash
+    # Use --dev for the development database
+    poetry run tux --dev db migrate --name <your-migration-name>
+
+    # Use --prod for the production database
+    poetry run tux --prod db migrate --name <your-migration-name>
+    ```
+
+- **Apply Migrations:**
+    Runs any pending SQL migration files against the target database.
+
+    ```bash
+    # Apply to development database
+    poetry run tux --dev db migrate
+
+    # Apply to production database
+    poetry run tux --prod db migrate
+    ```
+
+- **Pull Schema from Database:**
+    Introspects the target database and updates the `schema.prisma` file to match the database's current state. Useful if the database schema has diverged.
+
+    ```bash
+    poetry run tux --dev db pull
+    poetry run tux --prod db pull
+    ```
+
+- **Reset Database (Destructive!):**
+    Drops the entire database and recreates it based on the current schema, applying all migrations. **Use with extreme caution, especially with `--prod`.**
+
+    ```bash
+    # Reset development database
+    poetry run tux --dev db reset
+
+    # Reset production database (requires confirmation)
+    poetry run tux --prod db reset
+    ```

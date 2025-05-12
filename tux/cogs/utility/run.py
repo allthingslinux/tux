@@ -71,7 +71,7 @@ class Run(commands.Cog):
 
         Parameters
         ----------
-        ticks : str
+        st : str
             The string containing backticks.
 
         Returns
