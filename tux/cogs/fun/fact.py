@@ -44,7 +44,7 @@ cat_facts = [
     "Approximately 24 cat skins can make a coat.",
     "While it is commonly thought that the ancient Egyptians were the first to domesticate cats, the oldest known pet cat was recently found in a 9,500-year-old grave on the Mediterranean island of Cyprus. This grave predates early Egyptian art depicting cats by 4,000 years or more.",
     "During the time of the Spanish Inquisition, Pope Innocent VIII condemned cats as evil and thousands of cats were burned. Unfortunately, the widespread killing of cats led to an explosion of the rat population, which exacerbated the effects of the Black Death.",
-    "During the Middle Ages, cats were associated with withcraft, and on St. John's Day, people all over Europe would stuff them into sacks and toss the cats into bonfires. On holy days, people celebrated by tossing cats from church towers.",
+    "During the Middle Ages, cats were associated with witchcraft, and on St. John's Day, people all over Europe would stuff them into sacks and toss the cats into bonfires. On holy days, people celebrated by tossing cats from church towers.",
     "The first cat in space was a French cat named Felicette (a.k.a. “Astrocat”) In 1963, France blasted the cat into outer space. Electrodes implanted in her brains sent neurological signals back to Earth. She survived the trip.",
     "The group of words associated with cat (catt, cath, chat, katze) stem from the Latin catus, meaning domestic cat, as opposed to feles, or wild cat.",
     "The term “puss” is the root of the principal word for “cat” in the Romanian term pisica and the root of secondary words in Lithuanian (puz) and Low German puus. Some scholars suggest that “puss” could be imitative of the hissing sound used to get a cat's attention. As a slang word for the female pudenda, it could be associated with the connotation of a cat being soft, warm, and fuzzy.",
@@ -116,17 +116,14 @@ class Fact(commands.Cog):
             The category of fact to retrieve. {0}
         """
 
-        # Validate selected category
-        category_map = {ft.value: ft for ft in FactType}
-        if fact_type not in category_map:
-            options = ", ".join(category_map.keys())
-            # Inform user of invalid selection
-            await ctx.send(f"Invalid category '{fact_type}'. Choose one of: {options}.")
-            return  # explicit None return
-
-        sel = category_map[fact_type]
-
-        # Pick a random fact or show error
+        # Map selected name back to enum
+        mapping = {ft.value: ft for ft in FactType}
+        if fact_type not in mapping:
+            opts = ", ".join(mapping.keys())
+            await ctx.send(f"Invalid category '{fact_type}'. Available: {opts}.")
+            return
+        sel = mapping[fact_type]
+        # Pick a random fact
         facts = fact_type_map.get(sel, [])
         description = random.choice(facts) if facts else "No facts available for this category."
 
@@ -144,7 +141,6 @@ class Fact(commands.Cog):
 
         # Send the fact embed
         await ctx.send(embed=embed)
-        return  # explicit None return at end of function
 
 
 async def setup(bot: Tux) -> None:
