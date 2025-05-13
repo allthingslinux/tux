@@ -26,6 +26,6 @@ Explore the following pages for more detailed information on specific developmen
 * **[Database Controller Patterns](./docs/content/dev/database_patterns.md)**
   * Using controllers for CRUD, transactions, relations.
   * Best practices for database interactions in code.
-* **[Docker Environment](./docs/content/dev/docker_environment.md)** (Optional)
+* **[Docker Environment](./docs/content/dev/docker_development.md)** (Optional)
   * Setting up and using the Docker-based development environment.
   * Running commands within Docker containers.

@@ -84,6 +84,9 @@ class Config:
         # before this property is accessed.
         return get_bot_token()  # Get token based on manager's current env
 
+    # Wolfram
+    WOLFRAM_APP_ID: Final[str] = os.getenv("WOLFRAM_APP_ID", "")
+
     # InfluxDB
     INFLUXDB_TOKEN: Final[str] = os.getenv("INFLUXDB_TOKEN", "")
     INFLUXDB_URL: Final[str] = os.getenv("INFLUXDB_URL", "")
