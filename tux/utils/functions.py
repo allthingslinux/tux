@@ -415,3 +415,11 @@ def extract_member_attrs(member: discord.Member) -> dict[str, Any]:
         "status": str(member.status),
         "activity": str(member.activity) if member.activity else None,
     }
+
+
+def docstring_parameter(*sub: Any) -> Any:
+    def dec(obj: Any) -> Any:
+        obj.__doc__ = obj.__doc__.format(*sub)
+        return obj
+
+    return dec
