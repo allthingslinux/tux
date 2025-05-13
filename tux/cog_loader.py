@@ -44,6 +44,7 @@ class CogLoader(commands.Cog):
             "utility": 30,
             "info": 20,
             "fun": 10,
+            "tools": 5,
         }
 
     async def is_cog_eligible(self, filepath: Path) -> bool:
