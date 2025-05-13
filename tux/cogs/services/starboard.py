@@ -1,4 +1,3 @@
-import contextlib
 from datetime import UTC, datetime, timedelta
 
 import discord
@@ -309,8 +308,6 @@ class Starboard(commands.Cog):
                 async for user in reaction.users():
                     if user.id == message.author.id:
                         reaction_count -= 1
-                        with contextlib.suppress(Exception):
-                            await message.remove_reaction(starboard.starboard_emoji, message.author)
 
             starboard_channel = channel.guild.get_channel(starboard.starboard_channel_id)
             if not isinstance(starboard_channel, discord.TextChannel):
