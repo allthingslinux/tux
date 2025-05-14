@@ -66,11 +66,35 @@ tux_facts = [
     f"{CONFIG.BOT_NAME} is fully open source and available on GitHub (https://github.com/allthingslinux/tux). Unless you forked it and made it private, in which case, please make it public (GPLv3).",
 ]
 
+taco_bell_facts = [
+    "It didn't start with tacos. Before Taco Bell, founder Glen Bell created fast-food joint Taco Tia, offering hamburgers, hot dogs, milkshakes and tacos. Seeing the success of the tacos, Bell eventually launched Taco Bell in 1962 in Downey, Calif.",
+    "Originally, all menu items were only $0.19. In its early days in the 1960s, Taco Bell's menu only offered a limited number of classic options including tacos, burritos, frijoles and tostadas. Each item cost only $0.19.",
+    "Taco Bell's original menu offered chiliburgers, alongside tacos and burritos. The chiliburgers were eventually taken off the menu.",
+    "The first Taco Bell location featured fire pits and mariachi bands. It was an outdoor hangout with a walk-up window and no indoor seating.",
+    "PepsiCo used to own Taco Bell. PepsiCo acquired Taco Bell in 1978 as part of its Yum! Brands portfolio until 1997.",
+    "Taco Bell was the first fast food chain to hire women as managers, valuing diverse leadership early on.",
+    "The Taco Bell Chihuahua Gidget also starred in the movie 'Legally Blonde 2' after popularizing the line 'Yo quiero Taco Bell' in commercials.",
+    "Gidget lived like a star: she flew first class, opened the New York Stock Exchange, appeared at Madison Square Garden, and died in 2009 at 15 years old.",
+    "Taco Bell's beef contains 88% beef and 12% 'secret recipe', after a lawsuit in 2011 claimed it was only 35% beef.",
+    "Creedence Clearwater Revival ate there. A 1968 photo shows the band at Taco Bell, and Macaulay Culkin has also been spotted there.",
+    "Taco Bell once 'purchased' the Liberty Bell as an April Fools' prank in 1996, later pledging $50,000 to its upkeep to appease protestors.",
+    "An angry college football star got stuck in a Taco Bell drive-thru window in 1999 after trying to retrieve a missing chalupa.",
+    "Free tacos were offered if a piece of the deorbiting Mir space station landed on a target in 2001. No fragment hit the target.",
+    "Taco Bell was sued by rapper 50 Cent in 2008 for unauthorized use of his name and image during the 'Why Pay More?' campaign.",
+    "Infomercial icon Billy Mays signed to be Taco Bell's spokesperson in 2009 but died of heart failure before filming.",
+    "Taco Bell petitioned the Federal Reserve in 2010 to bring back $2 bills to promote its $2 menu; the petition gained attention but no action.",
+    "Taco Bell no longer has a kids' menu since 2013, aiming its focus on millennials and rebranding as an edgy brand.",
+    "The Doritos Locos Taco added 15,000 jobs in 2012 due to its popularity, helping Taco Bell outgrow Pizza Hut, KFC, and McDonald's.",
+    "It took two years and 40 different recipes to create the Doritos Locos Taco, which sells nearly 1 million units per day.",
+    "Taco Bell attempted an upscale spin-off, U.S. Taco Co., in 2014, but it closed after one year due to pricing, quality, and licensing issues.",
+]
+
 
 class FactType(Enum):
     LINUX = "Linux"
     TUX = f"{CONFIG.BOT_NAME}"
     CAT = "Cat"
+    TACO_BELL = "Taco Bell"
     RANDOM = "Random"
 
 
@@ -88,7 +112,8 @@ fact_type_map = {
     FactType.LINUX: linux_facts,
     FactType.TUX: tux_facts,
     FactType.CAT: cat_facts,
-    FactType.RANDOM: linux_facts + tux_facts + cat_facts,
+    FactType.TACO_BELL: taco_bell_facts,
+    FactType.RANDOM: linux_facts + tux_facts + cat_facts + taco_bell_facts,
 }
 
 
@@ -102,7 +127,7 @@ class Fact(commands.Cog):
     @docstring_parameter(
         f"Available categories: {', '.join([ft.value for ft in FactType])}. Default category is {FactType.RANDOM.value}.",
     )
-    async def fact(self, ctx: commands.Context[Tux], fact_type: str = FactType.RANDOM.value) -> None:
+    async def fact(self, ctx: commands.Context[Tux], *, fact_type: str = FactType.RANDOM.value) -> None:
         """
         Get a random fun fact from the specified category.
 
