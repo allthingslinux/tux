@@ -141,13 +141,14 @@ class Fact(commands.Cog):
             The category of fact to retrieve. {0}
         """
 
-        # Map selected name back to enum
-        mapping = {ft.value: ft for ft in FactType}
-        if fact_type not in mapping:
-            opts = ", ".join(mapping.keys())
+        # Map selected name back to enum (case-insensitive)
+        mapping = {ft.value.lower(): ft for ft in FactType}
+        key = fact_type.lower()
+        if key not in mapping:
+            opts = ", ".join(ft.value for ft in FactType)
             await ctx.send(f"Invalid category '{fact_type}'. Available: {opts}.")
             return
-        sel = mapping[fact_type]
+        sel = mapping[key]
         # Pick a random fact
         facts = fact_type_map.get(sel, [])
         description = random.choice(facts) if facts else "No facts available for this category."
