@@ -17,7 +17,7 @@ Explore the following pages for more detailed information on specific developmen
 * **[Local Development](./docs/content/dev/local_development.md)**
   * Running the bot locally.
   * Understanding the hot reloading mechanism.
-* **[Tux CLI Usage](./docs/content/dev/cli_usage.md)**
+* **[Tux CLI Usage](./docs/content/dev/cli/index.md)**
   * Understanding development vs. production modes (`--dev`, `--prod`).
   * Overview of command groups (`bot`, `db`, `dev`, `docker`).
 * **[Database Management](./docs/content/dev/database.md)**
