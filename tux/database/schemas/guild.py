@@ -2,42 +2,46 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from sqlalchemy import BigInteger
+from sqlalchemy import BigInteger, Column
 from sqlmodel import Field, Relationship, SQLModel
 
 
 # TODO: fill this in with relations to other schemas after they are written
 class Guild(SQLModel, table=True):
-    guild_id: int = Field(primary_key=True, index=True, sa_column_kwargs={"type_": BigInteger})
-    guild_joined_at: datetime | None = Field(default_factory=lambda: datetime.now(UTC))
+    """Represents a guild and associated metadata"""
+
+    guild_id: int = Field(primary_key=True, sa_column=Column(BigInteger))
+    guild_joined_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     config: GuildConfig = Relationship(back_populates="guild")
     case_count: int = Field(default=0)
 
 
 class GuildConfig(SQLModel, table=True):
-    guild_id: int = Field(primary_key=True, unique=True, sa_column_kwargs={"type_": BigInteger})
+    """Configuration settings associated with a guild"""
+
+    guild_id: int = Field(primary_key=True, sa_column=Column(BigInteger))
     prefix: str | None = Field(default=None)
-    mod_log_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    audit_log_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    join_log_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    private_log_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    report_log_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    dev_log_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    jail_channel_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    general_channel_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    starboard_channel_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    perm_level_0_role_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    perm_level_1_role_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    perm_level_2_role_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    perm_level_3_role_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    perm_level_4_role_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    perm_level_5_role_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    perm_level_6_role_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    perm_level_7_role_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    base_staff_role_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    base_member_role_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    jail_role_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
-    quarantine_role_id: int | None = Field(default=None, sa_column_kwargs={"type_": BigInteger})
+    mod_log_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    audit_log_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    join_log_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    private_log_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    report_log_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    dev_log_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    jail_channel_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    general_channel_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    starboard_channel_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    perm_level_0_role_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    perm_level_1_role_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    perm_level_2_role_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    perm_level_3_role_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    perm_level_4_role_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    perm_level_5_role_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    perm_level_6_role_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    perm_level_7_role_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    base_staff_role_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    base_member_role_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    jail_role_id: int | None = Field(default=None, sa_column=Column(BigInteger))
+    quarantine_role_id: int | None = Field(default=None, sa_column=Column(BigInteger))
 
     guild: Guild = Relationship(back_populates="config")
 
