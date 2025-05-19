@@ -100,6 +100,13 @@ class TtyRoles(commands.Cog):
             await discord.utils.sleep_until(datetime.datetime.now(datetime.UTC) + datetime.timedelta(seconds=5))
             await member.add_roles(role)
 
+        except discord.NotFound as error:
+            # check if the member left the server
+            if member.guild.get_member(member.id) is None:
+                logger.info(f"Member {member} left or got kicked by the server before the role could be assigned.")
+                return
+            logger.error(f"Failed to assign role {role.name} to {member}: {error}")
+
         except Exception as error:
             logger.error(f"Failed to assign role {role.name} to {member}: {error}")
 

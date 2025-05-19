@@ -415,3 +415,14 @@ def extract_member_attrs(member: discord.Member) -> dict[str, Any]:
         "status": str(member.status),
         "activity": str(member.activity) if member.activity else None,
     }
+
+
+def docstring_parameter(*sub: Any) -> Any:
+    def dec(obj: Any) -> Any:
+        if obj.__doc__ is not None:
+            obj.__doc__ = obj.__doc__.format(*sub)
+        else:
+            obj.__doc__ = "No docstring available. Substitution failed."
+        return obj
+
+    return dec

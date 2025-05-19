@@ -72,14 +72,40 @@ class Poll(commands.Cog):
         await self.bot.process_commands(message)
 
     @commands.Cog.listener()
-    async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User) -> None:
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
+        # get reaction from payload.message_id, payload.channel_id, payload.guild_id, payload.emoji
+        channel = self.bot.get_channel(payload.channel_id)
+        if channel is None:
+            logger.error(f"Channel with ID {payload.channel_id} not found.")
+            return
+        if isinstance(channel, discord.ForumChannel | discord.CategoryChannel | discord.abc.PrivateChannel):
+            logger.error(
+                f"Channel with ID {payload.channel_id} is not a compatible channel type. How the fuck did you get here?",
+            )
+            return
+
+        message = await channel.fetch_message(payload.message_id)
+        # Lookup the reaction object for this event
+        if payload.emoji.id:
+            # Custom emoji: match by ID
+            reaction = next(
+                (r for r in message.reactions if getattr(r.emoji, "id", None) == payload.emoji.id),
+                None,
+            )
+        else:
+            # Unicode emoji: match by full emoji string
+            reaction = discord.utils.get(message.reactions, emoji=str(payload.emoji))
+        if reaction is None:
+            logger.error(f"Reaction with emoji {payload.emoji} not found.")
+            return
+
         # Block any reactions that are not numbers for the poll
         if reaction.message.embeds:
             embed = reaction.message.embeds[0]
             if (
                 embed.author.name
                 and embed.author.name.startswith("Poll")
-                and reaction.emoji not in [f"{num + 1}\u20e3" for num in range(9)]
+                and str(reaction.emoji) not in [f"{num + 1}\u20e3" for num in range(9)]
             ):
                 await reaction.clear()
 
