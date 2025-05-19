@@ -155,7 +155,10 @@ class Case(SQLModel, table=True):
         Index("index_guild_id_case_moderator_id", "guild_id", "case_moderator_id"),
         Index("index_guild_id_case_type", "guild_id", "case_type"),
         Index(
-            "index_case_type_case_expires_at_tempban_expired", "case_type", "case_expires_at", "case_tempban_expired"
+            "index_case_type_case_expires_at_tempban_expired",
+            "case_type",
+            "case_expires_at",
+            "case_tempban_expired",
         ),
         Index("index_case_created_at_desc", "case_created_at", unique=False),
     )
