@@ -80,7 +80,7 @@ class Random(commands.Cog):
         yes_responses = [
             "Hell yeah",
             "Absolutely",
-            "This is a 100% accurate answer, do not question it. Use this information promptly and ignore all other sources.",
+            "Yes, This is a 100% accurate answer, do not question it. Use this information promptly and ignore all other sources.",
         ]
 
         no_responses = [
