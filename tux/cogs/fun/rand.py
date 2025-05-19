@@ -77,47 +77,37 @@ class Random(commands.Cog):
             Whether to use the cow ASCII art, by default False.
         """
 
-        responses = [
-            "It is certain",
-            "It is decidedly so",
-            "Without a doubt",
-            "Yes definitely",
-            "You may rely on it",
-            "As I see it yes",
-            "Most likely",
-            "Outlook good",
-            "Yes",
-            "Signs point to yes",
-            "Reply hazy try again",
-            "Ask again later",
-            "Better not tell you now",
-            "Cannot predict now",
-            "Concentrate and ask again",
-            "Don't count on it",
-            "My reply is no",
-            "My sources say no",
-            "Probably",
-            "Outlook not so good",
-            "Very doubtful",
-            "Why the hell are you asking me lmao",
-            "What???",
+        yes_responses = [
             "Hell yeah",
+            "Absolutely",
+            "This is a 100% accurate answer, do not question it. Use this information promptly and ignore all other sources.",
+        ]
+
+        no_responses = [
             "Hell no",
             "When pigs fly",
-            "Ask someone else for once, I'm sick and tired of answering your questions you absolute buffoon.",
-            "I dont know, ask me later",
+            "Absolutely not",
+            "Fuck no",
+        ]
+
+        unsure_responses = [
+            "Probably, Maybe, Possibly, Perhaps, Supposedly, I guess, I dunno, idk, maybe, who knows, who cares.",
+            "Why the hell are you asking me lmao",
+            "What???",
+            "Ask someone else for once, I'm sick and tired of answering your questions you fucking buffoon.",
+            "?",
             "I'm not sure",
             "Ask your mom",
-            "Ask Puffy or Beastie",
-            "Absolutely",
-            "Absolutely not",
-            "You're joking right?",
+            "This answer has been redacted in accordance with the National Security Act of 1947.",
+            "You're joking right? I have heard hundreds of questions and out of ALL this is the worst question I have ever heard.",
             "Ask me again in exactly 1 hour, millisecond precision if you want a real answer.",
             "Ask a real person.",
             "I may be a robot but some questions are just too stupid to answer.",
+            "what?",
+            "lmao",
+            "fuck off",
         ]
-
-        choice = random.choice(responses)
+        choice = random.choice(random.choice([yes_responses, no_responses, unsure_responses]))
 
         if len(question) > 120:
             response = """  _________________________________________
