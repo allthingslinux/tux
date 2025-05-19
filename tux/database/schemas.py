@@ -84,7 +84,7 @@ class AFKModel(SQLModel, table=True):
     member_id: int = Field(primary_key=True, sa_column=Column(BigInteger))
     nickname: str
     reason: str
-    since: datetime = Field(default_factory=datetime.now)
+    since: datetime = Field(default_factory=lambda: datetime.now(UTC))
     until: datetime | None = Field(default=None)
     guild_id: int = Field(sa_column=Column(BigInteger), foreign_key="guild.guild_id")
     enforced: bool = Field(default=False)
@@ -99,7 +99,7 @@ class Note(SQLModel, table=True):
     note_user_id: int = Field(sa_column=Column(BigInteger))
     note_moderator_id: int = Field(sa_column=Column(BigInteger))
     note_content: str
-    note_created_at: datetime = Field(default_factory=datetime.now)
+    note_created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     note_number: int | None = Field(default=None)
     guild_id: int = Field(sa_column=Column(BigInteger), foreign_key="guild.guild_id")
     guild: Guild | None = Relationship(back_populates="notes")
@@ -142,7 +142,7 @@ class Case(SQLModel, table=True):
     case_user_id: int = Field(sa_column=Column(BigInteger))
     case_user_roles: list[int] = Field(default_factory=list)
     case_number: int | None = None
-    case_created_at: datetime | None = Field(default_factory=datetime.now)
+    case_created_at: datetime | None = Field(default_factory=lambda: datetime.now(UTC))
     case_expires_at: datetime | None = None
     case_tempban_expired: bool | None = Field(default=False)
     guild_id: int = Field(sa_column=Column(BigInteger), foreign_key="guild.guild_id")
@@ -169,7 +169,7 @@ class Reminder(SQLModel, table=True):
 
     reminder_id: int = Field(primary_key=True, sa_column=Column(BigInteger), auto_increment=True)
     reminder_content: str
-    reminder_created_at: datetime = Field(default_factory=datetime.now)
+    reminder_created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     reminder_expires_at: datetime
     reminder_channel_id: int = Field(sa_column=Column(BigInteger))
     reminder_user_id: int = Field(sa_column=Column(BigInteger))
@@ -185,7 +185,7 @@ class Snippet(SQLModel, table=True):
     snippet_name: str
     snippet_content: str | None = None
     snippet_user_id: int = Field(sa_column=Column(BigInteger))
-    snippet_created_at: datetime = Field(default_factory=datetime.now)
+    snippet_created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     guild_id: int = Field(sa_column=Column(BigInteger), foreign_key="guild.guild_id")
     uses: int = Field(default=0)
     locked: bool = Field(default=False)
