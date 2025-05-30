@@ -85,9 +85,9 @@ class Snippet(SnippetsBaseCog):
                 if isinstance(reference, Message):
                     await reference.reply(text, allowed_mentions=AllowedMentions.none())
                 else:
-                    await ctx.send(text, allowed_mentions=AllowedMentions.none())
+                    await ctx.reply(text, allowed_mentions=AllowedMentions.none())
             else:
-                await ctx.send(text, allowed_mentions=AllowedMentions.none())
+                await ctx.reply(text, allowed_mentions=AllowedMentions.none())
             return
 
         menu = ViewMenu(
