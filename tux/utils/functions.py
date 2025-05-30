@@ -96,9 +96,9 @@ def strip_formatting(content: str) -> str:
         The string with formatting stripped.
     """
     # Remove triple backtick blocks
-    content = re.sub(r"```[\s\S]*?```", "", content)
+    content = re.sub(r"```(.*?)```", r"\1", content)
     # Remove single backtick code blocks
-    content = re.sub(r"`[^`]+`", "", content)
+    content = re.sub(r"`([^`]*)`", r"\1", content)
     # Remove Markdown headers
     content = re.sub(r"^#+\s+", "", content, flags=re.MULTILINE)
     # Remove markdown formatting characters, but preserve |
