@@ -1,4 +1,4 @@
-from discord import AllowedMentions
+from discord import AllowedMentions, Message
 from discord.ext import commands
 from reactionmenu import ViewButton, ViewMenu
 
@@ -79,7 +79,14 @@ class Snippet(SnippetsBaseCog):
 
         # pagination if text > 2000 characters
         if len(text) <= 2000:
-            await ctx.send(text, allowed_mentions=AllowedMentions.none())
+            if ctx.message.reference and ctx.message.reference.resolved:
+                reference = ctx.message.reference.resolved
+                if isinstance(reference, Message):
+                    await reference.reply(text, allowed_mentions=AllowedMentions.none())
+                else:
+                    await ctx.send(text, allowed_mentions=AllowedMentions.none())
+            else:
+                await ctx.send(text, allowed_mentions=AllowedMentions.none())
             return
 
         menu = ViewMenu(
