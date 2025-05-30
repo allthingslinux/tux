@@ -32,7 +32,7 @@ It is designed to provide a variety of features to the server, including moderat
 - Poetry for dependency management
 - Docker and Docker Compose for optional containerized environments
 - Strict typing with `pyright` and type hints
-- Type safe ORM using `prisma`
+- Type safe ORM using `tortoise`
 - Linting and formatting via `ruff`
 - Custom CLI via `click` and `poetry` scripts
 - Rich logging with `loguru`
