@@ -1,4 +1,5 @@
 import random
+from textwrap import shorten, wrap
 
 from discord.ext import commands
 
@@ -109,25 +110,18 @@ class Random(commands.Cog):
         ]
         choice = random.choice(random.choice([yes_responses, no_responses, unsure_responses]))
 
-        if len(question) > 120:
-            response = """  _________________________________________
-< That question is too long! Try a new one. >
-  -----------------------------------------
-   \\
-    \\
-        .--.
-       |o_o |
-       |:_/ |
-      //   \\ \\
-     (|     | )
-    /'\\_   _/`\\
-    \\___)=(___/
-"""
-        elif cow:
-            response = f"""Response to "{question}":
-  {"_" * len(choice)}
-< {choice} >
-  {"-" * len(choice)}
+        width = min(30, len(choice))
+        chunks = wrap(choice, width)
+
+        if len(chunks) > 1:
+            chunks = [chunk.ljust(width) for chunk in chunks]
+
+        formatted_choice = f"  {'_' * width}\n< {' >\n< '.join(chunks)} >\n  {'-' * width}"
+
+        response = f'Response to "{shorten(question, width=120, placeholder="...")}":\n{formatted_choice}'
+
+        if cow:
+            response += """
         \\   ^__^
          \\  (oo)\\_______
             (__)\\       )\\/\\
@@ -135,10 +129,7 @@ class Random(commands.Cog):
                 ||     ||
 """
         else:
-            response = f"""Response to "{question}":
-  {"_" * len(choice)}
-< {choice} >
-  {"-" * len(choice)}
+            response += """
    \\
     \\
         .--.
