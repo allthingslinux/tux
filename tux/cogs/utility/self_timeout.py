@@ -7,8 +7,7 @@ from tux.bot import Tux
 from tux.cogs.utility import add_afk, del_afk
 from tux.database.controllers import DatabaseController
 from tux.ui.views.confirmation import ConfirmationDanger
-from tux.utils.flags import generate_usage
-from tux.utils.functions import convert_to_seconds, seconds_to_human_readable
+from tux.utils.functions import convert_to_seconds, generate_usage, seconds_to_human_readable
 
 
 class SelfTimeout(commands.Cog):

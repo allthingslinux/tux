@@ -143,6 +143,10 @@ class GifLimiter(commands.Cog):
                 else:
                     del self.recent_gifs_by_user[user_id]
 
+    async def cog_unload(self) -> None:
+        """Cancel the background task when the cog is unloaded."""
+        self.old_gif_remover.cancel()
+
 
 async def setup(bot: Tux) -> None:
     await bot.add_cog(GifLimiter(bot))

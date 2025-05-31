@@ -12,7 +12,8 @@ from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.constants import CONST
-from tux.utils.flags import CaseModifyFlags, CasesViewFlags, generate_usage
+from tux.utils.flags import CaseModifyFlags, CasesViewFlags
+from tux.utils.functions import generate_usage
 
 from . import ModerationCogBase
 

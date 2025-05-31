@@ -1,10 +1,3 @@
-"""
-TLDR Pages Discord Bot Integration.
-
-A comprehensive implementation of the TLDR client specification v2.3 for Discord bots,
-providing command documentation lookup with proper caching, localization, and platform support.
-"""
-
 import contextlib
 
 import discord
@@ -15,28 +8,9 @@ from loguru import logger
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
 from tux.ui.views.tldr import TldrPaginatorView
-from tux.utils.flags import generate_usage
+from tux.utils.flags import TldrFlags
+from tux.utils.functions import generate_usage
 from tux.wrappers.tldr import SUPPORTED_PLATFORMS, TldrClient
-
-# --- Discord-specific classes ---
-
-
-# Define FlagConverter for prefix command options
-class TldrFlags(commands.FlagConverter, prefix="-", delimiter=" "):
-    command_words: tuple[str, ...] = commands.flag(
-        name="_command_words",
-        positional=True,
-        default=(),
-        description="Command name (internal)",
-    )
-    platform: str | None = commands.flag(description="Platform (e.g. linux, osx, common)", default=None)
-    language: str | None = commands.flag(description="Language code (e.g. en, es, fr)", default=None)
-    show_short: bool = commands.flag(description="Show only short options for placeholders", default=False)
-    show_long: bool = commands.flag(
-        description="Show only long options for placeholders (default if others false)",
-        default=True,
-    )
-    show_both: bool = commands.flag(description="Show both short and long options for placeholders", default=False)
 
 
 class Tldr(commands.Cog):
@@ -46,10 +20,16 @@ class Tldr(commands.Cog):
         self.bot = bot
         self.default_language: str = self.detect_bot_language()
         self.prefix_tldr.usage = generate_usage(self.prefix_tldr)
+        self._cache_checked = False  # Track if cache has been checked
 
     async def cog_load(self):
-        """Check cache age and update if necessary when the cog is loaded."""
-        logger.info("TLDR Cog: Checking cache status...")
+        """Check cache age and update if necessary when the cog is loaded (initial startup only)."""
+        # Skip cache checks during hot reloads - only check on initial startup
+        if self._cache_checked:
+            logger.debug("TLDR Cog: Skipping cache check (hot reload detected)")
+            return
+
+        logger.debug("TLDR Cog: Checking cache status...")
 
         # Normalize detected language before adding to set
         normalized_default_lang = self.default_language
@@ -66,13 +46,14 @@ class Tldr(commands.Cog):
                     if "Failed" in result_msg:
                         logger.error(f"TLDR Cog: Cache update for '{lang_code}' - {result_msg}")
                     else:
-                        logger.info(f"TLDR Cog: Cache update for '{lang_code}' - {result_msg}")
+                        logger.debug(f"TLDR Cog: Cache update for '{lang_code}' - {result_msg}")
                 except Exception as e:
                     logger.error(f"TLDR Cog: Exception during cache update for '{lang_code}': {e}", exc_info=True)
             else:
-                logger.info(f"TLDR Cog: Cache for '{lang_code}' is recent, skipping update.")
+                logger.debug(f"TLDR Cog: Cache for '{lang_code}' is recent, skipping update.")
 
-        logger.info("TLDR Cog: Cache check completed.")
+        self._cache_checked = True
+        logger.debug("TLDR Cog: Cache check completed.")
 
     def detect_bot_language(self) -> str:
         """Detect the bot's default language. For Discord bots, default to English."""
@@ -137,7 +118,7 @@ class Tldr(commands.Cog):
     @app_commands.command(name="tldr")
     @app_commands.guild_only()
     @app_commands.describe(
-        command="The command to look up",
+        command="The command to look up (e.g. tar, git-commit, etc)",
         platform="Platform (e.g. linux, osx, common)",
         language="Language code (e.g. en, es, fr)",
         show_short="Show only short options for placeholders",
@@ -174,18 +155,26 @@ class Tldr(commands.Cog):
     @commands.guild_only()
     async def prefix_tldr(self, ctx: commands.Context[Tux], *, flags: TldrFlags):
         """Show a TLDR page for a CLI command.
-        Command name can include spaces. Flags must come after the command name.
 
-        Usage examples:
-          >tldr git commit
-          >tldr git -platform linux
-          >tldr tar -show_both -platform osx
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context of the command.
+        flags : TldrFlags
+            The flags for the command.
         """
-        if not flags.command_words:
+        # Check if command is provided
+        if not flags.command:
             await ctx.send_help(ctx.command)
             return
 
-        command_name_str = " ".join(flags.command_words)
+        # Check if command contains spaces and warn user
+        if " " in flags.command:
+            await ctx.send(
+                f"⚠️ Command `{flags.command}` contains spaces. "
+                f"TLDR commands use hyphens instead of spaces. Try `{flags.command.replace(' ', '-')}` instead.",
+            )
+            return
 
         render_short, render_long, render_both = False, False, False
         if flags.show_both:
@@ -197,7 +186,7 @@ class Tldr(commands.Cog):
 
         await self._handle_tldr_command_prefix(
             ctx=ctx,
-            command_name=command_name_str,
+            command_name=flags.command,
             platform=flags.platform,
             language=flags.language,
             show_short=render_short,

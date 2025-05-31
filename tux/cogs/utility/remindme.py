@@ -9,8 +9,7 @@ from prisma.models import Reminder
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator
-from tux.utils.flags import generate_usage
-from tux.utils.functions import convert_to_seconds
+from tux.utils.functions import convert_to_seconds, generate_usage
 
 
 class RemindMe(commands.Cog):

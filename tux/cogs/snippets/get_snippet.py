@@ -3,7 +3,7 @@ from discord.ext import commands
 from reactionmenu import ViewButton, ViewMenu
 
 from tux.bot import Tux
-from tux.utils.flags import generate_usage
+from tux.utils.functions import generate_usage
 
 # from tux.utils.functions import truncate
 from . import SnippetsBaseCog

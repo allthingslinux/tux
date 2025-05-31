@@ -320,7 +320,7 @@ class TldrClient:
         language : str
             Language code to search.
         platform_filter : str | None
-            Platform to filter by.
+            Platform to filter by. If None, searches linux + common platforms.
 
         Returns
         -------
@@ -332,12 +332,16 @@ class TldrClient:
         normalized_lang_for_dir = "en" if language.startswith("en") else language
         pages_dir_name = f"pages.{normalized_lang_for_dir}" if normalized_lang_for_dir != "en" else "pages"
 
-        effective_platform_filter = platform_filter or "common"
-
-        platforms_to_scan: list[str] = [effective_platform_filter]
-        # Always include common unless it was explicitly requested
-        if effective_platform_filter != "common":
-            platforms_to_scan.append("common")
+        # Handle platform filtering logic
+        if platform_filter is None:
+            # When no filter specified, search linux + common
+            platforms_to_scan = ["linux", "common"]
+        else:
+            # Use the specified platform
+            platforms_to_scan = [platform_filter]
+            # Always include common unless it was explicitly requested
+            if platform_filter != "common":
+                platforms_to_scan.append("common")
 
         # Remove duplicates while keeping original order
         unique_platforms_to_scan: list[str] = []
@@ -618,9 +622,24 @@ class TldrClient:
 
                 target_path = CACHE_DIR / pages_dir_name
 
-                # Clear and recreate cache directory
+                # More robust cache directory cleanup
                 if target_path.exists():
-                    shutil.rmtree(target_path)
+                    try:
+                        shutil.rmtree(target_path)
+                    except OSError:
+                        # If rmtree fails, try to remove contents manually
+                        for item in target_path.rglob("*"):
+                            try:
+                                if item.is_file():
+                                    item.unlink()
+                                elif item.is_dir():
+                                    item.rmdir()
+                            except OSError:
+                                continue
+                        # Try final cleanup
+                        with contextlib.suppress(OSError):
+                            target_path.rmdir()
+
                 target_path.mkdir(parents=True, exist_ok=True)
 
                 # Extract archive

@@ -6,7 +6,7 @@ from reactionmenu import ViewButton, ViewMenu
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator, EmbedType
-from tux.utils.flags import generate_usage
+from tux.utils.functions import generate_usage
 
 
 class Info(commands.Cog):
