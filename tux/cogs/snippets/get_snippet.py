@@ -80,14 +80,11 @@ class Snippet(SnippetsBaseCog):
         # pagination if text > 2000 characters
         if len(text) <= 2000:
             # Check if there is a message being replied to
-            if ctx.message.reference and ctx.message.reference.resolved:
-                reference = ctx.message.reference.resolved
-                if isinstance(reference, Message):
-                    await reference.reply(text, allowed_mentions=AllowedMentions.none())
-                else:
-                    await ctx.reply(text, allowed_mentions=AllowedMentions.none())
-            else:
-                await ctx.reply(text, allowed_mentions=AllowedMentions.none())
+            reference = getattr(ctx.message.reference, "resolved", None)
+            # Set reply target if it exists, otherwise use the context message
+            reply_target = reference if isinstance(reference, Message) else ctx
+
+            await reply_target.reply(text, allowed_mentions=AllowedMentions.none())
             return
 
         menu = ViewMenu(
