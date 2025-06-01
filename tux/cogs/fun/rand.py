@@ -5,6 +5,7 @@ from discord.ext import commands
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
+from tux.utils.constants import CONST
 from tux.utils.flags import generate_usage
 
 
@@ -110,7 +111,7 @@ class Random(commands.Cog):
         ]
         choice = random.choice(yes_responses + no_responses + unsure_responses)
 
-        width = min(30, len(choice))
+        width = min(CONST.EIGHT_BALL_RESPONSE_WRAP_WIDTH, len(choice))
         chunks = wrap(choice, width)
 
         if len(chunks) > 1:
@@ -118,7 +119,7 @@ class Random(commands.Cog):
 
         formatted_choice = f"  {'_' * width}\n< {' >\n< '.join(chunks)} >\n  {'-' * width}"
 
-        shortened_question = shorten(question, width=120, placeholder="...")
+        shortened_question = shorten(question, width=CONST.EIGHT_BALL_QUESTION_LENGTH_LIMIT, placeholder="...")
 
         response = f'Response to "{shortened_question}":\n{formatted_choice}'
 
