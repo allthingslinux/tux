@@ -1,4 +1,5 @@
 import re
+from abc import ABC, abstractmethod
 
 import discord
 from discord.ext import commands
@@ -60,11 +61,55 @@ compiler_map_wandbox = {
 }
 
 
+class CodeDispatch(ABC):
+    def __init__(self, compiler_map: dict[str, str]):
+        self.compiler_map = compiler_map
+
+    async def run(self, lang: str, code: str, opts: str | None):
+        language = self.compiler_map.get(lang)
+        if language is None:
+            return None
+        return await self._execute(language, code, opts)
+
+    @abstractmethod
+    async def _execute(self, lang: str, code: str, opts: str | None) -> str | None: ...
+
+
+class GodboltService(CodeDispatch):
+    async def _execute(self, lang: str, code: str, opts: str | None):
+        if lang in {"c++", "cpp"}:
+            opts = f"{'' if opts is None else opts} -xc++ -lstdc++ -shared-libgcc"
+
+        out = godbolt.getoutput(code, lang, opts)
+        if not out:
+            return None
+        lines = out.split("\n")
+        return "\n".join(lines[5:])
+
+
+class WandboxService(CodeDispatch):
+    async def _execute(self, lang: str, code: str, opts: str | None):
+        output = "Padding word.\n P\n A\n D\n D\n"
+        temp = wandbox.getoutput(code, lang, opts)
+        if not temp:
+            return None
+        if temp["compiler_error"] != "":
+            output = output + temp["compiler_error"]
+        if temp["program_output"] != "":
+            output = output + temp["program_output"]
+
+        return "\n".join(output.split("\n")[5:])
+
+
 class Run(commands.Cog):
     def __init__(self, bot: Tux):
         self.bot = bot
         self.run.usage = generate_usage(self.run)
         self.languages.usage = generate_usage(self.languages)
+        self.services = {
+            "godbolt": GodboltService(compiler_map_godbolt),
+            "wandbox": WandboxService(compiler_map_wandbox),
+        }
 
     @staticmethod
     def __remove_ansi(ansi: str) -> str:
@@ -102,13 +147,9 @@ class Run(commands.Cog):
 
         return ticks_re.sub("", st)
 
-    def __clean_code(self, st: str) -> str:
+    def __parse_code(self, st: str) -> tuple[str, str]:
         cleaned_code = self.__remove_backticks(st)
-        return "\n".join(cleaned_code.splitlines()[1:])
-
-    def __get_language(self, st: str) -> str:
-        cleaned_code = self.__remove_backticks(st)
-        return cleaned_code.splitlines().pop(0)
+        return cleaned_code.split("\n").pop(0), "\n".join(cleaned_code.splitlines()[1:])
 
     async def execute(
         self,
@@ -139,11 +180,11 @@ class Run(commands.Cog):
         str | None
             Returns either the output of the evaluted code, or None.
         """
-        cleaned_code = self.__clean_code(code)
+        (_, cleaned_code) = self.__parse_code(code)
 
         # Godbolt for some reason does not have a specific C++ compiler, so this is a hack that makes gcc invoke itself in c++ mode.
         if language in {"c++", "cpp"}:
-            options = "-xc++ -lstdc++ -shared-libgcc" if options is None else options + "-xc++ -lstdc++ -shared-libgcc"
+            options = f"{'' if options is None else options} -xc++ -lstdc++ -shared-libgcc"
 
         compiler_id = compiler_map[language]
 
@@ -186,7 +227,7 @@ class Run(commands.Cog):
             user_name=ctx.author.name,
             user_display_avatar=ctx.author.display_avatar.url,
             title="",
-            description=f"{f'Service provided by {"[Godbolt](https://godbolt.org/)" if not is_wandbox else "[Wandbox](https://wandbox.org)"}'}\n```{lang}\n{output}\n```",
+            description=f"{f'Service provided by {"[Wandbox](https://wandbox.org)" if is_wandbox else "[Godbolt](https://godbolt.org/)"}'}\n```{lang}\n{output}\n```",
         )
 
         button = discord.ui.Button(style=discord.ButtonStyle.red, label="✖ Close")  # type: ignore
@@ -221,7 +262,6 @@ class Run(commands.Cog):
         code : str | None
             The code to be evaluated. Provide None if the code is supposed to be grabbed from the message replied to.
         """
-
         await ctx.message.add_reaction("<a:BreakdancePengu:1378346831250985061>")
 
         # checks if the author replied to a message or not.
@@ -253,8 +293,8 @@ class Run(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        language = self.__get_language(code)
-        is_wandbox = language in compiler_map_wandbox
+        (language, code) = self.__parse_code(code)
+        is_wandbox = "wandbox" if language in compiler_map_wandbox else "godbolt"
 
         if language not in compiler_map_godbolt and language not in compiler_map_wandbox:
             embed = EmbedCreator.create_embed(
@@ -268,12 +308,7 @@ class Run(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        filtered_output = await self.execute(
-            compiler_map_wandbox if is_wandbox else compiler_map_godbolt,
-            language,
-            code,
-            is_wandbox,
-        )
+        filtered_output = await self.services[is_wandbox].run(language, code, None)
 
         if not filtered_output:
             embed = EmbedCreator.create_embed(
@@ -282,7 +317,7 @@ class Run(commands.Cog):
                 user_name=ctx.author.name,
                 user_display_avatar=ctx.author.display_avatar.url,
                 title="Fatal exception occurred!",
-                description="failed to get output from the compiler",
+                description="failed to get output from the compiler.",
             )
             await ctx.send(embed=embed, ephemeral=True, delete_after=30)
             return
@@ -292,7 +327,7 @@ class Run(commands.Cog):
             ctx,
             self.__remove_ansi(filtered_output),
             language,
-            is_wandbox,
+            is_wandbox == "wandbox",
         )
 
     @run.error
