@@ -28,11 +28,12 @@ def getoutput(code: str, compiler: str, options: str | None) -> dict[str, Any] |
 
     copt = options if options is not None else ""
 
-    payload = {"compiler": compiler, "code": code, options: copt}
-
-    uri = client.post(url, json=payload)
+    payload = {"compiler": compiler, "code": code, "options": copt}
 
     try:
-        return uri.json() if uri.status_code == httpx.codes.OK else None
+        uri = client.post(url, json=payload)
+        uri.raise_for_status()
     except httpx.ReadTimeout:
         return None
+    else:
+        return uri.json() if uri.status_code == httpx.codes.OK else None
