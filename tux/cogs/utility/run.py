@@ -10,7 +10,7 @@ from tux.utils.flags import generate_usage
 from tux.wrappers import godbolt, wandbox
 
 ansi_re = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-ticks_re = re.compile(r"\```")
+ticks_re = re.compile(r"```")
 
 
 compiler_map_godbolt = {
@@ -78,7 +78,7 @@ class CodeDispatch(ABC):
 class GodboltService(CodeDispatch):
     async def _execute(self, lang: str, code: str, opts: str | None):
         if lang in {"c++", "cpp"}:
-            opts = f"{'' if opts is None else opts} -xc++ -lstdc++ -shared-libgcc"
+            opts = f"{' ' if opts is None else opts} -xc++ -lstdc++ -shared-libgcc"
 
         out = godbolt.getoutput(code, lang, opts)
         if not out:
@@ -319,7 +319,7 @@ class Run(commands.Cog):
                 title="Fatal exception occurred!",
                 description="failed to get output from the compiler.",
             )
-            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
+            await ctx.send(embed=embed, delete_after=30)
             return
 
         await ctx.message.clear_reaction("<a:BreakdancePengu:1378346831250985061>")
@@ -362,7 +362,7 @@ class Run(commands.Cog):
             description=str(desc),
         )
 
-        await ctx.send(embed=embed, ephemeral=True, delete_after=30)
+        await ctx.send(embed=embed, delete_after=30)
 
     @commands.command(
         name="languages",
