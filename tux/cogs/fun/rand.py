@@ -118,7 +118,9 @@ class Random(commands.Cog):
 
         formatted_choice = f"  {'_' * width}\n< {' >\n< '.join(chunks)} >\n  {'-' * width}"
 
-        response = f'Response to "{shorten(question, width=120, placeholder="...")}":\n{formatted_choice}'
+        shortened_question = shorten(question, width=120, placeholder="...")
+
+        response = f'Response to "{shortened_question}":\n{formatted_choice}'
 
         if cow:
             response += """
