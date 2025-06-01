@@ -115,7 +115,7 @@ def getcompilers() -> str | None:
 
 def getspecificcompiler(lang: str) -> str | None:
     """
-    Get the specific compiler from the Godbolt API.
+    Get a specific compiler from the Godbolt API.
 
     Parameters
     ----------
