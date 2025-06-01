@@ -90,16 +90,16 @@ class GodboltService(CodeDispatch):
 
 class WandboxService(CodeDispatch):
     async def _execute(self, lang: str, code: str, opts: str | None):
-        output = "Padding word.\n P\n A\n D\n D\n"
+        output = ""
         temp = wandbox.getoutput(code, lang, opts)
         if not temp:
             return None
         if temp["compiler_error"] != "":
-            output = output + temp["compiler_error"]
+            output = f"{output} {temp['compiler_error']}"
         if temp["program_output"] != "":
-            output = output + temp["program_output"]
+            output = f"{output} {temp['program_output']}"
 
-        return "\n".join(output.split("\n")[5:])
+        return "\n".join(output.split("\n")[1:])
 
 
 class Run(commands.Cog):
