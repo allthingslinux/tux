@@ -108,7 +108,7 @@ class Random(commands.Cog):
             "lmao",
             "fuck off",
         ]
-        choice = random.choice(random.choice([yes_responses, no_responses, unsure_responses]))
+        choice = random.choice(yes_responses + no_responses + unsure_responses)
 
         width = min(30, len(choice))
         chunks = wrap(choice, width)
