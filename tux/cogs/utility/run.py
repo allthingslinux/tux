@@ -45,6 +45,7 @@ compiler_map_wandbox = {
     "erlang": "erlang-27.1",
     "groovy": "groovy-4.0.23",
     "javascript": "nodejs-20.17.0",
+    "js": "nodejs-20.17.0",
     "lisp": "clisp-2.49",
     "lua": "lua-5.4.7",
     "nim": "nim-2.2.4",
