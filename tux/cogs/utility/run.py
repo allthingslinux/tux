@@ -34,7 +34,7 @@ compiler_map_godbolt = {
     "fsharp": "dotnet80fsharpmono",
     "fs": "dotnet80fsharpmono",
     "csharp": "dotnet80csharpmono",
-    "cs": "dotnet707csharpmono",
+    "cs": "dotnet80csharpmono",
 }
 
 compiler_map_wandbox = {
@@ -152,60 +152,6 @@ class Run(commands.Cog):
         cleaned_code = self.__remove_backticks(st)
         return cleaned_code.split("\n").pop(0), "\n".join(cleaned_code.splitlines()[1:])
 
-    async def execute(
-        self,
-        compiler_map: dict[str, str],
-        language: str,
-        code: str,
-        is_wandbox: bool,
-        options: str | None = None,
-    ) -> str | None:
-        """
-        A function that executes the code on either the Godbolt or Wandbox servers.
-
-        Parameters
-        ----------
-        compiler_map : dict[str, str]
-            A dictionary containing mappings from a language to its compiler.
-        code : str
-            A string consisting of the code.
-        language: str
-            A string containing the language to be evaluated.
-        is_wandbox: bool
-            A boolean that indicates whether to execute using wandbox.org or not.
-        options : str | None
-            Optional arguments to be passed to the compiler.
-
-        Returns
-        -------
-        str | None
-            Returns either the output of the evaluted code, or None.
-        """
-        (_, cleaned_code) = self.__parse_code(code)
-
-        # Godbolt for some reason does not have a specific C++ compiler, so this is a hack that makes gcc invoke itself in c++ mode.
-        if language in {"c++", "cpp"}:
-            options = f"{'' if options is None else options} -xc++ -lstdc++ -shared-libgcc"
-
-        compiler_id = compiler_map[language]
-
-        if not is_wandbox:
-            output = godbolt.getoutput(cleaned_code, compiler_id, options)
-        else:
-            # padding word so that filtered_output doesnt mess up.
-            output = "Padding word.\n P\n A\n D\n D\n"
-            temp = wandbox.getoutput(cleaned_code, compiler_id, options)
-            if temp is not None and temp["compiler_error"] != "":
-                output = output + temp["compiler_error"]
-            if temp is not None and temp["program_output"] != "":
-                output = output + temp["program_output"]
-
-        if output is None:
-            return None
-
-        lines: list[str] = output.split("\n")
-        return "\n".join(lines[5:])
-
     async def send_embedded_reply(self, ctx: commands.Context[Tux], output: str, lang: str, is_wandbox: bool) -> None:
         """
         A generalized version of an embed.
@@ -291,6 +237,7 @@ class Run(commands.Cog):
                 title="Fatal Exception occurred!",
                 description="Bad formatting.",
             )
+            await ctx.message.clear_reaction("<a:BreakdancePengu:1378346831250985061>")
             await ctx.send(embed=embed)
             return
 
@@ -306,6 +253,7 @@ class Run(commands.Cog):
                 title="Fatal exception occurred.",
                 description=f"No compiler could be found for target '{language}'.",
             )
+            await ctx.message.clear_reaction("<a:BreakdancePengu:1378346831250985061>")
             await ctx.send(embed=embed)
             return
 
@@ -320,6 +268,7 @@ class Run(commands.Cog):
                 title="Fatal exception occurred!",
                 description="failed to get output from the compiler.",
             )
+            await ctx.message.clear_reaction("<a:BreakdancePengu:1378346831250985061>")
             await ctx.send(embed=embed, delete_after=30)
             return
 
@@ -351,6 +300,7 @@ class Run(commands.Cog):
         desc = ""
         if isinstance(error, commands.CommandInvokeError):
             desc = error.original
+
         if isinstance(error, commands.MissingRequiredArgument):
             desc = f"Missing required argument: `{error.param.name}`"
 
@@ -363,6 +313,7 @@ class Run(commands.Cog):
             description=str(desc),
         )
 
+        await ctx.message.clear_reaction("<a:BreakdancePengu:1378346831250985061>")
         await ctx.send(embed=embed, delete_after=30)
 
     @commands.command(
