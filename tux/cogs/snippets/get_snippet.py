@@ -84,7 +84,10 @@ class Snippet(SnippetsBaseCog):
             # Set reply target if it exists, otherwise use the context message
             reply_target = reference if isinstance(reference, Message) else ctx
 
-            await reply_target.reply(text, allowed_mentions=AllowedMentions.none())
+            await reply_target.reply(
+                text,
+                allowed_mentions=AllowedMentions(users=False, roles=False, everyone=False, replied_user=True),
+            )
             return
 
         menu = ViewMenu(
