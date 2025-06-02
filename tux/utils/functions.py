@@ -98,9 +98,9 @@ def strip_formatting(content: str) -> str:
         The string with formatting stripped.
     """
     # Remove triple backtick blocks
-    content = re.sub(r"```[\s\S]*?```", "", content)
+    content = re.sub(r"```(.*?)```", r"\1", content)
     # Remove single backtick code blocks
-    content = re.sub(r"`[^`]+`", "", content)
+    content = re.sub(r"`([^`]*)`", r"\1", content)
     # Remove Markdown headers
     content = re.sub(r"^#+\s+", "", content, flags=re.MULTILINE)
     # Remove markdown formatting characters, but preserve |
@@ -547,3 +547,14 @@ def generate_usage(
         usage += f" [{' | '.join(optional_flags)}]"
 
     return usage
+
+
+def docstring_parameter(*sub: Any) -> Any:
+    def dec(obj: Any) -> Any:
+        if obj.__doc__ is not None:
+            obj.__doc__ = obj.__doc__.format(*sub)
+        else:
+            obj.__doc__ = "No docstring available. Substitution failed."
+        return obj
+
+    return dec

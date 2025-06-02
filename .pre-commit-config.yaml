@@ -18,20 +18,20 @@ repos:
 
     # 2. Code Upgraders/Modifiers
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.19.1
+    rev: v3.20.0
     hooks:
       - id: pyupgrade
         args: ["--py313-plus"]
 
   - repo: https://github.com/asottile/add-trailing-comma
-    rev: v3.1.0
+    rev: v3.2.0
     hooks:
       - id: add-trailing-comma
 
     # 3. Main Linter (with auto-fix)
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version should match the one in pyproject.toml
-    rev: v0.11.8 # Use the same Ruff version tag as formatter
+    rev: v0.11.12 # Use the same Ruff version tag as formatter
     hooks:
       - id: ruff
         args: [--fix]
@@ -39,7 +39,7 @@ repos:
     # 4. Main Formatter (after linting/fixing)
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version should match the one in pyproject.toml
-    rev: v0.11.8
+    rev: v0.11.12
     hooks:
       - id: ruff-format
 
@@ -53,7 +53,7 @@ repos:
 
     # 6. Security Check
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.25.1 # Use the latest tag from the repo
+    rev: v8.26.0 # Use the latest tag from the repo
     hooks:
       - id: gitleaks
 

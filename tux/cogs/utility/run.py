@@ -1,43 +1,103 @@
 import re
+from abc import ABC, abstractmethod
 
+import discord
 from discord.ext import commands
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
 from tux.utils.functions import generate_usage
-from tux.wrappers import godbolt
+from tux.wrappers import godbolt, wandbox
 
 ansi_re = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-ticks_re = re.compile(r"\`")
+ticks_re = re.compile(r"```")
 
-compiler_map = {
-    "hs": "ghc961",
-    "haskell": "ghc961",
-    "c": "cclang1810",
-    "cpp": "cclang1810",
-    "c++": "cclang1810",
-    "rs": "r1770",
-    "rust": "r1770",
+
+compiler_map_godbolt = {
+    "hs": "ghc984",
+    "haskell": "ghc984",
+    "c": "g151",
+    "cpp": "g151",
+    "c++": "g151",
+    "rs": "r1870",
+    "rust": "r1870",
     "julia": "julia_nightly",
-    "py": "python312",
-    "python": "python312",
-    "scala": "scalac300",
-    "go": "gccgo131",
-    "kotlin": "kotlinc1920",
-    "kt": "kotlinc1920",
-    "kot": "kotlinc1920",
-    "erlang": "erl2622",
-    "dart": "dart322",
-    "swift": "swift59",
-    "zig": "z090",
-    "java": "java2200",
-    "fsharp": "dotnet707fsharp",
-    "fs": "dotnet707fsharp",
-    "csharp": "dotnet707csharp",
-    "cs": "dotnet707csharp",
-    "ts": "tsc_0_0_35_gc",
-    "typescript": "tsc_0_0_35_gc",
+    "py": "python313",
+    "python": "python313",
+    "go": "gccgo151",
+    "kotlin": "kotlinc2121",
+    "kt": "kotlinc2121",
+    "kot": "kotlinc2121",
+    "swift": "swift61",
+    "zig": "z0141",
+    "java": "java2400",
+    "fsharp": "dotnet80fsharpmono",
+    "fs": "dotnet80fsharpmono",
+    "csharp": "dotnet80csharpmono",
+    "cs": "dotnet80csharpmono",
 }
+
+compiler_map_wandbox = {
+    "bash": "bash",
+    "sh": "bash",
+    "d": "dmd-2.109.1",
+    "elixir": "elixir-1.17.3",
+    "erlang": "erlang-27.1",
+    "groovy": "groovy-4.0.23",
+    "javascript": "nodejs-20.17.0",
+    "js": "nodejs-20.17.0",
+    "lisp": "clisp-2.49",
+    "lua": "lua-5.4.7",
+    "nim": "nim-2.2.4",
+    "ocaml": "ocaml-5.2.0",
+    "pascal": "fpc-3.2.2",
+    "perl": "perl-5.40.0",
+    "php": "php-8.3.12",
+    "pony": "pony-0.58.5",
+    "r": "r-4.4.1",
+    "ruby": "ruby-3.4.1",
+    "sql": "sqlite-3.46.1",
+    "swift": "swift-6.0.1",
+    "typescript": "typescript-5.6.2",
+}
+
+
+class CodeDispatch(ABC):
+    def __init__(self, compiler_map: dict[str, str]):
+        self.compiler_map = compiler_map
+
+    async def run(self, lang: str, code: str, opts: str | None):
+        language = self.compiler_map.get(lang)
+        return None if language is None else await self._execute(language, code, opts)
+
+    @abstractmethod
+    async def _execute(self, lang: str, code: str, opts: str | None) -> str | None: ...
+
+
+class GodboltService(CodeDispatch):
+    async def _execute(self, lang: str, code: str, opts: str | None):
+        if lang in {"c++", "cpp"}:
+            opts = f"{' ' if opts is None else opts} -xc++ -lstdc++ -shared-libgcc"
+
+        out = godbolt.getoutput(code, lang, opts)
+        if not out:
+            return None
+        lines = out.split("\n")
+        return "\n".join(lines[5:])
+
+
+class WandboxService(CodeDispatch):
+    async def _execute(self, lang: str, code: str, opts: str | None):
+        output = ""
+        temp = wandbox.getoutput(code, lang, opts)
+        if not temp:
+            return None
+        if temp["compiler_error"] != "":
+            output = f"{output} {temp['compiler_error']}"
+        if temp["program_output"] != "":
+            output = f"{output} {temp['program_output']}"
+
+        return "\n".join(output.split("\n")[1:])
 
 
 class Run(commands.Cog):
@@ -45,9 +105,13 @@ class Run(commands.Cog):
         self.bot = bot
         self.run.usage = generate_usage(self.run)
         self.languages.usage = generate_usage(self.languages)
+        self.services = {
+            "godbolt": GodboltService(compiler_map_godbolt),
+            "wandbox": WandboxService(compiler_map_wandbox),
+        }
 
     @staticmethod
-    def remove_ansi(ansi: str) -> str:
+    def __remove_ansi(ansi: str) -> str:
         """
         Converts ANSI encoded text into non-ANSI.
 
@@ -65,7 +129,7 @@ class Run(commands.Cog):
         return ansi_re.sub("", ansi)
 
     @staticmethod
-    def remove_backticks(st: str) -> str:
+    def __remove_backticks(st: str) -> str:
         """
         Removes backticks from the provided string.
 
@@ -82,148 +146,11 @@ class Run(commands.Cog):
 
         return ticks_re.sub("", st)
 
-    async def generalized_code_executor(
-        self,
-        ctx: commands.Context[Tux],
-        compiler_map: dict[str, str],
-        code: str,
-        options: str | None = None,
-    ) -> tuple[str, str, str]:
-        """
-        A generalized version of the code executor.
+    def __parse_code(self, st: str) -> tuple[str, str]:
+        cleaned_code = self.__remove_backticks(st)
+        return cleaned_code.split("\n").pop(0), "\n".join(cleaned_code.splitlines()[1:])
 
-        Parameters
-        ----------
-        ctx : commands.Context[Tux]
-            The context in which the command is invoked.
-        compiler_map : dict[str, str]
-            A dictionary containing mappings from a language to its compiler.
-        code : str
-            A string consisting of the code.
-        options : str | None
-            Optional arguments to be passed to the compiler.
-
-        Returns
-        -------
-        tuple[str, str, str]
-            A tuple containing the filtered output, the first few lines of the output, and the normalized language.
-        """
-
-        cleaned_code = self.remove_backticks(code)
-        normalized_lang = cleaned_code.splitlines().pop(0)
-        cleaned_code = "\n".join(cleaned_code.splitlines()[1:])
-
-        if normalized_lang not in compiler_map:
-            embed = EmbedCreator.create_embed(
-                bot=self.bot,
-                embed_type=EmbedCreator.ERROR,
-                user_name=ctx.author.name,
-                user_display_avatar=ctx.author.display_avatar.url,
-                title="Fatal exception occurred!",
-                description="Bad Formatting",
-            )
-            await ctx.send(embed=embed)
-            return ("", "", "")
-
-        compiler_id = compiler_map[normalized_lang]
-        output = godbolt.getoutput(cleaned_code, compiler_id, options)
-
-        if output is None:
-            embed = EmbedCreator.create_embed(
-                bot=self.bot,
-                embed_type=EmbedCreator.ERROR,
-                user_name=ctx.author.name,
-                user_display_avatar=ctx.author.display_avatar.url,
-                title="Fatal exception occurred!",
-                description="failed to get output from the compiler",
-            )
-            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
-            return ("", "", "")
-
-        lines = output.split("\n")
-        gen_one = lines[0]
-        filtered_output = "\n".join(lines[1:])
-
-        return (filtered_output, gen_one, normalized_lang)
-
-    async def generalized_code_constructor(
-        self,
-        ctx: commands.Context[Tux],
-        compiler_map: dict[str, str],
-        code: str,
-        options: str | None = None,
-    ) -> tuple[str, str, str]:
-        """
-        A generalized version of the assembly generation function used previously.
-
-        Parameters
-        ----------
-        ctx : commands.Context[Tux]
-            The context in which the command is invoked.
-        compiler_map : dict[str, str]
-            A dictionary containing mappings from a language to its compiler.
-        code : str
-            A string consisting of the code.
-        options : str | None
-            Optional arguments to be passed to the compiler.
-
-        Returns
-        -------
-        tuple[str, str, str] | None
-            A tuple containing the filtered output, the first few lines of the output, and the normalized language.
-        """
-
-        cleaned_code = self.remove_backticks(code)
-        normalized_lang = cleaned_code.splitlines().pop(0)
-        cleaned_code = "\n".join(cleaned_code.splitlines()[1:])
-
-        if normalized_lang not in compiler_map:
-            embed = EmbedCreator.create_embed(
-                bot=self.bot,
-                embed_type=EmbedCreator.ERROR,
-                user_name=ctx.author.name,
-                user_display_avatar=ctx.author.display_avatar.url,
-                title="Fatal exception occurred!",
-                description="Bad Formatting",
-            )
-            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
-            return ("", "", "")
-
-        compiler_id = compiler_map[normalized_lang]
-        output = godbolt.generateasm(cleaned_code, compiler_id, options)
-
-        if output is None:
-            embed = EmbedCreator.create_embed(
-                bot=self.bot,
-                embed_type=EmbedCreator.ERROR,
-                user_name=ctx.author.name,
-                user_display_avatar=ctx.author.display_avatar.url,
-                title="Fatal exception occurred!",
-                description="failed to get output from the compiler",
-            )
-            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
-            return ("", "", "")
-
-        lines = output.split("\n")
-        gen_one = lines[0]
-        filtered_output = "\n".join(lines[1:])
-
-        if len(filtered_output) > 3500:
-            return (
-                "The assembly is too big to fit! Please do it on the GodBolt website instead.",
-                gen_one,
-                normalized_lang,
-            )
-
-        return (filtered_output, gen_one, normalized_lang)
-
-    async def send_embedded_reply(
-        self,
-        ctx: commands.Context[Tux],
-        gen_one: str,
-        output: str,
-        lang: str,
-    ) -> None:
+    async def send_embedded_reply(self, ctx: commands.Context[Tux], output: str, lang: str, is_wandbox: bool) -> None:
         """
         A generalized version of an embed.
 
@@ -231,12 +158,12 @@ class Run(commands.Cog):
         ----------
         ctx : commands.Context[Tux]
             The context in which the command is invoked.
-        gen_one : str
-            The first few lines of the output.
         output : str
             The output.
         lang : str
             The language of the code.
+        is_wandbox: bool
+            True if Wandbox is used as the backend.
         """
 
         embed = EmbedCreator.create_embed(
@@ -244,11 +171,21 @@ class Run(commands.Cog):
             embed_type=EmbedCreator.INFO,
             user_name=ctx.author.name,
             user_display_avatar=ctx.author.display_avatar.url,
-            title="Compilation provided by https://godbolt.org/",
-            description=f"```{lang}\n{output}\n```",
+            title="",
+            description=f"{f'Service provided by {"[Wandbox](https://wandbox.org)" if is_wandbox else "[Godbolt](https://godbolt.org/)"}'}\n```{lang}\n{output}\n```",
         )
 
-        await ctx.send(embed=embed)
+        button = discord.ui.Button(style=discord.ButtonStyle.red, label="✖ Close")  # type: ignore
+        view = discord.ui.View()
+        view.add_item(button)  # type: ignore
+
+        async def button_callback(interaction: discord.Interaction):
+            if interaction.message is not None:
+                await interaction.message.delete()
+
+        button.callback = button_callback
+
+        await ctx.send(embed=embed, view=view)
 
     @commands.command(
         name="run",
@@ -258,34 +195,87 @@ class Run(commands.Cog):
         self,
         ctx: commands.Context[Tux],
         *,
-        code: str,
+        code: str | None,
     ):
         """
-        Run code in various languages. Code should be enclosed in triple backticks with syntax highlighting.
+        Run code in various languages. Code should be enclosed in triple backticks.
 
         Parameters
         ----------
         ctx : commands.Context[Tux]
             The context in which the command is invoked.
-        code : str
-            The code to be evaluated.
+        code : str | None
+            The code to be evaluated. Provide None if the code is supposed to be grabbed from the message replied to.
         """
+        await ctx.message.add_reaction("<a:BreakdancePengu:1378346831250985061>")
 
-        msg = await ctx.send("<a:typing:1236671731859722270>")
+        # checks if the author replied to a message or not.
+        if ctx.message.reference is not None:
+            msg = await ctx.fetch_message(ctx.message.reference.message_id)  # type: ignore
+        else:
+            msg = None
 
-        (filtered_output, gen_one, normalized_lang) = await self.generalized_code_executor(
-            ctx,
-            compiler_map,
-            code,
-        )
-        await msg.delete()
-        if not filtered_output and not gen_one and not normalized_lang:
+        # if the code wasnt provided, and there was no reply, Error out.
+        if code is None and msg is None:
+            raise commands.MissingRequiredArgument(
+                commands.Parameter(name="code", kind=commands.Parameter.KEYWORD_ONLY),
+            )
+
+        # if there was no code, but there was a reply.
+        if not code and msg:
+            code = msg.content.split("```", 1)[1] if "```" in msg.content else None
+
+        # if the reply was badly formatted
+        if code is None:
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                title="Fatal Exception occurred!",
+                description="Bad formatting.",
+            )
+            await ctx.message.clear_reaction("<a:BreakdancePengu:1378346831250985061>")
+            await ctx.send(embed=embed)
             return
+
+        (language, code) = self.__parse_code(code)
+        is_wandbox = "wandbox" if language in compiler_map_wandbox else "godbolt"
+
+        if language not in compiler_map_godbolt and language not in compiler_map_wandbox:
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                title="Fatal exception occurred.",
+                description=f"No compiler could be found for target '{language}'.",
+            )
+            await ctx.message.clear_reaction("<a:BreakdancePengu:1378346831250985061>")
+            await ctx.send(embed=embed)
+            return
+
+        filtered_output = await self.services[is_wandbox].run(language, code, None)
+
+        if not filtered_output:
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                title="Fatal exception occurred!",
+                description="failed to get output from the compiler.",
+            )
+            await ctx.message.clear_reaction("<a:BreakdancePengu:1378346831250985061>")
+            await ctx.send(embed=embed, delete_after=30)
+            return
+
+        await ctx.message.clear_reaction("<a:BreakdancePengu:1378346831250985061>")
         await self.send_embedded_reply(
             ctx,
-            gen_one,
-            self.remove_ansi(filtered_output),
-            normalized_lang,
+            self.__remove_ansi(filtered_output),
+            language,
+            is_wandbox == "wandbox",
         )
 
     @run.error
@@ -308,6 +298,7 @@ class Run(commands.Cog):
         desc = ""
         if isinstance(error, commands.CommandInvokeError):
             desc = error.original
+
         if isinstance(error, commands.MissingRequiredArgument):
             desc = f"Missing required argument: `{error.param.name}`"
 
@@ -320,7 +311,8 @@ class Run(commands.Cog):
             description=str(desc),
         )
 
-        await ctx.send(embed=embed, ephemeral=True, delete_after=30)
+        await ctx.message.clear_reaction("<a:BreakdancePengu:1378346831250985061>")
+        await ctx.send(embed=embed, delete_after=30)
 
     @commands.command(
         name="languages",
@@ -342,7 +334,7 @@ class Run(commands.Cog):
             user_name=ctx.author.name,
             user_display_avatar=ctx.author.display_avatar.url,
             title="Supported Languages",
-            description=f"```{', '.join(compiler_map.keys())}```",
+            description="```C, C++, C#, F#, OCaml, Haskell, Julia, Python, Javascript, Typescript, Ruby, SQL, Java, Nim, Lisp, Pascal, Perl, Pony, PHP, R, Swift, Groovy, D, Bash, Rust, Kotlin```",
         )
 
         await ctx.send(embed=embed)
