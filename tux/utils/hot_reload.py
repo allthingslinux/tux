@@ -15,7 +15,7 @@ import sys
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import ModuleType
@@ -55,7 +55,7 @@ class FileSystemWatcherProtocol(Protocol):
 @dataclass(frozen=True)
 class HotReloadConfig:
     """
-    Configuration for hot reload system following 12-factor principles.
+    Configuration for hot reload system.
 
     Environment Variables
     ---------------------
@@ -63,10 +63,12 @@ class HotReloadConfig:
         Seconds to wait after file change before reloading (prevents reloading while typing).
     HOT_RELOAD_VALIDATE_SYNTAX : bool, default=true
         Whether to validate Python syntax before attempting reload (prevents Sentry spam).
+    HOT_RELOAD_PREPOPULATE_HASHES : bool, default=true
+        Whether to pre-populate file hashes at startup (improves change detection but may impact startup time).
     """
 
     # File watching configuration
-    debounce_delay: float = float(os.getenv("HOT_RELOAD_DEBOUNCE_DELAY", "2.0"))  # Increased from 0.5 to 2.0 seconds
+    debounce_delay: float = float(os.getenv("HOT_RELOAD_DEBOUNCE_DELAY", "2.0"))
     cleanup_threshold: int = int(os.getenv("HOT_RELOAD_CLEANUP_THRESHOLD", "100"))
     max_dependency_depth: int = int(os.getenv("HOT_RELOAD_MAX_DEPENDENCY_DEPTH", "5"))
     cache_cleanup_interval: int = int(os.getenv("HOT_RELOAD_CACHE_CLEANUP_INTERVAL", "300"))
@@ -78,6 +80,7 @@ class HotReloadConfig:
         os.getenv("HOT_RELOAD_ENABLE_PERFORMANCE_MONITORING", "true").lower() == "true"
     )
     validate_syntax: bool = os.getenv("HOT_RELOAD_VALIDATE_SYNTAX", "true").lower() == "true"
+    prepopulate_hashes: bool = os.getenv("HOT_RELOAD_PREPOPULATE_HASHES", "true").lower() == "true"
 
     # Observability configuration
     log_level: str = os.getenv("HOT_RELOAD_LOG_LEVEL", "INFO")
@@ -93,6 +96,11 @@ class HotReloadConfig:
         default_factory=lambda: [
             pattern.strip()
             for pattern in os.getenv("HOT_RELOAD_IGNORE_PATTERNS", ".tmp,.bak,.swp,__pycache__").split(",")
+        ],
+    )
+    hash_extensions: Sequence[str] = field(
+        default_factory=lambda: [
+            pattern.strip() for pattern in os.getenv("HOT_RELOAD_HASH_EXTENSIONS", ".py").split(",")
         ],
     )
 
@@ -180,6 +188,12 @@ def get_extension_from_path(file_path: Path, base_dir: Path) -> str | None:
         relative_path = file_path.relative_to(base_dir)
         # Remove the .py extension
         path_without_ext = relative_path.with_suffix("")
+
+        # Special handling for __init__.py files - remove the __init__ suffix
+        # so that package directories are mapped correctly
+        if path_without_ext.name == "__init__":
+            path_without_ext = path_without_ext.parent
+
         # Convert to dot notation
         extension = str(path_without_ext).replace(os.sep, ".")
     except ValueError:
@@ -205,21 +219,18 @@ def validate_python_syntax(file_path: Path) -> bool:
     try:
         with file_path.open("r", encoding="utf-8") as f:
             content = f.read()
+    except OSError as e:
+        logger.debug(f"Failed to read file {file_path.name}: {e}")
+        return False
 
-        # Try to parse the file as Python AST
-        try:
-            ast.parse(content, filename=str(file_path))
-        except SyntaxError:
-            return False
-        else:
-            return True
-
+    # Try to parse the file as Python AST
+    try:
+        ast.parse(content, filename=str(file_path))
     except SyntaxError as e:
         logger.debug(f"Syntax error in {file_path.name} (line {e.lineno}): {e.msg}. Skipping hot reload.")
         return False
-    except Exception as e:
-        logger.debug(f"Failed to validate syntax for {file_path.name}: {e}")
-        return False
+    else:
+        return True
 
 
 @contextmanager
@@ -421,7 +432,7 @@ class DependencyGraph(DependencyTracker):
 
     @span("dependency.scan_dependencies")
     def scan_dependencies(self, file_path: Path) -> set[str]:
-        """Enhanced dependency scanning with better import detection."""
+        """Scan a Python file for import dependencies."""
         if not file_path.exists() or file_path.suffix != ".py":
             return set()
 
@@ -434,20 +445,9 @@ class DependencyGraph(DependencyTracker):
 
             for node in ast.walk(tree):
                 if isinstance(node, ast.Import):
-                    for alias in node.names:
-                        if alias.name and alias.name.startswith(("tux.", "discord")):
-                            dependencies.add(alias.name)
-
-                elif isinstance(node, ast.ImportFrom) and node.module:
-                    if node.module.startswith(("tux.", "discord")):
-                        dependencies.add(node.module)
-                    # Handle relative imports
-                    elif (
-                        node.level > 0
-                        and (abs_module := self._resolve_relative_import(file_path, node.module, node.level))
-                        and abs_module.startswith("tux.")
-                    ):
-                        dependencies.add(abs_module)
+                    self._process_import_node(node, dependencies)
+                elif isinstance(node, ast.ImportFrom):
+                    self._process_import_from_node(node, dependencies, file_path)
 
         except Exception as e:
             logger.debug(f"Error scanning dependencies in {file_path}: {e}")
@@ -456,6 +456,37 @@ class DependencyGraph(DependencyTracker):
             return set()
         else:
             return dependencies
+
+    def _process_import_node(self, node: ast.Import, dependencies: set[str]) -> None:
+        """Process a regular import node."""
+        for alias in node.names:
+            if alias.name and alias.name.startswith(("tux.", "discord")):
+                dependencies.add(alias.name)
+
+    def _process_import_from_node(self, node: ast.ImportFrom, dependencies: set[str], file_path: Path) -> None:
+        """Process an import-from node."""
+        if node.module and node.module.startswith(("tux.", "discord")):
+            dependencies.add(node.module)
+        elif node.level > 0:
+            self._process_relative_import(node, dependencies, file_path)
+
+    def _process_relative_import(self, node: ast.ImportFrom, dependencies: set[str], file_path: Path) -> None:
+        """Process relative imports."""
+        if node.module:
+            # Standard relative import: from .module import something
+            if (
+                abs_module := self._resolve_relative_import(file_path, node.module, node.level)
+            ) and abs_module.startswith("tux."):
+                dependencies.add(abs_module)
+        else:
+            # Pure relative import: from . import something
+            for alias in node.names:
+                if (
+                    alias.name
+                    and (abs_module := self._resolve_relative_import(file_path, None, node.level, alias.name))
+                    and abs_module.startswith("tux.")
+                ):
+                    dependencies.add(abs_module)
 
     def has_file_changed(self, file_path: Path, *, silent: bool = False) -> bool:
         """Check if file has actually changed since last scan."""
@@ -472,8 +503,17 @@ class DependencyGraph(DependencyTracker):
             return self._class_tracker.get_changed_classes(module_name, file_path)
         return []
 
-    def _resolve_relative_import(self, file_path: Path, module: str | None, level: int) -> str | None:
-        """Resolve relative imports to absolute module names."""
+    def _resolve_relative_import(
+        self,
+        file_path: Path,
+        module: str | None,
+        level: int,
+        imported_name: str | None = None,
+    ) -> str | None:
+        """Resolve relative imports to absolute module names.
+
+        If `module` is None (pure relative import), treat as importing from the current package.
+        """
         try:
             # Get the module path relative to tux package
             base_dir = Path(__file__).parent.parent
@@ -486,6 +526,14 @@ class DependencyGraph(DependencyTracker):
             for _ in range(level - 1):
                 if path_parts:
                     path_parts.pop()
+
+            if module is None and imported_name is not None:
+                # Pure relative import: from . import foo
+                # Remove the last component (the module itself) to get the package
+                package_parts = path_parts.copy()
+                if package_parts:
+                    return f"tux.{'.'.join(package_parts)}.{imported_name}"
+                return f"tux.{imported_name}"
 
             # Add the relative module if provided
             if module:
@@ -737,36 +785,33 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         # Pre-populate hash cache for all Python files in watched directories
         # This eliminates "first encounter" issues for any file
         cached_files = self._populate_all_file_hashes()
-
         if cached_files > 0:
-            logger.debug(f"Pre-populated hash cache for {cached_files} Python files")
+            logger.debug(f"Pre-populated hash cache for {cached_files} files")
 
         logger.debug(f"Mapped {extension_count} extensions for hot reload")
 
     def _populate_all_file_hashes(self) -> int:
-        """Pre-populate hash cache for all Python files in watched directories."""
+        """
+        Pre-populate hash cache for all files in watched directories matching configured extensions.
+        This can be disabled via configuration to avoid startup overhead.
+        """
+        if not self._config.prepopulate_hashes:
+            logger.debug("Hash pre-population disabled in configuration")
+            return 0
+
         cached_count = 0
 
         # Get the root watch path (this includes the entire tux directory)
         watch_root = Path(self.path)
 
-        try:
-            # Scan all Python files recursively
-            for py_file in watch_root.rglob("*.py"):
-                # Skip files we don't want to track
-                if (
-                    py_file.name.startswith(".")
-                    or py_file.name.endswith((".tmp", ".bak", ".swp"))
-                    or "__pycache__" in str(py_file)
-                ):
-                    continue
-
-                # Pre-populate cache silently
-                self.dependency_graph.has_file_changed(py_file, silent=True)
-                cached_count += 1
-
-        except Exception as e:
-            logger.debug(f"Error during file cache pre-population: {e}")
+        for ext in self._config.hash_extensions:
+            for file_path in watch_root.rglob(f"*{ext}"):
+                try:
+                    # Pre-populate cache silently using the public method
+                    self.dependency_graph.has_file_changed(file_path, silent=True)
+                    cached_count += 1
+                except Exception as e:
+                    logger.warning(f"Failed to hash {file_path}: {e}")
 
         return cached_count
 
@@ -784,6 +829,8 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         try:
             self.observer.stop()
             self.observer.join(timeout=5.0)  # Add timeout to prevent hanging
+            if self.observer.is_alive():
+                logger.warning("File watcher observer thread did not terminate within the timeout period.")
         except Exception as e:
             logger.error(f"Error stopping file watcher: {e}")
 
@@ -1036,9 +1083,6 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
     def _reload_extension(self, extension: str) -> None:
         """Reload an extension with proper error handling."""
         try:
-            # Add a small delay to ensure file write is complete
-            time.sleep(0.1)
-
             # Schedule async reload
             asyncio.run_coroutine_threadsafe(self._async_reload_extension(extension), self.loop)
         except Exception as e:
@@ -1049,8 +1093,6 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
     def _reload_help(self) -> None:
         """Reload the help command with proper error handling."""
         try:
-            time.sleep(0.1)  # Ensure file write is complete
-
             # Schedule async reload - simplify task tracking
             asyncio.run_coroutine_threadsafe(self._async_reload_help(), self.loop)
         except Exception as e:
@@ -1061,15 +1103,14 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
     @span("reload.extension")
     async def _async_reload_extension(self, extension: str) -> None:
         """Asynchronously reload an extension with logging (for single reloads)."""
-        try:
-            # Clear related module cache entries before reloading
-            if modules_to_clear := [key for key in sys.modules if key.startswith(extension)]:
-                logger.debug(f"Clearing {len(modules_to_clear)} cached modules for {extension}")
-                for module_key in modules_to_clear:
-                    del sys.modules[module_key]
+        # Add a small delay to ensure file write is complete
+        await asyncio.sleep(0.1)
 
-            # Reload the extension
-            await self.bot.reload_extension(extension)
+        # Clear related module cache entries before reloading
+        self._clear_extension_modules(extension, verbose=True)
+
+        with suppress(commands.ExtensionNotLoaded):
+            await self._reload_extension_core(extension)
 
             # Log individual reloads at INFO level for single operations
             if extension.startswith("tux.cogs"):
@@ -1077,44 +1118,59 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
                 logger.info(f"✅ Reloaded {short_name}")
             else:
                 logger.info(f"✅ Reloaded extension {extension}")
-        except commands.ExtensionNotLoaded:
-            try:
-                # Try to load it if it wasn't loaded before
-                await self.bot.load_extension(extension)
-                logger.info(f"✅ Loaded new extension {extension}")
 
-                # Update our mapping
-                path = path_from_extension(extension)
-                self.path_to_extension[str(path)] = extension
-            except commands.ExtensionError as e:
-                logger.error(f"❌ Failed to load new extension {extension}: {e}")
-                # Only send to Sentry if it's not a common development error
-                if sentry_sdk.is_initialized() and not self._is_development_error(e):
-                    sentry_sdk.capture_exception(e)
+    def _clear_extension_modules(self, extension: str, *, verbose: bool = True) -> None:
+        """Clear modules related to an extension from sys.modules."""
+        module = sys.modules.get(extension)
+        if module and hasattr(module, "__file__") and module.__file__:
+            extension_root = Path(module.__file__).parent.resolve()
+            modules_to_clear: list[str] = []
+            for key, mod in list(sys.modules.items()):
+                if key == extension or key.startswith(f"{extension}."):
+                    mod_file = getattr(mod, "__file__", None)
+                    if mod_file and Path(mod_file).parent.resolve().is_relative_to(extension_root):
+                        modules_to_clear.append(key)
+            if modules_to_clear:
+                if verbose:
+                    logger.debug(f"Clearing {len(modules_to_clear)} cached modules for {extension}: {modules_to_clear}")
+                for module_key in modules_to_clear:
+                    del sys.modules[module_key]
+        # Fallback to prefix matching if we can't determine file location
+        elif modules_to_clear := [key for key in sys.modules if key.startswith(extension)]:
+            if verbose:
+                logger.debug(f"Clearing {len(modules_to_clear)} cached modules for {extension}")
+            for module_key in modules_to_clear:
+                del sys.modules[module_key]
+
+    async def _handle_extension_not_loaded(self, extension: str) -> None:
+        """Handle the case when an extension is not loaded."""
+        try:
+            # Try to load it if it wasn't loaded before
+            await self.bot.load_extension(extension)
+            logger.info(f"✅ Loaded new extension {extension}")
+
+            # Update our mapping
+            path = path_from_extension(extension)
+            self.path_to_extension[str(path)] = extension
+        except commands.ExtensionError as e:
+            logger.error(f"❌ Failed to load new extension {extension}: {e}")
+            # Only send to Sentry if it's not a common development error
+            if sentry_sdk.is_initialized() and not self._is_development_error(e):
+                sentry_sdk.capture_exception(e)
+
+    async def _reload_extension_core(self, extension: str) -> None:
+        """Core extension reloading logic."""
+        try:
+            await self.bot.reload_extension(extension)
+        except commands.ExtensionNotLoaded:
+            await self._handle_extension_not_loaded(extension)
+            raise
         except commands.ExtensionError as e:
             logger.error(f"❌ Failed to reload extension {extension}: {e}")
             # Only send to Sentry if it's not a common development error
             if sentry_sdk.is_initialized() and not self._is_development_error(e):
                 sentry_sdk.capture_exception(e)
-
-    def _is_development_error(self, exception: Exception) -> bool:
-        """Check if an exception is a common development error that shouldn't spam Sentry."""
-        error_msg = str(exception).lower()
-
-        # Common development errors that shouldn't spam Sentry
-        development_indicators = [
-            "syntaxerror",
-            "indentationerror",
-            "unexpected indent",
-            "invalid syntax",
-            "name is not defined",
-            "cannot import name",
-            "no module named",
-            "expected an indented block",
-            "unindent does not match",
-        ]
-
-        return any(indicator in error_msg for indicator in development_indicators)
+            raise
 
     @span("reload.help")
     async def _async_reload_help(self) -> None:
@@ -1193,36 +1249,11 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
 
     async def _async_reload_extension_quiet(self, extension: str) -> None:
         """Quietly reload an extension without individual logging."""
-        try:
-            # Clear related module cache entries before reloading
-            if modules_to_clear := [key for key in sys.modules if key.startswith(extension)]:
-                for module_key in modules_to_clear:
-                    del sys.modules[module_key]
+        # Clear related module cache entries before reloading (without verbose logging)
+        self._clear_extension_modules(extension, verbose=False)
 
-            # Reload the extension
-            await self.bot.reload_extension(extension)
-
-        except commands.ExtensionNotLoaded:
-            try:
-                # Try to load it if it wasn't loaded before
-                await self.bot.load_extension(extension)
-                logger.info(f"✅ Loaded new extension {extension}")
-
-                # Update our mapping
-                path = path_from_extension(extension)
-                self.path_to_extension[str(path)] = extension
-            except commands.ExtensionError as e:
-                logger.error(f"❌ Failed to load new extension {extension}: {e}")
-                # Only send to Sentry if it's not a common development error
-                if sentry_sdk.is_initialized() and not self._is_development_error(e):
-                    sentry_sdk.capture_exception(e)
-                raise
-        except commands.ExtensionError as e:
-            logger.error(f"❌ Failed to reload extension {extension}: {e}")
-            # Only send to Sentry if it's not a common development error
-            if sentry_sdk.is_initialized() and not self._is_development_error(e):
-                sentry_sdk.capture_exception(e)
-            raise
+        # Use core reload logic
+        await self._reload_extension_core(extension)
 
     def _get_flag_classes_used(self, extension_name: str) -> bool:
         """Get list of flag classes used by an extension."""
@@ -1274,6 +1305,35 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
             "all_loaded_cogs": list(self.bot.extensions.keys()),
             "dependency_graph_size": len(self.dependency_graph.get_all_tracked_modules()),
         }
+
+    def _is_development_error(self, exception: Exception) -> bool:
+        """Check if an exception is a common development error that shouldn't spam Sentry."""
+        # Check exception types first - more reliable than string matching
+        development_exception_types = (
+            SyntaxError,
+            IndentationError,
+            NameError,
+            ImportError,
+            ModuleNotFoundError,
+            AttributeError,
+        )
+
+        if isinstance(exception, development_exception_types):
+            return True
+
+        # Fallback to string matching for specific message patterns
+        error_msg = str(exception).lower()
+        development_indicators = [
+            "unexpected indent",
+            "invalid syntax",
+            "name is not defined",
+            "cannot import name",
+            "no module named",
+            "expected an indented block",
+            "unindent does not match",
+        ]
+
+        return any(indicator in error_msg for indicator in development_indicators)
 
 
 def watch(
