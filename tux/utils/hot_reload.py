@@ -54,10 +54,19 @@ class FileSystemWatcherProtocol(Protocol):
 
 @dataclass(frozen=True)
 class HotReloadConfig:
-    """Configuration for hot reload system following 12-factor principles."""
+    """
+    Configuration for hot reload system following 12-factor principles.
+
+    Environment Variables
+    ---------------------
+    HOT_RELOAD_DEBOUNCE_DELAY : float, default=2.0
+        Seconds to wait after file change before reloading (prevents reloading while typing).
+    HOT_RELOAD_VALIDATE_SYNTAX : bool, default=true
+        Whether to validate Python syntax before attempting reload (prevents Sentry spam).
+    """
 
     # File watching configuration
-    debounce_delay: float = float(os.getenv("HOT_RELOAD_DEBOUNCE_DELAY", "0.5"))
+    debounce_delay: float = float(os.getenv("HOT_RELOAD_DEBOUNCE_DELAY", "2.0"))  # Increased from 0.5 to 2.0 seconds
     cleanup_threshold: int = int(os.getenv("HOT_RELOAD_CLEANUP_THRESHOLD", "100"))
     max_dependency_depth: int = int(os.getenv("HOT_RELOAD_MAX_DEPENDENCY_DEPTH", "5"))
     cache_cleanup_interval: int = int(os.getenv("HOT_RELOAD_CACHE_CLEANUP_INTERVAL", "300"))
@@ -68,6 +77,7 @@ class HotReloadConfig:
     enable_performance_monitoring: bool = (
         os.getenv("HOT_RELOAD_ENABLE_PERFORMANCE_MONITORING", "true").lower() == "true"
     )
+    validate_syntax: bool = os.getenv("HOT_RELOAD_VALIDATE_SYNTAX", "true").lower() == "true"
 
     # Observability configuration
     log_level: str = os.getenv("HOT_RELOAD_LOG_LEVEL", "INFO")
@@ -176,6 +186,40 @@ def get_extension_from_path(file_path: Path, base_dir: Path) -> str | None:
         return None
     else:
         return f"tux.{extension}"
+
+
+def validate_python_syntax(file_path: Path) -> bool:
+    """
+    Validate that a Python file has correct syntax before attempting to reload.
+
+    Parameters
+    ----------
+    file_path : Path
+        The path to the Python file to validate.
+
+    Returns
+    -------
+    bool
+        True if syntax is valid, False otherwise.
+    """
+    try:
+        with file_path.open("r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Try to parse the file as Python AST
+        try:
+            ast.parse(content, filename=str(file_path))
+        except SyntaxError:
+            return False
+        else:
+            return True
+
+    except SyntaxError as e:
+        logger.debug(f"Syntax error in {file_path.name} (line {e.lineno}): {e.msg}. Skipping hot reload.")
+        return False
+    except Exception as e:
+        logger.debug(f"Failed to validate syntax for {file_path.name}: {e}")
+        return False
 
 
 @contextmanager
@@ -802,6 +846,11 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
 
         logger.debug(f"Processing file change: {file_path.name}")
 
+        # Validate syntax before attempting reload (if enabled)
+        if self._config.validate_syntax and file_path.suffix == ".py" and not validate_python_syntax(file_path):
+            logger.debug(f"Skipping hot reload for {file_path.name} due to syntax errors")
+            return
+
         try:
             # Handle special cases first
             if self._handle_special_files(file_path):
@@ -1039,12 +1088,33 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
                 self.path_to_extension[str(path)] = extension
             except commands.ExtensionError as e:
                 logger.error(f"❌ Failed to load new extension {extension}: {e}")
-                if sentry_sdk.is_initialized():
+                # Only send to Sentry if it's not a common development error
+                if sentry_sdk.is_initialized() and not self._is_development_error(e):
                     sentry_sdk.capture_exception(e)
         except commands.ExtensionError as e:
             logger.error(f"❌ Failed to reload extension {extension}: {e}")
-            if sentry_sdk.is_initialized():
+            # Only send to Sentry if it's not a common development error
+            if sentry_sdk.is_initialized() and not self._is_development_error(e):
                 sentry_sdk.capture_exception(e)
+
+    def _is_development_error(self, exception: Exception) -> bool:
+        """Check if an exception is a common development error that shouldn't spam Sentry."""
+        error_msg = str(exception).lower()
+
+        # Common development errors that shouldn't spam Sentry
+        development_indicators = [
+            "syntaxerror",
+            "indentationerror",
+            "unexpected indent",
+            "invalid syntax",
+            "name is not defined",
+            "cannot import name",
+            "no module named",
+            "expected an indented block",
+            "unindent does not match",
+        ]
+
+        return any(indicator in error_msg for indicator in development_indicators)
 
     @span("reload.help")
     async def _async_reload_help(self) -> None:
@@ -1143,12 +1213,14 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
                 self.path_to_extension[str(path)] = extension
             except commands.ExtensionError as e:
                 logger.error(f"❌ Failed to load new extension {extension}: {e}")
-                if sentry_sdk.is_initialized():
+                # Only send to Sentry if it's not a common development error
+                if sentry_sdk.is_initialized() and not self._is_development_error(e):
                     sentry_sdk.capture_exception(e)
                 raise
         except commands.ExtensionError as e:
             logger.error(f"❌ Failed to reload extension {extension}: {e}")
-            if sentry_sdk.is_initialized():
+            # Only send to Sentry if it's not a common development error
+            if sentry_sdk.is_initialized() and not self._is_development_error(e):
                 sentry_sdk.capture_exception(e)
             raise
 

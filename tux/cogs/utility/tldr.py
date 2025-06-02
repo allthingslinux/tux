@@ -19,11 +19,12 @@ class Tldr(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.default_language: str = self.detect_bot_language()
-        self.prefix_tldr.usage = generate_usage(self.prefix_tldr)
+        self.prefix_tldr.usage = generate_usage(self.prefix_tldr, TldrFlags)
         self._cache_checked = False  # Track if cache has been checked
 
     async def cog_load(self):
         """Check cache age and update if necessary when the cog is loaded (initial startup only)."""
+
         # Skip cache checks during hot reloads - only check on initial startup
         if self._cache_checked:
             logger.debug("TLDR Cog: Skipping cache check (hot reload detected)")
@@ -121,9 +122,9 @@ class Tldr(commands.Cog):
         command="The command to look up (e.g. tar, git-commit, etc)",
         platform="Platform (e.g. linux, osx, common)",
         language="Language code (e.g. en, es, fr)",
-        show_short="Show only short options for placeholders",
-        show_long="Show only long options for placeholders",
-        show_both="Show both short and long options for placeholders",
+        show_short="Display shortform options over longform.",
+        show_long="Display longform options over shortform.",
+        show_both="Display both short and long options.",
     )
     @app_commands.autocomplete(
         platform=platform_autocomplete,
@@ -153,30 +154,26 @@ class Tldr(commands.Cog):
 
     @commands.command(name="tldr", aliases=["man"])
     @commands.guild_only()
-    async def prefix_tldr(self, ctx: commands.Context[Tux], *, flags: TldrFlags):
-        """Show a TLDR page for a CLI command.
+    async def prefix_tldr(
+        self,
+        ctx: commands.Context[Tux],
+        command: str,
+        *,
+        flags: TldrFlags,
+    ) -> None:
+        """Show a TLDR page for a CLI command. If spaces are required, use hyphens instead.
 
         Parameters
         ----------
         ctx : commands.Context[Tux]
             The context of the command.
+        command : str
+            The command to look up (e.g. tar, git-commit, etc).
         flags : TldrFlags
-            The flags for the command.
+            The flags for the command. (platform: str | None, language: str | None, show_short: bool, show_long: bool, show_both: bool)
         """
-        # Check if command is provided
-        if not flags.command:
-            await ctx.send_help(ctx.command)
-            return
-
-        # Check if command contains spaces and warn user
-        if " " in flags.command:
-            await ctx.send(
-                f"⚠️ Command `{flags.command}` contains spaces. "
-                f"TLDR commands use hyphens instead of spaces. Try `{flags.command.replace(' ', '-')}` instead.",
-            )
-            return
-
         render_short, render_long, render_both = False, False, False
+
         if flags.show_both:
             render_both = True
         elif flags.show_short:
@@ -186,7 +183,7 @@ class Tldr(commands.Cog):
 
         await self._handle_tldr_command_prefix(
             ctx=ctx,
-            command_name=flags.command,
+            command_name=command,
             platform=flags.platform,
             language=flags.language,
             show_short=render_short,

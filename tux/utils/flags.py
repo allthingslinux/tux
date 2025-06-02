@@ -280,28 +280,33 @@ class PollUnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" 
 
 
 class TldrFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    command: str = commands.flag(
-        name="command",
-        positional=True,
-        description="The command to look up (e.g. tar, git-commit, etc)",
-    )
     platform: str | None = commands.flag(
+        name="platform",
         description="Platform (e.g. linux, osx, common)",
+        aliases=["p"],
         default=None,
     )
     language: str | None = commands.flag(
+        name="language",
         description="Language code (e.g. en, es, fr)",
+        aliases=["lang", "l"],
         default=None,
     )
     show_short: bool = commands.flag(
-        description="Show only short options for placeholders",
+        name="show_short",
+        description="Display shortform options over longform.",
+        aliases=["short"],
         default=False,
     )
     show_long: bool = commands.flag(
-        description="Show only long options for placeholders",
+        name="show_long",
+        description="Display longform options over shortform.",
+        aliases=["long"],
         default=True,
     )
     show_both: bool = commands.flag(
-        description="Show both short and long options for placeholders",
+        name="show_both",
+        description="Display both short and long options.",
+        aliases=["both"],
         default=False,
     )
