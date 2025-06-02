@@ -69,5 +69,9 @@ class Constants:
     AFK_PREFIX = "[AFK] "
     AFK_TRUNCATION_SUFFIX = "..."
 
+    # 8ball constants
+    EIGHT_BALL_QUESTION_LENGTH_LIMIT = 120
+    EIGHT_BALL_RESPONSE_WRAP_WIDTH = 30
+
 
 CONST = Constants()
