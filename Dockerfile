@@ -11,7 +11,6 @@ RUN apt-get update && \
   libpango1.0-0 \
   libpangocairo-1.0-0 \
   shared-mime-info \
-  tealdeer \
   ffmpeg && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
@@ -113,11 +112,12 @@ ENV VIRTUAL_ENV=/app/.venv \
 # Ensure ownership is set to nonroot
 COPY --from=build --chown=nonroot:nonroot /app /app
 
+# Create TLDR cache directory with proper permissions for the nonroot user
+RUN mkdir -p /app/.cache/tldr && \
+  chown -R nonroot:nonroot /app/.cache
+
 # Switch to the non-root user
 USER nonroot
-
-# tldr stuff
-RUN tldr --update
 
 ENTRYPOINT ["tux"]
 CMD ["--prod", "start"]
