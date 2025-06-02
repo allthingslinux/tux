@@ -5,7 +5,8 @@ from loguru import logger
 from prisma.enums import CaseType
 from tux.bot import Tux
 from tux.utils import checks
-from tux.utils.flags import JailFlags, generate_usage
+from tux.utils.flags import JailFlags
+from tux.utils.functions import generate_usage
 
 from . import ModerationCogBase
 

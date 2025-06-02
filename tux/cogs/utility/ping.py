@@ -3,7 +3,7 @@ from discord.ext import commands
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
-from tux.utils.flags import generate_usage
+from tux.utils.functions import generate_usage
 
 
 class Ping(commands.Cog):

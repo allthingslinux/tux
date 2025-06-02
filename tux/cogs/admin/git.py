@@ -6,7 +6,7 @@ from tux.ui.buttons import GithubButton
 from tux.ui.embeds import EmbedCreator
 from tux.utils import checks
 from tux.utils.config import CONFIG
-from tux.utils.flags import generate_usage
+from tux.utils.functions import generate_usage
 from tux.wrappers.github import GithubService
 
 

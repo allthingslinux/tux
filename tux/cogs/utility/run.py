@@ -6,7 +6,7 @@ from discord.ext import commands
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
-from tux.utils.flags import generate_usage
+from tux.utils.functions import generate_usage
 from tux.wrappers import godbolt, wandbox
 
 ansi_re = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
@@ -68,9 +68,7 @@ class CodeDispatch(ABC):
 
     async def run(self, lang: str, code: str, opts: str | None):
         language = self.compiler_map.get(lang)
-        if language is None:
-            return None
-        return await self._execute(language, code, opts)
+        return None if language is None else await self._execute(language, code, opts)
 
     @abstractmethod
     async def _execute(self, lang: str, code: str, opts: str | None) -> str | None: ...

@@ -53,7 +53,7 @@ repos:
 
     # 6. Security Check
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.26.0 # Use the latest tag from the repo
+    rev: v8.27.0 # Use the latest tag from the repo
     hooks:
       - id: gitleaks
 

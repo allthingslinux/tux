@@ -3,7 +3,7 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.utils.constants import CONST
-from tux.utils.flags import generate_usage
+from tux.utils.functions import generate_usage
 
 from . import SnippetsBaseCog
 

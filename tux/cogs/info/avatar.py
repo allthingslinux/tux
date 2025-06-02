@@ -7,7 +7,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.utils.flags import generate_usage
+from tux.utils.functions import generate_usage
 
 client = httpx.AsyncClient()
 
