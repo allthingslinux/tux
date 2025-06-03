@@ -33,11 +33,13 @@ def getoutput(code: str, compiler: str, options: str | None) -> dict[str, Any] |
     """
 
     copt = options if options is not None else ""
-
+    headers = {
+        "Content-Type": "application/json",
+    }
     payload = {"compiler": compiler, "code": code, "options": copt}
 
     try:
-        uri = client.post(url, json=payload)
+        uri = client.post(url, json=payload, headers=headers)
         uri.raise_for_status()
     except httpx.ReadTimeout as e:
         # Changed to raise APIConnectionError for timeouts
