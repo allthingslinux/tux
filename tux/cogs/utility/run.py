@@ -59,6 +59,7 @@ compiler_map_wandbox = {
     "sql": "sqlite-3.46.1",
     "swift": "swift-6.0.1",
     "typescript": "typescript-5.6.2",
+    "ts": "typescript-5.6.2",
 }
 
 
@@ -82,6 +83,7 @@ class GodboltService(CodeDispatch):
         out = godbolt.getoutput(code, lang, opts)
         if not out:
             return None
+
         lines = out.split("\n")
         return "\n".join(lines[5:])
 
@@ -92,12 +94,16 @@ class WandboxService(CodeDispatch):
         temp = wandbox.getoutput(code, lang, opts)
         if not temp:
             return None
-        if temp["compiler_error"] != "":
+        if (
+            temp["compiler_error"] != "" and self.compiler_map.get("nim") != lang
+        ):  # Nim decides to do some absolutely horrible debug messages.
             output = f"{output} {temp['compiler_error']}"
         if temp["program_output"] != "":
             output = f"{output} {temp['program_output']}"
 
-        return "\n".join(output.split("\n")[1:])
+        if len(output.split("\n")) >= 2:
+            output = "".join(output.split("\n")[:1]).lstrip()
+        return output
 
 
 class Run(commands.Cog):
@@ -207,38 +213,22 @@ class Run(commands.Cog):
         code : str | None
             The code to be evaluated. Provide None if the code is supposed to be grabbed from the message replied to.
         """
-        await ctx.message.add_reaction("<a:BreakdancePengu:1378346831250985061>")
 
         # checks if the author replied to a message or not.
-        if ctx.message.reference is not None:
-            msg = await ctx.fetch_message(ctx.message.reference.message_id)  # type: ignore
+        if ctx.message.reference is not None and ctx.message.reference.message_id is not None:
+            msg = await ctx.fetch_message(ctx.message.reference.message_id)
         else:
             msg = None
 
-        # if the code wasnt provided, and there was no reply, Error out.
-        if code is None and msg is None:
-            raise commands.MissingRequiredArgument(
-                commands.Parameter(name="code", kind=commands.Parameter.KEYWORD_ONLY),
-            )
+        # neither code, nor message
+        if not code and not msg:
+            raise commands.MissingRequiredArgument(next(iter(self.run.params.values())))
 
         # if there was no code, but there was a reply.
         if not code and msg:
             code = msg.content.split("```", 1)[1] if "```" in msg.content else None
 
-        # if the reply was badly formatted
-        if code is None:
-            embed = EmbedCreator.create_embed(
-                bot=self.bot,
-                embed_type=EmbedCreator.ERROR,
-                user_name=ctx.author.name,
-                user_display_avatar=ctx.author.display_avatar.url,
-                title="Fatal Exception occurred!",
-                description="Bad formatting.",
-            )
-            await ctx.message.clear_reaction("<a:BreakdancePengu:1378346831250985061>")
-            await ctx.send(embed=embed)
-            return
-
+        await ctx.message.add_reaction("<a:BreakdancePengu:1378346831250985061>")
         (language, code) = self.__parse_code(code)
         is_wandbox = "wandbox" if language in compiler_map_wandbox else "godbolt"
 
@@ -257,7 +247,7 @@ class Run(commands.Cog):
 
         filtered_output = await self.services[is_wandbox].run(language, code, None)
 
-        if not filtered_output:
+        if filtered_output is None:
             embed = EmbedCreator.create_embed(
                 bot=self.bot,
                 embed_type=EmbedCreator.ERROR,
@@ -277,42 +267,6 @@ class Run(commands.Cog):
             language,
             is_wandbox == "wandbox",
         )
-
-    @run.error
-    async def run_error(
-        self,
-        ctx: commands.Context[Tux],
-        error: Exception,
-    ):
-        """
-        A generalized error handler for the run command.
-
-        Parameters
-        ----------
-        ctx : commands.Context[Tux]
-            The context in which the command is invoked.
-        error : Exception
-            The error that occurred.
-        """
-
-        desc = ""
-        if isinstance(error, commands.CommandInvokeError):
-            desc = error.original
-
-        if isinstance(error, commands.MissingRequiredArgument):
-            desc = f"Missing required argument: `{error.param.name}`"
-
-        embed = EmbedCreator.create_embed(
-            bot=self.bot,
-            embed_type=EmbedCreator.ERROR,
-            user_name=ctx.author.name,
-            user_display_avatar=ctx.author.display_avatar.url,
-            title="Fatal exception occurred!",
-            description=str(desc),
-        )
-
-        await ctx.message.clear_reaction("<a:BreakdancePengu:1378346831250985061>")
-        await ctx.send(embed=embed, delete_after=30)
 
     @commands.command(
         name="languages",
