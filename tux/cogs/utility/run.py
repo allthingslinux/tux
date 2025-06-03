@@ -101,9 +101,7 @@ class WandboxService(CodeDispatch):
         if temp["program_output"] != "":
             output = f"{output} {temp['program_output']}"
 
-        if len(output.split("\n")) >= 2:
-            output = "".join(output.split("\n")[:1]).lstrip()
-        return output
+        return output.strip()
 
 
 class Run(commands.Cog):
@@ -171,7 +169,6 @@ class Run(commands.Cog):
         is_wandbox: bool
             True if Wandbox is used as the backend.
         """
-
         embed = EmbedCreator.create_embed(
             bot=self.bot,
             embed_type=EmbedCreator.INFO,
