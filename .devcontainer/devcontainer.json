@@ -17,14 +17,13 @@
     }
   },
   "features": {
-    "ghcr.io/devcontainers/features/github-cli:1": {} // gh/github cli
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "customizations": {
     "vscode": {
       "extensions": [
         "ms-python.python",
         "ms-python.vscode-pylance",
-        // "ms-azuretools.vscode-docker",
         "charliermarsh.ruff",
         "prisma.prisma",
         "kevinrose.vsc-python-indent",
