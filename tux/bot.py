@@ -167,7 +167,10 @@ class Tux(commands.Bot):
 
     async def _post_ready_startup(self):
         """Run after the bot is fully ready: log banner, set Sentry stats."""
-        await self.wait_until_ready()
+        await self.wait_until_ready()  # Wait for Discord connection and READY event
+
+        # Also wait for internal bot setup (cogs, db, etc.) to complete
+        await self._wait_for_setup()
 
         if not self.start_time:
             self.start_time = discord.utils.utcnow().timestamp()
@@ -275,7 +278,7 @@ class Tux(commands.Bot):
             try:
                 all_tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
                 tasks_by_type = self._categorize_tasks(all_tasks)
-                await self._cancel_finished_tasks(tasks_by_type)
+                await self._process_finished_tasks(tasks_by_type)
 
             except Exception as e:
                 logger.error(f"Task monitoring failed: {e}")
@@ -311,8 +314,8 @@ class Tux(commands.Bot):
 
         return tasks_by_type
 
-    async def _cancel_finished_tasks(self, tasks_by_type: dict[str, list[asyncio.Task[Any]]]) -> None:
-        """Cancel and clean up finished tasks."""
+    async def _process_finished_tasks(self, tasks_by_type: dict[str, list[asyncio.Task[Any]]]) -> None:
+        """Process and clean up finished tasks."""
         for task_list in tasks_by_type.values():
             for task in task_list:
                 if task.done():
