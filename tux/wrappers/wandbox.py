@@ -2,6 +2,12 @@ from typing import Any
 
 import httpx
 
+from tux.utils.exceptions import (
+    APIConnectionError,
+    APIRequestError,
+    APIResourceNotFoundError,
+)
+
 client = httpx.Client(timeout=15)
 url = "https://wandbox.org/api/compile.json"
 
@@ -33,7 +39,19 @@ def getoutput(code: str, compiler: str, options: str | None) -> dict[str, Any] |
     try:
         uri = client.post(url, json=payload)
         uri.raise_for_status()
-    except httpx.ReadTimeout:
-        return None
+    except httpx.ReadTimeout as e:
+        # Changed to raise APIConnectionError for timeouts
+        raise APIConnectionError(service_name="Wandbox", original_error=e) from e
+    except httpx.RequestError as e:
+        # General connection/request error
+        raise APIConnectionError(service_name="Wandbox", original_error=e) from e
+    except httpx.HTTPStatusError as e:
+        # Specific HTTP status errors
+        if e.response.status_code == 404:
+            raise APIResourceNotFoundError(
+                service_name="Wandbox",
+                resource_identifier=compiler,
+            ) from e  # Using compiler as resource identifier
+        raise APIRequestError(service_name="Wandbox", status_code=e.response.status_code, reason=e.response.text) from e
     else:
         return uri.json() if uri.status_code == httpx.codes.OK else None

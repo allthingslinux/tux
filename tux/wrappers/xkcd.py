@@ -7,6 +7,12 @@ from typing import Any
 import httpx
 from PIL import Image, UnidentifiedImageError
 
+from tux.utils.exceptions import (
+    APIConnectionError,
+    APIRequestError,
+    APIResourceNotFoundError,
+)
+
 
 class HttpError(Exception):
     def __init__(self, status_code: int, reason: str) -> None:
@@ -295,7 +301,15 @@ class Client:
             response.raise_for_status()
 
         except httpx.HTTPStatusError as exc:
-            raise HttpError(exc.response.status_code, exc.response.reason_phrase) from exc
+            if exc.response.status_code == 404:
+                raise APIResourceNotFoundError(service_name="xkcd", resource_identifier=str(comic_id)) from exc
+            raise APIRequestError(
+                service_name="xkcd",
+                status_code=exc.response.status_code,
+                reason=exc.response.reason_phrase,
+            ) from exc
+        except httpx.RequestError as exc:
+            raise APIConnectionError(service_name="xkcd", original_error=exc) from exc
 
         return response.text
 
@@ -321,14 +335,22 @@ class Client:
         """
 
         if not raw_image_url:
-            raise HttpError(404, "Image URL not found")
+            raise APIResourceNotFoundError(service_name="xkcd", resource_identifier="image_url_not_provided")
 
         try:
             response = httpx.get(raw_image_url)
             response.raise_for_status()
 
         except httpx.HTTPStatusError as exc:
-            raise HttpError(exc.response.status_code, exc.response.reason_phrase) from exc
+            if exc.response.status_code == 404:
+                raise APIResourceNotFoundError(service_name="xkcd", resource_identifier=raw_image_url) from exc
+            raise APIRequestError(
+                service_name="xkcd",
+                status_code=exc.response.status_code,
+                reason=exc.response.reason_phrase,
+            ) from exc
+        except httpx.RequestError as exc:
+            raise APIConnectionError(service_name="xkcd", original_error=exc) from exc
 
         return response.content
 
