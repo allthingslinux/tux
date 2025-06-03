@@ -1,12 +1,9 @@
-import contextlib
-from datetime import datetime
-
 import discord
 from discord.ext import commands
 from loguru import logger
 
 from prisma.enums import CaseType
-from prisma.models import Case, Snippet
+from prisma.models import Snippet
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator, EmbedType
@@ -37,37 +34,12 @@ class SnippetsBaseCog(commands.Cog):
         bool
             True if the user is snippet banned, False otherwise.
         """
-        ban_cases: list[Case] = await self.db.case.get_cases_by_options(
+        return await self.db.case.is_user_under_restriction(
             guild_id=guild_id,
-            options={"case_user_id": user_id, "case_type": CaseType.SNIPPETBAN},
+            user_id=user_id,
+            active_restriction_type=CaseType.SNIPPETBAN,
+            inactive_restriction_type=CaseType.SNIPPETUNBAN,
         )
-        unban_cases: list[Case] = await self.db.case.get_cases_by_options(
-            guild_id=guild_id,
-            options={"case_user_id": user_id, "case_type": CaseType.SNIPPETUNBAN},
-        )
-
-        if not ban_cases:
-            return False
-
-        if unban_cases:
-            latest_ban_time: datetime | None = None
-            latest_unban_time: datetime | None = None
-
-            with contextlib.suppress(ValueError):
-                latest_ban_time = max(case.case_created_at for case in ban_cases if case.case_created_at)
-            with contextlib.suppress(ValueError):
-                latest_unban_time = max(case.case_created_at for case in unban_cases if case.case_created_at)
-
-            if latest_ban_time is None or latest_unban_time is None:
-                if latest_ban_time is not None:
-                    return True
-
-                logger.warning(f"Could not determine latest ban/unban time for user {user_id} in guild {guild_id}")
-                return True  # Assume banned if times are unclear
-
-            return latest_ban_time > latest_unban_time
-
-        return True
 
     def _create_snippets_list_embed(
         self,
