@@ -16,10 +16,10 @@ class Poll(commands.Cog):
         self.bot = bot
         self.db = DatabaseController()
 
-    # TODO: for the moment this is duplicated code from ModerationCogBase in a attempt to get the code out sooner
     async def is_pollbanned(self, guild_id: int, user_id: int) -> bool:
         """
-        Check if a user is poll banned.
+        Check if a user is currently poll banned.
+        The user is considered poll banned if their latest relevant case (POLLBAN or POLLUNBAN) is a POLLBAN.
 
         Parameters
         ----------
@@ -33,16 +33,14 @@ class Poll(commands.Cog):
         bool
             True if the user is poll banned, False otherwise.
         """
+        latest_case = await self.db.case.get_latest_case_by_user(
+            guild_id=guild_id,
+            user_id=user_id,
+            case_types=[CaseType.POLLBAN, CaseType.POLLUNBAN],
+        )
 
-        ban_cases = await self.db.case.find_many(where={"case_type": CaseType.POLLBAN})
-        unban_cases = await self.db.case.find_many(where={"case_type": CaseType.POLLUNBAN})
-
-        ban_count = sum(case.case_user_id == user_id for case in ban_cases)
-        unban_count = sum(case.case_user_id == user_id for case in unban_cases)
-
-        return (
-            ban_count > unban_count
-        )  # TODO: this implementation is flawed, if someone bans and unbans the same user multiple times, this will not work as expected
+        # If no relevant cases exist, the user is not poll banned.
+        return latest_case.case_type == CaseType.POLLBAN if latest_case else False
 
     @commands.Cog.listener()  # listen for messages
     async def on_message(self, message: discord.Message) -> None:
