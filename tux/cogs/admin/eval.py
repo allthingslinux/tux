@@ -77,7 +77,6 @@ class Eval(commands.Cog):
                 )
                 await ctx.send(
                     "You are not the bot owner and sysadmins are not allowed to use eval. Please contact your bot owner if you need assistance.",
-                    ephemeral=True,
                     delete_after=30,
                 )
                 return
@@ -87,7 +86,6 @@ class Eval(commands.Cog):
             )
             await ctx.send(
                 "You are not the bot owner. Better luck next time! (hint: if you are looking for the regular run command its $run)",
-                ephemeral=True,
                 delete_after=30,
             )
             return
