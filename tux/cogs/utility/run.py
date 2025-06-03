@@ -225,8 +225,21 @@ class Run(commands.Cog):
         if not code and msg:
             code = msg.content.split("```", 1)[1] if "```" in msg.content else None
 
-        await ctx.message.add_reaction("<a:BreakdancePengu:1378346831250985061>")
+        if code is None:
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                title="Fatal Exception occurred!",
+                description="Bad formatting.",
+            )
+            await ctx.send(embed=embed)
+            return
+
         (language, code) = self.__parse_code(code)
+
+        await ctx.message.add_reaction("<a:BreakdancePengu:1378346831250985061>")
         is_wandbox = "wandbox" if language in compiler_map_wandbox else "godbolt"
 
         if language not in compiler_map_godbolt and language not in compiler_map_wandbox:
