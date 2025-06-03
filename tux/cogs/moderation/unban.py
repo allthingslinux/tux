@@ -7,7 +7,8 @@ from prisma.enums import CaseType
 from tux.bot import Tux
 from tux.utils import checks
 from tux.utils.constants import CONST
-from tux.utils.flags import UnbanFlags, generate_usage
+from tux.utils.flags import UnbanFlags
+from tux.utils.functions import generate_usage
 
 from . import ModerationCogBase
 

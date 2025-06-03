@@ -1,10 +1,12 @@
 import random
+from textwrap import shorten, wrap
 
 from discord.ext import commands
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
-from tux.utils.flags import generate_usage
+from tux.utils.constants import CONST
+from tux.utils.functions import generate_usage
 
 
 class Random(commands.Cog):
@@ -107,27 +109,22 @@ class Random(commands.Cog):
             "lmao",
             "fuck off",
         ]
-        choice = random.choice(random.choice([yes_responses, no_responses, unsure_responses]))
+        choice = random.choice(yes_responses + no_responses + unsure_responses)
 
-        if len(question) > 120:
-            response = """  _________________________________________
-< That question is too long! Try a new one. >
-  -----------------------------------------
-   \\
-    \\
-        .--.
-       |o_o |
-       |:_/ |
-      //   \\ \\
-     (|     | )
-    /'\\_   _/`\\
-    \\___)=(___/
-"""
-        elif cow:
-            response = f"""Response to "{question}":
-  {"_" * len(choice)}
-< {choice} >
-  {"-" * len(choice)}
+        width = min(CONST.EIGHT_BALL_RESPONSE_WRAP_WIDTH, len(choice))
+        chunks = wrap(choice, width)
+
+        if len(chunks) > 1:
+            chunks = [chunk.ljust(width) for chunk in chunks]
+
+        formatted_choice = f"  {'_' * width}\n< {' >\n< '.join(chunks)} >\n  {'-' * width}"
+
+        shortened_question = shorten(question, width=CONST.EIGHT_BALL_QUESTION_LENGTH_LIMIT, placeholder="...")
+
+        response = f'Response to "{shortened_question}":\n{formatted_choice}'
+
+        if cow:
+            response += """
         \\   ^__^
          \\  (oo)\\_______
             (__)\\       )\\/\\
@@ -135,10 +132,7 @@ class Random(commands.Cog):
                 ||     ||
 """
         else:
-            response = f"""Response to "{question}":
-  {"_" * len(choice)}
-< {choice} >
-  {"-" * len(choice)}
+            response += """
    \\
     \\
         .--.

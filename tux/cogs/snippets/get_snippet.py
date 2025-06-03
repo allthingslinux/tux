@@ -3,7 +3,7 @@ from discord.ext import commands
 from reactionmenu import ViewButton, ViewMenu
 
 from tux.bot import Tux
-from tux.utils.flags import generate_usage
+from tux.utils.functions import generate_usage
 
 # from tux.utils.functions import truncate
 from . import SnippetsBaseCog
@@ -84,7 +84,10 @@ class Snippet(SnippetsBaseCog):
             # Set reply target if it exists, otherwise use the context message
             reply_target = reference if isinstance(reference, Message) else ctx
 
-            await reply_target.reply(text, allowed_mentions=AllowedMentions.none())
+            await reply_target.reply(
+                text,
+                allowed_mentions=AllowedMentions(users=False, roles=False, everyone=False, replied_user=True),
+            )
             return
 
         menu = ViewMenu(

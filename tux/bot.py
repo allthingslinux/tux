@@ -53,7 +53,6 @@ class Tux(commands.Bot):
         self.setup_complete: bool = False
         self.start_time: float | None = None
         self.setup_task: asyncio.Task[None] | None = None
-        self.cog_watcher: Any = None
         self.active_sentry_transactions: dict[int, Any] = {}
 
         self._emoji_manager_initialized = False
@@ -77,6 +76,10 @@ class Tux(commands.Bot):
                 span.set_tag("setup_phase", "database_connected")
                 await self._load_extensions()
                 span.set_tag("setup_phase", "extensions_loaded")
+                await self._load_cogs()
+                span.set_tag("setup_phase", "cogs_loaded")
+                await self._setup_hot_reload()
+                span.set_tag("setup_phase", "hot_reload_ready")
                 self._start_monitoring()
                 span.set_tag("setup_phase", "monitoring_started")
 
@@ -123,8 +126,6 @@ class Tux(commands.Bot):
                 span.set_tag("jishaku.loaded", False)
                 span.set_data("error", str(e))
 
-        await self.load_cogs()
-
     def _start_monitoring(self) -> None:
         """Start the background task monitoring loop."""
         self._monitor_tasks_loop.start()
@@ -157,10 +158,6 @@ class Tux(commands.Bot):
 
     async def setup_hook(self) -> None:
         """discord.py setup_hook: one-time async setup before connecting to Discord."""
-        if not self._hot_reload_loaded and "tux.utils.hot_reload" not in self.extensions:
-            await self.load_extension("tux.utils.hot_reload")
-            self._hot_reload_loaded = True
-
         if not self._emoji_manager_initialized:
             await self.emoji_manager.init()
             self._emoji_manager_initialized = True
@@ -189,6 +186,14 @@ class Tux(commands.Bot):
                     "uptime": discord.utils.utcnow().timestamp() - (self.start_time or 0),
                 },
             )
+
+    async def on_ready(self) -> None:
+        """Handle bot ready event."""
+        await self._wait_for_setup()
+
+        # Set bot status
+        activity = discord.Activity(type=discord.ActivityType.watching, name="for /help")
+        await self.change_presence(activity=activity, status=discord.Status.online)
 
     async def on_disconnect(self) -> None:
         """Log and report when the bot disconnects from Discord."""
@@ -335,7 +340,7 @@ class Tux(commands.Bot):
             await self._close_connections()
             transaction.set_tag("connections_closed", True)
 
-            logger.info("Shutdown complete.")
+            logger.info("Bot shutdown complete.")
 
     async def _handle_setup_task(self) -> None:
         """Handle setup task during shutdown."""
@@ -452,8 +457,8 @@ class Tux(commands.Bot):
                 if sentry_sdk.is_initialized():
                     sentry_sdk.capture_exception(e)
 
-    async def load_cogs(self) -> None:
-        """Load cogs using CogLoader."""
+    async def _load_cogs(self) -> None:
+        """Load bot cogs using CogLoader."""
         with start_span("bot.load_cogs", "Loading all cogs") as span:
             logger.info("Loading cogs...")
 
@@ -484,3 +489,16 @@ class Tux(commands.Bot):
             )
 
             console.print(banner)
+
+    async def _setup_hot_reload(self) -> None:
+        """Set up hot reload system after all cogs are loaded."""
+        if not self._hot_reload_loaded and "tux.utils.hot_reload" not in self.extensions:
+            with start_span("bot.setup_hot_reload", "Setting up hot reload system"):
+                try:
+                    await self.load_extension("tux.utils.hot_reload")
+                    self._hot_reload_loaded = True
+                    logger.info("🔥 Hot reload system initialized")
+                except Exception as e:
+                    logger.error(f"Failed to load hot reload extension: {e}")
+                    if sentry_sdk.is_initialized():
+                        sentry_sdk.capture_exception(e)

@@ -7,7 +7,7 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.utils import checks
-from tux.utils.flags import generate_usage
+from tux.utils.functions import generate_usage
 
 
 class Purge(commands.Cog):

@@ -6,8 +6,8 @@ from discord.ext import commands
 from prisma.enums import CaseType
 from tux.bot import Tux
 from tux.utils import checks
-from tux.utils.flags import TimeoutFlags, generate_usage
-from tux.utils.functions import parse_time_string
+from tux.utils.flags import TimeoutFlags
+from tux.utils.functions import generate_usage, parse_time_string
 
 from . import ModerationCogBase
 
