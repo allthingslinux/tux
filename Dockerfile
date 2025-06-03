@@ -82,6 +82,20 @@ FROM build AS dev
 
 WORKDIR /app
 
+ARG DEVCONTAINER=0
+ENV DEVCONTAINER=${DEVCONTAINER}
+
+# Conditionally install zsh if building for devcontainer
+RUN if [ "$DEVCONTAINER" = "1" ]; then \
+      apt-get update && \
+      apt-get install -y zsh && \
+      chsh -s /usr/bin/zsh && \
+      apt-get clean && rm -rf /var/lib/apt/lists/*; \
+    else \
+      echo "Not building for devcontainer, skipping devcontainer dependencies installation"; \
+    fi
+
+
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
   poetry install --only dev --no-root --no-directory
 

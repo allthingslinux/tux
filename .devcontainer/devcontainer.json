@@ -10,9 +10,29 @@
   "forwardPorts": [
     3000
   ],
-  "remoteUser": "appuser",
+  "build": {
+    "target": "dev",
+    "args": {
+      "DEVCONTAINER": "1"
+    }
+  },
   "features": {
-    "github-cli": "latest",
-    "ghcr.io/devcontainers-contrib/features/pre-commit:2": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {} // gh/github cli
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        // "ms-azuretools.vscode-docker",
+        "charliermarsh.ruff",
+        "prisma.prisma",
+        "kevinrose.vsc-python-indent",
+        "mikestead.dotenv",
+        "njpwerner.autodocstring",
+        "usernamehw.errorlens",
+        "redhat.vscode-yaml"
+      ]
+    }
   }
 }
