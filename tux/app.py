@@ -58,6 +58,9 @@ class TuxApp:
                 profiles_sample_rate=1.0,
             )
 
+            # Add additional global tags
+            sentry_sdk.set_tag("discord_library_version", discord.__version__)
+
             logger.info(f"Sentry initialized: {sentry_sdk.is_initialized()}")
 
         except Exception as e:
