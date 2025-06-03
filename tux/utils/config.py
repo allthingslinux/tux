@@ -40,6 +40,7 @@ class Config:
     # Permissions
     BOT_OWNER_ID: Final[int] = config["USER_IDS"]["BOT_OWNER"]
     SYSADMIN_IDS: Final[list[int]] = config["USER_IDS"]["SYSADMINS"]
+    ALLOW_SYSADMINS_EVAL: Final[bool] = config["ALLOW_SYSADMINS_EVAL"]
 
     # Production env
     DEFAULT_PROD_PREFIX: Final[str] = config["BOT_INFO"]["PROD_PREFIX"]
