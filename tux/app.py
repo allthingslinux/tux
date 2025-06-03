@@ -105,12 +105,24 @@ class TuxApp:
         if not self.validate_config():
             return
 
+        owner_ids = {CONFIG.BOT_OWNER_ID}
+        if CONFIG.ALLOW_SYSADMINS_EVAL:
+            logger.warning(
+                "Sysadmins are allowed to use eval commands. This can be potentially dangerous if you have not fully read the comments about this in settings.yml.",
+            )
+            owner_ids.update(CONFIG.SYSADMIN_IDS)
+        else:
+            logger.warning(
+                "Sysadmins are not allowed to use eval commands. Read settings.yml for more info on this. You can safely ignore this warning if you are not a sysadmin.",
+            )
+
         self.bot = Tux(
             command_prefix=get_prefix,
             strip_after_prefix=True,
             case_insensitive=True,
             intents=discord.Intents.all(),
-            owner_ids={CONFIG.BOT_OWNER_ID, *CONFIG.SYSADMIN_IDS},
+            # owner_ids={CONFIG.BOT_OWNER_ID, *CONFIG.SYSADMIN_IDS},
+            owner_ids=owner_ids,
             allowed_mentions=discord.AllowedMentions(everyone=False),
             help_command=TuxHelp(),
             activity=None,
