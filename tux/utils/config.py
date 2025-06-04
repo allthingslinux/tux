@@ -1,7 +1,7 @@
 import base64
 import os
 from pathlib import Path
-from typing import Final
+from typing import Any, Final, cast
 
 import yaml
 from dotenv import load_dotenv
@@ -38,14 +38,18 @@ config_file_example = workspace_root / "config/settings.yml.example"
 config = yaml.safe_load(config_file.read_text())
 config_example = yaml.safe_load(config_file_example.read_text())
 
-missing_keys = set(config_example.keys()) - set(config.keys())
-if missing_keys:
-    logger.warning(f"The config file is missing the following keys: {', '.join(missing_keys)}. ")
-    logger.warning(
-        "This has been automatically fixed by adding the missing keys with their default values TO THE LOADED CONFIG.",
-    )
-    for key in missing_keys:
-        config[key] = config_example[key]
+
+# Recursively merge defaults into user config (fills nested missing keys too)
+def merge_defaults(user: dict[str, Any], default: dict[str, Any]) -> None:
+    for key, default_val in default.items():
+        if key not in user:
+            user[key] = default_val
+            logger.warning(f"Added missing config key: {key}")
+        elif isinstance(default_val, dict) and isinstance(user.get(key), dict):
+            merge_defaults(user[key], cast(dict[str, Any], default_val))
+
+
+merge_defaults(config, config_example)
 
 
 class Config:
