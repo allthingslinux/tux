@@ -34,23 +34,25 @@ load_dotenv(verbose=True)
 workspace_root = Path(__file__).parent.parent.parent
 
 config_file = workspace_root / "config/settings.yml"
+config_file_example = workspace_root / "config/settings.yml.example"
 config = yaml.safe_load(config_file.read_text())
+config_example = yaml.safe_load(config_file_example.read_text())
+
+missing_keys = set(config_example.keys()) - set(config.keys())
+if missing_keys:
+    logger.warning(f"The config file is missing the following keys: {', '.join(missing_keys)}. ")
+    logger.warning(
+        "This has been automatically fixed by adding the missing keys with their default values TO THE LOADED CONFIG.",
+    )
+    for key in missing_keys:
+        config[key] = config_example[key]
 
 
 class Config:
     # Permissions
     BOT_OWNER_ID: Final[int] = config["USER_IDS"]["BOT_OWNER"]
     SYSADMIN_IDS: Final[list[int]] = config["USER_IDS"]["SYSADMINS"]
-    # ALLOW_SYSADMINS_EVAL: Final[bool] = config["ALLOW_SYSADMINS_EVAL"]
-    # default to false if not specified in config
-    _allow_sysadmins_eval = config.get("ALLOW_SYSADMINS_EVAL")
-    if _allow_sysadmins_eval is None:
-        logger.warning(
-            "ALLOW_SYSADMINS_EVAL not found in config, defaulting to False. "
-            "If you want to use the old behavior, please set it to True in your config.",
-        )
-        _allow_sysadmins_eval = False
-    ALLOW_SYSADMINS_EVAL: Final[bool] = _allow_sysadmins_eval
+    ALLOW_SYSADMINS_EVAL: Final[bool] = config["ALLOW_SYSADMINS_EVAL"]
 
     # Production env
     DEFAULT_PROD_PREFIX: Final[str] = config["BOT_INFO"]["PROD_PREFIX"]
