@@ -1,7 +1,7 @@
 import base64
 import os
 from pathlib import Path
-from typing import Final
+from typing import Any, Final, cast
 
 import yaml
 from dotenv import load_dotenv
@@ -34,23 +34,29 @@ load_dotenv(verbose=True)
 workspace_root = Path(__file__).parent.parent.parent
 
 config_file = workspace_root / "config/settings.yml"
+config_file_example = workspace_root / "config/settings.yml.example"
 config = yaml.safe_load(config_file.read_text())
+config_example = yaml.safe_load(config_file_example.read_text())
+
+
+# Recursively merge defaults into user config (fills nested missing keys too)
+def merge_defaults(user: dict[str, Any], default: dict[str, Any]) -> None:
+    for key, default_val in default.items():
+        if key not in user:
+            user[key] = default_val
+            logger.warning(f"Added missing config key: {key}")
+        elif isinstance(default_val, dict) and isinstance(user.get(key), dict):
+            merge_defaults(user[key], cast(dict[str, Any], default_val))
+
+
+merge_defaults(config, config_example)
 
 
 class Config:
     # Permissions
     BOT_OWNER_ID: Final[int] = config["USER_IDS"]["BOT_OWNER"]
     SYSADMIN_IDS: Final[list[int]] = config["USER_IDS"]["SYSADMINS"]
-    # ALLOW_SYSADMINS_EVAL: Final[bool] = config["ALLOW_SYSADMINS_EVAL"]
-    # default to false if not specified in config
-    _allow_sysadmins_eval = config.get("ALLOW_SYSADMINS_EVAL")
-    if _allow_sysadmins_eval is None:
-        logger.warning(
-            "ALLOW_SYSADMINS_EVAL not found in config, defaulting to False. "
-            "If you want to use the old behavior, please set it to True in your config.",
-        )
-        _allow_sysadmins_eval = False
-    ALLOW_SYSADMINS_EVAL: Final[bool] = _allow_sysadmins_eval
+    ALLOW_SYSADMINS_EVAL: Final[bool] = config["ALLOW_SYSADMINS_EVAL"]
 
     # Production env
     DEFAULT_PROD_PREFIX: Final[str] = config["BOT_INFO"]["PROD_PREFIX"]
