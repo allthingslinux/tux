@@ -115,3 +115,60 @@ class APIPermissionError(APIRequestError):
             status_code,
             reason="API request failed due to insufficient permissions.",
         )
+
+
+# === Code Execution Exceptions ===
+
+
+class CodeExecutionError(Exception):
+    """Base exception for code execution errors."""
+
+
+class MissingCodeError(CodeExecutionError):
+    """Raised when no code is provided for execution."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            "Please provide code with syntax highlighting in this format:\n"
+            '```\n`\u200b``python\nprint("Hello, World!")\n`\u200b``\n```',
+        )
+
+
+class InvalidCodeFormatError(CodeExecutionError):
+    """Raised when code format is invalid."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            "Please provide code with syntax highlighting in this format:\n"
+            '```\n`\u200b``python\nprint("Hello, World!")\n`\u200b``\n```',
+        )
+
+
+class UnsupportedLanguageError(CodeExecutionError):
+    """Raised when the specified language is not supported."""
+
+    def __init__(self, language: str, supported_languages: list[str]) -> None:
+        """
+        Initialize with language-specific error message.
+
+        Parameters
+        ----------
+        language : str
+            The unsupported language that was requested.
+        supported_languages : list[str]
+            List of supported language names.
+        """
+        self.language = language
+        self.supported_languages = supported_languages
+        available_langs = ", ".join(supported_languages)
+
+        super().__init__(
+            f"No compiler found for `{language}`. The following languages are supported:\n```{available_langs}```",
+        )
+
+
+class CompilationError(CodeExecutionError):
+    """Raised when code compilation fails."""
+
+    def __init__(self) -> None:
+        super().__init__("Failed to get output from the compiler. The code may have compilation errors.")
