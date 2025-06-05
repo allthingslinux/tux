@@ -156,7 +156,7 @@ class Jail(ModerationCogBase):
             if user_roles:
                 try:
                     # Try to remove all at once for efficiency
-                    await member.remove_roles(*user_roles, reason=flags.reason, atomic=False)
+                    await member.remove_roles(*user_roles, reason=flags.reason)
                 except Exception as e:
                     logger.warning(
                         f"Failed to remove all roles at once from {member}, falling back to individual removal: {e}",
