@@ -109,7 +109,7 @@ class Unjail(ModerationCogBase):
 
         # Try to add all roles at once
         try:
-            await member.add_roles(*roles_to_add, reason=reason, atomic=False)
+            await member.add_roles(*roles_to_add, reason=reason)
 
         except discord.Forbidden:
             logger.error(f"No permission to add roles to {member}")
