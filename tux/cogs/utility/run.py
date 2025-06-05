@@ -227,11 +227,6 @@ class GodboltService(CodeDispatch):
         str | None
             The execution output with header lines removed, or None if execution failed.
         """
-        # Handle C++ specific options
-        if compiler in {"c++", "cpp"}:
-            base_opts = options or ""
-            options = f"{base_opts} -xc++ -lstdc++ -shared-libgcc".strip()
-
         output = godbolt.getoutput(code, compiler, options)
         if not output:
             return None
@@ -273,7 +268,7 @@ class WandboxService(CodeDispatch):
         output_parts: list[str] = []
 
         # Handle compiler errors (skip for Nim due to verbose debug messages)
-        if (compiler_error := result.get("compiler_error")) and compiler != "nim-2.2.4":
+        if (compiler_error := result.get("compiler_error")) and compiler != self.compiler_map.get("nim"):
             output_parts.append(str(compiler_error))
 
         # Handle program output
