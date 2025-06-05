@@ -1,19 +1,36 @@
+"""
+Code execution cog for running code snippets in various programming languages.
+
+This module provides functionality to execute code using external services
+like Godbolt and Wandbox, with support for multiple programming languages
+and proper error handling through custom exceptions.
+"""
+
 import re
 from abc import ABC, abstractmethod
+from contextlib import suppress
 
 import discord
 from discord.ext import commands
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
+from tux.utils.exceptions import (
+    CompilationError,
+    InvalidCodeFormatError,
+    MissingCodeError,
+    UnsupportedLanguageError,
+)
 from tux.utils.functions import generate_usage
 from tux.wrappers import godbolt, wandbox
 
-ansi_re = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-ticks_re = re.compile(r"```")
+# Constants
+ANSI_PATTERN = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+BACKTICKS_PATTERN = re.compile(r"```")
+LOADING_REACTION = "<a:BreakdancePengu:1378346831250985061>"
 
-
-compiler_map_godbolt = {
+# Compiler mappings
+GODBOLT_COMPILERS = {
     "hs": "ghc984",
     "haskell": "ghc984",
     "c": "g151",
@@ -37,7 +54,7 @@ compiler_map_godbolt = {
     "cs": "dotnet80csharpmono",
 }
 
-compiler_map_wandbox = {
+WANDBOX_COMPILERS = {
     "bash": "bash",
     "sh": "bash",
     "d": "dmd-2.109.1",
@@ -62,235 +79,444 @@ compiler_map_wandbox = {
     "ts": "typescript-5.6.2",
 }
 
+SUPPORTED_LANGUAGES = [
+    "C",
+    "C++",
+    "C#",
+    "F#",
+    "OCaml",
+    "Haskell",
+    "Julia",
+    "Python",
+    "Javascript",
+    "Typescript",
+    "Ruby",
+    "SQL",
+    "Java",
+    "Nim",
+    "Lisp",
+    "Pascal",
+    "Perl",
+    "Pony",
+    "PHP",
+    "R",
+    "Swift",
+    "Groovy",
+    "D",
+    "Bash",
+    "Rust",
+    "Kotlin",
+]
+
+SERVICE_LINKS = {
+    "wandbox": f"[Wandbox]({wandbox.url.split('/api')[0]})",
+    "godbolt": f"[Godbolt]({godbolt.url})",
+}
+
+
+def _remove_ansi(text: str) -> str:
+    """
+    Remove ANSI escape sequences from text.
+
+    Parameters
+    ----------
+    text : str
+        Text containing ANSI escape sequences.
+
+    Returns
+    -------
+    str
+        Text with ANSI sequences removed.
+    """
+    return ANSI_PATTERN.sub("", text)
+
+
+def _remove_backticks(text: str) -> str:
+    """
+    Remove backticks from text.
+
+    Parameters
+    ----------
+    text : str
+        Text containing backticks.
+
+    Returns
+    -------
+    str
+        Text with backticks removed.
+    """
+    return BACKTICKS_PATTERN.sub("", text)
+
 
 class CodeDispatch(ABC):
-    def __init__(self, compiler_map: dict[str, str]):
+    """Abstract base class for code execution services."""
+
+    def __init__(self, compiler_map: dict[str, str]) -> None:
+        """
+        Initialize the code dispatch service.
+
+        Parameters
+        ----------
+        compiler_map : dict[str, str]
+            Mapping of language names to compiler identifiers.
+        """
         self.compiler_map = compiler_map
 
-    async def run(self, lang: str, code: str, opts: str | None):
-        language = self.compiler_map.get(lang)
-        return None if language is None else await self._execute(language, code, opts)
+    async def run(self, language: str, code: str, options: str | None = None) -> str | None:
+        """
+        Execute code using the appropriate compiler.
+
+        Parameters
+        ----------
+        language : str
+            The programming language identifier.
+        code : str
+            The source code to execute.
+        options : str | None, optional
+            Additional compiler options. Defaults to None.
+
+        Returns
+        -------
+        str | None
+            The execution output or None if execution failed.
+        """
+        compiler = self.compiler_map.get(language)
+        if compiler is None:
+            return None
+        return await self._execute(compiler, code, options)
 
     @abstractmethod
-    async def _execute(self, lang: str, code: str, opts: str | None) -> str | None: ...
+    async def _execute(self, compiler: str, code: str, options: str | None) -> str | None:
+        """
+        Execute code with the specified compiler.
+
+        Parameters
+        ----------
+        compiler : str
+            The compiler identifier.
+        code : str
+            The source code to execute.
+        options : str | None
+            Additional compiler options.
+
+        Returns
+        -------
+        str | None
+            The execution output or None if execution failed.
+        """
 
 
 class GodboltService(CodeDispatch):
-    async def _execute(self, lang: str, code: str, opts: str | None):
-        if lang in {"c++", "cpp"}:
-            opts = f"{' ' if opts is None else opts} -xc++ -lstdc++ -shared-libgcc"
+    """Code execution service using Godbolt compiler explorer."""
 
-        out = godbolt.getoutput(code, lang, opts)
-        if not out:
+    async def _execute(self, compiler: str, code: str, options: str | None) -> str | None:
+        """
+        Execute code using Godbolt service.
+
+        Parameters
+        ----------
+        compiler : str
+            The Godbolt compiler identifier.
+        code : str
+            The source code to compile and execute.
+        options : str | None
+            Additional compiler options. C++ options are automatically enhanced.
+
+        Returns
+        -------
+        str | None
+            The execution output with header lines removed, or None if execution failed.
+        """
+        # Handle C++ specific options
+        if compiler in {"c++", "cpp"}:
+            base_opts = options or ""
+            options = f"{base_opts} -xc++ -lstdc++ -shared-libgcc".strip()
+
+        output = godbolt.getoutput(code, compiler, options)
+        if not output:
             return None
 
-        lines = out.split("\n")
+        # Remove header lines (first 5 lines)
+        lines = output.split("\n")
         return "\n".join(lines[5:])
 
 
 class WandboxService(CodeDispatch):
-    async def _execute(self, lang: str, code: str, opts: str | None):
-        output = ""
-        temp = wandbox.getoutput(code, lang, opts)
-        if not temp:
-            return None
-        if (
-            temp["compiler_error"] != "" and self.compiler_map.get("nim") != lang
-        ):  # Nim decides to do some absolutely horrible debug messages.
-            output = f"{output} {temp['compiler_error']}"
-        if temp["program_output"] != "":
-            output = f"{output} {temp['program_output']}"
+    """Code execution service using Wandbox online compiler."""
 
-        return output.strip()
+    async def _execute(self, compiler: str, code: str, options: str | None) -> str | None:
+        """
+        Execute code using Wandbox service.
+
+        Parameters
+        ----------
+        compiler : str
+            The Wandbox compiler identifier.
+        code : str
+            The source code to compile and execute.
+        options : str | None
+            Additional compiler options.
+
+        Returns
+        -------
+        str | None
+            Combined compiler errors and program output, or None if execution failed.
+
+        Notes
+        -----
+        Nim compiler errors are filtered out due to excessive verbosity.
+        """
+        result = wandbox.getoutput(code, compiler, options)
+        if not result:
+            return None
+
+        output_parts: list[str] = []
+
+        # Handle compiler errors (skip for Nim due to verbose debug messages)
+        if (compiler_error := result.get("compiler_error")) and compiler != "nim-2.2.4":
+            output_parts.append(str(compiler_error))
+
+        # Handle program output
+        if program_output := result.get("program_output"):
+            output_parts.append(str(program_output))
+
+        return " ".join(output_parts).strip() if output_parts else None
 
 
 class Run(commands.Cog):
-    def __init__(self, bot: Tux):
+    """
+    Cog for executing code in various programming languages.
+
+    Supports multiple programming languages through Godbolt and Wandbox services.
+    Provides code execution with proper error handling and user-friendly output.
+    """
+
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.run.usage = generate_usage(self.run)
         self.languages.usage = generate_usage(self.languages)
         self.services = {
-            "godbolt": GodboltService(compiler_map_godbolt),
-            "wandbox": WandboxService(compiler_map_wandbox),
+            "godbolt": GodboltService(GODBOLT_COMPILERS),
+            "wandbox": WandboxService(WANDBOX_COMPILERS),
         }
 
-    @staticmethod
-    def __remove_ansi(ansi: str) -> str:
+    def _parse_code_block(self, text: str) -> tuple[str, str]:
         """
-        Converts ANSI encoded text into non-ANSI.
+        Parse a code block to extract language and code.
 
         Parameters
         ----------
-        ansi : str
-            The ANSI encoded text.
+        text : str
+            The code block text.
 
         Returns
         -------
-        str
-            The non-ANSI encoded text.
+        tuple[str, str]
+            A tuple containing (language, code).
         """
+        cleaned_text = _remove_backticks(text)
+        lines = cleaned_text.split("\n")
+        language = lines[0] if lines else ""
+        code = "\n".join(lines[1:]) if len(lines) > 1 else ""
+        return language, code
 
-        return ansi_re.sub("", ansi)
-
-    @staticmethod
-    def __remove_backticks(st: str) -> str:
+    def _determine_service(self, language: str) -> str | None:
         """
-        Removes backticks from the provided string.
+        Determine which service to use for a given language.
 
         Parameters
         ----------
-        st : str
-            The string containing backticks.
+        language : str
+            The programming language identifier.
 
         Returns
         -------
-        str
-            The string without backticks.
+        str | None
+            The service name ("wandbox" or "godbolt") or None if language is not supported.
         """
+        # sourcery skip: assign-if-exp, reintroduce-else
+        if language in WANDBOX_COMPILERS:
+            return "wandbox"
+        if language in GODBOLT_COMPILERS:
+            return "godbolt"
+        return None
 
-        return ticks_re.sub("", st)
-
-    def __parse_code(self, st: str) -> tuple[str, str]:
-        cleaned_code = self.__remove_backticks(st)
-        return cleaned_code.split("\n").pop(0), "\n".join(cleaned_code.splitlines()[1:])
-
-    async def send_embedded_reply(self, ctx: commands.Context[Tux], output: str, lang: str, is_wandbox: bool) -> None:
+    async def _create_result_embed(
+        self,
+        ctx: commands.Context[Tux],
+        output: str,
+        language: str,
+        service: str,
+    ) -> discord.Embed:
         """
-        A generalized version of an embed.
+        Create a result embed for code execution output.
 
         Parameters
         ----------
         ctx : commands.Context[Tux]
-            The context in which the command is invoked.
+            The command context.
         output : str
-            The output.
-        lang : str
-            The language of the code.
-        is_wandbox: bool
-            True if Wandbox is used as the backend.
+            The execution output.
+        language : str
+            The programming language.
+        service : str
+            The service used for execution.
+
+        Returns
+        -------
+        discord.Embed
+            The created embed.
         """
-        embed = EmbedCreator.create_embed(
+        service_link = SERVICE_LINKS.get(service, service)
+        description = f"-# Service provided by {service_link}\n```{language}\n{output}\n```"
+
+        return EmbedCreator.create_embed(
             bot=self.bot,
             embed_type=EmbedCreator.INFO,
             user_name=ctx.author.name,
             user_display_avatar=ctx.author.display_avatar.url,
             title="",
-            description=f"{f'Service provided by {"[Wandbox](https://wandbox.org)" if is_wandbox else "[Godbolt](https://godbolt.org/)"}'}\n```{lang}\n{output}\n```",
+            description=description,
         )
 
-        button = discord.ui.Button(style=discord.ButtonStyle.red, label="✖ Close")  # type: ignore
-        view = discord.ui.View()
-        view.add_item(button)  # type: ignore
+    def _create_close_button_view(self) -> discord.ui.View:
+        """
+        Create a view with a close button.
 
-        async def button_callback(interaction: discord.Interaction):
-            if interaction.message is not None:
+        Returns
+        -------
+        discord.ui.View
+            The view with close button.
+        """
+
+        async def close_callback(interaction: discord.Interaction) -> None:
+            if interaction.message:
                 await interaction.message.delete()
 
-        button.callback = button_callback
+        button = discord.ui.Button[discord.ui.View](style=discord.ButtonStyle.red, label="✖ Close")
+        button.callback = close_callback
 
-        await ctx.send(embed=embed, view=view)
+        view = discord.ui.View()
+        view.add_item(button)
+        return view
 
-    @commands.command(
-        name="run",
-        aliases=["compile", "exec"],
-    )
-    async def run(
-        self,
-        ctx: commands.Context[Tux],
-        *,
-        code: str | None,
-    ):
+    async def _extract_code_from_message(self, ctx: commands.Context[Tux], code: str | None) -> str | None:
         """
-        Run code in various languages. Code should be enclosed in triple backticks.
+        Extract code from the command or referenced message.
 
         Parameters
         ----------
         ctx : commands.Context[Tux]
-            The context in which the command is invoked.
+            The command context.
         code : str | None
-            The code to be evaluated. Provide None if the code is supposed to be grabbed from the message replied to.
+            Code provided directly in the command.
+
+        Returns
+        -------
+        str | None
+            The extracted code or None if not found.
+
+        Notes
+        -----
+        If no code is provided directly, attempts to extract code from
+        a replied-to message containing triple backticks.
+        """
+        if code:
+            return code
+
+        # Check for replied message
+        if ctx.message.reference and ctx.message.reference.message_id:
+            with suppress(discord.NotFound):
+                referenced_message = await ctx.fetch_message(ctx.message.reference.message_id)
+                if "```" in referenced_message.content:
+                    return referenced_message.content.split("```", 1)[1]
+
+        return None
+
+    @commands.command(name="run", aliases=["compile", "exec"])
+    async def run(self, ctx: commands.Context[Tux], *, code: str | None = None) -> None:
+        """
+        Execute code in various programming languages.
+        Code should be enclosed in triple backticks with language specification.
+        You can also reply to a message containing code to execute it.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The command context.
+        code : str | None, optional
+            The code to execute, or None to use referenced message. Defaults to None.
+
+        Raises
+        ------
+        MissingCodeError
+            When no code is provided and no replied message contains code.
+        InvalidCodeFormatError
+            When the code format is invalid or missing language specification.
+        UnsupportedLanguageError
+            When the specified language is not supported.
+        CompilationError
+            When code compilation or execution fails.
         """
 
-        # checks if the author replied to a message or not.
-        if ctx.message.reference is not None and ctx.message.reference.message_id is not None:
-            msg = await ctx.fetch_message(ctx.message.reference.message_id)
-        else:
-            msg = None
+        # Extract code from command or referenced message
+        extracted_code = await self._extract_code_from_message(ctx, code)
 
-        # neither code, nor message
-        if not code and not msg:
-            raise commands.MissingRequiredArgument(next(iter(self.run.params.values())))
+        if not extracted_code:
+            raise MissingCodeError
 
-        # if there was no code, but there was a reply.
-        if not code and msg:
-            code = msg.content.split("```", 1)[1] if "```" in msg.content else None
+        # Parse the code block
+        language, source_code = self._parse_code_block(extracted_code)
 
-        if code is None:
-            embed = EmbedCreator.create_embed(
-                bot=self.bot,
-                embed_type=EmbedCreator.ERROR,
-                user_name=ctx.author.name,
-                user_display_avatar=ctx.author.display_avatar.url,
-                title="Fatal Exception occurred!",
-                description="Bad formatting.",
-            )
-            await ctx.send(embed=embed)
-            return
+        if not language or not source_code.strip():
+            raise InvalidCodeFormatError
 
-        (language, code) = self.__parse_code(code)
+        # Determine service to use
+        service = self._determine_service(language)
+        if not service:
+            raise UnsupportedLanguageError(language, SUPPORTED_LANGUAGES)
 
-        await ctx.message.add_reaction("<a:BreakdancePengu:1378346831250985061>")
-        is_wandbox = "wandbox" if language in compiler_map_wandbox else "godbolt"
+        # Add loading reaction
+        await ctx.message.add_reaction(LOADING_REACTION)
 
-        if language not in compiler_map_godbolt and language not in compiler_map_wandbox:
-            embed = EmbedCreator.create_embed(
-                bot=self.bot,
-                embed_type=EmbedCreator.ERROR,
-                user_name=ctx.author.name,
-                user_display_avatar=ctx.author.display_avatar.url,
-                title="Fatal exception occurred.",
-                description=f"No compiler could be found for target '{language}'.",
-            )
-            await ctx.message.clear_reaction("<a:BreakdancePengu:1378346831250985061>")
-            await ctx.send(embed=embed)
-            return
+        try:
+            # Execute the code
+            output = await self.services[service].run(language, source_code)
 
-        filtered_output = await self.services[is_wandbox].run(language, code, None)
+            if output is None:
+                raise CompilationError
 
-        if filtered_output is None:
-            embed = EmbedCreator.create_embed(
-                bot=self.bot,
-                embed_type=EmbedCreator.ERROR,
-                user_name=ctx.author.name,
-                user_display_avatar=ctx.author.display_avatar.url,
-                title="Fatal exception occurred!",
-                description="failed to get output from the compiler.",
-            )
-            await ctx.message.clear_reaction("<a:BreakdancePengu:1378346831250985061>")
-            await ctx.send(embed=embed, delete_after=30)
-            return
+            # Create and send result embed
+            cleaned_output = _remove_ansi(output)
+            result_embed = await self._create_result_embed(ctx, cleaned_output, language, service)
+            view = self._create_close_button_view()
 
-        await ctx.message.clear_reaction("<a:BreakdancePengu:1378346831250985061>")
-        await self.send_embedded_reply(
-            ctx,
-            self.__remove_ansi(filtered_output),
-            language,
-            is_wandbox == "wandbox",
-        )
+            await ctx.send(embed=result_embed, view=view)
 
-    @commands.command(
-        name="languages",
-        aliases=["langs"],
-    )
+        finally:
+            # Remove loading reaction
+            with suppress(discord.HTTPException):
+                await ctx.message.clear_reaction(LOADING_REACTION)
+
+    @commands.command(name="languages", aliases=["langs", "lang"])
     async def languages(self, ctx: commands.Context[Tux]) -> None:
         """
-        Lists all the supported languages.
+        Display all supported programming languages to use with the `run` command.
 
         Parameters
         ----------
         ctx : commands.Context[Tux]
-            The context in which the command is invoked.
+            The command context.
         """
+
+        languages_text = ", ".join(SUPPORTED_LANGUAGES)
+
+        help_text = (
+            "The following languages are currently supported by the `run` command:\n"
+            f"```{languages_text}\n```\n\n"
+            "Please use triple backticks and provide syntax highlighting like below:\n"
+            '```\n`\u200b``python\nprint("Hello, World!")\n`\u200b``\n```\n'
+        )
 
         embed = EmbedCreator.create_embed(
             bot=self.bot,
@@ -298,7 +524,7 @@ class Run(commands.Cog):
             user_name=ctx.author.name,
             user_display_avatar=ctx.author.display_avatar.url,
             title="Supported Languages",
-            description="```C, C++, C#, F#, OCaml, Haskell, Julia, Python, Javascript, Typescript, Ruby, SQL, Java, Nim, Lisp, Pascal, Perl, Pony, PHP, R, Swift, Groovy, D, Bash, Rust, Kotlin```",
+            description=help_text,
         )
 
         await ctx.send(embed=embed)
