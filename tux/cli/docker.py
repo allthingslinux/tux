@@ -14,6 +14,35 @@ from tux.cli.core import (
 )
 from tux.utils.env import is_dev_mode
 
+# Resource configuration for safe Docker cleanup operations
+RESOURCE_MAP = {
+    "images": {
+        "cmd": ["docker", "images", "--format", "{{.Repository}}:{{.Tag}}"],
+        "regex": [
+            r"^tux:.*",
+            r"^ghcr\.io/allthingslinux/tux:.*",
+            r"^tux:(test|fresh|cached|switch-test|regression|perf-test)-.*",
+            r"^tux:(multiplatform|security)-test$",
+        ],
+        "remove": ["docker", "rmi", "-f"],
+    },
+    "containers": {
+        "cmd": ["docker", "ps", "-a", "--format", "{{.Names}}"],
+        "regex": [r"^(tux(-dev|-prod)?|memory-test|resource-test)$"],
+        "remove": ["docker", "rm", "-f"],
+    },
+    "volumes": {
+        "cmd": ["docker", "volume", "ls", "--format", "{{.Name}}"],
+        "regex": [r"^tux(_dev)?_(cache|temp)$"],
+        "remove": ["docker", "volume", "rm", "-f"],
+    },
+    "networks": {
+        "cmd": ["docker", "network", "ls", "--format", "{{.Name}}"],
+        "regex": [r"^tux_default$", r"^tux-.*"],
+        "remove": ["docker", "network", "rm"],
+    },
+}
+
 
 # Helper function moved from impl/docker.py
 def _get_compose_base_cmd() -> list[str]:
@@ -39,84 +68,25 @@ def _get_service_name() -> str:
     return "tux"  # Both dev and prod use the same service name
 
 
-def _get_tux_image_patterns() -> list[str]:
-    """Get patterns for Tux-related Docker images - SAFE: specific patterns only."""
-    return [
-        "tux:*",  # Official tux images
-        "ghcr.io/allthingslinux/tux:*",  # GitHub registry images
-        "tux:test-*",  # Test images from test script
-        "tux:fresh-*",  # Comprehensive test images
-        "tux:cached-*",  # Comprehensive test images
-        "tux:switch-test-*",  # Comprehensive test images
-        "tux:regression-*",  # Comprehensive test images
-        "tux:perf-test-*",  # Performance test images
-        "tux:multiplatform-test",  # Multi-platform test images
-        "tux:security-test",  # Security test images
-    ]
-
-
-def _get_tux_container_patterns() -> list[str]:
-    """Get patterns for Tux-related container names - SAFE: specific patterns only."""
-    return [
-        "tux",  # Main container name
-        "tux-dev",  # Development container
-        "tux-prod",  # Production container
-        "memory-test",  # Test script containers
-        "resource-test",  # Test script containers
-    ]
-
-
-def _get_tux_volume_patterns() -> list[str]:
-    """Get patterns for Tux-related volume names - SAFE: specific patterns only."""
-    return [
-        "tux_cache",  # Main cache volume
-        "tux_temp",  # Main temp volume
-        "tux_dev_cache",  # Dev cache volume
-        "tux_dev_temp",  # Dev temp volume
-    ]
-
-
-def _get_tux_network_patterns() -> list[str]:
-    """Get patterns for Tux-related network names - SAFE: specific patterns only."""
-    return [
-        "tux_default",  # Default compose network
-        "tux-*",  # Any tux-prefixed networks
-    ]
-
-
 def _get_tux_resources(resource_type: str) -> list[str]:
-    """Get list of Tux-related Docker resources safely."""
-    try:
-        if resource_type == "images":
-            patterns = _get_tux_image_patterns()
-            cmd = ["docker", "images", "--format", "{{.Repository}}:{{.Tag}}"]
-        elif resource_type == "containers":
-            patterns = _get_tux_container_patterns()
-            cmd = ["docker", "ps", "-a", "--format", "{{.Names}}"]
-        elif resource_type == "volumes":
-            patterns = _get_tux_volume_patterns()
-            cmd = ["docker", "volume", "ls", "--format", "{{.Name}}"]
-        elif resource_type == "networks":
-            patterns = _get_tux_network_patterns()
-            cmd = ["docker", "network", "ls", "--format", "{{.Name}}"]
-        else:
-            return []
+    """Get list of Tux-related Docker resources safely using data-driven approach."""
+    cfg = RESOURCE_MAP.get(resource_type)
+    if not cfg:
+        return []
 
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    try:
+        result = subprocess.run(cfg["cmd"], capture_output=True, text=True, check=True, timeout=30)
         all_resources = result.stdout.strip().split("\n") if result.stdout.strip() else []
 
-        # Filter resources that match our patterns
+        # Filter resources that match our regex patterns
         tux_resources: list[str] = []
         for resource in all_resources:
-            for pattern in patterns:
-                # Simple pattern matching (convert * to regex-like matching)
-                pattern_regex = pattern.replace("*", ".*")
-
-                if re.match(f"^{pattern_regex}$", resource, re.IGNORECASE):
+            for pattern in cfg["regex"]:
+                if re.match(pattern, resource, re.IGNORECASE):
                     tux_resources.append(resource)
                     break
 
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
         return []
     else:
         return tux_resources
@@ -127,7 +97,7 @@ def _display_resource_summary(
     tux_images: list[str],
     tux_volumes: list[str],
     tux_networks: list[str],
-) -> None:  # sourcery skip: extract-duplicate-method
+) -> None:
     """Display summary of resources that will be cleaned up."""
     logger.info("Tux Resources Found for Cleanup:")
     logger.info("=" * 50)
@@ -157,44 +127,26 @@ def _display_resource_summary(
         logger.info("")
 
 
-def _remove_containers(containers: list[str]) -> None:
-    """Remove Docker containers."""
-    for container in containers:
+def _remove_resources(resource_type: str, resources: list[str]) -> None:
+    """Remove Docker resources safely using data-driven approach."""
+    if not resources:
+        return
+
+    cfg = RESOURCE_MAP.get(resource_type)
+    if not cfg:
+        logger.warning(f"Unknown resource type: {resource_type}")
+        return
+
+    remove_cmd = cfg["remove"]
+    resource_singular = resource_type[:-1]  # Remove 's' from plural
+
+    for name in resources:
         try:
-            subprocess.run(["docker", "rm", "-f", container], check=True, capture_output=True)
-            logger.info(f"Removed container: {container}")
-        except subprocess.CalledProcessError as e:
-            logger.warning(f"Failed to remove container {container}: {e}")
-
-
-def _remove_images(images: list[str]) -> None:
-    """Remove Docker images."""
-    for image in images:
-        try:
-            subprocess.run(["docker", "rmi", "-f", image], check=True, capture_output=True)
-            logger.info(f"Removed image: {image}")
-        except subprocess.CalledProcessError as e:
-            logger.warning(f"Failed to remove image {image}: {e}")
-
-
-def _remove_volumes(volumes: list[str]) -> None:
-    """Remove Docker volumes."""
-    for volume in volumes:
-        try:
-            subprocess.run(["docker", "volume", "rm", "-f", volume], check=True, capture_output=True)
-            logger.info(f"Removed volume: {volume}")
-        except subprocess.CalledProcessError as e:
-            logger.warning(f"Failed to remove volume {volume}: {e}")
-
-
-def _remove_networks(networks: list[str]) -> None:
-    """Remove Docker networks."""
-    for network in networks:
-        try:
-            subprocess.run(["docker", "network", "rm", network], check=True, capture_output=True)
-            logger.info(f"Removed network: {network}")
-        except subprocess.CalledProcessError as e:
-            logger.warning(f"Failed to remove network {network}: {e}")
+            cmd = [*remove_cmd, name]
+            subprocess.run(cmd, check=True, capture_output=True, timeout=30)
+            logger.info(f"Removed {resource_singular}: {name}")
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+            logger.warning(f"Failed to remove {resource_singular} {name}: {e}")
 
 
 # Create the docker command group
@@ -420,18 +372,18 @@ def health() -> int:
 def test(no_cache: bool, force_clean: bool) -> int:
     """Run Docker performance and functionality tests.
 
-    Executes the comprehensive Docker test script.
+    Executes the unified Docker toolkit script.
     """
     if not _check_docker_availability():
         logger.error("Docker is not available or not running. Please start Docker first.")
         return 1
 
-    test_script = Path("scripts/test-docker.sh")
+    test_script = Path("scripts/docker-toolkit.sh")
     if not test_script.exists():
-        logger.error("Docker test script not found at scripts/test-docker.sh")
+        logger.error("Docker toolkit script not found at scripts/docker-toolkit.sh")
         return 1
 
-    cmd = ["bash", str(test_script)]
+    cmd = ["bash", str(test_script), "test"]
     if no_cache:
         cmd.append("--no-cache")
     if force_clean:
@@ -478,11 +430,11 @@ def cleanup(volumes: bool, force: bool, dry_run: bool) -> int:
 
     logger.info("Cleaning up Tux-related Docker resources...")
 
-    # Remove resources in order
-    _remove_containers(tux_containers)
-    _remove_images(tux_images)
-    _remove_volumes(tux_volumes)
-    _remove_networks(tux_networks)
+    # Remove resources in order using data-driven approach
+    _remove_resources("containers", tux_containers)
+    _remove_resources("images", tux_images)
+    _remove_resources("volumes", tux_volumes)
+    _remove_resources("networks", tux_networks)
 
     logger.info("Tux Docker cleanup completed")
     return 0
