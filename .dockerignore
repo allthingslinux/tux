@@ -1,10 +1,56 @@
-.env
+# Environment files
+.env*
+!.env.example
+
+# Python virtual environment and caches
 .venv/
-.cache/
 __pycache__/
-*.pyc
-assets/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+.mypy_cache/
+.ruff_cache/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Documentation and development files
 docs-build/
 site/
+README.md
+*.md
+!requirements.md
+
+# Development configuration
 .cursorrules
 .editorconfig
+.pre-commit-config.yaml
+
+# Logs
+*.log
+logs/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker files (prevent recursive inclusion)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Cache directories
+.cache/

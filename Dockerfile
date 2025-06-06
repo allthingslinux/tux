@@ -3,22 +3,34 @@
 # - Install only the common runtime dependencies and shared libraries
 FROM python:3.13.2-slim AS base
 
+LABEL org.opencontainers.image.source="https://github.com/allthingslinux/tux" \
+      org.opencontainers.image.description="Tux Discord Bot" \
+      org.opencontainers.image.licenses="GPL-3.0" \
+      org.opencontainers.image.authors="AllThingsLinux" \
+      org.opencontainers.image.vendor="AllThingsLinux"
+
+# Create non-root user early for security
+RUN groupadd --system --gid 1001 nonroot && \
+    useradd --create-home --system --uid 1001 --gid nonroot nonroot
+
+# Install runtime dependencies (sorted alphabetically)
 RUN apt-get update && \
-  apt-get install -y --no-install-recommends \
-  git \
-  libcairo2 \
-  libgdk-pixbuf2.0-0 \
-  libpango1.0-0 \
-  libpangocairo-1.0-0 \
-  shared-mime-info \
-  ffmpeg && \
-  apt-get clean && \
-  rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends \
+        ffmpeg \
+        git \
+        libcairo2 \
+        libgdk-pixbuf2.0-0 \
+        libpango1.0-0 \
+        libpangocairo-1.0-0 \
+        shared-mime-info \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Tweak Python to run better in Docker
 ENV PYTHONUNBUFFERED=1 \
-  PYTHONDONTWRITEBYTECODE=1 \
-  PIP_DISABLE_PIP_VERSION_CHECK=on
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_NO_CACHE_DIR=1
 
 
 # Build stage:
@@ -27,57 +39,51 @@ ENV PYTHONUNBUFFERED=1 \
 # - Install poetry (for managing app's dependencies)
 # - Install app's main dependencies
 # - Install the application itself
-# - Generate Prisma client AND copy binaries
+# - Generate Prisma client
 FROM base AS build
 
-# Install build dependencies (excluding Node.js)
+# Install build dependencies (sorted alphabetically)
 RUN apt-get update && \
-  apt-get install -y --no-install-recommends \
-  build-essential \
-  libcairo2-dev \
-  libffi-dev \
-  findutils \
-  && apt-get clean && \
-  rm -rf /var/lib/apt/lists/*
-
-# Node.js installation removed - prisma-client-py handles its own
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        findutils \
+        libcairo2-dev \
+        libffi-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV POETRY_VERSION=2.1.1 \
-  POETRY_NO_INTERACTION=1 \
-  POETRY_VIRTUALENVS_CREATE=1 \
-  POETRY_VIRTUALENVS_IN_PROJECT=1 \
-  POETRY_CACHE_DIR=/tmp/poetry_cache
+    POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_CREATE=1 \
+    POETRY_VIRTUALENVS_IN_PROJECT=1 \
+    POETRY_CACHE_DIR=/tmp/poetry_cache
 
-RUN --mount=type=cache,target=/root/.cache pip install poetry==$POETRY_VERSION
+RUN --mount=type=cache,target=/root/.cache \
+    pip install poetry==$POETRY_VERSION
 
 WORKDIR /app
 
-COPY . .
-RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
-  poetry install --only main --no-root --no-directory
+# Copy dependency files first for better caching
+COPY pyproject.toml poetry.lock ./
 
+# Install dependencies
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
-  --mount=type=cache,target=/root/.cache \
-  poetry install --only main && \
-  poetry run prisma py fetch && \
-  poetry run prisma generate && \
-  # --- Start: Copy Prisma Binaries ---
-  # Find the actual query engine binary path
-  PRISMA_QUERY_ENGINE_PATH=$(find /root/.cache/prisma-python/binaries -name query-engine-* -type f | head -n 1) && \
-  # Find the actual schema engine binary path (might be needed too)
-  PRISMA_SCHEMA_ENGINE_PATH=$(find /root/.cache/prisma-python/binaries -name schema-engine-* -type f | head -n 1) && \
-  # Create a directory within /app to store them
-  mkdir -p /app/prisma_binaries && \
-  # Copy and make executable
-  if [ -f "$PRISMA_QUERY_ENGINE_PATH" ]; then cp $PRISMA_QUERY_ENGINE_PATH /app/prisma_binaries/query-engine && chmod +x /app/prisma_binaries/query-engine; else echo "Warning: Query engine not found"; fi && \
-  if [ -f "$PRISMA_SCHEMA_ENGINE_PATH" ]; then cp $PRISMA_SCHEMA_ENGINE_PATH /app/prisma_binaries/schema-engine && chmod +x /app/prisma_binaries/schema-engine; else echo "Warning: Schema engine not found"; fi
-# --- End: Copy Prisma Binaries ---
+    poetry install --only main --no-root --no-directory
+
+# Copy application code
+COPY . .
+
+# Install application and generate Prisma client
+RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
+    --mount=type=cache,target=/root/.cache \
+    poetry install --only main && \
+    poetry run prisma py fetch && \
+    poetry run prisma generate
 
 
 # Dev stage (used by docker-compose.dev.yml):
-# - Install extra tools for development (pre-commit, ruff, pyright, types, etc.)
-# - Re-generate Prisma client on every run (CMD handles this)
-
+# - Install extra tools for development
+# - Set up development environment
 FROM build AS dev
 
 WORKDIR /app
@@ -85,53 +91,55 @@ WORKDIR /app
 ARG DEVCONTAINER=0
 ENV DEVCONTAINER=${DEVCONTAINER}
 
-# Conditionally install zsh if building for devcontainer
+# Install development dependencies
+RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
+    poetry install --only dev --no-root --no-directory
+
+# Conditionally install zsh for devcontainer
 RUN if [ "$DEVCONTAINER" = "1" ]; then \
-      apt-get update && \
-      apt-get install -y zsh && \
-      chsh -s /usr/bin/zsh && \
-      apt-get clean && rm -rf /var/lib/apt/lists/*; \
-    else \
-      echo "Not building for devcontainer, skipping devcontainer dependencies installation"; \
+        apt-get update && \
+        apt-get install -y --no-install-recommends zsh && \
+        chsh -s /usr/bin/zsh && \
+        apt-get clean && \
+        rm -rf /var/lib/apt/lists/*; \
     fi
 
+# Create cache directories with proper permissions
+RUN mkdir -p /app/.cache/tldr /app/temp && \
+    chown -R nonroot:nonroot /app/.cache /app/temp
 
-RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
-  poetry install --only dev --no-root --no-directory
+# Switch to non-root user for development too
+USER nonroot
 
-# Ensure Prisma client is regenerated on start, then run bot via CLI with --dev flag
+# Regenerate Prisma client on start for development
 CMD ["sh", "-c", "poetry run prisma generate && exec poetry run tux --dev start"]
 
 
 # Production stage:
-# - Start with the base with the runtime dependencies already installed
-# - Run the app as a nonroot user (least privileges principle)
-# - Use the packaged self-sufficient application bundle
+# - Minimal, secure runtime environment
+# - Non-root user execution
+# - Optimized for size and security
 FROM base AS production
-
-# Create a non-root user and group using standard tools for Debian base
-RUN groupadd --system nonroot && \
-  useradd --create-home --system --gid nonroot nonroot
 
 WORKDIR /app
 
+# Set up environment for production
 ENV VIRTUAL_ENV=/app/.venv \
-  PATH="/app/.venv/bin:$PATH" \
-  # --- Start: Point Prisma client to the copied binaries ---
-  PRISMA_QUERY_ENGINE_BINARY="/app/prisma_binaries/query-engine" \
-  PRISMA_SCHEMA_ENGINE_BINARY="/app/prisma_binaries/schema-engine"
-# --- End: Point Prisma client ---
+    PATH="/app/.venv/bin:$PATH"
 
-# Copy the application code, venv, and the prepared prisma_binaries dir
-# Ensure ownership is set to nonroot
+# Copy application code and dependencies with proper ownership
 COPY --from=build --chown=nonroot:nonroot /app /app
 
-# Create TLDR cache directory with proper permissions for the nonroot user
-RUN mkdir -p /app/.cache/tldr && \
-  chown -R nonroot:nonroot /app/.cache
+# Create cache directories with proper permissions
+RUN mkdir -p /app/.cache/tldr /app/temp && \
+    chown -R nonroot:nonroot /app/.cache /app/temp
 
-# Switch to the non-root user
+# Switch to non-root user
 USER nonroot
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD python -c "import sys; sys.exit(0)" || exit 1
 
 ENTRYPOINT ["tux"]
 CMD ["--prod", "start"]

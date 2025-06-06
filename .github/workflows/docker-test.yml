@@ -1,0 +1,362 @@
+name: "Docker Performance Testing"
+
+on:
+  push:
+    branches: ["main", "dev"]
+    paths:
+      - "Dockerfile"
+      - "docker-compose*.yml"
+      - ".dockerignore"
+      - "pyproject.toml"
+      - "poetry.lock"
+      - "prisma/schema/**"
+      - ".github/workflows/docker-test.yml"
+  pull_request:
+    paths:
+      - "Dockerfile"
+      - "docker-compose*.yml"
+      - ".dockerignore"
+      - "pyproject.toml"
+      - "poetry.lock"
+      - "prisma/schema/**"
+  workflow_dispatch:
+  schedule:
+    # Run performance tests nightly
+    - cron: '0 2 * * *'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  docker-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install performance monitoring tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq bc time
+          
+      - name: Create performance tracking directories
+        run: |
+          mkdir -p logs performance-history artifacts
+          
+      - name: Download previous performance data
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true
+        run: |
+          # Download previous performance data if available
+          echo "Checking for previous performance data..."
+          ls -la performance-history/ || echo "No previous data found"
+
+      - name: Set up environment file
+        run: |
+          # Create minimal .env for testing
+          echo "DATABASE_URL=sqlite:///tmp/test.db" > .env
+          echo "DISCORD_TOKEN=test_token" >> .env
+          echo "PRODUCTION=false" >> .env
+
+      - name: Run comprehensive performance tests
+        run: |
+          chmod +x scripts/test-docker.sh
+          ./scripts/test-docker.sh
+          
+      - name: Collect system performance metrics
+        run: |
+          echo "System Performance Baseline:" > artifacts/system-info.txt
+          echo "============================" >> artifacts/system-info.txt
+          echo "Date: $(date -Iseconds)" >> artifacts/system-info.txt
+          echo "Runner: ${{ runner.os }}" >> artifacts/system-info.txt
+          echo "Architecture: $(uname -m)" >> artifacts/system-info.txt
+          echo "CPU Info:" >> artifacts/system-info.txt
+          nproc >> artifacts/system-info.txt
+          echo "Memory Info:" >> artifacts/system-info.txt
+          free -h >> artifacts/system-info.txt
+          echo "Disk Info:" >> artifacts/system-info.txt
+          df -h >> artifacts/system-info.txt
+          echo "Docker Version:" >> artifacts/system-info.txt
+          docker --version >> artifacts/system-info.txt
+          echo "Docker Info:" >> artifacts/system-info.txt
+          docker system df >> artifacts/system-info.txt
+
+      - name: Analyze build performance
+        run: |
+          echo "Build Performance Analysis:" > artifacts/build-analysis.txt
+          echo "==========================" >> artifacts/build-analysis.txt
+          
+          # Extract build metrics from logs
+          if [ -f logs/docker-test-*.log ]; then
+            echo "Build Times:" >> artifacts/build-analysis.txt
+            grep "completed in" logs/docker-test-*.log >> artifacts/build-analysis.txt
+            
+            echo "" >> artifacts/build-analysis.txt
+            echo "Image Sizes:" >> artifacts/build-analysis.txt
+            grep "image size" logs/docker-test-*.log >> artifacts/build-analysis.txt
+            
+            echo "" >> artifacts/build-analysis.txt
+            echo "Memory Usage:" >> artifacts/build-analysis.txt
+            grep "Memory usage" logs/docker-test-*.log >> artifacts/build-analysis.txt
+          fi
+
+      - name: Generate performance comparison
+        if: github.ref == 'refs/heads/main'
+        run: |
+          if [ -f logs/docker-metrics-*.json ]; then
+            echo "Performance Metrics Comparison:" > artifacts/performance-comparison.txt
+            echo "===============================" >> artifacts/performance-comparison.txt
+            
+            # Current metrics
+            current_metrics=$(ls logs/docker-metrics-*.json | head -1)
+            echo "Current Performance:" >> artifacts/performance-comparison.txt
+            echo "===================" >> artifacts/performance-comparison.txt
+            
+            if command -v jq &> /dev/null; then
+              jq -r '.performance | to_entries[] | "\(.key): \(.value.value) \(.value.unit)"' "$current_metrics" >> artifacts/performance-comparison.txt
+              
+              # Calculate performance score
+              build_time=$(jq -r '.performance.production_build.value // 0' "$current_metrics")
+              image_size=$(jq -r '.performance.prod_image_size_mb.value // 0' "$current_metrics") 
+              startup_time=$(jq -r '.performance.container_startup.value // 0' "$current_metrics")
+              
+              # Simple performance score (lower is better)
+              score=$(echo "$build_time + $image_size * 1000 + $startup_time" | bc)
+              echo "" >> artifacts/performance-comparison.txt
+              echo "Performance Score: $score (lower is better)" >> artifacts/performance-comparison.txt
+              echo "PERFORMANCE_SCORE=$score" >> $GITHUB_ENV
+            fi
+          fi
+
+      - name: Check performance thresholds
+        run: |
+          echo "Performance Threshold Check:" > artifacts/threshold-check.txt
+          echo "============================" >> artifacts/threshold-check.txt
+          
+          # Define thresholds (in milliseconds and MB)
+          BUILD_THRESHOLD=300000    # 5 minutes
+          STARTUP_THRESHOLD=10000   # 10 seconds
+          SIZE_THRESHOLD=2000       # 2GB
+          MEMORY_THRESHOLD=1000     # 1GB
+          
+          if [ -f logs/docker-metrics-*.json ]; then
+            metrics_file=$(ls logs/docker-metrics-*.json | head -1)
+            
+            if command -v jq &> /dev/null; then
+              # Check build time
+              build_time=$(jq -r '.performance.production_build.value // 0' "$metrics_file")
+              if [ "$build_time" -gt "$BUILD_THRESHOLD" ]; then
+                echo "❌ FAIL: Build time ($build_time ms) exceeds threshold ($BUILD_THRESHOLD ms)" >> artifacts/threshold-check.txt
+                echo "BUILD_THRESHOLD_EXCEEDED=true" >> $GITHUB_ENV
+              else
+                echo "✅ PASS: Build time ($build_time ms) within threshold" >> artifacts/threshold-check.txt
+              fi
+              
+              # Check startup time
+              startup_time=$(jq -r '.performance.container_startup.value // 0' "$metrics_file")
+              if [ "$startup_time" -gt "$STARTUP_THRESHOLD" ]; then
+                echo "❌ FAIL: Startup time ($startup_time ms) exceeds threshold ($STARTUP_THRESHOLD ms)" >> artifacts/threshold-check.txt
+                echo "STARTUP_THRESHOLD_EXCEEDED=true" >> $GITHUB_ENV
+              else
+                echo "✅ PASS: Startup time ($startup_time ms) within threshold" >> artifacts/threshold-check.txt
+              fi
+              
+              # Check image size
+              image_size_float=$(jq -r '.performance.prod_image_size_mb.value // 0' "$metrics_file")
+              image_size=${image_size_float%.*}  # Convert to integer
+              if [ "$image_size" -gt "$SIZE_THRESHOLD" ]; then
+                echo "❌ FAIL: Image size ($image_size MB) exceeds threshold ($SIZE_THRESHOLD MB)" >> artifacts/threshold-check.txt
+                echo "SIZE_THRESHOLD_EXCEEDED=true" >> $GITHUB_ENV
+              else
+                echo "✅ PASS: Image size ($image_size MB) within threshold" >> artifacts/threshold-check.txt
+              fi
+              
+              # Check memory usage
+              memory_float=$(jq -r '.performance.memory_usage_mb.value // 0' "$metrics_file")
+              memory=${memory_float%.*}  # Convert to integer
+              if [ "$memory" -gt "$MEMORY_THRESHOLD" ]; then
+                echo "❌ FAIL: Memory usage ($memory MB) exceeds threshold ($MEMORY_THRESHOLD MB)" >> artifacts/threshold-check.txt
+                echo "MEMORY_THRESHOLD_EXCEEDED=true" >> $GITHUB_ENV
+              else
+                echo "✅ PASS: Memory usage ($memory MB) within threshold" >> artifacts/threshold-check.txt
+              fi
+            fi
+          fi
+
+      - name: Docker Scout security scan with timing
+        if: github.event_name != 'pull_request'
+        continue-on-error: true
+        run: |
+          echo "Security Performance Analysis:" > artifacts/security-analysis.txt
+          echo "=============================" >> artifacts/security-analysis.txt
+          
+          # Time the security scan
+          start_time=$(date +%s%N)
+          
+          if docker scout version &> /dev/null; then
+            # Build test image for scanning
+            docker build --target production -t tux:security-test . > /dev/null 2>&1
+            
+            # Run security scan
+            docker scout cves tux:security-test --only-severity critical,high > artifacts/security-scan.txt 2>&1 || true
+            
+            # Calculate scan time
+            end_time=$(date +%s%N)
+            scan_time=$(((end_time - start_time) / 1000000))
+            
+            echo "Security scan completed in: $scan_time ms" >> artifacts/security-analysis.txt
+            echo "SECURITY_SCAN_TIME=$scan_time" >> $GITHUB_ENV
+            
+            # Count vulnerabilities
+            critical_count=$(grep -c "critical" artifacts/security-scan.txt || echo "0")
+            high_count=$(grep -c "high" artifacts/security-scan.txt || echo "0")
+            
+            echo "Critical vulnerabilities: $critical_count" >> artifacts/security-analysis.txt
+            echo "High vulnerabilities: $high_count" >> artifacts/security-analysis.txt
+            echo "CRITICAL_VULNS=$critical_count" >> $GITHUB_ENV
+            echo "HIGH_VULNS=$high_count" >> $GITHUB_ENV
+            
+            # Cleanup
+            docker rmi tux:security-test > /dev/null 2>&1 || true
+          else
+            echo "Docker Scout not available" >> artifacts/security-analysis.txt
+          fi
+
+      - name: Generate performance report
+        run: |
+          echo "# Docker Performance Report" > artifacts/PERFORMANCE-REPORT.md
+          echo "" >> artifacts/PERFORMANCE-REPORT.md
+          echo "**Generated:** $(date -Iseconds)" >> artifacts/PERFORMANCE-REPORT.md
+          echo "**Commit:** ${{ github.sha }}" >> artifacts/PERFORMANCE-REPORT.md
+          echo "**Branch:** ${{ github.ref_name }}" >> artifacts/PERFORMANCE-REPORT.md
+          echo "" >> artifacts/PERFORMANCE-REPORT.md
+          
+          echo "## Performance Summary" >> artifacts/PERFORMANCE-REPORT.md
+          echo "" >> artifacts/PERFORMANCE-REPORT.md
+          
+          if [ -f logs/docker-metrics-*.json ]; then
+            metrics_file=$(ls logs/docker-metrics-*.json | head -1)
+            
+            if command -v jq &> /dev/null; then
+              echo "| Metric | Value | Status |" >> artifacts/PERFORMANCE-REPORT.md
+              echo "|--------|-------|--------|" >> artifacts/PERFORMANCE-REPORT.md
+              
+              # Production build
+              build_time=$(jq -r '.performance.production_build.value // 0' "$metrics_file")
+              build_status="✅"
+              [ "$build_time" -gt 300000 ] && build_status="❌"
+              echo "| Production Build | ${build_time} ms | $build_status |" >> artifacts/PERFORMANCE-REPORT.md
+              
+              # Container startup
+              startup_time=$(jq -r '.performance.container_startup.value // 0' "$metrics_file")
+              startup_status="✅"
+              [ "$startup_time" -gt 10000 ] && startup_status="❌"
+              echo "| Container Startup | ${startup_time} ms | $startup_status |" >> artifacts/PERFORMANCE-REPORT.md
+              
+              # Image size
+              image_size=$(jq -r '.performance.prod_image_size_mb.value // 0' "$metrics_file")
+              size_status="✅"
+              [ "${image_size%.*}" -gt 2000 ] && size_status="❌"
+              echo "| Image Size | ${image_size} MB | $size_status |" >> artifacts/PERFORMANCE-REPORT.md
+              
+              # Memory usage
+              memory=$(jq -r '.performance.memory_usage_mb.value // 0' "$metrics_file")
+              memory_status="✅"
+              [ "${memory%.*}" -gt 1000 ] && memory_status="❌"
+              echo "| Memory Usage | ${memory} MB | $memory_status |" >> artifacts/PERFORMANCE-REPORT.md
+              
+              # Security scan
+              if [ -n "${SECURITY_SCAN_TIME:-}" ]; then
+                scan_status="✅"
+                [ "${CRITICAL_VULNS:-0}" -gt 0 ] && scan_status="❌"
+                echo "| Security Scan | ${SECURITY_SCAN_TIME} ms | $scan_status |" >> artifacts/PERFORMANCE-REPORT.md
+                echo "| Critical Vulns | ${CRITICAL_VULNS:-0} | ${scan_status} |" >> artifacts/PERFORMANCE-REPORT.md
+              fi
+            fi
+          fi
+          
+          echo "" >> artifacts/PERFORMANCE-REPORT.md
+          echo "## Detailed Analysis" >> artifacts/PERFORMANCE-REPORT.md
+          echo "" >> artifacts/PERFORMANCE-REPORT.md
+          echo "See attached artifacts for detailed performance analysis." >> artifacts/PERFORMANCE-REPORT.md
+
+      - name: Store performance data
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Store metrics for trend analysis
+          if [ -f logs/docker-metrics-*.json ]; then
+            cp logs/docker-metrics-*.json performance-history/
+            echo "Stored performance data for trend analysis"
+          fi
+
+      - name: Upload performance artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-performance-${{ github.sha }}
+          path: |
+            artifacts/
+            logs/
+          retention-days: 30
+
+      - name: Comment performance results on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let comment = '## 🔧 Docker Performance Test Results\n\n';
+            
+            // Read performance report if it exists
+            try {
+              const report = fs.readFileSync('artifacts/PERFORMANCE-REPORT.md', 'utf8');
+              comment += report;
+            } catch (e) {
+              comment += 'Performance report not generated.\n';
+            }
+            
+            // Add threshold check results
+            try {
+              const thresholds = fs.readFileSync('artifacts/threshold-check.txt', 'utf8');
+              comment += '\n## Threshold Checks\n\n```\n' + thresholds + '\n```\n';
+            } catch (e) {
+              comment += '\nThreshold check results not available.\n';
+            }
+            
+            comment += '\n📊 [View detailed performance data](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\n';
+            
+            // Post comment
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Fail if performance thresholds exceeded
+        if: env.BUILD_THRESHOLD_EXCEEDED == 'true' || env.STARTUP_THRESHOLD_EXCEEDED == 'true' || env.SIZE_THRESHOLD_EXCEEDED == 'true' || env.MEMORY_THRESHOLD_EXCEEDED == 'true'
+        run: |
+          echo "❌ Performance thresholds exceeded!"
+          echo "See threshold-check.txt for details"
+          cat artifacts/threshold-check.txt
+          exit 1
+
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: docker-test
+    if: always()
+    steps:
+      - name: Clean up Docker resources
+        run: |
+          docker system prune -af
+          docker volume prune -f 
