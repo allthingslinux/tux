@@ -64,9 +64,12 @@ jobs:
       - name: Set up environment file
         run: |
           # Create minimal .env for testing
-          echo "DATABASE_URL=sqlite:///tmp/test.db" > .env
-          echo "DISCORD_TOKEN=test_token" >> .env
-          echo "PRODUCTION=false" >> .env
+          echo "DEV_DATABASE_URL=sqlite:///tmp/test.db" > .env
+          echo "PROD_DATABASE_URL=sqlite:///tmp/test.db" >> .env
+          echo "DEV_BOT_TOKEN=test_token_dev" >> .env
+          echo "PROD_BOT_TOKEN=test_token_prod" >> .env
+          echo "DEV_COG_IGNORE_LIST=rolecount,mail,git" >> .env
+          echo "PROD_COG_IGNORE_LIST=rolecount,mail,git" >> .env
 
       - name: Run comprehensive performance tests
         run: |
@@ -149,6 +152,9 @@ jobs:
           SIZE_THRESHOLD=2000       # 2GB
           MEMORY_THRESHOLD=1000     # 1GB
           
+          # Initialize failure flag
+          THRESHOLD_FAILED=false
+          
           if [ -f logs/docker-metrics-*.json ]; then
             metrics_file=$(ls logs/docker-metrics-*.json | head -1)
             
@@ -157,7 +163,7 @@ jobs:
               build_time=$(jq -r '.performance.production_build.value // 0' "$metrics_file")
               if [ "$build_time" -gt "$BUILD_THRESHOLD" ]; then
                 echo "❌ FAIL: Build time ($build_time ms) exceeds threshold ($BUILD_THRESHOLD ms)" >> artifacts/threshold-check.txt
-                echo "BUILD_THRESHOLD_EXCEEDED=true" >> $GITHUB_ENV
+                THRESHOLD_FAILED=true
               else
                 echo "✅ PASS: Build time ($build_time ms) within threshold" >> artifacts/threshold-check.txt
               fi
@@ -166,7 +172,7 @@ jobs:
               startup_time=$(jq -r '.performance.container_startup.value // 0' "$metrics_file")
               if [ "$startup_time" -gt "$STARTUP_THRESHOLD" ]; then
                 echo "❌ FAIL: Startup time ($startup_time ms) exceeds threshold ($STARTUP_THRESHOLD ms)" >> artifacts/threshold-check.txt
-                echo "STARTUP_THRESHOLD_EXCEEDED=true" >> $GITHUB_ENV
+                THRESHOLD_FAILED=true
               else
                 echo "✅ PASS: Startup time ($startup_time ms) within threshold" >> artifacts/threshold-check.txt
               fi
@@ -176,7 +182,7 @@ jobs:
               image_size=${image_size_float%.*}  # Convert to integer
               if [ "$image_size" -gt "$SIZE_THRESHOLD" ]; then
                 echo "❌ FAIL: Image size ($image_size MB) exceeds threshold ($SIZE_THRESHOLD MB)" >> artifacts/threshold-check.txt
-                echo "SIZE_THRESHOLD_EXCEEDED=true" >> $GITHUB_ENV
+                THRESHOLD_FAILED=true
               else
                 echo "✅ PASS: Image size ($image_size MB) within threshold" >> artifacts/threshold-check.txt
               fi
@@ -186,9 +192,21 @@ jobs:
               memory=${memory_float%.*}  # Convert to integer
               if [ "$memory" -gt "$MEMORY_THRESHOLD" ]; then
                 echo "❌ FAIL: Memory usage ($memory MB) exceeds threshold ($MEMORY_THRESHOLD MB)" >> artifacts/threshold-check.txt
-                echo "MEMORY_THRESHOLD_EXCEEDED=true" >> $GITHUB_ENV
+                THRESHOLD_FAILED=true
               else
                 echo "✅ PASS: Memory usage ($memory MB) within threshold" >> artifacts/threshold-check.txt
+              fi
+              
+              # Fail the step if any threshold was exceeded
+              if [ "$THRESHOLD_FAILED" = true ]; then
+                echo ""
+                echo "❌ Performance thresholds exceeded!"
+                echo "See threshold-check.txt for details"
+                cat artifacts/threshold-check.txt
+                exit 1
+              else
+                echo ""
+                echo "✅ All performance thresholds within acceptable ranges"
               fi
             fi
           fi
@@ -342,14 +360,6 @@ jobs:
               repo: context.repo.repo,
               body: comment
             });
-
-      - name: Fail if performance thresholds exceeded
-        if: env.BUILD_THRESHOLD_EXCEEDED == 'true' || env.STARTUP_THRESHOLD_EXCEEDED == 'true' || env.SIZE_THRESHOLD_EXCEEDED == 'true' || env.MEMORY_THRESHOLD_EXCEEDED == 'true'
-        run: |
-          echo "❌ Performance thresholds exceeded!"
-          echo "See threshold-check.txt for details"
-          cat artifacts/threshold-check.txt
-          exit 1
 
   cleanup:
     runs-on: ubuntu-latest
