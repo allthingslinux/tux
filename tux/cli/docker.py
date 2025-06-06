@@ -80,9 +80,11 @@ def _get_tux_resources(resource_type: str) -> list[str]:
 
         # Filter resources that match our regex patterns
         tux_resources: list[str] = []
+        # Compile patterns to regex objects once for better performance
+        compiled_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in cfg["regex"]]
         for resource in all_resources:
-            for pattern in cfg["regex"]:
-                if re.match(pattern, resource, re.IGNORECASE):
+            for pattern_regex in compiled_patterns:
+                if pattern_regex.match(resource):
                     tux_resources.append(resource)
                     break
 
