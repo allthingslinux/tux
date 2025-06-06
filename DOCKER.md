@@ -582,7 +582,7 @@ docker scout cves tux:prod --only-severity critical,high
 
 ```bash
 # Generate performance report
-./scripts/comprehensive-docker-test.sh
+./scripts/docker-toolkit.sh comprehensive
 
 # View detailed results
 cat logs/comprehensive-test-*/test-report.md
@@ -596,7 +596,7 @@ jq '.' logs/docker-metrics-*.json > performance-data.json
 ```yaml
 # GitHub Actions example
 - name: Docker Performance Test
-  run: ./scripts/test-docker.sh
+  run: ./scripts/docker-toolkit.sh test
   
 - name: Security Scan
   run: docker scout cves --exit-code --only-severity critical,high
