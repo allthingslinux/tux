@@ -4,10 +4,10 @@
 FROM python:3.13.2-slim AS base
 
 LABEL org.opencontainers.image.source="https://github.com/allthingslinux/tux" \
-      org.opencontainers.image.description="Tux Discord Bot" \
+      org.opencontainers.image.description="Tux" \
       org.opencontainers.image.licenses="GPL-3.0" \
-      org.opencontainers.image.authors="AllThingsLinux" \
-      org.opencontainers.image.vendor="AllThingsLinux"
+      org.opencontainers.image.authors="All Things Linux" \
+      org.opencontainers.image.vendor="All Things Linux"
 
 # Create non-root user early for security
 RUN groupadd --system --gid 1001 nonroot && \
@@ -129,10 +129,10 @@ CMD ["sh", "-c", "poetry run prisma generate && exec poetry run tux --dev start"
 FROM python:3.13.2-slim AS production
 
 LABEL org.opencontainers.image.source="https://github.com/allthingslinux/tux" \
-      org.opencontainers.image.description="Tux Discord Bot" \
+      org.opencontainers.image.description="Tux" \
       org.opencontainers.image.licenses="GPL-3.0" \
-      org.opencontainers.image.authors="AllThingsLinux" \
-      org.opencontainers.image.vendor="AllThingsLinux"
+      org.opencontainers.image.authors="All Things Linux" \
+      org.opencontainers.image.vendor="All Things Linux"
 
 # Create non-root user
 RUN groupadd --system --gid 1001 nonroot && \
