@@ -429,6 +429,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [docker-test, comprehensive-test]
     if: always()
+    permissions:
+      contents: read
     steps:
       - name: Clean up Docker resources (SAFE - test images only)
         run: |
