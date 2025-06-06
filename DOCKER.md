@@ -253,6 +253,7 @@ develop:
       target: /app/
     - action: rebuild   # Rebuild triggers
       path: pyproject.toml
+    - action: rebuild
       path: prisma/schema/
 ```
 
