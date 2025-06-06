@@ -306,13 +306,22 @@ All tests should pass with:
 
 ## 📊 **Performance Benchmarks**
 
-Document these metrics:
+Default performance thresholds (configurable via environment variables):
 
-- Development build time: `< 2 minutes`
-- Production build time: `< 3 minutes`
-- Schema rebuild time: `< 1 minute`
-- Container startup time: `< 30 seconds`
-- Memory usage: `< 512MB (prod), < 1GB (dev)`
+- Production build time: `< 300,000ms (5 minutes)` - `BUILD_THRESHOLD`
+- Container startup time: `< 10,000ms (10 seconds)` - `STARTUP_THRESHOLD`  
+- Prisma generation: `< 30,000ms (30 seconds)` - `PRISMA_THRESHOLD`
+- Memory usage: `< 512MB (production)` - `MEMORY_THRESHOLD`
+
+**Customize thresholds:**
+
+```bash
+# Example: Set stricter thresholds for CI
+BUILD_THRESHOLD=180000 STARTUP_THRESHOLD=5000 ./scripts/test-docker.sh
+
+# Example: Set looser thresholds for slower hardware
+BUILD_THRESHOLD=600000 MEMORY_THRESHOLD=1024 ./scripts/test-docker.sh
+```
 
 ## 🔄 **Automated Testing**
 

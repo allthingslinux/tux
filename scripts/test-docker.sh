@@ -24,6 +24,12 @@ while [[ $# -gt 0 ]]; do
             echo "  --no-cache     Force fresh builds (no Docker cache)"
             echo "  --force-clean  Aggressive cleanup before testing"
             echo "  --help         Show this help"
+            echo ""
+            echo "Environment Variables (performance thresholds):"
+            echo "  BUILD_THRESHOLD=300000      Max production build time (ms)"
+            echo "  STARTUP_THRESHOLD=10000     Max container startup time (ms)"
+            echo "  PRISMA_THRESHOLD=30000      Max Prisma generation time (ms)"
+            echo "  MEMORY_THRESHOLD=512        Max memory usage (MB)"
             exit 0
             ;;
         *)
@@ -302,7 +308,31 @@ sleep 3  # Let container stabilize
 
 # Get memory stats
 MEMORY_STATS=$(docker stats --no-stream --format "{{.MemUsage}}" $CONTAINER_ID 2>/dev/null || echo "0MiB / 0MiB")
-MEMORY_MB=$(echo $MEMORY_STATS | sed 's/MiB.*//' | sed 's/[^0-9.]//g')
+
+# Parse memory usage and convert to MB
+MEMORY_USAGE=$(echo $MEMORY_STATS | awk '{print $1}')  # Extract first part (e.g., "388KiB")
+
+# Extract numeric value and unit using sed
+value=$(echo $MEMORY_USAGE | sed 's/[^0-9.]//g')
+unit=$(echo $MEMORY_USAGE | sed 's/[0-9.]//g')
+
+if [[ -n "$value" && -n "$unit" ]]; then
+    case $unit in
+        "B")        MEMORY_MB=$(echo "scale=3; $value / 1024 / 1024" | bc -l 2>/dev/null || echo "0") ;;
+        "KiB"|"KB") MEMORY_MB=$(echo "scale=3; $value / 1024" | bc -l 2>/dev/null || echo "0") ;;
+        "MiB"|"MB") MEMORY_MB=$(echo "scale=3; $value" | bc -l 2>/dev/null || echo "$value") ;;
+        "GiB"|"GB") MEMORY_MB=$(echo "scale=3; $value * 1024" | bc -l 2>/dev/null || echo "0") ;;
+        "TiB"|"TB") MEMORY_MB=$(echo "scale=3; $value * 1024 * 1024" | bc -l 2>/dev/null || echo "0") ;;
+        *) MEMORY_MB="0" ;;
+    esac
+else
+    MEMORY_MB="0"
+fi
+
+# Round to 2 decimal places for cleaner output
+if command -v bc &> /dev/null && [[ "$MEMORY_MB" != "0" ]]; then
+    MEMORY_MB=$(echo "scale=2; $MEMORY_MB / 1" | bc -l 2>/dev/null || echo "$MEMORY_MB")
+fi
 
 docker stop $CONTAINER_ID > /dev/null 2>&1 || true
 
@@ -376,15 +406,75 @@ echo -e "${GREEN}🎉 All tests completed!${NC}"
 echo ""
 echo -e "${CYAN}📊 Detailed logs: $LOG_FILE${NC}"
 echo -e "${CYAN}📈 Metrics data: $METRICS_FILE${NC}"
+# Performance threshold checking
 echo ""
-echo "Performance Benchmarks:"
-echo "======================"
-echo "✅ Development build: < 120,000ms (2 min)"
-echo "✅ Production build: < 180,000ms (3 min)"
-echo "✅ Container startup: < 5,000ms (5 sec)"
-echo "✅ Prisma generation: < 30,000ms (30 sec)"
-echo "✅ Memory usage: < 512MB (prod)"
-echo ""
+echo "Performance Threshold Check:"
+echo "============================"
+
+# Define configurable thresholds (in milliseconds and MB)
+# These can be overridden via environment variables
+BUILD_THRESHOLD=${BUILD_THRESHOLD:-300000}    # 5 minutes (matches CI)
+STARTUP_THRESHOLD=${STARTUP_THRESHOLD:-10000} # 10 seconds (matches CI)
+PRISMA_THRESHOLD=${PRISMA_THRESHOLD:-30000}   # 30 seconds
+MEMORY_THRESHOLD=${MEMORY_THRESHOLD:-512}     # 512MB for production
+
+# Initialize failure flag
+THRESHOLD_FAILED=false
+
+if command -v jq &> /dev/null && [[ -f "$METRICS_FILE" ]]; then
+    # Check build time
+    build_time=$(jq -r '.performance.production_build.value // 0' "$METRICS_FILE")
+    if [ "$build_time" -gt "$BUILD_THRESHOLD" ]; then
+        echo "❌ FAIL: Production build time (${build_time}ms) exceeds threshold (${BUILD_THRESHOLD}ms)"
+        THRESHOLD_FAILED=true
+    else
+        echo "✅ PASS: Production build time (${build_time}ms) within threshold (${BUILD_THRESHOLD}ms)"
+    fi
+    
+    # Check startup time
+    startup_time=$(jq -r '.performance.container_startup.value // 0' "$METRICS_FILE")
+    if [ "$startup_time" -gt "$STARTUP_THRESHOLD" ]; then
+        echo "❌ FAIL: Container startup time (${startup_time}ms) exceeds threshold (${STARTUP_THRESHOLD}ms)"
+        THRESHOLD_FAILED=true
+    else
+        echo "✅ PASS: Container startup time (${startup_time}ms) within threshold (${STARTUP_THRESHOLD}ms)"
+    fi
+    
+    # Check Prisma generation time
+    prisma_time=$(jq -r '.performance.prisma_generation.value // 0' "$METRICS_FILE")
+    if [ "$prisma_time" -gt "$PRISMA_THRESHOLD" ]; then
+        echo "❌ FAIL: Prisma generation time (${prisma_time}ms) exceeds threshold (${PRISMA_THRESHOLD}ms)"
+        THRESHOLD_FAILED=true
+    else
+        echo "✅ PASS: Prisma generation time (${prisma_time}ms) within threshold (${PRISMA_THRESHOLD}ms)"
+    fi
+    
+    # Check memory usage
+    memory_float=$(jq -r '.performance.memory_usage_mb.value // 0' "$METRICS_FILE")
+    memory=${memory_float%.*}  # Convert to integer
+    if [ "$memory" -gt "$MEMORY_THRESHOLD" ]; then
+        echo "❌ FAIL: Memory usage (${memory}MB) exceeds threshold (${MEMORY_THRESHOLD}MB)"
+        THRESHOLD_FAILED=true
+    else
+        echo "✅ PASS: Memory usage (${memory}MB) within threshold (${MEMORY_THRESHOLD}MB)"
+    fi
+    
+    echo ""
+    if [ "$THRESHOLD_FAILED" = true ]; then
+        echo -e "${RED}❌ Some performance thresholds exceeded!${NC}"
+        echo "Consider optimizing the build process or adjusting thresholds via environment variables:"
+        echo "  BUILD_THRESHOLD=$BUILD_THRESHOLD (current)"
+        echo "  STARTUP_THRESHOLD=$STARTUP_THRESHOLD (current)"
+        echo "  PRISMA_THRESHOLD=$PRISMA_THRESHOLD (current)"
+        echo "  MEMORY_THRESHOLD=$MEMORY_THRESHOLD (current)"
+    else
+        echo -e "${GREEN}✅ All performance thresholds within acceptable ranges${NC}"
+    fi
+else
+    echo "⚠️  Performance threshold checking requires jq and metrics data"
+    echo "Install jq: sudo apt-get install jq (Ubuntu) or brew install jq (macOS)"
+fi
+echo ""d
 echo "Next steps:"
 echo "1. Review metrics in $METRICS_FILE"
 echo "2. Run full test suite: see DOCKER-TESTING.md"
