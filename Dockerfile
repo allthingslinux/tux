@@ -56,7 +56,8 @@ ENV POETRY_VERSION=2.1.1 \
     POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_CREATE=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache
+    POETRY_CACHE_DIR=/tmp/poetry_cache \
+    POETRY_INSTALLER_PARALLEL=true
 
 RUN --mount=type=cache,target=/root/.cache \
     pip install poetry==$POETRY_VERSION
@@ -76,6 +77,9 @@ COPY . .
 # Install application and generate Prisma client
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
     --mount=type=cache,target=/root/.cache \
+    git init . && \
+    git config user.email "docker@build.local" && \
+    git config user.name "Docker Build" && \
     poetry install --only main && \
     poetry run prisma py fetch && \
     poetry run prisma generate
@@ -108,6 +112,9 @@ RUN if [ "$DEVCONTAINER" = "1" ]; then \
 RUN mkdir -p /app/.cache/tldr /app/temp && \
     chown -R nonroot:nonroot /app/.cache /app/temp
 
+# Fix virtualenv permissions for nonroot user in dev stage too
+RUN chown -R nonroot:nonroot /app/.venv
+
 # Switch to non-root user for development too
 USER nonroot
 
@@ -116,23 +123,124 @@ CMD ["sh", "-c", "poetry run prisma generate && exec poetry run tux --dev start"
 
 
 # Production stage:
-# - Minimal, secure runtime environment
+# - Minimal, secure runtime environment  
 # - Non-root user execution
 # - Optimized for size and security
-FROM base AS production
+FROM python:3.13.2-slim AS production
+
+LABEL org.opencontainers.image.source="https://github.com/allthingslinux/tux" \
+      org.opencontainers.image.description="Tux Discord Bot" \
+      org.opencontainers.image.licenses="GPL-3.0" \
+      org.opencontainers.image.authors="AllThingsLinux" \
+      org.opencontainers.image.vendor="AllThingsLinux"
+
+# Create non-root user
+RUN groupadd --system --gid 1001 nonroot && \
+    useradd --create-home --system --uid 1001 --gid nonroot nonroot
+
+# Install ONLY runtime dependencies (minimal set)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libcairo2 \
+        libffi8 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/cache/apt/* \
+    && rm -rf /tmp/* \
+    && rm -rf /var/tmp/*
 
 WORKDIR /app
 
 # Set up environment for production
 ENV VIRTUAL_ENV=/app/.venv \
-    PATH="/app/.venv/bin:$PATH"
+    PATH="/app/.venv/bin:$PATH" \
+    PYTHONPATH="/app" \
+    PYTHONOPTIMIZE=2 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_NO_CACHE_DIR=1
 
-# Copy application code and dependencies with proper ownership
-COPY --from=build --chown=nonroot:nonroot /app /app
+# Copy only essential production files
+COPY --from=build --chown=nonroot:nonroot /app/.venv /app/.venv
+COPY --from=build --chown=nonroot:nonroot /app/tux /app/tux
+COPY --from=build --chown=nonroot:nonroot /app/prisma /app/prisma
+COPY --from=build --chown=nonroot:nonroot /app/config /app/config
+COPY --from=build --chown=nonroot:nonroot /app/pyproject.toml /app/pyproject.toml
 
-# Create cache directories with proper permissions
-RUN mkdir -p /app/.cache/tldr /app/temp && \
-    chown -R nonroot:nonroot /app/.cache /app/temp
+# Aggressive cleanup and optimization in one layer
+RUN set -eux; \
+    # Fix permissions
+    chown -R nonroot:nonroot /app/.venv; \
+    mkdir -p /app/.cache/tldr /app/temp; \
+    chown -R nonroot:nonroot /app/.cache /app/temp; \
+    \
+    # AGGRESSIVE virtualenv cleanup
+    cd /app/.venv; \
+    \
+    # Remove all bytecode first
+    find . -name "*.pyc" -delete; \
+    find . -name "*.pyo" -delete; \
+    find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    \
+    # Remove package metadata and installation files (but keep tux metadata)
+    find . -name "*.egg-info" -type d ! -name "*tux*" -exec rm -rf {} + 2>/dev/null || true; \
+    find . -name "*.dist-info" -type d ! -name "*tux*" -exec rm -rf {} + 2>/dev/null || true; \
+    \
+    # Remove test and development files
+    find . -name "tests" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find . -name "test" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find . -name "testing" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find . -name "*test*" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    \
+    # Remove documentation
+    find . -name "docs" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find . -name "doc" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find . -name "examples" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find . -name "samples" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    \
+    # Remove all documentation files
+    find . -name "*.md" -delete 2>/dev/null || true; \
+    find . -name "*.txt" -delete 2>/dev/null || true; \
+    find . -name "*.rst" -delete 2>/dev/null || true; \
+    find . -name "LICENSE*" -delete 2>/dev/null || true; \
+    find . -name "NOTICE*" -delete 2>/dev/null || true; \
+    find . -name "COPYING*" -delete 2>/dev/null || true; \
+    find . -name "CHANGELOG*" -delete 2>/dev/null || true; \
+    find . -name "README*" -delete 2>/dev/null || true; \
+    find . -name "HISTORY*" -delete 2>/dev/null || true; \
+    find . -name "AUTHORS*" -delete 2>/dev/null || true; \
+    find . -name "CONTRIBUTORS*" -delete 2>/dev/null || true; \
+    \
+    # Remove large packages not needed in production
+    rm -rf lib/python3.13/site-packages/pip* 2>/dev/null || true; \
+    rm -rf lib/python3.13/site-packages/setuptools* 2>/dev/null || true; \
+    rm -rf lib/python3.13/site-packages/wheel* 2>/dev/null || true; \
+    rm -rf lib/python3.13/site-packages/pkg_resources* 2>/dev/null || true; \
+    \
+    # Remove binaries from site-packages bin if they exist
+    rm -rf bin/pip* bin/easy_install* bin/wheel* 2>/dev/null || true; \
+    \
+    # Remove debug symbols and static libraries
+    find . -name "*.so.debug" -delete 2>/dev/null || true; \
+    find . -name "*.a" -delete 2>/dev/null || true; \
+    \
+    # Remove locale files (if your app doesn't need i18n)
+    find . -name "*.mo" -delete 2>/dev/null || true; \
+    find . -name "locale" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    \
+    # Remove source maps and other development artifacts
+    find . -name "*.map" -delete 2>/dev/null || true; \
+    find . -name "*.coffee" -delete 2>/dev/null || true; \
+    find . -name "*.ts" -delete 2>/dev/null || true; \
+    find . -name "*.scss" -delete 2>/dev/null || true; \
+    find . -name "*.less" -delete 2>/dev/null || true; \
+    \
+    # Compile Python bytecode and remove source files for some packages  
+    /app/.venv/bin/python -m compileall -b -q /app/tux /app/.venv/lib/python3.13/site-packages/ 2>/dev/null || true; \
+    \
+    # Strip binaries (if strip is available)
+    find . -name "*.so" -exec strip --strip-unneeded {} + 2>/dev/null || true;
 
 # Switch to non-root user
 USER nonroot

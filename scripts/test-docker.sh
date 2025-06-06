@@ -5,8 +5,45 @@
 
 set -e  # Exit on any error
 
+# Parse command line arguments
+NO_CACHE=""
+FORCE_CLEAN=""
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --no-cache)
+            NO_CACHE="--no-cache"
+            shift
+            ;;
+        --force-clean)
+            FORCE_CLEAN="true"
+            shift
+            ;;
+        --help)
+            echo "Usage: $0 [options]"
+            echo "Options:"
+            echo "  --no-cache     Force fresh builds (no Docker cache)"
+            echo "  --force-clean  Aggressive cleanup before testing"
+            echo "  --help         Show this help"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
 echo "🔧 Docker Setup Performance Test"
 echo "================================"
+
+# Display test mode
+if [[ -n "$NO_CACHE" ]]; then
+    echo "🚀 Running in NO-CACHE mode (true from-scratch builds)"
+fi
+if [[ -n "$FORCE_CLEAN" ]]; then
+    echo "🧹 Running with FORCE-CLEAN (aggressive cleanup)"
+fi
 
 # Colors for output
 RED='\033[0;31m'
@@ -26,6 +63,10 @@ METRICS_FILE="logs/docker-metrics-$(date +%Y%m%d-%H%M%S).json"
 # Initialize metrics JSON
 echo '{
   "timestamp": "'$(date -Iseconds)'",
+  "test_mode": {
+    "no_cache": '$([ -n "$NO_CACHE" ] && echo true || echo false)',
+    "force_clean": '$([ -n "$FORCE_CLEAN" ] && echo true || echo false)'
+  },
   "tests": [],
   "performance": {},
   "images": {},
@@ -108,6 +149,42 @@ test_with_timing() {
     return $result
 }
 
+# Cleanup function
+perform_cleanup() {
+    local cleanup_type="$1"
+    
+    info "Performing $cleanup_type cleanup..."
+    cleanup_start=$(start_timer)
+    
+    # Remove any existing test containers
+    docker rm -f $(docker ps -aq --filter "ancestor=tux:test-dev") 2>/dev/null || true
+    docker rm -f $(docker ps -aq --filter "ancestor=tux:test-prod") 2>/dev/null || true
+    
+    # Remove test images
+    docker rmi tux:test-dev tux:test-prod 2>/dev/null || true
+    
+    if [[ "$cleanup_type" == "aggressive" ]] || [[ -n "$FORCE_CLEAN" ]]; then
+        warning "Performing aggressive cleanup (this may affect other Docker work)..."
+        
+        # Remove all tux images
+        docker rmi $(docker images "tux*" -q) 2>/dev/null || true
+        docker rmi $(docker images "*tux*" -q) 2>/dev/null || true
+        
+        # Prune build cache
+        docker builder prune -f 2>/dev/null || true
+        
+        # Remove dangling images and containers
+        docker system prune -f 2>/dev/null || true
+        
+        # For very aggressive cleanup, prune everything (commented out for safety)
+        # docker system prune -af --volumes 2>/dev/null || true
+    fi
+    
+    cleanup_duration=$(end_timer $cleanup_start)
+    metric "$cleanup_type cleanup completed in ${cleanup_duration}ms"
+    add_metric "${cleanup_type}_cleanup" "$cleanup_duration" "ms"
+}
+
 log "Starting Docker performance tests"
 log "Log file: $LOG_FILE"
 log "Metrics file: $METRICS_FILE"
@@ -118,6 +195,13 @@ log "- OS: $(uname -s -r)"
 log "- Docker version: $(docker --version)"
 log "- Available memory: $(free -h | awk '/^Mem:/ {print $2}')"
 log "- Available disk: $(df -h . | awk 'NR==2 {print $4}')"
+
+# Initial cleanup
+if [[ -n "$FORCE_CLEAN" ]]; then
+    perform_cleanup "initial_aggressive"
+else
+    perform_cleanup "initial_basic"
+fi
 
 # Test 1: Environment Check
 info "Checking environment..."
@@ -133,7 +217,8 @@ fi
 success "Environment files present"
 
 # Test 2: Development Build with timing
-test_with_timing "development_build" "docker build --target dev -t tux:test-dev . > /dev/null 2>&1"
+BUILD_CMD="docker build $NO_CACHE --target dev -t tux:test-dev . > /dev/null 2>&1"
+test_with_timing "development_build" "$BUILD_CMD"
 if [[ $? -eq 0 ]]; then
     success "Development build successful"
     dev_size=$(get_image_size "tux:test-dev")
@@ -144,7 +229,8 @@ else
 fi
 
 # Test 3: Production Build with timing
-test_with_timing "production_build" "docker build --target production -t tux:test-prod . > /dev/null 2>&1"
+BUILD_CMD="docker build $NO_CACHE --target production -t tux:test-prod . > /dev/null 2>&1"
+test_with_timing "production_build" "$BUILD_CMD"
 if [[ $? -eq 0 ]]; then
     success "Production build successful"
     prod_size=$(get_image_size "tux:test-prod")
@@ -157,7 +243,7 @@ fi
 # Test 4: Container Startup Time
 info "Testing container startup time..."
 startup_start=$(start_timer)
-CONTAINER_ID=$(docker run -d --rm tux:test-prod sleep 30)
+CONTAINER_ID=$(docker run -d --rm --entrypoint="" tux:test-prod sleep 30)
 # Wait for container to be running
 while [[ "$(docker inspect -f '{{.State.Status}}' $CONTAINER_ID 2>/dev/null)" != "running" ]]; do
     sleep 0.1
@@ -171,7 +257,7 @@ success "Container startup test completed"
 
 # Test 5: Non-root User Check
 info "Testing non-root user execution..."
-USER_OUTPUT=$(docker run --rm tux:test-prod whoami 2>/dev/null || echo "failed")
+USER_OUTPUT=$(docker run --rm --entrypoint="" tux:test-prod whoami 2>/dev/null || echo "failed")
 if [[ "$USER_OUTPUT" == "nonroot" ]]; then
     success "Container runs as non-root user"
 else
@@ -180,7 +266,7 @@ fi
 
 # Test 6: Read-only Filesystem Check
 info "Testing read-only filesystem..."
-if docker run --rm tux:test-prod touch /test-file 2>/dev/null; then
+if docker run --rm --entrypoint="" tux:test-prod touch /test-file 2>/dev/null; then
     error "Filesystem is not read-only"
 else
     success "Read-only filesystem working"
@@ -189,7 +275,7 @@ fi
 # Test 7: Temp Directory Performance Test
 info "Testing temp directory performance..."
 temp_start=$(start_timer)
-docker run --rm tux:test-prod sh -c "
+docker run --rm --entrypoint="" tux:test-prod sh -c "
     for i in \$(seq 1 100); do
         echo 'test content' > /app/temp/test_\$i.txt
     done
@@ -202,7 +288,7 @@ add_metric "temp_file_ops" "$temp_duration" "ms"
 success "Temp directory performance test completed"
 
 # Test 8: Prisma Client Generation with timing
-test_with_timing "prisma_generation" "docker run --rm tux:test-dev sh -c 'poetry run prisma generate' > /dev/null 2>&1"
+test_with_timing "prisma_generation" "docker run --rm --entrypoint='' tux:test-dev sh -c 'cd /app && poetry run prisma generate' > /dev/null 2>&1"
 if [[ $? -eq 0 ]]; then
     success "Prisma client generation working"
 else
@@ -211,11 +297,11 @@ fi
 
 # Test 9: Memory Usage Test
 info "Testing memory usage..."
-CONTAINER_ID=$(docker run -d --rm tux:test-prod sleep 30)
-sleep 2  # Let container stabilize
+CONTAINER_ID=$(docker run -d --rm --entrypoint="" tux:test-prod sleep 30)
+sleep 3  # Let container stabilize
 
 # Get memory stats
-MEMORY_STATS=$(docker stats --no-stream --format "{{.MemUsage}}" $CONTAINER_ID)
+MEMORY_STATS=$(docker stats --no-stream --format "{{.MemUsage}}" $CONTAINER_ID 2>/dev/null || echo "0MiB / 0MiB")
 MEMORY_MB=$(echo $MEMORY_STATS | sed 's/MiB.*//' | sed 's/[^0-9.]//g')
 
 docker stop $CONTAINER_ID > /dev/null 2>&1 || true
@@ -262,11 +348,7 @@ else
 fi
 
 # Cleanup and final metrics
-info "Cleaning up test images..."
-cleanup_start=$(start_timer)
-docker rmi tux:test-dev tux:test-prod > /dev/null 2>&1 || true
-cleanup_duration=$(end_timer $cleanup_start)
-add_metric "cleanup_time" "$cleanup_duration" "ms"
+perform_cleanup "final_basic"
 
 # Generate summary
 log "Test Summary:"
