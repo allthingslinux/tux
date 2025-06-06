@@ -29,8 +29,8 @@ dist/
 # Documentation and development files
 docs-build/
 site/
-README.md
 *.md
+!README.md
 !requirements.md
 
 # Development configuration
