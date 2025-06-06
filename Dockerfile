@@ -119,7 +119,7 @@ RUN git config --global --add safe.directory /app && \
     poetry install --only dev --no-root --no-directory
 
 # Regenerate Prisma client on start for development
-CMD ["sh", "-c", "poetry run prisma generate && exec poe try run tux --dev start"]
+CMD ["sh", "-c", "poetry run prisma generate && exec poetry run tux --dev start"]
 
 
 # Production stage:
