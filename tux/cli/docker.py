@@ -243,8 +243,7 @@ def logs(follow: bool, tail: int | None, service: str | None) -> int:
         cmd.extend(["--tail", str(tail)])
     if service:
         cmd.append(service)
-    else:
-        cmd.append(_get_service_name())
+    # No else clause - if no service specified, show logs for all services
 
     return run_command(cmd)
 
