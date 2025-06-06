@@ -40,37 +40,47 @@ def _get_service_name() -> str:
 
 
 def _get_tux_image_patterns() -> list[str]:
-    """Get patterns for Tux-related Docker images."""
+    """Get patterns for Tux-related Docker images - SAFE: specific patterns only."""
     return [
-        "tux:*",
-        "tux-*",
-        "ghcr.io/allthingslinux/tux:*",
-        "*tux*:test-*",  # Test images from our test script
+        "tux:*",  # Official tux images
+        "ghcr.io/allthingslinux/tux:*",  # GitHub registry images
+        "tux:test-*",  # Test images from test script
+        "tux:fresh-*",  # Comprehensive test images
+        "tux:cached-*",  # Comprehensive test images
+        "tux:switch-test-*",  # Comprehensive test images
+        "tux:regression-*",  # Comprehensive test images
+        "tux:perf-test-*",  # Performance test images
+        "tux:multiplatform-test",  # Multi-platform test images
+        "tux:security-test",  # Security test images
     ]
 
 
 def _get_tux_container_patterns() -> list[str]:
-    """Get patterns for Tux-related container names."""
+    """Get patterns for Tux-related container names - SAFE: specific patterns only."""
     return [
-        "tux",
-        "tux-*",
-        "*tux*",
+        "tux",  # Main container name
+        "tux-dev",  # Development container
+        "tux-prod",  # Production container
+        "memory-test",  # Test script containers
+        "resource-test",  # Test script containers
     ]
 
 
 def _get_tux_volume_patterns() -> list[str]:
-    """Get patterns for Tux-related volume names."""
+    """Get patterns for Tux-related volume names - SAFE: specific patterns only."""
     return [
-        "tux_*",
-        "*tux*",
+        "tux_cache",  # Main cache volume
+        "tux_temp",  # Main temp volume
+        "tux_dev_cache",  # Dev cache volume
+        "tux_dev_temp",  # Dev temp volume
     ]
 
 
 def _get_tux_network_patterns() -> list[str]:
-    """Get patterns for Tux-related network names."""
+    """Get patterns for Tux-related network names - SAFE: specific patterns only."""
     return [
-        "tux_*",
-        "*tux*",
+        "tux_default",  # Default compose network
+        "tux-*",  # Any tux-prefixed networks
     ]
 
 

@@ -366,7 +366,15 @@ jobs:
     needs: docker-test
     if: always()
     steps:
-      - name: Clean up Docker resources
+      - name: Clean up Docker resources (SAFE - test images only)
         run: |
-          docker system prune -af
-          docker volume prune -f 
+          # Remove ONLY test images created during this job
+          docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "^tux:(test-|security-)" | xargs -r docker rmi -f 2>/dev/null || true
+          
+          # Remove ONLY dangling images (safe)
+          docker images --filter "dangling=true" -q | xargs -r docker rmi -f 2>/dev/null || true
+          
+          # Prune ONLY build cache (safe)
+          docker builder prune -f 2>/dev/null || true
+          
+          echo "✅ SAFE cleanup completed - system images preserved" 

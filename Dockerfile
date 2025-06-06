@@ -95,31 +95,31 @@ WORKDIR /app
 ARG DEVCONTAINER=0
 ENV DEVCONTAINER=${DEVCONTAINER}
 
-# Install development dependencies
-RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
-    poetry install --only dev --no-root --no-directory
-
-# Conditionally install zsh for devcontainer
-RUN if [ "$DEVCONTAINER" = "1" ]; then \
+# Setup development environment in one optimized layer
+RUN set -eux; \
+    # Conditionally install zsh for devcontainer
+    if [ "$DEVCONTAINER" = "1" ]; then \
         apt-get update && \
         apt-get install -y --no-install-recommends zsh && \
         chsh -s /usr/bin/zsh && \
         apt-get clean && \
         rm -rf /var/lib/apt/lists/*; \
-    fi
+    fi; \
+    # Create cache directories
+    mkdir -p /app/.cache/tldr /app/temp; \
+    # Fix ownership of all app files and directories in single operation
+    chown -R nonroot:nonroot /app
 
-# Create cache directories with proper permissions
-RUN mkdir -p /app/.cache/tldr /app/temp && \
-    chown -R nonroot:nonroot /app/.cache /app/temp
-
-# Fix virtualenv permissions for nonroot user in dev stage too
-RUN chown -R nonroot:nonroot /app/.venv
-
-# Switch to non-root user for development too
+# Switch to non-root user for development
 USER nonroot
 
+# Configure Git for non-root user and install development dependencies
+# Note: Cache mount removed due to network connectivity issues with Poetry
+RUN git config --global --add safe.directory /app && \
+    poetry install --only dev --no-root --no-directory
+
 # Regenerate Prisma client on start for development
-CMD ["sh", "-c", "poetry run prisma generate && exec poetry run tux --dev start"]
+CMD ["sh", "-c", "poetry run prisma generate && exec poe try run tux --dev start"]
 
 
 # Production stage:

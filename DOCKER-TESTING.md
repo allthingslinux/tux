@@ -16,13 +16,23 @@ This guide provides comprehensive tests to validate all Docker improvements with
 ## 🚀 **Quick Performance Test**
 
 ```bash
-# Run automated performance test (includes timing, sizes, metrics)
+# Run basic performance test (5 minutes)
 ./scripts/test-docker.sh
 
+# Run comprehensive test suite (all scenarios, 15-20 minutes)
+./scripts/comprehensive-docker-test.sh
+
 # View results
-cat logs/docker-test-*.log          # Detailed logs
-cat logs/docker-metrics-*.json     # JSON metrics data
+cat logs/docker-test-*.log                    # Basic test logs
+cat logs/comprehensive-test-*/test-report.md  # Comprehensive test report
+cat logs/docker-metrics-*.json               # JSON metrics data
 ```
+
+## 📚 **Testing Documentation**
+
+- **[DOCKER-TESTING.md](DOCKER-TESTING.md)** - Basic testing (this document)
+- **[DOCKER-TESTING-COMPREHENSIVE.md](DOCKER-TESTING-COMPREHENSIVE.md)** - All developer scenarios
+- **[DOCKER-SECURITY.md](DOCKER-SECURITY.md)** - Security testing guide
 
 ## 📋 **Detailed Testing Steps**
 
@@ -34,10 +44,11 @@ ls -la .env                    # Should exist
 ls -la pyproject.toml         # Should exist
 ls -la prisma/schema/         # Should contain your schema files
 
-# Clean up any existing containers/images
+# Clean up any existing containers/images (SAFE: only tux resources)
 docker compose -f docker-compose.dev.yml down -v
 docker compose -f docker-compose.yml down -v
-docker system prune -f
+# Use safe cleanup instead of system prune:
+poetry run tux docker cleanup --force --volumes
 ```
 
 ### 2. **Development Environment Testing**
