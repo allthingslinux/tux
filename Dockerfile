@@ -245,9 +245,9 @@ RUN set -eux; \
 # Switch to non-root user
 USER nonroot
 
-# Add health check
+# Add health check that verifies the application can import core modules
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import sys; sys.exit(0)" || exit 1
+    CMD python -c "import tux.cli.core; import tux.utils.env; print('Health check passed')" || exit 1
 
 ENTRYPOINT ["tux"]
 CMD ["--prod", "start"]
