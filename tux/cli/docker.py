@@ -1,8 +1,10 @@
 """Docker commands for the Tux CLI."""
 
 import re
+import shlex
 import subprocess
 from pathlib import Path
+from typing import Any
 
 import click
 from loguru import logger
@@ -43,6 +45,90 @@ RESOURCE_MAP = {
     },
 }
 
+# Security: Allowlisted Docker commands to prevent command injection
+ALLOWED_DOCKER_COMMANDS = {
+    "docker",
+    "images",
+    "ps",
+    "volume",
+    "network",
+    "ls",
+    "rm",
+    "rmi",
+    "inspect",
+    "version",
+    "--format",
+    "--filter",
+    "-a",
+    "-f",
+}
+
+
+def _validate_docker_command(cmd: list[str]) -> bool:
+    """Validate that a Docker command contains only allowed components."""
+    for component in cmd:
+        # Allow Docker format strings like {{.Repository}}:{{.Tag}}
+        if component.startswith("{{") and component.endswith("}}"):
+            continue
+        # Allow common Docker flags and arguments
+        if component.startswith("-"):
+            continue
+        # Check against allowlist
+        if component not in ALLOWED_DOCKER_COMMANDS and component not in [
+            "{{.Repository}}:{{.Tag}}",
+            "{{.Names}}",
+            "{{.Name}}",
+            "{{.State.Status}}",
+            "{{.State.Health.Status}}",
+        ]:
+            msg = f"Potentially unsafe Docker command component: {component}"
+            logger.warning(msg)
+            return False
+    return True
+
+
+def _sanitize_resource_name(name: str) -> str:
+    """Sanitize resource names to prevent command injection."""
+    # Only allow alphanumeric characters, hyphens, underscores, dots, colons, and slashes
+    # This covers valid Docker image names, container names, etc.
+    if not re.match(r"^[a-zA-Z0-9._:/-]+$", name):
+        msg = f"Invalid resource name format: {name}"
+        raise ValueError(msg)
+    return name
+
+
+def _safe_subprocess_run(cmd: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+    """Safely run subprocess with validation and escaping."""
+    # Validate command structure
+    if not cmd:
+        msg = "Command must be a non-empty list"
+        raise ValueError(msg)
+
+    # For Docker commands, validate against allowlist
+    if cmd[0] == "docker" and not _validate_docker_command(cmd):
+        msg = f"Unsafe Docker command: {cmd}"
+        raise ValueError(msg)
+
+    # Sanitize resource names in the command (last arguments typically)
+    sanitized_cmd: list[str] = []
+    for i, component in enumerate(cmd):
+        if i > 2 and not component.startswith("-") and not component.startswith("{{"):
+            # This is likely a resource name - sanitize it
+            try:
+                sanitized_cmd.append(_sanitize_resource_name(component))
+            except ValueError:
+                # If sanitization fails, use shlex.quote as fallback
+                sanitized_cmd.append(shlex.quote(component))
+        else:
+            sanitized_cmd.append(component)
+
+    # Execute with timeout and capture, ensure check is explicit
+    final_kwargs = {**kwargs, "timeout": kwargs.get("timeout", 30)}
+    if "check" not in final_kwargs:
+        final_kwargs["check"] = True
+
+    return subprocess.run(sanitized_cmd, check=final_kwargs.pop("check", True), **final_kwargs)  # type: ignore[return-value]
+
 
 # Helper function moved from impl/docker.py
 def _get_compose_base_cmd() -> list[str]:
@@ -56,7 +142,7 @@ def _get_compose_base_cmd() -> list[str]:
 def _check_docker_availability() -> bool:
     """Check if Docker is available and running."""
     try:
-        subprocess.run(["docker", "version"], check=True, capture_output=True, text=True, timeout=10)
+        _safe_subprocess_run(["docker", "version"], capture_output=True, text=True, timeout=10)
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
         return False
     else:
@@ -75,7 +161,7 @@ def _get_tux_resources(resource_type: str) -> list[str]:
         return []
 
     try:
-        result = subprocess.run(cfg["cmd"], capture_output=True, text=True, check=True, timeout=30)
+        result = _safe_subprocess_run(cfg["cmd"], capture_output=True, text=True, check=True)
         all_resources = result.stdout.strip().split("\n") if result.stdout.strip() else []
 
         # Filter resources that match our regex patterns
@@ -94,6 +180,15 @@ def _get_tux_resources(resource_type: str) -> list[str]:
         return tux_resources
 
 
+def _log_resource_list(resource_type: str, resources: list[str]) -> None:
+    """Log a list of resources with proper formatting."""
+    if resources:
+        logger.info(f"{resource_type} ({len(resources)}):")
+        for resource in resources:
+            logger.info(f"  - {resource}")
+        logger.info("")
+
+
 def _display_resource_summary(
     tux_containers: list[str],
     tux_images: list[str],
@@ -104,29 +199,10 @@ def _display_resource_summary(
     logger.info("Tux Resources Found for Cleanup:")
     logger.info("=" * 50)
 
-    if tux_containers:
-        logger.info(f"Containers ({len(tux_containers)}):")
-        for container in tux_containers:
-            logger.info(f"  - {container}")
-        logger.info("")
-
-    if tux_images:
-        logger.info(f"Images ({len(tux_images)}):")
-        for image in tux_images:
-            logger.info(f"  - {image}")
-        logger.info("")
-
-    if tux_volumes:
-        logger.info(f"Volumes ({len(tux_volumes)}):")
-        for volume in tux_volumes:
-            logger.info(f"  - {volume}")
-        logger.info("")
-
-    if tux_networks:
-        logger.info(f"Networks ({len(tux_networks)}):")
-        for network in tux_networks:
-            logger.info(f"  - {network}")
-        logger.info("")
+    _log_resource_list("Containers", tux_containers)
+    _log_resource_list("Images", tux_images)
+    _log_resource_list("Volumes", tux_volumes)
+    _log_resource_list("Networks", tux_networks)
 
 
 def _remove_resources(resource_type: str, resources: list[str]) -> None:
@@ -145,7 +221,7 @@ def _remove_resources(resource_type: str, resources: list[str]) -> None:
     for name in resources:
         try:
             cmd = [*remove_cmd, name]
-            subprocess.run(cmd, check=True, capture_output=True, timeout=30)
+            _safe_subprocess_run(cmd, check=True, capture_output=True)
             logger.info(f"Removed {resource_singular}: {name}")
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
             logger.warning(f"Failed to remove {resource_singular} {name}: {e}")
@@ -334,7 +410,7 @@ def health() -> int:
         for container in tux_containers:
             # Check if container is running
             try:
-                result = subprocess.run(
+                result = _safe_subprocess_run(
                     ["docker", "inspect", "--format", "{{.State.Status}}", container],
                     capture_output=True,
                     text=True,
@@ -343,7 +419,7 @@ def health() -> int:
                 status = result.stdout.strip()
 
                 # Get health status if available
-                health_result = subprocess.run(
+                health_result = _safe_subprocess_run(
                     ["docker", "inspect", "--format", "{{.State.Health.Status}}", container],
                     capture_output=True,
                     text=True,
