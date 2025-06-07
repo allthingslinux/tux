@@ -1170,8 +1170,8 @@ cmd_comprehensive() {
     done
 
     # Calculate averages
-    local dev_avg=$(( (${dev_times[0]} + ${dev_times[1]} + ${dev_times[2]}) / 3 ))
-    local prod_avg=$(( (${prod_times[0]} + ${prod_times[1]} + ${prod_times[2]}) / 3 ))
+    local dev_avg=$(( (dev_times[0] + dev_times[1] + dev_times[2]) / 3 ))
+    local prod_avg=$(( (prod_times[0] + prod_times[1] + prod_times[2]) / 3 ))
 
     success "Average dev build time: ${dev_avg}ms"
     success "Average prod build time: ${prod_avg}ms"
