@@ -4,9 +4,8 @@
 
 services:
   tux:
-    container_name: tux
+    container_name: tux-dev
     image: tux:dev
-    user: root
     build:
       context: .
       dockerfile: Dockerfile
@@ -17,17 +16,41 @@ services:
           path: .
           target: /app/
           ignore:
-            - .venv/
-            - .git/
             - .cache/
-            - .vscode/
+            - .git/
             - .idea/
+            - .venv/
+            - .vscode/
             - "**/__pycache__/"
             - "**/*.pyc"
             - "*.log"
-            - ".*.swp"
             - "*.swp"
+            - ".*.swp"
             - "*~"
+        - action: rebuild
+          path: pyproject.toml
+        - action: rebuild
+          path: poetry.lock
+        - action: rebuild
+          path: prisma/schema/
+    volumes:
+      - tux_dev_cache:/app/.cache
+      - tux_dev_temp:/app/temp
     env_file:
-      - .env
+      - path: .env
+        required: true
     restart: unless-stopped
+    mem_limit: 1g
+    mem_reservation: 512m
+    cpus: 1.0
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  tux_dev_cache:
+    driver: local
+  tux_dev_temp:
+    driver: local

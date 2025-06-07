@@ -12,8 +12,42 @@ services:
       target: production
     volumes:
       - ./config:/app/config:ro
-      - ./tux/extensions:/app/tux/extensions
-      - ./assets:/app/assets
+      - ./tux/extensions:/app/tux/extensions:ro
+      - ./assets:/app/assets:ro
+      - tux_cache:/app/.cache
+      - tux_temp:/app/temp
     env_file:
-      - .env
+      - path: .env
+        required: true
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=100m
+      - /var/tmp:size=50m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  tux_cache:
+    driver: local
+  tux_temp:
+    driver: local
