@@ -98,25 +98,37 @@ def _sanitize_resource_name(name: str) -> str:
 
 
 def _safe_subprocess_run(cmd: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
-    """Safely run subprocess with validation and escaping."""
+    """Safely run subprocess with validation and escaping.
+
+    Security measures:
+    - Validates command structure and components
+    - Uses allowlist for Docker commands
+    - Sanitizes resource names to prevent injection
+    - Enforces timeout and explicit error checking
+    """
     # Validate command structure
     if not cmd:
         msg = "Command must be a non-empty list"
         raise ValueError(msg)
 
+    # Log command for security audit (sanitized)
+    logger.debug(f"Executing command: {shlex.join(cmd[:3])}...")
+
     # For Docker commands, validate against allowlist
     if cmd[0] == "docker" and not _validate_docker_command(cmd):
-        msg = f"Unsafe Docker command: {cmd}"
+        msg = f"Unsafe Docker command blocked: {cmd[0]} {cmd[1] if len(cmd) > 1 else ''}"
+        logger.error(msg)
         raise ValueError(msg)
 
-    # Sanitize resource names in the command (last arguments typically)
+    # Sanitize resource names in the command (arguments after flags)
     sanitized_cmd: list[str] = []
     for i, component in enumerate(cmd):
         if i > 2 and not component.startswith("-") and not component.startswith("{{"):
             # This is likely a resource name - sanitize it
             try:
                 sanitized_cmd.append(_sanitize_resource_name(component))
-            except ValueError:
+            except ValueError as e:
+                logger.warning(f"Resource name sanitization failed: {e}")
                 # If sanitization fails, use shlex.quote as fallback
                 sanitized_cmd.append(shlex.quote(component))
         else:
@@ -127,7 +139,16 @@ def _safe_subprocess_run(cmd: list[str], **kwargs: Any) -> subprocess.CompletedP
     if "check" not in final_kwargs:
         final_kwargs["check"] = True
 
-    return subprocess.run(sanitized_cmd, check=final_kwargs.pop("check", True), **final_kwargs)  # type: ignore[return-value]
+    # Extract check flag to avoid duplicate parameter
+    check_flag = final_kwargs.pop("check", True)
+
+    try:
+        return subprocess.run(sanitized_cmd, check=check_flag, **final_kwargs)  # type: ignore[return-value]
+    except subprocess.CalledProcessError as e:
+        logger.error(
+            f"Command failed with exit code {e.returncode}: {shlex.join(sanitized_cmd[:3])}...",
+        )
+        raise
 
 
 # Helper function moved from impl/docker.py
