@@ -84,7 +84,7 @@ jobs:
           exit-code: false
 
       - name: Remove old images
-        if: github.ref_type == 'tag'
+        if: github.event_name != 'pull_request'
         uses: actions/delete-package-versions@v5
         with:
           package-name: 'tux'

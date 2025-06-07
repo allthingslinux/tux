@@ -194,9 +194,11 @@ RUN set -eux; \
     find . -name "*.pyo" -delete; \
     find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true; \
     \
-    # Remove package metadata and installation files (but keep tux metadata)
-    find . -name "*.egg-info" -type d ! -name "*tux*" -exec rm -rf {} + 2>/dev/null || true; \
-    find . -name "*.dist-info" -type d ! -name "*tux*" -exec rm -rf {} + 2>/dev/null || true; \
+    # Remove only development package metadata (keep essential runtime metadata)
+    find . -name "*dev*.egg-info" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find . -name "*test*.egg-info" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find . -name "*dev*.dist-info" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find . -name "*test*.dist-info" -type d -exec rm -rf {} + 2>/dev/null || true; \
     \
     # Remove test and development files
     find . -name "tests" -type d -exec rm -rf {} + 2>/dev/null || true; \
