@@ -196,42 +196,55 @@ jobs:
             echo "Using metrics file: $metrics_file" >> artifacts/threshold-check.txt
             
             if command -v jq &> /dev/null; then
+              # Helper function to safely compare numeric values
+              safe_compare() {
+                local value="$1"
+                local threshold="$2"
+                local name="$3"
+                
+                # Check if value is numeric and not null/N/A
+                if [[ "$value" =~ ^[0-9]+(\.[0-9]+)?$ ]] && [ "$value" != "null" ] && [ "$value" != "N/A" ]; then
+                  # Convert to integer for comparison
+                  local int_value=$(printf "%.0f" "$value")
+                  if [ "$int_value" -gt "$threshold" ]; then
+                    echo "❌ FAIL: $name (${int_value}ms) exceeds threshold (${threshold}ms)" >> artifacts/threshold-check.txt
+                    return 1
+                  else
+                    echo "✅ PASS: $name (${int_value}ms) within threshold (${threshold}ms)" >> artifacts/threshold-check.txt
+                    return 0
+                  fi
+                else
+                  echo "⚠️  SKIP: $name value ($value) is not numeric, skipping check" >> artifacts/threshold-check.txt
+                  return 0
+                fi
+              }
+              
               # Check build time
-              build_time=$(jq -r '.performance.production_build.value // 0' "$metrics_file" 2>/dev/null || echo "0")
-              if [ "$build_time" -gt "$BUILD_THRESHOLD" ]; then
-                echo "❌ FAIL: Build time (${build_time}ms) exceeds threshold (${BUILD_THRESHOLD}ms)" >> artifacts/threshold-check.txt
-                THRESHOLD_FAILED=true
-              else
-                echo "✅ PASS: Build time (${build_time}ms) within threshold (${BUILD_THRESHOLD}ms)" >> artifacts/threshold-check.txt
-              fi
+              build_time=$(jq -r '.performance.production_build.value // "N/A"' "$metrics_file" 2>/dev/null || echo "N/A")
+              safe_compare "$build_time" "$BUILD_THRESHOLD" "Build time" || THRESHOLD_FAILED=true
               
               # Check startup time
-              startup_time=$(jq -r '.performance.container_startup.value // 0' "$metrics_file" 2>/dev/null || echo "0")
-              if [ "$startup_time" -gt "$STARTUP_THRESHOLD" ]; then
-                echo "❌ FAIL: Startup time (${startup_time}ms) exceeds threshold (${STARTUP_THRESHOLD}ms)" >> artifacts/threshold-check.txt
-                THRESHOLD_FAILED=true
-              else
-                echo "✅ PASS: Startup time (${startup_time}ms) within threshold (${STARTUP_THRESHOLD}ms)" >> artifacts/threshold-check.txt
-              fi
+              startup_time=$(jq -r '.performance.container_startup.value // "N/A"' "$metrics_file" 2>/dev/null || echo "N/A")
+              safe_compare "$startup_time" "$STARTUP_THRESHOLD" "Startup time" || THRESHOLD_FAILED=true
               
               # Check Python validation time
-              python_time=$(jq -r '.performance.python_validation.value // 0' "$metrics_file" 2>/dev/null || echo "0")
-              if [ "$python_time" -gt "$PYTHON_THRESHOLD" ]; then
-                echo "❌ FAIL: Python validation (${python_time}ms) exceeds threshold (${PYTHON_THRESHOLD}ms)" >> artifacts/threshold-check.txt
-                THRESHOLD_FAILED=true
-              else
-                echo "✅ PASS: Python validation (${python_time}ms) within threshold (${PYTHON_THRESHOLD}ms)" >> artifacts/threshold-check.txt
-              fi
+              python_time=$(jq -r '.performance.python_validation.value // "N/A"' "$metrics_file" 2>/dev/null || echo "N/A")
+              safe_compare "$python_time" "$PYTHON_THRESHOLD" "Python validation" || THRESHOLD_FAILED=true
               
-              # Check image size
-              image_size_float=$(jq -r '.performance.prod_image_size_mb.value // 0' "$metrics_file" 2>/dev/null || echo "0")
-              image_size=${image_size_float%.*}  # Convert to integer
-              SIZE_THRESHOLD=1024  # 1GB for the new optimized images
-              if [ "$image_size" -gt "$SIZE_THRESHOLD" ]; then
-                echo "❌ FAIL: Image size (${image_size}MB) exceeds threshold (${SIZE_THRESHOLD}MB)" >> artifacts/threshold-check.txt
-                THRESHOLD_FAILED=true
+              # Check image size (with proper rounding)
+              image_size_raw=$(jq -r '.performance.prod_image_size_mb.value // "N/A"' "$metrics_file" 2>/dev/null || echo "N/A")
+              if [[ "$image_size_raw" =~ ^[0-9]+(\.[0-9]+)?$ ]] && [ "$image_size_raw" != "null" ] && [ "$image_size_raw" != "N/A" ]; then
+                # Properly round to nearest integer
+                image_size=$(printf "%.0f" "$image_size_raw")
+                SIZE_THRESHOLD=1024  # 1GB for the new optimized images
+                if [ "$image_size" -gt "$SIZE_THRESHOLD" ]; then
+                  echo "❌ FAIL: Image size (${image_size}MB) exceeds threshold (${SIZE_THRESHOLD}MB)" >> artifacts/threshold-check.txt
+                  THRESHOLD_FAILED=true
+                else
+                  echo "✅ PASS: Image size (${image_size}MB) within threshold (${SIZE_THRESHOLD}MB)" >> artifacts/threshold-check.txt
+                fi
               else
-                echo "✅ PASS: Image size (${image_size}MB) within threshold (${SIZE_THRESHOLD}MB)" >> artifacts/threshold-check.txt
+                echo "⚠️  SKIP: Image size value ($image_size_raw) is not numeric, skipping check" >> artifacts/threshold-check.txt
               fi
               
               # Fail the step if any threshold was exceeded
@@ -322,25 +335,28 @@ jobs:
               
               # Production build (if available)
               build_time=$(jq -r '.performance.production_build.value // "N/A"' "$metrics_file" 2>/dev/null || echo "N/A")
-              if [ "$build_time" != "N/A" ] && [ "$build_time" != "null" ]; then
+              if [ "$build_time" != "N/A" ] && [ "$build_time" != "null" ] && [[ "$build_time" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
                 build_status="✅"
-                [ "$build_time" -gt "$BUILD_THRESHOLD" ] && build_status="❌"
+                build_int=$(printf "%.0f" "$build_time")
+                [ "$build_int" -gt "$BUILD_THRESHOLD" ] && build_status="❌"
                 echo "| Production Build | ${build_time} ms | $build_status |" >> artifacts/PERFORMANCE-REPORT.md
               fi
               
               # Container startup (if available)
               startup_time=$(jq -r '.performance.container_startup.value // "N/A"' "$metrics_file" 2>/dev/null || echo "N/A")
-              if [ "$startup_time" != "N/A" ] && [ "$startup_time" != "null" ]; then
+              if [ "$startup_time" != "N/A" ] && [ "$startup_time" != "null" ] && [[ "$startup_time" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
                 startup_status="✅"
-                [ "$startup_time" -gt "$STARTUP_THRESHOLD" ] && startup_status="❌"
+                startup_int=$(printf "%.0f" "$startup_time")
+                [ "$startup_int" -gt "$STARTUP_THRESHOLD" ] && startup_status="❌"
                 echo "| Container Startup | ${startup_time} ms | $startup_status |" >> artifacts/PERFORMANCE-REPORT.md
               fi
               
               # Image size (if available)
               image_size=$(jq -r '.performance.prod_image_size_mb.value // "N/A"' "$metrics_file" 2>/dev/null || echo "N/A")
-              if [ "$image_size" != "N/A" ] && [ "$image_size" != "null" ]; then
+              if [ "$image_size" != "N/A" ] && [ "$image_size" != "null" ] && [[ "$image_size" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
                 size_status="✅"
-                [ "${image_size%.*}" -gt 1024 ] && size_status="❌"
+                size_int=$(printf "%.0f" "$image_size")
+                [ "$size_int" -gt 1024 ] && size_status="❌"
                 echo "| Image Size | ${image_size} MB | $size_status |" >> artifacts/PERFORMANCE-REPORT.md
               fi
               
@@ -559,42 +575,55 @@ jobs:
             echo "Using metrics file: $metrics_file" >> artifacts/threshold-check.txt
             
             if command -v jq &> /dev/null; then
+              # Helper function to safely compare numeric values
+              safe_compare() {
+                local value="$1"
+                local threshold="$2"
+                local name="$3"
+                
+                # Check if value is numeric and not null/N/A
+                if [[ "$value" =~ ^[0-9]+(\.[0-9]+)?$ ]] && [ "$value" != "null" ] && [ "$value" != "N/A" ]; then
+                  # Convert to integer for comparison
+                  local int_value=$(printf "%.0f" "$value")
+                  if [ "$int_value" -gt "$threshold" ]; then
+                    echo "❌ FAIL: $name (${int_value}ms) exceeds threshold (${threshold}ms)" >> artifacts/threshold-check.txt
+                    return 1
+                  else
+                    echo "✅ PASS: $name (${int_value}ms) within threshold (${threshold}ms)" >> artifacts/threshold-check.txt
+                    return 0
+                  fi
+                else
+                  echo "⚠️  SKIP: $name value ($value) is not numeric, skipping check" >> artifacts/threshold-check.txt
+                  return 0
+                fi
+              }
+              
               # Check build time
-              build_time=$(jq -r '.performance.production_build.value // 0' "$metrics_file" 2>/dev/null || echo "0")
-              if [ "$build_time" -gt "$BUILD_THRESHOLD" ]; then
-                echo "❌ FAIL: Build time (${build_time}ms) exceeds threshold (${BUILD_THRESHOLD}ms)" >> artifacts/threshold-check.txt
-                THRESHOLD_FAILED=true
-              else
-                echo "✅ PASS: Build time (${build_time}ms) within threshold (${BUILD_THRESHOLD}ms)" >> artifacts/threshold-check.txt
-              fi
+              build_time=$(jq -r '.performance.production_build.value // "N/A"' "$metrics_file" 2>/dev/null || echo "N/A")
+              safe_compare "$build_time" "$BUILD_THRESHOLD" "Build time" || THRESHOLD_FAILED=true
               
               # Check startup time
-              startup_time=$(jq -r '.performance.container_startup.value // 0' "$metrics_file" 2>/dev/null || echo "0")
-              if [ "$startup_time" -gt "$STARTUP_THRESHOLD" ]; then
-                echo "❌ FAIL: Startup time (${startup_time}ms) exceeds threshold (${STARTUP_THRESHOLD}ms)" >> artifacts/threshold-check.txt
-                THRESHOLD_FAILED=true
-              else
-                echo "✅ PASS: Startup time (${startup_time}ms) within threshold (${STARTUP_THRESHOLD}ms)" >> artifacts/threshold-check.txt
-              fi
+              startup_time=$(jq -r '.performance.container_startup.value // "N/A"' "$metrics_file" 2>/dev/null || echo "N/A")
+              safe_compare "$startup_time" "$STARTUP_THRESHOLD" "Startup time" || THRESHOLD_FAILED=true
               
               # Check Python validation time
-              python_time=$(jq -r '.performance.python_validation.value // 0' "$metrics_file" 2>/dev/null || echo "0")
-              if [ "$python_time" -gt "$PYTHON_THRESHOLD" ]; then
-                echo "❌ FAIL: Python validation (${python_time}ms) exceeds threshold (${PYTHON_THRESHOLD}ms)" >> artifacts/threshold-check.txt
-                THRESHOLD_FAILED=true
-              else
-                echo "✅ PASS: Python validation (${python_time}ms) within threshold (${PYTHON_THRESHOLD}ms)" >> artifacts/threshold-check.txt
-              fi
+              python_time=$(jq -r '.performance.python_validation.value // "N/A"' "$metrics_file" 2>/dev/null || echo "N/A")
+              safe_compare "$python_time" "$PYTHON_THRESHOLD" "Python validation" || THRESHOLD_FAILED=true
               
-              # Check image size
-              image_size_float=$(jq -r '.performance.prod_image_size_mb.value // 0' "$metrics_file" 2>/dev/null || echo "0")
-              image_size=${image_size_float%.*}  # Convert to integer
-              SIZE_THRESHOLD=1024  # 1GB for the new optimized images
-              if [ "$image_size" -gt "$SIZE_THRESHOLD" ]; then
-                echo "❌ FAIL: Image size (${image_size}MB) exceeds threshold (${SIZE_THRESHOLD}MB)" >> artifacts/threshold-check.txt
-                THRESHOLD_FAILED=true
+              # Check image size (with proper rounding)
+              image_size_raw=$(jq -r '.performance.prod_image_size_mb.value // "N/A"' "$metrics_file" 2>/dev/null || echo "N/A")
+              if [[ "$image_size_raw" =~ ^[0-9]+(\.[0-9]+)?$ ]] && [ "$image_size_raw" != "null" ] && [ "$image_size_raw" != "N/A" ]; then
+                # Properly round to nearest integer
+                image_size=$(printf "%.0f" "$image_size_raw")
+                SIZE_THRESHOLD=1024  # 1GB for the new optimized images
+                if [ "$image_size" -gt "$SIZE_THRESHOLD" ]; then
+                  echo "❌ FAIL: Image size (${image_size}MB) exceeds threshold (${SIZE_THRESHOLD}MB)" >> artifacts/threshold-check.txt
+                  THRESHOLD_FAILED=true
+                else
+                  echo "✅ PASS: Image size (${image_size}MB) within threshold (${SIZE_THRESHOLD}MB)" >> artifacts/threshold-check.txt
+                fi
               else
-                echo "✅ PASS: Image size (${image_size}MB) within threshold (${SIZE_THRESHOLD}MB)" >> artifacts/threshold-check.txt
+                echo "⚠️  SKIP: Image size value ($image_size_raw) is not numeric, skipping check" >> artifacts/threshold-check.txt
               fi
               
               # Fail the step if any threshold was exceeded
@@ -685,25 +714,28 @@ jobs:
               
               # Production build (if available)
               build_time=$(jq -r '.performance.production_build.value // "N/A"' "$metrics_file" 2>/dev/null || echo "N/A")
-              if [ "$build_time" != "N/A" ] && [ "$build_time" != "null" ]; then
+              if [ "$build_time" != "N/A" ] && [ "$build_time" != "null" ] && [[ "$build_time" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
                 build_status="✅"
-                [ "$build_time" -gt "$BUILD_THRESHOLD" ] && build_status="❌"
+                build_int=$(printf "%.0f" "$build_time")
+                [ "$build_int" -gt "$BUILD_THRESHOLD" ] && build_status="❌"
                 echo "| Production Build | ${build_time} ms | $build_status |" >> artifacts/PERFORMANCE-REPORT.md
               fi
               
               # Container startup (if available)
               startup_time=$(jq -r '.performance.container_startup.value // "N/A"' "$metrics_file" 2>/dev/null || echo "N/A")
-              if [ "$startup_time" != "N/A" ] && [ "$startup_time" != "null" ]; then
+              if [ "$startup_time" != "N/A" ] && [ "$startup_time" != "null" ] && [[ "$startup_time" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
                 startup_status="✅"
-                [ "$startup_time" -gt "$STARTUP_THRESHOLD" ] && startup_status="❌"
+                startup_int=$(printf "%.0f" "$startup_time")
+                [ "$startup_int" -gt "$STARTUP_THRESHOLD" ] && startup_status="❌"
                 echo "| Container Startup | ${startup_time} ms | $startup_status |" >> artifacts/PERFORMANCE-REPORT.md
               fi
               
               # Image size (if available)
               image_size=$(jq -r '.performance.prod_image_size_mb.value // "N/A"' "$metrics_file" 2>/dev/null || echo "N/A")
-              if [ "$image_size" != "N/A" ] && [ "$image_size" != "null" ]; then
+              if [ "$image_size" != "N/A" ] && [ "$image_size" != "null" ] && [[ "$image_size" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
                 size_status="✅"
-                [ "${image_size%.*}" -gt 1024 ] && size_status="❌"
+                size_int=$(printf "%.0f" "$image_size")
+                [ "$size_int" -gt 1024 ] && size_status="❌"
                 echo "| Image Size | ${image_size} MB | $size_status |" >> artifacts/PERFORMANCE-REPORT.md
               fi
               
