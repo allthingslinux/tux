@@ -18,7 +18,7 @@
 </div>
 
 > [!WARNING]
-**This bot is still a work in progress and issues are expected. If you self-host our bot please join our support server [here](https://discord.gg/gpmSjcjQxg) for announcements and support.**
+**This bot is still a work in progress and issues are expected. If you self-host our bot please join our support server [on Discord](https://discord.gg/gpmSjcjQxg) for announcements and support.**
 
 ## About
 
