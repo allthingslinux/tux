@@ -175,3 +175,5 @@ prisma_binaries/
 
 # direnv
 .direnv/
+
+.archive/
