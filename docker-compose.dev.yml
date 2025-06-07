@@ -36,8 +36,7 @@ services:
       - tux_dev_cache:/app/.cache
       - tux_dev_temp:/app/temp
     env_file:
-      - path: .env
-        required: true
+      - .env
     restart: unless-stopped
     mem_limit: 1g
     mem_reservation: 512m

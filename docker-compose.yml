@@ -16,8 +16,7 @@ services:
       - tux_cache:/app/.cache
       - tux_temp:/app/temp
     env_file:
-      - path: .env
-        required: true
+      - .env
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
