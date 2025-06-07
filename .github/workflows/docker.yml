@@ -53,8 +53,9 @@ jobs:
         run: |
           # Quick smoke test - can we import the bot and basic checks?
           docker run --rm --name tux-test \
+            --entrypoint python \
             tux:pr-${{ github.event.number }} \
-            python -c "
+            -c "
               print('🔍 Testing bot imports...')
               try:
                   import tux
@@ -155,8 +156,9 @@ jobs:
         run: |
           # Test the actual pushed image
           docker run --rm --name tux-prod-test \
+            --entrypoint python \
             $(echo '${{ steps.meta.outputs.tags }}' | head -1) \
-            python -c "
+            -c "
               print('🔍 Testing production image...')
               try:
                   import tux
