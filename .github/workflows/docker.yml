@@ -1,0 +1,211 @@
+name: "Docker Build & Deploy"
+
+on:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * 0'  # Weekly cleanup on Sundays
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  # Enable Docker build features
+  DOCKER_BUILD_SUMMARY: true
+  DOCKER_BUILD_CHECKS_ANNOTATIONS: true
+
+jobs:
+  # Fast validation for PRs (1-2 minutes with Git context)
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Build for validation (Git context)
+        uses: docker/build-push-action@v6.18.0
+        timeout-minutes: 15
+        with:
+          target: production
+          push: false
+          load: true
+          cache-from: |
+            type=gha
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ hashFiles('poetry.lock') }}
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=gha,mode=max
+          tags: tux:pr-${{ github.event.number }}
+          annotations: |
+            org.opencontainers.image.title=Tux Discord Bot
+            org.opencontainers.image.description=All Things Linux Discord Bot
+          
+      - name: Test container starts
+        run: |
+          # Quick smoke test - does it start and respond?
+          docker run --rm -d --name tux-test \
+            -e DATABASE_URL=sqlite:///tmp/test.db \
+            -e BOT_TOKEN=${TEST_BOT_TOKEN:-dummy_token} \
+            -e COG_IGNORE_LIST=rolecount,mail,git \
+            tux:pr-${{ github.event.number }} &
+          
+          # Give it 10 seconds to start
+          sleep 10
+          
+          # Check if container is still running
+          if ! docker ps | grep -q tux-test; then
+            echo "❌ Container failed to start"
+            docker logs tux-test
+            exit 1
+          fi
+          
+          echo "✅ Container started successfully"
+          docker stop tux-test
+
+  # Full build, scan, and push for main branch
+  build:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+    outputs:
+      image: ${{ steps.meta.outputs.tags }}
+      digest: ${{ steps.build.outputs.digest }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=${{ github.ref == 'refs/heads/main' }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha,prefix={{branch}}-
+          labels: |
+            org.opencontainers.image.title=Tux Discord Bot
+            org.opencontainers.image.description=All Things Linux Discord Bot
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=MIT
+            
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v6.18.0
+        timeout-minutes: 20
+        with:
+          context: .
+          target: production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: |
+            type=gha
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ hashFiles('poetry.lock') }}
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: |
+            type=gha,mode=max
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ hashFiles('poetry.lock') }},mode=max
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+          platforms: linux/amd64,linux/arm64
+          provenance: true
+          sbom: true
+          annotations: ${{ steps.meta.outputs.annotations }}
+          
+      - name: Test pushed image
+        run: |
+          # Test the actual pushed image
+          docker run --rm -d --name tux-prod-test \
+            -e DATABASE_URL=sqlite:///tmp/test.db \
+            -e BOT_TOKEN=${TEST_BOT_TOKEN:-dummy_token} \
+            -e COG_IGNORE_LIST=rolecount,mail,git \
+            $(echo '${{ steps.meta.outputs.tags }}' | head -1) &
+          
+          sleep 15
+          
+          if ! docker ps | grep -q tux-prod-test; then
+            echo "❌ Production image failed to start"
+            docker logs tux-prod-test
+            exit 1
+          fi
+          
+          echo "✅ Production image verified"
+          docker stop tux-prod-test
+
+  # Security scanning (runs in parallel with build)
+  security:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      
+    steps:
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ needs.build.outputs.image }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+          
+      - name: Fail on critical vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ needs.build.outputs.image }}
+          format: 'table'
+          severity: 'CRITICAL'
+          exit-code: '1'
+
+  # Cleanup old images (runs weekly)
+  cleanup:
+    if: github.event_name != 'pull_request' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      
+    steps:
+      - name: Delete old container versions
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: 'tux'
+          package-type: 'container'
+          min-versions-to-keep: 10
+          delete-only-untagged-versions: false 
