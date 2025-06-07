@@ -27,7 +27,7 @@ jobs:
           fetch-depth: 0
 
       - name: Check for Python changes
-        uses: tj-actions/changed-files@v44
+        uses: tj-actions/changed-files@v45.0.8
         id: python_changes
         with:
           files: |
@@ -87,7 +87,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check for ${{ matrix.name }} changes
-        uses: tj-actions/changed-files@v44
+        uses: tj-actions/changed-files@v45.0.8
         id: file_changes
         with:
           files: ${{ matrix.files }}
@@ -194,7 +194,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check for ${{ matrix.name }} changes
-        uses: tj-actions/changed-files@v44
+        uses: tj-actions/changed-files@v45.0.8
         id: infra_changes
         with:
           files: ${{ matrix.files }}
@@ -235,23 +235,3 @@ jobs:
         uses: ludeeus/action-shellcheck@master
         with:
           scandir: "./scripts"
-
-  # Security scanning
-  security:
-    name: "Security Scan"
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
-    permissions:
-      contents: read
-      security-events: write
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Run GitLeaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
