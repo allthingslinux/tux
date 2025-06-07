@@ -46,8 +46,10 @@ env:
   MEMORY_THRESHOLD: 512      # 512 MB
 
 jobs:
-  docker-test:
+  # Automatic testing job for push/PR events
+  docker-test-auto:
     runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch' && github.event_name != 'schedule'
     permissions:
       contents: read
       packages: read
@@ -64,6 +66,16 @@ jobs:
           - test-type: standard
             description: "Standard testing (5-7 min)"
             timeout: 15
+  
+  # Manual testing job for workflow_dispatch events
+  docker-test-manual:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+      packages: read
+      issues: write
+      pull-requests: write
     
     steps:
       - name: Checkout
@@ -104,8 +116,8 @@ jobs:
           echo "Created .env file with contents:"
           cat .env
 
-      - name: Run ${{ matrix.description }}
-        timeout-minutes: ${{ matrix.timeout }}
+      - name: Run manual test (${{ github.event.inputs.test_level }})
+        timeout-minutes: 20
         run: |
           chmod +x scripts/docker-toolkit.sh
           
@@ -114,43 +126,38 @@ jobs:
           
           # Show current environment
           echo "=== Environment Info ==="
-          echo "Matrix test-type: ${{ matrix.test-type }}"
           echo "Event name: ${{ github.event_name }}"
           echo "Test level input: ${{ github.event.inputs.test_level }}"
           echo "========================"
           
-          # Determine test command based on matrix and inputs
-          # Note: Scheduled runs are handled by the separate comprehensive-test job
-          if [ "${{ matrix.test-type }}" = "quick" ]; then
-            echo "Running quick validation tests..."
-            ./scripts/docker-toolkit.sh quick || {
-              echo "Quick tests failed with exit code $?"
-              echo "Continuing to collect logs and artifacts..."
-              exit 1
-            }
-          elif [ "${{ github.event.inputs.test_level }}" = "comprehensive" ] && [ "${{ github.event_name }}" != "schedule" ]; then
-            echo "Running comprehensive tests..."
-            ./scripts/docker-toolkit.sh comprehensive || {
-              echo "Comprehensive tests failed with exit code $?"
-              echo "Continuing to collect logs and artifacts..."
-              exit 1
-            }
-          elif [ "${{ github.event.inputs.test_level }}" = "quick" ]; then
-            echo "Running quick tests (from input)..."
-            ./scripts/docker-toolkit.sh quick || {
-              echo "Quick tests failed with exit code $?"
-              echo "Continuing to collect logs and artifacts..."
-              exit 1
-            }
-          else
-            # Standard test (matrix.test-type = "standard" or default)
-            echo "Running standard tests..."
-            ./scripts/docker-toolkit.sh test || {
-              echo "Standard tests failed with exit code $?"
-              echo "Continuing to collect logs and artifacts..."
-              exit 1
-            }
-          fi
+          # Run the test command based on input
+          test_level="${{ github.event.inputs.test_level }}"
+          case "$test_level" in
+            "quick")
+              echo "Running quick validation tests..."
+              ./scripts/docker-toolkit.sh quick || {
+                echo "Quick tests failed with exit code $?"
+                echo "Continuing to collect logs and artifacts..."
+                exit 1
+              }
+              ;;
+            "comprehensive")
+              echo "Running comprehensive tests..."
+              ./scripts/docker-toolkit.sh comprehensive || {
+                echo "Comprehensive tests failed with exit code $?"
+                echo "Continuing to collect logs and artifacts..."
+                exit 1
+              }
+              ;;
+            *)
+              echo "Running standard tests..."
+              ./scripts/docker-toolkit.sh test || {
+                echo "Standard tests failed with exit code $?"
+                echo "Continuing to collect logs and artifacts..."
+                exit 1
+              }
+              ;;
+          esac
           
           echo "Tests completed successfully!"
           
@@ -162,7 +169,7 @@ jobs:
           echo "Date: $(date -Iseconds)" >> artifacts/system-info.txt
           echo "Runner: ${{ runner.os }}" >> artifacts/system-info.txt
           echo "Architecture: $(uname -m)" >> artifacts/system-info.txt
-          echo "Test Type: ${{ matrix.test-type }}" >> artifacts/system-info.txt
+          echo "Test Type: ${{ github.event.inputs.test_level }}" >> artifacts/system-info.txt
           echo "CPU Info:" >> artifacts/system-info.txt
           nproc >> artifacts/system-info.txt
           echo "Memory Info:" >> artifacts/system-info.txt
@@ -177,7 +184,7 @@ jobs:
       - name: Analyze build performance
         if: always()
         run: |
-          echo "Build Performance Analysis (${{ matrix.test-type }}):" > artifacts/build-analysis.txt
+          echo "Build Performance Analysis (${{ github.event.inputs.test_level }}):" > artifacts/build-analysis.txt
           echo "====================================" >> artifacts/build-analysis.txt
           
           # Extract build metrics from logs (updated for new toolkit)
@@ -197,7 +204,7 @@ jobs:
           fi
 
       - name: Check performance thresholds
-        if: matrix.test-type == 'standard'
+        if: github.event.inputs.test_level == 'test' || github.event.inputs.test_level == 'comprehensive'
         run: |
           echo "Performance Threshold Check:" > artifacts/threshold-check.txt
           echo "============================" >> artifacts/threshold-check.txt
@@ -269,7 +276,7 @@ jobs:
           fi
 
       - name: Docker Scout security scan
-        if: matrix.test-type == 'standard' && github.event_name != 'pull_request'
+        if: (github.event.inputs.test_level == 'test' || github.event.inputs.test_level == 'comprehensive') && github.event_name != 'pull_request'
         continue-on-error: true
         run: |
           echo "Security Performance Analysis:" > artifacts/security-analysis.txt
@@ -317,12 +324,12 @@ jobs:
       - name: Generate performance report
         if: always()
         run: |
-          echo "# Docker Performance Report (${{ matrix.test-type }})" > artifacts/PERFORMANCE-REPORT.md
+          echo "# Docker Performance Report (${{ github.event.inputs.test_level }})" > artifacts/PERFORMANCE-REPORT.md
           echo "" >> artifacts/PERFORMANCE-REPORT.md
           echo "**Generated:** $(date -Iseconds)" >> artifacts/PERFORMANCE-REPORT.md
           echo "**Commit:** ${{ github.sha }}" >> artifacts/PERFORMANCE-REPORT.md
           echo "**Branch:** ${{ github.ref_name }}" >> artifacts/PERFORMANCE-REPORT.md
-          echo "**Test Type:** ${{ matrix.test-type }}" >> artifacts/PERFORMANCE-REPORT.md
+          echo "**Test Type:** ${{ github.event.inputs.test_level }}" >> artifacts/PERFORMANCE-REPORT.md
           echo "" >> artifacts/PERFORMANCE-REPORT.md
           
           echo "## Performance Summary" >> artifacts/PERFORMANCE-REPORT.md
@@ -381,14 +388,14 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: docker-performance-${{ matrix.test-type }}-${{ github.sha }}
+          name: docker-performance-manual-${{ github.event.inputs.test_level }}-${{ github.sha }}
           path: |
             artifacts/
             logs/
           retention-days: 30
 
       - name: Comment performance results on PR
-        if: github.event_name == 'pull_request' && matrix.test-type == 'standard'
+        if: false
         continue-on-error: true
         uses: actions/github-script@v7
         with:
@@ -480,7 +487,7 @@ jobs:
 
   cleanup:
     runs-on: ubuntu-latest
-    needs: [docker-test, comprehensive-test]
+    needs: [docker-test-auto, docker-test-manual, comprehensive-test]
     if: always()
     permissions:
       contents: read
