@@ -1,6 +1,10 @@
-name: "Ruff - Linting and Formatting"
+name: "Linting and Formatting"
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
@@ -8,27 +12,25 @@ permissions:
   pull-requests: write
 
 jobs:
-  Ruff:
-    runs-on: ubuntu-24.04
+  lint:
+    runs-on: ubuntu-latest
     steps:
-      - name: "Checkout Repository"
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          token: ${{ github.token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Install Python
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Run Ruff formatter
+        uses: astral-sh/ruff-action@v3
         with:
-          python-version: 3.13
+          args: "format"
 
-      # Install Ruff
-      - name: Install Ruff
-        run: sudo snap install ruff
-
-      # Run Ruff linter
-      - name: Run Ruff format
-        run: ruff format && ruff check . --fix
-      - uses: stefanzweifel/git-auto-commit-action@v5
+      - name: Run Ruff linter with auto-fix
+        uses: astral-sh/ruff-action@v3
         with:
-          commit_message: "chore: Linting and formatting via Ruff"
+          args: "check --fix"
+
+      - name: Auto-commit fixes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "style: auto-fix linting and formatting issues"
