@@ -102,7 +102,7 @@ jobs:
         timeout-minutes: 15
         env:
           DEFAULT_BRANCH: main
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN || 'ghp_placeholder' }}
           VALIDATE_ALL_CODEBASE: false
           # File format validation with Prettier (supports auto-fix)
           VALIDATE_YAML_PRETTIER: true
@@ -118,7 +118,7 @@ jobs:
           FIX_JSON_PRETTIER: true
           FIX_MARKDOWN_PRETTIER: true
           # Output settings for better debugging
-          LOG_LEVEL: INFO
+          LOG_LEVEL: DEBUG
           OUTPUT_FORMAT: tap
         # Continue on error for fork PRs where token might be limited
         continue-on-error: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
