@@ -858,10 +858,53 @@ jobs:
             logs/
           retention-days: 90
 
-  cleanup:
+  # Cleanup for auto tests (push/PR)
+  cleanup-auto:
     runs-on: ubuntu-latest
-    needs: [docker-test-auto, docker-test-manual, comprehensive-test]
-    if: always()
+    needs: [docker-test-auto]
+    if: always() && (github.event_name == 'push' || github.event_name == 'pull_request')
+    permissions:
+      contents: read
+    steps:
+      - name: Clean up Docker resources (SAFE - test images only)
+        run: |
+          # Remove ONLY test images created during this job (safe patterns)
+          docker images --format "{{.Repository}}:{{.Tag}}" 2>/dev/null | grep -E "^tux:(test-|quick-|security-|fresh-|cached-|switch-test-|regression-)" | xargs -r docker rmi -f 2>/dev/null || true
+          
+          # Remove ONLY dangling images (safe)
+          docker images --filter "dangling=true" -q 2>/dev/null | xargs -r docker rmi -f 2>/dev/null || true
+          
+          # Prune ONLY build cache (safe)
+          docker builder prune -f 2>/dev/null || true
+          
+          echo "✅ SAFE cleanup completed - system images preserved"
+
+  # Cleanup for manual tests
+  cleanup-manual:
+    runs-on: ubuntu-latest
+    needs: [docker-test-manual]
+    if: always() && github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+    steps:
+      - name: Clean up Docker resources (SAFE - test images only)
+        run: |
+          # Remove ONLY test images created during this job (safe patterns)
+          docker images --format "{{.Repository}}:{{.Tag}}" 2>/dev/null | grep -E "^tux:(test-|quick-|security-|fresh-|cached-|switch-test-|regression-)" | xargs -r docker rmi -f 2>/dev/null || true
+          
+          # Remove ONLY dangling images (safe)
+          docker images --filter "dangling=true" -q 2>/dev/null | xargs -r docker rmi -f 2>/dev/null || true
+          
+          # Prune ONLY build cache (safe)
+          docker builder prune -f 2>/dev/null || true
+          
+          echo "✅ SAFE cleanup completed - system images preserved"
+
+  # Cleanup for comprehensive tests
+  cleanup-comprehensive:
+    runs-on: ubuntu-latest
+    needs: [comprehensive-test]
+    if: always() && (github.event_name == 'schedule' || github.event.inputs.test_level == 'comprehensive')
     permissions:
       contents: read
     steps:
