@@ -73,6 +73,12 @@ ALLOWED_DOCKER_COMMANDS = {
 }
 
 
+def _log_warning_and_return_false(message: str) -> bool:
+    """Log a warning message and return False."""
+    logger.warning(message)
+    return False
+
+
 def _validate_docker_command(cmd: list[str]) -> bool:
     """Validate that a Docker command contains only allowed components."""
     # Define allowed Docker format strings for security
@@ -97,18 +103,14 @@ def _validate_docker_command(cmd: list[str]) -> bool:
         # Validate Docker format strings more strictly
         if component.startswith("{{") and component.endswith("}}"):
             if component not in allowed_format_strings and not re.match(r"^\{\{\.[\w.]+\}\}$", component):
-                msg = f"Unsafe Docker format string: {component}"
-                logger.warning(msg)
-                return False
+                return _log_warning_and_return_false(f"Unsafe Docker format string: {component}")
             continue
         # Allow common Docker flags and arguments
         if component.startswith("-"):
             continue
         # First few components should be in allowlist (docker, compose, subcommand)
         if i <= 2 and component not in ALLOWED_DOCKER_COMMANDS:
-            msg = f"Potentially unsafe Docker command component: {component}"
-            logger.warning(msg)
-            return False
+            return _log_warning_and_return_false(f"Potentially unsafe Docker command component: {component}")
         # For later components (arguments), apply more permissive validation
         # These will be validated by _sanitize_resource_name() if they're resource names
         if i > 2:
@@ -182,11 +184,34 @@ def _safe_subprocess_run(cmd: list[str], **kwargs: Any) -> subprocess.CompletedP
         logger.error(msg)
         raise ValueError(msg)
 
-    # Sanitize resource names in the command (arguments after flags)
+    # Only sanitize arguments that are likely to be Docker resource names
+    # Resource names typically appear in specific contexts and positions
     sanitized_cmd: list[str] = []
+    resource_name_contexts: dict[tuple[str, str], list[int]] = {
+        # Commands that take resource names as arguments
+        ("docker", "run"): [3, 4],  # docker run [options] IMAGE [COMMAND]
+        ("docker", "exec"): [3],  # docker exec [options] CONTAINER [COMMAND]
+        ("docker", "inspect"): [3],  # docker inspect [options] NAME|ID
+        ("docker", "rm"): [3],  # docker rm [options] CONTAINER
+        ("docker", "rmi"): [3],  # docker rmi [options] IMAGE
+        ("docker", "stop"): [3],  # docker stop [options] CONTAINER
+        ("docker", "start"): [3],  # docker start [options] CONTAINER
+        ("docker", "logs"): [3],  # docker logs [options] CONTAINER
+        ("docker", "images"): [],  # docker images has no resource name args
+        ("docker", "ps"): [],  # docker ps has no resource name args
+        ("docker", "compose"): [],  # compose subcommands handle their own validation
+    }
+
+    # Determine if this command has known resource name positions
+    if len(cmd) >= 2:
+        cmd_key = (cmd[0], cmd[1])
+        resource_positions = resource_name_contexts.get(cmd_key, [])
+    else:
+        resource_positions: list[int] = []
+
     for i, component in enumerate(cmd):
-        if i > 2 and not component.startswith("-") and not component.startswith("{{"):
-            # This is likely a resource name - sanitize it
+        # Only sanitize components that are in known resource name positions
+        if i in resource_positions and not component.startswith("-") and not component.startswith("{{"):
             try:
                 sanitized_cmd.append(_sanitize_resource_name(component))
             except ValueError as e:
@@ -196,6 +221,7 @@ def _safe_subprocess_run(cmd: list[str], **kwargs: Any) -> subprocess.CompletedP
                 msg = f"Unsafe resource name rejected: {component}"
                 raise ValueError(msg) from e
         else:
+            # Pass through all other arguments (flags, format strings, commands, etc.)
             sanitized_cmd.append(component)
 
     # Execute with timeout and capture, ensure check is explicit
@@ -234,14 +260,27 @@ def _check_docker_availability() -> bool:
         return True
 
 
+def _ensure_docker_available() -> int | None:
+    """Check Docker availability and return error code if not available."""
+    if not _check_docker_availability():
+        logger.error("Docker is not available or not running. Please start Docker first.")
+        return 1
+    return None
+
+
 def _get_service_name() -> str:
     """Get the appropriate service name based on the current mode."""
     return "tux"  # Both dev and prod use the same service name
 
 
+def _get_resource_config(resource_type: str) -> dict[str, Any] | None:
+    """Get resource configuration from RESOURCE_MAP."""
+    return RESOURCE_MAP.get(resource_type)
+
+
 def _get_tux_resources(resource_type: str) -> list[str]:
     """Get list of Tux-related Docker resources safely using data-driven approach."""
-    cfg = RESOURCE_MAP.get(resource_type)
+    cfg = _get_resource_config(resource_type)
     if not cfg:
         return []
 
@@ -295,7 +334,7 @@ def _remove_resources(resource_type: str, resources: list[str]) -> None:
     if not resources:
         return
 
-    cfg = RESOURCE_MAP.get(resource_type)
+    cfg = _get_resource_config(resource_type)
     if not cfg:
         logger.warning(f"Unknown resource type: {resource_type}")
         return
@@ -324,15 +363,14 @@ def build(no_cache: bool, target: str | None) -> int:
 
     Runs `docker compose build` with optional cache and target controls.
     """
-    if not _check_docker_availability():
-        logger.error("Docker is not available or not running. Please start Docker first.")
-        return 1
+    if error_code := _ensure_docker_available():
+        return error_code
 
     cmd = [*_get_compose_base_cmd(), "build"]
     if no_cache:
         cmd.append("--no-cache")
     if target:
-        cmd.extend(["--build-arg", f"target={target}"])
+        cmd.extend(["--target", target])
 
     logger.info(f"Building Docker images {'without cache' if no_cache else 'with cache'}")
     return run_command(cmd)
@@ -348,9 +386,8 @@ def up(detach: bool, build: bool, watch: bool) -> int:
     Runs `docker compose up` with various options.
     In development mode, --watch enables automatic code syncing.
     """
-    if not _check_docker_availability():
-        logger.error("Docker is not available or not running. Please start Docker first.")
-        return 1
+    if error_code := _ensure_docker_available():
+        return error_code
 
     cmd = [*_get_compose_base_cmd(), "up"]
 
@@ -536,9 +573,8 @@ def test(no_cache: bool, force_clean: bool) -> int:
 
     Executes the unified Docker toolkit script.
     """
-    if not _check_docker_availability():
-        logger.error("Docker is not available or not running. Please start Docker first.")
-        return 1
+    if error_code := _ensure_docker_available():
+        return error_code
 
     test_script = Path("scripts/docker-toolkit.sh")
     if not test_script.exists():
