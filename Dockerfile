@@ -82,7 +82,7 @@ COPY prisma/ ./prisma/
 COPY tux/ ./tux/
 
 # 4. Root level files needed for installation
-COPY README.md LICENSE pyproject.toml ./
+COPY README.md LICENSE.md pyproject.toml ./
 
 # Install application and generate Prisma client
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
