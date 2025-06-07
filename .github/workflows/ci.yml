@@ -95,10 +95,10 @@ jobs:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: false
-          # File format validation
-          VALIDATE_YAML: true
-          VALIDATE_JSON: true
-          VALIDATE_MARKDOWN: true
+          # File format validation with Prettier (supports auto-fix)
+          VALIDATE_YAML_PRETTIER: true
+          VALIDATE_JSON_PRETTIER: true
+          VALIDATE_MARKDOWN_PRETTIER: true
           VALIDATE_DOCKERFILE_HADOLINT: true
           # GitHub Actions validation
           VALIDATE_GITHUB_ACTIONS: true
