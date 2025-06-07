@@ -10,36 +10,55 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Install Poetry
-        run: pipx install poetry
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
           cache: "poetry"
+          cache-dependency-path: |
+            poetry.lock
+            pyproject.toml
 
-      - name: Install project
-        run: poetry install --no-interaction
+      - name: Cache Poetry installation
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/bin/poetry
+            ~/.local/venv
+          key: poetry-${{ runner.os }}-${{ hashFiles('poetry.lock') }}
 
-      - name: Activate virtual environment
-        run: echo "${{ github.workspace }}/.venv/bin" >> $GITHUB_PATH
+      - name: Cache Prisma Client
+        uses: actions/cache@v4
+        with:
+          path: |
+            .venv/lib/python*/site-packages/prisma
+            .venv/lib/python*/site-packages/prisma_client_py*
+          key: prisma-${{ runner.os }}-${{ hashFiles('prisma/schema.prisma') }}
 
-      - name: Add Poetry binary to PATH
-        run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
+      - name: Install Poetry
+        run: pipx install poetry
 
-      - name: Print environment for debug
+      - name: Configure Poetry
         run: |
-          echo "Python location: $(which python)"
-          echo "Poetry location: $(which poetry)"
-          poetry --version
-          which pyright
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
 
-      - name: Generate Prisma Client
-        run: poetry run prisma generate
+      - name: Install minimal dependencies (types only)
+        run: |
+          poetry install --only=main,types --no-interaction --no-ansi
+          poetry run pip install pyright
+
+      - name: Generate Prisma Client (cached)
+        run: |
+          if [ ! -d ".venv/lib/python*/site-packages/prisma" ]; then
+            poetry run prisma generate
+          else
+            echo "Prisma client found in cache, skipping generation"
+          fi
 
       - name: Run Pyright
         uses: jakebailey/pyright-action@v2
         with:
           version: "PATH"
-          annotate: "all"
+          annotate: "errors"  # Only annotate errors, not warnings
+          no-comments: false
