@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -17,16 +18,16 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-      
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-        
+
       - name: Install Poetry
         run: pipx install poetry
-        
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -35,7 +36,7 @@ jobs:
           cache-dependency-path: |
             poetry.lock
             pyproject.toml
-            
+
       - name: Cache Prisma Client
         uses: actions/cache@v4
         with:
@@ -45,7 +46,7 @@ jobs:
           key: prisma-${{ runner.os }}-${{ hashFiles('prisma/schema.prisma') }}
           restore-keys: |
             prisma-${{ runner.os }}-
-            
+
       - name: Cache Ruff
         uses: actions/cache@v4
         with:
@@ -53,7 +54,7 @@ jobs:
           key: ruff-${{ runner.os }}-${{ hashFiles('pyproject.toml', '**/*.py') }}
           restore-keys: |
             ruff-${{ runner.os }}-
-            
+
       - name: Cache Python packages
         uses: actions/cache@v4
         with:
@@ -61,20 +62,20 @@ jobs:
           key: pip-${{ runner.os }}-${{ hashFiles('poetry.lock') }}
           restore-keys: |
             pip-${{ runner.os }}-
-            
+
       - name: Configure Poetry
         run: |
           poetry config virtualenvs.create true
           poetry config virtualenvs.in-project true
-          
+
       - name: Install dependencies
         run: |
           poetry install --only=main,dev,types --no-interaction --no-ansi
         timeout-minutes: 10
-          
+
       - name: Add Poetry venv to PATH
         run: echo "$(poetry env info --path)/bin" >> "$GITHUB_PATH"
-        
+
       - name: Generate Prisma Client (cached)
         run: |
           found=false
@@ -89,15 +90,16 @@ jobs:
           else
             echo "Prisma client found in cache, skipping generation"
           fi
-          
+
       - name: Run Ruff formatter check
         run: poetry run ruff format --check
-        
+
       - name: Run Ruff linter
         run: poetry run ruff check
-        
+
       - name: Lint Additional Files (YAML, JSON, Markdown)
         uses: super-linter/super-linter/slim@v7.2.0
+        timeout-minutes: 15
         env:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -115,14 +117,17 @@ jobs:
           FIX_YAML_PRETTIER: true
           FIX_JSON_PRETTIER: true
           FIX_MARKDOWN_PRETTIER: true
+          # Output settings for better debugging
+          LOG_LEVEL: INFO
+          OUTPUT_FORMAT: tap
         # Continue on error for fork PRs where token might be limited
         continue-on-error: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
-        
+
       - name: Run Pyright type checker
         uses: jakebailey/pyright-action@v2
         with:
           annotate: "errors"
-          
+
       # Future: Add pytest here when you have tests
       # - name: Run tests
       #   run: poetry run pytest
