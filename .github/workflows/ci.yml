@@ -93,12 +93,19 @@ jobs:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: false
+          # File format validation
           VALIDATE_YAML: true
           VALIDATE_JSON: true
           VALIDATE_MARKDOWN: true
           VALIDATE_DOCKERFILE_HADOLINT: true
-          VALIDATE_PYTHON_RUFF: false  # We already run ruff separately
-          VALIDATE_PYTHON_MYPY: false  # We already run mypy separately
+          # GitHub Actions validation
+          VALIDATE_GITHUB_ACTIONS: true
+          # Security scanning
+          VALIDATE_GITLEAKS: true
+          # Auto-fix formatting issues
+          FIX_YAML_PRETTIER: true
+          FIX_JSON_PRETTIER: true
+          FIX_MARKDOWN_PRETTIER: true
         # Continue on error for fork PRs where token might be limited
         continue-on-error: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
         
