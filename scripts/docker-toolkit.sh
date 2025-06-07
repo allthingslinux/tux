@@ -197,7 +197,7 @@ cmd_quick() {
     
     # Test 2: Container execution
     echo "🏃 Testing container execution..."
-    if docker run --rm tux:quick-prod python --version > /dev/null 2>&1; then
+    if docker run --rm --entrypoint="" tux:quick-prod python --version > /dev/null 2>&1; then
         test_result 0 "Container execution"
     else
         test_result 1 "Container execution"
@@ -205,7 +205,7 @@ cmd_quick() {
     
     # Test 3: Security basics
     echo "🔒 Testing security..."
-    local user_output=$(docker run --rm tux:quick-prod whoami 2>/dev/null || echo "failed")
+    local user_output=$(docker run --rm --entrypoint="" tux:quick-prod whoami 2>/dev/null || echo "failed")
     if [[ "$user_output" == "nonroot" ]]; then
         test_result 0 "Non-root execution"
     else
@@ -228,7 +228,7 @@ cmd_quick() {
     
     # Test 5: Volume functionality
     echo "💻 Testing volume configuration..."
-    if docker run --rm -v /tmp:/app/temp tux:quick-dev test -d /app/temp > /dev/null 2>&1; then
+    if docker run --rm --entrypoint="" -v /tmp:/app/temp tux:quick-dev test -d /app/temp > /dev/null 2>&1; then
         test_result 0 "Volume mount functionality"
     else
         test_result 1 "Volume mount functionality"
@@ -1131,7 +1131,7 @@ cmd_comprehensive() {
     # Test 6.2: Resource Exhaustion
     info "6.2 Testing resource limit handling"
     start_time=$(start_timer)
-    if docker run --rm --memory=10m tux:cached-prod echo "Resource test" > /dev/null 2>&1; then
+    if docker run --rm --memory=10m --entrypoint="" tux:cached-prod echo "Resource test" > /dev/null 2>&1; then
         local duration=$(end_timer $start_time)
         success "Low memory test passed in ${duration}ms"
         comp_add_metric "low_memory_test" "$duration" "success" "10mb_limit"

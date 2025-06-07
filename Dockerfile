@@ -143,6 +143,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         libcairo2 \
         libffi8 \
+        coreutils \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /var/cache/apt/* \
@@ -241,6 +242,10 @@ RUN set -eux; \
     \
     # Strip binaries (if strip is available)
     find . -name "*.so" -exec strip --strip-unneeded {} + 2>/dev/null || true;
+
+# Create symlink for python accessibility and ensure everything is working
+RUN ln -sf /app/.venv/bin/python /usr/local/bin/python && \
+    ln -sf /app/.venv/bin/tux /usr/local/bin/tux
 
 # Switch to non-root user
 USER nonroot
