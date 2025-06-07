@@ -21,11 +21,10 @@ NC='\033[0m' # No Color
 # Global configuration
 DEFAULT_CONTAINER_NAME="tux-dev"
 LOGS_DIR="logs"
-METRICS_DIR="$LOGS_DIR"
 
 # Helper functions
 log() {
-    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE" 2>/dev/null || echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" | tee -a "${LOG_FILE:-/dev/null}" 2>/dev/null || echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
 }
 
 success() {
@@ -64,8 +63,9 @@ start_timer() {
 }
 
 end_timer() {
-    local start_time=$1
-    local end_time=$(($(date +%s%N) / 1000000))
+    local start_time="$1"
+    local end_time
+    end_time=$(($(date +%s%N) / 1000000))
     echo $((end_time - start_time))
 }
 
@@ -99,20 +99,21 @@ check_dependencies() {
 
 # Add metric to JSON (if jq available)
 add_metric() {
-    local key=$1
-    local value=$2
-    local unit=$3
-    local metrics_file=${4:-$METRICS_FILE}
+    local key="$1"
+    local value="$2"
+    local unit="$3"
+    local metrics_file="${4:-$METRICS_FILE}"
 
     if command -v jq &>/dev/null && [ -f "$metrics_file" ]; then
-        local tmp=$(mktemp)
+        local tmp
+        tmp=$(mktemp)
         jq ".performance.\"$key\" = {\"value\": $value, \"unit\": \"$unit\"}" "$metrics_file" >"$tmp" && mv "$tmp" "$metrics_file"
     fi
 }
 
 # Get image size in MB
 get_image_size() {
-    local image=$1
+    local image="$1"
     docker images --format "{{.Size}}" "$image" | head -1 | sed 's/[^0-9.]//g'
 }
 
@@ -126,14 +127,20 @@ perform_safe_cleanup() {
     cleanup_start=$(start_timer)
 
     # Remove test containers (SAFE: specific patterns only)
-    for pattern in "tux:test-" "tux:quick-" "tux:perf-test-" "memory-test" "resource-test"; do
-        if docker ps -aq --filter "ancestor=${pattern}*" | grep -q .; then
-            docker rm -f $(docker ps -aq --filter "ancestor=${pattern}*") 2>/dev/null || true
+    local patterns=("tux:test-" "tux:quick-" "tux:perf-test-" "memory-test" "resource-test")
+    local pattern
+    for pattern in "${patterns[@]}"; do
+        local containers
+        containers=$(docker ps -aq --filter "ancestor=${pattern}*" 2>/dev/null || true)
+        if [ -n "$containers" ]; then
+            # shellcheck disable=SC2086
+            docker rm -f $containers 2>/dev/null || true
         fi
     done
 
     # Remove test images (SAFE: specific test image names)
     local test_images=("tux:test-dev" "tux:test-prod" "tux:quick-dev" "tux:quick-prod" "tux:perf-test-dev" "tux:perf-test-prod")
+    local image
     for image in "${test_images[@]}"; do
         docker rmi "$image" 2>/dev/null || true
     done
@@ -142,10 +149,18 @@ perform_safe_cleanup() {
         warning "Performing aggressive cleanup (SAFE: only tux-related resources)..."
 
         # Remove tux project images (SAFE: excludes system images)
-        docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "^tux:" | xargs -r docker rmi 2>/dev/null || true
+        local tux_images
+        tux_images=$(docker images --format "{{.Repository}}:{{.Tag}}" 2>/dev/null | grep -E "^tux:" || true)
+        if [ -n "$tux_images" ]; then
+            echo "$tux_images" | xargs -r docker rmi 2>/dev/null || true
+        fi
 
         # Remove dangling images (SAFE)
-        docker images --filter "dangling=true" -q | xargs -r docker rmi 2>/dev/null || true
+        local dangling_images
+        dangling_images=$(docker images --filter "dangling=true" -q 2>/dev/null || true)
+        if [ -n "$dangling_images" ]; then
+            echo "$dangling_images" | xargs -r docker rmi 2>/dev/null || true
+        fi
 
         # Prune build cache (SAFE)
         docker builder prune -f 2>/dev/null || true
@@ -247,7 +262,7 @@ cmd_quick() {
     echo -e "Passed: ${GREEN}$passed${NC}"
     echo -e "Failed: ${RED}$failed${NC}"
 
-    if [ $failed -eq 0 ]; then
+    if [ "$failed" -eq 0 ]; then
         echo -e "\n${GREEN}🎉 All quick tests passed!${NC}"
         echo "Your Docker setup is ready for development."
         return 0
@@ -305,8 +320,10 @@ cmd_test() {
     ensure_logs_dir
 
     # Initialize log files
-    LOG_FILE="$LOGS_DIR/docker-test-$(date +%Y%m%d-%H%M%S).log"
-    METRICS_FILE="$LOGS_DIR/docker-metrics-$(date +%Y%m%d-%H%M%S).json"
+    local timestamp
+    timestamp=$(date +%Y%m%d-%H%M%S)
+    LOG_FILE="$LOGS_DIR/docker-test-$timestamp.log"
+    METRICS_FILE="$LOGS_DIR/docker-metrics-$timestamp.json"
 
     # Initialize metrics JSON
     cat >"$METRICS_FILE" <<EOF
@@ -330,8 +347,8 @@ EOF
     log "System Information:"
     log "- OS: $(uname -s -r)"
     log "- Docker version: $(docker --version)"
-    log "- Available memory: $(free -h | awk '/^Mem:/ {print $2}' 2>/dev/null || echo 'N/A')"
-    log "- Available disk: $(df -h . | awk 'NR==2 {print $4}' 2>/dev/null || echo 'N/A')"
+    log "- Available memory: $(free -h 2>/dev/null | awk '/^Mem:/ {print $2}' || echo 'N/A')"
+    log "- Available disk: $(df -h . 2>/dev/null | awk 'NR==2 {print $4}' || echo 'N/A')"
 
     # Initial cleanup
     if [[ -n "$force_clean" ]]; then
@@ -359,7 +376,7 @@ EOF
         ((env_errors++))
     fi
 
-    if [ $env_errors -eq 0 ]; then
+    if [ "$env_errors" -eq 0 ]; then
         success "Environment files present"
     else
         warning "$env_errors environment issues found - continuing with available tests"
@@ -368,9 +385,9 @@ EOF
     # Test 2: Development Build
     info "Testing development build..."
     local build_start
+    local build_duration
     build_start=$(start_timer)
     if docker build $no_cache --target dev -t tux:test-dev . >/dev/null 2>&1; then
-        local build_duration
         build_duration=$(end_timer "$build_start")
         success "Development build successful"
         local dev_size
@@ -380,7 +397,6 @@ EOF
         add_metric "development_build" "$build_duration" "ms"
         add_metric "dev_image_size_mb" "${dev_size//[^0-9.]/}" "MB"
     else
-        local build_duration
         build_duration=$(end_timer "$build_start")
         echo -e "${RED}❌ Development build failed after ${build_duration}ms${NC}"
         add_metric "development_build" "$build_duration" "ms"
@@ -391,7 +407,6 @@ EOF
     info "Testing production build..."
     build_start=$(start_timer)
     if docker build $no_cache --target production -t tux:test-prod . >/dev/null 2>&1; then
-        local build_duration
         build_duration=$(end_timer "$build_start")
         success "Production build successful"
         local prod_size
@@ -401,7 +416,6 @@ EOF
         add_metric "production_build" "$build_duration" "ms"
         add_metric "prod_image_size_mb" "${prod_size//[^0-9.]/}" "MB"
     else
-        local build_duration
         build_duration=$(end_timer "$build_start")
         echo -e "${RED}❌ Production build failed after ${build_duration}ms${NC}"
         add_metric "production_build" "$build_duration" "ms"
@@ -411,13 +425,13 @@ EOF
     # Test 4: Container Startup
     info "Testing container startup time..."
     local startup_start
+    local startup_duration
     startup_start=$(start_timer)
     local container_id
     container_id=$(docker run -d --rm --entrypoint="" tux:test-prod sleep 30)
     while [[ "$(docker inspect -f '{{.State.Status}}' "$container_id" 2>/dev/null)" != "running" ]]; do
         sleep 0.1
     done
-    local startup_duration
     startup_duration=$(end_timer "$startup_start")
     docker stop "$container_id" >/dev/null 2>&1 || true
 
@@ -447,6 +461,7 @@ EOF
     # Test 6: Performance tests
     info "Testing temp directory performance..."
     local temp_start
+    local temp_duration
     temp_start=$(start_timer)
     docker run --rm --entrypoint="" tux:test-prod sh -c "
         for i in \$(seq 1 100); do
@@ -454,7 +469,6 @@ EOF
         done
         rm /app/temp/test_*.txt
     " >/dev/null 2>&1
-    local temp_duration
     temp_duration=$(end_timer "$temp_start")
 
     metric "Temp file operations (100 files): ${temp_duration}ms"
@@ -464,15 +478,14 @@ EOF
     # Additional tests...
     info "Testing Python package validation..."
     local python_start
+    local python_duration
     python_start=$(start_timer)
     if docker run --rm --entrypoint='' tux:test-dev python -c "import sys; print('Python validation:', sys.version)" >/dev/null 2>&1; then
-        local python_duration
         python_duration=$(end_timer "$python_start")
         metric "Python validation: ${python_duration}ms"
         add_metric "python_validation" "$python_duration" "ms"
         success "Python package validation working"
     else
-        local python_duration
         python_duration=$(end_timer "$python_start")
         add_metric "python_validation" "$python_duration" "ms"
         echo -e "${RED}❌ Python package validation failed after ${python_duration}ms${NC}"
@@ -510,10 +523,9 @@ check_performance_thresholds() {
     echo "============================"
 
     # Configurable thresholds
-    local build_threshold=${BUILD_THRESHOLD:-300000}
-    local startup_threshold=${STARTUP_THRESHOLD:-10000}
-    local python_threshold=${PYTHON_THRESHOLD:-5000}
-    local memory_threshold=${MEMORY_THRESHOLD:-512}
+    local build_threshold="${BUILD_THRESHOLD:-300000}"
+    local startup_threshold="${STARTUP_THRESHOLD:-10000}"
+    local python_threshold="${PYTHON_THRESHOLD:-5000}"
 
     local threshold_failed=false
 
@@ -572,8 +584,10 @@ cmd_monitor() {
 
     ensure_logs_dir
 
-    local log_file="$LOGS_DIR/resource-monitor-$(date +%Y%m%d-%H%M%S).csv"
-    local report_file="$LOGS_DIR/resource-report-$(date +%Y%m%d-%H%M%S).txt"
+    local timestamp
+    timestamp=$(date +%Y%m%d-%H%M%S)
+    local log_file="$LOGS_DIR/resource-monitor-$timestamp.csv"
+    local report_file="$LOGS_DIR/resource-report-$timestamp.txt"
 
     # Check if container exists and is running
     if ! docker ps | grep -q "$container_name"; then
@@ -604,30 +618,38 @@ cmd_monitor() {
     local memory_sum=0
 
     # Monitor loop
+    local i
     for i in $(seq 1 $((duration / interval))); do
-        local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+        local timestamp_now
+        timestamp_now=$(date '+%Y-%m-%d %H:%M:%S')
 
         # Get container stats
-        local stats_output=$(docker stats --no-stream --format "{{.CPUPerc}},{{.MemUsage}},{{.MemPerc}},{{.NetIO}},{{.PIDs}}" "$container_name" 2>/dev/null)
+        local stats_output
+        stats_output=$(docker stats --no-stream --format "{{.CPUPerc}},{{.MemUsage}},{{.MemPerc}},{{.NetIO}},{{.PIDs}}" "$container_name" 2>/dev/null)
 
         if [ -n "$stats_output" ]; then
             # Parse stats
+            local cpu_percent mem_usage mem_percent net_io pids
             IFS=',' read -r cpu_percent mem_usage mem_percent net_io pids <<<"$stats_output"
 
             # Extract memory values
-            local memory_usage=$(echo "$mem_usage" | sed 's/MiB.*//' | sed 's/[^0-9.]//g')
-            local memory_limit=$(echo "$mem_usage" | sed 's/.*\///' | sed 's/MiB//' | sed 's/[^0-9.]//g')
+            local memory_usage
+            memory_usage=$(echo "$mem_usage" | sed 's/MiB.*//' | sed 's/[^0-9.]//g')
+            local memory_limit
+            memory_limit=$(echo "$mem_usage" | sed 's/.*\///' | sed 's/MiB//' | sed 's/[^0-9.]//g')
 
             # Extract network I/O
-            local network_input=$(echo "$net_io" | sed 's/\/.*//' | sed 's/[^0-9.]//g')
-            local network_output=$(echo "$net_io" | sed 's/.*\///' | sed 's/[^0-9.]//g')
+            local network_input
+            network_input=$(echo "$net_io" | sed 's/\/.*//' | sed 's/[^0-9.]//g')
+            local network_output
+            network_output=$(echo "$net_io" | sed 's/.*\///' | sed 's/[^0-9.]//g')
 
             # Clean percentages
-            local cpu_clean=$(echo "$cpu_percent" | sed 's/%//')
-            local mem_percent_clean=$(echo "$mem_percent" | sed 's/%//')
+            local cpu_clean="${cpu_percent%\%}"
+            local mem_percent_clean="${mem_percent%\%}"
 
             # Write to CSV
-            echo "$timestamp,$cpu_clean,$memory_usage,$memory_limit,$mem_percent_clean,$network_input,$network_output,$pids" >>"$log_file"
+            echo "$timestamp_now,$cpu_clean,$memory_usage,$memory_limit,$mem_percent_clean,$network_input,$network_output,$pids" >>"$log_file"
 
             # Display real-time stats
             printf "\r\033[K📊 CPU: %6s | Memory: %6s/%6s MiB (%5s) | Net I/O: %8s/%8s | PIDs: %3s" \
@@ -717,10 +739,12 @@ EOF
         fi
     fi
 
-    echo "" >>"$report_file"
-    echo "## Data Files" >>"$report_file"
-    echo "- **CSV Data:** $log_file" >>"$report_file"
-    echo "- **Report:** $report_file" >>"$report_file"
+    {
+        echo ""
+        echo "## Data Files"
+        echo "- **CSV Data:** $log_file"
+        echo "- **Report:** $report_file"
+    } >>"$report_file"
 
     # Display summary
     echo ""
@@ -769,30 +793,38 @@ cmd_cleanup() {
     info "Scanning for tux-related Docker resources..."
 
     # Get tux-specific resources safely
-    local tux_containers=$(docker ps -a --format "{{.Names}}" | grep -E "(tux|memory-test|resource-test)" || echo "")
-    local tux_images=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "^(tux:|.*tux.*:)" | grep -v -E "^(python|ubuntu|alpine|node|postgres)" || echo "")
+    local tux_containers
+    tux_containers=$(docker ps -a --format "{{.Names}}" 2>/dev/null | grep -E "(tux|memory-test|resource-test)" || echo "")
+    local tux_images
+    tux_images=$(docker images --format "{{.Repository}}:{{.Tag}}" 2>/dev/null | grep -E "^(tux:|.*tux.*:)" | grep -v -E "^(python|ubuntu|alpine|node|postgres)" || echo "")
     local tux_volumes=""
 
     if [[ "$volumes" == "true" ]]; then
-        tux_volumes=$(docker volume ls --format "{{.Name}}" | grep -E "(tux_|tux-)" || echo "")
+        tux_volumes=$(docker volume ls --format "{{.Name}}" 2>/dev/null | grep -E "(tux_|tux-)" || echo "")
     fi
 
     # Display what will be cleaned
     if [[ -n "$tux_containers" ]]; then
         info "Containers to be removed:"
-        echo "$tux_containers" | sed 's/^/  - /'
+        while IFS= read -r container; do
+            echo "  - $container"
+        done <<< "$tux_containers"
         echo ""
     fi
 
     if [[ -n "$tux_images" ]]; then
         info "Images to be removed:"
-        echo "$tux_images" | sed 's/^/  - /'
+        while IFS= read -r image; do
+            echo "  - $image"
+        done <<< "$tux_images"
         echo ""
     fi
 
     if [[ -n "$tux_volumes" ]]; then
         info "Volumes to be removed:"
-        echo "$tux_volumes" | sed 's/^/  - /'
+        while IFS= read -r volume; do
+            echo "  - $volume"
+        done <<< "$tux_volumes"
         echo ""
     fi
 
@@ -877,7 +909,8 @@ cmd_comprehensive() {
 
     ensure_logs_dir
 
-    local timestamp=$(date +%Y%m%d-%H%M%S)
+    local timestamp
+    timestamp=$(date +%Y%m%d-%H%M%S)
     local comp_log_dir="$LOGS_DIR/comprehensive-test-$timestamp"
     local comp_metrics_file="$comp_log_dir/comprehensive-metrics.json"
     local comp_report_file="$comp_log_dir/test-report.md"
@@ -921,23 +954,43 @@ cmd_comprehensive() {
         docker compose -f docker-compose.dev.yml down -v --remove-orphans 2>/dev/null || true
 
         # Remove tux-related test images (SAFE)
-        docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "^tux:" | xargs -r docker rmi -f 2>/dev/null || true
-        docker images --format "{{.Repository}}:{{.Tag}}" | grep -E ":fresh-|:cached-|:switch-test-|:regression-" | xargs -r docker rmi -f 2>/dev/null || true
+        local tux_images
+        tux_images=$(docker images --format "{{.Repository}}:{{.Tag}}" 2>/dev/null | grep -E "^tux:" || true)
+        if [ -n "$tux_images" ]; then
+            echo "$tux_images" | xargs -r docker rmi -f 2>/dev/null || true
+        fi
+
+        local test_images
+        test_images=$(docker images --format "{{.Repository}}:{{.Tag}}" 2>/dev/null | grep -E ":fresh-|:cached-|:switch-test-|:regression-" || true)
+        if [ -n "$test_images" ]; then
+            echo "$test_images" | xargs -r docker rmi -f 2>/dev/null || true
+        fi
 
         # Remove tux-related containers (SAFE)
-        for pattern in "tux:fresh-" "tux:cached-" "tux:switch-test-" "tux:regression-"; do
-            docker ps -aq --filter "ancestor=${pattern}*" | xargs -r docker rm -f 2>/dev/null || true
+        local patterns=("tux:fresh-" "tux:cached-" "tux:switch-test-" "tux:regression-")
+        local pattern
+        for pattern in "${patterns[@]}"; do
+            local containers
+            containers=$(docker ps -aq --filter "ancestor=${pattern}*" 2>/dev/null || true)
+            if [ -n "$containers" ]; then
+                # shellcheck disable=SC2086
+                docker rm -f $containers 2>/dev/null || true
+            fi
         done
 
         # Remove dangling images and build cache (SAFE)
-        docker images --filter "dangling=true" -q | xargs -r docker rmi -f 2>/dev/null || true
+        local dangling_images
+        dangling_images=$(docker images --filter "dangling=true" -q 2>/dev/null || true)
+        if [ -n "$dangling_images" ]; then
+            echo "$dangling_images" | xargs -r docker rmi -f 2>/dev/null || true
+        fi
         docker builder prune -f 2>/dev/null || true
 
         comp_log "SAFE cleanup completed - system images preserved"
     }
 
     # Initialize metrics
-    echo '{"test_session": "'$timestamp'", "tests": []}' >"$comp_metrics_file"
+    echo '{"test_session": "'"$timestamp"'", "tests": []}' >"$comp_metrics_file"
 
     # =============================================================================
     comp_section "1. CLEAN SLATE TESTING (No Cache)"
@@ -948,13 +1001,15 @@ cmd_comprehensive() {
 
     # Test 1.1: Fresh Development Build
     info "1.1 Testing fresh development build (no cache)"
-    local start_time=$(start_timer)
+    local start_time
+    local duration
+    start_time=$(start_timer)
     if docker build --no-cache --target dev -t tux:fresh-dev . >"$comp_log_dir/fresh-dev-build.log" 2>&1; then
-        local duration=$(end_timer $start_time)
+        duration=$(end_timer "$start_time")
         success "Fresh dev build completed in ${duration}ms"
         comp_add_metric "fresh_dev_build" "$duration" "success" "from_scratch"
     else
-        local duration=$(end_timer $start_time)
+        duration=$(end_timer "$start_time")
         error "Fresh dev build failed after ${duration}ms"
         comp_add_metric "fresh_dev_build" "$duration" "failed" "from_scratch"
     fi
@@ -963,11 +1018,11 @@ cmd_comprehensive() {
     info "1.2 Testing fresh production build (no cache)"
     start_time=$(start_timer)
     if docker build --no-cache --target production -t tux:fresh-prod . >"$comp_log_dir/fresh-prod-build.log" 2>&1; then
-        local duration=$(end_timer $start_time)
+        duration=$(end_timer "$start_time")
         success "Fresh prod build completed in ${duration}ms"
         comp_add_metric "fresh_prod_build" "$duration" "success" "from_scratch"
     else
-        local duration=$(end_timer $start_time)
+        duration=$(end_timer "$start_time")
         error "Fresh prod build failed after ${duration}ms"
         comp_add_metric "fresh_prod_build" "$duration" "failed" "from_scratch"
     fi
@@ -982,11 +1037,11 @@ cmd_comprehensive() {
     info "2.1 Testing cached development build"
     start_time=$(start_timer)
     if docker build --target dev -t tux:cached-dev . >"$comp_log_dir/cached-dev-build.log" 2>&1; then
-        local duration=$(end_timer $start_time)
+        duration=$(end_timer "$start_time")
         success "Cached dev build completed in ${duration}ms"
         comp_add_metric "cached_dev_build" "$duration" "success" "cached"
     else
-        local duration=$(end_timer $start_time)
+        duration=$(end_timer "$start_time")
         error "Cached dev build failed after ${duration}ms"
         comp_add_metric "cached_dev_build" "$duration" "failed" "cached"
     fi
@@ -994,121 +1049,121 @@ cmd_comprehensive() {
     # Test 2.2: Cached Production Build
     info "2.2 Testing cached production build"
     start_time=$(start_timer)
-    if docker build --target produc"tion -t tux":cached-prod . >"$comp_log_dir/cached-prod-build.log" 2>&1; then
-        local duration=$(end_timer $start_time)
+    if docker build --target production -t tux:cached-prod . >"$comp_log_dir/cached-prod-build.log" 2>&1; then
+        duration=$(end_timer "$start_time")
         success "Cached prod build completed in ${duration}ms"
         comp_add_metric "cached_prod_build" "$duration" "success" "cached"
     else
-        local duration=$(end_timer $start_time)
+        duration=$(end_timer "$start_time")
         error "Cached prod build failed after ${duration}ms"
         comp_add_metric "cached_prod_build" "$duration" "failed" "cached"
     fi
 
     # =============================================================================
     comp_section "3. DEVELOPMENT WORKFLOW TESTING"
-    # ============================="==========="=====================================
+    # =============================================================================
 
     info "Testing real development scenarios with file watching"
 
     # Test 3.1: Volume Configuration
     info "3.1 Testing volume configuration"
     start_time=$(start_timer)
-    if docker compose -f docker-com"pose.dev.ym"l config >/dev/null 2>&1; then
-        local duration=$(end_timer $start_time)
-        success "Dev compose config"uration val"id in ${duration}ms"
+    if docker compose -f docker-compose.dev.yml config >/dev/null 2>&1; then
+        duration=$(end_timer "$start_time")
+        success "Dev compose configuration valid in ${duration}ms"
         comp_add_metric "dev_compose_validation" "$duration" "success" "config_only"
     else
-        local duration=$(end_timer $start_time)
-        error "Dev compose configur"ation faile"d after ${duration}ms"
+        duration=$(end_timer "$start_time")
+        error "Dev compose configuration failed after ${duration}ms"
         comp_add_metric "dev_compose_validation" "$duration" "failed" "config_only"
     fi
 
     # Test 3.2: Development Image Functionality
     info "3.2 Testing development image functionality"
     start_time=$(start_timer)
-    if docker run --rm --entrypoint"="" tux:cac"hed-dev python -c "print('Dev container test successful')" >/dev/null 2>&1; then
-        local duration=$(end_timer $start_time)
-        success "Dev container func"tionality t"est completed in ${duration}ms"
+    if docker run --rm --entrypoint="" tux:cached-dev python -c "print('Dev container test successful')" >/dev/null 2>&1; then
+        duration=$(end_timer "$start_time")
+        success "Dev container functionality test completed in ${duration}ms"
         comp_add_metric "dev_container_test" "$duration" "success" "direct_run"
     else
-        local duration=$(end_timer $start_time)
-        error "Dev container functi"onality tes"t failed after ${duration}ms"
+        duration=$(end_timer "$start_time")
+        error "Dev container functionality test failed after ${duration}ms"
         comp_add_metric "dev_container_test" "$duration" "failed" "direct_run"
     fi
 
     # Test 3.3: File System Structure
     info "3.3 Testing file system structure"
     start_time=$(start_timer)
-    if docker run --rm --entrypoint"="" tux:cac"hed-dev sh -c "test -d /app && test -d /app/temp && test -d /app/.cache" >/dev/null 2>&1; then
-        local duration=$(end_timer $start_time)
+    if docker run --rm --entrypoint="" tux:cached-dev sh -c "test -d /app && test -d /app/temp && test -d /app/.cache" >/dev/null 2>&1; then
+        duration=$(end_timer "$start_time")
         success "File system structure validated in ${duration}ms"
         comp_add_metric "filesystem_validation" "$duration" "success" "structure_check"
     else
-        local duration=$(end_timer $start_time)
+        duration=$(end_timer "$start_time")
         error "File system structure validation failed after ${duration}ms"
         comp_add_metric "filesystem_validation" "$duration" "failed" "structure_check"
     fi
 
     # =============================================================================
     comp_section "4. PRODUCTION WORKFLOW TESTING"
-    # ============================="==========="=====================================
+    # =============================================================================
 
     info "Testing production deployment scenarios"
 
     # Test 4.1: Production Configuration
     info "4.1 Testing production compose configuration"
     start_time=$(start_timer)
-    if docker compose -f docker-com"pose.yml co"nfig >/dev/null 2>&1; then
-        local duration=$(end_timer $start_time)
-        success "Prod compose confi"guration va"lid in ${duration}ms"
+    if docker compose -f docker-compose.yml config >/dev/null 2>&1; then
+        duration=$(end_timer "$start_time")
+        success "Prod compose configuration valid in ${duration}ms"
         comp_add_metric "prod_compose_validation" "$duration" "success" "config_only"
     else
-        local duration=$(end_timer $start_time)
-        error "Prod compose configu"ration fail"ed after ${duration}ms"
+        duration=$(end_timer "$start_time")
+        error "Prod compose configuration failed after ${duration}ms"
         comp_add_metric "prod_compose_validation" "$duration" "failed" "config_only"
     fi
 
     # Test 4.2: Production Resource Constraints
     info "4.2 Testing production image with resource constraints"
     start_time=$(start_timer)
-    if docker run --rm --memory=512"m --cpus=0."5 --entrypoint="" tux:cached-prod python -c "print('Production resource test successful')" >/dev/null 2>&1; then
-        local duration=$(end_timer $start_time)
-        success "Production resourc"e constrain"t test completed in ${duration}ms"
+    if docker run --rm --memory=512m --cpus=0.5 --entrypoint="" tux:cached-prod python -c "print('Production resource test successful')" >/dev/null 2>&1; then
+        duration=$(end_timer "$start_time")
+        success "Production resource constraint test completed in ${duration}ms"
         comp_add_metric "prod_resource_test" "$duration" "success" "constrained_run"
     else
-        local duration=$(end_timer $start_time)
-        error "Production resource "constraint "test failed after ${duration}ms"
+        duration=$(end_timer "$start_time")
+        error "Production resource constraint test failed after ${duration}ms"
         comp_add_metric "prod_resource_test" "$duration" "failed" "constrained_run"
     fi
 
     # Test 4.3: Production Security
     info "4.3 Testing production security constraints"
     start_time=$(start_timer)
-    if docker run --rm --entrypoint"="" tux:cac"hed-prod sh -c "whoami | grep -q nonroot && test ! -w /" >/dev/null 2>&1; then
-        local duration=$(end_timer $start_time)
+    if docker run --rm --entrypoint="" tux:cached-prod sh -c "whoami | grep -q nonroot && test ! -w /" >/dev/null 2>&1; then
+        duration=$(end_timer "$start_time")
         success "Production security validation completed in ${duration}ms"
         comp_add_metric "prod_security_validation" "$duration" "success" "security_check"
     else
-        local duration=$(end_timer $start_time)
+        duration=$(end_timer "$start_time")
         error "Production security validation failed after ${duration}ms"
         comp_add_metric "prod_security_validation" "$duration" "failed" "security_check"
     fi
 
     # =============================================================================
     comp_section "5. MIXED SCENARIO TESTING"
-    # ============================="==========="=====================================
+    # =============================================================================
 
     info "Testing switching between dev and prod environments"
 
     # Test 5.1: Configuration Compatibility
     info "5.1 Testing dev <-> prod configuration compatibility"
     start_time=$(start_timer)
-    if docker compose -f docker-com"pose.dev.ym"l config >/dev/null 2>&1 && docker compose -f docker-compose.yml config >/dev/null 2>&1; then
-        local duration=$(end_timer $start_time)
+    if docker compose -f docker-compose.dev.yml config >/dev/null 2>&1 && docker compose -f docker-compose.yml config >/dev/null 2>&1; then
+        duration=$(end_timer "$start_time")
         success "Configuration compatibility validated in ${duration}ms"
         comp_add_metric "config_compatibility_check" "$duration" "success" "validation_only"
     else
-        local duration=$(end_timer $start_time)
+        duration=$(end_timer "$start_time")
         error "Configuration compatibility check failed after ${duration}ms"
         comp_add_metric "config_compatibility_check" "$duration" "failed" "validation_only"
     fi
@@ -1118,13 +1173,13 @@ cmd_comprehensive() {
     start_time=$(start_timer)
     docker build --target dev -t tux:switch-test-dev . >/dev/null 2>&1
     docker build --target production -t tux:switch-test-prod . >/dev/null 2>&1
-    docker build --target dev -"t tux:switc"h-test-dev2 . >/dev/null 2>&1
-    local duration=$(end_timer $start_time)
+    docker build --target dev -t tux:switch-test-dev2 . >/dev/null 2>&1
+    duration=$(end_timer "$start_time")
     success "Build target switching completed in ${duration}ms"
     comp_add_metric "build_target_switching" "$duration" "success" "dev_prod_dev"
 
     # =============================================================================
-    comp_section "6. ERROR SCENARIO" TESTING""
+    comp_section "6. ERROR SCENARIO TESTING"
     # =============================================================================
 
     info "Testing error handling and recovery scenarios"
@@ -1135,12 +1190,12 @@ cmd_comprehensive() {
     echo "INVALID_VAR=" >>.env
 
     start_time=$(start_timer)
-    if docker compose -f docker-com"pose.dev.ym"l config >/dev/null 2>&1; then
-        local duration=$(end_timer $start_time)
+    if docker compose -f docker-compose.dev.yml config >/dev/null 2>&1; then
+        duration=$(end_timer "$start_time")
         success "Handled invalid env vars gracefully in ${duration}ms"
         comp_add_metric "invalid_env_handling" "$duration" "success" "graceful_handling"
     else
-        local duration=$(end_timer "$start_time")
+        duration=$(end_timer "$start_time")
         warning "Invalid env vars caused validation failure in ${duration}ms"
         comp_add_metric "invalid_env_handling" "$duration" "expected_failure" "validation_error"
     fi
@@ -1151,12 +1206,12 @@ cmd_comprehensive() {
     # Test 6.2: Resource Exhaustion
     info "6.2 Testing resource limit handling"
     start_time=$(start_timer)
-    if docker run --rm --memory=10m" --entrypoi"nt="" tux:cached-prod echo "Resource test" >/dev/null 2>&1; then
-        local duration=$(end_timer $start_time)
+    if docker run --rm --memory=10m --entrypoint="" tux:cached-prod echo "Resource test" >/dev/null 2>&1; then
+        duration=$(end_timer "$start_time")
         success "Low memory test passed in ${duration}ms"
         comp_add_metric "low_memory_test" "$duration" "success" "10mb_limit"
     else
-        local duration=$(end_timer $start_time)
+        duration=$(end_timer "$start_time")
         warning "Low memory test failed (expected) in ${duration}ms"
         comp_add_metric "low_memory_test" "$duration" "expected_failure" "10mb_limit"
     fi
@@ -1167,12 +1222,13 @@ cmd_comprehensive() {
 
     info "Testing for performance regressions"
 
-    # Test 7.1: Build Time Regressi"on"
+    # Test 7.1: Build Time Regression
     info "7.1 Running build time regression tests"
     local regression_iterations=3
     local dev_times=()
     local prod_times=()
 
+    local i
     for i in $(seq 1 $regression_iterations); do
         info "Regression test iteration $i/$regression_iterations"
 
@@ -1192,8 +1248,10 @@ cmd_comprehensive() {
     done
 
     # Calculate averages
-    local dev_avg=$(((dev_times[0] + dev_times[1] + dev_times[2]) / 3))
-    local prod_avg=$(((prod_times[0] + prod_times[1] + prod_times[2]) / 3))
+    local dev_avg
+    dev_avg=$(((dev_times[0] + dev_times[1] + dev_times[2]) / 3))
+    local prod_avg
+    prod_avg=$(((prod_times[0] + prod_times[1] + prod_times[2]) / 3))
 
     success "Average dev build time: ${dev_avg}ms"
     success "Average prod build time: ${prod_avg}ms"
@@ -1213,7 +1271,7 @@ cmd_comprehensive() {
 
 **Generated:** $(date -Iseconds)
 **Test Session:** $timestamp
-**Duration:** ~$(date +%M) minutes
+**Duration:** ~15-20 minutes
 
 ## 🎯 Test Summary
 
@@ -1242,7 +1300,7 @@ cmd_comprehensive() {
 - **Resource Limits:** Tested
 
 ### Performance Regression
-- **Build Consistency:** Tested across $regression_iterations iterations
+- **Build Consistency:** Tested across 3 iterations
 
 ## 📊 Detailed Metrics
 
@@ -1322,7 +1380,6 @@ EXAMPLES:
     $SCRIPT_NAME monitor tux-dev 120 10         # Monitor for 2 min, 10s intervals
     $SCRIPT_NAME cleanup --dry-run --volumes    # Preview cleanup with volumes
 
-
 SAFETY:
     All cleanup operations only affect tux-related resources.
     System images (python, ubuntu, etc.) are preserved.
@@ -1366,7 +1423,6 @@ case "${1:-help}" in
     shift
     cmd_monitor "$@"
     ;;
-
 "cleanup")
     shift
     cmd_cleanup "$@"
