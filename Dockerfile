@@ -71,8 +71,18 @@ COPY pyproject.toml poetry.lock ./
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
     poetry install --only main --no-root --no-directory
 
-# Copy application code
-COPY . .
+# Copy critical application files in order of change frequency (least to most likely to change)
+# 1. Configuration files (rarely change)
+COPY config/ ./config/
+
+# 2. Database schema files (change infrequently)
+COPY prisma/ ./prisma/
+
+# 3. Main application code (changes more frequently)
+COPY tux/ ./tux/
+
+# 4. Root level files needed for installation
+COPY README.md LICENSE pyproject.toml ./
 
 # Install application and generate Prisma client
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
