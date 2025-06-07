@@ -211,6 +211,25 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
+      - name: Create .env file for Docker Compose validation
+        if: matrix.name == 'Docker'
+        run: |
+          # Create .env file from .env.example for CI validation
+          if [ ! -f .env ]; then
+            if [ -f .env.example ]; then
+              echo "Creating .env from .env.example for CI validation"
+              cp .env.example .env
+              # Set minimal required values for validation (these don't need to be real)
+              echo "DEV_DATABASE_URL=sqlite:///tmp/test.db" >> .env
+              echo "PROD_DATABASE_URL=sqlite:///tmp/test.db" >> .env
+              echo "DEV_BOT_TOKEN=test_token_for_ci_validation" >> .env
+              echo "PROD_BOT_TOKEN=test_token_for_ci_validation" >> .env
+            else
+              echo "Error: .env file not found and no .env.example available."
+              exit 1
+            fi
+          fi
+
       - name: Run Docker linting
         if: matrix.name == 'Docker'
         run: |
