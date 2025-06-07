@@ -24,7 +24,7 @@ on:
         description: "Optional earlier SHA for TODOs"
         required: false
   schedule:
-    - cron: '0 3 * * 0'  # Weekly cleanup on Sundays at 3 AM
+    - cron: "0 3 * * 0" # Weekly cleanup on Sundays at 3 AM
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -38,7 +38,7 @@ jobs:
     permissions:
       contents: read
       issues: write
-      
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -63,13 +63,13 @@ jobs:
     permissions:
       packages: write
       contents: read
-      
+
     steps:
       - name: Delete old container versions
         uses: actions/delete-package-versions@v5
         with:
-          package-name: 'tux'
-          package-type: 'container'
+          package-name: "tux"
+          package-type: "container"
           min-versions-to-keep: ${{ github.event.inputs.keep_amount || '10' }}
           delete-only-untagged-versions: ${{ github.event.inputs.remove_untagged || 'false' }}
 
@@ -80,23 +80,23 @@ jobs:
     permissions:
       contents: read
       issues: write
-      
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-        
+
       - name: Check for large files
         run: |
           echo "Checking for files larger than 50MB..."
           find . -type f -size +50M -not -path "./.git/*" || echo "No large files found"
-          
+
       - name: Check for outdated dependencies
         run: |
           if command -v poetry &> /dev/null; then
             echo "Checking for outdated dependencies..."
             poetry show --outdated || echo "All dependencies up to date"
           fi
-          
+
       - name: Repository statistics
         run: |
           echo "Repository Statistics:"
@@ -104,4 +104,4 @@ jobs:
           echo "Total files: $(find . -type f -not -path "./.git/*" | wc -l)"
           echo "Python files: $(find . -name "*.py" -not -path "./.git/*" | wc -l)"
           echo "Lines of Python code: $(find . -name "*.py" -not -path "./.git/*" -exec wc -l {} + 2>/dev/null | tail -1 || echo "0")"
-          echo "Docker files: $(find . -name "Dockerfile*" -o -name "docker-compose*.yml" | wc -l)" 
+          echo "Docker files: $(find . -name "Dockerfile*" -o -name "docker-compose*.yml" | wc -l)"
