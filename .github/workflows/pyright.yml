@@ -50,7 +50,7 @@ jobs:
 
       - name: Generate Prisma Client (cached)
         run: |
-          if [ ! -d ".venv/lib/python*/site-packages/prisma" ]; then
+          if [ ! -d .venv/lib/python*/site-packages/prisma ]; then
             poetry run prisma generate
           else
             echo "Prisma client found in cache, skipping generation"
