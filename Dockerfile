@@ -16,13 +16,13 @@ RUN groupadd --system --gid 1001 nonroot && \
 # Install runtime dependencies (sorted alphabetically)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        ffmpeg \
-        git \
-        libcairo2 \
-        libgdk-pixbuf2.0-0 \
-        libpango1.0-0 \
-        libpangocairo-1.0-0 \
-        shared-mime-info \
+        ffmpeg=7:5.1.6-0+deb12u1 \
+        git=1:2.39.5-0+deb12u2 \
+        libcairo2=1.16.0-7 \
+        libgdk-pixbuf2.0-0=2.40.2-2 \
+        libpango1.0-0=1.50.12+ds-1 \
+        libpangocairo-1.0-0=1.50.12+ds-1 \
+        shared-mime-info=2.2-1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -45,10 +45,10 @@ FROM base AS build
 # Install build dependencies (sorted alphabetically)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        build-essential \
-        findutils \
-        libcairo2-dev \
-        libffi-dev \
+        build-essential=12.9 \
+        findutils=4.9.0-4 \
+        libcairo2-dev=1.16.0-7 \
+        libffi-dev=3.4.4-1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -110,7 +110,7 @@ RUN set -eux; \
     # Conditionally install zsh for devcontainer
     if [ "$DEVCONTAINER" = "1" ]; then \
         apt-get update && \
-        apt-get install -y --no-install-recommends zsh && \
+        apt-get install -y --no-install-recommends zsh=5.9-4+b6 && \
         chsh -s /usr/bin/zsh && \
         apt-get clean && \
         rm -rf /var/lib/apt/lists/*; \
@@ -151,9 +151,9 @@ RUN groupadd --system --gid 1001 nonroot && \
 # Install ONLY runtime dependencies (minimal set)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        libcairo2 \
-        libffi8 \
-        coreutils \
+        libcairo2=1.16.0-7 \
+        libffi8=3.4.4-1 \
+        coreutils=9.1-1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /var/cache/apt/* \
@@ -186,74 +186,73 @@ RUN set -eux; \
     mkdir -p /app/.cache/tldr /app/temp; \
     chown -R nonroot:nonroot /app/.cache /app/temp; \
     \
-    # AGGRESSIVE virtualenv cleanup
-    cd /app/.venv; \
+    # AGGRESSIVE virtualenv cleanup in /app/.venv
     \
     # Remove all bytecode first
-    find . -name "*.pyc" -delete; \
-    find . -name "*.pyo" -delete; \
-    find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find /app/.venv -name "*.pyc" -delete; \
+    find /app/.venv -name "*.pyo" -delete; \
+    find /app/.venv -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true; \
     \
     # Remove only development package metadata (keep essential runtime metadata)
-    find . -name "*dev*.egg-info" -type d -exec rm -rf {} + 2>/dev/null || true; \
-    find . -name "*test*.egg-info" -type d -exec rm -rf {} + 2>/dev/null || true; \
-    find . -name "*dev*.dist-info" -type d -exec rm -rf {} + 2>/dev/null || true; \
-    find . -name "*test*.dist-info" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find /app/.venv -name "*dev*.egg-info" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find /app/.venv -name "*test*.egg-info" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find /app/.venv -name "*dev*.dist-info" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find /app/.venv -name "*test*.dist-info" -type d -exec rm -rf {} + 2>/dev/null || true; \
     \
     # Remove test and development files
-    find . -name "tests" -type d -exec rm -rf {} + 2>/dev/null || true; \
-    find . -name "test" -type d -exec rm -rf {} + 2>/dev/null || true; \
-    find . -name "testing" -type d -exec rm -rf {} + 2>/dev/null || true; \
-    find . -name "*test*" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find /app/.venv -name "tests" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find /app/.venv -name "test" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find /app/.venv -name "testing" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find /app/.venv -name "*test*" -type d -exec rm -rf {} + 2>/dev/null || true; \
     \
     # Remove documentation
-    find . -name "docs" -type d -exec rm -rf {} + 2>/dev/null || true; \
-    find . -name "doc" -type d -exec rm -rf {} + 2>/dev/null || true; \
-    find . -name "examples" -type d -exec rm -rf {} + 2>/dev/null || true; \
-    find . -name "samples" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find /app/.venv -name "docs" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find /app/.venv -name "doc" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find /app/.venv -name "examples" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find /app/.venv -name "samples" -type d -exec rm -rf {} + 2>/dev/null || true; \
     \
     # Remove all documentation files
-    find . -name "*.md" -delete 2>/dev/null || true; \
-    find . -name "*.txt" -delete 2>/dev/null || true; \
-    find . -name "*.rst" -delete 2>/dev/null || true; \
-    find . -name "LICENSE*" -delete 2>/dev/null || true; \
-    find . -name "NOTICE*" -delete 2>/dev/null || true; \
-    find . -name "COPYING*" -delete 2>/dev/null || true; \
-    find . -name "CHANGELOG*" -delete 2>/dev/null || true; \
-    find . -name "README*" -delete 2>/dev/null || true; \
-    find . -name "HISTORY*" -delete 2>/dev/null || true; \
-    find . -name "AUTHORS*" -delete 2>/dev/null || true; \
-    find . -name "CONTRIBUTORS*" -delete 2>/dev/null || true; \
+    find /app/.venv -name "*.md" -delete 2>/dev/null || true; \
+    find /app/.venv -name "*.txt" -delete 2>/dev/null || true; \
+    find /app/.venv -name "*.rst" -delete 2>/dev/null || true; \
+    find /app/.venv -name "LICENSE*" -delete 2>/dev/null || true; \
+    find /app/.venv -name "NOTICE*" -delete 2>/dev/null || true; \
+    find /app/.venv -name "COPYING*" -delete 2>/dev/null || true; \
+    find /app/.venv -name "CHANGELOG*" -delete 2>/dev/null || true; \
+    find /app/.venv -name "README*" -delete 2>/dev/null || true; \
+    find /app/.venv -name "HISTORY*" -delete 2>/dev/null || true; \
+    find /app/.venv -name "AUTHORS*" -delete 2>/dev/null || true; \
+    find /app/.venv -name "CONTRIBUTORS*" -delete 2>/dev/null || true; \
     \
     # Remove large packages not needed in production
-    rm -rf lib/python3.13/site-packages/pip* 2>/dev/null || true; \
-    rm -rf lib/python3.13/site-packages/setuptools* 2>/dev/null || true; \
-    rm -rf lib/python3.13/site-packages/wheel* 2>/dev/null || true; \
-    rm -rf lib/python3.13/site-packages/pkg_resources* 2>/dev/null || true; \
+    rm -rf /app/.venv/lib/python3.13/site-packages/pip* 2>/dev/null || true; \
+    rm -rf /app/.venv/lib/python3.13/site-packages/setuptools* 2>/dev/null || true; \
+    rm -rf /app/.venv/lib/python3.13/site-packages/wheel* 2>/dev/null || true; \
+    rm -rf /app/.venv/lib/python3.13/site-packages/pkg_resources* 2>/dev/null || true; \
     \
     # Remove binaries from site-packages bin if they exist
-    rm -rf bin/pip* bin/easy_install* bin/wheel* 2>/dev/null || true; \
+    rm -rf /app/.venv/bin/pip* /app/.venv/bin/easy_install* /app/.venv/bin/wheel* 2>/dev/null || true; \
     \
     # Remove debug symbols and static libraries
-    find . -name "*.so.debug" -delete 2>/dev/null || true; \
-    find . -name "*.a" -delete 2>/dev/null || true; \
+    find /app/.venv -name "*.so.debug" -delete 2>/dev/null || true; \
+    find /app/.venv -name "*.a" -delete 2>/dev/null || true; \
     \
     # Remove locale files (if your app doesn't need i18n)
-    find . -name "*.mo" -delete 2>/dev/null || true; \
-    find . -name "locale" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    find /app/.venv -name "*.mo" -delete 2>/dev/null || true; \
+    find /app/.venv -name "locale" -type d -exec rm -rf {} + 2>/dev/null || true; \
     \
     # Remove source maps and other development artifacts
-    find . -name "*.map" -delete 2>/dev/null || true; \
-    find . -name "*.coffee" -delete 2>/dev/null || true; \
-    find . -name "*.ts" -delete 2>/dev/null || true; \
-    find . -name "*.scss" -delete 2>/dev/null || true; \
-    find . -name "*.less" -delete 2>/dev/null || true; \
+    find /app/.venv -name "*.map" -delete 2>/dev/null || true; \
+    find /app/.venv -name "*.coffee" -delete 2>/dev/null || true; \
+    find /app/.venv -name "*.ts" -delete 2>/dev/null || true; \
+    find /app/.venv -name "*.scss" -delete 2>/dev/null || true; \
+    find /app/.venv -name "*.less" -delete 2>/dev/null || true; \
     \
     # Compile Python bytecode and remove source files for some packages  
     /app/.venv/bin/python -m compileall -b -q /app/tux /app/.venv/lib/python3.13/site-packages/ 2>/dev/null || true; \
     \
     # Strip binaries (if strip is available)
-    find . -name "*.so" -exec strip --strip-unneeded {} + 2>/dev/null || true;
+    find /app/.venv -name "*.so" -exec strip --strip-unneeded {} + 2>/dev/null || true;
 
 # Create symlink for python accessibility and ensure everything is working
 RUN ln -sf /app/.venv/bin/python /usr/local/bin/python && \
