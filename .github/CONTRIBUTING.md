@@ -12,7 +12,7 @@ Before you start, ensure you have:
 
 * [Python](https://www.python.org/) (3.13+ recommended)
   * If you don't have Python installed, we suggest using something like [mise](https://mise.jdx.dev/) or [pyenv](https://github.com/pyenv/pyenv) to manage your Python installations.
-  
+
 * [Poetry](https://python-poetry.org/docs/) (1.2+ recommended)
   * If you don't have Poetry installed, you can use one of the official methods. We recommend using the official installer:
 
@@ -56,7 +56,7 @@ Follow these steps to set up your local development environment. For more compre
 
     ```bash
     git remote add upstream https://github.com/allthingslinux/tux.git
-    
+
     # Verify the remotes
     git remote -v
     ```

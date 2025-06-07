@@ -12,8 +12,9 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  quality:
-    name: "Code Quality"
+  # Python linting (runs only if Python files changed)
+  python-quality:
+    name: "Python Quality"
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -25,6 +26,21 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Check for Python changes
+        uses: tj-actions/changed-files@v44
+        id: python_changes
+        with:
+          files: |
+            **/*.py
+            pyproject.toml
+            poetry.lock
+
+      - name: Skip if no Python changes
+        if: steps.python_changes.outputs.any_changed != 'true'
+        run: |
+          echo "No Python files changed, skipping Python quality checks"
+          exit 0
+
       - name: Install Poetry
         run: pipx install poetry
 
@@ -33,63 +49,9 @@ jobs:
         with:
           python-version: "3.13"
           cache: "poetry"
-          cache-dependency-path: |
-            poetry.lock
-            pyproject.toml
-
-      - name: Cache Prisma Client
-        uses: actions/cache@v4
-        with:
-          path: |
-            .venv/lib/python*/site-packages/prisma
-            .venv/lib/python*/site-packages/prisma_client_py*
-          key: prisma-${{ runner.os }}-${{ hashFiles('prisma/schema.prisma') }}
-          restore-keys: |
-            prisma-${{ runner.os }}-
-
-      - name: Cache Ruff
-        uses: actions/cache@v4
-        with:
-          path: .ruff_cache
-          key: ruff-${{ runner.os }}-${{ hashFiles('pyproject.toml', '**/*.py') }}
-          restore-keys: |
-            ruff-${{ runner.os }}-
-
-      - name: Cache Python packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: pip-${{ runner.os }}-${{ hashFiles('poetry.lock') }}
-          restore-keys: |
-            pip-${{ runner.os }}-
-
-      - name: Configure Poetry
-        run: |
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project true
 
       - name: Install dependencies
-        run: |
-          poetry install --only=main,dev,types --no-interaction --no-ansi
-        timeout-minutes: 10
-
-      - name: Add Poetry venv to PATH
-        run: echo "$(poetry env info --path)/bin" >> "$GITHUB_PATH"
-
-      - name: Generate Prisma Client (cached)
-        run: |
-          found=false
-          for dir in .venv/lib/python*/site-packages/prisma; do
-            if [ -d "$dir" ]; then
-              found=true
-              break
-            fi
-          done
-          if [ "$found" = false ]; then
-            poetry run prisma generate
-          else
-            echo "Prisma client found in cache, skipping generation"
-          fi
+        run: poetry install --only=main,dev,types --no-interaction --no-ansi
 
       - name: Run Ruff formatter check
         run: poetry run ruff format --check
@@ -97,37 +59,194 @@ jobs:
       - name: Run Ruff linter
         run: poetry run ruff check
 
-      - name: Lint Additional Files (YAML, JSON, Markdown)
-        uses: super-linter/super-linter/slim@v7.2.0
-        timeout-minutes: 15
-        env:
-          DEFAULT_BRANCH: main
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN || 'ghp_placeholder' }}
-          VALIDATE_ALL_CODEBASE: false
-          # File format validation with Prettier (supports auto-fix)
-          VALIDATE_YAML_PRETTIER: true
-          VALIDATE_JSON_PRETTIER: true
-          VALIDATE_MARKDOWN_PRETTIER: true
-          VALIDATE_DOCKERFILE_HADOLINT: true
-          # GitHub Actions validation
-          VALIDATE_GITHUB_ACTIONS: true
-          # Security scanning
-          VALIDATE_GITLEAKS: true
-          # Auto-fix formatting issues
-          FIX_YAML_PRETTIER: true
-          FIX_JSON_PRETTIER: true
-          FIX_MARKDOWN_PRETTIER: true
-          # Output settings for better debugging
-          LOG_LEVEL: DEBUG
-          OUTPUT_FORMAT: tap
-        # Continue on error for fork PRs where token might be limited
-        continue-on-error: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
-
       - name: Run Pyright type checker
         uses: jakebailey/pyright-action@v2
         with:
           annotate: "errors"
 
-      # Future: Add pytest here when you have tests
-      # - name: Run tests
-      #   run: poetry run pytest
+  # Matrix strategy for file linting with inline configs
+  file-linting:
+    name: "File Linting"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "YAML"
+            files: "**/*.yml,**/*.yaml"
+            extension: "yml,yaml"
+          - name: "JSON"
+            files: "**/*.json"
+            extension: "json"
+          - name: "Markdown"
+            files: "**/*.md"
+            extension: "md"
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Check for ${{ matrix.name }} changes
+        uses: tj-actions/changed-files@v44
+        id: file_changes
+        with:
+          files: ${{ matrix.files }}
+
+      - name: Skip if no ${{ matrix.name }} changes
+        if: steps.file_changes.outputs.any_changed != 'true'
+        run: |
+          echo "No ${{ matrix.name }} files changed, skipping ${{ matrix.name }} linting"
+          exit 0
+
+      - name: Setup Node.js (with cache)
+        if: matrix.name != 'YAML'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Setup Python (with cache)
+        if: matrix.name == 'YAML'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install linting tools
+        run: |
+          if [ "${{ matrix.name }}" = "YAML" ]; then
+            pip install yamllint
+            npm install -g prettier
+          elif [ "${{ matrix.name }}" = "JSON" ]; then
+            npm install -g prettier
+          elif [ "${{ matrix.name }}" = "Markdown" ]; then
+            npm install -g markdownlint-cli
+          fi
+
+      - name: Run YAML linting with inline config
+        if: matrix.name == 'YAML'
+        run: |
+          # Create inline yamllint config
+          cat > /tmp/yamllint.yml << 'EOF'
+          extends: default
+          rules:
+            line-length:
+              max: 120
+              level: warning
+            document-start: disable
+            truthy:
+              allowed-values: ['true', 'false', 'yes', 'no', 'on', 'off']
+          ignore: |
+            .venv/
+            .archive/
+            node_modules/
+            typings/
+          EOF
+
+          # Run yamllint with inline config
+          yamllint --config-file /tmp/yamllint.yml .
+
+          # Run prettier with inline config
+          npx prettier --check \
+            --tab-width 2 \
+            --print-width 120 \
+            --end-of-line lf \
+            "**/*.{yml,yaml}" \
+            --ignore-path <(echo -e ".venv/\n.archive/\nnode_modules/\ntypings/\npoetry.lock\nflake.lock")
+
+      - name: Run JSON linting with inline config
+        if: matrix.name == 'JSON'
+        run: |
+          npx prettier --check \
+            --tab-width 2 \
+            --print-width 100 \
+            --end-of-line lf \
+            "**/*.json" \
+            --ignore-path <(echo -e ".venv/\n.archive/\nnode_modules/\ntypings/\npoetry.lock")
+
+      - name: Run Markdown linting with inline config
+        if: matrix.name == 'Markdown'
+        run: |
+          # Run markdownlint with inline rules
+          npx markdownlint \
+            --disable MD013 MD033 MD041 \
+            --ignore node_modules \
+            --ignore .venv \
+            --ignore .archive \
+            "**/*.md"
+
+  # Infrastructure linting
+  infrastructure-lint:
+    name: "Infrastructure"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "Docker"
+            files: "Dockerfile*,docker-compose*.yml"
+          - name: "GitHub Actions"
+            files: ".github/workflows/**"
+          - name: "Shell Scripts"
+            files: "**/*.sh,**/*.bash,scripts/**"
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Check for ${{ matrix.name }} changes
+        uses: tj-actions/changed-files@v44
+        id: infra_changes
+        with:
+          files: ${{ matrix.files }}
+
+      - name: Skip if no ${{ matrix.name }} changes
+        if: steps.infra_changes.outputs.any_changed != 'true'
+        run: |
+          echo "No ${{ matrix.name }} files changed, skipping ${{ matrix.name }} linting"
+          exit 0
+
+      - name: Run Docker linting
+        if: matrix.name == 'Docker'
+        run: |
+          # Hadolint with inline config
+          docker run --rm -i hadolint/hadolint hadolint \
+            --ignore DL3008 \
+            --ignore DL3009 \
+            - < Dockerfile
+
+          # Docker Compose validation
+          docker-compose -f docker-compose.yml config --quiet
+          docker-compose -f docker-compose.dev.yml config --quiet
+
+      - name: Run GitHub Actions linting
+        if: matrix.name == 'GitHub Actions'
+        uses: raven-actions/actionlint@v1
+        with:
+          files: ".github/workflows/*.yml"
+
+      - name: Run Shell linting
+        if: matrix.name == 'Shell Scripts'
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: "./scripts"
+
+  # Security scanning
+  security:
+    name: "Security Scan"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run GitLeaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -16,12 +16,12 @@ This directory contains streamlined, industry-standard GitHub Actions workflows.
 ### Before (Old Complex Setup)
 
 - **7 individual workflows**: Fragmented, hard to maintain
-- **docker-test.yml**: 922 lines, 25+ minutes, $300+/month  
+- **docker-test.yml**: 922 lines, 25+ minutes, $300+/month
 - **docker-image.yml**: Redundant with complex logic
 - **Security issues**: Dangerous permissions, manual commits
 - **Non-standard naming**: Confusing for developers
 
-### After (New Industry-Standard Setup)  
+### After (New Industry-Standard Setup)
 
 - **4 consolidated workflows**: Clean, organized, professional
 - **docker.yml**: 150 lines, 5-8 minutes, ~$50/month
@@ -45,7 +45,7 @@ This directory contains streamlined, industry-standard GitHub Actions workflows.
 ### What Moved to External Tools
 
 - **Performance monitoring** → Recommended: Datadog, New Relic, Prometheus
-- **Complex metrics** → Recommended: APM tools, Grafana dashboards  
+- **Complex metrics** → Recommended: APM tools, Grafana dashboards
 - **Threshold analysis** → Recommended: Monitoring alerts, SLIs/SLOs
 - **Custom reporting** → Recommended: Dedicated observability stack
 
@@ -70,7 +70,7 @@ This directory contains streamlined, industry-standard GitHub Actions workflows.
 The new workflows "just work" - no configuration needed:
 
 1. **PR Validation**: Automatic fast checks (2-3 min)
-2. **Main Branch**: Full build + security scan (5-8 min)  
+2. **Main Branch**: Full build + security scan (5-8 min)
 3. **Security**: Automated vulnerability scanning with SARIF
 4. **Cleanup**: Weekly old image removal
 

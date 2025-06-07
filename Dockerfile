@@ -133,7 +133,7 @@ CMD ["sh", "-c", "poetry run prisma generate && exec poetry run tux --dev start"
 
 
 # Production stage:
-# - Minimal, secure runtime environment  
+# - Minimal, secure runtime environment
 # - Non-root user execution
 # - Optimized for size and security
 FROM python:3.13.2-slim AS production
@@ -248,7 +248,7 @@ RUN set -eux; \
     find /app/.venv -name "*.scss" -delete 2>/dev/null || true; \
     find /app/.venv -name "*.less" -delete 2>/dev/null || true; \
     \
-    # Compile Python bytecode and remove source files for some packages  
+    # Compile Python bytecode and remove source files for some packages
     /app/.venv/bin/python -m compileall -b -q /app/tux /app/.venv/lib/python3.13/site-packages/ 2>/dev/null || true; \
     \
     # Strip binaries (if strip is available)

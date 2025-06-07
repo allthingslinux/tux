@@ -58,7 +58,7 @@ All Docker operations are now available through a single, powerful script:
 # Quick validation (2-3 min)
 ./scripts/docker-toolkit.sh quick
 
-# Standard testing (5-7 min)  
+# Standard testing (5-7 min)
 ./scripts/docker-toolkit.sh test
 
 # Comprehensive testing (15-20 min)
@@ -284,7 +284,7 @@ jq '.performance | to_entries[] | "\(.key): \(.value.value) \(.value.unit)"' log
 ### **Key Metrics Tracked**
 
 - Build times (fresh vs cached)
-- Container startup performance  
+- Container startup performance
 - Memory usage patterns
 - Image sizes and layer counts
 - Security scan results
@@ -374,7 +374,7 @@ diff /tmp/before_images.txt /tmp/after_images.txt
 ```bash
 # ❌ NEVER USE THESE:
 docker system prune -af --volumes    # Removes ALL system resources
-docker system prune -af              # Removes ALL unused resources  
+docker system prune -af              # Removes ALL unused resources
 docker volume prune -f               # Removes ALL unused volumes
 docker network prune -f              # Removes ALL unused networks
 docker container prune -f            # Removes ALL stopped containers
@@ -597,7 +597,7 @@ jq '.' logs/docker-metrics-*.json > performance-data.json
 # GitHub Actions example
 - name: Docker Performance Test
   run: ./scripts/docker-toolkit.sh test
-  
+
 - name: Security Scan
   run: docker scout cves --exit-code --only-severity critical,high
 ```
@@ -665,7 +665,7 @@ Our optimized Docker setup achieves:
 ### **Getting Help**
 
 1. **Check logs:** `docker logs` and test outputs
-2. **Run diagnostics:** Performance and health scripts  
+2. **Run diagnostics:** Performance and health scripts
 3. **Review documentation:** This guide and linked resources
 4. **Use cleanup tools:** Safe cleanup operations via the toolkit
 
