@@ -1,7 +1,6 @@
 """Docker commands for the Tux CLI."""
 
 import re
-import shlex
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -176,7 +175,7 @@ def _safe_subprocess_run(cmd: list[str], **kwargs: Any) -> subprocess.CompletedP
         raise ValueError(msg)
 
     # Log command for security audit (sanitized)
-    logger.debug(f"Executing command: {shlex.join(cmd[:3])}...")
+    logger.debug(f"Executing command: {' '.join(cmd[:3])}...")
 
     # For Docker commands, validate against allowlist
     if cmd[0] == "docker" and not _validate_docker_command(cmd):
@@ -236,7 +235,7 @@ def _safe_subprocess_run(cmd: list[str], **kwargs: Any) -> subprocess.CompletedP
         return subprocess.run(sanitized_cmd, check=check_flag, **final_kwargs)  # type: ignore[return-value]
     except subprocess.CalledProcessError as e:
         logger.error(
-            f"Command failed with exit code {e.returncode}: {shlex.join(sanitized_cmd[:3])}...",
+            f"Command failed with exit code {e.returncode}: {' '.join(sanitized_cmd[:3])}...",
         )
         raise
 
