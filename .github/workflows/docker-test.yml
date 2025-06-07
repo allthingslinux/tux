@@ -83,33 +83,74 @@ jobs:
           
       - name: Set up environment file
         run: |
-          # Create minimal .env for testing
-          echo "DEV_DATABASE_URL=sqlite:///tmp/test.db" > .env
-          echo "PROD_DATABASE_URL=sqlite:///tmp/test.db" >> .env
-          echo "DEV_BOT_TOKEN=test_token_dev" >> .env
-          echo "PROD_BOT_TOKEN=test_token_prod" >> .env
-          echo "DEV_COG_IGNORE_LIST=rolecount,mail,git" >> .env
-          echo "PROD_COG_IGNORE_LIST=rolecount,mail,git" >> .env
+          # Create minimal .env for testing with all required variables
+          cat > .env << EOF
+          DEV_DATABASE_URL=sqlite:///tmp/test.db
+          PROD_DATABASE_URL=sqlite:///tmp/test.db
+          DEV_BOT_TOKEN=test_token_dev_$(date +%s)
+          PROD_BOT_TOKEN=test_token_prod_$(date +%s)
+          DEV_COG_IGNORE_LIST=rolecount,mail,git
+          PROD_COG_IGNORE_LIST=rolecount,mail,git
+          DISCORD_TOKEN=test_token_$(date +%s)
+          DATABASE_URL=sqlite:///tmp/test.db
+          BOT_TOKEN=test_token_$(date +%s)
+          COG_IGNORE_LIST=rolecount,mail,git
+          SENTRY_DSN=
+          LOG_LEVEL=INFO
+          EOF
+          
+          echo "Created .env file with contents:"
+          cat .env
 
       - name: Run ${{ matrix.description }}
         timeout-minutes: ${{ matrix.timeout }}
         run: |
           chmod +x scripts/docker-toolkit.sh
           
+          # Enable debug output for CI troubleshooting
+          set -x
+          
+          # Show current environment
+          echo "=== Environment Info ==="
+          echo "Matrix test-type: ${{ matrix.test-type }}"
+          echo "Event name: ${{ github.event_name }}"
+          echo "Test level input: ${{ github.event.inputs.test_level }}"
+          echo "========================"
+          
           # Determine test command based on matrix and inputs
+          # Note: Scheduled runs are handled by the separate comprehensive-test job
           if [ "${{ matrix.test-type }}" = "quick" ]; then
-            ./scripts/docker-toolkit.sh quick
-          elif [ "${{ github.event_name }}" = "schedule" ]; then
-            # Run comprehensive tests on scheduled runs
-            ./scripts/docker-toolkit.sh comprehensive
-          elif [ "${{ github.event.inputs.test_level }}" = "comprehensive" ]; then
-            ./scripts/docker-toolkit.sh comprehensive
+            echo "Running quick validation tests..."
+            ./scripts/docker-toolkit.sh quick || {
+              echo "Quick tests failed with exit code $?"
+              echo "Continuing to collect logs and artifacts..."
+              exit 1
+            }
+          elif [ "${{ github.event.inputs.test_level }}" = "comprehensive" ] && [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "Running comprehensive tests..."
+            ./scripts/docker-toolkit.sh comprehensive || {
+              echo "Comprehensive tests failed with exit code $?"
+              echo "Continuing to collect logs and artifacts..."
+              exit 1
+            }
           elif [ "${{ github.event.inputs.test_level }}" = "quick" ]; then
-            ./scripts/docker-toolkit.sh quick
+            echo "Running quick tests (from input)..."
+            ./scripts/docker-toolkit.sh quick || {
+              echo "Quick tests failed with exit code $?"
+              echo "Continuing to collect logs and artifacts..."
+              exit 1
+            }
           else
-            # Standard test
-            ./scripts/docker-toolkit.sh test
+            # Standard test (matrix.test-type = "standard" or default)
+            echo "Running standard tests..."
+            ./scripts/docker-toolkit.sh test || {
+              echo "Standard tests failed with exit code $?"
+              echo "Continuing to collect logs and artifacts..."
+              exit 1
+            }
           fi
+          
+          echo "Tests completed successfully!"
           
       - name: Collect system performance metrics
         if: always()
@@ -403,12 +444,21 @@ jobs:
 
       - name: Set up environment file
         run: |
-          echo "DEV_DATABASE_URL=sqlite:///tmp/test.db" > .env
-          echo "PROD_DATABASE_URL=sqlite:///tmp/test.db" >> .env
-          echo "DEV_BOT_TOKEN=test_token_dev" >> .env
-          echo "PROD_BOT_TOKEN=test_token_prod" >> .env
-          echo "DEV_COG_IGNORE_LIST=rolecount,mail,git" >> .env
-          echo "PROD_COG_IGNORE_LIST=rolecount,mail,git" >> .env
+          # Create minimal .env for testing with all required variables
+          cat > .env << EOF
+          DEV_DATABASE_URL=sqlite:///tmp/test.db
+          PROD_DATABASE_URL=sqlite:///tmp/test.db
+          DEV_BOT_TOKEN=test_token_dev_$(date +%s)
+          PROD_BOT_TOKEN=test_token_prod_$(date +%s)
+          DEV_COG_IGNORE_LIST=rolecount,mail,git
+          PROD_COG_IGNORE_LIST=rolecount,mail,git
+          DISCORD_TOKEN=test_token_$(date +%s)
+          DATABASE_URL=sqlite:///tmp/test.db
+          BOT_TOKEN=test_token_$(date +%s)
+          COG_IGNORE_LIST=rolecount,mail,git
+          SENTRY_DSN=
+          LOG_LEVEL=INFO
+          EOF
 
       - name: Run comprehensive Docker testing
         timeout-minutes: 25
