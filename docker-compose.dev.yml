@@ -40,14 +40,9 @@ services:
       - path: .env
         required: true
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          cpus: '1.0'
-        reservations:
-          memory: 512M
-          cpus: '0.5'
+    mem_limit: 1g
+    mem_reservation: 512m
+    cpus: 1.0
     logging:
       driver: "json-file"
       options:
