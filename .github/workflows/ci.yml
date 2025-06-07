@@ -73,11 +73,18 @@ jobs:
         timeout-minutes: 10
           
       - name: Add Poetry venv to PATH
-        run: echo "$(poetry env info --path)/bin" >> $GITHUB_PATH
+        run: echo "$(poetry env info --path)/bin" >> "$GITHUB_PATH"
         
       - name: Generate Prisma Client (cached)
         run: |
-          if [ ! -d .venv/lib/python*/site-packages/prisma ]; then
+          found=false
+          for dir in .venv/lib/python*/site-packages/prisma; do
+            if [ -d "$dir" ]; then
+              found=true
+              break
+            fi
+          done
+          if [ "$found" = false ]; then
             poetry run prisma generate
           else
             echo "Prisma client found in cache, skipping generation"
