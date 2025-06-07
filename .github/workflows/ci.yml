@@ -98,12 +98,11 @@ jobs:
           echo "No ${{ matrix.name }} files changed, skipping ${{ matrix.name }} linting"
           exit 0
 
-      - name: Setup Node.js (with cache)
+      - name: Setup Node.js
         if: matrix.name != 'YAML'
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
 
       - name: Setup Python (with cache)
         if: matrix.name == 'YAML'
