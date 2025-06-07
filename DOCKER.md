@@ -542,8 +542,8 @@ docker build --build-arg DEVCONTAINER=1 .
 ### **Multi-Platform Builds**
 
 ```bash
-# Build for multiple platforms
-docker buildx build --platform linux/amd64,linux/arm64 .
+# Build for amd64 only
+docker buildx build --platform linux/amd64 .
 ```
 
 ### **Security Scanning**

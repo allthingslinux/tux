@@ -62,7 +62,7 @@ jobs:
           sbom: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           build-args: |
             BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
 
