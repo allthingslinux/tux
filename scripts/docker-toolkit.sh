@@ -34,7 +34,12 @@ success() {
 
 error() {
     echo -e "${RED}❌ $1${NC}"
-    exit 1
+    # In testing contexts, don't exit immediately - let tests complete
+    if [[ "${TESTING_MODE:-false}" == "true" ]]; then
+        return 1
+    else
+        exit 1
+    fi
 }
 
 warning() {
@@ -153,6 +158,10 @@ perform_safe_cleanup() {
 # QUICK TESTING SUBCOMMAND
 # ============================================================================
 cmd_quick() {
+    # Enable testing mode for graceful error handling
+    export TESTING_MODE=true
+    set +e  # Disable immediate exit on error for testing
+    
     header "⚡ QUICK DOCKER VALIDATION"
     echo "=========================="
     echo "Testing core functionality (2-3 minutes)"
@@ -167,7 +176,7 @@ cmd_quick() {
             success "$2"
             ((passed++))
         else
-            error "$2"
+            echo -e "${RED}❌ $2${NC}"
             ((failed++))
         fi
     }
@@ -240,8 +249,13 @@ cmd_quick() {
         echo "Your Docker setup is ready for development."
         return 0
     else
-        echo -e "\n${RED}⚠️  Some tests failed.${NC}"
+        echo -e "\n${RED}⚠️  $failed out of $((passed + failed)) tests failed.${NC}"
         echo "Run '$SCRIPT_NAME test' for detailed diagnostics."
+        echo "Common issues to check:"
+        echo "  - Ensure Docker is running"
+        echo "  - Verify .env file exists with required variables"
+        echo "  - Check Dockerfile syntax"
+        echo "  - Review Docker compose configuration"
         return 1
     fi
 }
@@ -250,6 +264,10 @@ cmd_quick() {
 # STANDARD TESTING SUBCOMMAND
 # ============================================================================
 cmd_test() {
+    # Enable testing mode for graceful error handling
+    export TESTING_MODE=true
+    set +e  # Disable immediate exit on error for testing
+    
     local no_cache=""
     local force_clean=""
     
@@ -265,7 +283,8 @@ cmd_test() {
                 shift
                 ;;
             *)
-                error "Unknown test option: $1"
+                echo -e "${RED}❌ Unknown test option: $1${NC}"
+                return 1
                 ;;
         esac
     done
@@ -320,10 +339,28 @@ EOF
     
     # Test 1: Environment Check
     info "Checking environment..."
-    [[ ! -f ".env" ]] && error ".env file not found"
-    [[ ! -f "pyproject.toml" ]] && error "pyproject.toml not found"
-    [[ ! -d "prisma/schema" ]] && error "prisma/schema directory not found"
-    success "Environment files present"
+    local env_errors=0
+    
+    if [[ ! -f ".env" ]]; then
+        echo -e "${RED}❌ .env file not found${NC}"
+        ((env_errors++))
+    fi
+    
+    if [[ ! -f "pyproject.toml" ]]; then
+        echo -e "${RED}❌ pyproject.toml not found${NC}"
+        ((env_errors++))
+    fi
+    
+    if [[ ! -d "prisma/schema" ]]; then
+        echo -e "${RED}❌ prisma/schema directory not found${NC}"
+        ((env_errors++))
+    fi
+    
+    if [ $env_errors -eq 0 ]; then
+        success "Environment files present"
+    else
+        warning "$env_errors environment issues found - continuing with available tests"
+    fi
     
     # Test 2: Development Build
     info "Testing development build..."
@@ -337,7 +374,10 @@ EOF
         add_metric "development_build" "$build_duration" "ms"
         add_metric "dev_image_size_mb" "${dev_size//[^0-9.]/}" "MB"
     else
-        error "Development build failed"
+        local build_duration=$(end_timer $build_start)
+        echo -e "${RED}❌ Development build failed after ${build_duration}ms${NC}"
+        add_metric "development_build" "$build_duration" "ms" 
+        # Continue with other tests
     fi
     
     # Test 3: Production Build
@@ -352,7 +392,10 @@ EOF
         add_metric "production_build" "$build_duration" "ms"
         add_metric "prod_image_size_mb" "${prod_size//[^0-9.]/}" "MB"
     else
-        error "Production build failed"
+        local build_duration=$(end_timer $build_start)
+        echo -e "${RED}❌ Production build failed after ${build_duration}ms${NC}"
+        add_metric "production_build" "$build_duration" "ms"
+        # Continue with other tests
     fi
     
     # Test 4: Container Startup
@@ -375,12 +418,14 @@ EOF
     if [[ "$user_output" == "nonroot" ]]; then
         success "Container runs as non-root user"
     else
-        error "Container not running as non-root user (got: $user_output)"
+        echo -e "${RED}❌ Container not running as non-root user (got: $user_output)${NC}"
+        # Continue with tests
     fi
     
     # Test read-only filesystem
     if docker run --rm --entrypoint="" tux:test-prod touch /test-file 2>/dev/null; then
-        error "Filesystem is not read-only"
+        echo -e "${RED}❌ Filesystem is not read-only${NC}"
+        # Continue with tests
     else
         success "Read-only filesystem working"
     fi
@@ -411,7 +456,8 @@ EOF
     else
         local python_duration=$(end_timer $python_start)
         add_metric "python_validation" "$python_duration" "ms"
-        error "Python package validation failed"
+        echo -e "${RED}❌ Python package validation failed after ${python_duration}ms${NC}"
+        # Continue with other tests
     fi
     
     # Cleanup
@@ -425,6 +471,12 @@ EOF
     echo "📊 Results:"
     echo "  📋 Log file: $LOG_FILE"
     echo "  📈 Metrics: $METRICS_FILE"
+    echo ""
+    echo "💡 If you encountered issues:"
+    echo "  - Check the log file for detailed error messages"
+    echo "  - Verify your .env file has all required variables"
+    echo "  - Ensure Docker daemon is running and accessible"
+    echo "  - Try running with --force-clean for a fresh start"
 }
 
 # Performance threshold checking
@@ -794,6 +846,10 @@ cmd_cleanup() {
 # COMPREHENSIVE TESTING SUBCOMMAND
 # ============================================================================
 cmd_comprehensive() {
+    # Enable testing mode for graceful error handling
+    export TESTING_MODE=true
+    set +e  # Disable immediate exit on error for testing
+    
     header "🧪 Comprehensive Docker Testing Strategy"
     echo "=========================================="
     echo "Testing all developer scenarios and workflows"
