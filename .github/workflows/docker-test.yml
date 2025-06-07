@@ -51,6 +51,8 @@ jobs:
     permissions:
       contents: read
       packages: read
+      issues: write
+      pull-requests: write
     
     strategy:
       matrix:
@@ -387,6 +389,7 @@ jobs:
 
       - name: Comment performance results on PR
         if: github.event_name == 'pull_request' && matrix.test-type == 'standard'
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           script: |
