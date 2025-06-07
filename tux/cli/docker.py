@@ -46,8 +46,11 @@ RESOURCE_MAP = {
 }
 
 # Security: Allowlisted Docker commands to prevent command injection
+# Note: Only covers the first few command components (docker, compose, subcommand)
+# Resource names and other arguments are validated separately
 ALLOWED_DOCKER_COMMANDS = {
     "docker",
+    "compose",
     "images",
     "ps",
     "volume",
@@ -57,43 +60,102 @@ ALLOWED_DOCKER_COMMANDS = {
     "rmi",
     "inspect",
     "version",
-    "--format",
-    "--filter",
-    "-a",
-    "-f",
+    "build",
+    "up",
+    "down",
+    "logs",
+    "exec",
+    "restart",
+    "pull",
+    "config",
+    "bash",
+    "sh",
 }
 
 
 def _validate_docker_command(cmd: list[str]) -> bool:
     """Validate that a Docker command contains only allowed components."""
-    for component in cmd:
-        # Allow Docker format strings like {{.Repository}}:{{.Tag}}
+    # Define allowed Docker format strings for security
+    allowed_format_strings = {
+        "{{.Repository}}:{{.Tag}}",
+        "{{.Names}}",
+        "{{.Name}}",
+        "{{.State.Status}}",
+        "{{.State.Health.Status}}",
+        "{{.Repository}}",
+        "{{.Tag}}",
+        "{{.ID}}",
+        "{{.Image}}",
+        "{{.Command}}",
+        "{{.CreatedAt}}",
+        "{{.Status}}",
+        "{{.Ports}}",
+        "{{.Size}}",
+    }
+
+    for i, component in enumerate(cmd):
+        # Validate Docker format strings more strictly
         if component.startswith("{{") and component.endswith("}}"):
+            if component not in allowed_format_strings and not re.match(r"^\{\{\.[\w.]+\}\}$", component):
+                msg = f"Unsafe Docker format string: {component}"
+                logger.warning(msg)
+                return False
             continue
         # Allow common Docker flags and arguments
         if component.startswith("-"):
             continue
-        # Check against allowlist
-        if component not in ALLOWED_DOCKER_COMMANDS and component not in [
-            "{{.Repository}}:{{.Tag}}",
-            "{{.Names}}",
-            "{{.Name}}",
-            "{{.State.Status}}",
-            "{{.State.Health.Status}}",
-        ]:
+        # First few components should be in allowlist (docker, compose, subcommand)
+        if i <= 2 and component not in ALLOWED_DOCKER_COMMANDS:
             msg = f"Potentially unsafe Docker command component: {component}"
             logger.warning(msg)
             return False
+        # For later components (arguments), apply more permissive validation
+        # These will be validated by _sanitize_resource_name() if they're resource names
+        if i > 2:
+            # Skip validation for compose file names, service names, and other dynamic values
+            # These will be validated by the resource name sanitizer if appropriate
+            continue
     return True
 
 
 def _sanitize_resource_name(name: str) -> str:
-    """Sanitize resource names to prevent command injection."""
-    # Only allow alphanumeric characters, hyphens, underscores, dots, colons, and slashes
-    # This covers valid Docker image names, container names, etc.
-    if not re.match(r"^[a-zA-Z0-9._:/-]+$", name):
-        msg = f"Invalid resource name format: {name}"
+    """Sanitize resource names to prevent command injection.
+
+    Supports valid Docker resource naming patterns:
+    - Container names: alphanumeric, underscore, period, hyphen
+    - Image names: registry/namespace/repository:tag format
+    - Network names: alphanumeric with separators
+    - Volume names: alphanumeric with separators
+    """
+    # Enhanced regex to support Docker naming conventions
+    # Includes support for:
+    # - Registry hosts (docker.io, localhost:5000)
+    # - Namespaces and repositories (library/ubuntu, myorg/myapp)
+    # - Tags and digests (ubuntu:20.04, ubuntu@sha256:...)
+    # - Local names (my-container, my_volume)
+    if not re.match(r"^[a-zA-Z0-9]([a-zA-Z0-9._:@/-]*[a-zA-Z0-9])?$", name):
+        msg = f"Invalid resource name format: {name}. Must be valid Docker resource name."
         raise ValueError(msg)
+
+    # Additional security checks
+    if len(name) > 255:  # Docker limit
+        msg = f"Resource name too long: {len(name)} chars (max 255)"
+        raise ValueError(msg)
+
+    # Prevent obviously malicious patterns
+    dangerous_patterns = [
+        r"^\$",  # Variable expansion
+        r"[;&|`]",  # Command separators and substitution
+        r"\.\./",  # Path traversal
+        r"^-",  # Flag injection
+        r"\s",  # Whitespace
+    ]
+
+    for pattern in dangerous_patterns:
+        if re.search(pattern, name):
+            msg = f"Resource name contains unsafe pattern: {name}"
+            raise ValueError(msg)
+
     return name
 
 
@@ -128,9 +190,11 @@ def _safe_subprocess_run(cmd: list[str], **kwargs: Any) -> subprocess.CompletedP
             try:
                 sanitized_cmd.append(_sanitize_resource_name(component))
             except ValueError as e:
-                logger.warning(f"Resource name sanitization failed: {e}")
-                # If sanitization fails, use shlex.quote as fallback
-                sanitized_cmd.append(shlex.quote(component))
+                # Security: Don't use shlex.quote fallback for failed validation
+                # This prevents potential command injection through malformed names
+                logger.error(f"Resource name validation failed and cannot be sanitized: {e}")
+                msg = f"Unsafe resource name rejected: {component}"
+                raise ValueError(msg) from e
         else:
             sanitized_cmd.append(component)
 
