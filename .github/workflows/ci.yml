@@ -205,6 +205,12 @@ jobs:
           echo "No ${{ matrix.name }} files changed, skipping ${{ matrix.name }} linting"
           exit 0
 
+      - name: Install docker-compose
+        if: matrix.name == 'Docker'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
       - name: Run Docker linting
         if: matrix.name == 'Docker'
         run: |
