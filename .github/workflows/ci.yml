@@ -13,8 +13,8 @@ concurrency:
 
 jobs:
   # Python linting (runs only if Python files changed)
-  python-quality:
-    name: "Python Quality"
+  python:
+    name: "Python"
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -65,47 +65,44 @@ jobs:
           annotate: "errors"
 
   # Matrix strategy for file linting with inline configs
-  file-linting:
-    name: "File Linting"
+  lint:
+    name: "Lint (${{ matrix.type }})"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - name: "YAML"
+          - type: "YAML"
             files: "**/*.yml,**/*.yaml"
-            extension: "yml,yaml"
-          - name: "JSON"
+          - type: "JSON"
             files: "**/*.json"
-            extension: "json"
-          - name: "Markdown"
+          - type: "Markdown"
             files: "**/*.md"
-            extension: "md"
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Check for ${{ matrix.name }} changes
+      - name: Check for ${{ matrix.type }} changes
         uses: tj-actions/changed-files@v45.0.8
         id: file_changes
         with:
           files: ${{ matrix.files }}
 
-      - name: Skip if no ${{ matrix.name }} changes
+      - name: Skip if no ${{ matrix.type }} changes
         if: steps.file_changes.outputs.any_changed != 'true'
         run: |
-          echo "No ${{ matrix.name }} files changed, skipping ${{ matrix.name }} linting"
+          echo "No ${{ matrix.type }} files changed, skipping ${{ matrix.type }} linting"
           exit 0
 
       - name: Setup Node.js
-        if: matrix.name != 'YAML'
+        if: matrix.type != 'YAML'
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
       - name: Setup Python (with cache)
-        if: matrix.name == 'YAML'
+        if: matrix.type == 'YAML'
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -113,17 +110,17 @@ jobs:
 
       - name: Install linting tools
         run: |
-          if [ "${{ matrix.name }}" = "YAML" ]; then
+          if [ "${{ matrix.type }}" = "YAML" ]; then
             pip install yamllint
             npm install -g prettier
-          elif [ "${{ matrix.name }}" = "JSON" ]; then
+          elif [ "${{ matrix.type }}" = "JSON" ]; then
             npm install -g prettier
-          elif [ "${{ matrix.name }}" = "Markdown" ]; then
+          elif [ "${{ matrix.type }}" = "Markdown" ]; then
             npm install -g markdownlint-cli
           fi
 
       - name: Run YAML linting with inline config
-        if: matrix.name == 'YAML'
+        if: matrix.type == 'YAML'
         run: |
           # Create inline yamllint config
           cat > /tmp/yamllint.yml << 'EOF'
@@ -154,7 +151,7 @@ jobs:
             --ignore-path <(echo -e ".venv/\n.archive/\nnode_modules/\ntypings/\npoetry.lock\nflake.lock")
 
       - name: Run JSON linting with inline config
-        if: matrix.name == 'JSON'
+        if: matrix.type == 'JSON'
         run: |
           npx prettier --check \
             --tab-width 2 \
@@ -164,7 +161,7 @@ jobs:
             --ignore-path <(echo -e ".venv/\n.archive/\nnode_modules/\ntypings/\npoetry.lock")
 
       - name: Run Markdown linting with inline config
-        if: matrix.name == 'Markdown'
+        if: matrix.type == 'Markdown'
         run: |
           # Run markdownlint with inline rules
           npx markdownlint \
@@ -175,38 +172,38 @@ jobs:
             "**/*.md"
 
   # Infrastructure linting
-  infrastructure-lint:
-    name: "Infrastructure"
+  infrastructure:
+    name: "Infrastructure (${{ matrix.type }})"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - name: "Docker"
+          - type: "Docker"
             files: "Dockerfile*,docker-compose*.yml"
-          - name: "GitHub Actions"
+          - type: "GitHub Actions"
             files: ".github/workflows/**"
-          - name: "Shell Scripts"
+          - type: "Shell Scripts"
             files: "**/*.sh,**/*.bash,scripts/**"
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Check for ${{ matrix.name }} changes
+      - name: Check for ${{ matrix.type }} changes
         uses: tj-actions/changed-files@v45.0.8
         id: infra_changes
         with:
           files: ${{ matrix.files }}
 
-      - name: Skip if no ${{ matrix.name }} changes
+      - name: Skip if no ${{ matrix.type }} changes
         if: steps.infra_changes.outputs.any_changed != 'true'
         run: |
-          echo "No ${{ matrix.name }} files changed, skipping ${{ matrix.name }} linting"
+          echo "No ${{ matrix.type }} files changed, skipping ${{ matrix.type }} linting"
           exit 0
 
       - name: Set up Docker Compose v2
-        if: matrix.name == 'Docker'
+        if: matrix.type == 'Docker'
         run: |
           # Docker Compose v2 is pre-installed on GitHub runners
           # Just verify it's available and supports the develop configuration
@@ -214,7 +211,7 @@ jobs:
           echo "✅ Docker Compose v2 is available"
 
       - name: Create .env file for Docker Compose validation
-        if: matrix.name == 'Docker'
+        if: matrix.type == 'Docker'
         run: |
           # Create .env file from .env.example for CI validation
           if [ ! -f .env ]; then
@@ -235,7 +232,7 @@ jobs:
           fi
 
       - name: Run Docker linting
-        if: matrix.name == 'Docker'
+        if: matrix.type == 'Docker'
         run: |
           # Hadolint with inline config
           docker run --rm -i hadolint/hadolint hadolint \
@@ -248,13 +245,13 @@ jobs:
           docker compose -f docker-compose.dev.yml config --quiet
 
       - name: Run GitHub Actions linting
-        if: matrix.name == 'GitHub Actions'
+        if: matrix.type == 'GitHub Actions'
         uses: raven-actions/actionlint@v1
         with:
           files: ".github/workflows/*.yml"
 
       - name: Run Shell linting
-        if: matrix.name == 'Shell Scripts'
+        if: matrix.type == 'Shell Scripts'
         uses: ludeeus/action-shellcheck@master
         with:
           scandir: "./scripts"
