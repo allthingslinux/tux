@@ -183,42 +183,69 @@ def _safe_subprocess_run(cmd: list[str], **kwargs: Any) -> subprocess.CompletedP
         logger.error(msg)
         raise ValueError(msg)
 
-    # Only sanitize arguments that are likely to be Docker resource names
-    # Resource names typically appear in specific contexts and positions
+    # Enhanced resource name validation approach
+    # Instead of using fixed positions, identify resource names by analyzing command structure
     sanitized_cmd: list[str] = []
-    resource_name_contexts: dict[tuple[str, str], list[int]] = {
-        # Commands that take resource names as arguments
-        ("docker", "run"): [3, 4],  # docker run [options] IMAGE [COMMAND]
-        ("docker", "exec"): [3],  # docker exec [options] CONTAINER [COMMAND]
-        ("docker", "inspect"): [3],  # docker inspect [options] NAME|ID
-        ("docker", "rm"): [3],  # docker rm [options] CONTAINER
-        ("docker", "rmi"): [3],  # docker rmi [options] IMAGE
-        ("docker", "stop"): [3],  # docker stop [options] CONTAINER
-        ("docker", "start"): [3],  # docker start [options] CONTAINER
-        ("docker", "logs"): [3],  # docker logs [options] CONTAINER
-        ("docker", "images"): [],  # docker images has no resource name args
-        ("docker", "ps"): [],  # docker ps has no resource name args
-        ("docker", "compose"): [],  # compose subcommands handle their own validation
+
+    # Commands that take resource names as non-flag arguments
+    resource_name_commands = {
+        ("docker", "run"),
+        ("docker", "exec"),
+        ("docker", "inspect"),
+        ("docker", "rm"),
+        ("docker", "rmi"),
+        ("docker", "stop"),
+        ("docker", "start"),
+        ("docker", "logs"),
+        ("docker", "create"),
+        ("docker", "kill"),
+        ("docker", "pause"),
+        ("docker", "unpause"),
+        ("docker", "rename"),
+        ("docker", "update"),
+        ("docker", "wait"),
+        ("docker", "cp"),
+        ("docker", "diff"),
+        ("docker", "export"),
+        ("docker", "import"),
+        ("docker", "commit"),
+        ("docker", "save"),
+        ("docker", "load"),
+        ("docker", "tag"),
+        ("docker", "push"),
+        ("docker", "pull"),
+        ("docker", "volume", "inspect"),
+        ("docker", "volume", "rm"),
+        ("docker", "network", "inspect"),
+        ("docker", "network", "rm"),
+        ("docker", "network", "connect"),
+        ("docker", "network", "disconnect"),
     }
 
-    # Determine if this command has known resource name positions
-    if len(cmd) >= 2:
-        cmd_key = (cmd[0], cmd[1])
-        resource_positions = resource_name_contexts.get(cmd_key, [])
-    else:
-        resource_positions: list[int] = []
+    # Determine if this command uses resource names
+    cmd_key = tuple(cmd[:3]) if len(cmd) >= 3 else tuple(cmd[:2]) if len(cmd) >= 2 else tuple(cmd)
+    uses_resource_names = any(cmd_key[: len(pattern)] == pattern for pattern in resource_name_commands)
 
     for i, component in enumerate(cmd):
-        # Only sanitize components that are in known resource name positions
-        if i in resource_positions and not component.startswith("-") and not component.startswith("{{"):
-            try:
-                sanitized_cmd.append(_sanitize_resource_name(component))
-            except ValueError as e:
-                # Security: Don't use shlex.quote fallback for failed validation
-                # This prevents potential command injection through malformed names
-                logger.error(f"Resource name validation failed and cannot be sanitized: {e}")
-                msg = f"Unsafe resource name rejected: {component}"
-                raise ValueError(msg) from e
+        # Skip the first few command components and flags
+        if i < 2 or component.startswith(("-", "{{")):
+            sanitized_cmd.append(component)
+            continue
+
+        # For resource name commands, validate non-flag arguments that could be resource names
+        if uses_resource_names and not component.startswith(("-", "{{")):
+            # Check if this looks like a resource name (not a command or sub-command)
+            if i >= 2 and component not in ALLOWED_DOCKER_COMMANDS:
+                try:
+                    sanitized_cmd.append(_sanitize_resource_name(component))
+                except ValueError as e:
+                    # Security: Don't use shlex.quote fallback for failed validation
+                    # This prevents potential command injection through malformed names
+                    logger.error(f"Resource name validation failed and cannot be sanitized: {e}")
+                    msg = f"Unsafe resource name rejected: {component}"
+                    raise ValueError(msg) from e
+            else:
+                sanitized_cmd.append(component)
         else:
             # Pass through all other arguments (flags, format strings, commands, etc.)
             sanitized_cmd.append(component)
