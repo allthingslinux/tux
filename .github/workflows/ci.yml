@@ -68,6 +68,8 @@ jobs:
   lint:
     name: "Lint (${{ matrix.type }})"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -175,6 +177,8 @@ jobs:
   infrastructure:
     name: "Infrastructure (${{ matrix.type }})"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
