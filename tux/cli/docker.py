@@ -69,6 +69,33 @@ ALLOWED_DOCKER_COMMANDS = {
     "config",
     "bash",
     "sh",
+    # Additional common Docker subcommands
+    "container",
+    "image",
+    "system",
+    "stats",
+    "create",
+    "start",
+    "stop",
+    "kill",
+    "pause",
+    "unpause",
+    "rename",
+    "update",
+    "wait",
+    "cp",
+    "diff",
+    "export",
+    "import",
+    "commit",
+    "save",
+    "load",
+    "tag",
+    "push",
+    "connect",
+    "disconnect",
+    "prune",
+    "info",
 }
 
 
@@ -101,7 +128,8 @@ def _validate_docker_command(cmd: list[str]) -> bool:
     for i, component in enumerate(cmd):
         # Validate Docker format strings more strictly
         if component.startswith("{{") and component.endswith("}}"):
-            if component not in allowed_format_strings and not re.match(r"^\{\{\.[\w.]+\}\}$", component):
+            # Updated regex to allow colons, hyphens, and other valid format string characters
+            if component not in allowed_format_strings and not re.match(r"^\{\{\.[\w.:-]+\}\}$", component):
                 return _log_warning_and_return_false(f"Unsafe Docker format string: {component}")
             continue
         # Allow common Docker flags and arguments
