@@ -38,9 +38,14 @@ services:
     env_file:
       - .env
     restart: unless-stopped
-    mem_limit: 1g
-    mem_reservation: 512m
-    cpus: 1.0
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "1.0"
+        reservations:
+          memory: 512m
+          cpus: "0.5"
     logging:
       driver: "json-file"
       options:
