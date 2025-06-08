@@ -10,6 +10,8 @@
   "forwardPorts": [
     3000
   ],
+  "workspaceMount": "source=${localWorkspaceFolder},target=/app,type=bind",
+  "workspaceFolder": "/app",
   "build": {
     "target": "dev",
     "args": {
