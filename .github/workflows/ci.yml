@@ -205,11 +205,13 @@ jobs:
           echo "No ${{ matrix.name }} files changed, skipping ${{ matrix.name }} linting"
           exit 0
 
-      - name: Install docker-compose
+      - name: Set up Docker Compose v2
         if: matrix.name == 'Docker'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
+          # Docker Compose v2 is pre-installed on GitHub runners
+          # Just verify it's available and supports the develop configuration
+          docker compose version
+          echo "✅ Docker Compose v2 is available"
 
       - name: Create .env file for Docker Compose validation
         if: matrix.name == 'Docker'
@@ -220,10 +222,12 @@ jobs:
               echo "Creating .env from .env.example for CI validation"
               cp .env.example .env
               # Set minimal required values for validation (these don't need to be real)
-              echo "DEV_DATABASE_URL=sqlite:///tmp/test.db" >> .env
-              echo "PROD_DATABASE_URL=sqlite:///tmp/test.db" >> .env
-              echo "DEV_BOT_TOKEN=test_token_for_ci_validation" >> .env
-              echo "PROD_BOT_TOKEN=test_token_for_ci_validation" >> .env
+              {
+                echo "DEV_DATABASE_URL=sqlite:///tmp/test.db"
+                echo "PROD_DATABASE_URL=sqlite:///tmp/test.db"
+                echo "DEV_BOT_TOKEN=test_token_for_ci_validation"
+                echo "PROD_BOT_TOKEN=test_token_for_ci_validation"
+              } >> .env
             else
               echo "Error: .env file not found and no .env.example available."
               exit 1
@@ -239,9 +243,9 @@ jobs:
             --ignore DL3009 \
             - < Dockerfile
 
-          # Docker Compose validation
-          docker-compose -f docker-compose.yml config --quiet
-          docker-compose -f docker-compose.dev.yml config --quiet
+          # Docker Compose validation using v2 syntax
+          docker compose -f docker-compose.yml config --quiet
+          docker compose -f docker-compose.dev.yml config --quiet
 
       - name: Run GitHub Actions linting
         if: matrix.name == 'GitHub Actions'
