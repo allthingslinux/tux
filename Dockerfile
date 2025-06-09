@@ -371,8 +371,8 @@ RUN ln -sf /app/.venv/bin/python /usr/local/bin/python && \
 # SECURITY: Application runs with minimal privileges
 # RUNTIME: Ensures Prisma binaries and client are properly configured as nonroot user
 USER nonroot
-RUN poetry run prisma py fetch && \
-    poetry run prisma generate
+RUN /app/.venv/bin/python -m prisma py fetch && \
+    /app/.venv/bin/python -m prisma generate
 
 # Health check configuration for container orchestration
 # MONITORING: Allows Docker/Kubernetes to monitor application health
