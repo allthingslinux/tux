@@ -40,5 +40,12 @@ See [tux/utils/env.py](mdc:tux/utils/env.py) for environment logic.
   - `down`: Stops Docker services.
   - `logs`: Shows container logs.
   - `exec`: Executes a command inside a running container.
+  - `shell`: Opens an interactive shell in the container.
+  - `ps`: Shows running containers.
+  - `restart`: Restarts Docker services.
+  - `health`: Shows health status of containers.
+  - `cleanup`: Cleans up Tux-related Docker resources.
+  - `config`: Validates and displays Docker Compose configuration.
+  - `pull`: Pulls latest images from registry.
 
 Refer to [DEVELOPER.md](mdc:DEVELOPER.md) for detailed examples and explanations.

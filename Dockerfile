@@ -180,10 +180,6 @@ RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
     git init --quiet . && \
     # Install the application package itself
     poetry install --only main && \
-    # Fetch Prisma binaries for the current platform
-    poetry run prisma py fetch && \
-    # Generate Prisma client code based on schema
-    poetry run prisma generate && \
     # Clean up git repository (not needed in final image)
     rm -rf .git
 
@@ -220,9 +216,11 @@ RUN set -eux; \
     # Create application cache and temporary directories
     # These directories are used by the bot for caching and temporary files
     mkdir -p /app/.cache/tldr /app/temp; \
+    # Create user cache directories (fixes permission issues for Prisma/npm)
+    mkdir -p /home/nonroot/.cache /home/nonroot/.npm; \
     # Fix ownership of all application files for non-root user
     # SECURITY: Ensures the application runs with proper permissions
-    chown -R nonroot:nonroot /app
+    chown -R nonroot:nonroot /app /home/nonroot/.cache /home/nonroot/.npm
 
 # Switch to non-root user for all subsequent operations
 # SECURITY: Follows principle of least privilege
@@ -236,6 +234,10 @@ RUN git init --quiet . && \
     # Install development dependencies (linters, formatters, test tools, etc.)
     # NOTE: Cache mount removed due to network connectivity issues with Poetry
     poetry install --only dev --no-root --no-directory && \
+    # Fetch Prisma binaries for the current platform (as nonroot user)
+    poetry run prisma py fetch && \
+    # Generate Prisma client code based on schema (as nonroot user)
+    poetry run prisma generate && \
     # Clean up git repository
     rm -rf .git
 
@@ -322,7 +324,9 @@ RUN set -eux; \
     chown -R nonroot:nonroot /app/.venv; \
     # Create required runtime directories
     mkdir -p /app/.cache/tldr /app/temp; \
-    chown -R nonroot:nonroot /app/.cache /app/temp; \
+    # Create user cache directories (fixes permission issues for Prisma/npm)
+    mkdir -p /home/nonroot/.cache /home/nonroot/.npm; \
+    chown -R nonroot:nonroot /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm; \
     \
     # VIRTUAL ENVIRONMENT CLEANUP
     # The following operations remove unnecessary files from the Python environment
@@ -363,9 +367,12 @@ RUN set -eux; \
 RUN ln -sf /app/.venv/bin/python /usr/local/bin/python && \
     ln -sf /app/.venv/bin/tux /usr/local/bin/tux
 
-# Switch to non-root user for security
+# Switch to non-root user for security and run Prisma setup
 # SECURITY: Application runs with minimal privileges
+# RUNTIME: Ensures Prisma binaries and client are properly configured as nonroot user
 USER nonroot
+RUN poetry run prisma py fetch && \
+    poetry run prisma generate
 
 # Health check configuration for container orchestration
 # MONITORING: Allows Docker/Kubernetes to monitor application health
