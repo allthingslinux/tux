@@ -6,12 +6,23 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
+from tux.utils.config import CONFIG
 from tux.utils.constants import CONST
 
 
 class Bookmarks(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
+
+        self.valid_emojis: list[int | str] = CONFIG.ADD_BOOKMARK + CONFIG.REMOVE_BOOKMARK
+        self.valid_add_emojis: list[int | str] = CONFIG.ADD_BOOKMARK
+        self.valid_remove_emojis: list[int | str] = CONFIG.REMOVE_BOOKMARK
+
+    def _is_valid_emoji(self, emoji: discord.PartialEmoji, valid_list: list[int | str]) -> bool:
+        # Helper for checking if an emoji is in the list in "settings.yml -> BOOKMARK_EMOJIS"
+        if emoji.id is not None:
+            return emoji.id in valid_list
+        return emoji.name in valid_list
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
@@ -27,8 +38,13 @@ class Bookmarks(commands.Cog):
         -------
         None
         """
+        if not self._is_valid_emoji(payload.emoji, self.valid_emojis):
+            return
 
-        if str(payload.emoji) != "🔖":
+        # Get the user who reacted to the message
+        user = self.bot.get_user(payload.user_id)
+        if user is None:
+            logger.error(f"User not found for ID: {payload.user_id}")
             return
 
         # Fetch the channel where the reaction was added
@@ -48,19 +64,21 @@ class Bookmarks(commands.Cog):
             logger.error(f"Failed to fetch message: {fetch_error}")
             return
 
-        # Create an embed for the bookmarked message
-        embed = self._create_bookmark_embed(message)
+        # check for what to do
+        if self._is_valid_emoji(payload.emoji, self.valid_add_emojis):
+            # Create an embed for the bookmarked message
+            embed = await self._create_bookmark_embed(message)
 
-        # Get the user who reacted to the message
-        user = self.bot.get_user(payload.user_id)
-        if user is None:
-            logger.error(f"User not found for ID: {payload.user_id}")
+            # Send the bookmarked message to the user
+            await self._send_bookmark(user, message, embed, payload.emoji)
+
+        elif self._is_valid_emoji(payload.emoji, self.valid_remove_emojis):
+            await self._delete_bookmark(message, user)
+        else:
+            logger.debug("Somehow you managed to get bast the first valid emoji check then failed the 2nd good job?")
             return
 
-        # Send the bookmarked message to the user
-        await self._send_bookmark(user, message, embed, payload.emoji)
-
-    def _create_bookmark_embed(
+    async def _create_bookmark_embed(
         self,
         message: discord.Message,
     ) -> discord.Embed:
@@ -83,6 +101,12 @@ class Bookmarks(commands.Cog):
             embed.add_field(name="Attachments", value=attachments_info, inline=False)
 
         return embed
+
+    async def _delete_bookmark(self, message: discord.Message, user: discord.User) -> None:
+        logger.debug("you got to the delte function")
+        if message.author is not self.bot.user:
+            logger.debug("not tux message")
+            return
 
     @staticmethod
     async def _send_bookmark(
