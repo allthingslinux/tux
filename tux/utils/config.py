@@ -152,5 +152,9 @@ class Config:
     LIMIT_TO_ROLE_IDS: Final[bool] = config["SNIPPETS"]["LIMIT_TO_ROLE_IDS"]
     ACCESS_ROLE_IDS: Final[list[int]] = config["SNIPPETS"]["ACCESS_ROLE_IDS"]
 
+    # Bookmark reactions
+    ADD_BOOKMARK: Final[list[int | str]] = config["BOOKMARK_EMOJIS"]["ADD_BOOKMARK"]
+    REMOVE_BOOKMARK: Final[list[int | str]] = config["BOOKMARK_EMOJIS"]["REMOVE_BOOKMARK"]
+
 
 CONFIG = Config()

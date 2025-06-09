@@ -6,6 +6,7 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
+from tux.utils.config import CONFIG
 from tux.utils.constants import CONST
 
 
@@ -13,9 +14,15 @@ class Bookmarks(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
+<<<<<<< HEAD
         self.valid_add_emojis = CONST.ADD_BOOKMARK
         self.valid_remove_emojis = CONST.REMOVE_BOOKMARK
         self.valid_emojis = CONST.ADD_BOOKMARK + CONST.REMOVE_BOOKMARK
+=======
+        self.valid_emojis: list[int | str] = CONFIG.ADD_BOOKMARK + CONFIG.REMOVE_BOOKMARK
+        self.valid_add_emojis: list[int | str] = CONFIG.ADD_BOOKMARK
+        self.valid_remove_emojis: list[int | str] = CONFIG.REMOVE_BOOKMARK
+>>>>>>> b9c797a (wip changes)
 
     def _is_valid_emoji(self, emoji: discord.PartialEmoji, valid_list: list[int | str]) -> bool:
         # Helper for checking if an emoji is in the list in "settings.yml -> BOOKMARK_EMOJIS"
@@ -38,6 +45,15 @@ class Bookmarks(commands.Cog):
         None
         """
         if not self._is_valid_emoji(payload.emoji, self.valid_emojis):
+<<<<<<< HEAD
+=======
+            return
+
+        # Get the user who reacted to the message
+        user = self.bot.get_user(payload.user_id)
+        if user is None:
+            logger.error(f"User not found for ID: {payload.user_id}")
+>>>>>>> b9c797a (wip changes)
             return
 
         # Get the user who reacted to the message
@@ -99,9 +115,13 @@ class Bookmarks(commands.Cog):
         elif self._is_valid_emoji(payload.emoji, self.valid_remove_emojis):
             await self._delete_bookmark(message, user)
         else:
+<<<<<<< HEAD
             logger.error(
                 "First emoji validation check passed but second emoji validation check failed. How the fuck did you get here?",
             )
+=======
+            logger.debug("Somehow you managed to get bast the first valid emoji check then failed the 2nd good job?")
+>>>>>>> b9c797a (wip changes)
             return
 
     async def _create_bookmark_embed(
@@ -128,9 +148,16 @@ class Bookmarks(commands.Cog):
         return embed
 
     async def _delete_bookmark(self, message: discord.Message, user: discord.User) -> None:
+<<<<<<< HEAD
         if message.author is not self.bot.user:
             return
         await message.delete()
+=======
+        logger.debug("you got to the delte function")
+        if message.author is not self.bot.user:
+            logger.debug("not tux message")
+            return
+>>>>>>> b9c797a (wip changes)
 
     @staticmethod
     async def _send_bookmark(
