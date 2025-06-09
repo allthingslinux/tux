@@ -1247,16 +1247,26 @@ cmd_comprehensive() {
         prod_times+=("$prod_time")
     done
 
-    # Calculate averages
-    local dev_avg
-    dev_avg=$(((dev_times[0] + dev_times[1] + dev_times[2]) / 3))
-    local prod_avg
-    prod_avg=$(((prod_times[0] + prod_times[1] + prod_times[2]) / 3))
+    # Calculate averages dynamically based on actual number of iterations
+    local dev_avg=0
+    local prod_avg=0
+
+    # Sum dev times
+    for time in "${dev_times[@]}"; do
+        dev_avg=$((dev_avg + time))
+    done
+    dev_avg=$((dev_avg / regression_iterations))
+
+    # Sum prod times
+    for time in "${prod_times[@]}"; do
+        prod_avg=$((prod_avg + time))
+    done
+    prod_avg=$((prod_avg / regression_iterations))
 
     success "Average dev build time: ${dev_avg}ms"
     success "Average prod build time: ${prod_avg}ms"
-    comp_add_metric "regression_test_dev_avg" "$dev_avg" "success" "3_iterations"
-    comp_add_metric "regression_test_prod_avg" "$prod_avg" "success" "3_iterations"
+    comp_add_metric "regression_test_dev_avg" "$dev_avg" "success" "${regression_iterations}_iterations"
+    comp_add_metric "regression_test_prod_avg" "$prod_avg" "success" "${regression_iterations}_iterations"
 
     # =============================================================================
     comp_section "8. FINAL CLEANUP AND REPORTING"
@@ -1300,7 +1310,7 @@ cmd_comprehensive() {
 - **Resource Limits:** Tested
 
 ### Performance Regression
-- **Build Consistency:** Tested across 3 iterations
+- **Build Consistency:** Tested across $regression_iterations iterations
 
 ## 📊 Detailed Metrics
 

@@ -48,22 +48,22 @@ poetry run tux --dev docker down
 
 **Interacting with Docker Environment:**
 
-All interactions (running the bot, database commands, quality checks) must be executed *inside* the `app` service container.
+All interactions (running the bot, database commands, quality checks) must be executed *inside* the `tux` service container.
 
 * **View Logs:**
 
     ```bash
     # Follow logs
-    poetry run tux --dev docker logs -f app
+    poetry run tux --dev docker logs -f tux
 
     # Show existing logs
-    poetry run tux --dev docker logs app
+    poetry run tux --dev docker logs tux
     ```
 
 * **Open a Shell inside the Container:**
 
     ```bash
-    poetry run tux --dev docker exec app bash
+    poetry run tux --dev docker exec tux bash
     ```
 
     From within this shell, you can run `poetry run tux ...` commands directly.
@@ -72,16 +72,16 @@ All interactions (running the bot, database commands, quality checks) must be ex
 
     ```bash
     # Example: Push schema changes
-    poetry run tux --dev docker exec app poetry run tux --dev db push
+    poetry run tux --dev docker exec tux poetry run tux --dev db push
 
     # Example: Create migration
-    poetry run tux --dev docker exec app poetry run tux --dev db migrate --name <migration-name>
+    poetry run tux --dev docker exec tux poetry run tux --dev db migrate --name <migration-name>
     ```
 
 * **Linting/Formatting/Type Checking (via Docker `exec`):**
 
     ```bash
-    poetry run tux --dev docker exec app poetry run tux dev lint
-    poetry run tux --dev docker exec app poetry run tux dev format
+    poetry run tux --dev docker exec tux poetry run tux dev lint
+    poetry run tux --dev docker exec tux poetry run tux dev format
     # etc.
     ```

@@ -85,14 +85,14 @@ COPY tux/ ./tux/
 COPY README.md LICENSE.md pyproject.toml ./
 
 # Install application and generate Prisma client
+# Initialize minimal git repo for Poetry dynamic versioning only
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
     --mount=type=cache,target=/root/.cache \
-    git init . && \
-    git config user.email "docker@build.local" && \
-    git config user.name "Docker Build" && \
+    git init --quiet . && \
     poetry install --only main && \
     poetry run prisma py fetch && \
-    poetry run prisma generate
+    poetry run prisma generate && \
+    rm -rf .git
 
 
 # Dev stage (used by docker-compose.dev.yml):
@@ -125,8 +125,11 @@ USER nonroot
 
 # Configure Git for non-root user and install development dependencies
 # Note: Cache mount removed due to network connectivity issues with Poetry
-RUN git config --global --add safe.directory /app && \
-    poetry install --only dev --no-root --no-directory
+# Initialize minimal git repo for Poetry dynamic versioning in dev dependencies
+RUN git init --quiet . && \
+    git config --global --add safe.directory /app && \
+    poetry install --only dev --no-root --no-directory && \
+    rm -rf .git
 
 # Regenerate Prisma client on start for development
 CMD ["sh", "-c", "poetry run prisma generate && exec poetry run tux --dev start"]

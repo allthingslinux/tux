@@ -84,7 +84,7 @@ poetry run tux --dev docker up
 poetry run tux --dev docker logs -f
 
 # Execute commands in container
-poetry run tux --dev docker exec app bash
+poetry run tux --dev docker exec tux bash
 
 # Stop environment
 poetry run tux --dev docker down
@@ -486,13 +486,13 @@ rm test_file.py
 
 ```bash
 # Regenerate Prisma client
-poetry run tux --dev docker exec app poetry run prisma generate
+poetry run tux --dev docker exec tux poetry run prisma generate
 
 # Check Prisma binaries
-poetry run tux --dev docker exec app ls -la .venv/lib/python*/site-packages/prisma
+poetry run tux --dev docker exec tux ls -la .venv/lib/python*/site-packages/prisma
 
 # Test database operations
-poetry run tux --dev docker exec app poetry run prisma db push --accept-data-loss
+poetry run tux --dev docker exec tux poetry run prisma db push --accept-data-loss
 ```
 
 #### **Memory and Resource Issues**

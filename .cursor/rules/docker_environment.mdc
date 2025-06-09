@@ -34,7 +34,7 @@ Commands are run using the `tux` CLI's `docker` group (ensure you are in develop
     ```
     - Uses `docker-compose.dev.yml`.
     - Mounts the codebase using `develop: watch:` for live code syncing (replaces Python hot-reloading).
-    - Runs `python -m tux --dev bot start` inside the `app` container.
+    - Runs `python -m tux --dev bot start` inside the `tux` container.
 
 3.  **Stop Services:**
     ```bash
@@ -43,21 +43,21 @@ Commands are run using the `tux` CLI's `docker` group (ensure you are in develop
 
 ## Interacting with Containers
 
-Use `poetry run tux --dev docker exec app <command>` to run commands inside the `app` container.
+Use `poetry run tux --dev docker exec tux <command>` to run commands inside the `tux` container.
 
 - **Logs:** `poetry run tux --dev docker logs -f`
-- **Shell:** `poetry run tux --dev docker exec app bash`
+- **Shell:** `poetry run tux --dev docker exec tux bash`
 - **Database Commands:** Must be run *inside* the container.
   ```bash
   # Example: Push schema
-  poetry run tux --dev docker exec app poetry run tux --dev db push
+  poetry run tux --dev docker exec tux poetry run tux --dev db push
   # Example: Create migration
-  poetry run tux --dev docker exec app poetry run tux --dev db migrate --name <name>
+  poetry run tux --dev docker exec tux poetry run tux --dev db migrate --name <name>
   ```
 - **Linting/Formatting/Type Checking:** Must be run *inside* the container.
   ```bash
-  poetry run tux --dev docker exec app poetry run tux dev lint
-  poetry run tux --dev docker exec app poetry run tux dev format
+  poetry run tux --dev docker exec tux poetry run tux dev lint
+  poetry run tux --dev docker exec tux poetry run tux dev format
   # etc.
   ```
 

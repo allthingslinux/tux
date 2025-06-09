@@ -701,8 +701,30 @@ def cleanup(volumes: bool, force: bool, dry_run: bool) -> int:
     tux_volumes = _get_tux_resources("volumes") if volumes else []
     tux_networks = _get_tux_resources("networks")
 
-    # Filter out special items
-    tux_images = [img for img in tux_images if not img.endswith("<none>:<none>")]
+    # Remove all dangling images using Docker's built-in filter
+    try:
+        result = _safe_subprocess_run(
+            ["docker", "images", "--filter", "dangling=true", "--format", "{{.ID}}"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        dangling_image_ids = result.stdout.strip().split("\n") if result.stdout.strip() else []
+
+        if dangling_image_ids:
+            logger.info("Removing all dangling images using Docker's built-in filter")
+            _safe_subprocess_run(
+                ["docker", "rmi", "-f", *dangling_image_ids],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            logger.info(f"Removed {len(dangling_image_ids)} dangling images")
+
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+        logger.warning(f"Failed to filter dangling images: {e}")
+
+    # Filter out special networks
     tux_networks = [net for net in tux_networks if net not in ["bridge", "host", "none"]]
 
     if not any([tux_containers, tux_images, tux_volumes, tux_networks]):
