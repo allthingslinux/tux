@@ -119,16 +119,76 @@ jobs:
           PROD_BOT_TOKEN=test_token_for_ci
           EOF
 
-      - name: Run tests with coverage
-        run: poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml --cov-report=term-missing -m "not slow and not docker" --cov-fail-under=0
+      - name: Run unit tests with coverage
+        run: poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-unit.xml --cov-report=term-missing -m "not slow and not docker" --junitxml=junit-unit.xml -o junit_family=legacy --cov-fail-under=0
 
-      - name: Upload coverage to Codecov
+      - name: Upload unit test coverage to Codecov
         uses: codecov/codecov-action@v5
         if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
         with:
+          files: ./coverage-unit.xml
+          flags: unit
+          name: unit-tests
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: allthingslinux/tux
           fail_ci_if_error: false
+
+      - name: Upload unit test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          file: ./junit-unit.xml
+          flags: unit
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      # Run database-specific tests with dedicated flag
+      - name: Run database tests with coverage
+        run: poetry run pytest tests/tux/database/ -v --cov=tux/database --cov-branch --cov-report=xml:coverage-database.xml --junitxml=junit-database.xml -o junit_family=legacy --cov-fail-under=0
+        continue-on-error: true
+
+      - name: Upload database test coverage to Codecov
+        uses: codecov/codecov-action@v5
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+        with:
+          files: ./coverage-database.xml
+          flags: database
+          name: database-tests
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: allthingslinux/tux
+          fail_ci_if_error: false
+
+      - name: Upload database test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          file: ./junit-database.xml
+          flags: database
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      # Optional: Run integration tests separately (if you have them)
+      - name: Run integration tests with coverage
+        if: github.event_name == 'push' # Only on main branch pushes to save CI time
+        run: poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-integration.xml -m "slow" --junitxml=junit-integration.xml -o junit_family=legacy --cov-fail-under=0
+        continue-on-error: true # Don't fail CI if integration tests fail
+
+      - name: Upload integration test coverage to Codecov
+        if: github.event_name == 'push'
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage-integration.xml
+          flags: integration
+          name: integration-tests
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: allthingslinux/tux
+          fail_ci_if_error: false
+
+      - name: Upload integration test results to Codecov
+        if: github.event_name == 'push' && !cancelled()
+        uses: codecov/test-results-action@v1
+        with:
+          file: ./junit-integration.xml
+          flags: integration
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   # Matrix strategy for file linting with inline configs
   lint:

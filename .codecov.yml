@@ -1,0 +1,282 @@
+# Codecov configuration for Tux bot project
+# Documentation: https://docs.codecov.com/docs/codecov-yaml
+
+# Global coverage configuration
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+
+  # Status checks that appear on PRs
+  status:
+    # Global rules applied to all status checks
+    default_rules:
+      flag_coverage_not_uploaded_behavior: exclude
+      if_ci_failed: error
+      if_not_found: success
+      carryforward: true
+
+    # Project-wide coverage requirements
+    project:
+      default:
+        target: auto
+        threshold: 1%
+        informational: false
+        only_pulls: false
+
+      # Critical core functionality (higher standards)
+      core:
+        target: 80%
+        threshold: 2%
+        flags: [unit]
+        paths:
+          - "tux/bot.py"
+          - "tux/cog_loader.py"
+          - "tux/help.py"
+          - "tux/main.py"
+          - "tux/app.py"
+        only_pulls: true
+
+      # Database layer (highest standards - critical data handling)
+      database:
+        target: 90%
+        threshold: 1%
+        flags: [unit, database]
+        paths:
+          - "tux/database/**/*"
+        only_pulls: true
+
+      # Bot commands and features (high standards)
+      cogs:
+        target: 75%
+        threshold: 2%
+        flags: [unit]
+        paths:
+          - "tux/cogs/**/*"
+        only_pulls: true
+
+      # Utilities and helpers (moderate standards)
+      utils:
+        target: 70%
+        threshold: 3%
+        flags: [unit]
+        paths:
+          - "tux/utils/**/*"
+        only_pulls: true
+
+      # CLI interface (moderate standards)
+      cli:
+        target: 65%
+        threshold: 3%
+        flags: [unit]
+        paths:
+          - "tux/cli/**/*"
+        only_pulls: true
+
+      # Error handling and events (high standards - critical for stability)
+      handlers:
+        target: 80%
+        threshold: 2%
+        flags: [unit]
+        paths:
+          - "tux/handlers/**/*"
+        only_pulls: true
+
+      # UI components (moderate standards)
+      ui:
+        target: 70%
+        threshold: 3%
+        flags: [unit]
+        paths:
+          - "tux/ui/**/*"
+        only_pulls: true
+
+      # External service wrappers (lower standards - often dependent on external APIs)
+      wrappers:
+        target: 60%
+        threshold: 4%
+        flags: [unit]
+        paths:
+          - "tux/wrappers/**/*"
+        only_pulls: true
+
+    # Patch coverage for new code
+    patch:
+      default:
+        target: 85%
+        threshold: 5%
+        only_pulls: true
+
+      # Stricter requirements for critical components
+      database-patch:
+        target: 95%
+        threshold: 2%
+        flags: [database]
+        paths:
+          - "tux/database/**/*"
+
+      core-patch:
+        target: 90%
+        threshold: 3%
+        flags: [unit]
+        paths:
+          - "tux/bot.py"
+          - "tux/cog_loader.py"
+          - "tux/help.py"
+
+      handlers-patch:
+        target: 90%
+        threshold: 3%
+        flags: [unit]
+        paths:
+          - "tux/handlers/**/*"
+
+# Pull request comment configuration
+comment:
+  layout: "condensed_header, diff, flags, components, condensed_files, condensed_footer"
+  behavior: default
+  require_changes: true
+  require_base: false
+  require_head: true
+  hide_project_coverage: false
+  after_n_builds: 1 # Comment after first report arrives
+  show_carryforward_flags: true
+
+# Ignore paths from coverage calculation
+ignore:
+  - "tests/**/*"
+  - "**/__pycache__/**/*"
+  - "typings/**/*"
+  - ".venv/**/*"
+  - ".archive/**/*"
+  - "docs/**/*"
+  - "scripts/**/*"
+  - "*.md"
+  - "conftest.py"
+  - "setup.py"
+  - "*.toml"
+  - "*.lock"
+  - "*.nix"
+  - "flake.*"
+  - "shell.nix"
+  - "prisma/**/*"
+  - "assets/**/*"
+  - "logs/**/*"
+  - "htmlcov/**/*"
+  - ".pytest_cache/**/*"
+  - ".ruff_cache/**/*"
+
+# Component management (simplified and aligned with project structure)
+component_management:
+  default_rules:
+    flag_regexes: ["unit"]
+    statuses:
+      - type: "project"
+        target: "auto"
+        threshold: 1%
+
+  individual_components:
+    - component_id: "core"
+      name: "Core Bot Infrastructure"
+      paths:
+        - "tux/bot.py"
+        - "tux/cog_loader.py"
+        - "tux/help.py"
+        - "tux/main.py"
+        - "tux/app.py"
+      flag_regexes: ["unit"]
+
+    - component_id: "database"
+      name: "Database Layer"
+      paths:
+        - "tux/database/**/*"
+      flag_regexes: ["unit", "database"]
+
+    - component_id: "cogs"
+      name: "Bot Commands & Features"
+      paths:
+        - "tux/cogs/**/*"
+      flag_regexes: ["unit"]
+
+    - component_id: "handlers"
+      name: "Event & Error Handling"
+      paths:
+        - "tux/handlers/**/*"
+      flag_regexes: ["unit"]
+
+    - component_id: "utils"
+      name: "Utilities & Helpers"
+      paths:
+        - "tux/utils/**/*"
+      flag_regexes: ["unit"]
+
+    - component_id: "ui"
+      name: "User Interface Components"
+      paths:
+        - "tux/ui/**/*"
+      flag_regexes: ["unit"]
+
+    - component_id: "cli"
+      name: "CLI Interface"
+      paths:
+        - "tux/cli/**/*"
+      flag_regexes: ["unit"]
+
+    - component_id: "wrappers"
+      name: "External Service Wrappers"
+      paths:
+        - "tux/wrappers/**/*"
+      flag_regexes: ["unit"]
+
+# Flag management (simplified)
+flag_management:
+  default_rules:
+    carryforward: true
+    statuses:
+      - type: "project"
+        target: "auto"
+        threshold: 1%
+
+  individual_flags:
+    - name: "unit"
+      paths: ["tux/"]
+      carryforward: true
+
+    - name: "database"
+      paths: ["tux/database/**/*"]
+      carryforward: true
+
+    - name: "integration"
+      paths: ["tux/"]
+      carryforward: true
+
+# Advanced settings
+codecov:
+  max_report_age: "24h"
+  require_ci_to_pass: true
+  disable_default_path_fixes: false
+  archive:
+    uploads: true
+  notify:
+    after_n_builds: 1 # Comment when reports arrive
+    wait_for_ci: true
+    notify_error: true
+
+# GitHub integration
+github_checks:
+  annotations: true
+
+# Parser configuration
+parsers:
+  v1:
+    include_full_missed_files: true
+
+# Path normalization
+fixes:
+  - "tux/::"
+
+# AI features
+ai:
+  behavior:
+    require_head_to_base_comparison: true
+    require_ci_to_pass: true
