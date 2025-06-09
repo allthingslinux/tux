@@ -661,27 +661,47 @@ def health() -> int:
 @command_registration_decorator(docker_group, name="test")
 @click.option("--no-cache", is_flag=True, help="Run tests without Docker cache.")
 @click.option("--force-clean", is_flag=True, help="Perform aggressive cleanup before testing.")
-def test(no_cache: bool, force_clean: bool) -> int:
+@click.option("--quick", is_flag=True, help="Run quick validation tests only.")
+@click.option("--comprehensive", is_flag=True, help="Run comprehensive test suite.")
+def test(no_cache: bool, force_clean: bool, quick: bool, comprehensive: bool) -> int:
     """Run Docker performance and functionality tests.
 
-    Executes the unified Docker toolkit script.
+    Uses the Python Docker toolkit for testing.
     """
     if error_code := _ensure_docker_available():
         return error_code
 
-    test_script = Path("scripts/docker-toolkit.sh")
-    if not test_script.exists():
-        logger.error("Docker toolkit script not found at scripts/docker-toolkit.sh")
+    # Use the Python Docker toolkit
+    toolkit_script = Path.cwd() / "scripts" / "docker_toolkit.py"
+    if not toolkit_script.exists():
+        logger.error("Docker toolkit not found at scripts/docker_toolkit.py")
         return 1
 
-    cmd = ["bash", str(test_script), "test"]
-    if no_cache:
-        cmd.append("--no-cache")
-    if force_clean:
-        cmd.append("--force-clean")
+    # Build command arguments
+    cmd_args: list[str] = []
 
-    logger.info("Running Docker tests")
-    return run_command(cmd)
+    if quick:
+        cmd_args.append("quick")
+    elif comprehensive:
+        cmd_args.append("comprehensive")
+    else:
+        cmd_args.append("test")
+        if no_cache:
+            cmd_args.append("--no-cache")
+        if force_clean:
+            cmd_args.append("--force-clean")
+
+    logger.info(f"Running Docker tests: {' '.join(cmd_args)}")
+
+    # Execute the Python toolkit script
+    try:
+        cmd = ["python", str(toolkit_script), *cmd_args]
+        result = _safe_subprocess_run(cmd, check=False)
+    except Exception as e:
+        logger.error(f"Failed to run Docker toolkit: {e}")
+        return 1
+    else:
+        return result.returncode
 
 
 @command_registration_decorator(docker_group, name="cleanup")

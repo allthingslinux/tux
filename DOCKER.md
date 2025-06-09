@@ -1,29 +1,30 @@
+<!-- markdownlint-disable MD051 -->
 # Tux Docker Setup - Complete Guide
 
 This comprehensive guide covers the optimized Docker setup for Tux, including performance improvements, testing strategies, security measures, and practical usage.
 
-## 📑 **Table of Contents**
+## 📑 Table of Contents
 
 - [🚀 Performance Achievements](#-performance-achievements)
 - [📋 Quick Start](#-quick-start)
 - [🧪 Testing Strategy](#-testing-strategy)
-- [🏗️ Architecture Overview](#️-architecture-overview)
-- [🛡️ Security Features](#️-security-features)
+- [🏗️ Architecture Overview](#-architecture-overview)
+- [🛡️ Security Features](#-security-features)
 - [🔧 Development Features](#-development-features)
 - [📊 Performance Monitoring](#-performance-monitoring)
 - [🔄 Environment Management](#-environment-management)
 - [🧹 Safe Cleanup Operations](#-safe-cleanup-operations)
 - [📈 Performance Baselines](#-performance-baselines)
-- [🏥 Health Checks & Monitoring](#-health-checks--monitoring)
+- [🏥 Health Checks & Monitoring](#-health-checks-and-monitoring)
 - [🚨 Troubleshooting](#-troubleshooting)
-
 - [📚 Advanced Usage](#-advanced-usage)
 - [🎯 Best Practices](#-best-practices)
 - [📊 Metrics & Reporting](#-metrics--reporting)
 - [🎉 Success Metrics](#-success-metrics)
 - [📞 Support & Maintenance](#-support--maintenance)
+- [📂 Related Documentation](#-related-documentation)
 
-## 🚀 **Performance Achievements**
+## 🚀 Performance Achievements
 
 Our Docker setup has been extensively optimized, achieving **outstanding performance improvements** from the original implementation:
 
@@ -48,7 +49,7 @@ Our Docker setup has been extensively optimized, achieving **outstanding perform
 - ✅ Enhanced safety with targeted resource management
 - ✅ **Unified Docker toolkit** - Single script for all operations (testing, monitoring, cleanup)
 
-## 📋 **Quick Start**
+## 📋 Quick Start
 
 ### **🐳 Unified Docker Toolkit**
 
@@ -104,7 +105,7 @@ poetry run tux docker ps
 poetry run tux docker logs -f
 ```
 
-## 🧪 **Testing Strategy**
+## 🧪 Testing Strategy
 
 We have a comprehensive 3-tier testing approach:
 
@@ -162,7 +163,7 @@ All tests validate against configurable thresholds:
 - **Memory Usage:** < 512MB - `MEMORY_THRESHOLD`
 - **Python Validation:** < 5s - `PYTHON_THRESHOLD`
 
-## 🏗️ **Architecture Overview**
+## 🏗️ Architecture Overview
 
 ### **Multi-Stage Dockerfile**
 
@@ -181,7 +182,7 @@ FROM python:3.13.2-slim AS production # Minimal production runtime
 - **Aggressive size reduction**
 - **Security-first design**
 
-## 🛡️ **Security Features**
+## 🛡️ Security Features
 
 ### **Container Security**
 
@@ -240,7 +241,7 @@ with tempfile.NamedTemporaryFile(dir="/tmp") as tmp_file:
     pass
 ```
 
-## 🔧 **Development Features**
+## 🔧 Development Features
 
 ### **File Watching & Hot Reload**
 
@@ -264,7 +265,7 @@ develop:
 - **Dependency change handling**
 - **Interactive debugging support**
 
-## 📊 **Performance Monitoring**
+## 📊 Performance Monitoring
 
 ### **Automated Metrics Collection**
 
@@ -290,7 +291,7 @@ jq '.performance | to_entries[] | "\(.key): \(.value.value) \(.value.unit)"' log
 - Security scan results
 - File operation performance
 
-## 🔄 **Environment Management**
+## 🔄 Environment Management
 
 ### **Environment Switching**
 
@@ -313,7 +314,7 @@ poetry run tux --prod docker build   # Production build
 - **`Dockerfile`** - Multi-stage build definition
 - **`.dockerignore`** - Build context optimization
 
-## 🧹 **Safe Cleanup Operations**
+## 🧹 Safe Cleanup Operations
 
 ### **Automated Safe Cleanup**
 
@@ -380,7 +381,7 @@ docker network prune -f              # Removes ALL unused networks
 docker container prune -f            # Removes ALL stopped containers
 ```
 
-## 📈 **Performance Baselines**
+## 📈 Performance Baselines
 
 ### **Expected Performance Targets**
 
@@ -401,7 +402,7 @@ if [ "$build_time" -gt 180000 ]; then
 fi
 ```
 
-## 🏥 **Health Checks & Monitoring**
+## 🏥 Health Checks & Monitoring
 
 ### **Health Check Configuration**
 
@@ -430,7 +431,7 @@ poetry run tux docker logs -f
 docker system df
 ```
 
-## 🚨 **Troubleshooting**
+## 🚨 Troubleshooting
 
 ### **Common Issues & Solutions**
 
@@ -526,7 +527,7 @@ docker pull python:3.13.2-slim
 docker pull ubuntu:22.04
 ```
 
-## 📚 **Advanced Usage**
+## 📚 Advanced Usage
 
 ### **Custom Build Arguments**
 
@@ -553,7 +554,7 @@ docker buildx build --platform linux/amd64 .
 docker scout cves tux:prod --only-severity critical,high
 ```
 
-## 🎯 **Best Practices**
+## 🎯 Best Practices
 
 ### **Development Workflow Best Practices**
 
@@ -576,7 +577,7 @@ docker scout cves tux:prod --only-severity critical,high
 3. **Keep images small** with multi-stage builds
 4. **Regular performance testing** with metrics
 
-## 📊 **Metrics & Reporting**
+## 📊 Metrics & Reporting
 
 ### **Automated Reporting**
 
@@ -628,7 +629,7 @@ docker compose config || echo "✅ Invalid config detected"
 mv .env.backup .env
 ```
 
-## 🎉 **Success Metrics**
+## 🎉 Success Metrics
 
 Our optimized Docker setup achieves:
 
@@ -653,7 +654,7 @@ Our optimized Docker setup achieves:
 - ✅ **Instant file synchronization**
 - ✅ **Reliable, consistent performance**
 
-## 📞 **Support & Maintenance**
+## 📞 Support & Maintenance
 
 ### **Regular Maintenance**
 
@@ -671,7 +672,7 @@ Our optimized Docker setup achieves:
 
 ---
 
-## 📂 **Related Documentation**
+## 📂 Related Documentation
 
 - **[DEVELOPER.md](DEVELOPER.md)** - General development setup and prerequisites
 - **[Dockerfile](Dockerfile)** - Multi-stage build definition
