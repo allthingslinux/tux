@@ -51,7 +51,7 @@ jobs:
           cache: "poetry"
 
       - name: Install dependencies
-        run: poetry install --only=main,dev,types --no-interaction --no-ansi
+        run: poetry install --with=dev,types --no-interaction --no-ansi
 
       - name: Generate Prisma client
         run: poetry run prisma generate
@@ -105,7 +105,7 @@ jobs:
           cache: "poetry"
 
       - name: Install dependencies
-        run: poetry install --with=test --no-interaction --no-ansi
+        run: poetry install --with=dev,test,types --no-interaction --no-ansi
 
       - name: Generate Prisma client
         run: poetry run prisma generate
