@@ -53,6 +53,9 @@ jobs:
       - name: Install dependencies
         run: poetry install --only=main,dev,types --no-interaction --no-ansi
 
+      - name: Generate Prisma client
+        run: poetry run prisma generate
+
       - name: Run Ruff formatter check
         run: poetry run ruff format --check
 
@@ -103,6 +106,9 @@ jobs:
 
       - name: Install dependencies
         run: poetry install --with=test --no-interaction --no-ansi
+
+      - name: Generate Prisma client
+        run: poetry run prisma generate
 
       - name: Create test environment file
         run: |
