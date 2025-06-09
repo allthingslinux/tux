@@ -11,6 +11,7 @@ repos:
       - id: check-toml
       - id: end-of-file-fixer
       - id: trailing-whitespace
+        exclude: '\.md$' # Preserve trailing spaces in Markdown for line breaks
 
   - repo: https://github.com/rbubley/mirrors-prettier
     rev: v3.3.3
@@ -18,6 +19,7 @@ repos:
       - id: prettier
         types_or: [yaml, json]
         exclude: '^(\.archive/|.*typings/|poetry\.lock|flake\.lock).*$'
+        args: [--tab-width=2, --print-width=120] # Align with .editorconfig
 
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: v0.24.1
