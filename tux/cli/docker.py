@@ -188,35 +188,9 @@ def _sanitize_resource_name(name: str) -> str:
     return name
 
 
-def _safe_subprocess_run(cmd: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
-    """Safely run subprocess with validation and escaping.
-
-    Security measures:
-    - Validates command structure and components
-    - Uses allowlist for Docker commands
-    - Sanitizes resource names to prevent injection
-    - Enforces timeout and explicit error checking
-    """
-    # Validate command structure
-    if not cmd:
-        msg = "Command must be a non-empty list"
-        raise ValueError(msg)
-
-    # Log command for security audit (sanitized)
-    logger.debug(f"Executing command: {' '.join(cmd[:3])}...")
-
-    # For Docker commands, validate against allowlist
-    if cmd[0] == "docker" and not _validate_docker_command(cmd):
-        msg = f"Unsafe Docker command blocked: {cmd[0]} {cmd[1] if len(cmd) > 1 else ''}"
-        logger.error(msg)
-        raise ValueError(msg)
-
-    # Enhanced resource name validation approach
-    # Instead of using fixed positions, identify resource names by analyzing command structure
-    sanitized_cmd: list[str] = []
-
-    # Commands that take resource names as non-flag arguments
-    resource_name_commands = {
+def _get_resource_name_commands() -> set[tuple[str, ...]]:
+    """Get the set of Docker commands that use resource names as arguments."""
+    return {
         ("docker", "run"),
         ("docker", "exec"),
         ("docker", "inspect"),
@@ -250,43 +224,108 @@ def _safe_subprocess_run(cmd: list[str], **kwargs: Any) -> subprocess.CompletedP
         ("docker", "network", "disconnect"),
     }
 
+
+def _validate_command_structure(cmd: list[str]) -> None:
+    """Validate basic command structure and safety."""
+    if not cmd:
+        msg = "Command must be a non-empty list"
+        raise ValueError(msg)
+
+    if cmd[0] not in {"docker"}:
+        msg = f"Command validation failed: unsupported executable '{cmd[0]}'"
+        raise ValueError(msg)
+
+
+def _sanitize_command_arguments(cmd: list[str]) -> list[str]:
+    """Sanitize command arguments, validating resource names where applicable."""
+    resource_name_commands = _get_resource_name_commands()
+
     # Determine if this command uses resource names
     cmd_key = tuple(cmd[:3]) if len(cmd) >= 3 else tuple(cmd[:2]) if len(cmd) >= 2 else tuple(cmd)
     uses_resource_names = any(cmd_key[: len(pattern)] == pattern for pattern in resource_name_commands)
 
+    sanitized_cmd: list[str] = []
+
     for i, component in enumerate(cmd):
-        # Skip the first few command components and flags
-        if i < 2 or component.startswith(("-", "{{")):
+        if _should_skip_component(i, component):
             sanitized_cmd.append(component)
-            continue
-
-        # For resource name commands, validate non-flag arguments that could be resource names
-        if uses_resource_names and not component.startswith(("-", "{{")):
-            # Check if this looks like a resource name (not a command or sub-command)
-            if i >= 2 and component not in ALLOWED_DOCKER_COMMANDS:
-                try:
-                    sanitized_cmd.append(_sanitize_resource_name(component))
-                except ValueError as e:
-                    # Security: Don't use shlex.quote fallback for failed validation
-                    # This prevents potential command injection through malformed names
-                    logger.error(f"Resource name validation failed and cannot be sanitized: {e}")
-                    msg = f"Unsafe resource name rejected: {component}"
-                    raise ValueError(msg) from e
-            else:
-                sanitized_cmd.append(component)
+        elif _should_validate_as_resource_name(i, component, uses_resource_names):
+            sanitized_cmd.append(_validate_and_sanitize_resource(component))
         else:
-            # Pass through all other arguments (flags, format strings, commands, etc.)
             sanitized_cmd.append(component)
 
-    # Execute with timeout and capture, ensure check is explicit
+    return sanitized_cmd
+
+
+def _should_skip_component(index: int, component: str) -> bool:
+    """Check if a component should be skipped during validation."""
+    return index < 2 or component.startswith(("-", "{{"))
+
+
+def _should_validate_as_resource_name(index: int, component: str, uses_resource_names: bool) -> bool:
+    """Check if a component should be validated as a resource name."""
+    return (
+        uses_resource_names
+        and not component.startswith(("-", "{{"))
+        and index >= 2
+        and component not in ALLOWED_DOCKER_COMMANDS
+    )
+
+
+def _validate_and_sanitize_resource(component: str) -> str:
+    """Validate and sanitize a resource name component."""
+    try:
+        return _sanitize_resource_name(component)
+    except ValueError as e:
+        logger.error(f"Resource name validation failed and cannot be sanitized: {e}")
+        msg = f"Unsafe resource name rejected: {component}"
+        raise ValueError(msg) from e
+
+
+def _prepare_subprocess_kwargs(kwargs: dict[str, Any]) -> tuple[dict[str, Any], bool]:
+    """Prepare kwargs for subprocess execution."""
     final_kwargs = {**kwargs, "timeout": kwargs.get("timeout", 30)}
     if "check" not in final_kwargs:
         final_kwargs["check"] = True
 
-    # Extract check flag to avoid duplicate parameter
     check_flag = final_kwargs.pop("check", True)
+    return final_kwargs, check_flag
+
+
+def _safe_subprocess_run(cmd: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+    """Safely run subprocess with validation and escaping.
+
+    Security measures:
+    - Validates command structure and components
+    - Uses allowlist for Docker commands
+    - Sanitizes resource names to prevent injection
+    - Enforces timeout and explicit error checking
+    """
+    # Validate command structure and safety
+    _validate_command_structure(cmd)
+
+    # Log command for security audit (sanitized)
+    logger.debug(f"Executing command: {' '.join(cmd[:3])}...")
+
+    # For Docker commands, validate against allowlist
+    if cmd[0] == "docker" and not _validate_docker_command(cmd):
+        msg = f"Unsafe Docker command blocked: {cmd[0]} {cmd[1] if len(cmd) > 1 else ''}"
+        logger.error(msg)
+        raise ValueError(msg)
+
+    # Sanitize command arguments
+    sanitized_cmd = _sanitize_command_arguments(cmd)
+
+    # Prepare subprocess execution parameters
+    final_kwargs, check_flag = _prepare_subprocess_kwargs(kwargs)
 
     try:
+        # Security: This subprocess.run call is safe because:
+        # 1. Command structure validated above
+        # 2. All components validated against allowlists
+        # 3. Resource names sanitized to prevent injection
+        # 4. Only 'docker' executable permitted
+        # 5. Timeout enforced to prevent hanging
         return subprocess.run(sanitized_cmd, check=check_flag, **final_kwargs)  # type: ignore[return-value]
     except subprocess.CalledProcessError as e:
         logger.error(

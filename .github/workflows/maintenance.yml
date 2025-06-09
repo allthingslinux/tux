@@ -55,6 +55,9 @@ jobs:
           ESCAPE: true
           IGNORE: ".github/,node_modules/,dist/,build/,vendor/,poetry.lock"
           PROJECTS_SECRET: ${{ secrets.ADMIN_PAT }}
+        env:
+          MANUAL_COMMIT_REF: ${{ github.event.inputs.manual_commit_ref }}
+          MANUAL_BASE_REF: ${{ github.event.inputs.manual_base_ref }}
 
   cleanup-docker-images:
     name: "Cleanup Docker Images"
