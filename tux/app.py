@@ -58,6 +58,9 @@ class TuxApp:
                 profiles_sample_rate=1.0,
             )
 
+            # Add additional global tags
+            sentry_sdk.set_tag("discord_library_version", discord.__version__)
+
             logger.info(f"Sentry initialized: {sentry_sdk.is_initialized()}")
 
         except Exception as e:
@@ -102,12 +105,24 @@ class TuxApp:
         if not self.validate_config():
             return
 
+        owner_ids = {CONFIG.BOT_OWNER_ID}
+
+        if CONFIG.ALLOW_SYSADMINS_EVAL:
+            logger.warning(
+                "⚠️ Eval is enabled for sysadmins, this is potentially dangerous; see settings.yml.example for more info.",
+            )
+            owner_ids.update(CONFIG.SYSADMIN_IDS)
+
+        else:
+            logger.warning("🔒️ Eval is disabled for sysadmins; see settings.yml.example for more info.")
+
         self.bot = Tux(
             command_prefix=get_prefix,
             strip_after_prefix=True,
             case_insensitive=True,
             intents=discord.Intents.all(),
-            owner_ids={CONFIG.BOT_OWNER_ID, *CONFIG.SYSADMIN_IDS},
+            # owner_ids={CONFIG.BOT_OWNER_ID, *CONFIG.SYSADMIN_IDS},
+            owner_ids=owner_ids,
             allowed_mentions=discord.AllowedMentions(everyone=False),
             help_command=TuxHelp(),
             activity=None,

@@ -9,7 +9,7 @@ from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
-from tux.utils.flags import generate_usage
+from tux.utils.functions import generate_usage
 
 
 class Starboard(commands.Cog):

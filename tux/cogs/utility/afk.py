@@ -11,7 +11,7 @@ from prisma.models import AFKModel
 from tux.bot import Tux
 from tux.cogs.utility import add_afk, del_afk
 from tux.database.controllers import DatabaseController
-from tux.utils.flags import generate_usage
+from tux.utils.functions import generate_usage
 
 # TODO: add `afk until` command, or add support for providing a timeframe in the regular `afk` and `permafk` commands
 

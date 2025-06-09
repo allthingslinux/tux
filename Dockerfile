@@ -11,7 +11,6 @@ RUN apt-get update && \
   libpango1.0-0 \
   libpangocairo-1.0-0 \
   shared-mime-info \
-  tealdeer \
   ffmpeg && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
@@ -83,6 +82,20 @@ FROM build AS dev
 
 WORKDIR /app
 
+ARG DEVCONTAINER=0
+ENV DEVCONTAINER=${DEVCONTAINER}
+
+# Conditionally install zsh if building for devcontainer
+RUN if [ "$DEVCONTAINER" = "1" ]; then \
+      apt-get update && \
+      apt-get install -y zsh && \
+      chsh -s /usr/bin/zsh && \
+      apt-get clean && rm -rf /var/lib/apt/lists/*; \
+    else \
+      echo "Not building for devcontainer, skipping devcontainer dependencies installation"; \
+    fi
+
+
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
   poetry install --only dev --no-root --no-directory
 
@@ -113,11 +126,12 @@ ENV VIRTUAL_ENV=/app/.venv \
 # Ensure ownership is set to nonroot
 COPY --from=build --chown=nonroot:nonroot /app /app
 
+# Create TLDR cache directory with proper permissions for the nonroot user
+RUN mkdir -p /app/.cache/tldr && \
+  chown -R nonroot:nonroot /app/.cache
+
 # Switch to the non-root user
 USER nonroot
-
-# tldr stuff
-RUN tldr --update
 
 ENTRYPOINT ["tux"]
 CMD ["--prod", "start"]

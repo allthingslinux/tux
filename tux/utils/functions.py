@@ -1,8 +1,10 @@
+import inspect
 import re
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, Union, get_args, get_origin
 
 import discord
+from discord.ext import commands
 
 DANGEROUS_RM_COMMANDS = (
     # Privilege escalation prefixes
@@ -393,28 +395,158 @@ def extract_guild_attrs(guild: discord.Guild) -> dict[str, Any]:
 
 
 def extract_member_attrs(member: discord.Member) -> dict[str, Any]:
-    """Extract relevant attributes from a member object.
+    """
+    Extract relevant attributes from a member for comparison.
 
     Parameters
     ----------
     member : discord.Member
-        The member object to extract attributes from.
+        The member to extract attributes from.
 
     Returns
     -------
     dict[str, Any]
-        A dictionary containing the extracted attributes.
+        The member's relevant attributes as a dictionary.
     """
     return {
-        "name": member.name,
         "id": member.id,
-        "discriminator": member.discriminator,
         "display_name": member.display_name,
+        "display_avatar": member.display_avatar.url,
+        "nick": member.nick,
+        "timed_out_until": member.timed_out_until,
+        "guild_avatar": member.guild_avatar.url if member.guild_avatar else None,
+        "pending": member.pending,
+        "premium_since": member.premium_since,
+        "flags": member.flags.value if member.flags else None,
+        "guild_permissions": member.guild_permissions.value if member.guild_permissions else None,
         "roles": [role.name for role in member.roles],
-        "joined_at": member.joined_at,
-        "status": str(member.status),
-        "activity": str(member.activity) if member.activity else None,
     }
+
+
+def is_optional_param(param: commands.Parameter) -> bool:
+    """
+    Check if a parameter is optional.
+
+    Parameters
+    ----------
+    param : commands.Parameter
+        The parameter to check.
+
+    Returns
+    -------
+    bool
+        True if the parameter is optional, False otherwise.
+    """
+
+    if param.default is not inspect.Parameter.empty:
+        return True
+
+    param_type = param.annotation
+
+    if get_origin(param_type) is Union:
+        return type(None) in get_args(param_type)
+
+    return False
+
+
+def get_matching_string(arg: str) -> str:
+    """
+    Matches the given argument to a specific string based on common usage.
+
+    Parameters
+    ----------
+    arg : str
+        The argument to match.
+
+    Returns
+    -------
+    str
+        The matching string, or None if no match is found.
+    """
+    match arg:
+        case "user" | "target" | "member" | "username":
+            return "@member"
+        case "search_term":
+            return "CIA"
+        case "channel":
+            return "#general"
+        case "comic_id":
+            return "1337"
+        case _:
+            return arg
+
+
+def generate_usage(
+    command: commands.Command[Any, Any, Any],
+    flag_converter: type[commands.FlagConverter] | None = None,
+) -> str:
+    """
+    Generate the usage string for a command.
+
+    Parameters
+    ----------
+    command : commands.Command[Any, Any, Any]
+        The command to generate the usage string for.
+    flag_converter : type[commands.FlagConverter] | None
+        The flag converter to use.
+
+    Returns
+    -------
+    str
+        The usage string for the command.
+    """
+
+    command_name = command.qualified_name
+    usage = f"{command_name}"
+
+    parameters: dict[str, commands.Parameter] = command.clean_params
+
+    flag_prefix = getattr(flag_converter, "__commands_flag_prefix__", "-")
+    flags: dict[str, commands.Flag] = flag_converter.get_flags() if flag_converter else {}
+
+    # Handle regular parameters first
+    for param_name, param in parameters.items():
+        if param_name in {"ctx", "flags"}:
+            continue
+
+        is_required = not is_optional_param(param)
+        matching_string = get_matching_string(param_name)
+
+        if matching_string == param_name and is_required:
+            matching_string = f"<{param_name}>"
+
+        usage += f" {matching_string}" if is_required else f" [{matching_string}]"
+
+    # Find positional flag if it exists
+    positional_flag = None
+    required_flags: list[str] = []
+    optional_flags: list[str] = []
+
+    for flag_name, flag_obj in flags.items():
+        if getattr(flag_obj, "positional", False):
+            positional_flag = flag_name
+            continue
+
+        flag = f"{flag_prefix}{flag_name}"
+
+        if flag_obj.required:
+            required_flags.append(flag)
+        else:
+            optional_flags.append(flag)
+
+    # Add positional flag in its correct position
+    if positional_flag:
+        usage += f" [{positional_flag}]"
+
+    # Add required flags
+    for flag in required_flags:
+        usage += f" {flag}"
+
+    # Add optional flags
+    if optional_flags:
+        usage += f" [{' | '.join(optional_flags)}]"
+
+    return usage
 
 
 def docstring_parameter(*sub: Any) -> Any:

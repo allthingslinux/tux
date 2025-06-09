@@ -23,7 +23,15 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
-from tux.utils.exceptions import AppCommandPermissionLevelError, PermissionLevelError
+from tux.utils.exceptions import (
+    AppCommandPermissionLevelError,
+    CodeExecutionError,
+    CompilationError,
+    InvalidCodeFormatError,
+    MissingCodeError,
+    PermissionLevelError,
+    UnsupportedLanguageError,
+)
 
 # --- Constants and Configuration ---
 
@@ -376,6 +384,32 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
     AppCommandPermissionLevelError: ErrorHandlerConfig(
         message_format="You need permission level `{error.permission}` to use this command.",
         send_to_sentry=False,
+    ),
+    # === Code Execution Errors (from tux.utils.exceptions) ===
+    MissingCodeError: ErrorHandlerConfig(
+        message_format="{error}",
+        log_level="INFO",
+        send_to_sentry=False,
+    ),
+    InvalidCodeFormatError: ErrorHandlerConfig(
+        message_format="{error}",
+        log_level="INFO",
+        send_to_sentry=False,
+    ),
+    UnsupportedLanguageError: ErrorHandlerConfig(
+        message_format="{error}",
+        log_level="INFO",
+        send_to_sentry=False,
+    ),
+    CompilationError: ErrorHandlerConfig(
+        message_format="{error}",
+        log_level="INFO",
+        send_to_sentry=True,  # Monitor frequency of compilation failures
+    ),
+    CodeExecutionError: ErrorHandlerConfig(
+        message_format="{error}",
+        log_level="INFO",
+        send_to_sentry=True,  # Monitor general code execution issues
     ),
     # === Discord API & Client Errors ===
     discord.ClientException: ErrorHandlerConfig(

@@ -8,7 +8,7 @@ from tux.cogs.services.levels import LevelsService
 from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
-from tux.utils.flags import generate_usage
+from tux.utils.functions import generate_usage
 
 
 class Levels(commands.Cog):

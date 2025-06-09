@@ -34,12 +34,29 @@ BOT_INFO:
       {"type": "streaming", "name": "SuperTuxKart", "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
     ]
 
+# This allows sysadmins to use the eval and jsk commands which can execute arbitrary code.
+# Do enable if:
+# - Tux is dockerized 
+# - You trust your sysadmins with anything that the docker container can do (e.g if they already can access the host system)
+# - You are a small server
+# DO NOT ENABLE IF:
+# - Tux is not dockerized and you do not trust your sysadmins with the host system
+# - You are a large server and Tux has full permissions 
+# - You do not trust your sysadmins with anything that the docker container can do
+# - IF YOU ARE A MULTIPLE SERVER INSTANCE, DO NOT ENABLE IT FOR THE LOVE OF GOD
+# If you are not sure, do not enable this.
+ALLOW_SYSADMINS_EVAL: false
 
 USER_IDS:
-  SYSADMINS: # WARNING! This grants dangerous permissions such as eval and jsk which can be used to execute arbitrary code.
+  # These have access to all permissions in all servers, except for $eval and $jsk commands (unless set to true).
+  # Only give these to people you trust with the bot and who are able to handle the responsibilities that come with it.
+  SYSADMINS:
     - 123456789012345679
     - 123456789012345679
-  BOT_OWNER: 123456789012345679 # This is the user who has the highest level of control over the bot. Only one user can be the bot owner.
+
+  # This should be the person who owns the bot and nobody else unless you ABSOLUTELY know what you are doing.
+  # This person has access to all permissions in all servers, including $eval and $jsk commands.
+  BOT_OWNER: 123456789012345679
 
 # This adds a temporary voice channel feature to the bot, you can join the channel to create a channel called /tmp/<username> and move to it.
 # Channels are deleted when the last person leaves them.
