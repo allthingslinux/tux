@@ -126,7 +126,6 @@ jobs:
         uses: codecov/codecov-action@v5
         if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
         with:
-          fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: allthingslinux/tux
 
