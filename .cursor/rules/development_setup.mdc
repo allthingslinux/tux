@@ -1,5 +1,5 @@
 ---
-description: 
+description:
 globs: tux/cli/**,README.md,DEVELOPER.md,docs/**,pyproject.toml,.env
 alwaysApply: false
 ---

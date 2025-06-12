@@ -126,7 +126,7 @@ While the `BaseController` provides generic `create`, `find_unique`, `find_many`
 # From CaseController
 async def create_new_case(self, guild_id: int, user_id: int, moderator_id: int, reason: str) -> Case:
     # Determine the next case number (might involve a lookup or transaction)
-    next_case_num = await self.get_next_case_number(guild_id) 
+    next_case_num = await self.get_next_case_number(guild_id)
 
     return await self.create(
         data={

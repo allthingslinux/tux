@@ -28,10 +28,7 @@
     ".archive/**": true,
     "build/**": true
   },
-  "python.analysis.exclude": [
-    ".archive/**",
-    "build/**"
-  ],
+  "python.analysis.exclude": [".archive/**", "build/**"],
   "python.analysis.diagnosticSeverityOverrides": {
     "reportIncompatibleMethodOverride": "none",
     "reportGeneralTypeIssues": "information"

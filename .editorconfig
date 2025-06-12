@@ -1,0 +1,89 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Default settings for all files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Python files
+[*.py]
+indent_size = 4
+max_line_length = 120
+
+# Python stub files
+[*.pyi]
+indent_size = 4
+max_line_length = 120
+
+# Configuration files (YAML, TOML, JSON)
+[*.{yaml,yml}]
+indent_size = 2
+
+[*.toml]
+indent_size = 4
+
+[*.json]
+indent_size = 2
+
+# Docker files
+[{Dockerfile,*.dockerfile}]
+indent_size = 4
+
+[docker-compose*.yml]
+indent_size = 2
+
+# Shell scripts
+[*.{sh,bash,zsh,fish}]
+indent_size = 2
+
+# Nix files
+[*.nix]
+indent_size = 2
+
+# Web files (if any)
+[*.{html,css,js,ts,jsx,tsx}]
+indent_size = 2
+
+# Markdown files
+[*.md]
+indent_size = 2
+trim_trailing_whitespace = false
+
+# Environment files
+[.env*]
+indent_size = 4
+
+# Git files
+[.git*]
+indent_size = 4
+
+# Lock files (read-only, preserve formatting)
+[{poetry.lock,package-lock.json,yarn.lock,Pipfile.lock}]
+insert_final_newline = false
+trim_trailing_whitespace = false
+
+# Makefile (requires tabs)
+[{Makefile,makefile,*.mk}]
+indent_style = tab
+indent_size = 4
+
+# Batch files (Windows)
+[*.{bat,cmd}]
+end_of_line = crlf
+
+# Archive directory (preserve original formatting)
+[.archive/**]
+insert_final_newline = false
+trim_trailing_whitespace = false
+
+# Generated/cache directories (ignore)
+[{__pycache__,*.pyc,.mypy_cache,.pytest_cache,.ruff_cache,node_modules}/**]
+insert_final_newline = false
+trim_trailing_whitespace = false

@@ -1,5 +1,5 @@
 ---
-description: 
+description:
 globs: tux/database/**,prisma/**,tux/cli/database.py
 alwaysApply: false
 ---
