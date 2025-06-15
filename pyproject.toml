@@ -103,6 +103,7 @@ types-colorama = "^0.4.15.20240311"
 types-pyyaml = "^6.0.12.20250402"
 types-aiofiles = "^24.1.0.20250326"
 types-influxdb-client = "^1.45.0.20241221"
+types-jinja2 = "^2.11.9"
 
 [tool.ruff]
 exclude = [".venv", "examples", "tests", ".archive", "typings/**"]

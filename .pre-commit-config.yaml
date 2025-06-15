@@ -14,7 +14,7 @@ repos:
         exclude: '\.md$' # Preserve trailing spaces in Markdown for line breaks
 
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.3.3
+    rev: v3.5.3
     hooks:
       - id: prettier
         types_or: [yaml, json]
@@ -64,7 +64,7 @@ repos:
 
   # 6. Security Check
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.27.0 # Use the latest tag from the repo
+    rev: v8.27.2 # Use the latest tag from the repo
     hooks:
       - id: gitleaks
 
