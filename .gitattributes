@@ -89,6 +89,13 @@ Pipfile.lock text eol=lf linguist-generated=true
 *.tiff binary
 
 #
+# Media Files
+#
+*.mp4 binary
+*.mov binary
+*.avi binary
+
+#
 # Archive Files
 #
 *.zip binary
@@ -131,17 +138,9 @@ Pipfile.lock text eol=lf linguist-generated=true
 *.dylib binary
 
 #
-# Special Handling for Prisma Schema
+# Special Handling for Prisma Schema (using correct glob pattern)
 #
-prisma/schema.prisma text eol=lf
-
-#
-# Large Files (for Git LFS if needed)
-#
-*.gif filter=lfs diff=lfs merge=lfs -text
-*.mp4 filter=lfs diff=lfs merge=lfs -text
-*.mov filter=lfs diff=lfs merge=lfs -text
-*.avi filter=lfs diff=lfs merge=lfs -text
+prisma/schema/**/*.prisma text eol=lf
 
 #
 # Files to exclude from Git archive exports
