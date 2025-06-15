@@ -332,6 +332,7 @@ jobs:
 
           # Run prettier with inline config
           # Only auto-fix on PRs from same repo (not forks or protected main branch)
+          # shellcheck disable=SC2086 # GitHub Actions template variables are pre-substituted
           if [[ "${{ github.event_name }}" == "pull_request" ]] && [[ "${{ github.event.pull_request.head.repo.full_name }}" == "${{ github.repository }}" ]]; then
             echo "🔧 Auto-fixing YAML formatting issues..."
             npx prettier --write \
@@ -354,6 +355,7 @@ jobs:
         if: matrix.type == 'JSON'
         run: |
           # Only auto-fix on PRs from same repo (not forks or protected main branch)
+          # shellcheck disable=SC2086 # GitHub Actions template variables are pre-substituted
           if [[ "${{ github.event_name }}" == "pull_request" ]] && [[ "${{ github.event.pull_request.head.repo.full_name }}" == "${{ github.repository }}" ]]; then
             echo "🔧 Auto-fixing JSON formatting issues..."
             npx prettier --write \
