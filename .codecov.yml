@@ -441,7 +441,7 @@ flag_management:
 
 codecov:
   # UPLOAD AND PROCESSING SETTINGS
-  max_report_age: "24h" # Expire coverage reports after 24 hours
+  max_report_age: off # Disable age checking to prevent CI failures from timestamp issues
   require_ci_to_pass: true # Only process coverage if CI pipeline succeeds
   disable_default_path_fixes: false # Keep automatic path normalization
 
