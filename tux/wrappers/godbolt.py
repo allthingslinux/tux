@@ -63,7 +63,7 @@ def checkresponse(res: httpx.Response) -> str | None:
     """
 
     try:
-        return res.text if res.status_code == httpx.codes.OK else None
+        return res.text if res.status_code == 200 else None
     except httpx.ReadTimeout:
         return None
     except httpx.RequestError as e:
@@ -101,7 +101,7 @@ def sendresponse(url: str) -> str | None:
             raise APIResourceNotFoundError(service_name="Godbolt", resource_identifier=url) from e
         raise APIRequestError(service_name="Godbolt", status_code=e.response.status_code, reason=e.response.text) from e
     else:
-        return response.text if response.status_code == httpx.codes.OK else None
+        return response.text if response.status_code == 200 else None
 
 
 def getlanguages() -> str | None:
@@ -205,7 +205,7 @@ def getoutput(code: str, lang: str, compileroptions: str | None = None) -> str |
     uri = client.post(url_comp, json=payload)
 
     try:
-        return uri.text if uri.status_code == httpx.codes.OK else None
+        return uri.text if uri.status_code == 200 else None
 
     except httpx.ReadTimeout as e:
         raise APIConnectionError(service_name="Godbolt", original_error=e) from e
@@ -273,7 +273,7 @@ def generateasm(code: str, lang: str, compileroptions: str | None = None) -> str
     uri = client.post(url_comp, json=payload)
 
     try:
-        return uri.text if uri.status_code == httpx.codes.OK else None
+        return uri.text if uri.status_code == 200 else None
 
     except httpx.ReadTimeout as e:
         raise APIConnectionError(service_name="Godbolt", original_error=e) from e
