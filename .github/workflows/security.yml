@@ -77,7 +77,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Poetry
-        run: pipx install poetry
+        run: pipx install poetry --force
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -91,7 +91,8 @@ jobs:
       - name: Run Safety check
         run: |
           pip install safety
-          poetry export --format=requirements.txt --output=requirements.txt --without-hashes
+          poetry install --without dev
+          pip freeze > requirements.txt
           safety check --json --output safety-report.json -r requirements.txt || true
 
       - name: Upload Safety results
