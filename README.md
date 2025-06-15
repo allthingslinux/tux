@@ -10,6 +10,8 @@
             <img alt="Issues" src="https://img.shields.io/github/issues/allthingslinux/tux?style=for-the-badge&logo=githubactions&color=F9E2AF&logoColor=F9E2AF&labelColor=302D41"></a>
         <a href="https://github.com/allthingslinux/tux">
             <img alt="Repo size" src="https://img.shields.io/github/repo-size/allthingslinux/tux?style=for-the-badge&logo=github&color=FAB387&logoColor=FAB387&labelColor=302D41"/></a>
+        <a href="https://codecov.io/gh/allthingslinux/tux">
+            <img alt="Codecov" src="https://img.shields.io/codecov/c/gh/allthingslinux/tux?token=R0AUAS996W&style=for-the-badge"></a>
         <a href="https://github.com/allthingslinux/tux/LICENSE">
             <img alt="License" src="https://img.shields.io/github/license/allthingslinux/tux?style=for-the-badge&logo=github&color=A6E3A1&logoColor=A6E3A1&labelColor=302D41"></a>
         <a href="https://discord.gg/linux">

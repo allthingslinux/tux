@@ -69,18 +69,6 @@ coverage:
       # exclude = Don't send status if flag data missing (prevents false failures)
       flag_coverage_not_uploaded_behavior: exclude
 
-      # if_ci_failed: Status behavior when CI pipeline fails
-      # error = Set coverage status to error if CI fails (logical dependency)
-      if_ci_failed: error
-
-      # if_not_found: Status when no coverage data exists
-      # success = Pass on missing data (helps with initial PRs and new components)
-      if_not_found: success
-
-      # carryforward: Whether to use previous coverage data when new data missing
-      # true = Use last known good coverage (prevents false failures)
-      carryforward: true
-
     # PROJECT-WIDE COVERAGE REQUIREMENTS
     # These checks apply to the entire codebase and determine PR merge eligibility
     project:
@@ -90,7 +78,6 @@ coverage:
         target: auto # Compare to base commit (progressive improvement)
         threshold: 1% # Allow 1% coverage drop (accounts for refactoring)
         informational: false # Block PRs if coverage drops significantly
-        only_pulls: false # Apply to all commits, not just PRs
 
       # ========================================================================
       # COMPONENT-SPECIFIC PROJECT COVERAGE
