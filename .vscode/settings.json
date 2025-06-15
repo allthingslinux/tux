@@ -46,6 +46,12 @@
     "files.trimTrailingWhitespace": false,
     "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
   },
+  "markdownlint.config": {
+    "extends": ".markdownlint.yaml"
+  },
+  "markdownlint.ignore": [".yamlint", "*.yml", "*.yaml", "*.lock"],
+  "markdownlint.focusMode": false,
+  "markdownlint.run": "onType",
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
