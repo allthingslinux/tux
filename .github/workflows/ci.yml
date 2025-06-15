@@ -169,10 +169,10 @@ jobs:
         id: check_db_tests
         run: |
           if find tests/tux/database/ -name "test_*.py" -type f | grep -q .; then
-            echo "has_tests=true" >> $GITHUB_OUTPUT
+            echo "has_tests=true" >> "$GITHUB_OUTPUT"
             echo "Database tests found"
           else
-            echo "has_tests=false" >> $GITHUB_OUTPUT
+            echo "has_tests=false" >> "$GITHUB_OUTPUT"
             echo "No database tests found, skipping database test suite"
           fi
 
@@ -207,10 +207,10 @@ jobs:
         id: check_integration_tests
         run: |
           if poetry run pytest --collect-only -m "slow" -q tests/ | grep -q "test session starts"; then
-            echo "has_tests=true" >> $GITHUB_OUTPUT
+            echo "has_tests=true" >> "$GITHUB_OUTPUT"
             echo "Integration tests found"
           else
-            echo "has_tests=false" >> $GITHUB_OUTPUT
+            echo "has_tests=false" >> "$GITHUB_OUTPUT"
             echo "No integration tests found, skipping integration test suite"
           fi
 
