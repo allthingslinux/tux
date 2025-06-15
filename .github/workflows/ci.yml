@@ -224,6 +224,13 @@ jobs:
           echo "No ${{ matrix.type }} files changed, skipping ${{ matrix.type }} linting"
           exit 0
 
+      - name: Skip formatting checks for pushes to main (protected branch)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "ℹ️ Skipping ${{ matrix.type }} formatting checks for push to protected main branch"
+          echo "Formatting should have been handled in the PR before merge"
+          exit 0
+
       - name: Setup Node.js
         if: matrix.type != 'YAML'
         uses: actions/setup-node@v4
