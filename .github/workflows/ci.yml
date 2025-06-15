@@ -272,8 +272,8 @@ jobs:
           yamllint --config-file /tmp/yamllint.yml .
 
           # Run prettier with inline config
-          # Only auto-fix on direct pushes or PRs from same repo (not forks)
-          if [[ "${{ github.event_name }}" == "push" ]] || [[ "${{ github.event.pull_request.head.repo.full_name }}" == "${{ github.repository }}" ]]; then
+          # Only auto-fix on PRs from same repo (not forks or protected main branch)
+          if [[ "${{ github.event_name }}" == "pull_request" ]] && [[ "${{ github.event.pull_request.head.repo.full_name }}" == "${{ github.repository }}" ]]; then
             echo "🔧 Auto-fixing YAML formatting issues..."
             npx prettier --write \
               --tab-width 2 \
@@ -294,8 +294,8 @@ jobs:
       - name: Run JSON linting with inline config
         if: matrix.type == 'JSON'
         run: |
-          # Only auto-fix on direct pushes or PRs from same repo (not forks)
-          if [[ "${{ github.event_name }}" == "push" ]] || [[ "${{ github.event.pull_request.head.repo.full_name }}" == "${{ github.repository }}" ]]; then
+          # Only auto-fix on PRs from same repo (not forks or protected main branch)
+          if [[ "${{ github.event_name }}" == "pull_request" ]] && [[ "${{ github.event.pull_request.head.repo.full_name }}" == "${{ github.repository }}" ]]; then
             echo "🔧 Auto-fixing JSON formatting issues..."
             npx prettier --write \
               --tab-width 2 \
@@ -325,7 +325,7 @@ jobs:
             "**/*.md"
 
       - name: Commit formatting fixes
-        if: steps.file_changes.outputs.any_changed == 'true' && (matrix.type == 'JSON' || matrix.type == 'YAML') && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+        if: steps.file_changes.outputs.any_changed == 'true' && (matrix.type == 'JSON' || matrix.type == 'YAML') && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         run: |
           # Configure Git
           git config --local user.email "action@github.com"
