@@ -43,7 +43,9 @@ site/
 *.log
 logs/
 
-# Git (keep .git/ for version detection in Docker builds)
+# Git (now excluded since version info is passed via build args)
+# This improves build performance and security
+.git/
 .gitignore
 .gitattributes
 
