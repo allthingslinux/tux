@@ -188,22 +188,42 @@ COPY tux/ ./tux/
 # These include metadata and licensing information
 COPY README.md LICENSE pyproject.toml ./
 
-# Copy git metadata for proper version detection
-# Poetry dynamic versioning needs git history to determine version
-COPY .git ./.git
+# Build arguments for version information
+# These allow passing version info without requiring git history in build context
+ARG VERSION=""
+ARG GIT_SHA=""
+ARG BUILD_DATE=""
 
-# Generate version file from git before cleanup
-RUN git describe --tags --always --dirty 2>/dev/null | sed 's/^v//' > /app/VERSION || echo "unknown" > /app/VERSION && \
+# Generate version file using build args or git fallback
+# PERFORMANCE: Version is determined at build time, not runtime
+# SECURITY: Git history is optional and removed after use
+RUN set -eux; \
+    if [ -n "$VERSION" ]; then \
+        # Use provided version from build args (preferred for CI/CD)
+        echo "Using provided version: $VERSION"; \
+        echo "$VERSION" > /app/VERSION; \
+    elif [ -d .git ]; then \
+        # Fallback to git for local builds with git history
+        echo "Generating version from git history"; \
+        git describe --tags --always --dirty 2>/dev/null | sed 's/^v//' > /app/VERSION || echo "unknown" > /app/VERSION; \
+        # Clean up git repository immediately after use
+        rm -rf .git; \
+    else \
+        # Final fallback for builds without version info or git
+        echo "No version info available, using fallback"; \
+        echo "unknown" > /app/VERSION; \
+    fi; \
     echo "Building version: $(cat /app/VERSION)"
+
+# Set shell to bash with pipefail for proper error handling in pipes
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install the application and generate Prisma client
 # COMPLEXITY: This step requires multiple operations that must be done together
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
     --mount=type=cache,target=/root/.cache \
     # Install the application package itself
-    poetry install --only main && \
-    # Clean up git repository (not needed in final image)
-    rm -rf .git
+    poetry install --only main
 
 # ==============================================================================
 # DEVELOPMENT STAGE - Development Environment

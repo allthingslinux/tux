@@ -26,6 +26,14 @@ jobs:
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+      - name: Prepare version info
+        id: version
+        run: |
+          # For PR validation, use PR number and short SHA for version
+          VERSION="pr-${{ github.event.number }}-$(echo ${{ github.sha }} | cut -c1-7)"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "git_sha=${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
       - name: Build for validation (Git context)
         uses: docker/build-push-action@v6.18.0
         timeout-minutes: 15
@@ -39,10 +47,20 @@ jobs:
             type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
           cache-to: type=gha,mode=max
           tags: tux:pr-${{ github.event.number }}
+          build-args: |
+            VERSION=${{ steps.version.outputs.version }}
+            GIT_SHA=${{ steps.version.outputs.git_sha }}
+            BUILD_DATE=${{ steps.version.outputs.build_date }}
           annotations: |
-            org.opencontainers.image.title=Tux Discord Bot
-            org.opencontainers.image.description=All Things Linux Discord Bot
-      - name: Test container starts
+            org.opencontainers.image.title="Tux"
+            org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community"
+            org.opencontainers.image.source="https://github.com/allthingslinux/tux"
+            org.opencontainers.image.licenses="GPL-3.0"
+            org.opencontainers.image.authors="All Things Linux"
+            org.opencontainers.image.vendor="All Things Linux"
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.documentation="https://github.com/allthingslinux/tux/blob/main/README.md"
+            - name: Test container starts
         run: |
           docker run --rm --name tux-test \
             --entrypoint python \
@@ -65,6 +83,21 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Prepare version info
+        id: version
+        run: |
+          # Try to get version from git tags, fallback to SHA
+          if git describe --tags --exact-match 2>/dev/null; then
+            VERSION=$(git describe --tags --exact-match | sed 's/^v//')
+          elif git describe --tags 2>/dev/null; then
+            VERSION=$(git describe --tags | sed 's/^v//')
+          else
+            VERSION="$(date +'%Y%m%d')-$(echo ${{ github.sha }} | cut -c1-7)"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "git_sha=${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+          echo "Using version: $VERSION"
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
@@ -92,12 +125,14 @@ jobs:
             type=ref,event=tag
             type=sha
           labels: |
-            org.opencontainers.image.title=Tux Discord Bot
-            org.opencontainers.image.description=All Things Linux Discord Bot
-            org.opencontainers.image.url=https://github.com/${{ github.repository }}
-            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.title="Tux"
+            org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community"
+            org.opencontainers.image.source="https://github.com/${{ github.repository }}"
             org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.licenses="GPL-3.0"
+            org.opencontainers.image.authors="All Things Linux"
+            org.opencontainers.image.vendor="All Things Linux"
+            org.opencontainers.image.documentation="https://github.com/allthingslinux/tux/blob/main/README.md"
       - name: Build and push
         id: build
         uses: docker/build-push-action@v6.18.0
@@ -121,6 +156,9 @@ jobs:
           annotations: ${{ steps.meta.outputs.annotations }}
           build-args: |
             BUILDKIT_INLINE_CACHE=1
+            VERSION=${{ steps.version.outputs.version }}
+            GIT_SHA=${{ steps.version.outputs.git_sha }}
+            BUILD_DATE=${{ steps.version.outputs.build_date }}
       - name: Test pushed image
         run: |
           docker run --rm --name tux-prod-test \
@@ -156,6 +194,7 @@ jobs:
           format: sarif
           output: trivy-results.sarif
           severity: CRITICAL,HIGH
+          scanners: vuln
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@v3
         with:
@@ -169,6 +208,7 @@ jobs:
           exit-code: '1'
           ignore-unfixed: true
           trivyignores: .trivyignore
+          scanners: vuln
   cleanup:
     if: github.event_name != 'pull_request' && (github.event_name == 'schedule' ||
       github.event_name == 'workflow_dispatch')
