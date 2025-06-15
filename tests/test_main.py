@@ -8,7 +8,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-import tux.main
+# Mock the config loading before importing tux.main to prevent FileNotFoundError in CI
+with patch("tux.utils.config.CONFIG", Mock()):
+    import tux.main
 
 
 class TestMain:
@@ -167,18 +169,20 @@ from unittest.mock import Mock, patch
 # Add the project root to the path
 sys.path.insert(0, "{project_root}")
 
-with patch("tux.app.TuxApp") as mock_app:
-    mock_instance = Mock()
-    mock_app.return_value = mock_instance
+# Mock the config loading to prevent FileNotFoundError in CI
+with patch("tux.utils.config.CONFIG", Mock()):
+    with patch("tux.app.TuxApp") as mock_app:
+        mock_instance = Mock()
+        mock_app.return_value = mock_instance
 
-    # Import and run main
-    import tux.main
-    tux.main.run()
+        # Import and run main
+        import tux.main
+        tux.main.run()
 
-    # Verify it was called
-    assert mock_app.called
-    assert mock_instance.run.called
-    print("SUCCESS: Module executed correctly")
+        # Verify it was called
+        assert mock_app.called
+        assert mock_instance.run.called
+        print("SUCCESS: Module executed correctly")
 """
 
         # Get the project root dynamically
