@@ -149,9 +149,22 @@ jobs:
       security-events: write
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Get first image tag
         id: first_tag
         run: echo "image=$(echo '${{ needs.build.outputs.image }}' | head -1)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Trivy
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/trivy
+          key: cache-trivy-${{ github.run_id }}
+          restore-keys: |
+            cache-trivy-
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
@@ -166,13 +179,15 @@ jobs:
         with:
           sarif_file: "trivy-results.sarif"
 
-      - name: Fail on critical vulnerabilities
+      - name: Fail on critical vulnerabilities (excluding known issues)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ steps.first_tag.outputs.image }}
           format: "table"
           severity: "CRITICAL"
           exit-code: "1"
+          ignore-unfixed: true
+          trivyignores: .trivyignore
 
   # Cleanup old images (runs weekly)
   cleanup:

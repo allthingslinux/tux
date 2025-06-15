@@ -61,10 +61,11 @@ RUN groupadd --system --gid 1001 nonroot && \
     useradd --create-home --system --uid 1001 --gid nonroot nonroot
 
 # Install runtime dependencies required for the application
-# SECURITY: Pinned versions prevent supply chain attacks and ensure reproducibility
+# SECURITY: Update all packages first to get latest security patches, then install specific versions
 # PERFORMANCE: Packages sorted alphabetically for better caching and maintenance
 # NOTE: These are the minimal dependencies required for the bot to function
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
         ffmpeg=7:5.1.6-0+deb12u1 \
         git=1:2.39.5-0+deb12u2 \
@@ -104,6 +105,7 @@ FROM base AS build
 # These tools are needed for packages like cryptography, pillow, etc.
 # MAINTENANCE: Keep versions pinned and sorted alphabetically
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
         # GCC compiler and build essentials for native extensions
         build-essential=12.9 \
@@ -274,9 +276,10 @@ RUN groupadd --system --gid 1001 nonroot && \
     useradd --create-home --system --uid 1001 --gid nonroot nonroot
 
 # Install ONLY runtime dependencies (minimal subset of base stage)
-# SECURITY: Reduced attack surface by excluding unnecessary packages
+# SECURITY: Update all packages first, then install minimal runtime dependencies
 # SIZE: Significantly smaller than build stage dependencies
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
         libcairo2=1.16.0-7 \
         libffi8=3.4.4-1 \
