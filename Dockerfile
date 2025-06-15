@@ -357,6 +357,8 @@ RUN set -eux; \
     # Create user cache directories (fixes permission issues for Prisma/npm)
     mkdir -p /home/nonroot/.cache /home/nonroot/.npm; \
     chown -R nonroot:nonroot /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm; \
+    # Remove npm cache to reduce scan time and image size
+    rm -rf /home/nonroot/.npm/_cacache; \
     \
     # VIRTUAL ENVIRONMENT CLEANUP
     # The following operations remove unnecessary files from the Python environment
