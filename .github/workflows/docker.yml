@@ -151,7 +151,7 @@ jobs:
     steps:
       - name: Get first image tag
         id: first_tag
-        run: echo "image=$(echo '${{ needs.build.outputs.image }}' | head -1)" >> $GITHUB_OUTPUT
+        run: echo "image=$(echo '${{ needs.build.outputs.image }}' | head -1)" >> "$GITHUB_OUTPUT"
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
