@@ -1,5 +1,8 @@
+# yamllint disable rule:line-length
+
 # yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 
+---
 site_name: Tux
 site_url: https://tux.atl.dev
 
@@ -279,17 +282,16 @@ plugins:
       nav_section_title: "Tux Reference"
       api_root_uri: "reference"
       exclude_private: false
-      # nav_item_prefix: "<code class='doc-symbol doc-symbol-nav doc-symbol-module'></code>"
       on_implicit_namespace_packge: raise
 
-  # # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#revisioning
-  # - git-revision-date-localized:
-  #     enable_creation_date: false
+# https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#revisioning
+# - git-revision-date-localized:
+#     enable_creation_date: false
 
-  # # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#document-contributors
-  # - git-committers:
-  #     repository: allthingslinux/tux
-  #     branch: main
+# https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#document-contributors
+# - git-committers:
+#     repository: allthingslinux/tux
+#     branch: main
 
 #
 ### MARKDOWN EXTENSIONS
