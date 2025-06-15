@@ -4,18 +4,22 @@
 
 <div align="center">
     <p align="center">
-        <a href="https://github.com/allthingslinux/tux/forks">
-            <img alt="Forks" src="https://img.shields.io/github/commit-activity/m/allthingslinux/tux?style=for-the-badge&logo=git&color=EBA0AC&logoColor=EBA0AC&labelColor=302D41"></a>
-        <a href="https://github.com/allthingslinux/tux/issues">
-            <img alt="Issues" src="https://img.shields.io/github/issues/allthingslinux/tux?style=for-the-badge&logo=githubactions&color=F9E2AF&logoColor=F9E2AF&labelColor=302D41"></a>
-        <a href="https://github.com/allthingslinux/tux">
-            <img alt="Repo size" src="https://img.shields.io/github/repo-size/allthingslinux/tux?style=for-the-badge&logo=github&color=FAB387&logoColor=FAB387&labelColor=302D41"/></a>
+        <a href="https://github.com/allthingslinux/tux/actions">
+            <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/allthingslinux/tux/ci.yml?branch=main&label=CI"></a>
+        <a href="https://results.pre-commit.ci/latest/github/allthingslinux/tux/main">
+            <img alt="pre-commit.ci status" src="https://results.pre-commit.ci/badge/github/allthingslinux/tux/main.svg"></a>
         <a href="https://codecov.io/gh/allthingslinux/tux">
             <img alt="Codecov" src="https://codecov.io/gh/allthingslinux/tux/graph/badge.svg?token=R0AUAS996W"></a>
-        <a href="https://github.com/allthingslinux/tux/LICENSE">
-            <img alt="License" src="https://img.shields.io/github/license/allthingslinux/tux?style=for-the-badge&logo=github&color=A6E3A1&logoColor=A6E3A1&labelColor=302D41"></a>
+        <a href="https://github.com/allthingslinux/tux/commits/main">
+            <img alt="Commit Activity" src="https://img.shields.io/github/commit-activity/m/allthingslinux/tux"></a>
+        <a href="https://github.com/allthingslinux/tux/issues">
+            <img alt="Issues" src="https://img.shields.io/github/issues/allthingslinux/tux"></a>
+        <a href="https://github.com/allthingslinux/tux">
+            <img alt="Repo size" src="https://img.shields.io/github/repo-size/allthingslinux/tux"></a>
+        <a href="https://github.com/allthingslinux/tux/blob/main/LICENSE">
+            <img alt="License" src="https://img.shields.io/github/license/allthingslinux/tux"></a>
         <a href="https://discord.gg/linux">
-            <img alt="Discord" src="https://img.shields.io/discord/1172245377395728464?style=for-the-badge&logo=discord&color=B4BEFE&logoColor=B4BEFE&labelColor=302D41"></a>
+            <img alt="Discord" src="https://img.shields.io/discord/1172245377395728464?logo=discord"></a>
     </p>
 </div>
 
