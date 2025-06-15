@@ -50,8 +50,10 @@
     "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
   },
   "[json]": {
-    "editor.defaultFormatter": "vscode.json-language-features"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
+  "prettier.tabWidth": 2,
+  "prettier.printWidth": 100,
   "yaml.schemas": {
     "https://squidfunk.github.io/mkdocs-material/schema.json": "mkdocs.yml"
   }

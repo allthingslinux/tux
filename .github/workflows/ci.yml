@@ -195,7 +195,8 @@ jobs:
     name: "Lint (${{ matrix.type }})"
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
+      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
@@ -271,22 +272,46 @@ jobs:
           yamllint --config-file /tmp/yamllint.yml .
 
           # Run prettier with inline config
-          npx prettier --check \
-            --tab-width 2 \
-            --print-width 120 \
-            --end-of-line lf \
-            "**/*.{yml,yaml}" \
-            --ignore-path <(echo -e ".venv/\n.archive/\nnode_modules/\ntypings/\npoetry.lock\nflake.lock")
+          # Only auto-fix on direct pushes or PRs from same repo (not forks)
+          if [[ "${{ github.event_name }}" == "push" ]] || [[ "${{ github.event.pull_request.head.repo.full_name }}" == "${{ github.repository }}" ]]; then
+            echo "🔧 Auto-fixing YAML formatting issues..."
+            npx prettier --write \
+              --tab-width 2 \
+              --print-width 120 \
+              --end-of-line lf \
+              "**/*.{yml,yaml}" \
+              --ignore-path <(echo -e ".venv/\n.archive/\nnode_modules/\ntypings/\npoetry.lock\nflake.lock")
+          else
+            echo "⚠️ Fork detected - checking only (no auto-fix)"
+            npx prettier --check \
+              --tab-width 2 \
+              --print-width 120 \
+              --end-of-line lf \
+              "**/*.{yml,yaml}" \
+              --ignore-path <(echo -e ".venv/\n.archive/\nnode_modules/\ntypings/\npoetry.lock\nflake.lock")
+          fi
 
       - name: Run JSON linting with inline config
         if: matrix.type == 'JSON'
         run: |
-          npx prettier --check \
-            --tab-width 2 \
-            --print-width 100 \
-            --end-of-line lf \
-            "**/*.json" \
-            --ignore-path <(echo -e ".venv/\n.archive/\nnode_modules/\ntypings/\npoetry.lock")
+          # Only auto-fix on direct pushes or PRs from same repo (not forks)
+          if [[ "${{ github.event_name }}" == "push" ]] || [[ "${{ github.event.pull_request.head.repo.full_name }}" == "${{ github.repository }}" ]]; then
+            echo "🔧 Auto-fixing JSON formatting issues..."
+            npx prettier --write \
+              --tab-width 2 \
+              --print-width 100 \
+              --end-of-line lf \
+              "**/*.json" \
+              --ignore-path <(echo -e ".venv/\n.archive/\nnode_modules/\ntypings/\npoetry.lock")
+          else
+            echo "⚠️ Fork detected - checking only (no auto-fix)"
+            npx prettier --check \
+              --tab-width 2 \
+              --print-width 100 \
+              --end-of-line lf \
+              "**/*.json" \
+              --ignore-path <(echo -e ".venv/\n.archive/\nnode_modules/\ntypings/\npoetry.lock")
+          fi
 
       - name: Run Markdown linting with inline config
         if: matrix.type == 'Markdown'
@@ -298,6 +323,23 @@ jobs:
             --ignore .venv \
             --ignore .archive \
             "**/*.md"
+
+      - name: Commit formatting fixes
+        if: steps.file_changes.outputs.any_changed == 'true' && (matrix.type == 'JSON' || matrix.type == 'YAML') && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+        run: |
+          # Configure Git
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          # Check if there are changes to commit
+          if ! git diff --quiet; then
+            git add .
+            git commit -m "style: auto-fix ${{ matrix.type }} formatting issues [skip ci]"
+            git push
+            echo "✅ Committed ${{ matrix.type }} formatting fixes"
+          else
+            echo "ℹ️ No ${{ matrix.type }} formatting changes needed"
+          fi
 
   # Infrastructure linting
   infrastructure:
