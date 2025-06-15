@@ -346,9 +346,14 @@ COPY --from=build --chown=nonroot:nonroot /app/prisma /app/prisma
 COPY --from=build --chown=nonroot:nonroot /app/config /app/config
 COPY --from=build --chown=nonroot:nonroot /app/pyproject.toml /app/pyproject.toml
 
-# Aggressive cleanup and optimization in a single layer
-# PERFORMANCE: Single RUN reduces layer count and enables atomic cleanup
-# SIZE: Removes unnecessary files to minimize final image size
+# Create convenient symlinks for Python and application binaries
+# USABILITY: Allows running 'python' and 'tux' commands without full paths
+# COMPATIBILITY: Maintains expected command locations for scripts and debugging
+RUN ln -sf /app/.venv/bin/python /usr/local/bin/python && \
+    ln -sf /app/.venv/bin/tux /usr/local/bin/tux
+
+# Setup directories and permissions before Prisma setup
+# SECURITY: Ensures proper directory structure and permissions
 RUN set -eux; \
     # Fix permissions for virtual environment
     chown -R nonroot:nonroot /app/.venv; \
@@ -358,8 +363,20 @@ RUN set -eux; \
     mkdir -p /home/nonroot/.cache /home/nonroot/.npm; \
     chown -R nonroot:nonroot /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm; \
     # Remove npm cache to reduce scan time and image size
-    rm -rf /home/nonroot/.npm/_cacache; \
-    \
+    rm -rf /home/nonroot/.npm/_cacache
+
+# Switch to non-root user for security and run Prisma setup
+# SECURITY: Application runs with minimal privileges
+# RUNTIME: Ensures Prisma binaries and client are properly configured as nonroot user
+USER nonroot
+RUN /app/.venv/bin/python -m prisma py fetch && \
+    /app/.venv/bin/python -m prisma generate
+
+# Aggressive cleanup and optimization after Prisma setup
+# PERFORMANCE: Single RUN reduces layer count and enables atomic cleanup
+# SIZE: Removes unnecessary files to minimize final image size but preserves Prisma binaries
+USER root
+RUN set -eux; \
     # VIRTUAL ENVIRONMENT CLEANUP
     # The following operations remove unnecessary files from the Python environment
     # This can reduce the size by 30-50MB without affecting functionality
@@ -368,21 +385,22 @@ RUN set -eux; \
     find /app/.venv -name "*.pyc" -delete; \
     find /app/.venv -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true; \
     \
-    # Remove test directories from installed packages
+    # Remove test directories from installed packages (but preserve prisma binaries)
     # These directories contain test files that are not needed in production
     for test_dir in tests testing "*test*"; do \
-        find /app/.venv -name "$test_dir" -type d -exec rm -rf {} + 2>/dev/null || true; \
+        find /app/.venv -name "$test_dir" -type d -not -path "*/prisma*" -exec rm -rf {} + 2>/dev/null || true; \
     done; \
     \
-    # Remove documentation files from installed packages
+    # Remove documentation files from installed packages (but preserve prisma docs)
     # These files take up significant space and are not needed in production
     for doc_pattern in "*.md" "*.txt" "*.rst" "LICENSE*" "NOTICE*" "COPYING*" "CHANGELOG*" "README*" "HISTORY*" "AUTHORS*" "CONTRIBUTORS*"; do \
-        find /app/.venv -name "$doc_pattern" -delete 2>/dev/null || true; \
+        find /app/.venv -name "$doc_pattern" -not -path "*/prisma*" -delete 2>/dev/null || true; \
     done; \
     \
     # Remove large development packages that are not needed in production
     # These packages (pip, setuptools, wheel) are only needed for installing packages
-    for pkg in pip setuptools wheel pkg_resources; do \
+    # NOTE: Preserving packages that Prisma might need
+    for pkg in setuptools wheel pkg_resources; do \
         rm -rf /app/.venv/lib/python3.13/site-packages/${pkg}* 2>/dev/null || true; \
         rm -rf /app/.venv/bin/${pkg}* 2>/dev/null || true; \
     done; \
@@ -391,20 +409,13 @@ RUN set -eux; \
     # Compile Python bytecode for performance optimization
     # PERFORMANCE: Pre-compiled bytecode improves startup time
     # Note: Some compilation errors are expected and ignored
-    /app/.venv/bin/python -m compileall -b -q /app/tux /app/.venv/lib/python3.13/site-packages/ 2>/dev/null || true
+    /app/.venv/bin/python -m compileall -b -q /app/tux /app/.venv/lib/python3.13/site-packages/ 2>/dev/null || true; \
+    \
+    # Switch back to nonroot user for final ownership
+    chown -R nonroot:nonroot /app /home/nonroot
 
-# Create convenient symlinks for Python and application binaries
-# USABILITY: Allows running 'python' and 'tux' commands without full paths
-# COMPATIBILITY: Maintains expected command locations for scripts and debugging
-RUN ln -sf /app/.venv/bin/python /usr/local/bin/python && \
-    ln -sf /app/.venv/bin/tux /usr/local/bin/tux
-
-# Switch to non-root user for security and run Prisma setup
-# SECURITY: Application runs with minimal privileges
-# RUNTIME: Ensures Prisma binaries and client are properly configured as nonroot user
+# Switch back to non-root user for runtime
 USER nonroot
-RUN /app/.venv/bin/python -m prisma py fetch && \
-    /app/.venv/bin/python -m prisma generate
 
 # Health check configuration for container orchestration
 # MONITORING: Allows Docker/Kubernetes to monitor application health
