@@ -18,8 +18,8 @@ repos:
     hooks:
       - id: prettier
         types_or: [yaml, json]
-        exclude: '^(\.archive/|.*typings/|poetry\.lock|flake\.lock).*$'
-        args: [--tab-width=2, --print-width=120, --bracket-same-line=false] # Align with .editorconfig
+        exclude: '^(\.archive/|.*typings/|poetry\.lock|flake\.lock|\.vscode/).*$'
+        args: [--tab-width=2, --print-width=80, --bracket-same-line=false] # Force shorter lines for arrays
 
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: v0.24.1

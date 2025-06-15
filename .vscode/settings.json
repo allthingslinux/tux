@@ -20,7 +20,10 @@
   "python.analysis.inlayHints.variableTypes": true,
   "python.analysis.inlayHints.callArgumentNames": "all",
   "python.terminal.activateEnvInCurrentTerminal": true,
-  "python.analysis.exclude": [".archive/**", "build/**"],
+  "python.analysis.exclude": [
+    ".archive/**",
+    "build/**"
+  ],
   "python.analysis.diagnosticSeverityOverrides": {
     "reportIncompatibleMethodOverride": "none",
     "reportGeneralTypeIssues": "information"
