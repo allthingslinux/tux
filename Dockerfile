@@ -169,7 +169,7 @@ COPY tux/ ./tux/
 
 # 4. Root level files needed for installation
 # These include metadata and licensing information
-COPY README.md LICENSE.md pyproject.toml ./
+COPY README.md LICENSE pyproject.toml ./
 
 # Install the application and generate Prisma client
 # COMPLEXITY: This step requires multiple operations that must be done together
