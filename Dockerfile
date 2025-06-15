@@ -60,13 +60,26 @@ LABEL org.opencontainers.image.source="https://github.com/allthingslinux/tux" \
 RUN groupadd --system --gid 1001 nonroot && \
     useradd --create-home --system --uid 1001 --gid nonroot nonroot
 
+# Configure apt to avoid documentation and interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive \
+    DEBCONF_NONINTERACTIVE_SEEN=true
+
+# Configure dpkg to exclude documentation (reduces size and avoids man page issues)
+RUN echo 'path-exclude /usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
+    echo 'path-include /usr/share/doc/*/copyright' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
+    echo 'path-exclude /usr/share/man/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
+    echo 'path-exclude /usr/share/groff/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
+    echo 'path-exclude /usr/share/info/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
+    echo 'path-exclude /usr/share/lintian/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
+    echo 'path-exclude /usr/share/linda/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc
+
 # Install runtime dependencies required for the application
 # SECURITY: Update all packages first to get latest security patches, then install specific versions
 # PERFORMANCE: Packages sorted alphabetically for better caching and maintenance
 # NOTE: These are the minimal dependencies required for the bot to function
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends \
+    apt-get install -y --no-install-recommends --no-install-suggests \
         ffmpeg=7:5.1.6-0+deb12u1 \
         git=1:2.39.5-0+deb12u2 \
         libcairo2=1.16.0-7 \
@@ -275,12 +288,25 @@ LABEL org.opencontainers.image.source="https://github.com/allthingslinux/tux" \
 RUN groupadd --system --gid 1001 nonroot && \
     useradd --create-home --system --uid 1001 --gid nonroot nonroot
 
+# Configure apt for production (same as base stage)
+ENV DEBIAN_FRONTEND=noninteractive \
+    DEBCONF_NONINTERACTIVE_SEEN=true
+
+# Configure dpkg to exclude documentation (reduces size and avoids man page issues)
+RUN echo 'path-exclude /usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
+    echo 'path-include /usr/share/doc/*/copyright' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
+    echo 'path-exclude /usr/share/man/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
+    echo 'path-exclude /usr/share/groff/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
+    echo 'path-exclude /usr/share/info/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
+    echo 'path-exclude /usr/share/lintian/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
+    echo 'path-exclude /usr/share/linda/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc
+
 # Install ONLY runtime dependencies (minimal subset of base stage)
 # SECURITY: Update all packages first, then install minimal runtime dependencies
 # SIZE: Significantly smaller than build stage dependencies
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends \
+    apt-get install -y --no-install-recommends --no-install-suggests \
         libcairo2=1.16.0-7 \
         libffi8=3.4.4-1 \
         coreutils=9.1-1 \

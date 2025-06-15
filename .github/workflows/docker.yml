@@ -65,6 +65,8 @@ jobs:
       contents: read
       packages: write
       security-events: write
+      actions: read
+      id-token: write
     outputs:
       image: ${{ steps.meta.outputs.tags }}
       digest: ${{ steps.build.outputs.digest }}
@@ -123,8 +125,7 @@ jobs:
             type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
           cache-to: |
             type=gha,mode=max
-            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ hashFiles('poetry.lock') }},mode=max
-            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ github.run_id }},mode=max
           platforms: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
           provenance: ${{ startsWith(github.ref, 'refs/tags/') }}
           sbom: ${{ startsWith(github.ref, 'refs/tags/') }}
