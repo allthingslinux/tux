@@ -43,8 +43,7 @@ site/
 *.log
 logs/
 
-# Git
-.git/
+# Git (keep .git/ for version detection in Docker builds)
 .gitignore
 .gitattributes
 
