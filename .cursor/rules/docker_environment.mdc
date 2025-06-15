@@ -1,5 +1,5 @@
 ---
-description: 
+description:
 globs: docker-compose.yml,docker-compose.dev.yml,Dockerfile,README.md,.github/workflows/docker-image.yml,tux/cli/docker.py,.dockerignore
 alwaysApply: false
 ---

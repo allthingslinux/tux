@@ -2,14 +2,8 @@
   "name": "Tux Development Container",
   "dockerFile": "../Dockerfile",
   "context": "..",
-  "runArgs": [
-    "--init",
-    "--env-file",
-    ".env"
-  ],
-  "forwardPorts": [
-    3000
-  ],
+  "runArgs": ["--init", "--env-file", ".env"],
+  "forwardPorts": [3000],
   "workspaceMount": "source=${localWorkspaceFolder},target=/app,type=bind",
   "workspaceFolder": "/app",
   "build": {
