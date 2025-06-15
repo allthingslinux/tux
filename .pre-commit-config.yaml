@@ -2,13 +2,24 @@ default_language_version:
   python: python3.13
 
 repos:
-  # 1. Fast File Checks
+  # 1. Fast File Checks & Formatting
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
       - id: check-yaml
       - id: check-json
       - id: check-toml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        exclude: '\.md$' # Preserve trailing spaces in Markdown for line breaks
+
+  - repo: https://github.com/rbubley/mirrors-prettier
+    rev: v3.3.3
+    hooks:
+      - id: prettier
+        types_or: [yaml, json]
+        exclude: '^(\.archive/|.*typings/|poetry\.lock|flake\.lock).*$'
+        args: [--tab-width=2, --print-width=120] # Align with .editorconfig
 
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: v0.24.1
@@ -31,15 +42,15 @@ repos:
     # 3. Main Linter (with auto-fix)
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version should match the one in pyproject.toml
-    rev: v0.11.12 # Use the same Ruff version tag as formatter
+    rev: v0.11.13 # Use the same Ruff version tag as formatter
     hooks:
-      - id: ruff
+      - id: ruff-check
         args: [--fix]
 
     # 4. Main Formatter (after linting/fixing)
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version should match the one in pyproject.toml
-    rev: v0.11.12
+    rev: v0.11.13
     hooks:
       - id: ruff-format
 
@@ -51,10 +62,10 @@ repos:
   #  hooks:
   #    - id: poetry-check
 
-    # 6. Security Check
+  # 6. Security Check
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.27.0 # Use the latest tag from the repo
     hooks:
       - id: gitleaks
 
-exclude: '(^\.archive|/typings)/'
+exclude: '^(\.archive/|.*typings/|node_modules/|\.venv/).*$'
