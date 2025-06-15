@@ -306,7 +306,7 @@ jobs:
             echo "🔧 Auto-fixing JSON formatting issues..."
             npx prettier --write \
               --tab-width 2 \
-              --print-width 100 \
+              --print-width 80 \
               --end-of-line lf \
               "**/*.json" \
               --ignore-path <(echo -e ".venv/\n.archive/\nnode_modules/\ntypings/\npoetry.lock")
@@ -314,7 +314,7 @@ jobs:
             echo "⚠️ Fork detected - checking only (no auto-fix)"
             npx prettier --check \
               --tab-width 2 \
-              --print-width 100 \
+              --print-width 80 \
               --end-of-line lf \
               "**/*.json" \
               --ignore-path <(echo -e ".venv/\n.archive/\nnode_modules/\ntypings/\npoetry.lock")
