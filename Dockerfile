@@ -164,6 +164,7 @@ COPY pyproject.toml poetry.lock ./
 # Install Python dependencies using Poetry
 # PERFORMANCE: Cache mount speeds up subsequent builds
 # SECURITY: --only main excludes development dependencies from production
+# NOTE: Install dependencies only first, package itself will be installed later with git context
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
     --mount=type=cache,target=/root/.cache/pip \
     poetry install --only main --no-root --no-directory
@@ -187,13 +188,18 @@ COPY tux/ ./tux/
 # These include metadata and licensing information
 COPY README.md LICENSE pyproject.toml ./
 
+# Copy git metadata for proper version detection
+# Poetry dynamic versioning needs git history to determine version
+COPY .git ./.git
+
+# Generate version file from git before cleanup
+RUN git describe --tags --always --dirty 2>/dev/null | sed 's/^v//' > /app/VERSION || echo "unknown" > /app/VERSION && \
+    echo "Building version: $(cat /app/VERSION)"
+
 # Install the application and generate Prisma client
 # COMPLEXITY: This step requires multiple operations that must be done together
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
     --mount=type=cache,target=/root/.cache \
-    # Initialize minimal git repository for Poetry dynamic versioning
-    # Poetry requires git for version detection from tags/commits
-    git init --quiet . && \
     # Install the application package itself
     poetry install --only main && \
     # Clean up git repository (not needed in final image)
@@ -242,20 +248,11 @@ RUN set -eux; \
 # SECURITY: Follows principle of least privilege
 USER nonroot
 
-# Configure Git and install development dependencies
+# Install development dependencies and setup Prisma
 # DEVELOPMENT: These tools are needed for linting, testing, and development workflow
-RUN git init --quiet . && \
-    # Allow git operations in the app directory (required for Poetry)
-    git config --global --add safe.directory /app && \
-    # Install development dependencies (linters, formatters, test tools, etc.)
-    # NOTE: Cache mount removed due to network connectivity issues with Poetry
-    poetry install --only dev --no-root --no-directory && \
-    # Fetch Prisma binaries for the current platform (as nonroot user)
+RUN poetry install --only dev --no-root --no-directory && \
     poetry run prisma py fetch && \
-    # Generate Prisma client code based on schema (as nonroot user)
-    poetry run prisma generate && \
-    # Clean up git repository
-    rm -rf .git
+    poetry run prisma generate
 
 # Development container startup command
 # WORKFLOW: Regenerates Prisma client and starts the bot in development mode
@@ -345,6 +342,7 @@ COPY --from=build --chown=nonroot:nonroot /app/tux /app/tux
 COPY --from=build --chown=nonroot:nonroot /app/prisma /app/prisma
 COPY --from=build --chown=nonroot:nonroot /app/config /app/config
 COPY --from=build --chown=nonroot:nonroot /app/pyproject.toml /app/pyproject.toml
+COPY --from=build --chown=nonroot:nonroot /app/VERSION /app/VERSION
 
 # Create convenient symlinks for Python and application binaries
 # USABILITY: Allows running 'python' and 'tux' commands without full paths
