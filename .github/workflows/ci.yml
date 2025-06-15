@@ -339,7 +339,7 @@ jobs:
               --print-width 120 \
               --end-of-line lf \
               "**/*.{yml,yaml}" \
-              --ignore-path <(echo -e ".venv/\n.archive/\nnode_modules/\ntypings/\npoetry.lock\nflake.lock")
+              --ignore-path <(echo -e ".venv/\\n.archive/\\nnode_modules/\\ntypings/\\npoetry.lock\\nflake.lock")
           else
             echo "⚠️ Fork detected - checking only (no auto-fix)"
             npx prettier --check \
@@ -347,7 +347,7 @@ jobs:
               --print-width 120 \
               --end-of-line lf \
               "**/*.{yml,yaml}" \
-              --ignore-path <(echo -e ".venv/\n.archive/\nnode_modules/\ntypings/\npoetry.lock\nflake.lock")
+              --ignore-path <(echo -e ".venv/\\n.archive/\\nnode_modules/\\ntypings/\\npoetry.lock\\nflake.lock")
           fi
 
       - name: Run JSON linting with inline config
@@ -361,7 +361,7 @@ jobs:
               --print-width 80 \
               --end-of-line lf \
               "**/*.json" \
-              --ignore-path <(echo -e ".venv/\n.archive/\nnode_modules/\ntypings/\npoetry.lock")
+              --ignore-path <(echo -e ".venv/\\n.archive/\\nnode_modules/\\ntypings/\\npoetry.lock")
           else
             echo "⚠️ Fork detected - checking only (no auto-fix)"
             npx prettier --check \
@@ -369,7 +369,7 @@ jobs:
               --print-width 80 \
               --end-of-line lf \
               "**/*.json" \
-              --ignore-path <(echo -e ".venv/\n.archive/\nnode_modules/\ntypings/\npoetry.lock")
+              --ignore-path <(echo -e ".venv/\\n.archive/\\nnode_modules/\\ntypings/\\npoetry.lock")
           fi
 
       - name: Run Markdown linting with inline config
