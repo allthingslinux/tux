@@ -76,6 +76,12 @@ pyright = ">=1.1.358"
 ruff = ">=0.8.0"
 poetry-types = "^0.6.0"
 
+[tool.poetry.group.test.dependencies]
+pytest = "^8.0.0"
+pytest-asyncio = "^0.24.0"
+pytest-mock = "^3.14.0"
+pytest-cov = "^6.0.0"
+
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.30"
 mkdocstrings-python = "^1.14.3"
@@ -105,8 +111,9 @@ types-aiofiles = "^24.1.0.20250326"
 types-influxdb-client = "^1.45.0.20241221"
 types-jinja2 = "^2.11.9"
 
+
 [tool.ruff]
-exclude = [".venv", "examples", "tests", ".archive", "typings/**"]
+exclude = [".venv", "examples", ".archive", "typings/**"]
 indent-width = 4
 line-length = 120
 target-version = "py313"
@@ -116,31 +123,31 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 fixable = ["ALL"]
 ignore = ["E501", "N814", "PLR0913", "PLR2004"]
 select = [
-  "I",     # isort
-  "E",     # pycodestyle-error
-  "F",     # pyflakes
-  "PERF",  # perflint
-  "N",     # pep8-naming
-  "TRY",   # tryceratops
-  "UP",    # pyupgrade
-  "FURB",  # refurb
-  "PL",    # pylint
-  "B",     # flake8-bugbear
-  "SIM",   # flake8-simplify
-  "ASYNC", # flake8-async
-  "A",     # flake8-builtins
-  "C4",    # flake8-comprehensions
-  "DTZ",   # flake8-datetimez
-  "EM",    # flake8-errmsg
-  "PIE",   # flake8-pie
-  "T20",   # flake8-print
-  "Q",     # flake8-quotes
-  "RET",   # flake8-return
-  "PTH",   # flake8-use-pathlib
-  "INP",   # flake8-no-pep420
-  "RSE",   # flake8-raise
-  "ICN",   # flake8-import-conventions
-  "RUF",   # ruff
+    "I",     # isort
+    "E",     # pycodestyle-error
+    "F",     # pyflakes
+    "PERF",  # perflint
+    "N",     # pep8-naming
+    "TRY",   # tryceratops
+    "UP",    # pyupgrade
+    "FURB",  # refurb
+    "PL",    # pylint
+    "B",     # flake8-bugbear
+    "SIM",   # flake8-simplify
+    "ASYNC", # flake8-async
+    "A",     # flake8-builtins
+    "C4",    # flake8-comprehensions
+    "DTZ",   # flake8-datetimez
+    "EM",    # flake8-errmsg
+    "PIE",   # flake8-pie
+    "T20",   # flake8-print
+    "Q",     # flake8-quotes
+    "RET",   # flake8-return
+    "PTH",   # flake8-use-pathlib
+    "INP",   # flake8-no-pep420
+    "RSE",   # flake8-raise
+    "ICN",   # flake8-import-conventions
+    "RUF",   # ruff
 ]
 unfixable = []
 
@@ -155,16 +162,9 @@ skip-magic-trailing-comma = false
 [tool.pyright]
 defineConstant = { DEBUG = true }
 enableReachabilityAnalysis = true
-exclude = [
-  "__pypackages__",
-  "_build",
-  "examples",
-  "tests",
-  ".archive",
-  "typings/**",
-]
+exclude = ["__pypackages__", "_build", "examples", ".archive", "typings/**"]
 ignore = [".venv"]
-include = ["tux"]
+include = ["tux", "tests"]
 stubPath = "typings"
 pythonPlatform = "Linux"
 pythonVersion = "3.13"
@@ -175,3 +175,47 @@ strictSetInference = true
 typeCheckingMode = "strict"
 venv = ".venv"
 venvPath = "."
+
+[tool.coverage.run]
+source = ["tux"]
+branch = true
+parallel = true
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/migrations/*",
+    "*/venv/*",
+    "*/.venv/*",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "@abstract",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--cov=tux",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-branch",
+    "--cov-fail-under=80",
+    "-v",
+]
+asyncio_mode = "auto"
