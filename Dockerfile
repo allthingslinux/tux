@@ -156,6 +156,10 @@ RUN --mount=type=cache,target=/root/.cache \
 # Set working directory for all subsequent operations
 WORKDIR /app
 
+# Set shell to bash with pipefail for proper error handling in pipes
+# This must be set before any RUN commands that use pipes
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Copy dependency files first for optimal Docker layer caching
 # Changes to these files will invalidate subsequent layers
 # OPTIMIZATION: This pattern maximizes cache hits during development
@@ -214,9 +218,6 @@ RUN set -eux; \
         echo "unknown" > /app/VERSION; \
     fi; \
     echo "Building version: $(cat /app/VERSION)"
-
-# Set shell to bash with pipefail for proper error handling in pipes
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install the application and generate Prisma client
 # COMPLEXITY: This step requires multiple operations that must be done together
