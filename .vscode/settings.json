@@ -2,16 +2,14 @@
   "files.eol": "\n",
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
-  "ruff.lint.enable": true,
-  "ruff.codeAction.fixViolation": {
-    "enable": true
-  },
-  "ruff.fixAll": true,
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "charliermarsh.ruff",
-  "editor.codeActionsOnSave": {
-    "source.organizeImports.ruff": "always",
-    "source.fixAll": "always"
+  "editor.inlayHints.enabled": "offUnlessPressed",
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    }
   },
   "python.languageServer": "Pylance",
   "python.analysis.typeCheckingMode": "strict",
@@ -22,6 +20,11 @@
   "python.analysis.inlayHints.variableTypes": true,
   "python.analysis.inlayHints.callArgumentNames": "all",
   "python.terminal.activateEnvInCurrentTerminal": true,
+  "python.analysis.exclude": [".archive/**", "build/**"],
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportIncompatibleMethodOverride": "none",
+    "reportGeneralTypeIssues": "information"
+  },
   "files.exclude": {
     "**/__pycache__": true,
     "**/*.pyc": true,
@@ -31,27 +34,22 @@
     ".archive/**": true,
     "build/**": true
   },
-  "python.analysis.exclude": [".archive/**", "build/**"],
-  "python.analysis.diagnosticSeverityOverrides": {
-    "reportIncompatibleMethodOverride": "none",
-    "reportGeneralTypeIssues": "information"
-  },
   "git.autofetch": true,
-  "editor.inlayHints.enabled": "offUnlessPressed",
+  "git.autofetchPeriod": 180,
+  "git.pruneOnFetch": true,
+  "git.showProgress": true,
+  "git.fetchOnPull": true,
   "[yaml]": {
     "editor.defaultFormatter": "redhat.vscode-yaml"
-  },
-  "yaml.schemas": {
-    "https://squidfunk.github.io/mkdocs-material/schema.json": "mkdocs.yml"
   },
   "[markdown]": {
     "files.trimTrailingWhitespace": false,
     "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
   },
-  "[dockerfile]": {
-    "editor.defaultFormatter": "ms-azuretools.vscode-docker"
-  },
   "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "yaml.schemas": {
+    "https://squidfunk.github.io/mkdocs-material/schema.json": "mkdocs.yml"
   }
 }

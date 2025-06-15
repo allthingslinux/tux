@@ -20,7 +20,7 @@ jobs:
         with:
           ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
           fetch-depth: 0
-          
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -59,8 +59,6 @@ jobs:
       - name: Remove old images
         uses: actions/delete-package-versions@v5
         with:
-          package-name: 'tux'
-          package-type: 'container'
+          package-name: "tux"
+          package-type: "container"
           min-versions-to-keep: 10
-
-      
