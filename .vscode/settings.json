@@ -1,4 +1,7 @@
 {
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
   "ruff.lint.enable": true,
   "ruff.codeAction.fixViolation": {
     "enable": true
@@ -28,10 +31,7 @@
     ".archive/**": true,
     "build/**": true
   },
-  "python.analysis.exclude": [
-    ".archive/**",
-    "build/**"
-  ],
+  "python.analysis.exclude": [".archive/**", "build/**"],
   "python.analysis.diagnosticSeverityOverrides": {
     "reportIncompatibleMethodOverride": "none",
     "reportGeneralTypeIssues": "information"
@@ -45,6 +45,7 @@
     "https://squidfunk.github.io/mkdocs-material/schema.json": "mkdocs.yml"
   },
   "[markdown]": {
+    "files.trimTrailingWhitespace": false,
     "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
   },
   "[dockerfile]": {
