@@ -1,64 +1,6 @@
 # ==============================================================================
-# TUX DISCORD BOT - DEVELOPMENT DOCKER COMPOSE
-# ==============================================================================
-#
-# This Docker Compose file defines the development environment configuration for
-# the Tux Discord Bot. It is optimized for rapid development, debugging, and
-# testing with features like live code reloading and development tools.
-#
-# ENVIRONMENT:
-# ------------
-# Target: Local development (developer workstations, CI/CD)
-# Purpose: Fast iteration, debugging, testing, and development workflow
-# Features: Live reload, development tools, higher resource limits
-#
-# USAGE:
-# ------
-# RECOMMENDED (using tux CLI):
-#   poetry run tux --dev docker up           # Start development environment
-#   poetry run tux --dev docker up -d        # Start in background
-#   poetry run tux --dev docker logs -f      # View logs
-#   poetry run tux --dev docker exec tux bash # Execute commands in container
-#   poetry run tux --dev docker up --build   # Rebuild and restart
-#   poetry run tux --dev docker down         # Stop development environment
-#
-# ALTERNATIVE (direct docker-compose):
-#   docker-compose -f docker-compose.dev.yml up           # Start development environment
-#   docker-compose -f docker-compose.dev.yml up -d        # Start in background
-#   docker-compose -f docker-compose.dev.yml logs -f tux  # View logs
-#   docker-compose -f docker-compose.dev.yml exec tux bash # Execute commands in container
-#   docker-compose -f docker-compose.dev.yml up --build   # Rebuild and restart
-#   docker-compose -f docker-compose.dev.yml down         # Stop development environment
-#
-# DEVELOPMENT FEATURES:
-# ---------------------
-# - Live code synchronization with Docker BuildKit watch
-# - Automatic rebuilds on dependency changes
-# - Development tools and debugging utilities
-# - Higher resource limits for development workloads
-# - Separate volumes to avoid conflicts with production
-#
-# WORKFLOW OPTIMIZATION:
-# ----------------------
-# - File watching for instant code updates
-# - Intelligent rebuild triggers for dependency changes
-# - Optimized ignore patterns for better performance
-# - Separate development volumes for isolation
-#
-# DEBUGGING FEATURES:
-# -------------------
-# - Development container with debugging tools
-# - Easy shell access for troubleshooting
-# - Comprehensive logging for development insights
-# - No security restrictions that impede debugging
-#
-# ==============================================================================
-
----
-# ==============================================================================
 # SERVICES CONFIGURATION - DEVELOPMENT ENVIRONMENT
 # ==============================================================================
-
 services:
   # ============================================================================
   # TUX BOT SERVICE - Development Container
@@ -67,7 +9,6 @@ services:
   # Features: Code synchronization, automatic rebuilds, development tools
   # Performance: Higher resource limits for development workloads
   # ============================================================================
-
   tux:
     # CONTAINER IDENTIFICATION
     # Development-specific name to avoid conflicts with production containers
@@ -93,7 +34,10 @@ services:
     # DEVELOPMENT OVERRIDE COMMAND
     # Skip prisma generate in CMD to avoid read-only filesystem issues
     # Can be run manually after container starts
-    command: ["sh", "-c", "exec poetry run tux --dev start"]
+    command:
+      - sh
+      - -c
+      - exec poetry run tux --dev start
 
     # DEVELOPMENT WORKFLOW CONFIGURATION
     # Docker BuildKit watch feature for live development
@@ -126,14 +70,14 @@ services:
             # Editor configurations (not needed in container)
             - .vscode/
             # Python cache files (regenerated automatically)
-            - "**/__pycache__/"
-            - "**/*.pyc"
+            - '**/__pycache__/'
+            - '**/*.pyc'
             # Log files (not needed in sync)
-            - "*.log"
+            - '*.log'
             # Editor temporary files
-            - "*.swp"
-            - ".*.swp"
-            - "*~"
+            - '*.swp'
+            - .*.swp
+            - '*~'
 
         # DEPENDENCY REBUILD TRIGGERS
         # Files that require full container rebuild when changed
@@ -174,7 +118,8 @@ services:
     # Environment variables loaded from .env file
     # Same as production but may contain different values for development
     # DEVELOPMENT: May include debug flags, development database URLs, etc.
-    env_file: [".env"]
+    env_file:
+      - .env
 
     # RESTART POLICY
     # Automatic restart for development convenience
@@ -189,27 +134,26 @@ services:
         # RESOURCE LIMITS (Development)
         # Higher limits to accommodate development tools and processes
         limits:
-          memory: 1g # Maximum 1GB RAM (double production)
-          cpus: "1.0" # Maximum 1 full CPU core (double production)
+          memory: 1g  # Maximum 1GB RAM (double production)
+          cpus: '1.0'  # Maximum 1 full CPU core (double production)
 
         # RESOURCE RESERVATIONS (Development)
         # Higher reservations for better development performance
         reservations:
-          memory: 512m # Guaranteed 512MB RAM (double production)
-          cpus: "0.5" # Guaranteed 0.5 CPU cores (double production)
+          memory: 512m  # Guaranteed 512MB RAM (double production)
+          cpus: '0.5'  # Guaranteed 0.5 CPU cores (double production)
 
     # LOGGING CONFIGURATION
     # Same logging setup as production for consistency
     # Helps developers understand production logging behavior
     logging:
       # JSON structured logging for development log analysis
-      driver: "json-file"
+      driver: json-file
 
       # Log rotation to prevent development disk space issues
       options:
-        max-size: "10m" # Rotate logs when they reach 10MB
-        max-file: "3" # Keep maximum 3 rotated log files
-
+        max-size: 10m  # Rotate logs when they reach 10MB
+        max-file: '3'  # Keep maximum 3 rotated log files
 # ==============================================================================
 # VOLUMES CONFIGURATION - DEVELOPMENT ENVIRONMENT
 # ==============================================================================
@@ -217,7 +161,6 @@ services:
 # These volumes are isolated from production and can be safely removed
 # for clean development environment resets
 # ==============================================================================
-
 volumes:
   # DEVELOPMENT CACHE VOLUME
   # Stores development-specific cache data
@@ -225,7 +168,7 @@ volumes:
   # Isolation: Completely separate from production cache
   # Lifecycle: Can be reset anytime for clean development environment
   tux_dev_cache:
-    driver: local # Local Docker volume driver (default)
+    driver: local  # Local Docker volume driver (default)
 
   # DEVELOPMENT TEMPORARY VOLUME
   # Stores development temporary files and artifacts
@@ -233,7 +176,7 @@ volumes:
   # Isolation: Separate from production temporary data
   # Lifecycle: Safe to clear for clean development state
   tux_dev_temp:
-    driver: local # Local Docker volume driver (default)
+    driver: local  # Local Docker volume driver (default)
 
   # DEVELOPMENT USER HOME VOLUME
   # Stores all user cache and config directories
@@ -241,8 +184,7 @@ volumes:
   # Isolation: Separate from production user data
   # Lifecycle: Persistent to avoid re-downloading tools and cache
   tux_dev_user_home:
-    driver: local # Local Docker volume driver (default)
-
+    driver: local  # Local Docker volume driver (default)
 # ==============================================================================
 # DEVELOPMENT WORKFLOW BEST PRACTICES IMPLEMENTED
 # ==============================================================================

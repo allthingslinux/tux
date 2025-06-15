@@ -1,31 +1,28 @@
-name: "CI"
-
+name: CI
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
 jobs:
   # Python linting (runs only if Python files changed)
   python:
-    name: "Python"
+    name: Python
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Check for Python changes
         uses: tj-actions/changed-files@v45.0.8
         id: python_changes
@@ -34,51 +31,42 @@ jobs:
             **/*.py
             pyproject.toml
             poetry.lock
-
       - name: Skip if no Python changes
-        if: steps.python_changes.outputs.any_changed != 'true' && github.event_name != 'workflow_dispatch'
+        if: steps.python_changes.outputs.any_changed != 'true' && github.event_name
+          != 'workflow_dispatch'
         run: |
           echo "No Python files changed, skipping Python quality checks"
           echo "To force run checks, use workflow_dispatch trigger"
           exit 0
-
       - name: Install Poetry
         run: pipx install poetry
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
-          cache: "poetry"
-
+          python-version: '3.13'
+          cache: poetry
       - name: Install dependencies
         run: poetry install --with=dev,types --no-interaction --no-ansi
-
       - name: Generate Prisma client
         run: poetry run prisma generate
-
       - name: Run Ruff formatter check
         run: poetry run ruff format --check
-
       - name: Run Ruff linter
         run: poetry run ruff check
-
       - name: Run Pyright type checker
         uses: jakebailey/pyright-action@v2
         with:
-          annotate: "errors"
+          annotate: errors
 
   # Test suite
   test:
-    name: "Tests"
+    name: Tests
     runs-on: ubuntu-latest
     permissions:
       contents: read
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-
       - name: Check for Python changes
         uses: tj-actions/changed-files@v45.0.8
         id: python_changes
@@ -89,29 +77,24 @@ jobs:
             poetry.lock
             tests/**
             conftest.py
-
       - name: Skip if no Python/test changes
-        if: steps.python_changes.outputs.any_changed != 'true' && github.event_name != 'workflow_dispatch'
+        if: steps.python_changes.outputs.any_changed != 'true' && github.event_name
+          != 'workflow_dispatch'
         run: |
           echo "No Python or test files changed, skipping tests"
           echo "To force run tests, use workflow_dispatch trigger"
           exit 0
-
       - name: Install Poetry
         run: pipx install poetry
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
-          cache: "poetry"
-
+          python-version: '3.13'
+          cache: poetry
       - name: Install dependencies
         run: poetry install --with=dev,test,types --no-interaction --no-ansi
-
       - name: Generate Prisma client
         run: poetry run prisma generate
-
       - name: Create test environment file
         run: |
           cat > .env << EOF
@@ -120,13 +103,11 @@ jobs:
           DEV_BOT_TOKEN=test_token_for_ci
           PROD_BOT_TOKEN=test_token_for_ci
           EOF
-
       - name: Run unit tests with coverage
         run: |
           echo "Running unit tests with coverage..."
           poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-unit.xml --cov-report=term-missing -m "not slow and not docker" --junitxml=junit-unit.xml -o junit_family=legacy --cov-fail-under=0
           echo "Unit test coverage generation completed"
-
       - name: Debug coverage file before upload
         if: always()
         run: |
@@ -142,7 +123,6 @@ jobs:
           echo "Event: ${{ github.event_name }}"
           echo "Head repo: ${{ github.event.pull_request.head.repo.full_name }}"
           echo "Base repo: ${{ github.repository }}"
-
       - name: Upload unit test coverage to Codecov
         uses: codecov/codecov-action@v5
         if: hashFiles('./coverage-unit.xml') != ''
@@ -155,7 +135,6 @@ jobs:
           fail_ci_if_error: false
           verbose: true
           disable_search: true
-
       - name: Upload unit test results to Codecov
         if: ${{ !cancelled() }}
         uses: codecov/test-results-action@v1
@@ -179,10 +158,12 @@ jobs:
       # Run database-specific tests with dedicated flag (only if tests exist)
       - name: Run database tests with coverage
         if: steps.check_db_tests.outputs.has_tests == 'true'
-        run: poetry run pytest tests/tux/database/ -v --cov=tux/database --cov-branch --cov-report=xml:coverage-database.xml --junitxml=junit-database.xml -o junit_family=legacy --cov-fail-under=0
-
+        run: poetry run pytest tests/tux/database/ -v --cov=tux/database --cov-branch
+          --cov-report=xml:coverage-database.xml --junitxml=junit-database.xml -o
+          junit_family=legacy --cov-fail-under=0
       - name: Upload database test coverage to Codecov
-        if: steps.check_db_tests.outputs.has_tests == 'true' && hashFiles('./coverage-database.xml') != ''
+        if: steps.check_db_tests.outputs.has_tests == 'true' && hashFiles('./coverage-database.xml')
+          != ''
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage-database.xml
@@ -193,7 +174,6 @@ jobs:
           fail_ci_if_error: false
           verbose: true
           disable_search: true
-
       - name: Upload database test results to Codecov
         if: steps.check_db_tests.outputs.has_tests == 'true' && !cancelled()
         uses: codecov/test-results-action@v1
@@ -222,14 +202,14 @@ jobs:
           rm -f coverage-unit.xml coverage-database.xml || true
           echo "Current coverage files:"
           ls -la coverage-*.xml 2>/dev/null || echo "No coverage files found"
-
       - name: Run integration tests with coverage
         if: steps.check_integration_tests.outputs.has_tests == 'true'
-        run: poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-integration.xml -m "slow" --junitxml=junit-integration.xml -o junit_family=legacy --cov-fail-under=0
-        continue-on-error: true # Don't fail CI if integration tests fail
-
+        run: poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-integration.xml
+          -m "slow" --junitxml=junit-integration.xml -o junit_family=legacy --cov-fail-under=0
+        continue-on-error: true  # Don't fail CI if integration tests fail
       - name: Upload integration test coverage to Codecov
-        if: steps.check_integration_tests.outputs.has_tests == 'true' && hashFiles('./coverage-integration.xml') != ''
+        if: steps.check_integration_tests.outputs.has_tests == 'true' && hashFiles('./coverage-integration.xml')
+          != ''
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage-integration.xml
@@ -240,7 +220,6 @@ jobs:
           fail_ci_if_error: false
           verbose: true
           disable_search: true
-
       - name: Upload integration test results to Codecov
         if: steps.check_integration_tests.outputs.has_tests == 'true' && !cancelled()
         uses: codecov/test-results-action@v1
@@ -251,7 +230,7 @@ jobs:
 
   # Matrix strategy for file linting with inline configs
   lint:
-    name: "Lint (${{ matrix.type }})"
+    name: Lint (${{ matrix.type }})
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -260,49 +239,42 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - type: "YAML"
-            files: "**/*.yml,**/*.yaml"
-          - type: "JSON"
-            files: "**/*.json"
-          - type: "Markdown"
-            files: "**/*.md"
-
+          - type: YAML
+            files: '**/*.yml,**/*.yaml'
+          - type: JSON
+            files: '**/*.json'
+          - type: Markdown
+            files: '**/*.md'
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-
       - name: Check for ${{ matrix.type }} changes
         uses: tj-actions/changed-files@v45.0.8
         id: file_changes
         with:
           files: ${{ matrix.files }}
-
       - name: Skip if no ${{ matrix.type }} changes
         if: steps.file_changes.outputs.any_changed != 'true'
         run: |
           echo "No ${{ matrix.type }} files changed, skipping ${{ matrix.type }} linting"
           exit 0
-
       - name: Skip formatting checks for pushes to main (protected branch)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           echo "ℹ️ Skipping ${{ matrix.type }} formatting checks for push to protected main branch"
           echo "Formatting should have been handled in the PR before merge"
           exit 0
-
       - name: Setup Node.js
         if: matrix.type != 'YAML'
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-
+          node-version: '20'
       - name: Setup Python (with cache)
         if: matrix.type == 'YAML'
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-          cache: "pip"
-
+          python-version: '3.11'
+          cache: pip
       - name: Install linting tools
         run: |
           if [ "${{ matrix.type }}" = "YAML" ]; then
@@ -313,33 +285,15 @@ jobs:
           elif [ "${{ matrix.type }}" = "Markdown" ]; then
             npm install -g markdownlint-cli
           fi
-
-      - name: Run YAML linting with inline config
+      - name: Run YAML linting with project config
         if: matrix.type == 'YAML'
         run: |
-          # Create inline yamllint config
-          cat > /tmp/yamllint.yml << 'EOF'
-          extends: default
-          rules:
-            line-length:
-              max: 120
-              level: warning
-            document-start: disable
-            truthy:
-              allowed-values: ['true', 'false', 'yes', 'no', 'on', 'off']
-          ignore: |
-            .venv/
-            .archive/
-            node_modules/
-            typings/
-          EOF
-
-          # Run yamllint with inline config
-          yamllint --config-file /tmp/yamllint.yml .
+          # Run yamllint with project .yamllint.yml config
+          yamllint --config-file .yamllint.yml .
 
           # Run prettier with inline config
           # Only auto-fix on PRs from same repo (not forks or protected main branch)
-          # shellcheck disable=SC2086 # GitHub Actions template variables are pre-substituted
+          # shellcheck disable=SC2086  # GitHub Actions template variables are pre-substituted
           if [[ "${{ github.event_name }}" == "pull_request" ]] && [[ "${{ github.event.pull_request.head.repo.full_name }}" == "${{ github.repository }}" ]]; then
             echo "🔧 Auto-fixing YAML formatting issues..."
             npx prettier --write \
@@ -357,12 +311,11 @@ jobs:
               "**/*.{yml,yaml}" \
               --ignore-path <(echo -e ".venv/\\n.archive/\\nnode_modules/\\ntypings/\\npoetry.lock\\nflake.lock")
           fi
-
       - name: Run JSON linting with inline config
         if: matrix.type == 'JSON'
         run: |
           # Only auto-fix on PRs from same repo (not forks or protected main branch)
-          # shellcheck disable=SC2086 # GitHub Actions template variables are pre-substituted
+          # shellcheck disable=SC2086  # GitHub Actions template variables are pre-substituted
           if [[ "${{ github.event_name }}" == "pull_request" ]] && [[ "${{ github.event.pull_request.head.repo.full_name }}" == "${{ github.repository }}" ]]; then
             echo "🔧 Auto-fixing JSON formatting issues..."
             npx prettier --write \
@@ -380,7 +333,6 @@ jobs:
               "**/*.json" \
               --ignore-path <(echo -e ".venv/\\n.archive/\\nnode_modules/\\ntypings/\\npoetry.lock")
           fi
-
       - name: Run Markdown linting with inline config
         if: matrix.type == 'Markdown'
         run: |
@@ -391,9 +343,10 @@ jobs:
             --ignore .venv \
             --ignore .archive \
             "**/*.md"
-
       - name: Commit formatting fixes
-        if: steps.file_changes.outputs.any_changed == 'true' && (matrix.type == 'JSON' || matrix.type == 'YAML') && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        if: steps.file_changes.outputs.any_changed == 'true' && (matrix.type == 'JSON'
+          || matrix.type == 'YAML') && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name
+          == github.repository
         run: |
           # Configure Git
           git config --local user.email "action@github.com"
@@ -411,7 +364,7 @@ jobs:
 
   # Infrastructure linting
   infrastructure:
-    name: "Infrastructure (${{ matrix.type }})"
+    name: Infrastructure (${{ matrix.type }})
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -419,29 +372,25 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - type: "Docker"
-            files: "Dockerfile*,docker-compose*.yml"
-          - type: "GitHub Actions"
-            files: ".github/workflows/**"
-          - type: "Shell Scripts"
-            files: "**/*.sh,**/*.bash,scripts/**"
-
+          - type: Docker
+            files: Dockerfile*,docker-compose*.yml
+          - type: GitHub Actions
+            files: .github/workflows/**
+          - type: Shell Scripts
+            files: '**/*.sh,**/*.bash,scripts/**'
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-
       - name: Check for ${{ matrix.type }} changes
         uses: tj-actions/changed-files@v45.0.8
         id: infra_changes
         with:
           files: ${{ matrix.files }}
-
       - name: Skip if no ${{ matrix.type }} changes
         if: steps.infra_changes.outputs.any_changed != 'true'
         run: |
           echo "No ${{ matrix.type }} files changed, skipping ${{ matrix.type }} linting"
           exit 0
-
       - name: Set up Docker Compose v2
         if: matrix.type == 'Docker'
         run: |
@@ -449,7 +398,6 @@ jobs:
           # Just verify it's available and supports the develop configuration
           docker compose version
           echo "✅ Docker Compose v2 is available"
-
       - name: Create .env file for Docker Compose validation
         if: matrix.type == 'Docker'
         run: |
@@ -460,7 +408,6 @@ jobs:
           DEV_BOT_TOKEN=test_token_for_ci_validation
           PROD_BOT_TOKEN=test_token_for_ci_validation
           EOF
-
       - name: Run Docker linting
         if: matrix.type == 'Docker'
         run: |
@@ -484,15 +431,13 @@ jobs:
             echo "Neither docker compose nor docker-compose found"
             exit 1
           fi
-
       - name: Run GitHub Actions linting
         if: matrix.type == 'GitHub Actions'
         uses: raven-actions/actionlint@v1
         with:
-          files: ".github/workflows/*.yml"
-
+          files: .github/workflows/*.yml
       - name: Run Shell linting
         if: matrix.type == 'Shell Scripts'
         uses: ludeeus/action-shellcheck@master
         with:
-          scandir: "./scripts"
+          scandir: ./scripts

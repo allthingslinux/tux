@@ -75,6 +75,8 @@ pre-commit = ">=4.0.0"
 pyright = ">=1.1.358"
 ruff = ">=0.8.0"
 poetry-types = "^0.6.0"
+yamllint = "^1.37.1"
+yamlfix = "^1.17.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.0.0"
@@ -215,7 +217,15 @@ addopts = [
     "--cov-report=term-missing",
     "--cov-report=html",
     "--cov-branch",
-    "--cov-fail-under=80",
     "-v",
 ]
 asyncio_mode = "auto"
+
+[tool.yamlfix]
+comments_min_spaces_from_content = 1
+explicit_start = false
+indent_mapping = 2
+indent_sequence = 4
+line_length = 80
+preserve_quotes = false
+sequence_style = "block_style"

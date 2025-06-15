@@ -20,7 +20,10 @@
   "python.analysis.inlayHints.variableTypes": true,
   "python.analysis.inlayHints.callArgumentNames": "all",
   "python.terminal.activateEnvInCurrentTerminal": true,
-  "python.analysis.exclude": [".archive/**", "build/**"],
+  "python.analysis.exclude": [
+    ".archive/**",
+    "build/**"
+  ],
   "python.analysis.diagnosticSeverityOverrides": {
     "reportIncompatibleMethodOverride": "none",
     "reportGeneralTypeIssues": "information"
@@ -40,7 +43,11 @@
   "git.showProgress": true,
   "git.fetchOnPull": true,
   "[yaml]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml"
+    "editor.defaultFormatter": "redhat.vscode-yaml",
+    "editor.tabSize": 2,
+    "editor.formatOnType": false,
+    "editor.formatOnSave": false,
+    "editor.codeLens": true
   },
   "[markdown]": {
     "files.trimTrailingWhitespace": false,
@@ -49,14 +56,26 @@
   "markdownlint.config": {
     "extends": ".markdownlint.yaml"
   },
-  "markdownlint.ignore": [".yamlint", "*.yml", "*.yaml", "*.lock"],
-  "markdownlint.focusMode": false,
   "markdownlint.run": "onType",
   "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "vscode.json-language-features"
   },
-  "prettier.tabWidth": 2,
-  "prettier.printWidth": 80,
+  "yaml.format.enable": false,
+  "yaml.format.singleQuote": true,
+  "yaml.format.bracketSpacing": true,
+  "yaml.format.printWidth": 80,
+  "yaml.validate": true,
+  "yaml.hover": true,
+  "yaml.completion": true,
+  "yaml.schemaStore.enable": true,
+  "yaml.keyOrdering": false,
+  "yaml.style.flowMapping": "allow",
+  "yaml.style.flowSequence": "allow",
+  "yaml.yamlVersion": "1.2",
+  "yaml.maxItemsComputed": 5000,
+  "yaml.disableDefaultProperties": false,
+  "yaml.suggest.parentSkeletonSelectedFirst": false,
+  "yaml.extension.recommendations": true,
   "yaml.schemas": {
     "https://squidfunk.github.io/mkdocs-material/schema.json": "mkdocs.yml"
   }

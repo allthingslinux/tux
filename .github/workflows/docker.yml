@@ -1,26 +1,25 @@
-name: "Docker Build & Deploy"
-
+name: Docker Build & Deploy
 on:
   push:
-    branches: ["main"]
-    tags: ["v*"]
+    branches:
+      - main
+    tags:
+      - v*
   pull_request:
-    branches: ["main"]
+    branches:
+      - main
   workflow_dispatch:
   schedule:
-    - cron: "0 2 * * 0" # Weekly cleanup on Sundays
-
+    - cron: 0 2 * * 0  # Weekly cleanup on Sundays
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   # Enable Docker build features
   DOCKER_BUILD_SUMMARY: true
   DOCKER_BUILD_CHECKS_ANNOTATIONS: true
-
 jobs:
   # Fast validation for PRs (1-2 minutes with Git context)
   validate:
@@ -31,7 +30,6 @@ jobs:
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
       - name: Build for validation (Git context)
         uses: docker/build-push-action@v6.18.0
         timeout-minutes: 15
@@ -48,7 +46,6 @@ jobs:
           annotations: |
             org.opencontainers.image.title=Tux Discord Bot
             org.opencontainers.image.description=All Things Linux Discord Bot
-
       - name: Test container starts
         run: |
           # Quick smoke test - can we import the bot and basic checks?
@@ -70,31 +67,26 @@ jobs:
     outputs:
       image: ${{ steps.meta.outputs.tags }}
       digest: ${{ steps.build.outputs.digest }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
           platforms: linux/amd64,linux/arm64
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
           driver-opts: |
             image=moby/buildkit:buildx-stable-1
-
       - name: Log in to Container Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -113,7 +105,6 @@ jobs:
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.licenses=MIT
-
       - name: Build and push
         id: build
         uses: docker/build-push-action@v6.18.0
@@ -137,7 +128,6 @@ jobs:
           annotations: ${{ steps.meta.outputs.annotations }}
           build-args: |
             BUILDKIT_INLINE_CACHE=1
-
       - name: Test pushed image
         run: |
           # Test the actual pushed image
@@ -153,17 +143,15 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       security-events: write
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Get first image tag
         id: first_tag
-        run: echo "image=$(echo '${{ needs.build.outputs.image }}' | head -1)" >> "$GITHUB_OUTPUT"
-
+        run: echo "image=$(echo '${{ needs.build.outputs.image }}' | head -1)" >>
+          "$GITHUB_OUTPUT"
       - name: Cache Trivy
         uses: actions/cache@v4
         with:
@@ -171,42 +159,39 @@ jobs:
           key: cache-trivy-${{ github.run_id }}
           restore-keys: |
             cache-trivy-
-
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ steps.first_tag.outputs.image }}
-          format: "sarif"
-          output: "trivy-results.sarif"
-          severity: "CRITICAL,HIGH"
-
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: "trivy-results.sarif"
-
+          sarif_file: trivy-results.sarif
       - name: Fail on critical vulnerabilities (excluding known issues)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ steps.first_tag.outputs.image }}
-          format: "table"
-          severity: "CRITICAL"
-          exit-code: "1"
+          format: table
+          severity: CRITICAL
+          exit-code: '1'
           ignore-unfixed: true
           trivyignores: .trivyignore
 
   # Cleanup old images (runs weekly)
   cleanup:
-    if: github.event_name != 'pull_request' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    if: github.event_name != 'pull_request' && (github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     permissions:
       packages: write
-
     steps:
       - name: Delete old container versions
         uses: actions/delete-package-versions@v5
         with:
-          package-name: "tux"
-          package-type: "container"
+          package-name: tux
+          package-type: container
           min-versions-to-keep: 10
           delete-only-untagged-versions: false

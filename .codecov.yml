@@ -36,14 +36,12 @@
 # Company-specific examples: https://github.com/codecov/example-python
 #
 # ==============================================================================
-
 # ==============================================================================
 # GLOBAL COVERAGE CONFIGURATION
 # ==============================================================================
 # Purpose: Defines overall coverage behavior, precision, and display preferences
 # Impact: Affects all coverage calculations and visual representations
 # ==============================================================================
-
 coverage:
   # PRECISION AND DISPLAY SETTINGS
   # precision: Number of decimal places shown in coverage percentages (0-5)
@@ -51,7 +49,7 @@ coverage:
   # range: Color coding thresholds for visual coverage indicators (red...green)
   precision: 2
   round: down
-  range: "70...100"
+  range: 70...100
 
   # ==============================================================================
   # STATUS CHECKS CONFIGURATION
@@ -59,7 +57,6 @@ coverage:
   # Purpose: Controls PR status checks and blocking behavior
   # Impact: Determines which changes block merging and which are informational
   # ==============================================================================
-
   status:
     # GLOBAL STATUS RULES
     # Applied to all status checks unless overridden by specific configurations
@@ -75,9 +72,9 @@ coverage:
       # OVERALL PROJECT COVERAGE
       # Main coverage check that applies to all code changes
       default:
-        target: auto # Compare to base commit (progressive improvement)
-        threshold: 1% # Allow 1% coverage drop (accounts for refactoring)
-        informational: false # Block PRs if coverage drops significantly
+        target: auto  # Compare to base commit (progressive improvement)
+        threshold: 1%  # Allow 1% coverage drop (accounts for refactoring)
+        informational: false  # Block PRs if coverage drops significantly
 
       # ========================================================================
       # COMPONENT-SPECIFIC PROJECT COVERAGE
@@ -91,25 +88,28 @@ coverage:
       # High standards because failures here affect entire bot operation
       core:
         target: 80%
-        threshold: 2% # Stricter threshold for critical code
-        flags: [unit] # Covered by main unit test suite
+        threshold: 2%  # Stricter threshold for critical code
+        flags:         # Covered by main unit test suite
+          - unit
         paths:
-          - "tux/bot.py" # Main bot class and Discord client setup
-          - "tux/cog_loader.py" # Extension loading and management
-          - "tux/help.py" # Help system and command documentation
-          - "tux/main.py" # Application entry point
-          - "tux/app.py" # Application initialization
-        only_pulls: true # Only check on PRs to avoid noise on main
+          - tux/bot.py  # Main bot class and Discord client setup
+          - tux/cog_loader.py  # Extension loading and management
+          - tux/help.py  # Help system and command documentation
+          - tux/main.py  # Application entry point
+          - tux/app.py  # Application initialization
+        only_pulls: true  # Only check on PRs to avoid noise on main
 
       # DATABASE LAYER (Highest standards - 90% target)
       # All database operations, models, and data persistence logic
       # Highest standards due to data integrity and security implications
       database:
         target: 90%
-        threshold: 1% # Very strict threshold for data operations
-        flags: [unit, database] # Covered by both unit and database-specific tests
+        threshold: 1%  # Very strict threshold for data operations
+        flags:                   # Covered by both unit and database-specific tests
+          - unit
+          - database
         paths:
-          - "tux/database/**/*" # All database controllers, models, and utilities
+          - tux/database/**/*  # All database controllers, models, and utilities
         only_pulls: true
 
       # BOT COMMANDS AND FEATURES (High standards - 75% target)
@@ -118,9 +118,10 @@ coverage:
       cogs:
         target: 75%
         threshold: 2%
-        flags: [unit]
+        flags:
+          - unit
         paths:
-          - "tux/cogs/**/*" # All command cogs and Discord slash commands
+          - tux/cogs/**/*  # All command cogs and Discord slash commands
         only_pulls: true
 
       # UTILITIES AND HELPERS (Moderate standards - 70% target)
@@ -128,10 +129,11 @@ coverage:
       # Moderate standards as these are typically simpler, pure functions
       utils:
         target: 70%
-        threshold: 3% # More lenient for utility functions
-        flags: [unit]
+        threshold: 3%  # More lenient for utility functions
+        flags:
+          - unit
         paths:
-          - "tux/utils/**/*" # Configuration, helpers, constants, etc.
+          - tux/utils/**/*  # Configuration, helpers, constants, etc.
         only_pulls: true
 
       # CLI INTERFACE (Moderate standards - 65% target)
@@ -140,9 +142,10 @@ coverage:
       cli:
         target: 65%
         threshold: 3%
-        flags: [unit]
+        flags:
+          - unit
         paths:
-          - "tux/cli/**/*" # Development and management CLI tools
+          - tux/cli/**/*  # Development and management CLI tools
         only_pulls: true
 
       # EVENT AND ERROR HANDLING (High standards - 80% target)
@@ -151,9 +154,10 @@ coverage:
       handlers:
         target: 80%
         threshold: 2%
-        flags: [unit]
+        flags:
+          - unit
         paths:
-          - "tux/handlers/**/*" # Error handlers, event processors, activity handlers
+          - tux/handlers/**/*  # Error handlers, event processors, activity handlers
         only_pulls: true
 
       # USER INTERFACE COMPONENTS (Moderate standards - 70% target)
@@ -162,9 +166,10 @@ coverage:
       ui:
         target: 70%
         threshold: 3%
-        flags: [unit]
+        flags:
+          - unit
         paths:
-          - "tux/ui/**/*" # Discord embeds, buttons, modals, views
+          - tux/ui/**/*  # Discord embeds, buttons, modals, views
         only_pulls: true
 
       # EXTERNAL SERVICE WRAPPERS (Lower standards - 60% target)
@@ -172,10 +177,11 @@ coverage:
       # Lower standards because testing is limited by external service availability
       wrappers:
         target: 60%
-        threshold: 4% # Most lenient threshold due to external dependencies
-        flags: [unit]
+        threshold: 4%  # Most lenient threshold due to external dependencies
+        flags:
+          - unit
         paths:
-          - "tux/wrappers/**/*" # GitHub, XKCD, Godbolt, and other API wrappers
+          - tux/wrappers/**/*  # GitHub, XKCD, Godbolt, and other API wrappers
         only_pulls: true
 
     # ========================================================================
@@ -184,14 +190,13 @@ coverage:
     # Purpose: Ensures new code additions meet high quality standards
     # Impact: Prevents coverage regression from new development
     # ========================================================================
-
     patch:
       # DEFAULT PATCH COVERAGE
       # Applies to all new code unless overridden by component-specific rules
       default:
-        target: 85% # High standard for all new code
-        threshold: 5% # Allow some flexibility for complex implementations
-        only_pulls: true # Only apply to PR changes, not existing code
+        target: 85%  # High standard for all new code
+        threshold: 5%  # Allow some flexibility for complex implementations
+        only_pulls: true  # Only apply to PR changes, not existing code
 
       # CRITICAL COMPONENT PATCH COVERAGE
       # Stricter requirements for new code in critical areas
@@ -200,50 +205,51 @@ coverage:
       # New database code must be extremely well tested
       database-patch:
         target: 95%
-        threshold: 2% # Very strict for new database operations
-        flags: [database]
+        threshold: 2%  # Very strict for new database operations
+        flags:
+          - database
         paths:
-          - "tux/database/**/*"
+          - tux/database/**/*
 
       # CORE INFRASTRUCTURE PATCH COVERAGE (Very strict - 90% target)
       # New core bot functionality must be thoroughly tested
       core-patch:
         target: 90%
         threshold: 3%
-        flags: [unit]
+        flags:
+          - unit
         paths:
-          - "tux/bot.py"
-          - "tux/cog_loader.py"
-          - "tux/help.py"
+          - tux/bot.py
+          - tux/cog_loader.py
+          - tux/help.py
 
       # ERROR HANDLER PATCH COVERAGE (Very strict - 90% target)
       # New error handling code must be comprehensive
       handlers-patch:
         target: 90%
         threshold: 3%
-        flags: [unit]
+        flags:
+          - unit
         paths:
-          - "tux/handlers/**/*"
-
+          - tux/handlers/**/*
 # ==============================================================================
 # PULL REQUEST COMMENT CONFIGURATION
 # ==============================================================================
 # Purpose: Controls how Codecov comments appear on pull requests
 # Impact: Affects developer experience and coverage visibility
 # ==============================================================================
-
 comment:
   # COMMENT LAYOUT AND CONTENT
   # layout: Defines which sections appear in PR comments and their order
   # Options: header, diff, flags, components, files, footer, etc.
-  layout: "condensed_header, diff, flags, components, condensed_files, condensed_footer"
+  layout: condensed_header, diff, flags, components, condensed_files, condensed_footer
 
   # COMMENT BEHAVIOR SETTINGS
-  behavior: default # Update existing comments instead of creating new ones
-  require_changes: true # Only comment when coverage actually changes
-  require_base: false # Don't require base coverage (helps with first PRs)
-  require_head: true # Require head coverage to generate meaningful comments
-  hide_project_coverage: false # Show project-wide coverage changes
+  behavior: default  # Update existing comments instead of creating new ones
+  require_changes: true  # Only comment when coverage actually changes
+  require_base: false  # Don't require base coverage (helps with first PRs)
+  require_head: true  # Require head coverage to generate meaningful comments
+  hide_project_coverage: false  # Show project-wide coverage changes
 
   # TIMING CONFIGURATION
   # after_n_builds: How many coverage reports to wait for before commenting
@@ -255,72 +261,69 @@ comment:
   # show_carryforward_flags: Display which coverage data is carried over
   # Helps developers understand why certain components might show no change
   show_carryforward_flags: true
-
 # ==============================================================================
 # IGNORE PATTERNS
 # ==============================================================================
 # Purpose: Excludes files from coverage calculation that shouldn't be tested
 # Impact: Focuses coverage metrics on actual application code
 # ==============================================================================
-
 ignore:
   # TEST AND DEVELOPMENT FILES
   # Files that test the application or support development workflows
-  - "tests/**/*" # All test files (shouldn't test the tests)
-  - "conftest.py" # Pytest configuration and fixtures
+  - tests/**/*  # All test files (shouldn't test the tests)
+  - conftest.py  # Pytest configuration and fixtures
 
   # BUILD AND CACHE ARTIFACTS
   # Generated files and build artifacts that change frequently
-  - "**/__pycache__/**/*" # Python bytecode cache
-  - ".pytest_cache/**/*" # Pytest cache directory
-  - ".ruff_cache/**/*" # Ruff linter cache
-  - "htmlcov/**/*" # Coverage HTML reports
+  - '**/__pycache__/**/*'  # Python bytecode cache
+  - .pytest_cache/**/*  # Pytest cache directory
+  - .ruff_cache/**/*  # Ruff linter cache
+  - htmlcov/**/*  # Coverage HTML reports
 
   # PYTHON ENVIRONMENT FILES
   # Virtual environment and dependency management files
-  - ".venv/**/*" # Virtual environment
-  - "typings/**/*" # Type stubs and typing files
+  - .venv/**/*  # Virtual environment
+  - typings/**/*  # Type stubs and typing files
 
   # PROJECT MANAGEMENT FILES
   # Documentation, configuration, and project management files
-  - ".archive/**/*" # Archived/deprecated code
-  - "docs/**/*" # Documentation source files
-  - "scripts/**/*" # Utility scripts and automation
-  - "assets/**/*" # Static assets (images, sounds, etc.)
-  - "logs/**/*" # Application log files
-  - "*.md" # Markdown documentation files
+  - .archive/**/*  # Archived/deprecated code
+  - docs/**/*  # Documentation source files
+  - scripts/**/*  # Utility scripts and automation
+  - assets/**/*  # Static assets (images, sounds, etc.)
+  - logs/**/*  # Application log files
+  - '*.md'  # Markdown documentation files
 
   # CONFIGURATION FILES
   # Project configuration that doesn't contain application logic
-  - "*.toml" # Poetry, pyproject.toml, etc.
-  - "*.lock" # Dependency lock files
-  - "setup.py" # Python package setup files
+  - '*.toml'  # Poetry, pyproject.toml, etc.
+  - '*.lock'  # Dependency lock files
+  - setup.py  # Python package setup files
 
   # NIX DEVELOPMENT ENVIRONMENT
   # Nix package manager and development environment files
-  - "*.nix" # Nix configuration files
-  - "flake.*" # Nix flake files
-  - "shell.nix" # Nix development shell
+  - '*.nix'  # Nix configuration files
+  - flake.*  # Nix flake files
+  - shell.nix  # Nix development shell
 
   # EXTERNAL DEPENDENCIES
   # Third-party code and generated files we don't control
-  - "prisma/**/*" # Prisma ORM generated files
-
+  - prisma/**/*  # Prisma ORM generated files
 # ==============================================================================
 # COMPONENT MANAGEMENT
 # ==============================================================================
 # Purpose: Organizes codebase into logical components for better tracking
 # Impact: Provides component-level coverage insights and organization
 # ==============================================================================
-
 component_management:
   # DEFAULT COMPONENT RULES
   # Applied to all components unless overridden
   default_rules:
-    flag_regexes: ["unit"] # Most components covered by unit tests
+    flag_regexes:         # Most components covered by unit tests
+      - unit
     statuses:
-      - type: "project"
-        target: "auto" # Progressive improvement for all components
+      - type: project
+        target: auto  # Progressive improvement for all components
         threshold: 1%
 
   # INDIVIDUAL COMPONENT DEFINITIONS
@@ -328,87 +331,94 @@ component_management:
   individual_components:
     # CORE BOT INFRASTRUCTURE COMPONENT
     # Central bot functionality and startup logic
-    - component_id: "core"
-      name: "Core Bot Infrastructure"
+    - component_id: core
+      name: Core Bot Infrastructure
       paths:
-        - "tux/bot.py" # Main Discord bot client
-        - "tux/cog_loader.py" # Extension/cog management
-        - "tux/help.py" # Help system implementation
-        - "tux/main.py" # Application entry point
-        - "tux/app.py" # Application setup and configuration
-      flag_regexes: ["unit"]
+        - tux/bot.py  # Main Discord bot client
+        - tux/cog_loader.py  # Extension/cog management
+        - tux/help.py  # Help system implementation
+        - tux/main.py  # Application entry point
+        - tux/app.py  # Application setup and configuration
+      flag_regexes:
+        - unit
 
     # DATABASE LAYER COMPONENT
     # All data persistence and database operations
-    - component_id: "database"
-      name: "Database Layer"
+    - component_id: database
+      name: Database Layer
       paths:
-        - "tux/database/**/*" # Controllers, models, client, and utilities
-      flag_regexes: ["unit", "database"] # Covered by both unit and DB-specific tests
+        - tux/database/**/*  # Controllers, models, client, and utilities
+      flag_regexes:                   # Covered by both unit and DB-specific tests
 
     # BOT COMMANDS AND FEATURES COMPONENT
     # User-facing Discord commands and integrations
-    - component_id: "cogs"
-      name: "Bot Commands & Features"
+        - unit
+        - database
+    - component_id: cogs
+      name: Bot Commands & Features
       paths:
-        - "tux/cogs/**/*" # All command cogs organized by category
-      flag_regexes: ["unit"]
+        - tux/cogs/**/*  # All command cogs organized by category
+      flag_regexes:
+        - unit
 
     # EVENT AND ERROR HANDLING COMPONENT
     # System stability, error handling, and event processing
-    - component_id: "handlers"
-      name: "Event & Error Handling"
+    - component_id: handlers
+      name: Event & Error Handling
       paths:
-        - "tux/handlers/**/*" # Error handlers, event processors, activity tracking
-      flag_regexes: ["unit"]
+        - tux/handlers/**/*  # Error handlers, event processors, activity tracking
+      flag_regexes:
+        - unit
 
     # UTILITIES AND HELPERS COMPONENT
     # Supporting functions, configuration, and shared utilities
-    - component_id: "utils"
-      name: "Utilities & Helpers"
+    - component_id: utils
+      name: Utilities & Helpers
       paths:
-        - "tux/utils/**/*" # Constants, functions, config, logging, etc.
-      flag_regexes: ["unit"]
+        - tux/utils/**/*  # Constants, functions, config, logging, etc.
+      flag_regexes:
+        - unit
 
     # USER INTERFACE COMPONENTS
     # Discord-specific UI elements and interactions
-    - component_id: "ui"
-      name: "User Interface Components"
+    - component_id: ui
+      name: User Interface Components
       paths:
-        - "tux/ui/**/*" # Embeds, buttons, modals, views
-      flag_regexes: ["unit"]
+        - tux/ui/**/*  # Embeds, buttons, modals, views
+      flag_regexes:
+        - unit
 
     # CLI INTERFACE COMPONENT
     # Command-line tools and development utilities
-    - component_id: "cli"
-      name: "CLI Interface"
+    - component_id: cli
+      name: CLI Interface
       paths:
-        - "tux/cli/**/*" # Development CLI, Docker management, etc.
-      flag_regexes: ["unit"]
+        - tux/cli/**/*  # Development CLI, Docker management, etc.
+      flag_regexes:
+        - unit
 
     # EXTERNAL SERVICE WRAPPERS COMPONENT
     # Third-party API clients and external integrations
-    - component_id: "wrappers"
-      name: "External Service Wrappers"
+    - component_id: wrappers
+      name: External Service Wrappers
       paths:
-        - "tux/wrappers/**/*" # GitHub, XKCD, Godbolt, and other API clients
-      flag_regexes: ["unit"]
-
+        - tux/wrappers/**/*  # GitHub, XKCD, Godbolt, and other API clients
+      flag_regexes:
+        - unit
 # ==============================================================================
 # FLAG MANAGEMENT
 # ==============================================================================
 # Purpose: Defines test categories and their coverage behavior
 # Impact: Controls how different types of tests contribute to coverage
 # ==============================================================================
-
 flag_management:
   # DEFAULT FLAG BEHAVIOR
   # Applied to all flags unless specifically overridden
   default_rules:
-    carryforward: true # Use previous coverage when new data unavailable
+    carryforward: true  # Use previous coverage when new data unavailable
     statuses:
-      - type: "project"
-        target: "auto" # Progressive improvement for all flag types
+      - type: project
+        target: auto  # Progressive improvement for all flag types
         threshold: 1%
 
   # INDIVIDUAL FLAG DEFINITIONS
@@ -416,76 +426,71 @@ flag_management:
   individual_flags:
     # UNIT TESTS FLAG
     # Main test suite covering individual functions and classes
-    - name: "unit"
-      paths: ["tux/"] # Covers all application code
+    - name: unit
+      paths:         # Covers all application code
+        - tux/
       carryforward: true
 
     # DATABASE TESTS FLAG
     # Specific tests for database operations and data integrity
-    - name: "database"
-      paths: ["tux/database/**/*"] # Only covers database-related code
+    - name: database
+      paths:                      # Only covers database-related code
+        - tux/database/**/*
       carryforward: true
 
     # INTEGRATION TESTS FLAG
     # End-to-end tests covering full user workflows
-    - name: "integration"
-      paths: ["tux/"] # Covers all application code in integrated scenarios
+    - name: integration
+      paths:         # Covers all application code in integrated scenarios
+        - tux/
       carryforward: true
-
 # ==============================================================================
 # ADVANCED CODECOV SETTINGS
 # ==============================================================================
 # Purpose: Fine-tune Codecov behavior for optimal CI/CD integration
 # Impact: Affects upload processing, notification timing, and reliability
 # ==============================================================================
-
 codecov:
   # UPLOAD AND PROCESSING SETTINGS
-  max_report_age: off # Disable age checking to prevent CI failures from timestamp issues
-  require_ci_to_pass: true # Only process coverage if CI pipeline succeeds
-  disable_default_path_fixes: false # Keep automatic path normalization
+  max_report_age: off  # Disable age checking to prevent CI failures from timestamp issues
+  require_ci_to_pass: true  # Only process coverage if CI pipeline succeeds
+  disable_default_path_fixes: false  # Keep automatic path normalization
 
   # ARCHIVAL AND DEBUGGING
   archive:
-    uploads: true # Archive uploads for debugging and compliance
+    uploads: true  # Archive uploads for debugging and compliance
 
   # NOTIFICATION TIMING
   notify:
-    after_n_builds: 1 # Send notifications after first report
-    wait_for_ci: true # Wait for CI completion before final processing
-    notify_error: true # Show upload errors in PR comments for transparency
-
+    after_n_builds: 1  # Send notifications after first report
+    wait_for_ci: true  # Wait for CI completion before final processing
+    notify_error: true  # Show upload errors in PR comments for transparency
 # ==============================================================================
 # GITHUB INTEGRATION
 # ==============================================================================
 # Purpose: Enhanced integration with GitHub's pull request interface
 # Impact: Provides inline coverage annotations and improved developer experience
 # ==============================================================================
-
 github_checks:
-  annotations: true # Show line-by-line coverage in PR file diffs
-
+  annotations: true  # Show line-by-line coverage in PR file diffs
 # ==============================================================================
 # PARSER CONFIGURATION
 # ==============================================================================
 # Purpose: Configure how Codecov processes coverage reports
 # Impact: Affects accuracy and completeness of coverage data
 # ==============================================================================
-
 parsers:
   v1:
-    include_full_missed_files: true # Include files with 0% coverage in reports
-
+    include_full_missed_files: true  # Include files with 0% coverage in reports
 # ==============================================================================
 # PATH NORMALIZATION
 # ==============================================================================
 # Purpose: Normalize file paths for consistent reporting across environments
 # Impact: Ensures coverage data is properly matched regardless of build environment
 # ==============================================================================
-
 fixes:
   # Fix coverage.py path mapping issue where source path includes extra /tux
   # Coverage XML shows source="/path/to/repo/tux/tux" but files are at "tux/"
   # This maps the coverage paths back to the correct repository structure
-  - ".*/tux/tux/::tux/" # Generic pattern for any environment with double tux path
-  - "tux/tux/::tux/" # Relative path pattern fix
+  - .*/tux/tux/::tux/  # Generic pattern for any environment with double tux path
+  - tux/tux/::tux/  # Relative path pattern fix

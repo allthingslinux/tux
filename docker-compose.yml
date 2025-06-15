@@ -1,59 +1,6 @@
 # ==============================================================================
-# TUX DISCORD BOT - PRODUCTION DOCKER COMPOSE
-# ==============================================================================
-#
-# This Docker Compose file defines the production deployment configuration for
-# the Tux Discord Bot. It is optimized for stability, security, and resource
-# efficiency in production environments.
-#
-# ENVIRONMENT:
-# ------------
-# Target: Production deployment (servers, cloud platforms, etc.)
-# Purpose: Stable, secure, resource-limited bot execution
-# Features: Health monitoring, security hardening, resource limits
-#
-# USAGE:
-# ------
-# RECOMMENDED (using tux CLI):
-#   poetry run tux --prod docker up -d     # Start production bot
-#   poetry run tux --prod docker logs -f   # View logs
-#   poetry run tux --prod docker down      # Stop bot
-#
-# ALTERNATIVE (direct docker-compose):
-#   docker-compose up -d                    # Start production bot
-#   docker-compose logs -f tux              # View logs
-#   docker-compose down                     # Stop bot
-#   docker-compose up -d --build            # Update bot (rebuild and restart)
-#
-# SECURITY FEATURES:
-# ------------------
-# - Read-only root filesystem with tmpfs for writable areas
-# - No new privileges security option
-# - Non-root user execution (handled in Dockerfile)
-# - Resource limits to prevent resource exhaustion
-# - Structured logging for security monitoring
-#
-# RELIABILITY FEATURES:
-# ---------------------
-# - Health checks for automatic restart on failure
-# - Restart policy to handle crashes
-# - Persistent volumes for cache and temporary data
-# - Resource reservations to ensure minimum resources
-#
-# MONITORING FEATURES:
-# --------------------
-# - Container health checks
-# - Structured JSON logging
-# - Resource limit enforcement
-# - Log rotation to prevent disk space issues
-#
-# ==============================================================================
-
----
-# ==============================================================================
 # SERVICES CONFIGURATION
 # ==============================================================================
-
 services:
   # ============================================================================
   # TUX BOT SERVICE - Main Application Container
@@ -62,7 +9,6 @@ services:
   # Security: Hardened with read-only filesystem and security options
   # Monitoring: Health checks and structured logging enabled
   # ============================================================================
-
   tux:
     # CONTAINER IDENTIFICATION
     # Fixed name for easier management and log identification
@@ -122,7 +68,8 @@ services:
     # Environment variables loaded from .env file
     # Contains sensitive data like bot tokens, API keys, database URLs
     # SECURITY: .env file should be in .gitignore and properly secured
-    env_file: [".env"]
+    env_file:
+      - .env
 
     # RESTART POLICY
     # Automatically restart container unless explicitly stopped
@@ -136,13 +83,17 @@ services:
     healthcheck:
       # Simple Python import test to verify bot can start
       # Lighter than full bot initialization for faster health checks
-      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      test:
+        - CMD
+        - python
+        - -c
+        - import sys; sys.exit(0)
 
       # Health check timing configuration
-      interval: 30s # Check every 30 seconds
-      timeout: 10s # Allow 10 seconds for check to complete
-      retries: 3 # Mark unhealthy after 3 consecutive failures
-      start_period: 40s # Wait 40 seconds before first check (startup time)
+      interval: 30s  # Check every 30 seconds
+      timeout: 10s  # Allow 10 seconds for check to complete
+      retries: 3  # Mark unhealthy after 3 consecutive failures
+      start_period: 40s  # Wait 40 seconds before first check (startup time)
 
     # RESOURCE MANAGEMENT
     # Production resource limits and reservations for stable operation
@@ -152,14 +103,14 @@ services:
         # RESOURCE LIMITS (Hard Caps)
         # Container will be killed if it exceeds these limits
         limits:
-          memory: 512M # Maximum 512MB RAM usage
-          cpus: "0.5" # Maximum 0.5 CPU cores (50% of one core)
+          memory: 512M  # Maximum 512MB RAM usage
+          cpus: '0.5'  # Maximum 0.5 CPU cores (50% of one core)
 
         # RESOURCE RESERVATIONS (Guaranteed Resources)
         # Docker ensures these resources are always available to the container
         reservations:
-          memory: 256M # Guaranteed 256MB RAM
-          cpus: "0.25" # Guaranteed 0.25 CPU cores (25% of one core)
+          memory: 256M  # Guaranteed 256MB RAM
+          cpus: '0.25'  # Guaranteed 0.25 CPU cores (25% of one core)
 
     # SECURITY HARDENING
     # Additional security options for production deployment
@@ -189,13 +140,12 @@ services:
     # Prevents log files from consuming excessive disk space
     logging:
       # JSON structured logging for better parsing by log aggregators
-      driver: "json-file"
+      driver: json-file
 
       # Log rotation configuration to prevent disk space issues
       options:
-        max-size: "10m" # Rotate logs when they reach 10MB
-        max-file: "3" # Keep maximum 3 rotated log files
-
+        max-size: 10m  # Rotate logs when they reach 10MB
+        max-file: '3'  # Keep maximum 3 rotated log files
 # ==============================================================================
 # VOLUMES CONFIGURATION
 # ==============================================================================
@@ -203,7 +153,6 @@ services:
 # These volumes are managed by Docker and provide better performance
 # and portability compared to bind mounts for application data
 # ==============================================================================
-
 volumes:
   # BOT CACHE VOLUME
   # Stores bot cache data for improved performance across restarts
@@ -211,7 +160,7 @@ volumes:
   # Persistence: Survives container restarts and updates
   # Size: Grows based on bot usage, monitor in production
   tux_cache:
-    driver: local # Local Docker volume driver (default)
+    driver: local  # Local Docker volume driver (default)
 
   # TEMPORARY FILES VOLUME
   # Stores temporary files that need persistence across container restarts
@@ -219,7 +168,7 @@ volumes:
   # Persistence: Survives container restarts but can be cleared if needed
   # Size: Should be monitored and cleaned periodically in production
   tux_temp:
-    driver: local # Local Docker volume driver (default)
+    driver: local  # Local Docker volume driver (default)
 
   # USER HOME VOLUME
   # Stores all user cache and config directories
@@ -227,8 +176,7 @@ volumes:
   # Persistence: Critical for avoiding re-downloads and CLI performance
   # Size: Relatively small but covers all user-space tool requirements
   tux_user_home:
-    driver: local # Local Docker volume driver (default)
-
+    driver: local  # Local Docker volume driver (default)
 # ==============================================================================
 # PRODUCTION DEPLOYMENT BEST PRACTICES IMPLEMENTED
 # ==============================================================================
