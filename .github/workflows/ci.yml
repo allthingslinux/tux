@@ -36,9 +36,10 @@ jobs:
             poetry.lock
 
       - name: Skip if no Python changes
-        if: steps.python_changes.outputs.any_changed != 'true'
+        if: steps.python_changes.outputs.any_changed != 'true' && github.event_name != 'workflow_dispatch'
         run: |
           echo "No Python files changed, skipping Python quality checks"
+          echo "To force run checks, use workflow_dispatch trigger"
           exit 0
 
       - name: Install Poetry
@@ -90,9 +91,10 @@ jobs:
             conftest.py
 
       - name: Skip if no Python/test changes
-        if: steps.python_changes.outputs.any_changed != 'true'
+        if: steps.python_changes.outputs.any_changed != 'true' && github.event_name != 'workflow_dispatch'
         run: |
           echo "No Python or test files changed, skipping tests"
+          echo "To force run tests, use workflow_dispatch trigger"
           exit 0
 
       - name: Install Poetry
@@ -120,10 +122,13 @@ jobs:
           EOF
 
       - name: Run unit tests with coverage
-        run: poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-unit.xml --cov-report=term-missing -m "not slow and not docker" --junitxml=junit-unit.xml -o junit_family=legacy --cov-fail-under=0
+        run: |
+          echo "Running unit tests with coverage..."
+          poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-unit.xml --cov-report=term-missing -m "not slow and not docker" --junitxml=junit-unit.xml -o junit_family=legacy --cov-fail-under=0
+          echo "Unit test coverage generation completed"
 
       - name: Debug coverage file before upload
-        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+        if: always()
         run: |
           echo "Checking coverage files..."
           ls -la coverage-*.xml || echo "No coverage files found"
@@ -134,10 +139,13 @@ jobs:
           else
             echo "Unit coverage file not found"
           fi
+          echo "Event: ${{ github.event_name }}"
+          echo "Head repo: ${{ github.event.pull_request.head.repo.full_name }}"
+          echo "Base repo: ${{ github.repository }}"
 
       - name: Upload unit test coverage to Codecov
         uses: codecov/codecov-action@v5
-        if: (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && hashFiles('./coverage-unit.xml') != ''
+        if: hashFiles('./coverage-unit.xml') != ''
         with:
           files: ./coverage-unit.xml
           flags: unit
@@ -174,7 +182,7 @@ jobs:
         run: poetry run pytest tests/tux/database/ -v --cov=tux/database --cov-branch --cov-report=xml:coverage-database.xml --junitxml=junit-database.xml -o junit_family=legacy --cov-fail-under=0
 
       - name: Upload database test coverage to Codecov
-        if: steps.check_db_tests.outputs.has_tests == 'true' && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && hashFiles('./coverage-database.xml') != ''
+        if: steps.check_db_tests.outputs.has_tests == 'true' && hashFiles('./coverage-database.xml') != ''
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage-database.xml
@@ -196,7 +204,6 @@ jobs:
 
       # Check if integration tests (slow tests) exist before running them
       - name: Check for integration tests
-        if: github.event_name == 'push' # Only on main branch pushes to save CI time
         id: check_integration_tests
         run: |
           if poetry run pytest --collect-only -m "slow" -q tests/ | grep -q "test session starts"; then
@@ -209,7 +216,7 @@ jobs:
 
       # Optional: Run integration tests separately (if you have them)
       - name: Clean up previous coverage files before integration tests
-        if: github.event_name == 'push' && steps.check_integration_tests.outputs.has_tests == 'true'
+        if: steps.check_integration_tests.outputs.has_tests == 'true'
         run: |
           echo "Cleaning up previous coverage files to avoid conflicts..."
           rm -f coverage-unit.xml coverage-database.xml || true
@@ -217,12 +224,12 @@ jobs:
           ls -la coverage-*.xml 2>/dev/null || echo "No coverage files found"
 
       - name: Run integration tests with coverage
-        if: github.event_name == 'push' && steps.check_integration_tests.outputs.has_tests == 'true'
+        if: steps.check_integration_tests.outputs.has_tests == 'true'
         run: poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-integration.xml -m "slow" --junitxml=junit-integration.xml -o junit_family=legacy --cov-fail-under=0
         continue-on-error: true # Don't fail CI if integration tests fail
 
       - name: Upload integration test coverage to Codecov
-        if: github.event_name == 'push' && steps.check_integration_tests.outputs.has_tests == 'true' && hashFiles('./coverage-integration.xml') != ''
+        if: steps.check_integration_tests.outputs.has_tests == 'true' && hashFiles('./coverage-integration.xml') != ''
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage-integration.xml
@@ -235,7 +242,7 @@ jobs:
           disable_search: true
 
       - name: Upload integration test results to Codecov
-        if: github.event_name == 'push' && steps.check_integration_tests.outputs.has_tests == 'true' && !cancelled()
+        if: steps.check_integration_tests.outputs.has_tests == 'true' && !cancelled()
         uses: codecov/test-results-action@v1
         with:
           file: ./junit-integration.xml
