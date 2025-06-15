@@ -4,7 +4,6 @@ This module provides the main Click command group and utilities for the CLI.
 """
 
 import importlib
-import importlib.metadata
 import os
 import subprocess
 import sys
