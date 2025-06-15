@@ -60,7 +60,7 @@ jobs:
             org.opencontainers.image.vendor="All Things Linux"
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.documentation="https://github.com/allthingslinux/tux/blob/main/README.md"
-            - name: Test container starts
+      - name: Test container starts
         run: |
           docker run --rm --name tux-test \
             --entrypoint python \
