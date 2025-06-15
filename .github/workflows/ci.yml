@@ -122,9 +122,22 @@ jobs:
       - name: Run unit tests with coverage
         run: poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-unit.xml --cov-report=term-missing -m "not slow and not docker" --junitxml=junit-unit.xml -o junit_family=legacy --cov-fail-under=0
 
+      - name: Debug coverage file before upload
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+        run: |
+          echo "Checking coverage files..."
+          ls -la coverage-*.xml || echo "No coverage files found"
+          if [ -f ./coverage-unit.xml ]; then
+            echo "Unit coverage file size: $(stat -c%s ./coverage-unit.xml) bytes"
+            echo "Unit coverage file first few lines:"
+            head -n 5 ./coverage-unit.xml || echo "Could not read coverage file"
+          else
+            echo "Unit coverage file not found"
+          fi
+
       - name: Upload unit test coverage to Codecov
         uses: codecov/codecov-action@v5
-        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+        if: (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && hashFiles('./coverage-unit.xml') != ''
         with:
           files: ./coverage-unit.xml
           flags: unit
@@ -132,6 +145,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: allthingslinux/tux
           fail_ci_if_error: false
+          verbose: true
 
       - name: Upload unit test results to Codecov
         if: ${{ !cancelled() }}
@@ -141,14 +155,26 @@ jobs:
           flags: unit
           token: ${{ secrets.CODECOV_TOKEN }}
 
-      # Run database-specific tests with dedicated flag
+      # Check if database tests exist before running them
+      - name: Check for database tests
+        id: check_db_tests
+        run: |
+          if find tests/tux/database/ -name "test_*.py" -type f | grep -q .; then
+            echo "has_tests=true" >> $GITHUB_OUTPUT
+            echo "Database tests found"
+          else
+            echo "has_tests=false" >> $GITHUB_OUTPUT
+            echo "No database tests found, skipping database test suite"
+          fi
+
+      # Run database-specific tests with dedicated flag (only if tests exist)
       - name: Run database tests with coverage
+        if: steps.check_db_tests.outputs.has_tests == 'true'
         run: poetry run pytest tests/tux/database/ -v --cov=tux/database --cov-branch --cov-report=xml:coverage-database.xml --junitxml=junit-database.xml -o junit_family=legacy --cov-fail-under=0
-        continue-on-error: true
 
       - name: Upload database test coverage to Codecov
+        if: steps.check_db_tests.outputs.has_tests == 'true' && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) && hashFiles('./coverage-database.xml') != ''
         uses: codecov/codecov-action@v5
-        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
         with:
           files: ./coverage-database.xml
           flags: database
@@ -156,23 +182,37 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: allthingslinux/tux
           fail_ci_if_error: false
+          verbose: true
 
       - name: Upload database test results to Codecov
-        if: ${{ !cancelled() }}
+        if: steps.check_db_tests.outputs.has_tests == 'true' && !cancelled()
         uses: codecov/test-results-action@v1
         with:
           file: ./junit-database.xml
           flags: database
           token: ${{ secrets.CODECOV_TOKEN }}
 
+      # Check if integration tests (slow tests) exist before running them
+      - name: Check for integration tests
+        if: github.event_name == 'push' # Only on main branch pushes to save CI time
+        id: check_integration_tests
+        run: |
+          if poetry run pytest --collect-only -m "slow" -q tests/ | grep -q "test session starts"; then
+            echo "has_tests=true" >> $GITHUB_OUTPUT
+            echo "Integration tests found"
+          else
+            echo "has_tests=false" >> $GITHUB_OUTPUT
+            echo "No integration tests found, skipping integration test suite"
+          fi
+
       # Optional: Run integration tests separately (if you have them)
       - name: Run integration tests with coverage
-        if: github.event_name == 'push' # Only on main branch pushes to save CI time
+        if: github.event_name == 'push' && steps.check_integration_tests.outputs.has_tests == 'true'
         run: poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-integration.xml -m "slow" --junitxml=junit-integration.xml -o junit_family=legacy --cov-fail-under=0
         continue-on-error: true # Don't fail CI if integration tests fail
 
       - name: Upload integration test coverage to Codecov
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && steps.check_integration_tests.outputs.has_tests == 'true' && hashFiles('./coverage-integration.xml') != ''
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage-integration.xml
@@ -181,9 +221,10 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: allthingslinux/tux
           fail_ci_if_error: false
+          verbose: true
 
       - name: Upload integration test results to Codecov
-        if: github.event_name == 'push' && !cancelled()
+        if: github.event_name == 'push' && steps.check_integration_tests.outputs.has_tests == 'true' && !cancelled()
         uses: codecov/test-results-action@v1
         with:
           file: ./junit-integration.xml
