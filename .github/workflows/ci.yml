@@ -146,6 +146,7 @@ jobs:
           slug: allthingslinux/tux
           fail_ci_if_error: false
           verbose: true
+          disable_search: true
 
       - name: Upload unit test results to Codecov
         if: ${{ !cancelled() }}
@@ -183,6 +184,7 @@ jobs:
           slug: allthingslinux/tux
           fail_ci_if_error: false
           verbose: true
+          disable_search: true
 
       - name: Upload database test results to Codecov
         if: steps.check_db_tests.outputs.has_tests == 'true' && !cancelled()
@@ -206,6 +208,14 @@ jobs:
           fi
 
       # Optional: Run integration tests separately (if you have them)
+      - name: Clean up previous coverage files before integration tests
+        if: github.event_name == 'push' && steps.check_integration_tests.outputs.has_tests == 'true'
+        run: |
+          echo "Cleaning up previous coverage files to avoid conflicts..."
+          rm -f coverage-unit.xml coverage-database.xml || true
+          echo "Current coverage files:"
+          ls -la coverage-*.xml 2>/dev/null || echo "No coverage files found"
+
       - name: Run integration tests with coverage
         if: github.event_name == 'push' && steps.check_integration_tests.outputs.has_tests == 'true'
         run: poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-integration.xml -m "slow" --junitxml=junit-integration.xml -o junit_family=legacy --cov-fail-under=0
@@ -222,6 +232,7 @@ jobs:
           slug: allthingslinux/tux
           fail_ci_if_error: false
           verbose: true
+          disable_search: true
 
       - name: Upload integration test results to Codecov
         if: github.event_name == 'push' && steps.check_integration_tests.outputs.has_tests == 'true' && !cancelled()
