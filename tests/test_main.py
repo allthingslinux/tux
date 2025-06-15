@@ -9,7 +9,41 @@ from unittest.mock import Mock, patch
 import pytest
 
 # Mock the config loading before importing tux.main to prevent FileNotFoundError in CI
-with patch("tux.utils.config.CONFIG", Mock()):
+# We need to mock the file reading operations that happen at module import time
+with patch("pathlib.Path.read_text") as mock_read_text:
+    # Mock the YAML content that would be read from config files
+    mock_config_content = """
+    USER_IDS:
+      BOT_OWNER: 123456789
+      SYSADMINS: [123456789]
+    ALLOW_SYSADMINS_EVAL: false
+    BOT_INFO:
+      BOT_NAME: "Test Bot"
+      PROD_PREFIX: "!"
+      DEV_PREFIX: "??"
+      ACTIVITIES: "Testing"
+      HIDE_BOT_OWNER: false
+    STATUS_ROLES: []
+    TEMPVC_CATEGORY_ID: null
+    TEMPVC_CHANNEL_ID: null
+    GIF_LIMITER:
+      RECENT_GIF_AGE: 3600
+      GIF_LIMIT_EXCLUDE: []
+      GIF_LIMITS_USER: {}
+      GIF_LIMITS_CHANNEL: {}
+    XP:
+      XP_BLACKLIST_CHANNELS: []
+      XP_ROLES: []
+      XP_MULTIPLIERS: []
+      XP_COOLDOWN: 60
+      LEVELS_EXPONENT: 2
+      SHOW_XP_PROGRESS: false
+      ENABLE_XP_CAP: true
+    SNIPPETS:
+      LIMIT_TO_ROLE_IDS: false
+      ACCESS_ROLE_IDS: []
+    """
+    mock_read_text.return_value = mock_config_content
     import tux.main
 
 
@@ -169,8 +203,43 @@ from unittest.mock import Mock, patch
 # Add the project root to the path
 sys.path.insert(0, "{project_root}")
 
-# Mock the config loading to prevent FileNotFoundError in CI
-with patch("tux.utils.config.CONFIG", Mock()):
+# Mock the config loading before importing tux.main to prevent FileNotFoundError in CI
+# We need to mock the file reading operations that happen at module import time
+with patch("pathlib.Path.read_text") as mock_read_text:
+    # Mock the YAML content that would be read from config files
+    mock_config_content = '''
+    USER_IDS:
+      BOT_OWNER: 123456789
+      SYSADMINS: [123456789]
+    ALLOW_SYSADMINS_EVAL: false
+    BOT_INFO:
+      BOT_NAME: "Test Bot"
+      PROD_PREFIX: "!"
+      DEV_PREFIX: "??"
+      ACTIVITIES: "Testing"
+      HIDE_BOT_OWNER: false
+    STATUS_ROLES: []
+    TEMPVC_CATEGORY_ID: null
+    TEMPVC_CHANNEL_ID: null
+    GIF_LIMITER:
+      RECENT_GIF_AGE: 3600
+      GIF_LIMIT_EXCLUDE: []
+      GIF_LIMITS_USER: {{}}
+      GIF_LIMITS_CHANNEL: {{}}
+    XP:
+      XP_BLACKLIST_CHANNELS: []
+      XP_ROLES: []
+      XP_MULTIPLIERS: []
+      XP_COOLDOWN: 60
+      LEVELS_EXPONENT: 2
+      SHOW_XP_PROGRESS: false
+      ENABLE_XP_CAP: true
+    SNIPPETS:
+      LIMIT_TO_ROLE_IDS: false
+      ACCESS_ROLE_IDS: []
+    '''
+    mock_read_text.return_value = mock_config_content
+
     with patch("tux.app.TuxApp") as mock_app:
         mock_instance = Mock()
         mock_app.return_value = mock_instance
