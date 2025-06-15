@@ -484,4 +484,8 @@ parsers:
 # ==============================================================================
 
 fixes:
-  - "tux/::" # Remove tux prefix if present in path names
+  # Fix coverage.py path mapping issue where source path includes extra /tux
+  # Coverage XML shows source="/path/to/repo/tux/tux" but files are at "tux/"
+  # This maps the coverage paths back to the correct repository structure
+  - ".*/tux/tux/::tux/" # Generic pattern for any environment with double tux path
+  - "tux/tux/::tux/" # Relative path pattern fix
