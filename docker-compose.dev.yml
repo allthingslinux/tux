@@ -61,8 +61,6 @@ services:
           ignore:
             # Cache directories (not needed in sync)
             - .cache/
-            # Version control (not needed in container)
-            - .git/
             # IDE configurations (not needed in container)
             - .idea/
             # Virtual environment (managed by container)

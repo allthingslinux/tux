@@ -5,36 +5,19 @@ authors = [{ name = "All Things Linux", email = "tux@allthingslinux.org" }]
 requires-python = ">=3.13.2,<3.14"
 readme = "README.md"
 urls = { repository = "https://github.com/allthingslinux/tux" }
-dynamic = ["dependencies", "version"]
+version = "0.0.0"
 
 [project.scripts]
 tux = "tux.cli:main"
 
 [build-system]
-requires = ["poetry-core>=2.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
-build-backend = "poetry_dynamic_versioning.backend"
+requires = ["poetry-core>=2.0"]
+build-backend = "poetry.core.masonry.api"
+
 
 [tool.poetry]
 packages = [{ include = "tux" }]
-version = "0.0.0"
 
-[tool.poetry-dynamic-versioning]
-enable = true
-metadata = true
-dirty = true
-format-jinja = """
-   {%- if distance == 0 -%}
-       {{ serialize_pep440(base, stage, revision) }}
-   {%- elif branch == "main" -%}
-       {{ serialize_pep440(base, stage, revision, dev=distance, metadata=[commit]) }}
-   {%- else -%}
-       {{ serialize_pep440(base, stage, revision, dev=distance, metadata=[commit, branch_escaped]) }}
-   {%- endif -%}
-"""
-
-
-[tool.poetry.requires-plugins]
-poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
 
 [tool.poetry.dependencies]
 python = ">=3.13.2,<3.14"

@@ -43,7 +43,8 @@ site/
 *.log
 logs/
 
-# Git
+# Git (now excluded since version info is passed via build args)
+# This improves build performance and security
 .git/
 .gitignore
 .gitattributes
