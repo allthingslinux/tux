@@ -1,8 +1,7 @@
+---
 default_language_version:
   python: python3.13
-
 repos:
-  # 1. Fast File Checks & Formatting
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
@@ -11,61 +10,49 @@ repos:
       - id: check-toml
       - id: end-of-file-fixer
       - id: trailing-whitespace
-        exclude: '\.md$' # Preserve trailing spaces in Markdown for line breaks
-
-  - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.5.3
-    hooks:
-      - id: prettier
-        types_or: [yaml, json]
-        exclude: '^(\.archive/|.*typings/|poetry\.lock|flake\.lock).*$'
-        args: [--tab-width=2, --print-width=80, --bracket-same-line=false] # Force shorter lines for arrays
-
+        exclude: \.md$
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: v0.24.1
     hooks:
       - id: validate-pyproject
-        additional_dependencies: ["validate-pyproject-schema-store[all]"]
-
-    # 2. Code Upgraders/Modifiers
+        additional_dependencies: ['validate-pyproject-schema-store[all]']
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.37.1
+    hooks:
+      - id: yamllint
+        args: [-c=.yamllint.yml]
+  - repo: https://github.com/lyz-code/yamlfix
+    rev: 1.17.0
+    hooks:
+      - id: yamlfix
+        exclude: \.commitlintrc\.yaml$
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.20.0
     hooks:
       - id: pyupgrade
-        args: ["--py313-plus"]
-
+        args: [--py313-plus]
   - repo: https://github.com/asottile/add-trailing-comma
     rev: v3.2.0
     hooks:
       - id: add-trailing-comma
-
-    # 3. Main Linter (with auto-fix)
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    # Ruff version should match the one in pyproject.toml
-    rev: v0.11.13 # Use the same Ruff version tag as formatter
+    rev: v0.11.13
     hooks:
       - id: ruff-check
         args: [--fix]
-
-    # 4. Main Formatter (after linting/fixing)
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    # Ruff version should match the one in pyproject.toml
     rev: v0.11.13
     hooks:
       - id: ruff-format
-
-    # 5. Project Config / Dependency Checks
-  # TODO: Disabled due to a issue with "No module named 'jinja2'"
-  # relevant: https://github.com/mtkennerly/poetry-dynamic-versioning/issues/13
-  #- repo: https://github.com/python-poetry/poetry
-  #  rev: 2.1.3 # Use the latest tag from the repo
-  #  hooks:
-  #    - id: poetry-check
-
-  # 6. Security Check
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.27.2 # Use the latest tag from the repo
+    rev: v8.27.2
     hooks:
       - id: gitleaks
-
-exclude: '^(\.archive/|.*typings/|node_modules/|\.venv/).*$'
+  - repo: local
+    hooks:
+      - id: commitlint
+        name: commitlint
+        entry: sh -c 'poetry run commitlint --file "$1"' --
+        language: system
+        stages: [commit-msg]
+exclude: ^(\.archive/|.*typings/|node_modules/|\.venv/).*$
