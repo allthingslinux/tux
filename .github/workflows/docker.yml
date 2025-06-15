@@ -30,10 +30,12 @@ jobs:
         id: version
         run: |
           # For PR validation, use PR number and short SHA for version
-          VERSION="pr-${{ github.event.number }}-$(echo ${{ github.sha }} | cut -c1-7)"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "git_sha=${{ github.sha }}" >> $GITHUB_OUTPUT
-          echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+          VERSION="pr-${{ github.event.number }}-$(echo "${{ github.sha }}" | cut -c1-7)"
+          {
+            echo "version=$VERSION"
+            echo "git_sha=${{ github.sha }}"
+            echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          } >> "$GITHUB_OUTPUT"
       - name: Build for validation (Git context)
         uses: docker/build-push-action@v6.18.0
         timeout-minutes: 15
@@ -92,11 +94,13 @@ jobs:
           elif git describe --tags 2>/dev/null; then
             VERSION=$(git describe --tags | sed 's/^v//')
           else
-            VERSION="$(date +'%Y%m%d')-$(echo ${{ github.sha }} | cut -c1-7)"
+            VERSION="$(date +'%Y%m%d')-$(echo "${{ github.sha }}" | cut -c1-7)"
           fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "git_sha=${{ github.sha }}" >> $GITHUB_OUTPUT
-          echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+          {
+            echo "version=$VERSION"
+            echo "git_sha=${{ github.sha }}"
+            echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          } >> "$GITHUB_OUTPUT"
           echo "Using version: $VERSION"
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
