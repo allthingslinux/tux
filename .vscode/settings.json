@@ -35,7 +35,8 @@
   },
   "search.exclude": {
     ".archive/**": true,
-    "build/**": true
+    "build/**": true,
+    "typings/**": true
   },
   "git.autofetch": true,
   "git.pruneOnFetch": true,
