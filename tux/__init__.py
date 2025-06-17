@@ -171,15 +171,19 @@ def _get_version() -> str:
         return metadata.version("tux")
 
     # Attempt each version detection method in priority order
-    # Stop at the first method that returns a non-empty version string
+    # Stop at the first method that returns a non-empty, non-placeholder version string
     for getter in (from_env, from_file, from_git, from_metadata):
         try:
             version = getter()
-        except Exception:
-            # Silently continue to next method on any error
-            # This ensures version detection is robust and never crashes
+        except Exception as e:
+            # Log the specific error to aid debugging while continuing to next method
+            # This maintains robustness while providing visibility into version detection issues
+            import logging
+
+            logging.getLogger(__name__).debug(f"Version detection method {getter.__name__} failed: {e}")
             continue
-        if version:
+        # Check for valid version (non-empty and not placeholder values)
+        if version and version not in ("0.0.0", "0.0", "unknown"):
             return version
 
     # Fallback version when all detection methods fail
