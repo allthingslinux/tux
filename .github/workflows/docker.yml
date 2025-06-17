@@ -91,9 +91,9 @@ jobs:
           # Try to get version from git tags, fallback to SHA (consistent with Dockerfile)
           # Execute git commands only once and store results to avoid transient failures
           if EXACT_TAG=$(git describe --tags --exact-match 2>/dev/null); then
-            VERSION=$(echo "$EXACT_TAG" | sed 's/^v//')
+            VERSION=${EXACT_TAG#v}
           elif TAG_DESC=$(git describe --tags --always 2>/dev/null); then
-            VERSION=$(echo "$TAG_DESC" | sed 's/^v//')
+            VERSION=${TAG_DESC#v}
           else
             VERSION="$(date +'%Y%m%d')-$(echo "${{ github.sha }}" | cut -c1-7)"
           fi
