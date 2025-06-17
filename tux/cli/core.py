@@ -236,7 +236,7 @@ def start() -> int:
 
 # Register the version command directly under the main cli group
 @command_registration_decorator(cli, name="version")
-def version() -> int:
+def show_version() -> int:
     """Display the current version of Tux"""
 
     info(f"Tux version: {__version__}")
