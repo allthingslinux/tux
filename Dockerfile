@@ -16,6 +16,7 @@
 # ------
 # Development:  docker-compose -f docker-compose.dev.yml up
 # Production:   docker build --target production -t tux:latest .
+# With version: docker build --build-arg VERSION=$(git describe --tags --always --dirty | sed 's/^v//') -t tux:latest .
 #
 # SECURITY FEATURES:
 # ------------------
@@ -198,24 +199,20 @@ ARG VERSION=""
 ARG GIT_SHA=""
 ARG BUILD_DATE=""
 
-# Generate version file using build args or git fallback
+# Generate version file using build args with fallback
 # PERFORMANCE: Version is determined at build time, not runtime
-# SECURITY: Git history is optional and removed after use
+# SECURITY: Git operations happen outside container, only VERSION string is passed in
 RUN set -eux; \
     if [ -n "$VERSION" ]; then \
-        # Use provided version from build args (preferred for CI/CD)
+        # Use provided version from build args (preferred for all builds)
         echo "Using provided version: $VERSION"; \
         echo "$VERSION" > /app/VERSION; \
-    elif [ -d .git ]; then \
-        # Fallback to git for local builds with git history
-        echo "Generating version from git history"; \
-        git describe --tags --always --dirty 2>/dev/null | sed 's/^v//' > /app/VERSION || echo "unknown" > /app/VERSION; \
-        # Clean up git repository immediately after use
-        rm -rf .git; \
     else \
-        # Final fallback for builds without version info or git
-        echo "No version info available, using fallback"; \
-        echo "unknown" > /app/VERSION; \
+        # Fallback for builds without version info
+        # NOTE: .git directory is excluded by .dockerignore for security/performance
+        # Version should be passed via --build-arg VERSION=$(git describe --tags --always --dirty | sed 's/^v//')
+        echo "No version provided, using fallback"; \
+        echo "dev-unknown" > /app/VERSION; \
     fi; \
     echo "Building version: $(cat /app/VERSION)"
 
