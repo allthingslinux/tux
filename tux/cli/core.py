@@ -234,5 +234,14 @@ def start() -> int:
     return 0 if result is None else result
 
 
+# Register the version command directly under the main cli group
+@command_registration_decorator(cli, name="version")
+def version() -> int:
+    """Display the current version of Tux"""
+
+    info(f"Tux version: {__version__}")
+    return 0
+
+
 # Ensure commands are registered when this module is imported
 register_commands()
