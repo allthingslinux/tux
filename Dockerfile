@@ -212,7 +212,7 @@ RUN set -eux; \
         # NOTE: .git directory is excluded by .dockerignore for security/performance
         # Version should be passed via --build-arg VERSION=$(git describe --tags --always --dirty | sed 's/^v//')
         echo "No version provided, using fallback"; \
-        echo "dev-unknown" > /app/VERSION; \
+        echo "dev" > /app/VERSION; \
     fi; \
     echo "Building version: $(cat /app/VERSION)"
 
