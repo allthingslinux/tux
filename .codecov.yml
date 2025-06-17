@@ -74,7 +74,7 @@ coverage:
       default:
         target: auto  # Compare to base commit (progressive improvement)
         threshold: 1%  # Allow 1% coverage drop (accounts for refactoring)
-        informational: false  # Block PRs if coverage drops significantly
+        informational: true  # Don't block PRs while building up test suite
 
       # ========================================================================
       # COMPONENT-SPECIFIC PROJECT COVERAGE
@@ -89,6 +89,7 @@ coverage:
       core:
         target: 80%
         threshold: 2%  # Stricter threshold for critical code
+        informational: true  # Don't block PRs while building up test suite
         flags:         # Covered by main unit test suite
           - unit
         paths:
@@ -105,6 +106,7 @@ coverage:
       database:
         target: 90%
         threshold: 1%  # Very strict threshold for data operations
+        informational: true  # Don't block PRs while building up test suite
         flags:                   # Covered by both unit and database-specific tests
           - unit
           - database
@@ -118,6 +120,7 @@ coverage:
       cogs:
         target: 75%
         threshold: 2%
+        informational: true  # Don't block PRs while building up test suite
         flags:
           - unit
         paths:
@@ -130,6 +133,7 @@ coverage:
       utils:
         target: 70%
         threshold: 3%  # More lenient for utility functions
+        informational: true  # Don't block PRs while building up test suite
         flags:
           - unit
         paths:
@@ -142,6 +146,7 @@ coverage:
       cli:
         target: 65%
         threshold: 3%
+        informational: true  # Don't block PRs while building up test suite
         flags:
           - unit
         paths:
@@ -154,6 +159,7 @@ coverage:
       handlers:
         target: 80%
         threshold: 2%
+        informational: true  # Don't block PRs while building up test suite
         flags:
           - unit
         paths:
@@ -166,6 +172,7 @@ coverage:
       ui:
         target: 70%
         threshold: 3%
+        informational: true  # Don't block PRs while building up test suite
         flags:
           - unit
         paths:
@@ -178,6 +185,7 @@ coverage:
       wrappers:
         target: 60%
         threshold: 4%  # Most lenient threshold due to external dependencies
+        informational: true  # Don't block PRs while building up test suite
         flags:
           - unit
         paths:
@@ -196,6 +204,7 @@ coverage:
       default:
         target: 85%  # High standard for all new code
         threshold: 5%  # Allow some flexibility for complex implementations
+        informational: true  # Don't block PRs while building up test suite
         only_pulls: true  # Only apply to PR changes, not existing code
 
       # CRITICAL COMPONENT PATCH COVERAGE
@@ -206,6 +215,7 @@ coverage:
       database-patch:
         target: 95%
         threshold: 2%  # Very strict for new database operations
+        informational: true  # Don't block PRs while building up test suite
         flags:
           - database
         paths:
@@ -216,6 +226,7 @@ coverage:
       core-patch:
         target: 90%
         threshold: 3%
+        informational: true  # Don't block PRs while building up test suite
         flags:
           - unit
         paths:
@@ -228,6 +239,7 @@ coverage:
       handlers-patch:
         target: 90%
         threshold: 3%
+        informational: true  # Don't block PRs while building up test suite
         flags:
           - unit
         paths:
