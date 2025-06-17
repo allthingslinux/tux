@@ -12,10 +12,22 @@
             <img alt="Codecov" src="https://codecov.io/gh/allthingslinux/tux/graph/badge.svg?token=R0AUAS996W"></a>
         <a href="https://github.com/allthingslinux/tux/commits/main">
             <img alt="Commit Activity" src="https://img.shields.io/github/commit-activity/m/allthingslinux/tux"></a>
+        <a href="https://github.com/allthingslinux/tux/releases">
+            <img alt="GitHub Release" src="https://img.shields.io/github/v/release/allthingslinux/tux"></a>
+        <a href="https://github.com/allthingslinux/tux/stargazers">
+            <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/allthingslinux/tux"></a>
+        <a href="https://github.com/allthingslinux/tux/network/members">
+            <img alt="GitHub forks" src="https://img.shields.io/github/forks/allthingslinux/tux"></a>
+        <a href="https://github.com/allthingslinux/tux/graphs/contributors">
+            <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/allthingslinux/tux"></a>
         <a href="https://github.com/allthingslinux/tux/issues">
             <img alt="Issues" src="https://img.shields.io/github/issues/allthingslinux/tux"></a>
         <a href="https://github.com/allthingslinux/tux">
             <img alt="Repo size" src="https://img.shields.io/github/repo-size/allthingslinux/tux"></a>
+        <a href="https://python.org">
+            <img alt="Python" src="https://img.shields.io/badge/python-3.13+-blue.svg"></a>
+        <a href="https://python-poetry.org">
+            <img alt="Poetry" src="https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json"></a>
         <a href="https://github.com/allthingslinux/tux/blob/main/LICENSE">
             <img alt="License" src="https://img.shields.io/github/license/allthingslinux/tux"></a>
         <a href="https://discord.gg/linux">
@@ -25,6 +37,16 @@
 
 > [!WARNING]
 **This bot is still a work in progress and issues are expected. If you self-host our bot please join our support server [on Discord](https://discord.gg/gpmSjcjQxg) for announcements and support.**
+
+## Table of Contents
+
+- [About](#about)
+- [Tech Stack](#tech-stack)
+- [Bot Features](#bot-features)
+- [Installation and Development](#installation-and-development)
+- [License](#license)
+- [Metrics](#metrics)
+- [Contributors](#contributors)
 
 ## About
 
