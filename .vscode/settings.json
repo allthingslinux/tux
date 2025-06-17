@@ -38,7 +38,6 @@
     "build/**": true
   },
   "git.autofetch": true,
-  "git.autofetchPeriod": 180,
   "git.pruneOnFetch": true,
   "git.showProgress": true,
   "git.fetchOnPull": true,
