@@ -1,404 +1,445 @@
-# Tests Directory
+# Testing Guide for Tux Discord Bot
 
-This directory contains all tests for the Tux project, organized by test type and mirroring the main codebase structure.
+Welcome to the testing documentation for the Tux Discord Bot! This guide will help you understand how to write, run, and maintain tests in this project.
 
-## 🚀 **Quick Start: Testing & Coverage**
+## 🚀 Quick Start
 
-### **Local Development**
+### Running Tests
+
+Use the `poetry runtux test` CLI exclusively for running tests for quick access, instead of direct pytest commands.
 
 ```bash
 # Fast development cycle
 poetry run tux test quick                    # Run tests without coverage (fastest)
 poetry run tux test run                     # Run tests with coverage (recommended)
 
-# Coverage reports  
+# Parallel execution for speed
+poetry run tux test parallel                # Run tests in parallel using multiple CPU cores
+
+# Coverage reports
 poetry run tux test coverage --format=html  # Generate HTML coverage report
-poetry run tux test coverage --open         # Generate + auto-open in browser
+poetry run tux test coverage --open-browser # Generate and auto-open HTML report
+
+# Specialized test types
+poetry run tux test benchmark               # Run performance benchmarks
+poetry run tux test html                    # Generate HTML test report
 ```
 
-### **Coverage Strategy**
+### First Time Setup
 
-- **CI Pipeline**: Automatically handles coverage with XML reports for Codecov
-- **Local CLI**: Use `tux test` commands for flexible coverage control
-- **pyproject.toml**: Coverage options intentionally commented out for flexibility (see [Coverage Configuration Strategy](#5-coverage-configuration-strategy))
+1. **Install dependencies**: Poetry handles all test dependencies automatically
+2. **Verify setup**: Run `poetry run tux test quick` to ensure everything works
+3. **Check Docker**: Some tests require Docker for database operations
 
-## 📊 Pytest Setup Review & Analysis
+## 📊 Testing Philosophy & Standards
 
-### ✅ **Excellent Foundations**
+### Coverage Targets by Component
 
-Your pytest setup demonstrates several strong best practices:
+We follow a **tiered coverage approach** based on component criticality:
 
-- **Modern Configuration**: Using `pyproject.toml` for centralized configuration
-- **Proper Test Discovery**: Well-configured paths, patterns, and naming conventions
-- **Async Support**: `asyncio_mode = "auto"` properly configured for Discord.py testing
-- **Custom Markers**: Well-defined markers for test categorization (`slow`, `docker`, `integration`)
-- **Quality Dependencies**: Modern testing stack (pytest 8.0+, pytest-asyncio 0.24+, pytest-mock 3.14+)
-- **Enhanced Output**: pytest-sugar for beautiful progress bars and instant failure display  
-- **Parallel Execution**: pytest-xdist for faster test runs across multiple CPU cores
-- **Test Randomization**: pytest-randomly to catch test dependencies and improve reliability
-- **Timeout Protection**: pytest-timeout to prevent hanging tests
-- **Rich Reporting**: pytest-html for beautiful HTML test reports with self-contained output
-- **Performance Testing**: pytest-benchmark for measuring code performance and regression detection
-- **Comprehensive CLI**: Custom test commands via `poetry run tux test <command>` with optimized configurations
-- **Docker Integration**: Smart Docker availability detection with auto-skipping
+| Component | Target | Rationale |
+|-----------|--------|-----------|
+| **Database Layer** | 90% | Data integrity & security critical |
+| **Core Infrastructure** | 80% | Bot stability essential |
+| **Event Handlers** | 80% | Error handling crucial |
+| **Bot Commands (Cogs)** | 75% | User-facing features |
+| **UI Components** | 70% | Discord interface elements |
+| **Utilities** | 70% | Helper functions |
+| **CLI Interface** | 65% | Development tools |
+| **External Wrappers** | 60% | Limited by external dependencies |
 
-### 🎯 **Codecov Integration Alignment**
+### Testing Principles
 
-Your setup aligns **exceptionally well** with your sophisticated `.codecov.yml` configuration:
+- **Progressive Enhancement**: Tests should improve over time
+- **Component-Based**: Different standards for different components
+- **Practical Coverage**: Focus on meaningful tests, not just numbers
+- **CI Integration**: Automated coverage tracking via CodeCov
 
-```yaml
-# Component-Based Coverage Targets:
-- Database Layer: 90% target (highest standards)
-- Core Infrastructure: 80% target  
-- Event Handlers: 80% target
-- Bot Commands: 75% target
-- UI Components: 70% target
-- Utilities: 70% target
-- CLI Interface: 65% target
-- External Wrappers: 60% target (limited by external dependencies)
+## 📁 Test Organization
 
-# Patch Coverage: 85-95% for new code (very strict standards)
-```
+### Directory Structure
 
-**Coverage Configuration Status**: ✅ **EXCELLENT**
-
-- Proper source specification (`source = ["tux"]`)
-- Branch coverage enabled (`branch = true`)
-- Parallel test execution support (`parallel = true`)
-- Comprehensive exclusions (tests, cache, migrations, virtual envs)
-- HTML reports configured (`directory = "htmlcov"`)
-- Smart exclusion patterns for uncoverable code
-
-### ⚠️ **Critical Gaps & Improvement Areas**
-
-#### 1. **Missing Core Testing Infrastructure**
-
-Your `conftest.py` has good Docker support but lacks Discord.py testing fixtures:
-
-```python
-# NEEDED: Discord.py testing fixtures
-@pytest.fixture
-async def mock_bot():
-    """Create a mocked Discord bot for testing."""
-    
-@pytest.fixture  
-async def mock_ctx():
-    """Create a mocked command context."""
-    
-@pytest.fixture
-async def mock_interaction():
-    """Create a mocked slash command interaction."""
-
-@pytest.fixture
-async def mock_guild():
-    """Create a mocked Discord guild."""
-
-@pytest.fixture
-async def mock_member():
-    """Create a mocked Discord member."""
-```
-
-#### 2. **Database Testing Infrastructure Missing**
-
-With your **90% database coverage target** (highest in the project), you need:
-
-```python
-# NEEDED: Database testing patterns
-@pytest.fixture(scope="session")
-async def test_db():
-    """Set up test database connection."""
-    
-@pytest.fixture
-async def clean_db():
-    """Clean database state between tests."""
-
-@pytest.fixture
-async def sample_guild_data():
-    """Create sample guild data for testing."""
-```
-
-#### 3. **Empty Test Directories**
-
-Many test directories exist but contain only placeholder files:
-
-- `tests/unit/tux/cogs/*/` - **Missing cog tests** (75% coverage target)
-- `tests/unit/tux/database/controllers/` - **Missing controller tests** (90% target!)
-- `tests/integration/tux/*/` - **Missing integration tests**
-- Most handler and UI test files are empty
-
-#### 4. **Async Testing Patterns**
-
-Need examples for testing:
-
-- Discord command execution and validation
-- Event handlers and error processing  
-- Database operations with transactions
-- External API calls with proper mocking
-
-#### 5. **Coverage Configuration Strategy**
-
-Your `pyproject.toml` has coverage options intentionally commented out:
-
-```toml
-# addopts = [
-#     "--cov=tux",
-#     "--cov-report=term-missing", 
-#     "--cov-report=html",
-#     "--cov-branch",
-#     "-v",
-# ]
-```
-
-**Why commented out?** Coverage is handled at two levels:
-
-- **CI Pipeline**: Runs coverage automatically with specific XML outputs for Codecov integration
-- **CLI Commands**: Use `tux test` commands for flexible local coverage (`tux test run`, `tux test coverage`, etc.)
-
-**Benefits of this approach**:
-
-- ✅ **Flexibility**: Choose when to run coverage locally (faster iteration)
-- ✅ **Performance**: `tux test quick` for fast development cycles
-- ✅ **CI Integration**: Specialized coverage reports for different test types (unit, database, integration)
-- ✅ **No Conflicts**: CI and local environments use optimal settings for their context
-
-**Recommendation**: Keep commented out. Use CLI commands for coverage control.
-
-### 🚧 **Priority Action Items**
-
-#### **HIGH PRIORITY** (Align with 90% coverage targets)
-
-1. **Database Controllers**: Your highest coverage target (90%) but missing tests
-2. **Core Bot Infrastructure**: 80% target, critical for bot stability  
-3. **Event Handlers**: 80% target, essential for error handling
-
-#### **MEDIUM PRIORITY** (75-70% targets)
-
-4. **Discord Command Cogs**: User-facing features (75% target)
-5. **UI Components**: Discord interface elements (70% target)
-6. **Utilities**: Helper functions (70% target)
-
-#### **LOWER PRIORITY** (65-60% targets)
-
-7. **CLI Interface**: Development tools (65% target)
-8. **External Wrappers**: Third-party APIs (60% target)
-
-### 💡 **Quick Wins**
-
-1. **Keep coverage options commented** in `pyproject.toml` (current strategy is optimal)
-2. **Add basic Discord.py fixtures** to `conftest.py`
-3. **Implement database controller tests** (highest impact for coverage goals)
-4. **Fill in smoke tests** with actual implementations
-
-## 📁 Structure
-
-The test structure is organized into two main categories:
+The test suite mirrors the main codebase structure while seperated into unit and integration tests.
 
 ```text
 tests/
-├── README.md                       # This file
+├── README.md                    # This guide
+├── conftest.py                  # Global pytest configuration and fixtures
+├── __init__.py                  # Package marker
 │
-├── conftest.py                     # Global pytest configuration and fixtures
+├── unit/                        # Unit tests (isolated components)
+│   ├── scripts/                 # Testing for project scripts
+│   ├── test_main.py            # Main application tests
+│   └── tux/                    # Main codebase tests
+│       ├── cli/                # CLI interface tests
+│       ├── cogs/               # Discord command tests
+│       ├── database/           # Database layer tests
+│       │   └── controllers/    # Database controller tests
+│       ├── handlers/           # Event handler tests
+│       ├── ui/                 # UI component tests
+│       │   ├── modals/         # Modal dialog tests
+│       │   └── views/          # Discord view tests
+│       ├── utils/              # Utility function tests
+│       └── wrappers/           # External API wrapper tests
 │
-├── integration/                    # Integration tests
-│   └── tux/                       # Mirrors main package structure
-│       ├── cli/                   # CLI integration tests
-│       ├── handlers/              # Handler integration tests
-│       ├── ui/                    # UI integration tests
-│       ├── utils/                 # Utilities integration tests
-│       └── wrappers/             # External API integration tests
-│
-└── unit/                          # Unit tests
-    ├── scripts/                   # Tests for standalone scripts
-    ├── test_main.py              # Tests for main entry point
-    └── tux/                      # Mirrors main package structure
-        ├── cli/                  # CLI unit tests
-        ├── cogs/                 # Discord cogs tests
-        ├── database/            # Database layer tests
-        ├── handlers/            # Event handler tests
-        ├── ui/                  # UI component tests
-        ├── utils/               # Utility module tests
-        └── wrappers/           # External API wrapper tests
+└── integration/                # Integration tests (component interaction)
+    └── tux/                    # End-to-end workflow tests
+        ├── cli/                # CLI integration tests
+        ├── handlers/           # Handler integration tests
+        ├── ui/                 # UI workflow tests
+        ├── utils/              # Cross-component utility tests
+        └── wrappers/           # External service integration tests
 ```
 
-## 🎯 Testing Principles
+### Test Categories
 
-### 1. **Test Types Separation**
+#### Unit Tests (`tests/unit/`)
 
-- **Unit Tests**: Test individual components in isolation
-- **Integration Tests**: Test component interactions
-- Each type has its own directory to maintain clear separation
+- **Purpose**: Test individual components in isolation
+- **Scope**: Single functions, classes, or modules
+- **Dependencies**: Minimal external dependencies, heavy use of mocks
+- **Speed**: Fast execution (< 1 second per test)
 
-### 2. **Mirror Structure**: Tests mirror the source code structure
+#### Integration Tests (`tests/integration/`)
 
-- Makes it easy to find corresponding tests
-- Helps maintain test coverage
-- Example: `tux/utils/constants.py` → `tests/unit/tux/utils/test_constants.py`
+- **Purpose**: Test component interactions and workflows
+- **Scope**: Multiple components working together
+- **Dependencies**: May use real database connections or external services
+- **Speed**: Slower execution (may take several seconds)
 
-### 3. **Test Categories**
+### Test Markers
 
-- **Unit Tests**: Focus on individual functions/classes
-- **Integration Tests**: Test real interactions between components
-- **Benchmark Tests**: Performance testing with `pytest-benchmark`
-- **Slow Tests**: Marked with `@pytest.mark.slow`
-- **Docker Tests**: Marked with `@pytest.mark.docker`
+Use pytest markers to categorize tests:
 
-### 4. **Discord.py Testing Strategy**
+```python
+@pytest.mark.slow        # Tests that take >10 seconds
+@pytest.mark.docker      # Tests requiring Docker
+@pytest.mark.integration # Integration tests
+```
 
-- Mock Discord objects for unit tests
-- Use real Discord interactions for integration tests
-- Test command parsing, validation, and responses separately
-- Mock external API calls in unit tests
+## 📝 Writing Tests
 
-### 5. **Database Testing Approach**
+### Basic Test Structure
 
-- Use test database for integration tests
-- Mock database calls for unit tests
-- Test controllers with real database operations
-- Ensure test isolation and cleanup
+```python
+"""Tests for tux.module_name."""
 
-### 6. **Performance Testing with Benchmarks**
+import pytest
+from unittest.mock import AsyncMock, patch
 
-- Use `pytest-benchmark` for performance regression testing
-- Benchmark critical performance paths
-- Compare performance across code changes
-- Example benchmark tests available in `tests/unit/tux/utils/test_benchmark_examples.py`
-- Run with `poetry run tux test benchmark`
+from tux.module_name import function_to_test
 
-## 🚀 Running Tests
 
-The project includes a comprehensive CLI for running tests with optimized configurations:
+class TestFunctionName:
+    """Test the function_to_test function."""
+
+    def test_basic_functionality(self):
+        """Test basic functionality with valid input."""
+        result = function_to_test("valid_input")
+        assert result == "expected_output"
+
+    def test_edge_case(self):
+        """Test edge case handling."""
+        with pytest.raises(ValueError, match="specific error message"):
+            function_to_test("invalid_input")
+
+    @pytest.mark.asyncio
+    async def test_async_function(self):
+        """Test asynchronous function."""
+        result = await async_function_to_test()
+        assert result is not None
+```
+
+### Discord.py Testing Patterns
+
+For Discord bot components, use these patterns:
+
+```python
+import discord
+import pytest
+from discord.ext import commands
+from unittest.mock import AsyncMock, MagicMock
+
+
+class TestDiscordCommand:
+    """Test Discord command functionality."""
+
+    @pytest.fixture
+    def mock_bot(self):
+        """Create a mock Discord bot."""
+        bot = AsyncMock(spec=commands.Bot)
+        bot.user = MagicMock(spec=discord.User)
+        bot.user.id = 12345
+        return bot
+
+    @pytest.fixture
+    def mock_ctx(self, mock_bot):
+        """Create a mock command context."""
+        ctx = AsyncMock(spec=commands.Context)
+        ctx.bot = mock_bot
+        ctx.author = MagicMock(spec=discord.Member)
+        ctx.guild = MagicMock(spec=discord.Guild)
+        ctx.channel = MagicMock(spec=discord.TextChannel)
+        return ctx
+
+    @pytest.mark.asyncio
+    async def test_command_execution(self, mock_ctx):
+        """Test command executes successfully."""
+        # Your command testing logic here
+        await your_command(mock_ctx, "test_argument")
+        
+        # Assert expected behavior
+        mock_ctx.send.assert_called_once()
+```
+
+### Database Testing Patterns
+
+For database operations:
+
+```python
+import pytest
+from unittest.mock import AsyncMock
+
+from tux.database.controllers.example import ExampleController
+
+
+class TestExampleController:
+    """Test the ExampleController."""
+
+    @pytest.fixture
+    def mock_db(self):
+        """Create a mock database connection."""
+        return AsyncMock()
+
+    @pytest.fixture
+    def controller(self, mock_db):
+        """Create controller instance with mock database."""
+        return ExampleController(mock_db)
+
+    @pytest.mark.asyncio
+    async def test_create_record(self, controller, mock_db):
+        """Test record creation."""
+        # Mock database response
+        mock_db.example.create.return_value = {"id": 1, "name": "test"}
+        
+        result = await controller.create_example("test")
+        
+        assert result["name"] == "test"
+        mock_db.example.create.assert_called_once()
+```
+
+### Error Handling Tests
+
+Always test error conditions:
+
+```python
+def test_error_handling(self):
+    """Test proper error handling."""
+    with pytest.raises(SpecificException) as exc_info:
+        function_that_should_fail("bad_input")
+    
+    assert "Expected error message" in str(exc_info.value)
+
+@pytest.mark.asyncio
+async def test_async_error_handling(self):
+    """Test async error handling."""
+    with pytest.raises(AsyncSpecificException):
+        await async_function_that_should_fail()
+```
+
+## 🔧 Test Configuration
+
+### Pytest Configuration
+
+The project uses `pyproject.toml` for pytest configuration:
+
+```toml
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+markers = [
+    "slow: marks tests as slow (may take several minutes)",
+    "docker: marks tests that require Docker to be running",
+    "integration: marks tests as integration tests",
+]
+```
+
+### Global Fixtures (`conftest.py`)
+
+Currently provides:
+
+- **Docker availability detection**: Automatically skips Docker-required tests
+- **Custom pytest markers**: For test categorization
+
+Planned additions:
+
+- Discord.py testing fixtures (bot, context, interaction mocks)
+- Database testing infrastructure
+- Common test data factories
+
+## 📈 CodeCov Integration
+
+### How Coverage Works
+
+1. **Local Development**: Use `tux test coverage` commands for flexible coverage control
+2. **CI Pipeline**: Automatic coverage reporting to [CodeCov](https://codecov.io/gh/allthingslinux/tux)
+3. **Pull Requests**: Coverage reports appear as PR comments
+4. **Component Tracking**: Different coverage targets for different components
+
+### Coverage Configuration
+
+Coverage settings are defined in `pyproject.toml`:
+
+```toml
+[tool.coverage.run]
+source = ["tux"]
+branch = true
+parallel = true
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/migrations/*",
+    "*/venv/*",
+    "*/.venv/*",
+]
+```
+
+### Viewing Coverage Reports
 
 ```bash
-# Basic test execution
-poetry run tux test run         # Standard test run with coverage
-poetry run tux test quick       # Fast tests without coverage
-poetry run tux test plain       # Tests without pytest-sugar formatting
+# Terminal report
+poetry run tux test coverage --format=term
 
-# Parallel execution
-poetry run tux test parallel    # Run tests using multiple CPU cores
+# HTML report (detailed)
+poetry run tux test coverage --format=html
 
-# Specialized test types
-poetry run tux test html         # Generate HTML test + coverage reports
-poetry run tux test benchmark   # Run performance benchmark tests only
+# Open HTML report in browser
+poetry run tux test coverage --format=html --open-browser
 
-# Coverage reports
-poetry run tux test coverage                    # Generate coverage report (terminal)
-poetry run tux test coverage --format=html     # Generate HTML coverage report
-poetry run tux test coverage --format=xml      # Generate XML coverage (CI/CD)
-poetry run tux test coverage --format=json     # Generate JSON coverage
-poetry run tux test coverage --fail-under=80   # Fail if coverage below threshold
-poetry run tux test coverage --open            # Generate and open HTML report
-poetry run tux test coverage --clean           # Clean old coverage files first
-poetry run tux test coverage --specific=tux/utils  # Coverage for specific module
-poetry run tux test coverage --quick           # Quick coverage check only
-
-# Utility commands
-poetry run tux test coverage-clean    # Clean coverage files
-poetry run tux test coverage-open     # Open existing HTML coverage report
+# XML report (for CI)
+poetry run tux test coverage --format=xml
 ```
 
-### Advanced Test Commands
+### CodeCov Dashboard
+
+Visit [codecov.io/gh/allthingslinux/tux](https://codecov.io/gh/allthingslinux/tux) to:
+
+- View overall project coverage
+- See component-specific coverage
+- Track coverage trends over time
+- Review coverage on pull requests
+
+## 🔄 Development Workflow
+
+### Test-Driven Development
+
+1. **Write failing test**: Start with a test that describes desired behavior
+2. **Implement feature**: Write minimal code to make test pass
+3. **Refactor**: Improve code while keeping tests green
+4. **Repeat**: Continue with next feature
+
+### Before Committing
+
+1. **Run tests**: `poetry run tux test run` to ensure all tests pass with coverage
+2. **Check style**: Pre-commit hooks will check code formatting
+3. **Review coverage**: Ensure new code has appropriate test coverage
+
+### Adding New Tests
+
+1. **Create test file**: Follow naming convention `test_*.py`
+2. **Mirror structure**: Place tests in directory matching source code
+3. **Use appropriate markers**: Mark slow or Docker-dependent tests
+4. **Follow patterns**: Use established testing patterns for consistency
+
+## 🐛 Debugging Tests
+
+### Common Issues
+
+1. **Docker tests failing**: Ensure Docker is running (`docker version`)
+2. **Async tests hanging**: Check for proper `pytest.mark.asyncio` usage
+3. **Import errors**: Verify test paths and module structure
+4. **Flaky tests**: Use `pytest-randomly` to catch test dependencies
+
+### Debug Commands
 
 ```bash
-# Component-specific coverage testing (align with codecov targets)
-poetry run tux test coverage --specific=tux/database    # Database layer (90% target)
-poetry run tux test coverage --specific=tux/cogs        # Bot commands (75% target)  
-poetry run tux test coverage --specific=tux/handlers    # Event handlers (80% target)
+# Run with verbose output
+poetry run tux test run -v
 
-# Specialized test execution
-poetry run tux test parallel                            # Parallel execution
-poetry run tux test benchmark                           # Performance benchmarks
-poetry run tux test quick                               # Fast tests without coverage
-poetry run tux test plain                               # Tests without pytest-sugar
+# Run specific test file
+poetry run tux test run tests/unit/tux/utils/test_env.py
 
-# Coverage with thresholds and reporting
-poetry run tux test coverage --fail-under=90            # Enforce coverage threshold
-poetry run tux test coverage --format=xml --clean       # XML for CI/CD
-poetry run tux test coverage --format=json              # JSON for tooling
-poetry run tux test coverage --format=html --open       # HTML with auto-open
-poetry run tux test html                                # Combined HTML reports
+# Run tests with debugger
+poetry run tux test run --pdb
 
-# Utility operations
-poetry run tux test coverage-clean                      # Clean coverage files
-poetry run tux test coverage-open                       # Open existing HTML report
+# Run only failed tests from last run
+poetry run tux test run --lf
 ```
 
-## 📈 Coverage Goals & Status
+## 🚀 Performance Testing
 
-Based on your `.codecov.yml` configuration:
+### Benchmark Tests
 
-| Component | Target | Priority | Current Status |
-|-----------|--------|----------|----------------|
-| Database Layer | 90% | **Critical** | ⚠️ Tests missing |
-| Core Infrastructure | 80% | **High** | ⚠️ Tests missing |
-| Event Handlers | 80% | **High** | ⚠️ Tests missing |
-| Bot Commands | 75% | Medium | ⚠️ Tests missing |
-| UI Components | 70% | Medium | ⚠️ Tests missing |
-| Utilities | 70% | Medium | ✅ Good example (env.py) |
-| CLI Interface | 65% | Low | ⚠️ Tests missing |
-| External Wrappers | 60% | Low | ⚠️ Tests missing |
+Use `pytest-benchmark` for performance tests:
 
-## 🔍 Example Test Implementation
+```python
+def test_performance_critical_function(benchmark):
+    """Test performance of critical function."""
+    result = benchmark(performance_critical_function, "test_input")
+    assert result == "expected_output"
+```
 
-### Unit Test Examples
-
-Your `tests/unit/tux/utils/test_env.py` demonstrates **excellent** testing patterns:
-
-- Comprehensive test classes with clear organization
-- Proper setup/teardown with `pytest.fixture(autouse=True)`
-- Parameterized tests for multiple scenarios
-- Good mocking patterns with context managers
-- Environment variable isolation
-- Clear test naming and documentation
-
-**Use this as a template** for implementing other component tests!
-
-### Benchmark Test Examples
-
-Your `tests/unit/tux/utils/test_benchmark_examples.py` shows **proper benchmark testing**:
-
-- Performance testing for critical code paths
-- Parameterized benchmarks for different input sizes
-- Proper use of the `benchmark` fixture
-- Statistical analysis with performance metrics
-- Example tests include:
-  - String concatenation performance
-  - List comprehension benchmarks
-  - Dictionary creation benchmarks
-  - Sorting algorithm performance by data size
-  - Recursive function optimization (fibonacci)
-
-Run benchmarks with:
+Run benchmarks:
 
 ```bash
 poetry run tux test benchmark
 ```
 
-## 🛠️ Next Steps
+## 🎯 Best Practices
 
-### ✅ **Completed Improvements**
+### Test Writing
 
-1. ✅ **Benchmark testing infrastructure** - `pytest-benchmark` installed and configured
-2. ✅ **Example benchmark tests** - Template available in `test_benchmark_examples.py`
-3. ✅ **Comprehensive CLI commands** - Full `tux test` command suite implemented
-4. ✅ **Test environment isolation** - Fixed environment pollution in integration tests
-5. ✅ **Enhanced reporting** - HTML reports with coverage integration
+- **Clear names**: Test names should describe what they test
+- **Single responsibility**: One test should test one thing
+- **Arrange-Act-Assert**: Structure tests clearly
+- **Independent tests**: Tests should not depend on each other
 
-### 🔄 **In Progress / Recommended**
+### Test Organization
 
-1. **Add Discord.py fixtures** to `conftest.py` for better testing infrastructure
-2. **Start with database controller tests** (highest priority - 90% coverage target)
-3. **Follow the `test_env.py` pattern** for implementing other component tests
-4. **Gradually fill in cog tests** to meet the 75% coverage target
-5. **Implement integration tests** for end-to-end validation
-6. **Add performance benchmarks** for critical code paths using the example template
+- **Group related tests**: Use test classes to group related functionality
+- **Use descriptive docstrings**: Explain what each test verifies
+- **Parametrize similar tests**: Use `@pytest.mark.parametrize` for similar tests with different inputs
 
-### 🎯 **Priority Order**
+### Mocking
 
-1. **Database Layer** (90% target) - Critical for data integrity
-2. **Core Infrastructure** (80% target) - Bot stability foundations  
-3. **Event Handlers** (80% target) - Error handling and resilience
-4. **Bot Commands** (75% target) - User-facing functionality
-5. **Performance Benchmarks** - Prevent performance regressions
+- **Mock external dependencies**: Database calls, API requests, file operations
+- **Verify interactions**: Assert that mocked functions were called correctly
+- **Use appropriate mock types**: `Mock`, `AsyncMock`, `MagicMock` as needed
 
-Your foundation is **excellent** and getting stronger - the testing infrastructure is now production-ready!
+### Coverage
+
+- **Focus on meaningful coverage**: Don't just chase percentages
+- **Test edge cases**: Error conditions, boundary values, invalid inputs
+- **Exclude uncoverable code**: Use `# pragma: no cover` for defensive code
+
+## 📚 Additional Resources
+
+- **Pytest Documentation**: [docs.pytest.org](https://docs.pytest.org/)
+- **Discord.py Testing**: [discordpy.readthedocs.io](https://discordpy.readthedocs.io/)
+- **CodeCov Documentation**: [docs.codecov.com](https://docs.codecov.com/)
+- **Project CodeCov Dashboard**: [codecov.io/gh/allthingslinux/tux](https://codecov.io/gh/allthingslinux/tux)
+
+## 🤝 Contributing
+
+When contributing tests:
+
+1. **Follow existing patterns**: Maintain consistency with current test structure
+2. **Add appropriate coverage**: Ensure new features have corresponding tests
+3. **Update documentation**: Update this README if adding new testing patterns
+4. **Review coverage impact**: Check how your changes affect component coverage targets
+
+Happy testing! 🧪✨
