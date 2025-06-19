@@ -197,7 +197,7 @@ def create_group(name: str, help_text: str) -> Group:
 def register_commands() -> None:
     """Load and register all CLI commands."""
 
-    modules = ["database", "dev", "docs", "docker"]
+    modules = ["database", "dev", "docs", "docker", "test"]
 
     for module_name in modules:
         try:
