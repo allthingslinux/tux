@@ -26,9 +26,7 @@ class Bookmarks(commands.Cog):
 
     def _is_valid_emoji(self, emoji: discord.PartialEmoji, valid_list: list[int | str]) -> bool:
         # Helper for checking if an emoji is in the list in "settings.yml -> BOOKMARK_EMOJIS"
-        if emoji.id is not None:
-            return emoji.id in valid_list
-        return emoji.name in valid_list
+        return emoji.name in valid_list if emoji.id is None else emoji.id in valid_list
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
@@ -52,6 +50,7 @@ class Bookmarks(commands.Cog):
         # Get the user who reacted to the message
         user = self.bot.get_user(payload.user_id)
         if user is None:
+<<<<<<< HEAD
             logger.error(f"User not found for ID: {payload.user_id}")
 >>>>>>> b9c797a (wip changes)
             return
@@ -66,6 +65,25 @@ class Bookmarks(commands.Cog):
             except (discord.Forbidden, discord.HTTPException) as fetch_error:
                 logger.error(f"Failed to fetch user: {fetch_error}")
             return
+<<<<<<< HEAD
+=======
+=======
+                return
+            except (discord.Forbidden, discord.HTTPException) as fetch_error:
+                logger.error(f"Failed to fetch user: {fetch_error}")
+                return
+
+>>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
+=======
+            try:
+                user = await self.bot.fetch_user(payload.user_id)
+            except discord.NotFound:
+                logger.error(f"User not found for ID: {payload.user_id}")
+            except (discord.Forbidden, discord.HTTPException) as fetch_error:
+                logger.error(f"Failed to fetch user: {fetch_error}")
+            return
+>>>>>>> b8a4072 (added eletrons changes and fixed a warning)
+>>>>>>> dc15ffe (added eletrons changes and fixed a warning)
         # Fetch the channel where the reaction was added
         channel = self.bot.get_channel(payload.channel_id)
         if channel is None:
@@ -73,10 +91,29 @@ class Bookmarks(commands.Cog):
                 channel = await self.bot.fetch_channel(payload.channel_id)
             except discord.NotFound:
                 logger.error(f"Channel not found for ID: {payload.channel_id}")
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> b8a4072 (added eletrons changes and fixed a warning)
+>>>>>>> dc15ffe (added eletrons changes and fixed a warning)
             except (discord.Forbidden, discord.HTTPException) as fetch_error:
                 logger.error(f"Failed to fetch channel: {fetch_error}")
             return
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+                return
+            except (discord.Forbidden, discord.HTTPException) as fetch_error:
+                logger.error(f"Failed to fetch channel: {fetch_error}")
+                return
+>>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
+=======
+>>>>>>> b8a4072 (added eletrons changes and fixed a warning)
+>>>>>>> dc15ffe (added eletrons changes and fixed a warning)
         channel = cast(discord.TextChannel | discord.Thread, channel)
 
         # Fetch the message that was reacted to
@@ -102,6 +139,7 @@ class Bookmarks(commands.Cog):
         else:
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             logger.error(
                 "First emoji validation check passed but second emoji validation check failed. How the fuck did you get here?",
             )
@@ -111,6 +149,11 @@ class Bookmarks(commands.Cog):
 =======
             logger.error("How did you fail the 2nd check but passed the first?")
 >>>>>>> 56bebaf (Added removing bookmarks from the bot's DMs)
+=======
+            logger.error(
+                "First emoji validation check passed but second emoji validation check failed. How the fuck did you get here?",
+            )
+>>>>>>> b8a4072 (added eletrons changes and fixed a warning)
             return
 
     async def _create_bookmark_embed(
@@ -130,6 +173,16 @@ class Bookmarks(commands.Cog):
         embed.add_field(name="Author", value=message.author.name, inline=False)
 
         embed.add_field(name="Jump to Message", value=f"[Click Here]({message.jump_url})", inline=False)
+<<<<<<< HEAD
+=======
+
+        embed.add_field(
+            name="Delete Bookmark",
+            value=f"React with {CONFIG.REMOVE_BOOKMARK[0]} to delete this bookmark.",
+            inline=False,
+        )
+
+>>>>>>> b8a4072 (added eletrons changes and fixed a warning)
         if message.attachments:
             attachments_info = "\n".join([attachment.url for attachment in message.attachments])
             embed.add_field(name="Attachments", value=attachments_info, inline=False)
