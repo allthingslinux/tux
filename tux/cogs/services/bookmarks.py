@@ -153,6 +153,7 @@ class Bookmarks(commands.Cog):
             logger.error(
                 "First emoji validation check passed but second emoji validation check failed. How the fuck did you get here?",
             )
+<<<<<<< HEAD
 =======
             logger.debug("Somehow you managed to get bast the first valid emoji check then failed the 2nd good job?")
 >>>>>>> b9c797a (wip changes)
@@ -169,6 +170,8 @@ class Bookmarks(commands.Cog):
                 "First emoji validation check passed but second emoji validation check failed. How the fuck did you get here?",
             )
 >>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
+=======
+>>>>>>> 34798e9 (i think i fixed whatever the hell git just did)
             return
 
     async def _create_bookmark_embed(
@@ -198,9 +201,12 @@ class Bookmarks(commands.Cog):
         )
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> b8a4072 (added eletrons changes and fixed a warning)
 =======
 >>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
+=======
+>>>>>>> 34798e9 (i think i fixed whatever the hell git just did)
         if message.attachments:
             attachments_info = "\n".join([attachment.url for attachment in message.attachments])
             embed.add_field(name="Attachments", value=attachments_info, inline=False)
