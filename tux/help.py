@@ -721,7 +721,7 @@ class TuxHelp(commands.HelpCommand):
         )
         embed.add_field(
             name="Flag Help",
-            value=f"Flags in `[]` are optional. Most flags have aliases that can be used.\n> e.g. `{prefix}ban @user spamming` or `{prefix}b @user spamming -silent true`",
+            value=f"Flags in `[]` are optional. Most flags have aliases that can be used.\n> e.g. `{prefix}ban @user spamming` or `{prefix}b @user spam -silent true`",
             inline=False,
         )
         embed.add_field(
@@ -741,7 +741,8 @@ class TuxHelp(commands.HelpCommand):
 
         embed.add_field(
             name="Bot Instance",
-            value=f"-# Running {bot_name_display} version `{CONFIG.BOT_VERSION}` in `{environment}` mode | {owner_info}",
+            value=f"-# Running {bot_name_display} v `{CONFIG.BOT_VERSION}` in `{environment}` mode"
+            + (f"\n-# {owner_info}" if owner_info else ""),
             inline=False,
         )
 
