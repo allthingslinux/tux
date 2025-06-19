@@ -438,29 +438,10 @@ class Dev(commands.Cog):
             The context in which the command is being invoked.
         cog : str
             The name of the cog to load.
-
-        Raises
-        ------
-        commands.MissingRequiredArgument
-            If an cog is not specified.
-        commands.ExtensionAlreadyLoaded
-            If the specified cog is already loaded.
-        commands.ExtensionNotFound
-            If the specified cog is not found.
-        commands.ExtensionFailed
-            If the cog failed to load.
-        commands.NoEntryPointError
-            If the specified cog does not have a setup function.
         """
-
-        try:
-            await self.bot.load_extension(cog)
-        except Exception as error:
-            await ctx.send(f"Failed to load cog {cog}: {error}")
-            logger.error(f"Failed to load cog {cog}: {error}")
-        else:
-            await ctx.send(f"Cog {cog} loaded.")
-            logger.info(f"Cog {cog} loaded.")
+        await self.bot.load_extension(cog)
+        await ctx.send(f"Cog {cog} loaded.")
+        logger.info(f"Cog {cog} loaded.")
 
     @dev.command(
         name="unload_cog",
@@ -478,23 +459,10 @@ class Dev(commands.Cog):
             The context in which the command is being invoked.
         cog : str
             The name of the cog to unload.
-
-        Raises
-        ------
-        commands.MissingRequiredArgument
-            If an extension name is not specified.
-        commands.ExtensionNotLoaded
-            If the specified extension is not loaded or doesn't exist.
         """
-
-        try:
-            await self.bot.unload_extension(cog)
-        except Exception as error:
-            logger.error(f"Failed to unload cog {cog}: {error}")
-            await ctx.send(f"Failed to unload cog {cog}: {error}", ephemeral=True, delete_after=30)
-        else:
-            logger.info(f"Cog {cog} unloaded.")
-            await ctx.send(f"Cog {cog} unloaded.", ephemeral=True, delete_after=30)
+        await self.bot.unload_extension(cog)
+        logger.info(f"Cog {cog} unloaded.")
+        await ctx.send(f"Cog {cog} unloaded.", ephemeral=True, delete_after=30)
 
     @dev.command(
         name="reload_cog",
@@ -512,24 +480,11 @@ class Dev(commands.Cog):
             The context in which the command is being invoked.
         cog : str
             The name of the cog to reload.
-
-        Raises
-        ------
-        commands.MissingRequiredArgument
-            If an extension is not specified.
-        commands.ExtensionNotLoaded
-            If the specified extension is not loaded or doesn't exist.
         """
-
-        try:
-            await self.bot.unload_extension(cog)
-            await self.bot.load_extension(cog)
-        except Exception as error:
-            await ctx.send(f"Failed to reload cog {cog}: {error}", ephemeral=True, delete_after=30)
-            logger.error(f"Failed to reload cog {cog}: {error}")
-        else:
-            await ctx.send(f"Cog {cog} reloaded.", ephemeral=True, delete_after=30)
-            logger.info(f"Cog {cog} reloaded.")
+        await self.bot.unload_extension(cog)
+        await self.bot.load_extension(cog)
+        await ctx.send(f"Cog {cog} reloaded.", ephemeral=True, delete_after=30)
+        logger.info(f"Cog {cog} reloaded.")
 
     @dev.command(
         name="stop",
