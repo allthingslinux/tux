@@ -271,6 +271,9 @@ class WandboxService(CodeDispatch):
         if (compiler_error := result.get("compiler_error")) and compiler != self.compiler_map.get("nim"):
             output_parts.append(str(compiler_error))
 
+        if program_error := result.get("program_error"):
+            output_parts.append(str(program_error))
+
         # Handle program output
         if program_output := result.get("program_output"):
             output_parts.append(str(program_output))
@@ -363,7 +366,8 @@ class Run(commands.Cog):
             The created embed.
         """
         service_link = SERVICE_LINKS.get(service, service)
-        description = f"-# Service provided by {service_link}\n```{language}\n{output}\n```"
+
+        description = f"-# Service provided by {service_link}\n```{language}\n{output or 'no result to show.'}\n```"
 
         return EmbedCreator.create_embed(
             bot=self.bot,
