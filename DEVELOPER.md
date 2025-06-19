@@ -23,7 +23,7 @@ Explore the following pages for more detailed information on specific developmen
 * **[Code Coverage](./docs/content/dev/coverage.md)**
   * Running tests with coverage tracking.
   * Generating and interpreting coverage reports.
-  * Using `tux dev test`, `tux dev coverage`, and related commands.
+  * Using `tux test run`, `tux test coverage`, and related commands.
 * **[Database Management](./docs/content/dev/database.md)**
   * Detailed usage of `tux db` commands (push, migrate, generate, pull, reset).
   * Working with Prisma migrations.
