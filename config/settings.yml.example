@@ -116,9 +116,8 @@ GIF_LIMITER: # Limits the amount of gifs a user can send in a channel
     "123456789012345": 3
 
 BOOKMARK_EMOJIS:
-  ADD_BOOKMARK: # Unicode Emojis or Custom Server Emoji IDs
+  ADD_BOOKMARK:
     - "🔖"
-  # Custom Emoji example
-  #  - 1274504955163709525
-  REMOVE_BOOKMARK: # Unicode Emojis or Custom Server Emoji IDs (not reccomended)
+    #- 123456789012345 # Custom emoji example, replace with emoji id
+  REMOVE_BOOKMARK: # Do not use custom emojis for this.
     - "🗑️"

@@ -1,3 +1,5 @@
+from typing import cast
+
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -74,13 +76,15 @@ class Poll(commands.Cog):
         # get reaction from payload.message_id, payload.channel_id, payload.guild_id, payload.emoji
         channel = self.bot.get_channel(payload.channel_id)
         if channel is None:
-            logger.error(f"Channel with ID {payload.channel_id} not found.")
-            return
-        if isinstance(channel, discord.ForumChannel | discord.CategoryChannel | discord.abc.PrivateChannel):
-            logger.error(
-                f"Channel with ID {payload.channel_id} is not a compatible channel type. How the fuck did you get here?",
-            )
-            return
+            try:
+                channel = await self.bot.fetch_channel(payload.channel_id)
+            except discord.NotFound:
+                logger.error(f"Channel not found for ID: {payload.channel_id}")
+                return
+            except (discord.Forbidden, discord.HTTPException) as fetch_error:
+                logger.error(f"Failed to fetch channel: {fetch_error}")
+                return
+        channel = cast(discord.TextChannel | discord.Thread, channel)
 
         message = await channel.fetch_message(payload.message_id)
         # Lookup the reaction object for this event
