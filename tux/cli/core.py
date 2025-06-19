@@ -228,7 +228,7 @@ def main() -> int:
 def start() -> int:
     """Start the Discord bot"""
 
-    from tux.main import run
+    from tux.main import run  # noqa: PLC0415
 
     result = run()
     return 0 if result is None else result

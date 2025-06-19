@@ -5,6 +5,7 @@ This module contains sample benchmark tests to validate performance-critical fun
 
 from __future__ import annotations
 
+import random
 from typing import Any
 
 import pytest
@@ -46,7 +47,6 @@ def test_dict_creation_benchmark(benchmark: Any) -> None:
 @pytest.mark.parametrize("size", [100, 500, 1000])
 def test_list_sorting_benchmark(benchmark: Any, size: int) -> None:
     """Benchmark list sorting with different sizes."""
-    import random
 
     data = [random.randint(1, 1000) for _ in range(size)]
 
@@ -62,9 +62,7 @@ def test_fibonacci_benchmark(benchmark: Any) -> None:
     """Benchmark recursive fibonacci calculation."""
 
     def fibonacci(n: int) -> int:
-        if n <= 1:
-            return n
-        return fibonacci(n - 1) + fibonacci(n - 2)
+        return n if n <= 1 else fibonacci(n - 1) + fibonacci(n - 2)
 
     # Use a smaller number to avoid excessive computation time
     result = benchmark(fibonacci, 20)

@@ -1,4 +1,5 @@
 import datetime
+import math
 
 from loguru import logger
 
@@ -351,7 +352,6 @@ class LevelsController(BaseController[Levels]):
             The calculated level
         """
         # Base calculation: level = floor(sqrt(xp / 100))
-        import math
 
         return math.floor(math.sqrt(xp / 100))
 

@@ -3,6 +3,8 @@
 This module provides all testing-related commands for the Tux project.
 """
 
+from pathlib import Path
+
 import click
 from loguru import logger
 
@@ -154,19 +156,19 @@ def _build_coverage_command(
 
     # Disable pytest-sugar if plain mode requested
     if plain:
-        logger.info("📄 Using plain output (pytest-sugar disabled)...")
+        logger.info("Using plain output (pytest-sugar disabled)...")
         cmd.extend(["-p", "no:sugar"])
 
     # Set coverage path (specific or default)
     if specific:
-        logger.info(f"🔍 Running coverage for specific path: {specific}")
+        logger.info(f"Running coverage for specific path: {specific}")
         cmd.append(f"--cov={specific}")
     else:
         cmd.append("--cov=tux")
 
     # Handle quick mode (no reports)
     if quick:
-        logger.info("⚡ Quick coverage check (no reports)...")
+        logger.info("Quick coverage check (no reports)...")
         cmd.append("--cov-report=")
         cmd.extend(["--randomly-seed=last"])  # Add randomization even for quick tests
         return cmd
@@ -176,7 +178,7 @@ def _build_coverage_command(
 
     # Add fail-under if specified
     if fail_under is not None:
-        logger.info(f"🎯 Running with {fail_under}% coverage threshold...")
+        logger.info(f"Running with {fail_under}% coverage threshold...")
         cmd.extend(["--cov-fail-under", str(fail_under)])
 
     # Add randomization for reproducible test ordering
@@ -187,27 +189,26 @@ def _build_coverage_command(
 
 def _add_report_format(cmd: list[str], report_format: str, xml_file: str | None = None) -> None:
     """Add the appropriate coverage report format to the command."""
-    if report_format == "term":
-        cmd.append("--cov-report=term-missing")
-    elif report_format == "html":
+    if report_format == "html":
         cmd.append("--cov-report=html")
-        logger.info("📊 Generating HTML coverage report...")
+        logger.info("Generating HTML coverage report...")
+    elif report_format == "json":
+        cmd.append("--cov-report=json")
+        logger.info("Generating JSON coverage report...")
+    elif report_format == "term":
+        cmd.append("--cov-report=term-missing")
     elif report_format == "xml":
         if xml_file:
             cmd.append(f"--cov-report=xml:{xml_file}")
-            logger.info(f"📄 Generating XML coverage report: {xml_file}")
+            logger.info(f"Generating XML coverage report: {xml_file}")
         else:
             cmd.append("--cov-report=xml")
-            logger.info("📄 Generating XML coverage report...")
-    elif report_format == "json":
-        cmd.append("--cov-report=json")
-        logger.info("🔢 Generating JSON coverage report...")
+            logger.info("Generating XML coverage report...")
 
 
 def _clean_coverage_files() -> int:
     """Clean coverage files and directories."""
-    import shutil
-    from pathlib import Path
+    import shutil  # noqa: PLC0415
 
     coverage_files = [
         ".coverage",
@@ -221,9 +222,7 @@ def _clean_coverage_files() -> int:
     for pattern in coverage_files:
         if "*" in pattern:
             # Handle glob patterns
-            from pathlib import Path as PathlibPath
-
-            for file_path in PathlibPath().glob(pattern):
+            for file_path in Path().glob(pattern):
                 Path(file_path).unlink(missing_ok=True)
                 logger.debug(f"Removed: {file_path}")
         else:
@@ -235,26 +234,25 @@ def _clean_coverage_files() -> int:
                 shutil.rmtree(path, ignore_errors=True)
                 logger.debug(f"Removed directory: {path}")
 
-    logger.info("✅ Coverage cleanup completed")
+    logger.info("Coverage cleanup completed")
     return 0
 
 
 def _open_html_report() -> int:
     """Open HTML coverage report in the default browser."""
-    import webbrowser
-    from pathlib import Path
+    import webbrowser  # noqa: PLC0415
 
     html_report_path = Path("htmlcov/index.html")
 
     if not html_report_path.exists():
-        logger.error("❌ HTML coverage report not found. Run coverage with --format=html first.")
+        logger.error("HTML coverage report not found. Run coverage with --format=html first.")
         return 1
 
     try:
         webbrowser.open(f"file://{html_report_path.resolve()}")
-        logger.info("🌐 Opening HTML coverage report in browser...")
+        logger.info("Opening HTML coverage report in browser...")
     except Exception as e:
-        logger.error(f"❌ Failed to open HTML report: {e}")
+        logger.error(f"Failed to open HTML report: {e}")
         return 1
     else:
         return 0

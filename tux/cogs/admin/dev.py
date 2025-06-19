@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from loguru import logger
+from reactionmenu import ViewButton, ViewMenu
 
 from tux.bot import Tux
 from tux.utils import checks
@@ -341,7 +342,6 @@ class Dev(commands.Cog):
                 return
 
             # Create a ViewMenu for pagination
-            from reactionmenu import ViewButton, ViewMenu
 
             menu = ViewMenu(
                 ctx,
