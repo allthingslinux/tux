@@ -46,9 +46,17 @@ class Bookmarks(commands.Cog):
                 user = await self.bot.fetch_user(payload.user_id)
             except discord.NotFound:
                 logger.error(f"User not found for ID: {payload.user_id}")
+<<<<<<< HEAD
             except (discord.Forbidden, discord.HTTPException) as fetch_error:
                 logger.error(f"Failed to fetch user: {fetch_error}")
             return
+=======
+                return
+            except (discord.Forbidden, discord.HTTPException) as fetch_error:
+                logger.error(f"Failed to fetch user: {fetch_error}")
+                return
+
+>>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
         # Fetch the channel where the reaction was added
         channel = self.bot.get_channel(payload.channel_id)
         if channel is None:
@@ -56,10 +64,17 @@ class Bookmarks(commands.Cog):
                 channel = await self.bot.fetch_channel(payload.channel_id)
             except discord.NotFound:
                 logger.error(f"Channel not found for ID: {payload.channel_id}")
+<<<<<<< HEAD
             except (discord.Forbidden, discord.HTTPException) as fetch_error:
                 logger.error(f"Failed to fetch channel: {fetch_error}")
             return
 
+=======
+                return
+            except (discord.Forbidden, discord.HTTPException) as fetch_error:
+                logger.error(f"Failed to fetch channel: {fetch_error}")
+                return
+>>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
         channel = cast(discord.TextChannel | discord.Thread, channel)
 
         # Fetch the message that was reacted to
