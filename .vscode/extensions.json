@@ -12,6 +12,7 @@
     "njpwerner.autodocstring",
     "usernamehw.errorlens",
     "sourcery.sourcery",
-    "redhat.vscode-yaml"
+    "redhat.vscode-yaml",
+    "ryanluker.vscode-coverage-gutters"
   ]
 }
