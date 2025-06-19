@@ -20,9 +20,7 @@ class Bookmarks(commands.Cog):
 
     def _is_valid_emoji(self, emoji: discord.PartialEmoji, valid_list: list[int | str]) -> bool:
         # Helper for checking if an emoji is in the list in "settings.yml -> BOOKMARK_EMOJIS"
-        if emoji.id is not None:
-            return emoji.id in valid_list
-        return emoji.name in valid_list
+        return emoji.name in valid_list if emoji.id is None else emoji.id in valid_list
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
@@ -44,14 +42,24 @@ class Bookmarks(commands.Cog):
         # Get the user who reacted to the message
         user = self.bot.get_user(payload.user_id)
         if user is None:
-            logger.error(f"User not found for ID: {payload.user_id}")
+            try:
+                user = await self.bot.fetch_user(payload.user_id)
+            except discord.NotFound:
+                logger.error(f"User not found for ID: {payload.user_id}")
+            except (discord.Forbidden, discord.HTTPException) as fetch_error:
+                logger.error(f"Failed to fetch user: {fetch_error}")
             return
-
         # Fetch the channel where the reaction was added
         channel = self.bot.get_channel(payload.channel_id)
         if channel is None:
-            logger.error(f"Channel not found for ID: {payload.channel_id}")
+            try:
+                channel = await self.bot.fetch_channel(payload.channel_id)
+            except discord.NotFound:
+                logger.error(f"Channel not found for ID: {payload.channel_id}")
+            except (discord.Forbidden, discord.HTTPException) as fetch_error:
+                logger.error(f"Failed to fetch channel: {fetch_error}")
             return
+
         channel = cast(discord.TextChannel | discord.Thread, channel)
 
         # Fetch the message that was reacted to
@@ -75,7 +83,9 @@ class Bookmarks(commands.Cog):
         elif self._is_valid_emoji(payload.emoji, self.valid_remove_emojis):
             await self._delete_bookmark(message, user)
         else:
-            logger.error("How did you fail the 2nd check but passed the first?")
+            logger.error(
+                "First emoji validation check passed but second emoji validation check failed. How the fuck did you get here?",
+            )
             return
 
     async def _create_bookmark_embed(
@@ -95,6 +105,12 @@ class Bookmarks(commands.Cog):
         embed.add_field(name="Author", value=message.author.name, inline=False)
 
         embed.add_field(name="Jump to Message", value=f"[Click Here]({message.jump_url})", inline=False)
+
+        embed.add_field(
+            name="Delete Bookmark",
+            value=f"React with {CONFIG.REMOVE_BOOKMARK[0]} to delete this bookmark.",
+            inline=False,
+        )
 
         if message.attachments:
             attachments_info = "\n".join([attachment.url for attachment in message.attachments])
