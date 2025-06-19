@@ -21,6 +21,7 @@ class Bookmarks(commands.Cog):
     def _is_valid_emoji(self, emoji: discord.PartialEmoji, valid_list: list[int | str]) -> bool:
         # Helper for checking if an emoji is in the list in "settings.yml -> BOOKMARK_EMOJIS"
         return emoji.name in valid_list if emoji.id is None else emoji.id in valid_list
+        return emoji.name in valid_list if emoji.id is None else emoji.id in valid_list
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
@@ -86,6 +87,9 @@ class Bookmarks(commands.Cog):
             logger.error(
                 "First emoji validation check passed but second emoji validation check failed. How the fuck did you get here?",
             )
+            logger.error(
+                "First emoji validation check passed but second emoji validation check failed. How the fuck did you get here?",
+            )
             return
 
     async def _create_bookmark_embed(
@@ -105,6 +109,12 @@ class Bookmarks(commands.Cog):
         embed.add_field(name="Author", value=message.author.name, inline=False)
 
         embed.add_field(name="Jump to Message", value=f"[Click Here]({message.jump_url})", inline=False)
+
+        embed.add_field(
+            name="Delete Bookmark",
+            value=f"React with {CONFIG.REMOVE_BOOKMARK[0]} to delete this bookmark.",
+            inline=False,
+        )
 
         embed.add_field(
             name="Delete Bookmark",
