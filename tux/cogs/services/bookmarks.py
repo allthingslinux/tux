@@ -101,12 +101,16 @@ class Bookmarks(commands.Cog):
             await self._delete_bookmark(message, user)
         else:
 <<<<<<< HEAD
+<<<<<<< HEAD
             logger.error(
                 "First emoji validation check passed but second emoji validation check failed. How the fuck did you get here?",
             )
 =======
             logger.debug("Somehow you managed to get bast the first valid emoji check then failed the 2nd good job?")
 >>>>>>> b9c797a (wip changes)
+=======
+            logger.error("How did you fail the 2nd check but passed the first?")
+>>>>>>> 56bebaf (Added removing bookmarks from the bot's DMs)
             return
 
     async def _create_bookmark_embed(
@@ -134,15 +138,21 @@ class Bookmarks(commands.Cog):
 
     async def _delete_bookmark(self, message: discord.Message, user: discord.User) -> None:
 <<<<<<< HEAD
+<<<<<<< HEAD
         if message.author is not self.bot.user:
             return
         await message.delete()
 =======
         logger.debug("you got to the delte function")
+=======
+>>>>>>> 56bebaf (Added removing bookmarks from the bot's DMs)
         if message.author is not self.bot.user:
-            logger.debug("not tux message")
             return
+<<<<<<< HEAD
 >>>>>>> b9c797a (wip changes)
+=======
+        await message.delete()
+>>>>>>> 56bebaf (Added removing bookmarks from the bot's DMs)
 
     @staticmethod
     async def _send_bookmark(
