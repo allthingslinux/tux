@@ -51,9 +51,20 @@ class Bookmarks(commands.Cog):
         user = self.bot.get_user(payload.user_id)
         if user is None:
 <<<<<<< HEAD
+<<<<<<< HEAD
             logger.error(f"User not found for ID: {payload.user_id}")
 >>>>>>> b9c797a (wip changes)
             return
+=======
+            try:
+                user = await self.bot.fetch_user(payload.user_id)
+            except discord.NotFound:
+                logger.error(f"User not found for ID: {payload.user_id}")
+                return
+            except (discord.Forbidden, discord.HTTPException) as fetch_error:
+                logger.error(f"Failed to fetch user: {fetch_error}")
+                return
+>>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
 
         # Get the user who reacted to the message
         user = self.bot.get_user(payload.user_id)
@@ -91,6 +102,7 @@ class Bookmarks(commands.Cog):
                 logger.error(f"Channel not found for ID: {payload.channel_id}")
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> b8a4072 (added eletrons changes and fixed a warning)
             except (discord.Forbidden, discord.HTTPException) as fetch_error:
@@ -99,13 +111,18 @@ class Bookmarks(commands.Cog):
 
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
                 return
             except (discord.Forbidden, discord.HTTPException) as fetch_error:
                 logger.error(f"Failed to fetch channel: {fetch_error}")
                 return
+<<<<<<< HEAD
 >>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
 =======
 >>>>>>> b8a4072 (added eletrons changes and fixed a warning)
+=======
+>>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
         channel = cast(discord.TextChannel | discord.Thread, channel)
 
         # Fetch the message that was reacted to
@@ -132,6 +149,7 @@ class Bookmarks(commands.Cog):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             logger.error(
                 "First emoji validation check passed but second emoji validation check failed. How the fuck did you get here?",
             )
@@ -146,6 +164,11 @@ class Bookmarks(commands.Cog):
                 "First emoji validation check passed but second emoji validation check failed. How the fuck did you get here?",
             )
 >>>>>>> b8a4072 (added eletrons changes and fixed a warning)
+=======
+            logger.error(
+                "First emoji validation check passed but second emoji validation check failed. How the fuck did you get here?",
+            )
+>>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
             return
 
     async def _create_bookmark_embed(
@@ -174,7 +197,10 @@ class Bookmarks(commands.Cog):
             inline=False,
         )
 
+<<<<<<< HEAD
 >>>>>>> b8a4072 (added eletrons changes and fixed a warning)
+=======
+>>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
         if message.attachments:
             attachments_info = "\n".join([attachment.url for attachment in message.attachments])
             embed.add_field(name="Attachments", value=attachments_info, inline=False)
