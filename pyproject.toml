@@ -5,36 +5,19 @@ authors = [{ name = "All Things Linux", email = "tux@allthingslinux.org" }]
 requires-python = ">=3.13.2,<3.14"
 readme = "README.md"
 urls = { repository = "https://github.com/allthingslinux/tux" }
-dynamic = ["dependencies", "version"]
+version = "0.0.0"
 
 [project.scripts]
 tux = "tux.cli:main"
 
 [build-system]
-requires = ["poetry-core>=2.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
-build-backend = "poetry_dynamic_versioning.backend"
+requires = ["poetry-core>=2.0"]
+build-backend = "poetry.core.masonry.api"
+
 
 [tool.poetry]
 packages = [{ include = "tux" }]
-version = "0.0.0"
 
-[tool.poetry-dynamic-versioning]
-enable = true
-metadata = true
-dirty = true
-format-jinja = """
-   {%- if distance == 0 -%}
-       {{ serialize_pep440(base, stage, revision) }}
-   {%- elif branch == "main" -%}
-       {{ serialize_pep440(base, stage, revision, dev=distance, metadata=[commit]) }}
-   {%- else -%}
-       {{ serialize_pep440(base, stage, revision, dev=distance, metadata=[commit, branch_escaped]) }}
-   {%- endif -%}
-"""
-
-
-[tool.poetry.requires-plugins]
-poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
 
 [tool.poetry.dependencies]
 python = ">=3.13.2,<3.14"
@@ -75,6 +58,20 @@ pre-commit = ">=4.0.0"
 pyright = ">=1.1.358"
 ruff = ">=0.8.0"
 poetry-types = "^0.6.0"
+yamllint = "^1.37.1"
+yamlfix = "^1.17.0"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.0.0"
+pytest-asyncio = "^0.24.0"
+pytest-mock = "^3.14.0"
+pytest-cov = "^6.0.0"
+pytest-sugar = "^1.0.0"
+pytest-xdist = "^3.6.0"
+pytest-randomly = "^3.15.0"
+pytest-timeout = "^2.3.1"
+pytest-html = "^4.1.1"
+pytest-benchmark = "^5.1.0"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.30"
@@ -103,9 +100,11 @@ types-colorama = "^0.4.15.20240311"
 types-pyyaml = "^6.0.12.20250402"
 types-aiofiles = "^24.1.0.20250326"
 types-influxdb-client = "^1.45.0.20241221"
+types-jinja2 = "^2.11.9"
+
 
 [tool.ruff]
-exclude = [".venv", "examples", "tests", ".archive", "typings/**"]
+exclude = [".venv", "examples", ".archive", "typings/**"]
 indent-width = 4
 line-length = 120
 target-version = "py313"
@@ -115,31 +114,31 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 fixable = ["ALL"]
 ignore = ["E501", "N814", "PLR0913", "PLR2004"]
 select = [
-  "I",     # isort
-  "E",     # pycodestyle-error
-  "F",     # pyflakes
-  "PERF",  # perflint
-  "N",     # pep8-naming
-  "TRY",   # tryceratops
-  "UP",    # pyupgrade
-  "FURB",  # refurb
-  "PL",    # pylint
-  "B",     # flake8-bugbear
-  "SIM",   # flake8-simplify
-  "ASYNC", # flake8-async
-  "A",     # flake8-builtins
-  "C4",    # flake8-comprehensions
-  "DTZ",   # flake8-datetimez
-  "EM",    # flake8-errmsg
-  "PIE",   # flake8-pie
-  "T20",   # flake8-print
-  "Q",     # flake8-quotes
-  "RET",   # flake8-return
-  "PTH",   # flake8-use-pathlib
-  "INP",   # flake8-no-pep420
-  "RSE",   # flake8-raise
-  "ICN",   # flake8-import-conventions
-  "RUF",   # ruff
+    "I",     # isort
+    "E",     # pycodestyle-error
+    "F",     # pyflakes
+    "PERF",  # perflint
+    "N",     # pep8-naming
+    "TRY",   # tryceratops
+    "UP",    # pyupgrade
+    "FURB",  # refurb
+    "PL",    # pylint
+    "B",     # flake8-bugbear
+    "SIM",   # flake8-simplify
+    "ASYNC", # flake8-async
+    "A",     # flake8-builtins
+    "C4",    # flake8-comprehensions
+    "DTZ",   # flake8-datetimez
+    "EM",    # flake8-errmsg
+    "PIE",   # flake8-pie
+    "T20",   # flake8-print
+    "Q",     # flake8-quotes
+    "RET",   # flake8-return
+    "PTH",   # flake8-use-pathlib
+    "INP",   # flake8-no-pep420
+    "RSE",   # flake8-raise
+    "ICN",   # flake8-import-conventions
+    "RUF",   # ruff
 ]
 unfixable = []
 
@@ -154,16 +153,9 @@ skip-magic-trailing-comma = false
 [tool.pyright]
 defineConstant = { DEBUG = true }
 enableReachabilityAnalysis = true
-exclude = [
-  "__pypackages__",
-  "_build",
-  "examples",
-  "tests",
-  ".archive",
-  "typings/**",
-]
+exclude = ["__pypackages__", "_build", "examples", ".archive", "typings/**"]
 ignore = [".venv"]
-include = ["tux"]
+include = ["tux", "tests"]
 stubPath = "typings"
 pythonPlatform = "Linux"
 pythonVersion = "3.13"
@@ -174,3 +166,59 @@ strictSetInference = true
 typeCheckingMode = "strict"
 venv = ".venv"
 venvPath = "."
+
+[tool.coverage.run]
+source = ["tux"]
+branch = true
+parallel = true
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/migrations/*",
+    "*/venv/*",
+    "*/.venv/*",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "@abstract",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--cov=tux",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--cov-branch",
+    "-v",
+]
+asyncio_mode = "auto"
+
+[tool.yamlfix]
+comments_min_spaces_from_content = 1
+explicit_start = false
+indent_mapping = 2
+indent_sequence = 4
+line_length = 80
+preserve_quotes = false
+sequence_style = "block_style"

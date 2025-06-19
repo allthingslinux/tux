@@ -19,7 +19,7 @@ async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
     prefix: str | None = None
     if message.guild:
         try:
-            from tux.database.controllers import DatabaseController
+            from tux.database.controllers import DatabaseController  # noqa: PLC0415
 
             prefix = await DatabaseController().guild_config.get_guild_prefix(message.guild.id)
         except Exception as e:

@@ -307,26 +307,33 @@ class FileHashTracker:
             return ""
 
     def has_file_changed(self, file_path: Path, *, silent: bool = False) -> bool:
-        """Check if file has actually changed since last scan."""
-        current_hash = self.get_file_hash(file_path)
+        """Check if a file has changed by comparing content hashes."""
         file_key = str(file_path)
+
+        try:
+            current_hash = self.get_file_hash(file_path)
+        except FileNotFoundError:
+            # File was deleted
+            if file_key in self._file_hashes:
+                del self._file_hashes[file_key]
+            return False
 
         if file_key not in self._file_hashes:
             # First time seeing this file - store hash but don't consider it "changed"
             # unless this is a brand new file that didn't exist before
             self._file_hashes[file_key] = current_hash
-            if not silent:
-                logger.debug(f"First time tracking {file_path.name}, storing baseline hash")
+            # Only log on first discovery, not every save
             return False  # Don't reload on first encounter
 
         if self._file_hashes[file_key] != current_hash:
-            logger.debug(
-                f"Content changed for {file_path.name}: hash {self._file_hashes[file_key][:8]} -> {current_hash[:8]}",
-            )
+            if not silent:
+                old_hash = self._file_hashes[file_key][:8]
+                logger.debug(f"Content changed for {file_path.name}: hash {old_hash} -> {current_hash[:8]}")
             self._file_hashes[file_key] = current_hash
             return True
 
-        logger.debug(f"No content change for {file_path.name}")
+        # Only log "no change" in verbose mode to reduce noise
+        # Skip this debug log to reduce verbosity
         return False
 
     def clear_cache(self) -> None:
@@ -848,25 +855,23 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
 
     @span("watcher.on_modified")
     def on_modified(self, event: watchdog.events.FileSystemEvent) -> None:
-        """Handle file modification events with debouncing and validation."""
-        # Skip non-Python files and directories
-        if event.is_directory or not str(event.src_path).endswith(".py"):
+        """Handle file modification events with reduced verbosity."""
+        if event.is_directory:
             return
 
         file_path = Path(str(event.src_path))
 
-        # Skip temporary/backup files
-        if file_path.name.startswith(".") or file_path.name.endswith((".tmp", ".bak", ".swp")):
+        # Filter out irrelevant files early
+        if not self._should_watch_file(file_path):
             return
-
-        logger.debug(f"File modification event: {file_path.name}")
 
         # Check if file actually changed - this prevents unnecessary reloads on save without changes
         if not self.dependency_graph.has_file_changed(file_path):
-            logger.debug(f"File {file_path.name} saved but content unchanged, skipping reload")
+            # Skip logging for unchanged files to reduce noise
             return
 
-        logger.debug(f"File {file_path.name} content changed, scheduling reload")
+        # Only log when we're actually going to process the change
+
         file_key = str(file_path)
 
         # Cancel existing debounce timer if any
@@ -883,6 +888,14 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         except Exception as e:
             logger.error(f"Failed to schedule file change handler: {e}")
 
+    def _should_watch_file(self, file_path: Path) -> bool:
+        """Check if a file should be watched for changes."""
+        return (
+            str(file_path).endswith(".py")
+            and not file_path.name.startswith(".")
+            and not file_path.name.endswith((".tmp", ".bak", ".swp"))
+        )
+
     def _handle_file_change_debounced(self, file_path: Path) -> None:
         """Handle file change after debounce period with comprehensive error handling."""
         file_key = str(file_path)
@@ -890,8 +903,6 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         # Remove from debounce tracking
         if file_key in self._debounce_timers:
             del self._debounce_timers[file_key]
-
-        logger.debug(f"Processing file change: {file_path.name}")
 
         # Validate syntax before attempting reload (if enabled)
         if self._config.validate_syntax and file_path.suffix == ".py" and not validate_python_syntax(file_path):
@@ -1112,12 +1123,12 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         with suppress(commands.ExtensionNotLoaded):
             await self._reload_extension_core(extension)
 
-            # Log individual reloads at INFO level for single operations
+            # Log individual reloads at DEBUG level for single operations
             if extension.startswith("tux.cogs"):
                 short_name = extension.replace("tux.cogs.", "")
-                logger.info(f"✅ Reloaded {short_name}")
+                logger.debug(f"✅ Reloaded {short_name}")
             else:
-                logger.info(f"✅ Reloaded extension {extension}")
+                logger.debug(f"✅ Reloaded extension {extension}")
 
     def _clear_extension_modules(self, extension: str, *, verbose: bool = True) -> None:
         """Clear modules related to an extension from sys.modules."""
@@ -1525,7 +1536,7 @@ def validate_hot_reload_requirements() -> list[str]:
 
     # Check if required modules are available
     try:
-        import watchdog
+        import watchdog  # noqa: PLC0415
 
         if not hasattr(watchdog, "observers"):
             issues.append("watchdog.observers not available")

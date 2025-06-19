@@ -1,0 +1,230 @@
+name: Docker Build & Deploy
+on:
+  push:
+    tags:
+      - v*
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: 0 2 * * 0    # Weekly cleanup on Sundays
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  DOCKER_BUILD_SUMMARY: true
+  DOCKER_BUILD_CHECKS_ANNOTATIONS: true
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Prepare version info
+        id: version
+        run: |
+          # For PR validation, use PR number and short SHA for version
+          VERSION="pr-${{ github.event.number }}-$(echo "${{ github.sha }}" | cut -c1-7)"
+          {
+            echo "version=$VERSION"
+            echo "git_sha=${{ github.sha }}"
+            echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          } >> "$GITHUB_OUTPUT"
+      - name: Build for validation (Git context)
+        uses: docker/build-push-action@v6.18.0
+        timeout-minutes: 15
+        with:
+          target: production
+          push: false
+          load: true
+          cache-from: |
+            type=gha
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ hashFiles('poetry.lock') }}
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=gha,mode=max
+          tags: tux:pr-${{ github.event.number }}
+          build-args: |
+            VERSION=${{ steps.version.outputs.version }}
+            GIT_SHA=${{ steps.version.outputs.git_sha }}
+            BUILD_DATE=${{ steps.version.outputs.build_date }}
+          annotations: |
+            org.opencontainers.image.title="Tux"
+            org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community"
+            org.opencontainers.image.source="https://github.com/allthingslinux/tux"
+            org.opencontainers.image.licenses="GPL-3.0"
+            org.opencontainers.image.authors="All Things Linux"
+            org.opencontainers.image.vendor="All Things Linux"
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.documentation="https://github.com/allthingslinux/tux/blob/main/README.md"
+      - name: Test container starts
+        run: |
+          docker run --rm --name tux-test \
+            --entrypoint python \
+            tux:pr-${{ github.event.number }} \
+            -c "import tux; import sqlite3; import asyncio; print('🔍 Testing bot imports...'); print('✅ Main bot module imports successfully'); print('✅ SQLite available'); print('✅ Asyncio available'); conn = sqlite3.connect(':memory:'); conn.close(); print('✅ Database connectivity working'); print('🎉 All smoke tests passed!')"
+  build:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+      actions: read
+      id-token: write
+    outputs:
+      image: ${{ steps.meta.outputs.tags }}
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Prepare version info
+        id: version
+        run: |
+          # Try to get version from git tags, fallback to SHA (consistent with Dockerfile)
+          # Execute git commands only once and store results to avoid transient failures
+          if EXACT_TAG=$(git describe --tags --exact-match 2>/dev/null); then
+            VERSION=${EXACT_TAG#v}
+          elif TAG_DESC=$(git describe --tags --always 2>/dev/null); then
+            VERSION=${TAG_DESC#v}
+          else
+            VERSION="$(date +'%Y%m%d')-$(echo "${{ github.sha }}" | cut -c1-7)"
+          fi
+          {
+            echo "version=$VERSION"
+            echo "git_sha=${{ github.sha }}"
+            echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          } >> "$GITHUB_OUTPUT"
+          echo "Using version: $VERSION"
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            image=moby/buildkit:buildx-stable-1
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=${{ github.ref == 'refs/heads/main' }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha
+          labels: |
+            org.opencontainers.image.title="Tux"
+            org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community"
+            org.opencontainers.image.source="https://github.com/${{ github.repository }}"
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses="GPL-3.0"
+            org.opencontainers.image.authors="All Things Linux"
+            org.opencontainers.image.vendor="All Things Linux"
+            org.opencontainers.image.documentation="https://github.com/allthingslinux/tux/blob/main/README.md"
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v6.18.0
+        timeout-minutes: 20
+        with:
+          context: .
+          target: production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: |
+            type=gha
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ hashFiles('poetry.lock') }}
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: |
+            type=gha,mode=max
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ github.run_id }},mode=max
+          platforms: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
+          provenance: ${{ startsWith(github.ref, 'refs/tags/') }}
+          sbom: ${{ startsWith(github.ref, 'refs/tags/') }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+            VERSION=${{ steps.version.outputs.version }}
+            GIT_SHA=${{ steps.version.outputs.git_sha }}
+            BUILD_DATE=${{ steps.version.outputs.build_date }}
+      - name: Test pushed image
+        run: |
+          docker run --rm --name tux-prod-test \
+            --entrypoint python \
+            "$(echo '${{ steps.meta.outputs.tags }}' | head -1)" \
+            -c "import tux; import sqlite3; import asyncio; print('🔍 Testing production image...'); print('✅ Bot imports successfully'); print('✅ Dependencies available'); conn = sqlite3.connect(':memory:'); conn.close(); print('✅ Database connectivity working'); print('🎉 Production image verified!')"
+  security:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get first image tag
+        id: first_tag
+        run: echo "image=$(echo '${{ needs.build.outputs.image }}' | head -1)" >>
+          "$GITHUB_OUTPUT"
+      - name: Cache Trivy
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/trivy
+          key: cache-trivy-${{ github.run_id }}
+          restore-keys: |
+            cache-trivy-
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.first_tag.outputs.image }}
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          scanners: vuln
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+      - name: Fail on critical vulnerabilities (excluding known issues)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.first_tag.outputs.image }}
+          format: table
+          severity: CRITICAL
+          exit-code: '1'
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+          scanners: vuln
+  cleanup:
+    if: github.event_name != 'pull_request' && (github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Delete old container versions
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: tux
+          package-type: container
+          min-versions-to-keep: 10
+          delete-only-untagged-versions: false

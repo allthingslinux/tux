@@ -56,4 +56,4 @@ def getoutput(code: str, compiler: str, options: str | None) -> dict[str, Any] |
             ) from e  # Using compiler as resource identifier
         raise APIRequestError(service_name="Wandbox", status_code=e.response.status_code, reason=e.response.text) from e
     else:
-        return uri.json() if uri.status_code == httpx.codes.OK else None
+        return uri.json() if uri.status_code == 200 else None

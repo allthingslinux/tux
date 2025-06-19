@@ -1,0 +1,102 @@
+name: Maintenance
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      cleanup_images:
+        description: Clean up old Docker images
+        type: boolean
+        default: false
+      keep_amount:
+        description: Number of images to keep
+        required: false
+        default: '10'
+      remove_untagged:
+        description: Remove untagged images
+        type: boolean
+        default: false
+      manual_commit_ref:
+        description: SHA to compare for TODOs
+        required: false
+      manual_base_ref:
+        description: Optional earlier SHA for TODOs
+        required: false
+  schedule:
+    - cron: 0 3 * * 0  # Weekly cleanup on Sundays at 3 AM
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  todo-to-issues:
+    name: Convert TODOs to Issues
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.manual_commit_ref)
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Convert TODOs to Issues
+        uses: alstr/todo-to-issue-action@v5.1.12
+        with:
+          CLOSE_ISSUES: true
+          INSERT_ISSUE_URLS: true
+          AUTO_ASSIGN: true
+          IDENTIFIERS: '[{"name": "TODO", "labels": ["enhancement"]}, {"name": "FIXME",
+            "labels": ["bug"]}]'
+          ESCAPE: true
+          IGNORE: .github/,node_modules/,dist/,build/,vendor/,poetry.lock
+          PROJECTS_SECRET: ${{ secrets.ADMIN_PAT }}
+        env:
+          MANUAL_COMMIT_REF: ${{ github.event.inputs.manual_commit_ref }}
+          MANUAL_BASE_REF: ${{ github.event.inputs.manual_base_ref }}
+  cleanup-docker-images:
+    name: Cleanup Docker Images
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch'
+      && github.event.inputs.cleanup_images == 'true')
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Delete old container versions
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: tux
+          package-type: container
+          min-versions-to-keep: ${{ github.event.inputs.keep_amount || '10' }}
+          delete-only-untagged-versions: ${{ github.event.inputs.remove_untagged || 'false' }}
+  health-check:
+    name: Repository Health Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Check for large files
+        run: |
+          echo "Checking for files larger than 50MB..."
+          find . -type f -size +50M -not -path "./.git/*" || echo "No large files found"
+      - name: Check for outdated dependencies
+        run: |
+          if command -v poetry &> /dev/null; then
+            echo "Checking for outdated dependencies..."
+            poetry show --outdated || echo "All dependencies up to date"
+          fi
+      - name: Repository statistics
+        run: |-
+          echo "Repository Statistics:"
+          echo "====================="
+          echo "Total files: $(find . -type f -not -path "./.git/*" | wc -l)"
+          echo "Python files: $(find . -name "*.py" -not -path "./.git/*" | wc -l)"
+          echo "Lines of Python code: $(find . -name "*.py" -not -path "./.git/*" -exec wc -l {} + 2>/dev/null | tail -1 || echo "0")"
+          echo "Docker files: $(find . -name "Dockerfile*" -o -name "docker-compose*.yml" | wc -l)"

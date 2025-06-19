@@ -1,0 +1,176 @@
+# Auto normalize line endings for all text files
+* text=auto
+
+#
+# Source Code
+#
+*.py text eol=lf
+*.pyi text eol=lf
+*.pyx text eol=lf
+
+#
+# Configuration Files
+#
+*.toml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.ini text eol=lf
+*.cfg text eol=lf
+*.conf text eol=lf
+
+#
+# Documentation
+#
+*.md text eol=lf
+*.mdc text eol=lf
+*.rst text eol=lf
+*.txt text eol=lf
+
+#
+# Docker Files
+#
+Dockerfile text eol=lf
+*.dockerfile text eol=lf
+docker-compose*.yml text eol=lf
+.dockerignore text eol=lf
+
+#
+# Shell Scripts & Nix
+#
+*.sh text eol=lf
+*.bash text eol=lf
+*.zsh text eol=lf
+*.fish text eol=lf
+*.nix text eol=lf
+
+#
+# Web Files (if any)
+#
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+*.jsx text eol=lf
+*.tsx text eol=lf
+
+#
+# Environment & Config Files
+#
+.env* text eol=lf
+*.env text eol=lf
+
+#
+# Git Files
+#
+.gitignore text eol=lf
+.gitattributes text eol=lf
+.gitmodules text eol=lf
+
+#
+# Lock Files (binary-like treatment)
+#
+poetry.lock text eol=lf linguist-generated=true
+package-lock.json text eol=lf linguist-generated=true
+yarn.lock text eol=lf linguist-generated=true
+Pipfile.lock text eol=lf linguist-generated=true
+
+#
+# Binary Files
+#
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.svg binary
+*.bmp binary
+*.tiff binary
+
+#
+# Media Files
+#
+*.mp4 binary
+*.mov binary
+*.avi binary
+
+#
+# Archive Files
+#
+*.zip binary
+*.tar binary
+*.tar.gz binary
+*.tar.bz2 binary
+*.tar.xz binary
+*.7z binary
+*.rar binary
+
+#
+# Database Files
+#
+*.db binary
+*.sqlite binary
+*.sqlite3 binary
+
+#
+# Font Files
+#
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.eot binary
+
+#
+# Python Compiled Files
+#
+*.pyc binary
+*.pyo binary
+*.pyd binary
+
+#
+# Other Binary Files
+#
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+
+#
+# Special Handling for Prisma Schema (using correct glob pattern)
+#
+prisma/schema/**/*.prisma text eol=lf
+
+#
+# Files to exclude from Git archive exports
+#
+.gitignore export-ignore
+.gitattributes export-ignore
+.github/ export-ignore
+.vscode/ export-ignore
+.devcontainer/ export-ignore
+.trunk/ export-ignore
+.cache/ export-ignore
+.ruff_cache/ export-ignore
+__pycache__/ export-ignore
+*.pyc export-ignore
+.pytest_cache/ export-ignore
+.mypy_cache/ export-ignore
+.coverage export-ignore
+htmlcov/ export-ignore
+.env* export-ignore
+logs/ export-ignore
+
+#
+# Language Detection Overrides
+#
+*.md linguist-documentation
+*.rst linguist-documentation
+LICENSE* linguist-documentation
+CHANGELOG* linguist-documentation
+CONTRIBUTING* linguist-documentation
+docs/ linguist-documentation
+
+# Ensure Python is detected as the primary language
+*.py linguist-detectable=true

@@ -1,0 +1,339 @@
+name: CI
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  # Python linting (runs only if Python files changed)
+  python:
+    name: Python
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check for Python changes
+        uses: tj-actions/changed-files@v45.0.8
+        id: python_changes
+        with:
+          files: |
+            **/*.py
+            pyproject.toml
+            poetry.lock
+      - name: Skip if no Python changes
+        if: steps.python_changes.outputs.any_changed != 'true' && github.event_name
+          != 'workflow_dispatch'
+        run: |
+          echo "No Python files changed, skipping Python quality checks"
+          echo "To force run checks, use workflow_dispatch trigger"
+          exit 0
+      - name: Install Poetry
+        run: pipx install poetry
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: poetry
+      - name: Install dependencies
+        run: poetry install --with=dev,types --no-interaction --no-ansi
+      - name: Generate Prisma client
+        run: poetry run prisma generate
+      - name: Run Pyright type checker
+        uses: jakebailey/pyright-action@v2
+        with:
+          annotate: errors
+
+  # Test suite
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Check for Python changes
+        uses: tj-actions/changed-files@v45.0.8
+        id: python_changes
+        with:
+          files: |
+            **/*.py
+            pyproject.toml
+            poetry.lock
+            tests/**
+            conftest.py
+      - name: Skip if no Python/test changes
+        if: steps.python_changes.outputs.any_changed != 'true' && github.event_name
+          != 'workflow_dispatch'
+        run: |
+          echo "No Python or test files changed, skipping tests"
+          echo "To force run tests, use workflow_dispatch trigger"
+          exit 0
+      - name: Install Poetry
+        run: pipx install poetry
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: poetry
+      - name: Install dependencies
+        run: poetry install --with=dev,test,types --no-interaction --no-ansi
+      - name: Generate Prisma client
+        run: poetry run prisma generate
+      - name: Create test environment file
+        run: |
+          cat > .env << EOF
+          DEV_DATABASE_URL=sqlite:///tmp/test.db
+          PROD_DATABASE_URL=sqlite:///tmp/test.db
+          DEV_BOT_TOKEN=test_token_for_ci
+          PROD_BOT_TOKEN=test_token_for_ci
+          EOF
+      - name: Run unit tests with coverage
+        run: |
+          echo "Running unit tests with coverage..."
+          poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-unit.xml --cov-report=term-missing -m "not slow and not docker" --junitxml=junit-unit.xml -o junit_family=legacy --cov-fail-under=0
+          echo "Unit test coverage generation completed"
+      - name: Debug coverage file before upload
+        if: always()
+        run: |
+          echo "Checking coverage files..."
+          ls -la coverage-*.xml || echo "No coverage files found"
+          if [ -f ./coverage-unit.xml ]; then
+            echo "Unit coverage file size: $(stat -c%s ./coverage-unit.xml) bytes"
+            echo "Unit coverage file first few lines:"
+            head -n 5 ./coverage-unit.xml || echo "Could not read coverage file"
+          else
+            echo "Unit coverage file not found"
+          fi
+          echo "Event: ${{ github.event_name }}"
+          echo "Head repo: ${{ github.event.pull_request.head.repo.full_name }}"
+          echo "Base repo: ${{ github.repository }}"
+      - name: Upload unit test coverage to Codecov
+        uses: codecov/codecov-action@v5
+        if: hashFiles('./coverage-unit.xml') != ''
+        with:
+          files: ./coverage-unit.xml
+          flags: unit
+          name: unit-tests
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: allthingslinux/tux
+          fail_ci_if_error: false
+          verbose: true
+          disable_search: true
+      - name: Upload unit test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          file: ./junit-unit.xml
+          flags: unit
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      # Check if database tests exist before running them
+      - name: Check for database tests
+        id: check_db_tests
+        run: |
+          if find tests/tux/database/ -name "test_*.py" -type f | grep -q .; then
+            echo "has_tests=true" >> "$GITHUB_OUTPUT"
+            echo "Database tests found"
+          else
+            echo "has_tests=false" >> "$GITHUB_OUTPUT"
+            echo "No database tests found, skipping database test suite"
+          fi
+
+      # Run database-specific tests with dedicated flag (only if tests exist)
+      - name: Run database tests with coverage
+        if: steps.check_db_tests.outputs.has_tests == 'true'
+        run: poetry run pytest tests/tux/database/ -v --cov=tux/database --cov-branch
+          --cov-report=xml:coverage-database.xml --junitxml=junit-database.xml -o
+          junit_family=legacy --cov-fail-under=0
+      - name: Upload database test coverage to Codecov
+        if: steps.check_db_tests.outputs.has_tests == 'true' && hashFiles('./coverage-database.xml')
+          != ''
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage-database.xml
+          flags: database
+          name: database-tests
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: allthingslinux/tux
+          fail_ci_if_error: false
+          verbose: true
+          disable_search: true
+      - name: Upload database test results to Codecov
+        if: steps.check_db_tests.outputs.has_tests == 'true' && !cancelled()
+        uses: codecov/test-results-action@v1
+        with:
+          file: ./junit-database.xml
+          flags: database
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      # Check if integration tests (slow tests) exist before running them
+      - name: Check for integration tests
+        id: check_integration_tests
+        run: |
+          if poetry run pytest --collect-only -m "slow" -q tests/ | grep -q "test session starts"; then
+            echo "has_tests=true" >> "$GITHUB_OUTPUT"
+            echo "Integration tests found"
+          else
+            echo "has_tests=false" >> "$GITHUB_OUTPUT"
+            echo "No integration tests found, skipping integration test suite"
+          fi
+
+      # Optional: Run integration tests separately (if you have them)
+      - name: Clean up previous coverage files before integration tests
+        if: steps.check_integration_tests.outputs.has_tests == 'true'
+        run: |
+          echo "Cleaning up previous coverage files to avoid conflicts..."
+          rm -f coverage-unit.xml coverage-database.xml || true
+          echo "Current coverage files:"
+          ls -la coverage-*.xml 2>/dev/null || echo "No coverage files found"
+      - name: Run integration tests with coverage
+        if: steps.check_integration_tests.outputs.has_tests == 'true'
+        run: poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-integration.xml
+          -m "slow" --junitxml=junit-integration.xml -o junit_family=legacy --cov-fail-under=0
+        continue-on-error: true  # Don't fail CI if integration tests fail
+      - name: Upload integration test coverage to Codecov
+        if: steps.check_integration_tests.outputs.has_tests == 'true' && hashFiles('./coverage-integration.xml')
+          != ''
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage-integration.xml
+          flags: integration
+          name: integration-tests
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: allthingslinux/tux
+          fail_ci_if_error: false
+          verbose: true
+          disable_search: true
+      - name: Upload integration test results to Codecov
+        if: steps.check_integration_tests.outputs.has_tests == 'true' && !cancelled()
+        uses: codecov/test-results-action@v1
+        with:
+          file: ./junit-integration.xml
+          flags: integration
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  # Markdown linting (YAML/JSON handled by pre-commit.ci)
+  markdown-lint:
+    name: Markdown Linting
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Check for Markdown changes
+        uses: tj-actions/changed-files@v45.0.8
+        id: markdown_changes
+        with:
+          files: '**/*.md'
+      - name: Skip if no Markdown changes
+        if: steps.markdown_changes.outputs.any_changed != 'true'
+        run: |
+          echo "No Markdown files changed, skipping Markdown linting"
+          exit 0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install markdownlint
+        run: npm install -g markdownlint-cli
+      - name: Run Markdown linting
+        run: |
+          npx markdownlint \
+            --disable MD013 MD033 MD041 \
+            --ignore node_modules \
+            --ignore .venv \
+            --ignore .archive \
+            "**/*.md"
+
+  # Infrastructure linting
+  infrastructure:
+    name: Infrastructure (${{ matrix.type }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - type: Docker
+            files: Dockerfile*,docker-compose*.yml
+          - type: GitHub Actions
+            files: .github/workflows/**
+          - type: Shell Scripts
+            files: '**/*.sh,**/*.bash,scripts/**'
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Check for ${{ matrix.type }} changes
+        uses: tj-actions/changed-files@v45.0.8
+        id: infra_changes
+        with:
+          files: ${{ matrix.files }}
+      - name: Skip if no ${{ matrix.type }} changes
+        if: steps.infra_changes.outputs.any_changed != 'true'
+        run: |
+          echo "No ${{ matrix.type }} files changed, skipping ${{ matrix.type }} linting"
+          exit 0
+      - name: Set up Docker Compose v2
+        if: matrix.type == 'Docker'
+        run: |
+          # Docker Compose v2 is pre-installed on GitHub runners
+          # Just verify it's available and supports the develop configuration
+          docker compose version
+          echo "✅ Docker Compose v2 is available"
+      - name: Create .env file for Docker Compose validation
+        if: matrix.type == 'Docker'
+        run: |
+          # Create .env file for CI validation with minimal required values
+          cat > .env << EOF
+          DEV_DATABASE_URL=sqlite:///tmp/test.db
+          PROD_DATABASE_URL=sqlite:///tmp/test.db
+          DEV_BOT_TOKEN=test_token_for_ci_validation
+          PROD_BOT_TOKEN=test_token_for_ci_validation
+          EOF
+      - name: Run Docker linting
+        if: matrix.type == 'Docker'
+        run: |
+          # Hadolint with inline config
+          docker run --rm -i hadolint/hadolint hadolint \
+            --ignore DL3008 \
+            --ignore DL3009 \
+            - < Dockerfile
+
+          # Docker Compose validation (compatible with older versions)
+          # Check if docker compose (v2) is available, fallback to docker-compose (v1)
+          if command -v docker compose >/dev/null 2>&1; then
+            echo "Using Docker Compose v2"
+            docker compose -f docker-compose.yml config --quiet
+            docker compose -f docker-compose.dev.yml config --quiet
+          elif command -v docker-compose >/dev/null 2>&1; then
+            echo "Using Docker Compose v1"
+            docker-compose -f docker-compose.yml config --quiet
+            docker-compose -f docker-compose.dev.yml config --quiet
+          else
+            echo "Neither docker compose nor docker-compose found"
+            exit 1
+          fi
+      - name: Run GitHub Actions linting
+        if: matrix.type == 'GitHub Actions'
+        uses: raven-actions/actionlint@v1
+        with:
+          files: .github/workflows/*.yml
+      - name: Run Shell linting
+        if: matrix.type == 'Shell Scripts'
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: ./scripts

@@ -36,12 +36,12 @@ BOT_INFO:
 
 # This allows sysadmins to use the eval and jsk commands which can execute arbitrary code.
 # Do enable if:
-# - Tux is dockerized 
+# - Tux is dockerized
 # - You trust your sysadmins with anything that the docker container can do (e.g if they already can access the host system)
 # - You are a small server
 # DO NOT ENABLE IF:
 # - Tux is not dockerized and you do not trust your sysadmins with the host system
-# - You are a large server and Tux has full permissions 
+# - You are a large server and Tux has full permissions
 # - You do not trust your sysadmins with anything that the docker container can do
 # - IF YOU ARE A MULTIPLE SERVER INSTANCE, DO NOT ENABLE IT FOR THE LOVE OF GOD
 # If you are not sure, do not enable this.

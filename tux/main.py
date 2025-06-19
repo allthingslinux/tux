@@ -4,7 +4,13 @@ from tux.app import TuxApp
 
 
 def run() -> None:
-    """Instantiate and run the Tux application."""
+    """
+    Instantiate and run the Tux application.
+
+    This function is the entry point for the Tux application.
+    It creates an instance of the TuxApp class and runs it.
+    """
+
     app = TuxApp()
     app.run()
 

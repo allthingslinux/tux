@@ -223,4 +223,4 @@ All contributors are expected to adhere to the project's [Code of Conduct](https
 
 ## License
 
-By contributing to Tux, you agree that your contributions will be licensed under the [GNU General Public License v3.0](https://github.com/allthingslinux/tux/blob/main/LICENSE.md).
+By contributing to Tux, you agree that your contributions will be licensed under the [GNU General Public License v3.0](https://github.com/allthingslinux/tux/blob/main/LICENSE).

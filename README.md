@@ -4,21 +4,49 @@
 
 <div align="center">
     <p align="center">
-        <a href="https://github.com/allthingslinux/tux/forks">
-            <img alt="Forks" src="https://img.shields.io/github/commit-activity/m/allthingslinux/tux?style=for-the-badge&logo=git&color=EBA0AC&logoColor=EBA0AC&labelColor=302D41"></a>
+        <a href="https://github.com/allthingslinux/tux/actions">
+            <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/allthingslinux/tux/ci.yml?branch=main&label=CI"></a>
+        <a href="https://results.pre-commit.ci/latest/github/allthingslinux/tux/main">
+            <img alt="pre-commit.ci status" src="https://results.pre-commit.ci/badge/github/allthingslinux/tux/main.svg"></a>
+        <a href="https://codecov.io/gh/allthingslinux/tux">
+            <img alt="Codecov" src="https://codecov.io/gh/allthingslinux/tux/graph/badge.svg?token=R0AUAS996W"></a>
+        <a href="https://github.com/allthingslinux/tux/commits/main">
+            <img alt="Commit Activity" src="https://img.shields.io/github/commit-activity/m/allthingslinux/tux"></a>
+        <a href="https://github.com/allthingslinux/tux/releases">
+            <img alt="GitHub Release" src="https://img.shields.io/github/v/release/allthingslinux/tux"></a>
+        <a href="https://github.com/allthingslinux/tux/stargazers">
+            <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/allthingslinux/tux"></a>
+        <a href="https://github.com/allthingslinux/tux/network/members">
+            <img alt="GitHub forks" src="https://img.shields.io/github/forks/allthingslinux/tux"></a>
+        <a href="https://github.com/allthingslinux/tux/graphs/contributors">
+            <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/allthingslinux/tux"></a>
         <a href="https://github.com/allthingslinux/tux/issues">
-            <img alt="Issues" src="https://img.shields.io/github/issues/allthingslinux/tux?style=for-the-badge&logo=githubactions&color=F9E2AF&logoColor=F9E2AF&labelColor=302D41"></a>
+            <img alt="Issues" src="https://img.shields.io/github/issues/allthingslinux/tux"></a>
         <a href="https://github.com/allthingslinux/tux">
-            <img alt="Repo size" src="https://img.shields.io/github/repo-size/allthingslinux/tux?style=for-the-badge&logo=github&color=FAB387&logoColor=FAB387&labelColor=302D41"/></a>
-        <a href="https://github.com/allthingslinux/tux/LICENSE">
-            <img alt="License" src="https://img.shields.io/github/license/allthingslinux/tux?style=for-the-badge&logo=github&color=A6E3A1&logoColor=A6E3A1&labelColor=302D41"></a>
+            <img alt="Repo size" src="https://img.shields.io/github/repo-size/allthingslinux/tux"></a>
+        <a href="https://python.org">
+            <img alt="Python" src="https://img.shields.io/badge/python-3.13+-blue.svg"></a>
+        <a href="https://python-poetry.org">
+            <img alt="Poetry" src="https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json"></a>
+        <a href="https://github.com/allthingslinux/tux/blob/main/LICENSE">
+            <img alt="License" src="https://img.shields.io/github/license/allthingslinux/tux"></a>
         <a href="https://discord.gg/linux">
-            <img alt="Discord" src="https://img.shields.io/discord/1172245377395728464?style=for-the-badge&logo=discord&color=B4BEFE&logoColor=B4BEFE&labelColor=302D41"></a>
+            <img alt="Discord" src="https://img.shields.io/discord/1172245377395728464?logo=discord"></a>
     </p>
 </div>
 
 > [!WARNING]
-**This bot is still a work in progress and issues are expected. If you self-host our bot please join our support server [here](https://discord.gg/gpmSjcjQxg) for announcements and support.**
+**This bot is still a work in progress and issues are expected. If you self-host our bot please join our support server [on Discord](https://discord.gg/gpmSjcjQxg) for announcements and support.**
+
+## Table of Contents
+
+- [About](#about)
+- [Tech Stack](#tech-stack)
+- [Bot Features](#bot-features)
+- [Installation and Development](#installation-and-development)
+- [License](#license)
+- [Metrics](#metrics)
+- [Contributors](#contributors)
 
 ## About
 
@@ -89,7 +117,7 @@ It is designed to provide a variety of features to the server, including moderat
 
 This project is licensed under the GNU General Public License v3.0.
 
-See [LICENSE](LICENSE.md) for details.
+See [LICENSE](LICENSE) for details.
 
 ## Metrics
 
