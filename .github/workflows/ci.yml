@@ -72,18 +72,11 @@ jobs:
       contents: read          # Required for checkout
       pull-requests: write   # Required for Pyright annotations
     steps:
-      # REPOSITORY CHECKOUT
-      # Full history needed for accurate change detection
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      # SMART CHANGE DETECTION
+      # SMART CHANGE DETECTION WITH CHECKOUT
       # Detects Python file changes to skip unnecessary runs
       # Includes Python source, config files, and dependencies
-      - name: Check for Python changes
-        uses: tj-actions/changed-files@v45.0.8
+      - name: Detect Python changes
+        uses: ./.github/actions/detect-changes
         id: python_changes
         with:
           files: |
@@ -101,18 +94,18 @@ jobs:
           echo "✅ No Python files changed, skipping Python quality checks"
           echo "💡 To force run checks, use workflow_dispatch trigger"
 
-      # PYTHON ENVIRONMENT SETUP (REUSABLE WORKFLOW)
+      # PYTHON ENVIRONMENT SETUP (COMPOSITE ACTION)
       # Uses centralized Python setup for consistency and maintainability
       # Configured for CI/linting with dev and types dependency groups
       - name: Setup Python Environment
         if: steps.python_changes.outputs.any_changed == 'true' || github.event_name
           == 'workflow_dispatch'
-        uses: ./.github/workflows/_setup-python.yml
+        uses: ./.github/actions/setup-python
         with:
           python-version: '3.13'
           install-groups: dev,types
           cache-suffix: ci
-          generate-prisma: true
+          generate-prisma: 'true'
 
       # STATIC TYPE CHECKING
       # Pyright provides comprehensive type checking for Python
@@ -137,16 +130,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      # REPOSITORY CHECKOUT
-      # Shallow clone sufficient for linting current state
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      # MARKDOWN CHANGE DETECTION
+      # SMART CHANGE DETECTION WITH CHECKOUT
       # Only runs when documentation files change
       # Improves CI performance for code-only changes
-      - name: Check for Markdown changes
-        uses: tj-actions/changed-files@v45.0.8
+      - name: Detect Markdown changes
+        uses: ./.github/actions/detect-changes
         id: markdown_changes
         with:
           files: '**/*.md'
@@ -158,34 +146,11 @@ jobs:
         run: |
           echo "✅ No Markdown files changed, skipping Markdown linting"
 
-      # NODE.JS ENVIRONMENT SETUP
-      # Required for markdownlint-cli installation and execution
-      # Version 20 provides latest features and security updates
-      - name: Setup Node.js
+      # NODE.JS ENVIRONMENT SETUP WITH MARKDOWNLINT
+      # Sets up Node.js and installs markdownlint-cli with caching
+      - name: Setup Node.js and markdownlint
         if: steps.markdown_changes.outputs.any_changed == 'true'
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-          cache-dependency-path: '**/package*.json'
-
-      # NPM CACHE OPTIMIZATION
-      # Reduces markdownlint installation time on repeated runs
-      # Content-based cache key ensures fresh installs when needed
-      - name: Cache node modules
-        if: steps.markdown_changes.outputs.any_changed == 'true'
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: node-${{ runner.os }}-${{ hashFiles('**/package*.json') }}
-          restore-keys: |
-            node-${{ runner.os }}-
-
-      # MARKDOWNLINT INSTALLATION
-      # Global installation for CLI usage across all files
-      - name: Install markdownlint
-        if: steps.markdown_changes.outputs.any_changed == 'true'
-        run: npm install -g markdownlint-cli
+        uses: ./.github/actions/setup-nodejs-markdown
 
       # MARKDOWN LINTING EXECUTION
       # Custom rule configuration balances strictness with practicality
@@ -239,16 +204,11 @@ jobs:
           - type: Shell Scripts
             files: '**/*.sh,**/*.bash,scripts/**'
     steps:
-      # REPOSITORY CHECKOUT
-      # Shallow clone sufficient for infrastructure validation
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      # CATEGORY-SPECIFIC CHANGE DETECTION
+      # SMART CHANGE DETECTION WITH CHECKOUT
       # Each matrix job only runs if relevant files changed
       # Improves efficiency by skipping unchanged categories
-      - name: Check for ${{ matrix.type }} changes
-        uses: tj-actions/changed-files@v45.0.8
+      - name: Detect ${{ matrix.type }} changes
+        uses: ./.github/actions/detect-changes
         id: infra_changes
         with:
           files: ${{ matrix.files }}
@@ -275,17 +235,14 @@ jobs:
       # DOCKER COMPOSE VALIDATION ENVIRONMENT
       # Creates minimal .env file required for compose config validation
       # Contains placeholder values that satisfy syntax requirements
-      - name: Create .env file for Docker Compose validation
+      - name: Create test environment for Docker Compose validation
         if: matrix.type == 'Docker' && steps.infra_changes.outputs.any_changed ==
           'true'
-        run: |
-          # Create .env file for CI validation with minimal required values
-          cat > .env << EOF
-          DEV_DATABASE_URL=sqlite:///tmp/test.db
-          PROD_DATABASE_URL=sqlite:///tmp/test.db
-          DEV_BOT_TOKEN=test_token_for_ci_validation
-          PROD_BOT_TOKEN=test_token_for_ci_validation
-          EOF
+        uses: ./.github/actions/create-test-env
+        with:
+          additional-vars: |
+            PROD_DATABASE_URL=sqlite:///tmp/test.db
+            PROD_BOT_TOKEN=test_token_for_ci_validation
 
       # DOCKER VALIDATION EXECUTION
       # Runs Hadolint for Dockerfile best practices
