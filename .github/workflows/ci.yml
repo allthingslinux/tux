@@ -66,7 +66,7 @@ jobs:
   # Optimization: Only runs when Python files or dependencies change
   # ============================================================================
   python:
-    name: Python Code Quality
+    name: Python Type Checking
     runs-on: ubuntu-latest
     permissions:
       contents: read          # Required for checkout
@@ -132,7 +132,7 @@ jobs:
   # Scope: All .md files excluding dependencies and build artifacts
   # ============================================================================
   markdown-lint:
-    name: Markdown Documentation
+    name: Markdown Linting
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -208,7 +208,7 @@ jobs:
   # Performance: Only runs on push/dispatch to avoid PR overhead
   # ============================================================================
   infrastructure:
-    name: Infrastructure (${{ matrix.type }})
+    name: ${{ matrix.type }} Linting
     runs-on: ubuntu-latest
     permissions:
       contents: read

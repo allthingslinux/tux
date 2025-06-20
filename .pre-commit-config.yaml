@@ -65,3 +65,6 @@ repos:
           - '@commitlint/cli'
           - '@commitlint/config-conventional'
 exclude: ^(\.archive/|.*typings/|node_modules/|\.venv/).*$
+ci:
+  autofix_commit_msg: 'style: auto fixes from pre-commit hooks'
+  autoupdate_commit_msg: 'chore: update pre-commit hook versions'
