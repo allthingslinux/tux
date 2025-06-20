@@ -2,7 +2,6 @@ import re
 from typing import Any
 
 from discord.ext import commands
-
 from prisma.enums import CaseType
 
 time_regex = re.compile(r"(\d{1,5}(?:[.,]?\d{1,5})?)([smhd])")

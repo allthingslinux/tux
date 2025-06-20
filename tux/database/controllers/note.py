@@ -1,5 +1,6 @@
 from prisma.actions import GuildActions
 from prisma.models import Guild, Note
+
 from tux.database.client import db
 from tux.database.controllers.base import BaseController
 

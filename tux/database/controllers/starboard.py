@@ -2,6 +2,7 @@ from datetime import datetime
 
 from prisma.actions import GuildActions
 from prisma.models import Guild, Starboard, StarboardMessage
+
 from tux.database.client import db
 from tux.database.controllers.base import BaseController
 
