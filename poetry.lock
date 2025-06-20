@@ -2032,19 +2032,20 @@ min-versions = ["babel (==2.9.0)", "click (==7.0)", "colorama (==0.4) ; platform
 
 [[package]]
 name = "mkdocs-api-autonav"
-version = "0.2.2"
+version = "0.3.0"
 description = "Autogenerate API docs with mkdocstrings, including nav"
 optional = false
 python-versions = ">=3.9"
 groups = ["docs"]
 files = [
-    {file = "mkdocs_api_autonav-0.2.2-py3-none-any.whl", hash = "sha256:5aea2a0b47416699276dd29a73c0936c80b06b4d8f47f42ef1c946407cdb4cf3"},
-    {file = "mkdocs_api_autonav-0.2.2.tar.gz", hash = "sha256:c69dd7ae853ea675437292209dd36b984071ca66d3b28a1b2cc5aaa9c1474b83"},
+    {file = "mkdocs_api_autonav-0.3.0-py3-none-any.whl", hash = "sha256:3e5fce7a43e1a131b31e23b2391cde8b189a0a0aa772b74782c7141c3617e618"},
+    {file = "mkdocs_api_autonav-0.3.0.tar.gz", hash = "sha256:1c0f10c69db38bd35d9c343814c50c033224b790e68b45876ca7e3cdfd25005c"},
 ]
 
 [package.dependencies]
 mkdocs = ">=1.6"
 mkdocstrings-python = ">=1.11.0"
+pyyaml = ">=5"
 
 [[package]]
 name = "mkdocs-autorefs"
@@ -4791,4 +4792,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13.2,<3.14"
-content-hash = "ad8d5cbe94e188a3754a68c70ee081b5f01520e0c38b2e828aa9d59cec7b3b53"
+content-hash = "34f92f6c7ffe8c24a77427848945a44ce59a048490df41e55fe4d70e0b357a93"
