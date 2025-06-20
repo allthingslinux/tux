@@ -169,16 +169,16 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # PYTHON ENVIRONMENT SETUP (REUSABLE WORKFLOW)
+      # PYTHON ENVIRONMENT SETUP (COMPOSITE ACTION)
       # Uses centralized Python setup for production dependency analysis
       # Configured for security scanning with main dependencies only
       - name: Setup Python Environment
-        uses: ./.github/workflows/_setup-python.yml
+        uses: ./.github/actions/setup-python
         with:
           python-version: '3.13'
           install-groups: main
           cache-suffix: security
-          generate-prisma: false
+          generate-prisma: 'false'
 
       # SECURITY VULNERABILITY SCANNING
       # Comprehensive security advisory checking with structured output

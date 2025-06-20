@@ -1,0 +1,40 @@
+name: Detect File Changes
+description: Checkout repository and detect changes for specific file patterns
+inputs:
+  files:
+    description: File patterns to check for changes (e.g., "**/*.py" or "**/*.md")
+    required: true
+  fetch-depth:
+    description: Number of commits to fetch. 0 indicates all history for complete
+      diff
+    required: false
+    default: '0'
+  base-ref:
+    description: The base reference to compare against
+    required: false
+    default: ''
+outputs:
+  any_changed:
+    description: Whether any of the specified files have changed
+    value: ${{ steps.changes.outputs.any_changed }}
+  all_changed_files:
+    description: All changed files matching the pattern
+    value: ${{ steps.changes.outputs.all_changed_files }}
+runs:
+  using: composite
+  steps:
+    # REPOSITORY CHECKOUT
+    # Full history needed for accurate change detection in most cases
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: ${{ inputs.fetch-depth }}
+
+    # SMART CHANGE DETECTION
+    # Detects changes for specified file patterns
+    - name: Check for file changes
+      uses: tj-actions/changed-files@v45.0.8
+      id: changes
+      with:
+        files: ${{ inputs.files }}
+        base_sha: ${{ inputs.base-ref }}
