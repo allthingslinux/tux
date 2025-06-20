@@ -13,21 +13,9 @@ class Bookmarks(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
-<<<<<<< HEAD
-<<<<<<< HEAD
         self.valid_add_emojis = CONST.ADD_BOOKMARK
         self.valid_remove_emojis = CONST.REMOVE_BOOKMARK
         self.valid_emojis = CONST.ADD_BOOKMARK + CONST.REMOVE_BOOKMARK
-=======
-        self.valid_emojis: list[int | str] = CONFIG.ADD_BOOKMARK + CONFIG.REMOVE_BOOKMARK
-        self.valid_add_emojis: list[int | str] = CONFIG.ADD_BOOKMARK
-        self.valid_remove_emojis: list[int | str] = CONFIG.REMOVE_BOOKMARK
->>>>>>> b9c797a (wip changes)
-=======
-        self.valid_add_emojis = CONST.ADD_BOOKMARK
-        self.valid_remove_emojis = CONST.REMOVE_BOOKMARK
-        self.valid_emojis = CONST.ADD_BOOKMARK + CONST.REMOVE_BOOKMARK
->>>>>>> ba2c381 (chore(wip): still working on debugging)
 
     def _is_valid_emoji(self, emoji: discord.PartialEmoji, valid_list: list[int | str]) -> bool:
         # Helper for checking if an emoji is in the list in "settings.yml -> BOOKMARK_EMOJIS"
@@ -50,48 +38,11 @@ class Bookmarks(commands.Cog):
         None
         """
         if not self._is_valid_emoji(payload.emoji, self.valid_emojis):
-<<<<<<< HEAD
-=======
             return
 
         # Get the user who reacted to the message
         user = self.bot.get_user(payload.user_id)
         if user is None:
-<<<<<<< HEAD
-<<<<<<< HEAD
-            logger.error(f"User not found for ID: {payload.user_id}")
->>>>>>> b9c797a (wip changes)
-            return
-=======
-            try:
-                user = await self.bot.fetch_user(payload.user_id)
-            except discord.NotFound:
-                logger.error(f"User not found for ID: {payload.user_id}")
-                return
-            except (discord.Forbidden, discord.HTTPException) as fetch_error:
-                logger.error(f"Failed to fetch user: {fetch_error}")
-                return
->>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
-
-        # Get the user who reacted to the message
-        user = self.bot.get_user(payload.user_id)
-        if user is None:
-            try:
-                user = await self.bot.fetch_user(payload.user_id)
-            except discord.NotFound:
-                logger.error(f"User not found for ID: {payload.user_id}")
-<<<<<<< HEAD
-            except (discord.Forbidden, discord.HTTPException) as fetch_error:
-                logger.error(f"Failed to fetch user: {fetch_error}")
-            return
-=======
-                return
-            except (discord.Forbidden, discord.HTTPException) as fetch_error:
-                logger.error(f"Failed to fetch user: {fetch_error}")
-                return
-
->>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
-=======
             try:
                 user = await self.bot.fetch_user(payload.user_id)
             except discord.NotFound:
@@ -99,7 +50,6 @@ class Bookmarks(commands.Cog):
             except (discord.Forbidden, discord.HTTPException) as fetch_error:
                 logger.error(f"Failed to fetch user: {fetch_error}")
             return
->>>>>>> b8a4072 (added eletrons changes and fixed a warning)
         # Fetch the channel where the reaction was added
         channel = self.bot.get_channel(payload.channel_id)
         if channel is None:
@@ -107,29 +57,10 @@ class Bookmarks(commands.Cog):
                 channel = await self.bot.fetch_channel(payload.channel_id)
             except discord.NotFound:
                 logger.error(f"Channel not found for ID: {payload.channel_id}")
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> b8a4072 (added eletrons changes and fixed a warning)
             except (discord.Forbidden, discord.HTTPException) as fetch_error:
                 logger.error(f"Failed to fetch channel: {fetch_error}")
             return
 
-<<<<<<< HEAD
-=======
-=======
->>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
-                return
-            except (discord.Forbidden, discord.HTTPException) as fetch_error:
-                logger.error(f"Failed to fetch channel: {fetch_error}")
-                return
-<<<<<<< HEAD
->>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
-=======
->>>>>>> b8a4072 (added eletrons changes and fixed a warning)
-=======
->>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
         channel = cast(discord.TextChannel | discord.Thread, channel)
 
         # Fetch the message that was reacted to
@@ -153,32 +84,9 @@ class Bookmarks(commands.Cog):
         elif self._is_valid_emoji(payload.emoji, self.valid_remove_emojis):
             await self._delete_bookmark(message, user)
         else:
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
             logger.error(
                 "First emoji validation check passed but second emoji validation check failed. How the fuck did you get here?",
             )
-<<<<<<< HEAD
-=======
-            logger.debug("Somehow you managed to get bast the first valid emoji check then failed the 2nd good job?")
->>>>>>> b9c797a (wip changes)
-=======
-            logger.error("How did you fail the 2nd check but passed the first?")
->>>>>>> 56bebaf (Added removing bookmarks from the bot's DMs)
-=======
-            logger.error(
-                "First emoji validation check passed but second emoji validation check failed. How the fuck did you get here?",
-            )
->>>>>>> b8a4072 (added eletrons changes and fixed a warning)
-=======
-            logger.error(
-                "First emoji validation check passed but second emoji validation check failed. How the fuck did you get here?",
-            )
->>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
-=======
->>>>>>> 34798e9 (i think i fixed whatever the hell git just did)
             return
 
     async def _create_bookmark_embed(
@@ -198,25 +106,6 @@ class Bookmarks(commands.Cog):
         embed.add_field(name="Author", value=message.author.name, inline=False)
 
         embed.add_field(name="Jump to Message", value=f"[Click Here]({message.jump_url})", inline=False)
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
-        embed.add_field(
-            name="Delete Bookmark",
-            value=f"React with {CONFIG.REMOVE_BOOKMARK[0]} to delete this bookmark.",
-            inline=False,
-        )
-
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> b8a4072 (added eletrons changes and fixed a warning)
-=======
->>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
-=======
->>>>>>> 34798e9 (i think i fixed whatever the hell git just did)
-=======
->>>>>>> ba2c381 (chore(wip): still working on debugging)
         if message.attachments:
             attachments_info = "\n".join([attachment.url for attachment in message.attachments])
             embed.add_field(name="Attachments", value=attachments_info, inline=False)
@@ -224,22 +113,9 @@ class Bookmarks(commands.Cog):
         return embed
 
     async def _delete_bookmark(self, message: discord.Message, user: discord.User) -> None:
-<<<<<<< HEAD
-<<<<<<< HEAD
         if message.author is not self.bot.user:
             return
         await message.delete()
-=======
-        logger.debug("you got to the delte function")
-=======
->>>>>>> 56bebaf (Added removing bookmarks from the bot's DMs)
-        if message.author is not self.bot.user:
-            return
-<<<<<<< HEAD
->>>>>>> b9c797a (wip changes)
-=======
-        await message.delete()
->>>>>>> 56bebaf (Added removing bookmarks from the bot's DMs)
 
     @staticmethod
     async def _send_bookmark(
