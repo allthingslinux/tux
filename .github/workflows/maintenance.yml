@@ -107,14 +107,14 @@ jobs:
       # REPOSITORY CHECKOUT
       # Full history required for accurate TODO comparison and tracking
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           fetch-depth: 0
 
       # INTELLIGENT TODO CONVERSION
       # Automated conversion with smart categorization and issue management
       - name: Convert TODOs to Issues
-        uses: alstr/todo-to-issue-action@v5.1.12
+        uses: alstr/todo-to-issue-action@3bd536e14a2cbceeab1fadef96bea5f725ed4270 # v5.1.12
         with:
           CLOSE_ISSUES: true              # Auto-close resolved TODOs
           INSERT_ISSUE_URLS: true         # Link issues back to code
@@ -156,7 +156,7 @@ jobs:
       # AUTOMATED IMAGE CLEANUP
       # Configurable cleanup with safety mechanisms and retention policies
       - name: Delete old container versions
-        uses: actions/delete-package-versions@v5
+        uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5
         with:
           package-name: tux                    # Target specific package
           package-type: container             # Container images only
@@ -188,7 +188,7 @@ jobs:
       # REPOSITORY CHECKOUT
       # Required for comprehensive file and dependency analysis
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       # STORAGE HEALTH ANALYSIS
       # Identifies large files that may impact repository performance

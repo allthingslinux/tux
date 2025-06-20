@@ -87,13 +87,13 @@ jobs:
       # REPOSITORY CHECKOUT
       # Complete repository needed for comprehensive test execution
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       # SMART CHANGE DETECTION
       # Analyzes changes to determine if test execution is necessary
       # Includes all test-relevant files: source code, config, and tests
       - name: Detect Python changes
-        uses: tj-actions/changed-files@v45.0.8
+        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8 # v45.0.8
         id: python_changes
         with:
           files: |
@@ -313,7 +313,7 @@ jobs:
       # ========================================================================
       - name: Upload test artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: test-results-python-${{ matrix.python-version }}
           path: |

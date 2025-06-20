@@ -11,7 +11,7 @@ runs:
     # NODE.JS ENVIRONMENT SETUP
     # Required for markdownlint-cli installation and execution
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
       with:
         node-version: ${{ inputs.node-version }}
         cache: npm
@@ -20,7 +20,7 @@ runs:
     # NPM CACHE OPTIMIZATION
     # Reduces markdownlint installation time on repeated runs
     - name: Cache node modules
-      uses: actions/cache@v4
+      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
       with:
         path: ~/.npm
         key: node-${{ runner.os }}-${{ hashFiles('**/package*.json') }}
