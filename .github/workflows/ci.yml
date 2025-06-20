@@ -72,11 +72,18 @@ jobs:
       contents: read          # Required for checkout
       pull-requests: write   # Required for Pyright annotations
     steps:
-      # SMART CHANGE DETECTION WITH CHECKOUT
+      # REPOSITORY CHECKOUT
+      # Full history needed for accurate change detection
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # SMART CHANGE DETECTION
       # Detects Python file changes to skip unnecessary runs
       # Includes Python source, config files, and dependencies
       - name: Detect Python changes
-        uses: ./.github/actions/detect-changes
+        uses: tj-actions/changed-files@v45.0.8
         id: python_changes
         with:
           files: |
@@ -130,11 +137,16 @@ jobs:
     permissions:
       contents: read
     steps:
-      # SMART CHANGE DETECTION WITH CHECKOUT
+      # REPOSITORY CHECKOUT
+      # Shallow clone sufficient for linting current state
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # SMART CHANGE DETECTION
       # Only runs when documentation files change
       # Improves CI performance for code-only changes
       - name: Detect Markdown changes
-        uses: ./.github/actions/detect-changes
+        uses: tj-actions/changed-files@v45.0.8
         id: markdown_changes
         with:
           files: '**/*.md'
@@ -204,11 +216,16 @@ jobs:
           - type: Shell Scripts
             files: '**/*.sh,**/*.bash,scripts/**'
     steps:
-      # SMART CHANGE DETECTION WITH CHECKOUT
+      # REPOSITORY CHECKOUT
+      # Shallow clone sufficient for infrastructure validation
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # SMART CHANGE DETECTION
       # Each matrix job only runs if relevant files changed
       # Improves efficiency by skipping unchanged categories
       - name: Detect ${{ matrix.type }} changes
-        uses: ./.github/actions/detect-changes
+        uses: tj-actions/changed-files@v45.0.8
         id: infra_changes
         with:
           files: ${{ matrix.files }}
