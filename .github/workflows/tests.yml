@@ -93,7 +93,7 @@ jobs:
       # Analyzes changes to determine if test execution is necessary
       # Includes all test-relevant files: source code, config, and tests
       - name: Detect Python changes
-        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8 # v45.0.8
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
         id: python_changes
         with:
           files: |
