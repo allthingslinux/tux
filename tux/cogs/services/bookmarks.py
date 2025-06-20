@@ -6,7 +6,6 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
-from tux.utils.config import CONFIG
 from tux.utils.constants import CONST
 
 
@@ -14,6 +13,7 @@ class Bookmarks(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
+<<<<<<< HEAD
 <<<<<<< HEAD
         self.valid_add_emojis = CONST.ADD_BOOKMARK
         self.valid_remove_emojis = CONST.REMOVE_BOOKMARK
@@ -23,10 +23,17 @@ class Bookmarks(commands.Cog):
         self.valid_add_emojis: list[int | str] = CONFIG.ADD_BOOKMARK
         self.valid_remove_emojis: list[int | str] = CONFIG.REMOVE_BOOKMARK
 >>>>>>> b9c797a (wip changes)
+=======
+        self.valid_add_emojis = CONST.ADD_BOOKMARK
+        self.valid_remove_emojis = CONST.REMOVE_BOOKMARK
+        self.valid_emojis = CONST.ADD_BOOKMARK + CONST.REMOVE_BOOKMARK
+>>>>>>> ba2c381 (chore(wip): still working on debugging)
 
     def _is_valid_emoji(self, emoji: discord.PartialEmoji, valid_list: list[int | str]) -> bool:
         # Helper for checking if an emoji is in the list in "settings.yml -> BOOKMARK_EMOJIS"
-        return emoji.name in valid_list if emoji.id is None else emoji.id in valid_list
+        if emoji.id is not None:
+            return emoji.id in valid_list
+        return emoji.name in valid_list
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
@@ -192,6 +199,7 @@ class Bookmarks(commands.Cog):
 
         embed.add_field(name="Jump to Message", value=f"[Click Here]({message.jump_url})", inline=False)
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
         embed.add_field(
@@ -207,6 +215,8 @@ class Bookmarks(commands.Cog):
 >>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
 =======
 >>>>>>> 34798e9 (i think i fixed whatever the hell git just did)
+=======
+>>>>>>> ba2c381 (chore(wip): still working on debugging)
         if message.attachments:
             attachments_info = "\n".join([attachment.url for attachment in message.attachments])
             embed.add_field(name="Attachments", value=attachments_info, inline=False)
