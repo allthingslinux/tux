@@ -299,7 +299,7 @@ jobs:
       - name: Run GitHub Actions linting
         if: matrix.type == 'GitHub Actions' && steps.infra_changes.outputs.any_changed
           == 'true'
-        uses: raven-actions/actionlint@789059c543ab20522fb3e7240794e13b0f69ad67 # v1
+        uses: raven-actions/actionlint@3a24062651993d40fed1019b58ac6fbdfbf276cc # v2
         with:
           files: .github/workflows/*.yml
 
