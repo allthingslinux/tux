@@ -1,0 +1,97 @@
+name: Notifications
+on:
+  workflow_run:
+    workflows:
+      - Tests
+      - CI
+      - Docker Build & Deploy
+      - Security
+    types:
+      - completed
+jobs:
+  failure-notification:
+    name: Handle Workflow Failures
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.head_branch
+      == 'main'
+    steps:
+      - name: Get workflow info
+        id: workflow
+        run: |
+          {
+            echo "workflow_name=${{ github.event.workflow_run.name }}"
+            echo "commit_sha=${{ github.event.workflow_run.head_sha }}"
+            echo "run_url=${{ github.event.workflow_run.html_url }}"
+          } >> "$GITHUB_OUTPUT"
+      - name: Create issue for main branch failures
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `CI Failure: ${context.payload.workflow_run.name} failed on main branch`;
+            const body = `
+            ## CI Failure Report
+            **Workflow:** ${context.payload.workflow_run.name}
+            **Branch:** main
+            **Commit:** ${context.payload.workflow_run.head_sha}
+            **Run URL:** ${context.payload.workflow_run.html_url}
+            **Triggered by:** @${context.payload.workflow_run.triggering_actor.login}
+            Please investigate and fix this failure as it affects the main branch.
+            **Possible actions:**
+            - Check the workflow logs for error details
+            - Run tests locally to reproduce the issue
+            - Review recent changes that might have caused the failure
+            This issue will auto-close when the workflow passes again.
+            `;
+            // Check if issue already exists
+            const existingIssues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'ci-failure',
+              creator: 'github-actions[bot]'
+            });
+            const existingIssue = existingIssues.data.find(issue =>
+              issue.title.includes(context.payload.workflow_run.name)
+            );
+            if (!existingIssue) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['ci-failure', 'bug', 'priority-high']
+              });
+            }
+  success-cleanup:
+    name: Clean up success notifications
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch
+      == 'main'
+    steps:
+      - name: Close related failure issues
+        uses: actions/github-script@v7
+        with:
+          script: |-
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'ci-failure',
+              creator: 'github-actions[bot]'
+            });
+            for (const issue of issues.data) {
+              if (issue.title.includes(context.payload.workflow_run.name)) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  body: `✅ CI is now passing. Closing this issue.`
+                });
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  state: 'closed'
+                });
+              }
+            }
