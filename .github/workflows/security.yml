@@ -185,6 +185,8 @@ jobs:
       - name: Run Safety check
         run: |
           pip install safety
+          # Ensure Poetry export plugin is available
+          poetry self add poetry-plugin-export
           poetry export --without=dev --format=requirements.txt --output=requirements.txt
           safety check --json --output safety-report.json -r requirements.txt || true
 
