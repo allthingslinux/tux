@@ -40,7 +40,7 @@
 # - Efficient layer caching with cache-from/cache-to
 #
 # ==============================================================================
-name: Docker Build & Deploy
+name: Docker
 # TRIGGER CONFIGURATION
 # Comprehensive triggering for different build scenarios
 # Includes pull request validation, tag-based releases, and maintenance
@@ -87,6 +87,7 @@ jobs:
   # Performance: Optimized for quick feedback in PR reviews
   # ============================================================================
   validate:
+    name: Validate Build
     # EXECUTION CONDITIONS
     # Only runs on pull requests to validate changes without deployment
     if: github.event_name == 'pull_request'
@@ -157,6 +158,7 @@ jobs:
   # Security: Vulnerability scanning, provenance, and SBOM generation
   # ============================================================================
   build:
+    name: Build & Push
     # EXECUTION CONDITIONS
     # Skips pull requests to prevent unnecessary deployments
     # Waits for validation to complete before proceeding
@@ -298,6 +300,7 @@ jobs:
   # Scope: Critical and high severity vulnerabilities
   # ============================================================================
   security:
+    name: Security Scan
     # EXECUTION CONDITIONS
     # Runs after successful build, skips pull requests
     if: github.event_name != 'pull_request'
@@ -358,6 +361,7 @@ jobs:
   # Safety: Conservative retention policy to prevent accidental data loss
   # ============================================================================
   cleanup:
+    name: Registry Cleanup
     # EXECUTION CONDITIONS
     # Runs on scheduled maintenance or manual trigger only
     if: github.event_name != 'pull_request' && (github.event_name == 'schedule' ||

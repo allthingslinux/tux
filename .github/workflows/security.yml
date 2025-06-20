@@ -67,7 +67,7 @@ jobs:
   # Frequency: Main branch pushes and weekly scheduled deep scans
   # ============================================================================
   codeql:
-    name: CodeQL Analysis
+    name: CodeQL (${{ matrix.language }})
     runs-on: ubuntu-latest
     # RESOURCE OPTIMIZATION
     # Skips CodeQL on pull requests to save Actions minutes for critical tasks
@@ -155,7 +155,7 @@ jobs:
   # Integration: Artifact storage for security audit trails
   # ============================================================================
   security-advisories:
-    name: Security Advisories
+    name: Python Security
     runs-on: ubuntu-latest
     # MAIN BRANCH FOCUS
     # Monitors production dependencies, skips pull request analysis
@@ -207,7 +207,7 @@ jobs:
   # Scope: Patch-level and minor version updates only (excludes major changes)
   # ============================================================================
   dependabot-auto-merge:
-    name: Dependabot Auto-merge
+    name: Auto-merge
     runs-on: ubuntu-latest
     # SECURITY CONDITIONS
     # Strict conditions to ensure automated merging is safe and appropriate

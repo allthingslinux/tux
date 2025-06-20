@@ -70,7 +70,7 @@ jobs:
   # Coverage: Comprehensive reporting with category-specific tracking
   # ============================================================================
   test:
-    name: Tests (Python ${{ matrix.python-version }})
+    name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     permissions:
       contents: read    # Required for repository checkout and file access
