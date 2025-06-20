@@ -1,10 +1,17 @@
 import datetime
-import imghdr
 import json
 import random
+from io import BytesIO
 from typing import Any
 
 import httpx
+from PIL import Image, UnidentifiedImageError
+
+from tux.utils.exceptions import (
+    APIConnectionError,
+    APIRequestError,
+    APIResourceNotFoundError,
+)
 
 
 class HttpError(Exception):
@@ -62,6 +69,7 @@ class Comic:
         datetime.date | None
             The date of the comic.
         """
+
         try:
             return datetime.date(
                 int(xkcd_dict["year"]),
@@ -81,7 +89,14 @@ class Comic:
         str | None
             The extension of the image.
         """
-        return f".{imghdr.what(None, h=self.image)}" if self.image else None
+
+        if self.image:
+            try:
+                image = Image.open(BytesIO(self.image))
+                return f".{image.format.lower()}" if image.format else None
+            except (OSError, UnidentifiedImageError):
+                return None
+        return None
 
     def update_raw_image(self, raw_image: bytes) -> None:
         """
@@ -92,6 +107,7 @@ class Comic:
         raw_image : bytes
             The raw image data.
         """
+
         self.image = raw_image
         self.image_extension = self._determine_image_extension()
 
@@ -113,6 +129,17 @@ class Client:
         api_url: str = "https://xkcd.com",
         explanation_wiki_url: str = "https://www.explainxkcd.com/wiki/index.php/",
     ) -> None:
+        """
+        Initialize the Client.
+
+        Parameters
+        ----------
+        api_url : str, optional
+            The URL of the xkcd API, by default "https://xkcd.com"
+        explanation_wiki_url : str, optional
+            The URL of the xkcd explanation wiki, by default "https://www.explainxkcd.com/wiki/index.php/"
+        """
+
         self._api_url = api_url
         self._explanation_wiki_url = explanation_wiki_url
 
@@ -125,6 +152,7 @@ class Client:
         str
             The URL for the latest comic.
         """
+
         return f"{self._api_url}/info.0.json"
 
     def comic_id_url(self, comic_id: int) -> str:
@@ -141,6 +169,7 @@ class Client:
         str
             The URL for the specific comic ID.
         """
+
         return f"{self._api_url}/{comic_id}/info.0.json"
 
     def _parse_response(self, response_text: str) -> Comic:
@@ -157,6 +186,7 @@ class Client:
         Comic
             The parsed comic object.
         """
+
         response_dict: dict[str, Any] = json.loads(response_text)
         comic_url: str = f"{self._api_url}/{response_dict['num']}/"
         explanation_url: str = f"{self._explanation_wiki_url}{response_dict['num']}"
@@ -179,6 +209,7 @@ class Client:
         Comic
             The fetched comic.
         """
+
         comic = self._parse_response(self._request_comic(comic_id))
 
         if raw_comic_image:
@@ -201,6 +232,7 @@ class Client:
         Comic
             The latest xkcd comic.
         """
+
         return self._fetch_comic(0, raw_comic_image)
 
     def get_comic(self, comic_id: int, raw_comic_image: bool = False) -> Comic:
@@ -219,6 +251,7 @@ class Client:
         Comic
             The fetched xkcd comic.
         """
+
         return self._fetch_comic(comic_id, raw_comic_image)
 
     def get_random_comic(self, raw_comic_image: bool = False) -> Comic:
@@ -235,6 +268,7 @@ class Client:
         Comic
             The random xkcd comic.
         """
+
         latest_comic_id: int = self._parse_response(self._request_comic(0)).id or 0
         random_id: int = random.randint(1, latest_comic_id)
 
@@ -259,6 +293,7 @@ class Client:
         HttpError
             If the request fails.
         """
+
         comic_url = self.latest_comic_url() if comic_id <= 0 else self.comic_id_url(comic_id)
 
         try:
@@ -266,7 +301,15 @@ class Client:
             response.raise_for_status()
 
         except httpx.HTTPStatusError as exc:
-            raise HttpError(exc.response.status_code, exc.response.reason_phrase) from exc
+            if exc.response.status_code == 404:
+                raise APIResourceNotFoundError(service_name="xkcd", resource_identifier=str(comic_id)) from exc
+            raise APIRequestError(
+                service_name="xkcd",
+                status_code=exc.response.status_code,
+                reason=exc.response.reason_phrase,
+            ) from exc
+        except httpx.RequestError as exc:
+            raise APIConnectionError(service_name="xkcd", original_error=exc) from exc
 
         return response.text
 
@@ -290,15 +333,24 @@ class Client:
         HttpError
             If the request fails.
         """
+
         if not raw_image_url:
-            raise HttpError(404, "Image URL not found")
+            raise APIResourceNotFoundError(service_name="xkcd", resource_identifier="image_url_not_provided")
 
         try:
             response = httpx.get(raw_image_url)
             response.raise_for_status()
 
         except httpx.HTTPStatusError as exc:
-            raise HttpError(exc.response.status_code, exc.response.reason_phrase) from exc
+            if exc.response.status_code == 404:
+                raise APIResourceNotFoundError(service_name="xkcd", resource_identifier=raw_image_url) from exc
+            raise APIRequestError(
+                service_name="xkcd",
+                status_code=exc.response.status_code,
+                reason=exc.response.reason_phrase,
+            ) from exc
+        except httpx.RequestError as exc:
+            raise APIConnectionError(service_name="xkcd", original_error=exc) from exc
 
         return response.content
 

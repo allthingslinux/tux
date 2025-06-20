@@ -1,12 +1,14 @@
 import discord
 from discord.ext import commands
 
+from tux.bot import Tux
 from tux.database.controllers import DatabaseController
+from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils.functions import is_harmful, strip_formatting
 
 
 class EventHandler(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.db = DatabaseController()
 
@@ -18,15 +20,45 @@ class EventHandler(commands.Cog):
     async def on_guild_remove(self, guild: discord.Guild) -> None:
         await self.db.guild.delete_guild_by_id(guild.id)
 
-    async def handle_harmful_message(self, message: discord.Message) -> None:
+    @staticmethod
+    async def handle_harmful_message(message: discord.Message) -> None:
+        """
+        This function detects harmful linux commands and replies to the user with a warning.
+
+        Parameters
+        ----------
+        message : discord.Message
+            The message to check.
+
+        Returns
+        -------
+        None
+        """
+
         if message.author.bot:
             return
 
         stripped_content = strip_formatting(message.content)
+        harmful = is_harmful(stripped_content)
 
-        if is_harmful(stripped_content):
+        if harmful == "RM_COMMAND":
             await message.reply(
                 "-# ⚠️ **This command is likely harmful. By running it, all directory contents will be deleted. There is no undo. Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it.**",
+            )
+            return
+        if harmful == "FORK_BOMB":
+            await message.reply(
+                "-# ⚠️ **This command is likely harmful. By running it, all the memory in your system will be used. Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it.**",
+            )
+            return
+        if harmful == "DD_COMMAND":
+            await message.reply(
+                "-# ⚠️ **This command is likely harmful. By running it, your disk will be overwritten or erased irreversibly. Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it.**",
+            )
+            return
+        if harmful == "FORMAT_COMMAND":
+            await message.reply(
+                "-# ⚠️ **This command is likely harmful. By running it, your disk will be formatted. Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it.**",
             )
 
     @commands.Cog.listener()
@@ -86,7 +118,12 @@ class EventHandler(commands.Cog):
             else:
                 msg = f"<:tux_notify:1274504953666474025> **New support thread created** - help is appreciated!\n{thread.mention} by {owner_mention}"
 
-            embed = discord.Embed(description=msg, color=discord.Color.random())
+            embed = EmbedCreator.create_embed(
+                embed_type=EmbedType.INFO,
+                description=msg,
+                custom_color=discord.Color.random(),
+                hide_author=True,
+            )
 
             general_chat = 1172245377395728467
             channel = self.bot.get_channel(general_chat)
@@ -98,5 +135,5 @@ class EventHandler(commands.Cog):
                 await channel.send(content=support_role, embed=embed)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(EventHandler(bot))

@@ -2,29 +2,34 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.bot import Tux
 from tux.ui.buttons import XkcdButtons
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
+from tux.utils.functions import generate_usage
 from tux.wrappers import xkcd
 
 
 class Xkcd(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.client = xkcd.Client()
+        self.xkcd.usage = generate_usage(self.xkcd)
+        self.latest.usage = generate_usage(self.latest)
+        self.random.usage = generate_usage(self.random)
+        self.specific.usage = generate_usage(self.specific)
 
     @commands.hybrid_group(
         name="xkcd",
         aliases=["xk"],
-        usage="xkcd <subcommand>",
     )
     @commands.guild_only()
-    async def xkcd(self, ctx: commands.Context[commands.Bot], comic_id: int | None = None) -> None:
+    async def xkcd(self, ctx: commands.Context[Tux], comic_id: int | None = None) -> None:
         """
         xkcd related commands.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         comic_id : int | None
             The ID of the xkcd comic to search for.
@@ -38,16 +43,15 @@ class Xkcd(commands.Cog):
     @xkcd.command(
         name="latest",
         aliases=["l", "new", "n"],
-        usage="xkcd latest",
     )
     @commands.guild_only()
-    async def latest(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def latest(self, ctx: commands.Context[Tux]) -> None:
         """
         Get the latest xkcd comic.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         """
 
@@ -61,16 +65,15 @@ class Xkcd(commands.Cog):
     @xkcd.command(
         name="random",
         aliases=["rand", "r"],
-        usage="xkcd random",
     )
     @commands.guild_only()
-    async def random(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def random(self, ctx: commands.Context[Tux]) -> None:
         """
         Get a random xkcd comic.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the
         """
 
@@ -84,16 +87,15 @@ class Xkcd(commands.Cog):
     @xkcd.command(
         name="specific",
         aliases=["s", "id", "num"],
-        usage="xkcd specific [comic_id]",
     )
     @commands.guild_only()
-    async def specific(self, ctx: commands.Context[commands.Bot], comic_id: int) -> None:
+    async def specific(self, ctx: commands.Context[Tux], comic_id: int) -> None:
         """
         Get a specific xkcd comic.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         comic_id : int
             The ID of the comic to search for.
@@ -122,19 +124,22 @@ class Xkcd(commands.Cog):
             else:
                 comic = self.client.get_random_comic(raw_comic_image=True)
 
-            embed = EmbedCreator.create_success_embed(
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.INFO,
                 title="",
                 description=f"\n\n> {comic.description.strip()}" if comic.description else "",
+                custom_author_text=f"xkcd {comic.id} - {comic.title}",
+                image_url=comic.image_url,
             )
 
-            embed.set_author(name=f"xkcd {comic.id} - {comic.title}")
-            embed.set_image(url=comic.image_url)
             ephemeral = False
 
         except xkcd.HttpError:
             logger.error("HTTP error occurred while fetching xkcd comic")
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
                 description="I couldn't find the xkcd comic. Please try again later.",
             )
             ephemeral = True
@@ -142,8 +147,9 @@ class Xkcd(commands.Cog):
 
         except Exception as e:
             logger.error(f"Error getting xkcd comic: {e}")
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
                 description="An error occurred while fetching the xkcd comic",
             )
             ephemeral = True
@@ -157,5 +163,5 @@ class Xkcd(commands.Cog):
             )
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Xkcd(bot))

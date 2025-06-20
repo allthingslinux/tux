@@ -1,81 +1,38 @@
-import base64
-import os
-from pathlib import Path
 from typing import Final
-
-import yaml
-from dotenv import load_dotenv, set_key
-
-load_dotenv(verbose=True)
-
-config_file = Path("config/settings.yml")
-config = yaml.safe_load(config_file.read_text())
 
 
 class Constants:
-    # Permission constants
-    BOT_OWNER_ID: Final[int] = config["USER_IDS"]["BOT_OWNER"]
-    SYSADMIN_IDS: Final[list[int]] = config["USER_IDS"]["SYSADMINS"]
-
-    # Production env constants
-    PROD_TOKEN: Final[str] = os.getenv("PROD_TOKEN", "")
-    PROD_PREFIX: Final[str] = config["PREFIX"]["PROD"]
-    PROD_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("PROD_COG_IGNORE_LIST", "").split(","))
-
-    # Dev env constants
-    DEV: Final[str | None] = os.getenv("DEV")
-    DEV_TOKEN: Final[str] = os.getenv("DEV_TOKEN", "")
-    DEV_PREFIX: Final[str] = config["PREFIX"]["DEV"]
-    DEV_COG_IGNORE_LIST: Final[set[str]] = set(os.getenv("DEV_COG_IGNORE_LIST", "").split(","))
-
-    # Debug env constants
-    DEBUG: Final[bool] = bool(os.getenv("DEBUG", "True"))
-
-    # Final env constants
-    TOKEN: Final[str] = DEV_TOKEN if DEV and DEV.lower() == "true" else PROD_TOKEN
-    PREFIX: Final[str] = DEV_PREFIX if DEV and DEV.lower() == "true" else PROD_PREFIX
-    COG_IGNORE_LIST: Final[set[str]] = DEV_COG_IGNORE_LIST if DEV and DEV.lower() == "true" else PROD_COG_IGNORE_LIST
-
-    # Sentry-related constants
-    SENTRY_URL: Final[str | None] = os.getenv("SENTRY_URL", "")
-
-    # Database constants
-    PROD_DATABASE_URL: Final[str] = os.getenv("PROD_DATABASE_URL", "")
-    DEV_DATABASE_URL: Final[str] = os.getenv("DEV_DATABASE_URL", "")
-
-    DATABASE_URL: Final[str] = DEV_DATABASE_URL if DEV and DEV.lower() == "true" else PROD_DATABASE_URL
-
-    set_key(".env", "DATABASE_URL", DATABASE_URL)
-
-    # GitHub constants
-    GITHUB_REPO_URL: Final[str] = os.getenv("GITHUB_REPO_URL", "")
-    GITHUB_REPO_OWNER: Final[str] = os.getenv("GITHUB_REPO_OWNER", "")
-    GITHUB_REPO: Final[str] = os.getenv("GITHUB_REPO", "")
-    GITHUB_TOKEN: Final[str] = os.getenv("GITHUB_TOKEN", "")
-    GITHUB_APP_ID: Final[int] = int(os.getenv("GITHUB_APP_ID", "0"))
-    GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID", "")
-    GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET", "")
-    GITHUB_PUBLIC_KEY = os.getenv("GITHUB_PUBLIC_KEY", "")
-    GITHUB_INSTALLATION_ID: Final[str] = os.getenv("GITHUB_INSTALLATION_ID", "0")
-    GITHUB_PRIVATE_KEY: str = (
-        base64.b64decode(os.getenv("GITHUB_PRIVATE_KEY_BASE64", "")).decode("utf-8")
-        if os.getenv("GITHUB_PRIVATE_KEY_BASE64")
-        else ""
-    )
-
-    # Mailcow constants
-    MAILCOW_API_KEY: Final[str] = os.getenv("MAILCOW_API_KEY", "")
-    MAILCOW_API_URL: Final[str] = os.getenv("MAILCOW_API_URL", "")
-
-    # Temp VC constants
-    TEMPVC_CATEGORY_ID: Final[str | None] = config["TEMPVC_CATEGORY_ID"]
-    TEMPVC_CHANNEL_ID: Final[str | None] = config["TEMPVC_CHANNEL_ID"]
-
     # Color constants
-    EMBED_COLORS: Final[dict[str, int]] = config["EMBED_COLORS"]
+    EMBED_COLORS: Final[dict[str, int]] = {
+        "DEFAULT": 16044058,
+        "INFO": 12634869,
+        "WARNING": 16634507,
+        "ERROR": 16067173,
+        "SUCCESS": 10407530,
+        "POLL": 14724968,
+        "CASE": 16217742,
+        "NOTE": 16752228,
+    }
 
     # Icon constants
-    EMBED_ICONS: Final[dict[str, str]] = config["EMBED_ICONS"]
+    EMBED_ICONS: Final[dict[str, str]] = {
+        "DEFAULT": "https://i.imgur.com/owW4EZk.png",
+        "INFO": "https://i.imgur.com/8GRtR2G.png",
+        "SUCCESS": "https://i.imgur.com/JsNbN7D.png",
+        "ERROR": "https://i.imgur.com/zZjuWaU.png",
+        "CASE": "https://i.imgur.com/c43cwnV.png",
+        "NOTE": "https://i.imgur.com/VqPFbil.png",
+        "POLL": "https://i.imgur.com/pkPeG5q.png",
+        "ACTIVE_CASE": "https://github.com/allthingslinux/tux/blob/main/assets/embeds/active_case.png?raw=true",
+        "INACTIVE_CASE": "https://github.com/allthingslinux/tux/blob/main/assets/embeds/inactive_case.png?raw=true",
+        "ADD": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/added.png?raw=true",
+        "REMOVE": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/removed.png?raw=true",
+        "BAN": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/ban.png?raw=true",
+        "JAIL": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/jail.png?raw=true",
+        "KICK": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/kick.png?raw=true",
+        "TIMEOUT": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/timeout.png?raw=true",
+        "WARN": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/warn.png?raw=true",
+    }
 
     # Embed limit constants
     EMBED_MAX_NAME_LENGTH = 256
@@ -83,6 +40,8 @@ class Constants:
     EMBED_MAX_FIELDS = 25
     EMBED_TOTAL_MAX = 6000
     EMBED_FIELD_VALUE_LENGTH = 1024
+
+    NICKNAME_MAX_LENGTH = 32
 
     # Interaction constants
     ACTION_ROW_MAX_ITEMS = 5
@@ -95,6 +54,24 @@ class Constants:
     SLASH_CMD_MAX_DESC_LENGTH = 100
     SLASH_CMD_MAX_OPTIONS = 25
     SLASH_OPTION_NAME_LENGTH = 100
+
+    DEFAULT_REASON = "No reason provided"
+
+    # Snippet constants
+    SNIPPET_MAX_NAME_LENGTH = 20
+    SNIPPET_ALLOWED_CHARS_REGEX = r"^[a-zA-Z0-9-]+$"
+    SNIPPET_PAGINATION_LIMIT = 10
+
+    # Message timings
+    DEFAULT_DELETE_AFTER = 30
+
+    # AFK constants
+    AFK_PREFIX = "[AFK] "
+    AFK_TRUNCATION_SUFFIX = "..."
+
+    # 8ball constants
+    EIGHT_BALL_QUESTION_LENGTH_LIMIT = 120
+    EIGHT_BALL_RESPONSE_WRAP_WIDTH = 30
 
 
 CONST = Constants()

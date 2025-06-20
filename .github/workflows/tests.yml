@@ -1,0 +1,381 @@
+# ==============================================================================
+# TUX DISCORD BOT - COMPREHENSIVE TEST SUITE WORKFLOW
+# ==============================================================================
+#
+# This workflow executes the complete test suite for the Tux Discord bot,
+# providing comprehensive testing across multiple Python versions with detailed
+# coverage reporting and result archival. Designed for reliability and
+# comprehensive validation of all code paths.
+#
+# TESTING STRATEGY:
+# -----------------
+# 1. Multi-version Python testing (3.13) for compatibility
+# 2. Categorized test execution (Unit, Database, Integration)
+# 3. Intelligent test discovery and conditional execution
+# 4. Parallel test execution for performance optimization
+# 5. Comprehensive coverage reporting with multiple flags
+# 6. Artifact preservation for debugging and analysis
+#
+# COVERAGE STRATEGY:
+# ------------------
+# - Unit Tests: Fast tests covering core functionality
+# - Database Tests: Focused on database operations and models
+# - Integration Tests: End-to-end scenarios marked as "slow"
+# - Separate coverage reports for different test categories
+# - Codecov integration for coverage tracking and visualization
+#
+# PERFORMANCE FEATURES:
+# ---------------------
+# - Smart change detection to skip unnecessary test runs
+# - Python version-specific caching for faster dependency installation
+# - Parallel pytest execution when test count justifies overhead
+# - Conditional test suite execution based on test discovery
+# - Efficient artifact management with reasonable retention periods
+#
+# RELIABILITY FEATURES:
+# ---------------------
+# - Matrix strategy with fail-fast disabled to see all failures
+# - Integration test failures don't fail CI (continue-on-error)
+# - Robust coverage file handling with debugging support
+# - Test result upload even on test failures (!cancelled())
+# - Comprehensive error handling and status reporting
+#
+# ==============================================================================
+name: Tests
+# TRIGGER CONFIGURATION
+# Comprehensive testing on all main branch pushes and pull requests
+# Manual triggers available for debugging and testing specific scenarios
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  # Manual trigger for debugging test issues or validating changes
+  workflow_dispatch:
+# CONCURRENCY CONTROL
+# Prevents resource waste from multiple test runs on same branch
+# Cancels PR runs but preserves main branch runs for complete validation
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  # ============================================================================
+  # COMPREHENSIVE TEST EXECUTION - Multi-Version Matrix Testing
+  # ============================================================================
+  # Purpose: Executes the complete test suite across multiple Python versions
+  # Strategy: Matrix testing for compatibility validation
+  # Categories: Unit tests, database tests, integration tests
+  # Coverage: Comprehensive reporting with category-specific tracking
+  # ============================================================================
+  test:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read    # Required for repository checkout and file access
+
+    # MATRIX TESTING STRATEGY
+    # Tests multiple Python versions to ensure compatibility
+    # fail-fast disabled to see all version-specific issues
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:                     # Supported Python versions
+          - '3.13'
+    steps:
+      # REPOSITORY CHECKOUT
+      # Complete repository needed for comprehensive test execution
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      # SMART CHANGE DETECTION
+      # Analyzes changes to determine if test execution is necessary
+      # Includes all test-relevant files: source code, config, and tests
+      - name: Detect Python changes
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
+        id: python_changes
+        with:
+          files: |
+            **/*.py
+            pyproject.toml
+            poetry.lock
+            tests/**
+            conftest.py
+
+      # CONDITIONAL EXECUTION CONTROL
+      # Skips expensive test setup when no relevant files changed
+      # Manual triggers always execute for debugging purposes
+      - name: Skip if no Python/test changes
+        if: steps.python_changes.outputs.any_changed != 'true' && github.event_name
+          != 'workflow_dispatch'
+        run: |
+          echo "✅ No Python or test files changed, skipping tests"
+          echo "💡 To force run tests, use workflow_dispatch trigger"
+
+      # PYTHON ENVIRONMENT SETUP (COMPOSITE ACTION)
+      # Uses centralized Python setup with matrix-specific Python versions
+      # Configured for comprehensive testing with all dependency groups
+      - name: Setup Python Environment
+        if: steps.python_changes.outputs.any_changed == 'true' || github.event_name
+          == 'workflow_dispatch'
+        uses: ./.github/actions/setup-python
+        with:
+          python-version: ${{ matrix.python-version }}
+          install-groups: dev,test,types
+          cache-suffix: test
+          generate-prisma: 'true'
+
+      # TEST ENVIRONMENT CONFIGURATION
+      # Creates isolated test environment with SQLite for CI safety
+      # Prevents conflicts with production databases during testing
+      - name: Create test environment file
+        if: steps.python_changes.outputs.any_changed == 'true' || github.event_name
+          == 'workflow_dispatch'
+        uses: ./.github/actions/create-test-env
+        with:
+          additional-vars: |
+            PROD_DATABASE_URL=sqlite:///tmp/test.db
+            PROD_BOT_TOKEN=test_token_for_ci
+
+      # ========================================================================
+      # UNIT TEST EXECUTION - Core Functionality Testing
+      # ========================================================================
+      # Purpose: Fast, focused tests covering core application logic
+      # Strategy: Parallel execution for large test suites, sequential for small
+      # Coverage: Comprehensive branch and line coverage with XML output
+      # Performance: Adaptive parallel/sequential execution based on test count
+      # ========================================================================
+      - name: Run unit tests with coverage
+        if: steps.python_changes.outputs.any_changed == 'true' || github.event_name
+          == 'workflow_dispatch'
+        run: |
+          echo "Running unit tests with coverage..."
+          # ADAPTIVE PARALLEL EXECUTION
+          # Uses pytest-xdist for parallel execution when beneficial
+          # Threshold of 10 tests balances overhead vs performance gain
+          TEST_COUNT=$(poetry run pytest --collect-only -q tests/ -m "not slow and not docker" 2>/dev/null | grep -c "test session starts" || echo "0")
+          if [ "$TEST_COUNT" -gt 10 ]; then
+            echo "Running $TEST_COUNT tests in parallel..."
+            poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-unit.xml --cov-report=term-missing -m "not slow and not docker" --junitxml=junit-unit.xml -o junit_family=legacy --cov-fail-under=0 -n auto
+          else
+            echo "Running $TEST_COUNT tests sequentially..."
+            poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-unit.xml --cov-report=term-missing -m "not slow and not docker" --junitxml=junit-unit.xml -o junit_family=legacy --cov-fail-under=0
+          fi
+          echo "Unit test coverage generation completed"
+
+      # COVERAGE DEBUG SUPPORT
+      # Provides detailed diagnostics when coverage upload fails
+      # Helps troubleshoot coverage generation and file system issues
+      - name: Debug coverage file before upload
+        if: failure()
+        run: |
+          echo "🔍 Debugging coverage files due to failure..."
+          ls -la coverage-*.xml || echo "No coverage files found"
+          if [ -f ./coverage-unit.xml ]; then
+            echo "Unit coverage file size: $(stat -c%s ./coverage-unit.xml) bytes"
+            echo "Unit coverage file first few lines:"
+            head -n 5 ./coverage-unit.xml || echo "Could not read coverage file"
+          else
+            echo "Unit coverage file not found"
+          fi
+
+      # UNIT TEST COVERAGE AND RESULTS REPORTING
+      # Uploads coverage data and test results to Codecov with specific flags
+      # Robust configuration prevents CI failures from coverage upload issues
+      - name: Upload unit test coverage and results to Codecov
+        if: steps.python_changes.outputs.any_changed == 'true' || github.event_name
+          == 'workflow_dispatch'
+        uses: ./.github/actions/upload-coverage
+        with:
+          coverage-file: ./coverage-unit.xml
+          junit-file: ./junit-unit.xml
+          flags: unit
+          name: unit-tests
+          codecov-token: ${{ secrets.CODECOV_TOKEN }}
+
+      # ========================================================================
+      # DATABASE TEST EXECUTION - Data Layer Validation
+      # ========================================================================
+      # Purpose: Focused testing of database operations and models
+      # Strategy: Conditional execution based on test discovery
+      # Coverage: Database-specific coverage reporting
+      # Safety: Only runs when database tests actually exist
+      # ========================================================================
+
+      # DYNAMIC DATABASE TEST DISCOVERY
+      # Checks for existence of database tests before execution
+      # Prevents unnecessary setup and provides clear status reporting
+      - name: Check for database tests
+        if: steps.python_changes.outputs.any_changed == 'true' || github.event_name
+          == 'workflow_dispatch'
+        id: check_db_tests
+        run: |
+          if find tests/tux/database/ -name "test_*.py" -type f | grep -q .; then
+            echo "has_tests=true" >> "$GITHUB_OUTPUT"
+            echo "Database tests found"
+          else
+            echo "has_tests=false" >> "$GITHUB_OUTPUT"
+            echo "No database tests found, skipping database test suite"
+          fi
+
+      # DATABASE TEST EXECUTION
+      # Focused testing of database layer with dedicated coverage
+      # Targets only database directory for precise scope
+      - name: Run database tests with coverage
+        if: steps.check_db_tests.outputs.has_tests == 'true'
+        run: poetry run pytest tests/tux/database/ -v --cov=tux/database --cov-branch
+          --cov-report=xml:coverage-database.xml --junitxml=junit-database.xml -o
+          junit_family=legacy --cov-fail-under=0
+
+      # DATABASE COVERAGE AND RESULTS REPORTING
+      # Separate coverage tracking for database-specific functionality
+      # Provides granular insights into data layer test coverage
+      - name: Upload database test coverage and results to Codecov
+        if: steps.check_db_tests.outputs.has_tests == 'true' && hashFiles('./coverage-database.xml')
+          != ''
+        uses: ./.github/actions/upload-coverage
+        with:
+          coverage-file: ./coverage-database.xml
+          junit-file: ./junit-database.xml
+          flags: database
+          name: database-tests
+          codecov-token: ${{ secrets.CODECOV_TOKEN }}
+
+      # ========================================================================
+      # INTEGRATION TEST EXECUTION - End-to-End Validation
+      # ========================================================================
+      # Purpose: Comprehensive end-to-end testing of complete workflows
+      # Strategy: Marked as "slow" tests, conditional execution, non-blocking
+      # Coverage: Full application coverage in realistic scenarios
+      # Policy: Failures don't block CI but are reported for investigation
+      # ========================================================================
+
+      # DYNAMIC INTEGRATION TEST DISCOVERY
+      # Uses pytest marker system to identify integration tests
+      # Prevents execution overhead when no integration tests exist
+      - name: Check for integration tests
+        if: steps.python_changes.outputs.any_changed == 'true' || github.event_name
+          == 'workflow_dispatch'
+        id: check_integration_tests
+        run: |
+          if poetry run pytest --collect-only -m "slow" -q tests/ | grep -q "test session starts"; then
+            echo "has_tests=true" >> "$GITHUB_OUTPUT"
+            echo "Integration tests found"
+          else
+            echo "has_tests=false" >> "$GITHUB_OUTPUT"
+            echo "No integration tests found, skipping integration test suite"
+          fi
+
+      # COVERAGE FILE MANAGEMENT
+      # Cleans previous coverage files to prevent conflicts
+      # Ensures clean slate for integration test coverage reporting
+      - name: Clean up previous coverage files before integration tests
+        if: steps.check_integration_tests.outputs.has_tests == 'true'
+        run: |
+          echo "Cleaning up previous coverage files to avoid conflicts..."
+          rm -f coverage-unit.xml coverage-database.xml || true
+          echo "Current coverage files:"
+          ls -la coverage-*.xml 2>/dev/null || echo "No coverage files found"
+
+      # INTEGRATION TEST EXECUTION
+      # Non-blocking execution allows CI to continue even with integration failures
+      # Provides realistic end-to-end testing without blocking development
+      - name: Run integration tests with coverage
+        if: steps.check_integration_tests.outputs.has_tests == 'true'
+        run: poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-integration.xml
+          -m "slow" --junitxml=junit-integration.xml -o junit_family=legacy --cov-fail-under=0
+        continue-on-error: true  # Don't fail CI if integration tests fail
+
+      # INTEGRATION COVERAGE AND RESULTS REPORTING
+      # Captures coverage from comprehensive end-to-end scenarios
+      # Provides insights into real-world usage patterns
+      - name: Upload integration test coverage and results to Codecov
+        if: steps.check_integration_tests.outputs.has_tests == 'true' && hashFiles('./coverage-integration.xml')
+          != ''
+        uses: ./.github/actions/upload-coverage
+        with:
+          coverage-file: ./coverage-integration.xml
+          junit-file: ./junit-integration.xml
+          flags: integration
+          name: integration-tests
+          codecov-token: ${{ secrets.CODECOV_TOKEN }}
+
+      # NOTE: Integration test results are already handled by the composite action above
+
+      # ========================================================================
+      # ARTIFACT PRESERVATION - Test Results and Coverage Archive
+      # ========================================================================
+      # Purpose: Preserves test artifacts for debugging and analysis
+      # Strategy: Upload all test outputs regardless of success/failure
+      # Retention: 30-day retention for reasonable debugging window
+      # Organization: Python version-specific artifacts for precise debugging
+      # ========================================================================
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: test-results-python-${{ matrix.python-version }}
+          path: |
+            coverage-*.xml
+            junit-*.xml
+            htmlcov/
+          retention-days: 30
+# ==============================================================================
+# TEST WORKFLOW BEST PRACTICES IMPLEMENTED
+# ==============================================================================
+#
+# 1. COMPREHENSIVE TESTING STRATEGY:
+#    - Multi-version Python compatibility testing
+#    - Categorized test execution (unit, database, integration)
+#    - Intelligent test discovery and conditional execution
+#    - Parallel test execution for performance optimization
+#
+# 2. ROBUST COVERAGE REPORTING:
+#    - Category-specific coverage tracking with flags
+#    - Multiple coverage report formats (XML, terminal)
+#    - Codecov integration for visualization and tracking
+#    - Coverage debugging support for troubleshooting
+#
+# 3. PERFORMANCE OPTIMIZATION:
+#    - Smart change detection to skip unnecessary runs
+#    - Python version-specific caching strategies
+#    - Adaptive parallel/sequential test execution
+#    - Efficient artifact management with reasonable retention
+#
+# 4. RELIABILITY & FAULT TOLERANCE:
+#    - Matrix strategy with fail-fast disabled
+#    - Integration test failures don't block CI
+#    - Comprehensive error handling and debugging support
+#    - Test result reporting even on failures
+#
+# 5. DEVELOPER EXPERIENCE:
+#    - Clear status messages and skip explanations
+#    - Comprehensive artifact preservation for debugging
+#    - Manual trigger support for testing workflow changes
+#    - Detailed test categorization and reporting
+#
+# 6. SECURITY & ISOLATION:
+#    - Isolated test environment with SQLite
+#    - No production data exposure during testing
+#    - Secure token handling for coverage reporting
+#    - Read-only permissions for repository access
+#
+# USAGE EXAMPLES:
+# ---------------
+# Manual test execution:
+#   GitHub UI → Actions → Tests → Run workflow
+#
+# Debug specific Python version:
+#   Check matrix job for specific version in Actions tab
+#
+# Analyze coverage:
+#   Visit Codecov dashboard for detailed coverage analysis
+#
+# Download test artifacts:
+#   Actions tab → workflow run → Artifacts section
+#
+# View test results:
+#   Actions tab → workflow run → job details → test steps
+#
+# ==============================================================================

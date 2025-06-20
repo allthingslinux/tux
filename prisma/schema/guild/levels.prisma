@@ -1,0 +1,13 @@
+model Levels {
+  member_id    BigInt
+  xp           Float    @default(0)
+  level        BigInt   @default(0)
+  blacklisted  Boolean  @default(false)
+  last_message DateTime @default(now())
+  guild_id     BigInt
+  guild        Guild    @relation(fields: [guild_id], references: [guild_id])
+
+  @@id([member_id, guild_id])
+  @@unique([member_id, guild_id])
+  @@index([member_id])
+}

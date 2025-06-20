@@ -1,0 +1,16 @@
+model Guild {
+  guild_id         BigInt             @id
+  guild_joined_at  DateTime?          @default(now())
+  cases            Case[]
+  snippets         Snippet[]
+  notes            Note[]
+  reminders        Reminder[]
+  guild_config     GuildConfig[]
+  AFK              AFKModel[]
+  Starboard        Starboard?
+  StarboardMessage StarboardMessage[]
+  case_count       BigInt             @default(0)
+  levels           Levels[]
+
+  @@index([guild_id])
+}

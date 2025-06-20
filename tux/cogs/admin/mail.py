@@ -6,21 +6,22 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+from tux.bot import Tux
 from tux.utils import checks
-from tux.utils.constants import Constants as CONST
+from tux.utils.config import CONFIG
 
 MailboxData = dict[str, str | list[str]]
 
 
 class Mail(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
-        self.api_url = CONST.MAILCOW_API_URL
+        self.api_url = CONFIG.MAILCOW_API_URL
         self.headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "X-API-Key": CONST.MAILCOW_API_KEY,
-            "Authorization": f"Bearer {CONST.MAILCOW_API_KEY}",
+            "X-API-Key": CONFIG.MAILCOW_API_KEY,
+            "Authorization": f"Bearer {CONFIG.MAILCOW_API_KEY}",
         }
         self.default_options: dict[str, str | list[str]] = {
             "active": "1",
@@ -37,7 +38,6 @@ class Mail(commands.Cog):
     mail = app_commands.Group(name="mail", description="Mail commands.")
 
     @mail.command(name="register")
-    @app_commands.checks.has_any_role("Root", "Admin", "Mod")
     @checks.ac_has_pl(5)
     async def register(
         self,
@@ -98,7 +98,16 @@ class Mail(commands.Cog):
                 delete_after=30,
             )
 
-    def _generate_password(self) -> str:
+    @staticmethod
+    def _generate_password() -> str:
+        """
+        Generates a random password for the mailbox.
+
+        Returns
+        -------
+        str
+            The generated password.
+        """
         password = "changeme" + "".join(str(random.randint(0, 9)) for _ in range(6))
         password += "".join(random.choice("!@#$%^&*") for _ in range(4))
         return password
@@ -109,6 +118,18 @@ class Mail(commands.Cog):
         password: str,
         member_id: int,
     ) -> MailboxData:
+        """
+        Prepares the mailbox data for the API request.
+
+        Parameters
+        ----------
+        username : str
+            The username to register for mail.
+        password : str
+            The password to register for mail.
+        member_id : int
+            The ID of the member to register for mail.
+        """
         mailbox_data = self.default_options.copy()
 
         mailbox_data.update(
@@ -132,6 +153,20 @@ class Mail(commands.Cog):
         member: discord.Member,
         password: str,
     ) -> None:
+        """
+        Handles the response from the API request.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object for the command.
+        response : httpx.Response
+            The response from the API request.
+        member : discord.Member
+            The member to register for mail.
+        password : str
+            The password to register for mail.
+        """
         if response.status_code == 200:
             result: list[dict[str, str | None]] = response.json()
             logger.info(f"Response JSON: {result}")
@@ -160,7 +195,21 @@ class Mail(commands.Cog):
                 delete_after=30,
             )
 
-    def _extract_mailbox_info(self, result: list[dict[str, str | None]]) -> str | None:
+    @staticmethod
+    def _extract_mailbox_info(result: list[dict[str, str | None]]) -> str | None:
+        """
+        Extracts the mailbox information from the response.
+
+        Parameters
+        ----------
+        result : list[dict[str, str | None]]
+            The response from the API request.
+
+        Returns
+        -------
+        str | None
+            The mailbox information.
+        """
         for item in result:
             if "msg" in item:
                 msg = item["msg"]
@@ -172,13 +221,27 @@ class Mail(commands.Cog):
 
         return None
 
+    @staticmethod
     async def _send_dm(
-        self,
         interaction: discord.Interaction,
         member: discord.Member,
         mailbox_info: str,
         password: str,
     ) -> None:
+        """
+        Sends a DM to the member with the mailbox information.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object for the command.
+        member : discord.Member
+            The member to send the DM to.
+        mailbox_info : str
+            The mailbox information to send to the member.
+        password : str
+            The password to send to the member.
+        """
         dm_message = f"""
 **Your mailbox has been successfully registered!**
 
@@ -188,7 +251,7 @@ class Mail(commands.Cog):
 
 **Please change your password after logging in for the first time.**
 
-After changing, you can also set up your mailbox on your mobile device or email client following the instructions provided on the mail server. Alternatively, feel free to use our webmail interface available at [mail.atl.tools/SOGo](https://mail.atl.tools/SOGo/).
+After changing, you Ban also set up your mailbox on your mobile device or email client following the instructions provided on the mail server. Alternatively, feel free to use our webmail interface available at [mail.atl.tools/SOGo](https://mail.atl.tools/SOGo/).
 
 If you have any questions or need assistance, please feel free to reach out to the server staff. Enjoy your new mailbox! 📬
         """
@@ -203,5 +266,5 @@ If you have any questions or need assistance, please feel free to reach out to t
             )
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Mail(bot))

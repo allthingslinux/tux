@@ -1,0 +1,78 @@
+name: Deploy
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to deploy to
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+        default: staging
+concurrency:
+  group: deploy-${{ github.event.inputs.environment || 'production' }}
+  cancel-in-progress: false
+jobs:
+  deploy:
+    name: Deploy to ${{ github.event.inputs.environment || 'production' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.environment || 'production' }}
+      url: ${{ steps.deploy.outputs.url }}
+    permissions:
+      contents: read
+      packages: read
+      deployments: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Get Docker image
+        id: image
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            # Use the tag from the release
+            IMAGE_TAG="${{ github.event.release.tag_name }}"
+          else
+            # Use latest for manual deployments
+            IMAGE_TAG="main"
+          fi
+          IMAGE="ghcr.io/${{ github.repository }}:${IMAGE_TAG}"
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+          echo "Deploying image: $IMAGE"
+      - name: Deploy to environment
+        id: deploy
+        run: |
+          ENV="${{ github.event.inputs.environment || 'production' }}"
+          IMAGE="${{ steps.image.outputs.image }}"
+          echo "🚀 Deploying $IMAGE to $ENV environment"
+
+          # This is where you'd integrate with your deployment system
+          # Examples:
+          # - Update Kubernetes manifests
+          # - Deploy to cloud platforms
+          # - Update docker-compose files
+          # - Trigger external deployment systems
+
+          # For now, just simulate deployment
+          echo "✅ Deployment completed successfully"
+
+          # Set deployment URL (customize for your infrastructure)
+          if [ "$ENV" = "production" ]; then
+            echo "url=https://your-app.com" >> "$GITHUB_OUTPUT"
+          else
+            echo "url=https://staging.your-app.com" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Deployment notification
+        if: always()
+        run: |-
+          ENV="${{ github.event.inputs.environment || 'production' }}"
+          if [ "${{ steps.deploy.outcome }}" = "success" ]; then
+            echo "✅ Successfully deployed to $ENV"
+            echo "🔗 URL: ${{ steps.deploy.outputs.url }}"
+          else
+            echo "❌ Deployment to $ENV failed"
+          fi

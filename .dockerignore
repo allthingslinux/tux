@@ -1,0 +1,58 @@
+# Environment files
+.env*
+!.env.example
+
+# Python virtual environment and caches
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+.mypy_cache/
+.ruff_cache/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Documentation and development files
+docs-build/
+site/
+*.md
+!README.md
+!LICENSE
+!requirements.md
+
+# Development configuration
+.cursorrules
+.editorconfig
+.pre-commit-config.yaml
+
+# Logs
+*.log
+logs/
+
+# Git (now excluded since version info is passed via build args)
+# This improves build performance and security
+.git/
+.gitignore
+.gitattributes
+
+# Docker files (prevent recursive inclusion)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Cache directories
+.cache/

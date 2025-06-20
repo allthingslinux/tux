@@ -5,7 +5,6 @@ __pycache__/
 
 # Replit
 *.replit
-*.nix
 
 # C extensions
 *.so
@@ -44,6 +43,7 @@ htmlcov/
 .nox/
 .coverage
 .coverage.*
+.coverage-*
 .cache
 nosetests.xml
 coverage.xml
@@ -83,9 +83,6 @@ target/
 # IPython
 profile_default/
 ipython_config.py
-
-# Pyenv
-.python-version
 
 # Pipenv
 Pipfile.lock
@@ -141,9 +138,6 @@ tux/logs/
 # PyCharm
 .idea/
 
-# VS Code
-.vscode/
-
 # Prisma
 .binaries/
 prisma/database.db
@@ -153,18 +147,36 @@ prisma/database.db
 .venv
 env/
 venv/
-ENV/
-env.bak/
-venv.bak/
-.env.old
+env.bak
+.env.*
 
 # Sensitive files
 github-private-key.pem
 
 # Miscellaneous
 /debug.csv
-config/settings.json
-config/settings.yml
+config/settings*
+!config/settings.yml.example
 
 # MacOS
 .DS_Store
+
+build/
+docs-build/
+docs/site/
+site/
+
+# extensions
+tux/extensions/*
+!tux/extensions/README.md
+
+# misc
+slim.report.json
+prisma_binaries/
+
+# direnv
+.direnv/
+
+.archive/
+
+reports/

@@ -1,224 +1,197 @@
-import inspect
-from typing import Any
-
 import discord
 from discord.ext import commands
-from discord.utils import MISSING
 
 from prisma.enums import CaseType
-from tux.utils.converters import CaseTypeConverter
+from tux.utils.constants import CONST
+from tux.utils.converters import CaseTypeConverter, TimeConverter, convert_bool
 
-
-def generate_usage(
-    command: commands.Command[Any, Any, Any],
-    flag_converter: type[commands.FlagConverter],
-) -> str:
-    """
-    Generate a usage string for a command with flags.
-
-    Parameters
-    ----------
-    command : commands.Command
-        The command for which to generate the usage string.
-    flag_converter : type[commands.FlagConverter]
-        The flag converter class for the command.
-
-    Returns
-    -------
-    str
-        The usage string for the command. Example: "ban [target] -[reason] -<silent>"
-    """
-
-    # Get the name of the command
-    command_name = command.qualified_name
-
-    # Start the usage string with the command name
-    usage = f"{command_name}"
-
-    # Get the parameters of the command (excluding the `ctx` and `flags` parameters)
-    parameters: dict[str, commands.Parameter] = command.clean_params
-
-    flag_prefix = getattr(flag_converter, "__commands_flag_prefix__", "-")
-    flags: dict[str, commands.Flag] = flag_converter.get_flags()
-
-    # Add non-flag arguments to the usage string
-    for param_name, param in parameters.items():
-        # Ignore these parameters
-        if param_name in ["ctx", "flags"]:
-            continue
-        # Determine if the parameter is required
-        is_required = param.default == inspect.Parameter.empty
-        # Add the parameter to the usage string with required or optional wrapping
-        usage += f" [{param_name}]" if is_required else f" <{param_name}>"
-
-    # Add flag arguments to the usage string
-    for flag_name, flag_obj in flags.items():
-        # Determine if the flag is required or optional
-        if flag_obj.required:
-            usage += f" {flag_prefix}[{flag_name}]"
-        else:
-            usage += f" {flag_prefix}<{flag_name}>"
-
-    return usage
+# TODO: Figure out how to use boolean flags with empty values
 
 
 class BanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
-        description="Reason for the ban.",
-        aliases=["r"],
-        default=MISSING,
+        description="The reason for the ban.",
+        default=CONST.DEFAULT_REASON,
+        positional=True,
     )
-    purge_days: int = commands.flag(
-        name="purge_days",
-        description="Number of days in messages. (< 7)",
-        aliases=["p", "purge"],
+    purge: commands.Range[int, 0, 7] = commands.flag(
+        name="purge",
+        description="Days of messages to delete (0-7).",
+        aliases=["p"],
         default=0,
     )
     silent: bool = commands.flag(
         name="silent",
-        description="Do not send a DM to the target.",
+        description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
+        converter=convert_bool,
     )
 
 
 class TempBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
-        description="Reason for the temp ban.",
-        aliases=["r"],
-        default=MISSING,
+        description="The reason for the ban.",
+        default=CONST.DEFAULT_REASON,
+        positional=True,
     )
-    expires_at: int = commands.flag(
-        name="expires_at",
-        description="Number of days the ban will last for.",
-        aliases=["t", "d", "e", "duration", "expires", "time"],
+    duration: float = commands.flag(
+        name="duration",
+        description="Length of the ban (e.g. 1d, 1h).",
+        aliases=["t", "d", "e"],
+        converter=TimeConverter,
     )
-    purge_days: int = commands.flag(
-        name="purge_days",
-        description="Number of days in messages. (< 7)",
+    purge: commands.Range[int, 0, 7] = commands.flag(
+        name="purge",
+        description="Days of messages to delete (0-7).",
         aliases=["p"],
         default=0,
     )
     silent: bool = commands.flag(
         name="silent",
-        description="Do not send a DM to the target.",
+        description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
+        converter=convert_bool,
     )
+
+
+class UnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    pass
 
 
 class KickFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
-        description="Reason for the kick.",
-        aliases=["r"],
-        default=MISSING,
+        description="The reason for the kick.",
+        default=CONST.DEFAULT_REASON,
+        positional=True,
     )
     silent: bool = commands.flag(
         name="silent",
-        description="Do not send a DM to the target.",
+        description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
+        converter=convert_bool,
+    )
+
+
+class WarnFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    reason: str = commands.flag(
+        name="reason",
+        description="The reason for the warning.",
+        default=CONST.DEFAULT_REASON,
+        positional=True,
+    )
+    silent: bool = commands.flag(
+        name="silent",
+        description="Don't send a DM to the target.",
+        aliases=["s", "quiet"],
+        default=False,
+        converter=convert_bool,
     )
 
 
 class TimeoutFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    duration: str = commands.flag(
-        name="duration",
-        description="Duration of the timeout. (e.g. 1d, 1h, 1m)",
-        aliases=["d"],
-        default=MISSING,
-    )
     reason: str = commands.flag(
         name="reason",
-        description="Reason for the timeout.",
-        aliases=["r"],
-        default=MISSING,
+        description="The reason for the timeout.",
+        default=CONST.DEFAULT_REASON,
+        positional=True,
+    )
+    duration: str = commands.flag(
+        name="duration",
+        description="Length of the timeout. (e.g. 1d, 1h)",
+        aliases=["t", "d", "e"],
     )
     silent: bool = commands.flag(
         name="silent",
-        description="Do not send a DM to the target.",
+        description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
+        converter=convert_bool,
     )
 
 
 class UntimeoutFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
-        description="Reason for the untimeout.",
-        aliases=["r"],
-        default=MISSING,
+        description="The reason for the timeout.",
+        default=CONST.DEFAULT_REASON,
+        positional=True,
     )
     silent: bool = commands.flag(
         name="silent",
-        description="Do not send a DM to the target.",
+        description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
-    )
-
-
-class UnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    reason: str = commands.flag(
-        name="reason",
-        description="Reason for the unban.",
-        aliases=["r"],
-        default=MISSING,
+        converter=convert_bool,
     )
 
 
 class JailFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
-        description="Reason for the jail.",
-        aliases=["r"],
-        default=MISSING,
+        description="The reason for the jail.",
+        default=CONST.DEFAULT_REASON,
+        positional=True,
     )
     silent: bool = commands.flag(
         name="silent",
-        description="Do not send a DM to the target.",
+        description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
+        converter=convert_bool,
     )
 
 
 class UnjailFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
-        description="Reason for the unjail.",
-        aliases=["r"],
-        default=MISSING,
+        description="The reason for the jail.",
+        default=CONST.DEFAULT_REASON,
+        positional=True,
     )
     silent: bool = commands.flag(
         name="silent",
-        description="Do not send a DM to the target.",
+        description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
+        converter=convert_bool,
     )
 
 
 class CasesViewFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    type: CaseType = commands.flag(
+    type: CaseType | None = commands.flag(
         name="type",
         description="Type of case to view.",
         aliases=["t"],
         default=None,
         converter=CaseTypeConverter,
     )
-    user: discord.User = commands.flag(
+    user: discord.User | None = commands.flag(
         name="user",
         description="User to view cases for.",
-        aliases=["u", "member", "memb", "m", "target"],
+        aliases=["u"],
         default=None,
     )
-    moderator: discord.User = commands.flag(
+    moderator: discord.User | None = commands.flag(
         name="mod",
         description="Moderator to view cases for.",
-        aliases=["moderator"],
+        aliases=["m"],
         default=None,
     )
+
+    def __init__(self, *args: object, **kwargs: object) -> None:
+        super().__init__(*args, **kwargs)
+        if not hasattr(self, "type"):
+            self.type = None
+        if not hasattr(self, "user"):
+            self.user = None
+        if not hasattr(self, "moderator"):
+            self.moderator = None
 
 
 class CaseModifyFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
@@ -226,54 +199,114 @@ class CaseModifyFlags(commands.FlagConverter, case_insensitive=True, delimiter="
         name="status",
         description="Status of the case.",
         aliases=["s"],
+        default=None,
+        converter=convert_bool,
     )
     reason: str | None = commands.flag(
         name="reason",
         description="Modified reason.",
         aliases=["r"],
+        default=None,
     )
 
-
-class WarnFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    reason: str = commands.flag(
-        name="reason",
-        description="Reason for the warn.",
-        aliases=["r"],
-        default=MISSING,
-    )
-    silent: bool = commands.flag(
-        name="silent",
-        description="Do not send a DM to the target.",
-        aliases=["s", "quiet"],
-        default=False,
-    )
+    def __init__(self):
+        if all(value is None for value in (self.status, self.reason)):
+            msg = "Status or reason must be provided."
+            raise commands.FlagError(msg)
 
 
 class SnippetBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
-        description="Reason for the snippet ban.",
-        aliases=["r"],
-        default=MISSING,
+        description="The reason for the snippet ban.",
+        default=CONST.DEFAULT_REASON,
+        positional=True,
     )
     silent: bool = commands.flag(
         name="silent",
-        description="Do not send a DM to the target.",
+        description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
+        converter=convert_bool,
     )
 
 
 class SnippetUnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
-        description="Reason for the snippet unban.",
-        aliases=["r"],
-        default=MISSING,
+        description="The reason for the snippet unban.",
+        default=CONST.DEFAULT_REASON,
+        positional=True,
     )
     silent: bool = commands.flag(
         name="silent",
-        description="Do not send a DM to the target.",
+        description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
+        default=False,
+        converter=convert_bool,
+    )
+
+
+class PollBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    reason: str = commands.flag(
+        name="reason",
+        description="The reason for the poll ban.",
+        default=CONST.DEFAULT_REASON,
+        positional=True,
+    )
+    silent: bool = commands.flag(
+        name="silent",
+        description="Don't send a DM to the target.",
+        aliases=["s", "quiet"],
+        default=False,
+        converter=convert_bool,
+    )
+
+
+class PollUnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    reason: str = commands.flag(
+        name="reason",
+        description="The reason for the poll unban.",
+        default=CONST.DEFAULT_REASON,
+        positional=True,
+    )
+    silent: bool = commands.flag(
+        name="silent",
+        description="Don't send a DM to the target.",
+        aliases=["s", "quiet"],
+        default=False,
+        converter=convert_bool,
+    )
+
+
+class TldrFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    platform: str | None = commands.flag(
+        name="platform",
+        description="Platform (e.g. linux, osx, common)",
+        aliases=["p"],
+        default=None,
+    )
+    language: str | None = commands.flag(
+        name="language",
+        description="Language code (e.g. en, es, fr)",
+        aliases=["lang", "l"],
+        default=None,
+    )
+    show_short: bool = commands.flag(
+        name="show_short",
+        description="Display shortform options over longform.",
+        aliases=["short"],
+        default=False,
+    )
+    show_long: bool = commands.flag(
+        name="show_long",
+        description="Display longform options over shortform.",
+        aliases=["long"],
+        default=True,
+    )
+    show_both: bool = commands.flag(
+        name="show_both",
+        description="Display both short and long options.",
+        aliases=["both"],
         default=False,
     )

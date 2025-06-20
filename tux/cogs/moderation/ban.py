@@ -1,16 +1,17 @@
 import discord
 from discord.ext import commands
-from loguru import logger
 
 from prisma.enums import CaseType
+from tux.bot import Tux
 from tux.utils import checks
-from tux.utils.flags import BanFlags, generate_usage
+from tux.utils.flags import BanFlags
+from tux.utils.functions import generate_usage
 
 from . import ModerationCogBase
 
 
 class Ban(ModerationCogBase):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
         self.ban.usage = generate_usage(self.ban, BanFlags)
 
@@ -19,7 +20,7 @@ class Ban(ModerationCogBase):
     @checks.has_pl(3)
     async def ban(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         member: discord.Member,
         *,
         flags: BanFlags,
@@ -29,12 +30,12 @@ class Ban(ModerationCogBase):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
         member : discord.Member
             The member to ban.
         flags : BanFlags
-            The flags for the command. (reason: str, purge_days: int (< 7), silent: bool)
+            The flags for the command. (reason: str, purge: int (< 7), silent: bool)
 
         Raises
         ------
@@ -44,34 +45,25 @@ class Ban(ModerationCogBase):
             If an error occurs while banning the user.
         """
 
-        if ctx.guild is None:
-            logger.warning("Ban command used outside of a guild context.")
+        assert ctx.guild
+
+        # Check if moderator has permission to ban the member
+        if not await self.check_conditions(ctx, member, ctx.author, "ban"):
             return
 
-        moderator = ctx.author
-
-        if not await self.check_conditions(ctx, member, moderator, "ban"):
-            return
-
-        try:
-            await self.send_dm(ctx, flags.silent, member, flags.reason, action="banned")
-            await ctx.guild.ban(member, reason=flags.reason, delete_message_days=flags.purge_days)
-
-        except (discord.Forbidden, discord.HTTPException) as e:
-            logger.error(f"Failed to ban {member}. {e}")
-            await ctx.send(f"Failed to ban {member}. {e}", delete_after=30, ephemeral=True)
-            return
-
-        case = await self.db.case.insert_case(
-            case_user_id=member.id,
-            case_moderator_id=ctx.author.id,
+        # Execute ban with case creation and DM
+        await self.execute_mod_action(
+            ctx=ctx,
             case_type=CaseType.BAN,
-            case_reason=flags.reason,
-            guild_id=ctx.guild.id,
+            user=member,
+            reason=flags.reason,
+            silent=flags.silent,
+            dm_action="banned",
+            actions=[
+                (ctx.guild.ban(member, reason=flags.reason, delete_message_seconds=flags.purge * 86400), type(None)),
+            ],
         )
 
-        await self.handle_case_response(ctx, CaseType.BAN, case.case_number, flags.reason, member)
 
-
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Ban(bot))

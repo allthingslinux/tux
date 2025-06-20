@@ -4,8 +4,11 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.bot import Tux
+from tux.ui.embeds import EmbedCreator
 from tux.utils import checks
-from tux.utils.embeds import EmbedCreator
+from tux.utils.config import CONFIG
+from tux.utils.functions import generate_usage
 
 
 def insert_returns(body: list[ast.stmt]) -> None:
@@ -38,27 +41,28 @@ def insert_returns(body: list[ast.stmt]) -> None:
 
 
 class Eval(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
+        self.eval.usage = generate_usage(self.eval)
 
     @commands.command(
         name="eval",
         aliases=["e"],
-        usage="eval [expression]",
     )
     @commands.guild_only()
     @checks.has_pl(8)  # sysadmin or higher
-    async def eval(self, ctx: commands.Context[commands.Bot], *, cmd: str) -> None:
+    async def eval(self, ctx: commands.Context[Tux], *, expression: str) -> None:
         """
         Evaluate a Python expression. (Owner only)
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
-        cmd : str
+        expression : str
             The Python expression to evaluate.
         """
+        cmd = expression
 
         # Check if the user is in the discord.py owner_ids list in the bot instance
         if self.bot.owner_ids is None:
@@ -67,10 +71,23 @@ class Eval(commands.Cog):
             return
 
         if ctx.author.id not in self.bot.owner_ids:
+            if not CONFIG.ALLOW_SYSADMINS_EVAL and ctx.author.id in CONFIG.SYSADMIN_IDS:
+                logger.warning(
+                    f"{ctx.author} tried to run eval but is not the bot owner. (User ID: {ctx.author.id})",
+                )
+                await ctx.send(
+                    "You are not the bot owner and sysadmins are not allowed to use eval. Please contact your bot owner if you need assistance.",
+                    delete_after=30,
+                )
+                return
+
             logger.warning(
-                f"{ctx.author} tried to run eval but is not the bot owner. (User ID: {ctx.author.id})",
+                f"{ctx.author} tried to run eval but is not the bot owner or sysadmin. (User ID: {ctx.author.id})",
             )
-            await ctx.send("You are not the bot owner. Better luck next time!", ephemeral=True, delete_after=30)
+            await ctx.send(
+                "You are not the bot owner. Better luck next time! (hint: if you are looking for the regular run command its $run)",
+                delete_after=30,
+            )
             return
 
         try:
@@ -107,26 +124,27 @@ class Eval(commands.Cog):
             # Evaluate the function
             evaluated = await eval(f"{fn_name}()", env)
 
-            embed = EmbedCreator.create_success_embed(
-                title="Success!",
+            embed = EmbedCreator.create_embed(
+                EmbedCreator.SUCCESS,
+                bot=self.bot,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 description=f"```py\n{evaluated}```",
-                ctx=ctx,
             )
-
+            await ctx.reply(embed=embed, ephemeral=True, delete_after=30)
             logger.info(f"{ctx.author} ran an expression: {cmd}")
 
         except Exception as error:
-            embed = EmbedCreator.create_error_embed(
-                title="Error!",
+            embed = EmbedCreator.create_embed(
+                EmbedCreator.ERROR,
+                bot=self.bot,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
                 description=f"```py\n{error}```",
-                ctx=ctx,
             )
-
+            await ctx.reply(embed=embed, ephemeral=True, delete_after=30)
             logger.error(f"An error occurred while running an expression: {error}")
 
-        else:
-            await ctx.send(embed=embed, ephemeral=True, delete_after=30)
 
-
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Eval(bot))

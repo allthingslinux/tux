@@ -1,0 +1,286 @@
+# ==============================================================================
+# TUX DISCORD BOT - COMPREHENSIVE SECURITY SCANNING WORKFLOW
+# ==============================================================================
+#
+# This workflow provides comprehensive security scanning and vulnerability
+# management for the Tux Discord bot project. It implements multiple layers
+# of security analysis including static code analysis, dependency scanning,
+# and automated security advisory management with intelligent automation
+# for low-risk updates.
+#
+# SECURITY CAPABILITIES:
+# ----------------------
+# 1. Multi-language static analysis with GitHub CodeQL
+# 2. Dependency vulnerability scanning and review
+# 3. Automated security advisory monitoring
+# 4. Intelligent Dependabot auto-merge for patch/minor updates
+# 5. Comprehensive vulnerability reporting and tracking
+#
+# SCANNING STRATEGY:
+# ------------------
+# - CodeQL: Weekly comprehensive analysis for vulnerabilities
+# - Dependency Review: Real-time analysis on pull requests
+# - Safety Check: Continuous monitoring of Python dependencies
+# - Dependabot: Automated updates with intelligent approval
+#
+# AUTOMATION FEATURES:
+# --------------------
+# - Auto-approval of patch and minor dependency updates
+# - Centralized security event reporting via SARIF
+# - Intelligent scheduling to avoid resource conflicts
+# - Conservative security policies with manual override options
+#
+# ==============================================================================
+name: Security
+# TRIGGER CONFIGURATION
+# Comprehensive security scanning across different development stages
+# Balances thorough coverage with resource efficiency
+on:
+  # MAIN BRANCH MONITORING
+  # Continuous security monitoring for production code
+  push:
+    branches:
+      - main
+
+  # PULL REQUEST SECURITY VALIDATION
+  # Real-time security checks for incoming changes
+  pull_request:
+    branches:
+      - main
+
+  # SCHEDULED COMPREHENSIVE SCANNING
+  # Weekly deep analysis spread across different days from other workflows
+  schedule:
+    - cron: 20 7 * * 1  # Weekly on Mondays (spread from other schedules)
+# CONCURRENCY MANAGEMENT
+# Prevents resource conflicts while allowing parallel security analysis
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  # ============================================================================
+  # CODEQL STATIC ANALYSIS - Multi-Language Security Scanning
+  # ============================================================================
+  # Purpose: Comprehensive static code analysis for security vulnerabilities
+  # Coverage: Python source code and GitHub Actions workflows
+  # Integration: GitHub Security tab with detailed vulnerability reports
+  # Frequency: Main branch pushes and weekly scheduled deep scans
+  # ============================================================================
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    # RESOURCE OPTIMIZATION
+    # Skips CodeQL on pull requests to save Actions minutes for critical tasks
+    # Focuses on main branch and scheduled runs for comprehensive coverage
+    if: github.event_name != 'pull_request'
+    permissions:
+      security-events: write    # Required for SARIF upload
+      packages: read           # Required for dependency analysis
+      actions: read           # Required for workflow analysis
+      contents: read          # Required for repository access
+
+    # MULTI-LANGUAGE ANALYSIS STRATEGY
+    # Analyzes different languages with optimized configurations
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # GITHUB ACTIONS WORKFLOW ANALYSIS
+          # Scans workflow files for security misconfigurations
+          - language: actions
+            build-mode: none
+
+          # PYTHON SOURCE CODE ANALYSIS
+          # Comprehensive Python security vulnerability detection
+          - language: python
+            build-mode: none
+    steps:
+      # REPOSITORY CHECKOUT
+      # Full repository access required for comprehensive analysis
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      # CODEQL INITIALIZATION
+      # Configures language-specific analysis parameters
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@ce28f5bb42b7a9f2c824e633a3f6ee835bab6858 # v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      # SECURITY ANALYSIS EXECUTION
+      # Performs comprehensive static analysis with categorized results
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@ce28f5bb42b7a9f2c824e633a3f6ee835bab6858 # v3
+        with:
+          category: /language:${{matrix.language}}
+
+  # ============================================================================
+  # DEPENDENCY REVIEW - Real-time Vulnerability Assessment
+  # ============================================================================
+  # Purpose: Real-time analysis of dependency changes in pull requests
+  # Scope: High-severity vulnerability detection and licensing compliance
+  # Integration: Automated PR comments with security recommendations
+  # Workflow: Blocks merging of PRs with high-severity vulnerabilities
+  # ============================================================================
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    # PULL REQUEST FOCUS
+    # Only analyzes dependency changes in pull requests for targeted feedback
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read           # Required for repository access
+      pull-requests: write    # Required for PR comment posting
+    steps:
+      # REPOSITORY CHECKOUT
+      # Required for dependency comparison between base and head branches
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      # DEPENDENCY VULNERABILITY ANALYSIS
+      # Analyzes dependency changes for security vulnerabilities
+      - name: Dependency Review
+        uses: actions/dependency-review-action@da24556b548a50705dd671f47852072ea4c105d9 # v4
+        with:
+          fail-on-severity: high              # Block high-severity vulnerabilities
+          comment-summary-in-pr: always       # Always provide PR feedback
+
+  # ============================================================================
+  # SECURITY ADVISORIES - Python Dependency Vulnerability Monitoring
+  # ============================================================================
+  # Purpose: Continuous monitoring of Python dependencies for security advisories
+  # Tools: Safety CLI for comprehensive vulnerability database checking
+  # Output: Structured JSON reports for tracking and remediation
+  # Integration: Artifact storage for security audit trails
+  # ============================================================================
+  security-advisories:
+    name: Python Security
+    runs-on: ubuntu-latest
+    # MAIN BRANCH FOCUS
+    # Monitors production dependencies, skips pull request analysis
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read           # Required for repository access
+      security-events: write   # Required for security event reporting
+    steps:
+      # REPOSITORY CHECKOUT
+      # Required for dependency file access and analysis
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      # PYTHON ENVIRONMENT SETUP (COMPOSITE ACTION)
+      # Uses centralized Python setup for production dependency analysis
+      # Configured for security scanning with main dependencies only
+      - name: Setup Python Environment
+        uses: ./.github/actions/setup-python
+        with:
+          python-version: '3.13'
+          install-groups: main
+          cache-suffix: security
+          generate-prisma: 'false'
+
+      # SECURITY VULNERABILITY SCANNING
+      # Comprehensive security advisory checking with structured output
+      - name: Run Safety check
+        run: |
+          pip install safety
+          # Ensure Poetry export plugin is available
+          poetry self add poetry-plugin-export
+          poetry export --without=dev --format=requirements.txt --output=requirements.txt
+          safety check --json --output safety-report.json -r requirements.txt || true
+
+      # SECURITY REPORT ARCHIVAL
+      # Stores security reports for audit trails and trend analysis
+      - name: Upload Safety results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: safety-report
+          path: safety-report.json
+          retention-days: 30
+
+  # ============================================================================
+  # DEPENDABOT AUTO-MERGE - Intelligent Dependency Update Automation
+  # ============================================================================
+  # Purpose: Automated approval and merging of low-risk dependency updates
+  # Strategy: Conservative automation for patch and minor version updates
+  # Security: Repository-restricted execution to prevent supply chain attacks
+  # Scope: Patch-level and minor version updates only (excludes major changes)
+  # ============================================================================
+  dependabot-auto-merge:
+    name: Auto-merge
+    runs-on: ubuntu-latest
+    # SECURITY CONDITIONS
+    # Strict conditions to ensure automated merging is safe and appropriate
+    # Only processes Dependabot PRs from the same repository (not forks)
+    if: github.actor == 'dependabot[bot]' && github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: write         # Required for auto-approval
+      pull-requests: write   # Required for PR management
+    steps:
+      # DEPENDABOT METADATA EXTRACTION
+      # Analyzes Dependabot PR metadata for intelligent automation decisions
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@08eff52bf64351f401fb50d4972fa95b9f2c2d1b # v2.4.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # INTELLIGENT AUTO-APPROVAL
+      # Conservative automation focusing on low-risk updates only
+      # Patch updates: Bug fixes and security patches (1.0.0 → 1.0.1)
+      # Minor updates: New features with backward compatibility (1.0.0 → 1.1.0)
+      # Major updates: Breaking changes requiring manual review (excluded)
+      - name: Auto-approve patch and minor updates
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+# ==============================================================================
+# SECURITY WORKFLOW BEST PRACTICES IMPLEMENTED
+# ==============================================================================
+#
+# 1. DEFENSE IN DEPTH:
+#    - Multi-layer security analysis (static, dynamic, dependency)
+#    - Comprehensive language coverage (Python, GitHub Actions)
+#    - Real-time and scheduled scanning strategies
+#    - Automated and manual security review processes
+#
+# 2. INTELLIGENT AUTOMATION:
+#    - Conservative auto-merge policies for low-risk updates
+#    - Repository-restricted execution to prevent supply chain attacks
+#    - Fail-safe mechanisms with manual override capabilities
+#    - Structured reporting for audit trails and compliance
+#
+# 3. PERFORMANCE OPTIMIZATION:
+#    - Strategic scheduling to avoid resource conflicts
+#    - Targeted scanning based on change context (PR vs main)
+#    - Efficient caching and dependency management
+#    - Resource-aware execution with appropriate timeouts
+#
+# 4. INTEGRATION & REPORTING:
+#    - GitHub Security tab integration via SARIF
+#    - Automated PR commenting for immediate feedback
+#    - Artifact storage for security audit trails
+#    - Centralized vulnerability management and tracking
+#
+# SECURITY COVERAGE:
+# ------------------
+# - Static Analysis: CodeQL for Python and GitHub Actions
+# - Dependency Scanning: Real-time vulnerability assessment
+# - Advisory Monitoring: Continuous security advisory tracking
+# - Supply Chain: Automated dependency update management
+# - Compliance: Structured reporting and audit trail maintenance
+#
+# AUTOMATION POLICIES:
+# --------------------
+# - Auto-approve: Patch and minor version updates only
+# - Manual review: Major version updates and security-sensitive changes
+# - Fail-safe: Conservative defaults with explicit override mechanisms
+# - Audit trail: Comprehensive logging and artifact retention
+#
+# ==============================================================================

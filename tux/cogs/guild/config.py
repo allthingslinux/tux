@@ -4,24 +4,32 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from tux.bot import Tux
 from tux.database.controllers import DatabaseController
+from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.ui.views.config import ConfigSetChannels, ConfigSetPrivateLogs, ConfigSetPublicLogs
+from tux.utils.config import CONFIG
 
 # TODO: Add onboarding setup to ensure all required channels, logs, and roles are set up
 # TODO: Figure out how to handle using our custom checks because the current checks would result in a lock out
 # TODO: Add a command to reset the guild config to default values
 
 
-class Config(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+@app_commands.guild_only()
+@app_commands.checks.has_permissions(administrator=True)
+class Config(commands.GroupCog, group_name="config"):
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.db = DatabaseController().guild_config
 
-    config = app_commands.Group(name="config", description="Configure Tux for your server.")
+    logs = app_commands.Group(name="logs", description="Configure the guild logs.")
+    channels = app_commands.Group(name="channels", description="Configure the guild channels.")
+    perms = app_commands.Group(name="perms", description="Configure the guild permission levels.")
+    roles = app_commands.Group(name="roles", description="Configure the guild roles.")
+    prefix = app_commands.Group(name="prefix", description="Configure the guild prefix.")
 
-    @config.command(name="set_logs")
+    @logs.command(name="set")
     @app_commands.guild_only()
-    # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
     async def config_set_logs(
         self,
@@ -39,17 +47,17 @@ class Config(commands.Cog):
         category : Literal["Public", "Private"]
             The category of logs to configure.
         """
+        await interaction.response.defer(ephemeral=True)
 
         if category == "Public":
             view = ConfigSetPublicLogs()
         elif category == "Private":
             view = ConfigSetPrivateLogs()
 
-        await interaction.response.send_message(view=view, ephemeral=True)
+        await interaction.followup.send(view=view, ephemeral=True)
 
-    @config.command(name="set_channels")
+    @channels.command(name="set")
     @app_commands.guild_only()
-    # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
     async def config_set_channels(
         self,
@@ -63,11 +71,13 @@ class Config(commands.Cog):
         interaction : discord.Interaction
             The discord interaction object.
         """
-
+        await interaction.response.defer(ephemeral=True)
         view = ConfigSetChannels()
-        await interaction.response.send_message(view=view, ephemeral=True)
+        await interaction.followup.send(view=view, ephemeral=True)
 
-    @config.command(name="set_perms")
+    @perms.command(name="set")
+    @app_commands.guild_only()
+    @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(setting="Which permission level to configure")
     @app_commands.choices(
         setting=[
@@ -82,7 +92,6 @@ class Config(commands.Cog):
         ],
     )
     @app_commands.guild_only()
-    # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
     async def config_set_perms(
         self,
@@ -103,8 +112,8 @@ class Config(commands.Cog):
             The role to set for the permission level.
         """
 
-        if interaction.guild is None:
-            return
+        assert interaction.guild
+        await interaction.response.defer(ephemeral=True)
 
         await self.db.update_perm_level_role(
             interaction.guild.id,
@@ -112,22 +121,20 @@ class Config(commands.Cog):
             role.id,
         )
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             f"Perm level {setting.value} role set to {role.mention}.",
             ephemeral=True,
-            delete_after=30,
         )
 
-    @config.command(name="set_roles")
+    @roles.command(name="set")
     @app_commands.guild_only()
-    # @checks.ac_has_pl(7)
+    @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(setting="Which role to configure")
     @app_commands.choices(
         setting=[
             app_commands.Choice(name="Jail", value="jail_role_id"),
         ],
     )
-    @app_commands.checks.has_permissions(administrator=True)
     async def config_set_roles(
         self,
         interaction: discord.Interaction,
@@ -149,20 +156,18 @@ class Config(commands.Cog):
             The role to set.
         """
 
-        if interaction.guild is None:
-            return
+        assert interaction.guild
+        await interaction.response.defer(ephemeral=True)
 
         if setting.value == "jail_role_id":
             await self.db.update_jail_role_id(interaction.guild.id, role.id)
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"{setting.value} role set to {role.mention}.",
                 ephemeral=True,
-                delete_after=30,
             )
 
-    @config.command(name="get_roles")
+    @roles.command(name="get")
     @app_commands.guild_only()
-    # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
     async def config_get_roles(
         self,
@@ -177,24 +182,24 @@ class Config(commands.Cog):
             The discord interaction object.
         """
 
-        if interaction.guild is None:
-            return
+        assert interaction.guild
+        await interaction.response.defer(ephemeral=True)
 
-        embed = discord.Embed(
+        embed = EmbedCreator.create_embed(
             title="Config - Roles",
-            color=discord.Color.blue(),
-            timestamp=discord.utils.utcnow(),
+            embed_type=EmbedType.INFO,
+            custom_color=discord.Color.blue(),
+            message_timestamp=discord.utils.utcnow(),
         )
 
         jail_role_id = await self.db.get_jail_role_id(interaction.guild.id)
         jail_role = f"<@&{jail_role_id}>" if jail_role_id else "Not set"
         embed.add_field(name="Jail Role", value=jail_role, inline=False)
 
-        await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
+        await interaction.followup.send(embed=embed, ephemeral=True)
 
-    @config.command(name="get_perms")
+    @perms.command(name="get")
     @app_commands.guild_only()
-    # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
     async def config_get_perms(
         self,
@@ -209,13 +214,14 @@ class Config(commands.Cog):
             The discord interaction object.
         """
 
-        if interaction.guild is None:
-            return
+        assert interaction.guild
+        await interaction.response.defer(ephemeral=True)
 
-        embed = discord.Embed(
+        embed = EmbedCreator.create_embed(
+            embed_type=EmbedType.INFO,
+            custom_color=discord.Color.blue(),
             title="Config - Permission Level Roles",
-            color=discord.Color.blue(),
-            timestamp=discord.utils.utcnow(),
+            message_timestamp=discord.utils.utcnow(),
         )
 
         for i in range(8):
@@ -224,11 +230,10 @@ class Config(commands.Cog):
             role = f"<@&{role_id}>" if role_id else "Not set"
             embed.add_field(name=f"Perm Level {i}", value=role, inline=True)
 
-        await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
+        await interaction.followup.send(embed=embed, ephemeral=True)
 
-    @config.command(name="get_channels")
+    @channels.command(name="get")
     @app_commands.guild_only()
-    # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
     async def config_get_channels(
         self,
@@ -243,13 +248,14 @@ class Config(commands.Cog):
             The discord interaction object.
         """
 
-        if interaction.guild is None:
-            return
+        assert interaction.guild
+        await interaction.response.defer(ephemeral=True)
 
-        embed = discord.Embed(
+        embed = EmbedCreator.create_embed(
             title="Config - Channels",
-            color=discord.Color.blue(),
-            timestamp=discord.utils.utcnow(),
+            embed_type=EmbedType.INFO,
+            custom_color=discord.Color.blue(),
+            message_timestamp=discord.utils.utcnow(),
         )
 
         jail_channel_id = await self.db.get_jail_channel_id(interaction.guild.id)
@@ -264,11 +270,10 @@ class Config(commands.Cog):
         general_channel = f"<#{general_channel_id}>" if general_channel_id else "Not set"
         embed.add_field(name="General Channel", value=general_channel, inline=False)
 
-        await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
+        await interaction.followup.send(embed=embed, ephemeral=True)
 
-    @config.command(name="get_logs")
+    @logs.command(name="get")
     @app_commands.guild_only()
-    # @checks.ac_has_pl(7)
     @app_commands.checks.has_permissions(administrator=True)
     async def config_get_logs(
         self,
@@ -283,13 +288,14 @@ class Config(commands.Cog):
             The discord interaction object.
         """
 
-        if interaction.guild is None:
-            return
+        assert interaction.guild
+        await interaction.response.defer(ephemeral=True)
 
-        embed = discord.Embed(
+        embed = EmbedCreator.create_embed(
             title="Config - Logs",
-            color=discord.Color.blue(),
-            timestamp=discord.utils.utcnow(),
+            embed_type=EmbedType.INFO,
+            custom_color=discord.Color.blue(),
+            message_timestamp=discord.utils.utcnow(),
         )
 
         join_log_id = await self.db.get_join_log_id(interaction.guild.id)
@@ -316,8 +322,75 @@ class Config(commands.Cog):
         dev_log = f"<#{dev_log_id}>" if dev_log_id else "Not set"
         embed.add_field(name="Dev Log", value=dev_log, inline=True)
 
-        await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+    @prefix.command(name="set")
+    @app_commands.guild_only()
+    @app_commands.checks.has_permissions(administrator=True)
+    async def config_set_prefix(
+        self,
+        interaction: discord.Interaction,
+        prefix: app_commands.Range[str, 1, 10],
+    ) -> None:
+        """
+        Set the prefix for the guild.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        prefix : str
+            The prefix to set for the guild.
+        """
+
+        assert interaction.guild
+        await interaction.response.defer(ephemeral=True)
+
+        await self.db.update_guild_prefix(interaction.guild.id, prefix)
+
+        await interaction.followup.send(
+            embed=EmbedCreator.create_embed(
+                bot=self.bot,
+                user_name=interaction.user.name,
+                user_display_avatar=interaction.user.display_avatar.url,
+                embed_type=EmbedCreator.SUCCESS,
+                title="Guild Config",
+                description=f"The prefix was updated to `{prefix}`",
+            ),
+        )
+
+    @prefix.command(name="clear")
+    @app_commands.guild_only()
+    @app_commands.checks.has_permissions(administrator=True)
+    async def config_clear_prefix(
+        self,
+        interaction: discord.Interaction,
+    ) -> None:
+        """
+        Reset the prefix to the default value for this guild.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        """
+
+        assert interaction.guild
+        await interaction.response.defer(ephemeral=True)
+
+        await self.db.delete_guild_prefix(interaction.guild.id)
+
+        await interaction.followup.send(
+            embed=EmbedCreator.create_embed(
+                bot=self.bot,
+                user_name=interaction.user.name,
+                user_display_avatar=interaction.user.display_avatar.url,
+                embed_type=EmbedCreator.SUCCESS,
+                title="Guild Config",
+                description=f"The prefix was reset to `{CONFIG.DEFAULT_PREFIX}`",
+            ),
+        )
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Config(bot))

@@ -1,24 +1,68 @@
+import discord
 import httpx
 from discord.ext import commands
 from loguru import logger
 
-from tux.utils.embeds import EmbedCreator
+from tux.bot import Tux
+from tux.ui.embeds import EmbedCreator
+from tux.utils.functions import generate_usage
 
 
 class Wiki(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
-        self.arch_wiki_base_url = "https://wiki.archlinux.org/api.php"
-        self.atl_wiki_base_url = "https://atl.wiki/api.php"
+        self.arch_wiki_api_url = "https://wiki.archlinux.org/api.php"
+        self.atl_wiki_api_url = "https://atl.wiki/api.php"
+        self.wiki.usage = generate_usage(self.wiki)
+        self.arch_wiki.usage = generate_usage(self.arch_wiki)
+        self.atl_wiki.usage = generate_usage(self.atl_wiki)
 
-    def query_arch_wiki(self, search_term: str) -> tuple[str, str]:
+    def create_embed(self, title: tuple[str, str], ctx: commands.Context[Tux]) -> discord.Embed:
         """
-        Query the ArchWiki API for a search term and return the title and URL of the first search result.
+        Create a Discord embed message based on the search result.
 
         Parameters
         ----------
+        title : tuple[str, str]
+            A tuple containing the title and description of the search result.
+            If the first element is "error", it indicates no search results were found.
+        ctx : commands.Context[Tux]
+            The context object for the command.
+
+        Returns
+        -------
+        discord.Embed
+            The created embed message.
+        """
+        if title[0] == "error":
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.ERROR,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                description="No search results found.",
+            )
+        else:
+            embed = EmbedCreator.create_embed(
+                bot=self.bot,
+                embed_type=EmbedCreator.INFO,
+                user_name=ctx.author.name,
+                user_display_avatar=ctx.author.display_avatar.url,
+                title=title[0],
+                description=title[1],
+            )
+        return embed
+
+    def query_wiki(self, base_url: str, search_term: str) -> tuple[str, str]:
+        """
+        Query a wiki API for a search term and return the title and URL of the first search result.
+
+        Parameters
+        ----------
+        base_url : str
+            The base URL of the wiki API.
         search_term : str
-            The search term to query the ArchWiki API with.
+            The search term to query the wiki API with.
 
         Returns
         -------
@@ -26,73 +70,43 @@ class Wiki(commands.Cog):
             The title and URL of the first search result.
         """
 
-        params: dict[str, str] = {
-            "action": "opensearch",
-            "format": "json",
-            "limit": "1",
-            "search": search_term,
-        }
+        search_term = search_term.capitalize()
 
-        # Send a GET request to the ArchWiki API
+        params: dict[str, str] = {"action": "query", "format": "json", "list": "search", "srsearch": search_term}
+
+        # Send a GET request to the wiki API
         with httpx.Client() as client:
-            response = client.get(self.arch_wiki_base_url, params=params)
-            logger.info(f"GET request to {self.arch_wiki_base_url} with params {params}")
-
-        # example response: ["pacman",["Pacman"],[""],["https://wiki.archlinux.org/title/Pacman"]]
+            response = client.get(base_url, params=params)
+            logger.info(f"GET request to {base_url} with params {params}")
 
         # Check if the request was successful
         if response.status_code == 200:
             data = response.json()
-            return (data[1][0], data[3][0]) if data[1] else ("error", "error")
-        return "error", "error"
-
-    def query_atl_wiki(self, search_term: str) -> tuple[str, str]:
-        """
-        Query the atl.wiki API for a search term and return the title and URL of the first search result.
-
-        Parameters
-        ----------
-        search_term : str
-            The search term to query the atl.wiki API with.
-
-        Returns
-        -------
-        tuple[str, str]
-            The title and URL of the first search result.
-        """
-
-        params: dict[str, str] = {
-            "action": "opensearch",
-            "format": "json",
-            "limit": "1",
-            "search": search_term,
-        }
-
-        # Send a GET request to the ATL Wiki API
-        with httpx.Client() as client:
-            response = client.get(self.atl_wiki_base_url, params=params)
-            logger.info(f"GET request to {self.atl_wiki_base_url} with params {params}")
-
-        # example response: ["pacman",["Pacman"],[""],["https://atl.wiki/title/Pacman"]]
-
-        # Check if the request was successful
-        if response.status_code == 200:
-            data = response.json()
-            return (data[1][0], data[3][0]) if data[1] else ("error", "error")
+            logger.info(data)
+            if data.get("query") and data["query"].get("search"):
+                search_results = data["query"]["search"]
+                if search_results:
+                    title = search_results[0]["title"]
+                    url_title = title.replace(" ", "_")
+                    if "atl.wiki" in base_url:
+                        url = f"https://atl.wiki/{url_title}"
+                    else:
+                        url = f"https://wiki.archlinux.org/title/{url_title}"
+                    return title, url
+            return "error", "error"
         return "error", "error"
 
     @commands.hybrid_group(
         name="wiki",
-        usage="wiki [arch|atl]",
         aliases=["wk"],
     )
-    async def wiki(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def wiki(self, ctx: commands.Context[Tux]) -> None:
         """
         Wiki related commands.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         """
 
@@ -101,64 +115,46 @@ class Wiki(commands.Cog):
 
     @wiki.command(
         name="arch",
-        usage="wiki arch [query]",
     )
-    async def arch_wiki(self, ctx: commands.Context[commands.Bot], query: str) -> None:
+    async def arch_wiki(self, ctx: commands.Context[Tux], query: str) -> None:
         """
         Search the Arch Linux Wiki
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         query : str
             The search query.
         """
 
-        title: tuple[str, str] = self.query_arch_wiki(query)
+        title: tuple[str, str] = self.query_wiki(self.arch_wiki_api_url, query)
 
-        if title[0] == "error":
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
-                description="No search results found.",
-                ctx=ctx,
-            )
-
-        else:
-            embed = EmbedCreator.create_info_embed(title=title[0], description=title[1], ctx=ctx)
+        embed = self.create_embed(title, ctx)
 
         await ctx.send(embed=embed)
 
     @wiki.command(
         name="atl",
-        usage="wiki atl [query]",
     )
-    async def atl_wiki(self, ctx: commands.Context[commands.Bot], query: str) -> None:
+    async def atl_wiki(self, ctx: commands.Context[Tux], query: str) -> None:
         """
         Search the All Things Linux Wiki
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context object for the command.
         query : str
             The search query.
         """
 
-        title: tuple[str, str] = self.query_atl_wiki(query)
+        title: tuple[str, str] = self.query_wiki(self.atl_wiki_api_url, query)
 
-        if title[0] == "error":
-            embed = EmbedCreator.create_error_embed(
-                title="Error",
-                description="No search results found.",
-                ctx=ctx,
-            )
-
-        else:
-            embed = EmbedCreator.create_info_embed(title=title[0], description=title[1], ctx=ctx)
+        embed = self.create_embed(title, ctx)
 
         await ctx.send(embed=embed)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Wiki(bot))

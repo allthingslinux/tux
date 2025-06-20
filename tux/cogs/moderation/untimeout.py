@@ -1,16 +1,17 @@
 import discord
 from discord.ext import commands
-from loguru import logger
 
 from prisma.enums import CaseType
+from tux.bot import Tux
 from tux.utils import checks
-from tux.utils.flags import UntimeoutFlags, generate_usage
+from tux.utils.flags import UntimeoutFlags
+from tux.utils.functions import generate_usage
 
 from . import ModerationCogBase
 
 
 class Untimeout(ModerationCogBase):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
         self.untimeout.usage = generate_usage(self.untimeout, UntimeoutFlags)
 
@@ -22,59 +23,50 @@ class Untimeout(ModerationCogBase):
     @checks.has_pl(2)
     async def untimeout(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         member: discord.Member,
         *,
         flags: UntimeoutFlags,
     ) -> None:
         """
-        Untimeout a member from the server.
+        Remove timeout from a member.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
         member : discord.Member
-            The member to untimeout.
+            The member to remove timeout from.
         flags : UntimeoutFlags
-            The flags for the command (reason: str, silent: bool).
+            The flags for the command. (reason: str, silent: bool)
 
         Raises
         ------
         discord.DiscordException
-            If an error occurs while timing out the user.
+            If an error occurs while removing the timeout.
         """
-        if ctx.guild is None:
-            logger.warning("Timeout command used outside of a guild context.")
-            return
+        assert ctx.guild
 
-        moderator = ctx.author
-
-        if not await self.check_conditions(ctx, member, moderator, "untimeout"):
-            return
-
+        # Check if member is timed out
         if not member.is_timed_out():
-            await ctx.send(f"{member} is not currently timed out.", delete_after=30, ephemeral=True)
-
-        try:
-            # By passing `None` as the duration, the timeout is removed
-            await member.timeout(None, reason=flags.reason)
-        except discord.DiscordException as e:
-            await ctx.send(f"Failed to untimeout {member}. {e}", delete_after=30, ephemeral=True)
+            await ctx.send(f"{member} is not timed out.", ephemeral=True)
             return
 
-        case = await self.db.case.insert_case(
-            case_user_id=member.id,
-            case_moderator_id=ctx.author.id,
+        # Check if moderator has permission to untimeout the member
+        if not await self.check_conditions(ctx, member, ctx.author, "untimeout"):
+            return
+
+        # Execute untimeout with case creation and DM
+        await self.execute_mod_action(
+            ctx=ctx,
             case_type=CaseType.UNTIMEOUT,
-            case_reason=flags.reason,
-            case_expires_at=None,
-            guild_id=ctx.guild.id,
+            user=member,
+            reason=flags.reason,
+            silent=flags.silent,
+            dm_action="removed from timeout",
+            actions=[(member.timeout(None, reason=flags.reason), type(None))],
         )
 
-        await self.send_dm(ctx, flags.silent, member, flags.reason, "untimed out")
-        await self.handle_case_response(ctx, CaseType.UNTIMEOUT, case.case_number, flags.reason, member)
 
-
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Untimeout(bot))

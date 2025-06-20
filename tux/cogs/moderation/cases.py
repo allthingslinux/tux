@@ -1,3 +1,5 @@
+from typing import Any, Protocol
+
 import discord
 from discord.ext import commands
 from loguru import logger
@@ -6,47 +8,100 @@ from reactionmenu import ViewButton, ViewMenu
 from prisma.enums import CaseType
 from prisma.models import Case
 from prisma.types import CaseWhereInput
+from tux.bot import Tux
+from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
-from tux.utils.constants import Constants as CONST
-from tux.utils.embeds import create_embed_footer
-from tux.utils.flags import CaseModifyFlags, CasesViewFlags, generate_usage
+from tux.utils.constants import CONST
+from tux.utils.flags import CaseModifyFlags, CasesViewFlags
+from tux.utils.functions import generate_usage
 
 from . import ModerationCogBase
 
-emojis: dict[str, int] = {
-    "active_case_emoji": 1268115730344443966,
-    "inactive_case_emoji": 1268115712627441715,
-    "added": 1268115639914987562,
-    "removed": 1268116308927713331,
-    "ban": 1268115779350560799,
-    "kick": 1268115792818470944,
-    "timeout": 1268115809083981886,
-    "warn": 1268115764498399264,
-    "jail": 1268115750392954880,
-    "snippetban": 1277174953950576681,
-    "snippetunban": 1277174953292337222,
+# Maps case types to their corresponding emoji keys
+CASE_TYPE_EMOJI_MAP = {
+    CaseType.BAN: "ban",
+    CaseType.UNBAN: "ban",
+    CaseType.TEMPBAN: "tempban",
+    CaseType.KICK: "kick",
+    CaseType.TIMEOUT: "timeout",
+    CaseType.UNTIMEOUT: "timeout",
+    CaseType.WARN: "warn",
+    CaseType.JAIL: "jail",
+    CaseType.UNJAIL: "jail",
+    CaseType.SNIPPETBAN: "snippetban",
+    CaseType.SNIPPETUNBAN: "snippetunban",
+}
+
+# Maps case types to their action (added/removed)
+CASE_ACTION_MAP = {
+    CaseType.BAN: "added",
+    CaseType.KICK: "added",
+    CaseType.TEMPBAN: "added",
+    CaseType.TIMEOUT: "added",
+    CaseType.WARN: "added",
+    CaseType.JAIL: "added",
+    CaseType.SNIPPETBAN: "added",
+    CaseType.UNBAN: "removed",
+    CaseType.UNTIMEOUT: "removed",
+    CaseType.UNJAIL: "removed",
+    CaseType.SNIPPETUNBAN: "removed",
 }
 
 
+# Define a protocol for user-like objects
+class UserLike(Protocol):
+    id: int
+    name: str
+    avatar: Any
+
+    def __str__(self) -> str: ...
+
+
+# Mock user object for when a user cannot be found
+class MockUser:
+    """A mock user object for cases where we can't find the real user."""
+
+    def __init__(self, user_id: int) -> None:
+        self.id = user_id
+        self.name = "Unknown User"
+        self.discriminator = "0000"
+        self.avatar = None
+
+    def __str__(self) -> str:
+        return f"{self.name}#{self.discriminator}"
+
+
 class Cases(ModerationCogBase):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
+        self.cases.usage = generate_usage(self.cases)
         self.cases_view.usage = generate_usage(self.cases_view, CasesViewFlags)
-        self.cases_modify.usage = generate_usage(self.cases_modify, CaseModifyFlags)
+        self.cases_modify.usage = generate_usage(
+            self.cases_modify,
+            CaseModifyFlags,
+        )
 
     @commands.hybrid_group(
         name="cases",
-        aliases=["c"],
-        usage="cases <subcommand>",
+        aliases=["case", "c"],
     )
     @commands.guild_only()
     @checks.has_pl(2)
-    async def cases(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def cases(self, ctx: commands.Context[Tux], case_number: str | None = None) -> None:
         """
         Manage moderation cases in the server.
+
+        Parameters
+        ----------
+        case_number : str | None
+            The case number to view.
         """
-        if ctx.invoked_subcommand is None:
-            await ctx.send_help("cases")
+
+        if case_number is not None:
+            await ctx.invoke(self.cases_view, number=case_number, flags=CasesViewFlags())
+
+        elif ctx.subcommand_passed is None:
+            await ctx.invoke(self.cases_view, number=None, flags=CasesViewFlags())
 
     @cases.command(
         name="view",
@@ -56,8 +111,8 @@ class Cases(ModerationCogBase):
     @checks.has_pl(2)
     async def cases_view(
         self,
-        ctx: commands.Context[commands.Bot],
-        number: int | None,
+        ctx: commands.Context[Tux],
+        number: str | None = None,
         *,
         flags: CasesViewFlags,
     ) -> None:
@@ -66,17 +121,14 @@ class Cases(ModerationCogBase):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
-        number : int | None
+        number : Optional[str]
             The case number to view.
         flags : CasesViewFlags
             The flags for the command. (type, user, moderator)
         """
-
-        if ctx.guild is None:
-            logger.warning("Cases view command used outside of a guild context.")
-            return
+        assert ctx.guild
 
         if number is not None:
             await self._view_single_case(ctx, number)
@@ -91,8 +143,8 @@ class Cases(ModerationCogBase):
     @checks.has_pl(2)
     async def cases_modify(
         self,
-        ctx: commands.Context[commands.Bot],
-        number: int,
+        ctx: commands.Context[Tux],
+        number: str,
         *,
         flags: CaseModifyFlags,
     ) -> None:
@@ -101,66 +153,85 @@ class Cases(ModerationCogBase):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
-        number : int
+        number : str
             The case number to modify.
         flags : CaseModifyFlags
             The flags for the command. (status, reason)
         """
+        assert ctx.guild
 
-        if ctx.guild is None:
-            logger.warning("Cases modify command used outside of a guild context.")
+        try:
+            case_number = int(number)
+        except ValueError:
+            await ctx.send("Case number must be a valid integer.", ephemeral=True)
             return
 
-        # If the command is used via prefix, let the user know to use the slash command
-        if ctx.message.content.startswith(str(ctx.prefix)):
-            await ctx.send("Please use the slash command for this command.", delete_after=30, ephemeral=True)
-            return
-
-        case = await self.db.case.get_case_by_number(ctx.guild.id, number)
-
+        case = await self.db.case.get_case_by_number(ctx.guild.id, case_number)
         if not case:
-            await ctx.send("Case not found.", delete_after=30, ephemeral=True)
+            await ctx.send("Case not found.", ephemeral=True)
             return
 
-        if case.case_number is not None:
-            await self._update_case(ctx, case, flags)
+        # Validate flags
+        if flags.status is None and not flags.reason:
+            await ctx.send("You must provide either a new status or reason.", ephemeral=True)
+            return
+
+        # Check if status is valid
+        if flags.status is not None:
+            try:
+                flags.status = bool(flags.status)
+                if flags.status == case.case_status:
+                    await ctx.send("Status is already set to that value.", ephemeral=True)
+                    return
+
+            except ValueError:
+                await ctx.send("Status must be a boolean value (true/false).", ephemeral=True)
+                return
+
+        # Check if reason is the same
+        if flags.reason is not None and flags.reason == case.case_reason:
+            await ctx.send("Reason is already set to that value.", ephemeral=True)
+            return
+
+        # If we get here, we have valid changes to make
+        await self._update_case(ctx, case, flags)
 
     async def _view_single_case(
         self,
-        ctx: commands.Context[commands.Bot],
-        number: int,
+        ctx: commands.Context[Tux],
+        number: str,
     ) -> None:
         """
         View a single case by its number.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
-        number : int
+        number : str
             The number of the case to view.
         """
+        assert ctx.guild
 
-        if ctx.guild is None:
-            logger.warning("Cases view command used outside of a guild context.")
+        try:
+            case_number = int(number)
+        except ValueError:
+            await self.send_error_response(ctx, "Case number must be a valid integer.")
             return
 
-        case = await self.db.case.get_case_by_number(ctx.guild.id, number)
+        case = await self.db.case.get_case_by_number(ctx.guild.id, case_number)
         if not case:
-            await ctx.send("Case not found.", delete_after=30)
+            await self.send_error_response(ctx, "Case not found.")
             return
 
-        user = self.bot.get_user(case.case_user_id)
-        if user is None:
-            user = await self.bot.fetch_user(case.case_user_id)
-
+        user = await self._resolve_user(case.case_user_id)
         await self._handle_case_response(ctx, case, "viewed", case.case_reason, user)
 
     async def _view_cases_with_flags(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         flags: CasesViewFlags,
     ) -> None:
         """
@@ -168,15 +239,12 @@ class Cases(ModerationCogBase):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
         flags : CasesViewFlags
             The flags for the command. (type, user, moderator)
         """
-
-        if ctx.guild is None:
-            logger.warning("Cases view command used outside of a guild context.")
-            return
+        assert ctx.guild
 
         options: CaseWhereInput = {}
 
@@ -188,17 +256,18 @@ class Cases(ModerationCogBase):
             options["case_moderator_id"] = flags.moderator.id
 
         cases = await self.db.case.get_cases_by_options(ctx.guild.id, options)
-        total_cases = await self.db.case.get_all_cases(ctx.guild.id)
 
         if not cases:
-            await ctx.send("No cases found.")
+            await ctx.send("No cases found.", ephemeral=True)
             return
+
+        total_cases = await self.db.case.get_all_cases(ctx.guild.id)
 
         await self._handle_case_list_response(ctx, cases, len(total_cases))
 
     async def _update_case(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         case: Case,
         flags: CaseModifyFlags,
     ) -> None:
@@ -207,21 +276,15 @@ class Cases(ModerationCogBase):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
         case : Case
             The case to update.
         flags : CaseModifyFlags
             The flags for the command. (status, reason)
         """
-
-        if ctx.guild is None:
-            logger.warning("Cases modify command used outside of a guild context.")
-            return
-
-        if case.case_number is None:
-            await ctx.send("Failed to update case.", delete_after=30, ephemeral=True)
-            return
+        assert ctx.guild
+        assert case.case_number is not None
 
         updated_case = await self.db.case.update_case(
             ctx.guild.id,
@@ -230,210 +293,295 @@ class Cases(ModerationCogBase):
             case_status=flags.status if flags.status is not None else case.case_status,
         )
 
-        if updated_case is None:
-            await ctx.send("Failed to update case.", delete_after=30, ephemeral=True)
+        if not updated_case:
+            await self.send_error_response(ctx, "Failed to update case.")
             return
 
-        user = await commands.UserConverter().convert(ctx, str(case.case_user_id))
-
+        user = await self._resolve_user(case.case_user_id)
         await self._handle_case_response(ctx, updated_case, "updated", updated_case.case_reason, user)
+
+    async def _resolve_user(self, user_id: int) -> discord.User | MockUser:
+        """
+        Resolve a user ID to a User object or MockUser if not found.
+
+        Parameters
+        ----------
+        user_id : int
+            The ID of the user to resolve.
+
+        Returns
+        -------
+        Union[discord.User, MockUser]
+            The resolved user or a mock user if not found.
+        """
+        if user := self.bot.get_user(user_id):
+            return user
+
+        # If not in cache, try fetching
+        try:
+            return await self.bot.fetch_user(user_id)
+
+        except discord.NotFound:
+            logger.warning(f"Could not find user with ID {user_id}")
+            return MockUser(user_id)
+        except Exception as e:
+            logger.exception(f"Error resolving user with ID {user_id}: {e}")
+            return MockUser(user_id)
+
+    async def _resolve_moderator(self, moderator_id: int) -> discord.User | MockUser:
+        """
+        Resolve a moderator ID to a User object or MockUser if not found.
+        We use a separate function to potentially add admin-specific
+        resolution in the future.
+
+        Parameters
+        ----------
+        moderator_id : int
+            The ID of the moderator to resolve.
+
+        Returns
+        -------
+        Union[discord.User, MockUser]
+            The resolved moderator or a mock user if not found.
+        """
+        return await self._resolve_user(moderator_id)
 
     async def _handle_case_response(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         case: Case | None,
         action: str,
         reason: str,
-        user: discord.Member | discord.User,
+        user: discord.User | MockUser,
     ) -> None:
         """
         Handle the response for a case.
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
-        case : Case | None
+        case : Optional[Case]
             The case to handle the response for.
         action : str
             The action being performed on the case.
         reason : str
             The reason for the case.
-        user : discord.Member | discord.User
+        user : Union[discord.User, MockUser]
             The target of the case.
         """
-
-        if case is not None:
-            moderator = ctx.author
-
-            if isinstance(moderator, discord.Member):
-                fields = self._create_case_fields(moderator, user, reason)
-            else:
-                fields = self._create_case_fields(
-                    await commands.MemberConverter().convert(ctx, str(case.case_moderator_id)),
-                    user,
-                    reason,
-                )
-
-            embed = self.create_embed(
-                ctx,
-                title=f"Case #{case.case_number} ({case.case_type}) {action}",
-                fields=fields,
-                color=CONST.EMBED_COLORS["CASE"],
-                icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"]
-                if case.case_status is True
-                else CONST.EMBED_ICONS["INACTIVE_CASE"],
-            )
-            embed.set_thumbnail(url=user.avatar)
-        else:
-            embed = discord.Embed(
+        if not case:
+            embed = EmbedCreator.create_embed(
+                embed_type=EmbedType.ERROR,
                 title=f"Case {action}",
                 description="Failed to find case.",
-                color=CONST.EMBED_COLORS["ERROR"],
             )
 
-        await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+            await ctx.send(embed=embed, ephemeral=True)
+            return
+
+        moderator = await self._resolve_moderator(case.case_moderator_id)
+        fields = self._create_case_fields(moderator, user, reason)
+
+        embed = self.create_embed(
+            ctx,
+            title=f"Case #{case.case_number} ({case.case_type}) {action}",
+            fields=fields,
+            color=CONST.EMBED_COLORS["CASE"],
+            icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"] if case.case_status else CONST.EMBED_ICONS["INACTIVE_CASE"],
+        )
+
+        # Safe avatar access that works with MockUser
+        if hasattr(user, "avatar") and user.avatar:
+            embed.set_thumbnail(url=user.avatar.url)
+
+        await ctx.send(embed=embed, ephemeral=True)
 
     async def _handle_case_list_response(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         cases: list[Case],
         total_cases: int,
     ) -> None:
-        menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed, all_can_click=True, delete_on_timeout=True)
+        """
+        Handle the response for a case list.
 
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context in which the command is being invoked.
+        cases : list[Case]
+            The cases to handle the response for.
+        total_cases : int
+            The total number of cases.
+        """
         if not cases:
-            embed = discord.Embed(
+            embed = EmbedCreator.create_embed(
+                embed_type=EmbedType.ERROR,
                 title="Cases",
                 description="No cases found.",
-                color=CONST.EMBED_COLORS["ERROR"],
             )
-            await ctx.send(embed=embed, delete_after=30, ephemeral=True)
+            await ctx.send(embed=embed, ephemeral=True)
             return
 
+        menu = ViewMenu(
+            ctx,
+            menu_type=ViewMenu.TypeEmbed,
+            all_can_click=True,
+            delete_on_timeout=True,
+        )
+
+        # Paginate cases
         cases_per_page = 10
+
         for i in range(0, len(cases), cases_per_page):
-            embed = self._create_case_list_embed(ctx, cases[i : i + cases_per_page], total_cases)
+            embed = self._create_case_list_embed(
+                ctx,
+                cases[i : i + cases_per_page],
+                total_cases,
+            )
+
             menu.add_page(embed)
 
-        menu.add_button(
-            ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_GO_TO_FIRST_PAGE, emoji="⏮️"),
-        )
-        menu.add_button(
-            ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_PREVIOUS_PAGE, emoji="⏪"),
-        )
-        menu.add_button(ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_NEXT_PAGE, emoji="⏩"))
-        menu.add_button(
-            ViewButton(style=discord.ButtonStyle.secondary, custom_id=ViewButton.ID_GO_TO_LAST_PAGE, emoji="⏭️"),
-        )
+        menu_buttons = [
+            ViewButton(
+                style=discord.ButtonStyle.secondary,
+                custom_id=ViewButton.ID_GO_TO_FIRST_PAGE,
+                emoji="⏮️",
+            ),
+            ViewButton(
+                style=discord.ButtonStyle.secondary,
+                custom_id=ViewButton.ID_PREVIOUS_PAGE,
+                emoji="⏪",
+            ),
+            ViewButton(
+                style=discord.ButtonStyle.secondary,
+                custom_id=ViewButton.ID_NEXT_PAGE,
+                emoji="⏩",
+            ),
+            ViewButton(
+                style=discord.ButtonStyle.secondary,
+                custom_id=ViewButton.ID_GO_TO_LAST_PAGE,
+                emoji="⏭️",
+            ),
+        ]
+
+        menu.add_buttons(menu_buttons)
 
         await menu.start()
 
+    @staticmethod
     def _create_case_fields(
-        self,
-        moderator: discord.Member,
-        user: discord.Member | discord.User,
+        moderator: discord.User | MockUser,
+        user: discord.User | MockUser,
         reason: str,
     ) -> list[tuple[str, str, bool]]:
+        """
+        Create the fields for a case.
+
+        Parameters
+        ----------
+        moderator : Union[discord.User, MockUser]
+            The moderator of the case.
+        user : Union[discord.User, MockUser]
+            The user of the case.
+        reason : str
+            The reason for the case.
+
+        Returns
+        -------
+        list[tuple[str, str, bool]]
+            The fields for the case.
+        """
         return [
-            ("Moderator", f"__{moderator}__\n`{moderator.id}`", True),
-            ("User", f"__{user}__\n`{user.id}`", True),
+            (
+                "Moderator",
+                f"**{moderator}**\n`{moderator.id if hasattr(moderator, 'id') else 'Unknown'}`",
+                True,
+            ),
+            ("User", f"**{user}**\n`{user.id}`", True),
             ("Reason", f"> {reason}", False),
         ]
 
     def _create_case_list_embed(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         cases: list[Case],
         total_cases: int,
     ) -> discord.Embed:
-        embed = discord.Embed(
-            title=f"Total Cases ({total_cases})",
-            description="",
-            color=CONST.EMBED_COLORS["CASE"],
+        """
+        Create the embed for a case list.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context in which the command is being invoked.
+        cases : list[Case]
+            The cases to create the embed for.
+        total_cases : int
+            The total number of cases.
+
+        Returns
+        -------
+        discord.Embed
+            The embed for the case list.
+        """
+        assert ctx.guild
+        assert ctx.guild.icon
+
+        footer_text, footer_icon_url = EmbedCreator.get_footer(
+            bot=self.bot,
+            user_name=ctx.author.name,
+            user_display_avatar=ctx.author.display_avatar.url,
         )
 
-        if ctx.guild:
-            embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon)
+        embed = EmbedCreator.create_embed(
+            title=f"Total Cases ({total_cases})",
+            description="",
+            embed_type=EmbedType.CASE,
+            custom_author_text=ctx.guild.name,
+            custom_author_icon_url=ctx.guild.icon.url,
+            custom_footer_text=footer_text,
+            custom_footer_icon_url=footer_icon_url,
+        )
 
-        footer_text, footer_icon_url = create_embed_footer(ctx)
-        embed.set_footer(text=footer_text, icon_url=footer_icon_url)
+        # Header row for the list
+        embed.description = "**Case**\u2003\u2003\u2002**Type**\u2003\u2002**Date**\n"
 
+        # Add each case to the embed
         for case in cases:
-            self._add_case_to_embed(embed, case)
+            # Get emojis for this case
+            status_emoji = self.bot.emoji_manager.get(
+                "active_case" if case.case_status else "inactive_case",
+            )
+            type_emoji = self.bot.emoji_manager.get(
+                CASE_TYPE_EMOJI_MAP.get(case.case_type, "tux_error"),
+            )
+            action_emoji = self.bot.emoji_manager.get(
+                CASE_ACTION_MAP.get(case.case_type, "tux_error"),
+            )
+
+            # Format the case number
+            case_number = f"{case.case_number:04}" if case.case_number is not None else "0000"
+
+            # Format type and action
+            case_type_and_action = f"{action_emoji}{type_emoji}"
+
+            # Format date
+            case_date = (
+                discord.utils.format_dt(
+                    case.case_created_at,
+                    "R",
+                )
+                if case.case_created_at
+                else f"{self.bot.emoji_manager.get('tux_error')}"
+            )
+
+            # Add the line to the embed
+            embed.description += f"{status_emoji}`{case_number}`\u2003 {case_type_and_action} \u2003__{case_date}__\n"
 
         return embed
 
-    def _format_emoji(self, emoji: discord.Emoji | None) -> str:
-        return f"<:{emoji.name}:{emoji.id}>" if emoji else ""
 
-    def _get_case_status_emoji(self, case_status: bool | None) -> discord.Emoji | None:
-        if case_status is None:
-            return None
-        return self.bot.get_emoji(emojis["active_case_emoji" if case_status else "inactive_case_emoji"])
-
-    def _get_case_type_emoji(self, case_type: CaseType) -> discord.Emoji | None:
-        emoji_map = {
-            CaseType.BAN: "ban",
-            CaseType.UNBAN: "ban",
-            CaseType.KICK: "kick",
-            CaseType.TIMEOUT: "timeout",
-            CaseType.UNTIMEOUT: "timeout",
-            CaseType.WARN: "warn",
-            CaseType.JAIL: "jail",
-            CaseType.UNJAIL: "jail",
-            CaseType.SNIPPETBAN: "snippetban",
-            CaseType.SNIPPETUNBAN: "snippetunban",
-        }
-        emoji_name = emoji_map.get(case_type)
-        if emoji_name is not None:
-            emoji_id = emojis.get(emoji_name)
-            if emoji_id is not None:
-                return self.bot.get_emoji(emoji_id)
-        return None
-
-    def _get_case_action_emoji(self, case_type: CaseType) -> discord.Emoji | None:
-        action = (
-            "added"
-            if case_type
-            in [CaseType.BAN, CaseType.KICK, CaseType.TIMEOUT, CaseType.WARN, CaseType.JAIL, CaseType.SNIPPETBAN]
-            else "removed"
-            if case_type in [CaseType.UNBAN, CaseType.UNTIMEOUT, CaseType.UNJAIL, CaseType.SNIPPETUNBAN]
-            else None
-        )
-        if action is not None:
-            emoji_id = emojis.get(action)
-            if emoji_id is not None:
-                return self.bot.get_emoji(emoji_id)
-        return None
-
-    def _get_case_description(
-        self,
-        case: Case,
-        case_status_emoji: str,
-        case_type_emoji: str,
-        case_action_emoji: str,
-    ) -> str:
-        case_type_and_action = (
-            f"{case_action_emoji} {case_type_emoji}"
-            if case_action_emoji and case_type_emoji
-            else ":interrobang: :interrobang:"
-        )
-        case_date = discord.utils.format_dt(case.case_created_at, "R") if case.case_created_at else ":interrobang:"
-        case_number = f"{case.case_number:04d}"
-
-        return f"{case_status_emoji} `{case_number}`\u2002\u2002 {case_type_and_action} \u2002\u2002__{case_date}__\n"
-
-    def _add_case_to_embed(self, embed: discord.Embed, case: Case) -> None:
-        case_status_emoji = self._format_emoji(self._get_case_status_emoji(case.case_status))
-        case_type_emoji = self._format_emoji(self._get_case_type_emoji(case.case_type))
-        case_action_emoji = self._format_emoji(self._get_case_action_emoji(case.case_type))
-
-        if not embed.description:
-            embed.description = "**Case**\u2002\u2002\u2002\u2002\u2002**Type**\u2002\u2002\u2002**Date**\n"
-
-        embed.description += self._get_case_description(case, case_status_emoji, case_type_emoji, case_action_emoji)
-
-
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Cases(bot))

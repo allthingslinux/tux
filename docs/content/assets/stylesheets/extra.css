@@ -1,0 +1,204 @@
+/* Stretch content area */
+.md-main__inner.md-grid {
+  /* Default 61rem */
+  max-width: 75rem;
+}
+
+/* More space at the bottom of the page. */
+.md-main__inner {
+  margin-bottom: 1.5rem;
+}
+
+
+/* override md-content min-height */
+.md-content {
+  min-height: 100vh;
+}
+
+/* Shrink header and footer to the content size*/
+.md-grid {
+  /* Default 61rem */
+  max-width: 50rem;
+}
+
+.md-banner {
+  background: #11111B;
+  color: #fff;
+}
+
+.md-banner a {
+  color: inherit;
+  text-decoration: underline;
+  font-style: italic;
+}
+
+.md-banner a:hover {
+  color: inherit;
+  text-decoration: none;
+}
+
+.md-banner__inner {
+  margin: 0 auto;
+}
+
+/* header */
+
+.md-header {
+  background: #11111B;
+  color: #fff;
+}
+
+.md-header a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.md-header a:hover {
+  color: inherit;
+  text-decoration: none;
+}
+
+.md-header__inner {
+  margin: 0 auto;
+}
+
+.md-tabs {
+  background: #141420;
+  color: #fff;
+}
+
+.md-tabs__link {
+  color: #fff;
+}
+
+.md-tabs__link:hover {
+  color: #fff;
+}
+
+.md-tabs__link:active {
+  color: #fff;
+}
+
+[data-md-color-scheme="custom"] {
+  /* Tokyo Night Theme */
+  color-scheme: dark;
+
+  /* Main Colors */
+  --md-hue: 240;
+  /* Base hue guess for HSL fallbacks if needed, adjust as required */
+  --md-primary-fg-color: #7aa2f7;
+  /* Blue */
+  --md-accent-fg-color: #bb9af7;
+  /* Magenta */
+
+  /* Default colors */
+  --md-default-fg-color: #a9b1d6;
+  /* Editor Foreground */
+  --md-default-fg-color--light: #565f89;
+  /* Comments */
+  --md-default-fg-color--lighter: rgba(169, 177, 214, 0.32);
+  /* Lighter version of default fg */
+  --md-default-fg-color--lightest: rgba(169, 177, 214, 0.12);
+  /* Lightest version of default fg */
+  --md-default-bg-color: #11111B;
+  /* Editor Background (Night) */
+  --md-default-bg-color--light: rgba(26, 27, 38, 0.7);
+  /* Lighter version of default bg */
+  --md-default-bg-color--lighter: rgba(26, 27, 38, 0.4);
+  /* Lighter version of default bg */
+  --md-default-bg-color--lightest: rgba(26, 27, 38, 0.1);
+  /* Lightest version of default bg */
+
+  /* Code colors */
+  --md-code-fg-color: #c0caf5;
+  /* Variables, Class names */
+  --md-code-bg-color: #1a1b26;
+  /* Using main background */
+
+  /* Code highlighting */
+  --md-code-hl-color: rgba(187, 154, 247, 0.15);
+  /* Accent (Magenta) with alpha */
+  --md-code-hl-color--light: rgba(187, 154, 247, 0.1);
+  /* Accent (Magenta) with less alpha */
+  --md-code-hl-number-color: #ff9e64;
+  /* Number constants */
+  --md-code-hl-special-color: #f7768e;
+  /* Regex group symbol, CSS units */
+  --md-code-hl-function-color: #7aa2f7;
+  /* Function names */
+  --md-code-hl-constant-color: #ff9e64;
+  /* Language support constants */
+  --md-code-hl-keyword-color: #bb9af7;
+  /* Control Keywords, Storage Types */
+  --md-code-hl-string-color: #9ece6a;
+  /* Strings */
+  --md-code-hl-name-color: var(--md-code-fg-color);
+  /* Default code foreground */
+  --md-code-hl-operator-color: #bb9af7;
+  /* Regex symbols and operators */
+  --md-code-hl-punctuation-color: #7dcfff;
+  /* Object properties, punctuation */
+  --md-code-hl-comment-color: #565f89;
+  /* Comments */
+  --md-code-hl-generic-color: var(--md-default-fg-color--light);
+  --md-code-hl-variable-color: #c0caf5;
+  /* Variables */
+
+  /* Typeset colors */
+  --md-typeset-color: var(--md-default-fg-color);
+  --md-typeset-a-color: var(--md-primary-fg-color);
+  --md-typeset-kbd-color: #414868;
+  /* Terminal Black */
+  --md-typeset-kbd-accent-color: #565f89;
+  /* Comments */
+  --md-typeset-kbd-border-color: #24283b;
+  /* Editor Background (Storm) - slightly lighter */
+  --md-typeset-mark-color: rgba(187, 154, 247, 0.3);
+  /* Accent (Magenta) with alpha */
+  --md-typeset-table-color: rgba(169, 177, 214, 0.12);
+  /* Default FG lightest */
+  --md-typeset-table-color--light: rgba(169, 177, 214, 0.035);
+  /* Even lighter */
+
+  /* Admonition colors */
+  --md-admonition-fg-color: var(--md-default-fg-color);
+  --md-admonition-bg-color: rgba(41, 46, 66, 0.5);
+  /* #292e42 with alpha */
+
+  /* Footer colors */
+  --md-footer-fg-color: var(--md-default-fg-color--light);
+  --md-footer-fg-color--lighter: var(--md-default-fg-color--lighter);
+  --md-footer-bg-color: #16161e;
+  /* Slightly darker than main background */
+  --md-footer-bg-color--dark: #101014;
+  /* Even darker */
+
+  /* Shadows (copied from slate, generally okay for dark themes) */
+  --md-shadow-z1:
+    0 0.25rem 0.625rem hsla(0, 0%, 0%, 0.05),
+    0 0 0.0625rem hsla(0, 0%, 0%, 0.1);
+  --md-shadow-z2:
+    0 0.25rem 0.625rem hsla(0, 0%, 0%, 0.25),
+    0 0 0.0625rem hsla(0, 0%, 0%, 0.25);
+  --md-shadow-z3:
+    0 0.25rem 0.625rem hsla(0, 0%, 0%, 0.4),
+    0 0 0.0625rem hsla(0, 0%, 0%, 0.35);
+
+  /* Hide light-mode-only images */
+  img[src$="#only-light"],
+  img[src$="#gh-light-mode-only"] {
+    display: none;
+  }
+}
+
+/* Mark external links as such (also in nav) */
+a.external:hover::after,
+a.md-nav__link[href^="https:"]:hover::after {
+  /* https://primer.style/octicons/link-external-16 */
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="rgb(233, 235, 252)" d="M10.604 1h4.146a.25.25 0 01.25.25v4.146a.25.25 0 01-.427.177L13.03 4.03 9.28 7.78a.75.75 0 01-1.06-1.06l3.75-3.75-1.543-1.543A.25.25 0 0110.604 1zM3.75 2A1.75 1.75 0 002 3.75v8.5c0 .966.784 1.75 1.75 1.75h8.5A1.75 1.75 0 0014 12.25v-3.5a.75.75 0 00-1.5 0v3.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-8.5a.25.25 0 01.25-.25h3.5a.75.75 0 000-1.5h-3.5z"></path></svg>');
+  height: 0.8em;
+  width: 0.8em;
+  margin-left: 0.2em;
+  content: ' ';
+  display: inline-block;
+}

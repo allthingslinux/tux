@@ -2,11 +2,12 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from tux.utils.embeds import EmbedCreator
+from tux.bot import Tux
+from tux.ui.embeds import EmbedCreator
 
 
 class MemberCount(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
 
     @app_commands.command(name="membercount", description="Shows server member count")
@@ -20,8 +21,7 @@ class MemberCount(commands.Cog):
             The discord interaction object.
         """
 
-        if not interaction.guild:
-            return
+        assert interaction.guild
 
         # Get the member count for the server (total members)
         members = interaction.guild.member_count
@@ -33,10 +33,13 @@ class MemberCount(commands.Cog):
         staff_role = discord.utils.get(interaction.guild.roles, name="%wheel")
         staff = len(staff_role.members) if staff_role else 0
 
-        embed = EmbedCreator.create_info_embed(
+        embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.INFO,
+            user_name=interaction.user.name,
+            user_display_avatar=interaction.user.display_avatar.url,
             title="Member Count",
             description="Here is the member count for the server.",
-            interaction=interaction,
         )
 
         embed.add_field(name="Members", value=str(members), inline=False)
@@ -48,5 +51,5 @@ class MemberCount(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(MemberCount(bot))

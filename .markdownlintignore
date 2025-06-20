@@ -1,0 +1,29 @@
+# Exclude YAML configuration files that contain markdown-like comments
+.yamlint
+
+# Exclude other configuration files that might have markdown-like syntax
+.codecov.yml
+.pre-commit-config.yaml
+docker-compose*.yml
+*.lock
+
+# Exclude build and cache directories
+.venv/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+.cache/
+htmlcov/
+
+# Exclude archived and temporary files
+.archive/
+logs/
+
+# Exclude development environments
+.devcontainer/
+.vscode/
+.cursor/
+
+# Exclude dependencies and generated files
+prisma/
+typings/

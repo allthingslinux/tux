@@ -1,0 +1,33 @@
+{
+  "name": "Tux Development Container",
+  "dockerFile": "../Dockerfile",
+  "context": "..",
+  "runArgs": ["--init", "--env-file", ".env"],
+  "forwardPorts": [3000],
+  "workspaceMount": "source=${localWorkspaceFolder},target=/app,type=bind",
+  "workspaceFolder": "/app",
+  "build": {
+    "target": "dev",
+    "args": {
+      "DEVCONTAINER": "1"
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "prisma.prisma",
+        "kevinrose.vsc-python-indent",
+        "mikestead.dotenv",
+        "njpwerner.autodocstring",
+        "usernamehw.errorlens",
+        "redhat.vscode-yaml"
+      ]
+    }
+  }
+}

@@ -1,42 +1,116 @@
-# config/settings.yml
+# This is a example configuration file for Tux
+# Change the values to your liking and rename the file to settings.yml
 
-PREFIX:
-  PROD: "$"
-  DEV: "~"
+BOT_INFO:
+  PROD_PREFIX: "$"
+  DEV_PREFIX: "~" # You can enable dev mode in .env
+  BOT_NAME: "Tux" # This may not apply everywhere, WIP (Best to keep it as Tux for now). Help command will be changed to be less Tux-specific if you change this.
+  HIDE_BOT_OWNER: false # Hide bot owner and sysadmin from help command
+  # Available substitutions:
+  # {member_count} - total member count of all guilds
+  # {guild_count} - total guild count
+  # {bot_name} - bot name
+  # {bot_version} - bot version
+  # {prefix} - bot prefix
+  ACTIVITIES: |
+    [
+      {"type": "watching", "name": "{member_count} members"},
+      {"type": "listening", "name": "{guild_count} guilds"},
+      {"type": "playing", "name": "{bot_name} {bot_version}"},
+      {"type": "watching", "name": "All Things Linux"},
+      {"type": "playing", "name": "with fire"},
+      {"type": "watching", "name": "linux tech tips"},
+      {"type": "listening", "name": "mpd"},
+      {"type": "watching", "name": "a vast field of grain"},
+      {"type": "playing", "name": "i am calling about your car's extended warranty"},
+      {"type": "playing", "name": "SuperTuxKart"},
+      {"type": "playing", "name": "SuperTux 2"},
+      {"type": "watching", "name": "Gentoo compile..."},
+      {"type": "watching", "name": "Brodie Robertson"},
+      {"type": "listening", "name": "Terry Davis on YouTube"},
+      {"type": "playing", "name": "with Puffy"},
+      {"type": "watching", "name": "the stars"},
+      {"type": "watching", "name": "VLC"},
+      {"type": "streaming", "name": "SuperTuxKart", "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
+    ]
+
+# This allows sysadmins to use the eval and jsk commands which can execute arbitrary code.
+# Do enable if:
+# - Tux is dockerized
+# - You trust your sysadmins with anything that the docker container can do (e.g if they already can access the host system)
+# - You are a small server
+# DO NOT ENABLE IF:
+# - Tux is not dockerized and you do not trust your sysadmins with the host system
+# - You are a large server and Tux has full permissions
+# - You do not trust your sysadmins with anything that the docker container can do
+# - IF YOU ARE A MULTIPLE SERVER INSTANCE, DO NOT ENABLE IT FOR THE LOVE OF GOD
+# If you are not sure, do not enable this.
+ALLOW_SYSADMINS_EVAL: false
 
 USER_IDS:
+  # These have access to all permissions in all servers, except for $eval and $jsk commands (unless set to true).
+  # Only give these to people you trust with the bot and who are able to handle the responsibilities that come with it.
   SYSADMINS:
     - 123456789012345679
     - 123456789012345679
+
+  # This should be the person who owns the bot and nobody else unless you ABSOLUTELY know what you are doing.
+  # This person has access to all permissions in all servers, including $eval and $jsk commands.
   BOT_OWNER: 123456789012345679
 
+# This adds a temporary voice channel feature to the bot, you can join the channel to create a channel called /tmp/<username> and move to it.
+# Channels are deleted when the last person leaves them.
+# Set this to the category ID where you want the temporary voice channels to be created.
+# Temporary channels will be put at the bottom of the category.
 TEMPVC_CATEGORY_ID: 123456789012345679
+# Set this to the channel ID where you want the temporary voice channels to be created.
 TEMPVC_CHANNEL_ID: 123456789012345679
 
-EMBED_COLORS:
-  DEFAULT: 16044058
-  INFO: 12634869
-  WARNING: 16634507
-  ERROR: 16067173
-  SUCCESS: 10407530
-  POLL: 14724968
-  CASE: 16217742
-  NOTE: 16752228
+# This will automatically give people with a status regex a role.
+STATUS_ROLES:
+  #- server_id: 123456789012345679
+  #  status_regex: ".*"
+  #  role_id: 123456789012345679
 
-EMBED_ICONS:
-  DEFAULT: "https://i.imgur.com/owW4EZk.png"
-  INFO: "https://i.imgur.com/8GRtR2G.png"
-  SUCCESS: "https://i.imgur.com/JsNbN7D.png"
-  ERROR: "https://i.imgur.com/zZjuWaU.png"
-  CASE: "https://i.imgur.com/c43cwnV.png"
-  NOTE: "https://i.imgur.com/VqPFbil.png"
-  POLL: "https://i.imgur.com/pkPeG5q.png"
-  ACTIVE_CASE: "https://github.com/allthingslinux/tux/blob/main/assets/embeds/active_case.png?raw=true"
-  INACTIVE_CASE: "https://github.com/allthingslinux/tux/blob/main/assets/embeds/inactive_case.png?raw=true"
-  ADD: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/added.png?raw=true"
-  REMOVE: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/removed.png?raw=true"
-  BAN: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/ban.png?raw=true"
-  JAIL: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/jail.png?raw=true"
-  KICK: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/kick.png?raw=true"
-  TIMEOUT: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/timeout.png?raw=true"
-  WARN: "https://github.com/allthingslinux/tux/blob/main/assets/emojis/warn.png?raw=true"
+SNIPPETS:
+  LIMIT_TO_ROLE_IDS: false # Only allow users with the specified role IDs to use the snippet command
+  ACCESS_ROLE_IDS:
+    - 123456789012345679
+    - 123456789012345679
+
+XP:
+  XP_BLACKLIST_CHANNELS: # Channels where XP will not be counted
+    - 123456789012345679
+    - 123456789012345679
+  XP_ROLES: # Roles that will be given to users when they reach a certain level
+    - level: 5
+      role_id: 123456789012345679
+    - level: 10
+      role_id: 123456789012345679
+    - level: 15
+      role_id: 123456789012345679
+    - level: 20
+      role_id: 123456789012345679
+    - level: 25
+      role_id: 123456789012345679
+
+  XP_MULTIPLIERS: # Multipliers for certain roles
+    - role_id: 123456789012345679
+      multiplier: 1.5
+
+  XP_COOLDOWN: 1 # Delay in seconds between XP messages
+
+  LEVELS_EXPONENT: 1 # Exponent for the level formula
+  SHOW_XP_PROGRESS: false # Shows required XP for the next level in the level command
+  ENABLE_XP_CAP: false # if true, XP will still be counted, but not shown beyond the cap in the level command
+
+GIF_LIMITER: # Limits the amount of gifs a user can send in a channel
+  RECENT_GIF_AGE: 60
+
+  GIF_LIMIT_EXCLUDE:
+    - 123456789012345
+
+  GIF_LIMITS_USER:
+    "123456789012345": 2
+  GIF_LIMITS_CHANNEL:
+    "123456789012345": 3

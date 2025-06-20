@@ -5,6 +5,10 @@ import pytz
 from discord.ext import commands
 from reactionmenu import Page, ViewButton, ViewMenu, ViewSelect
 
+from tux.bot import Tux
+from tux.ui.embeds import EmbedCreator, EmbedType
+from tux.utils.functions import generate_usage
+
 timezones = {
     "North America": [
         ("🇺🇸", "US", "Pacific/Honolulu", "HST", -10),
@@ -85,15 +89,15 @@ continent_emojis = {
 
 
 class Timezones(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
+        self.timezones.usage = generate_usage(self.timezones)
 
     @commands.hybrid_command(
         name="timezones",
         aliases=["tz"],
-        usage="timezones",
     )
-    async def timezones(self, ctx: commands.Context[commands.Bot]) -> None:
+    async def timezones(self, ctx: commands.Context[Tux]) -> None:
         utc_now = datetime.now(UTC)
 
         menu = ViewMenu(ctx, menu_type=ViewMenu.TypeEmbed)
@@ -106,7 +110,11 @@ class Timezones(commands.Cog):
             pages = [tz_list[i : i + 9] for i in range(0, len(tz_list), 9)]
 
             for page in pages:
-                embed = discord.Embed(title=f"Timezones in {continent}", color=discord.Color.blurple())
+                embed = EmbedCreator.create_embed(
+                    embed_type=EmbedType.INFO,
+                    title=f"Timezones in {continent}",
+                    custom_color=discord.Color.blurple(),
+                )
 
                 for flag, _country, tz_name, abbr, utc_offset in page:
                     tz = pytz.timezone(tz_name)
@@ -136,5 +144,5 @@ class Timezones(commands.Cog):
         await menu.start()
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Timezones(bot))

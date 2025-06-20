@@ -1,0 +1,15 @@
+model Snippet {
+  snippet_id         BigInt   @id @default(autoincrement())
+  snippet_name       String
+  snippet_content    String?  // optional cause of snippet aliases
+  snippet_user_id    BigInt
+  snippet_created_at DateTime @default(now())
+  guild_id           BigInt
+  uses               BigInt   @default(0)
+  locked             Boolean  @default(false)
+  alias              String?  // name of another snippet
+  guild              Guild    @relation(fields: [guild_id], references: [guild_id])
+
+  @@unique([snippet_name, guild_id])
+  @@index([snippet_name, guild_id])
+}

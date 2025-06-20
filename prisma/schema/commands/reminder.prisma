@@ -1,0 +1,14 @@
+model Reminder {
+  reminder_id         BigInt   @id @default(autoincrement())
+  reminder_content    String
+  reminder_created_at DateTime @default(now())
+  reminder_expires_at DateTime
+  reminder_channel_id BigInt
+  reminder_user_id    BigInt
+  reminder_sent       Boolean  @default(false)
+  guild_id            BigInt
+  guild               Guild    @relation(fields: [guild_id], references: [guild_id])
+
+  @@unique([reminder_id, guild_id])
+  @@index([reminder_id, guild_id])
+}

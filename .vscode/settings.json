@@ -1,0 +1,106 @@
+{
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "editor.formatOnSave": true,
+  "editor.inlayHints.enabled": "offUnlessPressed",
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    }
+  },
+  "python.languageServer": "Pylance",
+  "python.analysis.typeCheckingMode": "strict",
+  "python.analysis.autoFormatStrings": true,
+  "python.analysis.completeFunctionParens": true,
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.inlayHints.functionReturnTypes": true,
+  "python.analysis.inlayHints.variableTypes": true,
+  "python.analysis.inlayHints.callArgumentNames": "all",
+  "python.terminal.activateEnvInCurrentTerminal": true,
+  "python.analysis.exclude": [
+    ".archive/**",
+    "build/**"
+  ],
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportIncompatibleMethodOverride": "none",
+    "reportGeneralTypeIssues": "information"
+  },
+  "python.poetryPath": "poetry",
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": true,
+  "python.testing.cwd": "${workspaceFolder}",
+  "python.testing.autoTestDiscoverOnSaveEnabled": true,
+  "coverage-gutters.coverageFileNames": [
+    "coverage.xml",
+    "coverage.lcov",
+    "cov.xml",
+    "gcov.out",
+    "jacoco.xml",
+    "lcov.info"
+  ],
+  "coverage-gutters.showGutterCoverage": false,
+  "coverage-gutters.showLineCoverage": true,
+  "coverage-gutters.showRulerCoverage": true,
+  "python.terminal.executeInFileDir": false,
+  "python.terminal.launchArgs": [],
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/pycache": true,
+    "**/.pytest_cache": true,
+    "**/htmlcov": true,
+    "**/.coverage": true
+  },
+  "search.exclude": {
+    ".archive/**": true,
+    "build/**": true,
+    "typings/**": true,
+    ".pytest_cache/**": true,
+    "htmlcov/**": true,
+    ".tox/**": true
+  },
+  "git.autofetch": true,
+  "git.pruneOnFetch": true,
+  "git.showProgress": true,
+  "git.fetchOnPull": true,
+  "[markdown]": {
+    "files.trimTrailingWhitespace": false,
+    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+  },
+  "markdownlint.config": {
+    "extends": ".markdownlint.yaml"
+  },
+  "markdownlint.run": "onType",
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml",
+    "editor.tabSize": 2,
+    "editor.formatOnType": false,
+    "editor.formatOnSave": false,
+    "editor.codeLens": true
+  },
+  "yaml.format.enable": false,
+  "yaml.format.singleQuote": true,
+  "yaml.format.bracketSpacing": true,
+  "yaml.format.printWidth": 80,
+  "yaml.validate": true,
+  "yaml.hover": true,
+  "yaml.completion": true,
+  "yaml.schemaStore.enable": true,
+  "yaml.keyOrdering": false,
+  "yaml.style.flowMapping": "allow",
+  "yaml.style.flowSequence": "allow",
+  "yaml.yamlVersion": "1.2",
+  "yaml.maxItemsComputed": 5000,
+  "yaml.disableDefaultProperties": false,
+  "yaml.suggest.parentSkeletonSelectedFirst": false,
+  "yaml.extension.recommendations": true,
+  "yaml.schemas": {
+    "https://squidfunk.github.io/mkdocs-material/schema.json": "mkdocs.yml"
+  }
+}

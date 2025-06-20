@@ -1,0 +1,18 @@
+{
+  "recommendations": [
+    "EditorConfig.EditorConfig",
+    "ms-vscode-remote.remote-containers",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-azuretools.vscode-docker",
+    "charliermarsh.ruff",
+    "prisma.prisma",
+    "kevinrose.vsc-python-indent",
+    "mikestead.dotenv",
+    "njpwerner.autodocstring",
+    "usernamehw.errorlens",
+    "sourcery.sourcery",
+    "redhat.vscode-yaml",
+    "ryanluker.vscode-coverage-gutters"
+  ]
+}

@@ -1,0 +1,49 @@
+name: Upload Coverage to Codecov
+description: Upload coverage reports and test results to Codecov
+inputs:
+  coverage-file:
+    description: Path to the coverage XML file
+    required: true
+  junit-file:
+    description: Path to the JUnit XML file
+    required: false
+    default: ''
+  flags:
+    description: Codecov flags for categorization
+    required: true
+  name:
+    description: Coverage report name
+    required: true
+  codecov-token:
+    description: Codecov token
+    required: true
+  slug:
+    description: Repository slug (owner/repo)
+    required: false
+    default: allthingslinux/tux
+runs:
+  using: composite
+  steps:
+    # COVERAGE UPLOAD TO CODECOV
+    # Uploads coverage data with specific flags for categorization
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5
+      with:
+        files: ${{ inputs.coverage-file }}
+        flags: ${{ inputs.flags }}
+        name: ${{ inputs.name }}
+        token: ${{ inputs.codecov-token }}
+        slug: ${{ inputs.slug }}
+        fail_ci_if_error: false
+        verbose: true
+        disable_search: true
+
+    # TEST RESULTS UPLOAD TO CODECOV
+    # Uploads test results for analytics (only if junit file provided)
+    - name: Upload test results to Codecov
+      if: ${{ inputs.junit-file != '' }}
+      uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1
+      with:
+        file: ${{ inputs.junit-file }}
+        flags: ${{ inputs.flags }}
+        token: ${{ inputs.codecov-token }}

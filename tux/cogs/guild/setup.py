@@ -2,17 +2,18 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.utils import checks
 
 
 class Setup(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.db = DatabaseController()
         self.config = DatabaseController().guild_config
 
-    setup = app_commands.Group(name="setup", description="Set up Tux for your server.")
+    setup = app_commands.Group(name="setup", description="Set this bot up for your server.")
 
     @setup.command(name="jail")
     @commands.guild_only()
@@ -27,8 +28,7 @@ class Setup(commands.Cog):
             The discord interaction object.
         """
 
-        if interaction.guild is None:
-            return
+        assert interaction.guild
 
         jail_role_id = await self.config.get_guild_config_field_value(interaction.guild.id, "jail_role_id")
         if not jail_role_id:
@@ -59,8 +59,20 @@ class Setup(commands.Cog):
         jail_role: discord.Role,
         jail_channel_id: int,
     ) -> None:
-        if interaction.guild is None:
-            return
+        """
+        Set up the permissions for the jail role in the jail channel.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The discord interaction object.
+        jail_role : discord.Role
+            The jail role to set permissions for.
+        jail_channel_id : int
+            The ID of the jail channel.
+        """
+
+        assert interaction.guild
 
         for channel in interaction.guild.channels:
             if not isinstance(channel, discord.TextChannel | discord.VoiceChannel | discord.ForumChannel):
@@ -81,5 +93,5 @@ class Setup(commands.Cog):
             await interaction.edit_original_response(content=f"Setting up permissions for {channel.name}.")
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Setup(bot))

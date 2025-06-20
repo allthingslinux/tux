@@ -1,13 +1,13 @@
 import discord
-from discord.ext import commands
 from loguru import logger
 
+from tux.bot import Tux
 from tux.database.controllers import DatabaseController
-from tux.utils.embeds import EmbedCreator
+from tux.ui.embeds import EmbedCreator
 
 
 class ReportModal(discord.ui.Modal):
-    def __init__(self, *, title: str = "Submit an anonymous report", bot: commands.Bot) -> None:
+    def __init__(self, *, title: str = "Submit an anonymous report", bot: Tux) -> None:
         super().__init__(title=title)
         self.bot = bot
         self.config = DatabaseController().guild_config
@@ -42,10 +42,12 @@ class ReportModal(discord.ui.Modal):
             logger.error("Guild is None")
             return
 
-        embed = EmbedCreator.create_log_embed(
+        embed = EmbedCreator.create_embed(
+            bot=self.bot,
+            embed_type=EmbedCreator.INFO,
+            user_name="tux",
             title=(f"Anonymous report for {self.short.value}"),  # type: ignore
             description=self.long.value,  # type: ignore
-            interaction=None,
         )
 
         try:
@@ -86,4 +88,9 @@ class ReportModal(discord.ui.Modal):
             delete_after=30,
         )
 
-        await report_log_channel.send(embed=embed)
+        message = await report_log_channel.send(embed=embed)
+        await report_log_channel.create_thread(
+            name=f"Anonymous report for {self.short.value}",  # type: ignore
+            message=message,
+            auto_archive_duration=10080,
+        )

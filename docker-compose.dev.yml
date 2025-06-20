@@ -1,0 +1,284 @@
+# ==============================================================================
+# SERVICES CONFIGURATION - DEVELOPMENT ENVIRONMENT
+# ==============================================================================
+services:
+  # ============================================================================
+  # TUX BOT SERVICE - Development Container
+  # ============================================================================
+  # Purpose: Runs the Tux Discord bot in development mode with live reloading
+  # Features: Code synchronization, automatic rebuilds, development tools
+  # Performance: Higher resource limits for development workloads
+  # ============================================================================
+  tux:
+    # CONTAINER IDENTIFICATION
+    # Development-specific name to avoid conflicts with production containers
+    # Clearly identifies this as a development instance
+    container_name: tux-dev
+
+    # IMAGE CONFIGURATION
+    # Uses local development image built from dev stage of Dockerfile
+    # Contains development tools, debugging utilities, and additional packages
+    image: tux:dev
+
+    # BUILD CONFIGURATION
+    # Always builds from local source for development
+    # Uses development target with full tooling and debugging capabilities
+    build:
+      # Build context includes entire project directory
+      context: .
+      # Dockerfile location (standard)
+      dockerfile: Dockerfile
+      # Target development stage with debugging tools and dev dependencies
+      target: dev
+
+    # DEVELOPMENT OVERRIDE COMMAND
+    # Skip prisma generate in CMD to avoid read-only filesystem issues
+    # Can be run manually after container starts
+    command:
+      - sh
+      - -c
+      - exec poetry run tux --dev start
+
+    # DEVELOPMENT WORKFLOW CONFIGURATION
+    # Docker BuildKit watch feature for live development
+    # Provides real-time code synchronization and intelligent rebuilds
+    develop:
+      # WATCH CONFIGURATION
+      # Monitors filesystem changes and syncs/rebuilds as appropriate
+      # Optimizes development workflow with minimal container restarts
+      watch:
+        # FILE SYNCHRONIZATION (Hot Reload)
+        # Syncs code changes without rebuilding the container
+        # Fastest feedback loop for code changes
+        - action: sync
+          # Watch entire project directory
+          path: .
+          # Sync to app directory in container
+          target: /app/
+          # IGNORE PATTERNS
+          # Excludes files that don't need syncing or would cause issues
+          # Performance optimization to reduce sync overhead
+          ignore:
+            # Cache directories (not needed in sync)
+            - .cache/
+            # IDE configurations (not needed in container)
+            - .idea/
+            # Virtual environment (managed by container)
+            - .venv/
+            # Editor configurations (not needed in container)
+            - .vscode/
+            # Python cache files (regenerated automatically)
+            - '**/__pycache__/'
+            - '**/*.pyc'
+            # Log files (not needed in sync)
+            - '*.log'
+            # Editor temporary files
+            - '*.swp'
+            - .*.swp
+            - '*~'
+
+        # DEPENDENCY REBUILD TRIGGERS
+        # Files that require full container rebuild when changed
+        # These changes affect the environment setup and need fresh build
+
+        # Python dependencies changed - rebuild required
+        - action: rebuild
+          path: pyproject.toml
+
+        # Lock file updated - rebuild required for dependency consistency
+        - action: rebuild
+          path: poetry.lock
+
+        # Database schema changes - rebuild required for Prisma client generation
+        - action: rebuild
+          path: prisma/schema/
+
+    # VOLUME MOUNTS
+    # Development-specific volumes with different naming to avoid production conflicts
+    # Focuses on persistence of development data without read-only restrictions
+    volumes:
+      # DEVELOPMENT CACHE VOLUME
+      # Separate cache volume for development to avoid conflicts with production
+      # Contains development-specific cache data and temporary files
+      - tux_dev_cache:/app/.cache
+
+      # DEVELOPMENT TEMPORARY VOLUME
+      # Separate temporary volume for development work
+      # Used for development artifacts, debugging files, etc.
+      - tux_dev_temp:/app/temp
+
+      # USER HOME VOLUME
+      # Single volume for all user cache/config directories (.cache, .npm, etc.)
+      # Prevents read-only filesystem errors and covers all CLI tools
+      - tux_dev_user_home:/home/nonroot
+
+    # ENVIRONMENT CONFIGURATION
+    # Environment variables loaded from .env file
+    # Same as production but may contain different values for development
+    # DEVELOPMENT: May include debug flags, development database URLs, etc.
+    env_file:
+      - .env
+
+    # RESTART POLICY
+    # Automatic restart for development convenience
+    # Helps maintain development environment during crashes and testing
+    restart: unless-stopped
+
+    # RESOURCE MANAGEMENT
+    # Higher resource limits for development workloads
+    # Development often requires more resources for compilation, debugging, etc.
+    deploy:
+      resources:
+        # RESOURCE LIMITS (Development)
+        # Higher limits to accommodate development tools and processes
+        limits:
+          memory: 1g  # Maximum 1GB RAM (double production)
+          cpus: '1.0'  # Maximum 1 full CPU core (double production)
+
+        # RESOURCE RESERVATIONS (Development)
+        # Higher reservations for better development performance
+        reservations:
+          memory: 512m  # Guaranteed 512MB RAM (double production)
+          cpus: '0.5'  # Guaranteed 0.5 CPU cores (double production)
+
+    # LOGGING CONFIGURATION
+    # Same logging setup as production for consistency
+    # Helps developers understand production logging behavior
+    logging:
+      # JSON structured logging for development log analysis
+      driver: json-file
+
+      # Log rotation to prevent development disk space issues
+      options:
+        max-size: 10m  # Rotate logs when they reach 10MB
+        max-file: '3'  # Keep maximum 3 rotated log files
+# ==============================================================================
+# VOLUMES CONFIGURATION - DEVELOPMENT ENVIRONMENT
+# ==============================================================================
+# Development-specific named volumes to avoid conflicts with production
+# These volumes are isolated from production and can be safely removed
+# for clean development environment resets
+# ==============================================================================
+volumes:
+  # DEVELOPMENT CACHE VOLUME
+  # Stores development-specific cache data
+  # Contains: Development API cache, debug cache, test data, etc.
+  # Isolation: Completely separate from production cache
+  # Lifecycle: Can be reset anytime for clean development environment
+  tux_dev_cache:
+    driver: local  # Local Docker volume driver (default)
+
+  # DEVELOPMENT TEMPORARY VOLUME
+  # Stores development temporary files and artifacts
+  # Contains: Debug files, development logs, test artifacts, etc.
+  # Isolation: Separate from production temporary data
+  # Lifecycle: Safe to clear for clean development state
+  tux_dev_temp:
+    driver: local  # Local Docker volume driver (default)
+
+  # DEVELOPMENT USER HOME VOLUME
+  # Stores all user cache and config directories
+  # Contains: .cache (Prisma), .npm, .config, and other CLI tool data
+  # Isolation: Separate from production user data
+  # Lifecycle: Persistent to avoid re-downloading tools and cache
+  tux_dev_user_home:
+    driver: local  # Local Docker volume driver (default)
+# ==============================================================================
+# DEVELOPMENT WORKFLOW BEST PRACTICES IMPLEMENTED
+# ==============================================================================
+#
+# 1. LIVE DEVELOPMENT:
+#    - Real-time code synchronization with Docker BuildKit watch
+#    - Intelligent rebuild triggers for dependency changes
+#    - Optimized ignore patterns for performance
+#    - Hot reload for rapid iteration
+#
+# 2. DEVELOPMENT ISOLATION:
+#    - Separate container name and volumes from production
+#    - Development-specific image with debugging tools
+#    - Isolated environment that doesn't affect production
+#
+# 3. RESOURCE OPTIMIZATION:
+#    - Higher resource limits for development workloads
+#    - Adequate resources for compilation and debugging
+#    - Performance optimized for development tasks
+#
+# 4. WORKFLOW EFFICIENCY:
+#    - Automatic restart for development convenience
+#    - Easy shell access for debugging and development
+#    - Consistent logging with production for familiarity
+#
+# 5. DEPENDENCY MANAGEMENT:
+#    - Automatic rebuilds on dependency file changes
+#    - Schema change detection for database updates
+#    - Smart rebuild triggers to minimize wait time
+#
+# DEVELOPMENT WORKFLOW:
+# ---------------------
+# 1. Start development environment:
+#    docker-compose -f docker-compose.dev.yml up
+#
+# 2. Edit code - changes sync automatically
+#    (No restart needed for code changes)
+#
+# 3. Update dependencies in pyproject.toml:
+#    (Container rebuilds automatically)
+#
+# 4. Debug with shell access:
+#    docker-compose -f docker-compose.dev.yml exec tux bash
+#
+# 5. View logs:
+#    docker-compose -f docker-compose.dev.yml logs -f tux
+#
+# 6. Clean restart:
+#    docker-compose -f docker-compose.dev.yml down
+#    docker-compose -f docker-compose.dev.yml up --build
+#
+# ==============================================================================
+#
+# TUX CLI COMMANDS (Recommended):
+# --------------------------------
+# Build:     poetry run tux --dev docker build
+# Start:     poetry run tux --dev docker up [-d|--build]
+# Logs:      poetry run tux --dev docker logs -f
+# Shell:     poetry run tux --dev docker shell
+# Stop:      poetry run tux --dev docker down
+#
+# Development workflow (from host):
+#   poetry run tux --dev docker exec tux "tux dev lint"
+#   poetry run tux --dev docker exec tux "pytest"
+#
+# Database (from host):
+#   poetry run tux --dev docker exec tux "tux db push"
+#   poetry run tux --dev docker exec tux "tux db migrate --name <name>"
+#
+# DEVELOPMENT COMMANDS:
+# ---------------------
+# Start development:
+#   docker-compose -f docker-compose.dev.yml up
+#
+# Start in background:
+#   docker-compose -f docker-compose.dev.yml up -d
+#
+# Force rebuild:
+#   docker-compose -f docker-compose.dev.yml up --build
+#
+# Shell access:
+#   docker-compose -f docker-compose.dev.yml exec tux bash
+#
+# Run linting:
+#   docker-compose -f docker-compose.dev.yml exec tux poetry run tux dev lint
+#
+# Run tests:
+#   docker-compose -f docker-compose.dev.yml exec tux poetry run pytest
+#
+# Database operations:
+#   docker-compose -f docker-compose.dev.yml exec tux poetry run tux --dev db push
+#
+# Stop development:
+#   docker-compose -f docker-compose.dev.yml down
+#
+# Clean reset (removes volumes):
+#   docker-compose -f docker-compose.dev.yml down -v
+#
+# ==============================================================================

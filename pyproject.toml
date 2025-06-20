@@ -1,125 +1,147 @@
-# Poetry Configuration
-[tool.poetry]
-authors = ["kaizen <admin@kaizen.wtf>"]
-description = "All Things Linux Discord Bot"
+[project]
 name = "tux"
+description = "Tux is an all in one bot for the All Things Linux discord server."
+authors = [{ name = "All Things Linux", email = "tux@allthingslinux.org" }]
+requires-python = ">=3.13.2,<3.14"
 readme = "README.md"
-repository = "https://github.com/allthingslinux/tux"
-version = "0.1.0"
+urls = { repository = "https://github.com/allthingslinux/tux" }
+version = "0.0.0"
+
+[project.scripts]
+tux = "tux.cli:main"
+
+[build-system]
+requires = ["poetry-core>=2.0"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry]
+packages = [{ include = "tux" }]
+
 
 [tool.poetry.dependencies]
-aiocache = "^0.12.2"
-aioconsole = "^0.7.0"
-aiofiles = "^24.1.0"
-asynctempfile = "^0.5.0"
-cairosvg = "^2.7.1"
-dateparser = "^1.2.0"
-discord-py = "^2.4.0"
-githubkit = {extras = ["auth-app"], version = "^0.11.3"}
-httpx = "^0.27.0"
-loguru = "^0.7.2"
-pillow = "^10.3.0"
-pre-commit = "^3.7.0"
-prisma = "^0.15.0"
-psutil = "^6.0.0"
-pydantic = "^2.8.2"
-pynacl = "^1.5.0"
-pyright = "^1.1.358"
-python = ">=3.12,<4"
-python-dotenv = "^1.0.1"
-pyyaml = "^6.0.2"
-reactionmenu = "^3.1.7"
-rsa = "^4.9"
-ruff = "^0.6.0"
-sentry-sdk = {extras = ["httpx", "loguru"], version = "^2.7.0"}
-types-aiofiles = "^24.1.0.20240626"
-types-psutil = "^6.0.0.20240621"
-typing-extensions = "^4.12.2"
-jishaku = "^2.5.2"
-pytz = "^2024.1"
+python = ">=3.13.2,<3.14"
+aiocache = ">=0.12.2"
+aioconsole = ">=0.8.0"
+aiofiles = ">=24.1.0"
+asynctempfile = ">=0.5.0"
+cairosvg = ">=2.7.1"
+dateparser = ">=1.2.0"
+"discord-py" = ">=2.4.0"
+"influxdb-client" = ">=1.48.0"
+emojis = ">=0.7.0"
+githubkit = { version = ">=0.12.0", extras = ["auth-app"] }
+httpx = ">=0.28.0"
+jishaku = ">=2.5.2"
+loguru = ">=0.7.2"
+pillow = ">=11.2.1,<11.3.0"
+prisma = ">=0.15.0"
+psutil = ">=6.0.0"
+pynacl = ">=1.5.0"
+python-dotenv = ">=1.0.1"
+pytz = ">=2024.1"
+pyyaml = ">=6.0.2"
+reactionmenu = ">=3.1.7"
+rsa = ">=4.9"
+sentry-sdk = { version = ">=2.7.0", extras = ["httpx", "loguru"] }
+audioop-lts = "^0.2.1"
+colorama = "^0.4.6"
+rich = "^14.0.0"
+watchdog = "^6.0.0"
+arrow = "^1.3.0"
+click = "^8.1.8"
+levenshtein = "^0.27.1"
+jinja2 = "^3.1.6"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "==4.2.0"
+pyright = "==1.1.402"
+ruff = "==0.12.0"
+poetry-types = "0.6.0"
+yamllint = "1.37.1"
+yamlfix = "1.17.0"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.0.0"
+pytest-asyncio = "^1.0.0"
+pytest-mock = "^3.14.0"
+pytest-cov = "^6.0.0"
+pytest-sugar = "^1.0.0"
+pytest-xdist = "^3.6.0"
+pytest-randomly = "^3.15.0"
+pytest-timeout = "^2.3.1"
+pytest-html = "^4.1.1"
+pytest-benchmark = "^5.1.0"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.30"
+mkdocstrings-python = "^1.14.3"
+mkdocs-git-revision-date-localized-plugin = "^1.3.0"
+mkdocs-git-committers-plugin-2 = "^2.5.0"
+pymdown-extensions = "^10.14.3"
+mkdocstrings = "^0.29.0"
+mkdocs = "^1.6.1"
+griffe = "^1.5.6"
+griffe-typingdoc = "^0.2.7"
+griffe-generics = "^1.0.13"
+griffe-inherited-method-crossrefs = "^0.0.1.4"
+griffe-inherited-docstrings = "^1.1.1"
+mkdocs-api-autonav = "^0.3.0"
+mkdocs-click = "^0.9.0"
+mkdocs-minify-plugin = "^0.8.0"
 
-[build-system]
-build-backend = "poetry.core.masonry.api"
-requires = ["poetry-core"]
+[tool.poetry.group.types.dependencies]
+types-pytz = "^2025.2.0.20250326"
+types-click = "^7.1.8"
+types-psutil = "^7.0.0.20250401"
+types-dateparser = "^1.2.0.20250408"
+types-pillow = "^10.2.0.20240822"
+types-colorama = "^0.4.15.20240311"
+types-pyyaml = "^6.0.12.20250402"
+types-aiofiles = "^24.1.0.20250326"
+types-influxdb-client = "^1.45.0.20241221"
+types-jinja2 = "^2.11.9"
 
-# Ruff Configuration
+
 [tool.ruff]
-exclude = [
-  ".bzr",
-  ".direnv",
-  ".eggs",
-  ".git",
-  ".git-rewrite",
-  ".hg",
-  ".ipynb_checkpoints",
-  ".mypy_cache",
-  ".nox",
-  ".pants.d",
-  ".pyenv",
-  ".pytest_cache",
-  ".pytype",
-  ".ruff_cache",
-  ".svn",
-  ".tox",
-  ".venv",
-  ".vscode",
-  "__pypackages__",
-  "_build",
-  "buck-out",
-  "build",
-  "dist",
-  "node_modules",
-  "site-packages",
-  "venv",
-  "examples",
-  "tmp",
-  "tests",
-  ".archive",
-  "stubs",
-]
-
+exclude = [".venv", "examples", ".archive", "typings/**"]
 indent-width = 4
 line-length = 120
-target-version = "py312"
+target-version = "py313"
 
-# Ruff Linting Configuration
 [tool.ruff.lint]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 fixable = ["ALL"]
 ignore = ["E501", "N814", "PLR0913", "PLR2004"]
 select = [
-  "I", # isort
-  "E", # pycodestyle-error
-  "F", # pyflakes
-  "PERF", # perflint
-  "N", # pep8-naming
-  "TRY", # tryceratops
-  "UP", # pyupgrade
-  "FURB", # refurb
-  "PL", # pylint
-  "B", # flake8-bugbear
-  "SIM", # flake8-simplify
-  "ASYNC", # flake8-async
-  "A", # flake8-builtins
-  "C4", # flake8-comprehensions
-  "DTZ", # flake8-datetimez
-  "EM", # flake8-errmsg
-  "PIE", # flake8-pie
-  "T20", # flake8-print
-  "Q", # flake8-quotes
-  "RET", # flake8-return
-  "PTH", # flake8-use-pathlib
-  "INP", # flake8-no-pep420
-  "RSE", # flake8-raise
-  "ICN", # flake8-import-conventions
-  "RUF", # ruff
+    "I",     # isort
+    "E",     # pycodestyle-error
+    "F",     # pyflakes
+    "PERF",  # perflint
+    "N",     # pep8-naming
+    "TRY",   # tryceratops
+    "UP",    # pyupgrade
+    "FURB",  # refurb
+    "PL",    # pylint
+    "B",     # flake8-bugbear
+    "SIM",   # flake8-simplify
+    "ASYNC", # flake8-async
+    "A",     # flake8-builtins
+    "C4",    # flake8-comprehensions
+    "DTZ",   # flake8-datetimez
+    "EM",    # flake8-errmsg
+    "PIE",   # flake8-pie
+    "T20",   # flake8-print
+    "Q",     # flake8-quotes
+    "RET",   # flake8-return
+    "PTH",   # flake8-use-pathlib
+    "INP",   # flake8-no-pep420
+    "RSE",   # flake8-raise
+    "ICN",   # flake8-import-conventions
+    "RUF",   # ruff
 ]
 unfixable = []
 
-# Ruff Formatting Configuration
 [tool.ruff.format]
 docstring-code-format = true
 docstring-code-line-length = "dynamic"
@@ -128,44 +150,75 @@ line-ending = "lf"
 quote-style = "double"
 skip-magic-trailing-comma = false
 
-# Pyright Configuration
 [tool.pyright]
-defineConstant = {DEBUG = true}
-exclude = [
-  ".direnv",
-  ".eggs",
-  ".git",
-  ".hg",
-  ".ipynb_checkpoints",
-  ".mypy_cache",
-  ".nox",
-  ".pants.d",
-  ".pyenv",
-  ".pytest_cache",
-  ".pytype",
-  ".svn",
-  ".tox",
-  ".venv",
-  ".vscode",
-  "__pypackages__",
-  "_build",
-  "buck-out",
-  "build",
-  "dist",
-  "node_modules",
-  "site-packages",
-  "venv",
-  "examples",
-  "tests",
-  ".archive",
-  "stubs",
-]
-include = ["tux"]
+defineConstant = { DEBUG = true }
+enableReachabilityAnalysis = true
+exclude = ["__pypackages__", "_build", "examples", ".archive", "typings/**"]
+ignore = [".venv"]
+include = ["tux", "tests"]
+stubPath = "typings"
 pythonPlatform = "Linux"
-pythonVersion = "3.12"
-reportMissingTypeStubs = true
-reportShadowedImports = false
-stubPath = "tux/stubs"
+pythonVersion = "3.13"
+reportImportCycles = true
+strictDictionaryInference = true
+strictListInference = true
+strictSetInference = true
 typeCheckingMode = "strict"
 venv = ".venv"
 venvPath = "."
+
+[tool.coverage.run]
+source = ["tux"]
+branch = true
+parallel = true
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/migrations/*",
+    "*/venv/*",
+    "*/.venv/*",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "@abstract",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--cov=tux",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--cov-branch",
+    "-v",
+]
+asyncio_mode = "auto"
+
+[tool.yamlfix]
+comments_min_spaces_from_content = 1
+explicit_start = false
+indent_mapping = 2
+indent_sequence = 4
+line_length = 80
+preserve_quotes = false
+sequence_style = "block_style"

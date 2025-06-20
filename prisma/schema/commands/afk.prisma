@@ -1,0 +1,14 @@
+model AFKModel {
+  member_id BigInt   @id
+  nickname  String
+  reason    String
+  since     DateTime @default(now())
+  until     DateTime?
+  guild_id  BigInt
+  enforced  Boolean  @default(false)
+  perm_afk  Boolean  @default(false)
+  guild     Guild    @relation(fields: [guild_id], references: [guild_id])
+
+  @@unique([member_id, guild_id])
+  @@index([member_id])
+}

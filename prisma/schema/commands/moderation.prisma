@@ -1,0 +1,60 @@
+model Note {
+  note_id           BigInt   @id @default(autoincrement())
+  note_content      String
+  note_created_at   DateTime @default(now())
+  note_moderator_id BigInt
+  note_user_id      BigInt
+  note_number       BigInt?
+  guild_id          BigInt
+  guild             Guild    @relation(fields: [guild_id], references: [guild_id])
+
+  @@unique([note_number, guild_id])
+  @@index([note_number, guild_id])
+}
+
+model Case {
+  case_id              BigInt    @id @default(autoincrement())
+  case_status          Boolean?  @default(true)
+  case_type            CaseType
+  case_reason          String
+  case_moderator_id    BigInt
+  case_user_id         BigInt
+  case_user_roles      BigInt[]  @default([])
+  case_number          BigInt?
+  case_created_at      DateTime? @default(now())
+  case_expires_at      DateTime?
+  case_tempban_expired Boolean?  @default(false)
+  guild_id             BigInt
+  guild                Guild     @relation(fields: [guild_id], references: [guild_id])
+
+  @@unique([case_number, guild_id])
+  @@index([case_number, guild_id])
+
+  @@index([guild_id, case_user_id])
+
+  @@index([guild_id, case_moderator_id])
+
+  @@index([guild_id, case_type])
+
+  @@index([case_type, case_expires_at, case_tempban_expired])
+
+  @@index([case_created_at(sort: Desc)])
+}
+
+enum CaseType {
+  BAN
+  UNBAN
+  HACKBAN
+  TEMPBAN
+  KICK
+  SNIPPETBAN
+  TIMEOUT
+  UNTIMEOUT
+  WARN
+  JAIL
+  UNJAIL
+  SNIPPETUNBAN
+  UNTEMPBAN
+  POLLBAN
+  POLLUNBAN
+}

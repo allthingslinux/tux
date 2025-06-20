@@ -6,12 +6,16 @@ import httpx
 from discord import app_commands
 from discord.ext import commands
 
+from tux.bot import Tux
+from tux.utils.functions import generate_usage
+
 client = httpx.AsyncClient()
 
 
 class Avatar(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: Tux) -> None:
         self.bot = bot
+        self.prefix_avatar.usage = generate_usage(self.prefix_avatar)
 
     @app_commands.command(name="avatar")
     @app_commands.guild_only()
@@ -36,12 +40,11 @@ class Avatar(commands.Cog):
     @commands.command(
         name="avatar",
         aliases=["av"],
-        usage="avatar <member>",
     )
     @commands.guild_only()
     async def prefix_avatar(
         self,
-        ctx: commands.Context[commands.Bot],
+        ctx: commands.Context[Tux],
         member: discord.Member | None = None,
     ) -> None:
         """
@@ -49,7 +52,7 @@ class Avatar(commands.Cog):
 
         Parameters
         ----------
-        ctx : commands.Context[commands.Bot]
+        ctx : commands.Context[Tux]
             The context in which the command is being invoked.
         member : discord.Member
             The member to get the avatar of.
@@ -59,7 +62,7 @@ class Avatar(commands.Cog):
 
     async def send_avatar(
         self,
-        source: commands.Context[commands.Bot] | discord.Interaction,
+        source: commands.Context[Tux] | discord.Interaction,
         member: discord.Member | None = None,
     ) -> None:
         """
@@ -67,7 +70,7 @@ class Avatar(commands.Cog):
 
         Parameters
         ----------
-        source : commands.Context[commands.Bot] | discord.Interaction
+        source : commands.Context[Tux] | discord.Interaction
             The source object for sending the message.
         member : discord.Member
             The member to get the avatar of.
@@ -130,5 +133,5 @@ class Avatar(commands.Cog):
         return discord.File(image_file, filename=f"avatar{extension}")
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: Tux) -> None:
     await bot.add_cog(Avatar(bot))
