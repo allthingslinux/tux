@@ -165,9 +165,6 @@ class Bookmarks(commands.Cog):
         elif self._is_valid_emoji(payload.emoji, self.valid_remove_emojis) and user is not self.bot.user:
             await self._delete_bookmark(message, user)
         else:
-            logger.error(
-                "First emoji validation check passed but second emoji validation check failed. How the fuck did you get here?",
-            )
             return
 
     async def _create_bookmark_embed(
