@@ -63,7 +63,7 @@ yamlfix = "1.17.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.0.0"
-pytest-asyncio = "^0.24.0"
+pytest-asyncio = "^0.26.0"
 pytest-mock = "^3.14.0"
 pytest-cov = "^6.0.0"
 pytest-sugar = "^1.0.0"
