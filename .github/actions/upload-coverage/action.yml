@@ -27,7 +27,7 @@ runs:
     # COVERAGE UPLOAD TO CODECOV
     # Uploads coverage data with specific flags for categorization
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5
       with:
         files: ${{ inputs.coverage-file }}
         flags: ${{ inputs.flags }}
@@ -42,7 +42,7 @@ runs:
     # Uploads test results for analytics (only if junit file provided)
     - name: Upload test results to Codecov
       if: ${{ inputs.junit-file != '' }}
-      uses: codecov/test-results-action@v1
+      uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1
       with:
         file: ${{ inputs.junit-file }}
         flags: ${{ inputs.flags }}

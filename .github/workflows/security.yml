@@ -98,12 +98,12 @@ jobs:
       # REPOSITORY CHECKOUT
       # Full repository access required for comprehensive analysis
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       # CODEQL INITIALIZATION
       # Configures language-specific analysis parameters
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@ce28f5bb42b7a9f2c824e633a3f6ee835bab6858 # v3
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
@@ -111,7 +111,7 @@ jobs:
       # SECURITY ANALYSIS EXECUTION
       # Performs comprehensive static analysis with categorized results
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@ce28f5bb42b7a9f2c824e633a3f6ee835bab6858 # v3
         with:
           category: /language:${{matrix.language}}
 
@@ -136,12 +136,12 @@ jobs:
       # REPOSITORY CHECKOUT
       # Required for dependency comparison between base and head branches
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       # DEPENDENCY VULNERABILITY ANALYSIS
       # Analyzes dependency changes for security vulnerabilities
       - name: Dependency Review
-        uses: actions/dependency-review-action@v4
+        uses: actions/dependency-review-action@da24556b548a50705dd671f47852072ea4c105d9 # v4
         with:
           fail-on-severity: high              # Block high-severity vulnerabilities
           comment-summary-in-pr: always       # Always provide PR feedback
@@ -167,7 +167,7 @@ jobs:
       # REPOSITORY CHECKOUT
       # Required for dependency file access and analysis
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       # PYTHON ENVIRONMENT SETUP (COMPOSITE ACTION)
       # Uses centralized Python setup for production dependency analysis
@@ -194,7 +194,7 @@ jobs:
       # Stores security reports for audit trails and trend analysis
       - name: Upload Safety results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: safety-report
           path: safety-report.json
@@ -224,7 +224,7 @@ jobs:
       # Analyzes Dependabot PR metadata for intelligent automation decisions
       - name: Dependabot metadata
         id: metadata
-        uses: dependabot/fetch-metadata@v2.0.0
+        uses: dependabot/fetch-metadata@0fb21704c18a42ce5aa8d720ea4b912f5e6babef # v2.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 

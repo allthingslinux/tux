@@ -75,7 +75,7 @@ jobs:
       # REPOSITORY CHECKOUT
       # Full history needed for accurate change detection
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           fetch-depth: 0
 
@@ -83,7 +83,7 @@ jobs:
       # Detects Python file changes to skip unnecessary runs
       # Includes Python source, config files, and dependencies
       - name: Detect Python changes
-        uses: tj-actions/changed-files@v45.0.8
+        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8 # v45.0.8
         id: python_changes
         with:
           files: |
@@ -120,7 +120,7 @@ jobs:
       - name: Run Pyright type checker
         if: steps.python_changes.outputs.any_changed == 'true' || github.event_name
           == 'workflow_dispatch'
-        uses: jakebailey/pyright-action@v2
+        uses: jakebailey/pyright-action@b5d50e5cde6547546a5c4ac92e416a8c2c1a1dfe # v2
         with:
           annotate: errors
 
@@ -140,13 +140,13 @@ jobs:
       # REPOSITORY CHECKOUT
       # Shallow clone sufficient for linting current state
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       # SMART CHANGE DETECTION
       # Only runs when documentation files change
       # Improves CI performance for code-only changes
       - name: Detect Markdown changes
-        uses: tj-actions/changed-files@v45.0.8
+        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8 # v45.0.8
         id: markdown_changes
         with:
           files: '**/*.md'
@@ -219,13 +219,13 @@ jobs:
       # REPOSITORY CHECKOUT
       # Shallow clone sufficient for infrastructure validation
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       # SMART CHANGE DETECTION
       # Each matrix job only runs if relevant files changed
       # Improves efficiency by skipping unchanged categories
       - name: Detect ${{ matrix.type }} changes
-        uses: tj-actions/changed-files@v45.0.8
+        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8 # v45.0.8
         id: infra_changes
         with:
           files: ${{ matrix.files }}
@@ -299,7 +299,7 @@ jobs:
       - name: Run GitHub Actions linting
         if: matrix.type == 'GitHub Actions' && steps.infra_changes.outputs.any_changed
           == 'true'
-        uses: raven-actions/actionlint@v1
+        uses: raven-actions/actionlint@789059c543ab20522fb3e7240794e13b0f69ad67 # v1
         with:
           files: .github/workflows/*.yml
 
