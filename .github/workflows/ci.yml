@@ -83,7 +83,7 @@ jobs:
       # Detects Python file changes to skip unnecessary runs
       # Includes Python source, config files, and dependencies
       - name: Detect Python changes
-        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8 # v45.0.8
+        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8 # v45.0.9
         id: python_changes
         with:
           files: |
@@ -146,7 +146,7 @@ jobs:
       # Only runs when documentation files change
       # Improves CI performance for code-only changes
       - name: Detect Markdown changes
-        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8 # v45.0.8
+        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8 # v45.0.9
         id: markdown_changes
         with:
           files: '**/*.md'
@@ -225,7 +225,7 @@ jobs:
       # Each matrix job only runs if relevant files changed
       # Improves efficiency by skipping unchanged categories
       - name: Detect ${{ matrix.type }} changes
-        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8 # v45.0.8
+        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8 # v45.0.9
         id: infra_changes
         with:
           files: ${{ matrix.files }}
