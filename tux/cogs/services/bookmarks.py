@@ -17,11 +17,11 @@ class Bookmarks(commands.Cog):
         self.valid_remove_emojis = CONST.REMOVE_BOOKMARK
         self.valid_emojis = CONST.ADD_BOOKMARK + CONST.REMOVE_BOOKMARK
 
-    def _is_valid_emoji(self, emoji: discord.PartialEmoji, valid_list: list[int | str]) -> bool:
-        # Helper for checking if an emoji is in the list in "settings.yml -> BOOKMARK_EMOJIS"
-        if emoji.id is not None:
-            return emoji.id in valid_list
-        return emoji.name in valid_list
+    # The linter wants to change this but it breaks when it does that
+    def _is_valid_emoji(self, emoji: discord.PartialEmoji, valid_list: str) -> bool:
+        if emoji.name in valid_list:  # noqa: SIM103
+            return True
+        return False
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
@@ -162,7 +162,7 @@ class Bookmarks(commands.Cog):
             # Send the bookmarked message to the user
             await self._send_bookmark(user, message, embed, payload.emoji)
 
-        elif self._is_valid_emoji(payload.emoji, self.valid_remove_emojis):
+        elif self._is_valid_emoji(payload.emoji, self.valid_remove_emojis) and user is not self.bot.user:
             await self._delete_bookmark(message, user)
         else:
             logger.error(
@@ -190,7 +190,6 @@ class Bookmarks(commands.Cog):
         if message.attachments:
             attachments_info = "\n".join([attachment.url for attachment in message.attachments])
             embed.add_field(name="Attachments", value=attachments_info, inline=False)
-
         return embed
 
     async def _delete_bookmark(self, message: discord.Message, user: discord.User) -> None:
