@@ -185,7 +185,7 @@ jobs:
   # Performance: Only runs on push/dispatch to avoid PR overhead
   # ============================================================================
   infrastructure:
-    name: ${{ matrix.type }} Linting
+    name: Infrastructure Linting
     runs-on: ubuntu-latest
     permissions:
       contents: read
