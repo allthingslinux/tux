@@ -43,6 +43,7 @@ htmlcov/
 .nox/
 .coverage
 .coverage.*
+.coverage-*
 .cache
 nosetests.xml
 coverage.xml
@@ -175,3 +176,7 @@ prisma_binaries/
 
 # direnv
 .direnv/
+
+.archive/
+
+reports/

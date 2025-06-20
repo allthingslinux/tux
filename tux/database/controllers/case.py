@@ -454,3 +454,43 @@ class CaseController(BaseController[Case]):
             The number of cases for the user in the guild
         """
         return await self.count(where={"guild_id": guild_id, "case_user_id": user_id})
+
+    async def is_user_under_restriction(
+        self,
+        guild_id: int,
+        user_id: int,
+        active_restriction_type: CaseType,
+        inactive_restriction_type: CaseType,
+    ) -> bool:
+        """Check if a user is currently under a specific restriction.
+
+        The user is considered under restriction if their latest relevant case
+        (of either active_restriction_type or inactive_restriction_type) is
+        of the active_restriction_type.
+
+        Parameters
+        ----------
+        guild_id : int
+            The ID of the guild to check in.
+        user_id : int
+            The ID of the user to check.
+        active_restriction_type : CaseType
+            The case type that signifies an active restriction (e.g., BAN, JAIL).
+        inactive_restriction_type : CaseType
+            The case type that signifies the removal of the restriction (e.g., UNBAN, UNJAIL).
+
+        Returns
+        -------
+        bool
+            True if the user is under the specified restriction, False otherwise.
+        """
+        latest_case = await self.get_latest_case_by_user(
+            guild_id=guild_id,
+            user_id=user_id,
+            case_types=[active_restriction_type, inactive_restriction_type],
+        )
+
+        if not latest_case:
+            return False  # No relevant cases, so not under active restriction
+
+        return latest_case.case_type == active_restriction_type

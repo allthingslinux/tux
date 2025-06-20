@@ -8,7 +8,8 @@ from prisma.enums import CaseType
 from prisma.models import Case
 from tux.bot import Tux
 from tux.utils import checks
-from tux.utils.flags import UnjailFlags, generate_usage
+from tux.utils.flags import UnjailFlags
+from tux.utils.functions import generate_usage
 
 from . import ModerationCogBase
 
@@ -108,7 +109,7 @@ class Unjail(ModerationCogBase):
 
         # Try to add all roles at once
         try:
-            await member.add_roles(*roles_to_add, reason=reason, atomic=False)
+            await member.add_roles(*roles_to_add, reason=reason)
 
         except discord.Forbidden:
             logger.error(f"No permission to add roles to {member}")

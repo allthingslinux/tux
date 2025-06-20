@@ -1,9 +1,9 @@
-from discord import AllowedMentions
+from discord import AllowedMentions, Message
 from discord.ext import commands
 from reactionmenu import ViewButton, ViewMenu
 
 from tux.bot import Tux
-from tux.utils.flags import generate_usage
+from tux.utils.functions import generate_usage
 
 # from tux.utils.functions import truncate
 from . import SnippetsBaseCog
@@ -79,7 +79,15 @@ class Snippet(SnippetsBaseCog):
 
         # pagination if text > 2000 characters
         if len(text) <= 2000:
-            await ctx.send(text, allowed_mentions=AllowedMentions.none())
+            # Check if there is a message being replied to
+            reference = getattr(ctx.message.reference, "resolved", None)
+            # Set reply target if it exists, otherwise use the context message
+            reply_target = reference if isinstance(reference, Message) else ctx
+
+            await reply_target.reply(
+                text,
+                allowed_mentions=AllowedMentions(users=False, roles=False, everyone=False, replied_user=True),
+            )
             return
 
         menu = ViewMenu(

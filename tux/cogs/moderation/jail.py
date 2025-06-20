@@ -5,7 +5,8 @@ from loguru import logger
 from prisma.enums import CaseType
 from tux.bot import Tux
 from tux.utils import checks
-from tux.utils.flags import JailFlags, generate_usage
+from tux.utils.flags import JailFlags
+from tux.utils.functions import generate_usage
 
 from . import ModerationCogBase
 
@@ -155,7 +156,7 @@ class Jail(ModerationCogBase):
             if user_roles:
                 try:
                     # Try to remove all at once for efficiency
-                    await member.remove_roles(*user_roles, reason=flags.reason, atomic=False)
+                    await member.remove_roles(*user_roles, reason=flags.reason)
                 except Exception as e:
                     logger.warning(
                         f"Failed to remove all roles at once from {member}, falling back to individual removal: {e}",

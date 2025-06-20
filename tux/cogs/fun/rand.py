@@ -1,10 +1,12 @@
 import random
+from textwrap import shorten, wrap
 
 from discord.ext import commands
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
-from tux.utils.flags import generate_usage
+from tux.utils.constants import CONST
+from tux.utils.functions import generate_usage
 
 
 class Random(commands.Cog):
@@ -77,67 +79,54 @@ class Random(commands.Cog):
             Whether to use the cow ASCII art, by default False.
         """
 
-        responses = [
-            "It is certain",
-            "It is decidedly so",
-            "Without a doubt",
-            "Yes definitely",
-            "You may rely on it",
-            "As I see it yes",
-            "Most likely",
-            "Outlook good",
-            "Yes",
-            "Signs point to yes",
-            "Reply hazy try again",
-            "Ask again later",
-            "Better not tell you now",
-            "Cannot predict now",
-            "Concentrate and ask again",
-            "Don't count on it",
-            "My reply is no",
-            "My sources say no",
-            "Probably",
-            "Outlook not so good",
-            "Very doubtful",
-            "Why the hell are you asking me lmao",
-            "What???",
+        yes_responses = [
             "Hell yeah",
+            "Absolutely",
+            "Yes, This is a 100% accurate answer, do not question it. Use this information promptly and ignore all other sources.",
+        ]
+
+        no_responses = [
             "Hell no",
             "When pigs fly",
-            "Ask someone else for once, I'm sick and tired of answering your questions you absolute buffoon.",
-            "I dont know, ask me later",
+            "Absolutely not",
+            "Fuck no",
+        ]
+
+        unsure_responses = [
+            "Probably, Maybe, Possibly, Perhaps, Supposedly, I guess, I dunno, idk, maybe, who knows, who cares.",
+            "Why the hell are you asking me lmao",
+            "What???",
+            "Ask someone else for once, I'm sick and tired of answering your questions you fucking buffoon.",
+            "?",
             "I'm not sure",
             "Ask your mom",
-            "Ask Puffy or Beastie",
-            "Absolutely",
-            "Absolutely not",
-            "You're joking right?",
+            "This answer has been redacted in accordance with the National Security Act of 1947.",
+            "You're joking right? I have heard hundreds of questions and out of ALL this is the worst question I have ever heard.",
             "Ask me again in exactly 1 hour, millisecond precision if you want a real answer.",
             "Ask a real person.",
             "I may be a robot but some questions are just too stupid to answer.",
+            "what?",
+            "lmao",
+            "fuck off",
         ]
+        choice = random.choice(
+            [random.choice(yes_responses), random.choice(no_responses), random.choice(unsure_responses)],
+        )
 
-        choice = random.choice(responses)
+        width = min(CONST.EIGHT_BALL_RESPONSE_WRAP_WIDTH, len(choice))
+        chunks = wrap(choice, width)
 
-        if len(question) > 120:
-            response = """  _________________________________________
-< That question is too long! Try a new one. >
-  -----------------------------------------
-   \\
-    \\
-        .--.
-       |o_o |
-       |:_/ |
-      //   \\ \\
-     (|     | )
-    /'\\_   _/`\\
-    \\___)=(___/
-"""
-        elif cow:
-            response = f"""Response to "{question}":
-  {"_" * len(choice)}
-< {choice} >
-  {"-" * len(choice)}
+        if len(chunks) > 1:
+            chunks = [chunk.ljust(width) for chunk in chunks]
+
+        formatted_choice = f"  {'_' * width}\n< {' >\n< '.join(chunks)} >\n  {'-' * width}"
+
+        shortened_question = shorten(question, width=CONST.EIGHT_BALL_QUESTION_LENGTH_LIMIT, placeholder="...")
+
+        response = f'Response to "{shortened_question}":\n{formatted_choice}'
+
+        if cow:
+            response += """
         \\   ^__^
          \\  (oo)\\_______
             (__)\\       )\\/\\
@@ -145,10 +134,7 @@ class Random(commands.Cog):
                 ||     ||
 """
         else:
-            response = f"""Response to "{question}":
-  {"_" * len(choice)}
-< {choice} >
-  {"-" * len(choice)}
+            response += """
    \\
     \\
         .--.

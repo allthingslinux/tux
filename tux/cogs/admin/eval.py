@@ -7,7 +7,8 @@ from loguru import logger
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
 from tux.utils import checks
-from tux.utils.flags import generate_usage
+from tux.utils.config import CONFIG
+from tux.utils.functions import generate_usage
 
 
 def insert_returns(body: list[ast.stmt]) -> None:
@@ -70,10 +71,23 @@ class Eval(commands.Cog):
             return
 
         if ctx.author.id not in self.bot.owner_ids:
+            if not CONFIG.ALLOW_SYSADMINS_EVAL and ctx.author.id in CONFIG.SYSADMIN_IDS:
+                logger.warning(
+                    f"{ctx.author} tried to run eval but is not the bot owner. (User ID: {ctx.author.id})",
+                )
+                await ctx.send(
+                    "You are not the bot owner and sysadmins are not allowed to use eval. Please contact your bot owner if you need assistance.",
+                    delete_after=30,
+                )
+                return
+
             logger.warning(
-                f"{ctx.author} tried to run eval but is not the bot owner. (User ID: {ctx.author.id})",
+                f"{ctx.author} tried to run eval but is not the bot owner or sysadmin. (User ID: {ctx.author.id})",
             )
-            await ctx.send("You are not the bot owner. Better luck next time!", ephemeral=True, delete_after=30)
+            await ctx.send(
+                "You are not the bot owner. Better luck next time! (hint: if you are looking for the regular run command its $run)",
+                delete_after=30,
+            )
             return
 
         try:

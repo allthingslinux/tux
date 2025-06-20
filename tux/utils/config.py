@@ -1,10 +1,11 @@
 import base64
 import os
 from pathlib import Path
-from typing import Final
+from typing import Any, Final, cast
 
 import yaml
 from dotenv import load_dotenv
+from loguru import logger
 
 from tux import __version__ as app_version
 from tux.utils.env import get_bot_token, get_database_url, is_dev_mode
@@ -33,13 +34,29 @@ load_dotenv(verbose=True)
 workspace_root = Path(__file__).parent.parent.parent
 
 config_file = workspace_root / "config/settings.yml"
+config_file_example = workspace_root / "config/settings.yml.example"
 config = yaml.safe_load(config_file.read_text())
+config_example = yaml.safe_load(config_file_example.read_text())
+
+
+# Recursively merge defaults into user config (fills nested missing keys too)
+def merge_defaults(user: dict[str, Any], default: dict[str, Any]) -> None:
+    for key, default_val in default.items():
+        if key not in user:
+            user[key] = default_val
+            logger.warning(f"Added missing config key: {key}")
+        elif isinstance(default_val, dict) and isinstance(user.get(key), dict):
+            merge_defaults(user[key], cast(dict[str, Any], default_val))
+
+
+merge_defaults(config, config_example)
 
 
 class Config:
     # Permissions
     BOT_OWNER_ID: Final[int] = config["USER_IDS"]["BOT_OWNER"]
     SYSADMIN_IDS: Final[list[int]] = config["USER_IDS"]["SYSADMINS"]
+    ALLOW_SYSADMINS_EVAL: Final[bool] = config["ALLOW_SYSADMINS_EVAL"]
 
     # Production env
     DEFAULT_PROD_PREFIX: Final[str] = config["BOT_INFO"]["PROD_PREFIX"]

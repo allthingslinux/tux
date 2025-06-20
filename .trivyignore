@@ -1,0 +1,9 @@
+# Trivy ignore file for known issues that are being tracked separately
+#
+# CVE-2023-45853: Integer overflow in minizip (zlib)
+# Status: Marked as "will_not_fix" by upstream
+# Impact: Critical vulnerability in zlib library
+# Mitigation: This is a known issue in the Python base image
+#            We are tracking this separately and investigating alternatives
+# TODO: Monitor for upstream fix or consider alternative base images
+CVE-2023-45853

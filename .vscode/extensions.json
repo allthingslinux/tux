@@ -1,5 +1,6 @@
 {
   "recommendations": [
+    "EditorConfig.EditorConfig",
     "ms-vscode-remote.remote-containers",
     "ms-python.python",
     "ms-python.vscode-pylance",
@@ -11,6 +12,7 @@
     "njpwerner.autodocstring",
     "usernamehw.errorlens",
     "sourcery.sourcery",
-    "redhat.vscode-yaml"
+    "redhat.vscode-yaml",
+    "ryanluker.vscode-coverage-gutters"
   ]
 }

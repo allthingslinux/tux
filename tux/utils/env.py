@@ -59,6 +59,12 @@ class Config:
         """
         # Core paths
         self.workspace_root = Path(__file__).parent.parent.parent
+        if self.workspace_root.name == "tux":
+            # If we're in the tux package, this is the workspace root
+            pass
+        elif self.workspace_root.parent.name == "tux":
+            # If we're in tests/tux, go up one more level
+            self.workspace_root = self.workspace_root.parent
         self.dotenv_path = dotenv_path or self.workspace_root / ".env"
 
         # Load environment variables
@@ -128,6 +134,40 @@ class Config:
         if persist and self.dotenv_path.exists():
             set_key(self.dotenv_path, key, str(value))
 
+    def _get_env_specific_value(self, env: Environment, dev_key: str, prod_key: str, value_name: str) -> str:
+        """
+        Get environment-specific configuration value.
+
+        Parameters
+        ----------
+        env : Environment
+            The environment to get value for
+        dev_key : str
+            Environment variable key for development
+        prod_key : str
+            Environment variable key for production
+        value_name : str
+            Human-readable name for error messages
+
+        Returns
+        -------
+        str
+            Configuration value
+
+        Raises
+        ------
+        ConfigurationError
+            If value is not configured for environment
+        """
+        key = dev_key if env.is_dev else prod_key
+        value = self.get(key)  # Don't provide a default value
+
+        if value is None:
+            error_msg = f"No {value_name} found for the {env.value.upper()} environment."
+            raise ConfigurationError(error_msg)
+
+        return value
+
     def get_database_url(self, env: Environment) -> str:
         """
         Get database URL for specified environment.
@@ -147,17 +187,7 @@ class Config:
         ConfigurationError
             If database URL is not configured for environment
         """
-        # Get the appropriate database URL key based on the environment
-        key = "DEV_DATABASE_URL" if env.is_dev else "PROD_DATABASE_URL"
-        url = self.get(key, default="")
-
-        if not url:
-            # If no URL is found, raise an error.
-            # We no longer provide a default/mock URL here.
-            error_msg = f"No database URL found for the {env.value.upper()} environment."
-            raise ConfigurationError(error_msg)
-
-        return url
+        return self._get_env_specific_value(env, "DEV_DATABASE_URL", "PROD_DATABASE_URL", "database URL")
 
     def get_bot_token(self, env: Environment) -> str:
         """
@@ -178,16 +208,7 @@ class Config:
         ConfigurationError
             If bot token is not configured for environment
         """
-        # Get the appropriate bot token key based on the environment
-        key = "DEV_BOT_TOKEN" if env.is_dev else "PROD_BOT_TOKEN"
-        token = self.get(key, default="")
-
-        if not token:
-            # If no token is found, raise an error.
-            error_msg = f"No bot token found for the {env.value.upper()} environment."
-            raise ConfigurationError(error_msg)
-
-        return token
+        return self._get_env_specific_value(env, "DEV_BOT_TOKEN", "PROD_BOT_TOKEN", "bot token")
 
 
 class EnvironmentManager:
@@ -200,22 +221,22 @@ class EnvironmentManager:
 
     _instance = None
 
+    @classmethod
+    def reset_for_testing(cls) -> None:
+        """Reset the singleton instance for testing purposes."""
+        cls._instance = None
+
     def __new__(cls, *args: Any, **kwargs: Any) -> "EnvironmentManager":
-        """Create or return the singleton instance."""
+        """Ensure singleton pattern."""
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._instance._initialized = False
         return cls._instance
 
     def __init__(self) -> None:
-        """Initialize the environment manager if not already initialized."""
-        if getattr(self, "_initialized", False):
-            return
-
-        # Core configuration
-        self._environment = Environment.DEVELOPMENT  # Default to development
-        self._config = Config()
-        self._initialized = True
+        """Initialize environment manager."""
+        if not hasattr(self, "_environment"):
+            self._environment = Environment.DEVELOPMENT
+            self._config = Config()
 
     @property
     def environment(self) -> Environment:

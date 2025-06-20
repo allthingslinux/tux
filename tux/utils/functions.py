@@ -1,8 +1,9 @@
+import inspect
 import re
-from datetime import UTC, datetime, timedelta
-from typing import Any
+from datetime import timedelta
+from typing import Any, Union, get_args, get_origin
 
-import discord
+from discord.ext import commands
 
 DANGEROUS_RM_COMMANDS = (
     # Privilege escalation prefixes
@@ -96,9 +97,9 @@ def strip_formatting(content: str) -> str:
         The string with formatting stripped.
     """
     # Remove triple backtick blocks
-    content = re.sub(r"```[\s\S]*?```", "", content)
+    content = re.sub(r"```(.*?)```", r"\1", content)
     # Remove single backtick code blocks
-    content = re.sub(r"`[^`]+`", "", content)
+    content = re.sub(r"`([^`]*)`", r"\1", content)
     # Remove Markdown headers
     content = re.sub(r"^#+\s+", "", content, flags=re.MULTILINE)
     # Remove markdown formatting characters, but preserve |
@@ -230,191 +231,130 @@ def seconds_to_human_readable(seconds: int) -> str:
     return ", ".join(parts)
 
 
-def datetime_to_unix(dt: datetime | None) -> str:
+def is_optional_param(param: commands.Parameter) -> bool:
     """
-    This function accepts a datetime object or None, converts it into a Unix timestamp
-    and returns it as a formatted Discord timestamp string or 'Never'
+    Check if a parameter is optional.
 
     Parameters
     ----------
-    dt : datetime
-        The datetime object to convert to a Discord timestamp string.
+    param : commands.Parameter
+        The parameter to check.
+
+    Returns
+    -------
+    bool
+        True if the parameter is optional, False otherwise.
+    """
+
+    if param.default is not inspect.Parameter.empty:
+        return True
+
+    param_type = param.annotation
+
+    if get_origin(param_type) is Union:
+        return type(None) in get_args(param_type)
+
+    return False
+
+
+def get_matching_string(arg: str) -> str:
+    """
+    Matches the given argument to a specific string based on common usage.
+
+    Parameters
+    ----------
+    arg : str
+        The argument to match.
 
     Returns
     -------
     str
-        The formatted Discord timestamp string or 'Never'
+        The matching string, or None if no match is found.
     """
+    match arg:
+        case "user" | "target" | "member" | "username":
+            return "@member"
+        case "search_term":
+            return "CIA"
+        case "channel":
+            return "#general"
+        case "comic_id":
+            return "1337"
+        case _:
+            return arg
 
-    if dt is None:
-        return "Never"
 
-    unix_timestamp = int(dt.timestamp())
-
-    return f"<t:{unix_timestamp}>"
-
-
-def datetime_to_elapsed_time(dt: datetime | None) -> str:
+def generate_usage(
+    command: commands.Command[Any, Any, Any],
+    flag_converter: type[commands.FlagConverter] | None = None,
+) -> str:
     """
-    Takes a datetime and computes the elapsed time from then to now in the format: X years, Y months, Z days.
+    Generate the usage string for a command.
 
     Parameters
     ----------
-    dt : datetime
-        The datetime object to compute the elapsed time from.
+    command : commands.Command[Any, Any, Any]
+        The command to generate the usage string for.
+    flag_converter : type[commands.FlagConverter] | None
+        The flag converter to use.
 
     Returns
     -------
     str
-        The elapsed time in the format: X years, Y months, Z days.
+        The usage string for the command.
     """
 
-    if dt is None:
-        return "Never"
+    command_name = command.qualified_name
+    usage = f"{command_name}"
 
-    elapsed_time = datetime.now(UTC) - dt
-    elapsed_days = elapsed_time.days
+    parameters: dict[str, commands.Parameter] = command.clean_params
 
-    years, days_left = divmod(elapsed_days, 365)
-    months, days_left = divmod(days_left, 30)
+    flag_prefix = getattr(flag_converter, "__commands_flag_prefix__", "-")
+    flags: dict[str, commands.Flag] = flag_converter.get_flags() if flag_converter else {}
 
-    return f"{years} years, {months} months, {days_left} days"
+    # Handle regular parameters first
+    for param_name, param in parameters.items():
+        if param_name in {"ctx", "flags"}:
+            continue
 
+        is_required = not is_optional_param(param)
+        matching_string = get_matching_string(param_name)
 
-def compare_changes(before: dict[str, Any], after: dict[str, Any]) -> list[str]:
-    """
-    Compares the changes between two dictionaries and returns a list of strings representing the changes.
+        if matching_string == param_name and is_required:
+            matching_string = f"<{param_name}>"
 
-    Parameters
-    ----------
-    before : dict
-        The dictionary representing the state before the changes.
-    after : dict
-        The dictionary representing the state after the changes.
+        usage += f" {matching_string}" if is_required else f" [{matching_string}]"
 
-    Returns
-    -------
-    list
-        A list of strings showing the changes made in the dictionaries.
-    """
+    # Find positional flag if it exists
+    positional_flag = None
+    required_flags: list[str] = []
+    optional_flags: list[str] = []
 
-    return [f"{key}: {before[key]} -> {after[key]}" for key in before if key in after and before[key] != after[key]]
+    for flag_name, flag_obj in flags.items():
+        if getattr(flag_obj, "positional", False):
+            positional_flag = flag_name
+            continue
 
+        flag = f"{flag_prefix}{flag_name}"
 
-def compare_guild_channel_changes(
-    before: discord.abc.GuildChannel,
-    after: discord.abc.GuildChannel,
-) -> list[str]:
-    """
-    Compares the changes between two GuildChannel instances and returns a list of strings representing the changes.
+        if flag_obj.required:
+            required_flags.append(flag)
+        else:
+            optional_flags.append(flag)
 
-    Parameters
-    ----------
-    before : discord.abc.GuildChannel
-        The GuildChannel instance representing the state before the changes.
-    after : discord.abc.GuildChannel
-        The GuildChannel instance representing the state after the changes.
+    # Add positional flag in its correct position
+    if positional_flag:
+        usage += f" [{positional_flag}]"
 
-    Returns
-    -------
-    list
-        A list of strings showing the changes made in the GuildChannel instances.
-    """
+    # Add required flags
+    for flag in required_flags:
+        usage += f" {flag}"
 
-    keys = [
-        "category",
-        "changed_roles",
-        "created_at",
-        "guild",
-        "name",
-        "overwrites",
-        "permissions_synced",
-        "position",
-    ]
+    # Add optional flags
+    if optional_flags:
+        usage += f" [{' | '.join(optional_flags)}]"
 
-    return [
-        f"{key}: {getattr(before, key)} -> {getattr(after, key)}"
-        for key in keys
-        if getattr(before, key) != getattr(after, key)
-    ]
-
-
-def compare_member_changes(
-    before: discord.Member | discord.User,
-    after: discord.Member | discord.User,
-) -> list[str]:
-    """
-    Compares changes between two Member instances and returns a list of strings representing the changes.
-
-    Parameters
-    ----------
-    before : discord.Member
-        The Member instance representing the state before the changes.
-    after : discord.Member
-        The Member instance representing the state after the changes.
-
-    Returns
-    -------
-    list
-        A list of strings showing the changes made in the Member instances.
-    """
-
-    keys = ["name", "display_name", "global_name"]
-
-    return [
-        f"{key}: {getattr(before, key)} -> {getattr(after, key)}"
-        for key in keys
-        if getattr(before, key) != getattr(after, key)
-    ]
-
-
-def extract_guild_attrs(guild: discord.Guild) -> dict[str, Any]:
-    """
-    Extracts relevant attributes from a discord.Guild and returns them as a dictionary.
-
-    Parameters
-    ----------
-    guild : discord.Guild
-        The discord.Guild instance to extract attributes from.
-
-    Returns
-    -------
-    dict
-        A dictionary containing the extracted attributes of the guild.
-    """
-
-    return {
-        "name": guild.name,
-        "description": guild.description,
-        "member_count": guild.member_count,
-        "verification_level": str(guild.verification_level),
-        "system_channel": guild.system_channel,
-    }
-
-
-def extract_member_attrs(member: discord.Member) -> dict[str, Any]:
-    """Extract relevant attributes from a member object.
-
-    Parameters
-    ----------
-    member : discord.Member
-        The member object to extract attributes from.
-
-    Returns
-    -------
-    dict[str, Any]
-        A dictionary containing the extracted attributes.
-    """
-    return {
-        "name": member.name,
-        "id": member.id,
-        "discriminator": member.discriminator,
-        "display_name": member.display_name,
-        "roles": [role.name for role in member.roles],
-        "joined_at": member.joined_at,
-        "status": str(member.status),
-        "activity": str(member.activity) if member.activity else None,
-    }
+    return usage
 
 
 def docstring_parameter(*sub: Any) -> Any:

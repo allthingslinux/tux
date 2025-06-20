@@ -1,5 +1,3 @@
-# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
-
 site_name: Tux
 site_url: https://tux.atl.dev
 
@@ -11,10 +9,8 @@ repo_name: allthingslinux/tux
 
 # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#code-actions
 edit_uri: edit/main/docs/
-
 docs_dir: ./content
 site_dir: ../build/docs
-
 extra:
   # https://squidfunk.github.io/mkdocs-material/setup/setting-up-the-footer/#social-links
   social:
@@ -24,15 +20,12 @@ extra:
       link: https://github.com/allthingslinux/tux
     - icon: fontawesome/brands/discord
       link: https://discord.gg/gpmSjcjQxg
-
 #
 ### THEME
 #
-
 extra_css:
   - assets/stylesheets/extra.css
   - assets/stylesheets/mkdocstrings.css
-
 theme:
   # https://squidfunk.github.io/mkdocs-material/setup/changing-the-language/
   language: en
@@ -61,7 +54,6 @@ theme:
   font:
     text: Inter
     code: JetBrains Mono
-
   features:
     ### Navigation
     # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#instant-loading
@@ -97,11 +89,9 @@ theme:
     # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#code-actions
     - content.action.edit
     - content.code.copy
-
 #
 ### PLUGINS
 #
-
 plugins:
   # https://squidfunk.github.io/mkdocs-material/setup/setting-up-site-search/#built-in-search-plugin
   # https://squidfunk.github.io/mkdocs-material/plugins/search/
@@ -117,9 +107,8 @@ plugins:
   - social:
       enabled: true
       cards_layout_options:
-        background_color: "#11111B"
-        color: "#ffffff"
-
+        background_color: '#11111B'
+        color: '#ffffff'
   - minify:
       minify_html: true
       minify_js: false
@@ -158,7 +147,6 @@ plugins:
           custom_templates: overrides/python/material
 
           ### Options
-
           options:
             ### Extensions
             # https://mkdocstrings.github.io/python/usage/configuration/general/#extensions
@@ -273,28 +261,23 @@ plugins:
             show_overloads: true
             # https://mkdocstrings.github.io/python/usage/configuration/signatures/#unwrap_annotated
             unwrap_annotated: false
-
   - api-autonav:
-      modules: ["../tux"]
-      nav_section_title: "Tux Reference"
-      api_root_uri: "reference"
+      modules:
+        - ../tux
+      nav_section_title: Tux Reference
+      api_root_uri: reference
       exclude_private: false
-      # nav_item_prefix: "<code class='doc-symbol doc-symbol-nav doc-symbol-module'></code>"
       on_implicit_namespace_packge: raise
-
-  # # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#revisioning
-  # - git-revision-date-localized:
-  #     enable_creation_date: false
-
-  # # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#document-contributors
-  # - git-committers:
-  #     repository: allthingslinux/tux
-  #     branch: main
-
+# https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#revisioning
+# - git-revision-date-localized:
+#     enable_creation_date: false
+# https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#document-contributors
+# - git-committers:
+#     repository: allthingslinux/tux
+#     branch: main
 #
 ### MARKDOWN EXTENSIONS
 #
-
 markdown_extensions:
   - attr_list
   # https://github.com/mkdocs/mkdocs-click
@@ -319,11 +302,9 @@ markdown_extensions:
   - md_in_html
   - def_list
   - tables
-
 #
 ### NAVIGATION
 #
-
 nav:
   - Home: index.md
   - Development:

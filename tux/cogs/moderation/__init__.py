@@ -550,14 +550,12 @@ class ModerationCogBase(commands.Cog):
             True if the user is poll banned, False otherwise.
         """
         # Get latest case for this user
-        latest_case = await self.db.case.get_latest_case_by_user(
+        return await self.db.case.is_user_under_restriction(
             guild_id=guild_id,
             user_id=user_id,
-            case_types=[CaseType.POLLBAN, CaseType.POLLUNBAN],
+            active_restriction_type=CaseType.POLLBAN,
+            inactive_restriction_type=CaseType.POLLUNBAN,
         )
-
-        # If no cases exist or latest case is an unban, user is not banned
-        return bool(latest_case and latest_case.case_type == CaseType.POLLBAN)
 
     async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
         """
@@ -576,14 +574,12 @@ class ModerationCogBase(commands.Cog):
             True if the user is snippet banned, False otherwise.
         """
         # Get latest case for this user
-        latest_case = await self.db.case.get_latest_case_by_user(
+        return await self.db.case.is_user_under_restriction(
             guild_id=guild_id,
             user_id=user_id,
-            case_types=[CaseType.SNIPPETBAN, CaseType.SNIPPETUNBAN],
+            active_restriction_type=CaseType.SNIPPETBAN,
+            inactive_restriction_type=CaseType.SNIPPETUNBAN,
         )
-
-        # If no cases exist or latest case is an unban, user is not banned
-        return bool(latest_case and latest_case.case_type == CaseType.SNIPPETBAN)
 
     async def is_jailed(self, guild_id: int, user_id: int) -> bool:
         """
@@ -602,11 +598,9 @@ class ModerationCogBase(commands.Cog):
             True if the user is jailed, False otherwise.
         """
         # Get latest case for this user
-        latest_case = await self.db.case.get_latest_case_by_user(
+        return await self.db.case.is_user_under_restriction(
             guild_id=guild_id,
             user_id=user_id,
-            case_types=[CaseType.JAIL, CaseType.UNJAIL],
+            active_restriction_type=CaseType.JAIL,
+            inactive_restriction_type=CaseType.UNJAIL,
         )
-
-        # If no cases exist or latest case is an unjail, user is not jailed
-        return bool(latest_case and latest_case.case_type == CaseType.JAIL)

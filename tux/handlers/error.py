@@ -23,7 +23,15 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
-from tux.utils.exceptions import AppCommandPermissionLevelError, PermissionLevelError
+from tux.utils.exceptions import (
+    AppCommandPermissionLevelError,
+    CodeExecutionError,
+    CompilationError,
+    InvalidCodeFormatError,
+    MissingCodeError,
+    PermissionLevelError,
+    UnsupportedLanguageError,
+)
 
 # --- Constants and Configuration ---
 
@@ -368,6 +376,37 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         message_format="Could not find server: {error.argument}.",
         send_to_sentry=False,
     ),
+    # === Extension/Cog Loading Errors (discord.ext.commands) ===
+    commands.ExtensionError: ErrorHandlerConfig(
+        message_format="Extension operation failed: {error}",
+        log_level="WARNING",
+        send_to_sentry=True,
+    ),
+    commands.ExtensionNotLoaded: ErrorHandlerConfig(
+        message_format="Cannot reload extension `{error.name}` - it hasn't been loaded yet.",
+        log_level="WARNING",
+        send_to_sentry=False,
+    ),
+    commands.ExtensionNotFound: ErrorHandlerConfig(
+        message_format="Extension `{error.name}` could not be found.",
+        log_level="WARNING",
+        send_to_sentry=False,
+    ),
+    commands.ExtensionAlreadyLoaded: ErrorHandlerConfig(
+        message_format="Extension `{error.name}` is already loaded.",
+        log_level="INFO",
+        send_to_sentry=False,
+    ),
+    commands.ExtensionFailed: ErrorHandlerConfig(
+        message_format="Extension `{error.name}` failed to load: {error.original}",
+        log_level="ERROR",
+        send_to_sentry=True,
+    ),
+    commands.NoEntryPointError: ErrorHandlerConfig(
+        message_format="Extension `{error.name}` is missing a setup function.",
+        log_level="ERROR",
+        send_to_sentry=True,
+    ),
     # === Custom Errors (defined in tux.utils.exceptions) ===
     PermissionLevelError: ErrorHandlerConfig(
         message_format="You need permission level `{error.permission}` to use this command.",
@@ -376,6 +415,32 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
     AppCommandPermissionLevelError: ErrorHandlerConfig(
         message_format="You need permission level `{error.permission}` to use this command.",
         send_to_sentry=False,
+    ),
+    # === Code Execution Errors (from tux.utils.exceptions) ===
+    MissingCodeError: ErrorHandlerConfig(
+        message_format="{error}",
+        log_level="INFO",
+        send_to_sentry=False,
+    ),
+    InvalidCodeFormatError: ErrorHandlerConfig(
+        message_format="{error}",
+        log_level="INFO",
+        send_to_sentry=False,
+    ),
+    UnsupportedLanguageError: ErrorHandlerConfig(
+        message_format="{error}",
+        log_level="INFO",
+        send_to_sentry=False,
+    ),
+    CompilationError: ErrorHandlerConfig(
+        message_format="{error}",
+        log_level="INFO",
+        send_to_sentry=True,  # Monitor frequency of compilation failures
+    ),
+    CodeExecutionError: ErrorHandlerConfig(
+        message_format="{error}",
+        log_level="INFO",
+        send_to_sentry=True,  # Monitor general code execution issues
     ),
     # === Discord API & Client Errors ===
     discord.ClientException: ErrorHandlerConfig(
@@ -461,6 +526,29 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         log_level="ERROR",
         send_to_sentry=True,
     ),
+    # === Additional Discord Client/Connection Errors ===
+    discord.LoginFailure: ErrorHandlerConfig(
+        message_format="Bot authentication failed. Please check the bot token configuration.",
+        log_level="CRITICAL",
+        send_to_sentry=True,
+    ),
+    discord.ConnectionClosed: ErrorHandlerConfig(
+        message_format="Connection to Discord was closed unexpectedly. Attempting to reconnect...",
+        log_level="WARNING",
+        send_to_sentry=True,
+    ),
+    discord.PrivilegedIntentsRequired: ErrorHandlerConfig(
+        message_format="This bot requires privileged intents to function properly. Please enable them in the Discord Developer Portal.",
+        log_level="CRITICAL",
+        send_to_sentry=True,
+    ),
+    discord.GatewayNotFound: ErrorHandlerConfig(
+        message_format="Could not connect to Discord's gateway. This may be a temporary issue.",
+        log_level="ERROR",
+        send_to_sentry=True,
+    ),
+    # Note: InvalidArgument, NoMoreItems, and TooManyRequests are not available in all discord.py versions
+    # or are handled by other existing exceptions like HTTPException
 }
 
 
@@ -508,7 +596,7 @@ class ErrorHandler(commands.Cog):
         self._old_tree_error = tree.on_error
         # Replace the tree's error handler with this cog's handler.
         tree.on_error = self.on_app_command_error
-        logger.info("Application command error handler mapped.")
+        logger.debug("Application command error handler mapped.")
 
     async def cog_unload(self) -> None:
         """
@@ -520,7 +608,7 @@ class ErrorHandler(commands.Cog):
         if self._old_tree_error:
             # Restore the previously stored handler.
             self.bot.tree.on_error = self._old_tree_error
-            logger.info("Application command error handler restored.")
+            logger.debug("Application command error handler restored.")
         else:
             # This might happen if cog_load failed or was never called.
             logger.warning("Application command error handler not restored: No previous handler found.")
@@ -1251,17 +1339,6 @@ class ErrorHandler(commands.Cog):
 
         # If no local handlers intercepted the error, process it globally.
         log_context = self._get_log_context(ctx, ctx.author, error)  # Regenerate context *after* CommandNotFound check
-
-        # Check if this originated from a slash command interaction
-        was_interaction = ctx.interaction is not None
-
-        # Refined log message
-        if was_interaction:
-            log_message = f"Handling slash-invoked hybrid command error via prefix listener: {type(error).__name__}"
-        else:
-            log_message = f"Handling prefix command error via global handler: {type(error).__name__}"
-
-        logger.bind(**log_context).debug(log_message)
         await self._handle_error(ctx, error)
 
     async def on_app_command_error(
@@ -1301,5 +1378,5 @@ class ErrorHandler(commands.Cog):
 
 async def setup(bot: Tux) -> None:
     """Standard setup function to add the ErrorHandler cog to the bot."""
-    logger.info("Setting up ErrorHandler")
+    logger.debug("Setting up ErrorHandler")
     await bot.add_cog(ErrorHandler(bot))

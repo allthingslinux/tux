@@ -4,7 +4,6 @@ This module provides the main Click command group and utilities for the CLI.
 """
 
 import importlib
-import importlib.metadata
 import os
 import subprocess
 import sys
@@ -16,6 +15,8 @@ import click
 from click import Command, Context, Group
 from loguru import logger
 
+# Import version from main package
+from tux import __version__
 from tux.cli.ui import command_header, command_result, error, info, warning
 from tux.utils.env import (
     configure_environment,
@@ -23,12 +24,6 @@ from tux.utils.env import (
     get_database_url,
 )
 from tux.utils.logger import setup_logging
-
-# Fetch version using importlib.metadata with fallback
-try:
-    __version__ = importlib.metadata.version("tux")
-except importlib.metadata.PackageNotFoundError:
-    __version__ = "unknown"
 
 # Type definitions
 T = TypeVar("T")
@@ -202,7 +197,7 @@ def create_group(name: str, help_text: str) -> Group:
 def register_commands() -> None:
     """Load and register all CLI commands."""
 
-    modules = ["database", "dev", "docs", "docker"]
+    modules = ["database", "dev", "docs", "docker", "test"]
 
     for module_name in modules:
         try:
@@ -233,10 +228,19 @@ def main() -> int:
 def start() -> int:
     """Start the Discord bot"""
 
-    from tux.main import run
+    from tux.main import run  # noqa: PLC0415
 
     result = run()
     return 0 if result is None else result
+
+
+# Register the version command directly under the main cli group
+@command_registration_decorator(cli, name="version")
+def show_version() -> int:
+    """Display the current version of Tux"""
+
+    info(f"Tux version: {__version__}")
+    return 0
 
 
 # Ensure commands are registered when this module is imported

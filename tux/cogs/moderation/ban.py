@@ -4,7 +4,8 @@ from discord.ext import commands
 from prisma.enums import CaseType
 from tux.bot import Tux
 from tux.utils import checks
-from tux.utils.flags import BanFlags, generate_usage
+from tux.utils.flags import BanFlags
+from tux.utils.functions import generate_usage
 
 from . import ModerationCogBase
 

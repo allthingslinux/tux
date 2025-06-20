@@ -34,6 +34,16 @@ tux                       # Main entry point (defined in cli/core.py)
 │   ├── format            # Format code
 │   ├── type-check        # Check types
 │   └── pre-commit        # Run pre-commit checks
+├── test                  # Testing commands (defined in cli/test.py)
+│   ├── run               # Run tests with coverage (enhanced output via pytest-sugar)
+│   ├── quick             # Run tests without coverage (faster)
+│   ├── plain             # Run tests with plain output (no pytest-sugar)
+│   ├── parallel          # Run tests in parallel using multiple workers
+│   ├── html              # Run tests and generate HTML report
+│   ├── benchmark         # Run benchmark tests to measure performance
+│   ├── coverage          # Generate coverage reports with options
+│   ├── coverage-clean    # Clean coverage files
+│   └── coverage-open     # Open HTML coverage report
 ├── docker                # Docker commands (defined in cli/docker.py)
 │   ├── build             # Build Docker image
 │   ├── up                # Start Docker services
@@ -79,6 +89,33 @@ poetry run tux db push --prod
 
 # Run docker compose up using development settings (flag after command)
 poetry run tux docker up --build --dev
+
+# Run tests with enhanced output (pytest-sugar enabled by default)
+poetry run tux test run
+
+# Run quick tests without coverage (faster)
+poetry run tux test quick
+
+# Run tests with plain output (no pytest-sugar)
+poetry run tux test plain
+
+# Run tests in parallel (utilizes all CPU cores)
+poetry run tux test parallel
+
+# Generate beautiful HTML test reports
+poetry run tux test html
+
+# Run performance benchmarks
+poetry run tux test benchmark
+
+# Generate HTML coverage report and open it
+poetry run tux test coverage --format=html --open
+
+# Generate coverage for specific component with threshold
+poetry run tux test coverage --specific=tux/database --fail-under=90
+
+# Clean coverage files and generate fresh report
+poetry run tux test coverage --clean --format=html
 ```
 
 ## Environment Handling
