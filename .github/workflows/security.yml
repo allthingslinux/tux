@@ -67,7 +67,7 @@ jobs:
   # Frequency: Main branch pushes and weekly scheduled deep scans
   # ============================================================================
   codeql:
-    name: CodeQL (${{ matrix.language }})
+    name: CodeQL Analysis
     runs-on: ubuntu-latest
     # RESOURCE OPTIMIZATION
     # Skips CodeQL on pull requests to save Actions minutes for critical tasks
