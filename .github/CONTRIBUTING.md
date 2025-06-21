@@ -63,11 +63,11 @@ Follow these steps to set up your local development environment. For more compre
 
 2. **Install Dependencies with Poetry**
 
-    Ensure Poetry is installed and configured to use the correct Python version (e.g., 3.13.2).
+    Ensure Poetry is installed and configured to use the correct Python version (e.g., 3.13.5).
 
     ```bash
     # Create a virtual environment
-    poetry env use 3.13.2
+    poetry env use 3.13.5
 
     # Install project dependencies and dev tools
     poetry install
