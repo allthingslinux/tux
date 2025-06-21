@@ -73,5 +73,9 @@ class Constants:
     EIGHT_BALL_QUESTION_LENGTH_LIMIT = 120
     EIGHT_BALL_RESPONSE_WRAP_WIDTH = 30
 
+    # Bookmark constants
+    ADD_BOOKMARK = "🔖"
+    REMOVE_BOOKMARK = "🗑️"
+
 
 CONST = Constants()
