@@ -168,10 +168,10 @@ All tests validate against configurable thresholds:
 ### **Multi-Stage Dockerfile**
 
 ```dockerfile
-FROM python:3.13.2-slim AS base       # Common runtime base
+FROM python:3.13.5-slim AS base       # Common runtime base
 FROM base AS build                    # Build dependencies & tools
 FROM build AS dev                     # Development environment
-FROM python:3.13.2-slim AS production # Minimal production runtime
+FROM python:3.13.5-slim AS production # Minimal production runtime
 ```
 
 ### **Key Features**
@@ -523,7 +523,7 @@ docker system df
 docker images
 
 # Manual image restoration if needed
-docker pull python:3.13.2-slim
+docker pull python:3.13.5-slim
 docker pull ubuntu:22.04
 ```
 
