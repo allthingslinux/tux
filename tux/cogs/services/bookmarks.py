@@ -43,26 +43,6 @@ class Bookmarks(commands.Cog):
         # Get the user who reacted to the message
         user = self.bot.get_user(payload.user_id)
         if user is None:
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-            logger.error(f"User not found for ID: {payload.user_id}")
->>>>>>> b9c797a (wip changes)
-            return
-=======
-            try:
-                user = await self.bot.fetch_user(payload.user_id)
-            except discord.NotFound:
-                logger.error(f"User not found for ID: {payload.user_id}")
-                return
-            except (discord.Forbidden, discord.HTTPException) as fetch_error:
-                logger.error(f"Failed to fetch user: {fetch_error}")
-                return
->>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
-
-        # Get the user who reacted to the message
-        user = self.bot.get_user(payload.user_id)
-        if user is None:
             try:
                 user = await self.bot.fetch_user(payload.user_id)
             except discord.NotFound:
@@ -70,30 +50,6 @@ class Bookmarks(commands.Cog):
             except (discord.Forbidden, discord.HTTPException) as fetch_error:
                 logger.error(f"Failed to fetch user: {fetch_error}")
             return
-<<<<<<< HEAD
-=======
-=======
-                return
-            except (discord.Forbidden, discord.HTTPException) as fetch_error:
-                logger.error(f"Failed to fetch user: {fetch_error}")
-                return
-
->>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
-=======
-=======
->>>>>>> 36a5db6 (chore(wip): still working on debugging)
-            try:
-                user = await self.bot.fetch_user(payload.user_id)
-            except discord.NotFound:
-                logger.error(f"User not found for ID: {payload.user_id}")
-            except (discord.Forbidden, discord.HTTPException) as fetch_error:
-                logger.error(f"Failed to fetch user: {fetch_error}")
-            return
-<<<<<<< HEAD
->>>>>>> b8a4072 (added eletrons changes and fixed a warning)
->>>>>>> dc15ffe (added eletrons changes and fixed a warning)
-=======
->>>>>>> 36a5db6 (chore(wip): still working on debugging)
         # Fetch the channel where the reaction was added
         channel = self.bot.get_channel(payload.channel_id)
         if channel is None:
@@ -101,47 +57,10 @@ class Bookmarks(commands.Cog):
                 channel = await self.bot.fetch_channel(payload.channel_id)
             except discord.NotFound:
                 logger.error(f"Channel not found for ID: {payload.channel_id}")
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> b8a4072 (added eletrons changes and fixed a warning)
->>>>>>> dc15ffe (added eletrons changes and fixed a warning)
-=======
->>>>>>> 36a5db6 (chore(wip): still working on debugging)
             except (discord.Forbidden, discord.HTTPException) as fetch_error:
                 logger.error(f"Failed to fetch channel: {fetch_error}")
             return
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
-=======
->>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
->>>>>>> 38f9809 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
-                return
-            except (discord.Forbidden, discord.HTTPException) as fetch_error:
-                logger.error(f"Failed to fetch channel: {fetch_error}")
-                return
-<<<<<<< HEAD
->>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
-=======
->>>>>>> b8a4072 (added eletrons changes and fixed a warning)
-<<<<<<< HEAD
->>>>>>> dc15ffe (added eletrons changes and fixed a warning)
-=======
-=======
->>>>>>> 217c364 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
->>>>>>> 38f9809 (fix(bookmarks): improve emoji validation and error handling for user and channel fetching)
-=======
->>>>>>> 36a5db6 (chore(wip): still working on debugging)
         channel = cast(discord.TextChannel | discord.Thread, channel)
 
         # Fetch the message that was reacted to
