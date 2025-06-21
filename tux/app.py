@@ -56,6 +56,9 @@ class TuxApp:
                 send_default_pii=False,
                 traces_sample_rate=1.0,
                 profiles_sample_rate=1.0,
+                _experiments={
+                    "enable_logs": True,  # https://docs.sentry.io/platforms/python/logs/
+                },
             )
 
             # Add additional global tags
