@@ -1,5 +1,6 @@
 import contextlib
 import datetime
+import asyncio
 
 import discord
 from discord.ext import commands, tasks
@@ -16,25 +17,10 @@ class RemindMe(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.db = DatabaseController()
-        self.check_reminders.start()
         self.remindme.usage = generate_usage(self.remindme)
 
-    @tasks.loop(seconds=120)
-    async def check_reminders(self):
-        reminders = await self.db.reminder.get_unsent_reminders()
 
-        try:
-            for reminder in reminders:
-                await self.send_reminder(reminder)
-                await self.db.reminder.update_reminder_status(reminder.reminder_id, sent=True)
-                logger.debug(f'Status of reminder {reminder.reminder_id} updated to "sent".')
-
-        except Exception as e:
-            logger.error(f"Error sending reminders: {e}")
-
-    async def send_reminder(self, reminder: Reminder) -> None:
-        user = self.bot.get_user(reminder.reminder_user_id)
-
+    async def send_reminder(self, user: discord.User, reminder: Reminder) -> None:
         if user is not None:
             embed = EmbedCreator.create_embed(
                 bot=self.bot,
@@ -69,9 +55,10 @@ class RemindMe(commands.Cog):
                 f"Failed to send reminder {reminder.reminder_id}, user with ID {reminder.reminder_user_id} not found.",
             )
 
-    @check_reminders.before_loop
-    async def before_check_reminders(self):
-        await self.bot.wait_until_ready()
+        try:
+            await self.db.reminder.delete_reminder_by_id(reminder.reminder_id)
+        except Exception as e:
+            logger.error(f"Failed to delete reminder: {e}")
 
     @commands.hybrid_command(
         name="remindme",
@@ -120,7 +107,7 @@ class RemindMe(commands.Cog):
         expires_at = datetime.datetime.now(datetime.UTC) + datetime.timedelta(seconds=seconds)
 
         try:
-            await self.db.reminder.insert_reminder(
+            reminder_obj = await self.db.reminder.insert_reminder(
                 reminder_user_id=ctx.author.id,
                 reminder_content=reminder,
                 reminder_expires_at=expires_at,
@@ -153,6 +140,8 @@ class RemindMe(commands.Cog):
             )
 
             logger.error(f"Error creating reminder: {e}")
+
+        self.bot.loop.call_later(seconds, asyncio.create_task, self.send_reminder(ctx.author, reminder_obj))
 
         await ctx.reply(embed=embed, ephemeral=True)
 
