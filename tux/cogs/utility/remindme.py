@@ -19,7 +19,12 @@ class RemindMe(commands.Cog):
         self.db = DatabaseController()
         self.remindme.usage = generate_usage(self.remindme)
 
-    async def send_reminder(self, user: discord.User | discord.Member, reminder: Reminder) -> None:
+    async def send_reminder(self, user_id: int, reminder: Reminder) -> None:
+        user = self.bot.get_user(user_id)
+
+        if not user:
+            user = await self.bot.fetch_user(user_id)
+        
         if user is not None:
             embed = EmbedCreator.create_embed(
                 bot=self.bot,
@@ -125,8 +130,7 @@ class RemindMe(commands.Cog):
 
             embed.add_field(
                 name="Note",
-                value="- If you have DMs closed, we will attempt to send it in this channel instead.\n"
-                "- The reminder may be delayed by up to 120 seconds due to the way Tux works.",
+                value="- If you have DMs closed, we will attempt to send it in this channel instead."
             )
 
         except Exception as e:
@@ -140,7 +144,7 @@ class RemindMe(commands.Cog):
 
             logger.error(f"Error creating reminder: {e}")
 
-        self.bot.loop.call_later(seconds, asyncio.create_task, self.send_reminder(ctx.author, reminder_obj))
+        self.bot.loop.call_later(seconds, asyncio.create_task, self.send_reminder(ctx.author.id, reminder_obj))
 
         await ctx.reply(embed=embed, ephemeral=True)
 
