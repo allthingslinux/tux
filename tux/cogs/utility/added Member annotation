@@ -19,7 +19,7 @@ class RemindMe(commands.Cog):
         self.db = DatabaseController()
         self.remindme.usage = generate_usage(self.remindme)
 
-    async def send_reminder(self, user: discord.User, reminder: Reminder) -> None:
+    async def send_reminder(self, user: discord.User | discord.Member, reminder: Reminder) -> None:
         if user is not None:
             embed = EmbedCreator.create_embed(
                 bot=self.bot,
