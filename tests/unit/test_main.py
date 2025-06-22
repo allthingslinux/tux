@@ -1,8 +1,10 @@
 """Tests for the main module."""
 
+import inspect
 import subprocess
 import sys
 import tempfile
+import textwrap
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -113,9 +115,8 @@ class TestMainExecution:
     def test_module_has_main_guard(self) -> None:
         """Test that the main module has the proper __name__ == '__main__' guard."""
         # Read the main.py file to ensure it has the proper structure
-        import inspect
 
-        import tux.main
+        import tux.main  # noqa: PLC0415
 
         # Get the source code of the main module
         source = inspect.getsource(tux.main)
@@ -127,7 +128,6 @@ class TestMainExecution:
     @patch("tux.main.TuxApp")
     def test_run_function_signature(self, mock_tux_app_class: Mock) -> None:
         """Test that the run function has the correct signature."""
-        import inspect
 
         # Check that run() takes no arguments
         sig = inspect.signature(tux.main.run)
@@ -150,7 +150,7 @@ class TestMainIntegration:
         # We're testing this by ensuring the module can be imported multiple times
         # without side effects
 
-        import importlib
+        import importlib  # noqa: PLC0415
 
         # Import the module multiple times
         for _ in range(3):
@@ -164,7 +164,7 @@ class TestMainIntegration:
         mock_tux_app_class.return_value = mock_app_instance
 
         # Simulate the CLI calling run() (from tux.cli.core start command)
-        from tux.main import run
+        from tux.main import run  # noqa: PLC0415
 
         result = run()
 
@@ -196,63 +196,64 @@ class TestMainIntegration:
         # We mock the TuxApp to prevent the bot from starting
 
         # Create a temporary script that imports and patches TuxApp
-        test_script = """
-import sys
-from unittest.mock import Mock, patch
 
-# Add the project root to the path
-sys.path.insert(0, "{project_root}")
+        test_script = textwrap.dedent("""
+            import sys
+            from unittest.mock import Mock, patch
 
-# Mock the config loading before importing tux.main to prevent FileNotFoundError in CI
-# We need to mock the file reading operations that happen at module import time
-with patch("pathlib.Path.read_text") as mock_read_text:
-    # Mock the YAML content that would be read from config files
-    mock_config_content = '''
-    USER_IDS:
-      BOT_OWNER: 123456789
-      SYSADMINS: [123456789]
-    ALLOW_SYSADMINS_EVAL: false
-    BOT_INFO:
-      BOT_NAME: "Test Bot"
-      PROD_PREFIX: "!"
-      DEV_PREFIX: "??"
-      ACTIVITIES: "Testing"
-      HIDE_BOT_OWNER: false
-    STATUS_ROLES: []
-    TEMPVC_CATEGORY_ID: null
-    TEMPVC_CHANNEL_ID: null
-    GIF_LIMITER:
-      RECENT_GIF_AGE: 3600
-      GIF_LIMIT_EXCLUDE: []
-      GIF_LIMITS_USER: {{}}
-      GIF_LIMITS_CHANNEL: {{}}
-    XP:
-      XP_BLACKLIST_CHANNELS: []
-      XP_ROLES: []
-      XP_MULTIPLIERS: []
-      XP_COOLDOWN: 60
-      LEVELS_EXPONENT: 2
-      SHOW_XP_PROGRESS: false
-      ENABLE_XP_CAP: true
-    SNIPPETS:
-      LIMIT_TO_ROLE_IDS: false
-      ACCESS_ROLE_IDS: []
-    '''
-    mock_read_text.return_value = mock_config_content
+            # Add the project root to the path
+            sys.path.insert(0, "{project_root}")
 
-    with patch("tux.app.TuxApp") as mock_app:
-        mock_instance = Mock()
-        mock_app.return_value = mock_instance
+            # Mock the config loading before importing tux.main to prevent FileNotFoundError in CI
+            # We need to mock the file reading operations that happen at module import time
+            with patch("pathlib.Path.read_text") as mock_read_text:
+                # Mock the YAML content that would be read from config files
+                mock_config_content = '''
+                USER_IDS:
+                  BOT_OWNER: 123456789
+                  SYSADMINS: [123456789]
+                ALLOW_SYSADMINS_EVAL: false
+                BOT_INFO:
+                  BOT_NAME: "Test Bot"
+                  PROD_PREFIX: "!"
+                  DEV_PREFIX: "??"
+                  ACTIVITIES: "Testing"
+                  HIDE_BOT_OWNER: false
+                STATUS_ROLES: []
+                TEMPVC_CATEGORY_ID: null
+                TEMPVC_CHANNEL_ID: null
+                GIF_LIMITER:
+                  RECENT_GIF_AGE: 3600
+                  GIF_LIMIT_EXCLUDE: []
+                  GIF_LIMITS_USER: {{}}
+                  GIF_LIMITS_CHANNEL: {{}}
+                XP:
+                  XP_BLACKLIST_CHANNELS: []
+                  XP_ROLES: []
+                  XP_MULTIPLIERS: []
+                  XP_COOLDOWN: 60
+                  LEVELS_EXPONENT: 2
+                  SHOW_XP_PROGRESS: false
+                  ENABLE_XP_CAP: true
+                SNIPPETS:
+                  LIMIT_TO_ROLE_IDS: false
+                  ACCESS_ROLE_IDS: []
+                '''
+                mock_read_text.return_value = mock_config_content
 
-        # Import and run main
-        import tux.main
-        tux.main.run()
+                with patch("tux.app.TuxApp") as mock_app:
+                    mock_instance = Mock()
+                    mock_app.return_value = mock_instance
 
-        # Verify it was called
-        assert mock_app.called
-        assert mock_instance.run.called
-        print("SUCCESS: Module executed correctly")
-"""
+                    # Import and run main
+                    import tux.main
+                    tux.main.run()
+
+                    # Verify it was called
+                    assert mock_app.called
+                    assert mock_instance.run.called
+                    print("SUCCESS: Module executed correctly")
+        """)
 
         # Get the project root dynamically
         project_root = Path(__file__).parent.parent

@@ -1,5 +1,6 @@
 """Integration tests for Docker functionality using the toolkit."""
 
+import re
 from pathlib import Path
 
 import pytest
@@ -113,8 +114,6 @@ class TestDockerSafety:
             "redis:7",
             "my-other-project",
         ]
-
-        import re
 
         # Test patterns (copied from docker_toolkit for self-contained testing)
         test_patterns = {

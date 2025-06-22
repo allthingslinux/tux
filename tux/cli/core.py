@@ -197,7 +197,7 @@ def create_group(name: str, help_text: str) -> Group:
 def register_commands() -> None:
     """Load and register all CLI commands."""
 
-    modules = ["database", "dev", "docs", "docker"]
+    modules = ["database", "dev", "docs", "docker", "test"]
 
     for module_name in modules:
         try:
@@ -228,7 +228,7 @@ def main() -> int:
 def start() -> int:
     """Start the Discord bot"""
 
-    from tux.main import run
+    from tux.main import run  # noqa: PLC0415
 
     result = run()
     return 0 if result is None else result

@@ -178,7 +178,7 @@ def _get_version() -> str:
         except Exception as e:
             # Log the specific error to aid debugging while continuing to next method
             # This maintains robustness while providing visibility into version detection issues
-            import logging
+            import logging  # noqa: PLC0415
 
             logging.getLogger(__name__).debug(f"Version detection method {getter.__name__} failed: {e}")
             continue

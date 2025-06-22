@@ -28,27 +28,44 @@
     "reportIncompatibleMethodOverride": "none",
     "reportGeneralTypeIssues": "information"
   },
+  "python.poetryPath": "poetry",
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": true,
+  "python.testing.cwd": "${workspaceFolder}",
+  "python.testing.autoTestDiscoverOnSaveEnabled": true,
+  "coverage-gutters.coverageFileNames": [
+    "coverage.xml",
+    "coverage.lcov",
+    "cov.xml",
+    "gcov.out",
+    "jacoco.xml",
+    "lcov.info"
+  ],
+  "coverage-gutters.showGutterCoverage": false,
+  "coverage-gutters.showLineCoverage": true,
+  "coverage-gutters.showRulerCoverage": true,
+  "python.terminal.executeInFileDir": false,
+  "python.terminal.launchArgs": [],
   "files.exclude": {
     "**/__pycache__": true,
     "**/*.pyc": true,
-    "**/pycache": true
+    "**/pycache": true,
+    "**/.pytest_cache": true,
+    "**/htmlcov": true,
+    "**/.coverage": true
   },
   "search.exclude": {
     ".archive/**": true,
     "build/**": true,
-    "typings/**": true
+    "typings/**": true,
+    ".pytest_cache/**": true,
+    "htmlcov/**": true,
+    ".tox/**": true
   },
   "git.autofetch": true,
   "git.pruneOnFetch": true,
   "git.showProgress": true,
   "git.fetchOnPull": true,
-  "[yaml]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml",
-    "editor.tabSize": 2,
-    "editor.formatOnType": false,
-    "editor.formatOnSave": false,
-    "editor.codeLens": true
-  },
   "[markdown]": {
     "files.trimTrailingWhitespace": false,
     "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
@@ -59,6 +76,13 @@
   "markdownlint.run": "onType",
   "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml",
+    "editor.tabSize": 2,
+    "editor.formatOnType": false,
+    "editor.formatOnSave": false,
+    "editor.codeLens": true
   },
   "yaml.format.enable": false,
   "yaml.format.singleQuote": true,

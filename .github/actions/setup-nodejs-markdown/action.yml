@@ -1,0 +1,32 @@
+name: Setup Node.js for Markdown Linting
+description: Set up Node.js with caching and install markdownlint-cli
+inputs:
+  node-version:
+    description: Node.js version to use
+    required: false
+    default: '20'
+runs:
+  using: composite
+  steps:
+    # NODE.JS ENVIRONMENT SETUP
+    # Required for markdownlint-cli installation and execution
+    - name: Setup Node.js
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    # NPM CACHE OPTIMIZATION
+    # Reduces markdownlint installation time on repeated runs
+    - name: Cache node modules
+      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+      with:
+        path: ~/.npm
+        key: node-${{ runner.os }}-${{ hashFiles('**/package*.json') }}
+        restore-keys: |
+          node-${{ runner.os }}-
+
+    # MARKDOWNLINT INSTALLATION
+    # Global installation for CLI usage across all files
+    - name: Install markdownlint
+      shell: bash
+      run: npm install -g markdownlint-cli

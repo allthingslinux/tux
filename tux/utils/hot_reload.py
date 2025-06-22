@@ -1536,7 +1536,7 @@ def validate_hot_reload_requirements() -> list[str]:
 
     # Check if required modules are available
     try:
-        import watchdog
+        import watchdog  # noqa: PLC0415
 
         if not hasattr(watchdog, "observers"):
             issues.append("watchdog.observers not available")

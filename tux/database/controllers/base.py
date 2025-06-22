@@ -1,7 +1,7 @@
 """Base controller module providing common database functionality."""
 
 from collections.abc import Callable
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
 import sentry_sdk
 from loguru import logger
@@ -38,7 +38,20 @@ ModelType = TypeVar(
 RelationType = TypeVar("RelationType")
 
 
-class BaseController(Generic[ModelType]):
+class BaseController[
+    ModelType: (
+        Case,
+        Guild,
+        Note,
+        Reminder,
+        Snippet,
+        Starboard,
+        StarboardMessage,
+        GuildConfig,
+        AFKModel,
+        Levels,
+    ),
+]:
     """Provides a base interface for database table controllers.
 
     This generic class offers common CRUD (Create, Read, Update, Delete)

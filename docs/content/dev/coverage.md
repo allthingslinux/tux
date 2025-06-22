@@ -10,18 +10,18 @@ The easiest way to run coverage is through the built-in Tux CLI:
 
 ```bash
 # Run tests with coverage
-poetry run tux dev test
+poetry run tux test run
 
 # Run tests without coverage (faster)
-poetry run tux dev test-quick
+poetry run tux test quick
 
 # Generate coverage reports
-poetry run tux dev coverage --format=html
-poetry run tux dev coverage --format=xml
-poetry run tux dev coverage --fail-under=90
+poetry run tux test coverage --format=html
+poetry run tux test coverage --format=xml
+poetry run tux test coverage --fail-under=90
 
 # Clean coverage files
-poetry run tux dev coverage-clean
+poetry run tux test coverage-clean
 ```
 
 ### Direct pytest Commands
@@ -45,16 +45,16 @@ Coverage functionality is integrated into the main CLI:
 
 ```bash
 # Run tests with coverage report
-poetry run tux dev coverage
+poetry run tux test coverage
 
 # Generate HTML report
-poetry run tux dev coverage --format=html
+poetry run tux test coverage --format=html
 
 # Clean coverage files
-poetry run tux dev coverage-clean
+poetry run tux test coverage-clean
 
 # See all available options
-poetry run tux dev coverage --help
+poetry run tux test coverage --help
 ```
 
 ## Configuration
@@ -119,13 +119,13 @@ TOTAL                      179    151     62      0  15.64%
 Generates a detailed interactive HTML report in `htmlcov/`:
 
 ```bash
-poetry run tux dev coverage --format=html
+poetry run tux test coverage --format=html
 # Generates htmlcov/index.html
 
 # Open the report in browser
-poetry run tux dev coverage --format=html --open
+poetry run tux test coverage --format=html --open
 # or open it separately
-poetry run tux dev coverage-open
+poetry run tux test coverage-open
 ```
 
 The HTML report provides:
@@ -140,7 +140,7 @@ The HTML report provides:
 For CI/CD integration:
 
 ```bash
-poetry run tux dev coverage --format=xml
+poetry run tux test coverage --format=xml
 # Generates coverage.xml
 ```
 
@@ -149,7 +149,7 @@ poetry run tux dev coverage --format=xml
 Machine-readable format:
 
 ```bash
-poetry run tux dev coverage --format=json
+poetry run tux test coverage --format=json
 # Generates coverage.json
 ```
 
@@ -177,7 +177,7 @@ def test_new_feature():
 Run coverage reports to identify untested code:
 
 ```bash
-poetry run tux dev coverage | grep "0.00%"
+poetry run tux test coverage | grep "0.00%"
 ```
 
 ### 3. Exclude Appropriate Code

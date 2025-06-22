@@ -1,0 +1,36 @@
+name: Create Test Environment
+description: Create .env file with test configuration for CI/testing purposes
+inputs:
+  database-url:
+    description: Database URL for testing
+    required: false
+    default: sqlite:///tmp/test.db
+  bot-token:
+    description: Bot token for testing
+    required: false
+    default: test_token_for_ci
+  additional-vars:
+    description: Additional environment variables (KEY=value format, one per line)
+    required: false
+    default: ''
+runs:
+  using: composite
+  steps:
+    # TEST ENVIRONMENT CONFIGURATION
+    # Creates isolated test environment with safe defaults
+    - name: Create test environment file
+      shell: bash
+      run: |-
+        # Create .env file for CI/testing with required values
+        cat > .env << EOF
+        DEV_DATABASE_URL=${{ inputs.database-url }}
+        PROD_DATABASE_URL=${{ inputs.database-url }}
+        DEV_BOT_TOKEN=${{ inputs.bot-token }}
+        PROD_BOT_TOKEN=${{ inputs.bot-token }}
+        EOF
+
+        # Add any additional environment variables if provided
+        if [ -n "${{ inputs.additional-vars }}" ]; then
+          echo "${{ inputs.additional-vars }}" >> .env
+        fi
+        echo "✅ Test environment file created"

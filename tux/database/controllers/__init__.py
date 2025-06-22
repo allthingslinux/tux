@@ -1,6 +1,7 @@
 """Database controller module providing access to all model controllers."""
 
 import functools
+import inspect
 from typing import Any, ClassVar, TypeVar
 
 import sentry_sdk
@@ -104,7 +105,6 @@ class DatabaseController:
         original_method : Any
             The original method to wrap
         """
-        import inspect
 
         # Check if the original method is async
         is_async = inspect.iscoroutinefunction(original_method)
