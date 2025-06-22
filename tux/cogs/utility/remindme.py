@@ -1,9 +1,9 @@
+import asyncio
 import contextlib
 import datetime
-import asyncio
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 from loguru import logger
 
 from prisma.models import Reminder
@@ -18,7 +18,6 @@ class RemindMe(commands.Cog):
         self.bot = bot
         self.db = DatabaseController()
         self.remindme.usage = generate_usage(self.remindme)
-
 
     async def send_reminder(self, user: discord.User, reminder: Reminder) -> None:
         if user is not None:
