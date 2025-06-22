@@ -24,7 +24,7 @@ class RemindMe(commands.Cog):
 
         if not user:
             user = await self.bot.fetch_user(user_id)
-        
+
         if user is not None:
             embed = EmbedCreator.create_embed(
                 bot=self.bot,
@@ -130,7 +130,7 @@ class RemindMe(commands.Cog):
 
             embed.add_field(
                 name="Note",
-                value="- If you have DMs closed, we will attempt to send it in this channel instead."
+                value="- If you have DMs closed, we will attempt to send it in this channel instead.",
             )
 
         except Exception as e:
