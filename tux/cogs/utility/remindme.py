@@ -22,7 +22,7 @@ class RemindMe(commands.Cog):
     async def send_reminder(self, user_id: int, reminder: Reminder) -> None:
         user = self.bot.get_user(user_id)
 
-        if not user:
+        if user is None:
             user = await self.bot.fetch_user(user_id)
 
         if user is not None:
