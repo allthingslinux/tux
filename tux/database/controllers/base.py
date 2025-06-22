@@ -3,9 +3,15 @@
 from collections.abc import Callable
 from typing import Any, TypeVar
 
-import sentry_sdk
 from loguru import logger
-from prisma.models import (
+from sqlalchemy import delete as sa_delete
+from sqlalchemy import func
+from sqlalchemy import update as sa_update
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
+
+from tux.database.client import db
+from tux.database.schemas import (
     AFKModel,
     Case,
     Guild,
@@ -18,11 +24,10 @@ from prisma.models import (
     StarboardMessage,
 )
 
-from tux.database.client import db
-
 # Explicitly define ModelType to cover all potential models used by controllers
 ModelType = TypeVar(
     "ModelType",
+    AFKModel,
     Case,
     Guild,
     Note,
@@ -31,7 +36,6 @@ ModelType = TypeVar(
     Starboard,
     StarboardMessage,
     GuildConfig,
-    AFKModel,
     Levels,
 )
 
@@ -55,77 +59,32 @@ class BaseController[
     """Provides a base interface for database table controllers.
 
     This generic class offers common CRUD (Create, Read, Update, Delete)
-    operations and utility methods for interacting with a specific Prisma model
+    operations and utility methods for interacting with a specific SQLModel model
     table. It standardizes database interactions and error handling.
 
     Attributes
     ----------
     table : Any
-        The Prisma client's model instance for the specific table.
+        The SQLModel client's model instance for the specific table.
     table_name : str
         The name of the database table this controller manages.
     """
 
-    def __init__(self, table_name: str) -> None:
+    def __init__(self, table: type[ModelType], session: AsyncSession | None = None) -> None:
         """Initializes the BaseController for a specific table.
 
         Parameters
         ----------
+        session : AsyncSession, optional
+            An optional SQLAlchemy AsyncSession instance. If not provided,
+            the default session from the database client will be used.
         table_name : str
-            The name of the Prisma model table (e.g., 'case', 'guild').
-            This name must match an attribute on the Prisma client instance.
+            The name of the table this controller will manage, used for logging and error messages.
         """
-        self.table: Any = getattr(db.client, table_name)
-        self.table_name = table_name
+        self.session = session or db.get_session()
+        self.table = table
 
     # --- Private Helper Methods ---
-
-    async def _execute_query(
-        self,
-        operation: Callable[[], Any],
-        error_msg: str,
-    ) -> Any:
-        """Executes a database query with standardized error logging.
-
-        Wraps the Prisma client operation call in a try-except block,
-        logging any exceptions with a contextual error message.
-
-        Parameters
-        ----------
-        operation : Callable[[], Any]
-            A zero-argument function (e.g., a lambda) that performs the database call.
-        error_msg : str
-            The base error message to log if an exception occurs.
-
-        Returns
-        -------
-        Any
-            The result of the database operation.
-
-        Raises
-        ------
-        Exception
-            Re-raises any exception caught during the database operation.
-        """
-        # Create a Sentry span to track database query performance
-        if sentry_sdk.is_initialized():
-            with sentry_sdk.start_span(op="db.query", description=f"Database query: {self.table_name}") as span:
-                span.set_tag("db.table", self.table_name)
-                try:
-                    result = await operation()
-                    span.set_status("ok")
-                    return result  # noqa: TRY300
-                except Exception as e:
-                    span.set_status("internal_error")
-                    span.set_data("error", str(e))
-                    logger.error(f"{error_msg}: {e}")
-                    raise
-        else:
-            try:
-                return await operation()
-            except Exception as e:
-                logger.error(f"{error_msg}: {e}")
-                raise
 
     def _add_include_arg_if_present(self, args: dict[str, Any], include: dict[str, bool] | None) -> None:
         """Adds the 'include' argument to a dictionary if it is not None."""
@@ -141,7 +100,7 @@ class BaseController[
         skip: int | None = None,
         cursor: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Constructs the keyword arguments dictionary for Prisma find operations."""
+        """Constructs the keyword arguments dictionary for SQLModel find operations."""
         args: dict[str, Any] = {"where": where}
         self._add_include_arg_if_present(args, include)
         if order:
@@ -160,7 +119,7 @@ class BaseController[
         key_value: dict[str, Any],
         include: dict[str, bool] | None = None,
     ) -> dict[str, Any]:
-        """Constructs simple keyword arguments for Prisma (e.g., create, delete)."""
+        """Constructs simple keyword arguments for SQLModel (e.g., create, delete)."""
         args = {key_name: key_value}
         self._add_include_arg_if_present(args, include)
         return args
@@ -170,7 +129,7 @@ class BaseController[
         data: dict[str, Any],
         include: dict[str, bool] | None = None,
     ) -> dict[str, Any]:
-        """Constructs keyword arguments for Prisma create operations."""
+        """Constructs keyword arguments for SQLModel create operations."""
         return self._build_simple_args("data", data, include)
 
     def _build_update_args(
@@ -179,7 +138,7 @@ class BaseController[
         data: dict[str, Any],
         include: dict[str, bool] | None = None,
     ) -> dict[str, Any]:
-        """Constructs keyword arguments for Prisma update operations."""
+        """Constructs keyword arguments for SQLModel update operations."""
         args = {"where": where, "data": data}
         self._add_include_arg_if_present(args, include)
         return args
@@ -189,7 +148,7 @@ class BaseController[
         where: dict[str, Any],
         include: dict[str, bool] | None = None,
     ) -> dict[str, Any]:
-        """Constructs keyword arguments for Prisma delete operations."""
+        """Constructs keyword arguments for SQLModel delete operations."""
         return self._build_simple_args("where", where, include)
 
     def _build_upsert_args(
@@ -199,7 +158,7 @@ class BaseController[
         update: dict[str, Any],
         include: dict[str, bool] | None = None,
     ) -> dict[str, Any]:
-        """Constructs keyword arguments for Prisma upsert operations."""
+        """Constructs keyword arguments for SQLModel upsert operations."""
         args = {
             "where": where,
             "data": {
@@ -218,27 +177,15 @@ class BaseController[
         include: dict[str, bool] | None = None,
         order: dict[str, str] | None = None,
     ) -> ModelType | None:
-        """Finds the first record matching specified criteria.
-
-        Parameters
-        ----------
-        where : dict[str, Any]
-            Query conditions to match.
-        include : dict[str, bool], optional
-            Specifies relations to include in the result.
-        order : dict[str, str], optional
-            Specifies the field and direction for ordering.
-
-        Returns
-        -------
-        ModelType | None
-            The found record or None if no match exists.
-        """
-        find_args = self._build_find_args(where=where, include=include, order=order)
-        return await self._execute_query(
-            lambda: self.table.find_first(**find_args),
-            f"Failed to find record in {self.table_name} with criteria {where}",
-        )
+        """Find the first matching record using SQLModel select()."""
+        stmt = select(self.table).filter_by(**where)
+        if order:
+            for field, direction in order.items():
+                col = getattr(self.table, field)
+                stmt = stmt.order_by(col.asc() if direction == "asc" else col.desc())
+        stmt = stmt.limit(1)
+        result = await self.session.execute(stmt)
+        return result.scalars().first()
 
     async def find_unique(
         self,
@@ -259,11 +206,9 @@ class BaseController[
         ModelType | None
             The found record or None if no match exists.
         """
-        find_args = self._build_find_args(where=where, include=include)  # Order not applicable for find_unique
-        return await self._execute_query(
-            lambda: self.table.find_unique(**find_args),
-            f"Failed to find unique record in {self.table_name} with criteria {where}",
-        )
+        stmt = select(self.table).filter_by(**where)
+        result = await self.session.execute(stmt)
+        return result.scalars().first()
 
     async def find_many(
         self,
@@ -296,18 +241,17 @@ class BaseController[
         list[ModelType]
             A list of found records, potentially empty.
         """
-        find_args = self._build_find_args(
-            where=where,
-            include=include,
-            order=order,
-            take=take,
-            skip=skip,
-            cursor=cursor,
-        )
-        return await self._execute_query(
-            lambda: self.table.find_many(**find_args),
-            f"Failed to find records in {self.table_name} with criteria {where}",
-        )
+        stmt = select(self.table).filter_by(**where)
+        if order:
+            for field, direction in order.items():
+                col = getattr(self.table, field)
+                stmt = stmt.order_by(col.asc() if direction == "asc" else col.desc())
+        if skip:
+            stmt = stmt.offset(skip)
+        if take:
+            stmt = stmt.limit(take)
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
 
     async def count(
         self,
@@ -325,10 +269,9 @@ class BaseController[
         int
             The total number of matching records.
         """
-        return await self._execute_query(
-            lambda: self.table.count(where=where),
-            f"Failed to count records in {self.table_name} with criteria {where}",
-        )
+        stmt = select(func.count()).select_from(self.table).filter_by(**where)
+        result = await self.session.execute(stmt)
+        return result.scalar_one()
 
     async def create(
         self,
@@ -349,11 +292,11 @@ class BaseController[
         ModelType
             The newly created record.
         """
-        create_args = self._build_create_args(data=data, include=include)
-        return await self._execute_query(
-            lambda: self.table.create(**create_args),
-            f"Failed to create record in {self.table_name} with data {data}",
-        )
+        instance = self.table(**data)
+        self.session.add(instance)
+        await self.session.commit()
+        await self.session.refresh(instance)
+        return instance
 
     async def update(
         self,
@@ -377,11 +320,15 @@ class BaseController[
         ModelType | None
             The updated record, or None if no matching record was found.
         """
-        update_args = self._build_update_args(where=where, data=data, include=include)
-        return await self._execute_query(
-            lambda: self.table.update(**update_args),
-            f"Failed to update record in {self.table_name} with criteria {where} and data {data}",
-        )
+        instance = await self.find_unique(where)
+        if not instance:
+            return None
+        for key, value in data.items():
+            setattr(instance, key, value)
+        self.session.add(instance)
+        await self.session.commit()
+        await self.session.refresh(instance)
+        return instance
 
     async def delete(
         self,
@@ -402,11 +349,12 @@ class BaseController[
         ModelType | None
             The deleted record, or None if no matching record was found.
         """
-        delete_args = self._build_delete_args(where=where, include=include)
-        return await self._execute_query(
-            lambda: self.table.delete(**delete_args),
-            f"Failed to delete record in {self.table_name} with criteria {where}",
-        )
+        instance = await self.find_unique(where)
+        if not instance:
+            return None
+        await self.session.delete(instance)
+        await self.session.commit()
+        return instance
 
     async def upsert(
         self,
@@ -433,11 +381,16 @@ class BaseController[
         ModelType
             The created or updated record.
         """
-        upsert_args = self._build_upsert_args(where=where, create=create, update=update, include=include)
-        return await self._execute_query(
-            lambda: self.table.upsert(**upsert_args),
-            f"Failed to upsert record in {self.table_name} with where={where}, create={create}, update={update}",
-        )
+        instance = await self.find_unique(where)
+        if instance:
+            for key, value in update.items():
+                setattr(instance, key, value)
+        else:
+            instance = self.table(**create)
+            self.session.add(instance)
+        await self.session.commit()
+        await self.session.refresh(instance)
+        return instance
 
     async def update_many(
         self,
@@ -463,16 +416,10 @@ class BaseController[
         ValueError
             If the database operation does not return a valid count.
         """
-        result = await self._execute_query(
-            lambda: self.table.update_many(where=where, data=data),
-            f"Failed to update records in {self.table_name} with criteria {where} and data {data}",
-        )
-        # Validate and return count
-        count_val = getattr(result, "count", None)
-        if count_val is None or not isinstance(count_val, int):
-            msg = f"Update operation for {self.table_name} did not return a valid count, got: {count_val}"
-            raise ValueError(msg)
-        return count_val
+        stmt = sa_update(self.table).filter_by(**where).values(**data)
+        result = await self.session.execute(stmt)
+        await self.session.commit()
+        return result.rowcount
 
     async def delete_many(
         self,
@@ -495,16 +442,10 @@ class BaseController[
         ValueError
             If the database operation does not return a valid count.
         """
-        result = await self._execute_query(
-            lambda: self.table.delete_many(where=where),
-            f"Failed to delete records in {self.table_name} with criteria {where}",
-        )
-        # Validate and return count
-        count_val = getattr(result, "count", None)
-        if count_val is None or not isinstance(count_val, int):
-            msg = f"Delete operation for {self.table_name} did not return a valid count, got: {count_val}"
-            raise ValueError(msg)
-        return count_val
+        stmt = sa_delete(self.table).filter_by(**where)
+        result = await self.session.execute(stmt)
+        await self.session.commit()
+        return result.rowcount
 
     # --- Other Utility Methods ---
 
@@ -531,10 +472,10 @@ class BaseController[
             Re-raises any exception that occurs during the transaction.
         """
         try:
-            async with db.transaction():
+            async with self.session.begin():
                 return await callback()
         except Exception as e:
-            logger.error(f"Transaction failed in {self.table_name}: {e}")
+            logger.exception(f"Transaction failed in {self.table}: {e}")
             raise
 
     @staticmethod
@@ -543,7 +484,7 @@ class BaseController[
         model_id: Any,
         create_data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Builds a Prisma 'connect_or_create' relation structure.
+        """Builds a SQLModel 'connect_or_create' relation structure.
 
         Simplifies linking or creating related records during create/update operations.
 
@@ -560,7 +501,7 @@ class BaseController[
         Returns
         -------
         dict[str, Any]
-            A dictionary formatted for Prisma's connect_or_create.
+            A dictionary formatted for SQLModel's connect_or_create.
         """
         where = {id_field: model_id}
         # Create data must contain the ID field for the new record
