@@ -1,9 +1,9 @@
+import asyncio
 import contextlib
 import datetime
-import asyncio
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 from loguru import logger
 
 from prisma.models import Reminder
@@ -19,7 +19,6 @@ class RemindMe(commands.Cog):
         self.db = DatabaseController()
         self.remindme.usage = generate_usage(self.remindme)
         self._initialized = False
-
 
     async def send_reminder(self, reminder: Reminder) -> None:
         user = self.bot.get_user(reminder.reminder_user_id)
@@ -68,7 +67,7 @@ class RemindMe(commands.Cog):
             return
 
         self._initialized = True
-        
+
         reminders = await self.db.reminder.get_all_reminders()
         dt_now = datetime.datetime.now(datetime.UTC)
 
@@ -147,7 +146,7 @@ class RemindMe(commands.Cog):
 
             embed.add_field(
                 name="Note",
-                value="- If you have DMs closed, we will attempt to send it in this channel instead.\n"
+                value="- If you have DMs closed, we will attempt to send it in this channel instead.\n",
             )
 
         except Exception as e:
