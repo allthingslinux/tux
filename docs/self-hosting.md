@@ -44,4 +44,3 @@
     > If this gets stuck your database URL is most likely incorrect. Please check the URL (port as well, port is usually 5432). You should give the command 30 seconds to run before you assume it's stuck.
 
 7. Run `(prefix)help` in your server to see if the bot is running. If it is, now you can start configuring the bot.
-
