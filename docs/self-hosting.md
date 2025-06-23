@@ -49,7 +49,7 @@
 
 If you prefer running PostgreSQL locally instead of using Supabase, follow these steps:
 
-1. **Install PostgreSQL**
+1. Install PostgreSQL
 
    On Debian, run:
 
@@ -58,14 +58,14 @@ If you prefer running PostgreSQL locally instead of using Supabase, follow these
    sudo apt install postgresql postgresql-contrib
    ```
 
-2. **Start and enable the PostgreSQL service**
+2. Start and enable the PostgreSQL service
 
    ```bash
    sudo systemctl start postgresql
    sudo systemctl enable postgresql
    ```
 
-3. **Create a database user and database**
+3. Create a database user and database
 
    Switch to the `postgres` user and enter the PostgreSQL shell:
 
@@ -88,7 +88,7 @@ If you prefer running PostgreSQL locally instead of using Supabase, follow these
    exit
    ```
 
-4. **Use this connection URL in `.env`**
+4. Use this connection URL in `.env`
 
    ```
    postgres://tuxuser:yourpassword@localhost:5432/tuxdb
