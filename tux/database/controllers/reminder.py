@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime
 
 from prisma.actions import GuildActions
 from prisma.models import Guild, Reminder
