@@ -1,9 +1,9 @@
-import asyncio
 import contextlib
 import datetime
+import asyncio
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from loguru import logger
 
 from prisma.models import Reminder
@@ -18,13 +18,11 @@ class RemindMe(commands.Cog):
         self.bot = bot
         self.db = DatabaseController()
         self.remindme.usage = generate_usage(self.remindme)
+        self._initialized = False
 
-    async def send_reminder(self, user_id: int, reminder: Reminder) -> None:
-        user = self.bot.get_user(user_id)
 
-        if user is None:
-            user = await self.bot.fetch_user(user_id)
-
+    async def send_reminder(self, reminder: Reminder) -> None:
+        user = self.bot.get_user(reminder.reminder_user_id)
         if user is not None:
             embed = EmbedCreator.create_embed(
                 bot=self.bot,
@@ -63,6 +61,25 @@ class RemindMe(commands.Cog):
             await self.db.reminder.delete_reminder_by_id(reminder.reminder_id)
         except Exception as e:
             logger.error(f"Failed to delete reminder: {e}")
+
+    @commands.Cog.listener()
+    async def on_ready(self) -> None:
+        if self._initialized:
+            return
+
+        self._initialized = True
+        
+        reminders = await self.db.reminder.get_all_reminders()
+        dt_now = datetime.datetime.now(datetime.UTC)
+
+        for reminder in reminders:
+            seconds = (reminder.reminder_expires_at - dt_now).total_seconds()
+
+            if seconds <= 0:
+                await self.send_reminder(reminder)
+                continue
+
+            self.bot.loop.call_later(seconds, asyncio.create_task, self.send_reminder(reminder))
 
     @commands.hybrid_command(
         name="remindme",
@@ -130,7 +147,7 @@ class RemindMe(commands.Cog):
 
             embed.add_field(
                 name="Note",
-                value="- If you have DMs closed, we will attempt to send it in this channel instead.",
+                value="- If you have DMs closed, we will attempt to send it in this channel instead.\n"
             )
 
         except Exception as e:
@@ -144,7 +161,7 @@ class RemindMe(commands.Cog):
 
             logger.error(f"Error creating reminder: {e}")
 
-        self.bot.loop.call_later(seconds, asyncio.create_task, self.send_reminder(ctx.author.id, reminder_obj))
+        self.bot.loop.call_later(seconds, asyncio.create_task, self.send_reminder(reminder_obj))
 
         await ctx.reply(embed=embed, ephemeral=True)
 
