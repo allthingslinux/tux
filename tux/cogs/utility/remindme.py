@@ -135,6 +135,8 @@ class RemindMe(commands.Cog):
                 guild_id=ctx.guild.id if ctx.guild else 0,
             )
 
+            self.bot.loop.call_later(seconds, asyncio.create_task, self.send_reminder(reminder_obj))
+
             embed = EmbedCreator.create_embed(
                 bot=self.bot,
                 embed_type=EmbedCreator.SUCCESS,
@@ -159,8 +161,6 @@ class RemindMe(commands.Cog):
             )
 
             logger.error(f"Error creating reminder: {e}")
-
-        self.bot.loop.call_later(seconds, asyncio.create_task, self.send_reminder(reminder_obj))
 
         await ctx.reply(embed=embed, ephemeral=True)
 
