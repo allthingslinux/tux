@@ -1,14 +1,17 @@
 # Getting started with self-hosting Tux
+
 > [!WARNING]
 > This guide is for Docker with Docker Compose. This also assumes you have a working Postgres database. If you don't have one, you can use [Supabase](https://supabase.io/).
 
 ## Prerequisites
+
 - Docker and Docker Compose
 - A working Postgres database and the URL in the format `postgres://[username]:[password]@host:port/database`. For Supabase users, ensure you use the provided pooler URL in the same format.
 - Discord bot token with intents enabled
 - Sentry URL for error tracking (optional)
 
 ## Steps to Install
+
 1. Clone the repository
 
     ```bash
@@ -90,7 +93,7 @@ If you prefer running PostgreSQL locally instead of using Supabase, follow these
 
 4. Use this connection URL in `.env`
 
-   ```
+   ```bash
    postgres://tuxuser:yourpassword@localhost:5432/tuxdb
    ```
 
