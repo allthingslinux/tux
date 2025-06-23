@@ -43,20 +43,6 @@ class ReminderController(BaseController[Reminder]):
         """
         return await self.find_unique(where={"reminder_id": reminder_id})
 
-    async def get_unsent_reminders(self) -> list[Reminder]:
-        """Get all unsent reminders that have expired.
-
-        This method finds reminders that should be sent to users
-        because their expiration time has passed.
-
-        Returns
-        -------
-        list[Reminder]
-            List of unsent expired reminders
-        """
-        now = datetime.now(UTC)
-        return await self.find_many(where={"reminder_sent": False, "reminder_expires_at": {"lte": now}})
-
     async def insert_reminder(
         self,
         reminder_user_id: int,
