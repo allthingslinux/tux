@@ -27,3 +27,5 @@ logs/
 # Exclude dependencies and generated files
 prisma/
 typings/
+
+.github/
