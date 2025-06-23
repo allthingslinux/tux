@@ -53,6 +53,7 @@ levenshtein = "^0.27.1"
 jinja2 = "^3.1.6"
 sqlmodel = "^0.0.24"
 asyncpg = "^0.30.0"
+alembic = "^1.16.2"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "==4.2.0"
