@@ -44,3 +44,54 @@
     > If this gets stuck your database URL is most likely incorrect. Please check the URL (port as well, port is usually 5432). You should give the command 30 seconds to run before you assume it's stuck.
 
 7. Run `(prefix)help` in your server to see if the bot is running. If it is, now you can start configuring the bot.
+
+## Setting Up a Local PostgreSQL Database
+
+If you prefer running PostgreSQL locally instead of using Supabase, follow these steps:
+
+1. **Install PostgreSQL**
+
+   On Debian, run:
+
+   ```bash
+   sudo apt update
+   sudo apt install postgresql postgresql-contrib
+   ```
+
+2. **Start and enable the PostgreSQL service**
+
+   ```bash
+   sudo systemctl start postgresql
+   sudo systemctl enable postgresql
+   ```
+
+3. **Create a database user and database**
+
+   Switch to the `postgres` user and enter the PostgreSQL shell:
+
+   ```bash
+   sudo -i -u postgres
+   psql
+   ```
+
+   Inside psql, run:
+
+   ```sql
+   CREATE USER tuxuser WITH PASSWORD 'yourpassword';
+   CREATE DATABASE tuxdb OWNER tuxuser;
+   \q
+   ```
+
+   Exit back:
+
+   ```bash
+   exit
+   ```
+
+4. **Use this connection URL in `.env`**
+
+   ```
+   postgres://tuxuser:yourpassword@localhost:5432/tuxdb
+   ```
+
+Your local PostgreSQL is now ready for Tux. Remember to replace `yourpassword` with a secure password of your choice!
