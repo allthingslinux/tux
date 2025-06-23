@@ -207,7 +207,7 @@ class Tux(commands.Bot):
                 scope.set_tag("event_type", "disconnect")
                 scope.set_level("info")
                 sentry_sdk.capture_message(
-                    "Bot disconnected from Discord, this happens sometimes and is fine as long as it's not hapening too often"
+                    "Bot disconnected from Discord, this happens sometimes and is fine as long as it's not hapening too often",
                 )
 
     # --- Sentry Transaction Tracking ---
