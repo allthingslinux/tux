@@ -12,17 +12,17 @@ import contextlib
 import traceback
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 import discord
 import Levenshtein
-import sentry_sdk
 from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator
+from tux.utils.context_utils import get_interaction_context
 from tux.utils.exceptions import (
     AppCommandPermissionLevelError,
     CodeExecutionError,
@@ -32,6 +32,7 @@ from tux.utils.exceptions import (
     PermissionLevelError,
     UnsupportedLanguageError,
 )
+from tux.utils.sentry_manager import LogLevelStr, SentryManager
 
 # --- Constants and Configuration ---
 
@@ -75,15 +76,6 @@ ErrorDetailExtractor = Callable[[Exception], dict[str, Any]]
 # Note: Interaction is parameterized with the Bot type (Tux).
 AppCommandErrorHandler = Callable[[discord.Interaction[Tux], app_commands.AppCommandError], Coroutine[Any, Any, None]]
 
-# --- Sentry Status Constants (copied from sentry.py for local use) ---
-SENTRY_STATUS_OK = "ok"
-SENTRY_STATUS_UNKNOWN = "unknown"
-SENTRY_STATUS_INTERNAL_ERROR = "internal_error"
-SENTRY_STATUS_NOT_FOUND = "not_found"
-SENTRY_STATUS_PERMISSION_DENIED = "permission_denied"
-SENTRY_STATUS_INVALID_ARGUMENT = "invalid_argument"
-SENTRY_STATUS_RESOURCE_EXHAUSTED = "resource_exhausted"
-
 
 # --- Error Handler Configuration ---
 
@@ -100,6 +92,9 @@ class ErrorHandlerConfig:
 
     # Default log level for this error type (e.g., "INFO", "WARNING", "ERROR").
     log_level: str = "INFO"
+
+    # Sentry transaction status for this error. If None, it's considered an internal error.
+    sentry_status: str | None = SentryManager.STATUS["ERROR"]
 
     # Whether to send this specific error type to Sentry when handled.
     # Useful for tracking frequency even if the user sees a friendly message.
@@ -222,6 +217,7 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
     app_commands.AppCommandError: ErrorHandlerConfig(
         message_format="An application command error occurred: {error}",
         log_level="WARNING",
+        sentry_status=SentryManager.STATUS["UNKNOWN"],
     ),
     # CommandInvokeError wraps the actual exception raised within an app command.
     # It will be unwrapped in _handle_error, but this provides a fallback config.
@@ -229,41 +225,49 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         message_format="An internal error occurred while running the command.",
         log_level="ERROR",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     app_commands.TransformerError: ErrorHandlerConfig(
         message_format="Failed to process an argument value: {error}",
         log_level="INFO",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["INVALID_ARGUMENT"],
     ),
     app_commands.MissingRole: ErrorHandlerConfig(
         message_format="You need the role {roles} to use this command.",
         detail_extractor=_extract_missing_role_details,
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["PERMISSION_DENIED"],
     ),
     app_commands.MissingAnyRole: ErrorHandlerConfig(
         message_format="You need one of the following roles: {roles}",
         detail_extractor=_extract_missing_any_role_details,
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["PERMISSION_DENIED"],
     ),
     app_commands.MissingPermissions: ErrorHandlerConfig(
         message_format="You lack the required permission(s): {permissions}",
         detail_extractor=_extract_permissions_details,
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["PERMISSION_DENIED"],
     ),
     # Generic check failure for app commands.
     app_commands.CheckFailure: ErrorHandlerConfig(
         message_format="You do not meet the requirements to run this command.",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["PERMISSION_DENIED"],
     ),
     app_commands.CommandOnCooldown: ErrorHandlerConfig(
         message_format="This command is on cooldown. Please wait {error.retry_after:.1f}s.",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["RESOURCE_EXHAUSTED"],
     ),
     app_commands.BotMissingPermissions: ErrorHandlerConfig(
         message_format="I lack the required permission(s): {permissions}",
         detail_extractor=_extract_permissions_details,
         log_level="WARNING",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     # Indicates a mismatch between the command signature registered with Discord
     # and the signature defined in the bot's code.
@@ -271,11 +275,13 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         message_format="Internal error: Command signature mismatch. Please report this.",
         log_level="ERROR",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     # === Traditional Commands (discord.ext.commands) ===
     commands.CommandError: ErrorHandlerConfig(
         message_format="A command error occurred: {error}",
         log_level="WARNING",
+        sentry_status=SentryManager.STATUS["UNKNOWN"],
     ),
     # CommandInvokeError wraps the actual exception raised within a prefix command.
     # It will be unwrapped in _handle_error, but this provides a fallback config.
@@ -283,180 +289,217 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         message_format="An internal error occurred while running the command.",
         log_level="ERROR",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     commands.ConversionError: ErrorHandlerConfig(
         message_format="Failed to convert argument: {error.original}",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["INVALID_ARGUMENT"],
     ),
     commands.MissingRole: ErrorHandlerConfig(
         message_format="You need the role {roles} to use this command.",
         detail_extractor=_extract_missing_role_details,
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["PERMISSION_DENIED"],
     ),
     commands.MissingAnyRole: ErrorHandlerConfig(
         message_format="You need one of the following roles: {roles}",
         detail_extractor=_extract_missing_any_role_details,
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["PERMISSION_DENIED"],
     ),
     commands.MissingPermissions: ErrorHandlerConfig(
         message_format="You lack the required permission(s): {permissions}",
         detail_extractor=_extract_permissions_details,
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["PERMISSION_DENIED"],
     ),
     # Error related to command flags (discord.ext.flags).
     commands.FlagError: ErrorHandlerConfig(
         message_format="Error processing command flags: {error}\nUsage: `{ctx.prefix}{usage}`",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["INVALID_ARGUMENT"],
     ),
     commands.BadFlagArgument: ErrorHandlerConfig(
         message_format="Invalid value for flag `{flag_name}`: {original_cause}\nUsage: `{ctx.prefix}{usage}`",
         detail_extractor=_extract_bad_flag_argument_details,
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["INVALID_ARGUMENT"],
     ),
     commands.MissingRequiredFlag: ErrorHandlerConfig(
         message_format="Missing required flag: `{flag_name}`\nUsage: `{ctx.prefix}{usage}`",
         detail_extractor=_extract_missing_flag_details,
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["INVALID_ARGUMENT"],
     ),
     # Generic check failure for prefix commands.
     commands.CheckFailure: ErrorHandlerConfig(
         message_format="You do not meet the requirements to run this command.",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["PERMISSION_DENIED"],
     ),
     commands.CommandOnCooldown: ErrorHandlerConfig(
         message_format="This command is on cooldown. Please wait {error.retry_after:.1f}s.",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["RESOURCE_EXHAUSTED"],
     ),
     commands.MissingRequiredArgument: ErrorHandlerConfig(
         message_format="Missing required argument: `{param_name}`\nUsage: `{ctx.prefix}{usage}`",
         detail_extractor=_extract_missing_argument_details,
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["INVALID_ARGUMENT"],
     ),
     commands.TooManyArguments: ErrorHandlerConfig(
         message_format="You provided too many arguments.\nUsage: `{ctx.prefix}{usage}`",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["INVALID_ARGUMENT"],
     ),
     commands.NotOwner: ErrorHandlerConfig(
         message_format="This command can only be used by the bot owner.",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["PERMISSION_DENIED"],
     ),
     commands.BotMissingPermissions: ErrorHandlerConfig(
         message_format="I lack the required permission(s): {permissions}",
         detail_extractor=_extract_permissions_details,
         log_level="WARNING",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     # Generic bad argument error.
     commands.BadArgument: ErrorHandlerConfig(
         message_format="Invalid argument provided: {error}",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["INVALID_ARGUMENT"],
     ),
     # Errors for when specific Discord entities are not found.
     commands.MemberNotFound: ErrorHandlerConfig(
         message_format="Could not find member: {error.argument}.",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["NOT_FOUND"],
     ),
     commands.UserNotFound: ErrorHandlerConfig(
         message_format="Could not find user: {error.argument}.",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["NOT_FOUND"],
     ),
     commands.ChannelNotFound: ErrorHandlerConfig(
         message_format="Could not find channel: {error.argument}.",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["NOT_FOUND"],
     ),
     commands.RoleNotFound: ErrorHandlerConfig(
         message_format="Could not find role: {error.argument}.",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["NOT_FOUND"],
     ),
     commands.EmojiNotFound: ErrorHandlerConfig(
         message_format="Could not find emoji: {error.argument}.",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["NOT_FOUND"],
     ),
     commands.GuildNotFound: ErrorHandlerConfig(
         message_format="Could not find server: {error.argument}.",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["NOT_FOUND"],
     ),
     # === Extension/Cog Loading Errors (discord.ext.commands) ===
     commands.ExtensionError: ErrorHandlerConfig(
         message_format="Extension operation failed: {error}",
         log_level="WARNING",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     commands.ExtensionNotLoaded: ErrorHandlerConfig(
         message_format="Cannot reload extension `{error.name}` - it hasn't been loaded yet.",
         log_level="WARNING",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     commands.ExtensionNotFound: ErrorHandlerConfig(
         message_format="Extension `{error.name}` could not be found.",
         log_level="WARNING",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["NOT_FOUND"],
     ),
     commands.ExtensionAlreadyLoaded: ErrorHandlerConfig(
         message_format="Extension `{error.name}` is already loaded.",
         log_level="INFO",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["INVALID_ARGUMENT"],
     ),
     commands.ExtensionFailed: ErrorHandlerConfig(
         message_format="Extension `{error.name}` failed to load: {error.original}",
         log_level="ERROR",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     commands.NoEntryPointError: ErrorHandlerConfig(
         message_format="Extension `{error.name}` is missing a setup function.",
         log_level="ERROR",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     # === Custom Errors (defined in tux.utils.exceptions) ===
     PermissionLevelError: ErrorHandlerConfig(
         message_format="You need permission level `{error.permission}` to use this command.",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["PERMISSION_DENIED"],
     ),
     AppCommandPermissionLevelError: ErrorHandlerConfig(
         message_format="You need permission level `{error.permission}` to use this command.",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["PERMISSION_DENIED"],
     ),
     # === Code Execution Errors (from tux.utils.exceptions) ===
     MissingCodeError: ErrorHandlerConfig(
         message_format="{error}",
         log_level="INFO",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["INVALID_ARGUMENT"],
     ),
     InvalidCodeFormatError: ErrorHandlerConfig(
         message_format="{error}",
         log_level="INFO",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["INVALID_ARGUMENT"],
     ),
     UnsupportedLanguageError: ErrorHandlerConfig(
         message_format="{error}",
         log_level="INFO",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["INVALID_ARGUMENT"],
     ),
     CompilationError: ErrorHandlerConfig(
         message_format="{error}",
         log_level="INFO",
         send_to_sentry=True,  # Monitor frequency of compilation failures
+        sentry_status=SentryManager.STATUS["INVALID_ARGUMENT"],
     ),
     CodeExecutionError: ErrorHandlerConfig(
         message_format="{error}",
         log_level="INFO",
         send_to_sentry=True,  # Monitor general code execution issues
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     # === Discord API & Client Errors ===
     discord.ClientException: ErrorHandlerConfig(
         message_format="A client-side error occurred: {error}",
         log_level="WARNING",
         send_to_sentry=True,  # Monitor frequency of generic client errors
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     discord.HTTPException: ErrorHandlerConfig(
         message_format="An HTTP error occurred while communicating with Discord: {error.status} {error.text}",
         log_level="WARNING",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     discord.RateLimited: ErrorHandlerConfig(
         message_format="We are being rate-limited by Discord. Please try again in {error.retry_after:.1f} seconds.",
         log_level="WARNING",
         send_to_sentry=True,  # Track rate limits
+        sentry_status=SentryManager.STATUS["RESOURCE_EXHAUSTED"],
     ),
     # Generic Forbidden/NotFound often indicate deleted resources or permission issues caught by more specific exceptions.
     # These provide fallbacks.
@@ -464,34 +507,40 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         message_format="I don't have permission to perform that action. Error: {error.text}",
         log_level="WARNING",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["PERMISSION_DENIED"],
     ),
     discord.NotFound: ErrorHandlerConfig(
         message_format="Could not find the requested resource (it might have been deleted). Error: {error.text}",
         log_level="INFO",
         send_to_sentry=False,
+        sentry_status=SentryManager.STATUS["NOT_FOUND"],
     ),
     discord.DiscordServerError: ErrorHandlerConfig(
         message_format="Discord reported a server error ({error.status}). Please try again later. Error: {error.text}",
         log_level="ERROR",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     # Indicates unexpected data from Discord, potentially a library or API issue.
     discord.InvalidData: ErrorHandlerConfig(
         message_format="Received invalid data from Discord. Please report this if it persists.",
         log_level="ERROR",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     # Specific to interactions, raised if interaction.response.send_message is called more than once.
     discord.InteractionResponded: ErrorHandlerConfig(
         message_format="This interaction has already been responded to.",
         log_level="WARNING",  # Usually indicates a logic error in command code
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     # Raised when Application ID is needed but not available (e.g., for app command sync).
     discord.MissingApplicationID: ErrorHandlerConfig(
         message_format="Internal setup error: Missing Application ID.",
         log_level="ERROR",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     # === Common Python Built-in Errors ===
     # These usually indicate internal logic errors, so show a generic message to the user
@@ -500,52 +549,62 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         message_format="An internal error occurred due to an invalid value.",
         log_level="ERROR",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     TypeError: ErrorHandlerConfig(
         message_format="An internal error occurred due to a type mismatch.",
         log_level="ERROR",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     KeyError: ErrorHandlerConfig(
         message_format="An internal error occurred while looking up data.",
         log_level="ERROR",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     IndexError: ErrorHandlerConfig(
         message_format="An internal error occurred while accessing a sequence.",
         log_level="ERROR",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     AttributeError: ErrorHandlerConfig(
         message_format="An internal error occurred while accessing an attribute.",
         log_level="ERROR",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     ZeroDivisionError: ErrorHandlerConfig(
         message_format="An internal error occurred during a calculation (division by zero).",
         log_level="ERROR",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     # === Additional Discord Client/Connection Errors ===
     discord.LoginFailure: ErrorHandlerConfig(
         message_format="Bot authentication failed. Please check the bot token configuration.",
         log_level="CRITICAL",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["UNAUTHENTICATED"],
     ),
     discord.ConnectionClosed: ErrorHandlerConfig(
         message_format="Connection to Discord was closed unexpectedly. Attempting to reconnect...",
         log_level="WARNING",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["UNKNOWN"],
     ),
     discord.PrivilegedIntentsRequired: ErrorHandlerConfig(
         message_format="This bot requires privileged intents to function properly. Please enable them in the Discord Developer Portal.",
         log_level="CRITICAL",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     discord.GatewayNotFound: ErrorHandlerConfig(
         message_format="Could not connect to Discord's gateway. This may be a temporary issue.",
         log_level="ERROR",
         send_to_sentry=True,
+        sentry_status=SentryManager.STATUS["ERROR"],
     ),
     # Note: InvalidArgument, NoMoreItems, and TooManyRequests are not available in all discord.py versions
     # or are handled by other existing exceptions like HTTPException
@@ -640,7 +699,7 @@ class ErrorHandler(commands.Cog):
         root_error = _unwrap_error(error)
 
         # --- Sentry Transaction Finalization (Added) ---
-        self._finish_sentry_transaction_on_error(source, root_error)
+        self.bot.sentry_manager.finish_transaction_on_error()
         # -----------------------------------------------
 
         # Step 3: Gather context using the resolved root error.
@@ -649,11 +708,8 @@ class ErrorHandler(commands.Cog):
         log_context = self._get_log_context(source, user, root_error)
         log_context["initial_error_type"] = type(error).__name__  # Keep initial error type for context
 
-        # Step 4: Determine handling configuration.
-        config = ERROR_CONFIG_MAP.get(error_type)
-
         # Step 5: Format the user-facing message.
-        message = self._get_formatted_message(source, root_error, config)
+        message = self._get_formatted_message(source, root_error, ERROR_CONFIG_MAP.get(error_type))
 
         # Step 6: Create the error embed.
         embed = EmbedCreator.create_embed(
@@ -673,19 +729,28 @@ class ErrorHandler(commands.Cog):
             log_context["send_error"] = str(send_exc)
             log_context["send_error_type"] = type(send_exc).__name__
             logger.bind(**log_context).exception("Unexpected failure during error message sending.")
-            self._capture_exception_with_context(
+            self.bot.sentry_manager.capture_exception(
                 send_exc,
-                log_context,
-                "ERROR",
+                context=log_context,
+                level="error",
                 tags={"failure_point": "send_response"},
             )
             return
 
         # Step 8 & 9: Log and report.
-        sentry_event_id = self._log_and_report_error(root_error, error_type, log_context, config)
+        sentry_event_id = self._log_and_report_error(
+            root_error,
+            error_type,
+            log_context,
+            ERROR_CONFIG_MAP.get(error_type),
+        )
 
         # Step 10: Attempt edit with Sentry ID.
         await self._try_edit_message_with_sentry_id(sent_message, sentry_event_id, log_context)
+
+        # Set context information for better Sentry reporting
+        if self.bot.sentry_manager.is_initialized:
+            self.bot.sentry_manager.set_command_context(source)
 
     @staticmethod
     def _get_user_from_source(source: ContextOrInteraction) -> discord.User | discord.Member:
@@ -704,71 +769,17 @@ class ErrorHandler(commands.Cog):
         """
         Builds a dictionary containing structured context information about the error event.
 
-        Includes information about invocation type (prefix/app) and definition type (hybrid/prefix_only/app_only).
+        Args:
+            source: The source of the error.
+            user: The user who triggered the error.
+            error: The exception that occurred.
 
-        Parameters
-        ----------
-        source : ContextOrInteraction
-            The source of the error.
-        user : Union[discord.User, discord.Member]
-            The user who triggered the error.
-        error : Exception
-            The exception that occurred.
-
-        Returns
-        -------
-        dict[str, Any]
+        Returns:
             A dictionary with context keys like user_id, command_name, guild_id, etc.
         """
-        context: dict[str, Any] = {
-            "user_id": user.id,
-            "user_name": str(user),
-            "error": str(error),
-            "error_type": type(error).__name__,
-        }
-
-        # Determine invocation method first using ternary operator
-        invoked_via_interaction: bool = (
-            True if isinstance(source, discord.Interaction) else source.interaction is not None
-        )
-
-        # Set command_type based on invocation method
-        context["command_type"] = "app" if invoked_via_interaction else "prefix"
-        context["invoked_via_interaction"] = invoked_via_interaction
-
-        # Add specific details based on source type
-        if isinstance(source, discord.Interaction):
-            context["interaction_id"] = source.id
-            context["channel_id"] = source.channel_id
-            context["guild_id"] = source.guild_id
-            # Determine definition type for app invocation
-            if source.command:
-                context["command_name"] = source.command.qualified_name
-                prefix_command = self.bot.get_command(source.command.qualified_name)
-                if prefix_command and isinstance(prefix_command, commands.HybridCommand | commands.HybridGroup):
-                    context["command_definition"] = "hybrid"
-                else:
-                    context["command_definition"] = "app"
-            else:
-                context["command_definition"] = "unknown"
-
-        else:  # Source is commands.Context
-            context["message_id"] = source.message.id
-            context["channel_id"] = source.channel.id
-            context["guild_id"] = source.guild.id if source.guild else None
-            # Determine definition type for prefix invocation
-            if source.command:
-                context["command_name"] = source.command.qualified_name
-                context["command_prefix"] = source.prefix
-                context["command_invoked_with"] = source.invoked_with
-                if isinstance(source.command, commands.HybridCommand | commands.HybridGroup):
-                    context["command_definition"] = "hybrid"
-                else:
-                    context["command_definition"] = "prefix"
-            else:
-                context["command_invoked_with"] = source.invoked_with
-                context["command_definition"] = "unknown"
-
+        context = get_interaction_context(source)
+        context["error"] = str(error)
+        context["error_type"] = type(error).__name__
         return context
 
     def _get_formatted_message(
@@ -897,152 +908,6 @@ class ErrorHandler(commands.Cog):
             mention_author=False,  # Avoid potentially annoying pings for errors.
         )
 
-    # --- Sentry Transaction Finalization Logic (Added) ---
-    def _finish_sentry_transaction_on_error(self, source: ContextOrInteraction, root_error: Exception) -> None:
-        """Attempts to find and finish an active Sentry transaction based on the error source."""
-        if not sentry_sdk.is_initialized():
-            return
-
-        transaction: Any | None = None
-        transaction_id: int | None = None
-        command_type: str | None = None
-
-        # Status mapping dictionaries
-        app_command_status_map = {
-            app_commands.CommandNotFound: SENTRY_STATUS_NOT_FOUND,
-            app_commands.CheckFailure: SENTRY_STATUS_PERMISSION_DENIED,
-            app_commands.TransformerError: SENTRY_STATUS_INVALID_ARGUMENT,
-        }
-
-        prefix_command_status_map = {
-            commands.CommandNotFound: SENTRY_STATUS_NOT_FOUND,
-            commands.UserInputError: SENTRY_STATUS_INVALID_ARGUMENT,
-            commands.CheckFailure: SENTRY_STATUS_PERMISSION_DENIED,
-            commands.CommandOnCooldown: SENTRY_STATUS_RESOURCE_EXHAUSTED,
-            commands.MaxConcurrencyReached: SENTRY_STATUS_RESOURCE_EXHAUSTED,
-        }
-
-        # Default status
-        status: str = SENTRY_STATUS_INTERNAL_ERROR
-
-        try:
-            # Determine ID and type based on source
-            if isinstance(source, discord.Interaction):
-                transaction_id = source.id
-                command_type = "app_command"
-
-                # Lookup status in mapping
-                for error_type, error_status in app_command_status_map.items():
-                    if isinstance(root_error, error_type):
-                        status = error_status
-                        break
-
-            elif isinstance(source, commands.Context):  # type: ignore
-                transaction_id = source.message.id
-                command_type = "prefix_command"
-
-                # Lookup status in mapping
-                for error_type, error_status in prefix_command_status_map.items():
-                    if isinstance(root_error, error_type):
-                        status = error_status
-                        break
-
-            else:
-                logger.warning(f"Unknown error source type encountered: {type(source).__name__}")
-                return  # Cannot determine transaction ID
-
-            # Try to pop the transaction from the bot's central store
-            if transaction_id is not None:  # type: ignore
-                transaction = self.bot.active_sentry_transactions.pop(transaction_id, None)
-
-            if transaction:
-                transaction.set_status(status)
-                transaction.finish()
-                logger.trace(
-                    f"Finished Sentry transaction ({status}) for errored {command_type} (ID: {transaction_id})",
-                )
-
-        except Exception as e:
-            logger.exception(f"Error during Sentry transaction finalization for ID {transaction_id}: {e}")
-            # Capture this specific failure to Sentry if needed
-            sentry_sdk.capture_exception(e, hint={"context": "Sentry transaction finalization"})
-
-    # --- Sentry Reporting Logic ---
-
-    @staticmethod
-    def _capture_exception_with_context(
-        error: Exception,
-        log_context: dict[str, Any],
-        level: str = "ERROR",
-        tags: dict[str, str] | None = None,
-    ) -> str | None:
-        """
-        Safely sends an exception to Sentry, enriching it with structured context.
-
-        This method pushes a new scope to Sentry, adds user information, the detailed
-        log context, the specified logging level, and any custom tags before capturing
-        the exception. It includes error handling to prevent Sentry SDK issues from
-        crashing the error handler itself.
-
-        Parameters
-        ----------
-        error : Exception
-            The exception to report.
-        log_context : dict[str, Any]
-            The dictionary of context information gathered by `_get_log_context`.
-        level : str, optional
-            The severity level for the Sentry event ('info', 'warning', 'error', etc.). Defaults to "ERROR".
-        tags : Optional[dict[str, str]], optional
-            Additional key-value tags to attach to the Sentry event. Defaults to None.
-
-        Returns
-        -------
-        Optional[str]
-            The Sentry event ID if capture was successful, otherwise None.
-        """
-        event_id: str | None = None
-        try:
-            # Create an isolated scope for this Sentry event.
-            with sentry_sdk.push_scope() as scope:
-                # Add user identification.
-                scope.set_user({"id": log_context.get("user_id"), "username": log_context.get("user_name")})
-                # Attach the detailed context dictionary under the 'discord' key.
-                scope.set_context("discord", log_context)
-                # Set the severity level of the event.
-                scope.level = level.lower()
-
-                # --- Add specific tags for better filtering/searching --- #
-                scope.set_tag("command_name", log_context.get("command_name", "Unknown"))
-                scope.set_tag("command_type", log_context.get("command_type", "Unknown"))
-                scope.set_tag("command_definition", log_context.get("command_definition", "Unknown"))
-
-                # Add new tag for interaction check
-                scope.set_tag("invoked_via_interaction", str(log_context.get("invoked_via_interaction", False)).lower())
-
-                # Handle potential None for guild_id (e.g., in DMs)
-                guild_id = log_context.get("guild_id")
-                scope.set_tag("guild_id", str(guild_id) if guild_id else "DM")
-
-                # Add any custom tags provided when calling this function.
-                if tags:
-                    for key, value in tags.items():
-                        scope.set_tag(key, value)
-
-                # Send the exception event to Sentry and capture the returned event ID.
-                event_id = sentry_sdk.capture_exception(error)
-
-                # Debug log indicating successful reporting.
-                if event_id:
-                    logger.debug(f"Reported {type(error).__name__} to Sentry ({event_id})")
-                else:
-                    logger.warning(f"Captured {type(error).__name__} but Sentry returned no ID.")
-
-        except Exception as sentry_exc:
-            # Log if reporting to Sentry fails, but don't let it stop the error handler.
-            logger.error(f"Failed to report {type(error).__name__} to Sentry: {sentry_exc}")
-
-        return event_id  # Return the event ID (or None if capture failed)
-
     def _log_and_report_error(
         self,
         root_error: Exception,
@@ -1057,16 +922,24 @@ class ErrorHandler(commands.Cog):
             logger.bind(**log_context).log(config.log_level, f"Handled expected error: {error_type.__name__}")
             if config.send_to_sentry:
                 # Optionally send handled errors to Sentry.
-                sentry_event_id = self._capture_exception_with_context(
+                sentry_event_id = self.bot.sentry_manager.capture_exception(
                     root_error,
-                    log_context,
-                    config.log_level,
+                    context=log_context,
+                    level=cast(LogLevelStr, config.log_level.lower()),
                     tags={"error_type": "handled"},
                 )
         else:
             # Log unhandled errors at ERROR level and always report to Sentry.
-            logger.bind(**log_context).error(f"Unhandled error: {error_type.__name__}")
-            sentry_event_id = self._log_and_capture_unhandled(root_error, log_context)
+            trace = traceback.format_exception(type(root_error), root_error, root_error.__traceback__)
+            formatted_trace = "".join(trace)
+            logger.bind(**log_context).error(f"Unhandled Error: {root_error}\nTraceback:\n{formatted_trace}")
+
+            sentry_event_id = self.bot.sentry_manager.capture_exception(
+                root_error,
+                context=log_context,
+                level="error",
+                tags={"error_type": "unhandled"},
+            )
         return sentry_event_id
 
     async def _try_edit_message_with_sentry_id(
@@ -1127,36 +1000,6 @@ class ErrorHandler(commands.Cog):
                 exc_info=unexpected_edit_exc,
             )
 
-    def _log_and_capture_unhandled(self, error: Exception, log_context: dict[str, Any]) -> str | None:
-        """
-        Handles errors not found in the `ERROR_CONFIG_MAP`.
-
-        It logs the error with its full traceback at the ERROR level and reports
-        it to Sentry, tagging it as 'unhandled'.
-
-        Parameters
-        ----------
-        error : Exception
-            The unhandled exception.
-        log_context : dict[str, Any]
-            The context dictionary for logging and reporting.
-
-        Returns
-        -------
-        Optional[str]
-            The Sentry event ID if capture was successful, otherwise None.
-        """
-        # Generate the formatted traceback string.
-        trace = traceback.format_exception(type(error), error, error.__traceback__)
-        formatted_trace = "".join(trace)
-
-        # Log the error locally with full traceback and context.
-        logger.bind(**log_context).error(f"Unhandled Error: {error}\nTraceback:\n{formatted_trace}")
-
-        # Report the unhandled error to Sentry with high severity.
-        # Directly return the result from _capture_exception_with_context.
-        return self._capture_exception_with_context(error, log_context, "ERROR", tags={"error_type": "unhandled"})
-
     # --- Command Suggestion Logic ---
 
     async def _suggest_command(self, ctx: commands.Context[Tux]) -> list[str] | None:
@@ -1197,7 +1040,7 @@ class ErrorHandler(commands.Cog):
         log_context["suggest_max_dist"] = max_distance
         log_context["suggest_max_count"] = max_suggestions
 
-        logger.bind(**log_context).debug("Attempting command suggestion.")
+        logger.bind(**log_context).trace("Attempting command suggestion.")
 
         # Store potential matches: {qualified_name: min_distance}
         command_distances: dict[str, int] = {}
@@ -1229,7 +1072,7 @@ class ErrorHandler(commands.Cog):
 
         # If no commands were within the distance threshold.
         if not command_distances:
-            logger.bind(**log_context).debug("No close command matches found for suggestion.")
+            logger.bind(**log_context).trace("No close command matches found for suggestion.")
             return None
 
         # Sort the found commands by distance (closest first).
@@ -1239,7 +1082,7 @@ class ErrorHandler(commands.Cog):
         final_suggestions = [cmd_name for cmd_name, _ in sorted_suggestions[:max_suggestions]]
 
         log_context["suggestions_found"] = final_suggestions
-        logger.bind(**log_context).debug("Command suggestions generated.")
+        logger.bind(**log_context).trace("Command suggestions generated.")
         # Return the list of names, or None if the list is empty (shouldn't happen here, but safety check).
         return final_suggestions or None
 
@@ -1277,7 +1120,7 @@ class ErrorHandler(commands.Cog):
                 # Send the suggestion message, automatically deleting it after a short period.
                 await ctx.send(embed=embed, delete_after=SUGGESTION_DELETE_AFTER)
                 log_context["suggestions_sent"] = suggestions
-                logger.bind(**log_context).info("Sent command suggestions.")
+                logger.bind(**log_context).debug("Sent command suggestions.")
             except discord.HTTPException as e:
                 # Log if sending the suggestion message fails.
                 log_context["send_error"] = str(e)
@@ -1290,7 +1133,7 @@ class ErrorHandler(commands.Cog):
         else:
             # Log that the command wasn't found and no suitable suggestions were generated.
             # No message is sent back to the user in this case to avoid unnecessary noise.
-            logger.bind(**log_context).info("Command not found, no suggestions generated.")
+            logger.bind(**log_context).debug("Command not found, no suggestions generated.")
 
     # --- Discord Event Listeners ---
 

@@ -43,7 +43,7 @@ pytz = ">=2024.1"
 pyyaml = ">=6.0.2"
 reactionmenu = ">=3.1.7"
 rsa = ">=4.9"
-sentry-sdk = { version = ">=2.7.0", extras = ["httpx", "loguru"] }
+sentry-sdk = { extras = ["loguru", "prisma"], version = "^2.0.1" }
 audioop-lts = "^0.2.1"
 colorama = "^0.4.6"
 rich = "^14.0.0"
@@ -60,6 +60,7 @@ ruff = "==0.12.0"
 poetry-types = "0.6.0"
 yamllint = "1.37.1"
 yamlfix = "1.17.0"
+vulture = "^2.14"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.0.0"
@@ -222,3 +223,20 @@ indent_sequence = 4
 line_length = 80
 preserve_quotes = false
 sequence_style = "block_style"
+
+[tool.vulture]
+paths = ["tux", "tests"]
+exclude = [
+    "__pypackages__",
+    ".venv",
+    "build",
+    "dist",
+    "htmlcov",
+    "prisma",
+    "typings",
+]
+min_confidence = 80
+sort_by_size = true
+verbose = false
+ignore_decorators = ["@pytest.fixture"]
+ignore_names = ["_*"]

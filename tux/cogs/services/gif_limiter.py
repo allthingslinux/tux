@@ -4,6 +4,7 @@ from time import time
 
 import discord
 from discord.ext import commands, tasks
+from loguru import logger
 
 from tux.bot import Tux
 from tux.utils.config import CONFIG
@@ -120,7 +121,7 @@ class GifLimiter(commands.Cog):
         if await self._should_process_message(message):
             await self._handle_gif_message(message)
 
-    @tasks.loop(seconds=20)
+    @tasks.loop(seconds=20, name="old_gif_remover")
     async def old_gif_remover(self) -> None:
         """
         Regularly cleans old GIF timestamps
@@ -142,6 +143,23 @@ class GifLimiter(commands.Cog):
                     self.recent_gifs_by_user[user_id] = filtered_timestamps
                 else:
                     del self.recent_gifs_by_user[user_id]
+
+    @old_gif_remover.before_loop
+    async def before_old_gif_remover(self) -> None:
+        """Wait until the bot is ready."""
+        await self.bot.wait_until_ready()
+
+    @old_gif_remover.error
+    async def on_old_gif_remover_error(self, error: BaseException) -> None:
+        """Handles errors in the old_gif_remover loop."""
+        logger.error(f"Error in old_gif_remover loop: {error}")
+
+        if isinstance(error, Exception):
+            self.bot.sentry_manager.capture_exception(error)
+        else:
+            # For BaseExceptions that are not Exceptions (like KeyboardInterrupt),
+            # it's often better to let them propagate.
+            raise error
 
     async def cog_unload(self) -> None:
         """Cancel the background task when the cog is unloaded."""

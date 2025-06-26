@@ -1,4 +1,3 @@
-import asyncio
 import re
 
 import discord
@@ -14,23 +13,7 @@ class StatusRoles(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.status_roles = CONFIG.STATUS_ROLES
-        self._unload_task = None  # Store task reference here
-
-        # Check if config exists and is valid
-        if not self.status_roles:
-            logger.warning("No status roles configurations found. Unloading StatusRoles cog.")
-            # Store the task reference
-            self._unload_task = asyncio.create_task(self._unload_self())
-        else:
-            logger.info(f"StatusRoles cog initialized with {len(self.status_roles)} role configurations")
-
-    async def _unload_self(self):
-        """Unload this cog if configuration is missing."""
-        try:
-            await self.bot.unload_extension("tux.cogs.services.status_roles")
-            logger.info("StatusRoles cog has been unloaded due to missing configuration")
-        except Exception as e:
-            logger.error(f"Failed to unload StatusRoles cog: {e}")
+        logger.info(f"StatusRoles cog initialized with {len(self.status_roles)} role configurations")
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -126,4 +109,9 @@ class StatusRoles(commands.Cog):
 
 
 async def setup(bot: commands.Bot):
+    # Check if config exists and is valid before loading the cog
+    if not CONFIG.STATUS_ROLES:
+        logger.warning("No status roles configurations found. Skipping StatusRoles cog.")
+        return
+
     await bot.add_cog(StatusRoles(bot))

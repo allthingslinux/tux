@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands, tasks
@@ -13,13 +14,16 @@ from tux.utils.functions import generate_usage
 
 from . import ModerationCogBase
 
+if TYPE_CHECKING:
+    from tux.bot import Tux
+
 
 class TempBan(ModerationCogBase):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
         self.tempban.usage = generate_usage(self.tempban, TempBanFlags)
         self._processing_tempbans = False  # Lock to prevent overlapping task runs
-        self.tempban_check.start()
+        self.check_tempbans.start()
 
     @commands.hybrid_command(name="tempban", aliases=["tb"])
     @commands.guild_only()
@@ -152,53 +156,51 @@ class TempBan(ModerationCogBase):
 
         return processed_count, failed_count
 
-    @tasks.loop(minutes=1)
-    async def tempban_check(self) -> None:
-        """
-        Check for expired tempbans at a set interval and unban the user if the ban has expired.
-
-        Uses a simple locking mechanism to prevent overlapping executions.
-        Processes bans in smaller batches to prevent timeout issues.
-
-        Raises
-        ------
-        Exception
-            If an error occurs while checking for expired tempbans.
-        """
-        # Skip if already processing
+    @tasks.loop(minutes=1, name="tempban_checker")
+    async def check_tempbans(self) -> None:
+        """Checks for expired tempbans and unbans the user."""
         if self._processing_tempbans:
+            logger.debug("Tempban check is already in progress. Skipping.")
             return
 
+        self._processing_tempbans = True
         try:
-            self._processing_tempbans = True
-
-            # Get expired tempbans
             expired_cases = await self.db.case.get_expired_tempbans()
-            processed_cases = 0
-            failed_cases = 0
 
+            if not expired_cases:
+                return
+
+            logger.info(f"Processing {len(expired_cases)} expired tempban cases.")
+
+            processed, failed = 0, 0
             for case in expired_cases:
-                # Process each case using the helper method
-                processed, failed = await self._process_tempban_case(case)
-                processed_cases += processed
-                failed_cases += failed
+                p, f = await self._process_tempban_case(case)
+                processed += p
+                failed += f
 
-            if processed_cases > 0 or failed_cases > 0:
-                logger.info(f"Tempban check: processed {processed_cases} cases, {failed_cases} failures")
+            if processed or failed:
+                logger.info(f"Finished processing tempbans. Processed: {processed}, Failed: {failed}.")
 
-        except Exception as e:
-            logger.error(f"Failed to check tempbans: {e}")
         finally:
             self._processing_tempbans = False
 
-    @tempban_check.before_loop
-    async def before_tempban_check(self) -> None:
-        """Wait for the bot to be ready before starting the loop."""
+    @check_tempbans.before_loop
+    async def before_check_tempbans(self) -> None:
+        """Wait until the bot is ready."""
         await self.bot.wait_until_ready()
 
+    @check_tempbans.error
+    async def on_tempban_error(self, error: BaseException) -> None:
+        """Handles errors in the tempban checking loop."""
+        logger.error(f"Error in tempban checker loop: {error}")
+
+        if isinstance(error, Exception):
+            self.bot.sentry_manager.capture_exception(error)
+        else:
+            raise error
+
     async def cog_unload(self) -> None:
-        """Cancel the tempban check loop when the cog is unloaded."""
-        self.tempban_check.cancel()
+        self.check_tempbans.cancel()
 
 
 async def setup(bot: Tux) -> None:

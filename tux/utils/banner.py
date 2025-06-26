@@ -1,6 +1,7 @@
 """Banner creation and formatting utilities for Tux."""
 
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from typing import NamedTuple
 
 from rich.console import Console
@@ -72,13 +73,13 @@ class BannerBuilder:
         mode_text = "Development" if self.config.dev_mode else "Production"
 
         info_data = [
-            ("", ""),  # Empty row to shift content down
-            ("Bot Name", f"{self.config.bot_name} (Tux)"),
+            ("Bot Name", f"{self.config.bot_name}"),
             ("Version", self.config.version),
             ("Bot ID", str(self.config.bot_id or "Unknown")),
             ("Status", f"Watching {self.config.guild_count} servers with {self.config.user_count} users"),
             ("Prefix", self.config.prefix),
             ("Mode", Text(mode_text, style=mode_style)),
+            ("Date", datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")),
         ]
 
         # Add rows, combining ASCII art with info

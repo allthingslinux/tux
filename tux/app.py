@@ -1,130 +1,91 @@
-"""TuxApp: Orchestration and lifecycle management for the Tux Discord bot."""
+"""
+TuxApp: Main application entrypoint and lifecycle orchestrator.
+
+This module contains the `TuxApp` class, which serves as the primary entrypoint
+for the Tux Discord bot. It is responsible for:
+
+- **Environment Setup**: Validating configuration, initializing Sentry, and setting
+  up OS-level signal handlers for graceful shutdown.
+- **Bot Instantiation**: Creating the instance of the `Tux` bot class with the
+  appropriate intents, command prefix logic, and owner IDs.
+- **Lifecycle Management**: Starting the asyncio event loop and managing the
+  bot's main `start` and `shutdown` sequence, including handling `KeyboardInterrupt`.
+"""
 
 import asyncio
 import signal
-from types import FrameType
 
 import discord
-import sentry_sdk
 from loguru import logger
 
 from tux.bot import Tux
 from tux.help import TuxHelp
 from tux.utils.config import CONFIG
-from tux.utils.env import get_current_env
-
-
-async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
-    """Resolve the command prefix for a guild or use the default prefix."""
-    prefix: str | None = None
-    if message.guild:
-        try:
-            from tux.database.controllers import DatabaseController  # noqa: PLC0415
-
-            prefix = await DatabaseController().guild_config.get_guild_prefix(message.guild.id)
-        except Exception as e:
-            logger.error(f"Error getting guild prefix: {e}")
-    return [prefix or CONFIG.DEFAULT_PREFIX]
+from tux.utils.sentry_manager import SentryManager
 
 
 class TuxApp:
-    """Orchestrates the startup, shutdown, and environment for the Tux bot."""
+    """
+    Orchestrates the startup, shutdown, and environment for the Tux bot.
+
+    This class is not a `discord.py` cog, but rather a top-level application
+    runner that manages the bot's entire lifecycle from an OS perspective.
+    """
+
+    # --- Initialization ---
 
     def __init__(self):
-        """Initialize the TuxApp with no bot instance yet."""
-        self.bot = None
+        """Initializes the TuxApp, setting the bot instance to None initially."""
+        self.bot: Tux | None = None
+
+    # --- Application Lifecycle ---
 
     def run(self) -> None:
-        """Run the Tux bot application (entrypoint for CLI)."""
+        """
+        The main synchronous entrypoint for the application.
+
+        This method starts the asyncio event loop and runs the primary `start`
+        coroutine, effectively launching the bot.
+        """
         asyncio.run(self.start())
 
-    def setup_sentry(self) -> None:
-        """Initialize Sentry for error monitoring and tracing."""
-        if not CONFIG.SENTRY_DSN:
-            logger.warning("No Sentry DSN configured, skipping Sentry setup")
-            return
-
-        logger.info("Setting up Sentry...")
-
-        try:
-            sentry_sdk.init(
-                dsn=CONFIG.SENTRY_DSN,
-                release=CONFIG.BOT_VERSION,
-                environment=get_current_env(),
-                enable_tracing=True,
-                attach_stacktrace=True,
-                send_default_pii=False,
-                traces_sample_rate=1.0,
-                profiles_sample_rate=1.0,
-                _experiments={
-                    "enable_logs": True,  # https://docs.sentry.io/platforms/python/logs/
-                },
-            )
-
-            # Add additional global tags
-            sentry_sdk.set_tag("discord_library_version", discord.__version__)
-
-            logger.info(f"Sentry initialized: {sentry_sdk.is_initialized()}")
-
-        except Exception as e:
-            logger.error(f"Failed to initialize Sentry: {e}")
-
-    def setup_signals(self) -> None:
-        """Set up signal handlers for graceful shutdown."""
-        signal.signal(signal.SIGTERM, self.handle_sigterm)
-        signal.signal(signal.SIGINT, self.handle_sigterm)
-
-    def handle_sigterm(self, signum: int, frame: FrameType | None) -> None:
-        """Handle SIGTERM/SIGINT by raising KeyboardInterrupt for graceful shutdown."""
-        logger.info(f"Received signal {signum}")
-
-        if sentry_sdk.is_initialized():
-            with sentry_sdk.push_scope() as scope:
-                scope.set_tag("signal.number", signum)
-                scope.set_tag("lifecycle.event", "termination_signal")
-
-                sentry_sdk.add_breadcrumb(
-                    category="lifecycle",
-                    message=f"Received termination signal {signum}",
-                    level="info",
-                )
-
-        raise KeyboardInterrupt
-
-    def validate_config(self) -> bool:
-        """Validate that all required configuration is present."""
-        if not CONFIG.BOT_TOKEN:
-            logger.critical("No bot token provided. Set DEV_BOT_TOKEN or PROD_BOT_TOKEN in your .env file.")
-            return False
-
-        return True
-
     async def start(self) -> None:
-        """Start the Tux bot, handling setup, errors, and shutdown."""
-        self.setup_sentry()
+        """
+        The main asynchronous entrypoint for the application.
 
+        This method orchestrates the entire bot startup sequence: setting up
+        Sentry and signal handlers, validating config, creating the `Tux`
+        instance, and connecting to Discord. It includes a robust
+        try/except/finally block to ensure graceful shutdown.
+        """
+
+        # Initialize Sentry
+        SentryManager.setup()
+
+        # Set up signal handlers
         self.setup_signals()
 
+        # Validate config
         if not self.validate_config():
             return
 
+        # Configure owner IDs, dynamically adding sysadmins if configured.
+        # This allows specified users to have access to sensitive commands like `eval`.
         owner_ids = {CONFIG.BOT_OWNER_ID}
-
         if CONFIG.ALLOW_SYSADMINS_EVAL:
             logger.warning(
-                "⚠️ Eval is enabled for sysadmins, this is potentially dangerous; see settings.yml.example for more info.",
+                "⚠️ Eval is enabled for sysadmins, this is potentially dangerous; "
+                "see settings.yml.example for more info.",
             )
             owner_ids.update(CONFIG.SYSADMIN_IDS)
-
         else:
             logger.warning("🔒️ Eval is disabled for sysadmins; see settings.yml.example for more info.")
 
+        # Instantiate the main bot class with all necessary parameters.
         self.bot = Tux(
-            command_prefix=get_prefix,
             strip_after_prefix=True,
             case_insensitive=True,
             intents=discord.Intents.all(),
-            # owner_ids={CONFIG.BOT_OWNER_ID, *CONFIG.SYSADMIN_IDS},
             owner_ids=owner_ids,
             allowed_mentions=discord.AllowedMentions(everyone=False),
             help_command=TuxHelp(),
@@ -132,25 +93,60 @@ class TuxApp:
             status=discord.Status.online,
         )
 
+        # Start the bot
         try:
+            # This is the main blocking call that connects to Discord and runs the bot.
             await self.bot.start(CONFIG.BOT_TOKEN, reconnect=True)
 
         except KeyboardInterrupt:
+            # This is caught when the user presses Ctrl+C.
             logger.info("Shutdown requested (KeyboardInterrupt)")
         except Exception as e:
-            logger.critical(f"Bot failed to start: {e}")
-            await self.shutdown()
-
+            # Catch any other unexpected exception during bot runtime.
+            logger.critical(f"Bot failed to start or run: {e}")
         finally:
+            # Ensure that shutdown is always called to clean up resources.
             await self.shutdown()
 
     async def shutdown(self) -> None:
-        """Gracefully shut down the bot and flush Sentry."""
+        """
+        Gracefully shuts down the bot and its resources.
+
+        This involves calling the bot's internal shutdown sequence and then
+        flushing any remaining Sentry events to ensure all data is sent.
+        """
         if self.bot and not self.bot.is_closed():
             await self.bot.shutdown()
 
-        if sentry_sdk.is_initialized():
-            sentry_sdk.flush()
-            await asyncio.sleep(0.1)
+        SentryManager.flush()
+        await asyncio.sleep(0.1)  # Brief pause to allow buffers to flush
 
         logger.info("Shutdown complete")
+
+    # --- Environment Setup ---
+
+    def setup_signals(self) -> None:
+        """
+        Sets up OS-level signal handlers for graceful shutdown.
+
+        This ensures that when the bot process receives a SIGINT (Ctrl+C) or
+        SIGTERM (from systemd or Docker), it is intercepted and handled
+        cleanly instead of causing an abrupt exit.
+        """
+        signal.signal(signal.SIGTERM, SentryManager.report_signal)
+        signal.signal(signal.SIGINT, SentryManager.report_signal)
+
+    def validate_config(self) -> bool:
+        """
+        Performs a pre-flight check for essential configuration.
+
+        Returns
+        -------
+        bool
+            True if the configuration is valid, False otherwise.
+        """
+        if not CONFIG.BOT_TOKEN:
+            logger.critical("No bot token provided. Set DEV_BOT_TOKEN or PROD_BOT_TOKEN in your .env file.")
+            return False
+
+        return True

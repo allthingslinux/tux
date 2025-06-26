@@ -1,4 +1,3 @@
-import asyncio
 import io
 from urllib.parse import quote_plus
 
@@ -17,22 +16,7 @@ from tux.utils.config import CONFIG
 class Wolfram(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
-
-        # Verify AppID configuration; unload cog if missing
-        if not CONFIG.WOLFRAM_APP_ID:
-            logger.warning("Wolfram Alpha API ID is not set. Some Science/Math commands will not work.")
-            # Store the task reference
-            self._unload_task = asyncio.create_task(self._unload_self())
-        else:
-            logger.info("Wolfram Alpha API ID is set, Science/Math commands that depend on it will work.")
-
-    async def _unload_self(self):
-        """Unload this cog if configuration is missing."""
-        try:
-            await self.bot.unload_extension("tux.cogs.tools.wolfram")
-            logger.info("Wolfram cog has been unloaded due to missing configuration")
-        except Exception as e:
-            logger.error(f"Failed to unload Wolfram cog: {e}")
+        logger.info("Wolfram Alpha cog initialized successfully.")
 
     @commands.hybrid_command(name="wolfram", description="Query Wolfram|Alpha Simple API and return an image result.")
     @app_commands.describe(
@@ -96,4 +80,9 @@ class Wolfram(commands.Cog):
 
 
 async def setup(bot: Tux) -> None:
+    # Check if Wolfram API ID is configured before loading the cog
+    if not CONFIG.WOLFRAM_APP_ID:
+        logger.warning("Wolfram Alpha API ID is not set. Skipping Wolfram cog.")
+        return
+
     await bot.add_cog(Wolfram(bot))
