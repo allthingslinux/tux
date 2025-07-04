@@ -72,6 +72,15 @@ class RemindMe(commands.Cog):
         dt_now = datetime.datetime.now(datetime.UTC)
 
         for reminder in reminders:
+            # hotfix for an issue where old reminders from the old system would all send at once
+            if reminder.reminder_sent:
+                try:
+                    await self.db.reminder.delete_reminder_by_id(reminder.reminder_id)
+                except Exception as e:
+                    logger.error(f"Failed to delete reminder: {e}")
+
+                continue
+
             seconds = (reminder.reminder_expires_at - dt_now).total_seconds()
 
             if seconds <= 0:
