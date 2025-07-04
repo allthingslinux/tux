@@ -9,6 +9,7 @@ from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
+from tux.utils.converters import get_channel_safe
 from tux.utils.functions import generate_usage
 
 
@@ -296,8 +297,8 @@ class Starboard(commands.Cog):
         if not starboard or str(payload.emoji) != starboard.starboard_emoji:
             return
 
-        channel = self.bot.get_channel(payload.channel_id)
-        if not isinstance(channel, discord.TextChannel):
+        channel = await get_channel_safe(self.bot, payload.channel_id)
+        if channel is None:
             return
 
         try:

@@ -1,5 +1,3 @@
-from typing import cast
-
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -9,6 +7,7 @@ from prisma.enums import CaseType
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator
+from tux.utils.converters import get_channel_safe
 
 # TODO: Create option inputs for the poll command instead of using a comma separated string
 
@@ -74,17 +73,9 @@ class Poll(commands.Cog):
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
         # get reaction from payload.message_id, payload.channel_id, payload.guild_id, payload.emoji
-        channel = self.bot.get_channel(payload.channel_id)
+        channel = await get_channel_safe(self.bot, payload.channel_id)
         if channel is None:
-            try:
-                channel = await self.bot.fetch_channel(payload.channel_id)
-            except discord.NotFound:
-                logger.error(f"Channel not found for ID: {payload.channel_id}")
-                return
-            except (discord.Forbidden, discord.HTTPException) as fetch_error:
-                logger.error(f"Failed to fetch channel: {fetch_error}")
-                return
-        channel = cast(discord.TextChannel | discord.Thread, channel)
+            return
 
         message = await channel.fetch_message(payload.message_id)
         # Lookup the reaction object for this event
