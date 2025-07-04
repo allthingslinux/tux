@@ -1,9 +1,12 @@
 import re
-from typing import Any
+from typing import Any, cast
 
+import discord
 from discord.ext import commands
+from loguru import logger
 
 from prisma.enums import CaseType
+from tux.bot import Tux
 
 time_regex = re.compile(r"(\d{1,5}(?:[.,]?\d{1,5})?)([smhd])")
 time_dict = {"h": 3600, "s": 1, "m": 60, "d": 86400}
@@ -74,6 +77,21 @@ class CaseTypeConverter(commands.Converter[CaseType]):
         except KeyError as e:
             msg = f"Invalid CaseType: {argument}"
             raise commands.BadArgument(msg) from e
+
+
+async def get_channel_safe(bot: Tux, channel_id: int) -> discord.TextChannel | discord.Thread | None:
+    """Get a channel by ID, returning None if not found."""
+    channel = bot.get_channel(channel_id)
+    if channel is None:
+        try:
+            channel = await bot.fetch_channel(channel_id)
+        except discord.NotFound:
+            logger.error(f"Channel not found for ID: {channel_id}")
+            return None
+        except (discord.Forbidden, discord.HTTPException) as fetch_error:
+            logger.error(f"Failed to fetch channel: {fetch_error}")
+            return None
+    return cast(discord.TextChannel | discord.Thread, channel)
 
 
 def convert_bool(x: str | None) -> bool | None:
