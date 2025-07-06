@@ -4,8 +4,8 @@ from typing import Any
 from unittest.mock import Mock
 
 import pytest
-from prisma.models import Case
 
+from tux.database.schemas import Case
 from tux.utils.exceptions import (
     APIConnectionError,
     APIRequestError,

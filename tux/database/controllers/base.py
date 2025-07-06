@@ -75,11 +75,10 @@ class BaseController[
 
         Parameters
         ----------
+        table : type[ModelType]
+            The SQLModel model class representing the table.
         session : AsyncSession, optional
-            An optional SQLAlchemy AsyncSession instance. If not provided,
-            the default session from the database client will be used.
-        table_name : str
-            The name of the table this controller will manage, used for logging and error messages.
+            An optional SQLAlchemy async session to use for database operations.
         """
         self.session = session or db.get_session()
         self.table = table

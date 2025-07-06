@@ -1,10 +1,7 @@
 import datetime
 
-from prisma.actions import GuildActions
-from prisma.models import Guild, Snippet
-
-from tux.database.client import db
 from tux.database.controllers.base import BaseController
+from tux.database.schemas import Snippet
 
 
 class SnippetController(BaseController[Snippet]):
@@ -16,8 +13,7 @@ class SnippetController(BaseController[Snippet]):
 
     def __init__(self) -> None:
         """Initialize the SnippetController with the snippet table."""
-        super().__init__("snippet")
-        self.guild_table: GuildActions[Guild] = db.client.guild
+        super().__init__(Snippet)
 
     async def get_all_snippets(self) -> list[Snippet]:
         """Get all snippets.

@@ -3,10 +3,10 @@ import asyncio
 import discord
 from discord.ext import commands
 from loguru import logger
-from prisma.enums import CaseType
-from prisma.models import Case
 
+from prisma.enums import CaseType
 from tux.bot import Tux
+from tux.database.schemas import Case
 from tux.utils import checks
 from tux.utils.flags import UnjailFlags
 from tux.utils.functions import generate_usage

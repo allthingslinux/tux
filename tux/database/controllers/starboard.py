@@ -1,10 +1,7 @@
 from datetime import datetime
 
-from prisma.actions import GuildActions
-from prisma.models import Guild, Starboard, StarboardMessage
-
-from tux.database.client import db
 from tux.database.controllers.base import BaseController
+from tux.database.schemas import Guild, Starboard, StarboardMessage
 
 
 class StarboardController(BaseController[Starboard]):
@@ -16,8 +13,8 @@ class StarboardController(BaseController[Starboard]):
 
     def __init__(self):
         """Initialize the StarboardController with the starboard table."""
-        super().__init__("starboard")
-        self.guild_table: GuildActions[Guild] = db.client.guild
+        super().__init__(Starboard)
+        self.guild_table = BaseController(Guild)
 
     async def get_all_starboards(self) -> list[Starboard]:
         """Get all starboards.
@@ -119,8 +116,8 @@ class StarboardMessageController(BaseController[StarboardMessage]):
 
     def __init__(self):
         """Initialize the StarboardMessageController with the starboardmessage table."""
-        super().__init__("starboardmessage")
-        self.guild_table: GuildActions[Guild] = db.client.guild
+        super().__init__(StarboardMessage)
+        self.guild_table = BaseController(Guild)
 
     async def get_starboard_message(self, message_id: int, guild_id: int) -> StarboardMessage | None:
         """Get a starboard message by message ID and guild ID.

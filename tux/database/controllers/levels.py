@@ -2,11 +2,9 @@ import datetime
 import math
 
 from loguru import logger
-from prisma.actions import GuildActions
-from prisma.models import Guild, Levels
 
-from tux.database.client import db
 from tux.database.controllers.base import BaseController
+from tux.database.schemas import Guild, Levels
 
 
 class LevelsController(BaseController[Levels]):
@@ -18,8 +16,8 @@ class LevelsController(BaseController[Levels]):
 
     def __init__(self) -> None:
         """Initialize the LevelsController with the levels table."""
-        super().__init__("levels")
-        self.guild_table: GuildActions[Guild] = db.client.guild
+        super().__init__(Levels)
+        self.guild_table = BaseController(Guild)
 
     async def get_xp(self, member_id: int, guild_id: int) -> float:
         """Get the XP of a member in a guild.

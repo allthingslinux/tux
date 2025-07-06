@@ -1,8 +1,7 @@
 from typing import Any
 
-from prisma.models import Guild
-
 from tux.database.controllers.base import BaseController
+from tux.database.schemas import Guild
 
 
 class GuildController(BaseController[Guild]):
@@ -14,7 +13,7 @@ class GuildController(BaseController[Guild]):
 
     def __init__(self):
         """Initialize the GuildController with the guild table."""
-        super().__init__("guild")
+        super().__init__(Guild)
         # Type hint for better IDE support
         self.table: Any = self.table
 

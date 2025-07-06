@@ -1,11 +1,10 @@
 import discord
 from discord.ext import commands
 from loguru import logger
-from prisma.enums import CaseType
-from prisma.models import Snippet
 
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
+from tux.database.schemas import CaseType, Snippet
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.config import Config

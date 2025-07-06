@@ -1,6 +1,6 @@
 from typing import TypeVar
 
-from prisma.models import Case
+from tux.database.schemas import Case
 
 
 class PermissionLevelError(Exception):

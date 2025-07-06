@@ -1,13 +1,8 @@
 from datetime import UTC, datetime
 from typing import Any
 
-from prisma.actions import GuildActions
-from prisma.enums import CaseType
-from prisma.models import Case, Guild
-from prisma.types import CaseWhereInput
-
-from tux.database.client import db
 from tux.database.controllers.base import BaseController
+from tux.database.schemas import Case, CaseType, Guild
 
 
 class CaseController(BaseController[Case]):
@@ -19,9 +14,8 @@ class CaseController(BaseController[Case]):
 
     def __init__(self):
         """Initialize the CaseController with the case table."""
-        super().__init__("case")
-        # Access guild table through client property
-        self.guild_table: GuildActions[Guild] = db.client.guild
+        super().__init__(Case)
+        self.guild_table = BaseController(Guild)
 
     async def get_next_case_number(self, guild_id: int) -> int:
         """Get the next case number for a guild.
@@ -42,10 +36,8 @@ class CaseController(BaseController[Case]):
         # Use connect_or_create to ensure guild exists and increment case count
         guild = await self.guild_table.upsert(
             where={"guild_id": guild_id},
-            data={
-                "create": {"guild_id": guild_id, "case_count": 1},
-                "update": {"case_count": {"increment": 1}},
-            },
+            create={"guild_id": guild_id, "case_count": 1},
+            update={"case_count": {"increment": 1}},
         )
 
         return self.safe_get_attr(guild, "case_count", 1)
@@ -147,7 +139,7 @@ class CaseController(BaseController[Case]):
     async def get_cases_by_options(
         self,
         guild_id: int,
-        options: CaseWhereInput,
+        options: dict[str, Any],
     ) -> list[Case]:
         """Get cases for a guild by options.
 
@@ -163,7 +155,10 @@ class CaseController(BaseController[Case]):
         list[Case]
             A list of cases for the guild matching the criteria.
         """
-        return await self.find_many(where={"guild_id": guild_id, **options}, order={"case_created_at": "desc"})
+        return await self.find_many(
+            where={"guild_id": guild_id, **options},
+            order={"case_created_at": "desc"},
+        )
 
     async def get_case_by_number(self, guild_id: int, case_number: int, include_guild: bool = False) -> Case | None:
         """Get a case by its number in a guild.
