@@ -9,9 +9,9 @@ import sentry_sdk
 from loguru import logger
 
 from core.bot import Tux
-from core.help import TuxHelp
 from core.config import CONFIG
 from core.env import get_current_env
+from core.help import TuxHelp
 
 
 async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:

@@ -1,9 +1,8 @@
 import discord
+from bot import Tux
 from discord import app_commands
 from discord.ext import commands
 from reactionmenu import ViewButton, ViewMenu
-
-from bot import Tux
 from ui.embeds import EmbedCreator
 
 # FIXME: THIS IS A ALL THINGS LINUX SPECIFIC FILE

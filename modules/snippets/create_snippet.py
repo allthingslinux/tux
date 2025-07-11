@@ -1,10 +1,9 @@
 import re
 from datetime import UTC, datetime
 
+from bot import Tux
 from discord.ext import commands
 from loguru import logger
-
-from bot import Tux
 from utils.constants import CONST
 from utils.functions import generate_usage
 

@@ -1,15 +1,15 @@
 import discord
-from discord.ext import commands
-from loguru import logger
-
-from prisma.enums import CaseType
-from prisma.models import Snippet
 from bot import Tux
 from database.controllers import DatabaseController
+from discord.ext import commands
+from loguru import logger
 from ui.embeds import EmbedCreator, EmbedType
 from utils import checks
 from utils.config import Config
 from utils.constants import CONST
+
+from prisma.enums import CaseType
+from prisma.models import Snippet
 
 
 class SnippetsBaseCog(commands.Cog):

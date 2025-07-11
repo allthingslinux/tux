@@ -1,8 +1,7 @@
 import discord
+from bot import Tux
 from discord import app_commands
 from discord.ext import commands
-
-from bot import Tux
 from ui.modals.report import ReportModal
 
 

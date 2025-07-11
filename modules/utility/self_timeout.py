@@ -1,11 +1,10 @@
 from datetime import UTC, datetime, timedelta
 
 import discord
-from discord.ext import commands
-
 from bot import Tux
 from cogs.utility import add_afk, del_afk
 from database.controllers import DatabaseController
+from discord.ext import commands
 from ui.views.confirmation import ConfirmationDanger
 from utils.functions import convert_to_seconds, generate_usage, seconds_to_human_readable
 

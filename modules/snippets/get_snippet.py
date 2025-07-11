@@ -1,8 +1,7 @@
+from bot import Tux
 from discord import AllowedMentions, Message
 from discord.ext import commands
 from reactionmenu import ViewButton, ViewMenu
-
-from bot import Tux
 from utils.functions import generate_usage
 
 # from utils.functions import truncate

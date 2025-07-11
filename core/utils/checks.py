@@ -23,12 +23,11 @@ from collections.abc import Callable, Coroutine
 from typing import Any, TypeVar
 
 import discord
+from bot import Tux
+from database.controllers import DatabaseController
 from discord import app_commands
 from discord.ext import commands
 from loguru import logger
-
-from bot import Tux
-from database.controllers import DatabaseController
 from utils.config import CONFIG
 from utils.exceptions import AppCommandPermissionLevelError, PermissionLevelError
 

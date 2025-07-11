@@ -1,7 +1,8 @@
 from typing import Any
 
-from prisma.models import Guild
 from database.controllers.base import BaseController
+
+from prisma.models import Guild
 
 
 class GuildController(BaseController[Guild]):

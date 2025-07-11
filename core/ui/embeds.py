@@ -2,9 +2,8 @@ from datetime import datetime
 from enum import Enum
 
 import discord
-from loguru import logger
-
 from bot import Tux
+from loguru import logger
 from utils.config import Config
 from utils.constants import CONST
 

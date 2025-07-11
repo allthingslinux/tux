@@ -1,7 +1,6 @@
+from bot import Tux
 from discord.ext import commands
 from loguru import logger
-
-from bot import Tux
 from ui.buttons import GithubButton
 from ui.embeds import EmbedCreator
 from utils import checks

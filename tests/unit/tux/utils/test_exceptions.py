@@ -4,8 +4,6 @@ from typing import Any
 from unittest.mock import Mock
 
 import pytest
-
-from prisma.models import Case
 from tux.utils.exceptions import (
     APIConnectionError,
     APIRequestError,
@@ -17,6 +15,8 @@ from tux.utils.exceptions import (
     handle_case_result,
     handle_gather_result,
 )
+
+from prisma.models import Case
 
 
 class TestPermissionLevelError:

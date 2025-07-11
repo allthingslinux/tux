@@ -1,9 +1,8 @@
 import random
 from textwrap import shorten, wrap
 
-from discord.ext import commands
-
 from bot import Tux
+from discord.ext import commands
 from ui.embeds import EmbedCreator
 from utils.constants import CONST
 from utils.functions import generate_usage

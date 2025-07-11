@@ -2,10 +2,9 @@ from datetime import UTC, datetime
 
 import discord
 import pytz
+from bot import Tux
 from discord.ext import commands
 from reactionmenu import Page, ViewButton, ViewMenu, ViewSelect
-
-from bot import Tux
 from ui.embeds import EmbedCreator, EmbedType
 from utils.functions import generate_usage
 

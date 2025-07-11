@@ -1,10 +1,10 @@
+from bot import Tux
 from discord.ext import commands
 from reactionmenu import ViewButton, ViewMenu
-
-from prisma.models import Snippet
-from bot import Tux
 from utils.constants import CONST
 from utils.functions import generate_usage
+
+from prisma.models import Snippet
 
 from . import SnippetsBaseCog
 

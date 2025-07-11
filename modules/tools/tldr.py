@@ -1,11 +1,10 @@
 import contextlib
 
 import discord
+from bot import Tux
 from discord import app_commands
 from discord.ext import commands
 from loguru import logger
-
-from bot import Tux
 from ui.embeds import EmbedCreator
 from ui.views.tldr import TldrPaginatorView
 from utils.flags import TldrFlags

@@ -1,13 +1,13 @@
 import discord
+from bot import Tux
+from database.controllers import DatabaseController
 from discord import app_commands
 from discord.ext import commands
 from loguru import logger
-
-from prisma.enums import CaseType
-from bot import Tux
-from database.controllers import DatabaseController
 from ui.embeds import EmbedCreator
 from utils.converters import get_channel_safe
+
+from prisma.enums import CaseType
 
 # TODO: Create option inputs for the poll command instead of using a comma separated string
 

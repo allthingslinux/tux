@@ -5,15 +5,15 @@ from datetime import datetime
 from typing import Any, ClassVar, TypeVar
 
 import discord
-from discord.ext import commands
-from loguru import logger
-
-from prisma.enums import CaseType
 from bot import Tux
 from database.controllers import DatabaseController
+from discord.ext import commands
+from loguru import logger
 from ui.embeds import EmbedCreator, EmbedType
 from utils.constants import CONST
 from utils.exceptions import handle_case_result, handle_gather_result
+
+from prisma.enums import CaseType
 
 T = TypeVar("T")
 R = TypeVar("R")  # Return type for generic functions

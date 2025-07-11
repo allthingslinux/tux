@@ -1,9 +1,10 @@
 from datetime import datetime
 
-from prisma.actions import GuildActions
-from prisma.models import Guild, Starboard, StarboardMessage
 from database.client import db
 from database.controllers.base import BaseController
+
+from prisma.actions import GuildActions
+from prisma.models import Guild, Starboard, StarboardMessage
 
 
 class StarboardController(BaseController[Starboard]):

@@ -2,12 +2,11 @@ import datetime
 import time
 
 import discord
-from discord.ext import commands
-from loguru import logger
-
 from app import get_prefix
 from bot import Tux
 from database.controllers import DatabaseController
+from discord.ext import commands
+from loguru import logger
 from ui.embeds import EmbedCreator
 from utils.config import CONFIG
 

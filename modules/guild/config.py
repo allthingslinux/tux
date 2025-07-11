@@ -1,11 +1,10 @@
 from typing import Literal
 
 import discord
-from discord import app_commands
-from discord.ext import commands
-
 from bot import Tux
 from database.controllers import DatabaseController
+from discord import app_commands
+from discord.ext import commands
 from ui.embeds import EmbedCreator, EmbedType
 from ui.views.config import ConfigSetChannels, ConfigSetPrivateLogs, ConfigSetPublicLogs
 from utils.config import CONFIG

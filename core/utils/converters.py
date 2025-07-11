@@ -2,11 +2,11 @@ import re
 from typing import Any, cast
 
 import discord
+from bot import Tux
 from discord.ext import commands
 from loguru import logger
 
 from prisma.enums import CaseType
-from bot import Tux
 
 time_regex = re.compile(r"(\d{1,5}(?:[.,]?\d{1,5})?)([smhd])")
 time_dict = {"h": 3600, "s": 1, "m": 60, "d": 86400}

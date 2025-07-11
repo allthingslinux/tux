@@ -8,7 +8,6 @@ from rich.panel import Panel
 from rich.style import Style
 from rich.table import Table
 from rich.text import Text
-
 from utils.ascii import TUX
 
 

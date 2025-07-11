@@ -1,11 +1,11 @@
 import discord
-from discord.ext import commands
-
-from prisma.enums import CaseType
 from bot import Tux
+from discord.ext import commands
 from utils import checks
 from utils.flags import KickFlags
 from utils.functions import generate_usage
+
+from prisma.enums import CaseType
 
 from . import ModerationCogBase
 

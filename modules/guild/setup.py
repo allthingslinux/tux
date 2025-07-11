@@ -1,9 +1,8 @@
 import discord
-from discord import app_commands
-from discord.ext import commands
-
 from bot import Tux
 from database.controllers import DatabaseController
+from discord import app_commands
+from discord.ext import commands
 from utils import checks
 
 

@@ -1,7 +1,6 @@
 import discord
-from discord.ext import commands
-
 from bot import Tux
+from discord.ext import commands
 from utils.config import CONFIG
 
 

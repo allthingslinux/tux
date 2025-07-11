@@ -4,6 +4,7 @@ from collections.abc import Callable
 from typing import Any, TypeVar
 
 import sentry_sdk
+from database.client import db
 from loguru import logger
 
 from prisma.models import (
@@ -18,7 +19,6 @@ from prisma.models import (
     Starboard,
     StarboardMessage,
 )
-from database.client import db
 
 # Explicitly define ModelType to cover all potential models used by controllers
 ModelType = TypeVar(

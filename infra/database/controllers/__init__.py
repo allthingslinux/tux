@@ -5,7 +5,6 @@ import inspect
 from typing import Any, ClassVar, TypeVar
 
 import sentry_sdk
-
 from database.controllers.afk import AfkController
 from database.controllers.case import CaseController
 from database.controllers.guild import GuildController

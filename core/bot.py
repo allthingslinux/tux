@@ -18,11 +18,11 @@ from loguru import logger
 from rich.console import Console
 
 from core.cog_loader import CogLoader
-from infra.database.client import db
-from core.utils.banner import create_banner
 from core.config import Config
-from core.utils.emoji import EmojiManager
 from core.env import is_dev_mode
+from core.utils.banner import create_banner
+from core.utils.emoji import EmojiManager
+from infra.database.client import db
 from infra.sentry import start_span, start_transaction
 
 # Create console for rich output

@@ -1,9 +1,8 @@
 import discord
 import httpx
+from bot import Tux
 from discord.ext import commands
 from loguru import logger
-
-from bot import Tux
 from ui.embeds import EmbedCreator
 from utils.functions import generate_usage
 

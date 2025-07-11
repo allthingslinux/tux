@@ -17,13 +17,14 @@ from loguru import logger
 
 # Import version from main package
 from tux import __version__
-from cli.ui import command_header, command_result, error, info, warning
 from utils.env import (
     configure_environment,
     get_current_env,
     get_database_url,
 )
 from utils.logger import setup_logging
+
+from cli.ui import command_header, command_result, error, info, warning
 
 # Type definitions
 T = TypeVar("T")

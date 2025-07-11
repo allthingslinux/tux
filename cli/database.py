@@ -5,9 +5,9 @@ from collections.abc import Callable
 from typing import TypeVar
 
 from loguru import logger
+from utils.env import get_database_url
 
 from cli.core import command_registration_decorator, create_group, run_command
-from utils.env import get_database_url
 
 # Type for command functions
 T = TypeVar("T")

@@ -1,8 +1,7 @@
 import discord
-from loguru import logger
-
 from bot import Tux
 from database.controllers import DatabaseController
+from loguru import logger
 from ui.embeds import EmbedCreator
 
 

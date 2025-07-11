@@ -5,9 +5,8 @@ A Discord UI view for paginating through long TLDR command documentation pages.
 """
 
 import discord
-from discord.ui import Button, View
-
 from bot import Tux
+from discord.ui import Button, View
 from ui.embeds import EmbedCreator
 
 

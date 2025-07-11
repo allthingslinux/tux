@@ -2,10 +2,9 @@ import datetime
 import math
 
 import discord
+from bot import Tux
 from discord.ext import commands
 from loguru import logger
-
-from bot import Tux
 
 
 class TtyRoles(commands.Cog):

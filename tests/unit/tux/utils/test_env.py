@@ -6,7 +6,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
 from tux.utils.env import (
     Config,
     ConfigurationError,

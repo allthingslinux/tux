@@ -1,10 +1,9 @@
 import random
 from enum import Enum
 
+from bot import Tux
 from discord import app_commands
 from discord.ext import commands
-
-from bot import Tux
 from ui.embeds import EmbedCreator
 from utils.config import CONFIG
 from utils.functions import docstring_parameter

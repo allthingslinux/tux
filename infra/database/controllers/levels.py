@@ -1,12 +1,12 @@
 import datetime
 import math
 
+from database.client import db
+from database.controllers.base import BaseController
 from loguru import logger
 
 from prisma.actions import GuildActions
 from prisma.models import Guild, Levels
-from database.client import db
-from database.controllers.base import BaseController
 
 
 class LevelsController(BaseController[Levels]):

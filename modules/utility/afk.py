@@ -5,13 +5,13 @@ from typing import cast
 from zoneinfo import ZoneInfo
 
 import discord
-from discord.ext import commands, tasks
-
-from prisma.models import AFKModel
 from bot import Tux
 from cogs.utility import add_afk, del_afk
 from database.controllers import DatabaseController
+from discord.ext import commands, tasks
 from utils.functions import generate_usage
+
+from prisma.models import AFKModel
 
 # TODO: add `afk until` command, or add support for providing a timeframe in the regular `afk` and `permafk` commands
 

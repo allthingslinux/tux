@@ -1,5 +1,6 @@
 from typing import Any
 
+from database.client import db
 from loguru import logger
 
 from prisma.actions import GuildActions, GuildConfigActions
@@ -8,7 +9,6 @@ from prisma.types import (
     GuildConfigScalarFieldKeys,
     GuildConfigUpdateInput,
 )
-from database.client import db
 
 
 class GuildConfigController:

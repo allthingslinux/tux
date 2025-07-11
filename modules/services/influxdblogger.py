@@ -1,13 +1,12 @@
 from typing import Any
 
+from bot import Tux
+from database.controllers import DatabaseController
 from discord.ext import commands, tasks
 from influxdb_client.client.influxdb_client import InfluxDBClient
 from influxdb_client.client.write.point import Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
-
-from bot import Tux
-from database.controllers import DatabaseController
 from utils.config import CONFIG
 
 

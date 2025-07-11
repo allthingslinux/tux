@@ -1,14 +1,14 @@
 from contextlib import suppress
 
 import discord
-from discord.ext import commands
-
-from prisma.enums import CaseType
 from bot import Tux
+from discord.ext import commands
 from utils import checks
 from utils.constants import CONST
 from utils.flags import UnbanFlags
 from utils.functions import generate_usage
+
+from prisma.enums import CaseType
 
 from . import ModerationCogBase
 

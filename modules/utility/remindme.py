@@ -3,14 +3,14 @@ import contextlib
 import datetime
 
 import discord
-from discord.ext import commands
-from loguru import logger
-
-from prisma.models import Reminder
 from bot import Tux
 from database.controllers import DatabaseController
+from discord.ext import commands
+from loguru import logger
 from ui.embeds import EmbedCreator
 from utils.functions import convert_to_seconds, generate_usage
+
+from prisma.models import Reminder
 
 
 class RemindMe(commands.Cog):

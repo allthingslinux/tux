@@ -1,19 +1,19 @@
 from typing import Any, Protocol
 
 import discord
+from bot import Tux
 from discord.ext import commands
 from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
-
-from prisma.enums import CaseType
-from prisma.models import Case
-from prisma.types import CaseWhereInput
-from bot import Tux
 from ui.embeds import EmbedCreator, EmbedType
 from utils import checks
 from utils.constants import CONST
 from utils.flags import CaseModifyFlags, CasesViewFlags
 from utils.functions import generate_usage
+
+from prisma.enums import CaseType
+from prisma.models import Case
+from prisma.types import CaseWhereInput
 
 from . import ModerationCogBase
 

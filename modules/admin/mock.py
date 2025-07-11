@@ -2,12 +2,11 @@ import asyncio
 from typing import Any
 
 import discord
+from bot import Tux
 from discord import app_commands
 from discord.ext import commands
-from loguru import logger
-
-from bot import Tux
 from handlers.error import ERROR_CONFIG_MAP
+from loguru import logger
 from ui.embeds import EmbedCreator
 from utils import checks
 

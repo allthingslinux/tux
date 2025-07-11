@@ -100,7 +100,7 @@ class CogLoader(commands.Cog):
             relative_path = path.relative_to(project_root)
 
             # Convert path to module format (e.g., modules.admin.dev, infra.handlers.error)
-            module = str(relative_path).replace('/', '.').replace('\\', '.')[:-3]
+            module = str(relative_path).replace("/", ".").replace("\\", ".")[:-3]
 
             if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
                 current_span.set_tag("cog.module", module)

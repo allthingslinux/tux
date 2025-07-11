@@ -3,7 +3,6 @@ from datetime import datetime
 from types import NoneType
 
 import discord
-
 from database.controllers import DatabaseController
 from utils.constants import CONST
 

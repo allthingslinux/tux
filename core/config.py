@@ -6,7 +6,6 @@ from typing import Any, Final, cast
 import yaml
 from dotenv import load_dotenv
 from loguru import logger
-
 from tux import __version__ as app_version
 from utils.env import get_bot_token, get_database_url, is_dev_mode
 

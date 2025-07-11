@@ -1,7 +1,8 @@
-from prisma.actions import GuildActions
-from prisma.models import Guild, Note
 from database.client import db
 from database.controllers.base import BaseController
+
+from prisma.actions import GuildActions
+from prisma.models import Guild, Note
 
 
 class NoteController(BaseController[Note]):

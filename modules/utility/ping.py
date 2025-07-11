@@ -1,7 +1,6 @@
 import psutil
-from discord.ext import commands
-
 from bot import Tux
+from discord.ext import commands
 from ui.embeds import EmbedCreator
 from utils.functions import generate_usage
 

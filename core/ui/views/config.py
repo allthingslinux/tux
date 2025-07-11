@@ -1,7 +1,6 @@
 from typing import Any
 
 import discord
-
 from database.controllers import DatabaseController
 
 

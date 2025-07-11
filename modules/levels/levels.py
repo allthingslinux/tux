@@ -1,11 +1,10 @@
 import datetime
 
 import discord
-from discord.ext import commands
-
 from bot import Tux
 from cogs.services.levels import LevelsService
 from database.controllers import DatabaseController
+from discord.ext import commands
 from ui.embeds import EmbedCreator, EmbedType
 from utils import checks
 from utils.functions import generate_usage

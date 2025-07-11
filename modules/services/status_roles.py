@@ -4,7 +4,6 @@ import re
 import discord
 from discord.ext import commands
 from loguru import logger
-
 from utils.config import CONFIG
 
 

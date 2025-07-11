@@ -2,9 +2,9 @@ import discord
 from discord.ext import commands
 
 from core.bot import Tux
-from infra.database.controllers import DatabaseController
 from core.ui.embeds import EmbedCreator, EmbedType
 from core.utils.functions import is_harmful, strip_formatting
+from infra.database.controllers import DatabaseController
 
 
 class EventHandler(commands.Cog):

@@ -1,12 +1,13 @@
 from datetime import UTC, datetime
 from typing import Any
 
+from database.client import db
+from database.controllers.base import BaseController
+
 from prisma.actions import GuildActions
 from prisma.enums import CaseType
 from prisma.models import Case, Guild
 from prisma.types import CaseWhereInput
-from database.client import db
-from database.controllers.base import BaseController
 
 
 class CaseController(BaseController[Case]):

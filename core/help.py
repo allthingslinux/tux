@@ -19,6 +19,8 @@ from discord import SelectOption
 from discord.ext import commands
 from loguru import logger
 
+from core.config import CONFIG
+from core.env import get_current_env
 from core.ui.embeds import EmbedCreator
 from core.ui.help_components import (
     BackButton,
@@ -31,9 +33,7 @@ from core.ui.help_components import (
     PrevButton,
     SubcommandSelectMenu,
 )
-from core.config import CONFIG
 from core.utils.constants import CONST
-from core.env import get_current_env
 from core.utils.help_utils import (
     create_cog_category_mapping,
     format_multiline_description,

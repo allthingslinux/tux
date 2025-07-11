@@ -14,7 +14,6 @@ from typing import Any, Protocol, TypeVar
 
 import discord
 from discord.ext import commands
-
 from utils.constants import CONST
 
 # Type aliases

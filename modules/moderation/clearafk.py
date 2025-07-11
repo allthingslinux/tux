@@ -1,10 +1,9 @@
 import contextlib
 
 import discord
-from discord.ext import commands
-
 from bot import Tux
 from database.controllers import AfkController
+from discord.ext import commands
 from utils import checks
 
 

@@ -1,9 +1,9 @@
 import discord
 from discord.ext import commands
-
-from prisma.enums import CaseType
 from utils.constants import CONST
 from utils.converters import CaseTypeConverter, TimeConverter, convert_bool
+
+from prisma.enums import CaseType
 
 # TODO: Figure out how to use boolean flags with empty values
 

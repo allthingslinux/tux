@@ -4,11 +4,10 @@ import io
 
 import aiohttp
 import discord
+from bot import Tux
 from discord.abc import Messageable
 from discord.ext import commands
 from loguru import logger
-
-from bot import Tux
 from ui.embeds import EmbedCreator
 from utils.constants import CONST
 

@@ -11,9 +11,8 @@ from abc import ABC, abstractmethod
 from contextlib import suppress
 
 import discord
-from discord.ext import commands
-
 from bot import Tux
+from discord.ext import commands
 from ui.embeds import EmbedCreator
 from utils.exceptions import (
     CompilationError,

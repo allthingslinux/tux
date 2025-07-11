@@ -3,9 +3,8 @@ from collections import defaultdict
 from time import time
 
 import discord
-from discord.ext import commands, tasks
-
 from bot import Tux
+from discord.ext import commands, tasks
 from utils.config import CONFIG
 
 
