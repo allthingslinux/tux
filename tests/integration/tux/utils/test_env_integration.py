@@ -9,7 +9,6 @@ from unittest.mock import patch
 import pytest
 from _pytest.logging import LogCaptureFixture
 from _pytest.monkeypatch import MonkeyPatch
-
 from tux.utils.env import (
     Config,
     ConfigurationError,

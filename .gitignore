@@ -166,9 +166,8 @@ docs-build/
 docs/site/
 site/
 
-# extensions
-tux/extensions/*
-!tux/extensions/README.md
+# custom modules (for self-hosters)
+custom_modules/
 
 # misc
 slim.report.json
