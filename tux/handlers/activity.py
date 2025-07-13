@@ -8,6 +8,7 @@ from loguru import logger
 
 from tux.bot import Tux
 from tux.utils.config import Config
+from tux.utils.substitutions import handle_substitution
 
 # Map the string type to the discord.ActivityType enum.
 ACTIVITY_TYPE_MAP = {
@@ -59,55 +60,6 @@ class ActivityHandler(commands.Cog):
 
         return activities
 
-    def _get_member_count(self) -> int:
-        """
-        Returns the total member count of all guilds the bot is in.
-
-        Returns
-        -------
-        int
-            The total member count of all guilds the bot is in.
-        """
-        return sum(guild.member_count for guild in self.bot.guilds if guild.member_count is not None)
-
-    async def handle_substitution(
-        self,
-        activity: discord.Activity | discord.Streaming,
-    ) -> discord.Activity | discord.Streaming:
-        """
-        Replaces multiple placeholders in the activity name.
-
-        Parameters
-        ----------
-        activity : discord.Activity | discord.Streaming
-            The activity to handle substitutions for.
-
-        Returns
-        -------
-        discord.Activity | discord.Streaming
-            The activity with substitutions applied.
-        """
-
-        # Available substitutions:
-        # {member_count} - total member count of all guilds
-        # {guild_count} - total guild count
-        # {bot_name} - bot name
-        # {bot_version} - bot version
-        # {prefix} - bot prefix
-
-        if activity.name and "{member_count}" in activity.name:
-            activity.name = activity.name.replace("{member_count}", str(self._get_member_count()))
-        if activity.name and "{guild_count}" in activity.name:
-            activity.name = activity.name.replace("{guild_count}", str(len(self.bot.guilds)))
-        if activity.name and "{bot_name}" in activity.name:
-            activity.name = activity.name.replace("{bot_name}", Config.BOT_NAME)
-        if activity.name and "{bot_version}" in activity.name:
-            activity.name = activity.name.replace("{bot_version}", Config.BOT_VERSION)
-        if activity.name and "{prefix}" in activity.name:
-            activity.name = activity.name.replace("{prefix}", Config.DEFAULT_PREFIX)
-
-        return activity
-
     async def run(self) -> NoReturn:
         """
         Loops through activities and updates bot presence periodically.
@@ -125,8 +77,11 @@ class ActivityHandler(commands.Cog):
         while True:
             for activity in self.activities:
                 try:
-                    substituted_activity = await self.handle_substitution(activity)
-                    await self.bot.change_presence(activity=substituted_activity)
+                    if activity.name is None:
+                        logger.warning("Activity name is None, skipping this activity.")
+                        continue
+                    activity.name = await handle_substitution(self.bot, activity.name)
+                    await self.bot.change_presence(activity=activity)
                 except Exception as e:
                     logger.error(f"Error updating activity: {e}")
                     # Continue the loop even if an error occurs
