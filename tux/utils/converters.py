@@ -2,7 +2,8 @@ import re
 from typing import Any
 
 from discord.ext import commands
-from prisma.enums import CaseType
+
+from tux.database.schemas import CaseType
 
 time_regex = re.compile(r"(\d{1,5}(?:[.,]?\d{1,5})?)([smhd])")
 time_dict = {"h": 3600, "s": 1, "m": 60, "d": 86400}

@@ -4,9 +4,8 @@ import discord
 from discord.ext import commands, tasks
 from loguru import logger
 
-from prisma.enums import CaseType
 from tux.bot import Tux
-from tux.database.schemas import Case
+from tux.database.schemas import Case, CaseType
 from tux.utils import checks
 from tux.utils.flags import TempBanFlags
 from tux.utils.functions import generate_usage

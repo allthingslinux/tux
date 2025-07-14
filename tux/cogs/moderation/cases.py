@@ -5,10 +5,8 @@ from discord.ext import commands
 from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
-from prisma.enums import CaseType
-from prisma.types import CaseWhereInput
 from tux.bot import Tux
-from tux.database.schemas import Case
+from tux.database.schemas import Case, CaseType
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.constants import CONST
@@ -246,7 +244,7 @@ class Cases(ModerationCogBase):
         """
         assert ctx.guild
 
-        options: CaseWhereInput = {}
+        options: dict[str, Any] = {}
 
         if flags.type:
             options["case_type"] = flags.type

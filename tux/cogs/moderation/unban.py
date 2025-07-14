@@ -2,9 +2,9 @@ from contextlib import suppress
 
 import discord
 from discord.ext import commands
-from prisma.enums import CaseType
 
 from tux.bot import Tux
+from tux.database.schemas import CaseType
 from tux.utils import checks
 from tux.utils.constants import CONST
 from tux.utils.flags import UnbanFlags
