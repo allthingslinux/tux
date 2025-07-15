@@ -1,5 +1,7 @@
 from typing import Final
 
+# TODO: move to assets/data/ potentially
+
 
 class Constants:
     # Color constants

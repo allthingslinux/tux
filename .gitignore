@@ -169,6 +169,7 @@ site/
 # extensions
 tux/extensions/*
 !tux/extensions/README.md
+!tux/extensions/__init__.py
 
 # misc
 slim.report.json
