@@ -8,7 +8,7 @@ from tux.utils.config import CONFIG
 class TempVc(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
-        self.base_vc_name: str = "/tmp/"
+        self.base_vc_name: str = CONFIG.TEMPVC_BASE_NAME or "/tmp/"
 
     @commands.Cog.listener()
     async def on_voice_state_update(
