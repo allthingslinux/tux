@@ -35,10 +35,11 @@ class Xkcd(commands.Cog):
             The ID of the xkcd comic to search for.
         """
 
-        if comic_id:
-            await self.specific(ctx, comic_id)
-        else:
+        if not comic_id:
             await ctx.send_help("xkcd")
+            return
+
+        await self.specific(ctx, comic_id)
 
     @xkcd.command(
         name="latest",

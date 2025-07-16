@@ -75,22 +75,16 @@ class Avatar(commands.Cog):
         member : discord.Member
             The member to get the avatar of.
         """
-        if member is not None:
+        if isinstance(source, discord.Interaction) and member is not None:
             guild_avatar = member.guild_avatar.url if member.guild_avatar else None
             global_avatar = member.avatar.url if member.avatar else None
             files = [await self.create_avatar_file(avatar) for avatar in [guild_avatar, global_avatar] if avatar]
 
             if files:
-                if isinstance(source, discord.Interaction):
-                    await source.response.send_message(files=files)
-                else:
-                    await source.reply(files=files)
+                await source.response.send_message(files=files)
             else:
                 message = "Member has no avatar."
-                if isinstance(source, discord.Interaction):
-                    await source.response.send_message(content=message, ephemeral=True, delete_after=30)
-                else:
-                    await source.reply(content=message, ephemeral=True, delete_after=30)
+                await source.response.send_message(content=message, ephemeral=True, delete_after=30)
 
         elif isinstance(source, commands.Context):
             member = await commands.MemberConverter().convert(source, str(source.author.id))
