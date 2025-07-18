@@ -4,7 +4,7 @@ This section provides details on using the custom `tux` command-line interface, 
 
 ## Environment Selection
 
-The `tux` CLI defaults to **development mode** for all command groups (`bot`, `db`, `dev`, `docker`). This ensures that operations like database migrations or starting the bot target your development resources unless explicitly specified otherwise.
+The `tux` CLI defaults to **development mode** for all command groups (`db`, `dev`, `docker`). This ensures that operations like database migrations or starting the bot target your development resources unless explicitly specified otherwise.
 
 * **Production Mode:**
     To run a command targeting production resources (e.g., production database, production bot token), you **must** use the global `--prod` flag immediately after `tux`:
@@ -14,7 +14,7 @@ The `tux` CLI defaults to **development mode** for all command groups (`bot`, `d
     poetry run tux --prod db migrate
 
     # Example: Start the bot using production token/DB
-    poetry run tux --prod bot start
+    poetry run tux --prod start
     ```
 
 * **Development Mode (Default / Explicit):**
@@ -25,8 +25,8 @@ The `tux` CLI defaults to **development mode** for all command groups (`bot`, `d
     poetry run tux db push
     poetry run tux --dev db push
 
-    poetry run tux bot start
-    poetry run tux --dev bot start
+    poetry run tux start
+    poetry run tux --dev start
     ```
 
 This default-to-development approach prioritizes safety by preventing accidental operations on production environments. The environment determination logic can be found in `tux/utils/env.py`.
