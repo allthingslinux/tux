@@ -24,6 +24,19 @@ from tux.utils.config import CONFIG
 from tux.utils.sentry_manager import SentryManager
 
 
+async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
+    """Resolve the command prefix for a guild or use the default prefix."""
+    prefix: str | None = None
+    if message.guild:
+        try:
+            from tux.database.controllers import DatabaseController  # noqa: PLC0415
+
+            prefix = await DatabaseController().guild_config.get_guild_prefix(message.guild.id)
+        except Exception as e:
+            logger.error(f"Error getting guild prefix: {e}")
+    return [prefix or CONFIG.DEFAULT_PREFIX]
+
+
 class TuxApp:
     """
     Orchestrates the startup, shutdown, and environment for the Tux bot.
@@ -83,6 +96,7 @@ class TuxApp:
 
         # Instantiate the main bot class with all necessary parameters.
         self.bot = Tux(
+            command_prefix=get_prefix,
             strip_after_prefix=True,
             case_insensitive=True,
             intents=discord.Intents.all(),
