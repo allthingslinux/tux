@@ -5,6 +5,8 @@ Provides intelligent dependency tracking, file watching, and cog reloading
 with comprehensive error handling and performance monitoring.
 """
 
+from __future__ import annotations
+
 import ast
 import asyncio
 import hashlib
@@ -14,35 +16,22 @@ import re
 import sys
 import time
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Sequence
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass, field
 from pathlib import Path
-from types import ModuleType
 from typing import Any, Protocol, TypeVar, cast
 
-import sentry_sdk
 import watchdog.events
 import watchdog.observers
 from discord.ext import commands
 from loguru import logger
 
+from tux.utils.protocols import BotProtocol
 from tux.utils.tracing import span
 
 # Type variables and protocols
 F = TypeVar("F", bound=Callable[..., Any])
-
-
-class BotProtocol(Protocol):
-    """Protocol for bot-like objects."""
-
-    @property
-    def extensions(self) -> Mapping[str, ModuleType]: ...
-
-    help_command: Any
-
-    async def load_extension(self, name: str) -> None: ...
-    async def reload_extension(self, name: str) -> None: ...
 
 
 class FileSystemWatcherProtocol(Protocol):
@@ -260,9 +249,8 @@ def reload_module_by_name(module_name: str) -> bool:
             importlib.reload(sys.modules[module_name])
     except Exception as e:
         logger.error(f"Failed to reload module {module_name}: {e}")
-        if sentry_sdk.is_initialized():
-            sentry_sdk.capture_exception(e)
-        return False
+        # No sentry_manager available here, so no Sentry capture
+        raise
     else:
         logger.debug(f"Reloaded module {module_name}")
         return True
@@ -382,9 +370,8 @@ class ClassDefinitionTracker:
 
         except Exception as e:
             logger.debug(f"Error scanning class definitions in {file_path}: {e}")
-            if sentry_sdk.is_initialized():
-                sentry_sdk.capture_exception(e)
-            return {}
+            # No sentry_manager available here, so no Sentry capture
+            raise
         else:
             return classes
 
@@ -458,9 +445,8 @@ class DependencyGraph(DependencyTracker):
 
         except Exception as e:
             logger.debug(f"Error scanning dependencies in {file_path}: {e}")
-            if sentry_sdk.is_initialized():
-                sentry_sdk.capture_exception(e)
-            return set()
+            # No sentry_manager available here, so no Sentry capture
+            raise
         else:
             return dependencies
 
@@ -698,9 +684,8 @@ class DependencyGraph(DependencyTracker):
             setattr(module, class_name, new_class)
         except Exception as e:
             logger.error(f"Failed to hot patch class {class_name} in {module_name}: {e}")
-            if sentry_sdk.is_initialized():
-                sentry_sdk.capture_exception(e)
-            return False
+            # No sentry_manager available here, so no Sentry capture
+            raise
         else:
             logger.info(f"Hot patched class {class_name} in {module_name}")
             return True
@@ -717,30 +702,47 @@ class DependencyGraph(DependencyTracker):
 
 
 class CogWatcher(watchdog.events.FileSystemEventHandler):
-    """Enhanced cog watcher with smart dependency tracking and improved error handling."""
+    """
+    Watches for file changes and automatically reloads affected cogs.
 
-    def __init__(self, bot: BotProtocol, path: str, *, recursive: bool = True, config: HotReloadConfig | None = None):
-        """Initialize the cog watcher with validation."""
-        self._config = config or HotReloadConfig()
-        validate_config(self._config)
+    This class extends watchdog's FileSystemEventHandler to monitor Python files
+    in the bot's directory and trigger automatic reloading when changes are detected.
+    """
 
-        watch_path = Path(path)
-        if not watch_path.exists():
-            msg = f"Watch path does not exist: {path}"
-            raise FileWatchError(msg)
+    def __init__(
+        self,
+        bot: commands.Bot | BotProtocol,
+        path: str,
+        *,
+        recursive: bool = True,
+        config: HotReloadConfig | None = None,
+    ):
+        """
+        Initialize the cog watcher.
 
+        Parameters
+        ----------
+        bot : commands.Bot | BotProtocol
+            The bot instance to reload extensions on.
+        path : str
+            The directory path to watch for changes.
+        recursive : bool, optional
+            Whether to watch subdirectories recursively, by default True
+        config : HotReloadConfig | None, optional
+            Configuration for the hot reload system, by default None
+        """
+        super().__init__()
         self.bot = bot
-        self.path = str(watch_path.resolve())
+        self.watch_path = Path(path)
         self.recursive = recursive
+        self.config = config or HotReloadConfig()
+        self.extension_map: dict[str, str] = {}
+        self.dependency_graph = DependencyGraph(self.config)
+        self.file_hash_tracker = FileHashTracker()
+        self.class_tracker = ClassDefinitionTracker()
+        self.debounce_timers: dict[str, asyncio.TimerHandle] = {}
         self.observer = watchdog.observers.Observer()
-        self.observer.schedule(self, self.path, recursive=recursive)
-        self.base_dir = Path(__file__).parent.parent
-
-        # Store a relative path for logging
-        try:
-            self.display_path = str(Path(path).relative_to(self.base_dir.parent))
-        except ValueError:
-            self.display_path = path
+        self.pending_tasks: list[asyncio.Task[None]] = []
 
         # Store the main event loop from the calling thread
         try:
@@ -749,23 +751,15 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
             msg = "Hot reload must be initialized from within an async context"
             raise HotReloadError(msg) from e
 
-        # Track special files
+        # Set up base directory and help file path
+        self.base_dir = Path(__file__).parent.parent
         self.help_file_path = self.base_dir / "help.py"
 
-        # Extension tracking
-        self.path_to_extension: dict[str, str] = {}
-        self.pending_tasks: list[asyncio.Task[None]] = []
-
-        # Enhanced dependency tracking
-        self.dependency_graph = DependencyGraph(self._config)
-
-        # Debouncing configuration
-        self._debounce_timers: dict[str, asyncio.Handle] = {}
-
-        # Build initial extension map
+        # Build the extension map and populate file hashes
         self._build_extension_map()
-
-        logger.debug(f"CogWatcher initialized for path: {self.display_path}")
+        if self.config.prepopulate_hashes:
+            cached_count = self._populate_all_file_hashes()
+            logger.debug(f"Pre-populated {cached_count} file hashes")
 
     @span("watcher.build_extension_map")
     def _build_extension_map(self) -> None:
@@ -779,15 +773,15 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
             try:
                 path = path_from_extension(extension)
                 if path.exists():
-                    self.path_to_extension[str(path)] = extension
+                    self.extension_map[str(path)] = extension
                     self.dependency_graph.update_dependencies(path, extension)
                     extension_count += 1
                 else:
                     logger.warning(f"Could not find file for extension {extension}, expected at {path}")
             except Exception as e:
                 logger.error(f"Error processing extension {extension}: {e}")
-                if sentry_sdk.is_initialized():
-                    sentry_sdk.capture_exception(e)
+                # No sentry_manager available here, so no Sentry capture
+                raise
 
         # Pre-populate hash cache for all Python files in watched directories
         # This eliminates "first encounter" issues for any file
@@ -802,16 +796,16 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         Pre-populate hash cache for all files in watched directories matching configured extensions.
         This can be disabled via configuration to avoid startup overhead.
         """
-        if not self._config.prepopulate_hashes:
+        if not self.config.prepopulate_hashes:
             logger.debug("Hash pre-population disabled in configuration")
             return 0
 
         cached_count = 0
 
         # Get the root watch path (this includes the entire tux directory)
-        watch_root = Path(self.path)
+        watch_root = Path(self.watch_path)
 
-        for ext in self._config.hash_extensions:
+        for ext in self.config.hash_extensions:
             for file_path in watch_root.rglob(f"*{ext}"):
                 try:
                     # Pre-populate cache silently using the public method
@@ -819,6 +813,8 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
                     cached_count += 1
                 except Exception as e:
                     logger.warning(f"Failed to hash {file_path}: {e}")
+                    # No sentry_manager available here, so no Sentry capture
+                    raise
 
         return cached_count
 
@@ -826,7 +822,7 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         """Start watching for file changes."""
         try:
             self.observer.start()
-            logger.info(f"Hot reload watching {self.display_path}")
+            logger.info(f"Hot reload watching {self.watch_path}")
         except Exception as e:
             msg = f"Failed to start file watcher: {e}"
             raise FileWatchError(msg) from e
@@ -847,9 +843,9 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
                 task.cancel()
 
         # Cancel debounce timers
-        for timer in self._debounce_timers.values():
+        for timer in self.debounce_timers.values():
             timer.cancel()
-        self._debounce_timers.clear()
+        self.debounce_timers.clear()
 
         logger.info("Stopped watching for changes")
 
@@ -875,13 +871,13 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         file_key = str(file_path)
 
         # Cancel existing debounce timer if any
-        if file_key in self._debounce_timers:
-            self._debounce_timers[file_key].cancel()
+        if file_key in self.debounce_timers:
+            self.debounce_timers[file_key].cancel()
 
         # Set new debounce timer
         try:
-            self._debounce_timers[file_key] = self.loop.call_later(
-                self._config.debounce_delay,
+            self.debounce_timers[file_key] = self.loop.call_later(
+                self.config.debounce_delay,
                 self._handle_file_change_debounced,
                 file_path,
             )
@@ -901,11 +897,11 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         file_key = str(file_path)
 
         # Remove from debounce tracking
-        if file_key in self._debounce_timers:
-            del self._debounce_timers[file_key]
+        if file_key in self.debounce_timers:
+            del self.debounce_timers[file_key]
 
         # Validate syntax before attempting reload (if enabled)
-        if self._config.validate_syntax and file_path.suffix == ".py" and not validate_python_syntax(file_path):
+        if self.config.validate_syntax and file_path.suffix == ".py" and not validate_python_syntax(file_path):
             logger.debug(f"Skipping hot reload for {file_path.name} due to syntax errors")
             return
 
@@ -918,8 +914,8 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
             self._handle_extension_file(file_path)
         except Exception as e:
             logger.error(f"Error handling file change for {file_path}: {e}")
-            if sentry_sdk.is_initialized():
-                sentry_sdk.capture_exception(e)
+            # No sentry_manager available here, so no Sentry capture
+            raise
 
     def _handle_special_files(self, file_path: Path) -> bool:
         """Handle special files like help.py and __init__.py."""
@@ -943,7 +939,7 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
             self.dependency_graph.update_dependencies(file_path, module_name)
 
         # Check direct mapping first
-        if extension := self.path_to_extension.get(str(file_path)):
+        if extension := self.extension_map.get(str(file_path)):
             self._reload_extension(extension)
             return
 
@@ -1014,7 +1010,7 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         self._reload_extension(extension)
 
         if file_path:
-            self.path_to_extension[str(file_path)] = extension
+            self.extension_map[str(file_path)] = extension
 
     @span("watcher.try_reload_variations")
     def _try_reload_extension_variations(self, extension: str, file_path: Path) -> bool:
@@ -1030,7 +1026,7 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
             shorter_ext = ".".join(parts[:i])
             if shorter_ext in self.bot.extensions:
                 logger.warning(f"Skipping reload of {extension} as parent module {shorter_ext} already loaded")
-                self.path_to_extension[str(file_path)] = shorter_ext
+                self.extension_map[str(file_path)] = shorter_ext
                 return True
 
         # Check parent modules
@@ -1074,8 +1070,8 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
                     self._process_extension_reload(ext)
         except Exception as e:
             logger.error(f"Error handling __init__.py change for {init_file_path}: {e}")
-            if sentry_sdk.is_initialized():
-                sentry_sdk.capture_exception(e)
+            # No sentry_manager available here, so no Sentry capture
+            raise
 
     def _collect_extensions_to_reload(self, full_package: str, short_package: str) -> list[str]:
         """Collect extensions that need to be reloaded based on package names."""
@@ -1098,8 +1094,8 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
             asyncio.run_coroutine_threadsafe(self._async_reload_extension(extension), self.loop)
         except Exception as e:
             logger.error(f"Failed to schedule reload of extension {extension}: {e}")
-            if sentry_sdk.is_initialized():
-                sentry_sdk.capture_exception(e)
+            # No sentry_manager available here, so no Sentry capture
+            raise
 
     def _reload_help(self) -> None:
         """Reload the help command with proper error handling."""
@@ -1108,8 +1104,8 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
             asyncio.run_coroutine_threadsafe(self._async_reload_help(), self.loop)
         except Exception as e:
             logger.error(f"Failed to schedule reload of help command: {e}")
-            if sentry_sdk.is_initialized():
-                sentry_sdk.capture_exception(e)
+            # No sentry_manager available here, so no Sentry capture
+            raise
 
     @span("reload.extension")
     async def _async_reload_extension(self, extension: str) -> None:
@@ -1162,12 +1158,13 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
 
             # Update our mapping
             path = path_from_extension(extension)
-            self.path_to_extension[str(path)] = extension
+            self.extension_map[str(path)] = extension
         except commands.ExtensionError as e:
             logger.error(f"❌ Failed to load new extension {extension}: {e}")
-            # Only send to Sentry if it's not a common development error
-            if sentry_sdk.is_initialized() and not self._is_development_error(e):
-                sentry_sdk.capture_exception(e)
+            # Only send to Sentry if it's not a common development error and bot supports it
+            if not self._is_development_error(e) and isinstance(self.bot, BotProtocol):
+                self.bot.sentry_manager.capture_exception(e)
+            raise
 
     async def _reload_extension_core(self, extension: str) -> None:
         """Core extension reloading logic."""
@@ -1178,9 +1175,9 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
             raise
         except commands.ExtensionError as e:
             logger.error(f"❌ Failed to reload extension {extension}: {e}")
-            # Only send to Sentry if it's not a common development error
-            if sentry_sdk.is_initialized() and not self._is_development_error(e):
-                sentry_sdk.capture_exception(e)
+            # Only send to Sentry if it's not a common development error and bot supports it
+            if not self._is_development_error(e) and isinstance(self.bot, BotProtocol):
+                self.bot.sentry_manager.capture_exception(e)
             raise
 
     @span("reload.help")
@@ -1203,12 +1200,12 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
                 logger.info("✅ Reloaded help command")
             except (AttributeError, ImportError) as e:
                 logger.error(f"Error accessing TuxHelp class: {e}")
-                if sentry_sdk.is_initialized():
-                    sentry_sdk.capture_exception(e)
+                # No sentry_manager available here, so no Sentry capture
+                raise
         except Exception as e:
             logger.error(f"❌ Failed to reload help command: {e}")
-            if sentry_sdk.is_initialized():
-                sentry_sdk.capture_exception(e)
+            # No sentry_manager available here, so no Sentry capture
+            raise
 
     @span("reload.flag_dependent_cogs")
     def _reload_flag_class_dependent_cogs(self) -> None:
@@ -1414,8 +1411,8 @@ def watch(
                 logger.info("🔥 Hot reload active")
             except Exception as e:
                 logger.error(f"Failed to start hot reload system: {e}")
-                if sentry_sdk.is_initialized():
-                    sentry_sdk.capture_exception(e)
+                # No sentry_manager available here, so no Sentry capture
+                raise
 
             return result
 
@@ -1463,9 +1460,8 @@ def auto_discover_cogs(path: str = "cogs") -> list[str]:
                 continue
     except Exception as e:
         logger.error(f"Error during cog discovery: {e}")
-        if sentry_sdk.is_initialized():
-            sentry_sdk.capture_exception(e)
-        return []
+        # No sentry_manager available here, so no Sentry capture
+        raise
     else:
         return sorted(discovered)
 
@@ -1473,7 +1469,7 @@ def auto_discover_cogs(path: str = "cogs") -> list[str]:
 class HotReload(commands.Cog):
     """Hot reload cog for backward compatibility and direct usage."""
 
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot: commands.Bot | BotProtocol) -> None:
         self.bot = bot
 
         logger.debug(f"Initializing HotReload cog with {len(bot.extensions)} loaded extensions")
@@ -1485,8 +1481,9 @@ class HotReload(commands.Cog):
             self.watcher.start()
         except Exception as e:
             logger.error(f"Failed to initialize hot reload watcher: {e}")
-            if sentry_sdk.is_initialized():
-                sentry_sdk.capture_exception(e)
+            # Type-safe access to sentry_manager
+            if isinstance(bot, BotProtocol):
+                bot.sentry_manager.capture_exception(e)
             raise
 
     async def cog_unload(self) -> None:
@@ -1499,7 +1496,7 @@ class HotReload(commands.Cog):
             logger.error(f"Error during HotReload cog unload: {e}")
 
 
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: commands.Bot | BotProtocol) -> None:
     """Set up the hot reload cog."""
     logger.info("Setting up hot reloader")
     logger.debug(f"Bot has {len(bot.extensions)} extensions loaded")
@@ -1511,11 +1508,11 @@ async def setup(bot: commands.Bot) -> None:
             logger.warning(f"  - {issue}")
 
     try:
+        # The actual bot instance will have the required attributes
         await bot.add_cog(HotReload(bot))
     except Exception as e:
         logger.error(f"Failed to setup hot reload cog: {e}")
-        if sentry_sdk.is_initialized():
-            sentry_sdk.capture_exception(e)
+        # No sentry_manager available here, so no Sentry capture
         raise
 
 
