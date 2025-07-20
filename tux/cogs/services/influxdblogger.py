@@ -9,6 +9,7 @@ from loguru import logger
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.utils.config import CONFIG
+from tux.utils.task_manager import CriticalTaskConfig, TaskPriority
 
 
 class InfluxLogger(commands.Cog):
@@ -44,6 +45,19 @@ class InfluxLogger(commands.Cog):
             self.influx_write_api = write_client.write_api(write_options=SYNCHRONOUS)  # type: ignore
             return True
         return False
+
+    def get_critical_tasks(self) -> list[CriticalTaskConfig]:
+        """Get critical tasks for this cog.
+
+        Returns
+        -------
+        list[CriticalTaskConfig]
+            List of critical task configurations, or empty list if not functional
+        """
+        # Only register the task if InfluxDB is properly configured
+        if self.influx_write_api is not None:
+            return [CriticalTaskConfig("influx_db_logger", "InfluxLogger", "logger", TaskPriority.LOW)]
+        return []
 
     @tasks.loop(seconds=60)
     async def logger(self) -> None:
