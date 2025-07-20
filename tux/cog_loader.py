@@ -9,7 +9,6 @@ reporting with Sentry integration.
 
 from __future__ import annotations
 
-import asyncio
 import time
 from collections import defaultdict
 from itertools import groupby
@@ -321,6 +320,11 @@ class CogLoader(commands.Cog):
         """
         Discovers, groups, and loads all eligible cogs from a directory.
 
+        Cogs are loaded by priority groups in descending order. Within each priority
+        group, cogs are loaded sequentially to prevent race conditions and dependency
+        issues. If a cog fails to load within a priority group, the remaining cogs
+        in that group are skipped to prevent cascading failures.
+
         Parameters
         ----------
         path : Path
@@ -347,18 +351,30 @@ class CogLoader(commands.Cog):
                 set_span_attributes({"cog_count": len(cogs_to_load), "categories": list(categories)})
 
                 start_time = time.perf_counter()
-                results = await asyncio.gather(
-                    *[self._load_single_cog(cog) for cog in cogs_to_load],
-                    return_exceptions=True,
-                )
-                group_results = [result for result in results if isinstance(result, CogLoadResult)]
+                # Load cogs sequentially within priority group to avoid dependency issues
+                # This prevents race conditions that could occur if cogs within the same
+                # priority group depend on each other during import/initialization
+                group_results: list[CogLoadResult] = []
+                for cog in cogs_to_load:
+                    try:
+                        result = await self._load_single_cog(cog)
+                        group_results.append(result)
+                    except CogLoadError as e:
+                        # Create a failed result for tracking
+                        failed_result = self._create_load_result(cog, start_time, success=False, error=e)
+                        group_results.append(failed_result)
+                        # Stop loading remaining cogs in this priority group to prevent
+                        # cascading failures from dependency issues
+                        logger.warning(f"Skipping remaining cogs in priority {priority} due to failure: {e}")
+                        break
+
                 all_results.extend(group_results)
 
                 set_span_attributes(
                     {
                         "load_time_s": time.perf_counter() - start_time,
-                        "success_count": len(group_results),
-                        "failure_count": len(results) - len(group_results),
+                        "success_count": len([r for r in group_results if r.success]),
+                        "failure_count": len([r for r in group_results if not r.success]),
                     },
                 )
         return all_results
