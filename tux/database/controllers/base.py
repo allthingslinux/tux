@@ -112,8 +112,7 @@ class BaseController[
         # Remove span creation here to avoid duplication with controller-level spans
         # Controller methods should handle their own tracing for meaningful operations
         try:
-            result = await operation()
-            return result
+            return await operation()
         except Exception as e:
             logger.error(f"{error_msg}: {e}")
             raise
