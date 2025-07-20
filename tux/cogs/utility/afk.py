@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 
 import discord
 from discord.ext import commands, tasks
+from loguru import logger
 
 from prisma.models import AFKModel
 from tux.bot import Tux
@@ -23,6 +24,9 @@ class Afk(commands.Cog):
         self.handle_afk_expiration.start()
         self.afk.usage = generate_usage(self.afk)
         self.permafk.usage = generate_usage(self.permafk)
+
+    async def cog_unload(self) -> None:
+        self.handle_afk_expiration.cancel()
 
     @commands.hybrid_command(
         name="afk",
@@ -183,8 +187,8 @@ class Afk(commands.Cog):
             ),
         )
 
-    @tasks.loop(seconds=120)
-    async def handle_afk_expiration(self):
+    @tasks.loop(seconds=120, name="afk_expiration_handler")
+    async def handle_afk_expiration(self) -> None:
         """
         Check AFK database at a regular interval,
         Remove AFK from users with an entry that has expired.
@@ -200,6 +204,20 @@ class Afk(commands.Cog):
                     await self.db.afk.remove_afk(entry.member_id)
                 else:
                     await del_afk(self.db, member, entry.nickname)
+
+    @handle_afk_expiration.before_loop
+    async def before_handle_afk_expiration(self) -> None:
+        """Wait until the bot is ready."""
+        await self.bot.wait_until_ready()
+
+    @handle_afk_expiration.error
+    async def on_handle_afk_expiration_error(self, error: BaseException) -> None:
+        """Handles errors in the AFK expiration handler loop."""
+        logger.error(f"Error in AFK expiration handler loop: {error}")
+        if isinstance(error, Exception):
+            self.bot.sentry_manager.capture_exception(error)
+        else:
+            raise error
 
     async def _get_expired_afk_entries(self, guild_id: int) -> list[AFKModel]:
         """

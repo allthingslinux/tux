@@ -1,15 +1,13 @@
-import asyncio
-import contextlib
 import datetime
 
-import discord
 from discord.ext import commands
 from loguru import logger
 
-from prisma.models import Reminder
 from tux.bot import Tux
+from tux.cogs.services.reminders import ReminderService
 from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator
+from tux.utils.constants import CONST
 from tux.utils.functions import convert_to_seconds, generate_usage
 
 
@@ -18,67 +16,6 @@ class RemindMe(commands.Cog):
         self.bot = bot
         self.db = DatabaseController()
         self.remindme.usage = generate_usage(self.remindme)
-        self._initialized = False
-
-    async def send_reminder(self, reminder: Reminder) -> None:
-        user = self.bot.get_user(reminder.reminder_user_id)
-        if user is not None:
-            embed = EmbedCreator.create_embed(
-                bot=self.bot,
-                embed_type=EmbedCreator.INFO,
-                user_name=user.name,
-                user_display_avatar=user.display_avatar.url,
-                title="Reminder",
-                description=reminder.reminder_content,
-            )
-
-            try:
-                await user.send(embed=embed)
-
-            except discord.Forbidden:
-                channel = self.bot.get_channel(reminder.reminder_channel_id)
-
-                if isinstance(channel, discord.TextChannel | discord.Thread | discord.VoiceChannel):
-                    with contextlib.suppress(discord.Forbidden):
-                        await channel.send(
-                            content=f"{user.mention} Failed to DM you, sending in channel",
-                            embed=embed,
-                        )
-                        return
-
-                else:
-                    logger.error(
-                        f"Failed to send reminder {reminder.reminder_id}, DMs closed and channel not found.",
-                    )
-
-        else:
-            logger.error(
-                f"Failed to send reminder {reminder.reminder_id}, user with ID {reminder.reminder_user_id} not found.",
-            )
-
-        try:
-            await self.db.reminder.delete_reminder_by_id(reminder.reminder_id)
-        except Exception as e:
-            logger.error(f"Failed to delete reminder: {e}")
-
-    @commands.Cog.listener()
-    async def on_ready(self) -> None:
-        if self._initialized:
-            return
-
-        self._initialized = True
-
-        reminders = await self.db.reminder.get_all_reminders()
-        dt_now = datetime.datetime.now(datetime.UTC)
-
-        for reminder in reminders:
-            seconds = (reminder.reminder_expires_at - dt_now).total_seconds()
-
-            if seconds <= 0:
-                await self.send_reminder(reminder)
-                continue
-
-            self.bot.loop.call_later(seconds, asyncio.create_task, self.send_reminder(reminder))
 
     @commands.hybrid_command(
         name="remindme",
@@ -102,7 +39,7 @@ class RemindMe(commands.Cog):
         - m = minutes
         - s = seconds
 
-        Example: `!remindme 1h30m "Take a break"` will remind you in 1 hour and 30 minutes.
+        Example: `$remindme 1h30m take a break` will remind you in 1 hour and 30 minutes.
 
         Parameters
         ----------
@@ -111,7 +48,7 @@ class RemindMe(commands.Cog):
         time : str
             The time to set the reminder for (e.g. 2d, 1h30m).
         reminder : str
-            The reminder message.
+            The reminder message (quotes are not required).
         """
 
         seconds = convert_to_seconds(time)
@@ -120,11 +57,17 @@ class RemindMe(commands.Cog):
             await ctx.reply(
                 "Invalid time format. Please use the format `[number][M/w/d/h/m/s]`.",
                 ephemeral=True,
-                delete_after=30,
+                delete_after=CONST.DEFAULT_DELETE_AFTER,
             )
             return
 
         expires_at = datetime.datetime.now(datetime.UTC) + datetime.timedelta(seconds=seconds)
+        reminder_service = self.bot.get_cog("ReminderService")
+
+        if not isinstance(reminder_service, ReminderService):
+            await ctx.reply("Reminder service not available.", ephemeral=True, delete_after=CONST.DEFAULT_DELETE_AFTER)
+            logger.error("ReminderService not found or is not the correct type.")
+            return
 
         try:
             reminder_obj = await self.db.reminder.insert_reminder(
@@ -135,7 +78,8 @@ class RemindMe(commands.Cog):
                 guild_id=ctx.guild.id if ctx.guild else 0,
             )
 
-            self.bot.loop.call_later(seconds, asyncio.create_task, self.send_reminder(reminder_obj))
+            # Schedule the reminder using our new queue system
+            await reminder_service.schedule_reminder(reminder_obj)
 
             embed = EmbedCreator.create_embed(
                 bot=self.bot,
