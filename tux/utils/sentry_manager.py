@@ -116,84 +116,143 @@ class SentryManager:
         return event
 
     @staticmethod
+    def _get_span_operation_mapping(op: str) -> str:
+        """
+        Map database controller operations to standardized operation types.
+
+        Parameters
+        ----------
+        op : str
+            The original operation name
+
+        Returns
+        -------
+        str
+            The standardized operation type
+        """
+        if not op.startswith("db.controller."):
+            return op
+
+        # Use dictionary lookup instead of if/elif chain
+        operation_mapping = {
+            "get_": "db.read",
+            "find_": "db.read",
+            "create_": "db.create",
+            "update_": "db.update",
+            "increment_": "db.update",
+            "delete_": "db.delete",
+            "count_": "db.count",
+        }
+
+        return next((mapped_op for prefix, mapped_op in operation_mapping.items() if prefix in op), "db.other")
+
+    @staticmethod
+    def _get_transaction_operation_mapping(transaction_name: str) -> str:
+        """
+        Map database controller transaction names to standardized operation types.
+
+        Parameters
+        ----------
+        transaction_name : str
+            The original transaction name
+
+        Returns
+        -------
+        str
+            The standardized transaction operation type
+        """
+        if not transaction_name.startswith("db.controller."):
+            return transaction_name
+
+        # Use dictionary lookup instead of if/elif chain
+        operation_mapping = {
+            "get_": "db.controller.read_operation",
+            "find_": "db.controller.read_operation",
+            "create_": "db.controller.create_operation",
+            "update_": "db.controller.update_operation",
+            "increment_": "db.controller.update_operation",
+            "delete_": "db.controller.delete_operation",
+            "count_": "db.controller.count_operation",
+        }
+
+        return next(
+            (mapped_op for prefix, mapped_op in operation_mapping.items() if prefix in transaction_name),
+            "db.controller.other_operation",
+        )
+
+    @staticmethod
+    def _filter_and_group_spans(spans: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """
+        Filter and group spans to reduce noise and improve trace readability.
+
+        Parameters
+        ----------
+        spans : list[dict[str, Any]]
+            List of spans to filter and group
+
+        Returns
+        -------
+        list[dict[str, Any]]
+            Filtered and grouped spans
+        """
+        filtered_spans: list[dict[str, Any]] = []
+
+        for span in spans:
+            op = span.get("op", "")
+            description = span.get("description", "")
+
+            # Filter out internal Prisma HTTP requests to the query engine
+            if op == "http.client" and "localhost" in description:
+                continue
+
+            # Filter out noisy, low-level asyncio/library functions
+            if "staggered_race" in description:
+                continue
+
+            # Group database controller operations for cleaner reporting
+            if "db.controller." in op:
+                span["op"] = SentryManager._get_span_operation_mapping(op)
+                # Normalize description for grouped DB operations
+                span["description"] = f"DB {str(span['op']).split('.')[-1].capitalize()} Operation"
+
+            filtered_spans.append(span)
+
+        return filtered_spans
+
+    @staticmethod
     def _before_send_transaction(event: Event, hint: Hint) -> Event | None:
         """
         Filter and modify transaction events before sending to Sentry.
 
         This helps reduce noise and improve transaction grouping.
         """
-        if event.get("type") == "transaction":
-            transaction_name = event.get("transaction", "")
+        if event.get("type") != "transaction":
+            return event
 
-            # Filter out noisy or uninteresting transactions entirely
-            if any(
-                op in transaction_name
-                for op in [
-                    "safe_get_attr",
-                    "connect_or_create",
-                    "_build_",
-                    "_add_include",
-                    "CogLoader.load_cogs_from_folder",  # Startup noise
-                    "CogLoader Setup",  # More startup noise
-                    "Bot shutdown process",  # Shutdown noise
-                ]
-            ):
-                return None
+        transaction_name = event.get("transaction", "")
 
-            # Filter spans to reduce noise and group operations.
-            # This provides more meaningful and actionable traces.
-            if "spans" in event:
-                spans = cast(list[dict[str, Any]], event.get("spans") or [])
-                filtered_spans: list[dict[str, Any]] = []
-                for span in spans:
-                    op = span.get("op", "")
-                    description = span.get("description", "")
+        # Filter out noisy or uninteresting transactions entirely
+        noisy_operations = [
+            "safe_get_attr",
+            "connect_or_create",
+            "_build_",
+            "_add_include",
+            "CogLoader.load_cogs_from_folder",  # Startup noise
+            "CogLoader Setup",  # More startup noise
+            "Bot shutdown process",  # Shutdown noise
+        ]
 
-                    # Filter out internal Prisma HTTP requests to the query engine.
-                    # These are implementation details and not useful for performance monitoring.
-                    if op == "http.client" and "localhost" in description:
-                        continue
+        if any(op in transaction_name for op in noisy_operations):
+            return None
 
-                    # Filter out noisy, low-level asyncio/library functions.
-                    if "staggered_race" in description:
-                        continue
+        # Filter spans to reduce noise and group operations
+        if "spans" in event:
+            spans = cast(list[dict[str, Any]], event.get("spans") or [])
+            event["spans"] = SentryManager._filter_and_group_spans(spans)
 
-                    # Group database controller operations for cleaner reporting.
-                    if "db.controller." in op:
-                        if "get_" in op or "find_" in op:
-                            span["op"] = "db.read"
-                        elif "create_" in op:
-                            span["op"] = "db.create"
-                        elif "update_" in op or "increment_" in op:
-                            span["op"] = "db.update"
-                        elif "delete_" in op:
-                            span["op"] = "db.delete"
-                        elif "count_" in op:
-                            span["op"] = "db.count"
-                        else:
-                            span["op"] = "db.other"
-                        # Normalize description for grouped DB operations
-                        span["description"] = f"DB {str(span['op']).split('.')[-1].capitalize()} Operation"
-
-                    filtered_spans.append(span)
-                event["spans"] = filtered_spans
-
-            # Group all database controller transactions by type for cleaner reporting.
-            # This is a fallback for transactions that are purely DB operations.
-            if "db.controller." in transaction_name:
-                # Extract operation type and normalize
-                if "get_" in transaction_name or "find_" in transaction_name:
-                    event["transaction"] = "db.controller.read_operation"
-                elif "create_" in transaction_name:
-                    event["transaction"] = "db.controller.create_operation"
-                elif "update_" in transaction_name or "increment_" in transaction_name:
-                    event["transaction"] = "db.controller.update_operation"
-                elif "delete_" in transaction_name:
-                    event["transaction"] = "db.controller.delete_operation"
-                elif "count_" in transaction_name:
-                    event["transaction"] = "db.controller.count_operation"
-                else:
-                    event["transaction"] = "db.controller.other_operation"
+        # Group all database controller transactions by type for cleaner reporting
+        if "db.controller." in transaction_name:
+            event["transaction"] = SentryManager._get_transaction_operation_mapping(transaction_name)
 
         return event
 
@@ -215,24 +274,23 @@ class SentryManager:
         # Get transaction name for decision making
         transaction_name = sampling_context.get("transaction_context", {}).get("name", "")
 
-        # Very aggressive sampling in production to reduce noise
-        if get_current_env() not in ("dev", "development"):
-            # Almost no sampling for database operations (they're very frequent)
-            if "db.controller" in transaction_name:
-                return 0.01  # 1% sampling for DB operations
-            if "db.query" in transaction_name:
-                return 0.005  # 0.5% sampling for low-level DB queries
-            if "command" in transaction_name:
-                # Normal sampling for user commands (more important)
-                return 0.1  # 10% sampling for commands
-            if "cog." in transaction_name:
-                # Very low sampling for cog operations
-                return 0.02  # 2% sampling for cog ops
-            # Low sampling for other operations
-            return 0.05  # 5% sampling for other ops
-
         # Full sampling in development for debugging
-        return 1.0
+        if get_current_env() in ("dev", "development"):
+            return 1.0
+
+        # Production sampling rates using dictionary lookup
+        sampling_rates = {
+            "db.controller": 0.01,  # 1% sampling for DB operations
+            "db.query": 0.005,  # 0.5% sampling for low-level DB queries
+            "command": 0.1,  # 10% sampling for commands
+            "cog.": 0.02,  # 2% sampling for cog ops
+        }
+
+        # Check for matching patterns and return appropriate sampling rate
+        return next(
+            (rate for pattern, rate in sampling_rates.items() if pattern in transaction_name),
+            0.05,  # Default sampling rate for other operations
+        )
 
     @staticmethod
     def setup() -> None:
