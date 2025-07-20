@@ -111,16 +111,6 @@ class TaskManager:
         ("patch_asyncio",): TaskCategory.SYSTEM,
     }
 
-    # Default critical tasks that should be monitored
-    DEFAULT_CRITICAL_TASKS: ClassVar[list[CriticalTaskConfig]] = [
-        CriticalTaskConfig("reminder_processor", "ReminderService", "reminder_processor", TaskPriority.CRITICAL),
-        CriticalTaskConfig("tempban_checker", "TempBan", "check_tempbans", TaskPriority.HIGH),
-        CriticalTaskConfig("afk_expiration_handler", "Afk", "handle_afk_expiration", TaskPriority.NORMAL),
-        CriticalTaskConfig("old_gif_remover", "GifLimiter", "old_gif_remover", TaskPriority.NORMAL),
-        CriticalTaskConfig("influx_guild_stats", "InfluxLogger", "_log_guild_stats", TaskPriority.LOW),
-        CriticalTaskConfig("influx_db_logger", "InfluxLogger", "logger", TaskPriority.LOW),
-    ]
-
     def __init__(self, bot: BotProtocol) -> None:
         """
         Initialize the TaskManager with enhanced monitoring capabilities.
@@ -201,7 +191,7 @@ class TaskManager:
         Parameters
         ----------
         config : CriticalTaskConfig
-            Configuration for the critical task.
+            Configuration for the critical task to register.
         """
         self.critical_tasks[config.name] = config
         self.task_metrics[config.name] = TaskMetrics(
@@ -210,6 +200,28 @@ class TaskManager:
             priority=config.priority,
         )
         logger.debug(f"Registered critical task: {config.name}")
+
+    def discover_and_register_cog_tasks(self) -> None:
+        """
+        Discover and register critical tasks from all loaded cogs.
+
+        This method asks each cog if it has critical tasks to register,
+        making the system dynamic and cog-driven instead of hardcoded.
+        """
+        logger.info("Discovering critical tasks from cogs...")
+
+        for cog_name, cog in self.bot.cogs.items():
+            # Check if the cog has a method to report its critical tasks
+            get_tasks_method = getattr(cog, "get_critical_tasks", None)
+            if get_tasks_method and callable(get_tasks_method):
+                try:
+                    if task_configs := get_tasks_method():
+                        for config in task_configs:
+                            self.register_critical_task(config)
+                            logger.debug(f"Discovered task {config.name} from cog {cog_name}")
+                except Exception as e:
+                    logger.warning(f"Error discovering tasks from cog {cog_name}: {e}")
+                    continue
 
     def unregister_critical_task(self, task_name: str) -> None:
         """
