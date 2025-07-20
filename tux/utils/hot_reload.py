@@ -27,7 +27,7 @@ import watchdog.observers
 from discord.ext import commands
 from loguru import logger
 
-from tux.utils.sentry import span
+from tux.utils.tracing import span
 
 # Type variables and protocols
 F = TypeVar("F", bound=Callable[..., Any])

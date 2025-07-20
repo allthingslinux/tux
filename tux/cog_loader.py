@@ -1,39 +1,92 @@
+"""
+CogLoader: A robust cog loader for the Tux bot.
+
+This module provides the `CogLoader` class, which is responsible for discovering,
+loading, and managing all cogs (Discord.py extensions) for the bot. It includes
+features for priority-based loading, performance tracking, and detailed error
+reporting with Sentry integration.
+"""
+
+from __future__ import annotations
+
 import asyncio
 import time
-import traceback
 from collections import defaultdict
-from collections.abc import Sequence
+from itertools import groupby
 from pathlib import Path
 
-import aiofiles
-import aiofiles.os
-import sentry_sdk
 from discord.ext import commands
 from loguru import logger
 
 from tux.utils.config import CONFIG
-from tux.utils.sentry import safe_set_name, span, start_span, transaction
+from tux.utils.tracing import (
+    capture_span_exception,
+    enhanced_span,
+    set_span_attributes,
+    span,
+    transaction,
+)
 
 
 class CogLoadError(Exception):
     """Raised when a cog fails to load."""
 
-    FAILED_TO_LOAD = "Failed to load cogs"
-    FAILED_TO_LOAD_FOLDER = "Failed to load cogs from folder"
-    FAILED_TO_INITIALIZE = "Failed to initialize cog loader"
 
-    def __init__(self, message: str) -> None:
-        self.message = message
-        super().__init__(self.message)
+class CogLoadResult:
+    """
+    Encapsulates the result of a cog loading operation.
+
+    Attributes
+    ----------
+    module : str
+        The full import path of the cog.
+    success : bool
+        Whether the cog loaded successfully.
+    load_time : float
+        The time taken to load the cog, in seconds.
+    error : Exception | None
+        The exception raised during loading, if any.
+    """
+
+    def __init__(self, module: str, success: bool, load_time: float, error: Exception | None = None) -> None:
+        self.module = module
+        self.success = success
+        self.load_time = load_time
+        self.error = error
+
+    @property
+    def load_time_ms(self) -> float:
+        """
+        Return the cog load time in milliseconds.
+
+        Returns
+        -------
+        float
+            The load time in milliseconds.
+        """
+        return self.load_time * 1000
 
 
 class CogLoader(commands.Cog):
+    """
+    A robust cog loader with priority-based loading, performance tracking,
+    and detailed Sentry integration.
+    """
+
+    # --- Initialization ---
+
     def __init__(self, bot: commands.Bot) -> None:
+        """
+        Initializes the CogLoader.
+
+        Parameters
+        ----------
+        bot : commands.Bot
+            The bot instance.
+        """
         self.bot = bot
-        self.cog_ignore_list: set[str] = CONFIG.COG_IGNORE_LIST
-        # Track load times for performance monitoring
+        self.cog_ignore_list: set[str] = set(CONFIG.COG_IGNORE_LIST)
         self.load_times: defaultdict[str, float] = defaultdict(float)
-        # Define load order priorities (higher number = higher priority)
         self.load_priorities = {
             "services": 90,
             "admin": 80,
@@ -47,9 +100,31 @@ class CogLoader(commands.Cog):
             "tools": 5,
         }
 
-    async def is_cog_eligible(self, filepath: Path) -> bool:
+    # --- Cog Discovery & Metadata ---
+
+    @staticmethod
+    def _path_to_module(path: Path) -> str:
         """
-        Checks if the specified file is an eligible cog.
+        Converts a Path object to a Python module path.
+
+        Example:
+            tux/cogs/admin.py -> tux.cogs.admin
+
+        Parameters
+        ----------
+        path : Path
+            The file path to convert.
+
+        Returns
+        -------
+        str
+            The Python module import path.
+        """
+        return ".".join(path.parts).removesuffix(".py")
+
+    def _is_eligible_cog_file(self, filepath: Path) -> bool:
+        """
+        Checks if a file is an eligible cog for loading.
 
         Parameters
         ----------
@@ -61,23 +136,98 @@ class CogLoader(commands.Cog):
         bool
             True if the file is an eligible cog, False otherwise.
         """
-        cog_name: str = filepath.stem
-
-        if cog_name in self.cog_ignore_list:
-            logger.warning(f"Skipping {cog_name} as it is in the ignore list.")
+        if filepath.suffix != ".py" or not filepath.is_file() or filepath.stem.startswith("_"):
             return False
 
-        return filepath.suffix == ".py" and not cog_name.startswith("_") and await aiofiles.os.path.isfile(filepath)
+        cog_name = filepath.stem
+        if cog_name in self.cog_ignore_list:
+            logger.trace(f"Skipping {cog_name} as it is in the ignore list.")
+            return False
 
-    @span("cog.load_single")
-    async def _load_single_cog(self, path: Path) -> None:
+        return True
+
+    def _get_cog_priority(self, path: Path) -> int:
         """
-        Load a single cog with timing and error tracking.
+        Gets the loading priority for a cog based on its parent directory.
 
         Parameters
         ----------
         path : Path
-            The path to the cog to load.
+            The path to the cog file.
+
+        Returns
+        -------
+        int
+            The priority value, or 0 if not specified.
+        """
+        return self.load_priorities.get(path.parent.name, 0)
+
+    def _discover_and_sort_cogs(self, path: Path) -> list[Path]:
+        """
+        Discovers all eligible cogs in a directory and sorts them by priority.
+
+        Parameters
+        ----------
+        path : Path
+            The directory to search for cogs.
+
+        Returns
+        -------
+        list[Path]
+            A list of cog file paths, sorted by priority (descending).
+        """
+        if not path.is_dir():
+            return []
+
+        eligible_cogs = [f for f in path.rglob("*.py") if self._is_eligible_cog_file(f)]
+        return sorted(eligible_cogs, key=lambda p: (self._get_cog_priority(p), p.name), reverse=True)
+
+    def _create_load_result(
+        self,
+        path: Path,
+        start_time: float,
+        success: bool = True,
+        error: Exception | None = None,
+    ) -> CogLoadResult:
+        """
+        Creates a standardized CogLoadResult object.
+
+        Parameters
+        ----------
+        path : Path
+            The path to the cog file.
+        start_time : float
+            The time when the loading process started.
+        success : bool, optional
+            Whether the load was successful, by default True.
+        error : Exception | None, optional
+            The error that occurred, if any, by default None.
+
+        Returns
+        -------
+        CogLoadResult
+            The result object.
+        """
+        module = self._path_to_module(path)
+        load_time = time.perf_counter() - start_time
+        return CogLoadResult(module, success, load_time, error)
+
+    # --- Cog Operations ---
+
+    @span("cog.load_single")
+    async def _load_single_cog(self, path: Path) -> CogLoadResult:
+        """
+        Loads a single cog with comprehensive error handling and timing.
+
+        Parameters
+        ----------
+        path : Path
+            The path to the cog file to load.
+
+        Returns
+        -------
+        CogLoadResult
+            The result of the loading operation.
 
         Raises
         ------
@@ -85,292 +235,254 @@ class CogLoader(commands.Cog):
             If the cog fails to load.
         """
         start_time = time.perf_counter()
-
-        # Setup for Sentry tracing
+        module = self._path_to_module(path)
         cog_name = path.stem
 
-        # Add span tags for the current cog
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-            current_span.set_tag("cog.name", cog_name)
-            current_span.set_tag("cog.path", str(path))
+        set_span_attributes({"cog.name": cog_name, "cog.path": str(path), "cog.module": module})
 
         try:
-            # Get the path relative to the tux package
-            relative_path = path.relative_to(Path(__file__).parent)
-
-            # Convert path to module format (e.g., tux.cogs.admin.dev)
-            module = f"tux.{str(relative_path).replace('/', '.').replace('\\', '.')[:-3]}"
-
-            if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-                current_span.set_tag("cog.module", module)
-
-            # Check if this module or any parent module is already loaded
-            # This prevents duplicate loading of the same module
-            module_parts = module.split(".")
-
-            for i in range(len(module_parts), 1, -1):
-                check_module = ".".join(module_parts[:i])
-                if check_module in self.bot.extensions:
-                    logger.warning(f"Skipping {module} as {check_module} is already loaded")
-                    if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-                        current_span.set_tag("cog.status", "skipped")
-                        current_span.set_tag("cog.skip_reason", "already_loaded")
-                        current_span.set_data("already_loaded_module", check_module)
-                    return
-
-            # Actually load the extension
-            await self.bot.load_extension(name=module)
-            load_time = time.perf_counter() - start_time
-            self.load_times[module] = load_time
-
-            # Add telemetry data to span
-            if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-                current_span.set_tag("cog.status", "loaded")
-                current_span.set_data("load_time_ms", load_time * 1000)
-                current_span.set_data("load_time_s", load_time)
-
-            logger.debug(f"Successfully loaded cog {module} in {load_time * 1000:.0f}ms")
-
+            await self.bot.load_extension(module)
         except Exception as e:
-            if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-                current_span.set_status("internal_error")
-                current_span.set_tag("cog.status", "failed")
-                current_span.set_data("error", str(e))
-                current_span.set_data("traceback", traceback.format_exc())
-
-            module_name = str(path)
-            error_msg = f"Failed to load cog {module_name}. Error: {e}\n{traceback.format_exc()}"
-            logger.error(error_msg)
+            result = self._create_load_result(path, start_time, success=False, error=e)
+            capture_span_exception(e, cog_status="failed", cog_name=cog_name, cog_module=module)
+            error_msg = f"Failed to load cog {module}."
+            logger.error(f"{error_msg} Error: {e}")
             raise CogLoadError(error_msg) from e
+        else:
+            result = self._create_load_result(path, start_time)
+            self.load_times[module] = result.load_time
+            set_span_attributes({"cog.status": "loaded", "load_time_ms": result.load_time_ms})
+            logger.debug(f"Successfully loaded cog {module} in {result.load_time_ms:.2f}ms")
+            return result
 
-    def _get_cog_priority(self, path: Path) -> int:
+    @span("cog.unload_single")
+    async def _unload_single_cog(self, path: Path) -> bool:
         """
-        Get the loading priority for a cog based on its category.
+        Unloads a single cog with enhanced tracing.
 
         Parameters
         ----------
         path : Path
-            The path to the cog.
+            The path to the cog file to unload.
 
         Returns
         -------
-        int
-            The priority value (higher = loaded earlier)
+        bool
+            True if the cog was unloaded successfully, False otherwise.
         """
-        return self.load_priorities.get(path.parent.name, 0)
+        module = self._path_to_module(path)
+        set_span_attributes({"cog.module": module})
 
-    @span("cog.load_group")
-    async def _load_cog_group(self, cogs: Sequence[Path]) -> None:
+        try:
+            await self.bot.unload_extension(module)
+        except commands.ExtensionNotLoaded:
+            logger.warning(f"Cog {module} is not loaded, cannot unload.")
+            return False
+        except Exception as e:
+            capture_span_exception(e, operation="unload", cog_module=module)
+            logger.error(f"Failed to unload cog {module}: {e}")
+            return False
+        else:
+            logger.info(f"Successfully unloaded cog: {module}")
+            return True
+
+    @span("cog.reload_single")
+    async def reload_cog(self, path: Path) -> bool:
         """
-        Load a group of cogs concurrently.
-
-        Parameters
-        ----------
-        cogs : Sequence[Path]
-            The cogs to load.
-        """
-        if not cogs:
-            return
-
-        # Add basic info for the group
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-            current_span.set_data("cog_count", len(cogs))
-
-            if categories := {cog.parent.name for cog in cogs if cog.parent}:
-                current_span.set_data("categories", list(categories))
-
-        # Track cog group loading
-        start_time = time.perf_counter()
-        results = await asyncio.gather(*[self._load_single_cog(cog) for cog in cogs], return_exceptions=True)
-        end_time = time.perf_counter()
-
-        # Calculate success/failure rates
-        success_count = len([r for r in results if not isinstance(r, Exception)])
-        failure_count = len(results) - success_count
-
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-            current_span.set_data("load_time_s", end_time - start_time)
-            current_span.set_data("success_count", success_count)
-            current_span.set_data("failure_count", failure_count)
-
-        # Log failures with proper context
-        for result, cog in zip(results, cogs, strict=False):
-            if isinstance(result, Exception):
-                logger.error(f"Error loading {cog}: {result}")
-
-    async def _process_single_file(self, path: Path) -> None:
-        """Process a single file path."""
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-            current_span.set_tag("path.is_dir", False)
-        if await self.is_cog_eligible(path):
-            await self._load_single_cog(path)
-
-    async def _process_directory(self, path: Path) -> None:
-        """Process a directory of cogs."""
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-            current_span.set_tag("path.is_dir", True)
-
-        # Collect and sort eligible cogs by priority
-        cog_paths: list[tuple[int, Path]] = [
-            (self._get_cog_priority(item), item) for item in path.rglob("*.py") if await self.is_cog_eligible(item)
-        ]
-        cog_paths.sort(key=lambda x: x[0], reverse=True)
-
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-            current_span.set_data("eligible_cog_count", len(cog_paths))
-
-            # Priority groups info for observability
-            priority_groups: dict[int, int] = {}
-            for priority, _ in cog_paths:
-                if priority in priority_groups:
-                    priority_groups[priority] += 1
-                else:
-                    priority_groups[priority] = 1
-            current_span.set_data("priority_groups", priority_groups)
-
-        # Group and load cogs by priority
-        current_group: list[Path] = []
-        current_priority: int | None = None
-
-        for priority, cog_path in cog_paths:
-            if current_priority != priority and current_group:
-                await self._load_cog_group(current_group)
-                current_group = []
-            current_priority = priority
-            current_group.append(cog_path)
-
-        # Load final group
-        if current_group:
-            await self._load_cog_group(current_group)
-
-    @span("cog.load_path")
-    async def load_cogs(self, path: Path) -> None:
-        """
-        Recursively loads eligible cogs from the specified directory with concurrent loading.
+        Reloads a single cog with comprehensive error handling.
 
         Parameters
         ----------
         path : Path
-            The path to the directory containing cogs.
+            The path to the cog file to reload.
+
+        Returns
+        -------
+        bool
+            True if the cog was reloaded successfully, False otherwise.
         """
-        # Add span context
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-            current_span.set_tag("cog.path", str(path))
+        module = self._path_to_module(path)
+        set_span_attributes({"cog.module": module})
+
+        await self._unload_single_cog(path)
 
         try:
-            # Handle file vs directory paths differently
-            if not await aiofiles.os.path.isdir(path):
-                await self._process_single_file(path)
-            else:
-                await self._process_directory(path)
+            await self._load_single_cog(path)
+        except CogLoadError:
+            return False
+        else:
+            logger.info(f"Successfully reloaded cog: {module}")
+            return True
 
-        except Exception as e:
-            path_str = path.as_posix()
-            logger.error(f"An error occurred while processing {path_str}: {e}")
+    # --- Loading Workflow ---
 
-            if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-                current_span.set_status("internal_error")
-                current_span.set_data("error", str(e))
-                current_span.set_data("traceback", traceback.format_exc())
-
-            raise CogLoadError(CogLoadError.FAILED_TO_LOAD) from e
-
-    @transaction("cog.load_folder", description="Loading all cogs from folder")
-    async def load_cogs_from_folder(self, folder_name: str) -> None:
+    @span("cog.load_directory")
+    async def _load_cogs_from_directory(self, path: Path) -> list[CogLoadResult]:
         """
-        Loads cogs from the specified folder with timing.
+        Discovers, groups, and loads all eligible cogs from a directory.
+
+        Parameters
+        ----------
+        path : Path
+            The directory to load cogs from.
+
+        Returns
+        -------
+        list[CogLoadResult]
+            A list of results for each cog loaded.
+        """
+        eligible_cogs = self._discover_and_sort_cogs(path)
+        if not eligible_cogs:
+            return []
+
+        set_span_attributes({"eligible_cog_count": len(eligible_cogs)})
+
+        all_results: list[CogLoadResult] = []
+        cogs_by_priority = groupby(eligible_cogs, key=self._get_cog_priority)
+
+        for priority, cogs in cogs_by_priority:
+            cogs_to_load = list(cogs)
+            with enhanced_span("cog.load_priority_group", f"Loading priority {priority} cogs", priority=priority):
+                categories = {cog.parent.name for cog in cogs_to_load}
+                set_span_attributes({"cog_count": len(cogs_to_load), "categories": list(categories)})
+
+                start_time = time.perf_counter()
+                results = await asyncio.gather(
+                    *[self._load_single_cog(cog) for cog in cogs_to_load],
+                    return_exceptions=True,
+                )
+                group_results = [result for result in results if isinstance(result, CogLoadResult)]
+                all_results.extend(group_results)
+
+                set_span_attributes(
+                    {
+                        "load_time_s": time.perf_counter() - start_time,
+                        "success_count": len(group_results),
+                        "failure_count": len(results) - len(group_results),
+                    },
+                )
+        return all_results
+
+    @span("cog.load_path")
+    async def load_cogs(self, path: Path) -> list[CogLoadResult]:
+        """
+        Recursively loads eligible cogs from a directory or a single file.
+
+        Parameters
+        ----------
+        path : Path
+            The path to the file or directory to load cogs from.
+
+        Returns
+        -------
+        list[CogLoadResult]
+            A list of results for each cog loaded.
+
+        Raises
+        ------
+        CogLoadError
+            If a fatal error occurs during the loading process.
+        """
+        set_span_attributes({"cog.path": str(path)})
+
+        if not path.exists():
+            logger.warning(f"Cog path not found: {path}")
+            return []
+
+        try:
+            if path.is_dir():
+                return await self._load_cogs_from_directory(path)
+            if self._is_eligible_cog_file(path):
+                return [await self._load_single_cog(path)]
+        except Exception as e:
+            capture_span_exception(e, path=str(path), operation="load_cogs")
+            logger.error(f"An error occurred while processing {path.as_posix()}: {e}")
+            msg = f"Failed to load from {path.as_posix()}"
+            raise CogLoadError(msg) from e
+
+        logger.debug(f"Path {path} is not an eligible cog file or directory.")
+        return []
+
+    @transaction("cog.load_folder", description="Loading all cogs from a folder")
+    async def load_cogs_from_folder(self, folder_name: str) -> list[CogLoadResult]:
+        """
+        Loads all cogs from a specified top-level folder.
 
         Parameters
         ----------
         folder_name : str
-            The name of the folder containing the cogs.
+            The name of the folder to load cogs from (e.g., "tux/cogs").
+
+        Returns
+        -------
+        list[CogLoadResult]
+            A list of results for each cog loaded.
+
+        Raises
+        ------
+        CogLoadError
+            Propagates errors from the underlying `load_cogs` call.
         """
-        # Add span info
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-            current_span.set_tag("cog.folder", folder_name)
-            # Use safe_set_name instead of direct set_name call
-            safe_set_name(current_span, f"Load Cogs: {folder_name}")
+        cog_path = Path(folder_name)
+        with enhanced_span("cog.folder_processing", f"Processing {folder_name}", folder=folder_name):
+            start_time = time.perf_counter()
+            try:
+                results = await self.load_cogs(path=cog_path)
+            except CogLoadError as e:
+                capture_span_exception(e, folder=folder_name, operation="load_folder")
+                logger.error(f"Failed to load cogs from folder {folder_name}: {e}")
+                raise
+            else:
+                load_time = time.perf_counter() - start_time
+                success_count = sum(r.success for r in results)
+                logger.info(
+                    f"Loaded {success_count}/{len(results)} cogs from {folder_name} in {load_time * 1000:.2f}ms",
+                )
+                return results
 
-        start_time = time.perf_counter()
-        cog_path: Path = Path(__file__).parent / folder_name
-
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-            current_span.set_data("full_path", str(cog_path))
-
-        try:
-            await self.load_cogs(path=cog_path)
-            load_time = time.perf_counter() - start_time
-
-            if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-                current_span.set_data("load_time_s", load_time)
-                current_span.set_data("load_time_ms", load_time * 1000)
-
-            if load_time:
-                logger.info(f"Loaded all cogs from {folder_name} in {load_time * 1000:.0f}ms")
-
-                # Log individual cog load times for performance monitoring
-                slow_threshold = 1.0  # seconds
-                if slow_cogs := {k: v for k, v in self.load_times.items() if v > slow_threshold}:
-                    if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-                        current_span.set_data("slow_cogs", slow_cogs)
-                    logger.warning(f"Slow loading cogs (>{slow_threshold * 1000:.0f}ms): {slow_cogs}")
-
-        except Exception as e:
-            if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-                current_span.set_status("internal_error")
-                current_span.set_data("error", str(e))
-                current_span.set_data("traceback", traceback.format_exc())
-
-            logger.error(f"Failed to load cogs from folder {folder_name}: {e}")
-            raise CogLoadError(CogLoadError.FAILED_TO_LOAD_FOLDER) from e
+    # --- Setup ---
 
     @classmethod
-    @transaction("cog.setup", name="CogLoader Setup", description="Initialize CogLoader and load all cogs")
-    async def setup(cls, bot: commands.Bot) -> None:
+    @transaction("cog.setup", name="CogLoader Setup", description="Initialize and load all cogs")
+    async def setup(cls, bot: commands.Bot) -> CogLoader:
         """
-        Set up the cog loader and load all cogs.
+        Sets up the cog loader and loads all initial cogs for the bot.
 
         Parameters
         ----------
         bot : commands.Bot
-            The bot instance.
+            The bot instance to set up.
+
+        Returns
+        -------
+        CogLoader
+            The initialized CogLoader instance.
+
+        Raises
+        ------
+        CogLoadError
+            If a fatal error occurs during the setup process.
         """
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-            current_span.set_tag("bot.id", bot.user.id if bot.user else "unknown")
-
-        start_time = time.perf_counter()
-        cog_loader = cls(bot)
-
-        try:
-            # Load handlers first (they have highest priority)
-            with start_span("cog.load_handlers", "Load handler cogs"):
-                await cog_loader.load_cogs_from_folder(folder_name="handlers")
-
-            # Then load regular cogs
-            with start_span("cog.load_regular", "Load regular cogs"):
-                await cog_loader.load_cogs_from_folder(folder_name="cogs")
-
-            # Finally, load cogs from the extensions folder
-            with start_span("cog.load_extensions", "Load extension cogs"):
-                await cog_loader.load_cogs_from_folder(folder_name="extensions")
-
-            total_time = time.perf_counter() - start_time
-
-            if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-                current_span.set_data("total_load_time_s", total_time)
-                current_span.set_data("total_load_time_ms", total_time * 1000)
-
-            # Add the CogLoader itself as a cog for bot maintenance
-            with start_span("cog.register_loader", "Register CogLoader cog"):
+        with enhanced_span("cog.loader_init", "Initializing CogLoader", bot_id=bot.user.id if bot.user else "unknown"):
+            start_time = time.perf_counter()
+            cog_loader = cls(bot)
+            cog_folders = ["tux/handlers", "tux/cogs", "tux/extensions"]
+            try:
+                all_results: list[CogLoadResult] = []
+                for folder in cog_folders:
+                    folder_results = await cog_loader.load_cogs_from_folder(folder_name=folder)
+                    all_results.extend(folder_results)
+                total_time = time.perf_counter() - start_time
+                total_cogs = len(all_results)
+                successful_cogs = sum(r.success for r in all_results)
+                logger.info(
+                    f"Cog loading complete: {successful_cogs}/{total_cogs} cogs loaded in {total_time * 1000:.2f}ms",
+                )
+            except Exception as e:
+                capture_span_exception(e, operation="cog_setup")
+                logger.opt(exception=e).critical("Failed to set up cog loader.")
+                msg = "Failed to initialize CogLoader"
+                raise CogLoadError(msg) from e
+            else:
                 await bot.add_cog(cog_loader)
-
-            logger.info(f"Total cog loading time: {total_time * 1000:.0f}ms")
-
-        except Exception as e:
-            if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-                current_span.set_status("internal_error")
-                current_span.set_data("error", str(e))
-                current_span.set_data("traceback", traceback.format_exc())
-
-            logger.error(f"Failed to set up cog loader: {e}")
-            raise CogLoadError(CogLoadError.FAILED_TO_INITIALIZE) from e
+                return cog_loader
