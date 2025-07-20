@@ -10,6 +10,7 @@ from tux.bot import Tux
 from tux.utils import checks
 from tux.utils.flags import TempBanFlags
 from tux.utils.functions import generate_usage
+from tux.utils.task_manager import CriticalTaskConfig, TaskPriority
 
 from . import ModerationCogBase
 
@@ -199,6 +200,16 @@ class TempBan(ModerationCogBase):
     async def cog_unload(self) -> None:
         """Cancel the tempban check loop when the cog is unloaded."""
         self.tempban_check.cancel()
+
+    def get_critical_tasks(self) -> list[CriticalTaskConfig]:
+        """Get critical tasks for this cog.
+
+        Returns
+        -------
+        list[CriticalTaskConfig]
+            List of critical task configurations
+        """
+        return [CriticalTaskConfig("tempban_checker", "TempBan", "tempban_check", TaskPriority.HIGH)]
 
 
 async def setup(bot: Tux) -> None:
