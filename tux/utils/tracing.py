@@ -237,6 +237,10 @@ def transaction(
     """
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
+        # Early return if Sentry is not initialized to avoid wrapper overhead
+        if not sentry_sdk.is_initialized():
+            return func
+
         transaction_name = name or f"{func.__module__}.{func.__qualname__}"
         transaction_description = description or f"Executing {func.__qualname__}"
 
@@ -274,6 +278,10 @@ def span(op: str, description: str | None = None) -> Callable[[Callable[P, R]], 
     """
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
+        # Early return if Sentry is not initialized to avoid wrapper overhead
+        if not sentry_sdk.is_initialized():
+            return func
+
         span_description = description or f"Executing {func.__qualname__}"
 
         def context_factory() -> Any:
@@ -420,6 +428,71 @@ def set_span_attributes(attributes: dict[str, Any]) -> None:
     if sentry_sdk.is_initialized() and (span := sentry_sdk.get_current_span()):
         for key, value in attributes.items():
             span.set_tag(key, value)
+
+
+def set_span_status(status: str, status_map: dict[str, str] | None = None) -> None:
+    """
+    Set status on the current span.
+
+    Parameters
+    ----------
+    status : str
+        The status to set (e.g., "OK", "ERROR", "NOT_FOUND")
+    status_map : dict[str, str] | None, optional
+        A mapping of status keys to Sentry status values. If None, uses default mapping.
+    """
+    if not sentry_sdk.is_initialized():
+        return
+
+    if span := sentry_sdk.get_current_span():
+        # Default status mapping if none provided
+        if status_map is None:
+            status_map = {
+                "OK": "ok",
+                "UNKNOWN": "unknown",
+                "ERROR": "internal_error",
+                "NOT_FOUND": "not_found",
+                "PERMISSION_DENIED": "permission_denied",
+                "INVALID_ARGUMENT": "invalid_argument",
+                "RESOURCE_EXHAUSTED": "resource_exhausted",
+                "UNAUTHENTICATED": "unauthenticated",
+                "CANCELLED": "cancelled",
+            }
+
+        span.set_status(status_map.get(status, status))
+
+
+def set_setup_phase_tag(span: Any, phase: str, status: str = "starting") -> None:
+    """
+    Set a setup phase tag on the span.
+
+    Parameters
+    ----------
+    span : Any
+        The Sentry span to tag
+    phase : str
+        The phase name (e.g., "database", "cogs")
+    status : str
+        The status ("starting" or "finished")
+    """
+    span.set_tag("setup_phase", f"{phase}_{status}")
+
+
+def set_span_error(span: Any, error: Exception, error_type: str = "error") -> None:
+    """
+    Set error information on a span with consistent patterns.
+
+    Parameters
+    ----------
+    span : Any
+        The Sentry span to set error data on
+    error : Exception
+        The exception that occurred
+    error_type : str
+        The type of error (e.g., "error", "discord_error", "db_error")
+    """
+    span.set_status("internal_error")
+    span.set_data(error_type, str(error))
 
 
 def capture_span_exception(exception: Exception, **extra_data: Any) -> None:

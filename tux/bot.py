@@ -39,7 +39,13 @@ from tux.utils.emoji_manager import EmojiManager
 from tux.utils.env import is_dev_mode
 from tux.utils.sentry_manager import SentryManager
 from tux.utils.task_manager import TaskManager
-from tux.utils.tracing import instrument_bot_commands, start_span, start_transaction
+from tux.utils.tracing import (
+    instrument_bot_commands,
+    set_setup_phase_tag,
+    set_span_error,
+    start_span,
+    start_transaction,
+)
 
 # Type hint for discord.ext.tasks.Loop
 type TaskLoop = tasks.Loop[Callable[[], Coroutine[Any, Any, None]]]
@@ -107,24 +113,8 @@ class Tux(commands.Bot):
         self.task_manager = TaskManager(self)
         self.console = Console(stderr=True, force_terminal=True)
 
-        # Bot lifecycle routines are defined as lists of (name, function) tuples.
-        # This makes the setup and shutdown sequences clear and easy to modify.
-        self.setup_steps = [
-            ("database", self._setup_database),
-            ("jishaku", self._load_jishaku),
-            ("cogs", self._load_cogs),
-            ("hot_reload", self._setup_hot_reload),
-            ("register_tasks", self._register_critical_tasks),
-            ("monitoring", self.task_manager.start),
-            ("instrument_tasks", self.task_manager.setup_task_instrumentation),
-            ("instrument_commands", lambda: instrument_bot_commands(self)),
-        ]
-
-        self.shutdown_steps = [
-            ("handle_setup_task", self._handle_setup_task),
-            ("cleanup_tasks", self.task_manager.cancel_all_tasks),
-            ("close_connections", self._close_connections),
-        ]
+        # Bot lifecycle routines are now inlined directly in setup() and shutdown() methods
+        # for better readability and explicit sequencing
 
         # The main setup routine is started as a background task immediately.
         logger.debug("Creating bot setup task")
@@ -137,10 +127,9 @@ class Tux(commands.Bot):
         """
         Executes the bot's startup routine in a defined sequence.
 
-        This method iterates through the `setup_steps` list, awaiting each
-        asynchronous setup method to ensure the bot is properly initialized
-        before it goes online. If any step fails, the setup is aborted, and
-        a graceful shutdown is triggered.
+        This method performs each setup step in order to ensure the bot is properly
+        initialized before it goes online. If any step fails, the setup is aborted,
+        and a graceful shutdown is triggered.
 
         Raises
         ------
@@ -150,13 +139,45 @@ class Tux(commands.Bot):
         """
         try:
             with start_span("bot.setup", "Bot setup process") as span:
-                for name, step_func in self.setup_steps:
-                    span.set_tag("setup_phase", f"{name}_starting")
-                    if asyncio.iscoroutinefunction(step_func):
-                        await step_func()
-                    else:
-                        step_func()
-                    span.set_tag("setup_phase", f"{name}_finished")
+                # Database connection
+                set_setup_phase_tag(span, "database", "starting")
+                await self._setup_database()
+                set_setup_phase_tag(span, "database", "finished")
+
+                # Load jishaku extension
+                set_setup_phase_tag(span, "jishaku", "starting")
+                await self._load_jishaku()
+                set_setup_phase_tag(span, "jishaku", "finished")
+
+                # Load all cogs
+                set_setup_phase_tag(span, "cogs", "starting")
+                await self._load_cogs()
+                set_setup_phase_tag(span, "cogs", "finished")
+
+                # Setup hot reload
+                set_setup_phase_tag(span, "hot_reload", "starting")
+                await self._setup_hot_reload()
+                set_setup_phase_tag(span, "hot_reload", "finished")
+
+                # Register critical tasks
+                set_setup_phase_tag(span, "register_tasks", "starting")
+                await self._register_critical_tasks()
+                set_setup_phase_tag(span, "register_tasks", "finished")
+
+                # Start monitoring
+                set_setup_phase_tag(span, "monitoring", "starting")
+                self.task_manager.start()
+                set_setup_phase_tag(span, "monitoring", "finished")
+
+                # Setup task instrumentation
+                set_setup_phase_tag(span, "instrument_tasks", "starting")
+                self.task_manager.setup_task_instrumentation()
+                set_setup_phase_tag(span, "instrument_tasks", "finished")
+
+                # Setup command instrumentation
+                set_setup_phase_tag(span, "instrument_commands", "starting")
+                instrument_bot_commands(self)
+                set_setup_phase_tag(span, "instrument_commands", "finished")
 
         except Exception as e:
             # If any part of the setup fails, log the critical error
@@ -189,11 +210,20 @@ class Tux(commands.Bot):
             transaction.set_tag("shutdown_initiated", True)
             logger.info("Shutting down...")
 
-            # Iterate through the defined shutdown steps.
-            for name, step_func in self.shutdown_steps:
-                transaction.set_tag(f"{name}_handled", False)
-                await step_func()
-                transaction.set_tag(f"{name}_handled", True)
+            # Handle setup task cleanup
+            transaction.set_tag("handle_setup_task_handled", False)
+            await self._handle_setup_task()
+            transaction.set_tag("handle_setup_task_handled", True)
+
+            # Cancel all tasks
+            transaction.set_tag("cleanup_tasks_handled", False)
+            await self.task_manager.cancel_all_tasks()
+            transaction.set_tag("cleanup_tasks_handled", True)
+
+            # Close connections
+            transaction.set_tag("close_connections_handled", False)
+            await self._close_connections()
+            transaction.set_tag("close_connections_handled", True)
 
             logger.info("Bot shutdown complete.")
 
@@ -268,8 +298,7 @@ class Tux(commands.Bot):
                 logger.info(f"Database models registered: {db.is_registered()}")
 
             except Exception as e:
-                span.set_status("internal_error")
-                span.set_data("error", str(e))
+                set_span_error(span, e, "db_error")
                 raise
 
     async def _load_jishaku(self) -> None:
@@ -306,7 +335,7 @@ class Tux(commands.Bot):
             except Exception as e:
                 logger.critical(f"Error loading cogs: {e}")
                 span.set_tag("cogs_loaded", False)
-                span.set_data("error", str(e))
+                set_span_error(span, e, "error")
                 self.sentry_manager.capture_exception(e)
                 raise
 
@@ -446,7 +475,7 @@ class Tux(commands.Bot):
             except Exception as e:
                 logger.error(f"Error during Discord shutdown: {e}")
                 span.set_tag("discord_closed", False)
-                span.set_data("discord_error", str(e))
+                set_span_error(span, e, "discord_error")
                 self.sentry_manager.capture_exception(e)
 
     async def _close_database(self) -> None:
@@ -465,7 +494,7 @@ class Tux(commands.Bot):
             except Exception as e:
                 logger.critical(f"Error during database disconnection: {e}")
                 span.set_tag("db_closed", False)
-                span.set_data("db_error", str(e))
+                set_span_error(span, e, "db_error")
                 self.sentry_manager.capture_exception(e)
 
     # --- Internal Helpers ---

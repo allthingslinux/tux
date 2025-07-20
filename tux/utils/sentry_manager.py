@@ -345,6 +345,25 @@ class SentryManager:
             logger.error(f"Failed to initialize Sentry: {e}")
 
     @staticmethod
+    def _set_signal_scope_tags(scope: Any, signum: int) -> None:
+        """Set signal-related tags on a Sentry scope.
+
+        Parameters
+        ----------
+        scope : Any
+            The Sentry scope to modify
+        signum : int
+            The signal number
+        """
+        tags = {
+            "signal.number": signum,
+            "lifecycle.event": "termination_signal",
+        }
+
+        for key, value in tags.items():
+            scope.set_tag(key, value)
+
+    @staticmethod
     def report_signal(signum: int, _frame: FrameType | None) -> None:
         """
         A signal handler that reports termination signals to Sentry.
@@ -363,8 +382,7 @@ class SentryManager:
         """
         if sentry_sdk.is_initialized():
             with sentry_sdk.push_scope() as scope:
-                scope.set_tag("signal.number", signum)
-                scope.set_tag("lifecycle.event", "termination_signal")
+                SentryManager._set_signal_scope_tags(scope, signum)
                 sentry_sdk.add_breadcrumb(
                     category="lifecycle",
                     message=f"Received termination signal {signum}",
@@ -537,10 +555,16 @@ class SentryManager:
         """
         scope.set_user({"id": context.get("user_id"), "username": context.get("user_name")})
         scope.set_context("discord", context)
-        scope.set_tag("command_name", context.get("command_name", "Unknown"))
-        scope.set_tag("command_type", context.get("command_type", "Unknown"))
-        guild_id = context.get("guild_id")
-        scope.set_tag("guild_id", str(guild_id) if guild_id else "DM")
+
+        # Set tags using a dictionary to avoid repetitive set_tag calls
+        tags = {
+            "command_name": context.get("command_name", "Unknown"),
+            "command_type": context.get("command_type", "Unknown"),
+            "guild_id": str(context.get("guild_id")) if context.get("guild_id") else "DM",
+        }
+
+        for key, value in tags.items():
+            scope.set_tag(key, value)
 
     def set_user_context(self, user: discord.User | discord.Member) -> None:
         """

@@ -821,6 +821,7 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
     def start(self) -> None:
         """Start watching for file changes."""
         try:
+            self.observer.schedule(self, str(self.watch_path), recursive=self.recursive)
             self.observer.start()
             logger.info(f"Hot reload watching {self.watch_path}")
         except Exception as e:
