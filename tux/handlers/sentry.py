@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any
 
 import discord
-import sentry_sdk
 from discord.ext import commands
 from loguru import logger
 
@@ -47,7 +46,7 @@ class SentryHandler(commands.Cog):
         ctx : commands.Context[Tux]
             The command context
         """
-        if self.sentry_manager.is_initialized and (span := sentry_sdk.get_current_span()):
+        if span := self.sentry_manager.get_current_span():
             span.set_status(self.sentry_manager.STATUS["OK"])
             logger.trace(f"Set Sentry span status to 'ok' for command: {ctx.command}")
 
@@ -63,7 +62,7 @@ class SentryHandler(commands.Cog):
         command : CommandObject
             The command that was completed
         """
-        if self.sentry_manager.is_initialized and (span := sentry_sdk.get_current_span()):
+        if span := self.sentry_manager.get_current_span():
             span.set_status(self.sentry_manager.STATUS["OK"])
             logger.trace(f"Set Sentry span status to 'ok' for app command: {command.name}")
 
