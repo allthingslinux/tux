@@ -396,14 +396,17 @@ class CogLoader(commands.Cog):
 
         Raises
         ------
+        FileNotFoundError
+            If the specified path does not exist.
         CogLoadError
             If a fatal error occurs during the loading process.
         """
         set_span_attributes({"cog.path": str(path)})
 
         if not path.exists():
-            logger.warning(f"Cog path not found: {path}")
-            return []
+            logger.error(f"Cog path not found: {path}")
+            msg = f"Cog path not found: {path}"
+            raise FileNotFoundError(msg)
 
         try:
             if path.is_dir():
@@ -444,6 +447,11 @@ class CogLoader(commands.Cog):
             start_time = time.perf_counter()
             try:
                 results = await self.load_cogs(path=cog_path)
+            except FileNotFoundError as e:
+                # Handle missing folders gracefully but log as error for visibility
+                capture_span_exception(e, folder=folder_name, operation="load_folder")
+                logger.error(f"Cog folder not found: {folder_name} - {e}")
+                return []
             except CogLoadError as e:
                 capture_span_exception(e, folder=folder_name, operation="load_folder")
                 logger.error(f"Failed to load cogs from folder {folder_name}: {e}")
