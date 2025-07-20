@@ -102,7 +102,7 @@ class Tux(commands.Bot):
         self._startup_task: asyncio.Task[None] | None = None
 
         # Sub-systems and managers that encapsulate specific functionalities.
-        self.sentry_manager = SentryManager()
+        self.sentry_manager: SentryManager = SentryManager()
         self.emoji_manager = EmojiManager(self)
         self.task_manager = TaskManager(self)
         self.console = Console(stderr=True, force_terminal=True)
@@ -336,8 +336,8 @@ class Tux(commands.Bot):
         """
         Registers critical tasks after cogs are loaded.
 
-        This method validates that cogs exist before registering their critical tasks,
-        ensuring that task registration only happens for cogs that are actually loaded.
+        This method uses dynamic discovery to find critical tasks from cogs,
+        making the system more flexible and cog-driven.
         """
         with start_span("bot.register_critical_tasks", "Registering critical tasks") as span:
             logger.info("Registering critical tasks...")
@@ -347,13 +347,8 @@ class Tux(commands.Bot):
                 self.task_manager.critical_tasks.clear()
                 self.task_manager.task_metrics.clear()
 
-                # Register critical tasks only for cogs that exist
-                for task_config in self.task_manager.DEFAULT_CRITICAL_TASKS:
-                    if task_config.cog_name in self.cogs:
-                        self.task_manager.register_critical_task(task_config)
-                        logger.debug(f"Registered critical task: {task_config.name} for cog: {task_config.cog_name}")
-                    else:
-                        logger.warning(f"Cog {task_config.cog_name} not found, skipping task: {task_config.name}")
+                # Discover and register tasks from cogs dynamically
+                self.task_manager.discover_and_register_cog_tasks()
 
                 span.set_tag("tasks_registered", len(self.task_manager.critical_tasks))
                 logger.info(f"Registered {len(self.task_manager.critical_tasks)} critical tasks.")
