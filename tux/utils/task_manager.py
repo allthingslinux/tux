@@ -24,7 +24,7 @@ from collections import defaultdict, deque
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Any, ClassVar, NamedTuple, cast
+from typing import Any, ClassVar, NamedTuple, Protocol, cast, runtime_checkable
 
 from discord.ext import tasks
 from loguru import logger
@@ -91,6 +91,13 @@ class CriticalTaskConfig:
     max_restarts: int = 5
     restart_delay: float = 30.0
     health_check_interval: float = 300.0  # 5 minutes
+
+
+@runtime_checkable
+class CriticalTasksProvider(Protocol):
+    """Protocol for cogs that provide critical tasks."""
+
+    def get_critical_tasks(self) -> list[CriticalTaskConfig]: ...
 
 
 class TaskManager:
@@ -205,20 +212,17 @@ class TaskManager:
         """
         Discover and register critical tasks from all loaded cogs.
 
-        This method asks each cog if it has critical tasks to register,
-        making the system dynamic and cog-driven instead of hardcoded.
+        This method iterates through all loaded cogs and looks for a
+        `get_critical_tasks` method. If found, it calls the method to
+        get a list of CriticalTaskConfig objects and registers them.
         """
-        logger.info("Discovering critical tasks from cogs...")
-
         for cog_name, cog in self.bot.cogs.items():
-            # Check if the cog has a method to report its critical tasks
-            get_tasks_method = getattr(cog, "get_critical_tasks", None)
-            if get_tasks_method and callable(get_tasks_method):
+            if isinstance(cog, CriticalTasksProvider):
                 try:
-                    if task_configs := get_tasks_method():
-                        for config in task_configs:
-                            self.register_critical_task(config)
-                            logger.debug(f"Discovered task {config.name} from cog {cog_name}")
+                    task_configs = cog.get_critical_tasks()
+                    for config in task_configs:
+                        self.register_critical_task(config)
+                        logger.debug(f"Discovered task {config.name} from cog {cog_name}")
                 except Exception as e:
                     logger.warning(f"Error discovering tasks from cog {cog_name}: {e}")
                     continue
