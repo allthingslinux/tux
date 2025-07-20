@@ -616,3 +616,92 @@ class SentryManager:
 
         # Set command context using standardized data
         self.set_context("command", context_data)
+
+    # --- Tracing and Span Management ---
+
+    def get_current_span(self) -> Any | None:
+        """
+        Get the current active span from Sentry.
+
+        Returns
+        -------
+        Any | None
+            The current span if Sentry is initialized and a span is active, None otherwise.
+        """
+        return sentry_sdk.get_current_span() if self.is_initialized else None
+
+    def start_transaction(self, op: str, name: str, description: str = "") -> Any:
+        """
+        Start a new Sentry transaction.
+
+        Parameters
+        ----------
+        op : str
+            The operation name for the transaction.
+        name : str
+            The name of the transaction.
+        description : str, optional
+            A description of the transaction.
+
+        Returns
+        -------
+        Any
+            The started transaction object.
+        """
+        return (
+            sentry_sdk.start_transaction(
+                op=op,
+                name=name,
+                description=description,
+            )
+            if self.is_initialized
+            else None
+        )
+
+    def start_span(self, op: str, description: str = "") -> Any:
+        """
+        Start a new Sentry span.
+
+        Parameters
+        ----------
+        op : str
+            The operation name for the span.
+        description : str, optional
+            A description of the span.
+
+        Returns
+        -------
+        Any
+            The started span object.
+        """
+        return sentry_sdk.start_span(op=op, description=description) if self.is_initialized else None
+
+    def add_breadcrumb(
+        self,
+        message: str,
+        category: str = "default",
+        level: LogLevelStr = "info",
+        data: dict[str, Any] | None = None,
+    ) -> None:
+        """
+        Add a breadcrumb to the current Sentry scope.
+
+        Parameters
+        ----------
+        message : str
+            The breadcrumb message.
+        category : str, optional
+            The breadcrumb category.
+        level : LogLevelStr, optional
+            The breadcrumb level.
+        data : dict[str, Any] | None, optional
+            Additional data for the breadcrumb.
+        """
+        if not self.is_initialized:
+            return
+        sentry_sdk.add_breadcrumb(
+            message=message,
+            category=category,
+            level=level,
+            data=data,
+        )
