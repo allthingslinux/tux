@@ -1,0 +1,72 @@
+{
+  "timestamp": "2025-07-20T00:22:35-04:00",
+  "total_branches": 5,
+  "successful_branches": 0,
+  "results": [
+    {
+      "branch_name": "01-core-foundation-split",
+      "build_success": false,
+      "test_success": false,
+      "lint_success": true,
+      "error_count": 2,
+      "warning_count": 0,
+      "errors": [
+        "Poetry install failed: \nThe option \"--no-dev\" does not exist\n",
+        "pytest not available"
+      ],
+      "warnings": []
+    },
+    {
+      "branch_name": "02-error-handling-split",
+      "build_success": false,
+      "test_success": false,
+      "lint_success": true,
+      "error_count": 2,
+      "warning_count": 0,
+      "errors": [
+        "Poetry install failed: \nThe option \"--no-dev\" does not exist\n",
+        "pytest not available"
+      ],
+      "warnings": []
+    },
+    {
+      "branch_name": "03-services-split",
+      "build_success": false,
+      "test_success": false,
+      "lint_success": true,
+      "error_count": 2,
+      "warning_count": 0,
+      "errors": [
+        "Poetry install failed: \nThe option \"--no-dev\" does not exist\n",
+        "pytest not available"
+      ],
+      "warnings": []
+    },
+    {
+      "branch_name": "04-other-cogs-split",
+      "build_success": false,
+      "test_success": false,
+      "lint_success": true,
+      "error_count": 2,
+      "warning_count": 0,
+      "errors": [
+        "Poetry install failed: \nThe option \"--no-dev\" does not exist\n",
+        "pytest not available"
+      ],
+      "warnings": []
+    },
+    {
+      "branch_name": "05-dependencies-and-cli-split",
+      "build_success": false,
+      "test_success": false,
+      "lint_success": true,
+      "error_count": 2,
+      "warning_count": 0,
+      "errors": [
+        "Poetry install failed: \nThe option \"--no-dev\" does not exist\n",
+        "pytest not available"
+      ],
+      "warnings": []
+    }
+  ]
+}
