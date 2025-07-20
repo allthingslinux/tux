@@ -543,16 +543,16 @@ class Tux(commands.Bot):
         ctx : commands.Context[Any]
             The context of the command invocation.
         """
-        if not self.sentry_manager.is_initialized or not ctx.command:
+        if not self.sentry_manager.is_initialized:
             await super().invoke(ctx)
             return
 
-        # Create a transaction for the command
+        # Create a transaction for every invocation, even if ctx.command is None
+        command_name = getattr(ctx.command, "qualified_name", None) or "unknown_command"
         op = "command"
-        name = ctx.command.qualified_name
         description = ctx.message.content
 
-        with start_transaction(op, name, description):
+        with start_transaction(op, command_name, description):
             # Set comprehensive context using the SentryManager
             self.sentry_manager.set_command_context(ctx)
 
