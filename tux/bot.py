@@ -19,6 +19,7 @@ responsible for the following key areas:
 from __future__ import annotations
 
 import asyncio
+import collections.abc
 import contextlib
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
@@ -113,6 +114,7 @@ class Tux(commands.Bot):
             ("jishaku", self._load_jishaku),
             ("cogs", self._load_cogs),
             ("hot_reload", self._setup_hot_reload),
+            ("register_tasks", self._register_critical_tasks),
             ("monitoring", self.task_manager.start),
             ("instrument_tasks", self.task_manager.setup_task_instrumentation),
             ("instrument_commands", lambda: instrument_bot_commands(self)),
@@ -329,6 +331,94 @@ class Tux(commands.Bot):
                 except Exception as e:
                     logger.error(f"Failed to load hot reload extension: {e}")
                     self.sentry_manager.capture_exception(e)
+
+    async def _register_critical_tasks(self) -> None:
+        """
+        Registers critical tasks after cogs are loaded.
+
+        This method validates that cogs exist before registering their critical tasks,
+        ensuring that task registration only happens for cogs that are actually loaded.
+        """
+        with start_span("bot.register_critical_tasks", "Registering critical tasks") as span:
+            logger.info("Registering critical tasks...")
+
+            try:
+                # Clear any existing critical tasks to avoid duplicates
+                self.task_manager.critical_tasks.clear()
+                self.task_manager.task_metrics.clear()
+
+                # Register critical tasks only for cogs that exist
+                for task_config in self.task_manager.DEFAULT_CRITICAL_TASKS:
+                    if task_config.cog_name in self.cogs:
+                        self.task_manager.register_critical_task(task_config)
+                        logger.debug(f"Registered critical task: {task_config.name} for cog: {task_config.cog_name}")
+                    else:
+                        logger.warning(f"Cog {task_config.cog_name} not found, skipping task: {task_config.name}")
+
+                span.set_tag("tasks_registered", len(self.task_manager.critical_tasks))
+                logger.info(f"Registered {len(self.task_manager.critical_tasks)} critical tasks.")
+
+            except Exception as e:
+                logger.critical(f"Failed to register critical tasks: {e}")
+                self.sentry_manager.capture_exception(e)
+                raise
+
+    def _handle_cog_unload(self, cog_name: str) -> None:
+        """
+        Handle cleanup when a cog is unloaded.
+
+        This method cleans up any critical tasks associated with the unloaded cog
+        to prevent orphaned task references.
+
+        Parameters
+        ----------
+        cog_name : str
+            The name of the cog that was unloaded.
+        """
+        logger.debug(f"Handling unload for cog: {cog_name}")
+        self.task_manager.cleanup_cog_tasks(cog_name)
+
+    async def remove_cog(
+        self,
+        name: str,
+        /,
+        *,
+        guild: discord.abc.Snowflake | None = None,
+        guilds: collections.abc.Sequence[discord.abc.Snowflake] | None = None,
+    ) -> commands.Cog | None:
+        """
+        Remove a cog and clean up associated tasks.
+
+        This overrides the default remove_cog method to ensure that critical tasks
+        associated with the unloaded cog are properly cleaned up when the cog is unloaded.
+
+        Parameters
+        ----------
+        name : str
+            The name of the cog to remove.
+        guild : discord.abc.Snowflake | None, optional
+            The guild to remove the cog from, by default None
+        guilds : collections.abc.Sequence[discord.abc.Snowflake] | None, optional
+            The guilds to remove the cog from, by default None
+
+        Returns
+        -------
+        commands.Cog | None
+            The removed cog, or None if it wasn't loaded.
+        """
+        # Remove the cog using the parent method
+        if guilds is not None:
+            removed_cog = await super().remove_cog(name, guild=guild, guilds=guilds)
+        elif guild is not None:
+            removed_cog = await super().remove_cog(name, guild=guild)
+        else:
+            removed_cog = await super().remove_cog(name)
+
+        # Clean up associated tasks if the cog was successfully removed
+        if removed_cog is not None:
+            self._handle_cog_unload(name)
+
+        return removed_cog
 
     async def _handle_setup_task(self) -> None:
         """
