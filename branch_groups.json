@@ -1,0 +1,41 @@
+{
+  "01-core-foundation": [
+    "tux/bot.py",
+    "tux/app.py",
+    "tux/cog_loader.py",
+    "tux/utils/task_manager.py",
+    "tux/utils/sentry_manager.py",
+    "tux/utils/tracing.py",
+    "tux/utils/context_utils.py",
+    "tux/utils/protocols.py",
+    "tux/utils/banner.py",
+    "tux/database/controllers/__init__.py",
+    "tux/database/controllers/base.py",
+    "tux/database/controllers/levels.py",
+    "tux/utils/hot_reload.py",
+    "tux/utils/emoji_manager.py"
+  ],
+  "02-error-handling": [
+    "tux/handlers/error.py",
+    "tux/handlers/sentry.py",
+    "tux/utils/sentry.py"
+  ],
+  "03-services": [
+    "tux/cogs/services/gif_limiter.py",
+    "tux/cogs/services/influxdblogger.py",
+    "tux/cogs/services/levels.py",
+    "tux/cogs/services/reminders.py",
+    "tux/cogs/services/status_roles.py"
+  ],
+  "04-other-cogs": [
+    "tux/cogs/moderation/tempban.py",
+    "tux/cogs/tools/wolfram.py",
+    "tux/cogs/utility/afk.py",
+    "tux/cogs/utility/remindme.py"
+  ],
+  "05-dependencies-and-cli": [
+    "poetry.lock",
+    "pyproject.toml",
+    "tux/cli/test.py"
+  ]
+}
