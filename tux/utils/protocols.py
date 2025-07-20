@@ -15,7 +15,8 @@ and easier to test.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Protocol
+from types import ModuleType
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
     from discord.ext import commands
@@ -23,10 +24,20 @@ if TYPE_CHECKING:
     from tux.utils.sentry_manager import SentryManager
 
 
+@runtime_checkable
 class BotProtocol(Protocol):
     """A protocol for the bot instance to provide necessary attributes."""
 
     @property
     def cogs(self) -> Mapping[str, commands.Cog]: ...
 
+    @property
+    def extensions(self) -> Mapping[str, ModuleType]: ...
+
+    help_command: Any
+
     sentry_manager: SentryManager
+
+    async def load_extension(self, name: str) -> None: ...
+    async def reload_extension(self, name: str) -> None: ...
+    async def add_cog(self, cog: commands.Cog, /, *, override: bool = False) -> None: ...
