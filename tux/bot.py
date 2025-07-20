@@ -92,7 +92,7 @@ class Tux(commands.Bot):
         the sequence of operations for the bot's startup and shutdown routines.
         It also creates and schedules the main setup task.
         """
-        super().__init__(*args, **kwargs, command_prefix=self._get_prefix)
+        super().__init__(*args, **kwargs)
 
         # Core bot state flags, managed by the BotState dataclass.
         self.state = BotState()
