@@ -473,10 +473,11 @@ def enhanced_span(op: str, name: str = "", **initial_data: Any) -> Generator[Dum
 
     # In production, skip tracing for certain frequent operations
     env = initial_data.get("environment", "development")
-    if env not in ("dev", "development"):
-        if any(skip_term in name.lower() for skip_term in ["safe_get_attr", "connect_or_create"]):
-            yield DummySpan()
-            return
+    if env not in ("dev", "development") and any(
+        skip_term in name.lower() for skip_term in ["safe_get_attr", "connect_or_create"]
+    ):
+        yield DummySpan()
+        return
 
     with start_span(op, name) as span:
         # Set initial data if provided
@@ -504,10 +505,10 @@ def instrument_bot_commands(bot: commands.Bot) -> None:
     bot : commands.Bot
         The instance of the bot whose commands should be instrumented.
     """
-    for command in bot.walk_commands():
-        # The operation for commands is standardized as `command.run`
-        op = "command.run"
+    # The operation for commands is standardized as `command.run`
+    op = "command.run"
 
+    for command in bot.walk_commands():
         # The transaction name is the full command name (e.g., "snippet get")
         transaction_name = f"command.{command.qualified_name}"
 
