@@ -141,9 +141,8 @@ class TaskManager:
         self.last_health_check: float = 0.0
         self.health_check_interval: float = 300.0  # 5 minutes
 
-        # Register default critical tasks
-        for task_config in self.DEFAULT_CRITICAL_TASKS:
-            self.register_critical_task(task_config)
+        # Note: Critical tasks are now registered after cogs are loaded
+        # to ensure cogs exist before registering their tasks
 
     def setup_task_instrumentation(self) -> None:
         """
@@ -211,6 +210,42 @@ class TaskManager:
             priority=config.priority,
         )
         logger.debug(f"Registered critical task: {config.name}")
+
+    def unregister_critical_task(self, task_name: str) -> None:
+        """
+        Unregister a critical task when its cog is unloaded.
+
+        Parameters
+        ----------
+        task_name : str
+            The name of the task to unregister.
+        """
+        if task_name in self.critical_tasks:
+            del self.critical_tasks[task_name]
+            logger.debug(f"Unregistered critical task: {task_name}")
+
+        if task_name in self.task_metrics:
+            del self.task_metrics[task_name]
+            logger.debug(f"Removed metrics for task: {task_name}")
+
+    def cleanup_cog_tasks(self, cog_name: str) -> None:
+        """
+        Clean up all critical tasks associated with a specific cog.
+
+        Parameters
+        ----------
+        cog_name : str
+            The name of the cog that was unloaded.
+        """
+        tasks_to_remove = [
+            task_name for task_name, config in self.critical_tasks.items() if config.cog_name == cog_name
+        ]
+
+        for task_name in tasks_to_remove:
+            self.unregister_critical_task(task_name)
+
+        if tasks_to_remove:
+            logger.info(f"Cleaned up {len(tasks_to_remove)} critical tasks for unloaded cog: {cog_name}")
 
     def get_task_health(self, task_name: str) -> TaskHealth | None:
         """
