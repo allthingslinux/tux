@@ -169,9 +169,9 @@ class TaskManager:
                 try:
                     # We are confident .coro exists and is a callable coroutine on a tasks.Loop instance.
                     # The type checker struggles with this dynamic attribute from the discord.py library.
-                    original_coro = cast(Callable[..., Coroutine[Any, Any, None]], task_loop.coro)
+                    original_coro = cast(Callable[..., Coroutine[Any, Any, None]], task_loop.coro)  # type: ignore[attr-defined]
                     decorated_loop = transaction(op="task.run", name=f"task.{task_name}")(original_coro)
-                    task_loop.coro = decorated_loop
+                    task_loop.coro = decorated_loop  # type: ignore[attr-defined]
                     logger.debug(f"Instrumented task: {task_name}")
                 except AttributeError:
                     logger.warning(f"Could not find a 'coro' on task {task_name}. Skipping instrumentation.")
