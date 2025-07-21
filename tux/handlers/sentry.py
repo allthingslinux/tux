@@ -72,31 +72,30 @@ class SentryHandler(commands.Cog):
         if not self._is_sentry_available():
             return
 
-        if self._is_sentry_available():
-            # Set command-specific tags
-            if isinstance(ctx, commands.Context):
-                set_span_attributes(
-                    {
-                        "discord.command.name": command_name,
-                        "discord.guild.id": str(ctx.guild.id) if ctx.guild else "DM",
-                        "discord.channel.id": ctx.channel.id,
-                        "discord.user.id": ctx.author.id,
-                        "discord.message.id": ctx.message.id,
-                        "discord.command.type": "prefix",
-                    },
-                )
-            else:  # discord.Interaction
-                set_span_attributes(
-                    {
-                        "discord.command.name": command_name,
-                        "discord.guild.id": str(ctx.guild_id) if ctx.guild_id else "DM",
-                        "discord.channel.id": ctx.channel_id,
-                        "discord.user.id": ctx.user.id,
-                        "discord.interaction.id": ctx.id,
-                        "discord.interaction.type": ctx.type.name,
-                        "discord.command.type": "slash",
-                    },
-                )
+        # Set command-specific tags
+        if isinstance(ctx, commands.Context):
+            set_span_attributes(
+                {
+                    "discord.command.name": command_name,
+                    "discord.guild.id": str(ctx.guild.id) if ctx.guild else "DM",
+                    "discord.channel.id": ctx.channel.id,
+                    "discord.user.id": ctx.author.id,
+                    "discord.message.id": ctx.message.id,
+                    "discord.command.type": "prefix",
+                },
+            )
+        else:  # discord.Interaction
+            set_span_attributes(
+                {
+                    "discord.command.name": command_name,
+                    "discord.guild.id": str(ctx.guild_id) if ctx.guild_id else "DM",
+                    "discord.channel.id": ctx.channel_id,
+                    "discord.user.id": ctx.user.id,
+                    "discord.interaction.id": ctx.id,
+                    "discord.interaction.type": ctx.type.name,
+                    "discord.command.type": "slash",
+                },
+            )
 
     @commands.Cog.listener()
     async def on_command(self, ctx: commands.Context[Tux]) -> None:
