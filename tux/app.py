@@ -14,6 +14,7 @@ for the Tux Discord bot. It is responsible for:
 
 import asyncio
 import signal
+import sys
 
 import discord
 from loguru import logger
@@ -75,8 +76,9 @@ class TuxApp:
         # Initialize Sentry
         SentryManager.setup()
 
-        # Set up signal handlers
-        self.setup_signals()
+        # Set up signal handlers using the event loop for cross-platform compatibility
+        loop = asyncio.get_event_loop()
+        self.setup_signals(loop)
 
         # Validate config
         if not self.validate_config():
@@ -132,23 +134,38 @@ class TuxApp:
         if self.bot and not self.bot.is_closed():
             await self.bot.shutdown()
 
-        SentryManager.flush()
+        await SentryManager.flush_async()
         await asyncio.sleep(0.1)  # Brief pause to allow buffers to flush
 
         logger.info("Shutdown complete")
 
     # --- Environment Setup ---
 
-    def setup_signals(self) -> None:
+    def setup_signals(self, loop: asyncio.AbstractEventLoop) -> None:
         """
-        Sets up OS-level signal handlers for graceful shutdown.
+        Sets up OS-level signal handlers for graceful shutdown using the event loop for better cross-platform compatibility.
 
-        This ensures that when the bot process receives a SIGINT (Ctrl+C) or
-        SIGTERM (from systemd or Docker), it is intercepted and handled
-        cleanly instead of causing an abrupt exit.
+        Note: loop.add_signal_handler may not be available on all platforms (e.g., Windows for some signals).
         """
-        signal.signal(signal.SIGTERM, SentryManager.report_signal)
-        signal.signal(signal.SIGINT, SentryManager.report_signal)
+
+        def handle_sigterm() -> None:
+            SentryManager.report_signal(signal.SIGTERM, None)
+
+        def handle_sigint() -> None:
+            SentryManager.report_signal(signal.SIGINT, None)
+
+        try:
+            loop.add_signal_handler(signal.SIGTERM, handle_sigterm)
+            loop.add_signal_handler(signal.SIGINT, handle_sigint)
+        except NotImplementedError:
+            # Fallback for platforms that do not support add_signal_handler (e.g., Windows)
+            signal.signal(signal.SIGINT, SentryManager.report_signal)
+            signal.signal(signal.SIGTERM, SentryManager.report_signal)
+            if sys.platform.startswith("win"):
+                # Document limitation
+                logger.warning(
+                    "Warning: Signal handling is limited on Windows. Some signals may not be handled as expected.",
+                )
 
     def validate_config(self) -> bool:
         """
