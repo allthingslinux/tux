@@ -736,6 +736,7 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         self.watch_path = Path(path)
         self.recursive = recursive
         self.config = config or HotReloadConfig()
+        validate_config(self.config)
         self.extension_map: dict[str, str] = {}
         self.dependency_graph = DependencyGraph(self.config)
         self.file_hash_tracker = FileHashTracker()
