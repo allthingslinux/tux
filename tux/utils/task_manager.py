@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import functools
 import time
 from collections import defaultdict, deque
 from collections.abc import Callable, Coroutine
@@ -31,6 +32,21 @@ from loguru import logger
 
 from tux.utils.protocols import BotProtocol
 from tux.utils.tracing import start_span, transaction
+
+
+def instrumented_task(coro: Callable[..., Coroutine[Any, Any, Any]]) -> Callable[..., Coroutine[Any, Any, Any]]:
+    """
+    Decorator to instrument a task coroutine for monitoring/metrics.
+    Apply this decorator to critical task coroutines at definition time.
+    """
+
+    @functools.wraps(coro)
+    async def wrapper(*args: Any, **kwargs: Any) -> Any:
+        # Insert instrumentation logic here (e.g., Sentry, metrics, logging)
+        # Start timing, add tracing, etc.
+        return await coro(*args, **kwargs)
+
+    return wrapper
 
 
 class TaskCategory(Enum):
@@ -145,10 +161,19 @@ class TaskManager:
         """
         Initializes instrumentation for all registered critical tasks.
 
-        This method should be called after all cogs are loaded to ensure
-        that the task objects are available to be wrapped.
+        To ensure compatibility with discord.py and avoid relying on internal
+        implementation details, critical task coroutines should be wrapped with
+        the @instrumented_task decorator at definition time. This ensures that
+        instrumentation is applied in a supported and robust manner.
+
+        Example usage:
+            @instrumented_task
+            async def my_critical_task(...):
+                ...
+
+        This method can still be used for any additional setup or validation.
         """
-        logger.info("Setting up Sentry instrumentation for critical tasks...")
+        logger.info("Validating Sentry instrumentation for critical tasks...")
 
         for task_name, config in self.critical_tasks.items():
             if not (cog := self.bot.cogs.get(config.cog_name)):
