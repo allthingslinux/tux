@@ -16,6 +16,7 @@ interactions with the Sentry SDK. Its primary responsibilities include:
 
 from __future__ import annotations
 
+import asyncio
 from types import FrameType
 from typing import Any, ClassVar, Literal, cast
 
@@ -400,6 +401,18 @@ class SentryManager:
         """
         if sentry_sdk.is_initialized():
             sentry_sdk.flush()
+
+    @staticmethod
+    async def flush_async() -> None:
+        """
+        Asynchronously flushes all pending Sentry events.
+
+        This method prevents blocking the event loop during shutdown by
+        running the synchronous flush operation in an executor.
+        """
+        if sentry_sdk.is_initialized():
+            loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
+            await loop.run_in_executor(None, SentryManager.flush)
 
     @property
     def is_initialized(self) -> bool:
