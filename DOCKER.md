@@ -79,30 +79,30 @@ All Docker operations are now available through a single, powerful script:
 
 ```bash
 # Start development environment
-poetry run tux --dev docker up
+uv run tux --dev docker up
 
 # Monitor logs
-poetry run tux --dev docker logs -f
+uv run tux --dev docker logs -f
 
 # Execute commands in container
-poetry run tux --dev docker exec tux bash
+uv run tux --dev docker exec tux bash
 
 # Stop environment
-poetry run tux --dev docker down
+uv run tux --dev docker down
 ```
 
 ### **Production Deployment**
 
 ```bash
 # Build and start production
-poetry run tux docker build
-poetry run tux docker up -d
+uv run tux docker build
+uv run tux docker up -d
 
 # Check health status
-poetry run tux docker ps
+uv run tux docker ps
 
 # View logs
-poetry run tux docker logs -f
+uv run tux docker logs -f
 ```
 
 ## 🧪 Testing Strategy
@@ -195,7 +195,7 @@ FROM python:3.13.5-slim AS production # Minimal production runtime
 ### **Build Security**
 
 - ✅ **Multi-stage separation** (build tools excluded from production)
-- ✅ **Dependency locking** (Poetry with `poetry.lock`)
+- ✅ **Dependency locking** (Uv with `uv.lock`)
 - ✅ **Vulnerability scanning** (Docker Scout integration)
 - ✅ **Minimal attack surface** (slim base images)
 
@@ -297,14 +297,14 @@ jq '.performance | to_entries[] | "\(.key): \(.value.value) \(.value.unit)"' log
 
 ```bash
 # Development mode (default)
-poetry run tux --dev docker up
+uv run tux --dev docker up
 
 # Production mode
-poetry run tux --prod docker up
+uv run tux --prod docker up
 
 # CLI environment flags
-poetry run tux --dev docker build    # Development build
-poetry run tux --prod docker build   # Production build
+uv run tux --dev docker build    # Development build
+uv run tux --prod docker build   # Production build
 ```
 
 ### **Configuration Files**
@@ -320,10 +320,10 @@ poetry run tux --prod docker build   # Production build
 
 ```bash
 # Preview cleanup (safe)
-poetry run tux docker cleanup --dry-run
+uv run tux docker cleanup --dry-run
 
 # Remove tux resources only
-poetry run tux docker cleanup --force --volumes
+uv run tux docker cleanup --force --volumes
 
 # Standard test with cleanup
 ./scripts/docker-toolkit.sh test --force-clean
@@ -359,7 +359,7 @@ Verify that cleanup operations only affect tux resources:
 docker images | grep -E "(python|ubuntu|alpine)" > /tmp/before_images.txt
 
 # Run safe cleanup
-poetry run tux docker cleanup --force --volumes
+uv run tux docker cleanup --force --volumes
 
 # After cleanup - verify system images still present
 docker images | grep -E "(python|ubuntu|alpine)" > /tmp/after_images.txt
@@ -419,13 +419,13 @@ healthcheck:
 
 ```bash
 # Health status
-poetry run tux docker health
+uv run tux docker health
 
 # Resource usage
 docker stats tux
 
 # Container logs
-poetry run tux docker logs -f
+uv run tux docker logs -f
 
 # System overview
 docker system df
@@ -442,7 +442,7 @@ docker system df
 docker builder prune -f
 
 # Rebuild without cache
-poetry run tux docker build --no-cache
+uv run tux docker build --no-cache
 ```
 
 #### **Permission Issues**
@@ -472,7 +472,7 @@ docker stats --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
 
 ```bash
 # Restart with rebuild
-poetry run tux --dev docker up --build
+uv run tux --dev docker up --build
 
 # Check sync logs
 docker compose -f docker-compose.dev.yml logs -f
@@ -487,13 +487,13 @@ rm test_file.py
 
 ```bash
 # Regenerate Prisma client
-poetry run tux --dev docker exec tux poetry run prisma generate
+uv run tux --dev docker exec tux uv run prisma generate
 
 # Check Prisma binaries
-poetry run tux --dev docker exec tux ls -la .venv/lib/python*/site-packages/prisma
+uv run tux --dev docker exec tux ls -la .venv/lib/python*/site-packages/prisma
 
 # Test database operations
-poetry run tux --dev docker exec tux poetry run prisma db push --accept-data-loss
+uv run tux --dev docker exec tux uv run prisma db push --accept-data-loss
 ```
 
 #### **Memory and Resource Issues**
@@ -515,7 +515,7 @@ docker stop memory-test && docker rm memory-test
 
 ```bash
 # Safe emergency cleanup
-poetry run tux docker cleanup --force --volumes
+uv run tux docker cleanup --force --volumes
 docker builder prune -f
 
 # Check system state

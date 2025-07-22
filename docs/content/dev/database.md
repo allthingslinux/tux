@@ -124,14 +124,14 @@ Commands target the development or production database based on the environment 
     Regenerates the Prisma Python client based on `schema.prisma`. Usually done automatically by other commands, but can be run manually.
 
     ```bash
-    poetry run tux --dev db generate
+    uv run tux --dev db generate
     ```
 
 - **Apply Schema Changes (Dev Only):**
     Pushes schema changes directly to the database **without** creating SQL migration files. This is suitable only for the development environment as it can lead to data loss if not used carefully.
 
     ```bash
-    poetry run tux --dev db push
+    uv run tux --dev db push
     ```
 
 - **Create Migrations:**
@@ -139,10 +139,10 @@ Commands target the development or production database based on the environment 
 
     ```bash
     # Use --dev for the development database
-    poetry run tux --dev db migrate --name <your-migration-name>
+    uv run tux --dev db migrate --name <your-migration-name>
 
     # Use --prod for the production database
-    poetry run tux --prod db migrate --name <your-migration-name>
+    uv run tux --prod db migrate --name <your-migration-name>
     ```
 
 - **Apply Migrations:**
@@ -150,18 +150,18 @@ Commands target the development or production database based on the environment 
 
     ```bash
     # Apply to development database
-    poetry run tux --dev db migrate
+    uv run tux --dev db migrate
 
     # Apply to production database
-    poetry run tux --prod db migrate
+    uv run tux --prod db migrate
     ```
 
 - **Pull Schema from Database:**
     Introspects the target database and updates the `schema.prisma` file to match the database's current state. Useful if the database schema has diverged.
 
     ```bash
-    poetry run tux --dev db pull
-    poetry run tux --prod db pull
+    uv run tux --dev db pull
+    uv run tux --prod db pull
     ```
 
 - **Reset Database (Destructive!):**
@@ -169,8 +169,8 @@ Commands target the development or production database based on the environment 
 
     ```bash
     # Reset development database
-    poetry run tux --dev db reset
+    uv run tux --dev db reset
 
     # Reset production database (requires confirmation)
-    poetry run tux --prod db reset
+    uv run tux --prod db reset
     ```
