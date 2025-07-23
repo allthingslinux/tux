@@ -1,40 +1,34 @@
+import tomllib
+from pathlib import Path
 from typing import Final
 
-# TODO: move to assets/data/ potentially
+# Get the absolute path to the assets/data directory
+_ASSETS_DATA_PATH = Path(__file__).parent.parent.parent / "assets" / "data"
+
+
+# Load colors and icons from data files
+def _load_colors() -> dict[str, int]:
+    """Load embed colors from TOML file."""
+    colors_file = _ASSETS_DATA_PATH / "embed_colors.toml"
+    with colors_file.open("rb") as f:
+        data = tomllib.load(f)
+    return data["colors"]
+
+
+def _load_icons() -> dict[str, str]:
+    """Load embed icons from TOML file."""
+    icons_file = _ASSETS_DATA_PATH / "embed_icons.toml"
+    with icons_file.open("rb") as f:
+        data = tomllib.load(f)
+    return data["icons"]
 
 
 class Constants:
     # Color constants
-    EMBED_COLORS: Final[dict[str, int]] = {
-        "DEFAULT": 16044058,
-        "INFO": 12634869,
-        "WARNING": 16634507,
-        "ERROR": 16067173,
-        "SUCCESS": 10407530,
-        "POLL": 14724968,
-        "CASE": 16217742,
-        "NOTE": 16752228,
-    }
+    EMBED_COLORS: Final[dict[str, int]] = _load_colors()
 
     # Icon constants
-    EMBED_ICONS: Final[dict[str, str]] = {
-        "DEFAULT": "https://i.imgur.com/owW4EZk.png",
-        "INFO": "https://i.imgur.com/8GRtR2G.png",
-        "SUCCESS": "https://i.imgur.com/JsNbN7D.png",
-        "ERROR": "https://i.imgur.com/zZjuWaU.png",
-        "CASE": "https://i.imgur.com/c43cwnV.png",
-        "NOTE": "https://i.imgur.com/VqPFbil.png",
-        "POLL": "https://i.imgur.com/pkPeG5q.png",
-        "ACTIVE_CASE": "https://github.com/allthingslinux/tux/blob/main/assets/embeds/active_case.png?raw=true",
-        "INACTIVE_CASE": "https://github.com/allthingslinux/tux/blob/main/assets/embeds/inactive_case.png?raw=true",
-        "ADD": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/added.png?raw=true",
-        "REMOVE": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/removed.png?raw=true",
-        "BAN": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/ban.png?raw=true",
-        "JAIL": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/jail.png?raw=true",
-        "KICK": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/kick.png?raw=true",
-        "TIMEOUT": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/timeout.png?raw=true",
-        "WARN": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/warn.png?raw=true",
-    }
+    EMBED_ICONS: Final[dict[str, str]] = _load_icons()
 
     # Embed limit constants
     EMBED_MAX_NAME_LENGTH = 256

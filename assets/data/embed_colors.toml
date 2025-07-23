@@ -1,0 +1,10 @@
+# Embed color constants for different message types
+[colors]
+DEFAULT = 16044058
+INFO = 12634869
+WARNING = 16634507
+ERROR = 16067173
+SUCCESS = 10407530
+POLL = 14724968
+CASE = 16217742
+NOTE = 16752228
