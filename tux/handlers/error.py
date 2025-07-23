@@ -376,6 +376,10 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         message_format="Could not find server: {error.argument}.",
         send_to_sentry=False,
     ),
+    commands.NoPrivateMessage: ErrorHandlerConfig(
+        message_format="This command can only be used in a server, not in direct messages.",
+        send_to_sentry=False,
+    ),
     # === Extension/Cog Loading Errors (discord.ext.commands) ===
     commands.ExtensionError: ErrorHandlerConfig(
         message_format="Extension operation failed: {error}",

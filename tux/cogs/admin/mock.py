@@ -223,6 +223,7 @@ class ErrorTestRegistry:
             ),
             commands.MemberNotFound: ("Traditional command member not found", ("NonExistentUser#1234",)),
             commands.ExtensionNotLoaded: ("Extension not loaded error", ("fake.extension.name",)),
+            commands.NoPrivateMessage: ("Traditional command used in DMs when guild-only", ()),
         }
 
         if error_type in specific_mappings:
