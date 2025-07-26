@@ -269,3 +269,8 @@ MODERATION_COMMANDS: dict[str, ModerationCommandConfig] = {
         discord_action=lambda guild, member, reason, args: None,  # Handled in base class
     ),
 }
+
+
+# This file is a data-only module; provide a noop setup so the cog loader is satisfied.
+async def setup(bot):  # type: ignore[unused-argument]
+    return

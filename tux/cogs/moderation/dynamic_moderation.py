@@ -38,17 +38,11 @@ class DynamicModerationCog(ModerationCogBase):
     def _create_and_register(self, config: ModerationCommandConfig) -> None:
         """Create a command function for *config* and add it to the cog/bot."""
 
-        # Decide parameter annotation based on whether the user must be in guild
-        target_annotation: Any
-        if config.requires_member:
-            target_annotation = discord.Member
-        else:
-            target_annotation = discord.User  # user may not be in guild (e.g. unban)
-
+        # Parameter annotation choice is runtime-only; using Any avoids evaluation issues
         async def _cmd(  # type: ignore[override]
             self: "DynamicModerationCog",  # bound method
             ctx: commands.Context[Tux],
-            target: target_annotation,  # type: ignore[name-defined]
+            target: discord.Member | discord.User,
             *,
             mixed_args: str = "",
         ) -> None:  # noqa: D401, ANN001
