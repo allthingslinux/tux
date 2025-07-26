@@ -9,7 +9,8 @@ from prisma.models import Case
 from tux.bot import Tux
 from tux.utils import checks
 from tux.utils.flags import TempBanFlags
-from tux.utils.functions import generate_usage
+from tux.utils.functions import parse_time_string
+from tux.utils.mixed_args import generate_mixed_usage, is_duration
 
 from . import ModerationCogBase
 
@@ -17,7 +18,13 @@ from . import ModerationCogBase
 class TempBan(ModerationCogBase):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
-        self.tempban.usage = generate_usage(self.tempban, TempBanFlags)
+        # Generate flexible usage that shows both formats
+        self.tempban.usage = generate_mixed_usage(
+            "tempban",
+            ["member"],
+            ["duration", "reason"],
+            ["-d duration", "-p purge", "-s"],
+        )
         self._processing_tempbans = False  # Lock to prevent overlapping task runs
         self.tempban_check.start()
 
@@ -28,11 +35,17 @@ class TempBan(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
+        duration_or_reason: str | None = None,
         *,
-        flags: TempBanFlags,
+        flags: TempBanFlags | None = None,
     ) -> None:
         """
         Temporarily ban a member from the server.
+
+        Supports both positional and flag-based arguments:
+        - Positional: `tempban @user 14d reason`
+        - Flag-based: `tempban @user reason -d 14d`
+        - Mixed: `tempban @user 14d reason -s`
 
         Parameters
         ----------
@@ -40,7 +53,9 @@ class TempBan(ModerationCogBase):
             The context in which the command is being invoked.
         member : discord.Member
             The member to ban.
-        flags : TempBanFlags
+        duration_or_reason : Optional[str]
+            Either a duration (e.g., "14d") or reason if using positional format.
+        flags : Optional[TempBanFlags]
             The flags for the command. (duration: float (via converter), purge: int (< 7), silent: bool)
 
         Raises
@@ -57,23 +72,67 @@ class TempBan(ModerationCogBase):
         if not await self.check_conditions(ctx, member, ctx.author, "temp ban"):
             return
 
-        # Calculate expiration datetime from duration in seconds
-        expires_at = datetime.now(UTC) + timedelta(seconds=flags.duration)
+        # Parse arguments - support both positional and flag formats
+        duration = None
+        reason = None
+        silent = False
+        purge = 0
+
+        # Check if duration_or_reason is a duration (time pattern)
+        if duration_or_reason and is_duration(duration_or_reason):
+            duration = duration_or_reason
+            # If flags are provided, use them for reason, silent, and purge
+            if flags:
+                reason = flags.reason
+                silent = flags.silent
+                purge = flags.purge
+            else:
+                # No flags provided, assume remaining arguments are reason
+                reason = "No reason provided"
+        else:
+            # duration_or_reason is not a duration, treat as reason
+            if duration_or_reason:
+                reason = duration_or_reason
+            elif flags:
+                reason = flags.reason
+            else:
+                reason = "No reason provided"
+
+            # Use flags for duration, silent, and purge if provided
+            if flags:
+                duration = str(flags.duration) if flags.duration else None
+                silent = flags.silent
+                purge = flags.purge
+
+        # Validate that we have a duration
+        if not duration:
+            await ctx.send("Duration is required. Use format like '14d', '1h', etc.", ephemeral=True)
+            return
+
+        # Parse and validate duration
+        try:
+            parsed_duration = parse_time_string(duration)
+            duration_seconds = parsed_duration.total_seconds()
+        except ValueError as e:
+            await ctx.send(f"Invalid duration format: {e}", ephemeral=True)
+            return
+
+        # Calculate expiration datetime from duration
+        expires_at = datetime.now(UTC) + timedelta(seconds=duration_seconds)
 
         # Create a simple duration string for logging/display
-        # TODO: Implement a more robust human-readable duration formatter
-        duration_display_str = str(timedelta(seconds=int(flags.duration)))  # Simple representation
+        duration_display_str = str(timedelta(seconds=int(duration_seconds)))
 
         # Execute tempban with case creation and DM
         await self.execute_mod_action(
             ctx=ctx,
             case_type=CaseType.TEMPBAN,
             user=member,
-            reason=flags.reason,
-            silent=flags.silent,
+            reason=reason,
+            silent=silent,
             dm_action="temp banned",
             actions=[
-                (ctx.guild.ban(member, reason=flags.reason, delete_message_seconds=flags.purge * 86400), type(None)),
+                (ctx.guild.ban(member, reason=reason, delete_message_seconds=purge * 86400), type(None)),
             ],
             duration=duration_display_str,  # Pass readable string for logging
             expires_at=expires_at,  # Pass calculated expiration datetime

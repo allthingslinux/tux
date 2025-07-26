@@ -7,7 +7,8 @@ from prisma.enums import CaseType
 from tux.bot import Tux
 from tux.utils import checks
 from tux.utils.flags import TimeoutFlags
-from tux.utils.functions import generate_usage, parse_time_string
+from tux.utils.functions import parse_time_string
+from tux.utils.mixed_args import generate_mixed_usage, is_duration
 
 from . import ModerationCogBase
 
@@ -15,7 +16,8 @@ from . import ModerationCogBase
 class Timeout(ModerationCogBase):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
-        self.timeout.usage = generate_usage(self.timeout, TimeoutFlags)
+        # Generate flexible usage that shows both formats
+        self.timeout.usage = generate_mixed_usage("timeout", ["member"], ["duration", "reason"], ["-d duration", "-s"])
 
     @commands.hybrid_command(
         name="timeout",
@@ -27,11 +29,17 @@ class Timeout(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         member: discord.Member,
+        duration_or_reason: str | None = None,
         *,
-        flags: TimeoutFlags,
+        flags: TimeoutFlags | None = None,
     ) -> None:
         """
         Timeout a member from the server.
+
+        Supports both positional and flag-based arguments:
+        - Positional: `timeout @user 14d reason`
+        - Flag-based: `timeout @user reason -d 14d`
+        - Mixed: `timeout @user 14d reason -s`
 
         Parameters
         ----------
@@ -39,7 +47,9 @@ class Timeout(ModerationCogBase):
             The context in which the command is being invoked.
         member : discord.Member
             The member to timeout.
-        flags : TimeoutFlags
+        duration_or_reason : Optional[str]
+            Either a duration (e.g., "14d") or reason if using positional format.
+        flags : Optional[TimeoutFlags]
             The flags for the command (duration: str, silent: bool).
 
         Raises
@@ -58,20 +68,54 @@ class Timeout(ModerationCogBase):
         if not await self.check_conditions(ctx, member, ctx.author, "timeout"):
             return
 
+        # Parse arguments - support both positional and flag formats
+        duration = None
+        reason = None
+        silent = False
+
+        # Check if duration_or_reason is a duration (time pattern)
+        if duration_or_reason and is_duration(duration_or_reason):
+            duration = duration_or_reason
+            # If flags are provided, use them for reason and silent
+            if flags:
+                reason = flags.reason
+                silent = flags.silent
+            else:
+                # No flags provided, assume remaining arguments are reason
+                reason = "No reason provided"
+        else:
+            # duration_or_reason is not a duration, treat as reason
+            if duration_or_reason:
+                reason = duration_or_reason
+            elif flags:
+                reason = flags.reason
+            else:
+                reason = "No reason provided"
+
+            # Use flags for duration and silent if provided
+            if flags:
+                duration = flags.duration
+                silent = flags.silent
+
+        # Validate that we have a duration
+        if not duration:
+            await ctx.send("Duration is required. Use format like '14d', '1h', etc.", ephemeral=True)
+            return
+
         # Parse and validate duration
         try:
-            duration = parse_time_string(flags.duration)
+            parsed_duration = parse_time_string(duration)
 
             # Discord maximum timeout duration is 28 days
             max_duration = datetime.timedelta(days=28)
-            if duration > max_duration:
+            if parsed_duration > max_duration:
                 await ctx.send(
                     "Timeout duration exceeds Discord's maximum of 28 days. Setting timeout to maximum allowed (28 days).",
                     ephemeral=True,
                 )
-                duration = max_duration
+                parsed_duration = max_duration
                 # Update the display duration for consistency
-                flags.duration = "28d"
+                duration = "28d"
         except ValueError as e:
             await ctx.send(f"Invalid duration format: {e}", ephemeral=True)
             return
@@ -81,11 +125,11 @@ class Timeout(ModerationCogBase):
             ctx=ctx,
             case_type=CaseType.TIMEOUT,
             user=member,
-            reason=flags.reason,
-            silent=flags.silent,
-            dm_action=f"timed out for {flags.duration}",
-            actions=[(member.timeout(duration, reason=flags.reason), type(None))],
-            duration=flags.duration,
+            reason=reason,
+            silent=silent,
+            dm_action=f"timed out for {duration}",
+            actions=[(member.timeout(parsed_duration, reason=reason), type(None))],
+            duration=duration,
         )
 
 
