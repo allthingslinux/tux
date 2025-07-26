@@ -16,7 +16,8 @@ class MemberOrUser(app_commands.Transformer, commands.Converter):
     """
 
     # --- app_commands.Transformer protocol ---------------------------------
-    type: app_commands.AppCommandOptionType = app_commands.AppCommandOptionType.user  # noqa: D401
+    # Slash option type must be declared as a class attribute; older d.py exposes it on the *discord* module.
+    type: discord.AppCommandOptionType = discord.AppCommandOptionType.user  # noqa: D401
 
     async def transform(
         self,
