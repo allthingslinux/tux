@@ -65,6 +65,9 @@ class DynamicModerationCog(ModerationCogBase):
             from typing import Dict as _Dict  # noqa: WPS433 (runtime import)
             if 'Dict' not in globals():
                 globals()['Dict'] = _Dict
+            import builtins as _builtins  # noqa: WPS433
+            if not hasattr(_builtins, 'Dict'):
+                setattr(_builtins, 'Dict', _Dict)
 
         # --------------------------------------------------------------
         # Define the command callback, optionally including the *flags* param
