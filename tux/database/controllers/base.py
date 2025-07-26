@@ -116,6 +116,18 @@ class BaseController[
                     span.set_status("ok")
                     return result  # noqa: TRY300
                 except Exception as e:
+                    # Attempt one reconnect + retry when connection lost
+                    if "Can't reach database server" in str(e):
+                        from tux.database.client import db
+                        logger.warning("DB connection lost; attempting to reconnect once and retry the query.")
+                        try:
+                            if not db.is_connected():
+                                await db.connect()
+                            result = await operation()
+                            span.set_status("ok")
+                            return result
+                        except Exception:
+                            pass
                     span.set_status("internal_error")
                     span.set_data("error", str(e))
                     logger.error(f"{error_msg}: {e}")
