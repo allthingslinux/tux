@@ -7,6 +7,26 @@ from prisma.enums import CaseType
 from tux.cogs.moderation.action_mixin import ModerationActionMixin
 from tux.cogs.moderation.common import ModCmdInfo, mod_command
 from tux.utils.transformers import MemberOrUser
+from discord.ext import commands as ext_cmds
+
+
+# ---------------- FlagConverter for prefix command -------------------------
+
+
+class BanFlags(ext_cmds.FlagConverter, delimiter=" ", prefix="-"):  # noqa: D401
+    """Flags for `>ban` command."""
+
+    purge: int = ext_cmds.flag(
+        default=0,
+        aliases=["p"],
+        description="Days of messages to delete (0-7)",
+    )
+
+    silent: bool = ext_cmds.flag(
+        default=False,
+        aliases=["s", "quiet"],
+        description="Don't DM the target",
+    )
 
 BAN_INFO = ModCmdInfo(
     name="ban",
@@ -41,23 +61,25 @@ class BanCog(ModerationActionMixin, commands.Cog):
             ctx: commands.Context,
             member: MemberOrUser,
             *,
-            purge: int = 0,
-            silent: bool = False,
+            flags: BanFlags | None = None,
             reason: str = "",
         ) -> None:  # noqa: D401
+            purge_val = flags.purge if flags else 0  # type: ignore[union-attr]
+            silent_val = flags.silent if flags else False  # type: ignore[union-attr]
+
             await self._run_action(
                 ctx,
                 member=member,
                 reason=reason,
                 duration=None,
-                purge=purge,
-                silent=silent,
+                purge=purge_val,
+                silent=silent_val,
                 case_type=BAN_INFO.case_type,
                 dm_verb=BAN_INFO.dm_verb,
                 discord_action=lambda: ctx.guild.ban(  # type: ignore[return-value]
                     member,
                     reason=reason,
-                    delete_message_seconds=purge * 86_400,
+                    delete_message_seconds=purge_val * 86_400,
                 ),
             )
 
