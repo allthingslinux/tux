@@ -12,6 +12,7 @@ from tux.bot import Tux
 from tux.cogs.utility import add_afk, del_afk
 from tux.database.controllers import DatabaseController
 from tux.utils.functions import generate_usage
+from tux.utils.task_manager import CriticalTaskConfig, TaskPriority
 
 # TODO: add `afk until` command, or add support for providing a timeframe in the regular `afk` and `permafk` commands
 
@@ -219,6 +220,16 @@ class Afk(commands.Cog):
         current_time = datetime.now(UTC)
 
         return [entry for entry in entries if entry.until is not None and entry.until < current_time]
+
+    def get_critical_tasks(self) -> list[CriticalTaskConfig]:
+        """Get critical tasks for this cog.
+
+        Returns
+        -------
+        list[CriticalTaskConfig]
+            List of critical task configurations
+        """
+        return [CriticalTaskConfig("afk_expiration_handler", "Afk", "handle_afk_expiration", TaskPriority.NORMAL)]
 
 
 async def setup(bot: Tux) -> None:
