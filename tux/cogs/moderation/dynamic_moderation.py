@@ -68,7 +68,8 @@ class DynamicModerationCog(ModerationCogBase):
         cmd_obj.help = config.get_help_text()
         cmd_obj.short_doc = config.description
 
-        # Attach to cog instance & add to bot
+        # Attach to cog instance & link back
+        cmd_obj.cog = self  # type: ignore[attr-defined]
         setattr(self, config.name, cmd_obj)
         self.bot.add_command(cmd_obj)
 
