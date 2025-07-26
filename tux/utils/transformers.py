@@ -48,5 +48,10 @@ class MemberOrUser(app_commands.Transformer, commands.Converter):
 
         if isinstance(ctx.guild, discord.Guild):
             member = ctx.guild.get_member(user.id)
+            if member is None:
+                try:
+                    member = await ctx.guild.fetch_member(user.id)
+                except discord.HTTPException:
+                    member = None
             return member or user
         return user
