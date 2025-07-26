@@ -66,6 +66,8 @@ class DynamicModerationCog(ModerationCogBase):
         FlagsCls: type[commands.FlagConverter] | None = None
         if flag_attrs:
             FlagsCls = type(f"{config.name.title()}Flags", (commands.FlagConverter,), flag_attrs)
+            # Expose class in module globals so `get_type_hints` can resolve
+            globals()[FlagsCls.__name__] = FlagsCls
 
         # --------------------------------------------------------------
         # Define the command callback, optionally including the *flags* param
