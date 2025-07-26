@@ -81,6 +81,7 @@ class ModerationCommandMeta(type):
         # Ensure eval_annotation can resolve FlagsCls
         if FlagsCls is not None:
             _callback.__globals__[FlagsCls.__name__] = FlagsCls
+            _callback.__globals__['FlagsCls'] = FlagsCls  # alias for eval string
             from typing import Dict as _Dict  # noqa: WPS433
             _callback.__globals__.setdefault('Dict', _Dict)
 
