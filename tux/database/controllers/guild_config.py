@@ -36,7 +36,12 @@ class GuildConfigController:
     async def get_guild_prefix(self, guild_id: int) -> str | None:
         """Get a guild prefix from the database."""
         config: Any = await self.table.find_first(where={"guild_id": guild_id})
-        return None if config is None else config.prefix
+        if config is None:
+            # Guild or config missing → create them lazily with default values
+            await self.ensure_guild_exists(guild_id)
+            config = await self.insert_guild_config(guild_id)
+            return config.prefix  # default set by Prisma schema default
+        return config.prefix
 
     async def get_log_channel(self, guild_id: int, log_type: str) -> int | None:
         log_channel_ids: dict[str, GuildConfigScalarFieldKeys] = {
