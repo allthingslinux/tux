@@ -87,7 +87,9 @@ class DynamicModerationCog(ModerationCogBase):
 
         if flag_attrs:
             FlagsCls = type(f"{config.name.title()}Flags", (commands.FlagConverter,), flag_attrs)
-            _cmd.__annotations__['mixed_args'] = FlagsCls  # type: ignore[assignment]
+            # Add a dummy annotation name that help.py will pick up without affecting
+            # the real signature parsing.
+            _cmd.__annotations__['__flags__'] = FlagsCls  # type: ignore[assignment]
 
 
         # Wrap with decorators
