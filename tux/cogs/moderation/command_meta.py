@@ -102,6 +102,8 @@ class ModerationCommandMeta(type):
         _text.__doc__ = description
 
         text_cmd = commands.command(name=cmd_name, aliases=aliases, help=description)(_text)
+        # Override usage string to exclude internal ctx parameter
+        text_cmd.usage = f"{cmd_name} <target> <flags> <reason>"
 
         # --------------------------------------------------
         # Slash command
