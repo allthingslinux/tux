@@ -25,6 +25,12 @@ class DynamicModerationCog(ModerationCogBase):
 
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
+        # Clean up any previously registered commands with the same names/aliases
+        for cfg in MODERATION_COMMANDS.values():
+            for alias in (cfg.name, *cfg.aliases):
+                if bot.get_command(alias):
+                    bot.remove_command(alias)
+
         self._register_all_commands()
 
     # ------------------------------------------------------------------
