@@ -73,8 +73,12 @@ class Bookmarks(commands.Cog):
         if payload.emoji.name in self.add_bookmark_emojis:
             await self.add_bookmark(user, message)
 
-        # If the emoji is the remove bookmark emoji, remove the bookmark
-        elif payload.emoji.name in self.remove_bookmark_emojis:
+        # Ensures were in a users DMs before removing (to fix an issue with being able to remove messages anywhere)
+        if not isinstance(channel, discord.DMChannel):
+            return
+
+        # If the emoji is the remove bookmark emoji and reaction is on the bot, remove the bookmark
+        if payload.emoji.name in self.remove_bookmark_emojis and message.author is self.bot.user:
             await self.remove_bookmark(message)
 
     async def add_bookmark(self, user: discord.User, message: discord.Message) -> None:
