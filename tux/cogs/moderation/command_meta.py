@@ -53,6 +53,10 @@ class ModerationCommandMeta(type):
             silent="silent" in flags_spec,
         )
 
+        # Make FlagsCls resolvable for annotation eval
+        if FlagsCls is not None and 'FlagsCls' not in globals():
+            globals()['FlagsCls'] = FlagsCls
+
         # --------------------------------------------------
         # Shared executor
         # --------------------------------------------------
