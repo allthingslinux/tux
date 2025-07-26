@@ -106,15 +106,23 @@ class ModerationCommandMeta(type):
         # --------------------------------------------------
         # Slash command
         # --------------------------------------------------
-        async def _slash(self: ModerationCogBase, interaction: discord.Interaction, target: MemberOrUser, *, flags: FlagsCls | None = None, reason: str = "") -> None:  # type: ignore[arg-type]
+        async def _slash(interaction: discord.Interaction, target: MemberOrUser, *, flags: FlagsCls | None = None, reason: str = "") -> None:  # type: ignore[arg-type]
+            """App command callback (no bound self, added directly to bot.tree)."""
             if flags is None:
                 flags = FlagsCls()  # type: ignore[assignment]
-            ctx = await self.bot.get_context(interaction)  # type: ignore[attr-defined]
-            await _run(self, ctx, target, flags, reason)
+
+            # Retrieve the moderation cog instance from the bot
+            bot = interaction.client  # type: ignore[attr-defined]
+            cog: ModerationCogBase | None = bot.get_cog("ModerationCommandsCog")  # type: ignore[attr-defined]
+            if cog is None:
+                return  # Should not happen
+
+            ctx = await cog.bot.get_context(interaction)  # type: ignore[attr-defined]
+            await _run(cog, ctx, target, flags, reason)
 
         if FlagsCls is not None:
             _slash.__globals__[FlagsCls.__name__] = FlagsCls
-            _slash.__globals__['FlagsCls'] = FlagsCls  # keep alias
+            _slash.__globals__['FlagsCls'] = FlagsCls
 
         slash_cmd = discord.app_commands.command(name=cmd_name, description=description)(_slash)
 
