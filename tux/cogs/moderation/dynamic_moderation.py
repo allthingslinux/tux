@@ -83,8 +83,7 @@ class DynamicModerationCog(ModerationCogBase):
         existing_cmds = list(getattr(self, "__cog_commands__", ()))  # type: ignore[attr-defined]
         existing_cmds.append(cmd_obj)
         self.__cog_commands__ = tuple(existing_cmds)  # type: ignore[attr-defined]
-        # Finally register on the bot (override handled at cog level)
-        self.bot.add_command(cmd_obj)
+        # Do NOT add to bot here; commands will be registered when the cog is injected.
 
 
 async def setup(bot: Tux) -> None:
