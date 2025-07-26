@@ -121,4 +121,8 @@ class ModerationCommandsCog(ModerationCogBase):
 
 
 async def setup(bot: commands.Bot):
+    # Ensure all command modules are imported so subclasses register
+    import importlib
+    importlib.import_module("tux.cogs.moderation.commands")
+
     await bot.add_cog(ModerationCommandsCog(bot))
