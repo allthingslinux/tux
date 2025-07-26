@@ -77,6 +77,14 @@ class DynamicModerationCog(ModerationCogBase):
         existing_cmds = list(getattr(self, "__cog_commands__", ()))  # type: ignore[attr-defined]
         existing_cmds.append(cmd_obj)
         self.__cog_commands__ = tuple(existing_cmds)  # type: ignore[attr-defined]
+        # If a command with this name/aliases already exists (e.g. from a prior failed load)
+        # remove it first to avoid CommandRegistrationError on reloads.
+        if self.bot.get_command(cmd_obj.name):
+            self.bot.remove_command(cmd_obj.name)
+        for alias in cmd_obj.aliases:
+            if self.bot.get_command(alias):
+                self.bot.remove_command(alias)
+
         # Finally register on the bot
         self.bot.add_command(cmd_obj)
 
