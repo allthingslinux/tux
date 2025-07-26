@@ -22,6 +22,7 @@ class Ban(ModerationCogBase):
         self,
         ctx: commands.Context[Tux],
         user: discord.User,
+        *,
         flags: BanFlags,
     ) -> None:
         """
