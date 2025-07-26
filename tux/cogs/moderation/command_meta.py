@@ -80,7 +80,9 @@ class ModerationCommandMeta(type):
         # --------------------------------------------------
         # Text command (prefix)
         # --------------------------------------------------
-        async def _text(self: ModerationCogBase, ctx: commands.Context, target: MemberOrUser, *, flags: FlagsCls = FlagsCls(), reason: str = "") -> None:  # type: ignore[arg-type]
+        async def _text(self: ModerationCogBase, ctx: commands.Context, target: MemberOrUser, *, flags: FlagsCls | None = None, reason: str = "") -> None:  # type: ignore[arg-type]
+            if flags is None:
+                flags = FlagsCls()  # type: ignore[assignment]
             await _run(self, ctx, target, flags, reason)
 
         if FlagsCls is not None:
@@ -96,7 +98,9 @@ class ModerationCommandMeta(type):
         # --------------------------------------------------
         # Slash command
         # --------------------------------------------------
-        async def _slash(self: ModerationCogBase, interaction: discord.Interaction, target: MemberOrUser, *, flags: FlagsCls = FlagsCls(), reason: str = "") -> None:  # type: ignore[arg-type]
+        async def _slash(self: ModerationCogBase, interaction: discord.Interaction, target: MemberOrUser, *, flags: FlagsCls | None = None, reason: str = "") -> None:  # type: ignore[arg-type]
+            if flags is None:
+                flags = FlagsCls()  # type: ignore[assignment]
             ctx = await self.bot.get_context(interaction)  # type: ignore[attr-defined]
             await _run(self, ctx, target, flags, reason)
 
