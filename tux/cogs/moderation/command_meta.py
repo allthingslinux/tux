@@ -53,17 +53,16 @@ class ModerationCommandMeta(type):
             silent="silent" in flags_spec,
         )
 
-        # Create the hybrid command callback
-        async def _callback(self: ModerationCogBase, ctx, target: MemberOrUser, *, flags: FlagsCls = FlagsCls(), reason: str = "") -> None:  # type: ignore[override]
-            # Permission / sanity checks
+        # --------------------------------------------------
+        # Shared executor
+        # --------------------------------------------------
+        async def _run(self: ModerationCogBase, ctx, target: MemberOrUser, flags, reason: str):
             if not await self.check_conditions(ctx, target, ctx.author, cmd_name):
                 return
 
             silent = getattr(flags, "silent", False)
             duration = getattr(flags, "duration", None)
-            purge = getattr(flags, "purge", 0)
 
-            # Build coroutine list using subclass _action
             action_coro = cls._action(self, ctx.guild, target, flags=flags, reason=reason)  # type: ignore[arg-type]
             actions = [(action_coro, type(None))]
 
@@ -78,25 +77,36 @@ class ModerationCommandMeta(type):
                 duration=duration,
             )
 
-        # Ensure eval_annotation can resolve FlagsCls
+        # --------------------------------------------------
+        # Text command (prefix)
+        # --------------------------------------------------
+        async def _text(self: ModerationCogBase, ctx: commands.Context, target: MemberOrUser, *, flags: FlagsCls = FlagsCls(), reason: str = "") -> None:  # type: ignore[arg-type]
+            await _run(self, ctx, target, flags, reason)
+
         if FlagsCls is not None:
-            _callback.__globals__[FlagsCls.__name__] = FlagsCls
-            _callback.__globals__['FlagsCls'] = FlagsCls  # alias for eval string
-            from typing import Dict as _Dict  # noqa: WPS433
-            _callback.__globals__.setdefault('Dict', _Dict)
+            _text.__globals__[FlagsCls.__name__] = FlagsCls
+            from typing import Dict as _Dict
+            _text.__globals__.setdefault('Dict', _Dict)
 
-        _callback.__name__ = cmd_name
-        _callback.__doc__ = description
+        _text.__name__ = cmd_name
+        _text.__doc__ = description
 
-        cmd_obj = commands.hybrid_command(
-            name=cmd_name,
-            aliases=aliases,
-            description=description,
-            with_app_command=True,
-        )(_callback)  # type: ignore[arg-type]
+        text_cmd = commands.command(name=cmd_name, aliases=aliases, help=description)(_text)
 
-        # store on cls for later access
-        cls.command = cmd_obj  # type: ignore[attr-defined]
+        # --------------------------------------------------
+        # Slash command
+        # --------------------------------------------------
+        async def _slash(self: ModerationCogBase, interaction: discord.Interaction, target: MemberOrUser, *, flags: FlagsCls = FlagsCls(), reason: str = "") -> None:  # type: ignore[arg-type]
+            ctx = await self.bot.get_context(interaction)  # type: ignore[attr-defined]
+            await _run(self, ctx, target, flags, reason)
+
+        _slash.__globals__[FlagsCls.__name__] = FlagsCls
+
+        slash_cmd = discord.app_commands.command(name=cmd_name, description=description)(_slash)
+
+        # store on cls
+        cls.text_command = text_cmd  # type: ignore[attr-defined]
+        cls.slash_command = slash_cmd  # type: ignore[attr-defined]
 
         # register class
         _REGISTRY.append(cls)
@@ -124,7 +134,8 @@ class ModerationCommandsCog(ModerationCogBase):
         super().__init__(bot)  # type: ignore[arg-type]
 
         for cls in _REGISTRY:
-            self.bot.add_command(cls.command)
+            self.bot.add_command(cls.text_command)  # type: ignore[attr-defined]
+            self.bot.tree.add_command(cls.slash_command)  # type: ignore[attr-defined]
 
 
 async def setup(bot: commands.Bot):
