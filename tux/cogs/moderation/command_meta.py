@@ -100,7 +100,8 @@ class ModerationCommandMeta(type):
             ctx = await self.bot.get_context(interaction)  # type: ignore[attr-defined]
             await _run(self, ctx, target, flags, reason)
 
-        _slash.__globals__[FlagsCls.__name__] = FlagsCls
+        if FlagsCls is not None:
+            _slash.__globals__[FlagsCls.__name__] = FlagsCls
 
         slash_cmd = discord.app_commands.command(name=cmd_name, description=description)(_slash)
 
