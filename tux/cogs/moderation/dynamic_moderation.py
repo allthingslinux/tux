@@ -17,6 +17,7 @@ from tux.utils import checks
 
 from . import ModerationCogBase
 from .command_config import MODERATION_COMMANDS, ModerationCommandConfig
+from tux.utils.transformers import MemberOrUser
 
 
 class DynamicModerationCog(ModerationCogBase):
@@ -40,7 +41,7 @@ class DynamicModerationCog(ModerationCogBase):
         async def _cmd(  # type: ignore[override]
             self: "DynamicModerationCog",
             ctx: commands.Context,  # plain Context for slash compatibility
-            target: discord.User,
+            target: MemberOrUser,
             *,
             mixed_args: str = "",
         ) -> None:  # noqa: D401, ANN001
