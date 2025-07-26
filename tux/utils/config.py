@@ -132,6 +132,7 @@ class Config:
     # Temp VC
     TEMPVC_CATEGORY_ID: Final[str | None] = config["TEMPVC_CATEGORY_ID"]
     TEMPVC_CHANNEL_ID: Final[str | None] = config["TEMPVC_CHANNEL_ID"]
+    TEMPVC_BASE_NAME: Final[str | None] = config["TEMPVC_BASE_NAME"]
 
     # GIF ratelimiter
     RECENT_GIF_AGE: Final[int] = config["GIF_LIMITER"]["RECENT_GIF_AGE"]
