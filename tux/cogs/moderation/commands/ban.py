@@ -23,3 +23,8 @@ class Ban(ModerationCommand):
 
     async def _action(self, guild: discord.Guild, member: discord.Member | discord.User, *, flags, reason: str) -> None:
         await guild.ban(member, reason=reason, delete_message_seconds=flags.purge * 86_400)
+
+
+# Extension entrypoint (no-op, handled by metaclass)
+async def setup(bot):  # type: ignore[unused-argument]
+    return
