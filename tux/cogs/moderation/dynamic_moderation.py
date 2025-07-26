@@ -1,94 +1,80 @@
 """
-Dynamic moderation command system demonstration.
+Dynamic moderation command system.
 
-This module demonstrates how moderation commands can be implemented
-using a unified approach with the mixed_args system.
+Automatically generates moderation commands from the configuration in
+`tux.cogs.moderation.command_config`.
 """
+
+from __future__ import annotations
+
+from typing import Any, Callable, Coroutine, TypeVar
 
 import discord
 from discord.ext import commands
 
-from prisma.enums import CaseType
 from tux.bot import Tux
 from tux.utils import checks
-from tux.utils.mixed_args import generate_mixed_usage, parse_mixed_arguments
 
 from . import ModerationCogBase
+from .command_config import MODERATION_COMMANDS, ModerationCommandConfig
+
+T = TypeVar("T")
 
 
 class DynamicModerationCog(ModerationCogBase):
-    """
-    Dynamic moderation cog that demonstrates the unified approach.
-
-    This cog shows how moderation commands can be implemented
-    using the mixed_args system for consistent argument parsing.
-    """
+    """Cog that registers *all* moderation commands dynamically."""
 
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
-        # Set usage string for dtimeout command
-        self.dtimeout.usage = generate_mixed_usage("dtimeout", ["member"], ["duration", "reason"], ["-d", "-s"])
+        self._register_all_commands()
 
-    @commands.hybrid_command(
-        name="dtimeout",
-        aliases=["dt", "dto", "dmute", "dm"],
-        description="Dynamic timeout command using mixed_args",
-    )
-    @commands.guild_only()
-    @checks.has_pl(2)
-    async def dtimeout(
-        self,
-        ctx: commands.Context[Tux],
-        member: discord.Member,
-        *,
-        mixed_args: str = "",
-    ) -> None:
-        """
-        Timeout a member using dynamic mixed arguments.
+    # ------------------------------------------------------------------
+    # Dynamic command creator
+    # ------------------------------------------------------------------
+    def _register_all_commands(self) -> None:
+        for config in MODERATION_COMMANDS.values():
+            self._create_and_register(config)
 
-        Supports both positional and flag-based arguments:
-        - Positional: `dtimeout @user 14d reason`
-        - Flag-based: `dtimeout @user reason -d 14d`
-        - Mixed: `dtimeout @user 14d reason -s`
-        """
-        assert ctx.guild
+    def _create_and_register(self, config: ModerationCommandConfig) -> None:
+        """Create a command function for *config* and add it to the cog/bot."""
 
-        # Check if member is already timed out
-        if member.is_timed_out():
-            await ctx.send(f"{member} is already timed out.", ephemeral=True)
-            return
+        # Decide parameter annotation based on whether the user must be in guild
+        target_annotation: Any
+        if config.requires_member:
+            target_annotation = discord.Member
+        else:
+            target_annotation = discord.User  # user may not be in guild (e.g. unban)
 
-        # Check if moderator has permission to timeout the member
-        if not await self.check_conditions(ctx, member, ctx.author, "timeout"):
-            return
+        async def _cmd(  # type: ignore[override]
+            self: "DynamicModerationCog",  # bound method
+            ctx: commands.Context[Tux],
+            target: target_annotation,  # type: ignore[name-defined]
+            *,
+            mixed_args: str = "",
+        ) -> None:  # noqa: D401, ANN001
+            await self.execute_mixed_mod_action(ctx, config, target, mixed_args)
 
-        # Parse mixed arguments
-        parsed_args = parse_mixed_arguments(mixed_args)
+        _cmd.__name__ = config.name
+        _cmd.__doc__ = config.description
 
-        # Extract values with defaults
-        duration = parsed_args.get("duration")
-        reason = parsed_args.get("reason", "No reason provided")
-        silent = parsed_args.get("silent", False)
-
-        # Validate that we have a duration
-        if not duration:
-            await ctx.send("Please provide a duration for the timeout.", ephemeral=True)
-            return
-
-        # Execute the timeout action
-        await self.execute_mod_action(
-            ctx=ctx,
-            case_type=CaseType.TIMEOUT,
-            user=member,
-            reason=reason,
-            silent=silent,
-            dm_action="timed out",
-            actions=[
-                (member.timeout(duration, reason=reason), type(None)),
-            ],
+        # Wrap with decorators
+        command_factory: Callable[[Callable[..., Coroutine[Any, Any, None]]], commands.HybridCommand[Any]] = commands.hybrid_command(
+            name=config.name,
+            aliases=config.aliases,
+            description=config.description,
         )
+        cmd_obj = command_factory(_cmd)  # type: ignore[arg-type]
+        cmd_obj = commands.guild_only()(cmd_obj)  # type: ignore[assignment]
+        cmd_obj = checks.has_pl(config.required_permission_level)(cmd_obj)  # type: ignore[assignment]
+
+        # Usage string for help
+        cmd_obj.usage = config.get_usage_string()
+
+        # Attach to cog instance & add to bot
+        setattr(self, config.name, cmd_obj)
+        self.bot.add_command(cmd_obj)
 
 
 async def setup(bot: Tux) -> None:
-    """Set up the dynamic moderation cog."""
+    """Entrypoint for this cog (called by discord.py loader)."""
     await bot.add_cog(DynamicModerationCog(bot))

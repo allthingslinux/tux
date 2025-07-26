@@ -604,3 +604,91 @@ class ModerationCogBase(commands.Cog):
             active_restriction_type=CaseType.JAIL,
             inactive_restriction_type=CaseType.UNJAIL,
         )
+
+    # ------------------------------------------------------------------
+    # Unified mixed-argument executor (dynamic moderation system)
+    # ------------------------------------------------------------------
+    async def execute_mixed_mod_action(
+        self,
+        ctx: commands.Context[Tux],
+        config: "ModerationCommandConfig",  # quoted to avoid circular import at runtime
+        user: discord.Member | discord.User,
+        mixed_args: str,
+    ) -> None:
+        """Parse *mixed_args* according to *config* and execute the moderation flow.
+
+        This serves as the single entry-point for all dynamically generated
+        moderation commands.  It handles:
+        1. Mixed-argument parsing (positional + flags).
+        2. Validation based on *config* (duration required?, purge range?, etc.).
+        3. Permission / sanity checks via *check_conditions*.
+        4. Building the *actions* list and delegating to :py:meth:`execute_mod_action`.
+        """
+
+        from tux.utils.mixed_args import parse_mixed_arguments  # local import to avoid heavy top-level deps
+        from tux.utils.constants import CONST  # default reason constant
+
+        assert ctx.guild, "This command can only be used in guild context."  # noqa: S101
+
+        parsed = parse_mixed_arguments(mixed_args or "")
+
+        # ------------------------------------------------------------------
+        # Extract common arguments
+        # ------------------------------------------------------------------
+        duration: str | None = parsed.get("duration")
+        purge: int = int(parsed.get("purge", 0)) if parsed.get("purge") is not None else 0
+        reason: str = parsed.get("reason") or CONST.DEFAULT_REASON
+        silent: bool = bool(parsed.get("silent", False))
+
+        # ------------------------------------------------------------------
+        # Validation based on config flags
+        # ------------------------------------------------------------------
+        # Duration
+        if config.supports_duration and not duration:
+            await ctx.send("Please supply a duration (e.g. `14d`).", ephemeral=True)
+            return
+        if not config.supports_duration:
+            duration = None  # ignore any provided duration
+
+        # Purge
+        if config.supports_purge:
+            if not 0 <= purge <= 7:
+                await ctx.send("`purge` must be between 0 and 7 days.", ephemeral=True)
+                return
+        else:
+            purge = 0
+
+        # ------------------------------------------------------------------
+        # Permission / sanity checks
+        # ------------------------------------------------------------------
+        if not await self.check_conditions(ctx, user, ctx.author, config.name):
+            return
+
+        # ------------------------------------------------------------------
+        # Build Discord action coroutine(s)
+        # ------------------------------------------------------------------
+        # Prepare arg bundle for the lambda / callable
+        arg_bundle: dict[str, Any] = {
+            "duration": duration,
+            "purge": purge,
+            "silent": silent,
+        }
+
+        coroutine_or_none = config.discord_action(ctx.guild, user, reason, arg_bundle)
+        actions: list[tuple[Any, type[Any]]] = []
+        if coroutine_or_none is not None:
+            actions.append((coroutine_or_none, type(None)))
+
+        # ------------------------------------------------------------------
+        # Delegate to existing helper that handles DM, case creation, etc.
+        # ------------------------------------------------------------------
+        await self.execute_mod_action(
+            ctx=ctx,
+            case_type=config.case_type,
+            user=user,
+            reason=reason,
+            silent=silent,
+            dm_action=config.dm_action,
+            actions=actions,
+            duration=duration,
+        )
