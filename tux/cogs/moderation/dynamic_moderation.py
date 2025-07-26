@@ -57,6 +57,39 @@ class DynamicModerationCog(ModerationCogBase):
         _cmd.__name__ = config.name
         _cmd.__doc__ = config.description
 
+        # --------------------------------------------------------------
+        # Inject FlagConverter annotation so custom help picks up flags
+        # --------------------------------------------------------------
+        flag_attrs: dict[str, Any] = {}
+        if config.supports_duration:
+            flag_attrs['duration'] = commands.flag(
+                description="Duration (e.g. 14d)",
+                aliases=['d'],
+                default=None,
+            )
+        if config.supports_purge:
+            flag_attrs['purge'] = commands.flag(
+                description="Days of messages to delete (0-7)",
+                aliases=['p'],
+                default=0,
+            )
+        if config.supports_silent:
+            flag_attrs['silent'] = commands.flag(
+                description="Don't DM the target",
+                aliases=['s', 'quiet'],
+                default=False,
+            )
+        if config.supports_reason and not config.supports_reason:  # always true path skip? we keep reason? maybe omit
+            flag_attrs['reason'] = commands.flag(
+                description="Reason for the action",
+                default="No reason provided",
+            )
+
+        if flag_attrs:
+            FlagsCls = type(f"{config.name.title()}Flags", (commands.FlagConverter,), flag_attrs)
+            _cmd.__annotations__['mixed_args'] = FlagsCls  # type: ignore[assignment]
+
+
         # Wrap with decorators
         command_factory: Callable[[Callable[..., Coroutine[Any, Any, None]]], commands.HybridCommand[Any]] = commands.hybrid_command(
             name=config.name,
