@@ -631,32 +631,15 @@ class ModerationCogBase(commands.Cog):
         assert ctx.guild, "This command can only be used in guild context."  # noqa: S101
 
         parsed = parse_mixed_arguments(mixed_args or "")
-
-        # ------------------------------------------------------------------
-        # Extract common arguments
-        # ------------------------------------------------------------------
-        duration: str | None = parsed.get("duration")
-        purge: int = int(parsed.get("purge", 0)) if parsed.get("purge") is not None else 0
-        reason: str = parsed.get("reason") or CONST.DEFAULT_REASON
-        silent: bool = bool(parsed.get("silent", False))
-
-        # ------------------------------------------------------------------
-        # Validation based on config flags
-        # ------------------------------------------------------------------
-        # Duration
-        if config.supports_duration and not duration:
-            await ctx.send("Please supply a duration (e.g. `14d`).", ephemeral=True)
+        ok, validated = self._validate_args(config, parsed)
+        if not ok:
+            await ctx.send(validated["error"], ephemeral=True)  # type: ignore[index]
             return
-        if not config.supports_duration:
-            duration = None  # ignore any provided duration
 
-        # Purge
-        if config.supports_purge:
-            if not 0 <= purge <= 7:
-                await ctx.send("`purge` must be between 0 and 7 days.", ephemeral=True)
-                return
-        else:
-            purge = 0
+        duration = validated["duration"]  # type: ignore[assignment]
+        purge = validated["purge"]         # type: ignore[assignment]
+        reason = (validated.get("reason") or CONST.DEFAULT_REASON)  # type: ignore[assignment]
+        silent = validated["silent"]       # type: ignore[assignment]
 
         # ------------------------------------------------------------------
         # Permission / sanity checks
@@ -692,3 +675,45 @@ class ModerationCogBase(commands.Cog):
             actions=actions,
             duration=duration,
         )
+
+    # ------------------------------------------------------------------
+    # Validation helper for dynamic moderation commands
+    # ------------------------------------------------------------------
+    def _validate_args(self, config: "ModerationCommandConfig", parsed: dict[str, Any]) -> tuple[bool, dict[str, Any]]:
+        """Validate *parsed* arguments against *config* rules.
+
+        Returns (is_valid, validated_dict).  On failure sends the error message
+        via the ctx stored in validated_dict["ctx"] and returns False.
+        """
+        validated: dict[str, Any] = {}
+
+        # Duration
+        duration = parsed.get("duration")
+        if config.supports_duration:
+            if not duration:
+                return False, {"error": "Duration required (e.g. `14d`)."}
+            from tux.utils.functions import parse_time_string
+            try:
+                parse_time_string(duration)  # ensure valid
+            except Exception:
+                return False, {"error": "Invalid duration format."}
+            validated["duration"] = duration
+        else:
+            validated["duration"] = None
+
+        # Purge
+        purge_raw = parsed.get("purge")
+        if config.supports_purge:
+            try:
+                purge_val = int(purge_raw or 0)
+            except ValueError:
+                return False, {"error": "Purge must be an integer 0-7."}
+            if not 0 <= purge_val <= 7:
+                return False, {"error": "Purge must be between 0 and 7."}
+            validated["purge"] = purge_val
+        else:
+            validated["purge"] = 0
+
+        validated["reason"] = parsed.get("reason")
+        validated["silent"] = bool(parsed.get("silent", False))
+        return True, validated
