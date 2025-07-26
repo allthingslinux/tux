@@ -54,8 +54,11 @@ class ModerationCommandMeta(type):
         )
 
         # Make FlagsCls resolvable for annotation eval
-        if FlagsCls is not None and 'FlagsCls' not in globals():
+        if FlagsCls is not None:
+            import builtins  # noqa: WPS433
+            # Expose under a stable alias so eval("FlagsCls") always succeeds
             globals()['FlagsCls'] = FlagsCls
+            setattr(builtins, 'FlagsCls', FlagsCls)
 
         # --------------------------------------------------
         # Shared executor
@@ -91,7 +94,8 @@ class ModerationCommandMeta(type):
 
         if FlagsCls is not None:
             _text.__globals__[FlagsCls.__name__] = FlagsCls
-            from typing import Dict as _Dict
+            _text.__globals__['FlagsCls'] = FlagsCls  # also as generic alias
+            from typing import Dict as _Dict  # noqa: WPS433
             _text.__globals__.setdefault('Dict', _Dict)
 
         _text.__name__ = cmd_name
@@ -110,6 +114,7 @@ class ModerationCommandMeta(type):
 
         if FlagsCls is not None:
             _slash.__globals__[FlagsCls.__name__] = FlagsCls
+            _slash.__globals__['FlagsCls'] = FlagsCls  # keep alias
 
         slash_cmd = discord.app_commands.command(name=cmd_name, description=description)(_slash)
 
