@@ -18,6 +18,8 @@ from tux.utils import checks
 from . import ModerationCogBase
 from .command_config import MODERATION_COMMANDS, ModerationCommandConfig
 from tux.utils.transformers import MemberOrUser
+# from tux.utils.mixed_args import generate_mixed_usage, parse_mixed_arguments (deprecated)
+from tux.utils.flag_factory import build_flag_converter
 
 
 class DynamicModerationCog(ModerationCogBase):
@@ -47,27 +49,14 @@ class DynamicModerationCog(ModerationCogBase):
         cog_self = self  # capture for closure
 
         # --------------------------------------------------------------
-        # Build FlagConverter subclass for help documentation
+        # Build FlagConverter using helper
         # --------------------------------------------------------------
-        flag_attrs: dict[str, Any] = {}
-        if config.supports_duration:
-            flag_attrs["duration"] = commands.flag(
-                description="Duration (e.g. 14d)", aliases=["d"], default=None
-            )
-        if config.supports_purge:
-            flag_attrs["purge"] = commands.flag(
-                description="Days of messages to delete (0-7)", aliases=["p"], default=0
-            )
-        if config.supports_silent:
-            flag_attrs["silent"] = commands.flag(
-                description="Don't DM the target", aliases=["s", "quiet"], default=False
-            )
-
-        FlagsCls: type[commands.FlagConverter] | None = None
-        if flag_attrs:
-            FlagsCls = type(f"{config.name.title()}Flags", (commands.FlagConverter,), flag_attrs)
-            # Expose class in module globals so `get_type_hints` can resolve
-            globals()[FlagsCls.__name__] = FlagsCls
+        FlagsCls = build_flag_converter(
+            config.name,
+            duration=config.supports_duration,
+            purge=config.supports_purge,
+            silent=config.supports_silent,
+        )
 
         # --------------------------------------------------------------
         # Define the command callback, optionally including the *flags* param
@@ -78,7 +67,7 @@ class DynamicModerationCog(ModerationCogBase):
                 ctx: commands.Context,
                 target: MemberOrUser,
                 *,
-                flags: FlagsCls = FlagsCls(),  # kw-only, hidden
+                flags: FlagsCls = FlagsCls(),
                 reason: str = "",
             ) -> None:  # noqa: D401, ANN001
                 await cog_self.execute_flag_mod_action(ctx, config, target, flags, reason)
@@ -93,7 +82,7 @@ class DynamicModerationCog(ModerationCogBase):
                 *,
                 reason: str = "",
             ) -> None:  # noqa: D401, ANN001
-                await cog_self.execute_flag_mod_action(ctx, config, target, flags=None, reason=reason)  # type: ignore[arg-type]
+                await cog_self.execute_flag_mod_action(ctx, config, target, None, reason)
 
         _cmd.__name__ = config.name
         _cmd.__doc__ = config.description
