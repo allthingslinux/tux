@@ -717,3 +717,71 @@ class ModerationCogBase(commands.Cog):
         validated["reason"] = parsed.get("reason")
         validated["silent"] = bool(parsed.get("silent", False))
         return True, validated
+
+    # ------------------------------------------------------------------
+    # New flag-based dynamic executor (replacing mixed-args approach)
+    # ------------------------------------------------------------------
+    async def execute_flag_mod_action(
+        self,
+        ctx: commands.Context[Tux],
+        config: "ModerationCommandConfig",
+        user: discord.Member | discord.User,
+        flags: Any,
+        reason: str,
+    ) -> None:
+        """Execute moderation flow based on *flags* parsed by FlagConverter.
+
+        This is the preferred pathway for dynamically generated moderation
+        commands that rely on discord.py's native FlagConverter parsing.
+        """
+
+        from tux.utils.constants import CONST
+
+        assert ctx.guild, "Command must run in a guild context."  # noqa: S101
+
+        duration = getattr(flags, "duration", None) if flags is not None else None
+        purge = getattr(flags, "purge", 0) if flags is not None else 0
+        silent = getattr(flags, "silent", False) if flags is not None else False
+
+        # Validation based on config
+        if config.supports_duration and not duration:
+            await ctx.send("Duration required (e.g. 14d).", ephemeral=True)
+            return
+        if not config.supports_duration:
+            duration = None
+
+        if not config.supports_purge:
+            purge = 0
+        else:
+            if not isinstance(purge, int) or not 0 <= purge <= 7:
+                await ctx.send("Purge must be between 0 and 7.", ephemeral=True)
+                return
+
+        reason_final = reason or CONST.DEFAULT_REASON
+
+        # Permission / sanity checks
+        if not await self.check_conditions(ctx, user, ctx.author, config.name):
+            return
+
+        # Build arg bundle for discord_action
+        arg_bundle: dict[str, Any] = {
+            "duration": duration,
+            "purge": purge,
+            "silent": silent,
+        }
+
+        coroutine_or_none = config.discord_action(ctx.guild, user, reason_final, arg_bundle)
+        actions: list[tuple[Any, type[Any]]] = []
+        if coroutine_or_none is not None:
+            actions.append((coroutine_or_none, type(None)))
+
+        await self.execute_mod_action(
+            ctx=ctx,
+            case_type=config.case_type,
+            user=user,
+            reason=reason_final,
+            silent=silent,
+            dm_action=config.dm_action,
+            actions=actions,
+            duration=duration,
+        )

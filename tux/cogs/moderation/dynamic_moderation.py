@@ -79,11 +79,9 @@ class DynamicModerationCog(ModerationCogBase):
                 target: MemberOrUser,
                 *,
                 flags: FlagsCls = FlagsCls(),  # kw-only, hidden
-                mixed_args: str = "",
+                reason: str = "",
             ) -> None:  # noqa: D401, ANN001
-                # We ignore *flags* at runtime; it exists purely for help docs
-                _ = flags  # noqa: B018 (silence linter unused variable)
-                await cog_self.execute_mixed_mod_action(ctx, config, target, mixed_args)
+                await cog_self.execute_flag_mod_action(ctx, config, target, flags, reason)
 
             _cmd.__annotations__["flags"] = FlagsCls  # type: ignore[index]
 
@@ -93,9 +91,9 @@ class DynamicModerationCog(ModerationCogBase):
                 ctx: commands.Context,
                 target: MemberOrUser,
                 *,
-                mixed_args: str = "",
+                reason: str = "",
             ) -> None:  # noqa: D401, ANN001
-                await cog_self.execute_mixed_mod_action(ctx, config, target, mixed_args)
+                await cog_self.execute_flag_mod_action(ctx, config, target, flags=None, reason=reason)  # type: ignore[arg-type]
 
         _cmd.__name__ = config.name
         _cmd.__doc__ = config.description
