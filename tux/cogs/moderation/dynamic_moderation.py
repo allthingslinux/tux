@@ -40,7 +40,7 @@ class DynamicModerationCog(ModerationCogBase):
         async def _cmd(  # type: ignore[override]
             self: "DynamicModerationCog",
             ctx: commands.Context,  # plain Context for slash compatibility
-            target: discord.Member | discord.User,
+            target: discord.User,
             *,
             mixed_args: str = "",
         ) -> None:  # noqa: D401, ANN001
