@@ -106,19 +106,28 @@ class ModerationCommandMeta(type):
         # --------------------------------------------------
         # Slash command
         # --------------------------------------------------
-        async def _slash(interaction: discord.Interaction, target: MemberOrUser, *, flags: FlagsCls | None = None, reason: str = "") -> None:  # type: ignore[arg-type]
-            """App command callback (no bound self, added directly to bot.tree)."""
-            if flags is None:
-                flags = FlagsCls()  # type: ignore[assignment]
+        async def _slash(
+            interaction: discord.Interaction,
+            target: MemberOrUser,
+            *,
+            duration: str | None = None,
+            purge: int = 0,
+            silent: bool = False,
+            reason: str = "",
+        ) -> None:  # type: ignore[arg-type]
+            """App command callback (no bound self) using explicit options."""
 
-            # Retrieve the moderation cog instance from the bot
+            from types import SimpleNamespace  # noqa: WPS433
+
+            flags_obj = SimpleNamespace(duration=duration, purge=purge, silent=silent)
+
             bot = interaction.client  # type: ignore[attr-defined]
             cog: ModerationCogBase | None = bot.get_cog("ModerationCommandsCog")  # type: ignore[attr-defined]
             if cog is None:
-                return  # Should not happen
+                return
 
             ctx = await cog.bot.get_context(interaction)  # type: ignore[attr-defined]
-            await _run(cog, ctx, target, flags, reason)
+            await _run(cog, ctx, target, flags_obj, reason)
 
         if FlagsCls is not None:
             _slash.__globals__[FlagsCls.__name__] = FlagsCls
