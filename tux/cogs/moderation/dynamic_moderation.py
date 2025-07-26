@@ -7,7 +7,7 @@ Automatically generates moderation commands from the configuration in
 
 from __future__ import annotations
 
-from typing import Any, Callable, Coroutine, TypeVar
+from typing import Any, Callable, Coroutine
 
 import discord
 from discord.ext import commands
@@ -17,8 +17,6 @@ from tux.utils import checks
 
 from . import ModerationCogBase
 from .command_config import MODERATION_COMMANDS, ModerationCommandConfig
-
-T = TypeVar("T")
 
 
 class DynamicModerationCog(ModerationCogBase):
@@ -40,8 +38,8 @@ class DynamicModerationCog(ModerationCogBase):
 
         # Parameter annotation choice is runtime-only; using Any avoids evaluation issues
         async def _cmd(  # type: ignore[override]
-            self: "DynamicModerationCog",  # bound method
-            ctx: commands.Context[Tux],
+            self: "DynamicModerationCog",
+            ctx: commands.Context,  # plain Context for slash compatibility
             target: discord.Member | discord.User,
             *,
             mixed_args: str = "",
@@ -56,7 +54,7 @@ class DynamicModerationCog(ModerationCogBase):
             name=config.name,
             aliases=config.aliases,
             description=config.description,
-            with_app_command=False,
+            with_app_command=True,
         )
         cmd_obj = command_factory(_cmd)  # type: ignore[arg-type]
         cmd_obj = commands.guild_only()(cmd_obj)  # type: ignore[assignment]
