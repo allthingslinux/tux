@@ -58,6 +58,10 @@ class DynamicModerationCog(ModerationCogBase):
             silent=config.supports_silent,
         )
 
+        # Make sure help introspection can resolve the class via this module's globals
+        if FlagsCls is not None and FlagsCls.__name__ not in globals():
+            globals()[FlagsCls.__name__] = FlagsCls
+
         # --------------------------------------------------------------
         # Define the command callback, optionally including the *flags* param
         # --------------------------------------------------------------
