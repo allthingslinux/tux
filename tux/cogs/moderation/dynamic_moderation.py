@@ -64,6 +64,7 @@ class DynamicModerationCog(ModerationCogBase):
 
         # Usage string for help
         cmd_obj.usage = config.get_usage_string()
+        cmd_obj.help = config.get_help_text()
 
         # Attach to cog instance & add to bot
         setattr(self, config.name, cmd_obj)
