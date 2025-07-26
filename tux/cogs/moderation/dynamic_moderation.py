@@ -73,10 +73,10 @@ class DynamicModerationCog(ModerationCogBase):
         # Link the command back to this cog instance
         cmd_obj.cog = self  # type: ignore[attr-defined]
         setattr(self, config.name, cmd_obj)
-        # Register with cog's internal command list so help finds it
-        if not hasattr(self, "__cog_commands__"):
-            self.__cog_commands__ = []  # type: ignore[attr-defined]
-        self.__cog_commands__.append(cmd_obj)  # type: ignore[attr-defined]
+        # Add to cog command registry so help command can discover it
+        existing_cmds = list(getattr(self, "__cog_commands__", ()))  # type: ignore[attr-defined]
+        existing_cmds.append(cmd_obj)
+        self.__cog_commands__ = tuple(existing_cmds)  # type: ignore[attr-defined]
         # Finally register on the bot
         self.bot.add_command(cmd_obj)
 
