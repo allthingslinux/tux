@@ -69,7 +69,6 @@ class DynamicModerationCog(ModerationCogBase):
         # Usage & docs for help system
         cmd_obj.usage = config.get_usage_string()
         cmd_obj.help = config.get_help_text()
-        cmd_obj.short_doc = config.description
 
         # Link the command back to this cog instance
         cmd_obj.cog = self  # type: ignore[attr-defined]
