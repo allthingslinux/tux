@@ -101,3 +101,13 @@ def mod_command(info: ModCmdInfo):
         return prefix_cmd, slash_cmd
 
     return decorator
+
+
+# ---------------------------------------------------------------------------
+# No-op setup so the cog loader doesn’t treat this util as a failing extension
+# ---------------------------------------------------------------------------
+
+
+async def setup(bot):  # type: ignore[unused-argument]
+    """Utility module – nothing to load."""
+    return

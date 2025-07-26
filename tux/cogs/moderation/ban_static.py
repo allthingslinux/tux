@@ -26,6 +26,15 @@ class BanCog(ModerationActionMixin, commands.Cog):
         super().__init__(bot)  # type: ignore[misc]
         # Register commands returned by decorator
         prefix_cmd, slash_cmd = self._create_commands()
+
+        # Remove any pre-existing ban command from old dynamic system
+        existing = bot.get_command("ban")
+        if existing:
+            bot.remove_command("ban")
+        for alias in BAN_INFO.aliases:
+            if bot.get_command(alias):
+                bot.remove_command(alias)
+
         bot.add_command(prefix_cmd)
         bot.tree.add_command(slash_cmd)
 

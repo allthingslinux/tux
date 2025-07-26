@@ -63,3 +63,13 @@ class ModerationActionMixin(ModerationCogBase):
             actions=actions,
             duration=duration,
         )
+
+
+# ---------------------------------------------------------------------------
+# No-op setup so the cog loader skips this util module
+# ---------------------------------------------------------------------------
+
+
+async def setup(bot):  # type: ignore[unused-argument]
+    """Utility module – nothing to load."""
+    return
