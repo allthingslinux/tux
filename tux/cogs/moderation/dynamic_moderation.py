@@ -7,7 +7,7 @@ Automatically generates moderation commands from the configuration in
 
 from __future__ import annotations
 
-from typing import Any, Callable, Coroutine
+from typing import Any, Callable, Coroutine, Dict
 
 import discord
 from discord.ext import commands
@@ -61,6 +61,10 @@ class DynamicModerationCog(ModerationCogBase):
         # Make sure help introspection can resolve the class via this module's globals
         if FlagsCls is not None and FlagsCls.__name__ not in globals():
             globals()[FlagsCls.__name__] = FlagsCls
+            # Ensure typing aliases used in annotations are resolvable
+            from typing import Dict as _Dict  # noqa: WPS433 (runtime import)
+            if 'Dict' not in globals():
+                globals()['Dict'] = _Dict
 
         # --------------------------------------------------------------
         # Define the command callback, optionally including the *flags* param
