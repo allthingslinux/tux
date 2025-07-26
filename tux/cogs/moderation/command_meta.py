@@ -55,7 +55,28 @@ class ModerationCommandMeta(type):
 
         # Create the hybrid command callback
         async def _callback(self: ModerationCogBase, ctx: commands.Context, target: MemberOrUser, *, flags: FlagsCls = FlagsCls(), reason: str = "") -> None:  # type: ignore[name-defined]
-            await self.execute_flag_mod_action(ctx, cls, target, flags, reason)  # type: ignore[arg-type]
+            # Permission / sanity checks
+            if not await self.check_conditions(ctx, target, ctx.author, cmd_name):
+                return
+
+            silent = getattr(flags, "silent", False)
+            duration = getattr(flags, "duration", None)
+            purge = getattr(flags, "purge", 0)
+
+            # Build coroutine list using subclass _action
+            action_coro = cls._action(self, ctx.guild, target, flags=flags, reason=reason)  # type: ignore[arg-type]
+            actions = [(action_coro, type(None))]
+
+            await self.execute_mod_action(
+                ctx=ctx,
+                case_type=case_type,
+                user=target,
+                reason=reason,
+                silent=silent,
+                dm_action=getattr(cls, "dm_action", cmd_name),
+                actions=actions,
+                duration=duration,
+            )
 
         _callback.__name__ = cmd_name
         _callback.__doc__ = description
