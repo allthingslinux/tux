@@ -59,18 +59,22 @@ class DynamicModerationCog(ModerationCogBase):
             help=config.get_help_text(),
             with_app_command=True,
         )
+        # Build the command
         cmd_obj = command_factory(_cmd)  # type: ignore[arg-type]
-        cmd_obj = commands.guild_only()(cmd_obj)  # type: ignore[assignment]
-        cmd_obj = checks.has_pl(config.required_permission_level)(cmd_obj)  # type: ignore[assignment]
 
-        # Usage string for help
+        # Apply decorators *in place* so we don't lose object identity
+        commands.guild_only()(cmd_obj)
+        checks.has_pl(config.required_permission_level)(cmd_obj)
+
+        # Usage & docs for help system
         cmd_obj.usage = config.get_usage_string()
         cmd_obj.help = config.get_help_text()
         cmd_obj.short_doc = config.description
 
-        # Attach to cog instance & link back
+        # Link the command back to this cog instance
         cmd_obj.cog = self  # type: ignore[attr-defined]
         setattr(self, config.name, cmd_obj)
+        # Finally register on the bot
         self.bot.add_command(cmd_obj)
 
 
