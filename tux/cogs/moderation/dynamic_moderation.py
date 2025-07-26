@@ -77,18 +77,12 @@ class DynamicModerationCog(ModerationCogBase):
         existing_cmds = list(getattr(self, "__cog_commands__", ()))  # type: ignore[attr-defined]
         existing_cmds.append(cmd_obj)
         self.__cog_commands__ = tuple(existing_cmds)  # type: ignore[attr-defined]
-        # If a command with this name/aliases already exists (e.g. from a prior failed load)
-        # remove it first to avoid CommandRegistrationError on reloads.
-        if self.bot.get_command(cmd_obj.name):
-            self.bot.remove_command(cmd_obj.name)
-        for alias in cmd_obj.aliases:
-            if self.bot.get_command(alias):
-                self.bot.remove_command(alias)
-
-        # Finally register on the bot
+        # Finally register on the bot (override handled at cog level)
         self.bot.add_command(cmd_obj)
 
 
 async def setup(bot: Tux) -> None:
     """Entrypoint for this cog (called by discord.py loader)."""
-    await bot.add_cog(DynamicModerationCog(bot))
+    # Use override=True so any previously registered commands with the same
+    # names or aliases (e.g. from a failed reload) are replaced cleanly.
+    await bot.add_cog(DynamicModerationCog(bot), override=True)
