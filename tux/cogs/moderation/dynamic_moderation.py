@@ -56,6 +56,7 @@ class DynamicModerationCog(ModerationCogBase):
             name=config.name,
             aliases=config.aliases,
             description=config.description,
+            with_app_command=False,
         )
         cmd_obj = command_factory(_cmd)  # type: ignore[arg-type]
         cmd_obj = commands.guild_only()(cmd_obj)  # type: ignore[assignment]
