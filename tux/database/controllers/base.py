@@ -130,7 +130,10 @@ class BaseController[
                             pass
                     span.set_status("internal_error")
                     span.set_data("error", str(e))
-                    logger.error(f"{error_msg}: {e}")
+                    if "Can't reach database server" in str(e):
+                        logger.error(f"Database connection error: {e}")
+                    else:
+                        logger.error(f"{error_msg}: {e}")
                     raise
         else:
             try:
