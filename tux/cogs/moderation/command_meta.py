@@ -54,7 +54,7 @@ class ModerationCommandMeta(type):
         )
 
         # Create the hybrid command callback
-        async def _callback(self: ModerationCogBase, ctx: commands.Context, target: MemberOrUser, *, flags: FlagsCls = FlagsCls(), reason: str = "") -> None:  # type: ignore[name-defined]
+        async def _callback(self: ModerationCogBase, ctx, target: MemberOrUser, *, flags: FlagsCls = FlagsCls(), reason: str = "") -> None:  # type: ignore[override]
             # Permission / sanity checks
             if not await self.check_conditions(ctx, target, ctx.author, cmd_name):
                 return
