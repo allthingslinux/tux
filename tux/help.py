@@ -181,18 +181,40 @@ class TuxHelp(commands.HelpCommand):
         except Exception:
             return ""
 
-        for param_annotation in type_hints.values():
-            if not isinstance(param_annotation, type) or not issubclass(param_annotation, commands.FlagConverter):
-                continue
+        from typing import get_origin, get_args  # noqa: WPS433
 
-            for flag in param_annotation.__commands_flags__.values():
-                flag_str = self._format_flag_name(flag)
-                if flag.aliases and not getattr(flag, "positional", False):
-                    flag_str += f" ({', '.join(flag.aliases)})"
-                flag_str += f"\n\t{flag.description or 'No description provided'}"
-                if flag.default is not discord.utils.MISSING:
-                    flag_str += f"\n\tDefault: {flag.default}"
-                flag_details.append(flag_str)
+        for param_annotation in type_hints.values():
+            origin = get_origin(param_annotation)
+            args = get_args(param_annotation)
+
+            candidates: list[type] = []
+
+            # Direct FlagConverter subclass
+            if isinstance(param_annotation, type):
+                candidates.append(param_annotation)
+
+            # Union | Optional[...] etc.
+            if origin in {getattr(__import__('types'), 'UnionType', None), None, list, dict, tuple, set}:  # placeholder check
+                # Not needed
+                pass
+
+            if origin is not None and args:
+                for arg in args:
+                    if isinstance(arg, type):
+                        candidates.append(arg)
+
+            for cand in candidates:
+                if not issubclass(cand, commands.FlagConverter):
+                    continue
+
+                for flag in cand.__commands_flags__.values():
+                    flag_str = self._format_flag_name(flag)
+                    if flag.aliases and not getattr(flag, "positional", False):
+                        flag_str += f" ({', '.join(flag.aliases)})"
+                    flag_str += f"\n\t{flag.description or 'No description provided'}"
+                    if flag.default is not discord.utils.MISSING:
+                        flag_str += f"\n\tDefault: {flag.default}"
+                    flag_details.append(flag_str)
 
         return "\n\n".join(flag_details)
 
