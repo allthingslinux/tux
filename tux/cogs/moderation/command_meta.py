@@ -124,7 +124,7 @@ class ModerationCommandsCog(ModerationCogBase):
         super().__init__(bot)  # type: ignore[arg-type]
 
         for cls in _REGISTRY:
-            self.add_command(cls.command)
+            self.bot.add_command(cls.command)
 
 
 async def setup(bot: commands.Bot):
