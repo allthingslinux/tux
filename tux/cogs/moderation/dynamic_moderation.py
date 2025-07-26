@@ -38,14 +38,15 @@ class DynamicModerationCog(ModerationCogBase):
         """Create a command function for *config* and add it to the cog/bot."""
 
         # Parameter annotation choice is runtime-only; using Any avoids evaluation issues
+        cog_self = self  # capture for closure
+
         async def _cmd(  # type: ignore[override]
-            self: "DynamicModerationCog",
-            ctx: commands.Context,  # plain Context for slash compatibility
+            ctx: commands.Context,
             target: MemberOrUser,
             *,
             mixed_args: str = "",
         ) -> None:  # noqa: D401, ANN001
-            await self.execute_mixed_mod_action(ctx, config, target, mixed_args)
+            await cog_self.execute_mixed_mod_action(ctx, config, target, mixed_args)
 
         _cmd.__name__ = config.name
         _cmd.__doc__ = config.description
