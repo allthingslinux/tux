@@ -46,51 +46,57 @@ class DynamicModerationCog(ModerationCogBase):
         # Parameter annotation choice is runtime-only; using Any avoids evaluation issues
         cog_self = self  # capture for closure
 
-        async def _cmd(  # type: ignore[override]
-            ctx: commands.Context,
-            target: MemberOrUser,
-            *,
-            mixed_args: str = "",
-        ) -> None:  # noqa: D401, ANN001
-            await cog_self.execute_mixed_mod_action(ctx, config, target, mixed_args)
-
-        _cmd.__name__ = config.name
-        _cmd.__doc__ = config.description
-
         # --------------------------------------------------------------
-        # Inject FlagConverter annotation so custom help picks up flags
+        # Build FlagConverter subclass for help documentation
         # --------------------------------------------------------------
         flag_attrs: dict[str, Any] = {}
         if config.supports_duration:
-            flag_attrs['duration'] = commands.flag(
-                description="Duration (e.g. 14d)",
-                aliases=['d'],
-                default=None,
+            flag_attrs["duration"] = commands.flag(
+                description="Duration (e.g. 14d)", aliases=["d"], default=None
             )
         if config.supports_purge:
-            flag_attrs['purge'] = commands.flag(
-                description="Days of messages to delete (0-7)",
-                aliases=['p'],
-                default=0,
+            flag_attrs["purge"] = commands.flag(
+                description="Days of messages to delete (0-7)", aliases=["p"], default=0
             )
         if config.supports_silent:
-            flag_attrs['silent'] = commands.flag(
-                description="Don't DM the target",
-                aliases=['s', 'quiet'],
-                default=False,
-            )
-        if config.supports_reason and not config.supports_reason:  # always true path skip? we keep reason? maybe omit
-            flag_attrs['reason'] = commands.flag(
-                description="Reason for the action",
-                default="No reason provided",
+            flag_attrs["silent"] = commands.flag(
+                description="Don't DM the target", aliases=["s", "quiet"], default=False
             )
 
+        FlagsCls: type[commands.FlagConverter] | None = None
         if flag_attrs:
             FlagsCls = type(f"{config.name.title()}Flags", (commands.FlagConverter,), flag_attrs)
-            # Add a dummy annotation name that help.py will pick up without affecting
-            # the real signature parsing.
-            _cmd.__annotations__['__flags__'] = FlagsCls  # type: ignore[assignment]
 
+        # --------------------------------------------------------------
+        # Define the command callback, optionally including the *flags* param
+        # --------------------------------------------------------------
+        if FlagsCls is not None:
+
+            async def _cmd(  # type: ignore[override]
+                ctx: commands.Context,
+                target: MemberOrUser,
+                *,
+                flags: FlagsCls = FlagsCls(),  # kw-only, hidden
+                mixed_args: str = "",
+            ) -> None:  # noqa: D401, ANN001
+                # We ignore *flags* at runtime; it exists purely for help docs
+                _ = flags  # noqa: B018 (silence linter unused variable)
+                await cog_self.execute_mixed_mod_action(ctx, config, target, mixed_args)
+
+            _cmd.__annotations__["flags"] = FlagsCls  # type: ignore[index]
+
+        else:
+
+            async def _cmd(  # type: ignore[override]
+                ctx: commands.Context,
+                target: MemberOrUser,
+                *,
+                mixed_args: str = "",
+            ) -> None:  # noqa: D401, ANN001
+                await cog_self.execute_mixed_mod_action(ctx, config, target, mixed_args)
+
+        _cmd.__name__ = config.name
+        _cmd.__doc__ = config.description
 
         # Wrap with decorators
         command_factory: Callable[[Callable[..., Coroutine[Any, Any, None]]], commands.HybridCommand[Any]] = commands.hybrid_command(
