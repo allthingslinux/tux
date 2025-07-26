@@ -213,12 +213,12 @@ volumes:
 #
 # TUX CLI COMMANDS (Recommended):
 # --------------------------------
-# Build:     poetry run tux --prod docker build
-# Start:     poetry run tux --prod docker up [-d|--build]
-# Logs:      poetry run tux --prod docker logs -f
-# Shell:     poetry run tux --prod docker shell
-# Stop:      poetry run tux --prod docker down
-# Database:  poetry run tux --prod docker exec tux "tux db <command>"
+# Build:     uv run tux --prod docker build
+# Start:     uv run tux --prod docker up [-d|--build]
+# Logs:      uv run tux --prod docker logs -f
+# Shell:     uv run tux --prod docker shell
+# Stop:      uv run tux --prod docker down
+# Database:  uv run tux --prod docker exec tux "tux db <command>"
 #
 # PRODUCTION COMMANDS:
 # --------------------

@@ -6,29 +6,29 @@ Welcome to the testing documentation for the Tux Discord Bot! This guide will he
 
 ### Running Tests
 
-Use the `poetry runtux test` CLI exclusively for running tests for quick access, instead of direct pytest commands.
+Use the `uv run tux test` CLI exclusively for running tests for quick access, instead of direct pytest commands.
 
 ```bash
 # Fast development cycle
-poetry run tux test quick                    # Run tests without coverage (fastest)
-poetry run tux test run                     # Run tests with coverage (recommended)
+uv run tux test quick                    # Run tests without coverage (fastest)
+uv run tux test run                     # Run tests with coverage (recommended)
 
 # Parallel execution for speed
-poetry run tux test parallel                # Run tests in parallel using multiple CPU cores
+uv run tux test parallel                # Run tests in parallel using multiple CPU cores
 
 # Coverage reports
-poetry run tux test coverage --format=html  # Generate HTML coverage report
-poetry run tux test coverage --open-browser # Generate and auto-open HTML report
+uv run tux test coverage --format=html  # Generate HTML coverage report
+uv run tux test coverage --open-browser # Generate and auto-open HTML report
 
 # Specialized test types
-poetry run tux test benchmark               # Run performance benchmarks
-poetry run tux test html                    # Generate HTML test report
+uv run tux test benchmark               # Run performance benchmarks
+uv run tux test html                    # Generate HTML test report
 ```
 
 ### First Time Setup
 
-1. **Install dependencies**: Poetry handles all test dependencies automatically
-2. **Verify setup**: Run `poetry run tux test quick` to ensure everything works
+1. **Install dependencies**: Uv handles all test dependencies automatically
+2. **Verify setup**: Run `uv run tux test quick` to ensure everything works
 3. **Check Docker**: Some tests require Docker for database operations
 
 ## 📊 Testing Philosophy & Standards
@@ -312,16 +312,16 @@ omit = [
 
 ```bash
 # Terminal report
-poetry run tux test coverage --format=term
+uv run tux test coverage --format=term
 
 # HTML report (detailed)
-poetry run tux test coverage --format=html
+uv run tux test coverage --format=html
 
 # Open HTML report in browser
-poetry run tux test coverage --format=html --open-browser
+uv run tux test coverage --format=html --open-browser
 
 # XML report (for CI)
-poetry run tux test coverage --format=xml
+uv run tux test coverage --format=xml
 ```
 
 ### CodeCov Dashboard
@@ -344,7 +344,7 @@ Visit [codecov.io/gh/allthingslinux/tux](https://codecov.io/gh/allthingslinux/tu
 
 ### Before Committing
 
-1. **Run tests**: `poetry run tux test run` to ensure all tests pass with coverage
+1. **Run tests**: `uv run tux test run` to ensure all tests pass with coverage
 2. **Check style**: Pre-commit hooks will check code formatting
 3. **Review coverage**: Ensure new code has appropriate test coverage
 
@@ -368,16 +368,16 @@ Visit [codecov.io/gh/allthingslinux/tux](https://codecov.io/gh/allthingslinux/tu
 
 ```bash
 # Run with verbose output
-poetry run tux test run -v
+uv run tux test run -v
 
 # Run specific test file
-poetry run tux test run tests/unit/tux/utils/test_env.py
+uv run tux test run tests/unit/tux/utils/test_env.py
 
 # Run tests with debugger
-poetry run tux test run --pdb
+uv run tux test run --pdb
 
 # Run only failed tests from last run
-poetry run tux test run --lf
+uv run tux test run --lf
 ```
 
 ## 🚀 Performance Testing
@@ -396,7 +396,7 @@ def test_performance_critical_function(benchmark):
 Run benchmarks:
 
 ```bash
-poetry run tux test benchmark
+uv run tux test benchmark
 ```
 
 ## 🎯 Best Practices

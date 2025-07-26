@@ -106,7 +106,7 @@ Follow these steps to set up your local development environment. For more compre
 
     ```bash
     # Use --dev or rely on the default development mode
-    poetry run tux --dev db push
+    uv run tux --dev db push
     ```
 
 ## Development Workflow
@@ -164,16 +164,16 @@ Follow these steps to set up your local development environment. For more compre
 
     ```bash
     # Format code using Ruff
-    poetry run tux dev format
+    uv run tux dev format
 
     # Lint code using Ruff
-    poetry run tux dev lint-fix
+    uv run tux dev lint-fix
 
     # Type-check code using Pyright
-    poetry run tux dev type-check
+    uv run tux dev type-check
 
     # Run all pre-commit checks (includes formatting, linting, etc.)
-    poetry run tux dev pre-commit
+    uv run tux dev pre-commit
     ```
 
     Fix any issues reported by these tools.

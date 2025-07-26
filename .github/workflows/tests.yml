@@ -154,13 +154,13 @@ jobs:
           # ADAPTIVE PARALLEL EXECUTION
           # Uses pytest-xdist for parallel execution when beneficial
           # Threshold of 10 tests balances overhead vs performance gain
-          TEST_COUNT=$(poetry run pytest --collect-only -q tests/ -m "not slow and not docker" 2>/dev/null | grep -c "test session starts" || echo "0")
+          TEST_COUNT=$(uv run pytest --collect-only -q tests/ -m "not slow and not docker" 2>/dev/null | grep -c "test session starts" || echo "0")
           if [ "$TEST_COUNT" -gt 10 ]; then
             echo "Running $TEST_COUNT tests in parallel..."
-            poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-unit.xml --cov-report=term-missing -m "not slow and not docker" --junitxml=junit-unit.xml -o junit_family=legacy --cov-fail-under=0 -n auto
+            uv run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-unit.xml --cov-report=term-missing -m "not slow and not docker" --junitxml=junit-unit.xml -o junit_family=legacy --cov-fail-under=0 -n auto
           else
             echo "Running $TEST_COUNT tests sequentially..."
-            poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-unit.xml --cov-report=term-missing -m "not slow and not docker" --junitxml=junit-unit.xml -o junit_family=legacy --cov-fail-under=0
+            uv run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-unit.xml --cov-report=term-missing -m "not slow and not docker" --junitxml=junit-unit.xml -o junit_family=legacy --cov-fail-under=0
           fi
           echo "Unit test coverage generation completed"
 
@@ -224,7 +224,7 @@ jobs:
       # Targets only database directory for precise scope
       - name: Run database tests with coverage
         if: steps.check_db_tests.outputs.has_tests == 'true'
-        run: poetry run pytest tests/tux/database/ -v --cov=tux/database --cov-branch
+        run: uv run pytest tests/tux/database/ -v --cov=tux/database --cov-branch
           --cov-report=xml:coverage-database.xml --junitxml=junit-database.xml -o
           junit_family=legacy --cov-fail-under=0
 
@@ -259,7 +259,7 @@ jobs:
           == 'workflow_dispatch'
         id: check_integration_tests
         run: |
-          if poetry run pytest --collect-only -m "slow" -q tests/ | grep -q "test session starts"; then
+          if uv run pytest --collect-only -m "slow" -q tests/ | grep -q "test session starts"; then
             echo "has_tests=true" >> "$GITHUB_OUTPUT"
             echo "Integration tests found"
           else
@@ -283,7 +283,7 @@ jobs:
       # Provides realistic end-to-end testing without blocking development
       - name: Run integration tests with coverage
         if: steps.check_integration_tests.outputs.has_tests == 'true'
-        run: poetry run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-integration.xml
+        run: uv run pytest tests/ -v --cov=tux --cov-branch --cov-report=xml:coverage-integration.xml
           -m "slow" --junitxml=junit-integration.xml -o junit_family=legacy --cov-fail-under=0
         continue-on-error: true  # Don't fail CI if integration tests fail
 
