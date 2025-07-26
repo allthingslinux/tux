@@ -158,6 +158,8 @@ MODERATION_COMMANDS: dict[str, ModerationCommandConfig] = {
         required_permission_level=1,
         supports_duration=False,
         supports_purge=False,
+        supports_reason=True,
+        supports_silent=True,
         dm_action="warned",
         discord_action=lambda guild, member, reason, args: None,  # No Discord action for warns
     ),
@@ -169,6 +171,8 @@ MODERATION_COMMANDS: dict[str, ModerationCommandConfig] = {
         required_permission_level=2,
         supports_duration=False,
         supports_purge=False,
+        supports_reason=True,
+        supports_silent=True,
         dm_action="jailed",
         discord_action=lambda guild, member, reason, args: None,  # Handled in base class
     ),
@@ -180,6 +184,8 @@ MODERATION_COMMANDS: dict[str, ModerationCommandConfig] = {
         required_permission_level=2,
         supports_duration=False,
         supports_purge=False,
+        supports_reason=True,
+        supports_silent=True,
         dm_action="unjailed",
         discord_action=lambda guild, member, reason, args: None,  # Handled in base class
     ),
@@ -191,6 +197,8 @@ MODERATION_COMMANDS: dict[str, ModerationCommandConfig] = {
         required_permission_level=3,
         supports_duration=False,
         supports_purge=False,
+        supports_reason=True,
+        supports_silent=True,
         requires_member=False,
         dm_action="unbanned",
         discord_action=lambda guild, member, reason, args: guild.unban(member, reason=reason),
@@ -203,6 +211,8 @@ MODERATION_COMMANDS: dict[str, ModerationCommandConfig] = {
         required_permission_level=2,
         supports_duration=False,
         supports_purge=False,
+        supports_reason=True,
+        supports_silent=True,
         dm_action="untimeout",
         discord_action=lambda guild, member, reason, args: member.timeout(None, reason=reason),
     ),
@@ -214,6 +224,8 @@ MODERATION_COMMANDS: dict[str, ModerationCommandConfig] = {
         required_permission_level=2,
         supports_duration=False,
         supports_purge=False,
+        supports_reason=True,
+        supports_silent=True,
         dm_action="snippet banned",
         discord_action=lambda guild, member, reason, args: None,  # Handled in base class
     ),
@@ -225,6 +237,8 @@ MODERATION_COMMANDS: dict[str, ModerationCommandConfig] = {
         required_permission_level=2,
         supports_duration=False,
         supports_purge=False,
+        supports_reason=True,
+        supports_silent=True,
         dm_action="snippet unbanned",
         discord_action=lambda guild, member, reason, args: None,  # Handled in base class
     ),
@@ -236,6 +250,8 @@ MODERATION_COMMANDS: dict[str, ModerationCommandConfig] = {
         required_permission_level=2,
         supports_duration=False,
         supports_purge=False,
+        supports_reason=True,
+        supports_silent=True,
         dm_action="poll banned",
         discord_action=lambda guild, member, reason, args: None,  # Handled in base class
     ),
@@ -247,6 +263,8 @@ MODERATION_COMMANDS: dict[str, ModerationCommandConfig] = {
         required_permission_level=2,
         supports_duration=False,
         supports_purge=False,
+        supports_reason=True,
+        supports_silent=True,
         dm_action="poll unbanned",
         discord_action=lambda guild, member, reason, args: None,  # Handled in base class
     ),

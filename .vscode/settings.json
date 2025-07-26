@@ -11,7 +11,7 @@
       "source.organizeImports.ruff": "explicit"
     }
   },
-  "python.languageServer": "Pylance",
+  "python.languageServer": "None",
   "python.analysis.typeCheckingMode": "strict",
   "python.analysis.autoFormatStrings": true,
   "python.analysis.completeFunctionParens": true,
