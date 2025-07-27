@@ -181,3 +181,4 @@ prisma_binaries/
 .archive/
 
 reports/
+.kiro/settings/mcp.json

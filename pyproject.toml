@@ -60,6 +60,8 @@ ruff = "==0.12.4"
 poetry-types = "0.6.0"
 yamllint = "1.37.1"
 yamlfix = "1.17.0"
+aiofiles = "^24.1.0"
+psutil = "^7.0.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.0.0"

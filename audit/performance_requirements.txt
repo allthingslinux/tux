@@ -1,0 +1,3 @@
+# Additional requirements for performance analysis
+aiofiles>=23.0.0
+psutil>=5.9.0

@@ -1,0 +1,310 @@
+name: Success Metrics Monitoring
+
+on:
+  schedule:
+    # Run daily at 6 AM UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      report_type:
+        description: 'Type of report to generate'
+        required: false
+        default: 'daily'
+        type: choice
+        options:
+          - daily
+          - weekly
+          - monthly
+
+jobs:
+  coll
+    runs-on: ubuntu-latest
+    name: Collect and Store Metrics
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install coverage radon bandit mypy jinja2 requests
+
+      - name: Install additional tools
+        run: |
+          # Install additional analysis tools
+          pip install flake8 black isort
+
+      - name: Run tests with coverage
+        run: |
+          coverage run -m pytest tests/
+          coverage json --pretty-print
+          coverage report
+
+      - name: Collect code quality metrics
+        run: |
+          python scripts/metrics_dashboard.py
+
+      - name: Store metrics in database
+        run: |
+          # The metrics_dashboard.py script already stores metrics
+          echo "Metrics stored successfully"
+
+      - name: Upload metrics database
+        uses: actions/upload-artifact@v3
+        with:
+          name: metrics-database
+          path: metrics.db
+          retention-days: 30
+
+  generate-reports:
+    needs: collect-metrics
+    runs-on: ubuntu-latest
+    name: Generate Progress Reports
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install jinja2 requests
+
+      - name: Download metrics database
+        uses: actions/download-artifact@v3
+        with:
+          name: metrics-database
+
+      - name: Generate weekly report
+        if: github.event.schedule == '0 6 * * 1' || github.event.inputs.report_type == 'weekly'
+        run: |
+          python scripts/progress_reporter.py --type weekly --output-dir reports
+
+      - name: Generate monthly report
+        if: github.event.schedule == '0 6 1 * *' || github.event.inputs.report_type == 'monthly'
+        run: |
+          python scripts/progress_reporter.py --type monthly --output-dir reports
+
+      - name: Generate daily summary
+        if: github.event.inputs.report_type == 'daily' || github.event.schedule == '0 6 * * *'
+        run: |
+          python scripts/generate_daily_summary.py
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: progress-reports
+          path: reports/
+          retention-days: 90
+
+  continuous-improvement:
+    needs: collect-metrics
+    runs-on: ubuntu-latest
+    name: Run Continuous Improvement Pipeline
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install coverage radon bandit mypy requests
+
+      - name: Download metrics database
+        uses: actions/download-artifact@v3
+        with:
+          name: metrics-database
+
+      - name: Run continuous improvement pipeline
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: ${{ github.repository }}
+        run: |
+          python scripts/continuous_improvement_pipeline.py
+
+      - name: Upload improvement report
+        uses: actions/upload-artifact@v3
+        with:
+          name: improvement-report
+          path: improvement_report.json
+          retention-days: 30
+
+  performance-monitoring:
+    needs: collect-metrics
+    runs-on: ubuntu-latest
+    name: Monitor Performance Regressions
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Download metrics database
+        uses: actions/download-artifact@v3
+        with:
+          name: metrics-database
+
+      - name: Run performance benchmarks
+        run: |
+          python scripts/run_performance_benchmarks.py
+
+      - name: Check for performance regressions
+        run: |
+          python scripts/check_performance_regressions.py
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-results
+          path: performance_results.json
+          retention-days: 30
+
+  quality-gates:
+    needs: [collect-metrics, performance-monitoring]
+    runs-on: ubuntu-latest
+    name: Evaluate Quality Gates
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Download metrics database
+        uses: actions/download-artifact@v3
+        with:
+          name: metrics-database
+
+      - name: Download performance results
+        uses: actions/download-artifact@v3
+        with:
+          name: performance-results
+
+      - name: Evaluate quality gates
+        run: |
+          python scripts/evaluate_quality_gates.py
+
+      - name: Post quality gate results
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            if (fs.existsSync('quality_gate_results.json')) {
+              const results = JSON.parse(fs.readFileSync('quality_gate_results.json', 'utf8'));
+
+              let comment = '## Quality Gate Results\n\n';
+
+              if (results.passed) {
+                comment += '✅ All quality gates passed!\n\n';
+              } else {
+                comment += '❌ Some quality gates failed:\n\n';
+
+                for (const failure of results.failures) {
+                  comment += `- **${failure.gate}**: ${failure.message}\n`;
+                }
+              }
+
+              comment += `\n**Overall Status**: ${results.overall_status}\n`;
+              comment += `**Generated**: ${results.timestamp}\n`;
+
+              // Post as issue comment if this is a scheduled run
+              if (context.eventName === 'schedule') {
+                github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: `Quality Gate Alert - ${new Date().toISOString().split('T')[0]}`,
+                  body: comment,
+                  labels: ['quality-gate', 'automated']
+                });
+              }
+            }
+
+  notify-team:
+    needs: [generate-reports, continuous-improvement, quality-gates]
+    runs-on: ubuntu-latest
+    name: Notify Team of Results
+    if: always()
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          python scripts/send_slack_notification.py
+
+      - name: Send email notification
+        if: env.SMTP_SERVER != ''
+        env:
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+        run: |
+          python scripts/send_email_notification.py
+
+  cleanup:
+    needs: [notify-team]
+    runs-on: ubuntu-latest
+    name: Cleanup and Archive
+    if: always()
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download metrics database
+        uses: actions/download-artifact@v3
+        with:
+          name: metrics-database
+
+      - name: Archive old metrics
+        run: |
+          python scripts/archive_old_metrics.py
+
+      - name: Cleanup temporary files
+        run: |
+          rm -f *.tmp
+          rm -f /tmp/mypy-report/*
