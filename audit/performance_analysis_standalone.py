@@ -122,7 +122,7 @@ class PerformanceProfiler:
                     "issue": "High query count",
                     "description": f"Found {total_queries} database queries across codebase",
                     "recommendation": "Consider implementing query caching and optimization",
-                }
+                },
             )
 
         # Check for N+1 query patterns
@@ -133,7 +133,7 @@ class PerformanceProfiler:
                     "issue": "Potential N+1 queries",
                     "description": f"Found {n_plus_one_indicators} potential N+1 query patterns",
                     "recommendation": "Use batch queries or includes to reduce database round trips",
-                }
+                },
             )
 
         self.metrics["database_analysis"] = db_patterns
@@ -202,7 +202,7 @@ class PerformanceProfiler:
                         for stat in top_stats[:5]
                     ],
                     "timestamp": datetime.now(UTC).isoformat(),
-                }
+                },
             )
 
             # Force garbage collection between tests
@@ -231,7 +231,7 @@ class PerformanceProfiler:
                     "id": i,
                     "data": "x" * 1000,  # 1KB of data per item
                     "timestamp": datetime.now(UTC),
-                }
+                },
             )
 
         # Process the data
@@ -293,7 +293,7 @@ class PerformanceProfiler:
                     "is_bottleneck": is_bottleneck,
                     "iterations": len(timings),
                     "timestamp": datetime.now(UTC).isoformat(),
-                }
+                },
             )
 
             if is_bottleneck:
@@ -304,7 +304,7 @@ class PerformanceProfiler:
                         "avg_time_ms": avg_time,
                         "severity": "high" if avg_time > 500 else "medium",
                         "recommendation": self._get_bottleneck_recommendation(cmd_name, avg_time),
-                    }
+                    },
                 )
 
     async def _simulate_simple_command(self):
@@ -383,7 +383,7 @@ class PerformanceProfiler:
                     "max_time_ms": max(timings),
                     "samples": len(timings),
                     "timestamp": datetime.now(UTC).isoformat(),
-                }
+                },
             )
 
     async def _test_text_response(self):
@@ -441,7 +441,7 @@ class PerformanceProfiler:
                     "system_memory_available_mb": system_memory.available / (1024 * 1024),
                     "system_disk_percent": system_disk.percent,
                     "timestamp": datetime.now(UTC).isoformat(),
-                }
+                },
             )
 
             await asyncio.sleep(0.5)  # Sample every 500ms
@@ -492,7 +492,7 @@ class PerformanceProfiler:
                         "size_kb": len(content) / 1024,
                         "functions": content.count("def "),
                         "classes": content.count("class "),
-                    }
+                    },
                 )
             except Exception as e:
                 logger.debug(f"Could not analyze {file_path}: {e}")
@@ -584,7 +584,7 @@ class PerformanceProfiler:
                         "priority": "high",
                         "issue": issue["issue"],
                         "recommendation": issue["recommendation"],
-                    }
+                    },
                 )
 
         # Memory recommendations
@@ -596,7 +596,7 @@ class PerformanceProfiler:
                     "priority": "medium",
                     "issue": f"Total memory growth of {memory_growth:.1f}MB during testing",
                     "recommendation": "Review object lifecycle management and implement proper cleanup",
-                }
+                },
             )
 
         # Command performance recommendations
@@ -608,7 +608,7 @@ class PerformanceProfiler:
                     "priority": "high",
                     "issue": f"{len(bottlenecks)} command bottlenecks identified",
                     "recommendation": "Optimize slow commands with caching, async patterns, and background processing",
-                }
+                },
             )
 
         # Code analysis recommendations
@@ -621,7 +621,7 @@ class PerformanceProfiler:
                     "priority": "medium",
                     "issue": f"{sync_ops} synchronous operations found",
                     "recommendation": "Replace synchronous operations with async alternatives",
-                }
+                },
             )
 
         # System resource recommendations
@@ -635,7 +635,7 @@ class PerformanceProfiler:
                         "priority": "medium",
                         "issue": f"High average CPU usage: {avg_cpu:.1f}%",
                         "recommendation": "Profile CPU-intensive operations and consider optimization",
-                    }
+                    },
                 )
 
         return recommendations

@@ -81,7 +81,10 @@ class MetricsDashboard:
         # Code duplication
         try:
             result = subprocess.run(
-                ["python", "scripts/detect_duplication.py"], capture_output=True, text=True, check=True
+                ["python", "scripts/detect_duplication.py"],
+                capture_output=True,
+                text=True,
+                check=True,
             )
             duplication_data = json.loads(result.stdout)
             metrics["duplication_percentage"] = duplication_data.get("duplication_rate", 0.0)
@@ -91,7 +94,10 @@ class MetricsDashboard:
         # Type coverage
         try:
             result = subprocess.run(
-                ["mypy", "tux", "--json-report", "/tmp/mypy-report"], check=False, capture_output=True, text=True
+                ["mypy", "tux", "--json-report", "/tmp/mypy-report"],
+                check=False,
+                capture_output=True,
+                text=True,
             )
             if os.path.exists("/tmp/mypy-report/index.json"):
                 with open("/tmp/mypy-report/index.json") as f:
@@ -269,7 +275,7 @@ class MetricsDashboard:
                         "status": row[3],
                         "trend": row[4],
                         "timestamp": row[5],
-                    }
+                    },
                 )
 
             # Get historical data for trends

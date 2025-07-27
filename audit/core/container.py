@@ -338,7 +338,7 @@ class ServiceContainer:
                         # Required parameter without default value
                         logger.warning(
                             f"Cannot resolve required dependency {param_name}: {param_type} "
-                            f"for {implementation_type.__name__}"
+                            f"for {implementation_type.__name__}",
                         )
 
             return implementation_type(**kwargs)

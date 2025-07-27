@@ -109,7 +109,7 @@ class PerformanceProfiler:
                         "success": True,
                         "result_count": result.get("count", 0) if isinstance(result, dict) else 1,
                         "timestamp": datetime.now(UTC).isoformat(),
-                    }
+                    },
                 )
 
             except Exception as e:
@@ -121,14 +121,14 @@ class PerformanceProfiler:
                         "success": False,
                         "error": str(e),
                         "timestamp": datetime.now(UTC).isoformat(),
-                    }
+                    },
                 )
 
     async def _test_guild_lookup(self) -> dict[str, Any]:
         """Test guild lookup performance."""
         # Test finding a guild by ID
         guild = await db.client.guild.find_first(
-            where={"guild_id": 123456789}  # Test ID
+            where={"guild_id": 123456789},  # Test ID
         )
         return {"count": 1 if guild else 0}
 
@@ -148,7 +148,7 @@ class PerformanceProfiler:
                 "snippet_created_at": datetime.now(UTC),
                 "snippet_user_id": 123456789,
                 "guild_id": 123456789,
-            }
+            },
         )
 
         # Clean up test snippet
@@ -228,7 +228,7 @@ class PerformanceProfiler:
                         for stat in top_stats[:5]
                     ],
                     "timestamp": datetime.now(UTC).isoformat(),
-                }
+                },
             )
 
             # Force garbage collection between tests
@@ -248,7 +248,9 @@ class PerformanceProfiler:
         embeds = []
         for i in range(100):
             embed = discord.Embed(
-                title=f"Test Embed {i}", description="This is a test embed for memory analysis", color=0x00FF00
+                title=f"Test Embed {i}",
+                description="This is a test embed for memory analysis",
+                color=0x00FF00,
             )
             embed.add_field(name="Field 1", value="Value 1", inline=True)
             embed.add_field(name="Field 2", value="Value 2", inline=True)
@@ -266,7 +268,7 @@ class PerformanceProfiler:
                     "id": i,
                     "data": "x" * 1000,  # 1KB of data per item
                     "timestamp": datetime.now(UTC),
-                }
+                },
             )
 
         # Process the data
@@ -313,7 +315,7 @@ class PerformanceProfiler:
                     "is_bottleneck": is_bottleneck,
                     "iterations": len(timings),
                     "timestamp": datetime.now(UTC).isoformat(),
-                }
+                },
             )
 
             if is_bottleneck:
@@ -324,7 +326,7 @@ class PerformanceProfiler:
                         "avg_time_ms": avg_time,
                         "severity": "high" if avg_time > 500 else "medium",
                         "recommendation": self._get_bottleneck_recommendation(cmd_name, avg_time),
-                    }
+                    },
                 )
 
     async def _simulate_simple_command(self):
@@ -391,13 +393,15 @@ class PerformanceProfiler:
                     "max_time_ms": max(timings),
                     "samples": len(timings),
                     "timestamp": datetime.now(UTC).isoformat(),
-                }
+                },
             )
 
     async def _test_embed_response(self):
         """Test embed creation time."""
         embed = discord.Embed(
-            title="Performance Test", description="Testing embed creation performance", color=0x00FF00
+            title="Performance Test",
+            description="Testing embed creation performance",
+            color=0x00FF00,
         )
         embed.add_field(name="Test", value="Value", inline=True)
         return embed
@@ -444,7 +448,7 @@ class PerformanceProfiler:
                     "system_memory_percent": system_memory.percent,
                     "system_memory_available_mb": system_memory.available / (1024 * 1024),
                     "timestamp": datetime.now(UTC).isoformat(),
-                }
+                },
             )
 
             await asyncio.sleep(0.5)  # Sample every 500ms
@@ -544,7 +548,7 @@ class PerformanceProfiler:
                     "priority": "high",
                     "issue": f"{len(slow_queries)} database queries taking >100ms",
                     "recommendation": "Implement query optimization, indexing, and connection pooling",
-                }
+                },
             )
 
         # Memory recommendations
@@ -556,7 +560,7 @@ class PerformanceProfiler:
                     "priority": "medium",
                     "issue": f"Total memory growth of {memory_growth:.1f}MB during testing",
                     "recommendation": "Review object lifecycle management and implement proper cleanup",
-                }
+                },
             )
 
         # Command performance recommendations
@@ -568,7 +572,7 @@ class PerformanceProfiler:
                     "priority": "high",
                     "issue": f"{len(bottlenecks)} command bottlenecks identified",
                     "recommendation": "Optimize slow commands with caching, async patterns, and background processing",
-                }
+                },
             )
 
         # System resource recommendations
@@ -582,7 +586,7 @@ class PerformanceProfiler:
                         "priority": "medium",
                         "issue": f"High average CPU usage: {avg_cpu:.1f}%",
                         "recommendation": "Profile CPU-intensive operations and consider optimization",
-                    }
+                    },
                 )
 
         return recommendations

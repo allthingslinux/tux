@@ -1,138 +1,128 @@
 # Success Metrics and Monitoring Configuration
-
 # Metric Targets and Thresholds
 metrics:
   code_quality:
     test_coverage:
       target: 90.0
-      unit: "%"
+      unit: '%'
       excellent_threshold: 90.0
       good_threshold: 80.0
-      trend_calculation: "higher_is_better"
-
+      trend_calculation: higher_is_better
     type_coverage:
       target: 95.0
-      unit: "%"
+      unit: '%'
       excellent_threshold: 95.0
       good_threshold: 85.0
-      trend_calculation: "higher_is_better"
-
+      trend_calculation: higher_is_better
     avg_complexity:
       target: 10.0
-      unit: ""
+      unit: ''
       excellent_threshold: 8.0
       good_threshold: 12.0
-      trend_calculation: "lower_is_better"
-
+      trend_calculation: lower_is_better
     duplication_percentage:
       target: 5.0
-      unit: "%"
+      unit: '%'
       excellent_threshold: 3.0
       good_threshold: 7.0
-      trend_calculation: "lower_is_better"
-
+      trend_calculation: lower_is_better
   performance:
     avg_response_time:
       target: 200.0
-      unit: "ms"
+      unit: ms
       excellent_threshold: 150.0
       good_threshold: 250.0
-      trend_calculation: "lower_is_better"
-
+      trend_calculation: lower_is_better
     p95_response_time:
       target: 500.0
-      unit: "ms"
+      unit: ms
       excellent_threshold: 400.0
       good_threshold: 600.0
-      trend_calculation: "lower_is_better"
-
+      trend_calculation: lower_is_better
     error_rate:
       target: 1.0
-      unit: "%"
+      unit: '%'
       excellent_threshold: 0.5
       good_threshold: 2.0
-      trend_calculation: "lower_is_better"
-
+      trend_calculation: lower_is_better
     memory_usage:
       target: 512.0
-      unit: "MB"
+      unit: MB
       excellent_threshold: 400.0
       good_threshold: 600.0
-      trend_calculation: "lower_is_better"
-
+      trend_calculation: lower_is_better
   testing:
     test_count:
       target: 500
-      unit: ""
+      unit: ''
       excellent_threshold: 500
       good_threshold: 300
-      trend_calculation: "higher_is_better"
-
+      trend_calculation: higher_is_better
     flaky_test_rate:
       target: 1.0
-      unit: "%"
+      unit: '%'
       excellent_threshold: 0.5
       good_threshold: 2.0
-      trend_calculation: "lower_is_better"
-
+      trend_calculation: lower_is_better
   security:
     security_vulnerabilities:
       target: 0
-      unit: ""
+      unit: ''
       excellent_threshold: 0
       good_threshold: 0
-      trend_calculation: "lower_is_better"
-
+      trend_calculation: lower_is_better
     input_validation_coverage:
       target: 100.0
-      unit: "%"
+      unit: '%'
       excellent_threshold: 100.0
       good_threshold: 95.0
-      trend_calculation: "higher_is_better"
-
+      trend_calculation: higher_is_better
 # Monitoring Configuration
 monitoring:
-  collection_frequency: "daily"
+  collection_frequency: daily
   retention_period_days: 90
-
   alerts:
-    - name: "high_error_rate"
-      condition: "error_rate > 2.0"
-      severity: "high"
-      notification_channels: ["slack", "email"]
-
-    - name: "low_test_coverage"
-      condition: "test_coverage < 80.0"
-      severity: "medium"
-      notification_channels: ["slack"]
-
-    - name: "performance_regression"
-      condition: "p95_response_time > 600.0"
-      severity: "high"
-      notification_channels: ["slack", "email"]
-
-    - name: "high_complexity"
-      condition: "avg_complexity > 15.0"
-      severity: "medium"
-      notification_channels: ["slack"]
-
+    - name: high_error_rate
+      condition: error_rate > 2.0
+      severity: high
+      notification_channels:
+        - slack
+        - email
+    - name: low_test_coverage
+      condition: test_coverage < 80.0
+      severity: medium
+      notification_channels:
+        - slack
+    - name: performance_regression
+      condition: p95_response_time > 600.0
+      severity: high
+      notification_channels:
+        - slack
+        - email
+    - name: high_complexity
+      condition: avg_complexity > 15.0
+      severity: medium
+      notification_channels:
+        - slack
 # Reporting Configuration
 reporting:
   weekly_reports:
     enabled: true
-    schedule: "monday_morning"
-    recipients: ["dev-team@example.com"]
+    schedule: monday_morning
+    recipients:
+      - dev-team@example.com
     include_sections:
       - executive_summary
       - metrics_dashboard
       - achievements
       - concerns
       - recommendations
-
   monthly_reports:
     enabled: true
-    schedule: "first_monday"
-    recipients: ["dev-team@example.com", "management@example.com"]
+    schedule: first_monday
+    recipients:
+      - dev-team@example.com
+      - management@example.com
     include_sections:
       - executive_summary
       - monthly_metrics_summary
@@ -140,115 +130,105 @@ reporting:
       - challenges_resolutions
       - next_month_focus
       - resource_utilization
-
 # Continuous Improvement Configuration
 continuous_improvement:
-  analysis_frequency: "weekly"
-
+  analysis_frequency: weekly
   suggestion_categories:
     - code_quality
     - performance
     - testing
     - security
     - documentation
-
   priority_thresholds:
     high_priority:
-      - "security vulnerabilities > 0"
-      - "test_coverage < 70"
-      - "error_rate > 3.0"
-      - "p95_response_time > 800"
-
+      - security vulnerabilities > 0
+      - test_coverage < 70
+      - error_rate > 3.0
+      - p95_response_time > 800
     medium_priority:
-      - "duplication_percentage > 10"
-      - "avg_complexity > 15"
-      - "flaky_test_rate > 3.0"
-
+      - duplication_percentage > 10
+      - avg_complexity > 15
+      - flaky_test_rate > 3.0
   github_integration:
     enabled: true
     create_issues_for_high_priority: true
     max_issues_per_run: 5
     labels:
-      - "improvement"
-      - "automated"
-
+      - improvement
+      - automated
 # Dashboard Configuration
 dashboard:
   refresh_interval_minutes: 15
-
   panels:
-    - name: "Code Quality Overview"
-      metrics: ["test_coverage", "type_coverage", "avg_complexity", "duplication_percentage"]
-      visualization: "gauge"
-
-    - name: "Performance Metrics"
-      metrics: ["avg_response_time", "p95_response_time", "error_rate"]
-      visualization: "time_series"
-
-    - name: "Testing Health"
-      metrics: ["test_count", "flaky_test_rate"]
-      visualization: "stat"
-
-    - name: "Trend Analysis"
-      metrics: ["test_coverage", "error_rate", "avg_response_time"]
-      visualization: "trend_lines"
-      time_range: "30d"
-
+    - name: Code Quality Overview
+      metrics:
+        - test_coverage
+        - type_coverage
+        - avg_complexity
+        - duplication_percentage
+      visualization: gauge
+    - name: Performance Metrics
+      metrics:
+        - avg_response_time
+        - p95_response_time
+        - error_rate
+      visualization: time_series
+    - name: Testing Health
+      metrics:
+        - test_count
+        - flaky_test_rate
+      visualization: stat
+    - name: Trend Analysis
+      metrics:
+        - test_coverage
+        - error_rate
+        - avg_response_time
+      visualization: trend_lines
+      time_range: 30d
 # Notification Configuration
 notifications:
   slack:
-    webhook_url: "${SLACK_WEBHOOK_URL}"
-    channel: "#dev-alerts"
-    username: "Metrics Bot"
-
+    webhook_url: ${SLACK_WEBHOOK_URL}
+    channel: '#dev-alerts'
+    username: Metrics Bot
   email:
-    smtp_server: "${SMTP_SERVER}"
+    smtp_server: ${SMTP_SERVER}
     smtp_port: 587
-    username: "${SMTP_USERNAME}"
-    password: "${SMTP_PASSWORD}"
-    from_address: "metrics@example.com"
-
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    from_address: metrics@example.com
 # Data Storage Configuration
 storage:
-  database_path: "metrics.db"
-  backup_frequency: "daily"
+  database_path: metrics.db
+  backup_frequency: daily
   backup_retention_days: 30
-
   export_formats:
     - json
     - csv
     - prometheus
-
 # Quality Gates Configuration
 quality_gates:
   deployment:
     required_metrics:
-      - name: "test_coverage"
+      - name: test_coverage
         minimum_value: 85.0
-
-      - name: "error_rate"
+      - name: error_rate
         maximum_value: 2.0
-
-      - name: "security_vulnerabilities"
+      - name: security_vulnerabilities
         maximum_value: 0
-
   pull_request:
     required_checks:
-      - "no_new_security_vulnerabilities"
-      - "test_coverage_maintained"
-      - "complexity_not_increased"
-
+      - no_new_security_vulnerabilities
+      - test_coverage_maintained
+      - complexity_not_increased
 # Performance Baseline Configuration
 performance_baselines:
-  update_frequency: "weekly"
+  update_frequency: weekly
   sample_size: 100
-
   operations:
-    - name: "command_processing"
+    - name: command_processing
       target_p95: 300.0
-
-    - name: "database_query"
+    - name: database_query
       target_p95: 100.0
-
-    - name: "api_response"
+    - name: api_response
       target_p95: 500.0
