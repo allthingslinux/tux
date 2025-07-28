@@ -1,11 +1,14 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, UTC
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Any, Callable
 
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field as _SMField, Relationship, SQLModel
 from sqlalchemy import Column, JSON
+
+# Explicitly annotate Field callable to satisfy Pyright strict mode
+Field: Callable[..., Any] = _SMField  # type: ignore[assignment]
 
 
 class CaseType(str, Enum):
@@ -34,7 +37,7 @@ class CaseType(str, Enum):
 
 class Guild(SQLModel, table=True):
     guild_id: int = Field(primary_key=True, sa_column_kwargs={"index": True})
-    guild_joined_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(datetime.UTC))
+    guild_joined_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC))
     case_count: int = Field(default=0, nullable=False)
 
     # --- relationships ---
@@ -84,7 +87,7 @@ class AFKModel(SQLModel, table=True):
     member_id: int = Field(primary_key=True)
     nickname: str
     reason: str
-    since: datetime = Field(default_factory=lambda: datetime.now(datetime.UTC))
+    since: datetime = Field(default_factory=lambda: datetime.now(UTC))
     until: datetime | None = None
     guild_id: int = Field(foreign_key="guild.guild_id")
     enforced: bool = Field(default=False)
@@ -100,7 +103,7 @@ class Levels(SQLModel, table=True):
     xp: float = Field(default=0)
     level: int = Field(default=0)
     blacklisted: bool = Field(default=False)
-    last_message: datetime = Field(default_factory=lambda: datetime.now(datetime.UTC))
+    last_message: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     guild: Guild = Relationship(back_populates="levels")
 
@@ -114,7 +117,7 @@ class Note(SQLModel, table=True):
     note_id: int | None = Field(default=None, primary_key=True)
 
     note_content: str
-    note_created_at: datetime = Field(default_factory=lambda: datetime.now(datetime.UTC))
+    note_created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     note_moderator_id: int
     note_user_id: int
     note_number: int | None = Field(default=None)
@@ -134,7 +137,7 @@ class Case(SQLModel, table=True):
     case_user_id: int
     case_user_roles: List[int] = Field(default_factory=list, sa_column=Column(JSON))
     case_number: int | None = None
-    case_created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(datetime.UTC))
+    case_created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC))
     case_expires_at: datetime | None = None
     case_tempban_expired: bool | None = Field(default=False)
 
@@ -147,7 +150,7 @@ class Reminder(SQLModel, table=True):
     reminder_id: int | None = Field(default=None, primary_key=True)
 
     reminder_content: str
-    reminder_created_at: datetime = Field(default_factory=lambda: datetime.now(datetime.UTC))
+    reminder_created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     reminder_expires_at: datetime
     reminder_channel_id: int
     reminder_user_id: int
@@ -164,7 +167,7 @@ class Snippet(SQLModel, table=True):
     snippet_name: str
     snippet_content: str | None = None
     snippet_user_id: int
-    snippet_created_at: datetime = Field(default_factory=lambda: datetime.now(datetime.UTC))
+    snippet_created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     guild_id: int = Field(foreign_key="guild.guild_id")
     uses: int = Field(default=0)
     locked: bool = Field(default=False)
@@ -187,7 +190,7 @@ class StarboardMessage(SQLModel, table=True):
     message_id: int = Field(primary_key=True)
 
     message_content: str
-    message_created_at: datetime = Field(default_factory=lambda: datetime.now(datetime.UTC))
+    message_created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     message_expires_at: datetime
     message_channel_id: int
     message_user_id: int

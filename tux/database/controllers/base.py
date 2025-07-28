@@ -48,8 +48,8 @@ class BaseController(Generic[ModelT]):
             with sentry_sdk.start_span(op="db.query", description=span_desc) as span:
                 span.set_tag("db.table", self.model_name)
                 try:
-                    async with db.session() as session:
-                        result = await op(session)
+                    async with db.session() as _session:
+                        result = await op(_session)
                     span.set_status("ok")
                     return result  # noqa: TRY300 – maintain behaviour
                 except Exception as exc:
@@ -58,8 +58,8 @@ class BaseController(Generic[ModelT]):
                     logger.error(f"{span_desc}: {exc}")
                     raise
         else:
-            async with db.session() as session:
-                return await op(session)
+            async with db.session() as _session:
+                return await op(_session)
 
     # ------------------------------------------------------------------
     # CRUD helpers

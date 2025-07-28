@@ -90,8 +90,8 @@ class SnippetController(BaseController[Snippet]):
             result = await session.execute(stmt)
             snippet_obj = result.scalar_one_or_none()
             if include_guild and snippet_obj is not None:
-                # Access guild relationship to ensure it is loaded
-                _ = snippet_obj.guild
+                # Access relationship to ensure it is loaded; ignore typing for dynamic attribute
+                getattr(snippet_obj, "guild", None)  # type: ignore[attr-defined]
             return snippet_obj
 
         return await self._execute_query(_op, "get_snippet_by_name")
@@ -130,7 +130,7 @@ class SnippetController(BaseController[Snippet]):
             result = await session.execute(stmt)
             snippet_obj = result.scalar_one_or_none()
             if include_guild and snippet_obj is not None:
-                _ = snippet_obj.guild
+                getattr(snippet_obj, "guild", None)  # type: ignore[attr-defined]
             return snippet_obj
 
         return await self._execute_query(_op, "get_snippet_by_name_and_guild_id")
