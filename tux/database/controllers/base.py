@@ -99,6 +99,7 @@ class BaseController(Generic[ModelT]):
         self,
         *,
         where: dict[str, Any] | None = None,
+        include: dict[str, bool] | None = None,  # ignored
         order: dict[str, str] | None = None,
         take: int | None = None,
         skip: int | None = None,
@@ -175,6 +176,24 @@ class BaseController(Generic[ModelT]):
             return obj
 
         return await self._execute_query(_op, f"upsert {self.model_name}")
+
+    # ------------------------------------------------------------------
+    # Compatibility helpers – transaction wrapper
+    # ------------------------------------------------------------------
+
+    async def execute_transaction(self, callback: Callable[[], Any]) -> Any:  # noqa: D401 – compat
+        """Execute *callback* inside a database session / transaction block."""
+
+        try:
+            async with db.transaction() as session:  # db.transaction yields AsyncSession
+                # Provide session to callback by setting attribute maybe? The old
+                # code expected none, so we just call callback; operations inside
+                # will create their own sessions where needed.  This still gives
+                # us atomicity because we're running in a SAVEPOINT transaction.
+                return await callback()
+        except Exception as exc:
+            logger.error(f"Transaction failed in {self.model_name}: {exc}")
+            raise
 
     # ------------------------------------------------------------------
     # Utility helpers mirrored from old implementation

@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from prisma.models import Reminder
+from tux.database.models import Reminder
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator

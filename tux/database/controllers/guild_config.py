@@ -1,41 +1,41 @@
-from typing import Any
+from typing import Any, Dict
 
 from loguru import logger
 
-from prisma.actions import GuildActions, GuildConfigActions
-from prisma.models import Guild, GuildConfig
-from prisma.types import (
-    GuildConfigScalarFieldKeys,
-    GuildConfigUpdateInput,
-)
-from tux.database.client import db
+from tux.database.models import Guild, GuildConfig
+from tux.database.controllers.base import BaseController
+
+# Remove Prisma generated typing aliases – use plain str/Any
+GuildConfigScalarFieldKeys = str  # type: ignore
+GuildConfigUpdateInput = Dict[str, Any]  # type: ignore
 
 
-class GuildConfigController:
+class GuildConfigController(BaseController[GuildConfig]):
+    """Controller that manages per-guild configuration settings."""
+
     def __init__(self):
-        """Initialize the controller with database tables."""
-        self.table: GuildConfigActions[GuildConfig] = db.client.guildconfig
-        self.guild_table: GuildActions[Guild] = db.client.guild
+        super().__init__(GuildConfig)
+        self._guild_repo: BaseController[Guild] = BaseController(Guild)
 
     async def ensure_guild_exists(self, guild_id: int) -> Any:
         """Ensure the guild exists in the database."""
-        guild: Any = await self.guild_table.find_first(where={"guild_id": guild_id})
+        guild: Any = await self._guild_repo.find_one(where={"guild_id": guild_id})
         if guild is None:
-            return await self.guild_table.create(data={"guild_id": guild_id})
+            return await self._guild_repo.create(data={"guild_id": guild_id})
         return guild
 
     async def insert_guild_config(self, guild_id: int) -> Any:
         """Insert a new guild config into the database."""
         await self.ensure_guild_exists(guild_id)
-        return await self.table.create(data={"guild_id": guild_id})
+        return await self.create(data={"guild_id": guild_id})
 
     async def get_guild_config(self, guild_id: int) -> Any:
         """Get a guild config from the database."""
-        return await self.table.find_first(where={"guild_id": guild_id})
+        return await self.find_one(where={"guild_id": guild_id})
 
     async def get_guild_prefix(self, guild_id: int) -> str | None:
         """Get a guild prefix from the database."""
-        config: Any = await self.table.find_first(where={"guild_id": guild_id})
+        config: Any = await self.find_one(where={"guild_id": guild_id})
         return None if config is None else config.prefix
 
     async def get_log_channel(self, guild_id: int, log_type: str) -> int | None:
@@ -99,7 +99,7 @@ class GuildConfigController:
         guild_id: int,
         field: GuildConfigScalarFieldKeys,
     ) -> Any:
-        config: Any = await self.table.find_first(where={"guild_id": guild_id})
+        config: Any = await self.find_one(where={"guild_id": guild_id})
 
         if config is None:
             logger.warning(f"No guild config found for guild_id: {guild_id}")
@@ -157,7 +157,7 @@ class GuildConfigController:
     ) -> Any:
         await self.ensure_guild_exists(guild_id)
 
-        return await self.table.upsert(
+        return await self.upsert(
             where={"guild_id": guild_id},
             data={
                 "create": {"guild_id": guild_id, "prefix": prefix},
@@ -184,7 +184,7 @@ class GuildConfigController:
             "7": "perm_level_7_role_id",
         }
 
-        return await self.table.upsert(
+        return await self.upsert(
             where={"guild_id": guild_id},
             data={
                 "create": {"guild_id": guild_id, perm_level_roles[level]: role_id},  # type: ignore
@@ -199,7 +199,7 @@ class GuildConfigController:
     ) -> Any:
         await self.ensure_guild_exists(guild_id)
 
-        return await self.table.upsert(
+        return await self.upsert(
             where={"guild_id": guild_id},
             data={
                 "create": {
@@ -217,7 +217,7 @@ class GuildConfigController:
     ) -> Any:
         await self.ensure_guild_exists(guild_id)
 
-        return await self.table.upsert(
+        return await self.upsert(
             where={"guild_id": guild_id},
             data={
                 "create": {
@@ -235,7 +235,7 @@ class GuildConfigController:
     ) -> Any:
         await self.ensure_guild_exists(guild_id)
 
-        return await self.table.upsert(
+        return await self.upsert(
             where={"guild_id": guild_id},
             data={
                 "create": {
@@ -253,7 +253,7 @@ class GuildConfigController:
     ) -> Any:
         await self.ensure_guild_exists(guild_id)
 
-        return await self.table.upsert(
+        return await self.upsert(
             where={"guild_id": guild_id},
             data={
                 "create": {
@@ -271,7 +271,7 @@ class GuildConfigController:
     ) -> Any:
         await self.ensure_guild_exists(guild_id)
 
-        return await self.table.upsert(
+        return await self.upsert(
             where={"guild_id": guild_id},
             data={
                 "create": {
@@ -289,7 +289,7 @@ class GuildConfigController:
     ) -> Any:
         await self.ensure_guild_exists(guild_id)
 
-        return await self.table.upsert(
+        return await self.upsert(
             where={"guild_id": guild_id},
             data={
                 "create": {
@@ -307,7 +307,7 @@ class GuildConfigController:
     ) -> Any:
         await self.ensure_guild_exists(guild_id)
 
-        return await self.table.upsert(
+        return await self.upsert(
             where={"guild_id": guild_id},
             data={
                 "create": {"guild_id": guild_id, "jail_channel_id": jail_channel_id},
@@ -322,7 +322,7 @@ class GuildConfigController:
     ) -> Any:
         await self.ensure_guild_exists(guild_id)
 
-        return await self.table.upsert(
+        return await self.upsert(
             where={"guild_id": guild_id},
             data={
                 "create": {
@@ -340,7 +340,7 @@ class GuildConfigController:
     ) -> Any:
         await self.ensure_guild_exists(guild_id)
 
-        return await self.table.upsert(
+        return await self.upsert(
             where={"guild_id": guild_id},
             data={
                 "create": {
@@ -358,7 +358,7 @@ class GuildConfigController:
     ) -> Any:
         await self.ensure_guild_exists(guild_id)
 
-        return await self.table.upsert(
+        return await self.upsert(
             where={"guild_id": guild_id},
             data={
                 "create": {
@@ -376,7 +376,7 @@ class GuildConfigController:
     ) -> Any:
         await self.ensure_guild_exists(guild_id)
 
-        return await self.table.upsert(
+        return await self.upsert(
             where={"guild_id": guild_id},
             data={
                 "create": {
@@ -394,7 +394,7 @@ class GuildConfigController:
     ) -> Any:
         await self.ensure_guild_exists(guild_id)
 
-        return await self.table.upsert(
+        return await self.upsert(
             where={"guild_id": guild_id},
             data={
                 "create": {"guild_id": guild_id, "jail_role_id": jail_role_id},
@@ -409,7 +409,7 @@ class GuildConfigController:
     ) -> Any:
         await self.ensure_guild_exists(guild_id)
 
-        return await self.table.upsert(
+        return await self.upsert(
             where={"guild_id": guild_id},
             data={
                 "create": {
@@ -427,10 +427,10 @@ class GuildConfigController:
     ) -> Any:
         await self.ensure_guild_exists(guild_id)
 
-        return await self.table.update(where={"guild_id": guild_id}, data=data)
+        return await self.update(where={"guild_id": guild_id}, data=data)
 
     async def delete_guild_config(self, guild_id: int) -> None:
-        await self.table.delete(where={"guild_id": guild_id})
+        await self.delete(where={"guild_id": guild_id})
 
     async def delete_guild_prefix(self, guild_id: int) -> None:
-        await self.table.update(where={"guild_id": guild_id}, data={"prefix": None})
+        await self.update(where={"guild_id": guild_id}, data={"prefix": None})

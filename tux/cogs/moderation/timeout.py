@@ -3,7 +3,7 @@ import datetime
 import discord
 from discord.ext import commands
 
-from prisma.enums import CaseType
+from tux.database.models import CaseType
 from tux.bot import Tux
 from tux.utils import checks
 from tux.utils.flags import TimeoutFlags

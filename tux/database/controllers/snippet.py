@@ -1,8 +1,6 @@
 import datetime
 
-from prisma.actions import GuildActions
-from prisma.models import Guild, Snippet
-from tux.database.client import db
+from tux.database.models import Guild, Snippet
 from tux.database.controllers.base import BaseController
 
 
@@ -15,8 +13,7 @@ class SnippetController(BaseController[Snippet]):
 
     def __init__(self) -> None:
         """Initialize the SnippetController with the snippet table."""
-        super().__init__("snippet")
-        self.guild_table: GuildActions[Guild] = db.client.guild
+        super().__init__(Snippet)
 
     async def get_all_snippets(self) -> list[Snippet]:
         """Get all snippets.
@@ -82,11 +79,21 @@ class SnippetController(BaseController[Snippet]):
         Snippet | None
             The snippet if found, None otherwise
         """
-        include = {"guild": True} if include_guild else None
-        return await self.find_one(
-            where={"snippet_name": {"contains": snippet_name, "mode": "insensitive"}},
-            include=include,
-        )
+        from sqlalchemy import select
+        from sqlalchemy import func
+
+        async def _op(session):
+            stmt = select(Snippet)
+            pattern = f"%{snippet_name}%"
+            stmt = stmt.where(func.lower(Snippet.snippet_name).like(pattern.lower()))
+            result = await session.execute(stmt)
+            snippet_obj = result.scalar_one_or_none()
+            if include_guild and snippet_obj is not None:
+                # Access guild relationship to ensure it is loaded
+                _ = snippet_obj.guild
+            return snippet_obj
+
+        return await self._execute_query(_op, "get_snippet_by_name")
 
     async def get_snippet_by_name_and_guild_id(
         self,
@@ -110,11 +117,21 @@ class SnippetController(BaseController[Snippet]):
         Snippet | None
             The snippet if found, None otherwise
         """
-        include = {"guild": True} if include_guild else None
-        return await self.find_one(
-            where={"snippet_name": {"equals": snippet_name, "mode": "insensitive"}, "guild_id": guild_id},
-            include=include,
-        )
+        from sqlalchemy import select
+        from sqlalchemy import func
+
+        async def _op(session):
+            stmt = select(Snippet).where(
+                func.lower(Snippet.snippet_name) == snippet_name.lower(),
+                Snippet.guild_id == guild_id,
+            )
+            result = await session.execute(stmt)
+            snippet_obj = result.scalar_one_or_none()
+            if include_guild and snippet_obj is not None:
+                _ = snippet_obj.guild
+            return snippet_obj
+
+        return await self._execute_query(_op, "get_snippet_by_name_and_guild_id")
 
     async def create_snippet(
         self,
