@@ -32,10 +32,15 @@ class DatabaseClient:
     # Public helpers
     # ---------------------------------------------------------------------
 
-    @property
-    def is_connected(self) -> bool:
-        """Return ``True`` if :pyattr:`_engine` is initialised."""
+    def is_connected(self) -> bool:  # noqa: D401
+        """Return True if the engine is initialised."""
         return self._engine is not None
+
+    # Backwards-compatibility: older code treated these as *methods*.
+
+    def is_registered(self) -> bool:  # noqa: D401 – compat shim
+        return self.is_connected
+
 
     async def connect(self, database_url: str | None = None, *, echo: bool = False) -> None:
         """Initialise the async engine and create all tables.

@@ -134,7 +134,12 @@ class BaseController(Generic[ModelT]):
 
         return await self._execute_query(_op, f"count {self.model_name}")
 
-    async def create(self, *, data: dict[str, Any]) -> ModelT:
+    async def create(
+        self,
+        *,
+        data: dict[str, Any],
+        include: dict[str, bool] | None = None,  # ignored for compat
+    ) -> ModelT:
         async def _op(session: AsyncSession):
             obj = self.model(**data)  # type: ignore[arg-type]
             session.add(obj)
@@ -143,7 +148,13 @@ class BaseController(Generic[ModelT]):
 
         return await self._execute_query(_op, f"create {self.model_name}")
 
-    async def update(self, *, where: dict[str, Any], data: dict[str, Any]) -> ModelT | None:
+    async def update(
+        self,
+        *,
+        where: dict[str, Any],
+        data: dict[str, Any],
+        include: dict[str, bool] | None = None,
+    ) -> ModelT | None:
         async def _op(session: AsyncSession):
             stmt = sa_update(self.model).filter_by(**where).values(**data).returning(self.model)
             result = await session.execute(stmt)
@@ -151,7 +162,12 @@ class BaseController(Generic[ModelT]):
 
         return await self._execute_query(_op, f"update {self.model_name}")
 
-    async def delete(self, *, where: dict[str, Any]) -> ModelT | None:
+    async def delete(
+        self,
+        *,
+        where: dict[str, Any],
+        include: dict[str, bool] | None = None,
+    ) -> ModelT | None:
         async def _op(session: AsyncSession):
             stmt = sa_delete(self.model).filter_by(**where).returning(self.model)
             result = await session.execute(stmt)
@@ -159,8 +175,20 @@ class BaseController(Generic[ModelT]):
 
         return await self._execute_query(_op, f"delete {self.model_name}")
 
-    async def upsert(self, *, where: dict[str, Any], create: dict[str, Any], update: dict[str, Any]) -> ModelT:
-        """Very naive *upsert* helper using a transaction (select → insert/update)."""
+    async def upsert(
+        self,
+        *,
+        where: dict[str, Any],
+        create: dict[str, Any] | None = None,
+        update: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        include: dict[str, bool] | None = None,
+    ) -> ModelT:
+        # Support old signature with `data` containing create/update dicts
+        if data is not None and (create is None or update is None):
+            create = data.get("create", {})  # type: ignore[arg-type]
+            update = data.get("update", {})  # type: ignore[arg-type]
+        assert create is not None and update is not None, "create/update required"
 
         async def _op(session: AsyncSession):
             stmt = select(self.model).filter_by(**where).with_for_update()
@@ -176,6 +204,14 @@ class BaseController(Generic[ModelT]):
             return obj
 
         return await self._execute_query(_op, f"upsert {self.model_name}")
+
+    async def update_many(self, *, where: dict[str, Any], data: dict[str, Any]) -> int:  # noqa: D401
+        res = await self.update(where=where, data=data)
+        return 1 if res else 0
+
+    async def delete_many(self, *, where: dict[str, Any]) -> int:
+        res = await self.delete(where=where)
+        return 1 if res else 0
 
     # ------------------------------------------------------------------
     # Compatibility helpers – transaction wrapper
