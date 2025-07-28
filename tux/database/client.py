@@ -48,7 +48,7 @@ class DatabaseClient:
         The *first* call performs initialisation – every subsequent call is a
         no-op (but will log a warning).
         """
-        if self.is_connected:
+        if self.is_connected():
             logger.warning("Database engine already connected – reusing existing engine")
             return
 
@@ -74,7 +74,7 @@ class DatabaseClient:
 
     async def disconnect(self) -> None:
         """Dispose the engine and tear-down the connection pool."""
-        if not self.is_connected:
+        if not self.is_connected():
             logger.warning("Database engine not connected – nothing to disconnect")
             return
 
@@ -91,7 +91,7 @@ class DatabaseClient:
     @asynccontextmanager
     async def session(self) -> AsyncGenerator[AsyncSession]:
         """Return an async SQLAlchemy session context-manager."""
-        if not self.is_connected:
+        if not self.is_connected():
             raise RuntimeError("Database engine not initialised – call connect() first")
         assert self._session_factory is not None  # mypy
         async with self._session_factory() as sess:
