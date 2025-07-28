@@ -1,8 +1,6 @@
-from typing import Any
-
 # NOTE: Imported from new SQLModel-based models
-from tux.database.models import Guild
 from tux.database.controllers.base import BaseController
+from tux.database.models import Guild
 
 
 class GuildController(BaseController[Guild]):

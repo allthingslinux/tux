@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
 
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -33,48 +32,48 @@ class CaseType(str, Enum):
 
 class Guild(SQLModel, table=True):
     guild_id: int = Field(primary_key=True, sa_column_kwargs={"index": True})
-    guild_joined_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
+    guild_joined_at: datetime | None = Field(default_factory=datetime.utcnow)
     case_count: int = Field(default=0, nullable=False)
 
     # --- relationships ---
-    cases: List["Case"] = Relationship(back_populates="guild")
-    snippets: List["Snippet"] = Relationship(back_populates="guild")
-    notes: List["Note"] = Relationship(back_populates="guild")
-    reminders: List["Reminder"] = Relationship(back_populates="guild")
-    guild_config: Optional["GuildConfig"] = Relationship(back_populates="guild")
-    afk_records: List["AFKModel"] = Relationship(back_populates="guild")
-    starboard: Optional["Starboard"] = Relationship(back_populates="guild")
-    starboard_messages: List["StarboardMessage"] = Relationship(back_populates="guild")
-    levels: List["Levels"] = Relationship(back_populates="guild")
+    cases: list[Case] = Relationship(back_populates="guild")
+    snippets: list[Snippet] = Relationship(back_populates="guild")
+    notes: list[Note] = Relationship(back_populates="guild")
+    reminders: list[Reminder] = Relationship(back_populates="guild")
+    guild_config: GuildConfig | None = Relationship(back_populates="guild")
+    afk_records: list[AFKModel] = Relationship(back_populates="guild")
+    starboard: Starboard | None = Relationship(back_populates="guild")
+    starboard_messages: list[StarboardMessage] = Relationship(back_populates="guild")
+    levels: list[Levels] = Relationship(back_populates="guild")
 
 
 class GuildConfig(SQLModel, table=True):
     guild_id: int = Field(primary_key=True, foreign_key="guild.guild_id")
 
-    prefix: Optional[str] = None
-    mod_log_id: Optional[int] = None
-    audit_log_id: Optional[int] = None
-    join_log_id: Optional[int] = None
-    private_log_id: Optional[int] = None
-    report_log_id: Optional[int] = None
-    dev_log_id: Optional[int] = None
-    jail_channel_id: Optional[int] = None
-    general_channel_id: Optional[int] = None
-    starboard_channel_id: Optional[int] = None
+    prefix: str | None = None
+    mod_log_id: int | None = None
+    audit_log_id: int | None = None
+    join_log_id: int | None = None
+    private_log_id: int | None = None
+    report_log_id: int | None = None
+    dev_log_id: int | None = None
+    jail_channel_id: int | None = None
+    general_channel_id: int | None = None
+    starboard_channel_id: int | None = None
 
-    perm_level_0_role_id: Optional[int] = None
-    perm_level_1_role_id: Optional[int] = None
-    perm_level_2_role_id: Optional[int] = None
-    perm_level_3_role_id: Optional[int] = None
-    perm_level_4_role_id: Optional[int] = None
-    perm_level_5_role_id: Optional[int] = None
-    perm_level_6_role_id: Optional[int] = None
-    perm_level_7_role_id: Optional[int] = None
+    perm_level_0_role_id: int | None = None
+    perm_level_1_role_id: int | None = None
+    perm_level_2_role_id: int | None = None
+    perm_level_3_role_id: int | None = None
+    perm_level_4_role_id: int | None = None
+    perm_level_5_role_id: int | None = None
+    perm_level_6_role_id: int | None = None
+    perm_level_7_role_id: int | None = None
 
-    base_staff_role_id: Optional[int] = None
-    base_member_role_id: Optional[int] = None
-    jail_role_id: Optional[int] = None
-    quarantine_role_id: Optional[int] = None
+    base_staff_role_id: int | None = None
+    base_member_role_id: int | None = None
+    jail_role_id: int | None = None
+    quarantine_role_id: int | None = None
 
     guild: Guild = Relationship(back_populates="guild_config")
 
@@ -84,7 +83,7 @@ class AFKModel(SQLModel, table=True):
     nickname: str
     reason: str
     since: datetime = Field(default_factory=datetime.utcnow)
-    until: Optional[datetime] = None
+    until: datetime | None = None
     guild_id: int = Field(foreign_key="guild.guild_id")
     enforced: bool = Field(default=False)
     perm_afk: bool = Field(default=False)
@@ -116,7 +115,7 @@ class Note(SQLModel, table=True):
     note_created_at: datetime = Field(default_factory=datetime.utcnow)
     note_moderator_id: int
     note_user_id: int
-    note_number: Optional[int] = Field(default=None)
+    note_number: int | None = Field(default=None)
 
     guild_id: int = Field(foreign_key="guild.guild_id")
 
@@ -126,16 +125,16 @@ class Note(SQLModel, table=True):
 class Case(SQLModel, table=True):
     case_id: int | None = Field(default=None, primary_key=True)
 
-    case_status: Optional[bool] = Field(default=True)
+    case_status: bool | None = Field(default=True)
     case_type: CaseType
     case_reason: str
     case_moderator_id: int
     case_user_id: int
-    case_user_roles: List[int] = Field(default_factory=list, sa_column_kwargs={"default": "{}"})
-    case_number: Optional[int] = None
-    case_created_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
-    case_expires_at: Optional[datetime] = None
-    case_tempban_expired: Optional[bool] = Field(default=False)
+    case_user_roles: list[int] = Field(default_factory=list, sa_column_kwargs={"default": "{}"})
+    case_number: int | None = None
+    case_created_at: datetime | None = Field(default_factory=datetime.utcnow)
+    case_expires_at: datetime | None = None
+    case_tempban_expired: bool | None = Field(default=False)
 
     guild_id: int = Field(foreign_key="guild.guild_id")
 
@@ -161,13 +160,13 @@ class Snippet(SQLModel, table=True):
     snippet_id: int | None = Field(default=None, primary_key=True)
 
     snippet_name: str
-    snippet_content: Optional[str] = None
+    snippet_content: str | None = None
     snippet_user_id: int
     snippet_created_at: datetime = Field(default_factory=datetime.utcnow)
     guild_id: int = Field(foreign_key="guild.guild_id")
     uses: int = Field(default=0)
     locked: bool = Field(default=False)
-    alias: Optional[str] = None
+    alias: str | None = None
 
     guild: Guild = Relationship(back_populates="snippets")
 

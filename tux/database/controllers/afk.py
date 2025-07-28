@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
-from tux.database.models import AFKModel
 from tux.database.controllers.base import BaseController
+from tux.database.models import AFKModel
 
 
 # NOTE: class name unchanged but inherits new BaseController

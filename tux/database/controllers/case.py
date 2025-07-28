@@ -1,14 +1,14 @@
 from datetime import UTC, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from tux.database.models import Case, Guild, CaseType
 from tux.database.controllers.base import BaseController
+from tux.database.models import Case, CaseType, Guild
 
 # NOTE: Prisma-specific CaseWhereInput was a typed-dict for filtering; we
 # replace it with a plain `dict[str, Any]` for now, maintaining backward
 # compatibility with function signatures that previously expected the Prisma
 # generated type.
-CaseWhereInput = Dict[str, Any]
+CaseWhereInput = dict[str, Any]
 
 
 class CaseController(BaseController[Case]):

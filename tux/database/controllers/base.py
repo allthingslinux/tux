@@ -3,13 +3,13 @@ from __future__ import annotations
 """Shared SQLModel-powered base controller replacing the old Prisma-based version."""
 
 from collections.abc import Callable
-from typing import Any, Generic, Type, TypeVar
+from typing import Any, Generic, TypeVar
 
 import sentry_sdk
 from loguru import logger
 from sqlalchemy import delete as sa_delete
-from sqlalchemy import func, select, update as sa_update
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import func, select
+from sqlalchemy import update as sa_update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import SQLModel
 
@@ -30,7 +30,7 @@ class BaseController(Generic[ModelT]):
     largely untouched.
     """
 
-    def __init__(self, model: Type[ModelT]):
+    def __init__(self, model: type[ModelT]):
         self.model = model
         self.model_name = model.__name__.lower()
         # Backwards-compatibility – many controllers used `self.table` to access
@@ -71,10 +71,10 @@ class BaseController(Generic[ModelT]):
         where: dict[str, Any],
         include: dict[str, bool] | None = None,  # ignored but kept for API compatibility
         **__: Any,
-    ) -> ModelT | None:  # noqa: D401 – simple
+    ) -> ModelT | None:
         """Return the first row that matches *where* or *None*."""
 
-        async def _op(session: AsyncSession):  # noqa: D401 – nested
+        async def _op(session: AsyncSession):
             stmt = select(self.model).filter_by(**where).limit(1)
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
@@ -92,7 +92,7 @@ class BaseController(Generic[ModelT]):
         where: dict[str, Any],
         include: dict[str, bool] | None = None,  # ignored
         **__: Any,
-    ) -> ModelT | None:  # noqa: D401 – simple
+    ) -> ModelT | None:
         return await self.find_one(where=where, include=include)
 
     async def find_many(
@@ -181,7 +181,7 @@ class BaseController(Generic[ModelT]):
     # ------------------------------------------------------------------
 
     @staticmethod
-    def safe_get_attr(obj: Any, attr: str, default: Any = None) -> Any:  # noqa: D401 – util
+    def safe_get_attr(obj: Any, attr: str, default: Any = None) -> Any:
         """Return ``getattr(obj, attr, default)`` – keeps old helper available."""
         return getattr(obj, attr, default)
 
@@ -190,14 +190,12 @@ class BaseController(Generic[ModelT]):
     # just set the foreign-key field directly, but we keep this shim so that the
     # higher-level code does not need to be rewritten right away.
     @staticmethod
-    def connect_or_create_relation(id_field: str, model_id: Any, *_: Any, **__: Any) -> dict[str, Any]:  # noqa: D401
+    def connect_or_create_relation(id_field: str, model_id: Any, *_: Any, **__: Any) -> dict[str, Any]:
         """Return a dict with a single key that can be merged into *data* dicts.
 
         The calling code does something like::
 
-            data={
-                "guild": connect_or_create_relation("guild_id", guild_id)
-            }
+            data = {"guild": connect_or_create_relation("guild_id", guild_id)}
 
         We map that pattern to a very small helper that collapses to `{"guild_id": guild_id}`.
         """

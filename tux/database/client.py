@@ -1,14 +1,12 @@
 from __future__ import annotations
 
+import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator, Generator, Optional
 
 from loguru import logger
-from sqlmodel import SQLModel
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
-
-import os
+from sqlmodel import SQLModel
 
 
 class DatabaseClient:
@@ -19,23 +17,23 @@ class DatabaseClient:
     changes.  All interactions go through an :pyclass:`~sqlalchemy.ext.asyncio.AsyncSession`.
     """
 
-    _instance: "DatabaseClient | None" = None
+    _instance: DatabaseClient | None = None
 
-    def __new__(cls) -> "DatabaseClient":
+    def __new__(cls) -> DatabaseClient:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self) -> None:  # noqa: D401 – simple
-        self._engine: Optional[AsyncEngine] = None
-        self._session_factory: Optional[async_sessionmaker[AsyncSession]] = None
+    def __init__(self) -> None:
+        self._engine: AsyncEngine | None = None
+        self._session_factory: async_sessionmaker[AsyncSession] | None = None
 
     # ---------------------------------------------------------------------
     # Public helpers
     # ---------------------------------------------------------------------
 
     @property
-    def is_connected(self) -> bool:  # noqa: D401 – property
+    def is_connected(self) -> bool:
         """Return ``True`` if :pyattr:`_engine` is initialised."""
         return self._engine is not None
 
@@ -86,7 +84,7 @@ class DatabaseClient:
     # ------------------------------------------------------------------
 
     @asynccontextmanager
-    async def session(self) -> AsyncGenerator[AsyncSession, None]:
+    async def session(self) -> AsyncGenerator[AsyncSession]:
         """Return an async SQLAlchemy session context-manager."""
         if not self.is_connected:
             raise RuntimeError("Database engine not initialised – call connect() first")
@@ -100,7 +98,7 @@ class DatabaseClient:
                 raise
 
     @asynccontextmanager
-    async def transaction(self) -> AsyncGenerator[AsyncSession, None]:  # noqa: D401 – alias
+    async def transaction(self) -> AsyncGenerator[AsyncSession]:
         """Synonym for :pyfunc:`session` – kept for API parity."""
         async with self.session() as sess:
             yield sess
