@@ -39,7 +39,7 @@ class DatabaseClient:
     # Backwards-compatibility: older code treated these as *methods*.
 
     def is_registered(self) -> bool:  # noqa: D401 – compat shim
-        return self.is_connected
+        return self.is_connected()
 
 
     async def connect(self, database_url: str | None = None, *, echo: bool = False) -> None:
