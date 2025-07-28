@@ -112,7 +112,6 @@ jobs:
           python-version: '3.13'
           install-groups: dev,types
           cache-suffix: ci
-          generate-prisma: 'true'
 
       # STATIC TYPE CHECKING
       # Pyright provides comprehensive type checking for Python

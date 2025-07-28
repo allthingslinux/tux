@@ -13,10 +13,6 @@ inputs:
     description: Cache key suffix for differentiation
     required: false
     default: default
-  generate-prisma:
-    description: Whether to generate Prisma client
-    required: false
-    default: 'true'
 runs:
   using: composite
   steps:
@@ -58,9 +54,3 @@ runs:
           poetry install --with=${{ inputs.install-groups }} --no-interaction --no-ansi
         fi
 
-    # CONDITIONAL PRISMA CLIENT GENERATION
-    # Generates Prisma database client when needed for database operations
-    - name: Generate Prisma client
-      if: ${{ inputs.generate-prisma == 'true' }}
-      shell: bash
-      run: poetry run prisma generate

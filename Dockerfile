@@ -183,7 +183,6 @@ COPY config/ ./config/
 
 # 2. Database schema files (change infrequently)
 # Prisma schema and migrations are relatively stable
-COPY prisma/ ./prisma/
 
 # 3. Main application code (changes more frequently)
 # The core bot code is most likely to change during development
@@ -269,13 +268,12 @@ USER nonroot
 # Install development dependencies and setup Prisma
 # DEVELOPMENT: These tools are needed for linting, testing, and development workflow
 RUN poetry install --only dev --no-root --no-directory && \
-    poetry run prisma py fetch && \
-    poetry run prisma generate
+    true
 
 # Development container startup command
 # WORKFLOW: Regenerates Prisma client and starts the bot in development mode
 # This ensures the database client is always up-to-date with schema changes
-CMD ["sh", "-c", "poetry run prisma generate && exec poetry run tux --dev start"]
+CMD ["sh", "-c", "exec poetry run tux --dev start"]
 
 # ==============================================================================
 # PRODUCTION STAGE - Minimal Runtime Environment
@@ -357,7 +355,6 @@ ENV VIRTUAL_ENV=/app/.venv \
 # EFFICIENCY: Only copies what's needed for runtime
 COPY --from=build --chown=nonroot:nonroot /app/.venv /app/.venv
 COPY --from=build --chown=nonroot:nonroot /app/tux /app/tux
-COPY --from=build --chown=nonroot:nonroot /app/prisma /app/prisma
 COPY --from=build --chown=nonroot:nonroot /app/config /app/config
 COPY --from=build --chown=nonroot:nonroot /app/pyproject.toml /app/pyproject.toml
 COPY --from=build --chown=nonroot:nonroot /app/VERSION /app/VERSION
@@ -385,8 +382,7 @@ RUN set -eux; \
 # SECURITY: Application runs with minimal privileges
 # RUNTIME: Ensures Prisma binaries and client are properly configured as nonroot user
 USER nonroot
-RUN /app/.venv/bin/python -m prisma py fetch && \
-    /app/.venv/bin/python -m prisma generate
+RUN true
 
 # Aggressive cleanup and optimization after Prisma setup
 # PERFORMANCE: Single RUN reduces layer count and enables atomic cleanup
@@ -404,18 +400,18 @@ RUN set -eux; \
     # Remove test directories from installed packages (but preserve prisma binaries)
     # These directories contain test files that are not needed in production
     for test_dir in tests testing "*test*"; do \
-        find /app/.venv -name "$test_dir" -type d -not -path "*/prisma*" -exec rm -rf {} + 2>/dev/null || true; \
+        find /app/.venv -name "$test_dir" -type d -exec rm -rf {} + 2>/dev/null || true; \
     done; \
     \
-    # Remove documentation files from installed packages (but preserve prisma docs)
+    # Remove documentation files from installed packages
     # These files take up significant space and are not needed in production
     for doc_pattern in "*.md" "*.txt" "*.rst" "LICENSE*" "NOTICE*" "COPYING*" "CHANGELOG*" "README*" "HISTORY*" "AUTHORS*" "CONTRIBUTORS*"; do \
-        find /app/.venv -name "$doc_pattern" -not -path "*/prisma*" -delete 2>/dev/null || true; \
+        find /app/.venv -name "$doc_pattern" -delete 2>/dev/null || true; \
     done; \
     \
     # Remove large development packages that are not needed in production
     # These packages (pip, setuptools, wheel) are only needed for installing packages
-    # NOTE: Preserving packages that Prisma might need
+    # NOTE: Cleanup complete
     for pkg in setuptools wheel pkg_resources; do \
         rm -rf /app/.venv/lib/python3.13/site-packages/${pkg}* 2>/dev/null || true; \
         rm -rf /app/.venv/bin/${pkg}* 2>/dev/null || true; \
