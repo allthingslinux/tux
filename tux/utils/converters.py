@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from prisma.enums import CaseType
+from tux.database.models import CaseType
 from tux.bot import Tux
 
 time_regex = re.compile(r"(\d{1,5}(?:[.,]?\d{1,5})?)([smhd])")
