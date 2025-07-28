@@ -162,12 +162,9 @@ exclude = [
     "examples",
     ".archive",
     "typings/**",
-    "tests",
-    "tux/cogs",
-    "tux/wrappers",
 ]
 ignore = [".venv"]
-include = ["tux"]
+include = ["tux", "tests"]
 stubPath = "typings"
 pythonPlatform = "Linux"
 pythonVersion = "3.13"
