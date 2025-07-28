@@ -1,5 +1,5 @@
 # Switched to SQLModel models
-from tux.database.models import Guild, Note
+from tux.database.models import Note
 from tux.database.controllers.base import BaseController
 
 

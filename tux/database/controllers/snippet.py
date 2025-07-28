@@ -1,6 +1,6 @@
 import datetime
 
-from tux.database.models import Guild, Snippet
+from tux.database.models import Snippet
 from tux.database.controllers.base import BaseController
 
 
@@ -81,8 +81,9 @@ class SnippetController(BaseController[Snippet]):
         """
         from sqlalchemy import select
         from sqlalchemy import func
+        from sqlalchemy.ext.asyncio import AsyncSession
 
-        async def _op(session):
+        async def _op(session: AsyncSession):
             stmt = select(Snippet)
             pattern = f"%{snippet_name}%"
             stmt = stmt.where(func.lower(Snippet.snippet_name).like(pattern.lower()))
@@ -119,8 +120,9 @@ class SnippetController(BaseController[Snippet]):
         """
         from sqlalchemy import select
         from sqlalchemy import func
+        from sqlalchemy.ext.asyncio import AsyncSession
 
-        async def _op(session):
+        async def _op(session: AsyncSession):
             stmt = select(Snippet).where(
                 func.lower(Snippet.snippet_name) == snippet_name.lower(),
                 Snippet.guild_id == guild_id,

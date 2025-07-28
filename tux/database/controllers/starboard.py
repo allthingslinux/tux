@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from tux.database.models import Guild, Starboard, StarboardMessage
+from tux.database.models import Starboard, StarboardMessage
 from tux.database.controllers.base import BaseController
 
 

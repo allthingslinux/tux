@@ -32,14 +32,18 @@ class DatabaseClient:
     # Public helpers
     # ---------------------------------------------------------------------
 
-    def is_connected(self) -> bool:  # noqa: D401
-        """Return True if the engine is initialised."""
+    @property
+    def is_connected(self) -> bool:  # noqa: D401 – property
+        """Return True if the engine/metadata are initialised."""
         return self._engine is not None
 
-    # Backwards-compatibility: older code treated these as *methods*.
+    # Back-compat: expose old callable form
+    def is_connected_call(self) -> bool:  # noqa: D401
+        return self.is_connected
 
-    def is_registered(self) -> bool:  # noqa: D401 – compat shim
-        return self.is_connected()
+    # Existing code queried `db.is_registered()` to check models; same semantics
+    def is_registered(self) -> bool:  # noqa: D401
+        return self.is_connected
 
 
     async def connect(self, database_url: str | None = None, *, echo: bool = False) -> None:
@@ -48,7 +52,7 @@ class DatabaseClient:
         The *first* call performs initialisation – every subsequent call is a
         no-op (but will log a warning).
         """
-        if self.is_connected():
+        if self.is_connected:
             logger.warning("Database engine already connected – reusing existing engine")
             return
 
@@ -74,7 +78,7 @@ class DatabaseClient:
 
     async def disconnect(self) -> None:
         """Dispose the engine and tear-down the connection pool."""
-        if not self.is_connected():
+        if not self.is_connected:
             logger.warning("Database engine not connected – nothing to disconnect")
             return
 
@@ -91,7 +95,7 @@ class DatabaseClient:
     @asynccontextmanager
     async def session(self) -> AsyncGenerator[AsyncSession]:
         """Return an async SQLAlchemy session context-manager."""
-        if not self.is_connected():
+        if not self.is_connected:
             raise RuntimeError("Database engine not initialised – call connect() first")
         assert self._session_factory is not None  # mypy
         async with self._session_factory() as sess:

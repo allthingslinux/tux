@@ -3,8 +3,7 @@ import math
 
 from loguru import logger
 
-from tux.database.models import Guild, Levels
-from tux.database.client import db
+from tux.database.models import Levels
 from tux.database.controllers.base import BaseController
 
 

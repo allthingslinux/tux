@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from tux.database.models import Guild, Reminder
+from tux.database.models import Reminder
 from tux.database.controllers.base import BaseController
 
 
