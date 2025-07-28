@@ -1,6 +1,7 @@
 from typing import Any
 
-from prisma.models import Guild
+# NOTE: Imported from new SQLModel-based models
+from tux.database.models import Guild
 from tux.database.controllers.base import BaseController
 
 
@@ -13,9 +14,7 @@ class GuildController(BaseController[Guild]):
 
     def __init__(self):
         """Initialize the GuildController with the guild table."""
-        super().__init__("guild")
-        # Type hint for better IDE support
-        self.table: Any = self.table
+        super().__init__(Guild)
 
     async def get_guild_by_id(self, guild_id: int) -> Guild | None:
         """Get a guild by its ID.
@@ -45,12 +44,10 @@ class GuildController(BaseController[Guild]):
         Guild
             The existing or newly created guild
         """
-        return await self.table.upsert(
+        return await self.upsert(
             where={"guild_id": guild_id},
-            data={
-                "create": {"guild_id": guild_id},
-                "update": {},
-            },
+            create={"guild_id": guild_id},
+            update={},
         )
 
     async def insert_guild_by_id(self, guild_id: int) -> Guild:

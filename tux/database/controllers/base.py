@@ -1,596 +1,204 @@
-"""Base controller module providing common database functionality."""
+from __future__ import annotations
+
+"""Shared SQLModel-powered base controller replacing the old Prisma-based version."""
 
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import Any, Generic, Type, TypeVar
 
 import sentry_sdk
 from loguru import logger
+from sqlalchemy import delete as sa_delete
+from sqlalchemy import func, select, update as sa_update
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import SQLModel
 
-from prisma.models import (
-    AFKModel,
-    Case,
-    Guild,
-    GuildConfig,
-    Levels,
-    Note,
-    Reminder,
-    Snippet,
-    Starboard,
-    StarboardMessage,
-)
 from tux.database.client import db
 
-# Explicitly define ModelType to cover all potential models used by controllers
-ModelType = TypeVar(
-    "ModelType",
-    Case,
-    Guild,
-    Note,
-    Reminder,
-    Snippet,
-    Starboard,
-    StarboardMessage,
-    GuildConfig,
-    AFKModel,
-    Levels,
-)
-
-RelationType = TypeVar("RelationType")
+ModelT = TypeVar("ModelT", bound=SQLModel)
 
 
-class BaseController[
-    ModelType: (
-        Case,
-        Guild,
-        Note,
-        Reminder,
-        Snippet,
-        Starboard,
-        StarboardMessage,
-        GuildConfig,
-        AFKModel,
-        Levels,
-    ),
-]:
-    """Provides a base interface for database table controllers.
+class BaseController(Generic[ModelT]):
+    """A thin asynchronous repository / DAO layer.
 
-    This generic class offers common CRUD (Create, Read, Update, Delete)
-    operations and utility methods for interacting with a specific Prisma model
-    table. It standardizes database interactions and error handling.
+    The goal is *not* to hide SQLAlchemy entirely but to provide a small,
+    opinionated convenience wrapper that matches the minimal subset of methods
+    that were previously offered by the Prisma-powered controller.
 
-    Attributes
-    ----------
-    table : Any
-        The Prisma client's model instance for the specific table.
-    table_name : str
-        The name of the database table this controller manages.
+    The public API therefore continues to expose familiar methods such as
+    ``find_many`` or ``create`` so that the higher-level business-logic remains
+    largely untouched.
     """
 
-    def __init__(self, table_name: str) -> None:
-        """Initializes the BaseController for a specific table.
+    def __init__(self, model: Type[ModelT]):
+        self.model = model
+        self.model_name = model.__name__.lower()
+        # Backwards-compatibility – many controllers used `self.table` to access
+        # the underlying ORM model (mainly for `.upsert`).
+        self.table = model
 
-        Parameters
-        ----------
-        table_name : str
-            The name of the Prisma model table (e.g., 'case', 'guild').
-            This name must match an attribute on the Prisma client instance.
-        """
-        self.table: Any = getattr(db.client, table_name)
-        self.table_name = table_name
+    # ------------------------------------------------------------------
+    # Helper – internal
+    # ------------------------------------------------------------------
 
-    # --- Private Helper Methods ---
+    async def _execute_query(self, op: Callable[[AsyncSession], Any], span_desc: str) -> Any:
+        """Run *op* inside a managed session & sentry span (if enabled)."""
 
-    async def _execute_query(
-        self,
-        operation: Callable[[], Any],
-        error_msg: str,
-    ) -> Any:
-        """Executes a database query with standardized error logging.
-
-        Wraps the Prisma client operation call in a try-except block,
-        logging any exceptions with a contextual error message.
-
-        Parameters
-        ----------
-        operation : Callable[[], Any]
-            A zero-argument function (e.g., a lambda) that performs the database call.
-        error_msg : str
-            The base error message to log if an exception occurs.
-
-        Returns
-        -------
-        Any
-            The result of the database operation.
-
-        Raises
-        ------
-        Exception
-            Re-raises any exception caught during the database operation.
-        """
-        # Create a Sentry span to track database query performance
         if sentry_sdk.is_initialized():
-            with sentry_sdk.start_span(op="db.query", description=f"Database query: {self.table_name}") as span:
-                span.set_tag("db.table", self.table_name)
+            with sentry_sdk.start_span(op="db.query", description=span_desc) as span:
+                span.set_tag("db.table", self.model_name)
                 try:
-                    result = await operation()
+                    async with db.session() as session:
+                        result = await op(session)
                     span.set_status("ok")
-                    return result  # noqa: TRY300
-                except Exception as e:
+                    return result  # noqa: TRY300 – maintain behaviour
+                except Exception as exc:
                     span.set_status("internal_error")
-                    span.set_data("error", str(e))
-                    logger.error(f"{error_msg}: {e}")
+                    span.set_data("error", str(exc))
+                    logger.error(f"{span_desc}: {exc}")
                     raise
         else:
-            try:
-                return await operation()
-            except Exception as e:
-                logger.error(f"{error_msg}: {e}")
-                raise
+            async with db.session() as session:
+                return await op(session)
 
-    def _add_include_arg_if_present(self, args: dict[str, Any], include: dict[str, bool] | None) -> None:
-        """Adds the 'include' argument to a dictionary if it is not None."""
-        if include:
-            args["include"] = include
-
-    def _build_find_args(
-        self,
-        where: dict[str, Any],
-        include: dict[str, bool] | None = None,
-        order: dict[str, str] | None = None,
-        take: int | None = None,
-        skip: int | None = None,
-        cursor: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
-        """Constructs the keyword arguments dictionary for Prisma find operations."""
-        args: dict[str, Any] = {"where": where}
-        self._add_include_arg_if_present(args, include)
-        if order:
-            args["order"] = order
-        if take is not None:
-            args["take"] = take
-        if skip is not None:
-            args["skip"] = skip
-        if cursor is not None:
-            args["cursor"] = cursor
-        return args
-
-    def _build_simple_args(
-        self,
-        key_name: str,
-        key_value: dict[str, Any],
-        include: dict[str, bool] | None = None,
-    ) -> dict[str, Any]:
-        """Constructs simple keyword arguments for Prisma (e.g., create, delete)."""
-        args = {key_name: key_value}
-        self._add_include_arg_if_present(args, include)
-        return args
-
-    def _build_create_args(
-        self,
-        data: dict[str, Any],
-        include: dict[str, bool] | None = None,
-    ) -> dict[str, Any]:
-        """Constructs keyword arguments for Prisma create operations."""
-        return self._build_simple_args("data", data, include)
-
-    def _build_update_args(
-        self,
-        where: dict[str, Any],
-        data: dict[str, Any],
-        include: dict[str, bool] | None = None,
-    ) -> dict[str, Any]:
-        """Constructs keyword arguments for Prisma update operations."""
-        args = {"where": where, "data": data}
-        self._add_include_arg_if_present(args, include)
-        return args
-
-    def _build_delete_args(
-        self,
-        where: dict[str, Any],
-        include: dict[str, bool] | None = None,
-    ) -> dict[str, Any]:
-        """Constructs keyword arguments for Prisma delete operations."""
-        return self._build_simple_args("where", where, include)
-
-    def _build_upsert_args(
-        self,
-        where: dict[str, Any],
-        create: dict[str, Any],
-        update: dict[str, Any],
-        include: dict[str, bool] | None = None,
-    ) -> dict[str, Any]:
-        """Constructs keyword arguments for Prisma upsert operations."""
-        args = {
-            "where": where,
-            "data": {
-                "create": create,
-                "update": update,
-            },
-        }
-        self._add_include_arg_if_present(args, include)
-        return args
-
-    # --- Public CRUD Methods ---
+    # ------------------------------------------------------------------
+    # CRUD helpers
+    # ------------------------------------------------------------------
 
     async def find_one(
         self,
+        *,
         where: dict[str, Any],
-        include: dict[str, bool] | None = None,
-        order: dict[str, str] | None = None,
-    ) -> ModelType | None:
-        """Finds the first record matching specified criteria.
+        include: dict[str, bool] | None = None,  # ignored but kept for API compatibility
+        **__: Any,
+    ) -> ModelT | None:  # noqa: D401 – simple
+        """Return the first row that matches *where* or *None*."""
 
-        Parameters
-        ----------
-        where : dict[str, Any]
-            Query conditions to match.
-        include : dict[str, bool], optional
-            Specifies relations to include in the result.
-        order : dict[str, str], optional
-            Specifies the field and direction for ordering.
+        async def _op(session: AsyncSession):  # noqa: D401 – nested
+            stmt = select(self.model).filter_by(**where).limit(1)
+            result = await session.execute(stmt)
+            return result.scalar_one_or_none()
 
-        Returns
-        -------
-        ModelType | None
-            The found record or None if no match exists.
-        """
-        find_args = self._build_find_args(where=where, include=include, order=order)
-        return await self._execute_query(
-            lambda: self.table.find_first(**find_args),
-            f"Failed to find record in {self.table_name} with criteria {where}",
-        )
+        return await self._execute_query(_op, f"find_one {self.model_name}")
+
+    # NOTE: The old Prisma-powered layer had separate ``find_unique`` and
+    # ``find_first`` helpers.  For our purposes a unique lookup is identical to
+    # ``find_one`` when the *where* clause targets a unique / primary-key
+    # constraint.
 
     async def find_unique(
         self,
+        *,
         where: dict[str, Any],
-        include: dict[str, bool] | None = None,
-    ) -> ModelType | None:
-        """Finds a single record by a unique constraint (e.g., ID).
-
-        Parameters
-        ----------
-        where : dict[str, Any]
-            Unique query conditions (e.g., {'id': 1}).
-        include : dict[str, bool], optional
-            Specifies relations to include in the result.
-
-        Returns
-        -------
-        ModelType | None
-            The found record or None if no match exists.
-        """
-        find_args = self._build_find_args(where=where, include=include)  # Order not applicable for find_unique
-        return await self._execute_query(
-            lambda: self.table.find_unique(**find_args),
-            f"Failed to find unique record in {self.table_name} with criteria {where}",
-        )
+        include: dict[str, bool] | None = None,  # ignored
+        **__: Any,
+    ) -> ModelT | None:  # noqa: D401 – simple
+        return await self.find_one(where=where, include=include)
 
     async def find_many(
         self,
-        where: dict[str, Any],
-        include: dict[str, bool] | None = None,
+        *,
+        where: dict[str, Any] | None = None,
         order: dict[str, str] | None = None,
         take: int | None = None,
         skip: int | None = None,
-        cursor: dict[str, Any] | None = None,
-    ) -> list[ModelType]:
-        """Finds multiple records matching specified criteria.
+    ) -> list[ModelT]:
+        """Return a list of rows matching *where* (or all rows)."""
 
-        Parameters
-        ----------
-        where : dict[str, Any]
-            Query conditions to match.
-        include : dict[str, bool], optional
-            Specifies relations to include in the results.
-        order : dict[str, str], optional
-            Specifies the field and direction for ordering.
-        take : int, optional
-            Maximum number of records to return.
-        skip : int, optional
-            Number of records to skip (for pagination).
-        cursor : dict[str, Any], optional
-            Cursor for pagination based on a unique field.
+        async def _op(session: AsyncSession):
+            stmt = select(self.model)
+            if where:
+                stmt = stmt.filter_by(**where)
+            if order:
+                # Expecting {"col": "asc"|"desc"}
+                for col, direction in order.items():
+                    column_attr = getattr(self.model, col)
+                    stmt = stmt.order_by(column_attr.desc() if direction.lower() == "desc" else column_attr.asc())
+            if take is not None:
+                stmt = stmt.limit(take)
+            if skip is not None:
+                stmt = stmt.offset(skip)
+            res = await session.execute(stmt)
+            return res.scalars().all()
 
-        Returns
-        -------
-        list[ModelType]
-            A list of found records, potentially empty.
-        """
-        find_args = self._build_find_args(
-            where=where,
-            include=include,
-            order=order,
-            take=take,
-            skip=skip,
-            cursor=cursor,
-        )
-        return await self._execute_query(
-            lambda: self.table.find_many(**find_args),
-            f"Failed to find records in {self.table_name} with criteria {where}",
-        )
+        return await self._execute_query(_op, f"find_many {self.model_name}")
 
-    async def count(
-        self,
-        where: dict[str, Any],
-    ) -> int:
-        """Counts records matching the specified criteria.
+    async def count(self, *, where: dict[str, Any] | None = None) -> int:
+        async def _op(session: AsyncSession):
+            stmt = select(func.count()).select_from(self.model)
+            if where:
+                stmt = stmt.filter_by(**where)
+            result = await session.execute(stmt)
+            return result.scalar_one()
 
-        Parameters
-        ----------
-        where : dict[str, Any]
-            Query conditions to match.
+        return await self._execute_query(_op, f"count {self.model_name}")
 
-        Returns
-        -------
-        int
-            The total number of matching records.
-        """
-        return await self._execute_query(
-            lambda: self.table.count(where=where),
-            f"Failed to count records in {self.table_name} with criteria {where}",
-        )
+    async def create(self, *, data: dict[str, Any]) -> ModelT:
+        async def _op(session: AsyncSession):
+            obj = self.model(**data)  # type: ignore[arg-type]
+            session.add(obj)
+            await session.flush()  # populate PKs
+            return obj
 
-    async def create(
-        self,
-        data: dict[str, Any],
-        include: dict[str, bool] | None = None,
-    ) -> ModelType:
-        """Creates a new record in the table.
+        return await self._execute_query(_op, f"create {self.model_name}")
 
-        Parameters
-        ----------
-        data : dict[str, Any]
-            The data for the new record.
-        include : dict[str, bool], optional
-            Specifies relations to include in the returned record.
+    async def update(self, *, where: dict[str, Any], data: dict[str, Any]) -> ModelT | None:
+        async def _op(session: AsyncSession):
+            stmt = sa_update(self.model).filter_by(**where).values(**data).returning(self.model)
+            result = await session.execute(stmt)
+            return result.scalar_one_or_none()
 
-        Returns
-        -------
-        ModelType
-            The newly created record.
-        """
-        create_args = self._build_create_args(data=data, include=include)
-        return await self._execute_query(
-            lambda: self.table.create(**create_args),
-            f"Failed to create record in {self.table_name} with data {data}",
-        )
+        return await self._execute_query(_op, f"update {self.model_name}")
 
-    async def update(
-        self,
-        where: dict[str, Any],
-        data: dict[str, Any],
-        include: dict[str, bool] | None = None,
-    ) -> ModelType | None:
-        """Updates a single existing record matching the criteria.
+    async def delete(self, *, where: dict[str, Any]) -> ModelT | None:
+        async def _op(session: AsyncSession):
+            stmt = sa_delete(self.model).filter_by(**where).returning(self.model)
+            result = await session.execute(stmt)
+            return result.scalar_one_or_none()
 
-        Parameters
-        ----------
-        where : dict[str, Any]
-            Query conditions to find the record to update.
-        data : dict[str, Any]
-            The data to update the record with.
-        include : dict[str, bool], optional
-            Specifies relations to include in the returned record.
+        return await self._execute_query(_op, f"delete {self.model_name}")
 
-        Returns
-        -------
-        ModelType | None
-            The updated record, or None if no matching record was found.
-        """
-        update_args = self._build_update_args(where=where, data=data, include=include)
-        return await self._execute_query(
-            lambda: self.table.update(**update_args),
-            f"Failed to update record in {self.table_name} with criteria {where} and data {data}",
-        )
+    async def upsert(self, *, where: dict[str, Any], create: dict[str, Any], update: dict[str, Any]) -> ModelT:
+        """Very naive *upsert* helper using a transaction (select → insert/update)."""
 
-    async def delete(
-        self,
-        where: dict[str, Any],
-        include: dict[str, bool] | None = None,
-    ) -> ModelType | None:
-        """Deletes a single record matching the criteria.
+        async def _op(session: AsyncSession):
+            stmt = select(self.model).filter_by(**where).with_for_update()
+            result = await session.execute(stmt)
+            obj = result.scalar_one_or_none()
+            if obj is None:
+                obj = self.model(**{**where, **create})  # type: ignore[arg-type]
+                session.add(obj)
+            else:
+                for key, value in update.items():
+                    setattr(obj, key, value)
+            await session.flush()
+            return obj
 
-        Parameters
-        ----------
-        where : dict[str, Any]
-            Query conditions to find the record to delete.
-        include : dict[str, bool], optional
-            Specifies relations to include in the returned deleted record.
+        return await self._execute_query(_op, f"upsert {self.model_name}")
 
-        Returns
-        -------
-        ModelType | None
-            The deleted record, or None if no matching record was found.
-        """
-        delete_args = self._build_delete_args(where=where, include=include)
-        return await self._execute_query(
-            lambda: self.table.delete(**delete_args),
-            f"Failed to delete record in {self.table_name} with criteria {where}",
-        )
-
-    async def upsert(
-        self,
-        where: dict[str, Any],
-        create: dict[str, Any],
-        update: dict[str, Any],
-        include: dict[str, bool] | None = None,
-    ) -> ModelType:
-        """Updates a record if it exists, otherwise creates it.
-
-        Parameters
-        ----------
-        where : dict[str, Any]
-            Query conditions to find the existing record.
-        create : dict[str, Any]
-            Data to use if creating a new record.
-        update : dict[str, Any]
-            Data to use if updating an existing record.
-        include : dict[str, bool], optional
-            Specifies relations to include in the returned record.
-
-        Returns
-        -------
-        ModelType
-            The created or updated record.
-        """
-        upsert_args = self._build_upsert_args(where=where, create=create, update=update, include=include)
-        return await self._execute_query(
-            lambda: self.table.upsert(**upsert_args),
-            f"Failed to upsert record in {self.table_name} with where={where}, create={create}, update={update}",
-        )
-
-    async def update_many(
-        self,
-        where: dict[str, Any],
-        data: dict[str, Any],
-    ) -> int:
-        """Updates multiple records matching the criteria.
-
-        Parameters
-        ----------
-        where : dict[str, Any]
-            Query conditions to find the records to update.
-        data : dict[str, Any]
-            The data to update the records with.
-
-        Returns
-        -------
-        int
-            The number of records updated.
-
-        Raises
-        ------
-        ValueError
-            If the database operation does not return a valid count.
-        """
-        result = await self._execute_query(
-            lambda: self.table.update_many(where=where, data=data),
-            f"Failed to update records in {self.table_name} with criteria {where} and data {data}",
-        )
-        # Validate and return count
-        count_val = getattr(result, "count", None)
-        if count_val is None or not isinstance(count_val, int):
-            msg = f"Update operation for {self.table_name} did not return a valid count, got: {count_val}"
-            raise ValueError(msg)
-        return count_val
-
-    async def delete_many(
-        self,
-        where: dict[str, Any],
-    ) -> int:
-        """Deletes multiple records matching the criteria.
-
-        Parameters
-        ----------
-        where : dict[str, Any]
-            Query conditions to find the records to delete.
-
-        Returns
-        -------
-        int
-            The number of records deleted.
-
-        Raises
-        ------
-        ValueError
-            If the database operation does not return a valid count.
-        """
-        result = await self._execute_query(
-            lambda: self.table.delete_many(where=where),
-            f"Failed to delete records in {self.table_name} with criteria {where}",
-        )
-        # Validate and return count
-        count_val = getattr(result, "count", None)
-        if count_val is None or not isinstance(count_val, int):
-            msg = f"Delete operation for {self.table_name} did not return a valid count, got: {count_val}"
-            raise ValueError(msg)
-        return count_val
-
-    # --- Other Utility Methods ---
-
-    async def execute_transaction(self, callback: Callable[[], Any]) -> Any:
-        """Executes a series of database operations within a transaction.
-
-        Ensures atomicity: all operations succeed or all fail and roll back.
-        Note: Does not use _execute_query internally to preserve specific
-              transaction context in error messages.
-
-        Parameters
-        ----------
-        callback : Callable[[], Any]
-            An async function containing the database operations to execute.
-
-        Returns
-        -------
-        Any
-            The result returned by the callback function.
-
-        Raises
-        ------
-        Exception
-            Re-raises any exception that occurs during the transaction.
-        """
-        try:
-            async with db.transaction():
-                return await callback()
-        except Exception as e:
-            logger.error(f"Transaction failed in {self.table_name}: {e}")
-            raise
+    # ------------------------------------------------------------------
+    # Utility helpers mirrored from old implementation
+    # ------------------------------------------------------------------
 
     @staticmethod
-    def connect_or_create_relation(
-        id_field: str,
-        model_id: Any,
-        create_data: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
-        """Builds a Prisma 'connect_or_create' relation structure.
-
-        Simplifies linking or creating related records during create/update operations.
-
-        Parameters
-        ----------
-        id_field : str
-            The name of the ID field used for connection (e.g., 'guild_id').
-        model_id : Any
-            The ID value of the record to connect to.
-        create_data : dict[str, Any], optional
-            Additional data required if creating the related record.
-            Must include at least the `id_field` and `model_id`.
-
-        Returns
-        -------
-        dict[str, Any]
-            A dictionary formatted for Prisma's connect_or_create.
-        """
-        where = {id_field: model_id}
-        # Create data must contain the ID field for the new record
-        create = {id_field: model_id}
-        if create_data:
-            create |= create_data
-
-        return {
-            "connect_or_create": {
-                "where": where,
-                "create": create,
-            },
-        }
-
-    @staticmethod
-    def safe_get_attr(obj: Any, attr: str, default: Any = None) -> Any:
-        """Safely retrieves an attribute from an object, returning a default if absent.
-
-        Parameters
-        ----------
-        obj : Any
-            The object to retrieve the attribute from.
-        attr : str
-            The name of the attribute.
-        default : Any, optional
-            The value to return if the attribute is not found. Defaults to None.
-
-        Returns
-        -------
-        Any
-            The attribute's value or the default value.
-        """
+    def safe_get_attr(obj: Any, attr: str, default: Any = None) -> Any:  # noqa: D401 – util
+        """Return ``getattr(obj, attr, default)`` – keeps old helper available."""
         return getattr(obj, attr, default)
+
+    # The old implementation exposed a *static* connect_or_create_relation helper
+    # used when inserting nested relations through Prisma.  Under SQLModel we can
+    # just set the foreign-key field directly, but we keep this shim so that the
+    # higher-level code does not need to be rewritten right away.
+    @staticmethod
+    def connect_or_create_relation(id_field: str, model_id: Any, *_: Any, **__: Any) -> dict[str, Any]:  # noqa: D401
+        """Return a dict with a single key that can be merged into *data* dicts.
+
+        The calling code does something like::
+
+            data={
+                "guild": connect_or_create_relation("guild_id", guild_id)
+            }
+
+        We map that pattern to a very small helper that collapses to `{"guild_id": guild_id}`.
+        """
+        return {id_field: model_id}

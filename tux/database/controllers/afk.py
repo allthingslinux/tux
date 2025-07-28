@@ -1,11 +1,10 @@
 from datetime import UTC, datetime
 
-from prisma.actions import GuildActions
-from prisma.models import AFKModel, Guild
-from tux.database.client import db
+from tux.database.models import AFKModel
 from tux.database.controllers.base import BaseController
 
 
+# NOTE: class name unchanged but inherits new BaseController
 class AfkController(BaseController[AFKModel]):
     """Controller for managing AFK status records.
 
@@ -15,8 +14,7 @@ class AfkController(BaseController[AFKModel]):
 
     def __init__(self) -> None:
         """Initialize the AfkController with the afkmodel table."""
-        super().__init__("afkmodel")
-        self.guild_table: GuildActions[Guild] = db.client.guild
+        super().__init__(AFKModel)
 
     async def get_afk_member(self, member_id: int, *, guild_id: int) -> AFKModel | None:
         """Get the AFK record for a member in a guild.

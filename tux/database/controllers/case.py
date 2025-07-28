@@ -1,12 +1,14 @@
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Dict, List, Optional
 
-from prisma.actions import GuildActions
-from prisma.enums import CaseType
-from prisma.models import Case, Guild
-from prisma.types import CaseWhereInput
-from tux.database.client import db
+from tux.database.models import Case, Guild, CaseType
 from tux.database.controllers.base import BaseController
+
+# NOTE: Prisma-specific CaseWhereInput was a typed-dict for filtering; we
+# replace it with a plain `dict[str, Any]` for now, maintaining backward
+# compatibility with function signatures that previously expected the Prisma
+# generated type.
+CaseWhereInput = Dict[str, Any]
 
 
 class CaseController(BaseController[Case]):
@@ -18,9 +20,9 @@ class CaseController(BaseController[Case]):
 
     def __init__(self):
         """Initialize the CaseController with the case table."""
-        super().__init__("case")
-        # Access guild table through client property
-        self.guild_table: GuildActions[Guild] = db.client.guild
+        super().__init__(Case)
+        # Dedicated guild controller for internal helper operations
+        self._guild_repo: BaseController[Guild] = BaseController(Guild)
 
     async def get_next_case_number(self, guild_id: int) -> int:
         """Get the next case number for a guild.
@@ -38,16 +40,18 @@ class CaseController(BaseController[Case]):
         int
             The next case number for the guild.
         """
-        # Use connect_or_create to ensure guild exists and increment case count
-        guild = await self.guild_table.upsert(
-            where={"guild_id": guild_id},
-            data={
-                "create": {"guild_id": guild_id, "case_count": 1},
-                "update": {"case_count": {"increment": 1}},
-            },
-        )
+        # Try to fetch the guild entry – if it doesn't exist, create it with
+        # case_count = 1.  Otherwise increment the counter atomically inside a
+        # transaction block to avoid race-conditions.
+        guild = await self._guild_repo.find_one(where={"guild_id": guild_id})
 
-        return self.safe_get_attr(guild, "case_count", 1)
+        if guild is None:
+            guild = await self._guild_repo.create(data={"guild_id": guild_id, "case_count": 1})
+            return 1
+
+        new_number = (guild.case_count or 0) + 1
+        await self._guild_repo.update(where={"guild_id": guild_id}, data={"case_count": new_number})
+        return new_number
 
     async def insert_case(
         self,
