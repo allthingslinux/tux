@@ -156,9 +156,18 @@ skip-magic-trailing-comma = false
 [tool.pyright]
 defineConstant = { DEBUG = true }
 enableReachabilityAnalysis = true
-exclude = ["__pypackages__", "_build", "examples", ".archive", "typings/**"]
+exclude = [
+    "__pypackages__",
+    "_build",
+    "examples",
+    ".archive",
+    "typings/**",
+    "tests",
+    "tux/cogs",
+    "tux/wrappers",
+]
 ignore = [".venv"]
-include = ["tux", "tests"]
+include = ["tux"]
 stubPath = "typings"
 pythonPlatform = "Linux"
 pythonVersion = "3.13"
