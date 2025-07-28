@@ -14,69 +14,68 @@ T = TypeVar("T")
 CommandFunction = Callable[[], int]
 
 
-# Helper function moved from impl/database.py
-def _run_prisma_command(args: list[str], env: dict[str, str]) -> int:
-    """
-    Run a Prisma command directly.
-
-    When using 'poetry run tux', the prisma binary is already
-    properly configured, so we can run it directly.
-    """
+def _run_alembic_command(args: list[str], env: dict[str, str]) -> int:
+    """Run an Alembic command with the provided environment variables."""
 
     logger.info(f"Using database URL: {env['DATABASE_URL']}")
 
-    # Set the environment variables for the process
     env_vars = os.environ | env
 
-    # Use prisma directly - it's already available through Poetry
     try:
-        logger.info(f"Running: prisma {' '.join(args)}")
-        return run_command(["prisma", *args], env=env_vars)
-
-    except Exception as e:
-        logger.error(f"Error running prisma command: {e}")
+        logger.info("Running: alembic %s", " ".join(args))
+        return run_command(["alembic", *args], env=env_vars)
+    except Exception as exc:
+        logger.error("Error running alembic command: %s", exc)
         return 1
 
 
-# Create the database command group
-db_group = create_group("db", "Database management commands")
+# ---------------------------------------------------------------------------
+# Command group
+# ---------------------------------------------------------------------------
+
+db_group = create_group("db", "Database migration commands (Alembic)")
 
 
-@command_registration_decorator(db_group, name="generate")
-def generate() -> int:
-    """Generate Prisma client."""
-
-    env = {"DATABASE_URL": get_database_url()}
-    return _run_prisma_command(["generate"], env=env)
+# ---------------------------------------------------------------------------
+# Alembic command wrappers
+# ---------------------------------------------------------------------------
 
 
-@command_registration_decorator(db_group, name="push")
-def push() -> int:
-    """Push schema changes to database."""
-
-    env = {"DATABASE_URL": get_database_url()}
-    return _run_prisma_command(["db", "push"], env=env)
-
-
-@command_registration_decorator(db_group, name="pull")
-def pull() -> int:
-    """Pull schema from database."""
+@command_registration_decorator(db_group, name="upgrade")
+def upgrade() -> int:
+    """Apply all pending migrations (alembic upgrade head)."""
 
     env = {"DATABASE_URL": get_database_url()}
-    return _run_prisma_command(["db", "pull"], env=env)
+    return _run_alembic_command(["upgrade", "head"], env=env)
 
 
-@command_registration_decorator(db_group, name="migrate")
-def migrate() -> int:
-    """Run database migrations."""
-
-    env = {"DATABASE_URL": get_database_url()}
-    return _run_prisma_command(["migrate", "dev"], env=env)
-
-
-@command_registration_decorator(db_group, name="reset")
-def reset() -> int:
-    """Reset database."""
+@command_registration_decorator(db_group, name="downgrade")
+def downgrade() -> int:
+    """Downgrade one migration step (alembic downgrade -1)."""
 
     env = {"DATABASE_URL": get_database_url()}
-    return _run_prisma_command(["migrate", "reset"], env=env)
+    return _run_alembic_command(["downgrade", "-1"], env=env)
+
+
+@command_registration_decorator(db_group, name="revision")
+def revision() -> int:
+    """Create a new migration autogenerating from model changes."""
+
+    env = {"DATABASE_URL": get_database_url()}
+    return _run_alembic_command(["revision", "--autogenerate", "-m", "auto"], env=env)
+
+
+@command_registration_decorator(db_group, name="current")
+def current() -> int:
+    """Show current migration revision."""
+
+    env = {"DATABASE_URL": get_database_url()}
+    return _run_alembic_command(["current"], env=env)
+
+
+@command_registration_decorator(db_group, name="history")
+def history() -> int:
+    """Show migration history."""
+
+    env = {"DATABASE_URL": get_database_url()}
+    return _run_alembic_command(["history"], env=env)
