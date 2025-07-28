@@ -5,13 +5,7 @@ from enum import Enum
 from typing import List
 
 from sqlmodel import Field, Relationship, SQLModel
-from sqlalchemy import Column
-from sqlalchemy.dialects.sqlite import JSON as SQLiteJSON
-try:
-    from sqlalchemy.dialects.postgresql import ARRAY, BIGINT
-    PG_ARRAY_BIGINT = Column(ARRAY(BIGINT))
-except ImportError:
-    PG_ARRAY_BIGINT = Column(SQLiteJSON)
+from sqlalchemy import Column, JSON
 
 
 class CaseType(str, Enum):
@@ -138,7 +132,7 @@ class Case(SQLModel, table=True):
     case_reason: str
     case_moderator_id: int
     case_user_id: int
-    case_user_roles: List[int] = Field(default_factory=list, sa_column=PG_ARRAY_BIGINT)
+    case_user_roles: List[int] = Field(default_factory=list, sa_column=Column(JSON))
     case_number: int | None = None
     case_created_at: datetime | None = Field(default_factory=datetime.utcnow)
     case_expires_at: datetime | None = None
