@@ -1,8 +1,8 @@
 from discord.ext import commands
 from reactionmenu import ViewButton, ViewMenu
 
-from tux.database.models import Snippet
 from tux.bot import Tux
+from tux.database.models import Snippet
 from tux.utils.constants import CONST
 from tux.utils.functions import generate_usage
 

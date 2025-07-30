@@ -8,9 +8,9 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.database.models import CaseType
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
+from tux.database.models import CaseType
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils.constants import CONST
 from tux.utils.exceptions import handle_case_result, handle_gather_result

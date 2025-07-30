@@ -32,14 +32,13 @@ class DatabaseClient:
     # Public helpers
     # ---------------------------------------------------------------------
 
-    def is_connected(self) -> bool:  # noqa: D401 – method to keep backwards-compat
+    def is_connected(self) -> bool:
         """Return True if the engine/metadata are initialised."""
         return self._engine is not None
 
     # Existing code queried `db.is_registered()` to check models; same semantics
-    def is_registered(self) -> bool:  # noqa: D401
+    def is_registered(self) -> bool:
         return self.is_connected()
-
 
     async def connect(self, database_url: str | None = None, *, echo: bool = False) -> None:
         """Initialise the async engine and create all tables.

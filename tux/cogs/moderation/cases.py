@@ -5,9 +5,9 @@ from discord.ext import commands
 from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
-from tux.database.models import CaseType, Case
-from typing import Any, Dict
-CaseWhereInput = Dict[str, Any]
+from tux.database.models import Case, CaseType
+
+CaseWhereInput = dict[str, Any]
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks

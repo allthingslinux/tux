@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from enum import Enum
-from typing import List, Optional, Any, Callable, cast
+from typing import Any, cast
 
-from sqlmodel import Field as _SMField, Relationship, SQLModel
-from sqlalchemy import Column, JSON
+from sqlalchemy import JSON, Column
+from sqlmodel import Field as _SMField
+from sqlmodel import Relationship, SQLModel
 
 # Explicitly annotate Field callable to satisfy Pyright strict mode
 Field = cast(Any, _SMField)
@@ -37,7 +38,7 @@ class CaseType(str, Enum):
 
 class Guild(SQLModel, table=True):
     guild_id: int = Field(primary_key=True, sa_column_kwargs={"index": True})
-    guild_joined_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC))
+    guild_joined_at: datetime | None = Field(default_factory=lambda: datetime.now(UTC))
     case_count: int = Field(default=0, nullable=False)
 
     # --- relationships ---
@@ -135,9 +136,9 @@ class Case(SQLModel, table=True):
     case_reason: str
     case_moderator_id: int
     case_user_id: int
-    case_user_roles: List[int] = Field(default_factory=list, sa_column=Column(JSON))
+    case_user_roles: list[int] = Field(default_factory=list, sa_column=Column(JSON))
     case_number: int | None = None
-    case_created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC))
+    case_created_at: datetime | None = Field(default_factory=lambda: datetime.now(UTC))
     case_expires_at: datetime | None = None
     case_tempban_expired: bool | None = Field(default=False)
 

@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from tux.database.models import Reminder
 from tux.database.controllers.base import BaseController
+from tux.database.models import Reminder
 
 
 class ReminderController(BaseController[Reminder]):

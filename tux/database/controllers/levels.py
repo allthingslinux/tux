@@ -3,8 +3,8 @@ import math
 
 from loguru import logger
 
-from tux.database.models import Levels
 from tux.database.controllers.base import BaseController
+from tux.database.models import Levels
 
 
 class LevelsController(BaseController[Levels]):

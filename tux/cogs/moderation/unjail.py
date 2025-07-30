@@ -4,8 +4,8 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.database.models import CaseType, Case
 from tux.bot import Tux
+from tux.database.models import Case, CaseType
 from tux.utils import checks
 from tux.utils.flags import UnjailFlags
 from tux.utils.functions import generate_usage

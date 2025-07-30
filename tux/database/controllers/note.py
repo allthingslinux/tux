@@ -1,6 +1,6 @@
 # Switched to SQLModel models
-from tux.database.models import Note
 from tux.database.controllers.base import BaseController
+from tux.database.models import Note
 
 
 class NoteController(BaseController[Note]):

@@ -3,9 +3,9 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
-from tux.database.models import CaseType
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
+from tux.database.models import CaseType
 from tux.ui.embeds import EmbedCreator
 from tux.utils.converters import get_channel_safe
 

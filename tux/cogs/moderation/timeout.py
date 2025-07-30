@@ -3,8 +3,8 @@ import datetime
 import discord
 from discord.ext import commands
 
-from tux.database.models import CaseType
 from tux.bot import Tux
+from tux.database.models import CaseType
 from tux.utils import checks
 from tux.utils.flags import TimeoutFlags
 from tux.utils.functions import generate_usage, parse_time_string

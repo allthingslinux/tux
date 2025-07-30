@@ -1,7 +1,7 @@
 import datetime
 
-from tux.database.models import Snippet
 from tux.database.controllers.base import BaseController
+from tux.database.models import Snippet
 
 
 class SnippetController(BaseController[Snippet]):
@@ -79,8 +79,7 @@ class SnippetController(BaseController[Snippet]):
         Snippet | None
             The snippet if found, None otherwise
         """
-        from sqlalchemy import select
-        from sqlalchemy import func
+        from sqlalchemy import func, select
         from sqlalchemy.ext.asyncio import AsyncSession
 
         async def _op(session: AsyncSession):
@@ -118,8 +117,7 @@ class SnippetController(BaseController[Snippet]):
         Snippet | None
             The snippet if found, None otherwise
         """
-        from sqlalchemy import select
-        from sqlalchemy import func
+        from sqlalchemy import func, select
         from sqlalchemy.ext.asyncio import AsyncSession
 
         async def _op(session: AsyncSession):

@@ -47,10 +47,9 @@ runs:
     # Installs specified Poetry groups with CI-optimized settings
     - name: Install dependencies
       shell: bash
-      run: |
+      run: |-
         if [[ "${{ inputs.install-groups }}" == "main" ]]; then
           poetry install --only=main --no-interaction --no-ansi
         else
           poetry install --with=${{ inputs.install-groups }} --no-interaction --no-ansi
         fi
-

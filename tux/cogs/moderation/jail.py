@@ -2,8 +2,8 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.database.models import CaseType
 from tux.bot import Tux
+from tux.database.models import CaseType
 from tux.utils import checks
 from tux.utils.flags import JailFlags
 from tux.utils.functions import generate_usage

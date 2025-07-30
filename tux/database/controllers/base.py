@@ -205,7 +205,7 @@ class BaseController(Generic[ModelT]):
 
         return await self._execute_query(_op, f"upsert {self.model_name}")
 
-    async def update_many(self, *, where: dict[str, Any], data: dict[str, Any]) -> int:  # noqa: D401
+    async def update_many(self, *, where: dict[str, Any], data: dict[str, Any]) -> int:
         res = await self.update(where=where, data=data)
         return 1 if res else 0
 
@@ -217,7 +217,7 @@ class BaseController(Generic[ModelT]):
     # Compatibility helpers – transaction wrapper
     # ------------------------------------------------------------------
 
-    async def execute_transaction(self, callback: Callable[[], Any]) -> Any:  # noqa: D401 – compat
+    async def execute_transaction(self, callback: Callable[[], Any]) -> Any:
         """Execute *callback* inside a database session / transaction block."""
 
         try:

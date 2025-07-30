@@ -7,14 +7,14 @@ This file wires Alembic to the *runtime* SQLModel metadata defined in
 reflects changes to the declarative models.
 """
 
-import asyncio
 import os
 from logging.config import fileConfig
 from typing import Any
 
-from alembic import context
 from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
+
+from alembic import context
 
 # Import models so their metadata is registered.
 from tux.database import models as _models  # noqa: F401  # pylint: disable=unused-import
@@ -46,6 +46,7 @@ if DATABASE_URL.startswith("postgresql://") and "+asyncpg" not in DATABASE_URL:
 # Helper functions
 # --------------------------------------------------------
 
+
 def get_engine_config(overrides: dict[str, Any] | None = None) -> dict[str, Any]:
     """Return the SQLAlchemy Engine configuration for Alembic."""
 
@@ -62,7 +63,8 @@ def get_engine_config(overrides: dict[str, Any] | None = None) -> dict[str, Any]
 # Offline / online migration runners
 # --------------------------------------------------------
 
-def run_migrations_offline() -> None:  # noqa: D401 – Alembic hook
+
+def run_migrations_offline() -> None:
     """Run migrations without an Engine (generates SQL scripts)."""
 
     context.configure(
@@ -76,7 +78,7 @@ def run_migrations_offline() -> None:  # noqa: D401 – Alembic hook
         context.run_migrations()
 
 
-def run_migrations_online() -> None:  # noqa: D401 – Alembic hook
+def run_migrations_online() -> None:
     """Run migrations in ‘online’ mode with a live DB connection."""
 
     connectable = engine_from_config(

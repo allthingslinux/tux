@@ -6,9 +6,9 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.database.models import Reminder
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
+from tux.database.models import Reminder
 from tux.ui.embeds import EmbedCreator
 from tux.utils.functions import convert_to_seconds, generate_usage
 
