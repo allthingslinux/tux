@@ -12,9 +12,8 @@ from sqlmodel import SQLModel
 class DatabaseClient:
     """Singleton wrapper around an *async* SQLAlchemy engine / session factory.
 
-    This class replaces the previous Prisma-based client while exposing a very
-    similar public API so that the higher-level controllers require only minimal
-    changes.  All interactions go through an :pyclass:`~sqlalchemy.ext.asyncio.AsyncSession`.
+    This class provides a clean async interface for database operations using SQLModel
+    and SQLAlchemy. All interactions go through an :pyclass:`~sqlalchemy.ext.asyncio.AsyncSession`.
     """
 
     _instance: DatabaseClient | None = None
@@ -64,10 +63,10 @@ class DatabaseClient:
         self._engine = create_async_engine(database_url, echo=echo, future=True)
         self._session_factory = async_sessionmaker(self._engine, expire_on_commit=False, class_=AsyncSession)
 
-        # Create tables (equivalent to `prisma db push` for now - migrations will
-        # be handled by Alembic, but auto-create helps during development & tests).
-        async with self._engine.begin() as conn:
-            await conn.run_sync(SQLModel.metadata.create_all)
+        # Create tables (auto-create helps during development & tests, migrations
+        # are handled by Alembic).
+        async with self._engine.begin() as conn:  # type: ignore[attr-defined]
+            await conn.run_sync(SQLModel.metadata.create_all)  # type: ignore[attr-defined]
 
         logger.info("Successfully connected to database via SQLModel/SQLAlchemy")
 
@@ -78,7 +77,7 @@ class DatabaseClient:
             return
 
         assert self._engine is not None  # mypy
-        await self._engine.dispose()
+        await self._engine.dispose()  # type: ignore[attr-defined]
         self._engine = None
         self._session_factory = None
         logger.info("Disconnected from database")
@@ -94,12 +93,12 @@ class DatabaseClient:
             error_msg = "Database engine not initialised - call connect() first"
             raise RuntimeError(error_msg)
         assert self._session_factory is not None  # mypy
-        async with self._session_factory() as sess:
+        async with self._session_factory() as sess:  # type: ignore[attr-defined]
             try:
                 yield sess
-                await sess.commit()
+                await sess.commit()  # type: ignore[attr-defined]
             except Exception:
-                await sess.rollback()
+                await sess.rollback()  # type: ignore[attr-defined]
                 raise
 
     @asynccontextmanager
@@ -110,6 +109,6 @@ class DatabaseClient:
 
 
 # A *process-level* singleton instance - mirrors the old behaviour
-# where the Prisma client lived at ``tux.database.client.db``.
+# where the database client lives at ``tux.database.client.db``.
 
 db = DatabaseClient()

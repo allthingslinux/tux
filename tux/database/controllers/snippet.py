@@ -87,8 +87,8 @@ class SnippetController(BaseController[Snippet]):
             stmt = select(Snippet)
             pattern = f"%{snippet_name}%"
             stmt = stmt.where(func.lower(Snippet.snippet_name).like(pattern.lower()))
-            result = await session.execute(stmt)
-            snippet_obj = result.scalar_one_or_none()
+            result = await session.execute(stmt)  # type: ignore[attr-defined]
+            snippet_obj = result.scalar_one_or_none()  # type: ignore[attr-defined]
             if include_guild and snippet_obj is not None:
                 # Access relationship to ensure it is loaded; ignore typing for dynamic attribute
                 getattr(snippet_obj, "guild", None)  # type: ignore[attr-defined]
@@ -124,8 +124,8 @@ class SnippetController(BaseController[Snippet]):
                 func.lower(Snippet.snippet_name) == snippet_name.lower(),  # type: ignore[arg-type]
                 Snippet.guild_id == guild_id,  # type: ignore[arg-type]
             )
-            result = await session.execute(stmt)
-            snippet_obj = result.scalar_one_or_none()
+            result = await session.execute(stmt)  # type: ignore[attr-defined]
+            snippet_obj = result.scalar_one_or_none()  # type: ignore[attr-defined]
             if include_guild and snippet_obj is not None:
                 getattr(snippet_obj, "guild", None)  # type: ignore[attr-defined]
             return snippet_obj

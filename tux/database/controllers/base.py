@@ -1,4 +1,4 @@
-"""Shared SQLModel-powered base controller replacing the old Prisma-based version."""
+"""Shared SQLModel-powered base controller for database operations."""
 
 from __future__ import annotations
 
@@ -22,18 +22,16 @@ class BaseController[ModelT]:
     """A thin asynchronous repository / DAO layer.
 
     The goal is *not* to hide SQLAlchemy entirely but to provide a small,
-    opinionated convenience wrapper that matches the minimal subset of methods
-    that were previously offered by the Prisma-powered controller.
+    opinionated convenience wrapper for common database operations.
 
-    The public API therefore continues to expose familiar methods such as
-    ``find_many`` or ``create`` so that the higher-level business-logic remains
-    largely untouched.
+    The public API exposes familiar methods such as ``find_many`` or ``create``
+    for clean and consistent database access patterns.
     """
 
     def __init__(self, model: type[ModelT]):
         self.model = model
         self.model_name = model.__name__.lower()
-        # Backwards-compatibility - many controllers used `self.table` to access
+        # Legacy support - many controllers used `self.table` to access
         # the underlying ORM model (mainly for `.upsert`).
         self.table = model
 
@@ -69,22 +67,20 @@ class BaseController[ModelT]:
         self,
         *,
         where: dict[str, Any],
-        include: dict[str, bool] | None = None,  # ignored but kept for API compatibility
+        include: dict[str, bool] | None = None,  # ignored but kept for API consistency
         **__: Any,
     ) -> ModelT | None:
         """Return the first row that matches *where* or *None*."""
 
         async def _op(session: AsyncSession):
             stmt = select(self.model).filter_by(**where).limit(1)
-            result = await session.execute(stmt)
-            return result.scalar_one_or_none()
+            result = await session.execute(stmt)  # type: ignore[attr-defined]
+            return result.scalar_one_or_none()  # type: ignore[attr-defined]
 
         return await self._execute_query(_op, f"find_one {self.model_name}")
 
-    # NOTE: The old Prisma-powered layer had separate ``find_unique`` and
-    # ``find_first`` helpers.  For our purposes a unique lookup is identical to
-    # ``find_one`` when the *where* clause targets a unique / primary-key
-    # constraint.
+    # NOTE: For our purposes a unique lookup is identical to ``find_one`` when
+    # the *where* clause targets a unique / primary-key constraint.
 
     async def find_unique(
         self,
@@ -119,8 +115,8 @@ class BaseController[ModelT]:
                 stmt = stmt.limit(take)
             if skip is not None:
                 stmt = stmt.offset(skip)
-            res = await session.execute(stmt)
-            return res.scalars().all()
+            res = await session.execute(stmt)  # type: ignore[attr-defined]
+            return res.scalars().all()  # type: ignore[attr-defined]
 
         return await self._execute_query(_op, f"find_many {self.model_name}")
 
@@ -129,8 +125,8 @@ class BaseController[ModelT]:
             stmt = select(func.count()).select_from(self.model)
             if where:
                 stmt = stmt.filter_by(**where)
-            result = await session.execute(stmt)
-            return result.scalar_one()
+            result = await session.execute(stmt)  # type: ignore[attr-defined]
+            return result.scalar_one()  # type: ignore[attr-defined]
 
         return await self._execute_query(_op, f"count {self.model_name}")
 
@@ -138,12 +134,12 @@ class BaseController[ModelT]:
         self,
         *,
         data: dict[str, Any],
-        include: dict[str, bool] | None = None,  # ignored for compat
+        include: dict[str, bool] | None = None,  # ignored for consistency
     ) -> ModelT:
         async def _op(session: AsyncSession):
             obj = self.model(**data)  # type: ignore[arg-type]
-            session.add(obj)
-            await session.flush()  # populate PKs
+            session.add(obj)  # type: ignore[attr-defined]
+            await session.flush()  # type: ignore[attr-defined] # populate PKs
             return obj
 
         return await self._execute_query(_op, f"create {self.model_name}")
@@ -157,8 +153,8 @@ class BaseController[ModelT]:
     ) -> ModelT | None:
         async def _op(session: AsyncSession):
             stmt = sa_update(self.model).filter_by(**where).values(**data).returning(self.model)
-            result = await session.execute(stmt)
-            return result.scalar_one_or_none()
+            result = await session.execute(stmt)  # type: ignore[attr-defined]
+            return result.scalar_one_or_none()  # type: ignore[attr-defined]
 
         return await self._execute_query(_op, f"update {self.model_name}")
 
@@ -170,8 +166,8 @@ class BaseController[ModelT]:
     ) -> ModelT | None:
         async def _op(session: AsyncSession):
             stmt = sa_delete(self.model).filter_by(**where).returning(self.model)
-            result = await session.execute(stmt)
-            return result.scalar_one_or_none()
+            result = await session.execute(stmt)  # type: ignore[attr-defined]
+            return result.scalar_one_or_none()  # type: ignore[attr-defined]
 
         return await self._execute_query(_op, f"delete {self.model_name}")
 
@@ -184,7 +180,7 @@ class BaseController[ModelT]:
         data: dict[str, Any] | None = None,
         include: dict[str, bool] | None = None,
     ) -> ModelT:
-        # Support old signature with `data` containing create/update dicts
+        # Support legacy signature with `data` containing create/update dicts
         if data is not None and (create is None or update is None):
             create = data.get("create", {})  # type: ignore[arg-type]
             update = data.get("update", {})  # type: ignore[arg-type]
@@ -192,15 +188,15 @@ class BaseController[ModelT]:
 
         async def _op(session: AsyncSession):
             stmt = select(self.model).filter_by(**where).with_for_update()
-            result = await session.execute(stmt)
-            obj = result.scalar_one_or_none()
+            result = await session.execute(stmt)  # type: ignore[attr-defined]
+            obj = result.scalar_one_or_none()  # type: ignore[attr-defined]
             if obj is None:
                 obj = self.model(**{**where, **create})  # type: ignore[arg-type]
-                session.add(obj)
+                session.add(obj)  # type: ignore[attr-defined]
             else:
                 for key, value in update.items():
                     setattr(obj, key, value)
-            await session.flush()
+            await session.flush()  # type: ignore[attr-defined]
             return obj
 
         return await self._execute_query(_op, f"upsert {self.model_name}")
@@ -214,7 +210,7 @@ class BaseController[ModelT]:
         return 1 if res else 0
 
     # ------------------------------------------------------------------
-    # Compatibility helpers - transaction wrapper
+    # Transaction helpers
     # ------------------------------------------------------------------
 
     async def execute_transaction(self, callback: Callable[[], Any]) -> Any:
@@ -241,9 +237,8 @@ class BaseController[ModelT]:
         return getattr(obj, attr, default)
 
     # The old implementation exposed a *static* connect_or_create_relation helper
-    # used when inserting nested relations through Prisma.  Under SQLModel we can
-    # just set the foreign-key field directly, but we keep this shim so that the
-    # higher-level code does not need to be rewritten right away.
+    # used when inserting nested relations.  Under SQLModel we can just set the
+    # foreign-key field directly, but we keep this shim for API consistency.
     @staticmethod
     def connect_or_create_relation(id_field: str, model_id: Any, *_: Any, **__: Any) -> dict[str, Any]:
         """Return a dict with a single key that can be merged into *data* dicts.

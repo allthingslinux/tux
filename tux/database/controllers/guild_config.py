@@ -5,9 +5,9 @@ from loguru import logger
 from tux.database.controllers.base import BaseController
 from tux.database.models import Guild, GuildConfig
 
-# Remove Prisma generated typing aliases - use plain str/Any
-GuildConfigScalarFieldKeys = str  # type: ignore
-GuildConfigUpdateInput = dict[str, Any]  # type: ignore
+# Type aliases for configuration field names and update data
+GuildConfigScalarFieldKeys = str
+GuildConfigUpdateInput = dict[str, Any]
 
 
 class GuildConfigController(BaseController[GuildConfig]):

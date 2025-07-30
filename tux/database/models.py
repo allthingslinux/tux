@@ -2,21 +2,16 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, cast
 
 from sqlalchemy import JSON, Column
-from sqlmodel import Field as _SMField
-from sqlmodel import Relationship, SQLModel
-
-# Explicitly annotate Field callable to satisfy Pyright strict mode
-Field = cast(Any, _SMField)
+from sqlmodel import Field, Relationship, SQLModel  # type: ignore
 
 
 class CaseType(str, Enum):
     """Enumeration of moderation case types.
 
-    This mirrors the values previously defined in the Prisma schema so that
-    existing business-logic can continue to rely on the same string values.
+    This maintains the same string values for consistency with existing
+    business logic and database records.
     """
 
     BAN = "BAN"

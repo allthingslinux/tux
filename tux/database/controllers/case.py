@@ -4,10 +4,7 @@ from typing import Any
 from tux.database.controllers.base import BaseController
 from tux.database.models import Case, CaseType, Guild
 
-# NOTE: Prisma-specific CaseWhereInput was a typed-dict for filtering; we
-# replace it with a plain `dict[str, Any]` for now, maintaining backward
-# compatibility with function signatures that previously expected the Prisma
-# generated type.
+# Type alias for case filtering criteria
 CaseWhereInput = dict[str, Any]
 
 
