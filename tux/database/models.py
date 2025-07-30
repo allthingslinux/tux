@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from datetime import datetime, UTC
 from enum import Enum
-from typing import List, Optional, Any, Callable
+from typing import List, Optional, Any, Callable, cast
 
 from sqlmodel import Field as _SMField, Relationship, SQLModel
 from sqlalchemy import Column, JSON
 
 # Explicitly annotate Field callable to satisfy Pyright strict mode
-Field: Callable[..., Any] = _SMField  # type: ignore[assignment]
+Field = cast(Callable[..., Any], _SMField)
 
 
 class CaseType(str, Enum):

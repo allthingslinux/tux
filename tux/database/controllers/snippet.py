@@ -124,8 +124,8 @@ class SnippetController(BaseController[Snippet]):
 
         async def _op(session: AsyncSession):
             stmt = select(Snippet).where(
-                func.lower(Snippet.snippet_name) == snippet_name.lower(),
-                Snippet.guild_id == guild_id,
+                func.lower(Snippet.snippet_name) == snippet_name.lower(),  # type: ignore[arg-type]
+                Snippet.guild_id == guild_id,  # type: ignore[arg-type]
             )
             result = await session.execute(stmt)
             snippet_obj = result.scalar_one_or_none()

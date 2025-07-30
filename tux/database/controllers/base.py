@@ -221,7 +221,7 @@ class BaseController(Generic[ModelT]):
         """Execute *callback* inside a database session / transaction block."""
 
         try:
-            async with db.transaction() as session:  # db.transaction yields AsyncSession
+            async with db.transaction() as _session:  # db.transaction yields AsyncSession
                 # Provide session to callback by setting attribute maybe? The old
                 # code expected none, so we just call callback; operations inside
                 # will create their own sessions where needed.  This still gives
