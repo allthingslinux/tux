@@ -8,7 +8,7 @@ from sqlmodel import Field as _SMField, Relationship, SQLModel
 from sqlalchemy import Column, JSON
 
 # Explicitly annotate Field callable to satisfy Pyright strict mode
-Field = cast(Callable[..., Any], _SMField)
+Field = cast(Any, _SMField)
 
 
 class CaseType(str, Enum):
