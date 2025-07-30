@@ -5,10 +5,8 @@ from discord.ext import commands
 from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
-from tux.database.models import Case, CaseType
-
-CaseWhereInput = dict[str, Any]
 from tux.bot import Tux
+from tux.database.models import Case, CaseType
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.constants import CONST
@@ -16,6 +14,8 @@ from tux.utils.flags import CaseModifyFlags, CasesViewFlags
 from tux.utils.functions import generate_usage
 
 from . import ModerationCogBase
+
+CaseWhereInput = dict[str, Any]
 
 # Maps case types to their corresponding emoji keys
 CASE_TYPE_EMOJI_MAP = {

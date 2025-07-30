@@ -40,7 +40,7 @@ class CaseController(BaseController[Case]):
         int
             The next case number for the guild.
         """
-        # Try to fetch the guild entry – if it doesn't exist, create it with
+        # Try to fetch the guild entry - if it doesn't exist, create it with
         # case_count = 1.  Otherwise increment the counter atomically inside a
         # transaction block to avoid race-conditions.
         guild = await self._guild_repo.find_one(where={"guild_id": guild_id})

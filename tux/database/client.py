@@ -43,16 +43,17 @@ class DatabaseClient:
     async def connect(self, database_url: str | None = None, *, echo: bool = False) -> None:
         """Initialise the async engine and create all tables.
 
-        The *first* call performs initialisation – every subsequent call is a
+        The *first* call performs initialisation - every subsequent call is a
         no-op (but will log a warning).
         """
         if self.is_connected():
-            logger.warning("Database engine already connected – reusing existing engine")
+            logger.warning("Database engine already connected - reusing existing engine")
             return
 
         database_url = database_url or os.getenv("DATABASE_URL")
         if not database_url:
-            raise RuntimeError("DATABASE_URL environment variable must be set before connecting to the DB")
+            error_msg = "DATABASE_URL environment variable must be set before connecting to the DB"
+            raise RuntimeError(error_msg)
 
         # SQLAlchemy async engines expect an async driver (e.g. asyncpg for Postgres)
         # If the user provided a sync URL, we attempt to coerce it to async-pg URL.
@@ -63,7 +64,7 @@ class DatabaseClient:
         self._engine = create_async_engine(database_url, echo=echo, future=True)
         self._session_factory = async_sessionmaker(self._engine, expire_on_commit=False, class_=AsyncSession)
 
-        # Create tables (equivalent to `prisma db push` for now – migrations will
+        # Create tables (equivalent to `prisma db push` for now - migrations will
         # be handled by Alembic, but auto-create helps during development & tests).
         async with self._engine.begin() as conn:
             await conn.run_sync(SQLModel.metadata.create_all)
@@ -73,7 +74,7 @@ class DatabaseClient:
     async def disconnect(self) -> None:
         """Dispose the engine and tear-down the connection pool."""
         if not self.is_connected():
-            logger.warning("Database engine not connected – nothing to disconnect")
+            logger.warning("Database engine not connected - nothing to disconnect")
             return
 
         assert self._engine is not None  # mypy
@@ -90,7 +91,8 @@ class DatabaseClient:
     async def session(self) -> AsyncGenerator[AsyncSession]:
         """Return an async SQLAlchemy session context-manager."""
         if not self.is_connected():
-            raise RuntimeError("Database engine not initialised – call connect() first")
+            error_msg = "Database engine not initialised - call connect() first"
+            raise RuntimeError(error_msg)
         assert self._session_factory is not None  # mypy
         async with self._session_factory() as sess:
             try:
@@ -102,12 +104,12 @@ class DatabaseClient:
 
     @asynccontextmanager
     async def transaction(self) -> AsyncGenerator[AsyncSession]:
-        """Synonym for :pyfunc:`session` – kept for API parity."""
+        """Synonym for :pyfunc:`session` - kept for API parity."""
         async with self.session() as sess:
             yield sess
 
 
-# A *process-level* singleton instance – mirrors the old behaviour
+# A *process-level* singleton instance - mirrors the old behaviour
 # where the Prisma client lived at ``tux.database.client.db``.
 
 db = DatabaseClient()

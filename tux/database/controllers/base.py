@@ -1,9 +1,9 @@
-from __future__ import annotations
-
 """Shared SQLModel-powered base controller replacing the old Prisma-based version."""
 
+from __future__ import annotations
+
 from collections.abc import Callable
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
 import sentry_sdk
 from loguru import logger
@@ -18,7 +18,7 @@ from tux.database.client import db
 ModelT = TypeVar("ModelT", bound=SQLModel)
 
 
-class BaseController(Generic[ModelT]):
+class BaseController[ModelT]:
     """A thin asynchronous repository / DAO layer.
 
     The goal is *not* to hide SQLAlchemy entirely but to provide a small,
@@ -33,12 +33,12 @@ class BaseController(Generic[ModelT]):
     def __init__(self, model: type[ModelT]):
         self.model = model
         self.model_name = model.__name__.lower()
-        # Backwards-compatibility – many controllers used `self.table` to access
+        # Backwards-compatibility - many controllers used `self.table` to access
         # the underlying ORM model (mainly for `.upsert`).
         self.table = model
 
     # ------------------------------------------------------------------
-    # Helper – internal
+    # Helper - internal
     # ------------------------------------------------------------------
 
     async def _execute_query(self, op: Callable[[AsyncSession], Any], span_desc: str) -> Any:
@@ -51,7 +51,7 @@ class BaseController(Generic[ModelT]):
                     async with db.session() as _session:
                         result = await op(_session)
                     span.set_status("ok")
-                    return result  # noqa: TRY300 – maintain behaviour
+                    return result  # noqa: TRY300 - maintain behaviour
                 except Exception as exc:
                     span.set_status("internal_error")
                     span.set_data("error", str(exc))
@@ -214,7 +214,7 @@ class BaseController(Generic[ModelT]):
         return 1 if res else 0
 
     # ------------------------------------------------------------------
-    # Compatibility helpers – transaction wrapper
+    # Compatibility helpers - transaction wrapper
     # ------------------------------------------------------------------
 
     async def execute_transaction(self, callback: Callable[[], Any]) -> Any:
@@ -237,7 +237,7 @@ class BaseController(Generic[ModelT]):
 
     @staticmethod
     def safe_get_attr(obj: Any, attr: str, default: Any = None) -> Any:
-        """Return ``getattr(obj, attr, default)`` – keeps old helper available."""
+        """Return ``getattr(obj, attr, default)`` - keeps old helper available."""
         return getattr(obj, attr, default)
 
     # The old implementation exposed a *static* connect_or_create_relation helper
