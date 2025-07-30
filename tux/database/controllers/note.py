@@ -1,7 +1,6 @@
-from prisma.actions import GuildActions
-from prisma.models import Guild, Note
-from tux.database.client import db
+# Switched to SQLModel models
 from tux.database.controllers.base import BaseController
+from tux.database.models import Note
 
 
 class NoteController(BaseController[Note]):
@@ -13,8 +12,7 @@ class NoteController(BaseController[Note]):
 
     def __init__(self):
         """Initialize the NoteController with the note table."""
-        super().__init__("note")
-        self.guild_table: GuildActions[Guild] = db.client.guild
+        super().__init__(Note)
 
     async def get_all_notes(self) -> list[Note]:
         """Get all notes across all guilds.

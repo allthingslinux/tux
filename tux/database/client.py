@@ -1,155 +1,114 @@
+from __future__ import annotations
+
+import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import TypeVar
 
 from loguru import logger
-
-from prisma import Prisma
-
-T = TypeVar("T")
-
-# Error messages
-CLIENT_NOT_CONNECTED = "Database client is not connected. Call connect() first."
-CLIENT_ALREADY_CONNECTED = "Database client is already connected."
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlmodel import SQLModel
 
 
 class DatabaseClient:
-    """A singleton database client that manages the Prisma connection.
+    """Singleton wrapper around an *async* SQLAlchemy engine / session factory.
 
-    This class provides a centralized way to manage the database connection
-    and ensures proper connection handling throughout the application lifecycle.
+    This class provides a clean async interface for database operations using SQLModel
+    and SQLAlchemy. All interactions go through an :pyclass:`~sqlalchemy.ext.asyncio.AsyncSession`.
     """
 
-    _instance = None
-    _client: Prisma | None = None
+    _instance: DatabaseClient | None = None
 
-    def __new__(cls):
+    def __new__(cls) -> DatabaseClient:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    @property
-    def client(self) -> Prisma:
-        """Get the Prisma client instance.
+    def __init__(self) -> None:
+        self._engine: AsyncEngine | None = None
+        self._session_factory: async_sessionmaker[AsyncSession] | None = None
 
-        Returns
-        -------
-        Prisma
-            The Prisma client instance.
-
-        Raises
-        ------
-        RuntimeError
-            If the client is not connected.
-        """
-        if self._client is None:
-            raise RuntimeError(CLIENT_NOT_CONNECTED)
-        return self._client
+    # ---------------------------------------------------------------------
+    # Public helpers
+    # ---------------------------------------------------------------------
 
     def is_connected(self) -> bool:
-        """Check if the database client is connected.
+        """Return True if the engine/metadata are initialised."""
+        return self._engine is not None
 
-        Returns
-        -------
-        bool
-            True if the client is connected, False otherwise.
-        """
-        return self._client is not None
-
+    # Existing code queried `db.is_registered()` to check models; same semantics
     def is_registered(self) -> bool:
-        """Check if the database client is properly registered.
-
-        Returns
-        -------
-        bool
-            True if the client is registered with models, False otherwise.
-        """
-        # Since we use auto_register=True in connect(), if connected then registered
         return self.is_connected()
 
-    async def connect(self) -> None:
-        """Connect to the database.
+    async def connect(self, database_url: str | None = None, *, echo: bool = False) -> None:
+        """Initialise the async engine and create all tables.
 
-        This method establishes the database connection and performs
-        any necessary initialization.
-
-        Notes
-        -----
-        The DATABASE_URL environment variable should be set before calling
-        this method, which is handled by the tux.utils.env module.
+        The *first* call performs initialisation - every subsequent call is a
+        no-op (but will log a warning).
         """
-        if self._client is not None:
-            logger.warning(CLIENT_ALREADY_CONNECTED)
+        if self.is_connected():
+            logger.warning("Database engine already connected - reusing existing engine")
             return
 
-        try:
-            self._client = Prisma(
-                log_queries=False,
-                auto_register=True,
-            )
-            await self._client.connect()
-            logger.info("Successfully connected to database.")
-        except Exception as e:
-            logger.error(f"Failed to connect to database: {e}")
-            raise
+        database_url = database_url or os.getenv("DATABASE_URL")
+        if not database_url:
+            error_msg = "DATABASE_URL environment variable must be set before connecting to the DB"
+            raise RuntimeError(error_msg)
+
+        # SQLAlchemy async engines expect an async driver (e.g. asyncpg for Postgres)
+        # If the user provided a sync URL, we attempt to coerce it to async-pg URL.
+        if database_url.startswith("postgresql://") and "+asyncpg" not in database_url:
+            database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+        logger.debug(f"Creating async SQLAlchemy engine (echo={echo})")
+        self._engine = create_async_engine(database_url, echo=echo, future=True)
+        self._session_factory = async_sessionmaker(self._engine, expire_on_commit=False, class_=AsyncSession)
+
+        # Create tables (auto-create helps during development & tests, migrations
+        # are handled by Alembic).
+        async with self._engine.begin() as conn:  # type: ignore[attr-defined]
+            await conn.run_sync(SQLModel.metadata.create_all)  # type: ignore[attr-defined]
+
+        logger.info("Successfully connected to database via SQLModel/SQLAlchemy")
 
     async def disconnect(self) -> None:
-        """Disconnect from the database.
-
-        This method closes the database connection and performs
-        any necessary cleanup.
-        """
-        if self._client is None:
-            logger.warning("Database client is not connected.")
+        """Dispose the engine and tear-down the connection pool."""
+        if not self.is_connected():
+            logger.warning("Database engine not connected - nothing to disconnect")
             return
 
-        try:
-            await self._client.disconnect()
-            self._client = None
-            logger.info("Successfully disconnected from database.")
-        except Exception as e:
-            logger.error(f"Failed to disconnect from database: {e}")
-            raise
+        assert self._engine is not None  # mypy
+        await self._engine.dispose()  # type: ignore[attr-defined]
+        self._engine = None
+        self._session_factory = None
+        logger.info("Disconnected from database")
+
+    # ------------------------------------------------------------------
+    # Session / transaction helpers
+    # ------------------------------------------------------------------
 
     @asynccontextmanager
-    async def transaction(self) -> AsyncGenerator[None]:
-        """Create a database transaction.
-
-        This context manager ensures that database operations are atomic
-        and handles rollback in case of errors.
-
-        Yields
-        ------
-        None
-            Control is yielded to the caller within the transaction.
-        """
-        if self._client is None:
-            raise RuntimeError(CLIENT_NOT_CONNECTED)
-
-        async with self._client.batch_() as _:
+    async def session(self) -> AsyncGenerator[AsyncSession]:
+        """Return an async SQLAlchemy session context-manager."""
+        if not self.is_connected():
+            error_msg = "Database engine not initialised - call connect() first"
+            raise RuntimeError(error_msg)
+        assert self._session_factory is not None  # mypy
+        async with self._session_factory() as sess:  # type: ignore[attr-defined]
             try:
-                yield
-            except Exception as e:
-                logger.error(f"Transaction failed, rolling back: {e}")
+                yield sess
+                await sess.commit()  # type: ignore[attr-defined]
+            except Exception:
+                await sess.rollback()  # type: ignore[attr-defined]
                 raise
 
-    async def batch(self) -> AsyncGenerator[None]:
-        """Create a batch operation context.
-
-        This context manager allows batching multiple write operations
-        into a single database call for better performance.
-
-        Yields
-        ------
-        None
-            Control is yielded to the caller within the batch context.
-        """
-        if self._client is None:
-            raise RuntimeError(CLIENT_NOT_CONNECTED)
-
-        async with self._client.batch_() as _:
-            yield
+    @asynccontextmanager
+    async def transaction(self) -> AsyncGenerator[AsyncSession]:
+        """Synonym for :pyfunc:`session` - kept for API parity."""
+        async with self.session() as sess:
+            yield sess
 
 
-# Global database client instance
+# A *process-level* singleton instance - mirrors the old behaviour
+# where the database client lives at ``tux.database.client.db``.
+
 db = DatabaseClient()

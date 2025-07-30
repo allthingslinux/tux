@@ -1,9 +1,7 @@
 from datetime import datetime
 
-from prisma.actions import GuildActions
-from prisma.models import Guild, Reminder
-from tux.database.client import db
 from tux.database.controllers.base import BaseController
+from tux.database.models import Reminder
 
 
 class ReminderController(BaseController[Reminder]):
@@ -15,8 +13,7 @@ class ReminderController(BaseController[Reminder]):
 
     def __init__(self) -> None:
         """Initialize the ReminderController with the reminder table."""
-        super().__init__("reminder")
-        self.guild_table: GuildActions[Guild] = db.client.guild
+        super().__init__(Reminder)
 
     async def get_all_reminders(self) -> list[Reminder]:
         """Get all reminders across all guilds.

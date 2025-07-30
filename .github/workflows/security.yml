@@ -178,7 +178,6 @@ jobs:
           python-version: '3.13'
           install-groups: main
           cache-suffix: security
-          generate-prisma: 'false'
 
       # SECURITY VULNERABILITY SCANNING
       # Comprehensive security advisory checking with structured output

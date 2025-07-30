@@ -1,9 +1,10 @@
 import datetime
 
-from prisma.actions import GuildActions
-from prisma.models import Guild, Snippet
-from tux.database.client import db
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from tux.database.controllers.base import BaseController
+from tux.database.models import Snippet
 
 
 class SnippetController(BaseController[Snippet]):
@@ -15,8 +16,7 @@ class SnippetController(BaseController[Snippet]):
 
     def __init__(self) -> None:
         """Initialize the SnippetController with the snippet table."""
-        super().__init__("snippet")
-        self.guild_table: GuildActions[Guild] = db.client.guild
+        super().__init__(Snippet)
 
     async def get_all_snippets(self) -> list[Snippet]:
         """Get all snippets.
@@ -82,11 +82,19 @@ class SnippetController(BaseController[Snippet]):
         Snippet | None
             The snippet if found, None otherwise
         """
-        include = {"guild": True} if include_guild else None
-        return await self.find_one(
-            where={"snippet_name": {"contains": snippet_name, "mode": "insensitive"}},
-            include=include,
-        )
+
+        async def _op(session: AsyncSession):
+            stmt = select(Snippet)
+            pattern = f"%{snippet_name}%"
+            stmt = stmt.where(func.lower(Snippet.snippet_name).like(pattern.lower()))
+            result = await session.execute(stmt)  # type: ignore[attr-defined]
+            snippet_obj = result.scalar_one_or_none()  # type: ignore[attr-defined]
+            if include_guild and snippet_obj is not None:
+                # Access relationship to ensure it is loaded; ignore typing for dynamic attribute
+                getattr(snippet_obj, "guild", None)  # type: ignore[attr-defined]
+            return snippet_obj
+
+        return await self._execute_query(_op, "get_snippet_by_name")
 
     async def get_snippet_by_name_and_guild_id(
         self,
@@ -110,11 +118,19 @@ class SnippetController(BaseController[Snippet]):
         Snippet | None
             The snippet if found, None otherwise
         """
-        include = {"guild": True} if include_guild else None
-        return await self.find_one(
-            where={"snippet_name": {"equals": snippet_name, "mode": "insensitive"}, "guild_id": guild_id},
-            include=include,
-        )
+
+        async def _op(session: AsyncSession):
+            stmt = select(Snippet).where(
+                func.lower(Snippet.snippet_name) == snippet_name.lower(),  # type: ignore[arg-type]
+                Snippet.guild_id == guild_id,  # type: ignore[arg-type]
+            )
+            result = await session.execute(stmt)  # type: ignore[attr-defined]
+            snippet_obj = result.scalar_one_or_none()  # type: ignore[attr-defined]
+            if include_guild and snippet_obj is not None:
+                getattr(snippet_obj, "guild", None)  # type: ignore[attr-defined]
+            return snippet_obj
+
+        return await self._execute_query(_op, "get_snippet_by_name_and_guild_id")
 
     async def create_snippet(
         self,

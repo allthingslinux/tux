@@ -124,7 +124,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
           install-groups: dev,test,types
           cache-suffix: test
-          generate-prisma: 'true'
 
       # TEST ENVIRONMENT CONFIGURATION
       # Creates isolated test environment with SQLite for CI safety
