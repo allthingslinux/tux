@@ -152,5 +152,8 @@ class Config:
     LIMIT_TO_ROLE_IDS: Final[bool] = config["SNIPPETS"]["LIMIT_TO_ROLE_IDS"]
     ACCESS_ROLE_IDS: Final[list[int]] = config["SNIPPETS"]["ACCESS_ROLE_IDS"]
 
+    # IRC Bridges
+    BRIDGE_WEBHOOK_IDS: Final[list[int]] = config["IRC"]["BRIDGE_WEBHOOK_IDS"]
+
 
 CONFIG = Config()
