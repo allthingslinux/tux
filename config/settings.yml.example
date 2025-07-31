@@ -114,3 +114,9 @@ GIF_LIMITER: # Limits the amount of gifs a user can send in a channel
     "123456789012345": 2
   GIF_LIMITS_CHANNEL:
     "123456789012345": 3
+
+IRC: # IDs of the IRC bridge webhooks
+  BRIDGE_WEBHOOK_IDS:
+    - 123456789012345679
+    - 123456789012345679
+    - 123456789012345679
