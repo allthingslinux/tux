@@ -46,13 +46,13 @@ repos:
     hooks:
       - id: add-trailing-comma
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.5
+    rev: v0.12.7
     hooks:
       - id: ruff-check
         args:
           - --fix
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.5
+    rev: v0.12.7
     hooks:
       - id: ruff-format
   - repo: https://github.com/gitleaks/gitleaks
