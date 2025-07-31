@@ -153,7 +153,7 @@ class Config:
     ACCESS_ROLE_IDS: Final[list[int]] = config["SNIPPETS"]["ACCESS_ROLE_IDS"]
 
     # IRC Bridges
-    BRIDGE_WEBHOOK_IDS: Final[list[int]] = config["IRC"]["BRIDGE_WEBHOOK_IDS"]
+    BRIDGE_WEBHOOK_IDS: Final[list[int]] = [int(x) for x in config["IRC"]["BRIDGE_WEBHOOK_IDS"]]
 
 
 CONFIG = Config()
