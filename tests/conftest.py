@@ -4,6 +4,8 @@ import subprocess
 
 import pytest
 
+# Import dependency injection fixtures
+
 
 def pytest_configure(config: pytest.Config) -> None:
     """Configure pytest with custom markers."""
