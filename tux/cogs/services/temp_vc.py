@@ -2,12 +2,13 @@ import discord
 from discord.ext import commands
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.utils.config import CONFIG
 
 
-class TempVc(commands.Cog):
+class TempVc(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
         self.base_vc_name: str = "/tmp/"
 
     @commands.Cog.listener()

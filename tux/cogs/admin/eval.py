@@ -5,6 +5,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator
 from tux.utils import checks
 from tux.utils.config import CONFIG
@@ -40,9 +41,9 @@ def insert_returns(body: list[ast.stmt]) -> None:
         insert_returns(body[-1].body)
 
 
-class Eval(commands.Cog):
+class Eval(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
         self.eval.usage = generate_usage(self.eval)
 
     @commands.command(

@@ -6,6 +6,7 @@ from discord.ext import commands
 from reactionmenu import Page, ViewButton, ViewMenu, ViewSelect
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils.functions import generate_usage
 
@@ -88,9 +89,9 @@ continent_emojis = {
 }
 
 
-class Timezones(commands.Cog):
+class Timezones(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
         self.timezones.usage = generate_usage(self.timezones)
 
     @commands.hybrid_command(

@@ -7,6 +7,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.handlers.error import ERROR_CONFIG_MAP
 from tux.ui.embeds import EmbedCreator
 from tux.utils import checks
@@ -450,9 +451,9 @@ class ErrorTestRegistry:
         return self.tests.get(name)
 
 
-class Mock(commands.Cog):
+class Mock(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
         self.error_registry = ErrorTestRegistry()
 
     async def _create_error_info_embed(

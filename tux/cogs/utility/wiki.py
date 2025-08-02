@@ -4,13 +4,14 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator
 from tux.utils.functions import generate_usage
 
 
-class Wiki(commands.Cog):
+class Wiki(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
         self.arch_wiki_api_url = "https://wiki.archlinux.org/api.php"
         self.atl_wiki_api_url = "https://atl.wiki/api.php"
         self.wiki.usage = generate_usage(self.wiki)

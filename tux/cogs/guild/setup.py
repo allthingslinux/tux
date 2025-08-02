@@ -3,15 +3,14 @@ from discord import app_commands
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.database.controllers import DatabaseController
+from tux.core.base_cog import BaseCog
 from tux.utils import checks
 
 
-class Setup(commands.Cog):
+class Setup(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
-        self.db = DatabaseController()
-        self.config = DatabaseController().guild_config
+        super().__init__(bot)
+        self.config = self.db.guild_config
 
     setup = app_commands.Group(name="setup", description="Set this bot up for your server.")
 

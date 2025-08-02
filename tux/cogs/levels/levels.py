@@ -5,17 +5,16 @@ from discord.ext import commands
 
 from tux.bot import Tux
 from tux.cogs.services.levels import LevelsService
-from tux.database.controllers import DatabaseController
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.functions import generate_usage
 
 
-class Levels(commands.Cog):
+class Levels(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
         self.levels_service = LevelsService(bot)
-        self.db = DatabaseController()
         self.levels.usage = generate_usage(self.levels)
         self.set.usage = generate_usage(self.set)
         self.reset.usage = generate_usage(self.reset)

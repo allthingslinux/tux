@@ -3,15 +3,16 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.ui.buttons import XkcdButtons
 from tux.ui.embeds import EmbedCreator
 from tux.utils.functions import generate_usage
 from tux.wrappers import xkcd
 
 
-class Xkcd(commands.Cog):
+class Xkcd(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
         self.client = xkcd.Client()
         self.xkcd.usage = generate_usage(self.xkcd)
         self.latest.usage = generate_usage(self.latest)

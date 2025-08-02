@@ -1,20 +1,19 @@
 from typing import Any
 
-from discord.ext import commands, tasks
+from discord.ext import tasks
 from influxdb_client.client.influxdb_client import InfluxDBClient
 from influxdb_client.client.write.point import Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
 
 from tux.bot import Tux
-from tux.database.controllers import DatabaseController
+from tux.core.base_cog import BaseCog
 from tux.utils.config import CONFIG
 
 
-class InfluxLogger(commands.Cog):
+class InfluxLogger(BaseCog):
     def __init__(self, bot: Tux):
-        self.bot = bot
-        self.db = DatabaseController()
+        super().__init__(bot)
         self.influx_write_api: Any | None = None
         self.influx_org: str = ""
 

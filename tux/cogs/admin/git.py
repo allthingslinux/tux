@@ -2,6 +2,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.ui.buttons import GithubButton
 from tux.ui.embeds import EmbedCreator
 from tux.utils import checks
@@ -10,9 +11,9 @@ from tux.utils.functions import generate_usage
 from tux.wrappers.github import GithubService
 
 
-class Git(commands.Cog):
+class Git(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
         self.github = GithubService()
         self.repo_url = CONFIG.GITHUB_REPO_URL
         self.git.usage = generate_usage(self.git)

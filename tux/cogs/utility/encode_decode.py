@@ -5,6 +5,7 @@ from discord import AllowedMentions
 from discord.ext import commands
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.utils.functions import generate_usage
 
 
@@ -26,9 +27,9 @@ CODING_SYSTEMS = [
 ]
 
 
-class EncodeDecode(commands.Cog):
+class EncodeDecode(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
         self.encode.usage = generate_usage(self.encode)
         self.decode.usage = generate_usage(self.decode)
 

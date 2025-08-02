@@ -4,14 +4,15 @@ from textwrap import shorten, wrap
 from discord.ext import commands
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator
 from tux.utils.constants import CONST
 from tux.utils.functions import generate_usage
 
 
-class Random(commands.Cog):
+class Random(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
         self.random.usage = generate_usage(self.random)
         self.coinflip.usage = generate_usage(self.coinflip)
         self.eight_ball.usage = generate_usage(self.eight_ball)

@@ -6,10 +6,11 @@ import discord
 from discord.ext import commands, tasks
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.utils.config import CONFIG
 
 
-class GifLimiter(commands.Cog):
+class GifLimiter(BaseCog):
     """
     This class is a handler for GIF ratelimiting.
     It keeps a list of GIF send times and routinely removes old times.
@@ -17,7 +18,7 @@ class GifLimiter(commands.Cog):
     """
 
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
 
         # Max age for a GIF to be considered a recent post
         self.recent_gif_age: int = CONFIG.RECENT_GIF_AGE

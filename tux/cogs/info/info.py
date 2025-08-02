@@ -5,13 +5,14 @@ from discord.ext import commands
 from reactionmenu import ViewButton, ViewMenu
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils.functions import generate_usage
 
 
-class Info(commands.Cog):
+class Info(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
         self.info.usage = generate_usage(self.info)
         self.server.usage = generate_usage(self.server)
         self.member.usage = generate_usage(self.member)

@@ -14,6 +14,7 @@ import discord
 from discord.ext import commands
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator
 from tux.utils.exceptions import (
     CompilationError,
@@ -281,7 +282,7 @@ class WandboxService(CodeDispatch):
         return " ".join(output_parts).strip() if output_parts else None
 
 
-class Run(commands.Cog):
+class Run(BaseCog):
     """
     Cog for executing code in various programming languages.
 
@@ -290,7 +291,7 @@ class Run(commands.Cog):
     """
 
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
         self.run.usage = generate_usage(self.run)
         self.languages.usage = generate_usage(self.languages)
         self.services = {

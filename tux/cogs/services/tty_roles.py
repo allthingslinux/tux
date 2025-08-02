@@ -6,9 +6,10 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 
 
-class TtyRoles(commands.Cog):
+class TtyRoles(BaseCog):
     def __init__(self, bot: Tux):
         self.bot = bot
         self.base_role_name = "/dev/tty"

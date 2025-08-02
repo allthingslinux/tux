@@ -1,9 +1,9 @@
 import discord
 from discord import app_commands
-from discord.ext import commands
 from reactionmenu import ViewButton, ViewMenu
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator
 
 # FIXME: THIS IS A ALL THINGS LINUX SPECIFIC FILE
@@ -150,7 +150,7 @@ misc_ids = [
 # TODO: Figure out how to make rolecount work without hard coded ids
 
 
-class RoleCount(commands.Cog):
+class RoleCount(BaseCog):
     def __init__(self, bot: Tux):
         self.bot = bot
         self.roles_emoji_mapping = {

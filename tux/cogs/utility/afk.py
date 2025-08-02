@@ -10,16 +10,15 @@ from discord.ext import commands, tasks
 from prisma.models import AFKModel
 from tux.bot import Tux
 from tux.cogs.utility import add_afk, del_afk
-from tux.database.controllers import DatabaseController
+from tux.core.base_cog import BaseCog
 from tux.utils.functions import generate_usage
 
 # TODO: add `afk until` command, or add support for providing a timeframe in the regular `afk` and `permafk` commands
 
 
-class Afk(commands.Cog):
+class Afk(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
-        self.db = DatabaseController()
+        super().__init__(bot)
         self.handle_afk_expiration.start()
         self.afk.usage = generate_usage(self.afk)
         self.permafk.usage = generate_usage(self.permafk)

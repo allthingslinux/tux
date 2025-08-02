@@ -5,15 +5,14 @@ from discord.ext import commands
 
 from tux.bot import Tux
 from tux.cogs.utility import add_afk, del_afk
-from tux.database.controllers import DatabaseController
+from tux.core.base_cog import BaseCog
 from tux.ui.views.confirmation import ConfirmationDanger
 from tux.utils.functions import convert_to_seconds, generate_usage, seconds_to_human_readable
 
 
-class SelfTimeout(commands.Cog):
+class SelfTimeout(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
-        self.db = DatabaseController()
+        super().__init__(bot)
         self.self_timeout.usage = generate_usage(self.self_timeout)
 
     @commands.hybrid_command(

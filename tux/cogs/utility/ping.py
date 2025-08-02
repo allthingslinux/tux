@@ -2,13 +2,14 @@ import psutil
 from discord.ext import commands
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator
 from tux.utils.functions import generate_usage
 
 
-class Ping(commands.Cog):
+class Ping(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
         self.ping.usage = generate_usage(self.ping)
 
     @commands.hybrid_command(

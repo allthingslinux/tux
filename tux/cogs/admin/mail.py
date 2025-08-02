@@ -3,19 +3,19 @@ import random
 import discord
 import httpx
 from discord import app_commands
-from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.utils import checks
 from tux.utils.config import CONFIG
 
 MailboxData = dict[str, str | list[str]]
 
 
-class Mail(commands.Cog):
+class Mail(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
         self.api_url = CONFIG.MAILCOW_API_URL
         self.headers = {
             "Content-Type": "application/json",

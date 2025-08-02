@@ -9,15 +9,16 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator
 from tux.utils.config import workspace_root
 from tux.utils.functions import generate_usage
 from tux.utils.substitutions import handle_substitution
 
 
-class Fact(commands.Cog):
+class Fact(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
         self.facts_data: dict[str, dict[str, Any]] = {}
         self._load_facts()
         self.fact.usage = generate_usage(self.fact)

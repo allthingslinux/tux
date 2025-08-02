@@ -7,15 +7,14 @@ from loguru import logger
 
 from tux.app import get_prefix
 from tux.bot import Tux
-from tux.database.controllers import DatabaseController
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator
 from tux.utils.config import CONFIG
 
 
-class LevelsService(commands.Cog):
+class LevelsService(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
-        self.db = DatabaseController()
+        super().__init__(bot)
         self.xp_cooldown = CONFIG.XP_COOLDOWN
         self.levels_exponent = CONFIG.LEVELS_EXPONENT
         self.xp_roles = {role["level"]: role["role_id"] for role in CONFIG.XP_ROLES}

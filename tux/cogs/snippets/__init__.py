@@ -5,19 +5,18 @@ from loguru import logger
 from prisma.enums import CaseType
 from prisma.models import Snippet
 from tux.bot import Tux
-from tux.database.controllers import DatabaseController
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.config import Config
 from tux.utils.constants import CONST
 
 
-class SnippetsBaseCog(commands.Cog):
+class SnippetsBaseCog(BaseCog):
     """Base class for Snippet Cogs, providing shared utilities."""
 
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
-        self.db = DatabaseController()
+        super().__init__(bot)
 
     async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
         """Check if a user is currently snippet banned in a guild.

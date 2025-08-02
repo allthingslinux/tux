@@ -8,15 +8,14 @@ from loguru import logger
 
 from prisma.models import Reminder
 from tux.bot import Tux
-from tux.database.controllers import DatabaseController
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator
 from tux.utils.functions import convert_to_seconds, generate_usage
 
 
-class RemindMe(commands.Cog):
+class RemindMe(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
-        self.db = DatabaseController()
+        super().__init__(bot)
         self.remindme.usage = generate_usage(self.remindme)
         self._initialized = False
 

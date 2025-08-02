@@ -5,17 +5,16 @@ from loguru import logger
 
 from prisma.enums import CaseType
 from tux.bot import Tux
-from tux.database.controllers import DatabaseController
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator
 from tux.utils.converters import get_channel_safe
 
 # TODO: Create option inputs for the poll command instead of using a comma separated string
 
 
-class Poll(commands.Cog):
+class Poll(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
-        self.db = DatabaseController()
+        super().__init__(bot)
 
     async def is_pollbanned(self, guild_id: int, user_id: int) -> bool:
         """

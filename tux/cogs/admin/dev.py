@@ -4,13 +4,14 @@ from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.utils import checks
 from tux.utils.functions import generate_usage
 
 
-class Dev(commands.Cog):
+class Dev(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
         self.sync_tree.usage = generate_usage(self.sync_tree)
         self.clear_tree.usage = generate_usage(self.clear_tree)
         self.load_cog.usage = generate_usage(self.load_cog)

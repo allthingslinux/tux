@@ -6,6 +6,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator
 from tux.ui.views.tldr import TldrPaginatorView
 from tux.utils.flags import TldrFlags
@@ -13,11 +14,11 @@ from tux.utils.functions import generate_usage
 from tux.wrappers.tldr import SUPPORTED_PLATFORMS, TldrClient
 
 
-class Tldr(commands.Cog):
+class Tldr(BaseCog):
     """Discord cog for TLDR command integration."""
 
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
         self.default_language: str = self.detect_bot_language()
         self.prefix_tldr.usage = generate_usage(self.prefix_tldr, TldrFlags)
         self._cache_checked = False  # Track if cache has been checked

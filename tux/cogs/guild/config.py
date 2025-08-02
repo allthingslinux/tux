@@ -5,7 +5,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from tux.bot import Tux
-from tux.database.controllers import DatabaseController
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.ui.views.config import ConfigSetChannels, ConfigSetPrivateLogs, ConfigSetPublicLogs
 from tux.utils.config import CONFIG
@@ -17,10 +17,10 @@ from tux.utils.config import CONFIG
 
 @app_commands.guild_only()
 @app_commands.checks.has_permissions(administrator=True)
-class Config(commands.GroupCog, group_name="config"):
+class Config(BaseCog, commands.GroupCog, group_name="config"):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
-        self.db = DatabaseController().guild_config
+        super().__init__(bot)
+        self.db_config = self.db.guild_config
 
     logs = app_commands.Group(name="logs", description="Configure the guild logs.")
     channels = app_commands.Group(name="channels", description="Configure the guild channels.")
@@ -115,7 +115,7 @@ class Config(commands.GroupCog, group_name="config"):
         assert interaction.guild
         await interaction.response.defer(ephemeral=True)
 
-        await self.db.update_perm_level_role(
+        await self.db_config.update_perm_level_role(
             interaction.guild.id,
             setting.value,
             role.id,
@@ -160,7 +160,7 @@ class Config(commands.GroupCog, group_name="config"):
         await interaction.response.defer(ephemeral=True)
 
         if setting.value == "jail_role_id":
-            await self.db.update_jail_role_id(interaction.guild.id, role.id)
+            await self.db_config.update_jail_role_id(interaction.guild.id, role.id)
             await interaction.followup.send(
                 f"{setting.value} role set to {role.mention}.",
                 ephemeral=True,
@@ -192,7 +192,7 @@ class Config(commands.GroupCog, group_name="config"):
             message_timestamp=discord.utils.utcnow(),
         )
 
-        jail_role_id = await self.db.get_jail_role_id(interaction.guild.id)
+        jail_role_id = await self.db_config.get_jail_role_id(interaction.guild.id)
         jail_role = f"<@&{jail_role_id}>" if jail_role_id else "Not set"
         embed.add_field(name="Jail Role", value=jail_role, inline=False)
 
@@ -226,7 +226,7 @@ class Config(commands.GroupCog, group_name="config"):
 
         for i in range(8):
             perm_level: str = f"perm_level_{i}_role_id"
-            role_id = await self.db.get_perm_level_role(interaction.guild.id, perm_level)
+            role_id = await self.db_config.get_perm_level_role(interaction.guild.id, perm_level)
             role = f"<@&{role_id}>" if role_id else "Not set"
             embed.add_field(name=f"Perm Level {i}", value=role, inline=True)
 
@@ -258,15 +258,15 @@ class Config(commands.GroupCog, group_name="config"):
             message_timestamp=discord.utils.utcnow(),
         )
 
-        jail_channel_id = await self.db.get_jail_channel_id(interaction.guild.id)
+        jail_channel_id = await self.db_config.get_jail_channel_id(interaction.guild.id)
         jail_channel = f"<#{jail_channel_id}>" if jail_channel_id else "Not set"
         embed.add_field(name="Jail Channel", value=jail_channel, inline=False)
 
-        starboard_channel_id = await self.db.get_starboard_channel_id(interaction.guild.id)
+        starboard_channel_id = await self.db_config.get_starboard_channel_id(interaction.guild.id)
         starboard_channel = f"<#{starboard_channel_id}>" if starboard_channel_id else "Not set"
         embed.add_field(name="Starboard Channel", value=starboard_channel, inline=False)
 
-        general_channel_id = await self.db.get_general_channel_id(interaction.guild.id)
+        general_channel_id = await self.db_config.get_general_channel_id(interaction.guild.id)
         general_channel = f"<#{general_channel_id}>" if general_channel_id else "Not set"
         embed.add_field(name="General Channel", value=general_channel, inline=False)
 
@@ -298,27 +298,27 @@ class Config(commands.GroupCog, group_name="config"):
             message_timestamp=discord.utils.utcnow(),
         )
 
-        join_log_id = await self.db.get_join_log_id(interaction.guild.id)
+        join_log_id = await self.db_config.get_join_log_id(interaction.guild.id)
         join_log = f"<#{join_log_id}>" if join_log_id else "Not set"
         embed.add_field(name="Join Log", value=join_log, inline=True)
 
-        audit_log_id = await self.db.get_audit_log_id(interaction.guild.id)
+        audit_log_id = await self.db_config.get_audit_log_id(interaction.guild.id)
         audit_log = f"<#{audit_log_id}>" if audit_log_id else "Not set"
         embed.add_field(name="Audit Log", value=audit_log, inline=True)
 
-        mod_log_id = await self.db.get_mod_log_id(interaction.guild.id)
+        mod_log_id = await self.db_config.get_mod_log_id(interaction.guild.id)
         mod_log = f"<#{mod_log_id}>" if mod_log_id else "Not set"
         embed.add_field(name="Mod Log", value=mod_log, inline=True)
 
-        private_log_id = await self.db.get_private_log_id(interaction.guild.id)
+        private_log_id = await self.db_config.get_private_log_id(interaction.guild.id)
         private_log = f"<#{private_log_id}>" if private_log_id else "Not set"
         embed.add_field(name="Private Log", value=private_log, inline=True)
 
-        report_log_id = await self.db.get_report_log_id(interaction.guild.id)
+        report_log_id = await self.db_config.get_report_log_id(interaction.guild.id)
         report_log = f"<#{report_log_id}>" if report_log_id else "Not set"
         embed.add_field(name="Report Log", value=report_log, inline=True)
 
-        dev_log_id = await self.db.get_dev_log_id(interaction.guild.id)
+        dev_log_id = await self.db_config.get_dev_log_id(interaction.guild.id)
         dev_log = f"<#{dev_log_id}>" if dev_log_id else "Not set"
         embed.add_field(name="Dev Log", value=dev_log, inline=True)
 
@@ -346,7 +346,7 @@ class Config(commands.GroupCog, group_name="config"):
         assert interaction.guild
         await interaction.response.defer(ephemeral=True)
 
-        await self.db.update_guild_prefix(interaction.guild.id, prefix)
+        await self.db_config.update_guild_prefix(interaction.guild.id, prefix)
 
         await interaction.followup.send(
             embed=EmbedCreator.create_embed(
@@ -378,7 +378,7 @@ class Config(commands.GroupCog, group_name="config"):
         assert interaction.guild
         await interaction.response.defer(ephemeral=True)
 
-        await self.db.delete_guild_prefix(interaction.guild.id)
+        await self.db_config.delete_guild_prefix(interaction.guild.id)
 
         await interaction.followup.send(
             embed=EmbedCreator.create_embed(

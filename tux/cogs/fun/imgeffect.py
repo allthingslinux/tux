@@ -3,17 +3,17 @@ import io
 import discord
 import httpx
 from discord import app_commands
-from discord.ext import commands
 from loguru import logger
 from PIL import Image, ImageEnhance, ImageOps
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator
 
 
-class ImgEffect(commands.Cog):
+class ImgEffect(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
         self.allowed_mimetypes = ["image/jpeg", "image/png"]
 
     imgeffect = app_commands.Group(name="imgeffect", description="Image effects")

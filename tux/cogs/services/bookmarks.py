@@ -9,13 +9,14 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator
 from tux.utils.constants import CONST
 
 
-class Bookmarks(commands.Cog):
+class Bookmarks(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
         self.add_bookmark_emojis = CONST.ADD_BOOKMARK
         self.remove_bookmark_emojis = CONST.REMOVE_BOOKMARK
         self.valid_emojis = self.add_bookmark_emojis + self.remove_bookmark_emojis

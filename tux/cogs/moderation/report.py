@@ -1,14 +1,14 @@
 import discord
 from discord import app_commands
-from discord.ext import commands
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.ui.modals.report import ReportModal
 
 
-class Report(commands.Cog):
+class Report(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
 
     @app_commands.command(name="report")
     @app_commands.guild_only()

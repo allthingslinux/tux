@@ -10,13 +10,14 @@ from loguru import logger
 from PIL import Image
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator
 from tux.utils.config import CONFIG
 
 
-class Wolfram(commands.Cog):
+class Wolfram(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
 
         # Verify AppID configuration; unload cog if missing
         if not CONFIG.WOLFRAM_APP_ID:

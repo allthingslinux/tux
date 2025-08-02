@@ -5,6 +5,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
+from tux.core.base_cog import BaseCog
 from tux.utils import checks
 
 # Type for channels that support slowmode
@@ -13,9 +14,9 @@ SlowmodeChannel = (
 )
 
 
-class Slowmode(commands.Cog):
+class Slowmode(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
+        super().__init__(bot)
 
     @commands.hybrid_command(
         name="slowmode",

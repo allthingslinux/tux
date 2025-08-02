@@ -10,7 +10,7 @@ from loguru import logger
 
 from prisma.enums import CaseType
 from tux.bot import Tux
-from tux.database.controllers import DatabaseController
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils.constants import CONST
 from tux.utils.exceptions import handle_case_result, handle_gather_result
@@ -19,13 +19,12 @@ T = TypeVar("T")
 R = TypeVar("R")  # Return type for generic functions
 
 
-class ModerationCogBase(commands.Cog):
+class ModerationCogBase(BaseCog):
     # Actions that remove users from the server, requiring DM to be sent first
     REMOVAL_ACTIONS: ClassVar[set[CaseType]] = {CaseType.BAN, CaseType.KICK, CaseType.TEMPBAN}
 
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
-        self.db = DatabaseController()
+        super().__init__(bot)
 
         # Dictionary to store locks per user
         self._user_action_locks: dict[int, Lock] = {}

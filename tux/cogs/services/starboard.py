@@ -6,17 +6,16 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.bot import Tux
-from tux.database.controllers import DatabaseController
+from tux.core.base_cog import BaseCog
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
 from tux.utils.converters import get_channel_safe
 from tux.utils.functions import generate_usage
 
 
-class Starboard(commands.Cog):
+class Starboard(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        self.bot = bot
-        self.db = DatabaseController()
+        super().__init__(bot)
         self.starboard.usage = generate_usage(self.starboard)
         self.setup_starboard.usage = generate_usage(self.setup_starboard)
         self.remove_starboard.usage = generate_usage(self.remove_starboard)

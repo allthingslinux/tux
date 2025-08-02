@@ -5,10 +5,11 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.core.base_cog import BaseCog
 from tux.utils.config import CONFIG
 
 
-class StatusRoles(commands.Cog):
+class StatusRoles(BaseCog):
     """Assign roles to users based on their status."""
 
     def __init__(self, bot: commands.Bot):
