@@ -32,7 +32,24 @@ from tux.database.controllers import DatabaseController
 from tux.utils.config import CONFIG
 from tux.utils.exceptions import AppCommandPermissionLevelError, PermissionLevelError
 
-db = DatabaseController().guild_config
+
+class DatabaseControllerSingleton:
+    """Singleton class to manage database controller instance."""
+
+    _instance: DatabaseController | None = None
+
+    @classmethod
+    def get_instance(cls) -> DatabaseController:
+        """Get the database controller, initializing it if needed."""
+        if cls._instance is None:
+            cls._instance = DatabaseController()
+        return cls._instance
+
+
+def get_db_controller() -> DatabaseController:
+    """Get the database controller, initializing it if needed."""
+    return DatabaseControllerSingleton.get_instance()
+
 
 T = TypeVar("T", bound=commands.Context[Tux] | discord.Interaction)
 
@@ -51,7 +68,8 @@ async def fetch_guild_config(guild_id: int) -> dict[str, Any]:
         Dictionary mapping permission level role keys to their corresponding role IDs.
         Keys are in format 'perm_level_{i}_role_id' where i ranges from 0 to 7.
     """
-    config = await db.get_guild_config(guild_id)
+    db_controller = get_db_controller()
+    config = await db_controller.guild_config.get_guild_config(guild_id)
     return {f"perm_level_{i}_role_id": getattr(config, f"perm_level_{i}_role_id", None) for i in range(8)}
 
 
