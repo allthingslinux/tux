@@ -106,7 +106,15 @@ types-jinja2 = "^2.11.9"
 
 
 [tool.ruff]
-exclude = [".venv", "examples", ".archive", "typings/**"]
+exclude = [
+    ".venv",
+    "examples",
+    ".archive",
+    "typings/**",
+    "tests/**",
+    ".kiro/**",
+    ".audit/**",
+]
 indent-width = 4
 line-length = 120
 target-version = "py313"
@@ -155,9 +163,17 @@ skip-magic-trailing-comma = false
 [tool.pyright]
 defineConstant = { DEBUG = true }
 enableReachabilityAnalysis = true
-exclude = ["__pypackages__", "_build", "examples", ".archive", "typings/**"]
+exclude = [
+    "__pypackages__/**",
+    "_build/**",
+    "examples/**",
+    ".archive/**",
+    "typings/**",
+    "tests/**",
+    "docs/**",
+]
 ignore = [".venv"]
-include = ["tux", "tests"]
+include = ["tux"]
 stubPath = "typings"
 pythonPlatform = "Linux"
 pythonVersion = "3.13"
