@@ -18,6 +18,8 @@ from loguru import logger
 from rich.console import Console
 
 from tux.cog_loader import CogLoader
+from tux.core.container import ServiceContainer
+from tux.core.service_registry import ServiceRegistry
 from tux.database.client import db
 from tux.utils.banner import create_banner
 from tux.utils.config import Config
@@ -36,6 +38,12 @@ class DatabaseConnectionError(RuntimeError):
     """Raised when database connection fails."""
 
     CONNECTION_FAILED = "Failed to establish database connection"
+
+
+class ContainerInitializationError(RuntimeError):
+    """Raised when dependency injection container initialization fails."""
+
+    INITIALIZATION_FAILED = "Failed to initialize dependency injection container"
 
 
 class Tux(commands.Bot):
@@ -60,6 +68,9 @@ class Tux(commands.Bot):
         self._banner_logged = False
         self._startup_task = None
 
+        # Dependency injection container
+        self.container: ServiceContainer | None = None
+
         self.emoji_manager = EmojiManager(self)
         self.console = Console(stderr=True, force_terminal=True)
 
@@ -74,6 +85,8 @@ class Tux(commands.Bot):
                 span.set_tag("setup_phase", "starting")
                 await self._setup_database()
                 span.set_tag("setup_phase", "database_connected")
+                await self._setup_container()
+                span.set_tag("setup_phase", "container_initialized")
                 await self._load_extensions()
                 span.set_tag("setup_phase", "extensions_loaded")
                 await self._load_cogs()
@@ -113,6 +126,46 @@ class Tux(commands.Bot):
                 span.set_data("error", str(e))
                 raise
 
+    async def _setup_container(self) -> None:
+        """Set up and configure the dependency injection container."""
+        with start_span("bot.container_setup", "Setting up dependency injection container") as span:
+            logger.info("Initializing dependency injection container...")
+
+            try:
+                # Configure the service container with all required services
+                self.container = ServiceRegistry.configure_container(self)
+
+                # Validate that all required services are registered
+                if not ServiceRegistry.validate_container(self.container):
+                    error_msg = "Container validation failed - missing required services"
+                    self._raise_container_validation_error(error_msg)
+
+                # Log registered services for debugging
+                registered_services = ServiceRegistry.get_registered_services(self.container)
+                logger.info(f"Container initialized with services: {', '.join(registered_services)}")
+
+                span.set_tag("container.initialized", True)
+                span.set_tag("container.services_count", len(registered_services))
+                span.set_data("container.services", registered_services)
+
+            except Exception as e:
+                span.set_status("internal_error")
+                span.set_data("error", str(e))
+                logger.error(f"Failed to initialize dependency injection container: {e}")
+
+                if sentry_sdk.is_initialized():
+                    sentry_sdk.set_context(
+                        "container_failure",
+                        {
+                            "error": str(e),
+                            "error_type": type(e).__name__,
+                        },
+                    )
+                    sentry_sdk.capture_exception(e)
+
+                error_msg = ContainerInitializationError.INITIALIZATION_FAILED
+                raise ContainerInitializationError(error_msg) from e
+
     async def _load_extensions(self) -> None:
         """Load bot extensions and cogs, including Jishaku for debugging."""
         with start_span("bot.load_jishaku", "Loading jishaku debug extension") as span:
@@ -137,6 +190,20 @@ class Tux(commands.Bot):
         if not db.is_connected() or not db.is_registered():
             raise DatabaseConnectionError(DatabaseConnectionError.CONNECTION_FAILED)
 
+    def _validate_container(self) -> None:
+        """Raise if the dependency injection container is not properly initialized."""
+        if self.container is None:
+            error_msg = "Container is not initialized"
+            raise ContainerInitializationError(error_msg)
+
+        if not ServiceRegistry.validate_container(self.container):
+            error_msg = "Container validation failed"
+            raise ContainerInitializationError(error_msg)
+
+    def _raise_container_validation_error(self, message: str) -> None:
+        """Helper method to raise container validation errors."""
+        raise ContainerInitializationError(message)
+
     def _setup_callback(self, task: asyncio.Task[None]) -> None:
         """Handle setup task completion and update setup_complete flag."""
         try:
@@ -146,6 +213,16 @@ class Tux(commands.Bot):
 
             if sentry_sdk.is_initialized():
                 sentry_sdk.set_tag("bot.setup_complete", True)
+                if self.container:
+                    registered_services = ServiceRegistry.get_registered_services(self.container)
+                    sentry_sdk.set_context(
+                        "container_info",
+                        {
+                            "initialized": True,
+                            "services_count": len(registered_services),
+                            "services": registered_services,
+                        },
+                    )
 
         except Exception as e:
             logger.critical(f"Setup failed: {e}")
@@ -154,6 +231,11 @@ class Tux(commands.Bot):
             if sentry_sdk.is_initialized():
                 sentry_sdk.set_tag("bot.setup_complete", False)
                 sentry_sdk.set_tag("bot.setup_failed", True)
+
+                # Add specific context for container failures
+                if isinstance(e, ContainerInitializationError):
+                    sentry_sdk.set_tag("container.initialization_failed", True)
+
                 sentry_sdk.capture_exception(e)
 
     async def setup_hook(self) -> None:
@@ -345,6 +427,9 @@ class Tux(commands.Bot):
             await self._close_connections()
             transaction.set_tag("connections_closed", True)
 
+            self._cleanup_container()
+            transaction.set_tag("container_cleaned", True)
+
             logger.info("Bot shutdown complete.")
 
     async def _handle_setup_task(self) -> None:
@@ -461,6 +546,17 @@ class Tux(commands.Bot):
 
                 if sentry_sdk.is_initialized():
                     sentry_sdk.capture_exception(e)
+
+    def _cleanup_container(self) -> None:
+        """Clean up the dependency injection container."""
+        with start_span("bot.cleanup_container", "Cleaning up dependency injection container"):
+            if self.container is not None:
+                logger.debug("Cleaning up dependency injection container")
+                # The container doesn't need explicit cleanup, just clear the reference
+                self.container = None
+                logger.debug("Dependency injection container cleaned up")
+            else:
+                logger.debug("No container to clean up")
 
     async def _load_cogs(self) -> None:
         """Load bot cogs using CogLoader."""
