@@ -36,7 +36,7 @@ class EventHandler(commands.Cog):
         None
         """
 
-        if message.author.bot:
+        if message.author.bot and message.webhook_id not in CONFIG.BRIDGE_WEBHOOK_IDS:
             return
 
         stripped_content = strip_formatting(message.content)
