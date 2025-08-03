@@ -44,9 +44,13 @@ class Ping(commands.Cog):
         minutes, seconds = divmod(remainder, 60)
 
         # Format it for the command
-        bot_uptime_readable = " ".join(
-            [f"{days}d" if days else "", f"{hours}h" if hours else "", f"{minutes}m" if minutes else "", f"{seconds}s"],
-        ).strip()
+        bot_uptime_parts = [
+            f"{days}d" if days else "",
+            f"{hours}h" if hours else "",
+            f"{minutes}m" if minutes else "",
+            f"{seconds}s",
+        ]
+        bot_uptime_readable = " ".join(part for part in bot_uptime_parts if part).strip()
 
         # Get the CPU usage and RAM usage of the bot
         cpu_usage = psutil.Process().cpu_percent()
