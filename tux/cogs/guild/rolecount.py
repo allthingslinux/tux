@@ -29,13 +29,13 @@ des_ids = [
     [1175219898113331331, "_icewm"],
     [1175337897180803082, "_openbox"],
     [1175336806963744788, "_wayfire"],
-    [1185972642260455445, "_berry"],
-    [1192097654818226256, "_leftwm"],
+    [1367180985602412668, "_cosmic"],
     [1192149690096033882, "_budgie"],
     [1196324646170148925, "_riverwm"],
-    [1212033435858898995, "_enlightenment"],
+    [1350877106606968903, "_niri"],
     [1212031657805221930, "_stumpwm"],
     [1232200058737397771, "_lxqt"],
+    [1297922269628338290, "grey_question"],  # Other DE/WM role
 ]
 
 distro_ids = [
@@ -45,48 +45,33 @@ distro_ids = [
     [1175176812293271652, "_ubuntu"],
     [1175235143707918436, "_windows"],
     [1175176279616663573, "_gentoo"],
-    [1175227850119458897, "_freebsd"],
+    [1175227850119458897, "_freebsd"],  # *BSD role
     [1175177831551086593, "_nixos"],
     [1175178088347344916, "_void"],
     [1175176981936087161, "_opensuse"],
     [1175244437530611712, "_macos"],
     [1175241975818092564, "_alpine"],
     [1175177993526726717, "_linuxmint"],
-    [1175221054684286996, "_openbsd"],
     [1176533514385096714, "_bedrock"],
-    [1178347402730688542, "_endeavouros"],
-    [1178391378812735508, "_artix"],
+    [1290975975919849482, "_arch"],  # Arch-based role
     [1182152672447569972, "_slackware"],
-    [1178347123905929316, "_popos"],
-    [1175177750143848520, "_kisslinux"],
+    [1178347123905929316, "_ubuntu"],  # Ubuntu-basesd role
     [1180570700734546031, "_lfs"],
-    [1191106506276479067, "_garuda"],
     [1192177499413684226, "_asahi"],
     [1207599112585740309, "_fedoraatomic"],
-    [1232383833152819282, "_solus"],
     [1210000519272079411, "_redhat"],
-    [1232199326722293790, "_mxlinux"],
-    [1232387598107017227, "_netbsd"],
-    [1232385920335089734, "_qubesos"],
     [1212028841103597679, "_plan9"],
-    [1232390816312590369, "_devuan"],
-    [1221123322100584518, "_zorin"],
-    [1220995767813013544, "_chimera"],
-    [1237701796940611635, "_antix"],
     [1237704018629885983, "_cachyos"],
-    [1237702486421147698, "_rockylinux"],
-    [1237701203404783698, "_nobara"],
-    [1237700290732490762, "_deepin"],
-    [1269381234384048169, "_vanillaos"],
+    [1237701203404783698, "_fedora"],  # Fedora-based role
 ]
 
 lang_ids = [
     [1175612831996055562, "_python"],
-    [1175612831861837864, "_bash"],
-    [1175612831941525574, "_html"],
-    [1175612831115260006, "_javascript"],
+    [1175612831861837864, "_sh"],  # Shell Script role
+    [1175612831941525574, "_html"],  # HTML/CSS role
+    [1175612831115260006, "_javascript"],  # JS/TS role
     [1175612831652139008, "_c"],
-    [1175612832029609994, "_cplusplus"],
+    [1386793293576409139, "_cplusplus"],
     [1175612831790534797, "_lua"],
     [1175612831631155220, "_rust"],
     [1175612831907979336, "_java"],
@@ -109,6 +94,7 @@ lang_ids = [
     [1232389554426876045, "_godot"],
     [1232390379337285692, "_nim"],
     [1237700521465217084, "_swift"],
+    [1214465450860351498, "_r"],
 ]
 
 vanity_ids = [
@@ -130,9 +116,10 @@ vanity_ids = [
     [1217601089721995264, "old_man"],
     [1217866697751400518, "ear_of_rice"],
     [1212039041269366854, "chess_pawn"],
+    [1346489154766372874, "headphones"],
 ]
 
-misc_ids = [
+editor_ids = [
     [1182069378636849162, "_vsc"],
     [1180571441276649613, "_nvim"],
     [1180660198428393643, "_emacs"],
@@ -143,9 +130,11 @@ misc_ids = [
     [1185974067472380015, "_helix"],
     [1192139311919935518, "_kakoune"],
     [1187804435578093690, "_ed"],
-    [1189236454153527367, "_gecko"],
-    [1189236400571301958, "_chromium"],
+    [1392616344075243570, "_Cursor"],
+    [1367199970587050035, "_Zed"],
 ]
+
+# TODO: Shell Roles (needs emojis)
 
 # TODO: Figure out how to make rolecount work without hard coded ids
 
@@ -157,7 +146,7 @@ class RoleCount(commands.Cog):
             "ds": distro_ids,
             "lg": lang_ids,
             "de": des_ids,
-            "misc": misc_ids,
+            "edit": editor_ids,
             "vanity": vanity_ids,
         }
 
@@ -168,7 +157,7 @@ class RoleCount(commands.Cog):
             app_commands.Choice(name="Distro", value="ds"),
             app_commands.Choice(name="Language", value="lg"),
             app_commands.Choice(name="DE/WM", value="de"),
-            app_commands.Choice(name="Misc", value="misc"),
+            app_commands.Choice(name="Editors", value="edit"),
             app_commands.Choice(name="Vanity", value="vanity"),
         ],
     )
