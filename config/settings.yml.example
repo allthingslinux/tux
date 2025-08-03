@@ -115,7 +115,9 @@ GIF_LIMITER: # Limits the amount of gifs a user can send in a channel
   GIF_LIMITS_CHANNEL:
     "123456789012345": 3
 
-IRC: # IDs of the IRC bridge webhooks
+# If you do not have an IRC bridge running, ignore these options
+# Allows messages from these webhooks to use only the $s and $snippet commands (for now)
+IRC:
   BRIDGE_WEBHOOK_IDS:
     - 123456789012345679
     - 123456789012345679
