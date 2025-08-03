@@ -3,7 +3,7 @@
     "EditorConfig.EditorConfig",
     "ms-vscode-remote.remote-containers",
     "ms-python.python",
-    "ms-python.vscode-pylance",
+    "detachhead.basedpyright",
     "ms-azuretools.vscode-docker",
     "charliermarsh.ruff",
     "prisma.prisma",
