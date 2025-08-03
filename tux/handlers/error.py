@@ -1175,8 +1175,9 @@ class ErrorHandler(commands.Cog):
         Returns
         -------
         Optional[List[str]]
-            A list of suggested command qualified names (e.g., ["tag create", "tag edit"])
-            or None if no suitable suggestions are found.
+            A list of suggested command names or aliases (e.g., ["tag create", "status", "ping"])
+            or None if no suitable suggestions are found. When an alias matches better than
+            the original command name, the alias is returned instead.
         """
         # Suggestions require a guild context (commands vary across guilds)
         # and the name the user actually typed.
@@ -1199,7 +1200,7 @@ class ErrorHandler(commands.Cog):
 
         logger.bind(**log_context).debug("Attempting command suggestion.")
 
-        # Store potential matches: {qualified_name: min_distance}
+        # Store potential matches: {name_to_suggest: min_distance}
         command_distances: dict[str, int] = {}
 
         # Iterate through all commands registered with the bot.
@@ -1209,6 +1210,7 @@ class ErrorHandler(commands.Cog):
                 continue
 
             min_dist_for_cmd = max_distance + 1
+            best_match_name = cmd.qualified_name
             qualified_name = cmd.qualified_name
             # Check against the command's main name and all its aliases.
             names_to_check = [qualified_name, *cmd.aliases]
@@ -1217,15 +1219,17 @@ class ErrorHandler(commands.Cog):
             for name in names_to_check:
                 # Perform case-insensitive comparison.
                 distance = Levenshtein.distance(command_name.lower(), name.lower())
-                min_dist_for_cmd = min(min_dist_for_cmd, distance)
+                if distance < min_dist_for_cmd:
+                    min_dist_for_cmd = distance
+                    best_match_name = name
 
             # If the command is close enough, store its distance.
             if min_dist_for_cmd <= max_distance:
                 # If we found a closer match for this command (e.g., via an alias)
                 # than previously stored, update the distance.
-                current_min = command_distances.get(qualified_name, max_distance + 1)
+                current_min = command_distances.get(best_match_name, max_distance + 1)
                 if min_dist_for_cmd < current_min:
-                    command_distances[qualified_name] = min_dist_for_cmd
+                    command_distances[best_match_name] = min_dist_for_cmd
 
         # If no commands were within the distance threshold.
         if not command_distances:
