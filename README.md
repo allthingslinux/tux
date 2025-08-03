@@ -1,6 +1,5 @@
-# Tux
-
-## A Discord bot for the All Things Linux Discord server
+<h1 align="center">Tux</h1>
+<h3 align="center">A Discord bot for the All Things Linux Discord server</h3>
 
 <div align="center">
     <p align="center">
