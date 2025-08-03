@@ -62,6 +62,7 @@ class Tux(commands.Bot):
 
         self.emoji_manager = EmojiManager(self)
         self.console = Console(stderr=True, force_terminal=True)
+        self.uptime = discord.utils.utcnow().timestamp()
 
         logger.debug("Creating bot setup task")
         self.setup_task = asyncio.create_task(self.setup(), name="bot_setup")
