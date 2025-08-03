@@ -240,6 +240,8 @@ class TestMainIntegration:
                 SNIPPETS:
                   LIMIT_TO_ROLE_IDS: false
                   ACCESS_ROLE_IDS: []
+                IRC:
+                  BRIDGE_WEBHOOK_IDS: []
                 '''
                 mock_read_text.return_value = mock_config_content
 
