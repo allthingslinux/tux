@@ -44,7 +44,6 @@ class RemindMe(commands.Cog):
                             content=f"{user.mention} Failed to DM you, sending in channel",
                             embed=embed,
                         )
-                        return
 
                 else:
                     logger.error(
