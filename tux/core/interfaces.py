@@ -1,10 +1,12 @@
-"""Service interfaces using Python protocols for type safety.
+"""Service and bot interfaces using Python protocols for type safety.
 
 This module defines the contracts for services using Python protocols,
 enabling structural typing and better testability.
 """
 
-from typing import Any, Protocol
+from collections.abc import Mapping
+from types import ModuleType
+from typing import Any, Protocol, runtime_checkable
 
 import discord
 
@@ -166,3 +168,27 @@ class IConfigService(Protocol):
             True if in development mode, False otherwise
         """
         ...
+
+
+@runtime_checkable
+class IReloadableBot(Protocol):
+    """Protocol for bot-like objects that support extension management.
+
+    This enables hot-reload and cog management utilities to operate on any
+    bot-like object that exposes the expected interface without importing
+    the concrete bot implementation.
+    """
+
+    @property
+    def extensions(self) -> Mapping[str, ModuleType]: ...
+
+    help_command: Any
+
+    async def load_extension(self, name: str) -> None: ...
+
+    async def reload_extension(self, name: str) -> None: ...
+
+    async def add_cog(self, cog: Any, /, *, override: bool = False) -> None: ...
+
+    # Optional attribute; kept as Any to avoid import-time cycles
+    sentry_manager: Any

@@ -14,11 +14,10 @@ import re
 import sys
 import time
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Sequence
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass, field
 from pathlib import Path
-from types import ModuleType
 from typing import Any, Protocol, TypeVar, cast
 
 import sentry_sdk
@@ -27,6 +26,7 @@ import watchdog.observers
 from discord.ext import commands
 from loguru import logger
 
+from tux.core.interfaces import IReloadableBot
 from tux.services.sentry import span
 
 # Type variables and protocols
@@ -34,15 +34,9 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 
 class BotProtocol(Protocol):
-    """Protocol for bot-like objects."""
+    """Deprecated: use IReloadableBot from tux.core.interfaces instead."""
 
-    @property
-    def extensions(self) -> Mapping[str, ModuleType]: ...
-
-    help_command: Any
-
-    async def load_extension(self, name: str) -> None: ...
-    async def reload_extension(self, name: str) -> None: ...
+    ...
 
 
 class FileSystemWatcherProtocol(Protocol):
@@ -719,7 +713,14 @@ class DependencyGraph(DependencyTracker):
 class CogWatcher(watchdog.events.FileSystemEventHandler):
     """Enhanced cog watcher with smart dependency tracking and improved error handling."""
 
-    def __init__(self, bot: BotProtocol, path: str, *, recursive: bool = True, config: HotReloadConfig | None = None):
+    def __init__(
+        self,
+        bot: commands.Bot | IReloadableBot,
+        path: str,
+        *,
+        recursive: bool = True,
+        config: HotReloadConfig | None = None,
+    ):
         """Initialize the cog watcher with validation."""
         self._config = config or HotReloadConfig()
         validate_config(self._config)
