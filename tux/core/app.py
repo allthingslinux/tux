@@ -3,7 +3,6 @@
 import asyncio
 import signal
 import sys
-from types import FrameType
 
 import discord
 from loguru import logger
@@ -48,6 +47,7 @@ class TuxApp:
 
     def setup_signals(self, loop: asyncio.AbstractEventLoop) -> None:
         """Set up signal handlers for graceful shutdown."""
+
         # Prefer event-loop handlers for portability
         def _sigterm() -> None:
             SentryManager.report_signal(signal.SIGTERM, None)
