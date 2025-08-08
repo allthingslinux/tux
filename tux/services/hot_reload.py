@@ -27,7 +27,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.interfaces import IReloadableBot
-from tux.services.sentry import span
+from tux.utils.tracing import capture_exception_safe, span
 
 # Type variables and protocols
 F = TypeVar("F", bound=Callable[..., Any])
@@ -254,8 +254,7 @@ def reload_module_by_name(module_name: str) -> bool:
             importlib.reload(sys.modules[module_name])
     except Exception as e:
         logger.error(f"Failed to reload module {module_name}: {e}")
-        if sentry_sdk.is_initialized():
-            sentry_sdk.capture_exception(e)
+        capture_exception_safe(e)
         return False
     else:
         logger.debug(f"Reloaded module {module_name}")
@@ -376,8 +375,7 @@ class ClassDefinitionTracker:
 
         except Exception as e:
             logger.debug(f"Error scanning class definitions in {file_path}: {e}")
-            if sentry_sdk.is_initialized():
-                sentry_sdk.capture_exception(e)
+            capture_exception_safe(e)
             return {}
         else:
             return classes
@@ -452,8 +450,7 @@ class DependencyGraph(DependencyTracker):
 
         except Exception as e:
             logger.debug(f"Error scanning dependencies in {file_path}: {e}")
-            if sentry_sdk.is_initialized():
-                sentry_sdk.capture_exception(e)
+            capture_exception_safe(e)
             return set()
         else:
             return dependencies
@@ -692,8 +689,7 @@ class DependencyGraph(DependencyTracker):
             setattr(module, class_name, new_class)
         except Exception as e:
             logger.error(f"Failed to hot patch class {class_name} in {module_name}: {e}")
-            if sentry_sdk.is_initialized():
-                sentry_sdk.capture_exception(e)
+            capture_exception_safe(e)
             return False
         else:
             logger.info(f"Hot patched class {class_name} in {module_name}")
@@ -787,8 +783,7 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
                     logger.warning(f"Could not find file for extension {extension}, expected at {path}")
             except Exception as e:
                 logger.error(f"Error processing extension {extension}: {e}")
-                if sentry_sdk.is_initialized():
-                    sentry_sdk.capture_exception(e)
+                capture_exception_safe(e)
 
         # Pre-populate hash cache for all Python files in watched directories
         # This eliminates "first encounter" issues for any file
@@ -919,8 +914,7 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
             self._handle_extension_file(file_path)
         except Exception as e:
             logger.error(f"Error handling file change for {file_path}: {e}")
-            if sentry_sdk.is_initialized():
-                sentry_sdk.capture_exception(e)
+            capture_exception_safe(e)
 
     def _handle_special_files(self, file_path: Path) -> bool:
         """Handle special files like help.py and __init__.py."""
@@ -1075,8 +1069,7 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
                     self._process_extension_reload(ext)
         except Exception as e:
             logger.error(f"Error handling __init__.py change for {init_file_path}: {e}")
-            if sentry_sdk.is_initialized():
-                sentry_sdk.capture_exception(e)
+            capture_exception_safe(e)
 
     def _collect_extensions_to_reload(self, full_package: str, short_package: str) -> list[str]:
         """Collect extensions that need to be reloaded based on package names."""
@@ -1099,8 +1092,7 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
             asyncio.run_coroutine_threadsafe(self._async_reload_extension(extension), self.loop)
         except Exception as e:
             logger.error(f"Failed to schedule reload of extension {extension}: {e}")
-            if sentry_sdk.is_initialized():
-                sentry_sdk.capture_exception(e)
+            capture_exception_safe(e)
 
     def _reload_help(self) -> None:
         """Reload the help command with proper error handling."""
@@ -1109,8 +1101,7 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
             asyncio.run_coroutine_threadsafe(self._async_reload_help(), self.loop)
         except Exception as e:
             logger.error(f"Failed to schedule reload of help command: {e}")
-            if sentry_sdk.is_initialized():
-                sentry_sdk.capture_exception(e)
+            capture_exception_safe(e)
 
     @span("reload.extension")
     async def _async_reload_extension(self, extension: str) -> None:
@@ -1204,12 +1195,10 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
                 logger.info("✅ Reloaded help command")
             except (AttributeError, ImportError) as e:
                 logger.error(f"Error accessing TuxHelp class: {e}")
-                if sentry_sdk.is_initialized():
-                    sentry_sdk.capture_exception(e)
+                capture_exception_safe(e)
         except Exception as e:
             logger.error(f"❌ Failed to reload help command: {e}")
-            if sentry_sdk.is_initialized():
-                sentry_sdk.capture_exception(e)
+            capture_exception_safe(e)
 
     @span("reload.flag_dependent_modules")
     def _reload_flag_class_dependent_modules(self) -> None:
@@ -1462,10 +1451,12 @@ def auto_discover_modules(path: str = "modules") -> list[str]:
                 discovered.append(extension_name)
             except ValueError:
                 continue
+            except Exception as e:
+                logger.error(f"Error during cog discovery: {e}")
+                capture_exception_safe(e)
     except Exception as e:
-        logger.error(f"Error during cog discovery: {e}")
-        if sentry_sdk.is_initialized():
-            sentry_sdk.capture_exception(e)
+        logger.error(f"Error walking cog directory {watch_path}: {e}")
+        capture_exception_safe(e)
         return []
     else:
         return sorted(discovered)
@@ -1486,8 +1477,7 @@ class HotReload(commands.Cog):
             self.watcher.start()
         except Exception as e:
             logger.error(f"Failed to initialize hot reload watcher: {e}")
-            if sentry_sdk.is_initialized():
-                sentry_sdk.capture_exception(e)
+            capture_exception_safe(e)
             raise
 
     async def cog_unload(self) -> None:
@@ -1515,8 +1505,7 @@ async def setup(bot: commands.Bot) -> None:
         await bot.add_cog(HotReload(bot))
     except Exception as e:
         logger.error(f"Failed to setup hot reload cog: {e}")
-        if sentry_sdk.is_initialized():
-            sentry_sdk.capture_exception(e)
+        capture_exception_safe(e)
         raise
 
 

@@ -517,6 +517,36 @@ def capture_span_exception(exception: Exception, **extra_data: Any) -> None:
             span.set_data(f"extra.{key}", value)
 
 
+def capture_exception_safe(exception: Exception) -> None:
+    """
+    Safely capture an exception to Sentry if initialized.
+
+    This helper avoids repeating initialization checks at call sites.
+
+    Parameters
+    ----------
+    exception : Exception
+        The exception to report.
+    """
+    if sentry_sdk.is_initialized():
+        sentry_sdk.capture_exception(exception)
+
+
+def capture_message_safe(message: str, level: str = "info") -> None:
+    """
+    Safely capture a message to Sentry if initialized.
+
+    Parameters
+    ----------
+    message : str
+        The message to report.
+    level : str
+        The severity level (e.g., 'info', 'warning', 'error').
+    """
+    if sentry_sdk.is_initialized():
+        sentry_sdk.capture_message(message)
+
+
 @contextmanager
 def enhanced_span(op: str, name: str = "", **initial_data: Any) -> Generator[DummySpan | Any]:
     """

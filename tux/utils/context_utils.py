@@ -103,7 +103,6 @@ def get_interaction_context(source: ContextOrInteraction) -> dict[str, Any]:
 
     # Delegate to helper functions for type-specific details
     details = _get_interaction_details(source) if isinstance(source, Interaction) else _get_context_details(source)
-
     context |= details
 
     return context

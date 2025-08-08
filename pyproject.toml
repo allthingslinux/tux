@@ -220,7 +220,7 @@ addopts = [
     "--cov-report=html",
     "--cov-report=xml",
     "--cov-branch",
-    "-v",
+    # "-v",
 ]
 asyncio_mode = "auto"
 

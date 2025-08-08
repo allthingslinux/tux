@@ -22,9 +22,7 @@ from loguru import logger
 
 from tux.core.bot import Tux
 from tux.services.sentry_manager import LogLevelStr, SentryManager
-from tux.ui.embeds import EmbedCreator
-from tux.utils.context_utils import get_interaction_context
-from tux.utils.exceptions import (
+from tux.shared.exceptions import (
     AppCommandPermissionLevelError,
     CodeExecutionError,
     CompilationError,
@@ -33,6 +31,8 @@ from tux.utils.exceptions import (
     PermissionLevelError,
     UnsupportedLanguageError,
 )
+from tux.ui.embeds import EmbedCreator
+from tux.utils.context_utils import get_interaction_context
 
 # --- Constants and Configuration ---
 

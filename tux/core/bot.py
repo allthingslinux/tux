@@ -25,6 +25,8 @@ from tux.shared.config.settings import Config
 from tux.utils.banner import create_banner
 from tux.utils.emoji import EmojiManager
 from tux.utils.tracing import (
+    capture_exception_safe,
+    instrument_bot_commands,
     set_setup_phase_tag,
     set_span_error,
     start_span,
@@ -65,12 +67,11 @@ class Tux(commands.Bot):
         self.setup_complete: bool = False
         self.start_time: float | None = None
         self.setup_task: asyncio.Task[None] | None = None
-        self.active_sentry_transactions: dict[int, Any] = {}
-
         self._emoji_manager_initialized = False
         self._hot_reload_loaded = False
         self._banner_logged = False
         self._startup_task = None
+        self._commands_instrumented = False
 
         # Dependency injection container
         self.container: ServiceContainer | None = None
@@ -105,7 +106,7 @@ class Tux(commands.Bot):
 
             if sentry_sdk.is_initialized():
                 sentry_sdk.set_context("setup_failure", {"error": str(e), "error_type": type(e).__name__})
-                sentry_sdk.capture_exception(e)
+            capture_exception_safe(e)
 
             await self.shutdown()
             raise
@@ -263,6 +264,16 @@ class Tux(commands.Bot):
             await self._log_startup_banner()
             self._banner_logged = True
 
+        # Instrument commands once, after cogs are loaded and bot is ready
+        if not self._commands_instrumented and sentry_sdk.is_initialized():
+            try:
+                instrument_bot_commands(self)
+                self._commands_instrumented = True
+                logger.info("Sentry command instrumentation enabled")
+            except Exception as e:
+                logger.error(f"Failed to instrument commands for Sentry: {e}")
+                capture_exception_safe(e)
+
         if sentry_sdk.is_initialized():
             sentry_sdk.set_context(
                 "bot_stats",
@@ -294,54 +305,7 @@ class Tux(commands.Bot):
                     "Bot disconnected from Discord, this happens sometimes and is fine as long as it's not happening too often",
                 )
 
-    # --- Sentry Transaction Tracking ---
-
-    def start_interaction_transaction(self, interaction_id: int, name: str) -> Any:
-        """Start a Sentry transaction for a slash command interaction."""
-        if not sentry_sdk.is_initialized():
-            return None
-
-        transaction = sentry_sdk.start_transaction(
-            op="slash_command",
-            name=f"Slash Command: {name}",
-            description=f"Processing slash command {name}",
-        )
-
-        transaction.set_tag("interaction.id", interaction_id)
-        transaction.set_tag("command.name", name)
-        transaction.set_tag("command.type", "slash")
-
-        self.active_sentry_transactions[interaction_id] = transaction
-
-        return transaction
-
-    def start_command_transaction(self, message_id: int, name: str) -> Any:
-        """Start a Sentry transaction for a prefix command."""
-        if not sentry_sdk.is_initialized():
-            return None
-
-        transaction = sentry_sdk.start_transaction(
-            op="prefix_command",
-            name=f"Prefix Command: {name}",
-            description=f"Processing prefix command {name}",
-        )
-
-        transaction.set_tag("message.id", message_id)
-        transaction.set_tag("command.name", name)
-        transaction.set_tag("command.type", "prefix")
-
-        self.active_sentry_transactions[message_id] = transaction
-
-        return transaction
-
-    def finish_transaction(self, transaction_id: int, status: str = "ok") -> None:
-        """Finish a stored Sentry transaction with the given status."""
-        if not sentry_sdk.is_initialized():
-            return
-
-        if transaction := self.active_sentry_transactions.pop(transaction_id, None):
-            transaction.set_status(status)
-            transaction.finish()
+    # (Manual command transaction helpers removed; commands are instrumented automatically.)
 
     async def _wait_for_setup(self) -> None:
         """Wait for setup to complete if not already done."""
@@ -352,8 +316,7 @@ class Tux(commands.Bot):
 
                 except Exception as e:
                     logger.critical(f"Setup failed during on_ready: {e}")
-                    if sentry_sdk.is_initialized():
-                        sentry_sdk.capture_exception(e)
+                    capture_exception_safe(e)
 
                     await self.shutdown()
 
@@ -368,8 +331,7 @@ class Tux(commands.Bot):
 
             except Exception as e:
                 logger.error(f"Task monitoring failed: {e}")
-                if sentry_sdk.is_initialized():
-                    sentry_sdk.capture_exception(e)
+                capture_exception_safe(e)
 
                 msg = "Critical failure in task monitoring system"
                 raise RuntimeError(msg) from e
@@ -456,8 +418,7 @@ class Tux(commands.Bot):
 
             except Exception as e:
                 logger.error(f"Error during task cleanup: {e}")
-                if sentry_sdk.is_initialized():
-                    sentry_sdk.capture_exception(e)
+                capture_exception_safe(e)
 
     async def _stop_task_loops(self) -> None:
         """Stop all task loops in cogs."""
@@ -525,8 +486,7 @@ class Tux(commands.Bot):
 
                 span.set_tag("discord_closed", False)
                 span.set_data("discord_error", str(e))
-                if sentry_sdk.is_initialized():
-                    sentry_sdk.capture_exception(e)
+                capture_exception_safe(e)
 
             try:
                 logger.debug("Closing database connections.")
@@ -546,8 +506,7 @@ class Tux(commands.Bot):
                 span.set_tag("db_closed", False)
                 span.set_data("db_error", str(e))
 
-                if sentry_sdk.is_initialized():
-                    sentry_sdk.capture_exception(e)
+                capture_exception_safe(e)
 
     def _cleanup_container(self) -> None:
         """Clean up the dependency injection container."""
@@ -569,13 +528,21 @@ class Tux(commands.Bot):
                 await CogLoader.setup(self)
                 span.set_tag("cogs_loaded", True)
 
+                # Load Sentry handler cog to enrich spans and handle command errors
+                try:
+                    await self.load_extension("tux.services.handlers.sentry")
+                    span.set_tag("sentry_handler.loaded", True)
+                except Exception as sentry_err:
+                    logger.warning(f"Failed to load Sentry handler: {sentry_err}")
+                    span.set_tag("sentry_handler.loaded", False)
+                    capture_exception_safe(sentry_err)
+
             except Exception as e:
                 logger.critical(f"Error loading cogs: {e}")
                 span.set_tag("cogs_loaded", False)
                 span.set_data("error", str(e))
 
-                if sentry_sdk.is_initialized():
-                    sentry_sdk.capture_exception(e)
+                capture_exception_safe(e)
                 raise
 
     async def _log_startup_banner(self) -> None:
@@ -603,5 +570,4 @@ class Tux(commands.Bot):
                     logger.info("🔥 Hot reload system initialized")
                 except Exception as e:
                     logger.error(f"Failed to load hot reload extension: {e}")
-                    if sentry_sdk.is_initialized():
-                        sentry_sdk.capture_exception(e)
+                    capture_exception_safe(e)

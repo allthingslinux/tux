@@ -329,7 +329,7 @@ class TestSnippetsBaseCog:
         snippets_base_cog.check_if_user_has_mod_override = AsyncMock(return_value=False)
         snippets_base_cog.is_snippetbanned = AsyncMock(return_value=False)
 
-        with patch('tux.utils.config.Config') as mock_config:
+        with patch('tux.shared.config.settings.CONFIG') as mock_config:
             mock_config.LIMIT_TO_ROLE_IDS = True
             mock_config.ACCESS_ROLE_IDS = [33333, 44444]  # Required roles not in user's roles
 
@@ -352,7 +352,7 @@ class TestSnippetsBaseCog:
         snippets_base_cog.check_if_user_has_mod_override = AsyncMock(return_value=False)
         snippets_base_cog.is_snippetbanned = AsyncMock(return_value=False)
 
-        with patch('tux.utils.config.Config') as mock_config:
+        with patch('tux.shared.config.settings.CONFIG') as mock_config:
             mock_config.LIMIT_TO_ROLE_IDS = False
 
             result, reason = await snippets_base_cog.snippet_check(ctx, snippet_locked=True)
@@ -372,7 +372,7 @@ class TestSnippetsBaseCog:
         snippets_base_cog.check_if_user_has_mod_override = AsyncMock(return_value=False)
         snippets_base_cog.is_snippetbanned = AsyncMock(return_value=False)
 
-        with patch('tux.utils.config.Config') as mock_config:
+        with patch('tux.shared.config.settings.CONFIG') as mock_config:
             mock_config.LIMIT_TO_ROLE_IDS = False
 
             result, reason = await snippets_base_cog.snippet_check(ctx, snippet_user_id=99999)
@@ -392,7 +392,7 @@ class TestSnippetsBaseCog:
         snippets_base_cog.check_if_user_has_mod_override = AsyncMock(return_value=False)
         snippets_base_cog.is_snippetbanned = AsyncMock(return_value=False)
 
-        with patch('tux.utils.config.Config') as mock_config:
+        with patch('tux.shared.config.settings.CONFIG') as mock_config:
             mock_config.LIMIT_TO_ROLE_IDS = False
 
             result, reason = await snippets_base_cog.snippet_check(ctx, snippet_user_id=67890)
