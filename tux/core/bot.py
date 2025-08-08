@@ -20,11 +20,16 @@ from tux.core.cog_loader import CogLoader
 from tux.core.container import ServiceContainer
 from tux.core.service_registry import ServiceRegistry
 from tux.services.database.client import db
-from tux.services.sentry import start_span, start_transaction
 from tux.shared.config.env import is_dev_mode
 from tux.shared.config.settings import Config
 from tux.utils.banner import create_banner
 from tux.utils.emoji import EmojiManager
+from tux.utils.tracing import (
+    set_setup_phase_tag,
+    set_span_error,
+    start_span,
+    start_transaction,
+)
 
 # Create console for rich output
 console = Console(stderr=True, force_terminal=True)
@@ -81,19 +86,19 @@ class Tux(commands.Bot):
         """Set up the bot: connect to database, load extensions, and start monitoring."""
         try:
             with start_span("bot.setup", "Bot setup process") as span:
-                span.set_tag("setup_phase", "starting")
+                set_setup_phase_tag(span, "starting")
                 await self._setup_database()
-                span.set_tag("setup_phase", "database_connected")
+                set_setup_phase_tag(span, "database", "finished")
                 await self._setup_container()
-                span.set_tag("setup_phase", "container_initialized")
+                set_setup_phase_tag(span, "container", "finished")
                 await self._load_extensions()
-                span.set_tag("setup_phase", "extensions_loaded")
+                set_setup_phase_tag(span, "extensions", "finished")
                 await self._load_cogs()
-                span.set_tag("setup_phase", "cogs_loaded")
+                set_setup_phase_tag(span, "cogs", "finished")
                 await self._setup_hot_reload()
-                span.set_tag("setup_phase", "hot_reload_ready")
+                set_setup_phase_tag(span, "hot_reload", "finished")
                 self._start_monitoring()
-                span.set_tag("setup_phase", "monitoring_started")
+                set_setup_phase_tag(span, "monitoring", "finished")
 
         except Exception as e:
             logger.critical(f"Critical error during setup: {e}")
@@ -121,8 +126,7 @@ class Tux(commands.Bot):
                 logger.info(f"Database models registered: {db.is_registered()}")
 
             except Exception as e:
-                span.set_status("internal_error")
-                span.set_data("error", str(e))
+                set_span_error(span, e, "db_error")
                 raise
 
     async def _setup_container(self) -> None:
@@ -148,8 +152,7 @@ class Tux(commands.Bot):
                 span.set_data("container.services", registered_services)
 
             except Exception as e:
-                span.set_status("internal_error")
-                span.set_data("error", str(e))
+                set_span_error(span, e, "container_error")
                 logger.error(f"Failed to initialize dependency injection container: {e}")
 
                 if sentry_sdk.is_initialized():

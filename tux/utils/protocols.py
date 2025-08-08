@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 if TYPE_CHECKING:
     from discord.ext import commands
 
-    from tux.utils.sentry_manager import SentryManager
+    from tux.services.sentry_manager import SentryManager
 
 
 @runtime_checkable
