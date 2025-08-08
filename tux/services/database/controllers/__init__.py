@@ -1,10 +1,7 @@
 """Database controller module providing access to all model controllers."""
 
-import functools
-import inspect
+import importlib
 from typing import Any, ClassVar, TypeVar
-
-import sentry_sdk
 
 from tux.services.database.controllers.afk import AfkController
 from tux.services.database.controllers.case import CaseController
@@ -14,7 +11,13 @@ from tux.services.database.controllers.levels import LevelsController
 from tux.services.database.controllers.note import NoteController
 from tux.services.database.controllers.reminder import ReminderController
 from tux.services.database.controllers.snippet import SnippetController
-from tux.services.database.controllers.starboard import StarboardController, StarboardMessageController
+from tux.services.database.controllers.starboard import (
+    StarboardController,
+    StarboardMessageController,
+)
+
+# Note: Avoid importing tracing at module import time to prevent circular imports.
+_TRACING_AVAILABLE = True
 
 # Define a TypeVar that can be any BaseController subclass
 ControllerType = TypeVar("ControllerType")
@@ -67,7 +70,9 @@ class DatabaseController:
 
     def _get_controller(self, controller_type: type[ControllerType]) -> ControllerType:
         """
-        Helper method to instantiate a controller with proper Sentry instrumentation.
+        Helper to instantiate a controller with selective Sentry instrumentation.
+
+        Only instruments meaningful database operations to reduce span noise.
 
         Parameters
         ----------
@@ -77,83 +82,64 @@ class DatabaseController:
         Returns
         -------
         ControllerType
-            The instantiated controller
+            The instantiated controller with selectively instrumented methods
         """
         instance = controller_type()
-        if sentry_sdk.is_initialized():
-            # Get all public methods to wrap
-            methods = [attr for attr in dir(instance) if callable(getattr(instance, attr)) and not attr.startswith("_")]
 
-            # Wrap each public method with Sentry transaction
-            for method_name in methods:
+        # Exclude internal/utility helpers that create noise
+        excluded_methods = {
+            "safe_get_attr",
+            "connect_or_create_relation",
+            "_add_include_arg_if_present",
+            "_build_find_args",
+            "_build_simple_args",
+            "_build_create_args",
+            "_build_update_args",
+            "_build_delete_args",
+            "_build_upsert_args",
+            "_execute_query",
+            "_set_scope_context",
+        }
+
+        # Include common CRUD/meaningful patterns
+        include_prefixes = (
+            "get_",
+            "find_",
+            "create_",
+            "update_",
+            "delete_",
+            "count_",
+            "increment_",
+            "toggle_",
+            "lock_",
+            "unlock_",
+            "bulk_",
+        )
+
+        # Lazy import via importlib to avoid circular import during package init
+        try:
+            _tracing = importlib.import_module("tux.utils.tracing")
+            _span = getattr(_tracing, "span", None)
+        except Exception:
+            _span = None
+
+        # Get public methods that aren't excluded
+        method_names = [
+            attr
+            for attr in dir(instance)
+            if callable(getattr(instance, attr)) and not attr.startswith("_") and attr not in excluded_methods
+        ]
+
+        # Wrap only methods that match meaningful operation patterns
+        for method_name in method_names:
+            if method_name.startswith(include_prefixes):
                 original_method = getattr(instance, method_name)
-                # Use a factory function to capture loop variables
-                self._create_wrapped_method(instance, method_name, original_method)
+                if _span is not None:
+                    op = f"db.controller.{method_name}"
+                    wrapped = _span(op=op)(original_method)
+                    setattr(instance, method_name, wrapped)
 
         return instance
-
-    def _create_wrapped_method(self, instance: Any, method_name: str, original_method: Any) -> None:
-        """
-        Create a wrapped method with proper sentry instrumentation.
-
-        Parameters
-        ----------
-        instance : Any
-            The controller instance
-        method_name : str
-            The name of the method to wrap
-        original_method : Any
-            The original method to wrap
-        """
-
-        # Check if the original method is async
-        is_async = inspect.iscoroutinefunction(original_method)
-
-        if is_async:
-
-            @functools.wraps(original_method)
-            async def async_wrapped_method(*args: Any, **kwargs: Any) -> Any:
-                controller_name = instance.__class__.__name__
-                with sentry_sdk.start_span(
-                    op=f"db.controller.{method_name}",
-                    description=f"{controller_name}.{method_name}",
-                ) as span:
-                    span.set_tag("db.controller", controller_name)
-                    span.set_tag("db.operation", method_name)
-                    try:
-                        result = await original_method(*args, **kwargs)
-                    except Exception as e:
-                        span.set_status("internal_error")
-                        span.set_data("error", str(e))
-                        raise
-                    else:
-                        span.set_status("ok")
-                        return result
-
-            setattr(instance, method_name, async_wrapped_method)
-
-        else:
-
-            @functools.wraps(original_method)
-            def sync_wrapped_method(*args: Any, **kwargs: Any) -> Any:
-                controller_name = instance.__class__.__name__
-                with sentry_sdk.start_span(
-                    op=f"db.controller.{method_name}",
-                    description=f"{controller_name}.{method_name}",
-                ) as span:
-                    span.set_tag("db.controller", controller_name)
-                    span.set_tag("db.operation", method_name)
-                    try:
-                        result = original_method(*args, **kwargs)
-                    except Exception as e:
-                        span.set_status("internal_error")
-                        span.set_data("error", str(e))
-                        raise
-                    else:
-                        span.set_status("ok")
-                        return result
-
-            setattr(instance, method_name, sync_wrapped_method)
 
     _controller_mapping: ClassVar[dict[str, type]] = {
         "afk": AfkController,

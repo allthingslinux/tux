@@ -1,9 +1,9 @@
 """Base controller module providing common database functionality."""
 
+import importlib
 from collections.abc import Callable
 from typing import Any, TypeVar
 
-import sentry_sdk
 from loguru import logger
 
 from prisma.models import (
@@ -84,6 +84,7 @@ class BaseController[
         self,
         operation: Callable[[], Any],
         error_msg: str,
+        op_name: str,
     ) -> Any:
         """Executes a database query with standardized error logging.
 
@@ -107,17 +108,25 @@ class BaseController[
         Exception
             Re-raises any exception caught during the database operation.
         """
-        # Create a Sentry span to track database query performance
-        if sentry_sdk.is_initialized():
-            with sentry_sdk.start_span(op="db.query", description=f"Database query: {self.table_name}") as span:
-                span.set_tag("db.table", self.table_name)
+        # Lazy import via importlib to avoid circular import through package __init__
+        try:
+            _tracing = importlib.import_module("tux.utils.tracing")
+            _start_span = getattr(_tracing, "start_span", None)
+        except Exception:
+            _start_span = None
+
+        if _start_span is not None:
+            with _start_span(op=f"db.query.{op_name}", name=self.table_name) as span:  # type: ignore
                 try:
                     result = await operation()
-                    span.set_status("ok")
+                    if hasattr(span, "set_status"):
+                        span.set_status("ok")
                     return result  # noqa: TRY300
                 except Exception as e:
-                    span.set_status("internal_error")
-                    span.set_data("error", str(e))
+                    if hasattr(span, "set_status"):
+                        span.set_status("internal_error")
+                    if hasattr(span, "set_data"):
+                        span.set_data("error", str(e))
                     logger.error(f"{error_msg}: {e}")
                     raise
         else:
@@ -238,6 +247,7 @@ class BaseController[
         return await self._execute_query(
             lambda: self.table.find_first(**find_args),
             f"Failed to find record in {self.table_name} with criteria {where}",
+            "find_one",
         )
 
     async def find_unique(
@@ -263,6 +273,7 @@ class BaseController[
         return await self._execute_query(
             lambda: self.table.find_unique(**find_args),
             f"Failed to find unique record in {self.table_name} with criteria {where}",
+            "find_unique",
         )
 
     async def find_many(
@@ -307,6 +318,7 @@ class BaseController[
         return await self._execute_query(
             lambda: self.table.find_many(**find_args),
             f"Failed to find records in {self.table_name} with criteria {where}",
+            "find_many",
         )
 
     async def count(
@@ -328,6 +340,7 @@ class BaseController[
         return await self._execute_query(
             lambda: self.table.count(where=where),
             f"Failed to count records in {self.table_name} with criteria {where}",
+            "count",
         )
 
     async def create(
@@ -353,6 +366,7 @@ class BaseController[
         return await self._execute_query(
             lambda: self.table.create(**create_args),
             f"Failed to create record in {self.table_name} with data {data}",
+            "create",
         )
 
     async def update(
@@ -381,6 +395,7 @@ class BaseController[
         return await self._execute_query(
             lambda: self.table.update(**update_args),
             f"Failed to update record in {self.table_name} with criteria {where} and data {data}",
+            "update",
         )
 
     async def delete(
@@ -406,6 +421,7 @@ class BaseController[
         return await self._execute_query(
             lambda: self.table.delete(**delete_args),
             f"Failed to delete record in {self.table_name} with criteria {where}",
+            "delete",
         )
 
     async def upsert(
@@ -437,6 +453,7 @@ class BaseController[
         return await self._execute_query(
             lambda: self.table.upsert(**upsert_args),
             f"Failed to upsert record in {self.table_name} with where={where}, create={create}, update={update}",
+            "upsert",
         )
 
     async def update_many(
@@ -466,6 +483,7 @@ class BaseController[
         result = await self._execute_query(
             lambda: self.table.update_many(where=where, data=data),
             f"Failed to update records in {self.table_name} with criteria {where} and data {data}",
+            "update_many",
         )
         # Validate and return count
         count_val = getattr(result, "count", None)
@@ -498,6 +516,7 @@ class BaseController[
         result = await self._execute_query(
             lambda: self.table.delete_many(where=where),
             f"Failed to delete records in {self.table_name} with criteria {where}",
+            "delete_many",
         )
         # Validate and return count
         count_val = getattr(result, "count", None)
