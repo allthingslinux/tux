@@ -55,7 +55,7 @@ jinja2 = "^3.1.6"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "==4.2.0"
-pyright = "==1.1.403"
+basedpyright = "==1.29.5" # currently downgraded due to https://github.com/DetachHead/basedpyright/issues/1395
 ruff = "==0.12.7"
 poetry-types = "0.6.0"
 yamllint = "1.37.1"
@@ -150,7 +150,7 @@ line-ending = "lf"
 quote-style = "double"
 skip-magic-trailing-comma = false
 
-[tool.pyright]
+[tool.basedpyright]
 defineConstant = { DEBUG = true }
 enableReachabilityAnalysis = true
 exclude = ["__pypackages__", "_build", "examples", ".archive", "typings/**"]
@@ -160,6 +160,7 @@ stubPath = "typings"
 pythonPlatform = "Linux"
 pythonVersion = "3.13"
 reportImportCycles = true
+reportRedeclaration = false
 strictDictionaryInference = true
 strictListInference = true
 strictSetInference = true

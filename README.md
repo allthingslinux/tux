@@ -58,7 +58,7 @@ It is designed to provide a variety of features to the server, including moderat
 - Python 3.13+ alongside the `discord.py` library
 - Poetry for dependency management
 - Docker and Docker Compose for optional containerized environments
-- Strict typing with `pyright` and type hints
+- Strict typing with `basedpyright` and type hints
 - Type safe ORM using `prisma`
 - Linting and formatting via `ruff`
 - Custom CLI via `click` and `poetry` scripts

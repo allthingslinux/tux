@@ -30,8 +30,8 @@ def format_code() -> int:
 
 @command_registration_decorator(dev_group, name="type-check")
 def type_check() -> int:
-    """Check types with Pyright."""
-    return run_command(["pyright"])
+    """Check types with basedpyright."""
+    return run_command(["basedpyright"])
 
 
 @command_registration_decorator(dev_group, name="pre-commit")

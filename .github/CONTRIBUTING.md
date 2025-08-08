@@ -169,7 +169,7 @@ Follow these steps to set up your local development environment. For more compre
     # Lint code using Ruff
     poetry run tux dev lint-fix
 
-    # Type-check code using Pyright
+    # Type-check code using basedpyright
     poetry run tux dev type-check
 
     # Run all pre-commit checks (includes formatting, linting, etc.)
