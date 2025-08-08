@@ -13,12 +13,12 @@ class EventHandler(BaseCog):
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild) -> None:
-        controller = self.db_service.get_controller()
+        controller = self.db
         await controller.guild.insert_guild_by_id(guild.id)
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild: discord.Guild) -> None:
-        controller = self.db_service.get_controller()
+        controller = self.db
         await controller.guild.delete_guild_by_id(guild.id)
 
     @staticmethod
