@@ -23,7 +23,6 @@ packages = [{ include = "tux" }]
 python = ">=3.13.2,<3.14"
 aiocache = ">=0.12.2"
 aioconsole = ">=0.8.0"
-aiofiles = ">=24.1.0"
 asynctempfile = ">=0.5.0"
 cairosvg = ">=2.7.1"
 dateparser = ">=1.2.0"
@@ -36,9 +35,10 @@ jishaku = ">=2.5.2"
 loguru = ">=0.7.2"
 pillow = ">=11.3.0,<11.4.0"
 prisma = ">=0.15.0"
-psutil = ">=6.0.0"
+psutil = "^7.0.0"
 pynacl = ">=1.5.0"
 python-dotenv = ">=1.0.1"
+aiofiles = "^24.1.0"
 pytz = ">=2024.1"
 pyyaml = ">=6.0.2"
 reactionmenu = ">=3.1.7"
@@ -52,6 +52,7 @@ arrow = "^1.3.0"
 click = "^8.1.8"
 levenshtein = "^0.27.1"
 jinja2 = "^3.1.6"
+basedpyright = "^1.31.1"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "==4.2.0"
@@ -60,8 +61,6 @@ ruff = "==0.12.4"
 poetry-types = "0.6.0"
 yamllint = "1.37.1"
 yamlfix = "1.17.0"
-aiofiles = "^24.1.0"
-psutil = "^7.0.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.0.0"
@@ -160,24 +159,17 @@ line-ending = "lf"
 quote-style = "double"
 skip-magic-trailing-comma = false
 
-[tool.pyright]
+[tool.basedpyright]
 defineConstant = { DEBUG = true }
 enableReachabilityAnalysis = true
-exclude = [
-    "__pypackages__/**",
-    "_build/**",
-    "examples/**",
-    ".archive/**",
-    "typings/**",
-    "tests/**",
-    "docs/**",
-]
+exclude = ["__pypackages__", "_build", "examples", ".archive", "typings/**"]
 ignore = [".venv"]
-include = ["tux"]
+include = ["tux", "tests"]
 stubPath = "typings"
 pythonPlatform = "Linux"
 pythonVersion = "3.13"
 reportImportCycles = true
+reportRedeclaration = false
 strictDictionaryInference = true
 strictListInference = true
 strictSetInference = true

@@ -34,6 +34,6 @@ This section covers running and developing Tux directly on your local machine, w
 
 The project includes a hot-reloading utility (`tux/utils/hot_reload.py`).
 
-When the bot is running locally via `poetry run tux --dev start`, this utility watches for changes in the `tux/cogs/` directory. It attempts to automatically reload modified cogs or cogs affected by changes in watched utility files without requiring a full bot restart.
+When the bot is running locally via `poetry run tux --dev start`, this utility watches for changes in the `tux/modules/` directory. It attempts to automatically reload modified modules or modules affected by changes in watched utility files without requiring a full bot restart.
 
-This significantly speeds up development for cog-related changes. Note that changes outside the watched directories (e.g., core bot logic, dependencies) may still require a manual restart (`Ctrl+C` and run the start command again).
+This significantly speeds up development for module-related changes. Note that changes outside the watched directories (e.g., core bot logic, dependencies) may still require a manual restart (`Ctrl+C` and run the start command again).

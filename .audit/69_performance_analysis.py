@@ -29,7 +29,7 @@ from loguru import logger
 # Add the project root to the Python path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from tux.database.client import db
+from tux.services.database.client import db
 
 
 class PerformanceProfiler:

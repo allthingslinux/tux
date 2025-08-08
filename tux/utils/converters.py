@@ -1,12 +1,16 @@
+from __future__ import annotations
+
 import re
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import discord
 from discord.ext import commands
 from loguru import logger
 
 from prisma.enums import CaseType
-from tux.bot import Tux
+
+if TYPE_CHECKING:
+    from tux.core.types import Tux
 
 time_regex = re.compile(r"(\d{1,5}(?:[.,]?\d{1,5})?)([smhd])")
 time_dict = {"h": 3600, "s": 1, "m": 60, "d": 86400}
@@ -79,19 +83,18 @@ class CaseTypeConverter(commands.Converter[CaseType]):
             raise commands.BadArgument(msg) from e
 
 
-async def get_channel_safe(bot: Tux, channel_id: int) -> discord.TextChannel | discord.Thread | None:
-    """Get a channel by ID, returning None if not found."""
-    channel = bot.get_channel(channel_id)
-    if channel is None:
-        try:
-            channel = await bot.fetch_channel(channel_id)
-        except discord.NotFound:
-            logger.error(f"Channel not found for ID: {channel_id}")
-            return None
-        except (discord.Forbidden, discord.HTTPException) as fetch_error:
-            logger.error(f"Failed to fetch channel: {fetch_error}")
-            return None
-    return cast(discord.TextChannel | discord.Thread, channel)
+async def get_channel_safe(bot: Tux, channel_id: int) -> discord.abc.GuildChannel | discord.Thread | None:  # type: ignore[valid-type]
+    """
+    Get a channel by ID, returning None if not found.
+
+    This is a helper function to safely get a channel by ID without raising an exception.
+    """
+    try:
+        channel = bot.get_channel(channel_id)
+        return cast(discord.abc.GuildChannel | discord.Thread | None, channel)
+    except Exception as e:
+        logger.opt(exception=e).error(f"Error getting channel {channel_id}")
+        return None
 
 
 def convert_bool(x: str | None) -> bool | None:

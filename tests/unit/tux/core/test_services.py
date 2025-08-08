@@ -6,7 +6,7 @@ import discord
 import pytest
 
 from tux.core.services import BotService, ConfigService, DatabaseService
-from tux.database.controllers import DatabaseController
+from tux.services.database.controllers import DatabaseController
 
 
 class TestDatabaseService:

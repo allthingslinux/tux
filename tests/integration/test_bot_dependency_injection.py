@@ -11,7 +11,7 @@ import discord
 import pytest
 from discord.ext import commands
 
-from tux.bot import ContainerInitializationError, Tux
+from tux.core.bot import ContainerInitializationError, Tux
 from tux.core.container import ServiceContainer
 from tux.core.interfaces import IBotService, IConfigService, IDatabaseService
 from tux.core.service_registry import ServiceRegistry

@@ -444,7 +444,7 @@ class DiscordErrorHandler:
 
 ```python
 # tux/cogs/moderation/kick.py (After migration)
-from tux.cogs.moderation.base import ModerationCogBase
+from tux.modules.moderation.base import ModerationCogBase
 from tux.core.discord_error_utils import DiscordErrorHandler
 
 class KickCog(ModerationCogBase):
@@ -476,7 +476,7 @@ class KickCog(ModerationCogBase):
 
 ```python
 # tux/cogs/utility/avatar.py (After migration)
-from tux.cogs.utility.base import UtilityCogBase
+from tux.modules.utility.base import UtilityCogBase
 
 class AvatarCog(UtilityCogBase):
     def __init__(self, bot: Tux) -> None:
@@ -510,7 +510,7 @@ class AvatarCog(UtilityCogBase):
 
 ```python
 # tux/cogs/admin/user_management.py
-from tux.cogs.admin.base import AdminCogBase
+from tux.modules.admin.base import AdminCogBase
 from tux.core.discord_error_utils import DiscordErrorHandler
 
 class UserManagementCog(AdminCogBase):
@@ -806,7 +806,7 @@ async def test_error_categorization():
 ```python
 # tests/integration/test_error_integration.py
 import pytest
-from tux.cogs.moderation.kick import KickCog
+from tux.modules.moderation.kick import KickCog
 from unittest.mock import Mock, AsyncMock
 import discord
 

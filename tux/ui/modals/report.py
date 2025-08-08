@@ -1,8 +1,8 @@
 import discord
 from loguru import logger
 
-from tux.bot import Tux
-from tux.database.controllers import DatabaseController
+from tux.core.bot import Tux
+from tux.core.interfaces import IDatabaseService
 from tux.ui.embeds import EmbedCreator
 
 
@@ -10,7 +10,16 @@ class ReportModal(discord.ui.Modal):
     def __init__(self, *, title: str = "Submit an anonymous report", bot: Tux) -> None:
         super().__init__(title=title)
         self.bot = bot
-        self.config = DatabaseController().guild_config
+        # Resolve config via DI
+        container = getattr(self.bot, "container", None)
+        if container is None:
+            error_msg = "Service container is required for ReportModal"
+            raise RuntimeError(error_msg)
+        db_service = container.get_optional(IDatabaseService)
+        if db_service is None:
+            error_msg = "IDatabaseService not available. DI is required for ReportModal"
+            raise RuntimeError(error_msg)
+        self.config = db_service.get_controller().guild_config
 
     short = discord.ui.TextInput(  # type: ignore
         label="Related user(s) or issue(s)",

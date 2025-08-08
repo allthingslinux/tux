@@ -48,7 +48,7 @@ class ReloadCog(commands.Cog):
         usage = f"{ctx.prefix}reload <extension>"
         
         try:
-            await self.bot.reload_extension(f"tux.cogs.{extension}")
+            await self.bot.reload_extension(f"tux.modules.{extension}")
             embed = discord.Embed(title="Success", description=f"Reloaded {extension}")
         except Exception as e:
             embed = discord.Embed(title="Error", description=f"Failed to reload: {e}")
@@ -60,7 +60,7 @@ class ReloadCog(commands.Cog):
 
 ```python
 # tux/cogs/moderation/ban.py (Current successful pattern)
-from tux.cogs.moderation.base import ModerationCogBase
+from tux.modules.moderation.base import ModerationCogBase
 
 class BanCog(ModerationCogBase):  # ✅ Already using base class
     def __init__(self, bot: Tux) -> None:
@@ -312,7 +312,7 @@ class AdminCogBase(BaseCog):
     ) -> None:
         """Safely reload an extension with error handling."""
         try:
-            await self.bot.reload_extension(f"tux.cogs.{extension}")
+            await self.bot.reload_extension(f"tux.modules.{extension}")
             await self.send_success_response(
                 ctx, 
                 f"Successfully reloaded extension: {extension}"
@@ -470,7 +470,7 @@ class ModerationCogBase(BaseCog):  # ✅ Now inherits from enhanced BaseCog
 
 ```python
 # tux/cogs/utility/ping.py (After migration)
-from tux.cogs.utility.base import UtilityCogBase
+from tux.modules.utility.base import UtilityCogBase
 
 class PingCog(UtilityCogBase):  # ✅ Uses category-specific base
     def __init__(self, bot: Tux) -> None:
@@ -497,7 +497,7 @@ class PingCog(UtilityCogBase):  # ✅ Uses category-specific base
 
 ```python
 # tux/cogs/admin/reload.py (After migration)
-from tux.cogs.admin.base import AdminCogBase
+from tux.modules.admin.base import AdminCogBase
 
 class ReloadCog(AdminCogBase):  # ✅ Uses admin base with permissions
     def __init__(self, bot: Tux) -> None:
@@ -515,7 +515,7 @@ class ReloadCog(AdminCogBase):  # ✅ Uses admin base with permissions
 
 ```python
 # tux/cogs/utility/avatar.py (After migration)
-from tux.cogs.utility.base import UtilityCogBase
+from tux.modules.utility.base import UtilityCogBase
 import discord
 
 class AvatarCog(UtilityCogBase):
@@ -698,8 +698,8 @@ async def test_success_response():
 ```python
 # tests/test_migration_validation.py
 import pytest
-from tux.cogs.utility.ping import PingCog
-from tux.cogs.utility.base import UtilityCogBase
+from tux.modules.utility.ping import PingCog
+from tux.modules.utility.base import UtilityCogBase
 
 def test_ping_cog_inheritance():
     """Verify PingCog properly inherits from UtilityCogBase."""
@@ -740,7 +740,7 @@ grep -r "DatabaseController()" tux/cogs/ | wc -l
 
 # Verify automatic usage generation
 python -c "
-from tux.cogs.utility.ping import PingCog
+from tux.modules.utility.ping import PingCog
 from unittest.mock import Mock
 bot = Mock()
 bot.command_prefix = '!'

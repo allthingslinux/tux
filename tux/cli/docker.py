@@ -13,7 +13,7 @@ from tux.cli.core import (
     create_group,
     run_command,
 )
-from tux.utils.env import is_dev_mode
+from tux.shared.config.env import is_dev_mode
 
 # Resource configuration for safe Docker cleanup operations
 RESOURCE_MAP = {

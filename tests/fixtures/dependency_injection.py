@@ -14,7 +14,7 @@ from discord.ext import commands
 
 from tux.core.container import ServiceContainer
 from tux.core.interfaces import IBotService, IConfigService, IDatabaseService
-from tux.database.controllers import DatabaseController
+from tux.services.database.controllers import DatabaseController
 
 
 class MockDatabaseService:
@@ -432,9 +432,28 @@ def mock_bot_with_container(mock_bot: Mock, mock_container: ServiceContainer) ->
         mock_container: Mock service container
 
     Returns:
-        A mock bot with the container attached
+        A mock bot with the container attached and all required attributes
     """
+    # Attach the container
     mock_bot.container = mock_container
+
+    # Ensure required attributes exist
+    if not hasattr(mock_bot, 'user'):
+        mock_bot.user = Mock()
+
+    # Add any other required bot attributes here
+    if not hasattr(mock_bot, 'guilds'):
+        mock_bot.guilds = []
+
+    # Add any required methods
+    if not hasattr(mock_bot, 'get_user'):
+        mock_bot.get_user = Mock(return_value=None)
+
+    if not hasattr(mock_bot, 'get_emoji'):
+        mock_bot.get_emoji = Mock(return_value=None)
+
+    # Add any other required mocks here
+
     return mock_bot
 
 

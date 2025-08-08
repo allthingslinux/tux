@@ -2,12 +2,21 @@ from typing import Any
 
 import discord
 
-from tux.database.controllers import DatabaseController
+from tux.core.interfaces import IDatabaseService
 
 
 class ConfigSetPrivateLogs(discord.ui.View):
-    def __init__(self, *, timeout: float = 180):
-        self.db = DatabaseController().guild_config
+    def __init__(self, *, timeout: float = 180, bot: Any | None = None, db_service: IDatabaseService | None = None):
+        controller = None
+        if db_service is not None:
+            controller = db_service.get_controller()
+        elif bot is not None and getattr(bot, "container", None) is not None:
+            resolved = bot.container.get_optional(IDatabaseService)
+            if resolved is not None:
+                controller = resolved.get_controller()
+        if controller is None:
+            raise RuntimeError("IDatabaseService not available. DI is required for ConfigSetPrivateLogs.")
+        self.db = controller.guild_config
         super().__init__(timeout=timeout)
 
     @discord.ui.select(
@@ -72,8 +81,17 @@ class ConfigSetPrivateLogs(discord.ui.View):
 
 
 class ConfigSetPublicLogs(discord.ui.View):
-    def __init__(self, *, timeout: float = 180):
-        self.db = DatabaseController().guild_config
+    def __init__(self, *, timeout: float = 180, bot: Any | None = None, db_service: IDatabaseService | None = None):
+        controller = None
+        if db_service is not None:
+            controller = db_service.get_controller()
+        elif bot is not None and getattr(bot, "container", None) is not None:
+            resolved = bot.container.get_optional(IDatabaseService)
+            if resolved is not None:
+                controller = resolved.get_controller()
+        if controller is None:
+            raise RuntimeError("IDatabaseService not available. DI is required for ConfigSetPublicLogs.")
+        self.db = controller.guild_config
         super().__init__(timeout=timeout)
 
     @discord.ui.select(
@@ -138,8 +156,17 @@ class ConfigSetPublicLogs(discord.ui.View):
 
 
 class ConfigSetChannels(discord.ui.View):
-    def __init__(self, *, timeout: float = 180):
-        self.db = DatabaseController().guild_config
+    def __init__(self, *, timeout: float = 180, bot: Any | None = None, db_service: IDatabaseService | None = None):
+        controller = None
+        if db_service is not None:
+            controller = db_service.get_controller()
+        elif bot is not None and getattr(bot, "container", None) is not None:
+            resolved = bot.container.get_optional(IDatabaseService)
+            if resolved is not None:
+                controller = resolved.get_controller()
+        if controller is None:
+            raise RuntimeError("IDatabaseService not available. DI is required for ConfigSetChannels.")
+        self.db = controller.guild_config
         super().__init__(timeout=timeout)
 
     @discord.ui.select(

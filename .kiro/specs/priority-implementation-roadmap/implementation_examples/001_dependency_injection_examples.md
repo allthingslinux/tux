@@ -438,7 +438,7 @@ touch tux/core/service_registry.py
 # tests/test_ban_cog.py
 import pytest
 from unittest.mock import Mock, AsyncMock
-from tux.cogs.moderation.ban import BanCog
+from tux.modules.moderation.ban import BanCog
 from tux.core.container import ServiceContainer
 from tux.core.interfaces import IDatabaseService
 

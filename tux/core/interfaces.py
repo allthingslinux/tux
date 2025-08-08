@@ -8,7 +8,37 @@ from typing import Any, Protocol
 
 import discord
 
-from tux.database.controllers import DatabaseController
+from tux.services.database.controllers import DatabaseController
+
+
+class IGithubService(Protocol):
+    """Protocol for GitHub service operations.
+
+    Provides access to GitHub API functionality.
+    """
+
+    async def get_repo(self) -> Any:
+        """Get the repository information.
+
+        Returns:
+            The repository data
+        """
+        ...
+
+
+class ILoggerService(Protocol):
+    """Protocol for logging service operations.
+
+    Provides centralized logging configuration and management.
+    """
+
+    def setup_logging(self, level: str = "INFO") -> None:
+        """Set up logging configuration.
+
+        Args:
+            level: The logging level to use
+        """
+        ...
 
 
 class IDatabaseService(Protocol):

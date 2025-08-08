@@ -11,9 +11,73 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.database.controllers import DatabaseController
-from tux.utils.config import Config
-from tux.utils.env import is_dev_mode
+from tux.services.database.controllers import DatabaseController
+from tux.services.wrappers.github import GithubService as GitHubWrapper
+from tux.shared.config.env import is_dev_mode
+from tux.shared.config.settings import Config
+
+
+class GitHubService:
+    """Concrete implementation of IGithubService.
+
+    Wraps the GitHub API wrapper to provide a clean service interface.
+    """
+
+    def __init__(self) -> None:
+        """Initialize the GitHub service."""
+        self._github_wrapper: GitHubWrapper | None = None
+        logger.debug("GitHubService initialized")
+
+    def get_wrapper(self) -> GitHubWrapper:
+        """Get the GitHub wrapper instance.
+
+        Returns:
+            The GitHub wrapper for performing GitHub operations
+        """
+        if self._github_wrapper is None:
+            self._github_wrapper = GitHubWrapper()
+            logger.debug("GitHubWrapper instantiated")
+
+        return self._github_wrapper
+
+    async def get_repo(self) -> Any:
+        """Get the repository information.
+
+        Returns:
+            The repository data
+        """
+        try:
+            wrapper = self.get_wrapper()
+            return await wrapper.get_repo()
+        except Exception as e:
+            logger.error(f"Failed to get repository: {e}")
+            raise
+
+
+class LoggerService:
+    """Concrete implementation of ILoggerService.
+
+    Provides centralized logging configuration and management.
+    """
+
+    def __init__(self) -> None:
+        """Initialize the logger service."""
+        logger.debug("LoggerService initialized")
+
+    def setup_logging(self, level: str = "INFO") -> None:
+        """Set up logging configuration.
+
+        Args:
+            level: The logging level to use
+        """
+        try:
+            from tux.services.logger import setup_logging
+
+            setup_logging(level)
+            logger.debug(f"Logging configured with level: {level}")
+        except Exception as e:
+            logger.error(f"Failed to setup logging: {e}")
+            raise
 
 
 class DatabaseService:
@@ -112,6 +176,8 @@ class BotService:
             bot: The Discord bot instance
         """
         self._bot = bot
+        # Expose bot as a public property for container validation
+        self.bot = bot
         logger.debug("BotService initialized")
 
     @property

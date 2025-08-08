@@ -19,6 +19,9 @@ from discord import SelectOption
 from discord.ext import commands
 from loguru import logger
 
+from tux.shared.config.env import get_current_env
+from tux.shared.config.settings import CONFIG
+from tux.shared.constants import CONST
 from tux.ui.embeds import EmbedCreator
 from tux.ui.help_components import (
     BackButton,
@@ -31,9 +34,6 @@ from tux.ui.help_components import (
     PrevButton,
     SubcommandSelectMenu,
 )
-from tux.utils.config import CONFIG
-from tux.utils.constants import CONST
-from tux.utils.env import get_current_env
 from tux.utils.help_utils import (
     create_cog_category_mapping,
     format_multiline_description,
@@ -1307,8 +1307,8 @@ class TuxHelp(commands.HelpCommand):
             if cmd.cog:
                 module = getattr(cmd.cog, "__module__", "")
                 parts = module.split(".")
-                # Assuming the structure is: tux.cogs.<group>...
-                if len(parts) >= 3 and parts[1].lower() == "cogs":
+                # Assuming the structure is: tux.modules.<group>...
+                if len(parts) >= 3 and parts[1].lower() == "modules":
                     return parts[2].lower()
             return None
 

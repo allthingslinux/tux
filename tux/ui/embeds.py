@@ -4,9 +4,9 @@ from enum import Enum
 import discord
 from loguru import logger
 
-from tux.bot import Tux
-from tux.utils.config import Config
-from tux.utils.constants import CONST
+from tux.core.bot import Tux
+from tux.shared.config.settings import Config
+from tux.shared.constants import CONST
 
 
 class EmbedType(Enum):

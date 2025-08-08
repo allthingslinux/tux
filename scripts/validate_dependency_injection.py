@@ -41,12 +41,16 @@ class DependencyInjectionValidator:
     def __init__(self, project_root: str = "."):
         self.project_root = Path(project_root)
         self.cogs_dir = self.project_root / "tux" / "cogs"
+        self.modules_dir = self.project_root / "tux" / "modules"
         self.core_dir = self.project_root / "tux" / "core"
 
     def validate_migration_completeness(self) -> ValidationResult:
         """Validate the completeness of dependency injection migration."""
         results = ValidationResult(
-            total_cogs=0, base_cog_inheritance=0, direct_instantiations=0, migration_completeness=0.0
+            total_cogs=0,
+            base_cog_inheritance=0,
+            direct_instantiations=0,
+            migration_completeness=0.0,
         )
 
         # Find all cog files
@@ -79,23 +83,30 @@ class DependencyInjectionValidator:
         """Find all Python files that define cog classes."""
         cog_files: list[Path] = []
 
-        for py_file in self.cogs_dir.rglob("*.py"):
-            if py_file.name == "__init__.py":
-                continue
+        search_dirs = []
+        if self.cogs_dir.exists():
+            search_dirs.append(self.cogs_dir)
+        if hasattr(self, "modules_dir") and self.modules_dir.exists():
+            search_dirs.append(self.modules_dir)
 
-            try:
-                with open(py_file, encoding="utf-8") as f:
-                    content = f.read()
+        for directory in search_dirs:
+            for py_file in directory.rglob("*.py"):
+                if py_file.name == "__init__.py":
+                    continue
 
-                # Check if file contains cog class definitions
-                if any(
-                    keyword in content
-                    for keyword in ["class", "commands.Cog", "BaseCog", "ModerationCogBase", "SnippetsBaseCog"]
-                ):
-                    cog_files.append(py_file)
+                try:
+                    with open(py_file, encoding="utf-8") as f:
+                        content = f.read()
 
-            except Exception as e:
-                print(f"Error reading {py_file}: {e}")
+                    # Check if file contains cog class definitions
+                    if any(
+                        keyword in content
+                        for keyword in ["class", "commands.Cog", "BaseCog", "ModerationCogBase", "SnippetsBaseCog"]
+                    ):
+                        cog_files.append(py_file)
+
+                except Exception as e:
+                    print(f"Error reading {py_file}: {e}")
 
         return cog_files
 
@@ -215,6 +226,7 @@ def main():
     parser.add_argument("--format", choices=["json", "table", "summary"], default="table", help="Output format")
     parser.add_argument("--export", type=str, help="Export results to JSON file")
     parser.add_argument("--project-root", type=str, default=".", help="Project root directory")
+    parser.add_argument("--modules", action="store_true", help="Also scan tux/modules alongside tux/cogs")
 
     args = parser.parse_args()
 

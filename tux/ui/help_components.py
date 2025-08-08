@@ -15,7 +15,7 @@ from typing import Any, Protocol, TypeVar
 import discord
 from discord.ext import commands
 
-from tux.utils.constants import CONST
+from tux.shared.constants import CONST
 
 # Type aliases
 CommandT = TypeVar("CommandT", bound=commands.Command[Any, Any, Any])

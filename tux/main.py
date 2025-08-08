@@ -1,6 +1,6 @@
 """Entrypoint for the Tux Discord bot application."""
 
-from tux.app import TuxApp
+from tux.core.app import TuxApp
 
 
 def run() -> None:

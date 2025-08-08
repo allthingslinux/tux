@@ -18,12 +18,12 @@ from loguru import logger
 # Import version from main package
 from tux import __version__
 from tux.cli.ui import command_header, command_result, error, info, warning
-from tux.utils.env import (
+from tux.services.logger import setup_logging
+from tux.shared.config.env import (
     configure_environment,
     get_current_env,
     get_database_url,
 )
-from tux.utils.logger import setup_logging
 
 # Type definitions
 T = TypeVar("T")

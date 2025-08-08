@@ -9,7 +9,7 @@ from loguru import logger
 from tux.core.service_registry import ServiceRegistry
 
 if TYPE_CHECKING:
-    from tux.bot import Tux
+    from tux.core.bot import Tux
     from tux.core.container import ServiceContainer
 
 

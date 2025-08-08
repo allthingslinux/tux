@@ -7,7 +7,7 @@ from typing import TypeVar
 from loguru import logger
 
 from tux.cli.core import command_registration_decorator, create_group, run_command
-from tux.utils.env import get_database_url
+from tux.shared.config.env import get_database_url
 
 # Type for command functions
 T = TypeVar("T")

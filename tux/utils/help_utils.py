@@ -108,20 +108,20 @@ def extract_cog_group(cog: commands.Cog) -> str | None:
     module = getattr(cog, "__module__", "")
     parts = module.split(".")
 
-    # Assuming the structure is: tux.cogs.<group>...
-    if len(parts) >= 3 and parts[1].lower() == "cogs":
+    # Assuming the structure is: tux.modules.<group>...
+    if len(parts) >= 3 and parts[1].lower() == "modules":
         return parts[2].lower()
     return None
 
 
 def get_cog_groups() -> list[str]:
-    """Retrieve a list of cog groups from the 'cogs' folder.
+    """Retrieve a list of module groups from the 'modules' folder.
 
     Returns:
-        List of cog group names
+        A list of module group names.
     """
-    cogs_path = Path("./tux/cogs")
-    return [d.name for d in cogs_path.iterdir() if d.is_dir() and d.name != "__pycache__"]
+    modules_dir = Path(__file__).parent.parent / "modules"
+    return [d.name for d in modules_dir.iterdir() if d.is_dir() and not d.name.startswith("_")]
 
 
 def is_large_command_group(command: commands.Group[Any, Any, Any]) -> bool:

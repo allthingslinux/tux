@@ -117,14 +117,14 @@ coverage:
       # BOT COMMANDS AND FEATURES (High standards - 75% target)
       # User-facing commands and Discord integrations
       # High standards because these directly impact user experience
-      cogs:
+      modules:
         target: 75%
         threshold: 2%
         informational: true  # Don't block PRs while building up test suite
         flags:
           - unit
         paths:
-          - tux/cogs/**/*  # All command cogs and Discord slash commands
+          - tux/modules/**/*  # All command modules and Discord slash commands
         only_pulls: true
 
       # UTILITIES AND HELPERS (Moderate standards - 70% target)
@@ -366,10 +366,10 @@ component_management:
     # User-facing Discord commands and integrations
         - unit
         - database
-    - component_id: cogs
+    - component_id: modules
       name: Bot Commands & Features
       paths:
-        - tux/cogs/**/*  # All command cogs organized by category
+        - tux/modules/**/*  # All command modules organized by category
       flag_regexes:
         - unit
 

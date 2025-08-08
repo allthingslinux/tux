@@ -11,8 +11,8 @@
       "source.organizeImports.ruff": "explicit"
     }
   },
-  "python.languageServer": "Pylance",
-  "python.analysis.typeCheckingMode": "strict",
+  "python.languageServer": "None",
+  "python.analysis.typeCheckingMode": "off",
   "python.analysis.autoFormatStrings": true,
   "python.analysis.completeFunctionParens": true,
   "python.analysis.autoImportCompletions": true,
@@ -31,7 +31,6 @@
   "python.poetryPath": "poetry",
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": true,
-  "python.testing.cwd": "${workspaceFolder}",
   "python.testing.autoTestDiscoverOnSaveEnabled": true,
   "coverage-gutters.coverageFileNames": [
     "coverage.xml",
@@ -102,5 +101,7 @@
   "yaml.extension.recommendations": true,
   "yaml.schemas": {
     "https://squidfunk.github.io/mkdocs-material/schema.json": "mkdocs.yml"
-  }
+  },
+  "autoDocstring.docstringFormat": "numpy",
+  "basedpyright.analysis.typeCheckingMode": "strict"
 }

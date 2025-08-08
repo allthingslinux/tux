@@ -20,17 +20,17 @@ The permission system uses numeric levels from 0 to 9, each with an associated r
 """
 
 from collections.abc import Callable, Coroutine
-from typing import Any, TypeVar
+from typing import Any
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
-from tux.bot import Tux
-from tux.database.controllers import DatabaseController
-from tux.utils.config import CONFIG
-from tux.utils.exceptions import AppCommandPermissionLevelError, PermissionLevelError
+from tux.core.types import Tux
+from tux.services.database.controllers import DatabaseController
+from tux.shared.config.settings import CONFIG
+from tux.shared.exceptions import AppCommandPermissionLevelError, PermissionLevelError
 
 
 class DatabaseControllerSingleton:
@@ -51,7 +51,7 @@ def get_db_controller() -> DatabaseController:
     return DatabaseControllerSingleton.get_instance()
 
 
-T = TypeVar("T", bound=commands.Context[Tux] | discord.Interaction)
+# T type is now imported from tux.core.types
 
 
 async def fetch_guild_config(guild_id: int) -> dict[str, Any]:
