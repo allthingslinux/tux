@@ -21,6 +21,28 @@ class LevelsController(BaseController[Levels]):
         super().__init__("levels")
         self.guild_table: GuildActions[Guild] = db.client.guild
 
+    async def get_user_level_data(self, member_id: int, guild_id: int) -> Levels | None:
+        """
+        Fetches all level-related data for a user in a single query.
+
+        Parameters
+        ----------
+        member_id : int
+            The ID of the member.
+        guild_id : int
+            The ID of the guild.
+
+        Returns
+        -------
+        Levels | None
+            The levels record for the user, or None if not found.
+        """
+        try:
+            return await self.find_one(where={"member_id": member_id, "guild_id": guild_id})
+        except Exception as e:
+            logger.error(f"Error querying level data for member_id: {member_id}, guild_id: {guild_id}: {e}")
+            return None
+
     async def get_xp(self, member_id: int, guild_id: int) -> float:
         """Get the XP of a member in a guild.
 

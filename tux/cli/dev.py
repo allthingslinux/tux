@@ -38,3 +38,15 @@ def type_check() -> int:
 def check() -> int:
     """Run pre-commit checks."""
     return run_command(["pre-commit", "run", "--all-files"])
+
+
+@command_registration_decorator(dev_group, name="check-all")
+def check_all() -> int:
+    """Run all development checks (pre-commit + type checking)."""
+    # Run pre-commit first
+    pre_commit_result = run_command(["pre-commit", "run", "--all-files"])
+    if pre_commit_result != 0:
+        return pre_commit_result
+
+    # Then run type checking
+    return run_command(["pyright"])
