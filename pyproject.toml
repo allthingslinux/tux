@@ -223,6 +223,7 @@ addopts = [
     # "-v",
 ]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.yamlfix]
 comments_min_spaces_from_content = 1
