@@ -1,0 +1,14 @@
+{
+    "files": {
+        "./tests/conftest.py": [
+            {
+                "code": "reportUnusedFunction",
+                "range": {
+                    "startColumn": 4,
+                    "endColumn": 23,
+                    "lineCount": 1
+                }
+            }
+        ]
+    }
+}

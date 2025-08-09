@@ -12,7 +12,6 @@
     }
   },
   "python.languageServer": "None",
-  "python.analysis.autoFormatStrings": true,
   "python.terminal.activateEnvInCurrentTerminal": true,
   "python.terminal.executeInFileDir": false,
   "basedpyright.importStrategy": "useBundled",
@@ -21,6 +20,7 @@
   "basedpyright.analysis.inlayHints.variableTypes": true,
   "basedpyright.analysis.inlayHints.callArgumentNames": true,
   "basedpyright.analysis.inlayHints.genericTypes": true,
+  "basedpyright.analysis.inlayHints.callArgumentNamesMatching": true,
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": true,
   "python.testing.autoTestDiscoverOnSaveEnabled": true,

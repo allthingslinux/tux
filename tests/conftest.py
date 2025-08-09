@@ -110,14 +110,16 @@ class _HasMarker(Protocol):
 
 
 @pytest.fixture(autouse=True)
+
 def _isolate_unit_tests(
     monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest, tmp_path: Path,
 ) -> None:  # pyright: ignore[reportUnusedFunction]
-    """For tests marked as unit:
+    """
+    For tests marked as unit:
     - Isolate filesystem to a temp HOME/XDG* dirs
     - Block outbound network unless --allow-network is set
     """
-    # Avoid pyright unknown attribute warning by using getattr with a safe default
+
     node = cast(_HasMarker, request.node)
     is_unit = node.get_closest_marker("unit") is not None
     if not is_unit:
