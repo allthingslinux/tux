@@ -20,6 +20,7 @@ from tux.core.cog_loader import CogLoader
 from tux.core.container import ServiceContainer
 from tux.core.service_registry import ServiceRegistry
 from tux.services.database.client import db
+from tux.services.sentry_manager import SentryManager
 from tux.shared.config.env import is_dev_mode
 from tux.shared.config.settings import Config
 from tux.utils.banner import create_banner
@@ -75,6 +76,9 @@ class Tux(commands.Bot):
 
         # Dependency injection container
         self.container: ServiceContainer | None = None
+
+        # Sentry manager instance for error handling and context utilities
+        self.sentry_manager: SentryManager = SentryManager()
 
         self.emoji_manager = EmojiManager(self)
         self.console = Console(stderr=True, force_terminal=True)
