@@ -1,5 +1,6 @@
 import datetime
 import math
+from typing import NoReturn, cast
 
 from loguru import logger
 
@@ -78,18 +79,26 @@ class LevelsController(BaseController[Levels]):
         Returns
         -------
         tuple[float, int]
-            A tuple containing the XP and level of the member, or (0.0, 0) if not found
+            A tuple containing the XP and level of the member. Returns None if not found.
         """
+
+        def _fail(msg: str) -> NoReturn:
+            raise ValueError(msg)
+
         try:
             record = await self.find_one(where={"member_id": member_id, "guild_id": guild_id})
+            if record is None:
+                return 0.0, 0
 
-            if record:
-                return (self.safe_get_attr(record, "xp", 0.0), self.safe_get_attr(record, "level", 0))
-            return (0.0, 0)  # noqa: TRY300
+            xp = getattr(record, "xp", None)
+            level = getattr(record, "level", None)
+            if xp is None or level is None:
+                _fail(f"Levels record missing xp/level for member {member_id} in guild {guild_id}")
+
+            return cast(float, xp), cast(int, level)
 
         except Exception as e:
-            logger.error(f"Error querying XP and level for member_id: {member_id}, guild_id: {guild_id}: {e}")
-            return (0.0, 0)
+            _fail(f"Error querying XP and level for member_id: {member_id}, guild_id: {guild_id}: {e}")
 
     async def get_last_message_time(self, member_id: int, guild_id: int) -> datetime.datetime | None:
         """Get the last message time of a member in a guild.
