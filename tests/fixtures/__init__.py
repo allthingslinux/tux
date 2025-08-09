@@ -1,1 +1,1 @@
-"""Test fixtures for the Tux bot testing infrastructure."""
+# Test fixtures package

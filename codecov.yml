@@ -1,0 +1,26 @@
+codecov:
+  require_ci_to_pass: true
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+ignore:
+  - tests/**
+  - typings/**
+parsers:
+  gcov:
+    branch_detection:
+      conditional: true
+      loop: true
+      method: false
+      macro: false
+comment:
+  layout: reach, diff, flags, files
+  behavior: default
+  require_changes: false

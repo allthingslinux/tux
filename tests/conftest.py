@@ -1,37 +1,22 @@
-"""Global pytest configuration and fixtures."""
-
-import subprocess
-
+import os
 import pytest
 
-# Import dependency injection fixtures
+# Global test configuration and common fixtures
+
+@pytest.fixture(autouse=True)
+def _set_test_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Ensure predictable environment for tests.
+
+    - Set minimal required env vars
+    - Force non-interactive behavior
+    """
+    monkeypatch.setenv("ENV", "test")
+    monkeypatch.setenv("PYTHONHASHSEED", "0")
+    # Avoid accidental network calls in unit tests by default
+    monkeypatch.setenv("NO_NETWORK", "1")
 
 
 def pytest_configure(config: pytest.Config) -> None:
-    """Configure pytest with custom markers."""
-    config.addinivalue_line("markers", "slow: marks tests as slow (may take several minutes)")
-    config.addinivalue_line("markers", "docker: marks tests that require Docker to be running")
-    config.addinivalue_line("markers", "integration: marks tests as integration tests")
-
-
-@pytest.fixture(scope="session")
-def docker_available() -> bool:
-    """Check if Docker is available for testing."""
-    try:
-        subprocess.run(["docker", "version"], capture_output=True, text=True, timeout=10, check=True)
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
-        return False
-    else:
-        return True
-
-
-@pytest.fixture(autouse=True)
-def skip_if_no_docker(request: pytest.FixtureRequest, docker_available: bool) -> None:
-    """Skip tests that require Docker if Docker is not available."""
-
-    # Make type-checker happy
-    node = getattr(request, "node", None)
-    get_marker = getattr(node, "get_closest_marker", None)
-
-    if callable(get_marker) and get_marker("docker") and not docker_available:
-        pytest.skip("Docker is not available")
+    config.addinivalue_line("markers", "unit: fast, isolated tests")
+    config.addinivalue_line("markers", "integration: tests involving multiple components or IO")
+    config.addinivalue_line("markers", "e2e: full system tests simulating user journeys")
