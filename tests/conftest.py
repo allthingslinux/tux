@@ -5,6 +5,7 @@ import socket
 import time
 import warnings
 from pathlib import Path
+from typing import Any, Protocol, cast
 
 import pytest
 
@@ -83,7 +84,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 # -----------------------------
 
 @pytest.fixture(scope="session", autouse=True)
-def _session_defaults() -> None:
+def _session_defaults() -> None:  # pyright: ignore[reportUnusedFunction]
     # Redundant safety (already set in pytest_configure)
     os.environ.setdefault("ENV", "test")
     os.environ.setdefault("PYTHONHASHSEED", "0")
@@ -104,16 +105,21 @@ def _session_defaults() -> None:
 # Unit-test isolation helpers
 # -----------------------------
 
+class _HasMarker(Protocol):
+    def get_closest_marker(self, name: str) -> Any: ...
+
+
 @pytest.fixture(autouse=True)
 def _isolate_unit_tests(
     monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest, tmp_path: Path,
-) -> None:
+) -> None:  # pyright: ignore[reportUnusedFunction]
     """For tests marked as unit:
     - Isolate filesystem to a temp HOME/XDG* dirs
     - Block outbound network unless --allow-network is set
     """
     # Avoid pyright unknown attribute warning by using getattr with a safe default
-    is_unit = getattr(request.node, "get_closest_marker", lambda *_: None)("unit") is not None
+    node = cast(_HasMarker, request.node)
+    is_unit = node.get_closest_marker("unit") is not None
     if not is_unit:
         return
 
