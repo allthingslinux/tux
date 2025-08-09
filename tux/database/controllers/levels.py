@@ -41,8 +41,8 @@ class LevelsController(BaseController[Levels]):
             levels = await self.find_one(where={"member_id": member_id, "guild_id": guild_id})
             return self.safe_get_attr(levels, "xp", 0.0)
         except Exception as e:
-            logger.error(f"Error querying XP for member_id: {member_id}, guild_id: {guild_id}: {e}")
-            return 0.0
+            msg = f"DB read failed for XP for member_id: {member_id}, guild_id: {guild_id}"
+            raise ValueError(msg) from e
 
     async def get_level(self, member_id: int, guild_id: int) -> int:
         """Get the level of a member in a guild.
