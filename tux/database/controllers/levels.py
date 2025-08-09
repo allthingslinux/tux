@@ -79,7 +79,7 @@ class LevelsController(BaseController[Levels]):
         Returns
         -------
         tuple[float, int]
-            A tuple containing the XP and level of the member. Returns None if not found.
+            A tuple containing the XP and level of the member.
         """
 
         def _fail(msg: str) -> NoReturn:
