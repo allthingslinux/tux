@@ -12,6 +12,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.services.database.controllers import DatabaseController
+from tux.services.logger import setup_logging as setup_rich_logging
 from tux.services.wrappers.github import GithubService as GitHubWrapper
 from tux.shared.config.env import is_dev_mode
 from tux.shared.config.settings import Config
@@ -71,9 +72,8 @@ class LoggerService:
             level: The logging level to use
         """
         try:
-            from tux.services.logger import setup_logging
-
-            setup_logging(level)
+            # The rich logging setup currently doesn't take a level parameter; it configures handlers.
+            setup_rich_logging()
             logger.debug(f"Logging configured with level: {level}")
         except Exception as e:
             logger.error(f"Failed to setup logging: {e}")
@@ -133,19 +133,20 @@ class DatabaseService:
 
             method = getattr(controller, operation)
 
-            if callable(method):
+            if not callable(method):
+                logger.warning(f"Operation '{operation}' is not callable")
+                value = method
+            else:
                 if asyncio.iscoroutinefunction(method):
-                    result = await method(*args, **kwargs)
+                    value = await method(*args, **kwargs)
                 else:
-                    result = method(*args, **kwargs)
+                    value = method(*args, **kwargs)
                 logger.debug(f"Executed database operation: {operation}")
-                return result
-            logger.warning(f"Operation '{operation}' is not callable")
-            return method
-
         except Exception as e:
             logger.error(f"Database operation '{operation}' failed: {e}")
             raise
+        else:
+            return value
 
     def _validate_operation(self, controller: DatabaseController, operation: str) -> None:
         """Validate that an operation exists on the controller.
@@ -263,12 +264,17 @@ class ConfigService:
         try:
             # Try to get the attribute from Config class
             if hasattr(self._config, key):
-                return getattr(self._config, key)
-            logger.warning(f"Configuration key '{key}' not found, returning default: {default}")
-            return default
+                value = getattr(self._config, key)
+            else:
+                logger.warning(
+                    f"Configuration key '{key}' not found, returning default: {default}",
+                )
+                value = default
         except Exception as e:
             logger.error(f"Failed to get config key '{key}': {e}")
             return default
+        else:
+            return value
 
     def get_database_url(self) -> str:
         """Get the database URL for the current environment.

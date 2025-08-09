@@ -4,6 +4,8 @@ This module provides the ServiceRegistry class that handles the centralized
 configuration of all services in the dependency injection container.
 """
 
+from typing import Any
+
 from discord.ext import commands
 from loguru import logger
 
@@ -66,9 +68,6 @@ class ServiceRegistry:
             container.register_instance(IBotService, bot_service)
             logger.debug("Registered BotService instance")
 
-            logger.info("Service container configuration completed successfully")
-            return container
-
         except ServiceRegistrationError as e:
             logger.error(f"Service registration failed: {e}")
             raise
@@ -76,6 +75,9 @@ class ServiceRegistry:
             logger.error(f"Unexpected error during service registration: {e}")
             error_msg = f"Failed to configure service container: {e}"
             raise ServiceRegistrationError(error_msg) from e
+        else:
+            logger.info("Service container configuration completed successfully")
+            return container
 
     @staticmethod
     def configure_test_container() -> ServiceContainer:
@@ -100,13 +102,13 @@ class ServiceRegistry:
             container.register_singleton(IConfigService, ConfigService)
             # Do not register IBotService in test container to match unit tests expectations
 
-            logger.debug("Test service container configuration completed")
-            return container
-
         except Exception as e:
             logger.error(f"Failed to configure test container: {e}")
             error_msg = f"Failed to configure test container: {e}"
             raise ServiceRegistrationError(error_msg) from e
+        else:
+            logger.debug("Test service container configuration completed")
+            return container
 
     @staticmethod
     def validate_container(container: ServiceContainer) -> bool:
@@ -161,7 +163,7 @@ class ServiceRegistry:
         """
         # Use the public method to get registered service types
         try:
-            service_types = container.get_registered_service_types()
+            service_types: list[type] = container.get_registered_service_types()
             # Only return the core services expected by tests
             core = {IDatabaseService.__name__, IConfigService.__name__, IBotService.__name__}
             return [service_type.__name__ for service_type in service_types if service_type.__name__ in core]
@@ -191,7 +193,7 @@ class ServiceRegistry:
             for service_type in service_types:
                 try:
                     # Get the service implementation
-                    service_impl = container.get(service_type)  # type: ignore
+                    service_impl: Any = container.get(service_type)  # type: ignore[arg-type]
                     if service_impl is not None:
                         impl_name = type(service_impl).__name__
                         service_info[service_type.__name__] = impl_name

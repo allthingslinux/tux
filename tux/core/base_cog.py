@@ -220,8 +220,8 @@ class BaseCog(commands.Cog):
 
     def __repr__(self) -> str:
         """Return a string representation of the cog."""
-        # Container is required; just reflect presence
-        has_container = hasattr(self, "_container") and self._container is not None
+        # Container is required by design; reflect presence based on attribute existence
+        has_container = hasattr(self, "_container")
         injection_status = "injected" if has_container else "fallback"
         bot_user = getattr(self.bot, "user", "Unknown")
         return f"<{self.__class__.__name__} bot={bot_user} injection={injection_status}>"
