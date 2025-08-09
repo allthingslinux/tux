@@ -88,6 +88,9 @@ class LevelsController(BaseController[Levels]):
         try:
             record = await self.find_one(where={"member_id": member_id, "guild_id": guild_id})
             if record is None:
+                logger.debug(
+                    f"Level record not found for member_id: {member_id}, guild_id: {guild_id}. Returning 0.0, 0",
+                )
                 return 0.0, 0
 
             xp = getattr(record, "xp", None)
