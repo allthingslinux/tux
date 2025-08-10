@@ -3,9 +3,9 @@ from discord.ext import commands
 
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
+from tux.shared.config.settings import CONFIG
 from tux.shared.functions import is_harmful, strip_formatting
 from tux.ui.embeds import EmbedCreator, EmbedType
-from tux.shared.config.settings import CONFIG
 
 
 class EventHandler(BaseCog):

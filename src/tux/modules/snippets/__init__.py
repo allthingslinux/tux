@@ -9,8 +9,8 @@ from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
 from tux.shared.config.settings import Config
 from tux.shared.constants import CONST
-from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.shared.exceptions import PermissionLevelError
+from tux.ui.embeds import EmbedCreator, EmbedType
 
 
 class SnippetsBaseCog(BaseCog):
