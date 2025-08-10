@@ -187,7 +187,7 @@ COPY prisma/ ./prisma/
 
 # 3. Main application code (changes more frequently)
 # The core bot code is most likely to change during development
-COPY tux/ ./tux/
+COPY src/tux/ ./tux/
 
 # 4. Root level files needed for installation
 # These include metadata and licensing information
@@ -313,8 +313,7 @@ RUN echo 'path-exclude /usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
     echo 'path-exclude /usr/share/man/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
     echo 'path-exclude /usr/share/groff/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
     echo 'path-exclude /usr/share/info/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
-    echo 'path-exclude /usr/share/lintian/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
-    echo 'path-exclude /usr/share/linda/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc
+    echo 'path-exclude /usr/share/lintian/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc
 
 # Install ONLY runtime dependencies (minimal subset of base stage)
 # SECURITY: Update all packages first, then install minimal runtime dependencies

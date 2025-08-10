@@ -80,7 +80,7 @@ It is designed to provide a variety of features to the server, including moderat
 - Custom help command
 - Configuration system (`config/settings.yml.example`)
 - Dynamic role-based (access level) permission system
-- Basic extensions system (see [extensions](tux/extensions/README.md))
+- Basic extensions system (see [extensions](src/tux/extensions/README.md))
 
 ## Installation and Development
 

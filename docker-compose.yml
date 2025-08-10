@@ -42,7 +42,7 @@ services:
       # EXTENSIONS MOUNT (Read-Only)
       # Bot extensions/plugins - mounted read-only for security
       # Allows hot-reloading of extensions without full rebuild
-      - ./tux/extensions:/app/tux/extensions:ro
+      - ./src/tux/extensions:/app/tux/extensions:ro
 
       # ASSETS MOUNT (Read-Only)
       # Static assets like images, sounds, etc. - read-only for security
@@ -208,36 +208,5 @@ volumes:
 #    - Environment file separation for security
 #    - Build fallback for deployment flexibility
 #    - Registry image for faster deployments
-#
-# ==============================================================================
-#
-# TUX CLI COMMANDS (Recommended):
-# --------------------------------
-# Build:     poetry run tux --prod docker build
-# Start:     poetry run tux --prod docker up [-d|--build]
-# Logs:      poetry run tux --prod docker logs -f
-# Shell:     poetry run tux --prod docker shell
-# Stop:      poetry run tux --prod docker down
-# Database:  poetry run tux --prod docker exec tux "tux db <command>"
-#
-# PRODUCTION COMMANDS:
-# --------------------
-# Production deployment:
-#   docker-compose up -d
-#
-# View logs:
-#   docker-compose logs -f tux
-#
-# Update bot:
-#   docker-compose pull && docker-compose up -d
-#
-# Rebuild from source:
-#   docker-compose up -d --build
-#
-# Stop bot:
-#   docker-compose down
-#
-# Stop and remove volumes (WARNING: destroys cache):
-#   docker-compose down -v
 #
 # ==============================================================================

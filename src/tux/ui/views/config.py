@@ -15,7 +15,8 @@ class ConfigSetPrivateLogs(discord.ui.View):
             if resolved is not None:
                 controller = resolved.get_controller()
         if controller is None:
-            raise RuntimeError("IDatabaseService not available. DI is required for ConfigSetPrivateLogs.")
+            message = "IDatabaseService not available. DI is required for ConfigSetPrivateLogs."
+            raise RuntimeError(message)
         self.db = controller.guild_config
         super().__init__(timeout=timeout)
 
@@ -90,7 +91,8 @@ class ConfigSetPublicLogs(discord.ui.View):
             if resolved is not None:
                 controller = resolved.get_controller()
         if controller is None:
-            raise RuntimeError("IDatabaseService not available. DI is required for ConfigSetPublicLogs.")
+            message = "IDatabaseService not available. DI is required for ConfigSetPublicLogs."
+            raise RuntimeError(message)
         self.db = controller.guild_config
         super().__init__(timeout=timeout)
 
@@ -165,7 +167,8 @@ class ConfigSetChannels(discord.ui.View):
             if resolved is not None:
                 controller = resolved.get_controller()
         if controller is None:
-            raise RuntimeError("IDatabaseService not available. DI is required for ConfigSetChannels.")
+            message = "IDatabaseService not available. DI is required for ConfigSetChannels."
+            raise RuntimeError(message)
         self.db = controller.guild_config
         super().__init__(timeout=timeout)
 

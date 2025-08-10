@@ -16,7 +16,7 @@ build-backend = "poetry.core.masonry.api"
 
 
 [tool.poetry]
-packages = [{ include = "tux" }]
+packages = [{ include = "tux", from = "src" }]
 
 
 [tool.poetry.dependencies]
@@ -161,7 +161,7 @@ skip-magic-trailing-comma = false
 [tool.basedpyright]
 defineConstant = { DEBUG = true }
 exclude = ["__pypackages__", "_build", "examples", ".archive", "typings/**"]
-include = ["tux", "tests"]
+include = ["src", "tests"]
 stubPath = "typings"
 pythonPlatform = "Linux"
 pythonVersion = "3.13"
@@ -216,6 +216,7 @@ addopts = [
 ]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+pythonpath = ["src"]
 
 [tool.yamlfix]
 comments_min_spaces_from_content = 1
