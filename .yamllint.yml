@@ -49,7 +49,7 @@ ignore: |-
   .devcontainer/
   .vscode/
   .cursor/
-  poetry.lock
+  uv.lock
   flake.lock
   prisma/
   typings/

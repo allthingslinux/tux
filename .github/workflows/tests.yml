@@ -99,7 +99,7 @@ jobs:
           files: |
             **/*.py
             pyproject.toml
-            poetry.lock
+            uv.lock
             tests/**
             conftest.py
 
@@ -122,9 +122,8 @@ jobs:
         uses: ./.github/actions/setup-python
         with:
           python-version: ${{ matrix.python-version }}
-          install-groups: dev,test,types
-          cache-suffix: test
           generate-prisma: 'true'
+          enable-cache: 'true'
 
       # TEST ENVIRONMENT CONFIGURATION
       # Creates isolated test environment with SQLite for CI safety

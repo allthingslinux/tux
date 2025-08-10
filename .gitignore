@@ -87,8 +87,8 @@ ipython_config.py
 # Pipenv
 Pipfile.lock
 
-# Poetry
-poetry.lock
+# uv
+uv.lock
 
 # Pdm
 .pdm.toml

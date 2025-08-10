@@ -54,7 +54,6 @@ dev = [
     "pre-commit==4.2.0",
     "pyright==1.1.403",
     "ruff==0.12.4",
-    "poetry-types==0.6.0",
     "yamllint==1.37.1",
     "yamlfix==1.17.0",
 ]

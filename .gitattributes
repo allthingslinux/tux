@@ -70,10 +70,10 @@ docker-compose*.yml text eol=lf
 #
 # Lock Files (binary-like treatment)
 #
-poetry.lock text eol=lf linguist-generated=true
 package-lock.json text eol=lf linguist-generated=true
 yarn.lock text eol=lf linguist-generated=true
 Pipfile.lock text eol=lf linguist-generated=true
+uv.lock text eol=lf linguist-generated=true
 
 #
 # Binary Files
