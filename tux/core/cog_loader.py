@@ -10,7 +10,6 @@ import aiofiles.os
 from discord.ext import commands
 from loguru import logger
 
-from tux.shared.config.settings import CONFIG
 from tux.services.tracing import (
     capture_span_exception,
     enhanced_span,
@@ -20,6 +19,7 @@ from tux.services.tracing import (
     start_span,
     transaction,
 )
+from tux.shared.config.settings import CONFIG
 
 
 class CogLoadError(Exception):

@@ -7,10 +7,10 @@ from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
+from tux.core.converters import get_channel_safe
 from tux.shared.functions import generate_usage
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
-from tux.core.converters import get_channel_safe
 
 
 class Starboard(BaseCog):
