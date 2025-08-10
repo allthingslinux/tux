@@ -54,7 +54,7 @@ levenshtein = "^0.27.1"
 jinja2 = "^3.1.6"
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = "==4.2.0"
+pre-commit = "==4.3.0"
 basedpyright = "==1.29.5" # currently downgraded due to https://github.com/DetachHead/basedpyright/issues/1395
 ruff = "==0.12.7"
 poetry-types = "0.6.0"
