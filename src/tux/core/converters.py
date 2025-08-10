@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 import discord
 from discord.ext import commands
@@ -83,17 +83,20 @@ class CaseTypeConverter(commands.Converter[CaseType]):
             raise commands.BadArgument(msg) from e
 
 
-async def get_channel_safe(bot: Tux, channel_id: int) -> discord.abc.GuildChannel | discord.Thread | None:  # type: ignore[valid-type]
+async def get_channel_safe(bot: Tux, channel_id: int) -> discord.TextChannel | discord.Thread | None:
     """
-    Get a channel by ID, returning None if not found.
+    Get a TextChannel or Thread by ID, returning None if not found.
 
-    This is a helper function to safely get a channel by ID without raising an exception.
+    This narrows the return type so callers can safely use fetch_message and message.reactions.
     """
     try:
         channel = bot.get_channel(channel_id)
-        return cast(discord.abc.GuildChannel | discord.Thread | None, channel)
     except Exception as e:
         logger.opt(exception=e).error(f"Error getting channel {channel_id}")
+        return None
+    else:
+        if isinstance(channel, discord.TextChannel | discord.Thread):
+            return channel
         return None
 
 

@@ -15,6 +15,7 @@ class InfluxLogger(BaseCog):
     def __init__(self, bot: Tux):
         super().__init__(bot)
         self.influx_write_api: Any | None = None
+        # avoid name collision with method names
         self.influx_org: str = ""
 
         if self.init_influx():
@@ -32,7 +33,7 @@ class InfluxLogger(BaseCog):
         """
         influx_token: str = CONFIG.INFLUXDB_TOKEN
         influx_url: str = CONFIG.INFLUXDB_URL
-        self.influx_org: str = CONFIG.INFLUXDB_ORG
+        self.influx_org = CONFIG.INFLUXDB_ORG
 
         if (influx_token != "") and (influx_url != "") and (self.influx_org != ""):
             write_client = InfluxDBClient(url=influx_url, token=influx_token, org=self.influx_org)

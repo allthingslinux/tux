@@ -43,13 +43,15 @@ class Level(BaseCog):
         xp: float = await self.db.levels.get_xp(member.id, ctx.guild.id)
         level: int = await self.db.levels.get_level(member.id, ctx.guild.id)
 
+        level_display: int
+        xp_display: str
         if self.levels_service.enable_xp_cap and level >= self.levels_service.max_level:
             max_xp: float = self.levels_service.calculate_xp_for_level(self.levels_service.max_level)
-            level_display: int = self.levels_service.max_level
-            xp_display: str = f"{round(max_xp)} (limit reached)"
+            level_display = self.levels_service.max_level
+            xp_display = f"{round(max_xp)} (limit reached)"
         else:
-            level_display: int = level
-            xp_display: str = f"{round(xp)}"
+            level_display = level
+            xp_display = f"{round(xp)}"
 
         if CONFIG.SHOW_XP_PROGRESS:
             xp_progress: int
@@ -67,7 +69,7 @@ class Level(BaseCog):
                 custom_footer_text=f"Total XP: {xp_display}",
             )
         else:
-            embed: discord.Embed = EmbedCreator.create_embed(
+            embed = EmbedCreator.create_embed(
                 embed_type=EmbedType.DEFAULT,
                 description=f"**Level {level_display}** - `XP: {xp_display}`",
                 custom_color=discord.Color.blurple(),

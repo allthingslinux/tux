@@ -52,7 +52,7 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
     "pre-commit==4.2.0",
-    "pyright==1.1.403",
+    "basedpyright==1.31.1",
     "ruff==0.12.4",
     "yamllint==1.37.1",
     "yamlfix==1.17.0",
@@ -165,8 +165,15 @@ skip-magic-trailing-comma = false
 
 [tool.basedpyright]
 defineConstant = { DEBUG = true }
-exclude = ["__pypackages__", "_build", "examples", ".archive", "typings/**"]
-include = ["src", "tests"]
+exclude = [
+    "__pypackages__",
+    "_build",
+    "examples",
+    ".archive",
+    "typings/**",
+    "tests/**",
+]
+include = ["src"]
 stubPath = "typings"
 pythonPlatform = "Linux"
 pythonVersion = "3.13"

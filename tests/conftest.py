@@ -110,10 +110,9 @@ class _HasMarker(Protocol):
 
 
 @pytest.fixture(autouse=True)
-
-def _isolate_unit_tests(
+def _isolate_unit_tests(  # pyright: ignore[reportUnusedFunction]
     monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest, tmp_path: Path,
-) -> None:  # pyright: ignore[reportUnusedFunction]
+) -> None:
     """
     For tests marked as unit:
     - Isolate filesystem to a temp HOME/XDG* dirs

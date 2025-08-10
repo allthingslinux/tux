@@ -4,7 +4,7 @@ This module provides the ServiceRegistry class that handles the centralized
 configuration of all services in the dependency injection container.
 """
 
-from typing import Any
+from typing import Any, cast
 
 from discord.ext import commands
 from loguru import logger
@@ -193,7 +193,7 @@ class ServiceRegistry:
             for service_type in service_types:
                 try:
                     # Get the service implementation
-                    service_impl: Any = container.get(service_type)  # type: ignore[arg-type]
+                    service_impl: Any = cast(Any, container.get(service_type))  # type: ignore[arg-type]
                     if service_impl is not None:
                         impl_name = type(service_impl).__name__
                         service_info[service_type.__name__] = impl_name

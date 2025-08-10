@@ -76,7 +76,7 @@ class Poll(BaseCog):
         if channel is None:
             return
 
-        message = await channel.fetch_message(payload.message_id)
+        message: discord.Message = await channel.fetch_message(payload.message_id)
         # Lookup the reaction object for this event
         if payload.emoji.id:
             # Custom emoji: match by ID

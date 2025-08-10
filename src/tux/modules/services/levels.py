@@ -141,9 +141,9 @@ class LevelsService(BaseCog):
         await member.remove_roles(*roles_to_remove)
 
         if highest_role or roles_to_remove:
-            logger.debug(
-                f"Updated roles for {member}: {f'Assigned {highest_role.name}' if highest_role else 'No role assigned'}{', Removed: ' + ', '.join(r.name for r in roles_to_remove) if roles_to_remove else ''}",
-            )
+            assigned_text = f"Assigned {highest_role.name}" if highest_role else "No role assigned"
+            removed_text = f", Removed: {', '.join(r.name for r in roles_to_remove)}" if roles_to_remove else ""
+            logger.debug(f"Updated roles for {member}: {assigned_text}{removed_text}")
 
     @staticmethod
     async def try_assign_role(member: discord.Member, role: discord.Role) -> None:
@@ -226,20 +226,18 @@ class LevelsService(BaseCog):
             A string if the input is valid, or a discord. Embed if there is an error.
         """
         if user_input >= 2**63 - 1:
-            embed: discord.Embed = EmbedCreator.create_embed(
+            return EmbedCreator.create_embed(
                 embed_type=EmbedCreator.ERROR,
                 title="Error",
                 description="Input must be less than the integer limit (2^63).",
             )
-            return embed
 
         if user_input < 0:
-            embed: discord.Embed = EmbedCreator.create_embed(
+            return EmbedCreator.create_embed(
                 embed_type=EmbedCreator.ERROR,
                 title="Error",
                 description="Input must be a positive integer.",
             )
-            return embed
 
         return None
 

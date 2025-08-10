@@ -301,7 +301,7 @@ class Starboard(BaseCog):
             return
 
         try:
-            message = await channel.fetch_message(payload.message_id)
+            message: discord.Message = await channel.fetch_message(payload.message_id)
             reaction = discord.utils.get(message.reactions, emoji=starboard.starboard_emoji)
             reaction_count = reaction.count if reaction else 0
 
@@ -350,7 +350,7 @@ class Starboard(BaseCog):
             if not isinstance(channel, discord.TextChannel):
                 return
 
-            message = await channel.fetch_message(payload.message_id)
+            message: discord.Message = await channel.fetch_message(payload.message_id)
             starboard = await self.db.starboard.get_starboard_by_guild_id(payload.guild_id)
 
             if not starboard or (emoji and str(emoji) != starboard.starboard_emoji):

@@ -117,7 +117,7 @@ jobs:
       # basedpyright provides comprehensive type checking for Python
       # Annotations appear directly in PR for developer feedback
       - name: Run basedpyright type checker
-        run: poetry run basedpyright
+        run: basedpyright
 
   # ============================================================================
   # MARKDOWN DOCUMENTATION LINTING
