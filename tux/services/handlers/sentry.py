@@ -6,7 +6,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.bot import Tux
-from tux.utils.tracing import capture_span_exception, set_span_attributes, set_span_status
+from tux.services.tracing import capture_span_exception, set_span_attributes, set_span_status
 
 # Type alias using PEP695 syntax
 type CommandObject = (

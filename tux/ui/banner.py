@@ -9,7 +9,7 @@ from rich.style import Style
 from rich.table import Table
 from rich.text import Text
 
-from tux.utils.ascii import TUX
+from tux.ui.ascii import TUX
 
 
 class BannerColors(NamedTuple):

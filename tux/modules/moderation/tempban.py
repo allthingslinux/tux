@@ -9,7 +9,7 @@ from prisma.models import Case
 from tux.core.bot import Tux
 from tux.shared.functions import generate_usage
 from tux.utils import checks
-from tux.utils.flags import TempBanFlags
+from tux.core.flags import TempBanFlags
 
 from . import ModerationCogBase
 

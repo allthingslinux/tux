@@ -5,10 +5,10 @@ from discord.ext import commands
 
 from prisma.enums import CaseType
 from tux.core.bot import Tux
+from tux.core.flags import UnbanFlags
 from tux.shared.constants import CONST
 from tux.shared.functions import generate_usage
 from tux.utils import checks
-from tux.utils.flags import UnbanFlags
 
 from . import ModerationCogBase
 

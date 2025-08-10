@@ -7,9 +7,9 @@ from loguru import logger
 from prisma.enums import CaseType
 from prisma.models import Case
 from tux.core.bot import Tux
+from tux.core.flags import UnjailFlags
 from tux.shared.functions import generate_usage
 from tux.utils import checks
-from tux.utils.flags import UnjailFlags
 
 from . import ModerationCogBase
 

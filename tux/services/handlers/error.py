@@ -21,6 +21,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.bot import Tux
+from tux.core.context import get_interaction_context
 from tux.services.sentry_manager import LogLevelStr, SentryManager
 from tux.shared.exceptions import (
     AppCommandPermissionLevelError,
@@ -32,7 +33,6 @@ from tux.shared.exceptions import (
     UnsupportedLanguageError,
 )
 from tux.ui.embeds import EmbedCreator
-from tux.utils.context_utils import get_interaction_context
 
 # --- Constants and Configuration ---
 

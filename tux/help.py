@@ -34,7 +34,7 @@ from tux.ui.help_components import (
     PrevButton,
     SubcommandSelectMenu,
 )
-from tux.utils.help_utils import (
+from tux.ui.help_utils import (
     create_cog_category_mapping,
     format_multiline_description,
     paginate_items,

@@ -11,7 +11,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.shared.config.settings import CONFIG
-from tux.utils.tracing import (
+from tux.services.tracing import (
     capture_span_exception,
     enhanced_span,
     safe_set_name,

@@ -29,9 +29,9 @@ from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.integrations.loguru import LoguruIntegration
 from sentry_sdk.types import Event, Hint
 
+from tux.core.context import get_interaction_context
 from tux.shared.config.env import get_current_env
 from tux.shared.config.settings import CONFIG
-from tux.utils.context_utils import get_interaction_context
 
 # Type alias for Sentry's log level strings.
 LogLevelStr = Literal["fatal", "critical", "error", "warning", "info", "debug"]

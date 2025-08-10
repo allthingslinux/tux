@@ -10,7 +10,7 @@ from tux.core.bot import Tux
 from tux.shared.functions import generate_usage
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
-from tux.utils.converters import get_channel_safe
+from tux.core.converters import get_channel_safe
 
 
 class Starboard(BaseCog):

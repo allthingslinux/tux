@@ -27,7 +27,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.interfaces import IReloadableBot
-from tux.utils.tracing import capture_exception_safe, span
+from tux.services.tracing import capture_exception_safe, span
 
 # Type variables and protocols
 F = TypeVar("F", bound=Callable[..., Any])
@@ -976,12 +976,12 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         module_name = f"tux.{rel_path_str.replace('/', '.').replace('.py', '')}"
 
         # Special handling for flags.py - only reload modules that actually use flag classes
-        if rel_path_str == "utils/flags.py":
+        if rel_path_str == "core/flags.py":
             self._reload_flag_class_dependent_modules()
             return True
 
-        # Handle utils/ or ui/ changes with smart dependency resolution
-        if rel_path_str.startswith(("utils/", "ui/")):
+        # Handle core/ui changes with smart dependency resolution
+        if rel_path_str.startswith(("core/", "ui/")):
             # Reload the changed module first
             reload_module_by_name(module_name)
 
@@ -1202,11 +1202,11 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
 
     @span("reload.flag_dependent_modules")
     def _reload_flag_class_dependent_modules(self) -> None:
-        """Reload only modules that actually use flag classes from tux.utils.flags."""
+        """Reload only modules that actually use flag classes from tux.core.flags."""
         logger.info("Flags module changed, reloading dependent modules...")
 
         # First reload the flags module
-        reload_module_by_name("tux.utils.flags")
+        reload_module_by_name("tux.core.flags")
 
         # Find modules that actually import flag classes
         flag_using_modules: set[str] = set()
@@ -1273,7 +1273,7 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
                 source = f.read()
 
             # Pattern to match flag class imports
-            pattern = r"from\s+tux\.utils\.flags\s+import\s+([^#\n]+)"
+            pattern = r"from\s+tux\.core\.flags\s+import\s+([^#\n]+)"
 
             for match in re.finditer(pattern, source):
                 import_items = match.group(1)

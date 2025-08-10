@@ -21,11 +21,7 @@ from tux.core.container import ServiceContainer
 from tux.core.service_registry import ServiceRegistry
 from tux.services.database.client import db
 from tux.services.sentry_manager import SentryManager
-from tux.shared.config.env import is_dev_mode
-from tux.shared.config.settings import Config
-from tux.utils.banner import create_banner
-from tux.utils.emoji import EmojiManager
-from tux.utils.tracing import (
+from tux.services.tracing import (
     capture_exception_safe,
     instrument_bot_commands,
     set_setup_phase_tag,
@@ -33,6 +29,10 @@ from tux.utils.tracing import (
     start_span,
     start_transaction,
 )
+from tux.shared.config.env import is_dev_mode
+from tux.shared.config.settings import Config
+from tux.ui.banner import create_banner
+from tux.utils.emoji import EmojiManager
 
 # Create console for rich output
 console = Console(stderr=True, force_terminal=True)

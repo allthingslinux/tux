@@ -2,8 +2,8 @@ import discord
 from discord.ext import commands
 
 from prisma.enums import CaseType
+from tux.core.converters import CaseTypeConverter, TimeConverter, convert_bool
 from tux.shared.constants import CONST
-from tux.utils.converters import CaseTypeConverter, TimeConverter, convert_bool
 
 # TODO: Figure out how to use boolean flags with empty values
 

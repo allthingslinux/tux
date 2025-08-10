@@ -5,7 +5,7 @@ from prisma.enums import CaseType
 from tux.core.bot import Tux
 from tux.shared.functions import generate_usage
 from tux.utils import checks
-from tux.utils.flags import KickFlags
+from tux.core.flags import KickFlags
 
 from . import ModerationCogBase
 

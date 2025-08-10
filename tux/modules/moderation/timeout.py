@@ -5,9 +5,9 @@ from discord.ext import commands
 
 from prisma.enums import CaseType
 from tux.core.bot import Tux
+from tux.core.flags import TimeoutFlags
 from tux.shared.functions import generate_usage, parse_time_string
 from tux.utils import checks
-from tux.utils.flags import TimeoutFlags
 
 from . import ModerationCogBase
 
