@@ -10,7 +10,7 @@
 # ------------------
 # 1. Smart file change detection to skip unnecessary jobs
 # 2. Parallel execution for different linting categories
-# 3. Comprehensive Python static analysis with Pyright
+# 3. Comprehensive Python static analysis with basedpyright
 # 4. Infrastructure validation (Docker, GitHub Actions, Shell)
 # 5. Markdown linting for documentation quality
 # 6. Efficient caching to reduce execution time
@@ -62,7 +62,7 @@ jobs:
   # PYTHON QUALITY CHECKS - Static Analysis and Type Checking
   # ============================================================================
   # Purpose: Ensures Python code quality through static analysis and type checking
-  # Tools: Pyright type checker with Poetry dependency management
+  # Tools: Basedpyright type checker with Poetry dependency management
   # Optimization: Only runs when Python files or dependencies change
   # ============================================================================
   python:
@@ -70,7 +70,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read          # Required for checkout
-      pull-requests: write   # Required for Pyright annotations
+      pull-requests: write   # Required for basedpyright annotations
     steps:
       # REPOSITORY CHECKOUT
       # Full history needed for accurate change detection
@@ -114,14 +114,10 @@ jobs:
           enable-cache: 'true'
 
       # STATIC TYPE CHECKING
-      # Pyright provides comprehensive type checking for Python
+      # basedpyright provides comprehensive type checking for Python
       # Annotations appear directly in PR for developer feedback
-      - name: Run Pyright type checker
-        if: steps.python_changes.outputs.any_changed == 'true' || github.event_name
-          == 'workflow_dispatch'
-        uses: jakebailey/pyright-action@b5d50e5cde6547546a5c4ac92e416a8c2c1a1dfe # v2
-        with:
-          annotate: errors
+      - name: Run basedpyright type checker
+        run: poetry run basedpyright
 
   # ============================================================================
   # MARKDOWN DOCUMENTATION LINTING

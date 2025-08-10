@@ -10,6 +10,7 @@ from tux.core.types import Tux
 from tux.shared.config.settings import Config
 from tux.shared.constants import CONST
 from tux.ui.embeds import EmbedCreator, EmbedType
+from tux.shared.exceptions import PermissionLevelError
 
 
 class SnippetsBaseCog(BaseCog):
@@ -108,7 +109,8 @@ class SnippetsBaseCog(BaseCog):
         """Check if the user invoking the command has moderator permissions (PL >= configured level)."""
         try:
             await checks.has_pl(2).predicate(ctx)
-        except commands.CheckFailure:
+        except PermissionLevelError:
+            # this happens if the user is not a mod
             return False
         except Exception as e:
             logger.error(f"Unexpected error in check_if_user_has_mod_override: {e}")

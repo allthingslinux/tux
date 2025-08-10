@@ -19,7 +19,7 @@
     "vscode": {
       "extensions": [
         "ms-python.python",
-        "ms-python.vscode-pylance",
+        "detachhead.basedpyright",
         "charliermarsh.ruff",
         "prisma.prisma",
         "kevinrose.vsc-python-indent",

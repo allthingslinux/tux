@@ -1,6 +1,5 @@
-# Tux
-
-## A Discord bot for the All Things Linux Discord server
+<h1 align="center">Tux</h1>
+<h3 align="center">A Discord bot for the All Things Linux Discord server</h3>
 
 <div align="center">
     <p align="center">
@@ -59,7 +58,7 @@ It is designed to provide a variety of features to the server, including moderat
 - Python 3.13+ alongside the `discord.py` library
 - Uv for dependency management
 - Docker and Docker Compose for optional containerized environments
-- Strict typing with `pyright` and type hints
+- Strict typing with `basedpyright` and type hints
 - Type safe ORM using `prisma`
 - Linting and formatting via `ruff`
 - Custom CLI via `click` and `uv` scripts

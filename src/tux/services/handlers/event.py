@@ -5,6 +5,7 @@ from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
 from tux.shared.functions import is_harmful, strip_formatting
 from tux.ui.embeds import EmbedCreator, EmbedType
+from tux.shared.config.settings import CONFIG
 
 
 class EventHandler(BaseCog):
@@ -67,6 +68,14 @@ class EventHandler(BaseCog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
+        # Allow the IRC bridge to use the snippet command only
+        if message.webhook_id in CONFIG.BRIDGE_WEBHOOK_IDS and (
+            message.content.startswith(f"{CONFIG.DEFAULT_PREFIX}s ")
+            or message.content.startswith(f"{CONFIG.DEFAULT_PREFIX}snippet ")
+        ):
+            ctx = await self.bot.get_context(message)
+            await self.bot.invoke(ctx)
+
         await self.handle_harmful_message(message)
 
     @commands.Cog.listener()
