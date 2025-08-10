@@ -1,18 +1,18 @@
 name: Setup Python Environment
-description: Set up Python with Poetry, dependencies, and optional Prisma client generation
+description: Set up Python with Uv, dependencies, and optional Prisma client generation
 inputs:
   python-version:
     description: Python version to use
     required: false
     default: '3.13'
-  install-groups:
-    description: Poetry groups to install (comma-separated)
+  uv-version:
+    description: Uv version to install (e.g. 0.8.8)
     required: false
-    default: dev,types
-  cache-suffix:
-    description: Cache key suffix for differentiation
+    default: 0.8.8
+  enable-cache:
+    description: Enable uv cache persistence
     required: false
-    default: default
+    default: 'true'
   generate-prisma:
     description: Whether to generate Prisma client
     required: false
@@ -20,47 +20,29 @@ inputs:
 runs:
   using: composite
   steps:
-    # POETRY INSTALLATION
-    # Uses pipx for isolated Poetry installation without conflicts
-    - name: Install Poetry
-      shell: bash
-      run: pipx install poetry
-
-    # PYTHON ENVIRONMENT SETUP
-    # Configures Python with integrated Poetry cache support
+    # PYTHON ENVIRONMENT SETUP (use GitHub's cached Python)
     - name: Set up Python
       uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
       with:
         python-version: ${{ inputs.python-version }}
-        cache: poetry
 
-    # ADVANCED DEPENDENCY CACHING
-    # Multi-level caching strategy for maximum cache hit rate
-    - name: Cache Poetry dependencies
-      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+    # UV INSTALLATION
+    # Installs uv and optionally enables cache persistence
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
       with:
-        path: |
-          ~/.cache/pypoetry
-          ~/.cache/pip
-        key: poetry-${{ inputs.cache-suffix }}-${{ runner.os }}-${{ hashFiles('poetry.lock')
-          }}
-        restore-keys: |
-          poetry-${{ inputs.cache-suffix }}-${{ runner.os }}-
+        version: ${{ inputs.uv-version }}
+        enable-cache: ${{ inputs.enable-cache }}
 
     # DEPENDENCY INSTALLATION
-    # Installs specified Poetry groups with CI-optimized settings
+    # Install project with locked dependencies
     - name: Install dependencies
       shell: bash
-      run: |
-        if [[ "${{ inputs.install-groups }}" == "main" ]]; then
-          poetry install --only=main --no-interaction --no-ansi
-        else
-          poetry install --with=${{ inputs.install-groups }} --no-interaction --no-ansi
-        fi
+      run: uv sync --frozen
 
     # CONDITIONAL PRISMA CLIENT GENERATION
     # Generates Prisma database client when needed for database operations
     - name: Generate Prisma client
       if: ${{ inputs.generate-prisma == 'true' }}
       shell: bash
-      run: poetry run prisma generate
+      run: uv run prisma generate

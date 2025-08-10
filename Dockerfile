@@ -108,7 +108,7 @@ ENV PYTHONUNBUFFERED=1 \
 # ==============================================================================
 # BUILD STAGE - Development Tools and Dependency Installation
 # ==============================================================================
-# Purpose: Installs build tools, Poetry, and application dependencies
+# Purpose: Installs build tools, Uv, and application dependencies
 # Contains: Compilers, headers, build tools, complete Python environment
 # Size Impact: ~1.3GB (includes all build dependencies and Python packages)
 # ==============================================================================
@@ -133,26 +133,10 @@ RUN apt-get update && \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Poetry configuration for dependency management
-# These settings optimize Poetry for containerized builds
+ENV UV_VERSION=0.8.0
 
-# POETRY_NO_INTERACTION=1        : Disables interactive prompts for CI/CD
-# POETRY_VIRTUALENVS_CREATE=1    : Ensures virtual environment creation
-# POETRY_VIRTUALENVS_IN_PROJECT=1: Creates .venv in project directory
-# POETRY_CACHE_DIR=/tmp/poetry_cache: Uses temporary directory for cache
-# POETRY_INSTALLER_PARALLEL=true : Enables parallel package installation
-
-ENV POETRY_VERSION=2.1.1 \
-    POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_CREATE=1 \
-    POETRY_VIRTUALENVS_IN_PROJECT=1 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache \
-    POETRY_INSTALLER_PARALLEL=true
-
-# Install Poetry using pip with BuildKit cache mount for efficiency
-# Cache mount prevents re-downloading Poetry on subsequent builds
-RUN --mount=type=cache,target=/root/.cache \
-    pip install poetry==$POETRY_VERSION
+# Install Uv using pip
+RUN pip install uv==$UV_VERSION
 
 # Set working directory for all subsequent operations
 WORKDIR /app
@@ -164,15 +148,13 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Copy dependency files first for optimal Docker layer caching
 # Changes to these files will invalidate subsequent layers
 # OPTIMIZATION: This pattern maximizes cache hits during development
-COPY pyproject.toml poetry.lock ./
+COPY pyproject.toml uv.lock ./
 
-# Install Python dependencies using Poetry
-# PERFORMANCE: Cache mount speeds up subsequent builds
-# SECURITY: --only main excludes development dependencies from production
-# NOTE: Install dependencies only first, package itself will be installed later with git context
-RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
-    --mount=type=cache,target=/root/.cache/pip \
-    poetry install --only main --no-root --no-directory
+# Install dependencies
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --locked --no-install-project
 
 # Copy application files in order of change frequency (Docker layer optimization)
 # STRATEGY: Files that change less frequently are copied first to maximize cache reuse
@@ -187,7 +169,10 @@ COPY prisma/ ./prisma/
 
 # 3. Main application code (changes more frequently)
 # The core bot code is most likely to change during development
-COPY tux/ ./tux/
+# Copy the entire src tree so Poetry can find packages from "src"
+COPY src/ ./src/
+# Keep runtime path stable at /app/tux for later stages and health checks
+RUN cp -a src/tux ./tux
 
 # 4. Root level files needed for installation
 # These include metadata and licensing information
@@ -216,12 +201,9 @@ RUN set -eux; \
     fi; \
     echo "Building version: $(cat /app/VERSION)"
 
-# Install the application and generate Prisma client
-# COMPLEXITY: This step requires multiple operations that must be done together
-RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
-    --mount=type=cache,target=/root/.cache \
-    # Install the application package itself
-    poetry install --only main
+# Sync the project
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked
 
 # ==============================================================================
 # DEVELOPMENT STAGE - Development Environment
@@ -267,14 +249,14 @@ USER nonroot
 
 # Install development dependencies and setup Prisma
 # DEVELOPMENT: These tools are needed for linting, testing, and development workflow
-RUN poetry install --only dev --no-root --no-directory && \
-    poetry run prisma py fetch && \
-    poetry run prisma generate
+RUN uv sync --dev && \
+    uv run prisma py fetch && \
+    uv run prisma generate
 
 # Development container startup command
 # WORKFLOW: Regenerates Prisma client and starts the bot in development mode
 # This ensures the database client is always up-to-date with schema changes
-CMD ["sh", "-c", "poetry run prisma generate && exec poetry run tux --dev start"]
+CMD ["sh", "-c", "uv run prisma generate && exec uv run tux --dev start"]
 
 # ==============================================================================
 # PRODUCTION STAGE - Minimal Runtime Environment
@@ -312,8 +294,7 @@ RUN echo 'path-exclude /usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
     echo 'path-exclude /usr/share/man/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
     echo 'path-exclude /usr/share/groff/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
     echo 'path-exclude /usr/share/info/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
-    echo 'path-exclude /usr/share/lintian/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
-    echo 'path-exclude /usr/share/linda/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc
+    echo 'path-exclude /usr/share/lintian/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc
 
 # Install ONLY runtime dependencies (minimal subset of base stage)
 # SECURITY: Update all packages first, then install minimal runtime dependencies
@@ -419,7 +400,7 @@ USER nonroot
 # MONITORING: Allows Docker/Kubernetes to monitor application health
 # RELIABILITY: Enables automatic restart of unhealthy containers
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import tux.cli.core; import tux.utils.env; print('Health check passed')" || exit 1
+    CMD python -c "import tux.cli.core; import tux.shared.config.env; print('Health check passed')" || exit 1
 
 # --interval=30s    : Check health every 30 seconds
 # --timeout=10s     : Allow 10 seconds for health check to complete

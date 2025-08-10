@@ -176,18 +176,15 @@ jobs:
         uses: ./.github/actions/setup-python
         with:
           python-version: '3.13'
-          install-groups: main
-          cache-suffix: security
           generate-prisma: 'false'
+          enable-cache: 'true'
 
       # SECURITY VULNERABILITY SCANNING
       # Comprehensive security advisory checking with structured output
       - name: Run Safety check
         run: |
           pip install safety
-          # Ensure Poetry export plugin is available
-          poetry self add poetry-plugin-export
-          poetry export --without=dev --format=requirements.txt --output=requirements.txt
+          uv export --format requirements.txt --output-file requirements.txt
           safety check --json --output safety-report.json -r requirements.txt || true
 
       # SECURITY REPORT ARCHIVAL

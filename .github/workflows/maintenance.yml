@@ -126,7 +126,7 @@ jobs:
           ESCAPE: true                   # Handle special characters safely
           # EXCLUSION PATTERNS
           # Skip maintenance-heavy directories and lock files
-          IGNORE: .github/,node_modules/,dist/,build/,vendor/,poetry.lock
+          IGNORE: .github/,node_modules/,dist/,build/,vendor/,uv.lock
           PROJECTS_SECRET: ${{ secrets.ADMIN_PAT }}
         env:
           # MANUAL OVERRIDE SUPPORT
@@ -201,9 +201,9 @@ jobs:
       # Monitors for outdated dependencies requiring security or feature updates
       - name: Check for outdated dependencies
         run: |
-          if command -v poetry &> /dev/null; then
+          if command -v uv &> /dev/null; then
             echo "Checking for outdated dependencies..."
-            poetry show --outdated || echo "All dependencies up to date"
+            uv pip list --outdated || echo "All dependencies up to date"
           fi
 
       # PROJECT METRICS COLLECTION

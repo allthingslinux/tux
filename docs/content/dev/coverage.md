@@ -10,18 +10,18 @@ The easiest way to run coverage is through the built-in Tux CLI:
 
 ```bash
 # Run tests with coverage
-poetry run tux test run
+uv run tux test run
 
 # Run tests without coverage (faster)
-poetry run tux test quick
+uv run tux test quick
 
 # Generate coverage reports
-poetry run tux test coverage --format=html
-poetry run tux test coverage --format=xml
-poetry run tux test coverage --fail-under=90
+uv run tux test coverage --format=html
+uv run tux test coverage --format=xml
+uv run tux test coverage --fail-under=90
 
 # Clean coverage files
-poetry run tux test coverage-clean
+uv run tux test coverage-clean
 ```
 
 ### Direct pytest Commands
@@ -30,13 +30,13 @@ You can also run pytest directly:
 
 ```bash
 # Basic coverage report in terminal
-poetry run pytest --cov=tux
+uv run pytest --cov=tux
 
 # With missing lines highlighted
-poetry run pytest --cov=tux --cov-report=term-missing
+uv run pytest --cov=tux --cov-report=term-missing
 
 # Generate HTML report
-poetry run pytest --cov=tux --cov-report=html
+uv run pytest --cov=tux --cov-report=html
 ```
 
 ### Using the Coverage Commands
@@ -45,16 +45,16 @@ Coverage functionality is integrated into the main CLI:
 
 ```bash
 # Run tests with coverage report
-poetry run tux test coverage
+uv run tux test coverage
 
 # Generate HTML report
-poetry run tux test coverage --format=html
+uv run tux test coverage --format=html
 
 # Clean coverage files
-poetry run tux test coverage-clean
+uv run tux test coverage-clean
 
 # See all available options
-poetry run tux test coverage --help
+uv run tux test coverage --help
 ```
 
 ## Configuration
@@ -119,13 +119,13 @@ TOTAL                      179    151     62      0  15.64%
 Generates a detailed interactive HTML report in `htmlcov/`:
 
 ```bash
-poetry run tux test coverage --format=html
+uv run tux test coverage --format=html
 # Generates htmlcov/index.html
 
 # Open the report in browser
-poetry run tux test coverage --format=html --open
+uv run tux test coverage --format=html --open
 # or open it separately
-poetry run tux test coverage-open
+uv run tux test coverage-open
 ```
 
 The HTML report provides:
@@ -140,7 +140,7 @@ The HTML report provides:
 For CI/CD integration:
 
 ```bash
-poetry run tux test coverage --format=xml
+uv run tux test coverage --format=xml
 # Generates coverage.xml
 ```
 
@@ -149,7 +149,7 @@ poetry run tux test coverage --format=xml
 Machine-readable format:
 
 ```bash
-poetry run tux test coverage --format=json
+uv run tux test coverage --format=json
 # Generates coverage.json
 ```
 
@@ -177,7 +177,7 @@ def test_new_feature():
 Run coverage reports to identify untested code:
 
 ```bash
-poetry run tux test coverage | grep "0.00%"
+uv run tux test coverage | grep "0.00%"
 ```
 
 ### 3. Exclude Appropriate Code
@@ -218,7 +218,7 @@ def process_data(data):
 ```yaml
 - name: Run tests with coverage
   run: |
-    poetry run tux dev coverage --format=xml
+    uv run tux dev coverage --format=xml
 
 - name: Upload coverage to Codecov
   uses: codecov/codecov-action@v3
@@ -232,23 +232,23 @@ def process_data(data):
 
 ```bash
 # Basic testing
-poetry run tux dev test                              # Run tests with coverage
-poetry run tux dev test-quick                        # Run tests without coverage
+uv run tux dev test                              # Run tests with coverage
+uv run tux dev test-quick                        # Run tests without coverage
 
 # Coverage reports
-poetry run tux dev coverage                          # Terminal report (default)
-poetry run tux dev coverage --format=html            # HTML report
-poetry run tux dev coverage --format=html --open     # HTML report + open browser
-poetry run tux dev coverage --format=xml             # XML report for CI
-poetry run tux dev coverage --format=json            # JSON report
-poetry run tux dev coverage --fail-under=90          # Set coverage threshold
+uv run tux dev coverage                          # Terminal report (default)
+uv run tux dev coverage --format=html            # HTML report
+uv run tux dev coverage --format=html --open     # HTML report + open browser
+uv run tux dev coverage --format=xml             # XML report for CI
+uv run tux dev coverage --format=json            # JSON report
+uv run tux dev coverage --fail-under=90          # Set coverage threshold
 
 # Advanced options
-poetry run tux dev coverage --quick                  # Quick coverage check (no detailed reports)
-poetry run tux dev coverage --specific=tux/utils     # Test specific module
-poetry run tux dev coverage --clean                  # Clean coverage files before running
-poetry run tux dev coverage-clean                    # Clean coverage files only
-poetry run tux dev coverage-open                     # Open HTML report in browser
+uv run tux dev coverage --quick                  # Quick coverage check (no detailed reports)
+uv run tux dev coverage --specific=tux/utils     # Test specific module
+uv run tux dev coverage --clean                  # Clean coverage files before running
+uv run tux dev coverage-clean                    # Clean coverage files only
+uv run tux dev coverage-open                     # Open HTML report in browser
 ```
 
 ## Troubleshooting
@@ -275,10 +275,10 @@ For faster test runs during development:
 
 ```bash
 # Skip coverage for quick tests
-poetry run pytest tests/test_specific.py
+uv run pytest tests/test_specific.py
 
 # Use the quick option
-poetry run tux dev coverage --quick
+uv run tux dev coverage --quick
 ```
 
 ## Resources

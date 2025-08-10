@@ -89,7 +89,7 @@ jobs:
           files: |
             **/*.py
             pyproject.toml
-            poetry.lock
+            uv.lock
 
       # EARLY TERMINATION FOR UNCHANGED FILES
       # Skips expensive Python setup if no relevant files changed
@@ -110,15 +110,14 @@ jobs:
         uses: ./.github/actions/setup-python
         with:
           python-version: '3.13'
-          install-groups: dev,types
-          cache-suffix: ci
           generate-prisma: 'true'
+          enable-cache: 'true'
 
       # STATIC TYPE CHECKING
       # basedpyright provides comprehensive type checking for Python
       # Annotations appear directly in PR for developer feedback
       - name: Run basedpyright type checker
-        run: poetry run basedpyright
+        run: uv run basedpyright
 
   # ============================================================================
   # MARKDOWN DOCUMENTATION LINTING
