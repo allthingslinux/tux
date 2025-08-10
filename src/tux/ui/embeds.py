@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 from datetime import datetime
 from enum import Enum
+from typing import TYPE_CHECKING
 
 import discord
 from loguru import logger
 
-from tux.core.bot import Tux
+if TYPE_CHECKING:  # Avoid runtime import cycle
+    from tux.core.types import Tux
 from tux.shared.config.settings import Config
 from tux.shared.constants import CONST
 

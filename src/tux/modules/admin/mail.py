@@ -5,10 +5,10 @@ import httpx
 from discord import app_commands
 from loguru import logger
 
+from tux.core import checks
 from tux.core.base_cog import BaseCog
-from tux.core.bot import Tux
+from tux.core.types import Tux
 from tux.shared.config.settings import CONFIG
-from tux.utils import checks
 
 MailboxData = dict[str, str | list[str]]
 

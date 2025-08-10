@@ -6,10 +6,10 @@ from loguru import logger
 
 from prisma.enums import CaseType
 from prisma.models import Case
-from tux.core.bot import Tux
+from tux.core import checks
 from tux.core.flags import UnjailFlags
+from tux.core.types import Tux
 from tux.shared.functions import generate_usage
-from tux.utils import checks
 
 from . import ModerationCogBase
 

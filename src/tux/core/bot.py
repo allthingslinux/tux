@@ -20,6 +20,7 @@ from tux.core.cog_loader import CogLoader
 from tux.core.container import ServiceContainer
 from tux.core.service_registry import ServiceRegistry
 from tux.services.database.client import db
+from tux.services.emoji_manager import EmojiManager
 from tux.services.sentry_manager import SentryManager
 from tux.services.tracing import (
     capture_exception_safe,
@@ -32,7 +33,6 @@ from tux.services.tracing import (
 from tux.shared.config.env import is_dev_mode
 from tux.shared.config.settings import Config
 from tux.ui.banner import create_banner
-from tux.utils.emoji import EmojiManager
 
 # Create console for rich output
 console = Console(stderr=True, force_terminal=True)

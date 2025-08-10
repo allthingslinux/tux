@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 
 from tux.core.base_cog import BaseCog
-from tux.core.bot import Tux
+from tux.core.types import Tux
 from tux.modules.utility import add_afk, del_afk
 from tux.shared.functions import convert_to_seconds, generate_usage, seconds_to_human_readable
 from tux.ui.views.confirmation import ConfirmationDanger

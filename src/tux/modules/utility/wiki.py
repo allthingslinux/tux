@@ -4,7 +4,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.base_cog import BaseCog
-from tux.core.bot import Tux
+from tux.core.types import Tux
 from tux.shared.functions import generate_usage
 from tux.ui.embeds import EmbedCreator
 

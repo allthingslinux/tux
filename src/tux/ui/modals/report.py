@@ -1,8 +1,8 @@
 import discord
 from loguru import logger
 
-from tux.core.bot import Tux
 from tux.core.interfaces import IDatabaseService
+from tux.core.types import Tux
 from tux.ui.embeds import EmbedCreator
 
 

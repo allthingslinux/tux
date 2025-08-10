@@ -7,7 +7,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
 
 from tux.core.base_cog import BaseCog
-from tux.core.bot import Tux
+from tux.core.types import Tux
 from tux.shared.config.settings import CONFIG
 
 

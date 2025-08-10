@@ -14,7 +14,7 @@ This directory is for custom modules created by self-hosters. Any Python modules
 ```python
 from discord.ext import commands
 from tux.core.base_cog import BaseCog
-from tux.core.bot import Tux
+from tux.core.types import Tux
 
 class MyCustomModule(BaseCog):
     def __init__(self, bot: Tux) -> None:

@@ -8,7 +8,7 @@ from loguru import logger
 
 from prisma.models import Reminder
 from tux.core.base_cog import BaseCog
-from tux.core.bot import Tux
+from tux.core.types import Tux
 from tux.shared.functions import convert_to_seconds, generate_usage
 from tux.ui.embeds import EmbedCreator
 

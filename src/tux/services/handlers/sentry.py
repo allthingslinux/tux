@@ -5,7 +5,7 @@ import sentry_sdk
 from discord.ext import commands
 from loguru import logger
 
-from tux.core.bot import Tux
+from tux.core.types import Tux
 from tux.services.tracing import capture_span_exception, set_span_attributes, set_span_status
 
 # Type alias using PEP695 syntax

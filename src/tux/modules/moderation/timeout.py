@@ -4,10 +4,10 @@ import discord
 from discord.ext import commands
 
 from prisma.enums import CaseType
-from tux.core.bot import Tux
+from tux.core import checks
 from tux.core.flags import TimeoutFlags
+from tux.core.types import Tux
 from tux.shared.functions import generate_usage, parse_time_string
-from tux.utils import checks
 
 from . import ModerationCogBase
 

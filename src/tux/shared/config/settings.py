@@ -30,8 +30,21 @@ def convert_dict_str_to_int(original_dict: dict[str, int]) -> dict[int, int]:
 # Load environment variables from .env file
 load_dotenv(verbose=True)
 
-# Get the workspace root directory
-workspace_root = Path(__file__).parent.parent.parent.parent
+
+# Get the workspace root directory by walking up to the repo root
+def _find_workspace_root(start: Path) -> Path:
+    current = start.resolve()
+    for parent in [current, *current.parents]:
+        if (parent / "pyproject.toml").exists() or (parent / ".git").exists():
+            return parent
+    # Fallback to previous heuristic (compatible with old layout)
+    try:
+        return current.parents[4]
+    except IndexError:
+        return current.parent
+
+
+workspace_root = _find_workspace_root(Path(__file__))
 
 config_file = workspace_root / "config/settings.yml"
 config_file_example = workspace_root / "config/settings.yml.example"

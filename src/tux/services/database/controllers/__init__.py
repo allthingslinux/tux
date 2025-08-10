@@ -118,7 +118,7 @@ class DatabaseController:
 
         # Lazy import via importlib to avoid circular import during package init
         try:
-            _tracing = importlib.import_module("tux.utils.tracing")
+            _tracing = importlib.import_module("tux.services.tracing")
             _span = getattr(_tracing, "span", None)
         except Exception:
             _span = None

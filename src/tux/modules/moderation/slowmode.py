@@ -4,9 +4,9 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.core import checks
 from tux.core.base_cog import BaseCog
-from tux.core.bot import Tux
-from tux.utils import checks
+from tux.core.types import Tux
 
 # Type for channels that support slowmode
 SlowmodeChannel = (

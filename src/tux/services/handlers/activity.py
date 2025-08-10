@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.core.bot import Tux
+from tux.core.types import Tux
 from tux.shared.config.settings import Config
 from tux.shared.substitutions import handle_substitution
 

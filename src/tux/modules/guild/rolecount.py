@@ -3,7 +3,7 @@ from discord import app_commands
 from reactionmenu import ViewButton, ViewMenu
 
 from tux.core.base_cog import BaseCog
-from tux.core.bot import Tux
+from tux.core.types import Tux
 from tux.ui.embeds import EmbedCreator
 
 # FIXME: THIS IS A ALL THINGS LINUX SPECIFIC FILE

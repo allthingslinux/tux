@@ -7,7 +7,7 @@ from loguru import logger
 
 from tux.core.app import get_prefix
 from tux.core.base_cog import BaseCog
-from tux.core.bot import Tux
+from tux.core.types import Tux
 from tux.shared.config.settings import CONFIG
 from tux.ui.embeds import EmbedCreator
 

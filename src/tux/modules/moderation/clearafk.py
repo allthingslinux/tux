@@ -3,10 +3,10 @@ import contextlib
 import discord
 from discord.ext import commands
 
+from tux.core import checks
 from tux.core.base_cog import BaseCog
-from tux.core.bot import Tux
+from tux.core.types import Tux
 from tux.services.database.controllers import AfkController
-from tux.utils import checks
 
 
 class ClearAFK(BaseCog):

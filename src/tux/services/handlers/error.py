@@ -20,8 +20,8 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
-from tux.core.bot import Tux
 from tux.core.context import get_interaction_context
+from tux.core.types import Tux
 from tux.services.sentry_manager import LogLevelStr, SentryManager
 from tux.shared.exceptions import (
     AppCommandPermissionLevelError,
@@ -440,7 +440,7 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         send_to_sentry=True,
         sentry_status=SentryManager.STATUS["ERROR"],
     ),
-    # === Custom Errors (defined in tux.utils.exceptions) ===
+    # === Custom Errors (defined in tux.shared.exceptions) ===
     PermissionLevelError: ErrorHandlerConfig(
         message_format="You need permission level `{error.permission}` to use this command.",
         send_to_sentry=False,
@@ -451,7 +451,7 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         send_to_sentry=False,
         sentry_status=SentryManager.STATUS["PERMISSION_DENIED"],
     ),
-    # === Code Execution Errors (from tux.utils.exceptions) ===
+    # === Code Execution Errors (from tux.shared.exceptions) ===
     MissingCodeError: ErrorHandlerConfig(
         message_format="{error}",
         log_level="INFO",

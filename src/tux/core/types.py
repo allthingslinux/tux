@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 
 if TYPE_CHECKING:
-    from tux.core.bot import Tux
+    from tux.core.types import Tux
 else:
     Tux = commands.Bot  # type: ignore[valid-type]
 

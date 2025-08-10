@@ -4,12 +4,12 @@ from loguru import logger
 
 from prisma.enums import CaseType
 from prisma.models import Snippet
+from tux.core import checks
 from tux.core.base_cog import BaseCog
-from tux.core.bot import Tux
+from tux.core.types import Tux
 from tux.shared.config.settings import Config
 from tux.shared.constants import CONST
 from tux.ui.embeds import EmbedCreator, EmbedType
-from tux.utils import checks
 
 
 class SnippetsBaseCog(BaseCog):

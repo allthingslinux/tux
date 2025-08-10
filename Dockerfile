@@ -187,7 +187,10 @@ COPY prisma/ ./prisma/
 
 # 3. Main application code (changes more frequently)
 # The core bot code is most likely to change during development
-COPY src/tux/ ./tux/
+# Copy the entire src tree so Poetry can find packages from "src"
+COPY src/ ./src/
+# Keep runtime path stable at /app/tux for later stages and health checks
+RUN cp -a src/tux ./tux
 
 # 4. Root level files needed for installation
 # These include metadata and licensing information
@@ -436,7 +439,7 @@ USER nonroot
 # MONITORING: Allows Docker/Kubernetes to monitor application health
 # RELIABILITY: Enables automatic restart of unhealthy containers
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import tux.cli.core; import tux.utils.env; print('Health check passed')" || exit 1
+    CMD python -c "import tux.cli.core; import tux.shared.config.env; print('Health check passed')" || exit 1
 
 # --interval=30s    : Check health every 30 seconds
 # --timeout=10s     : Allow 10 seconds for health check to complete

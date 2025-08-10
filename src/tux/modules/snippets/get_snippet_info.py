@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 import discord
 from discord.ext import commands
 
-from tux.core.bot import Tux
+from tux.core.types import Tux
 from tux.shared.functions import generate_usage, truncate
 from tux.ui.embeds import EmbedCreator
 

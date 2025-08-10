@@ -6,7 +6,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.base_cog import BaseCog
-from tux.core.bot import Tux
+from tux.core.types import Tux
 
 
 class TtyRoles(BaseCog):

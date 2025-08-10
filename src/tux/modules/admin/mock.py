@@ -6,11 +6,11 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+from tux.core import checks
 from tux.core.base_cog import BaseCog
-from tux.core.bot import Tux
+from tux.core.types import Tux
 from tux.services.handlers.error import ERROR_CONFIG_MAP
 from tux.ui.embeds import EmbedCreator
-from tux.utils import checks
 
 
 # Minimal Mock Objects for Required Arguments

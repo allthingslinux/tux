@@ -4,11 +4,11 @@ import discord
 from discord.ext import commands
 
 from prisma.enums import CaseType
-from tux.core.bot import Tux
+from tux.core import checks
 from tux.core.flags import UnbanFlags
+from tux.core.types import Tux
 from tux.shared.constants import CONST
 from tux.shared.functions import generate_usage
-from tux.utils import checks
 
 from . import ModerationCogBase
 

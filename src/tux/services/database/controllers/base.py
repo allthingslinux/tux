@@ -110,7 +110,7 @@ class BaseController[
         """
         # Lazy import via importlib to avoid circular import through package __init__
         try:
-            _tracing = importlib.import_module("tux.utils.tracing")
+            _tracing = importlib.import_module("tux.services.tracing")
             _start_span = getattr(_tracing, "start_span", None)
         except Exception:
             _start_span = None

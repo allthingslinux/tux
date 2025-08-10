@@ -13,7 +13,7 @@ from loguru import logger
 from tux.core.interfaces import IBotService, IConfigService, IDatabaseService
 
 if TYPE_CHECKING:
-    from tux.core.bot import Tux
+    from tux.core.types import Tux
 
 
 class BaseCog(commands.Cog):
