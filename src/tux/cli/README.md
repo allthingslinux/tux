@@ -58,64 +58,64 @@ tux                       # Main entry point (defined in cli/core.py)
 
 ## Using the CLI
 
-The CLI is intended to be run via Poetry from the project root. The global environment flags `--dev` or `--prod` can be placed either before or after the command name.
+The CLI is intended to be run via Uv from the project root. The global environment flags `--dev` or `--prod` can be placed either before or after the command name.
 
 ```bash
-poetry run tux [GLOBAL OPTIONS] [COMMAND/GROUP] [SUBCOMMAND] [ARGS...]
+uv run tux [GLOBAL OPTIONS] [COMMAND/GROUP] [SUBCOMMAND] [ARGS...]
 # or
-poetry run tux [COMMAND/GROUP] [SUBCOMMAND] [ARGS...] [GLOBAL OPTIONS]
+uv run tux [COMMAND/GROUP] [SUBCOMMAND] [ARGS...] [GLOBAL OPTIONS]
 ```
 
 **Examples:**
 
 ```bash
 # Start the bot (defaults to development mode)
-poetry run tux start
+uv run tux start
 
 # Explicitly start in production mode (flag before command)
-poetry run tux --prod start
+uv run tux --prod start
 
 # Explicitly start in production mode (flag after command)
-poetry run tux start --prod
+uv run tux start --prod
 
 # Lint the code (defaults to development mode)
-poetry run tux dev lint
+uv run tux dev lint
 
 # Push database changes using the production database URL (flag before command)
-poetry run tux --prod db push
+uv run tux --prod db push
 
 # Push database changes using the production database URL (flag after command)
-poetry run tux db push --prod
+uv run tux db push --prod
 
 # Run docker compose up using development settings (flag after command)
-poetry run tux docker up --build --dev
+uv run tux docker up --build --dev
 
 # Run tests with enhanced output (pytest-sugar enabled by default)
-poetry run tux test run
+uv run tux test run
 
 # Run quick tests without coverage (faster)
-poetry run tux test quick
+uv run tux test quick
 
 # Run tests with plain output (no pytest-sugar)
-poetry run tux test plain
+uv run tux test plain
 
 # Run tests in parallel (utilizes all CPU cores)
-poetry run tux test parallel
+uv run tux test parallel
 
 # Generate beautiful HTML test reports
-poetry run tux test html
+uv run tux test html
 
 # Run performance benchmarks
-poetry run tux test benchmark
+uv run tux test benchmark
 
 # Generate HTML coverage report and open it
-poetry run tux test coverage --format=html --open
+uv run tux test coverage --format=html --open
 
 # Generate coverage for specific component with threshold
-poetry run tux test coverage --specific=tux/database --fail-under=90
+uv run tux test coverage --specific=tux/database --fail-under=90
 
 # Clean coverage files and generate fresh report
-poetry run tux test coverage --clean --format=html
+uv run tux test coverage --clean --format=html
 ```
 
 ## Environment Handling

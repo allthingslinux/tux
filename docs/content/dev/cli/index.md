@@ -11,10 +11,10 @@ The `tux` CLI defaults to **development mode** for all command groups (`db`, `de
 
     ```bash
     # Example: Apply migrations to production database
-    poetry run tux db migrate --prod
+    uv run tux db migrate --prod
 
     # Example: Start the bot using production token/DB
-    poetry run tux start --prod
+    uv run tux start --prod
     ```
 
 * **Development Mode (Default / Explicit):**
@@ -22,11 +22,11 @@ The `tux` CLI defaults to **development mode** for all command groups (`db`, `de
 
     ```bash
     # These are equivalent and run in development mode:
-    poetry run tux db push
-    poetry run tux db push --dev
+    uv run tux db push
+    uv run tux db push --dev
 
-    poetry run tux start
-    poetry run tux start --dev
+    uv run tux start
+    uv run tux start --dev
     ```
 
 This default-to-development approach prioritizes safety by preventing accidental operations on production environments. The environment determination logic can be found in `tux/utils/env.py`.

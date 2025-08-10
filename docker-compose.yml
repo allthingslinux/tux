@@ -210,3 +210,34 @@ volumes:
 #    - Registry image for faster deployments
 #
 # ==============================================================================
+#
+# TUX CLI COMMANDS (Recommended):
+# --------------------------------
+# Build:     uv run tux --prod docker build
+# Start:     uv run tux --prod docker up [-d|--build]
+# Logs:      uv run tux --prod docker logs -f
+# Shell:     uv run tux --prod docker shell
+# Stop:      uv run tux --prod docker down
+# Database:  uv run tux --prod docker exec tux "tux db <command>"
+#
+# PRODUCTION COMMANDS:
+# --------------------
+# Production deployment:
+#   docker-compose up -d
+#
+# View logs:
+#   docker-compose logs -f tux
+#
+# Update bot:
+#   docker-compose pull && docker-compose up -d
+#
+# Rebuild from source:
+#   docker-compose up -d --build
+#
+# Stop bot:
+#   docker-compose down
+#
+# Stop and remove volumes (WARNING: destroys cache):
+#   docker-compose down -v
+#
+# ==============================================================================

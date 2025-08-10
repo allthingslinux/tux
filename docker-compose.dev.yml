@@ -37,7 +37,7 @@ services:
     command:
       - sh
       - -c
-      - exec poetry run tux --dev start
+      - exec uv run tux --dev start
 
     # DEVELOPMENT WORKFLOW CONFIGURATION
     # Docker BuildKit watch feature for live development
@@ -87,7 +87,7 @@ services:
 
         # Lock file updated - rebuild required for dependency consistency
         - action: rebuild
-          path: poetry.lock
+          path: uv.lock
 
         # Database schema changes - rebuild required for Prisma client generation
         - action: rebuild
@@ -233,5 +233,52 @@ volumes:
 # 6. Clean restart:
 #    docker-compose -f docker-compose.dev.yml down
 #    docker-compose -f docker-compose.dev.yml up --build
+#
+# ==============================================================================
+#
+# TUX CLI COMMANDS (Recommended):
+# --------------------------------
+# Build:     uv run tux --dev docker build
+# Start:     uv run tux --dev docker up [-d|--build]
+# Logs:      uv run tux --dev docker logs -f
+# Shell:     uv run tux --dev docker shell
+# Stop:      uv run tux --dev docker down
+#
+# Development workflow (from host):
+#   uv run tux --dev docker exec tux "tux dev lint"
+#   uv run tux --dev docker exec tux "pytest"
+#
+# Database (from host):
+#   uv run tux --dev docker exec tux "tux db push"
+#   uv run tux --dev docker exec tux "tux db migrate --name <name>"
+#
+# DEVELOPMENT COMMANDS:
+# ---------------------
+# Start development:
+#   docker-compose -f docker-compose.dev.yml up
+#
+# Start in background:
+#   docker-compose -f docker-compose.dev.yml up -d
+#
+# Force rebuild:
+#   docker-compose -f docker-compose.dev.yml up --build
+#
+# Shell access:
+#   docker-compose -f docker-compose.dev.yml exec tux bash
+#
+# Run linting:
+#   docker-compose -f docker-compose.dev.yml exec tux uv run tux dev lint
+#
+# Run tests:
+#   docker-compose -f docker-compose.dev.yml exec tux uv run pytest
+#
+# Database operations:
+#   docker-compose -f docker-compose.dev.yml exec tux uv run tux --dev db push
+#
+# Stop development:
+#   docker-compose -f docker-compose.dev.yml down
+#
+# Clean reset (removes volumes):
+#   docker-compose -f docker-compose.dev.yml down -v
 #
 # ==============================================================================

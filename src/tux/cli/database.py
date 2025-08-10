@@ -19,7 +19,7 @@ def _run_prisma_command(args: list[str], env: dict[str, str]) -> int:
     """
     Run a Prisma command directly.
 
-    When using 'poetry run tux', the prisma binary is already
+    When using 'uv run tux', the prisma binary is already
     properly configured, so we can run it directly.
     """
 
@@ -28,7 +28,7 @@ def _run_prisma_command(args: list[str], env: dict[str, str]) -> int:
     # Set the environment variables for the process
     env_vars = os.environ | env
 
-    # Use prisma directly - it's already available through Poetry
+    # Use prisma directly - it's already available through Uv
     try:
         logger.info(f"Running: prisma {' '.join(args)}")
         return run_command(["prisma", *args], env=env_vars)
