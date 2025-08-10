@@ -43,7 +43,6 @@ class RemindMe(BaseCog):
                             content=f"{user.mention} Failed to DM you, sending in channel",
                             embed=embed,
                         )
-                        return
 
                 else:
                     logger.error(
