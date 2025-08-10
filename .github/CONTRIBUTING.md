@@ -13,15 +13,15 @@ Before you start, ensure you have:
 * [Python](https://www.python.org/) (3.13+ recommended)
   * If you don't have Python installed, we suggest using something like [mise](https://mise.jdx.dev/) or [pyenv](https://github.com/pyenv/pyenv) to manage your Python installations.
   
-* [Poetry](https://python-poetry.org/docs/) (1.2+ recommended)
-  * If you don't have Poetry installed, you can use one of the official methods. We recommend using the official installer:
+* [Uv](https://docs.astral.sh/uv/) (recommended)
+  * If you don't have Uv installed, use the official installer and verify:
 
     ```bash
-    # Linux, macOS, Windows (WSL)
-    curl -sSL https://install.python-poetry.org | python3 -
+    # Linux/macOS
+    curl -LsSf https://astral.sh/uv/install.sh | sh
 
-    # After installation and ensuring Poetry is in your PATH, you can verify it by running:
-    poetry --version
+    # Verify installation
+    uv --version
     ```
 
 * A PostgreSQL Database (local or remote)
@@ -61,19 +61,19 @@ Follow these steps to set up your local development environment. For more compre
     git remote -v
     ```
 
-2. **Install Dependencies with Poetry**
+2. **Install Dependencies with Uv**
 
-    Ensure Poetry is installed and configured to use the correct Python version (e.g., 3.13.5).
+    Ensure Uv is installed and using the correct Python version (project requires 3.13.x).
 
     ```bash
-    # Create a virtual environment
-    poetry env use 3.13.5
+    # (Optional) Pin the Python version used by uv
+    uv python pin 3.13.5
 
-    # Install project dependencies and dev tools
-    poetry install
+    # Create the virtual environment and install all dependencies
+    uv sync
 
     # Install pre-commit hooks for quality checks
-    poetry run pre-commit install
+    uv run pre-commit install
     ```
 
 3. **Configure Environment Variables**
