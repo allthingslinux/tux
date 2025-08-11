@@ -92,9 +92,8 @@ def safe_set_name(obj: Any, name: str) -> None:
     name : str
         The name to set.
     """
-    if hasattr(obj, "set_name"):
-        # Use getattr to avoid static type checking issues
-        set_name_func = obj.set_name
+    set_name_func = getattr(obj, "set_name", None)
+    if callable(set_name_func):
         set_name_func(name)
 
 
@@ -611,12 +610,23 @@ def instrument_bot_commands(bot: commands.Bot) -> None:
     # The operation for commands is standardized as `command.run`
     op = "command.run"
 
-    for command in bot.walk_commands():
-        # The transaction name is the full command name (e.g., "snippet get")
-        transaction_name = f"command.{command.qualified_name}"
+    for cmd in bot.walk_commands():
+        # Preserve existing decorators and metadata
+        original_callback = cast(Callable[..., Coroutine[Any, Any, None]], cmd.callback)
+        txn_name = f"command.{cmd.qualified_name}"
 
-        # Apply the transaction decorator to the command's callback
-        original_callback = cast(Callable[..., Coroutine[Any, Any, None]], command.callback)
-        command.callback = transaction(op=op, name=transaction_name)(original_callback)
+        @functools.wraps(original_callback)
+        async def wrapped(
+            *args: Any,
+            __orig_cb: Callable[..., Coroutine[Any, Any, None]] = original_callback,
+            __txn_name: str = txn_name,
+            **kwargs: Any,
+        ) -> None:
+            if not sentry_sdk.is_initialized():
+                return await __orig_cb(*args, **kwargs)
+            with sentry_sdk.start_transaction(op=op, name=__txn_name):
+                return await __orig_cb(*args, **kwargs)
+
+        cmd.callback = cast(Callable[..., Coroutine[Any, Any, None]], wrapped)
 
     logger.info(f"Instrumented {len(list(bot.walk_commands()))} commands with Sentry.")
