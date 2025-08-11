@@ -92,12 +92,13 @@ def get_interaction_context(source: ContextOrInteraction) -> dict[str, Any]:
         A dictionary with standardized context keys like `user_id`,
         `command_name`, `guild_id`, `command_type`, etc.
     """
-    user = source.user if isinstance(source, Interaction) else source.author
+    # Safely get the user/author attribute; fall back to None
+    user = getattr(source, "user", None) if isinstance(source, Interaction) else getattr(source, "author", None)
 
     # Base context is common to both types
     context: dict[str, Any] = {
-        "user_id": user.id,
-        "user_name": str(user),
+        "user_id": getattr(user, "id", None),
+        "user_name": str(user) if user is not None else "Unknown",
         "is_interaction": isinstance(source, Interaction),
     }
 
