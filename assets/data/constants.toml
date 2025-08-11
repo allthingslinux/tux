@@ -1,0 +1,71 @@
+# Bot Constants Configuration
+# This file contains all the constants used throughout the Tux Discord bot
+
+[embed_colors]
+DEFAULT = 16044058
+INFO = 12634869
+WARNING = 16634507
+ERROR = 16067173
+SUCCESS = 10407530
+POLL = 14724968
+CASE = 16217742
+NOTE = 16752228
+
+[embed_icons]
+DEFAULT = "https://i.imgur.com/owW4EZk.png"
+INFO = "https://i.imgur.com/8GRtR2G.png"
+SUCCESS = "https://i.imgur.com/JsNbN7D.png"
+ERROR = "https://i.imgur.com/zZjuWaU.png"
+CASE = "https://i.imgur.com/c43cwnV.png"
+NOTE = "https://i.imgur.com/VqPFbil.png"
+POLL = "https://i.imgur.com/pkPeG5q.png"
+ACTIVE_CASE = "https://github.com/allthingslinux/tux/blob/main/assets/embeds/active_case.png?raw=true"
+INACTIVE_CASE = "https://github.com/allthingslinux/tux/blob/main/assets/embeds/inactive_case.png?raw=true"
+ADD = "https://github.com/allthingslinux/tux/blob/main/assets/emojis/added.png?raw=true"
+REMOVE = "https://github.com/allthingslinux/tux/blob/main/assets/emojis/removed.png?raw=true"
+BAN = "https://github.com/allthingslinux/tux/blob/main/assets/emojis/ban.png?raw=true"
+JAIL = "https://github.com/allthingslinux/tux/blob/main/assets/emojis/jail.png?raw=true"
+KICK = "https://github.com/allthingslinux/tux/blob/main/assets/emojis/kick.png?raw=true"
+TIMEOUT = "https://github.com/allthingslinux/tux/blob/main/assets/emojis/timeout.png?raw=true"
+WARN = "https://github.com/allthingslinux/tux/blob/main/assets/emojis/warn.png?raw=true"
+
+[embed_limits]
+max_name_length = 256
+max_desc_length = 4096
+max_fields = 25
+total_max = 6000
+field_value_length = 1024
+
+[discord_limits]
+nickname_max_length = 32
+context_menu_name_length = 32
+slash_cmd_name_length = 32
+slash_cmd_max_desc_length = 100
+slash_cmd_max_options = 25
+slash_option_name_length = 100
+
+[interaction_limits]
+action_row_max_items = 5
+selects_max_options = 25
+select_max_name_length = 100
+
+[defaults]
+reason = "No reason provided"
+delete_after = 30
+
+[snippet_config]
+max_name_length = 20
+allowed_chars_regex = "^[a-zA-Z0-9-]+$"
+pagination_limit = 10
+
+[afk_config]
+prefix = "[AFK] "
+truncation_suffix = "..."
+
+[eight_ball_config]
+question_length_limit = 120
+response_wrap_width = 30
+
+[bookmark_config]
+add_emoji = "🔖"
+remove_emoji = "🗑️"

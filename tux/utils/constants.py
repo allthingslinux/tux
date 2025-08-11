@@ -1,83 +1,64 @@
-from typing import Final
+import tomllib
+from typing import Any, Final
 
-# TODO: move to assets/data/ potentially
+from tux.utils.config import workspace_root
+
+
+def _load_constants() -> dict[str, Any]:
+    """Load constants from the TOML configuration file."""
+    constants_path = workspace_root / "assets" / "data" / "constants.toml"
+    with constants_path.open("rb") as f:
+        return tomllib.load(f)
 
 
 class Constants:
-    # Color constants
-    EMBED_COLORS: Final[dict[str, int]] = {
-        "DEFAULT": 16044058,
-        "INFO": 12634869,
-        "WARNING": 16634507,
-        "ERROR": 16067173,
-        "SUCCESS": 10407530,
-        "POLL": 14724968,
-        "CASE": 16217742,
-        "NOTE": 16752228,
-    }
+    def __init__(self) -> None:
+        data = _load_constants()
 
-    # Icon constants
-    EMBED_ICONS: Final[dict[str, str]] = {
-        "DEFAULT": "https://i.imgur.com/owW4EZk.png",
-        "INFO": "https://i.imgur.com/8GRtR2G.png",
-        "SUCCESS": "https://i.imgur.com/JsNbN7D.png",
-        "ERROR": "https://i.imgur.com/zZjuWaU.png",
-        "CASE": "https://i.imgur.com/c43cwnV.png",
-        "NOTE": "https://i.imgur.com/VqPFbil.png",
-        "POLL": "https://i.imgur.com/pkPeG5q.png",
-        "ACTIVE_CASE": "https://github.com/allthingslinux/tux/blob/main/assets/embeds/active_case.png?raw=true",
-        "INACTIVE_CASE": "https://github.com/allthingslinux/tux/blob/main/assets/embeds/inactive_case.png?raw=true",
-        "ADD": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/added.png?raw=true",
-        "REMOVE": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/removed.png?raw=true",
-        "BAN": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/ban.png?raw=true",
-        "JAIL": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/jail.png?raw=true",
-        "KICK": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/kick.png?raw=true",
-        "TIMEOUT": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/timeout.png?raw=true",
-        "WARN": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/warn.png?raw=true",
-    }
+        self.EMBED_COLORS: Final[dict[str, int]] = data["embed_colors"]
 
-    # Embed limit constants
-    EMBED_MAX_NAME_LENGTH = 256
-    EMBED_MAX_DESC_LENGTH = 4096
-    EMBED_MAX_FIELDS = 25
-    EMBED_TOTAL_MAX = 6000
-    EMBED_FIELD_VALUE_LENGTH = 1024
+        self.EMBED_ICONS: Final[dict[str, str]] = data["embed_icons"]
 
-    NICKNAME_MAX_LENGTH = 32
+        embed_limits: dict[str, Any] = data["embed_limits"]
+        self.EMBED_MAX_NAME_LENGTH: Final[int] = int(embed_limits["max_name_length"])
+        self.EMBED_MAX_DESC_LENGTH: Final[int] = int(embed_limits["max_desc_length"])
+        self.EMBED_MAX_FIELDS: Final[int] = int(embed_limits["max_fields"])
+        self.EMBED_TOTAL_MAX: Final[int] = int(embed_limits["total_max"])
+        self.EMBED_FIELD_VALUE_LENGTH: Final[int] = int(embed_limits["field_value_length"])
 
-    # Interaction constants
-    ACTION_ROW_MAX_ITEMS = 5
-    SELECTS_MAX_OPTIONS = 25
-    SELECT_MAX_NAME_LENGTH = 100
+        discord_limits: dict[str, Any] = data["discord_limits"]
+        self.NICKNAME_MAX_LENGTH: Final[int] = int(discord_limits["nickname_max_length"])
+        self.CONTEXT_MENU_NAME_LENGTH: Final[int] = int(discord_limits["context_menu_name_length"])
+        self.SLASH_CMD_NAME_LENGTH: Final[int] = int(discord_limits["slash_cmd_name_length"])
+        self.SLASH_CMD_MAX_DESC_LENGTH: Final[int] = int(discord_limits["slash_cmd_max_desc_length"])
+        self.SLASH_CMD_MAX_OPTIONS: Final[int] = int(discord_limits["slash_cmd_max_options"])
+        self.SLASH_OPTION_NAME_LENGTH: Final[int] = int(discord_limits["slash_option_name_length"])
 
-    # App commands constants
-    CONTEXT_MENU_NAME_LENGTH = 32
-    SLASH_CMD_NAME_LENGTH = 32
-    SLASH_CMD_MAX_DESC_LENGTH = 100
-    SLASH_CMD_MAX_OPTIONS = 25
-    SLASH_OPTION_NAME_LENGTH = 100
+        interaction_limits: dict[str, Any] = data["interaction_limits"]
+        self.ACTION_ROW_MAX_ITEMS: Final[int] = int(interaction_limits["action_row_max_items"])
+        self.SELECTS_MAX_OPTIONS: Final[int] = int(interaction_limits["selects_max_options"])
+        self.SELECT_MAX_NAME_LENGTH: Final[int] = int(interaction_limits["select_max_name_length"])
 
-    DEFAULT_REASON = "No reason provided"
+        defaults: dict[str, Any] = data["defaults"]
+        self.DEFAULT_REASON: Final[str] = str(defaults["reason"])
+        self.DEFAULT_DELETE_AFTER: Final[int] = int(defaults["delete_after"])
 
-    # Snippet constants
-    SNIPPET_MAX_NAME_LENGTH = 20
-    SNIPPET_ALLOWED_CHARS_REGEX = r"^[a-zA-Z0-9-]+$"
-    SNIPPET_PAGINATION_LIMIT = 10
+        snippet_config: dict[str, Any] = data["snippet_config"]
+        self.SNIPPET_MAX_NAME_LENGTH: Final[int] = int(snippet_config["max_name_length"])
+        self.SNIPPET_ALLOWED_CHARS_REGEX: Final[str] = str(snippet_config["allowed_chars_regex"])
+        self.SNIPPET_PAGINATION_LIMIT: Final[int] = int(snippet_config["pagination_limit"])
 
-    # Message timings
-    DEFAULT_DELETE_AFTER = 30
+        afk_config: dict[str, Any] = data["afk_config"]
+        self.AFK_PREFIX: Final[str] = str(afk_config["prefix"])
+        self.AFK_TRUNCATION_SUFFIX: Final[str] = str(afk_config["truncation_suffix"])
 
-    # AFK constants
-    AFK_PREFIX = "[AFK] "
-    AFK_TRUNCATION_SUFFIX = "..."
+        eight_ball_config: dict[str, Any] = data["eight_ball_config"]
+        self.EIGHT_BALL_QUESTION_LENGTH_LIMIT: Final[int] = int(eight_ball_config["question_length_limit"])
+        self.EIGHT_BALL_RESPONSE_WRAP_WIDTH: Final[int] = int(eight_ball_config["response_wrap_width"])
 
-    # 8ball constants
-    EIGHT_BALL_QUESTION_LENGTH_LIMIT = 120
-    EIGHT_BALL_RESPONSE_WRAP_WIDTH = 30
-
-    # Bookmark constants
-    ADD_BOOKMARK = "🔖"
-    REMOVE_BOOKMARK = "🗑️"
+        bookmark_config: dict[str, Any] = data["bookmark_config"]
+        self.ADD_BOOKMARK: Final[str] = str(bookmark_config["add_emoji"])
+        self.REMOVE_BOOKMARK: Final[str] = str(bookmark_config["remove_emoji"])
 
 
 CONST = Constants()
