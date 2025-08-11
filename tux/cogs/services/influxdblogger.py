@@ -9,6 +9,7 @@ from loguru import logger
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.utils.config import CONFIG
+from tux.utils.task_manager import CriticalTaskConfig, TaskPriority
 
 
 class InfluxLogger(commands.Cog):
@@ -20,8 +21,11 @@ class InfluxLogger(commands.Cog):
 
         if self.init_influx():
             self.logger.start()
+            logger.info("InfluxDB logger initialized successfully")
         else:
             logger.warning("InfluxDB logger failed to init. Check .env configuration if you want to use it.")
+            # Don't start the task if InfluxDB is not configured
+            # The cog will remain loaded but the task won't run
 
     def init_influx(self) -> bool:
         """Initialize InfluxDB client for metrics logging.
@@ -42,6 +46,19 @@ class InfluxLogger(commands.Cog):
             return True
         return False
 
+    def get_critical_tasks(self) -> list[CriticalTaskConfig]:
+        """Get critical tasks for this cog.
+
+        Returns
+        -------
+        list[CriticalTaskConfig]
+            List of critical task configurations, or empty list if not functional
+        """
+        # Only register the task if InfluxDB is properly configured
+        if self.influx_write_api is not None:
+            return [CriticalTaskConfig("influx_db_logger", "InfluxLogger", "logger", TaskPriority.LOW)]
+        return []
+
     @tasks.loop(seconds=60)
     async def logger(self) -> None:
         """Log statistics to InfluxDB at regular intervals.
@@ -49,7 +66,8 @@ class InfluxLogger(commands.Cog):
         Collects data from various database models and writes metrics to InfluxDB.
         """
         if not self.influx_write_api:
-            logger.warning("InfluxDB writer not initialized, skipping metrics collection")
+            logger.warning("InfluxDB writer not initialized, stopping task")
+            self.logger.stop()
             return
 
         influx_bucket = "tux stats"

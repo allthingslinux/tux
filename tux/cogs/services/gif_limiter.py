@@ -7,6 +7,7 @@ from discord.ext import commands, tasks
 
 from tux.bot import Tux
 from tux.utils.config import CONFIG
+from tux.utils.task_manager import CriticalTaskConfig, TaskPriority
 
 
 class GifLimiter(commands.Cog):
@@ -146,6 +147,16 @@ class GifLimiter(commands.Cog):
     async def cog_unload(self) -> None:
         """Cancel the background task when the cog is unloaded."""
         self.old_gif_remover.cancel()
+
+    def get_critical_tasks(self) -> list[CriticalTaskConfig]:
+        """Get critical tasks for this cog.
+
+        Returns
+        -------
+        list[CriticalTaskConfig]
+            List of critical task configurations
+        """
+        return [CriticalTaskConfig("old_gif_remover", "GifLimiter", "old_gif_remover", TaskPriority.NORMAL)]
 
 
 async def setup(bot: Tux) -> None:
