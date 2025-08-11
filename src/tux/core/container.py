@@ -54,7 +54,7 @@ class ServiceContainer:
         """Initialize an empty service container."""
         self._services: dict[type, ServiceDescriptor] = {}
         self._singleton_instances: dict[type, Any] = {}
-        self._resolution_stack: set[type] = set()
+        self._resolution_stack: list[type] = []
 
     def register_singleton(self, service_type: type[T], implementation: type[T] | None = None) -> "ServiceContainer":
         """Register a service as a singleton.
@@ -162,6 +162,9 @@ class ServiceContainer:
 
         try:
             result = self._resolve_service(service_type)
+        except ServiceResolutionError:
+            # Preserve detailed resolution error messages
+            raise
         except Exception as e:
             logger.error(f"Failed to resolve {service_type.__name__}: {e}")
             error_msg = f"Cannot resolve {service_type.__name__}"
@@ -232,27 +235,28 @@ class ServiceContainer:
         descriptor = self._services[service_type]
 
         # Return existing instance for singletons
-        if descriptor.lifetime == ServiceLifetime.SINGLETON:
-            if service_type in self._singleton_instances:
-                return self._singleton_instances[service_type]
-
-            # If we have a pre-registered instance, return it
-            if descriptor.instance is not None:
-                return descriptor.instance
+        if descriptor.lifetime == ServiceLifetime.SINGLETON and service_type in self._singleton_instances:
+            return self._singleton_instances[service_type]
 
         # Create new instance
-        self._resolution_stack.add(service_type)
-
+        self._resolution_stack.append(service_type)
         try:
             instance = self._create_instance(descriptor)
-
+        except Exception as e:
+            stack_trace = " -> ".join([t.__name__ for t in self._resolution_stack])
+            log_msg = f"Failed to resolve {service_type.__name__}: {e}\nResolution stack: {stack_trace}"
+            logger.error(log_msg)
+            error_msg = f"Cannot resolve {service_type.__name__} (resolution stack: {stack_trace})"
+            raise ServiceResolutionError(error_msg) from e
+        else:
             # Cache singleton instances
             if descriptor.lifetime == ServiceLifetime.SINGLETON:
                 self._singleton_instances[service_type] = instance
-
             return instance
         finally:
-            self._resolution_stack.remove(service_type)
+            # Pop the last pushed type to preserve order semantics
+            if self._resolution_stack:
+                self._resolution_stack.pop()
 
     def _create_instance(self, descriptor: ServiceDescriptor) -> Any:
         """Create a new instance of a service.
@@ -303,6 +307,12 @@ class ServiceContainer:
                     kwargs[param.name] = dependency
             elif param.kind == inspect.Parameter.KEYWORD_ONLY:
                 kwargs[param.name] = dependency
+            elif param.kind == inspect.Parameter.VAR_POSITIONAL:
+                msg = f"Constructor parameter '*{param.name}' in {impl_type.__name__} is not supported by the DI container"
+                raise ServiceResolutionError(msg)
+            elif param.kind == inspect.Parameter.VAR_KEYWORD:
+                msg = f"Constructor parameter '**{param.name}' in {impl_type.__name__} is not supported by the DI container"
+                raise ServiceResolutionError(msg)
 
         # Create the instance
         try:
