@@ -593,12 +593,13 @@ class SentryManager:
         if not self.is_initialized:
             return
 
+        # Always include public Discord user fields
         user_data: dict[str, Any] = {
             "id": str(user.id),
             "username": user.name,
-            "display_name": user.display_name,
             "bot": user.bot,
-            "created_at": user.created_at.isoformat(),
+            "display_name": getattr(user, "display_name", user.name),
+            "created_at": (user.created_at.isoformat() if user.created_at else None),
         }
 
         # Add member-specific data if available
@@ -608,7 +609,9 @@ class SentryManager:
                 "guild_name": user.guild.name,
                 "nick": user.nick,
                 "joined_at": user.joined_at.isoformat() if user.joined_at else None,
-                "roles": [role.name for role in user.roles[1:]],  # Exclude @everyone
+                "roles": [
+                    role.name for role in (user.roles[1:] if hasattr(user, "roles") else [])
+                ],  # Exclude @everyone
                 "premium_since": user.premium_since.isoformat() if user.premium_since else None,
             }
             user_data |= member_data
