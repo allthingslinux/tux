@@ -1,4 +1,13 @@
-"""TuxApp: Orchestration and lifecycle management for the Tux Discord bot."""
+"""Tux application entrypoint and lifecycle utilities.
+
+This module provides the orchestration necessary to run the Tux Discord bot,
+including:
+
+- Command prefix resolution based on per-guild configuration
+- Signal handling for graceful shutdown
+- Validation of runtime configuration
+- Structured startup/shutdown flow with Sentry integration
+"""
 
 import asyncio
 import signal
@@ -8,47 +17,86 @@ import discord
 from loguru import logger
 
 from tux.core.bot import Tux
-from tux.core.interfaces import IDatabaseService
 from tux.help import TuxHelp
+from tux.services.database.utils import get_db_controller_from
 from tux.services.sentry_manager import SentryManager
 from tux.shared.config.settings import CONFIG
 
 
 async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
-    """Resolve the command prefix for a guild or use the default prefix."""
+    """Resolve the command prefix for a guild.
+
+    Parameters
+    ----------
+    bot : Tux
+        The running bot instance.
+    message : discord.Message
+        The incoming message used to determine guild context.
+
+    Returns
+    -------
+    list[str]
+        A 1-item list containing the resolved prefix. Falls back to
+        `CONFIG.DEFAULT_PREFIX` when the guild is unavailable or the database
+        cannot be resolved.
+    """
+    if not message.guild:
+        return [CONFIG.DEFAULT_PREFIX]
+
     prefix: str | None = None
-    if message.guild:
-        try:
-            container = getattr(bot, "container", None)
-            if container is None:
-                logger.error("Service container missing on bot; DI is required for prefix resolution")
-            else:
-                db_service = container.get_optional(IDatabaseService)
-                if db_service is None:
-                    logger.warning("IDatabaseService not available; using default prefix")
-                else:
-                    controller = db_service.get_controller()
-                    prefix = await controller.guild_config.get_guild_prefix(message.guild.id)
-        except Exception as e:
-            logger.error(f"Error getting guild prefix: {e}")
+
+    try:
+        controller = get_db_controller_from(bot, fallback_to_direct=False)
+        if controller is None:
+            logger.warning("Database unavailable; using default prefix")
+        else:
+            prefix = await controller.guild_config.get_guild_prefix(message.guild.id)
+
+    except Exception as e:
+        logger.error(f"Error getting guild prefix: {e}")
+
     return [prefix or CONFIG.DEFAULT_PREFIX]
 
 
 class TuxApp:
-    """Orchestrates the startup, shutdown, and environment for the Tux bot."""
+    """Application wrapper that manages Tux bot lifecycle.
+
+    This class encapsulates setup, run, and shutdown phases of the bot,
+    providing consistent signal handling and configuration validation.
+    """
 
     def __init__(self):
-        """Initialize the TuxApp with no bot instance yet."""
+        """Initialize the application state.
+
+        Notes
+        -----
+        The bot instance is not created until :meth:`start` to ensure the
+        event loop and configuration are ready.
+        """
         self.bot: Tux | None = None
 
     def run(self) -> None:
-        """Run the Tux bot application (entrypoint for CLI)."""
+        """Run the Tux bot application.
+
+        This is the synchronous entrypoint typically invoked by the CLI.
+        """
         asyncio.run(self.start())
 
-    def setup_signals(self, loop: asyncio.AbstractEventLoop) -> None:
-        """Set up signal handlers for graceful shutdown."""
+    @staticmethod
+    def setup_signals(loop: asyncio.AbstractEventLoop) -> None:
+        """Register signal handlers for graceful shutdown.
 
-        # Prefer event-loop handlers for portability
+        Parameters
+        ----------
+        loop : asyncio.AbstractEventLoop
+            The active event loop on which to register handlers.
+
+        Notes
+        -----
+        Uses ``loop.add_signal_handler`` where available, falling back to the
+        ``signal`` module on platforms that do not support it (e.g. Windows).
+        """
+
         def _sigterm() -> None:
             SentryManager.report_signal(signal.SIGTERM, None)
 
@@ -58,6 +106,7 @@ class TuxApp:
         try:
             loop.add_signal_handler(signal.SIGTERM, _sigterm)
             loop.add_signal_handler(signal.SIGINT, _sigint)
+
         except NotImplementedError:
             # Fallback for platforms that do not support add_signal_handler (e.g., Windows)
             signal.signal(signal.SIGTERM, SentryManager.report_signal)
@@ -68,26 +117,26 @@ class TuxApp:
                 "Warning: Signal handling is limited on Windows. Some signals may not be handled as expected.",
             )
 
-    def validate_config(self) -> bool:
-        """Validate that all required configuration is present."""
-        if not CONFIG.BOT_TOKEN:
-            logger.critical("No bot token provided. Set DEV_BOT_TOKEN or PROD_BOT_TOKEN in your .env file.")
-            return False
-        return True
-
     async def start(self) -> None:
-        """Start the Tux bot, handling setup, errors, and shutdown."""
+        """Start the Tux bot, managing setup and error handling.
+
+        This method initializes Sentry, registers signal handlers, validates
+        configuration, constructs the bot, and begins the Discord connection.
+        """
+
         # Initialize Sentry via façade
         SentryManager.setup()
 
         # Setup signals via event loop
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         self.setup_signals(loop)
 
-        if not self.validate_config():
+        if not CONFIG.BOT_TOKEN:
+            logger.critical("No bot token provided. Set DEV_BOT_TOKEN or PROD_BOT_TOKEN in your .env file.")
             return
 
         owner_ids = {CONFIG.BOT_OWNER_ID}
+
         if CONFIG.ALLOW_SYSADMINS_EVAL:
             logger.warning(
                 "⚠️ Eval is enabled for sysadmins, this is potentially dangerous; see settings.yml.example for more info.",
@@ -114,16 +163,19 @@ class TuxApp:
             logger.info("Shutdown requested (KeyboardInterrupt)")
         except Exception as e:
             logger.critical(f"Bot failed to start: {e}")
-            await self.shutdown()
         finally:
             await self.shutdown()
 
     async def shutdown(self) -> None:
-        """Gracefully shut down the bot and flush Sentry."""
+        """Gracefully shut down the bot and flush telemetry.
+
+        Ensures the bot client is closed and Sentry is flushed asynchronously
+        before returning.
+        """
+
         if self.bot and not self.bot.is_closed():
             await self.bot.shutdown()
 
-        # Asynchronous flush
         await SentryManager.flush_async()
 
         logger.info("Shutdown complete")
