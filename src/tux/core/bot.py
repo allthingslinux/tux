@@ -11,14 +11,15 @@ import contextlib
 from typing import Any
 
 import discord
-import sentry_sdk
-from discord.ext import commands, tasks
+from discord.ext import commands
 from loguru import logger
 from rich.console import Console
 
 from tux.core.cog_loader import CogLoader
 from tux.core.container import ServiceContainer
+from tux.core.interfaces import IDatabaseService
 from tux.core.service_registry import ServiceRegistry
+from tux.core.task_monitor import TaskMonitor
 from tux.services.database.client import db
 from tux.services.emoji_manager import EmojiManager
 from tux.services.sentry_manager import SentryManager
@@ -33,9 +34,6 @@ from tux.services.tracing import (
 from tux.shared.config.env import is_dev_mode
 from tux.shared.config.settings import Config
 from tux.ui.banner import create_banner
-
-# Create console for rich output
-console = Console(stderr=True, force_terminal=True)
 
 # Re-export the T type for backward compatibility
 __all__ = ["ContainerInitializationError", "DatabaseConnectionError", "Tux"]
@@ -54,16 +52,20 @@ class ContainerInitializationError(RuntimeError):
 
 
 class Tux(commands.Bot):
-    """
-    Main bot class for Tux, extending discord.py's Bot.
+    """Main bot class for Tux, extending ``discord.py``'s ``commands.Bot``.
 
-    Handles setup, cog loading, error handling, Sentry tracing, and resource cleanup.
+    Responsibilities
+    ----------------
+    - Connect to the database and validate readiness
+    - Initialize the DI container and load cogs/extensions
+    - Configure Sentry tracing and enrich spans
+    - Start background task monitoring and perform graceful shutdown
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the Tux bot and start setup process."""
         super().__init__(*args, **kwargs)
-        # Core state
+        # --- Core state ----------------------------------------------------
         self.is_shutting_down: bool = False
         self.setup_complete: bool = False
         self.start_time: float | None = None
@@ -71,15 +73,19 @@ class Tux(commands.Bot):
         self._emoji_manager_initialized = False
         self._hot_reload_loaded = False
         self._banner_logged = False
-        self._startup_task = None
+        self._startup_task: asyncio.Task[None] | None = None
         self._commands_instrumented = False
 
+        # Background task monitor (encapsulates loops/cleanup)
+        self.task_monitor = TaskMonitor(self)
+
+        # --- Integration points -------------------------------------------
         # Dependency injection container
         self.container: ServiceContainer | None = None
-
         # Sentry manager instance for error handling and context utilities
         self.sentry_manager: SentryManager = SentryManager()
 
+        # UI / misc
         self.emoji_manager = EmojiManager(self)
         self.console = Console(stderr=True, force_terminal=True)
         self.uptime = discord.utils.utcnow().timestamp()
@@ -89,28 +95,38 @@ class Tux(commands.Bot):
         self.setup_task.add_done_callback(self._setup_callback)
 
     async def setup(self) -> None:
-        """Set up the bot: connect to database, load extensions, and start monitoring."""
+        """Perform one-time bot setup.
+
+        Steps
+        -----
+        - Connect to the database and validate connection
+        - Initialize and validate DI container
+        - Load extensions and cogs
+        - Initialize hot reload (if enabled)
+        - Start background task monitoring
+        """
         try:
+            # High-level setup pipeline with tracing
             with start_span("bot.setup", "Bot setup process") as span:
                 set_setup_phase_tag(span, "starting")
                 await self._setup_database()
                 set_setup_phase_tag(span, "database", "finished")
                 await self._setup_container()
                 set_setup_phase_tag(span, "container", "finished")
-                await self._load_extensions()
+                await self._load_drop_in_extensions()
                 set_setup_phase_tag(span, "extensions", "finished")
                 await self._load_cogs()
                 set_setup_phase_tag(span, "cogs", "finished")
                 await self._setup_hot_reload()
                 set_setup_phase_tag(span, "hot_reload", "finished")
-                self._start_monitoring()
+                self.task_monitor.start()
                 set_setup_phase_tag(span, "monitoring", "finished")
 
         except Exception as e:
             logger.critical(f"Critical error during setup: {e}")
 
-            if sentry_sdk.is_initialized():
-                sentry_sdk.set_context("setup_failure", {"error": str(e), "error_type": type(e).__name__})
+            if self.sentry_manager.is_initialized:
+                self.sentry_manager.set_context("setup_failure", {"error": str(e), "error_type": type(e).__name__})
             capture_exception_safe(e)
 
             await self.shutdown()
@@ -121,15 +137,29 @@ class Tux(commands.Bot):
         with start_span("bot.database_connect", "Setting up database connection") as span:
             logger.info("Setting up database connection...")
 
+            def _raise_db_connection_error() -> None:
+                raise DatabaseConnectionError(DatabaseConnectionError.CONNECTION_FAILED)
+
             try:
-                await db.connect()
-                self._validate_db_connection()
+                # Prefer DI service; fall back to shared client early in startup
+                db_service = self.container.get_optional(IDatabaseService) if self.container else None
 
-                span.set_tag("db.connected", db.is_connected())
-                span.set_tag("db.registered", db.is_registered())
+                if db_service is None:
+                    await db.connect()
+                    self._validate_db_connection()
+                    connected, registered = db.is_connected(), db.is_registered()
 
-                logger.info(f"Database connected: {db.is_connected()}")
-                logger.info(f"Database models registered: {db.is_registered()}")
+                else:
+                    await db_service.connect()
+                    connected, registered = db_service.is_connected(), db_service.is_registered()
+                    if not (connected and registered):
+                        _raise_db_connection_error()
+
+                # Minimal telemetry for connection health
+                span.set_tag("db.connected", connected)
+                span.set_tag("db.registered", registered)
+                logger.info(f"Database connected: {connected}")
+                logger.info(f"Database models registered: {registered}")
 
             except Exception as e:
                 set_span_error(span, e, "db_error")
@@ -149,7 +179,7 @@ class Tux(commands.Bot):
                     error_msg = "Container validation failed - missing required services"
                     self._raise_container_validation_error(error_msg)
 
-                # Log registered services for debugging
+                # Log registered services for debugging/observability
                 registered_services = ServiceRegistry.get_registered_services(self.container)
                 logger.info(f"Container initialized with services: {', '.join(registered_services)}")
 
@@ -161,22 +191,22 @@ class Tux(commands.Bot):
                 set_span_error(span, e, "container_error")
                 logger.error(f"Failed to initialize dependency injection container: {e}")
 
-                if sentry_sdk.is_initialized():
-                    sentry_sdk.set_context(
+                if self.sentry_manager.is_initialized:
+                    self.sentry_manager.set_context(
                         "container_failure",
                         {
                             "error": str(e),
                             "error_type": type(e).__name__,
                         },
                     )
-                    sentry_sdk.capture_exception(e)
+                    self.sentry_manager.capture_exception(e)
 
                 error_msg = ContainerInitializationError.INITIALIZATION_FAILED
                 raise ContainerInitializationError(error_msg) from e
 
-    async def _load_extensions(self) -> None:
-        """Load bot extensions and cogs, including Jishaku for debugging."""
-        with start_span("bot.load_jishaku", "Loading jishaku debug extension") as span:
+    async def _load_drop_in_extensions(self) -> None:
+        """Load optional drop-in extensions (e.g., Jishaku)."""
+        with start_span("bot.load_drop_in_extensions", "Loading drop-in extensions") as span:
             try:
                 await self.load_extension("jishaku")
                 logger.info("Successfully loaded jishaku extension")
@@ -187,11 +217,6 @@ class Tux(commands.Bot):
                 span.set_tag("jishaku.loaded", False)
                 span.set_data("error", str(e))
 
-    def _start_monitoring(self) -> None:
-        """Start the background task monitoring loop."""
-        self._monitor_tasks_loop.start()
-        logger.debug("Task monitoring started")
-
     @staticmethod
     def _validate_db_connection() -> None:
         """Raise if the database is not connected or registered."""
@@ -200,10 +225,12 @@ class Tux(commands.Bot):
 
     def _validate_container(self) -> None:
         """Raise if the dependency injection container is not properly initialized."""
+        # Ensure container object exists before attempting to use it
         if self.container is None:
             error_msg = "Container is not initialized"
             raise ContainerInitializationError(error_msg)
 
+        # Validate registered services and basic invariants via the registry
         if not ServiceRegistry.validate_container(self.container):
             error_msg = "Container validation failed"
             raise ContainerInitializationError(error_msg)
@@ -213,17 +240,28 @@ class Tux(commands.Bot):
         raise ContainerInitializationError(message)
 
     def _setup_callback(self, task: asyncio.Task[None]) -> None:
-        """Handle setup task completion and update setup_complete flag."""
+        """Handle setup completion and update ``setup_complete`` flag.
+
+        Parameters
+        ----------
+        task : asyncio.Task[None]
+            The setup task whose result should be observed.
+        """
         try:
+            # Accessing the task's result will re-raise any exception that occurred
+            # during asynchronous setup, allowing unified error handling below.
             task.result()
+
+            # Mark setup as successful and emit a concise info log
             self.setup_complete = True
             logger.info("Bot setup completed successfully")
 
-            if sentry_sdk.is_initialized():
-                sentry_sdk.set_tag("bot.setup_complete", True)
+            # Record success and container details in Sentry for observability
+            if self.sentry_manager.is_initialized:
+                self.sentry_manager.set_tag("bot.setup_complete", True)
                 if self.container:
                     registered_services = ServiceRegistry.get_registered_services(self.container)
-                    sentry_sdk.set_context(
+                    self.sentry_manager.set_context(
                         "container_info",
                         {
                             "initialized": True,
@@ -233,21 +271,23 @@ class Tux(commands.Bot):
                     )
 
         except Exception as e:
+            # Any exception here indicates setup failed (DB/container/cogs/etc.)
             logger.critical(f"Setup failed: {e}")
             self.setup_complete = False
 
-            if sentry_sdk.is_initialized():
-                sentry_sdk.set_tag("bot.setup_complete", False)
-                sentry_sdk.set_tag("bot.setup_failed", True)
+            if self.sentry_manager.is_initialized:
+                # Tag failure and, when applicable, highlight container init problems
+                self.sentry_manager.set_tag("bot.setup_complete", False)
+                self.sentry_manager.set_tag("bot.setup_failed", True)
 
-                # Add specific context for container failures
                 if isinstance(e, ContainerInitializationError):
-                    sentry_sdk.set_tag("container.initialization_failed", True)
+                    self.sentry_manager.set_tag("container.initialization_failed", True)
 
-                sentry_sdk.capture_exception(e)
+                # Send the exception to Sentry with the tags above
+                self.sentry_manager.capture_exception(e)
 
     async def setup_hook(self) -> None:
-        """discord.py setup_hook: one-time async setup before connecting to Discord."""
+        """One-time async setup before connecting to Discord (``discord.py`` hook)."""
         if not self._emoji_manager_initialized:
             await self.emoji_manager.init()
             self._emoji_manager_initialized = True
@@ -255,8 +295,15 @@ class Tux(commands.Bot):
         if self._startup_task is None or self._startup_task.done():
             self._startup_task = self.loop.create_task(self._post_ready_startup())
 
-    async def _post_ready_startup(self):
-        """Run after the bot is fully ready: log banner, set Sentry stats."""
+    async def _post_ready_startup(self) -> None:
+        """Run after the bot is fully ready.
+
+        Notes
+        -----
+        - Waits for READY and internal setup
+        - Logs the startup banner
+        - Instruments commands (Sentry) and records basic bot stats
+        """
         await self.wait_until_ready()  # Wait for Discord connection and READY event
 
         # Also wait for internal bot setup (cogs, db, etc.) to complete
@@ -270,7 +317,7 @@ class Tux(commands.Bot):
             self._banner_logged = True
 
         # Instrument commands once, after cogs are loaded and bot is ready
-        if not self._commands_instrumented and sentry_sdk.is_initialized():
+        if not self._commands_instrumented and self.sentry_manager.is_initialized:
             try:
                 instrument_bot_commands(self)
                 self._commands_instrumented = True
@@ -279,22 +326,29 @@ class Tux(commands.Bot):
                 logger.error(f"Failed to instrument commands for Sentry: {e}")
                 capture_exception_safe(e)
 
-        if sentry_sdk.is_initialized():
-            sentry_sdk.set_context(
-                "bot_stats",
-                {
-                    "guild_count": len(self.guilds),
-                    "user_count": len(self.users),
-                    "channel_count": sum(len(g.channels) for g in self.guilds),
-                    "uptime": discord.utils.utcnow().timestamp() - (self.start_time or 0),
-                },
-            )
+        self._record_bot_stats()
+
+    def _record_bot_stats(self) -> None:
+        """Record basic bot stats to Sentry context (if available)."""
+        if not self.sentry_manager.is_initialized:
+            return
+        self.sentry_manager.set_context(
+            "bot_stats",
+            {
+                "guild_count": len(self.guilds),
+                "user_count": len(self.users),
+                "channel_count": sum(len(g.channels) for g in self.guilds),
+                "uptime": discord.utils.utcnow().timestamp() - (self.start_time or 0),
+            },
+        )
 
     async def on_ready(self) -> None:
-        """Handle bot ready event."""
+        """Handle the Discord READY event."""
         await self._wait_for_setup()
+        await self._set_presence()
 
-        # Set bot status
+    async def _set_presence(self) -> None:
+        """Set the bot's presence (activity and status)."""
         activity = discord.Activity(type=discord.ActivityType.watching, name="for /help")
         await self.change_presence(activity=activity, status=discord.Status.online)
 
@@ -302,18 +356,15 @@ class Tux(commands.Bot):
         """Log and report when the bot disconnects from Discord."""
         logger.warning("Bot has disconnected from Discord.")
 
-        if sentry_sdk.is_initialized():
-            with sentry_sdk.push_scope() as scope:
-                scope.set_tag("event_type", "disconnect")
-                scope.set_level("info")
-                sentry_sdk.capture_message(
-                    "Bot disconnected from Discord, this happens sometimes and is fine as long as it's not happening too often",
-                )
-
-    # (Manual command transaction helpers removed; commands are instrumented automatically.)
+        if self.sentry_manager.is_initialized:
+            self.sentry_manager.set_tag("event_type", "disconnect")
+            self.sentry_manager.capture_message(
+                "Bot disconnected from Discord, this happens sometimes and is fine as long as it's not happening too often",
+                level="info",
+            )
 
     async def _wait_for_setup(self) -> None:
-        """Wait for setup to complete if not already done."""
+        """Wait for setup to complete, if not already done."""
         if self.setup_task and not self.setup_task.done():
             with start_span("bot.wait_setup", "Waiting for setup to complete"):
                 try:
@@ -325,59 +376,10 @@ class Tux(commands.Bot):
 
                     await self.shutdown()
 
-    @tasks.loop(seconds=60)
-    async def _monitor_tasks_loop(self) -> None:
-        """Monitor and clean up running tasks every 60 seconds."""
-        with start_span("bot.monitor_tasks", "Monitoring async tasks"):
-            try:
-                all_tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
-                tasks_by_type = self._categorize_tasks(all_tasks)
-                await self._process_finished_tasks(tasks_by_type)
-
-            except Exception as e:
-                logger.error(f"Task monitoring failed: {e}")
-                capture_exception_safe(e)
-
-                msg = "Critical failure in task monitoring system"
-                raise RuntimeError(msg) from e
-
-    def _categorize_tasks(self, tasks: list[asyncio.Task[Any]]) -> dict[str, list[asyncio.Task[Any]]]:
-        """Categorize tasks by their type for monitoring/cleanup."""
-        tasks_by_type: dict[str, list[asyncio.Task[Any]]] = {
-            "SCHEDULED": [],
-            "GATEWAY": [],
-            "SYSTEM": [],
-            "COMMAND": [],
-        }
-
-        for task in tasks:
-            if task.done():
-                continue
-
-            name = task.get_name()
-
-            if name.startswith("discord-ext-tasks:"):
-                tasks_by_type["SCHEDULED"].append(task)
-            elif name.startswith(("discord.py:", "discord-voice-", "discord-gateway-")):
-                tasks_by_type["GATEWAY"].append(task)
-            elif "command_" in name.lower():
-                tasks_by_type["COMMAND"].append(task)
-            else:
-                tasks_by_type["SYSTEM"].append(task)
-
-        return tasks_by_type
-
-    async def _process_finished_tasks(self, tasks_by_type: dict[str, list[asyncio.Task[Any]]]) -> None:
-        """Process and clean up finished tasks."""
-        for task_list in tasks_by_type.values():
-            for task in task_list:
-                if task.done():
-                    with contextlib.suppress(asyncio.CancelledError):
-                        await task
-
     async def shutdown(self) -> None:
         """Gracefully shut down the bot and clean up resources."""
         with start_transaction("bot.shutdown", "Bot shutdown process") as transaction:
+            # Idempotent shutdown guard
             if self.is_shutting_down:
                 logger.info("Shutdown already in progress. Exiting.")
                 transaction.set_data("already_shutting_down", True)
@@ -402,7 +404,10 @@ class Tux(commands.Bot):
             logger.info("Bot shutdown complete.")
 
     async def _handle_setup_task(self) -> None:
-        """Handle setup task during shutdown."""
+        """Handle the setup task during shutdown.
+
+        Cancels the setup task when still pending and waits for it to finish.
+        """
         with start_span("bot.handle_setup_task", "Handling setup task during shutdown"):
             if self.setup_task and not self.setup_task.done():
                 self.setup_task.cancel()
@@ -412,74 +417,13 @@ class Tux(commands.Bot):
 
     async def _cleanup_tasks(self) -> None:
         """Clean up all running tasks."""
-        with start_span("bot.cleanup_tasks", "Cleaning up running tasks"):
-            try:
-                await self._stop_task_loops()
-
-                all_tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
-                tasks_by_type = self._categorize_tasks(all_tasks)
-
-                await self._cancel_tasks(tasks_by_type)
-
-            except Exception as e:
-                logger.error(f"Error during task cleanup: {e}")
-                capture_exception_safe(e)
-
-    async def _stop_task_loops(self) -> None:
-        """Stop all task loops in cogs."""
-        with start_span("bot.stop_task_loops", "Stopping task loops"):
-            for cog_name in self.cogs:
-                cog = self.get_cog(cog_name)
-                if not cog:
-                    continue
-
-                for name, value in cog.__dict__.items():
-                    if isinstance(value, tasks.Loop):
-                        try:
-                            value.stop()
-                            logger.debug(f"Stopped task loop {cog_name}.{name}")
-
-                        except Exception as e:
-                            logger.error(f"Error stopping task loop {cog_name}.{name}: {e}")
-
-            if hasattr(self, "_monitor_tasks_loop") and self._monitor_tasks_loop.is_running():
-                self._monitor_tasks_loop.stop()
-
-    async def _cancel_tasks(self, tasks_by_type: dict[str, list[asyncio.Task[Any]]]) -> None:
-        """Cancel tasks by category."""
-        with start_span("bot.cancel_tasks", "Cancelling tasks by category") as span:
-            for task_type, task_list in tasks_by_type.items():
-                if not task_list:
-                    continue
-
-                task_names: list[str] = []
-
-                for t in task_list:
-                    name = t.get_name() or "unnamed"
-                    if name in ("None", "unnamed"):
-                        coro = t.get_coro()
-                        name = getattr(coro, "__qualname__", str(coro))
-                    task_names.append(name)
-                names = ", ".join(task_names)
-
-                logger.debug(f"Cancelling {len(task_list)} {task_type}: {names}")
-                span.set_data(f"tasks.{task_type.lower()}", task_names)
-
-                for task in task_list:
-                    task.cancel()
-
-                results = await asyncio.gather(*task_list, return_exceptions=True)
-
-                for result in results:
-                    if isinstance(result, Exception) and not isinstance(result, asyncio.CancelledError):
-                        logger.error(f"Exception during task cancellation for {task_type}: {result!r}")
-
-                logger.debug(f"Cancelled {task_type}")
+        await self.task_monitor.cleanup_tasks()
 
     async def _close_connections(self) -> None:
         """Close Discord and database connections."""
         with start_span("bot.close_connections", "Closing connections") as span:
             try:
+                # Discord gateway/session
                 logger.debug("Closing Discord connections.")
 
                 await self.close()
@@ -494,9 +438,13 @@ class Tux(commands.Bot):
                 capture_exception_safe(e)
 
             try:
+                # Database connection via DI when available
                 logger.debug("Closing database connections.")
 
-                if db.is_connected():
+                db_service = self.container.get(IDatabaseService) if self.container else None
+                if db_service is not None:
+                    await db_service.disconnect()
+                elif db.is_connected():
                     await db.disconnect()
 
                     logger.debug("Database connections closed.")
@@ -521,8 +469,6 @@ class Tux(commands.Bot):
                 # The container doesn't need explicit cleanup, just clear the reference
                 self.container = None
                 logger.debug("Dependency injection container cleaned up")
-            else:
-                logger.debug("No container to clean up")
 
     async def _load_cogs(self) -> None:
         """Load bot cogs using CogLoader."""
@@ -534,13 +480,17 @@ class Tux(commands.Bot):
                 span.set_tag("cogs_loaded", True)
 
                 # Load Sentry handler cog to enrich spans and handle command errors
-                try:
-                    await self.load_extension("tux.services.handlers.sentry")
+                sentry_ext = "tux.services.handlers.sentry"
+                if sentry_ext not in self.extensions:
+                    try:
+                        await self.load_extension(sentry_ext)
+                        span.set_tag("sentry_handler.loaded", True)
+                    except Exception as sentry_err:
+                        logger.warning(f"Failed to load Sentry handler: {sentry_err}")
+                        span.set_tag("sentry_handler.loaded", False)
+                        capture_exception_safe(sentry_err)
+                else:
                     span.set_tag("sentry_handler.loaded", True)
-                except Exception as sentry_err:
-                    logger.warning(f"Failed to load Sentry handler: {sentry_err}")
-                    span.set_tag("sentry_handler.loaded", False)
-                    capture_exception_safe(sentry_err)
 
             except Exception as e:
                 logger.critical(f"Error loading cogs: {e}")
@@ -563,7 +513,7 @@ class Tux(commands.Bot):
                 dev_mode=is_dev_mode(),
             )
 
-            console.print(banner)
+            self.console.print(banner)
 
     async def _setup_hot_reload(self) -> None:
         """Set up hot reload system after all cogs are loaded."""
