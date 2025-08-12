@@ -3,6 +3,7 @@ from typing import Any
 import discord
 
 from tux.core.interfaces import IDatabaseService
+from tux.services.database.utils import get_db_controller_from
 
 
 class ConfigSetPrivateLogs(discord.ui.View):
@@ -10,10 +11,8 @@ class ConfigSetPrivateLogs(discord.ui.View):
         controller = None
         if db_service is not None:
             controller = db_service.get_controller()
-        elif bot is not None and getattr(bot, "container", None) is not None:
-            resolved = bot.container.get_optional(IDatabaseService)
-            if resolved is not None:
-                controller = resolved.get_controller()
+        elif bot is not None:
+            controller = get_db_controller_from(bot, fallback_to_direct=False)
         if controller is None:
             message = "IDatabaseService not available. DI is required for ConfigSetPrivateLogs."
             raise RuntimeError(message)
@@ -86,10 +85,8 @@ class ConfigSetPublicLogs(discord.ui.View):
         controller = None
         if db_service is not None:
             controller = db_service.get_controller()
-        elif bot is not None and getattr(bot, "container", None) is not None:
-            resolved = bot.container.get_optional(IDatabaseService)
-            if resolved is not None:
-                controller = resolved.get_controller()
+        elif bot is not None:
+            controller = get_db_controller_from(bot, fallback_to_direct=False)
         if controller is None:
             message = "IDatabaseService not available. DI is required for ConfigSetPublicLogs."
             raise RuntimeError(message)
@@ -162,10 +159,8 @@ class ConfigSetChannels(discord.ui.View):
         controller = None
         if db_service is not None:
             controller = db_service.get_controller()
-        elif bot is not None and getattr(bot, "container", None) is not None:
-            resolved = bot.container.get_optional(IDatabaseService)
-            if resolved is not None:
-                controller = resolved.get_controller()
+        elif bot is not None:
+            controller = get_db_controller_from(bot, fallback_to_direct=False)
         if controller is None:
             message = "IDatabaseService not available. DI is required for ConfigSetChannels."
             raise RuntimeError(message)
