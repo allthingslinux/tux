@@ -63,22 +63,17 @@ class BaseCog(commands.Cog):
         Attempts to resolve and inject all available services. If any service
         injection fails, it will be logged; no legacy fallbacks are provided.
         """
-        logger.debug(f"[BaseCog] Starting service injection for {self.__class__.__name__}")
-        logger.debug(f"[BaseCog] Has container: {hasattr(self, '_container')}")
-
-        logger.debug(f"[BaseCog] Container type: {type(self._container).__name__}")
-        logger.debug(f"[BaseCog] Container state: {self._container}")
-
         # Inject services in order of dependency
         self._inject_database_service()
         self._inject_bot_service()
         self._inject_config_service()
 
-        logger.debug(f"[BaseCog] Completed service injection for {self.__class__.__name__}")
+        # Single summary log for this cog's injection results
         logger.debug(
-            f"[BaseCog] Services - db_service: {self.db_service is not None}, "
-            f"bot_service: {self.bot_service is not None}, "
-            f"config_service: {self.config_service is not None}",
+            f"[BaseCog] Injected services for {self.__class__.__name__} "
+            f"(db={self.db_service is not None}, "
+            f"bot={self.bot_service is not None}, "
+            f"config={self.config_service is not None})",
         )
 
     def _inject_database_service(self) -> None:
@@ -86,7 +81,7 @@ class BaseCog(commands.Cog):
         try:
             self.db_service = self._container.get_optional(IDatabaseService)
             if self.db_service:
-                logger.debug(f"Injected database service into {self.__class__.__name__}")
+                logger.trace(f"Injected database service into {self.__class__.__name__}")
             else:
                 logger.warning(f"Database service not available for {self.__class__.__name__}")
         except Exception as e:
@@ -94,21 +89,12 @@ class BaseCog(commands.Cog):
 
     def _inject_bot_service(self) -> None:
         """Inject the bot service."""
-        logger.debug(f"[BaseCog] Attempting to inject bot service for {self.__class__.__name__}")
-
-        logger.debug("[BaseCog] Container is available, trying to get IBotService")
         try:
-            logger.debug("[BaseCog] Calling container.get_optional(IBotService)")
             self.bot_service = self._container.get_optional(IBotService)
-            logger.debug(f"[BaseCog] container.get_optional(IBotService) returned: {self.bot_service}")
-
             if self.bot_service:
-                logger.debug(f"[BaseCog] Successfully injected bot service into {self.__class__.__name__}")
-                logger.debug(f"[BaseCog] Bot service type: {type(self.bot_service).__name__}")
+                logger.trace(f"[BaseCog] Injected bot service into {self.__class__.__name__}")
             else:
-                logger.warning(
-                    f"[BaseCog] Bot service not available for {self.__class__.__name__} (container returned None)",
-                )
+                logger.warning(f"[BaseCog] Bot service not available for {self.__class__.__name__}")
         except Exception as e:
             logger.error(f"[BaseCog] Bot service injection failed for {self.__class__.__name__}: {e}", exc_info=True)
 
@@ -117,7 +103,7 @@ class BaseCog(commands.Cog):
         try:
             self.config_service = self._container.get_optional(IConfigService)
             if self.config_service:
-                logger.debug(f"Injected config service into {self.__class__.__name__}")
+                logger.trace(f"Injected config service into {self.__class__.__name__}")
             else:
                 logger.warning(f"Config service not available for {self.__class__.__name__}")
         except Exception as e:
