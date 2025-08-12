@@ -8,7 +8,7 @@ from loguru import logger
 
 # --- Configuration Constants ---
 
-DEFAULT_EMOJI_ASSETS_PATH = Path(__file__).parents[2] / "assets" / "emojis"
+DEFAULT_EMOJI_ASSETS_PATH = Path(__file__).parents[3] / "assets" / "emojis"
 DOCKER_EMOJI_ASSETS_PATH = Path("/app/assets/emojis")
 DEFAULT_EMOJI_CREATE_DELAY = 1.0
 VALID_EMOJI_EXTENSIONS = [".png", ".gif", ".jpg", ".jpeg", ".webp"]
