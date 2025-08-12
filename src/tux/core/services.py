@@ -11,6 +11,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.services.database.client import db
 from tux.services.database.controllers import DatabaseController
 from tux.services.logger import setup_logging as setup_rich_logging
 from tux.services.wrappers.github import GithubService as GitHubWrapper
@@ -147,6 +148,23 @@ class DatabaseService:
             raise
         else:
             return value
+
+    async def connect(self) -> None:
+        """Establish the database connection using the shared client."""
+        await db.connect()
+
+    def is_connected(self) -> bool:
+        """Return whether the database client is connected."""
+        return db.is_connected()
+
+    def is_registered(self) -> bool:
+        """Return whether models are registered (auto-register follows connection)."""
+        return db.is_registered()
+
+    async def disconnect(self) -> None:
+        """Disconnect the database client if connected."""
+        if db.is_connected():
+            await db.disconnect()
 
     def _validate_operation(self, controller: DatabaseController, operation: str) -> None:
         """Validate that an operation exists on the controller.
