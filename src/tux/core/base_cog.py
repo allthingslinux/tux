@@ -1,16 +1,23 @@
-"""Enhanced base cog with automatic dependency injection support.
+"""Enhanced base cog with automatic dependency injection and usage generation.
 
-This module provides the `BaseCog` class that automatically injects services
-via the dependency injection container. Backward-compatibility fallbacks have
-been removed; cogs are expected to run with a configured service container.
+This module provides the `BaseCog` class that:
+- Injects services via the dependency injection container
+- Generates command usage strings from function signatures
+
+Backwards-compatibility fallbacks have been removed; cogs are expected to run
+with a configured service container.
 """
 
+from __future__ import annotations
+
+import inspect
 from typing import TYPE_CHECKING, Any
 
 from discord.ext import commands
 from loguru import logger
 
-from tux.core.interfaces import IBotService, IConfigService, IDatabaseService
+from tux.core.interfaces import IBotService, IConfigService, IDatabaseService, ILoggerService
+from tux.shared.functions import generate_usage as _generate_usage_shared
 
 if TYPE_CHECKING:
     from tux.core.types import Tux
@@ -27,9 +34,10 @@ class BaseCog(commands.Cog):
     - db_service: Database service for database operations
     - bot_service: Bot service for bot-related operations
     - config_service: Configuration service for accessing settings
+    - logger_service: Logger service for logging
     """
 
-    def __init__(self, bot: "Tux") -> None:
+    def __init__(self, bot: Tux) -> None:
         """Initialize the base cog with automatic service injection.
 
         Args:
@@ -43,6 +51,7 @@ class BaseCog(commands.Cog):
         self.db_service: IDatabaseService | None = None
         self.bot_service: IBotService | None = None
         self.config_service: IConfigService | None = None
+        self.logger_service: ILoggerService | None = None
         self._db_controller = None  # legacy attribute removed; kept for type stability only
 
         # Get the bot instance
@@ -57,6 +66,9 @@ class BaseCog(commands.Cog):
         # Attempt injection
         self._inject_services()
 
+        # Configure automatic usage strings for commands that do not set one
+        self._setup_command_usage()
+
     def _inject_services(self) -> None:
         """Inject services through the dependency injection container.
 
@@ -67,13 +79,15 @@ class BaseCog(commands.Cog):
         self._inject_database_service()
         self._inject_bot_service()
         self._inject_config_service()
+        self._inject_logger_service()
 
         # Single summary log for this cog's injection results
         logger.debug(
             f"[BaseCog] Injected services for {self.__class__.__name__} "
             f"(db={self.db_service is not None}, "
             f"bot={self.bot_service is not None}, "
-            f"config={self.config_service is not None})",
+            f"config={self.config_service is not None}, "
+            f"logger={self.logger_service is not None})",
         )
 
     def _inject_database_service(self) -> None:
@@ -108,6 +122,71 @@ class BaseCog(commands.Cog):
                 logger.warning(f"Config service not available for {self.__class__.__name__}")
         except Exception as e:
             logger.error(f"Config service injection failed for {self.__class__.__name__}: {e}")
+
+    def _inject_logger_service(self) -> None:
+        """Inject the logger service (optional)."""
+        try:
+            self.logger_service = self._container.get_optional(ILoggerService)
+            if self.logger_service:
+                logger.trace(f"Injected logger service into {self.__class__.__name__}")
+        except Exception as e:
+            logger.error(f"Logger service injection failed for {self.__class__.__name__}: {e}")
+
+    # ---------- Usage generation ----------
+    def _setup_command_usage(self) -> None:
+        """Generate usage strings for all commands on this cog when missing.
+
+        The generated usage follows the pattern:
+        "<qualified_name> <param tokens>"
+        where each required parameter is denoted as "<name: Type>" and optional
+        parameters are denoted as "[name: Type]". The prefix is intentionally
+        omitted because it's context-dependent and provided by `ctx.prefix`.
+        """
+        try:
+            for command in self.get_commands():
+                # Respect explicit usage if provided by the command
+                if getattr(command, "usage", None):
+                    continue
+                command.usage = self._generate_usage(command)
+        except Exception as e:
+            logger.debug(f"Failed to setup command usage for {self.__class__.__name__}: {e}")
+
+    def _generate_usage(self, command: commands.Command[Any, ..., Any]) -> str:
+        """Generate a usage string with flag support when available.
+
+        Detects a `flags` parameter annotated with a `commands.FlagConverter` subclass
+        and delegates to the shared usage generator for consistent formatting.
+        Fallbacks to simple positional/optional parameter rendering otherwise.
+        """
+        flag_converter: type[commands.FlagConverter] | None = None
+        try:
+            signature = inspect.signature(command.callback)  # type: ignore[attr-defined]
+            for name, param in signature.parameters.items():
+                if name != "flags":
+                    continue
+                ann = param.annotation
+                if (
+                    ann is not inspect.Signature.empty
+                    and isinstance(ann, type)
+                    and issubclass(
+                        ann,
+                        commands.FlagConverter,
+                    )
+                ):
+                    flag_converter = ann  # type: ignore[assignment]
+                    break
+        except Exception:
+            # If inspection fails, defer to simple name
+            return command.qualified_name
+
+        # Use the shared generator to keep behavior consistent across cogs
+        try:
+            return _generate_usage_shared(command, flag_converter)
+        except Exception:
+            # Final fallback: minimal usage string
+            return command.qualified_name
+
+    # (Embed helpers and error handling intentionally omitted as requested.)
 
     @property
     def db(self):
