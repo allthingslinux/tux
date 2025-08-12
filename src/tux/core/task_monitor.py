@@ -120,6 +120,7 @@ class TaskMonitor:
                 if not task_list:
                     continue
 
+                # Collect raw task names
                 task_names: list[str] = []
                 for t in task_list:
                     name = t.get_name() or "unnamed"
@@ -128,8 +129,35 @@ class TaskMonitor:
                         name = getattr(coro, "__qualname__", str(coro))
                     task_names.append(name)
 
-                logger.debug(f"Cancelling {len(task_list)} {task_type}: {', '.join(task_names)}")
+                # Provide full list to tracing span for diagnostics
                 span.set_data(f"tasks.{task_type.lower()}", task_names)
+
+                # Build concise preview for logs: collapse duplicates, truncate, and limit count
+                seen: dict[str, int] = {}
+                order: list[str] = []
+                for n in task_names:
+                    if n not in seen:
+                        seen[n] = 0
+                        order.append(n)
+                    seen[n] += 1
+
+                def _shorten(s: str, max_len: int = 60) -> str:
+                    return s if len(s) <= max_len else f"{s[: max_len - 1]}…"
+
+                display_entries: list[str] = []
+                for n in order:
+                    count = seen[n]
+                    short = _shorten(n)
+                    display_entries.append(f"{short}x{count}" if count > 1 else short)
+
+                max_items = 5
+                preview = display_entries[:max_items]
+                remainder = len(display_entries) - max_items
+                suffix = f" (+{remainder} more)" if remainder > 0 else ""
+
+                logger.debug(
+                    f"Cancelling {len(task_list)} {task_type}: {', '.join(preview)}{suffix}",
+                )
 
                 for task in task_list:
                     task.cancel()
