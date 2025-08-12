@@ -70,6 +70,22 @@ class IDatabaseService(Protocol):
         """
         ...
 
+    async def connect(self) -> None:
+        """Establish the database connection."""
+        ...
+
+    def is_connected(self) -> bool:
+        """Check if the database client is connected."""
+        ...
+
+    def is_registered(self) -> bool:
+        """Check if the database models are registered/ready."""
+        ...
+
+    async def disconnect(self) -> None:
+        """Close the database connection if connected."""
+        ...
+
 
 class IBotService(Protocol):
     """Protocol for bot service operations.
