@@ -29,38 +29,28 @@ from loguru import logger
 
 from tux.core.types import Tux
 from tux.services.database.controllers import DatabaseController
+from tux.services.database.utils import get_db_controller_from
 from tux.shared.config.settings import CONFIG
 from tux.shared.exceptions import AppCommandPermissionLevelError, PermissionLevelError
 
 
-class DatabaseControllerSingleton:
-    """Singleton class to manage database controller instance."""
-
-    _instance: DatabaseController | None = None
-
-    @classmethod
-    def get_instance(cls) -> DatabaseController:
-        """Get the database controller, initializing it if needed."""
-        if cls._instance is None:
-            cls._instance = DatabaseController()
-        return cls._instance
-
-
-def get_db_controller() -> DatabaseController:
-    """Get the database controller, initializing it if needed."""
-    return DatabaseControllerSingleton.get_instance()
+def _get_db_controller_from_source(source: commands.Context[Tux] | discord.Interaction) -> DatabaseController:
+    """Resolve a `DatabaseController` via shared DB utils (with fallback)."""
+    controller = get_db_controller_from(source, fallback_to_direct=True)
+    assert controller is not None  # fallback ensures non-None
+    return controller
 
 
 # T type is now imported from tux.core.types
 
 
-async def fetch_guild_config(guild_id: int) -> dict[str, Any]:
+async def fetch_guild_config(source: commands.Context[Tux] | discord.Interaction) -> dict[str, Any]:
     """Fetch all relevant guild config data in a single DB call.
 
     Parameters
     ----------
-    guild_id : int
-        The Discord guild ID to fetch configuration for.
+    source : commands.Context[Tux] | discord.Interaction
+        The context/interaction used to resolve the bot's DI container and guild ID.
 
     Returns
     -------
@@ -68,8 +58,9 @@ async def fetch_guild_config(guild_id: int) -> dict[str, Any]:
         Dictionary mapping permission level role keys to their corresponding role IDs.
         Keys are in format 'perm_level_{i}_role_id' where i ranges from 0 to 7.
     """
-    db_controller = get_db_controller()
-    config = await db_controller.guild_config.get_guild_config(guild_id)
+    assert source.guild is not None
+    db_controller = _get_db_controller_from_source(source)
+    config = await db_controller.guild_config.get_guild_config(source.guild.id)
     return {f"perm_level_{i}_role_id": getattr(config, f"perm_level_{i}_role_id", None) for i in range(8)}
 
 
@@ -107,7 +98,7 @@ async def has_permission(
         return lower_bound == 0
 
     author = source.author if isinstance(source, commands.Context) else source.user
-    guild_config = await fetch_guild_config(source.guild.id)
+    guild_config = await fetch_guild_config(source)
 
     roles = [guild_config[f"perm_level_{i}_role_id"] for i in range(lower_bound, min(higher_bound + 1, 8))]
     roles = [role for role in roles if role is not None]
@@ -152,7 +143,7 @@ async def level_to_name(
 
     assert source.guild
 
-    guild_config = await fetch_guild_config(source.guild.id)
+    guild_config = await fetch_guild_config(source)
     role_id = guild_config.get(f"perm_level_{level}_role_id")
 
     if role_id and (role := source.guild.get_role(role_id)):
