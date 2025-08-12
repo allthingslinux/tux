@@ -344,8 +344,8 @@ class CogLoader(commands.Cog):
 
         try:
             # Load handlers first (they have highest priority)
-            with enhanced_span("cog.load_handlers", "Load handler cogs"):
-                await cog_loader.load_cogs_from_folder(folder_name="handlers")
+            with enhanced_span("cog.load_handlers", "Load handlers"):
+                await cog_loader.load_cogs_from_folder(folder_name="services/handlers")
 
             # Load modules from the new modules directory
             with enhanced_span("cog.load_modules", "Load modules"):
@@ -354,22 +354,6 @@ class CogLoader(commands.Cog):
             # Load custom modules (for self-hosters)
             with enhanced_span("cog.load_custom_modules", "Load custom modules"):
                 await cog_loader.load_cogs_from_folder(folder_name="custom_modules")
-
-            # Load legacy cogs for backward compatibility (if they exist)
-            with enhanced_span("cog.load_legacy_cogs", "Load legacy cogs"):
-                try:
-                    await cog_loader.load_cogs_from_folder(folder_name="cogs")
-                except CogLoadError:
-                    # It's okay if the cogs folder doesn't exist during migration
-                    logger.info("Legacy cogs folder not found or empty, skipping")
-
-            # Load extensions
-            with enhanced_span("cog.load_extensions", "Load extension cogs"):
-                try:
-                    await cog_loader.load_cogs_from_folder(folder_name="extensions")
-                except CogLoadError:
-                    # Extensions folder might not exist
-                    logger.info("Extensions folder not found or empty, skipping")
 
             total_time = time.perf_counter() - start_time
 
