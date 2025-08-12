@@ -845,7 +845,7 @@ class TuxHelp(commands.HelpCommand):
                     jsk_select = CommandSelectMenu(self, jsk_select_options, "Select a command")
                     view.add_item(jsk_select)
             else:
-                logger.info(
+                logger.debug(
                     f"Creating dropdown for command group: {self.current_command_obj.name} with {len(sorted_cmds)} subcommands",
                 )
 
@@ -855,7 +855,7 @@ class TuxHelp(commands.HelpCommand):
 
                 if nested_groups := [cmd for cmd in sorted_cmds if isinstance(cmd, commands.Group) and cmd.commands]:
                     for group_cmd in nested_groups:
-                        logger.info(
+                        logger.debug(
                             f"Adding nested group handling for {group_cmd.name} with {len(group_cmd.commands)} subcommands",
                         )
 
@@ -928,7 +928,7 @@ class TuxHelp(commands.HelpCommand):
             # Just log nested groups for debugging
             for subcommand in self.current_command_obj.commands:
                 if isinstance(subcommand, commands.Group) and subcommand.commands:
-                    logger.info(
+                    logger.debug(
                         f"Found nested command group: {subcommand.name} with {len(subcommand.commands)} subcommands",
                     )
 
@@ -971,7 +971,7 @@ class TuxHelp(commands.HelpCommand):
 
         # Check if this subcommand is itself a group with subcommands
         if isinstance(selected_command, commands.Group) and selected_command.commands:
-            logger.info(
+            logger.debug(
                 f"Selected subcommand '{subcommand_name}' is a group with {len(selected_command.commands)} subcommands",
             )
 
@@ -1032,7 +1032,7 @@ class TuxHelp(commands.HelpCommand):
             and (parent := self._find_parent_command(self.current_command))
         ):
             parent_name, parent_obj = parent
-            logger.info(f"Found parent command {parent_name} for {self.current_command}")
+            logger.debug(f"Found parent command {parent_name} for {self.current_command}")
             self.current_command = parent_name
             self.current_command_obj = parent_obj
             embed = await self._create_command_embed(parent_name)
@@ -1079,7 +1079,7 @@ class TuxHelp(commands.HelpCommand):
         if current_page < total_pages - 1:
             self.current_subcommand_page = current_page + 1
         else:
-            logger.info(f"Pagination: Already at last page ({current_page})")
+            logger.debug(f"Pagination: Already at last page ({current_page})")
 
         # Update the embed with the new page
         if self.current_command:
@@ -1111,7 +1111,7 @@ class TuxHelp(commands.HelpCommand):
         if current_page > 0:
             self.current_subcommand_page = current_page - 1
         else:
-            logger.info(f"Pagination: Already at first page ({current_page})")
+            logger.debug(f"Pagination: Already at first page ({current_page})")
 
         # Update the embed with the new page
         if self.current_command:
