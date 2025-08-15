@@ -232,7 +232,7 @@ RUN set -eux; \
         chsh -s /usr/bin/zsh && \
         apt-get clean && \
         rm -rf /var/lib/apt/lists/*; \
-    fi; \
+    fi
 # Fix ownership of all application files for non-root user
 # SECURITY: Ensures the application runs with proper permissions
 COPY --from=build --chown=nonroot:nonroot /app /app
@@ -243,6 +243,8 @@ RUN set -eux; \
     mkdir -p /app/.cache/tldr /app/temp; \
     # Create user cache directories (fixes permission issues for Prisma/npm)
     mkdir -p /home/nonroot/.cache /home/nonroot/.npm; \
+    # Ensure correct ownership for nonroot user to write into these directories
+    chown -R nonroot:nonroot /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm
 # Switch to non-root user for all subsequent operations
 # SECURITY: Follows principle of least privilege
 USER nonroot

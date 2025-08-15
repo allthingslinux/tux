@@ -18,7 +18,7 @@ services:
     # IMAGE CONFIGURATION
     # Uses pre-built image from GitHub Container Registry for faster deployment
     # Falls back to local build if image is not available in registry
-    image: ghcr.io/allthingslinux/tux:latest
+    image: ghcr.io/allthingslinux/tux:${TUX_IMAGE_TAG:-latest}
 
     # BUILD CONFIGURATION
     # Local build fallback when registry image is unavailable
@@ -30,6 +30,10 @@ services:
       dockerfile: Dockerfile
       # Target production stage for minimal, secure image
       target: production
+      args:
+        VERSION: ${VERSION}
+        GIT_SHA: ${GIT_SHA}
+        BUILD_DATE: ${BUILD_DATE}
 
     # VOLUME MOUNTS
     # Strategic mounting for configuration, code, and persistent data
@@ -70,6 +74,9 @@ services:
     # SECURITY: .env file should be in .gitignore and properly secured
     env_file:
       - .env
+    environment:
+      # Ensure the bot reports the correct version at runtime
+      TUX_VERSION: ${VERSION}
 
     # RESTART POLICY
     # Automatically restart container unless explicitly stopped

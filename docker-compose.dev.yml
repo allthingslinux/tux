@@ -18,7 +18,7 @@ services:
     # IMAGE CONFIGURATION
     # Uses local development image built from dev stage of Dockerfile
     # Contains development tools, debugging utilities, and additional packages
-    image: tux:dev
+    image: tux:${TUX_IMAGE_TAG:-dev}
 
     # BUILD CONFIGURATION
     # Always builds from local source for development
@@ -26,6 +26,10 @@ services:
     build:
       # Build context includes entire project directory
       context: .
+      args:
+        VERSION: ${VERSION}
+        GIT_SHA: ${GIT_SHA}
+        BUILD_DATE: ${BUILD_DATE}
       # Dockerfile location (standard)
       dockerfile: Dockerfile
       # Target development stage with debugging tools and dev dependencies
@@ -118,6 +122,9 @@ services:
     # DEVELOPMENT: May include debug flags, development database URLs, etc.
     env_file:
       - .env
+    environment:
+      # Ensure the bot reports the correct version at runtime
+      TUX_VERSION: ${VERSION}
 
     # RESTART POLICY
     # Automatic restart for development convenience

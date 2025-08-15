@@ -1,5 +1,7 @@
 """Docker commands for the Tux CLI."""
 
+import datetime
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -14,6 +16,42 @@ from tux.cli.core import (
     run_command,
 )
 from tux.shared.config.env import is_dev_mode
+
+
+def _compute_version_env() -> dict[str, str]:
+    """Compute version-related env vars for docker builds.
+
+    - VERSION: git describe with 'v' stripped, falls back to 'dev'
+    - GIT_SHA: short commit SHA, falls back to 'unknown'
+    - BUILD_DATE: ISO8601 UTC timestamp
+    - TUX_IMAGE_TAG: mirrors VERSION for tagging images in compose
+    """
+
+    def _run(cmd: list[str]) -> str:
+        try:
+            out = subprocess.run(cmd, capture_output=True, text=True, timeout=5, check=False)
+            return out.stdout.strip()
+        except Exception:
+            return ""
+
+    # VERSION from git describe (strip leading 'v')
+    version = _run(["git", "describe", "--tags", "--always", "--dirty"]).lstrip("v")
+    if not version:
+        version = "dev"
+
+    # Short SHA
+    git_sha = _run(["git", "rev-parse", "--short", "HEAD"]) or "unknown"
+
+    # Build date in UTC
+    build_date = datetime.datetime.now(datetime.UTC).replace(microsecond=0).isoformat()
+
+    return {
+        "VERSION": version,
+        "GIT_SHA": git_sha,
+        "BUILD_DATE": build_date,
+        "TUX_IMAGE_TAG": version,
+    }
+
 
 # Resource configuration for safe Docker cleanup operations
 RESOURCE_MAP = {
@@ -465,8 +503,11 @@ def build(no_cache: bool, target: str | None) -> int:
     if target:
         cmd.extend(["--target", target])
 
-    logger.info(f"Building Docker images {'without cache' if no_cache else 'with cache'}")
-    return run_command(cmd)
+    env = {**_compute_version_env()}
+    logger.info(
+        f"Building Docker images {'without cache' if no_cache else 'with cache'} (tag: {env['VERSION']})",
+    )
+    return run_command(cmd, env={**os.environ, **env})
 
 
 @command_registration_decorator(docker_group, name="up")
@@ -496,9 +537,10 @@ def up(detach: bool, build: bool, watch: bool) -> int:
             logger.warning("--watch is only available in development mode")
 
     mode = "development" if is_dev_mode() else "production"
-    logger.info(f"Starting Docker services in {mode} mode")
+    env = _compute_version_env()
+    logger.info(f"Starting Docker services in {mode} mode (tag: {env['VERSION']})")
 
-    return run_command(cmd)
+    return run_command(cmd, env={**os.environ, **env})
 
 
 @command_registration_decorator(docker_group, name="down")
