@@ -28,7 +28,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.types import Tux
-from tux.services.database.controllers import DatabaseController
+from tux.database.controllers import DatabaseController
 from tux.services.database.utils import get_db_controller_from
 from tux.shared.config.settings import CONFIG
 from tux.shared.exceptions import AppCommandPermissionLevelError, PermissionLevelError
