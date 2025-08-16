@@ -38,3 +38,23 @@ class GuildController(BaseController):
         await session.flush()
         await session.refresh(config)
         return config
+
+    @with_session
+    async def delete_guild_by_id(self, guild_id: int, *, session: AsyncSession) -> bool:
+        inst = await session.get(Guild, guild_id)
+        if inst is None:
+            return False
+        await session.delete(inst)
+        await session.flush()
+        return True
+
+    @with_session
+    async def find_many(self, *, where: dict[str, Any], session: AsyncSession):
+        # minimal filter support
+        from sqlmodel import select
+
+        stmt = select(Guild)
+        for key, value in where.items():
+            stmt = stmt.where(getattr(Guild, key) == value)
+        res = await session.execute(stmt)
+        return list(res.scalars())

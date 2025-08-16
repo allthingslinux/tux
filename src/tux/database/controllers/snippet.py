@@ -109,6 +109,6 @@ class SnippetController(BaseController):
 
 	@with_session
 	async def get_all_aliases(self, snippet_name: str, guild_id: int, *, session: AsyncSession) -> List[Snippet]:
-		stmt = select(Snippet).where((func.lower(Snippet.alias) == snippet_name.lower()) & (Snippet.guild_id == guild_id))
+		stmt = select(Snippet).where((func.lower(func.coalesce(Snippet.alias, "")) == snippet_name.lower()) & (Snippet.guild_id == guild_id))
 		res = await session.execute(stmt)
 		return list(res.scalars())

@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy import and_, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tux.database.controllers.base import BaseController, with_session
@@ -48,6 +48,6 @@ class ReminderController(BaseController):
 
 	@with_session
 	async def get_all_reminders(self, guild_id: int, *, session: AsyncSession) -> List[Reminder]:
-		stmt = select(Reminder).where(and_(Reminder.guild_id == guild_id))
+		stmt = select(Reminder).where(Reminder.guild_id == guild_id)
 		res = await session.execute(stmt)
 		return list(res.scalars())

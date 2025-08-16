@@ -5,8 +5,7 @@ from discord.ext import commands
 from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
-from tux.database.models.moderation import CaseType
-from tux.database.models.moderation import Case
+from tux.database.models.moderation import CaseType as DBCaseType, Case
 from typing import Dict as CaseWhereInput  # type: ignore
 from tux.core import checks
 from tux.core.flags import CaseModifyFlags, CasesViewFlags
@@ -19,32 +18,28 @@ from . import ModerationCogBase
 
 # Maps case types to their corresponding emoji keys
 CASE_TYPE_EMOJI_MAP = {
-    CaseType.BAN: "ban",
-    CaseType.UNBAN: "ban",
-    CaseType.TEMPBAN: "tempban",
-    CaseType.KICK: "kick",
-    CaseType.TIMEOUT: "timeout",
-    CaseType.UNTIMEOUT: "timeout",
-    CaseType.WARN: "warn",
-    CaseType.JAIL: "jail",
-    CaseType.UNJAIL: "jail",
-    CaseType.SNIPPETBAN: "snippetban",
-    CaseType.SNIPPETUNBAN: "snippetunban",
+    DBCaseType.BAN: "ban",
+    DBCaseType.UNBAN: "ban",
+    DBCaseType.TEMPBAN: "tempban",
+    DBCaseType.KICK: "kick",
+    DBCaseType.TIMEOUT: "timeout",
+    DBCaseType.UNTIMEOUT: "timeout",
+    DBCaseType.WARN: "warn",
+    DBCaseType.JAIL: "jail",
+    DBCaseType.UNJAIL: "jail",
 }
 
 # Maps case types to their action (added/removed)
 CASE_ACTION_MAP = {
-    CaseType.BAN: "added",
-    CaseType.KICK: "added",
-    CaseType.TEMPBAN: "added",
-    CaseType.TIMEOUT: "added",
-    CaseType.WARN: "added",
-    CaseType.JAIL: "added",
-    CaseType.SNIPPETBAN: "added",
-    CaseType.UNBAN: "removed",
-    CaseType.UNTIMEOUT: "removed",
-    CaseType.UNJAIL: "removed",
-    CaseType.SNIPPETUNBAN: "removed",
+    DBCaseType.BAN: "added",
+    DBCaseType.KICK: "added",
+    DBCaseType.TEMPBAN: "added",
+    DBCaseType.TIMEOUT: "added",
+    DBCaseType.WARN: "added",
+    DBCaseType.JAIL: "added",
+    DBCaseType.UNBAN: "removed",
+    DBCaseType.UNTIMEOUT: "removed",
+    DBCaseType.UNJAIL: "removed",
 }
 
 
@@ -570,10 +565,10 @@ class Cases(ModerationCogBase):
             # Format date
             case_date = (
                 discord.utils.format_dt(
-                    case.case_created_at,
+                    case.created_at,
                     "R",
                 )
-                if case.case_created_at
+                if case.created_at
                 else f"{self.bot.emoji_manager.get('tux_error')}"
             )
 

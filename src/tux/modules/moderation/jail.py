@@ -61,7 +61,6 @@ class Jail(ModerationCogBase):
         latest_case = await self.db.case.get_latest_case_by_user(
             guild_id=guild_id,
             user_id=user_id,
-            case_types=[CaseType.JAIL, CaseType.UNJAIL],
         )
 
         # If no cases exist or latest case is an unjail, user is not jailed
@@ -140,7 +139,7 @@ class Jail(ModerationCogBase):
                 case_moderator_id=ctx.author.id,
                 case_type=CaseType.JAIL,
                 case_reason=flags.reason,
-                case_user_roles=case_user_roles,
+                # store user roles as metadata if needed later
             )
 
             # Add jail role immediately - this is the most important part
