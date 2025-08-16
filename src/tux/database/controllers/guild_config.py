@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -140,3 +140,9 @@ class GuildConfigController(BaseController):
 			"dev": cfg.dev_log_id,
 		}
 		return mapping.get(log_type)
+
+    # Generic field getter for setup workflows
+	@with_session
+	async def get_guild_config_field_value(self, guild_id: int, field: str, *, session: AsyncSession) -> Any:
+		cfg = await session.get(GuildConfig, guild_id)
+		return None if cfg is None else getattr(cfg, field)
