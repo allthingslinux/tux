@@ -26,13 +26,13 @@ class AccessType(str, Enum):
 
 
 class GuildPermission(BaseModel, table=True):
-    id: int = Field(primary_key=True, sa_column_kwargs={"type_": BigInteger()})
-    guild_id: int = Field(foreign_key="guild.guild_id", sa_column_kwargs={"type_": BigInteger()})
+    id: int = Field(primary_key=True, sa_type=BigInteger())
+    guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger())
 
     permission_type: PermissionType
     access_type: AccessType
 
-    target_id: int = Field(sa_column_kwargs={"type_": BigInteger()})
+    target_id: int = Field(sa_type=BigInteger())
     target_name: str | None = Field(default=None, max_length=100)
     command_name: str | None = Field(default=None, max_length=100)
     module_name: str | None = Field(default=None, max_length=100)
