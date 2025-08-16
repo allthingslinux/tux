@@ -19,7 +19,7 @@ class Snippet(BaseModel, table=True):
     locked: bool = Field(default=False)
     alias: str | None = Field(default=None, max_length=100)
 
-    guild: Guild | None = Relationship()
+    guild: "Guild" = Relationship()
 
     __table_args__ = (Index("idx_snippet_name_guild", "snippet_name", "guild_id", unique=True),)
 
@@ -33,4 +33,4 @@ class Reminder(BaseModel, table=True):
     reminder_sent: bool = Field(default=False)
     guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger())
 
-    guild: Guild | None = Relationship()
+    guild: "Guild" = Relationship()
