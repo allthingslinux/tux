@@ -133,7 +133,7 @@ class TempBan(ModerationCogBase):
                         f"Successfully unbanned user {case.case_user_id} and marked case {case.case_id} as expired in guild {guild.id}.",
                     )
                     processed_count = 1
-                elif update_result is None:
+                elif not update_result:
                     logger.info(
                         f"Successfully unbanned user {case.case_user_id} in guild {guild.id} (case {case.case_id} was already marked expired).",
                     )

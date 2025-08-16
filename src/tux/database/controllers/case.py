@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any, List, Optional
+from typing import Any, List, Optional, cast
 
-from sqlalchemy import and_, desc
+from sqlalchemy import and_
 from sqlmodel import select
 
 from tux.database.controllers.base import BaseController, with_session
@@ -24,7 +24,7 @@ class CaseController(BaseController):
 		session: Any = None,
 	) -> Case:
 		# Determine next case number scoped to guild
-		stmt = select(Case.case_number).where(Case.guild_id == guild_id).order_by(Case.case_number.desc()).limit(1)
+		stmt = select(Case.case_number).where(Case.guild_id == guild_id).order_by(cast(Any, Case.case_number).desc()).limit(1)
 		res = await session.execute(stmt)
 		next_num = (res.scalar_one_or_none() or 0) + 1
 		return await Case.create(
@@ -41,7 +41,7 @@ class CaseController(BaseController):
 	@with_session
 	async def get_latest_case_by_user(self, guild_id: int, user_id: int, *, session: Any = None) -> Optional[Case]:
 		stmt = select(Case).where((Case.guild_id == guild_id) & (Case.case_user_id == user_id)).order_by(
-			Case.created_at.desc()
+			cast(Any, Case.created_at).desc()
 		).limit(1)
 		res = await session.execute(stmt)
 		return res.scalars().first()
@@ -57,13 +57,13 @@ class CaseController(BaseController):
 		conditions: list[Any] = [Case.guild_id == guild_id]
 		for key, value in options.items():
 			conditions.append(getattr(Case, key) == value)
-		stmt = select(Case).where(and_(*conditions)).order_by(Case.created_at.desc())
+		stmt = select(Case).where(and_(*conditions)).order_by(cast(Any, Case.created_at).desc())
 		res = await session.execute(stmt)
 		return list(res.scalars())
 
 	@with_session
 	async def get_all_cases(self, guild_id: int, *, session: Any = None) -> List[Case]:
-		stmt = select(Case).where(Case.guild_id == guild_id).order_by(Case.created_at.desc())
+		stmt = select(Case).where(Case.guild_id == guild_id).order_by(cast(Any, Case.created_at).desc())
 		res = await session.execute(stmt)
 		return list(res.scalars())
 
@@ -101,12 +101,9 @@ class CaseController(BaseController):
 	async def get_expired_tempbans(self, *, session: Any = None) -> List[Case]:
 		# any expired and still active TEMPBAN cases
 		now = datetime.now(UTC)
-		stmt = select(Case).where(
-			(Case.case_type == CaseType.TEMPBAN)
-			& (Case.case_status.is_(True))
-			& (Case.case_expires_at.is_not(None))
-			& (Case.case_expires_at <= now)
-		)
+		tempban_active = (Case.case_type == CaseType.TEMPBAN) & (cast(Any, Case.case_status).is_(True))
+		expiry_filters = cast(Any, Case.case_expires_at).is_not(None) & (cast(Any, Case.case_expires_at) <= now)
+		stmt = select(Case).where(tempban_active & expiry_filters)
 		res = await session.execute(stmt)
 		return list(res.scalars())
 
@@ -123,7 +120,7 @@ class CaseController(BaseController):
 		stmt = (
 			select(Case)
 			.where((Case.guild_id == guild_id) & (Case.case_user_id == user_id))
-			.order_by(Case.created_at.desc())
+			.order_by(cast(Any, Case.created_at).desc())
 			.limit(1)
 		)
 		res = await session.execute(stmt)
