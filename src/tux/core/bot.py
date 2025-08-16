@@ -144,6 +144,9 @@ class Tux(commands.Bot):
                 db_service = self.container.get_optional(IDatabaseService) if self.container else None
                 if db_service is None:
                     _raise_db_connection_error()
+                # Narrow type for type checker
+                from typing import cast
+                db_service = cast(IDatabaseService, db_service)
                 await db_service.connect()
                 connected, registered = db_service.is_connected(), db_service.is_registered()
                 if not (connected and registered):
