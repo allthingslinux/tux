@@ -1,4 +1,4 @@
-from typing import Any, Protocol
+from typing import Any, Dict, Protocol
 
 import discord
 from discord.ext import commands
@@ -241,7 +241,7 @@ class Cases(ModerationCogBase):
         """
         assert ctx.guild
 
-        options: CaseWhereInput = {}
+        options: Dict[str, Any] = {}
 
         if flags.type:
             options["case_type"] = flags.type
@@ -549,12 +549,10 @@ class Cases(ModerationCogBase):
             status_emoji = self.bot.emoji_manager.get(
                 "active_case" if case.case_status else "inactive_case",
             )
-            type_emoji = self.bot.emoji_manager.get(
-                CASE_TYPE_EMOJI_MAP.get(case.case_type, "tux_error"),
-            )
-            action_emoji = self.bot.emoji_manager.get(
-                CASE_ACTION_MAP.get(case.case_type, "tux_error"),
-            )
+            type_emoji_key = CASE_TYPE_EMOJI_MAP.get(case.case_type, "tux_error")
+            type_emoji = self.bot.emoji_manager.get(type_emoji_key)
+            action_emoji_key = CASE_ACTION_MAP.get(case.case_type, "tux_error")
+            action_emoji = self.bot.emoji_manager.get(action_emoji_key)
 
             # Format the case number
             case_number = f"{case.case_number:04}" if case.case_number is not None else "0000"

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
-from sqlalchemy import and_, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 
 from tux.database.controllers.base import BaseController, with_session
 from tux.database.models.starboard import Starboard, StarboardMessage
@@ -18,7 +17,7 @@ class StarboardController(BaseController):
 		starboard_channel_id: int,
 		starboard_emoji: str,
 		starboard_threshold: int,
-		session: AsyncSession,
+		session: Any = None,
 	) -> Starboard:
 		inst = await session.get(Starboard, guild_id)
 		if inst is None:
@@ -37,7 +36,7 @@ class StarboardController(BaseController):
 		return inst
 
 	@with_session
-	async def delete_starboard_by_guild_id(self, guild_id: int, *, session: AsyncSession) -> bool:
+	async def delete_starboard_by_guild_id(self, guild_id: int, *, session: Any = None) -> bool:
 		inst = await session.get(Starboard, guild_id)
 		if inst is None:
 			return False
@@ -46,13 +45,13 @@ class StarboardController(BaseController):
 		return True
 
 	@with_session
-	async def get_starboard_by_guild_id(self, guild_id: int, *, session: AsyncSession) -> Optional[Starboard]:
+	async def get_starboard_by_guild_id(self, guild_id: int, *, session: Any = None) -> Optional[Starboard]:
 		return await session.get(Starboard, guild_id)
 
 
 class StarboardMessageController(BaseController):
 	@with_session
-	async def get_starboard_message_by_id(self, message_id: int, *, session: AsyncSession) -> Optional[StarboardMessage]:
+	async def get_starboard_message_by_id(self, message_id: int, *, session: Any = None) -> Optional[StarboardMessage]:
 		return await session.get(StarboardMessage, message_id)
 
 	@with_session
@@ -66,7 +65,7 @@ class StarboardMessageController(BaseController):
 		message_content: str,
 		star_count: int,
 		starboard_message_id: int,
-		session: AsyncSession,
+		session: Any = None,
 	) -> StarboardMessage:
 		inst = await session.get(StarboardMessage, message_id)
 		if inst is None:

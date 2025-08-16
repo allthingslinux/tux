@@ -1,28 +1,23 @@
 from __future__ import annotations
 
 from functools import wraps
-from typing import Any, Awaitable, Callable, TypeVar
-from typing_extensions import Concatenate, ParamSpec
-
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Awaitable, Callable, TypeVar, Any
 
 from tux.database.services.database import DatabaseService
 
 
-P = ParamSpec("P")
 R = TypeVar("R")
-C = TypeVar("C", bound="BaseController")
 
 
 def with_session(
-	func: Callable[Concatenate[C, P], Awaitable[R]]
-) -> Callable[Concatenate[C, P], Awaitable[R]]:
+	func: Callable[..., Awaitable[R]]
+) -> Callable[..., Awaitable[R]]:
 	@wraps(func)
-	async def wrapper(self: C, *args: P.args, **kwargs: P.kwargs) -> R:
+	async def wrapper(self: "BaseController", *args: Any, **kwargs: Any) -> R:
 		if kwargs.get("session") is not None:
 			return await func(self, *args, **kwargs)
 		async with self.db.session() as session:
-			return await func(self, *args, session=session, **kwargs)
+			return await func(self, *args, session=session, **kwargs)  # type: ignore[call-arg]
 
 	return wrapper
 

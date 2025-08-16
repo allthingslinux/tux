@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any, List
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from tux.database.controllers.base import BaseController, with_session
