@@ -4,7 +4,7 @@ from types import NoneType
 
 import discord
 
-from tux.services.database.controllers import DatabaseController
+from tux.database.controllers import DatabaseController
 from tux.shared.constants import CONST
 
 __all__ = ("add_afk", "del_afk")

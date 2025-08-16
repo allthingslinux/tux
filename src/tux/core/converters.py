@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from prisma.enums import CaseType
+from tux.database.models.moderation import CaseType
 
 if TYPE_CHECKING:
     from tux.core.types import Tux

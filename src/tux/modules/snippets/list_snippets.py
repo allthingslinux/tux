@@ -1,7 +1,7 @@
 from discord.ext import commands
 from reactionmenu import ViewButton, ViewMenu
 
-from prisma.models import Snippet
+from tux.database.models.content import Snippet
 from tux.core.types import Tux
 from tux.shared.constants import CONST
 

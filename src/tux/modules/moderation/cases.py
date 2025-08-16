@@ -5,9 +5,9 @@ from discord.ext import commands
 from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
-from prisma.enums import CaseType
-from prisma.models import Case
-from prisma.types import CaseWhereInput
+from tux.database.models.moderation import CaseType
+from tux.database.models.moderation import Case
+from typing import Dict as CaseWhereInput  # type: ignore
 from tux.core import checks
 from tux.core.flags import CaseModifyFlags, CasesViewFlags
 from tux.core.types import Tux

@@ -3,7 +3,7 @@ from contextlib import suppress
 import discord
 from discord.ext import commands
 
-from prisma.enums import CaseType
+from tux.database.models.moderation import CaseType
 from tux.core import checks
 from tux.core.flags import UnbanFlags
 from tux.core.types import Tux

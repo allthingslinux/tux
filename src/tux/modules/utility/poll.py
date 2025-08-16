@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
-from prisma.enums import CaseType
+from tux.database.models.moderation import CaseType
 from tux.core.base_cog import BaseCog
 from tux.core.converters import get_channel_safe
 from tux.core.types import Tux
