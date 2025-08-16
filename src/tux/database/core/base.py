@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Optional, TypeVar
 
-from sqlalchemy import BigInteger, Boolean, Column, DateTime, func
+from sqlalchemy import BigInteger, Boolean, Column, DateTime, func, select, update as sa_update, delete as sa_delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import Field, SQLModel
 
@@ -70,6 +70,94 @@ class CRUDMixin(SQLModel):
     @classmethod
     async def get_by_id(cls, session: AsyncSession, record_id: Any):
         return await session.get(cls, record_id)
+
+    @classmethod
+    async def find_one(cls, session: AsyncSession, filters: Any | None = None, order_by: Any | None = None):
+        stmt = select(cls)
+        if filters is not None:
+            stmt = stmt.where(filters)
+        if order_by is not None:
+            stmt = stmt.order_by(order_by)
+        result = await session.execute(stmt)
+        return result.scalars().first()
+
+    @classmethod
+    async def find_all(
+        cls,
+        session: AsyncSession,
+        filters: Any | None = None,
+        order_by: Any | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ):
+        stmt = select(cls)
+        if filters is not None:
+            stmt = stmt.where(filters)
+        if order_by is not None:
+            stmt = stmt.order_by(order_by)
+        if limit is not None:
+            stmt = stmt.limit(limit)
+        if offset is not None:
+            stmt = stmt.offset(offset)
+        result = await session.execute(stmt)
+        return result.scalars().all()
+
+    @classmethod
+    async def count(cls, session: AsyncSession, filters: Any | None = None) -> int:
+        stmt = select(func.count()).select_from(cls)
+        if filters is not None:
+            stmt = stmt.where(filters)
+        result = await session.execute(stmt)
+        return int(result.scalar_one() or 0)
+
+    @classmethod
+    async def update_by_id(cls, session: AsyncSession, record_id: Any, /, **values: Any):
+        instance = await session.get(cls, record_id)
+        if instance is None:
+            return None
+        for key, value in values.items():
+            setattr(instance, key, value)
+        await session.flush()
+        await session.refresh(instance)
+        return instance
+
+    @classmethod
+    async def update_where(cls, session: AsyncSession, filters: Any, values: dict[str, Any]) -> int:
+        stmt = sa_update(cls).where(filters).values(**values)
+        result = await session.execute(stmt)
+        return int(getattr(result, "rowcount", 0) or 0)
+
+    @classmethod
+    async def delete_by_id(cls, session: AsyncSession, record_id: Any) -> bool:
+        instance = await session.get(cls, record_id)
+        if instance is None:
+            return False
+        session.delete(instance)
+        await session.flush()
+        return True
+
+    @classmethod
+    async def delete_where(cls, session: AsyncSession, filters: Any) -> int:
+        stmt = sa_delete(cls).where(filters)
+        result = await session.execute(stmt)
+        return int(getattr(result, "rowcount", 0) or 0)
+
+    @classmethod
+    async def upsert(
+        cls,
+        session: AsyncSession,
+        match_filter: Any,
+        create_values: dict[str, Any],
+        update_values: dict[str, Any],
+    ):
+        existing = await cls.find_one(session, filters=match_filter)
+        if existing is None:
+            return await cls.create(session, **create_values)
+        for key, value in update_values.items():
+            setattr(existing, key, value)
+        await session.flush()
+        await session.refresh(existing)
+        return existing
 
 
 class BaseModel(TimestampMixin, SoftDeleteMixin, AuditMixin, CRUDMixin, DiscordIDMixin, SQLModel):
