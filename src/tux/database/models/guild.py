@@ -47,4 +47,4 @@ class GuildConfig(BaseModel, table=True):
     perm_level_6_role_id: int | None = Field(default=None, sa_type=BigInteger())
     perm_level_7_role_id: int | None = Field(default=None, sa_type=BigInteger())
 
-    guild: "Guild" = Relationship(sa_relationship_kwargs={"backref": "guild_config"})
+    guild: Guild = Relationship(sa_relationship_kwargs={"backref": "guild_config"})
