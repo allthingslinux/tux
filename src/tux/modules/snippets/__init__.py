@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.database.models.moderation import CaseType
+from tux.database.models.moderation import CaseType as DBCaseType
 from tux.database.models.content import Snippet
 from tux.core import checks
 from tux.core.base_cog import BaseCog
@@ -37,8 +37,8 @@ class SnippetsBaseCog(BaseCog):
         return await self.db.case.is_user_under_restriction(
             guild_id=guild_id,
             user_id=user_id,
-            active_restriction_type=CaseType.SNIPPETBAN,
-            inactive_restriction_type=CaseType.SNIPPETUNBAN,
+            active_restriction_type=DBCaseType.JAIL,
+            inactive_restriction_type=DBCaseType.UNJAIL,
         )
 
     def _create_snippets_list_embed(

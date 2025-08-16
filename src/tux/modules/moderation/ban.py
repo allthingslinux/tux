@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from tux.database.models.moderation import CaseType
+from tux.database.models.moderation import CaseType as DBCaseType
 from tux.core import checks
 from tux.core.flags import BanFlags
 from tux.core.types import Tux
@@ -54,7 +54,7 @@ class Ban(ModerationCogBase):
         # Execute ban with case creation and DM
         await self.execute_mod_action(
             ctx=ctx,
-            case_type=CaseType.BAN,
+            case_type=DBCaseType.BAN,
             user=user,
             reason=flags.reason,
             silent=flags.silent,

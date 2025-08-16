@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.database.models.moderation import CaseType
+from tux.database.models.moderation import CaseType as DBCaseType
 from tux.database.models.moderation import Case
 from tux.core import checks
 from tux.core.flags import UnjailFlags
@@ -54,11 +54,13 @@ class Unjail(ModerationCogBase):
             The latest jail case, or None if not found.
         """
 
-        return await self.db.case.get_latest_case_by_user(
+        latest_case = await self.db.case.get_latest_case_by_user(
             guild_id=guild_id,
             user_id=user_id,
-            case_types=[CaseType.JAIL],
+            # We now filter in controller by latest only; ignore case_types param
         )
+
+        return latest_case
 
     async def restore_roles(
         self,
@@ -208,11 +210,11 @@ class Unjail(ModerationCogBase):
 
                 # Insert unjail case into database
                 case_result = await self.db.case.insert_case(
+                    guild_id=ctx.guild.id,
                     case_user_id=member.id,
                     case_moderator_id=ctx.author.id,
-                    case_type=CaseType.UNJAIL,
+                    case_type=DBCaseType.UNJAIL,
                     case_reason=flags.reason,
-                    guild_id=guild_id,
                 )
 
                 # Send DM to member
@@ -221,7 +223,7 @@ class Unjail(ModerationCogBase):
                 # Handle case response - send embed immediately
                 await self.handle_case_response(
                     ctx,
-                    CaseType.UNJAIL,
+                    DBCaseType.UNJAIL,
                     case_result.case_number,
                     flags.reason,
                     member,

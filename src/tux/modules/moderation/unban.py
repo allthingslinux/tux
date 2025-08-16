@@ -3,7 +3,7 @@ from contextlib import suppress
 import discord
 from discord.ext import commands
 
-from tux.database.models.moderation import CaseType
+from tux.database.models.moderation import CaseType as DBCaseType
 from tux.core import checks
 from tux.core.flags import UnbanFlags
 from tux.core.types import Tux
@@ -72,7 +72,7 @@ class Unban(ModerationCogBase):
         assert user is not None, "User cannot be None at this point"
         await self.execute_mod_action(
             ctx=ctx,
-            case_type=CaseType.UNBAN,
+            case_type=DBCaseType.UNBAN,
             user=user,
             reason=final_reason,
             silent=True,  # No DM for unbans due to user not being in the guild

@@ -112,7 +112,12 @@ class Starboard(BaseCog):
             return
 
         try:
-            await self.db.starboard.create_or_update_starboard(ctx.guild.id, channel.id, emoji, threshold)
+            await self.db.starboard.create_or_update_starboard(
+                ctx.guild.id,
+                starboard_channel_id=channel.id,
+                starboard_emoji=emoji,
+                starboard_threshold=threshold,
+            )
 
             embed = EmbedCreator.create_embed(
                 bot=self.bot,
@@ -202,10 +207,7 @@ class Starboard(BaseCog):
         assert original_message.guild
 
         try:
-            starboard_message = await self.db.starboard_message.get_starboard_message_by_id(
-                original_message.id,
-                original_message.guild.id,
-            )
+            starboard_message = await self.db.starboard_message.get_starboard_message_by_id(original_message.id)
 
             return (
                 await starboard_channel.fetch_message(starboard_message.starboard_message_id)
@@ -273,7 +275,6 @@ class Starboard(BaseCog):
             await self.db.starboard_message.create_or_update_starboard_message(
                 message_id=original_message.id,
                 message_content=original_message.content,
-                message_expires_at=datetime.now(UTC) + timedelta(days=30),
                 message_channel_id=original_message.channel.id,
                 message_user_id=original_message.author.id,
                 message_guild_id=original_message.guild.id,
