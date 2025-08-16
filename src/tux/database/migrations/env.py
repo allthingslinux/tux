@@ -7,6 +7,7 @@ from sqlalchemy import MetaData
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlmodel import SQLModel
+import alembic_postgresql_enum  # noqa: F401
 
 # Import models to populate metadata
 from tux.database.models import content as _content  # noqa: F401
