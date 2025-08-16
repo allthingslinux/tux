@@ -10,7 +10,7 @@ from typing import Any, Protocol, runtime_checkable
 
 import discord
 
-from tux.services.database.controllers import DatabaseController
+from tux.database.controllers import DatabaseController
 
 
 class IGithubService(Protocol):

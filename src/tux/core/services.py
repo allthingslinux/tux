@@ -12,7 +12,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.services.database.client import db
-from tux.services.database.controllers import DatabaseController
+from tux.database.controllers import DatabaseController
 from tux.services.logger import setup_logging as setup_rich_logging
 from tux.services.wrappers.github import GithubService as GitHubWrapper
 from tux.shared.config.env import is_dev_mode

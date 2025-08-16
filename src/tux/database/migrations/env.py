@@ -8,7 +8,8 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlmodel import SQLModel
 
 # Import models to populate metadata
-# from tux.database.models import *  # noqa: F401,F403
+from tux.database.models import guild, moderation, content, social, permissions, starboard  # noqa: F401
+from tux.shared.config.env import get_database_url
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -18,6 +19,10 @@ config = context.config
 # This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
+
+# Ensure sqlalchemy.url is set, fallback to app environment
+if not config.get_main_option("sqlalchemy.url"):
+    config.set_main_option("sqlalchemy.url", get_database_url())
 
 # add your model's MetaData object here
 # for 'autogenerate' support
