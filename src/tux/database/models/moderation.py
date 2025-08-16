@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from sqlalchemy import BigInteger, Index
-from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlmodel import Field, Relationship
 
 from tux.database.core.base import BaseModel
@@ -50,7 +49,7 @@ class Case(BaseModel, table=True):
     case_user_roles: List[int] = Field(default_factory=list)
     case_number: Optional[int] = Field(default=None)
     case_expires_at: Optional[datetime] = Field(default=None)
-    case_metadata: Optional[dict] = Field(default=None)
+    case_metadata: Optional[Dict[str, str]] = Field(default=None)
 
     guild_id: int = Field(foreign_key="guild.guild_id", sa_column_kwargs={"type_": BigInteger()})
 

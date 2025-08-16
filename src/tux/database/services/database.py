@@ -1,9 +1,6 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
-
-from sqlmodel import SQLModel
 
 from tux.database.core.database import DatabaseManager
 from tux.shared.config.env import get_database_url
@@ -18,5 +15,5 @@ class DatabaseService:
         async with self.manager.get_session() as s:  # type: ignore[reportUnknownMemberType]
             yield s
 
-    def create_all(self) -> None:
-        self.manager.create_tables()
+    async def create_all_async(self) -> None:
+        await self.manager.create_tables_async()

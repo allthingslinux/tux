@@ -1,7 +1,9 @@
 import asyncio
 from logging.config import fileConfig
+from typing import Any, Callable
 
 from alembic import context
+from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlmodel import SQLModel
 
@@ -49,12 +51,13 @@ async def run_async_migrations() -> None:
     )
 
     async with connectable.connect() as connection:
-        await connection.run_sync(do_run_migrations)
+        callback: Callable[[Connection], None] = do_run_migrations
+        await connection.run_sync(callback)
 
     await connectable.dispose()
 
 
-def do_run_migrations(connection) -> None:
+def do_run_migrations(connection: Connection) -> None:
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
