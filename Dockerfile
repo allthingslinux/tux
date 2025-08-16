@@ -43,7 +43,7 @@
 # Size Impact: ~150MB (Python slim + runtime deps)
 # ==============================================================================
 
-FROM python:3.13.5-slim@sha256:4c2cf9917bd1cbacc5e9b07320025bdb7cdf2df7b0ceaccb55e9dd7e30987419 AS base
+FROM python:3.13.7-slim@sha256:8220ccec22e88cddd9a541cacd1bf48423bda8cdeb1015249e4b298edf86cdc7 AS base
 
 # OCI Labels for container metadata and registry compliance
 # These labels provide important metadata for container registries and tools
@@ -285,7 +285,7 @@ CMD ["sh", "-c", "poetry run prisma generate && exec poetry run tux --dev start"
 # Size Impact: ~440MB (73% reduction from development image)
 # ==============================================================================
 
-FROM python:3.13.5-slim@sha256:4c2cf9917bd1cbacc5e9b07320025bdb7cdf2df7b0ceaccb55e9dd7e30987419 AS production
+FROM python:3.13.7-slim@sha256:8220ccec22e88cddd9a541cacd1bf48423bda8cdeb1015249e4b298edf86cdc7 AS production
 
 # Duplicate OCI labels for production image metadata
 # COMPLIANCE: Ensures production images have proper metadata for registries
