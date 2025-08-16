@@ -3,11 +3,10 @@ from __future__ import annotations
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import BigInteger, Index, JSON
-from sqlmodel import Field, Relationship
+from sqlalchemy import BigInteger, Index, Integer, JSON
+from sqlmodel import Field
 
 from tux.database.core.base import BaseModel
-from tux.database.models.guild import Guild
 
 
 class CaseType(str, Enum):
@@ -28,7 +27,7 @@ class CaseType(str, Enum):
 
 
 class CustomCaseType(BaseModel, table=True):
-    id: int = Field(primary_key=True, sa_type=BigInteger())
+    id: int | None = Field(default=None, primary_key=True, sa_type=Integer())
     guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger())
     type_name: str = Field(max_length=50)
     display_name: str = Field(max_length=100)
@@ -36,11 +35,9 @@ class CustomCaseType(BaseModel, table=True):
     severity_level: int = Field(default=1)
     requires_duration: bool = Field(default=False)
 
-    guild: Guild = Relationship()
-
 
 class Case(BaseModel, table=True):
-    case_id: int = Field(primary_key=True, sa_type=BigInteger())
+    case_id: int | None = Field(default=None, primary_key=True, sa_type=Integer())
     case_status: bool | None = Field(default=True)
 
     case_type: CaseType | None = Field(default=None)
@@ -56,9 +53,6 @@ class Case(BaseModel, table=True):
 
     guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger())
 
-    guild: Guild = Relationship()
-    custom_case_type: CustomCaseType = Relationship()
-
     __table_args__ = (
         Index("idx_case_guild_user", "guild_id", "case_user_id"),
         Index("idx_case_guild_moderator", "guild_id", "case_moderator_id"),
@@ -66,11 +60,9 @@ class Case(BaseModel, table=True):
 
 
 class Note(BaseModel, table=True):
-    note_id: int = Field(primary_key=True, sa_type=BigInteger())
+    note_id: int | None = Field(default=None, primary_key=True, sa_type=Integer())
     note_content: str = Field(max_length=2000)
     note_moderator_id: int = Field(sa_type=BigInteger())
     note_user_id: int = Field(sa_type=BigInteger())
     note_number: int | None = Field(default=None)
     guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger())
-
-    guild: Guild = Relationship()
