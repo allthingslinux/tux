@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 import discord
 from discord.ext import commands, tasks
 
-from prisma.models import AFKModel
+from tux.database.models.social import AFK as AFKModel
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
 from tux.modules.utility import add_afk, del_afk

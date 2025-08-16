@@ -4,8 +4,8 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from prisma.enums import CaseType
-from prisma.models import Case
+from tux.database.models.moderation import CaseType
+from tux.database.models.moderation import Case
 from tux.core import checks
 from tux.core.flags import UnjailFlags
 from tux.core.types import Tux

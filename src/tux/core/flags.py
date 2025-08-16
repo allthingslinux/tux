@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from prisma.enums import CaseType
+from tux.database.models.moderation import CaseType
 from tux.core.converters import CaseTypeConverter, TimeConverter, convert_bool
 from tux.shared.constants import CONST
 

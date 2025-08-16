@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from prisma.models import Reminder
+from tux.database.models.content import Reminder
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
 from tux.shared.functions import convert_to_seconds

@@ -2,8 +2,8 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from prisma.enums import CaseType
-from prisma.models import Snippet
+from tux.database.models.moderation import CaseType
+from tux.database.models.content import Snippet
 from tux.core import checks
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
