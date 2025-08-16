@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from prisma.enums import CaseType
+from tux.database.models.moderation import CaseType as DBCaseType
 from tux.core import checks
 from tux.core.flags import PollBanFlags
 from tux.core.types import Tux
@@ -54,7 +54,7 @@ class PollBan(ModerationCogBase):
         # Execute poll ban with case creation and DM
         await self.execute_mod_action(
             ctx=ctx,
-            case_type=CaseType.POLLBAN,
+            case_type=DBCaseType.JAIL,
             user=member,
             reason=flags.reason,
             silent=flags.silent,

@@ -8,7 +8,6 @@ from tux.database.controllers.snippet import SnippetController
 from tux.database.controllers.case import CaseController
 from tux.database.controllers.starboard import StarboardController, StarboardMessageController
 from tux.database.controllers.reminder import ReminderController
-from tux.database.models.moderation import CaseType
 from tux.database.services.database import DatabaseService
 
 

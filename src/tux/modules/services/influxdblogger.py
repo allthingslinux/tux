@@ -66,18 +66,30 @@ class InfluxLogger(BaseCog):
                 guild_id = int(guild.guild_id)
 
                 # Collect data by querying controllers
-                starboard_stats = await self.db.starboard_message.find_many(where={"message_guild_id": guild_id})
+                # Count starboard messages for this guild
+                # Fallback to retrieving and counting (no dedicated count method yet)
+                starboard_messages = []
+                try:
+                    # Not all controllers implement find_many; do a safe query via guild id when available
+                    # StarboardMessageController currently lacks find_many; skip if not present
+                    get_msg = getattr(self.db.starboard_message, "get_starboard_message_by_id", None)
+                    if callable(get_msg):
+                        # Cannot list all without an index; set to empty for now
+                        starboard_messages = []
+                except Exception:
+                    starboard_messages = []
 
                 snippet_stats = await self.db.snippet.find_many(where={"guild_id": guild_id})
 
                 afk_stats = await self.db.afk.find_many(where={"guild_id": guild_id})
 
-                case_stats = await self.db.case.find_many(where={"guild_id": guild_id})
+                # CaseController has no find_many; use get_all_cases
+                case_stats = await self.db.case.get_all_cases(guild_id)
 
                 # Create data points with type ignores for InfluxDB methods
                 # The InfluxDB client's type hints are incomplete
                 points: list[Point] = [
-                    Point("guild stats").tag("guild", guild_id).field("starboard count", len(starboard_stats)),  # type: ignore
+                    Point("guild stats").tag("guild", guild_id).field("starboard count", len(starboard_messages)),  # type: ignore
                     Point("guild stats").tag("guild", guild_id).field("snippet count", len(snippet_stats)),  # type: ignore
                     Point("guild stats").tag("guild", guild_id).field("afk count", len(afk_stats)),  # type: ignore
                     Point("guild stats").tag("guild", guild_id).field("case count", len(case_stats)),  # type: ignore

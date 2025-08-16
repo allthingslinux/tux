@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlmodel import SQLModel
 
 # Import models to populate metadata
-from tux.database.models import content, guild, moderation, permissions, social, starboard  # noqa: F401
+from tux.database.models import content, guild, moderation, permissions, social, starboard  # noqa: F401,F401,F401,F401,F401,F401
 from tux.shared.config.env import get_database_url
 
 # this is the Alembic Config object, which provides

@@ -57,7 +57,7 @@ class SnippetInfo(SnippetsBaseCog):
             user_name=ctx.author.name,
             user_display_avatar=ctx.author.display_avatar.url,
             title="Snippet Information",
-            message_timestamp=snippet.snippet_created_at or datetime.fromtimestamp(0, UTC),
+            message_timestamp=snippet.created_at or datetime.fromtimestamp(0, UTC),
         )
 
         embed.add_field(name="Name", value=snippet.snippet_name, inline=True)

@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, Optional
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 
 from tux.database.controllers.base import BaseController, with_session
 from tux.database.models.content import Reminder
@@ -21,7 +20,7 @@ class ReminderController(BaseController):
 		reminder_channel_id: int,
 		reminder_user_id: int,
 		guild_id: int,
-		session: AsyncSession,
+		session: Any = None,
 	) -> Reminder:
 		return await Reminder.create(
 			session,
@@ -34,7 +33,7 @@ class ReminderController(BaseController):
 		)
 
 	@with_session
-	async def delete_reminder_by_id(self, reminder_id: int, *, session: AsyncSession) -> bool:
+	async def delete_reminder_by_id(self, reminder_id: int, *, session: Any = None) -> bool:
 		inst = await session.get(Reminder, reminder_id)
 		if inst is None:
 			return False
@@ -43,11 +42,11 @@ class ReminderController(BaseController):
 		return True
 
 	@with_session
-	async def get_reminder_by_id(self, reminder_id: int, *, session: AsyncSession) -> Optional[Reminder]:
+	async def get_reminder_by_id(self, reminder_id: int, *, session: Any = None) -> Optional[Reminder]:
 		return await session.get(Reminder, reminder_id)
 
 	@with_session
-	async def get_all_reminders(self, guild_id: int, *, session: AsyncSession) -> List[Reminder]:
+	async def get_all_reminders(self, guild_id: int, *, session: Any = None) -> List[Reminder]:
 		stmt = select(Reminder).where(Reminder.guild_id == guild_id)
 		res = await session.execute(stmt)
 		return list(res.scalars())

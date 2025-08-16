@@ -74,9 +74,9 @@ class LevelsService(BaseCog):
         await self.db.levels.update_xp_and_level(
             member.id,
             guild.id,
-            new_xp,
-            new_level,
-            datetime.datetime.fromtimestamp(time.time(), tz=datetime.UTC),
+            xp=new_xp,
+            level=new_level,
+            last_message=datetime.datetime.fromtimestamp(time.time(), tz=datetime.UTC),
         )
 
         if new_level > current_level:

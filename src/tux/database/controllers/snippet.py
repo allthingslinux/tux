@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
@@ -13,16 +13,20 @@ from tux.database.models.content import Snippet
 
 class SnippetController(BaseController):
 	@with_session
-	async def get_all_snippets_by_guild_id(self, guild_id: int, *, session: AsyncSession) -> List[Snippet]:
+	async def get_all_snippets_by_guild_id(self, guild_id: int, *, session: Any = None) -> List[Snippet]:
 		stmt = select(Snippet).where(Snippet.guild_id == guild_id)
 		res = await session.execute(stmt)
 		return list(res.scalars())
 
 	@with_session
 	async def get_snippet_by_name_and_guild_id(
-		self, snippet_name: str, guild_id: int, *, session: AsyncSession
+		self, snippet_name: str, guild_id: int, *, session: Any = None
 	) -> Optional[Snippet]:
-		stmt = select(Snippet).where((Snippet.guild_id == guild_id) & (func.lower(Snippet.snippet_name) == snippet_name.lower()))
+		stmt = (
+			select(Snippet)
+			.where(Snippet.guild_id == guild_id)
+			.where(func.lower(Snippet.snippet_name) == snippet_name.lower())
+		)
 		res = await session.execute(stmt)
 		return res.scalars().first()
 
@@ -35,7 +39,7 @@ class SnippetController(BaseController):
 		snippet_user_id: int,
 		guild_id: int,
 		*,
-		session: AsyncSession,
+		session: Any = None,
 	) -> Snippet:
 		return await Snippet.create(
 			session,
@@ -49,7 +53,7 @@ class SnippetController(BaseController):
 		)
 
 	@with_session
-	async def delete_snippet_by_id(self, snippet_id: int, *, session: AsyncSession) -> bool:
+	async def delete_snippet_by_id(self, snippet_id: int, *, session: Any = None) -> bool:
 		inst = await session.get(Snippet, snippet_id)
 		if inst is None:
 			return False
@@ -58,7 +62,7 @@ class SnippetController(BaseController):
 		return True
 
 	@with_session
-	async def update_snippet_by_id(self, snippet_id: int, snippet_content: str, *, session: AsyncSession) -> bool:
+	async def update_snippet_by_id(self, snippet_id: int, snippet_content: str, *, session: Any = None) -> bool:
 		inst = await session.get(Snippet, snippet_id)
 		if inst is None:
 			return False
@@ -67,7 +71,7 @@ class SnippetController(BaseController):
 		return True
 
 	@with_session
-	async def increment_snippet_uses(self, snippet_id: int, *, session: AsyncSession) -> bool:
+	async def increment_snippet_uses(self, snippet_id: int, *, session: Any = None) -> bool:
 		inst = await session.get(Snippet, snippet_id)
 		if inst is None:
 			return False
@@ -76,7 +80,7 @@ class SnippetController(BaseController):
 		return True
 
 	@with_session
-	async def toggle_snippet_lock_by_id(self, snippet_id: int, *, session: AsyncSession) -> Optional[Snippet]:
+	async def toggle_snippet_lock_by_id(self, snippet_id: int, *, session: Any = None) -> Optional[Snippet]:
 		inst = await session.get(Snippet, snippet_id)
 		if inst is None:
 			return None
@@ -94,7 +98,7 @@ class SnippetController(BaseController):
 		snippet_user_id: int,
 		guild_id: int,
 		*,
-		session: AsyncSession,
+		session: Any = None,
 	) -> Snippet:
 		return await Snippet.create(
 			session,
@@ -108,7 +112,19 @@ class SnippetController(BaseController):
 		)
 
 	@with_session
-	async def get_all_aliases(self, snippet_name: str, guild_id: int, *, session: AsyncSession) -> List[Snippet]:
-		stmt = select(Snippet).where((func.lower(func.coalesce(Snippet.alias, "")) == snippet_name.lower()) & (Snippet.guild_id == guild_id))
+	async def get_all_aliases(self, snippet_name: str, guild_id: int, *, session: Any = None) -> List[Snippet]:
+		stmt = (
+			select(Snippet)
+			.where(func.lower(func.coalesce(Snippet.alias, "")) == snippet_name.lower())
+			.where(Snippet.guild_id == guild_id)
+		)
+		res = await session.execute(stmt)
+		return list(res.scalars())
+
+	@with_session
+	async def find_many(self, *, where: dict[str, Any], session: Any = None) -> List[Snippet]:
+		stmt = select(Snippet)
+		for key, value in where.items():
+			stmt = stmt.where(getattr(Snippet, key) == value)
 		res = await session.execute(stmt)
 		return list(res.scalars())

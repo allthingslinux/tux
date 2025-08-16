@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any, Iterable, List, Optional
+from typing import Any, List, Optional
 
-from sqlalchemy import and_, desc, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import and_, desc
+from sqlmodel import select
 
 from tux.database.controllers.base import BaseController, with_session
 from tux.database.models.moderation import Case, CaseType
@@ -21,7 +21,7 @@ class CaseController(BaseController):
 		case_type: CaseType,
 		case_reason: str,
 		case_expires_at: datetime | None = None,
-		session: AsyncSession,
+		session: Any = None,
 	) -> Case:
 		# Determine next case number scoped to guild
 		stmt = select(Case.case_number).where(Case.guild_id == guild_id).order_by(desc(Case.case_number)).limit(1)
@@ -39,7 +39,7 @@ class CaseController(BaseController):
 		)
 
 	@with_session
-	async def get_latest_case_by_user(self, guild_id: int, user_id: int, *, session: AsyncSession) -> Optional[Case]:
+	async def get_latest_case_by_user(self, guild_id: int, user_id: int, *, session: Any = None) -> Optional[Case]:
 		stmt = select(Case).where((Case.guild_id == guild_id) & (Case.case_user_id == user_id)).order_by(
 			desc(Case.created_at)
 		).limit(1)
@@ -47,13 +47,13 @@ class CaseController(BaseController):
 		return res.scalars().first()
 
 	@with_session
-	async def get_case_by_number(self, guild_id: int, case_number: int, *, session: AsyncSession) -> Optional[Case]:
+	async def get_case_by_number(self, guild_id: int, case_number: int, *, session: Any = None) -> Optional[Case]:
 		stmt = select(Case).where((Case.guild_id == guild_id) & (Case.case_number == case_number)).limit(1)
 		res = await session.execute(stmt)
 		return res.scalars().first()
 
 	@with_session
-	async def get_cases_by_options(self, guild_id: int, options: dict[str, Any], *, session: AsyncSession) -> List[Case]:
+	async def get_cases_by_options(self, guild_id: int, options: dict[str, Any], *, session: Any = None) -> List[Case]:
 		conditions: list[Any] = [Case.guild_id == guild_id]
 		for key, value in options.items():
 			conditions.append(getattr(Case, key) == value)
@@ -62,7 +62,7 @@ class CaseController(BaseController):
 		return list(res.scalars())
 
 	@with_session
-	async def get_all_cases(self, guild_id: int, *, session: AsyncSession) -> List[Case]:
+	async def get_all_cases(self, guild_id: int, *, session: Any = None) -> List[Case]:
 		stmt = select(Case).where(Case.guild_id == guild_id).order_by(desc(Case.created_at))
 		res = await session.execute(stmt)
 		return list(res.scalars())
@@ -75,7 +75,7 @@ class CaseController(BaseController):
 		*,
 		case_reason: str | None = None,
 		case_status: bool | None = None,
-		session: AsyncSession,
+		session: Any = None,
 	) -> Optional[Case]:
 		case = await self.get_case_by_number(guild_id, case_number, session=session)
 		if case is None:
@@ -89,7 +89,7 @@ class CaseController(BaseController):
 		return case
 
 	@with_session
-	async def set_tempban_expired(self, case_id: int, guild_id: int, *, session: AsyncSession) -> bool:
+	async def set_tempban_expired(self, case_id: int, guild_id: int, *, session: Any = None) -> bool:
 		case = await session.get(Case, case_id)
 		if case is None or case.guild_id != guild_id:
 			return False
@@ -98,12 +98,12 @@ class CaseController(BaseController):
 		return True
 
 	@with_session
-	async def get_expired_tempbans(self, *, session: AsyncSession) -> List[Case]:
+	async def get_expired_tempbans(self, *, session: Any = None) -> List[Case]:
 		# any expired and still active TEMPBAN cases
 		now = datetime.now(UTC)
 		stmt = select(Case).where(
 			(Case.case_type == CaseType.TEMPBAN)
-			& (Case.case_status == True)
+			& (Case.case_status.is_(True))
 			& (Case.case_expires_at.is_not(None))
 			& (Case.case_expires_at <= now)
 		)
@@ -118,7 +118,7 @@ class CaseController(BaseController):
 		user_id: int,
 		active_restriction_type: CaseType,
 		inactive_restriction_type: CaseType,
-		session: AsyncSession,
+		session: Any = None,
 	) -> bool:
 		stmt = (
 			select(Case)

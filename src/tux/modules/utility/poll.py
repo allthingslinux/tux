@@ -3,7 +3,6 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
-from tux.database.models.moderation import CaseType as DBCaseType
 from tux.core.base_cog import BaseCog
 from tux.core.converters import get_channel_safe
 from tux.core.types import Tux
@@ -16,33 +15,7 @@ class Poll(BaseCog):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
 
-    async def is_pollbanned(self, guild_id: int, user_id: int) -> bool:
-        """
-        Check if a user is currently poll banned.
-        The user is considered poll banned if their latest relevant case (POLLBAN or POLLUNBAN) is a POLLBAN.
-
-        Parameters
-        ----------
-        guild_id : int
-            The ID of the guild to check in.
-        user_id : int
-            The ID of the user to check.
-
-        Returns
-        -------
-        bool
-            True if the user is poll banned, False otherwise.
-        """
-        latest_case = await self.db.case.get_latest_case_by_user(
-            guild_id=guild_id,
-            user_id=user_id,
-            # Controller returns latest; map to jail/un-jail if needed
-        )
-
-        # If no relevant cases exist, the user is not poll banned.
-        if latest_case and latest_case.case_type == DBCaseType.JAIL:
-            return CaseType.POLLBAN
-        return False
+    # Uses ModerationCogBase.is_pollbanned
 
     @commands.Cog.listener()  # listen for messages
     async def on_message(self, message: discord.Message) -> None:
