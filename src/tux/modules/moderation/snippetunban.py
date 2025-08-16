@@ -54,7 +54,7 @@ class SnippetUnban(ModerationCogBase):
         # Execute snippet unban with case creation and DM
         await self.execute_mod_action(
             ctx=ctx,
-            case_type=CaseType.UNJAIL,
+            case_type=CaseType.SNIPPETUNBAN,
             user=member,
             reason=flags.reason,
             silent=flags.silent,

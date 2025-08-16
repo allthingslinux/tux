@@ -27,6 +27,10 @@ CASE_TYPE_EMOJI_MAP = {
     DBCaseType.WARN: "warn",
     DBCaseType.JAIL: "jail",
     DBCaseType.UNJAIL: "jail",
+    DBCaseType.SNIPPETBAN: "snippet",
+    DBCaseType.SNIPPETUNBAN: "snippet",
+    DBCaseType.POLLBAN: "poll",
+    DBCaseType.POLLUNBAN: "poll",
 }
 
 # Maps case types to their action (added/removed)
@@ -40,6 +44,10 @@ CASE_ACTION_MAP = {
     DBCaseType.UNBAN: "removed",
     DBCaseType.UNTIMEOUT: "removed",
     DBCaseType.UNJAIL: "removed",
+    DBCaseType.SNIPPETBAN: "added",
+    DBCaseType.POLLBAN: "added",
+    DBCaseType.SNIPPETUNBAN: "removed",
+    DBCaseType.POLLUNBAN: "removed",
 }
 
 

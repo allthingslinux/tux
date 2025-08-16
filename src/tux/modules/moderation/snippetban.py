@@ -54,7 +54,7 @@ class SnippetBan(ModerationCogBase):
         # Execute snippet ban with case creation and DM
         await self.execute_mod_action(
             ctx=ctx,
-            case_type=CaseType.JAIL,
+            case_type=CaseType.SNIPPETBAN,
             user=member,
             reason=flags.reason,
             silent=flags.silent,
