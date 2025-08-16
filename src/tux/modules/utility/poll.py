@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
-from tux.core.base_cog import BaseCog
+from tux.modules.moderation import ModerationCogBase
 from tux.core.converters import get_channel_safe
 from tux.core.types import Tux
 from tux.ui.embeds import EmbedCreator
@@ -11,7 +11,7 @@ from tux.ui.embeds import EmbedCreator
 # TODO: Create option inputs for the poll command instead of using a comma separated string
 
 
-class Poll(BaseCog):
+class Poll(ModerationCogBase):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
 

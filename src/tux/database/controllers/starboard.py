@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from sqlmodel import select
-
 from tux.database.controllers.base import BaseController, with_session
 from tux.database.models.starboard import Starboard, StarboardMessage
 

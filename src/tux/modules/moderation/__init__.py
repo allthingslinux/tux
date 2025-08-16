@@ -12,7 +12,7 @@ from tux.database.models.moderation import CaseType as DBCaseType
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
 from tux.shared.constants import CONST
-from tux.shared.exceptions import handle_case_result, handle_gather_result
+from tux.shared.exceptions import handle_gather_result
 from tux.ui.embeds import EmbedCreator, EmbedType
 
 T = TypeVar("T")
@@ -200,7 +200,7 @@ class ModerationCogBase(BaseCog):
                 case_expires_at=expires_at,
             )
 
-            case_result = handle_case_result(case_result) if case_result is not None else None
+            # case_result is either a Case or None by construction
 
         except Exception as e:
             logger.error(f"Failed to create case for {user}: {e}")

@@ -17,7 +17,7 @@ from tux.ui.embeds import EmbedCreator, EmbedType
 from . import ModerationCogBase
 
 # Maps case types to their corresponding emoji keys
-CASE_TYPE_EMOJI_MAP = {
+CASE_TYPE_EMOJI_MAP: Dict[DBCaseType | None, str] = {
     DBCaseType.BAN: "ban",
     DBCaseType.UNBAN: "ban",
     DBCaseType.TEMPBAN: "tempban",
@@ -34,7 +34,7 @@ CASE_TYPE_EMOJI_MAP = {
 }
 
 # Maps case types to their action (added/removed)
-CASE_ACTION_MAP = {
+CASE_ACTION_MAP: Dict[DBCaseType | None, str] = {
     DBCaseType.BAN: "added",
     DBCaseType.KICK: "added",
     DBCaseType.TEMPBAN: "added",
@@ -558,9 +558,9 @@ class Cases(ModerationCogBase):
                 "active_case" if case.case_status else "inactive_case",
             )
             type_emoji_key = CASE_TYPE_EMOJI_MAP.get(case.case_type, "tux_error")
-            type_emoji = self.bot.emoji_manager.get(type_emoji_key)
+            type_emoji = self.bot.emoji_manager.get(str(type_emoji_key))
             action_emoji_key = CASE_ACTION_MAP.get(case.case_type, "tux_error")
-            action_emoji = self.bot.emoji_manager.get(action_emoji_key)
+            action_emoji = self.bot.emoji_manager.get(str(action_emoji_key))
 
             # Format the case number
             case_number = f"{case.case_number:04}" if case.case_number is not None else "0000"

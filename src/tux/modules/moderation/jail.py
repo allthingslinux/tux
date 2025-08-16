@@ -129,8 +129,7 @@ class Jail(ModerationCogBase):
             # Get roles that can be managed by the bot
             user_roles = self._get_manageable_roles(member, jail_role)
 
-            # Convert roles to IDs
-            case_user_roles = [role.id for role in user_roles]
+            # Convert roles to IDs (not used presently)
 
             # First create the case - if this fails, no role changes are made
             case = await self.db.case.insert_case(
