@@ -2,12 +2,16 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import BigInteger, Index
-from sqlmodel import Field, Relationship
+from sqlmodel import Field
 
 from tux.database.core.base import BaseModel
-from tux.database.models.guild import Guild
+
+
+if TYPE_CHECKING:
+    from tux.database.models.guild import Guild
 
 
 class PermissionType(str, Enum):
@@ -39,8 +43,6 @@ class GuildPermission(BaseModel, table=True):
 
     expires_at: datetime | None = Field(default=None)
     is_active: bool = Field(default=True)
-
-    guild: Guild | None = Relationship()
 
     __table_args__ = (
         Index("idx_guild_perm_guild_type", "guild_id", "permission_type"),

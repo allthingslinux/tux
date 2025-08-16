@@ -3,10 +3,9 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from sqlalchemy import BigInteger, Float, Index
-from sqlmodel import Field, Relationship
+from sqlmodel import Field
 
 from tux.database.core.base import BaseModel
-from tux.database.models.guild import Guild
 
 
 class AFK(BaseModel, table=True):
@@ -19,8 +18,6 @@ class AFK(BaseModel, table=True):
     enforced: bool = Field(default=False)
     perm_afk: bool = Field(default=False)
 
-    guild: Guild = Relationship()
-
     __table_args__ = (Index("idx_afk_member_guild", "member_id", "guild_id", unique=True),)
 
 
@@ -31,7 +28,5 @@ class Levels(BaseModel, table=True):
     level: int = Field(default=0)
     blacklisted: bool = Field(default=False)
     last_message: datetime = Field(default_factory=lambda: datetime.now(UTC))
-
-    guild: Guild = Relationship()
 
     __table_args__ = (Index("idx_levels_guild_xp", "guild_id", "xp"),)
