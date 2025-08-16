@@ -36,7 +36,7 @@ class CustomCaseType(BaseModel, table=True):
     severity_level: int = Field(default=1)
     requires_duration: bool = Field(default=False)
 
-    guild: Guild | None = Relationship()
+    guild: "Guild" = Relationship()
 
 
 class Case(BaseModel, table=True):
@@ -56,8 +56,8 @@ class Case(BaseModel, table=True):
 
     guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger())
 
-    guild: Guild | None = Relationship()
-    custom_case_type: CustomCaseType | None = Relationship()
+    guild: "Guild" = Relationship()
+    custom_case_type: "CustomCaseType" = Relationship()
 
     __table_args__ = (
         Index("idx_case_guild_user", "guild_id", "case_user_id"),
@@ -73,4 +73,4 @@ class Note(BaseModel, table=True):
     note_number: int | None = Field(default=None)
     guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger())
 
-    guild: Guild | None = Relationship()
+    guild: "Guild" = Relationship()
