@@ -40,18 +40,15 @@ class CaseController(BaseController):
 
 	@with_session
 	async def get_latest_case_by_user(self, guild_id: int, user_id: int, *, session: AsyncSession) -> Optional[Case]:
-		stmt = (
-			select(Case)
-			.where(and_(Case.guild_id == guild_id, Case.case_user_id == user_id))
-			.order_by(desc(Case.created_at))
-			.limit(1)
-		)
+		stmt = select(Case).where((Case.guild_id == guild_id) & (Case.case_user_id == user_id)).order_by(
+			desc(Case.created_at)
+		).limit(1)
 		res = await session.execute(stmt)
 		return res.scalars().first()
 
 	@with_session
 	async def get_case_by_number(self, guild_id: int, case_number: int, *, session: AsyncSession) -> Optional[Case]:
-		stmt = select(Case).where(and_(Case.guild_id == guild_id, Case.case_number == case_number)).limit(1)
+		stmt = select(Case).where((Case.guild_id == guild_id) & (Case.case_number == case_number)).limit(1)
 		res = await session.execute(stmt)
 		return res.scalars().first()
 
@@ -103,8 +100,12 @@ class CaseController(BaseController):
 	@with_session
 	async def get_expired_tempbans(self, *, session: AsyncSession) -> List[Case]:
 		# any expired and still active TEMPBAN cases
+		now = datetime.now(UTC)
 		stmt = select(Case).where(
-			and_(Case.case_type == CaseType.TEMPBAN, Case.case_status == True, Case.case_expires_at <= datetime.now(UTC))
+			(Case.case_type == CaseType.TEMPBAN)
+			& (Case.case_status == True)
+			& (Case.case_expires_at.is_not(None))
+			& (Case.case_expires_at <= now)
 		)
 		res = await session.execute(stmt)
 		return list(res.scalars())
@@ -121,7 +122,7 @@ class CaseController(BaseController):
 	) -> bool:
 		stmt = (
 			select(Case)
-			.where(and_(Case.guild_id == guild_id, Case.case_user_id == user_id))
+			.where((Case.guild_id == guild_id) & (Case.case_user_id == user_id))
 			.order_by(desc(Case.created_at))
 			.limit(1)
 		)

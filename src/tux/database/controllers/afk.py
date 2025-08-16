@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import List
+from typing import Any, List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
@@ -12,16 +12,16 @@ from tux.database.models.social import AFK
 
 class AfkController(BaseController):
 	@with_session
-	async def get_afk_member(self, member_id: int, *, guild_id: int, session: AsyncSession) -> AFK | None:
+	async def get_afk_member(self, member_id: int, *, guild_id: int, session: Any = None) -> AFK | None:
 		return await session.get(AFK, member_id)
 
 	@with_session
-	async def is_afk(self, member_id: int, *, guild_id: int, session: AsyncSession) -> bool:
+	async def is_afk(self, member_id: int, *, guild_id: int, session: Any = None) -> bool:
 		entry = await session.get(AFK, member_id)
 		return entry is not None and entry.guild_id == guild_id
 
 	@with_session
-	async def is_perm_afk(self, member_id: int, *, guild_id: int, session: AsyncSession) -> bool:
+	async def is_perm_afk(self, member_id: int, *, guild_id: int, session: Any = None) -> bool:
 		entry = await session.get(AFK, member_id)
 		return bool(entry and entry.guild_id == guild_id and entry.perm_afk)
 
@@ -36,7 +36,7 @@ class AfkController(BaseController):
 		until: datetime | None = None,
 		enforced: bool = False,
 		*,
-		session: AsyncSession,
+		session: Any = None,
 	) -> AFK:
 		entry = await session.get(AFK, member_id)
 		if entry is None:
@@ -62,7 +62,7 @@ class AfkController(BaseController):
 		return entry
 
 	@with_session
-	async def remove_afk(self, member_id: int, *, session: AsyncSession) -> bool:
+	async def remove_afk(self, member_id: int, *, session: Any = None) -> bool:
 		instance = await session.get(AFK, member_id)
 		if instance is None:
 			return False
@@ -71,7 +71,15 @@ class AfkController(BaseController):
 		return True
 
 	@with_session
-	async def get_all_afk_members(self, guild_id: int, *, session: AsyncSession) -> List[AFK]:
+	async def get_all_afk_members(self, guild_id: int, *, session: Any = None) -> List[AFK]:
 		stmt = select(AFK).where(AFK.guild_id == guild_id)
+		res = await session.execute(stmt)
+		return list(res.scalars())
+
+	@with_session
+	async def find_many(self, *, where: dict[str, Any], session: Any = None) -> List[AFK]:
+		stmt = select(AFK)
+		for key, value in where.items():
+			stmt = stmt.where(getattr(AFK, key) == value)
 		res = await session.execute(stmt)
 		return list(res.scalars())

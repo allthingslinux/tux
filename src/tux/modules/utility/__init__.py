@@ -5,6 +5,7 @@ from types import NoneType
 import discord
 
 from tux.shared.constants import CONST
+from tux.database.controllers import DatabaseController
 
 __all__ = ("add_afk", "del_afk")
 
@@ -24,7 +25,7 @@ def _generate_afk_nickname(display_name: str) -> str:
 
 
 async def add_afk(
-    db,
+    db: DatabaseController,
     reason: str,
     target: discord.Member,
     guild_id: int,

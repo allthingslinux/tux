@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
+from sqlalchemy import func
 
 from tux.database.controllers.base import BaseController, with_session
 from tux.database.models.content import Snippet
@@ -21,7 +22,7 @@ class SnippetController(BaseController):
 	async def get_snippet_by_name_and_guild_id(
 		self, snippet_name: str, guild_id: int, *, session: AsyncSession
 	) -> Optional[Snippet]:
-		stmt = select(Snippet).where((Snippet.guild_id == guild_id) & (Snippet.snippet_name.ilike(snippet_name)))
+		stmt = select(Snippet).where((Snippet.guild_id == guild_id) & (func.lower(Snippet.snippet_name) == snippet_name.lower()))
 		res = await session.execute(stmt)
 		return res.scalars().first()
 
@@ -108,6 +109,6 @@ class SnippetController(BaseController):
 
 	@with_session
 	async def get_all_aliases(self, snippet_name: str, guild_id: int, *, session: AsyncSession) -> List[Snippet]:
-		stmt = select(Snippet).where((Snippet.alias == snippet_name) & (Snippet.guild_id == guild_id))
+		stmt = select(Snippet).where((func.lower(Snippet.alias) == snippet_name.lower()) & (Snippet.guild_id == guild_id))
 		res = await session.execute(stmt)
 		return list(res.scalars())
