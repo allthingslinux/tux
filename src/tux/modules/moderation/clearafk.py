@@ -6,6 +6,7 @@ from discord.ext import commands
 from tux.core import checks
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
+from tux.database.controllers.afk import AfkController
 
 
 class ClearAFK(BaseCog):
