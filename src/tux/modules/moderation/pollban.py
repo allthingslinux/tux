@@ -54,7 +54,7 @@ class PollBan(ModerationCogBase):
         # Execute poll ban with case creation and DM
         await self.execute_mod_action(
             ctx=ctx,
-            case_type=DBCaseType.JAIL,
+            case_type=DBCaseType.POLLBAN,
             user=member,
             reason=flags.reason,
             silent=flags.silent,

@@ -21,6 +21,10 @@ class CaseType(str, Enum):
     WARN = "WARN"
     JAIL = "JAIL"
     UNJAIL = "UNJAIL"
+    SNIPPETBAN = "SNIPPETBAN"
+    SNIPPETUNBAN = "SNIPPETUNBAN"
+    POLLBAN = "POLLBAN"
+    POLLUNBAN = "POLLUNBAN"
 
 
 class CustomCaseType(BaseModel, table=True):

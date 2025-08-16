@@ -54,7 +54,7 @@ class PollUnban(ModerationCogBase):
         # Execute poll unban with case creation and DM
         await self.execute_mod_action(
             ctx=ctx,
-            case_type=DBCaseType.UNJAIL,
+            case_type=DBCaseType.POLLUNBAN,
             user=member,
             reason=flags.reason,
             silent=flags.silent,
