@@ -132,7 +132,7 @@ class CRUDMixin(SQLModel):
         instance = await session.get(cls, record_id)
         if instance is None:
             return False
-        session.delete(instance)
+        await session.delete(instance)
         await session.flush()
         return True
 
