@@ -12,8 +12,8 @@ class DatabaseService:
 
     @asynccontextmanager
     async def session(self):
-        async with self.manager.get_session() as s:  # type: ignore[reportUnknownMemberType]
+        async with self.manager.get_session() as s:
             yield s
 
-    async def create_all_async(self) -> None:
-        await self.manager.create_tables_async()
+    async def create_all(self) -> None:
+        await self.manager.create_tables()
