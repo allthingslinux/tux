@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 from sqlalchemy import BigInteger, Float, Index
 from sqlmodel import Field, Relationship
@@ -14,8 +13,8 @@ class AFK(BaseModel, table=True):
     member_id: int = Field(primary_key=True, sa_column_kwargs={"type_": BigInteger()})
     nickname: str = Field(max_length=100)
     reason: str = Field(max_length=500)
-    since: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    until: Optional[datetime] = Field(default=None)
+    since: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    until: datetime | None = Field(default=None)
     guild_id: int = Field(foreign_key="guild.guild_id", sa_column_kwargs={"type_": BigInteger()})
     enforced: bool = Field(default=False)
     perm_afk: bool = Field(default=False)
@@ -31,7 +30,7 @@ class Levels(BaseModel, table=True):
     xp: float = Field(default=0.0, sa_column_kwargs={"type_": Float()})
     level: int = Field(default=0)
     blacklisted: bool = Field(default=False)
-    last_message: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_message: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     guild: Guild | None = Relationship()
 

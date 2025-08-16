@@ -1,6 +1,6 @@
 import asyncio
+from collections.abc import Callable
 from logging.config import fileConfig
-from typing import Callable
 
 from alembic import context
 from sqlalchemy.engine import Connection
@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlmodel import SQLModel
 
 # Import models to populate metadata
-from tux.database.models import guild, moderation, content, social, permissions, starboard  # noqa: F401
+from tux.database.models import content, guild, moderation, permissions, social, starboard  # noqa: F401
 from tux.shared.config.env import get_database_url
 
 # this is the Alembic Config object, which provides

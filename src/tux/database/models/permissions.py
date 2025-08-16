@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from sqlalchemy import BigInteger, Index
 from sqlmodel import Field, Relationship
@@ -34,11 +33,11 @@ class GuildPermission(BaseModel, table=True):
     access_type: AccessType
 
     target_id: int = Field(sa_column_kwargs={"type_": BigInteger()})
-    target_name: Optional[str] = Field(default=None, max_length=100)
-    command_name: Optional[str] = Field(default=None, max_length=100)
-    module_name: Optional[str] = Field(default=None, max_length=100)
+    target_name: str | None = Field(default=None, max_length=100)
+    command_name: str | None = Field(default=None, max_length=100)
+    module_name: str | None = Field(default=None, max_length=100)
 
-    expires_at: Optional[datetime] = Field(default=None)
+    expires_at: datetime | None = Field(default=None)
     is_active: bool = Field(default=True)
 
     guild: Guild | None = Relationship()

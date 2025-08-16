@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
 
 from sqlalchemy import BigInteger, Index
 from sqlmodel import Field, Relationship
@@ -29,7 +28,7 @@ class CustomCaseType(BaseModel, table=True):
     guild_id: int = Field(foreign_key="guild.guild_id", sa_column_kwargs={"type_": BigInteger()})
     type_name: str = Field(max_length=50)
     display_name: str = Field(max_length=100)
-    description: Optional[str] = Field(default=None, max_length=500)
+    description: str | None = Field(default=None, max_length=500)
     severity_level: int = Field(default=1)
     requires_duration: bool = Field(default=False)
 
@@ -38,23 +37,23 @@ class CustomCaseType(BaseModel, table=True):
 
 class Case(BaseModel, table=True):
     case_id: int = Field(primary_key=True, sa_column_kwargs={"type_": BigInteger()})
-    case_status: Optional[bool] = Field(default=True)
+    case_status: bool | None = Field(default=True)
 
-    case_type: Optional[CaseType] = Field(default=None)
-    custom_case_type_id: Optional[int] = Field(default=None, foreign_key="customcasetype.id")
+    case_type: CaseType | None = Field(default=None)
+    custom_case_type_id: int | None = Field(default=None, foreign_key="customcasetype.id")
 
     case_reason: str = Field(max_length=2000)
     case_moderator_id: int = Field(sa_column_kwargs={"type_": BigInteger()})
     case_user_id: int = Field(sa_column_kwargs={"type_": BigInteger()})
-    case_user_roles: List[int] = Field(default_factory=list)
-    case_number: Optional[int] = Field(default=None)
-    case_expires_at: Optional[datetime] = Field(default=None)
-    case_metadata: Optional[Dict[str, str]] = Field(default=None)
+    case_user_roles: list[int] = Field(default_factory=list)
+    case_number: int | None = Field(default=None)
+    case_expires_at: datetime | None = Field(default=None)
+    case_metadata: dict[str, str] | None = Field(default=None)
 
     guild_id: int = Field(foreign_key="guild.guild_id", sa_column_kwargs={"type_": BigInteger()})
 
     guild: Guild | None = Relationship()
-    custom_case_type: Optional[CustomCaseType] = Relationship()
+    custom_case_type: CustomCaseType | None = Relationship()
 
     __table_args__ = (
         Index("idx_case_guild_user", "guild_id", "case_user_id"),
@@ -67,7 +66,7 @@ class Note(BaseModel, table=True):
     note_content: str = Field(max_length=2000)
     note_moderator_id: int = Field(sa_column_kwargs={"type_": BigInteger()})
     note_user_id: int = Field(sa_column_kwargs={"type_": BigInteger()})
-    note_number: Optional[int] = Field(default=None)
+    note_number: int | None = Field(default=None)
     guild_id: int = Field(foreign_key="guild.guild_id", sa_column_kwargs={"type_": BigInteger()})
 
     guild: Guild | None = Relationship()

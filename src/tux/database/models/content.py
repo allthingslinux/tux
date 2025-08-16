@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import BigInteger, Index
 from sqlmodel import Field, Relationship
@@ -13,12 +12,12 @@ from tux.database.models.guild import Guild
 class Snippet(BaseModel, table=True):
     snippet_id: int = Field(primary_key=True, sa_column_kwargs={"type_": BigInteger()})
     snippet_name: str = Field(max_length=100)
-    snippet_content: Optional[str] = Field(default=None, max_length=4000)
+    snippet_content: str | None = Field(default=None, max_length=4000)
     snippet_user_id: int = Field(sa_column_kwargs={"type_": BigInteger()})
     guild_id: int = Field(foreign_key="guild.guild_id", sa_column_kwargs={"type_": BigInteger()})
     uses: int = Field(default=0)
     locked: bool = Field(default=False)
-    alias: Optional[str] = Field(default=None, max_length=100)
+    alias: str | None = Field(default=None, max_length=100)
 
     guild: Guild | None = Relationship()
 
