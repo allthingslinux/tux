@@ -13,7 +13,7 @@ class Guild(BaseModel, table=True):
     guild_joined_at: datetime | None = Field(default_factory=lambda: datetime.now(UTC))
     case_count: int = Field(default=0)
 
-    guild_config: "GuildConfig" = Relationship(back_populates="guild")
+    # Relationship provided via backref on GuildConfig
 
     __table_args__ = (Index("idx_guild_id", "guild_id"),)
 
@@ -47,4 +47,4 @@ class GuildConfig(BaseModel, table=True):
     perm_level_6_role_id: int | None = Field(default=None, sa_type=BigInteger())
     perm_level_7_role_id: int | None = Field(default=None, sa_type=BigInteger())
 
-    guild: "Guild" = Relationship(back_populates="guild_config")
+    guild: "Guild" = Relationship(sa_relationship_kwargs={"backref": "guild_config"})
