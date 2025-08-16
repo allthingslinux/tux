@@ -12,7 +12,9 @@ from tux.database.controllers import DatabaseController
 def _resolve_bot(source: commands.Context[Tux] | discord.Interaction | Tux) -> Tux | None:
     if isinstance(source, commands.Context):
         return source.bot
-    return source.client if isinstance(source, discord.Interaction) else source  # type: ignore[return-value]
+    if isinstance(source, discord.Interaction):
+        return source.client  # type: ignore[return-value]
+    return source
 
 
 def get_db_service_from(source: commands.Context[Tux] | discord.Interaction | Tux) -> IDatabaseService | None:
@@ -23,7 +25,7 @@ def get_db_service_from(source: commands.Context[Tux] | discord.Interaction | Tu
     if container is None:
         return None
     try:
-        return container.get_optional(IDatabaseService)  # type: ignore[attr-defined]
+        return container.get_optional(IDatabaseService)
     except Exception as e:
         logger.debug(f"Failed to resolve IDatabaseService from container: {e}")
         return None
