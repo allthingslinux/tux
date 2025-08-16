@@ -1,6 +1,6 @@
 import asyncio
 from logging.config import fileConfig
-from typing import Any, Callable
+from typing import Callable
 
 from alembic import context
 from sqlalchemy.engine import Connection
