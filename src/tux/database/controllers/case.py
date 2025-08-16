@@ -3,7 +3,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any, List, Optional, cast
 
-from sqlalchemy import and_
+from sqlalchemy import and_, update
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from tux.database.controllers.base import BaseController, with_session
@@ -23,20 +24,45 @@ class CaseController(BaseController):
 		case_expires_at: datetime | None = None,
 		session: Any = None,
 	) -> Case:
-		# Determine next case number scoped to guild
-		stmt = select(Case.case_number).where(Case.guild_id == guild_id).order_by(cast(Any, Case.case_number).desc()).limit(1)
-		res = await session.execute(stmt)
-		next_num = (res.scalar_one_or_none() or 0) + 1
-		return await Case.create(
-			session,
-			guild_id=guild_id,
-			case_user_id=case_user_id,
-			case_moderator_id=case_moderator_id,
-			case_type=case_type,
-			case_reason=case_reason,
-			case_number=next_num,
-			case_expires_at=case_expires_at,
+		# Safe case number allocation under concurrency:
+		# 1) Attempt to lock the latest case row for this guild (if exists)
+		# 2) Compute next number = max(case_number) + 1 (or 1 if none)
+		# This avoids two writers computing the same next_num concurrently.
+		latest_stmt = (
+			select(Case.case_number)
+			.where(Case.guild_id == guild_id)
+			.order_by(cast(Any, Case.case_number).desc())
+			.limit(1)
+			.with_for_update()
 		)
+		res = await session.execute(latest_stmt)
+		next_num = (res.scalar_one_or_none() or 0) + 1
+
+		try:
+			return await Case.create(
+				session,
+				guild_id=guild_id,
+				case_user_id=case_user_id,
+				case_moderator_id=case_moderator_id,
+				case_type=case_type,
+				case_reason=case_reason,
+				case_number=next_num,
+				case_expires_at=case_expires_at,
+			)
+		except Exception:
+			# If uniqueness is violated due to a race, retry once by recomputing
+			res = await session.execute(latest_stmt)
+			next_num = (res.scalar_one_or_none() or 0) + 1
+			return await Case.create(
+				session,
+				guild_id=guild_id,
+				case_user_id=case_user_id,
+				case_moderator_id=case_moderator_id,
+				case_type=case_type,
+				case_reason=case_reason,
+				case_number=next_num,
+				case_expires_at=case_expires_at,
+			)
 
 	@with_session
 	async def get_latest_case_by_user(self, guild_id: int, user_id: int, *, session: Any = None) -> Optional[Case]:
