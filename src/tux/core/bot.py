@@ -20,7 +20,6 @@ from tux.core.container import ServiceContainer
 from tux.core.interfaces import IDatabaseService
 from tux.core.service_registry import ServiceRegistry
 from tux.core.task_monitor import TaskMonitor
-from tux.services.database.client import db
 from tux.services.emoji_manager import EmojiManager
 from tux.services.sentry_manager import SentryManager
 from tux.services.tracing import (
@@ -143,17 +142,12 @@ class Tux(commands.Bot):
             try:
                 # Prefer DI service; fall back to shared client early in startup
                 db_service = self.container.get_optional(IDatabaseService) if self.container else None
-
                 if db_service is None:
-                    await db.connect()
-                    self._validate_db_connection()
-                    connected, registered = db.is_connected(), db.is_registered()
-
-                else:
-                    await db_service.connect()
-                    connected, registered = db_service.is_connected(), db_service.is_registered()
-                    if not (connected and registered):
-                        _raise_db_connection_error()
+                    _raise_db_connection_error()
+                await db_service.connect()
+                connected, registered = db_service.is_connected(), db_service.is_registered()
+                if not (connected and registered):
+                    _raise_db_connection_error()
 
                 # Minimal telemetry for connection health
                 span.set_tag("db.connected", connected)
@@ -219,9 +213,7 @@ class Tux(commands.Bot):
 
     @staticmethod
     def _validate_db_connection() -> None:
-        """Raise if the database is not connected or registered."""
-        if not db.is_connected() or not db.is_registered():
-            raise DatabaseConnectionError(DatabaseConnectionError.CONNECTION_FAILED)
+        return None
 
     def _validate_container(self) -> None:
         """Raise if the dependency injection container is not properly initialized."""
@@ -444,15 +436,8 @@ class Tux(commands.Bot):
                 db_service = self.container.get(IDatabaseService) if self.container else None
                 if db_service is not None:
                     await db_service.disconnect()
-                elif db.is_connected():
-                    await db.disconnect()
-
-                    logger.debug("Database connections closed.")
-                    span.set_tag("db_closed", True)
-
-                else:
-                    logger.warning("Database was not connected, no disconnect needed.")
-                    span.set_tag("db_connected", False)
+                logger.debug("Database connections closed.")
+                span.set_tag("db_closed", True)
 
             except Exception as e:
                 logger.critical(f"Error during database disconnection: {e}")
