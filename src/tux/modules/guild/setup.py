@@ -29,7 +29,7 @@ class Setup(BaseCog):
 
         assert interaction.guild
 
-        jail_role_id = await self.config.get_guild_config_field_value(interaction.guild.id, "jail_role_id")
+        jail_role_id = await self.config.get_jail_role_id(interaction.guild.id)
         if not jail_role_id:
             await interaction.response.send_message("No jail role has been set up for this server.", ephemeral=True)
             return
@@ -39,7 +39,7 @@ class Setup(BaseCog):
             await interaction.response.send_message("The jail role has been deleted.", ephemeral=True)
             return
 
-        jail_channel_id = await self.config.get_guild_config_field_value(interaction.guild.id, "jail_channel_id")
+        jail_channel_id = await self.config.get_jail_channel_id(interaction.guild.id)
         if not jail_channel_id:
             await interaction.response.send_message("No jail channel has been set up for this server.", ephemeral=True)
             return

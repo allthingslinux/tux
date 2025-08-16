@@ -160,7 +160,7 @@ class Config(BaseCog, commands.GroupCog, group_name="config"):
         await interaction.response.defer(ephemeral=True)
 
         if setting.value == "jail_role_id":
-            await self.db_config.update_jail_role_id(interaction.guild.id, role.id)
+            await self.db_config._update_field(interaction.guild.id, "jail_role_id", role.id)
             await interaction.followup.send(
                 f"{setting.value} role set to {role.mention}.",
                 ephemeral=True,

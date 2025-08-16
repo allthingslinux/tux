@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
-from tux.database.models.moderation import CaseType
+from tux.database.models.moderation import CaseType as DBCaseType
 from tux.core.base_cog import BaseCog
 from tux.core.converters import get_channel_safe
 from tux.core.types import Tux
@@ -36,11 +36,13 @@ class Poll(BaseCog):
         latest_case = await self.db.case.get_latest_case_by_user(
             guild_id=guild_id,
             user_id=user_id,
-            case_types=[CaseType.POLLBAN, CaseType.POLLUNBAN],
+            # Controller returns latest; map to jail/un-jail if needed
         )
 
         # If no relevant cases exist, the user is not poll banned.
-        return latest_case.case_type == CaseType.POLLBAN if latest_case else False
+        if latest_case and latest_case.case_type == DBCaseType.JAIL:
+            return CaseType.POLLBAN
+        return False
 
     @commands.Cog.listener()  # listen for messages
     async def on_message(self, message: discord.Message) -> None:

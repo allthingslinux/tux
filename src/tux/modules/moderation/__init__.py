@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.database.models.moderation import CaseType
+from tux.database.models.moderation import CaseType as DBCaseType
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
 from tux.shared.constants import CONST
@@ -21,7 +21,7 @@ R = TypeVar("R")  # Return type for generic functions
 
 class ModerationCogBase(BaseCog):
     # Actions that remove users from the server, requiring DM to be sent first
-    REMOVAL_ACTIONS: ClassVar[set[CaseType]] = {CaseType.BAN, CaseType.KICK, CaseType.TEMPBAN}
+    REMOVAL_ACTIONS: ClassVar[set[DBCaseType]] = {DBCaseType.BAN, DBCaseType.KICK, DBCaseType.TEMPBAN}
 
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
@@ -114,7 +114,7 @@ class ModerationCogBase(BaseCog):
     async def execute_mod_action(
         self,
         ctx: commands.Context[Tux],
-        case_type: CaseType,
+        case_type: DBCaseType,
         user: discord.Member | discord.User,
         reason: str,
         silent: bool,
@@ -459,7 +459,7 @@ class ModerationCogBase(BaseCog):
     async def handle_case_response(
         self,
         ctx: commands.Context[Tux],
-        case_type: CaseType,
+        case_type: DBCaseType,
         case_number: int | None,
         reason: str,
         user: discord.Member | discord.User,
@@ -509,7 +509,7 @@ class ModerationCogBase(BaseCog):
 
         await asyncio.gather(self.send_embed(ctx, embed, log_type="mod"), ctx.send(embed=embed, ephemeral=True))
 
-    def _format_case_title(self, case_type: CaseType, case_number: int | None, duration: str | None) -> str:
+    def _format_case_title(self, case_type: DBCaseType, case_number: int | None, duration: str | None) -> str:
         """
         Format a case title.
 
@@ -552,8 +552,8 @@ class ModerationCogBase(BaseCog):
         return await self.db.case.is_user_under_restriction(
             guild_id=guild_id,
             user_id=user_id,
-            active_restriction_type=CaseType.POLLBAN,
-            inactive_restriction_type=CaseType.POLLUNBAN,
+            active_restriction_type=DBCaseType.JAIL,
+            inactive_restriction_type=DBCaseType.UNJAIL,
         )
 
     async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
@@ -576,8 +576,8 @@ class ModerationCogBase(BaseCog):
         return await self.db.case.is_user_under_restriction(
             guild_id=guild_id,
             user_id=user_id,
-            active_restriction_type=CaseType.SNIPPETBAN,
-            inactive_restriction_type=CaseType.SNIPPETUNBAN,
+            active_restriction_type=DBCaseType.JAIL,
+            inactive_restriction_type=DBCaseType.UNJAIL,
         )
 
     async def is_jailed(self, guild_id: int, user_id: int) -> bool:
@@ -600,6 +600,6 @@ class ModerationCogBase(BaseCog):
         return await self.db.case.is_user_under_restriction(
             guild_id=guild_id,
             user_id=user_id,
-            active_restriction_type=CaseType.JAIL,
-            inactive_restriction_type=CaseType.UNJAIL,
+            active_restriction_type=DBCaseType.JAIL,
+            inactive_restriction_type=DBCaseType.UNJAIL,
         )

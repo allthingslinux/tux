@@ -11,21 +11,22 @@ from tux.database.services.database import DatabaseService
 
 P = ParamSpec("P")
 R = TypeVar("R")
+C = TypeVar("C", bound="BaseController")
 
 
 def with_session(
-    func: Callable[Concatenate["BaseController", P], Awaitable[R]]
-) -> Callable[Concatenate["BaseController", P], Awaitable[R]]:
-    @wraps(func)
-    async def wrapper(self: "BaseController", *args: P.args, **kwargs: P.kwargs) -> R:
-        if kwargs.get("session") is not None:
-            return await func(self, *args, **kwargs)
-        async with self.db.session() as session:
-            return await func(self, *args, session=session, **kwargs)
+	func: Callable[Concatenate[C, P], Awaitable[R]]
+) -> Callable[Concatenate[C, P], Awaitable[R]]:
+	@wraps(func)
+	async def wrapper(self: C, *args: P.args, **kwargs: P.kwargs) -> R:
+		if kwargs.get("session") is not None:
+			return await func(self, *args, **kwargs)
+		async with self.db.session() as session:
+			return await func(self, *args, session=session, **kwargs)
 
-    return wrapper
+	return wrapper
 
 
 class BaseController:
-    def __init__(self, db: DatabaseService | None = None):
-        self.db = db or DatabaseService()
+	def __init__(self, db: DatabaseService | None = None):
+		self.db = db or DatabaseService()
