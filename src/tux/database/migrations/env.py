@@ -1,6 +1,7 @@
 import asyncio
 from collections.abc import Callable
 from logging.config import fileConfig
+from pathlib import Path
 
 from alembic import context
 from sqlalchemy.engine import Connection
@@ -20,10 +21,7 @@ from tux.shared.config.env import get_database_url
 # access to the values within the .ini file in use.
 config = context.config
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+# Skip fileConfig to avoid requiring logging sections
 
 # Ensure sqlalchemy.url is set, fallback to app environment
 if not config.get_main_option("sqlalchemy.url"):
