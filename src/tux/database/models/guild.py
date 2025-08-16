@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime
-from typing import List, Optional
+from datetime import datetime, timezone
+from typing import Optional
 
 from sqlalchemy import BigInteger, Index
 from sqlmodel import Field, Relationship
@@ -11,7 +11,7 @@ from tux.database.core.base import BaseModel
 
 class Guild(BaseModel, table=True):
     guild_id: int = Field(primary_key=True, sa_column_kwargs={"type_": BigInteger()})
-    guild_joined_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
+    guild_joined_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
     case_count: int = Field(default=0)
 
     guild_config: Optional["GuildConfig"] = Relationship(back_populates="guild")

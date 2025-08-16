@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Iterator
+from typing import AsyncGenerator, Any
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlmodel import Session, SQLModel, create_engine
 
 
@@ -11,7 +11,7 @@ class DatabaseManager:
     def __init__(self, database_url: str, echo: bool = False):
         self.is_async = database_url.startswith(("postgresql+asyncpg", "sqlite+aiosqlite"))
         if self.is_async:
-            self.engine = create_async_engine(database_url, echo=echo, pool_pre_ping=True)
+            self.engine: AsyncEngine | Any = create_async_engine(database_url, echo=echo, pool_pre_ping=True)
             self.async_session_factory = async_sessionmaker(self.engine, class_=AsyncSession, expire_on_commit=False)
         else:
             self.engine = create_engine(database_url, echo=echo, pool_pre_ping=True)
@@ -35,5 +35,15 @@ class DatabaseManager:
                     session.rollback()
                     raise
 
+    async def create_tables_async(self) -> None:
+        if not self.is_async:
+            SQLModel.metadata.create_all(self.engine)
+            return
+        async with self.engine.begin() as conn:  # type: ignore[reportAttributeAccessIssue]
+            await conn.run_sync(SQLModel.metadata.create_all)
+
     def create_tables(self) -> None:
+        # Synchronous convenience wrapper
+        if self.is_async:
+            raise RuntimeError("Use create_tables_async() with async engines")
         SQLModel.metadata.create_all(self.engine)

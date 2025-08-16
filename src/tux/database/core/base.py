@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Optional, TypeVar
 
 from sqlalchemy import BigInteger, Boolean, Column, DateTime, func
@@ -12,7 +12,7 @@ class TimestampMixin(SQLModel):
     """Automatic created_at and updated_at timestamps."""
 
     created_at: datetime = Field(
-        default_factory=datetime.utcnow,
+        default_factory=lambda: datetime.now(timezone.utc),
         sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False),
     )
     updated_at: Optional[datetime] = Field(
@@ -30,7 +30,7 @@ class SoftDeleteMixin(SQLModel):
 
     def soft_delete(self, deleted_by_user_id: Optional[int] = None) -> None:
         self.is_deleted = True
-        self.deleted_at = datetime.utcnow()
+        self.deleted_at = datetime.now(timezone.utc)
         self.deleted_by = deleted_by_user_id
 
 
@@ -41,6 +41,18 @@ class AuditMixin(SQLModel):
     updated_by: Optional[int] = Field(default=None, sa_column=Column(BigInteger))
 
 
+class DiscordIDMixin(SQLModel):
+    """Discord snowflake ID validation and utilities."""
+
+    @staticmethod
+    def validate_snowflake(snowflake_id: int, field_name: str = "id") -> int:
+        if snowflake_id <= 0:
+            raise ValueError(f"{field_name} must be a positive integer")
+        if snowflake_id < 4194304:  # Minimum Discord snowflake
+            raise ValueError(f"{field_name} is not a valid Discord snowflake")
+        return snowflake_id
+
+
 ModelT = TypeVar("ModelT", bound="BaseModel")
 
 
@@ -48,7 +60,7 @@ class CRUDMixin(SQLModel):
     """Minimal async CRUD helpers for SQLModel."""
 
     @classmethod
-    async def create(cls: type[ModelT], session: AsyncSession, /, **kwargs: Any) -> ModelT:
+    async def create(cls, session: AsyncSession, /, **kwargs: Any):
         instance = cls(**kwargs)  # type: ignore[call-arg]
         session.add(instance)
         await session.flush()
@@ -56,23 +68,11 @@ class CRUDMixin(SQLModel):
         return instance
 
     @classmethod
-    async def get_by_id(cls: type[ModelT], session: AsyncSession, record_id: Any) -> Optional[ModelT]:
+    async def get_by_id(cls, session: AsyncSession, record_id: Any):
         return await session.get(cls, record_id)
 
 
-class DiscordIDMixin(SQLModel):
-    """Discord snowflake ID validation and utilities."""
-
-    @staticmethod
-    def validate_snowflake(snowflake_id: int, field_name: str = "id") -> int:
-        if not isinstance(snowflake_id, int) or snowflake_id <= 0:
-            raise ValueError(f"{field_name} must be a positive integer")
-        if snowflake_id < 4194304:  # Minimum Discord snowflake
-            raise ValueError(f"{field_name} is not a valid Discord snowflake")
-        return snowflake_id
-
-
-class BaseModel(SQLModel, TimestampMixin, SoftDeleteMixin, AuditMixin, CRUDMixin, DiscordIDMixin):
+class BaseModel(TimestampMixin, SoftDeleteMixin, AuditMixin, CRUDMixin, DiscordIDMixin, SQLModel):
     """Full-featured base model for entities."""
 
     pass
