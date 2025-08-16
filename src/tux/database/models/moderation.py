@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import BigInteger, Index, Integer, JSON
+from sqlalchemy import BigInteger, Index, Integer, JSON, UniqueConstraint
 from sqlmodel import Field
 
 from tux.database.core.base import BaseModel
@@ -56,6 +56,7 @@ class Case(BaseModel, table=True):
     __table_args__ = (
         Index("idx_case_guild_user", "guild_id", "case_user_id"),
         Index("idx_case_guild_moderator", "guild_id", "case_moderator_id"),
+        UniqueConstraint("guild_id", "case_number", name="uq_case_guild_case_number"),
     )
 
 

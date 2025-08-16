@@ -1,9 +1,9 @@
 import asyncio
 from collections.abc import Callable
-from logging.config import fileConfig
 from pathlib import Path
 
 from alembic import context
+from sqlalchemy import MetaData
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlmodel import SQLModel
@@ -17,26 +17,30 @@ from tux.database.models import social as _social  # noqa: F401
 from tux.database.models import starboard as _starboard  # noqa: F401
 from tux.shared.config.env import get_database_url
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
 config = context.config
 
-# Skip fileConfig to avoid requiring logging sections
-
-# Ensure sqlalchemy.url is set, fallback to app environment
 if not config.get_main_option("sqlalchemy.url"):
     config.set_main_option("sqlalchemy.url", get_database_url())
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
+naming_convention = {
+    "ix": "ix_%(column_0_label)s",
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s",
+}
+
+metadata = MetaData(naming_convention=naming_convention)
+SQLModel.metadata.naming_convention = naming_convention  # type: ignore[attr-defined]
 
 target_metadata = SQLModel.metadata
 
-# Keep imported model modules referenced to avoid static analyzers from
-# pruning side-effect imports that register models with SQLModel metadata.
 _keep_refs = (_content, _guild, _moderation, _permissions, _social, _starboard)
+
+
+def include_object(object, name, type_, reflected, compare_to):
+    # Include all objects; adjust if we later want to exclude temp tables
+    return True
 
 
 def run_migrations_offline() -> None:
@@ -49,6 +53,7 @@ def run_migrations_offline() -> None:
         compare_server_default=True,
         dialect_opts={"paramstyle": "named"},
         render_as_batch=True,
+        include_object=include_object,
     )
 
     with context.begin_transaction():
@@ -76,6 +81,7 @@ def do_run_migrations(connection: Connection) -> None:
         compare_type=True,
         compare_server_default=True,
         render_as_batch=True,
+        include_object=include_object,
     )
 
     with context.begin_transaction():
