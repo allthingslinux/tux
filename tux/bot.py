@@ -163,6 +163,8 @@ class Tux(commands.Bot):
             await self.emoji_manager.init()
             self._emoji_manager_initialized = True
 
+        await self.load_extension("extensions.cowsay")
+
         if self._startup_task is None or self._startup_task.done():
             self._startup_task = self.loop.create_task(self._post_ready_startup())
 
