@@ -1,12 +1,15 @@
 import time
+
 import cowsay
 from discord.ext import commands
+
 from tux.bot import Tux
 from tux.utils.functions import generate_usage
 
 # Initialize cooldown tracking
 user_cooldowns = {}
 cooldown_duration = 180  # seconds
+
 
 class Cowsay(commands.Cog):
     def __init__(self, bot: Tux) -> None:
@@ -19,10 +22,10 @@ class Cowsay(commands.Cog):
     )
     @commands.guild_only()
     async def cowsay_command(
-        self, 
-        ctx: commands.Context[Tux], 
-        *, 
-        text: str
+        self,
+        ctx: commands.Context[Tux],
+        *,
+        text: str,
     ) -> None:
         user_id = ctx.author.id
         now = time.time()
@@ -32,22 +35,23 @@ class Cowsay(commands.Cog):
             if elapsed < cooldown_duration:
                 remaining = int(cooldown_duration - elapsed)
                 await ctx.respond(
-                    f"⏳ You're on cooldown! Try again in {remaining} seconds.", 
-                    ephemeral=True
+                    f"⏳ You're on cooldown! Try again in {remaining} seconds.",
+                    ephemeral=True,
                 )
                 return
-        
+
         user_cooldowns[user_id] = now
-        
+
         # Enforce character limit and sanitize input
         max_length = 200
-        sanitized_text = ''.join(c for c in text if c.isprintable()).strip()
+        sanitized_text = "".join(c for c in text if c.isprintable()).strip()
         if len(sanitized_text) > max_length:
             await ctx.send(content=f"❌ Input too long! Please limit your message to {max_length} characters.")
             return
-            
+
         cow_text = cowsay.get_output_string("cow", sanitized_text)
         await ctx.send(content=f"```{cow_text}```")
+
 
 async def setup(bot: Tux) -> None:
     await bot.add_cog(Cowsay(bot))
