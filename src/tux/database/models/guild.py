@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from sqlalchemy import BigInteger, Index
+from sqlalchemy import BigInteger, Index, DateTime
 from sqlmodel import Field, Relationship
 
 from tux.database.core.base import BaseModel
@@ -10,7 +10,7 @@ from tux.database.core.base import BaseModel
 
 class Guild(BaseModel, table=True):
     guild_id: int = Field(primary_key=True, sa_type=BigInteger())
-    guild_joined_at: datetime | None = Field(default_factory=lambda: datetime.now(UTC))
+    guild_joined_at: datetime | None = Field(default_factory=lambda: datetime.now(UTC), sa_type=DateTime(timezone=True))
     case_count: int = Field(default=0)
 
     # Relationship provided via backref on GuildConfig
