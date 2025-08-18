@@ -4,6 +4,7 @@ from functools import wraps
 from typing import Awaitable, Callable, TypeVar, Any
 
 from tux.database.services.database import DatabaseService
+from tux.database.services import CacheService
 
 
 R = TypeVar("R")
@@ -23,5 +24,6 @@ def with_session(
 
 
 class BaseController:
-	def __init__(self, db: DatabaseService | None = None):
+	def __init__(self, db: DatabaseService | None = None, cache: CacheService | None = None):
 		self.db = db or DatabaseService()
+		self.cache = cache
