@@ -5,6 +5,7 @@ from enum import Enum
 
 from sqlalchemy import BigInteger, Index, Integer, JSON, UniqueConstraint
 from sqlalchemy import Enum as PgEnum, Column
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field
 
 from tux.database.core.base import BaseModel
@@ -47,10 +48,10 @@ class Case(BaseModel, table=True):
     case_reason: str = Field(max_length=2000)
     case_moderator_id: int = Field(sa_type=BigInteger())
     case_user_id: int = Field(sa_type=BigInteger())
-    case_user_roles: list[int] = Field(default_factory=list, sa_type=JSON())
+    case_user_roles: list[int] = Field(default_factory=list, sa_type=JSONB())
     case_number: int | None = Field(default=None)
     case_expires_at: datetime | None = Field(default=None)
-    case_metadata: dict[str, str] | None = Field(default=None, sa_type=JSON())
+    case_metadata: dict[str, str] | None = Field(default=None, sa_type=JSONB())
 
     guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger())
 
