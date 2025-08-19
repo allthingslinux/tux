@@ -4,11 +4,11 @@ import discord
 from discord.ext import commands, tasks
 from loguru import logger
 
-from tux.database.models.moderation import CaseType as DBCaseType
-from tux.database.models.moderation import Case
 from tux.core import checks
 from tux.core.flags import TempBanFlags
 from tux.core.types import Tux
+from tux.database.models.moderation import Case
+from tux.database.models.moderation import CaseType as DBCaseType
 from tux.shared.functions import generate_usage
 
 from . import ModerationCogBase

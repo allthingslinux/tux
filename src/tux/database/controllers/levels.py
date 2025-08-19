@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any, Tuple
+from datetime import UTC, datetime
+from typing import Any
 
 from tux.database.controllers.base import BaseController, with_session
 from tux.database.models.social import Levels
@@ -19,7 +19,7 @@ class LevelsController(BaseController):
         return 0 if rec is None else rec.level
 
     @with_session
-    async def get_xp_and_level(self, member_id: int, guild_id: int, *, session: Any = None) -> Tuple[float, int]:
+    async def get_xp_and_level(self, member_id: int, guild_id: int, *, session: Any = None) -> tuple[float, int]:
         rec = await session.get(Levels, (member_id, guild_id))
         return (0.0, 0) if rec is None else (rec.xp, rec.level)
 
@@ -52,11 +52,11 @@ class LevelsController(BaseController):
                 guild_id=guild_id,
                 xp=xp,
                 level=level,
-                last_message=last_message or datetime.now(timezone.utc),
+                last_message=last_message or datetime.now(UTC),
             )
         rec.xp = xp
         rec.level = level
-        rec.last_message = last_message or datetime.now(timezone.utc)
+        rec.last_message = last_message or datetime.now(UTC)
         await session.flush()
         await session.refresh(rec)
         return rec
@@ -65,7 +65,9 @@ class LevelsController(BaseController):
     async def toggle_blacklist(self, member_id: int, guild_id: int, *, session: Any = None) -> bool:
         rec = await session.get(Levels, (member_id, guild_id))
         if rec is None:
-            created = await Levels.create(session, member_id=member_id, guild_id=guild_id, xp=0.0, level=0, blacklisted=True)
+            created = await Levels.create(
+                session, member_id=member_id, guild_id=guild_id, xp=0.0, level=0, blacklisted=True
+            )
             return created.blacklisted
         rec.blacklisted = not rec.blacklisted
         await session.flush()

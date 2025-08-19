@@ -3,10 +3,10 @@ import datetime
 import discord
 from discord.ext import commands
 
-from tux.database.models.moderation import CaseType as DBCaseType
 from tux.core import checks
 from tux.core.flags import TimeoutFlags
 from tux.core.types import Tux
+from tux.database.models.moderation import CaseType as DBCaseType
 from tux.shared.functions import generate_usage, parse_time_string
 
 from . import ModerationCogBase

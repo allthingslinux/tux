@@ -38,4 +38,3 @@ async def upgrade_head_if_needed() -> None:
     cfg = _build_alembic_config()
     # Alembic commands are synchronous; run in a thread to avoid blocking.
     await asyncio.to_thread(command.upgrade, cfg, "head")
-

@@ -7,9 +7,9 @@ from zoneinfo import ZoneInfo
 import discord
 from discord.ext import commands, tasks
 
-from tux.database.models.social import AFK as AFKModel
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
+from tux.database.models.social import AFK as AFKModel
 from tux.modules.utility import add_afk, del_afk
 
 # TODO: add `afk until` command, or add support for providing a timeframe in the regular `afk` and `permafk` commands

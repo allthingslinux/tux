@@ -1,13 +1,13 @@
 from __future__ import annotations
 
+from tux.database.controllers.afk import AfkController
+from tux.database.controllers.case import CaseController
 from tux.database.controllers.guild import GuildController
 from tux.database.controllers.guild_config import GuildConfigController
-from tux.database.controllers.afk import AfkController
 from tux.database.controllers.levels import LevelsController
-from tux.database.controllers.snippet import SnippetController
-from tux.database.controllers.case import CaseController
-from tux.database.controllers.starboard import StarboardController, StarboardMessageController
 from tux.database.controllers.reminder import ReminderController
+from tux.database.controllers.snippet import SnippetController
+from tux.database.controllers.starboard import StarboardController, StarboardMessageController
 from tux.database.services.database import DatabaseService
 
 

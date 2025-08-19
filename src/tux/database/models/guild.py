@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from sqlalchemy import BigInteger, Index, DateTime
+from sqlalchemy import BigInteger, DateTime, Index
 from sqlmodel import Field, Relationship
 
 from tux.database.core.base import BaseModel

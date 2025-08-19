@@ -72,4 +72,3 @@ If using a managed provider (e.g., Supabase), prefer the provider’s reset tool
 
 - On startup, non‑dev runs a programmatic Alembic upgrade to `head` (`tux.database.migrations.runner.upgrade_head_if_needed`).
 - Dev mode intentionally skips auto-upgrade to keep developer control.
-

@@ -3,8 +3,8 @@ from __future__ import annotations
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import BigInteger, Index, Integer, JSON, UniqueConstraint
-from sqlalchemy import Enum as PgEnum, Column
+from sqlalchemy import BigInteger, Column, Index, Integer, UniqueConstraint
+from sqlalchemy import Enum as PgEnum
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field
 
@@ -42,7 +42,9 @@ class Case(BaseModel, table=True):
     case_id: int | None = Field(default=None, primary_key=True, sa_type=Integer())
     case_status: bool | None = Field(default=True)
 
-    case_type: CaseType | None = Field(default=None, sa_column=Column(PgEnum(CaseType, name="case_type_enum"), nullable=True))
+    case_type: CaseType | None = Field(
+        default=None, sa_column=Column(PgEnum(CaseType, name="case_type_enum"), nullable=True)
+    )
     custom_case_type_id: int | None = Field(default=None, foreign_key="custom_case_type.id")
 
     case_reason: str = Field(max_length=2000)

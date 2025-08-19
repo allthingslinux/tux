@@ -2,10 +2,10 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.database.models.moderation import CaseType
 from tux.core import checks
 from tux.core.flags import JailFlags
 from tux.core.types import Tux
+from tux.database.models.moderation import CaseType
 from tux.shared.functions import generate_usage
 
 from . import ModerationCogBase

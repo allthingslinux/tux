@@ -1,21 +1,20 @@
 import asyncio
 from collections.abc import Callable
-from pathlib import Path
 
+import alembic_postgresql_enum  # noqa: F401
 from alembic import context
 from sqlalchemy import MetaData
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlmodel import SQLModel
-import alembic_postgresql_enum  # noqa: F401
 
 # Import models to populate metadata
-from tux.database.models import content as _content  # noqa: F401
-from tux.database.models import guild as _guild  # noqa: F401
-from tux.database.models import moderation as _moderation  # noqa: F401
-from tux.database.models import permissions as _permissions  # noqa: F401
-from tux.database.models import social as _social  # noqa: F401
-from tux.database.models import starboard as _starboard  # noqa: F401
+from tux.database.models import content as _content
+from tux.database.models import guild as _guild
+from tux.database.models import moderation as _moderation
+from tux.database.models import permissions as _permissions
+from tux.database.models import social as _social
+from tux.database.models import starboard as _starboard
 from tux.shared.config.env import get_database_url
 
 config = context.config

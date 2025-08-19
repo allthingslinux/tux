@@ -20,6 +20,7 @@ from tux.core.container import ServiceContainer
 from tux.core.interfaces import IDatabaseService
 from tux.core.service_registry import ServiceRegistry
 from tux.core.task_monitor import TaskMonitor
+from tux.database.migrations.runner import upgrade_head_if_needed
 from tux.services.emoji_manager import EmojiManager
 from tux.services.sentry_manager import SentryManager
 from tux.services.tracing import (
@@ -33,7 +34,6 @@ from tux.services.tracing import (
 from tux.shared.config.env import is_dev_mode
 from tux.shared.config.settings import Config
 from tux.ui.banner import create_banner
-from tux.database.migrations.runner import upgrade_head_if_needed
 
 # Re-export the T type for backward compatibility
 __all__ = ["ContainerInitializationError", "DatabaseConnectionError", "Tux"]
@@ -149,6 +149,7 @@ class Tux(commands.Bot):
                     _raise_db_connection_error()
                 # Narrow type for type checker
                 from typing import cast
+
                 db_service = cast(IDatabaseService, db_service)
                 await db_service.connect()
                 connected, registered = db_service.is_connected(), db_service.is_registered()

@@ -150,7 +150,7 @@ class DatabaseService:
 
     async def connect(self) -> None:
         """No-op for SQLModel async sessions; kept for compatibility."""
-        return None
+        return
 
     def is_connected(self) -> bool:
         """Always true for controller-based access."""
@@ -162,7 +162,7 @@ class DatabaseService:
 
     async def disconnect(self) -> None:
         """No-op for SQLModel async sessions; kept for compatibility."""
-        return None
+        return
 
     def _validate_operation(self, controller: DatabaseController, operation: str) -> None:
         """Validate that an operation exists on the controller.
