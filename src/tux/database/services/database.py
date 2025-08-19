@@ -14,6 +14,3 @@ class DatabaseService:
     async def session(self):
         async with self.manager.get_session() as s:
             yield s
-
-    async def create_all(self) -> None:
-        await self.manager.create_tables()
