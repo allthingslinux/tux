@@ -38,7 +38,7 @@ target_metadata = SQLModel.metadata
 _keep_refs = (_content, _guild, _moderation, _permissions, _social, _starboard)
 
 
-def include_object(object, name, type_, reflected, compare_to):
+def include_object(obj, name, type_, reflected, compare_to):
     # Include all objects; adjust if we later want to exclude temp tables
     return True
 

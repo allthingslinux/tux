@@ -57,9 +57,11 @@ class DiscordIDMixin(SQLModel):
     @staticmethod
     def validate_snowflake(snowflake_id: int, field_name: str = "id") -> int:
         if snowflake_id <= 0:
-            raise ValueError(f"{field_name} must be a positive integer")
+            msg = f"{field_name} must be a positive integer"
+            raise ValueError(msg)
         if snowflake_id < 4194304:  # Minimum Discord snowflake
-            raise ValueError(f"{field_name} is not a valid Discord snowflake")
+            msg = f"{field_name} is not a valid Discord snowflake"
+            raise ValueError(msg)
         return snowflake_id
 
 
@@ -174,8 +176,8 @@ class BaseModel(TimestampMixin, SoftDeleteMixin, AuditMixin, CRUDMixin, DiscordI
     """Full-featured base model for entities."""
 
     @declared_attr
-    def __tablename__(cls) -> str:  # type: ignore[override]
+    def __tablename__(self) -> str:  # type: ignore[override]
         # Convert CamelCase to snake_case
-        name = cls.__name__
+        name = self.__name__
         s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
         return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()

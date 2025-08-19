@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from datetime import UTC, datetime
 from typing import Any
 
@@ -66,7 +67,12 @@ class LevelsController(BaseController):
         rec = await session.get(Levels, (member_id, guild_id))
         if rec is None:
             created = await Levels.create(
-                session, member_id=member_id, guild_id=guild_id, xp=0.0, level=0, blacklisted=True
+                session,
+                member_id=member_id,
+                guild_id=guild_id,
+                xp=0.0,
+                level=0,
+                blacklisted=True,
             )
             return created.blacklisted
         rec.blacklisted = not rec.blacklisted
@@ -87,6 +93,4 @@ class LevelsController(BaseController):
     @staticmethod
     def calculate_level(xp: float) -> int:
         # Keep same logic as before (sqrt-based progression)
-        import math
-
         return math.floor(math.sqrt(xp / 100))

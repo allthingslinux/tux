@@ -54,13 +54,11 @@ class Unjail(ModerationCogBase):
             The latest jail case, or None if not found.
         """
 
-        latest_case = await self.db.case.get_latest_case_by_user(
+        return await self.db.case.get_latest_case_by_user(
             guild_id=guild_id,
             user_id=user_id,
             # We now filter in controller by latest only; ignore case_types param
         )
-
-        return latest_case
 
     async def restore_roles(
         self,

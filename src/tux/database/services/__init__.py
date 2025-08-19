@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from datetime import timedelta
-from typing import Any, Optional
-
 try:
     import redis.asyncio as redis  # type: ignore
 except Exception:  # pragma: no cover - optional at runtime
