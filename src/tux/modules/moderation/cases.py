@@ -1,15 +1,15 @@
-from typing import Any, Dict, Protocol
+from typing import Any, Protocol
 
 import discord
 from discord.ext import commands
 from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
-from tux.database.models.moderation import CaseType as DBCaseType, Case
-from typing import Dict as CaseWhereInput  # type: ignore
 from tux.core import checks
 from tux.core.flags import CaseModifyFlags, CasesViewFlags
 from tux.core.types import Tux
+from tux.database.models.moderation import Case
+from tux.database.models.moderation import CaseType as DBCaseType
 from tux.shared.constants import CONST
 from tux.shared.functions import generate_usage
 from tux.ui.embeds import EmbedCreator, EmbedType
@@ -17,7 +17,7 @@ from tux.ui.embeds import EmbedCreator, EmbedType
 from . import ModerationCogBase
 
 # Maps case types to their corresponding emoji keys
-CASE_TYPE_EMOJI_MAP: Dict[DBCaseType | None, str] = {
+CASE_TYPE_EMOJI_MAP: dict[DBCaseType | None, str] = {
     DBCaseType.BAN: "ban",
     DBCaseType.UNBAN: "ban",
     DBCaseType.TEMPBAN: "tempban",
@@ -34,7 +34,7 @@ CASE_TYPE_EMOJI_MAP: Dict[DBCaseType | None, str] = {
 }
 
 # Maps case types to their action (added/removed)
-CASE_ACTION_MAP: Dict[DBCaseType | None, str] = {
+CASE_ACTION_MAP: dict[DBCaseType | None, str] = {
     DBCaseType.BAN: "added",
     DBCaseType.KICK: "added",
     DBCaseType.TEMPBAN: "added",
@@ -249,7 +249,7 @@ class Cases(ModerationCogBase):
         """
         assert ctx.guild
 
-        options: Dict[str, Any] = {}
+        options: dict[str, Any] = {}
 
         if flags.type:
             options["case_type"] = flags.type

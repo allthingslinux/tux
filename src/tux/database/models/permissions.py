@@ -9,9 +9,8 @@ from sqlmodel import Field
 
 from tux.database.core.base import BaseModel
 
-
 if TYPE_CHECKING:
-    from tux.database.models.guild import Guild
+    pass
 
 
 class PermissionType(str, Enum):

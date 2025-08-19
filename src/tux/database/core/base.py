@@ -1,24 +1,26 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any, Optional, TypeVar
-
-from sqlalchemy import BigInteger, Boolean, DateTime, func, select, update as sa_update, delete as sa_delete
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import Field, SQLModel
-from sqlalchemy.orm import declared_attr
 import re
+from datetime import UTC, datetime
+from typing import Any, TypeVar
+
+from sqlalchemy import BigInteger, Boolean, DateTime, func, select
+from sqlalchemy import delete as sa_delete
+from sqlalchemy import update as sa_update
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import declared_attr
+from sqlmodel import Field, SQLModel
 
 
 class TimestampMixin(SQLModel):
     """Automatic created_at and updated_at timestamps."""
 
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         sa_type=DateTime(timezone=True),
         sa_column_kwargs={"server_default": func.now(), "nullable": False},
     )
-    updated_at: Optional[datetime] = Field(
+    updated_at: datetime | None = Field(
         default=None,
         sa_type=DateTime(timezone=True),
         sa_column_kwargs={"onupdate": func.now()},
@@ -33,19 +35,20 @@ class SoftDeleteMixin(SQLModel):
         sa_type=Boolean(),
         sa_column_kwargs={"nullable": False, "server_default": "false"},
     )
-    deleted_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
-    deleted_by: Optional[int] = Field(default=None, sa_type=BigInteger())
+    deleted_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
+    deleted_by: int | None = Field(default=None, sa_type=BigInteger())
 
-    def soft_delete(self, deleted_by_user_id: Optional[int] = None) -> None:
+    def soft_delete(self, deleted_by_user_id: int | None = None) -> None:
         self.is_deleted = True
-        self.deleted_at = datetime.now(timezone.utc)
+        self.deleted_at = datetime.now(UTC)
         self.deleted_by = deleted_by_user_id
 
 
 class AuditMixin(SQLModel):
     """Track who created/modified records."""
-    created_by: Optional[int] = Field(default=None, sa_type=BigInteger())
-    updated_by: Optional[int] = Field(default=None, sa_type=BigInteger())
+
+    created_by: int | None = Field(default=None, sa_type=BigInteger())
+    updated_by: int | None = Field(default=None, sa_type=BigInteger())
 
 
 class DiscordIDMixin(SQLModel):
