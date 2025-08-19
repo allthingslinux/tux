@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-from typing import Any
+from typing import Any, cast
 
 import discord
 from discord.ext import commands
@@ -148,8 +148,6 @@ class Tux(commands.Bot):
                 if db_service is None:
                     _raise_db_connection_error()
                 # Narrow type for type checker
-                from typing import cast
-
                 db_service = cast(IDatabaseService, db_service)
                 await db_service.connect()
                 connected, registered = db_service.is_connected(), db_service.is_registered()

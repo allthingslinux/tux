@@ -5,13 +5,13 @@ from contextlib import asynccontextmanager
 
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
+import tux.database.models  # noqa: F401
+
 
 class DatabaseManager:
     def __init__(self, database_url: str, echo: bool = False):
         # Eagerly import models to register all SQLModel/SQLAlchemy mappings
         # in a single, centralized place to avoid forward-ref resolution issues.
-        import tux.database.models  # noqa: F401
-
         self.engine: AsyncEngine = create_async_engine(database_url, echo=echo, pool_pre_ping=True)
         self.async_session_factory = async_sessionmaker(self.engine, class_=AsyncSession, expire_on_commit=False)
 

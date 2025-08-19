@@ -43,7 +43,8 @@ class Case(BaseModel, table=True):
     case_status: bool | None = Field(default=True)
 
     case_type: CaseType | None = Field(
-        default=None, sa_column=Column(PgEnum(CaseType, name="case_type_enum"), nullable=True)
+        default=None,
+        sa_column=Column(PgEnum(CaseType, name="case_type_enum"), nullable=True),
     )
     custom_case_type_id: int | None = Field(default=None, foreign_key="custom_case_type.id")
 

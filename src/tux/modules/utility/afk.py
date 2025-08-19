@@ -9,7 +9,7 @@ from discord.ext import commands, tasks
 
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
-from tux.database.models.social import AFK as AFKModel
+from tux.database.models.social import AFK as AFKMODEL
 from tux.modules.utility import add_afk, del_afk
 
 # TODO: add `afk until` command, or add support for providing a timeframe in the regular `afk` and `permafk` commands
@@ -156,7 +156,7 @@ class Afk(BaseCog):
         if message.content.startswith("$sto"):
             return
 
-        afks_mentioned: list[tuple[discord.Member, AFKModel]] = []
+        afks_mentioned: list[tuple[discord.Member, AFKMODEL]] = []
 
         for mentioned in message.mentions:
             entry = await self.db.afk.get_afk_member(mentioned.id, guild_id=message.guild.id)
@@ -198,7 +198,7 @@ class Afk(BaseCog):
                 else:
                     await del_afk(self.db, member, entry.nickname)
 
-    async def _get_expired_afk_entries(self, guild_id: int) -> list[AFKModel]:
+    async def _get_expired_afk_entries(self, guild_id: int) -> list[AFKMODEL]:
         """
         Get all expired AFK entries for a guild.
 
@@ -209,7 +209,7 @@ class Afk(BaseCog):
 
         Returns
         -------
-        list[AFKModel]
+        list[AFKMODEL]
             A list of expired AFK entries.
         """
         entries = await self.db.afk.get_all_afk_members(guild_id)

@@ -114,7 +114,12 @@ class GuildConfigController(BaseController):
 
     @with_session
     async def update_perm_level_role(
-        self, guild_id: int, perm_level: str, role_id: int, *, session: Any = None
+        self,
+        guild_id: int,
+        perm_level: str,
+        role_id: int,
+        *,
+        session: Any = None,
     ) -> None:
         field = f"perm_level_{perm_level}_role_id"
         await self._update_field(guild_id, field, role_id)

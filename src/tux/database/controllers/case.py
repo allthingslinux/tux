@@ -159,6 +159,4 @@ class CaseController(BaseController):
             return False
         if latest.case_type == inactive_restriction_type:
             return False
-        if latest.case_type == active_restriction_type and (latest.case_status is True):
-            return True
-        return False
+        return latest.case_type == active_restriction_type and (latest.case_status is True)

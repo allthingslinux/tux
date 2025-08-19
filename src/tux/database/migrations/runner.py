@@ -11,7 +11,7 @@ from tux.shared.config.env import get_database_url, is_dev_mode
 
 def _find_project_root(start: Path) -> Path:
     path = start.resolve()
-    for parent in [path] + list(path.parents):
+    for parent in [path, *list(path.parents)]:
         if (parent / "alembic.ini").exists():
             return parent
     # Fallback to current working directory

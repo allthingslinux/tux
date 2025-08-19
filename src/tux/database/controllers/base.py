@@ -8,13 +8,14 @@ from tux.database.services import CacheService
 from tux.database.services.database import DatabaseService
 
 R = TypeVar("R")
+C = TypeVar("C", bound="BaseController")
 
 
 def with_session(
     func: Callable[..., Awaitable[R]],
 ) -> Callable[..., Awaitable[R]]:
     @wraps(func)
-    async def wrapper(self: BaseController, *args: Any, **kwargs: Any) -> R:
+    async def wrapper(self: C, *args: Any, **kwargs: Any) -> R:
         if kwargs.get("session") is not None:
             return await func(self, *args, **kwargs)
         async with self.db.session() as session:

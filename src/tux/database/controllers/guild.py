@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 
 from tux.database.controllers.base import BaseController, with_session
 from tux.database.models.guild import Guild, GuildConfig
@@ -51,8 +52,6 @@ class GuildController(BaseController):
     @with_session
     async def find_many(self, *, where: dict[str, Any], session: AsyncSession):
         # minimal filter support
-        from sqlmodel import select
-
         stmt = select(Guild)
         for key, value in where.items():
             stmt = stmt.where(getattr(Guild, key) == value)
