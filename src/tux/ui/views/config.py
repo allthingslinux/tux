@@ -3,7 +3,7 @@ from typing import Any
 import discord
 
 from tux.core.interfaces import IDatabaseService
-from tux.services.database.utils import get_db_controller_from
+from tux.database.utils import get_db_controller_from
 
 
 class ConfigSetPrivateLogs(discord.ui.View):

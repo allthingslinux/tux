@@ -36,7 +36,7 @@ services:
       target: dev
 
     # DEVELOPMENT OVERRIDE COMMAND
-    # Skip prisma generate in CMD to avoid read-only filesystem issues
+    # Development mode with automatic database setup
     # Can be run manually after container starts
     command:
       - sh
@@ -93,9 +93,9 @@ services:
         - action: rebuild
           path: uv.lock
 
-        # Database schema changes - rebuild required for Prisma client generation
+        # Database schema changes - rebuild required for migration changes
         - action: rebuild
-          path: prisma/schema/
+          path: src/tux/database/migrations/
 
     # VOLUME MOUNTS
     # Development-specific volumes with different naming to avoid production conflicts
@@ -185,7 +185,7 @@ volumes:
 
   # DEVELOPMENT USER HOME VOLUME
   # Stores all user cache and config directories
-  # Contains: .cache (Prisma), .npm, .config, and other CLI tool data
+  # Contains: .cache, .npm, .config, and other CLI tool data
   # Isolation: Separate from production user data
   # Lifecycle: Persistent to avoid re-downloading tools and cache
   tux_dev_user_home:

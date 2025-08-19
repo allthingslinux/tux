@@ -40,7 +40,7 @@
 6. Push the database schema
 
     ```bash
-    docker exec -it tux prisma db push
+    docker exec -it tux tux db upgrade
     ```
 
     > [!NOTE]

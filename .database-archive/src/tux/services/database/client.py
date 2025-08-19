@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 from typing import TypeVar
 
 from loguru import logger
-
 from prisma import Prisma
 
 T = TypeVar("T")

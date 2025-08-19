@@ -202,7 +202,7 @@ class SentryManager:
             op = span.get("op", "")
             description = span.get("description", "")
 
-            # Filter out internal Prisma HTTP requests to the query engine
+            # Filter out internal database HTTP requests
             if op == "http.client" and "localhost" in description:
                 continue
 

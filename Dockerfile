@@ -163,9 +163,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # These are typically static configuration that changes infrequently
 COPY config/ ./config/
 
-# 2. Database schema files (change infrequently)
-# Prisma schema and migrations are relatively stable
-COPY prisma/ ./prisma/
+# 2. Database migration files (change infrequently)
+# Alembic migrations are relatively stable
+COPY src/tux/database/migrations/ ./src/tux/database/migrations/
 
 # 3. Main application code (changes more frequently)
 # The core bot code is most likely to change during development
@@ -241,7 +241,7 @@ RUN set -eux; \
     # Create application cache and temporary directories
     # These directories are used by the bot for caching and temporary files
     mkdir -p /app/.cache/tldr /app/temp; \
-    # Create user cache directories (fixes permission issues for Prisma/npm)
+    # Create user cache directories (fixes permission issues for npm and other tools)
     mkdir -p /home/nonroot/.cache /home/nonroot/.npm; \
     # Ensure correct ownership for nonroot user to write into these directories
     chown -R nonroot:nonroot /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm
@@ -249,16 +249,13 @@ RUN set -eux; \
 # SECURITY: Follows principle of least privilege
 USER nonroot
 
-# Install development dependencies and setup Prisma
+# Install development dependencies
 # DEVELOPMENT: These tools are needed for linting, testing, and development workflow
-RUN uv sync --dev && \
-    uv run prisma py fetch && \
-    uv run prisma generate
+RUN uv sync --dev
 
 # Development container startup command
-# WORKFLOW: Regenerates Prisma client and starts the bot in development mode
-# This ensures the database client is always up-to-date with schema changes
-CMD ["sh", "-c", "uv run prisma generate && exec uv run tux --dev start"]
+# WORKFLOW: Starts the bot in development mode with automatic database migrations
+CMD ["uv", "run", "tux", "--dev", "start"]
 
 # ==============================================================================
 # PRODUCTION STAGE - Minimal Runtime Environment
@@ -339,7 +336,7 @@ ENV VIRTUAL_ENV=/app/.venv \
 # EFFICIENCY: Only copies what's needed for runtime
 COPY --from=build --chown=nonroot:nonroot /app/.venv /app/.venv
 COPY --from=build --chown=nonroot:nonroot /app/tux /app/tux
-COPY --from=build --chown=nonroot:nonroot /app/prisma /app/prisma
+
 COPY --from=build --chown=nonroot:nonroot /app/config /app/config
 COPY --from=build --chown=nonroot:nonroot /app/pyproject.toml /app/pyproject.toml
 COPY --from=build --chown=nonroot:nonroot /app/VERSION /app/VERSION
@@ -356,15 +353,13 @@ RUN set -eux; \
   rm -rf /home/nonroot/.npm/_cacache_; \
   chown nonroot:nonroot /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm
 
-# Switch to non-root user and finalize Prisma binaries
+# Switch to non-root user for final optimizations
 USER nonroot
-RUN /app/.venv/bin/python -m prisma py fetch \
- && /app/.venv/bin/python -m prisma generate
 
 USER root
-# Aggressive cleanup and optimization after Prisma setup
+# Aggressive cleanup and optimization
 # PERFORMANCE: Single RUN reduces layer count and enables atomic cleanup
-# SIZE: Removes unnecessary files to minimize final image size but preserves Prisma binaries
+# SIZE: Removes unnecessary files to minimize final image size
 RUN set -eux; \
     # VIRTUAL ENVIRONMENT CLEANUP
     # The following operations remove unnecessary files from the Python environment
@@ -372,19 +367,18 @@ RUN set -eux; \
     # Remove Python bytecode files (will be regenerated as needed)
     find /app/.venv -name "*.pyc" -delete; \
     find /app/.venv -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true; \
-    # Remove test directories from installed packages (but preserve prisma binaries)
+    # Remove test directories from installed packages
     # These directories contain test files that are not needed in production
     for test_dir in tests testing "*test*"; do \
-      find /app/.venv -name "$test_dir" -type d -not -path "*/prisma*" -exec rm -rf {} + 2>/dev/null || true; \
+      find /app/.venv -name "$test_dir" -type d -exec rm -rf {} + 2>/dev/null || true; \
     done; \
-    # Remove documentation files from installed packages (but preserve prisma docs)
+    # Remove documentation files from installed packages
     # These files take up significant space and are not needed in production
     for doc_pattern in "*.md" "*.txt" "*.rst" "LICENSE*" "NOTICE*" "COPYING*" "CHANGELOG*" "README*" "HISTORY*" "AUTHORS*" "CONTRIBUTORS*"; do \
-      find /app/.venv -name "$doc_pattern" -not -path "*/prisma*" -delete 2>/dev/null || true; \
+      find /app/.venv -name "$doc_pattern" -delete 2>/dev/null || true; \
     done; \
     # Remove large development packages that are not needed in production
     # These packages (pip, setuptools, wheel) are only needed for installing packages
-    # NOTE: Preserving packages that Prisma might need
     for pkg in setuptools wheel pkg_resources; do \
       rm -rf /app/.venv/lib/python3.13/site-packages/${pkg}* 2>/dev/null || true; \
       rm -rf /app/.venv/bin/${pkg}* 2>/dev/null || true; \

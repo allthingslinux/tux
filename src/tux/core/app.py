@@ -17,8 +17,8 @@ import discord
 from loguru import logger
 
 from tux.core.bot import Tux
+from tux.database.utils import get_db_controller_from
 from tux.help import TuxHelp
-from tux.services.database.utils import get_db_controller_from
 from tux.services.sentry_manager import SentryManager
 from tux.shared.config.settings import CONFIG
 

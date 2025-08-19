@@ -116,7 +116,7 @@ def cli(ctx: Context) -> None:  # Remove env_dev and env_prod params
         try:
             db_url = get_database_url()
             os.environ["DATABASE_URL"] = db_url
-            logger.trace("Set DATABASE_URL environment variable for Prisma.")
+            logger.trace("Set DATABASE_URL environment variable for database operations.")
         except Exception as e:
             # Log critical error and exit if URL couldn't be determined for a required command.
             logger.critical(f"Command '{invoked_command}' requires a database, but failed to configure URL: {e}")

@@ -184,3 +184,7 @@ reports/
 
 .kiro
 .audit
+
+.prisma-archive
+sqlmodel-refactor
+.database-archive

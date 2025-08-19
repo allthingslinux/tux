@@ -37,7 +37,7 @@ However, be aware that:
     uv run tux --dev docker up -d
     ```
 
-    This uses `docker-compose -f docker-compose.yml -f docker-compose.dev.yml up`. The `develop: watch:` feature attempts to sync code changes from your host into the running container. The container entrypoint runs `uv run prisma generate` followed by `uv run tux --dev start`.
+    This uses `docker-compose -f docker-compose.yml -f docker-compose.dev.yml up`. The `develop: watch:` feature attempts to sync code changes from your host into the running container. The container entrypoint runs `uv run tux --dev start` with automatic database migration handling.
 
 **Stopping the Docker Environment:**
 

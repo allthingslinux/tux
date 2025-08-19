@@ -141,18 +141,18 @@ BUILD_THRESHOLD=180000 MEMORY_THRESHOLD=256 ./scripts/docker-toolkit.sh test
 
 ### **When to Use Each Test Tier**
 
-| Scenario | Quick | Standard | Comprehensive |
-|----------|-------|----------|---------------|
-| **Daily development** | ✅ | | |
-| **Before commit** | ✅ | | |
-| **Docker file changes** | | ✅ | |
-| **Performance investigation** | | ✅ | |
-| **Before release** | | ✅ | ✅ |
-| **CI/CD pipeline** | | ✅ | |
-| **Major refactoring** | | | ✅ |
-| **New developer onboarding** | | | ✅ |
-| **Production deployment** | | ✅ | |
-| **Issue investigation** | | ✅ | ✅ |
+| Scenario                      | Quick | Standard | Comprehensive |
+| ----------------------------- | ----- | -------- | ------------- |
+| **Daily development**         | ✅     |          |               |
+| **Before commit**             | ✅     |          |               |
+| **Docker file changes**       |       | ✅        |               |
+| **Performance investigation** |       | ✅        |               |
+| **Before release**            |       | ✅        | ✅             |
+| **CI/CD pipeline**            |       | ✅        |               |
+| **Major refactoring**         |       |          | ✅             |
+| **New developer onboarding**  |       |          | ✅             |
+| **Production deployment**     |       | ✅        |               |
+| **Issue investigation**       |       | ✅        | ✅             |
 
 ### **Performance Thresholds**
 
@@ -255,7 +255,7 @@ develop:
     - action: rebuild   # Rebuild triggers
       path: pyproject.toml
     - action: rebuild
-      path: prisma/schema/
+      path: src/tux/database/migrations/
 ```
 
 ### **Development Tools**
@@ -385,13 +385,13 @@ docker container prune -f            # Removes ALL stopped containers
 
 ### **Expected Performance Targets**
 
-| Metric | Development | Production | Threshold |
-|--------|-------------|------------|-----------|
-| **Fresh Build** | ~108s | ~115s | < 300s |
-| **Cached Build** | ~0.3s | ~0.3s | < 60s |
-| **Container Startup** | < 5s | < 3s | < 10s |
-| **Memory Usage** | < 1GB | < 512MB | Configurable |
-| **Image Size** | ~2GB | ~500MB | Monitored |
+| Metric                | Development | Production | Threshold    |
+| --------------------- | ----------- | ---------- | ------------ |
+| **Fresh Build**       | ~108s       | ~115s      | < 300s       |
+| **Cached Build**      | ~0.3s       | ~0.3s      | < 60s        |
+| **Container Startup** | < 5s        | < 3s       | < 10s        |
+| **Memory Usage**      | < 1GB       | < 512MB    | Configurable |
+| **Image Size**        | ~2GB        | ~500MB     | Monitored    |
 
 ### **Performance Alerts**
 
@@ -483,17 +483,17 @@ docker compose -f docker-compose.dev.yml exec tux test -f /app/test_file.py
 rm test_file.py
 ```
 
-#### **Prisma Issues**
+#### **Database Issues**
 
 ```bash
-# Regenerate Prisma client
-uv run tux --dev docker exec tux uv run prisma generate
+# Check database connection
+uv run tux --dev docker exec tux tux db current
 
-# Check Prisma binaries
-uv run tux --dev docker exec tux ls -la .venv/lib/python*/site-packages/prisma
+# Upgrade database to latest migration
+uv run tux --dev docker exec tux tux db upgrade
 
-# Test database operations
-uv run tux --dev docker exec tux uv run prisma db push --accept-data-loss
+# Reset database (use with caution - will lose all data)
+uv run tux --dev docker exec tux tux db reset
 ```
 
 #### **Memory and Resource Issues**

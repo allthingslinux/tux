@@ -5,6 +5,7 @@ from prisma.actions import GuildActions
 from prisma.enums import CaseType
 from prisma.models import Case, Guild
 from prisma.types import CaseWhereInput
+
 from tux.services.database.client import db
 from tux.services.database.controllers.base import BaseController
 

@@ -10,6 +10,18 @@ from tux.database.controllers import DatabaseController
 
 
 def _resolve_bot(source: commands.Context[Tux] | discord.Interaction | Tux) -> Tux | None:
+    """Resolve the bot instance from various source types.
+
+    Parameters
+    ----------
+    source : commands.Context[Tux] | discord.Interaction | Tux
+        The source object to resolve the bot from.
+
+    Returns
+    -------
+    Tux | None
+        The resolved bot instance, or None if resolution fails.
+    """
     if isinstance(source, commands.Context):
         return source.bot
     if isinstance(source, discord.Interaction):
@@ -18,6 +30,18 @@ def _resolve_bot(source: commands.Context[Tux] | discord.Interaction | Tux) -> T
 
 
 def get_db_service_from(source: commands.Context[Tux] | discord.Interaction | Tux) -> IDatabaseService | None:
+    """Get the database service from various source types.
+
+    Parameters
+    ----------
+    source : commands.Context[Tux] | discord.Interaction | Tux
+        The source object to get the database service from.
+
+    Returns
+    -------
+    IDatabaseService | None
+        The database service instance, or None if not available.
+    """
     bot = _resolve_bot(source)
     if bot is None:
         return None
@@ -36,6 +60,22 @@ def get_db_controller_from(
     *,
     fallback_to_direct: bool = True,
 ) -> DatabaseController | None:
+    """Get the database controller from various source types.
+
+    Parameters
+    ----------
+    source : commands.Context[Tux] | discord.Interaction | Tux
+        The source object to get the database controller from.
+    fallback_to_direct : bool, optional
+        Whether to fallback to creating a direct DatabaseController instance
+        if the service-based approach fails, by default True.
+
+    Returns
+    -------
+    DatabaseController | None
+        The database controller instance, or None if not available and
+        fallback_to_direct is False.
+    """
     db_service = get_db_service_from(source)
     if db_service is not None:
         try:

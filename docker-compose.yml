@@ -179,7 +179,7 @@ volumes:
 
   # USER HOME VOLUME
   # Stores all user cache and config directories
-  # Contains: .cache (Prisma), .npm, .config, and other CLI tool data
+  # Contains: .cache, .npm, .config, and other CLI tool data
   # Persistence: Critical for avoiding re-downloads and CLI performance
   # Size: Relatively small but covers all user-space tool requirements
   tux_user_home:

@@ -5,14 +5,14 @@ This section covers running and developing Tux directly on your local machine, w
 **Running the Bot:**
 
 1. **Push Database Schema:**
-    If this is your first time setting up or if you've made changes to `schema.prisma`, push the schema to your development database. This command also generates the Prisma client.
+    If this is your first time setting up or if there are pending database migrations, upgrade your development database to the latest schema.
 
     ```bash
     # Ensure you use --dev or rely on the default development mode
-    uv run tux --dev db push
+    uv run tux --dev db upgrade
     ```
 
-    *You can explicitly regenerate the Prisma client anytime with `uv run tux --dev db generate`.*
+    *You can create new migrations after model changes with `uv run tux --dev db revision`.*
 
 2. **Start the Bot:**
 

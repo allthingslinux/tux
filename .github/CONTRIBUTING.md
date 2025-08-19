@@ -102,11 +102,11 @@ Follow these steps to set up your local development environment. For more compre
 
 5. **Initialize Development Database**
 
-    Push the Prisma schema to your development database. This also generates the Prisma client.
+    Run database migrations to set up your development database.
 
     ```bash
     # Use --dev or rely on the default development mode
-    uv run tux --dev db push
+    uv run tux --dev db upgrade
     ```
 
 ## Development Workflow

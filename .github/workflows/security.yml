@@ -176,7 +176,6 @@ jobs:
         uses: ./.github/actions/setup-python
         with:
           python-version: '3.13'
-          generate-prisma: 'false'
           enable-cache: 'true'
 
       # SECURITY VULNERABILITY SCANNING

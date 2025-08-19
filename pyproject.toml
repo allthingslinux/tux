@@ -20,7 +20,7 @@ dependencies = [
     "jishaku>=2.5.2",
     "loguru>=0.7.2",
     "pillow>=11.3.0,<11.4.0",
-    "prisma>=0.15.0",
+
     "psutil>=6.0.0",
     "pynacl>=1.5.0",
     "python-dotenv>=1.0.1",

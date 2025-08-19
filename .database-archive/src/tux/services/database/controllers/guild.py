@@ -1,6 +1,7 @@
 from typing import Any
 
 from prisma.models import Guild
+
 from tux.services.database.controllers.base import BaseController
 
 

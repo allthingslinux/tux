@@ -59,7 +59,7 @@ It is designed to provide a variety of features to the server, including moderat
 - Uv for dependency management
 - Docker and Docker Compose for optional containerized environments
 - Strict typing with `basedpyright` and type hints
-- Type safe ORM using `prisma`
+- Type safe ORM using `SQLModel` with `SQLAlchemy`
 - Linting and formatting via `ruff`
 - Custom CLI via `click` and `uv` scripts
 - Rich logging with `loguru`

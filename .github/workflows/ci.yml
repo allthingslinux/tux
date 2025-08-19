@@ -110,7 +110,6 @@ jobs:
         uses: ./.github/actions/setup-python
         with:
           python-version: '3.13'
-          generate-prisma: 'true'
           enable-cache: 'true'
 
       # STATIC TYPE CHECKING
@@ -338,7 +337,8 @@ jobs:
       - name: Install dependencies
         run: uv sync
       - name: Wait for Postgres
-        run: >-
+        run: |
+          # shellcheck disable=SC2034
           for i in {1..20}; do
             pg_isready -h localhost -p 5432 -U postgres && break;
             sleep 1;

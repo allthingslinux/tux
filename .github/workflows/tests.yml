@@ -122,7 +122,6 @@ jobs:
         uses: ./.github/actions/setup-python
         with:
           python-version: ${{ matrix.python-version }}
-          generate-prisma: 'true'
           enable-cache: 'true'
 
       # TEST ENVIRONMENT CONFIGURATION

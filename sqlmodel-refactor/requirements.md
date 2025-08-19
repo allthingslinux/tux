@@ -41,7 +41,7 @@ Based on analysis of existing Discord bot projects in the workspace, the new sch
 2. WHEN users interact per guild THEN the system SHALL maintain member-specific data like AFK status, levels, and moderation history
 3. WHEN guild admins configure settings THEN the system SHALL persist prefixes, channel assignments, role configurations, and permission levels
 4. IF users are blacklisted or have special status THEN the system SHALL track this at both user and guild levels
-5. WHEN maintaining compatibility THEN the system SHALL preserve existing data relationships and indexing patterns from the current Prisma schema
+5. WHEN maintaining compatibility THEN the system SHALL preserve existing data relationships and indexing patterns from the previous database schema
 
 ### Requirement 4
 

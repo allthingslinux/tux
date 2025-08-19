@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 
 from prisma.actions import GuildActions
 from prisma.models import AFKModel, Guild
+
 from tux.services.database.client import db
 from tux.services.database.controllers.base import BaseController
 

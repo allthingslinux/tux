@@ -1,5 +1,5 @@
 name: Setup Python Environment
-description: Set up Python with Uv, dependencies, and optional Prisma client generation
+description: Set up Python with Uv and dependencies
 inputs:
   python-version:
     description: Python version to use
@@ -11,10 +11,6 @@ inputs:
     default: 0.8.8
   enable-cache:
     description: Enable uv cache persistence
-    required: false
-    default: 'true'
-  generate-prisma:
-    description: Whether to generate Prisma client
     required: false
     default: 'true'
 runs:
@@ -39,10 +35,3 @@ runs:
     - name: Install dependencies
       shell: bash
       run: uv sync --frozen
-
-    # CONDITIONAL PRISMA CLIENT GENERATION
-    # Generates Prisma database client when needed for database operations
-    - name: Generate Prisma client
-      if: ${{ inputs.generate-prisma == 'true' }}
-      shell: bash
-      run: uv run prisma generate

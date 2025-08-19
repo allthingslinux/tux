@@ -23,11 +23,12 @@ tux                       # Main entry point (defined in cli/core.py)
 ├── --dev / --prod        # Global environment flags
 ├── start                 # Starts the bot (defined in cli/core.py)
 ├── db                    # Database commands (defined in cli/database.py)
-│   ├── generate          # Generate Prisma client
-│   ├── migrate           # Run migrations
-│   ├── pull              # Pull schema
-│   ├── push              # Push schema changes
-│   └── reset             # Reset database
+│   ├── upgrade           # Upgrade to latest migration
+│   ├── downgrade         # Downgrade by one migration
+│   ├── revision          # Create new migration
+│   ├── current           # Show current migration version
+│   ├── history           # Show migration history
+│   └── reset             # Reset database to base
 ├── dev                   # Development tools (defined in cli/dev.py)
 │   ├── lint              # Run linters
 │   ├── lint-fix          # Fix linting issues
@@ -81,11 +82,11 @@ uv run tux start --prod
 # Lint the code (defaults to development mode)
 uv run tux dev lint
 
-# Push database changes using the production database URL (flag before command)
-uv run tux --prod db push
+# Upgrade database using the production database URL (flag before command)
+uv run tux --prod db upgrade
 
-# Push database changes using the production database URL (flag after command)
-uv run tux db push --prod
+# Upgrade database using the production database URL (flag after command)
+uv run tux db upgrade --prod
 
 # Run docker compose up using development settings (flag after command)
 uv run tux docker up --build --dev
