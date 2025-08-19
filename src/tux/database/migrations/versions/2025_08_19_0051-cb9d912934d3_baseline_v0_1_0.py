@@ -1,7 +1,7 @@
 """
-Revision ID: 5c59c1e61b13
-Revises: df75aae067ff
-Create Date: 2025-08-18 22:11:18.407320
+Revision ID: cb9d912934d3
+Revises: 
+Create Date: 2025-08-19 00:51:42.713645
 """
 from __future__ import annotations
 
@@ -11,8 +11,8 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision: str = '5c59c1e61b13'
-down_revision: Union[str, None] = 'df75aae067ff'
+revision: str = 'cb9d912934d3'
+down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
