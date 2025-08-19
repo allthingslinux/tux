@@ -4,7 +4,6 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
-from sqlmodel import SQLModel
 
 
 class DatabaseManager:
@@ -26,5 +25,5 @@ class DatabaseManager:
                 raise
 
     async def create_tables(self) -> None:
-        async with self.engine.begin() as conn:
-            await conn.run_sync(SQLModel.metadata.create_all)
+        # Deprecated: migrations manage schema. Kept for backward compatibility; no-op.
+        return None

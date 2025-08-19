@@ -33,6 +33,7 @@ from tux.services.tracing import (
 from tux.shared.config.env import is_dev_mode
 from tux.shared.config.settings import Config
 from tux.ui.banner import create_banner
+from tux.database.migrations.runner import upgrade_head_if_needed
 
 # Re-export the T type for backward compatibility
 __all__ = ["ContainerInitializationError", "DatabaseConnectionError", "Tux"]
@@ -109,6 +110,8 @@ class Tux(commands.Bot):
             with start_span("bot.setup", "Bot setup process") as span:
                 set_setup_phase_tag(span, "starting")
                 await self._setup_database()
+                # Ensure DB schema is up-to-date in non-dev
+                await upgrade_head_if_needed()
                 set_setup_phase_tag(span, "database", "finished")
                 await self._setup_container()
                 set_setup_phase_tag(span, "container", "finished")
