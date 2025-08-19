@@ -325,6 +325,7 @@ jobs:
           --health-retries=5
     env:
       DEV_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/postgres
+      POSTGRES_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/postgres
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -352,7 +353,6 @@ jobs:
           uv run basedpyright --version
           uv run basedpyright
       - name: Tests
-        if: false # TODO: enable when tests are added
         run: |
           uv run pytest -q
 # ==============================================================================
