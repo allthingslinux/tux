@@ -109,12 +109,12 @@ class Tux(commands.Bot):
             # High-level setup pipeline with tracing
             with start_span("bot.setup", "Bot setup process") as span:
                 set_setup_phase_tag(span, "starting")
+                await self._setup_container()
+                set_setup_phase_tag(span, "container", "finished")
                 await self._setup_database()
                 # Ensure DB schema is up-to-date in non-dev
                 await upgrade_head_if_needed()
                 set_setup_phase_tag(span, "database", "finished")
-                await self._setup_container()
-                set_setup_phase_tag(span, "container", "finished")
                 await self._load_drop_in_extensions()
                 set_setup_phase_tag(span, "extensions", "finished")
                 await self._load_cogs()

@@ -1,6 +1,6 @@
 import contextlib
 import textwrap
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import cast
 from zoneinfo import ZoneInfo
 
@@ -212,10 +212,7 @@ class Afk(BaseCog):
         list[AFKMODEL]
             A list of expired AFK entries.
         """
-        entries = await self.db.afk.get_all_afk_members(guild_id)
-        current_time = datetime.now(UTC)
-
-        return [entry for entry in entries if entry.until is not None and entry.until < current_time]
+        return await self.db.afk.get_expired_afk_members(guild_id)
 
 
 async def setup(bot: Tux) -> None:

@@ -12,12 +12,13 @@ from sqlalchemy.sql.schema import SchemaItem
 from sqlmodel import SQLModel
 
 # Import models to populate metadata
-from tux.database.models import content as _content
-from tux.database.models import guild as _guild
-from tux.database.models import moderation as _moderation
-from tux.database.models import permissions as _permissions
-from tux.database.models import social as _social
-from tux.database.models import starboard as _starboard
+# We need to import the actual model classes, not just the modules
+from tux.database.models.content import Reminder, Snippet
+from tux.database.models.guild import Guild, GuildConfig
+from tux.database.models.moderation import Case, CaseType, CustomCaseType, Note
+from tux.database.models.permissions import AccessType, GuildPermission, PermissionType
+from tux.database.models.social import AFK, Levels
+from tux.database.models.starboard import Starboard, StarboardMessage
 from tux.shared.config.env import get_database_url
 
 config = context.config
@@ -38,7 +39,24 @@ SQLModel.metadata.naming_convention = naming_convention  # type: ignore[attr-def
 
 target_metadata = SQLModel.metadata
 
-_keep_refs = (_content, _guild, _moderation, _permissions, _social, _starboard)
+# Keep references to imported models to ensure they're registered
+_keep_refs = (
+    Snippet,
+    Reminder,
+    Guild,
+    GuildConfig,
+    Case,
+    CaseType,
+    CustomCaseType,
+    Note,
+    GuildPermission,
+    PermissionType,
+    AccessType,
+    AFK,
+    Levels,
+    Starboard,
+    StarboardMessage,
+)
 
 
 def include_object(
@@ -91,6 +109,8 @@ def do_run_migrations(connection: Connection) -> None:
         compare_server_default=True,
         render_as_batch=True,
         include_object=include_object,
+        # Enhanced configuration for better timezone handling
+        process_revision_directives=None,
     )
 
     with context.begin_transaction():

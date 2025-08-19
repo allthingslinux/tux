@@ -10,7 +10,7 @@ from tux.database.services.database import DatabaseService
 R = TypeVar("R")
 
 
-def with_session(
+def with_session[R](
     func: Callable[..., Awaitable[R]],
 ) -> Callable[..., Awaitable[R]]:
     @wraps(func)

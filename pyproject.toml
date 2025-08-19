@@ -20,7 +20,6 @@ dependencies = [
     "jishaku>=2.5.2",
     "loguru>=0.7.2",
     "pillow>=11.3.0,<11.4.0",
-
     "psutil>=6.0.0",
     "pynacl>=1.5.0",
     "python-dotenv>=1.0.1",
@@ -44,6 +43,7 @@ dependencies = [
     "asyncpg>=0.30.0",
     "aiosqlite>=0.20.0",
     "redis>=5.0.0",
+    "psycopg2-binary>=2.9.10",
 ]
 
 [project.urls]
@@ -124,6 +124,7 @@ exclude = [
     "tests/**",
     ".kiro/**",
     ".audit/**",
+    "src/tux/database/migrations/**",
 ]
 indent-width = 4
 line-length = 120
@@ -178,6 +179,7 @@ exclude = [
     ".archive",
     "typings/**",
     "tests/**",
+    "src/tux/database/migrations/**",
 ]
 include = ["src"]
 stubPath = "typings"
@@ -250,6 +252,7 @@ script_location = "src/tux/database/migrations"
 version_locations = ["src/tux/database/migrations/versions"]
 prepend_sys_path = ["src"]
 file_template = "%%(year)d_%%(month).2d_%%(day).2d_%%(hour).2d%%(minute).2d-%%(rev)s_%%(slug)s"
+timezone = "UTC"
 
-[tool.ruff.lint.per-file-ignores]
-"src/tux/database/migrations/versions/*.py" = ["N999"]
+[tool.alembic.sqlalchemy]
+url = ""

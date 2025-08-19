@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any, cast
 
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 from sqlmodel import select
 
 from tux.database.controllers.base import BaseController, with_session
@@ -129,9 +129,9 @@ class CaseController(BaseController):
     @with_session
     async def get_expired_tempbans(self, *, session: Any = None) -> list[Case]:
         # any expired and still active TEMPBAN cases
-        now = datetime.now(UTC)
+        # Use database-side current timestamp to avoid timezone parameter issues
         tempban_active = (Case.case_type == CaseType.TEMPBAN) & (cast(Any, Case.case_status).is_(True))
-        expiry_filters = cast(Any, Case.case_expires_at).is_not(None) & (cast(Any, Case.case_expires_at) <= now)
+        expiry_filters = cast(Any, Case.case_expires_at).is_not(None) & (cast(Any, Case.case_expires_at) <= func.now())
         stmt = select(Case).where(tempban_active & expiry_filters)
         res = await session.execute(stmt)
         return list(res.scalars())

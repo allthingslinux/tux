@@ -58,7 +58,8 @@ class TempBan(ModerationCogBase):
             return
 
         # Calculate expiration datetime from duration in seconds
-        expires_at = datetime.now(UTC) + timedelta(seconds=flags.duration)
+        # Store as timezone-naive to match database column format (TIMESTAMP WITHOUT TIME ZONE)
+        expires_at = (datetime.now(UTC) + timedelta(seconds=flags.duration)).replace(tzinfo=None)
 
         # Create a simple duration string for logging/display
         # TODO: Implement a more robust human-readable duration formatter

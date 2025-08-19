@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, cast
 
+from sqlalchemy import func
 from sqlmodel import select
 
 from tux.database.controllers.base import BaseController, with_session
@@ -78,6 +79,15 @@ class AfkController(BaseController):
     @with_session
     async def get_all_afk_members(self, guild_id: int, *, session: Any = None) -> list[AFK]:
         stmt = select(AFK).where(AFK.guild_id == guild_id)
+        res = await session.execute(stmt)
+        return list(res.scalars())
+
+    @with_session
+    async def get_expired_afk_members(self, guild_id: int, *, session: Any = None) -> list[AFK]:
+        """Get AFK members whose 'until' time has expired (database-side comparison)."""
+        stmt = select(AFK).where(
+            (AFK.guild_id == guild_id) & (cast(Any, AFK.until).is_not(None)) & (cast(Any, AFK.until) <= func.now()),
+        )
         res = await session.execute(stmt)
         return list(res.scalars())
 
