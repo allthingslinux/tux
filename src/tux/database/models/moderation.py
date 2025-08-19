@@ -29,8 +29,8 @@ class CaseType(str, Enum):
 
 
 class CustomCaseType(BaseModel, table=True):
-    id: int | None = Field(default=None, primary_key=True, sa_type=Integer())
-    guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger())
+    id: int | None = Field(default=None, primary_key=True, sa_type=Integer)
+    guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger)
     type_name: str = Field(max_length=50)
     display_name: str = Field(max_length=100)
     description: str | None = Field(default=None, max_length=500)
@@ -39,7 +39,7 @@ class CustomCaseType(BaseModel, table=True):
 
 
 class Case(BaseModel, table=True):
-    case_id: int | None = Field(default=None, primary_key=True, sa_type=Integer())
+    case_id: int | None = Field(default=None, primary_key=True, sa_type=Integer)
     case_status: bool | None = Field(default=True)
 
     case_type: CaseType | None = Field(
@@ -49,14 +49,14 @@ class Case(BaseModel, table=True):
     custom_case_type_id: int | None = Field(default=None, foreign_key="custom_case_type.id")
 
     case_reason: str = Field(max_length=2000)
-    case_moderator_id: int = Field(sa_type=BigInteger())
-    case_user_id: int = Field(sa_type=BigInteger())
-    case_user_roles: list[int] = Field(default_factory=list, sa_type=JSONB())
+    case_moderator_id: int = Field(sa_type=BigInteger)
+    case_user_id: int = Field(sa_type=BigInteger)
+    case_user_roles: list[int] = Field(default_factory=list, sa_type=JSONB)
     case_number: int | None = Field(default=None)
     case_expires_at: datetime | None = Field(default=None)
-    case_metadata: dict[str, str] | None = Field(default=None, sa_type=JSONB())
+    case_metadata: dict[str, str] | None = Field(default=None, sa_type=JSONB)
 
-    guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger())
+    guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger)
 
     __table_args__ = (
         Index("idx_case_guild_user", "guild_id", "case_user_id"),
@@ -66,9 +66,9 @@ class Case(BaseModel, table=True):
 
 
 class Note(BaseModel, table=True):
-    note_id: int | None = Field(default=None, primary_key=True, sa_type=Integer())
+    note_id: int | None = Field(default=None, primary_key=True, sa_type=Integer)
     note_content: str = Field(max_length=2000)
-    note_moderator_id: int = Field(sa_type=BigInteger())
-    note_user_id: int = Field(sa_type=BigInteger())
+    note_moderator_id: int = Field(sa_type=BigInteger)
+    note_user_id: int = Field(sa_type=BigInteger)
     note_number: int | None = Field(default=None)
-    guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger())
+    guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger)

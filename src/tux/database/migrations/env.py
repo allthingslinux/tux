@@ -1,11 +1,14 @@
 import asyncio
 from collections.abc import Callable
+from typing import Literal
 
+# Import required for alembic postgresql enum support
 import alembic_postgresql_enum  # noqa: F401
 from alembic import context
 from sqlalchemy import MetaData
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
+from sqlalchemy.sql.schema import SchemaItem
 from sqlmodel import SQLModel
 
 # Import models to populate metadata
@@ -38,7 +41,13 @@ target_metadata = SQLModel.metadata
 _keep_refs = (_content, _guild, _moderation, _permissions, _social, _starboard)
 
 
-def include_object(obj, name, type_, reflected, compare_to):
+def include_object(
+    obj: SchemaItem,
+    name: str | None,
+    type_: Literal["schema", "table", "column", "index", "unique_constraint", "foreign_key_constraint"],
+    reflected: bool,
+    compare_to: SchemaItem | None,
+) -> bool:
     # Include all objects; adjust if we later want to exclude temp tables
     return True
 

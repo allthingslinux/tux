@@ -9,11 +9,11 @@ from tux.database.core.base import BaseModel
 
 
 class Snippet(BaseModel, table=True):
-    snippet_id: int | None = Field(default=None, primary_key=True, sa_type=Integer())
+    snippet_id: int | None = Field(default=None, primary_key=True, sa_type=Integer)
     snippet_name: str = Field(max_length=100)
     snippet_content: str | None = Field(default=None, max_length=4000)
-    snippet_user_id: int = Field(sa_type=BigInteger())
-    guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger())
+    snippet_user_id: int = Field(sa_type=BigInteger)
+    guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger)
     uses: int = Field(default=0)
     locked: bool = Field(default=False)
     alias: str | None = Field(default=None, max_length=100)
@@ -22,10 +22,10 @@ class Snippet(BaseModel, table=True):
 
 
 class Reminder(BaseModel, table=True):
-    reminder_id: int | None = Field(default=None, primary_key=True, sa_type=Integer())
+    reminder_id: int | None = Field(default=None, primary_key=True, sa_type=Integer)
     reminder_content: str = Field(max_length=2000)
     reminder_expires_at: datetime
-    reminder_channel_id: int = Field(sa_type=BigInteger())
-    reminder_user_id: int = Field(sa_type=BigInteger())
+    reminder_channel_id: int = Field(sa_type=BigInteger)
+    reminder_user_id: int = Field(sa_type=BigInteger)
     reminder_sent: bool = Field(default=False)
-    guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger())
+    guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger)

@@ -17,13 +17,13 @@ class TimestampMixin(SQLModel):
 
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
-        sa_type=DateTime(timezone=True),
-        sa_column_kwargs={"server_default": func.now(), "nullable": False},
+        sa_type=DateTime,
+        sa_column_kwargs={"server_default": func.now(), "nullable": False, "timezone": True},
     )
     updated_at: datetime | None = Field(
         default=None,
-        sa_type=DateTime(timezone=True),
-        sa_column_kwargs={"onupdate": func.now()},
+        sa_type=DateTime,
+        sa_column_kwargs={"onupdate": func.now(), "timezone": True},
     )
 
 
@@ -32,11 +32,11 @@ class SoftDeleteMixin(SQLModel):
 
     is_deleted: bool = Field(
         default=False,
-        sa_type=Boolean(),
+        sa_type=Boolean,
         sa_column_kwargs={"nullable": False, "server_default": "false"},
     )
-    deleted_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
-    deleted_by: int | None = Field(default=None, sa_type=BigInteger())
+    deleted_at: datetime | None = Field(default=None, sa_type=DateTime, sa_column_kwargs={"timezone": True})
+    deleted_by: int | None = Field(default=None, sa_type=BigInteger)
 
     def soft_delete(self, deleted_by_user_id: int | None = None) -> None:
         self.is_deleted = True
@@ -47,8 +47,8 @@ class SoftDeleteMixin(SQLModel):
 class AuditMixin(SQLModel):
     """Track who created/modified records."""
 
-    created_by: int | None = Field(default=None, sa_type=BigInteger())
-    updated_by: int | None = Field(default=None, sa_type=BigInteger())
+    created_by: int | None = Field(default=None, sa_type=BigInteger)
+    updated_by: int | None = Field(default=None, sa_type=BigInteger)
 
 
 class DiscordIDMixin(SQLModel):
@@ -175,7 +175,7 @@ class CRUDMixin(SQLModel):
 class BaseModel(TimestampMixin, SoftDeleteMixin, AuditMixin, CRUDMixin, DiscordIDMixin, SQLModel):
     """Full-featured base model for entities."""
 
-    @declared_attr
+    @declared_attr  # type: ignore[misc]
     def __tablename__(self) -> str:  # type: ignore[override]
         # Convert CamelCase to snake_case
         name = self.__name__

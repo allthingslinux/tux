@@ -85,8 +85,7 @@ class CaseController(BaseController):
     @with_session
     async def get_cases_by_options(self, guild_id: int, options: dict[str, Any], *, session: Any = None) -> list[Case]:
         conditions: list[Any] = [Case.guild_id == guild_id]
-        for key, value in options.items():
-            conditions.append(getattr(Case, key) == value)
+        conditions.extend(getattr(Case, key) == value for key, value in options.items())
         stmt = select(Case).where(and_(*conditions)).order_by(cast(Any, Case.created_at).desc())
         res = await session.execute(stmt)
         return list(res.scalars())

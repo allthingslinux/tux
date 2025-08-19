@@ -50,15 +50,21 @@ class AfkController(BaseController):
                 enforced=enforced,
                 since=datetime.now(UTC),
             )
-        entry.nickname = nickname
-        entry.reason = reason
-        entry.guild_id = guild_id
-        entry.perm_afk = is_perm
-        entry.until = until
-        entry.enforced = enforced
-        await session.flush()
-        await session.refresh(entry)
-        return entry
+
+        # Use the existing BaseModel update method
+        updated_entry = await AFK.update_by_id(
+            session,
+            member_id,
+            nickname=nickname,
+            reason=reason,
+            guild_id=guild_id,
+            perm_afk=is_perm,
+            until=until,
+            enforced=enforced,
+        )
+        # This should never be None since we already checked entry exists above
+        assert updated_entry is not None
+        return updated_entry
 
     @with_session
     async def remove_afk(self, member_id: int, *, session: Any = None) -> bool:
