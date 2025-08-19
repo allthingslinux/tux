@@ -6,6 +6,8 @@ from typing import Any, Optional, TypeVar
 from sqlalchemy import BigInteger, Boolean, DateTime, func, select, update as sa_update, delete as sa_delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import Field, SQLModel
+from sqlalchemy.orm import declared_attr
+import re
 
 
 class TimestampMixin(SQLModel):
@@ -168,4 +170,9 @@ class CRUDMixin(SQLModel):
 class BaseModel(TimestampMixin, SoftDeleteMixin, AuditMixin, CRUDMixin, DiscordIDMixin, SQLModel):
     """Full-featured base model for entities."""
 
-    pass
+    @declared_attr
+    def __tablename__(cls) -> str:  # type: ignore[override]
+        # Convert CamelCase to snake_case
+        name = cls.__name__
+        s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
