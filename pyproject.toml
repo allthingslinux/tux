@@ -110,10 +110,10 @@ types = [
 default-groups = ["dev", "test", "docs", "types"]
 
 [tool.hatch.build.targets.sdist]
-include = ["tux"]
+packages = ["src/tux"]
 
 [tool.hatch.build.targets.wheel]
-include = ["tux"]
+packages = ["src/tux"]
 
 [tool.ruff]
 exclude = [
@@ -253,4 +253,3 @@ file_template = "%%(year)d_%%(month).2d_%%(day).2d_%%(hour).2d%%(minute).2d-%%(r
 
 [tool.ruff.lint.per-file-ignores]
 "src/tux/database/migrations/versions/*.py" = ["N999"]
-"src/tux/database/controllers/base.py" = ["UP047"]
