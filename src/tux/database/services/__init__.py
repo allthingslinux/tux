@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 try:
-    import redis.asyncio as redis  # type: ignore
-except Exception:  # pragma: no cover - optional at runtime
-    redis = None  # type: ignore
+    import redis.asyncio as redis
+except Exception:
+    redis = None
 
 
 class CacheService:
@@ -16,12 +16,10 @@ class CacheService:
     def __init__(self, redis_url: str | None = None) -> None:
         self._client = None
         if redis and redis_url:
-            self._client = redis.from_url(redis_url, decode_responses=True)
+            self._client = redis.from_url(redis_url, decode_responses=True)  # pyright: ignore[reportUnknownMemberType]
 
     async def get(self, key: str) -> str | None:
-        if self._client is None:
-            return None
-        return await self._client.get(key)
+        return None if self._client is None else await self._client.get(key)
 
     async def setex(self, key: str, ttl_seconds: int, value: str) -> None:
         if self._client is None:
@@ -34,6 +32,4 @@ class CacheService:
         await self._client.delete(key)
 
     async def ttl(self, key: str) -> int | None:
-        if self._client is None:
-            return None
-        return await self._client.ttl(key)
+        return None if self._client is None else await self._client.ttl(key)

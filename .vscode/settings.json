@@ -14,7 +14,7 @@
   "python.languageServer": "None",
   "python.terminal.activateEnvInCurrentTerminal": true,
   "python.terminal.executeInFileDir": false,
-  "basedpyright.importStrategy": "fromEnvironment",
+  "basedpyright.importStrategy": "useBundled",
   "basedpyright.analysis.autoImportCompletions": true,
   "basedpyright.analysis.inlayHints.functionReturnTypes": true,
   "basedpyright.analysis.inlayHints.variableTypes": true,

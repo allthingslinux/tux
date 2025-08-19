@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, Index
+from sqlalchemy import BigInteger, Index
 from sqlmodel import Field
 
 from tux.database.core.base import BaseModel
@@ -18,7 +18,7 @@ class Starboard(BaseModel, table=True):
 class StarboardMessage(BaseModel, table=True):
     message_id: int = Field(primary_key=True, sa_type=BigInteger)
     message_content: str = Field(max_length=4000)
-    message_expires_at: datetime = Field(sa_type=DateTime)
+    message_expires_at: datetime = Field()
     message_channel_id: int = Field(sa_type=BigInteger)
     message_user_id: int = Field(sa_type=BigInteger)
     message_guild_id: int = Field(sa_type=BigInteger)

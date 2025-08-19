@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from sqlalchemy import BigInteger, DateTime, Float, Index
+from sqlalchemy import BigInteger, Float, Index
 from sqlmodel import Field
 
 from tux.database.core.base import BaseModel
@@ -27,6 +27,6 @@ class Levels(BaseModel, table=True):
     xp: float = Field(default=0.0, sa_type=Float)
     level: int = Field(default=0)
     blacklisted: bool = Field(default=False)
-    last_message: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_type=DateTime)
+    last_message: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     __table_args__ = (Index("idx_levels_guild_xp", "guild_id", "xp"),)

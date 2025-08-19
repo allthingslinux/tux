@@ -3,7 +3,7 @@ from collections.abc import Callable
 from typing import Literal
 
 # Import required for alembic postgresql enum support
-import alembic_postgresql_enum  # noqa: F401
+import alembic_postgresql_enum  # noqa: F401  # pyright: ignore[reportUnusedImport]
 from alembic import context
 from sqlalchemy import MetaData
 from sqlalchemy.engine import Connection

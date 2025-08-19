@@ -24,7 +24,9 @@ def _resolve_bot(source: commands.Context[Tux] | discord.Interaction | Tux) -> T
     """
     if isinstance(source, commands.Context):
         return source.bot
-    return source.client if isinstance(source, discord.Interaction) else source
+    if isinstance(source, discord.Interaction):
+        return source.client if isinstance(source.client, Tux) else None
+    return source
 
 
 def get_db_service_from(source: commands.Context[Tux] | discord.Interaction | Tux) -> IDatabaseService | None:

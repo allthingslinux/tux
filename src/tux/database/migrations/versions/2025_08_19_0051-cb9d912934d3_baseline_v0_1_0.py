@@ -203,7 +203,7 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("case_id", sa.Integer(), primary_key=True, autoincrement=True),
         sa.Column("case_status", sa.Boolean(), nullable=True),
-        sa.Column("case_type", postgresql.ENUM(name="case_type_enum", create_type=False), nullable=True),
+        sa.Column("case_type", postgresql.ENUM(name="case_type_enum", create_type=False), nullable=True),  # pyright: ignore[reportUnknownArgumentType]
         sa.Column("custom_case_type_id", sa.Integer(), sa.ForeignKey("custom_case_type.id"), nullable=True),
         sa.Column("case_reason", sa.String(length=2000), nullable=False),
         sa.Column("case_moderator_id", sa.BigInteger(), nullable=False),

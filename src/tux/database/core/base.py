@@ -17,13 +17,11 @@ class TimestampMixin(SQLModel):
 
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
-        sa_type=DateTime,
-        sa_column_kwargs={"server_default": func.now(), "nullable": False, "timezone": True},
+        sa_column_kwargs={"server_default": func.now(), "nullable": False},
     )
     updated_at: datetime | None = Field(
         default=None,
-        sa_type=DateTime,
-        sa_column_kwargs={"onupdate": func.now(), "timezone": True},
+        sa_column_kwargs={"onupdate": func.now()},
     )
 
 
@@ -35,7 +33,7 @@ class SoftDeleteMixin(SQLModel):
         sa_type=Boolean,
         sa_column_kwargs={"nullable": False, "server_default": "false"},
     )
-    deleted_at: datetime | None = Field(default=None, sa_type=DateTime, sa_column_kwargs={"timezone": True})
+    deleted_at: datetime | None = Field(default=None, sa_type=DateTime)
     deleted_by: int | None = Field(default=None, sa_type=BigInteger)
 
     def soft_delete(self, deleted_by_user_id: int | None = None) -> None:
@@ -175,7 +173,7 @@ class CRUDMixin(SQLModel):
 class BaseModel(TimestampMixin, SoftDeleteMixin, AuditMixin, CRUDMixin, DiscordIDMixin, SQLModel):
     """Full-featured base model for entities."""
 
-    @declared_attr  # type: ignore[misc]
+    @declared_attr  # type: ignore[attr-defined]
     def __tablename__(self) -> str:  # type: ignore[override]
         # Convert CamelCase to snake_case
         name = self.__name__
