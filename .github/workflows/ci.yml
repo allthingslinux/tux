@@ -307,6 +307,63 @@ jobs:
         uses: ludeeus/action-shellcheck@master
         with:
           scandir: ./scripts
+
+  build-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=5
+    env:
+      DEV_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        run: pipx install uv
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Wait for Postgres
+        run: >-
+          for i in {1..20}; do
+            pg_isready -h localhost -p 5432 -U postgres && break;
+            sleep 1;
+          done
+
+      - name: Run Alembic migrations
+        run: |
+          export PYTHONPATH=src:$PYTHONPATH
+          uv run alembic -c alembic.ini upgrade head
+
+      - name: Lint
+        run: |
+          uv run ruff check .
+          uv run basedpyright --version
+          uv run basedpyright
+
+      - name: Tests
+        if: false # TODO: enable when tests are added
+        run: |
+          uv run pytest -q
+
 # ==============================================================================
 # CI WORKFLOW BEST PRACTICES IMPLEMENTED
 # ==============================================================================
