@@ -346,14 +346,14 @@ extras = ["regex"]
 
 [[package]]
 name = "basedpyright"
-version = "1.29.5"
+version = "1.31.3"
 description = "static type checking for Python (but based)"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
 files = [
-    {file = "basedpyright-1.29.5-py3-none-any.whl", hash = "sha256:e7eee13bec8b3c20d718c6f3ef1e2d57fb04621408e742aa8c82a1bd82fe325b"},
-    {file = "basedpyright-1.29.5.tar.gz", hash = "sha256:468ad6305472a2b368a1f383c7914e9e4ff3173db719067e1575cf41ed7b5a36"},
+    {file = "basedpyright-1.31.3-py3-none-any.whl", hash = "sha256:bdb0b5a9abe287a023d330fc71eaed181aaffd48f1dec59567f912cf716f38ff"},
+    {file = "basedpyright-1.31.3.tar.gz", hash = "sha256:c77bff2dc7df4fe09c0ee198589d8d24faaf8bfd883ee9e0af770b1a275a58f8"},
 ]
 
 [package.dependencies]
@@ -4828,4 +4828,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13.2,<3.14"
-content-hash = "9b4d3ec68b13f56e917fdde753dda9b88c85e337e830a7803362f523b4bffe86"
+content-hash = "8db7bcde5a7e43c9b9efe64a4f2c2a4ca7db2181ed4429968ecebd0cf4ad4a9d"
