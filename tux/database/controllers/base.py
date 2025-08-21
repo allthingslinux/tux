@@ -17,6 +17,7 @@ from prisma.models import (
     Snippet,
     Starboard,
     StarboardMessage,
+    Ticket,
 )
 from tux.database.client import db
 
@@ -33,6 +34,7 @@ ModelType = TypeVar(
     GuildConfig,
     AFKModel,
     Levels,
+    Ticket,
 )
 
 RelationType = TypeVar("RelationType")
@@ -50,6 +52,7 @@ class BaseController[
         GuildConfig,
         AFKModel,
         Levels,
+        Ticket,
     ),
 ]:
     """Provides a base interface for database table controllers.
