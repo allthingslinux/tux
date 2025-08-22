@@ -55,7 +55,8 @@ class RemindMe(BaseCog):
             )
 
         try:
-            await self.db.reminder.delete_reminder_by_id(reminder.reminder_id)
+            if reminder.reminder_id is not None:
+                await self.db.reminder.delete_reminder_by_id(reminder.reminder_id)
         except Exception as e:
             logger.error(f"Failed to delete reminder: {e}")
 
@@ -66,14 +67,16 @@ class RemindMe(BaseCog):
 
         self._initialized = True
 
-        reminders = await self.db.reminder.get_all_reminders()
+        # Get reminders from all guilds since this is on_ready
+        reminders = await self.db.reminder.find_all()
         dt_now = datetime.datetime.now(datetime.UTC)
 
         for reminder in reminders:
             # hotfix for an issue where old reminders from the old system would all send at once
             if reminder.reminder_sent:
                 try:
-                    await self.db.reminder.delete_reminder_by_id(reminder.reminder_id)
+                    if reminder.reminder_id is not None:
+                        await self.db.reminder.delete_reminder_by_id(reminder.reminder_id)
                 except Exception as e:
                     logger.error(f"Failed to delete reminder: {e}")
 

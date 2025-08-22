@@ -48,7 +48,11 @@ class DeleteSnippet(SnippetsBaseCog):
             return
 
         # Delete the snippet
-        await self.db.snippet.delete_snippet_by_id(snippet.snippet_id)
+        if snippet.snippet_id is not None:
+            await self.db.snippet.delete_snippet_by_id(snippet.snippet_id)
+        else:
+            await ctx.send("Error: Snippet ID is invalid.", delete_after=CONST.DEFAULT_DELETE_AFTER, ephemeral=True)
+            return
 
         await ctx.send("Snippet deleted.", delete_after=CONST.DEFAULT_DELETE_AFTER, ephemeral=True)
 

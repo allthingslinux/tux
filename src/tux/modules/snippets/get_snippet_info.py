@@ -44,7 +44,7 @@ class SnippetInfo(SnippetsBaseCog):
         author_display = author.mention if author else f"<@!{snippet.snippet_user_id}> (Not found)"
 
         # Attempt to get aliases if any
-        aliases = [alias.snippet_name for alias in (await self.db.snippet.get_all_aliases(name, ctx.guild.id))]
+        aliases = [alias.snippet_name for alias in (await self.db.snippet.get_all_aliases(ctx.guild.id))]
 
         # Determine content field details
         content_field_name = "Alias Target" if snippet.alias else "Content Preview"
@@ -57,7 +57,7 @@ class SnippetInfo(SnippetsBaseCog):
             user_name=ctx.author.name,
             user_display_avatar=ctx.author.display_avatar.url,
             title="Snippet Information",
-            message_timestamp=snippet.created_at or datetime.fromtimestamp(0, UTC),
+            message_timestamp=datetime.fromtimestamp(0, UTC),  # Snippet model doesn't have created_at
         )
 
         embed.add_field(name="Name", value=snippet.snippet_name, inline=True)

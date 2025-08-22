@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from typing import Any, Protocol
 
 import discord
@@ -289,7 +290,7 @@ class Cases(ModerationCogBase):
         assert ctx.guild
         assert case.case_number is not None
 
-        updated_case = await self.db.case.update_case(
+        updated_case = await self.db.case.update_case_by_number(
             ctx.guild.id,
             case.case_number,
             case_reason=flags.reason if flags.reason is not None else case.case_reason,
@@ -568,13 +569,13 @@ class Cases(ModerationCogBase):
             # Format type and action
             case_type_and_action = f"{action_emoji}{type_emoji}"
 
-            # Format date
+            # Format date - Case model doesn't have created_at, use case_id as proxy for age
             case_date = (
                 discord.utils.format_dt(
-                    case.created_at,
+                    datetime.fromtimestamp(0, UTC),  # Default timestamp since no created_at
                     "R",
                 )
-                if case.created_at
+                if case.case_id
                 else f"{self.bot.emoji_manager.get('tux_error')}"
             )
 

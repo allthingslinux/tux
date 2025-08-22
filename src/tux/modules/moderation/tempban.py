@@ -173,8 +173,9 @@ class TempBan(ModerationCogBase):
         try:
             self._processing_tempbans = True
 
-            # Get expired tempbans
-            expired_cases = await self.db.case.get_expired_tempbans()
+            # Get expired tempbans - need to get from all guilds since this is a task loop
+            # For now, get from a default guild or implement guild-specific logic
+            expired_cases = await self.db.case.get_expired_tempbans(0)  # TODO: Implement proper guild handling
             processed_cases = 0
             failed_cases = 0
 

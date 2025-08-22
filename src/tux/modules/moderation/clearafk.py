@@ -6,13 +6,11 @@ from discord.ext import commands
 from tux.core import checks
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
-from tux.database.controllers.afk import AfkController
 
 
 class ClearAFK(BaseCog):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
-        self.afk_controller = AfkController()
         self.clear_afk.usage = "clearafk <member>"
 
     @commands.hybrid_command(
@@ -40,13 +38,13 @@ class ClearAFK(BaseCog):
 
         assert ctx.guild
 
-        if not await self.afk_controller.is_afk(member.id, guild_id=ctx.guild.id):
+        if not await self.db.afk.is_afk(member.id, guild_id=ctx.guild.id):
             return await ctx.send(f"{member.mention} is not currently AFK.", ephemeral=True)
 
         # Fetch the AFK entry to retrieve the original nickname
-        entry = await self.afk_controller.get_afk_member(member.id, guild_id=ctx.guild.id)
+        entry = await self.db.afk.get_afk_member(member.id, guild_id=ctx.guild.id)
 
-        await self.afk_controller.remove_afk(member.id)
+        await self.db.afk.remove_afk(member.id, ctx.guild.id)
 
         if entry:
             if entry.nickname:

@@ -1,5 +1,4 @@
 import re
-from datetime import UTC, datetime
 
 from discord.ext import commands
 from loguru import logger
@@ -46,7 +45,6 @@ class CreateSnippet(SnippetsBaseCog):
             await self.send_snippet_error(ctx, description=reason)
             return
 
-        created_at = datetime.now(UTC)
         author_id = ctx.author.id
         guild_id = ctx.guild.id
 
@@ -71,10 +69,8 @@ class CreateSnippet(SnippetsBaseCog):
 
         if existing_snippet_for_alias:
             await self.db.snippet.create_snippet_alias(
-                snippet_name=name,
-                snippet_alias=content,
-                snippet_created_at=created_at,
-                snippet_user_id=author_id,
+                original_name=content,
+                alias_name=name,
                 guild_id=guild_id,
             )
 
@@ -91,7 +87,6 @@ class CreateSnippet(SnippetsBaseCog):
         await self.db.snippet.create_snippet(
             snippet_name=name,
             snippet_content=content,
-            snippet_created_at=created_at,
             snippet_user_id=author_id,
             guild_id=guild_id,
         )

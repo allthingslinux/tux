@@ -39,7 +39,8 @@ class Snippet(SnippetsBaseCog):
             return
 
         # Increment uses before potentially resolving alias
-        await self.db.snippet.increment_snippet_uses(snippet.snippet_id)
+        if snippet.snippet_id is not None:
+            await self.db.snippet.increment_snippet_uses(snippet.snippet_id)
 
         # Handle aliases
         if snippet.alias:
@@ -50,7 +51,7 @@ class Snippet(SnippetsBaseCog):
             )
 
             # If alias target doesn't exist, delete the broken alias
-            if aliased_snippet is None:
+            if aliased_snippet is None and snippet.snippet_id is not None:
                 await self.db.snippet.delete_snippet_by_id(snippet.snippet_id)
 
                 await self.send_snippet_error(
@@ -60,12 +61,15 @@ class Snippet(SnippetsBaseCog):
                 return
 
             # Format message for alias
-            text = f"`{snippet.snippet_name}.txt -> {aliased_snippet.snippet_name}.txt` "
+            if aliased_snippet is not None:
+                text = f"`{snippet.snippet_name}.txt -> {aliased_snippet.snippet_name}.txt` "
 
-            if aliased_snippet.locked:
-                text += "🔒 "
+                if aliased_snippet.locked:
+                    text += "🔒 "
 
-            text += f"|| {aliased_snippet.snippet_content}"
+                text += f"|| {aliased_snippet.snippet_content}"
+            else:
+                text = f"`{snippet.snippet_name}.txt -> [BROKEN ALIAS]`"
 
         else:
             # Format message for regular snippet

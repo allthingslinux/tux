@@ -51,10 +51,14 @@ class EditSnippet(SnippetsBaseCog):
             return
 
         # Update the snippet content
-        await self.db.snippet.update_snippet_by_id(
-            snippet_id=snippet.snippet_id,
-            snippet_content=content,
-        )
+        if snippet.snippet_id is not None:
+            await self.db.snippet.update_snippet_by_id(
+                snippet_id=snippet.snippet_id,
+                snippet_content=content,
+            )
+        else:
+            await ctx.send("Error: Snippet ID is invalid.", delete_after=CONST.DEFAULT_DELETE_AFTER, ephemeral=True)
+            return
 
         await ctx.send("Snippet edited.", delete_after=CONST.DEFAULT_DELETE_AFTER, ephemeral=True)
 

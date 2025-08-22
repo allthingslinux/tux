@@ -44,6 +44,10 @@ class ToggleSnippetLock(SnippetsBaseCog):
             return
 
         # Toggle the lock status in the database
+        if snippet.snippet_id is None:
+            await self.send_snippet_error(ctx, "Error: Snippet ID is invalid.")
+            return
+
         try:
             status = await self.db.snippet.toggle_snippet_lock_by_id(snippet.snippet_id)
         except Exception as e:

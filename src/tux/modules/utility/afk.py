@@ -126,7 +126,7 @@ class Afk(BaseCog):
         if await self.db.afk.is_perm_afk(message.author.id, guild_id=message.guild.id):
             return
 
-        await self.db.afk.remove_afk(message.author.id)
+        await self.db.afk.remove_afk(message.author.id, message.guild.id)
 
         await message.reply("Welcome back!", delete_after=5)
 
@@ -194,7 +194,7 @@ class Afk(BaseCog):
 
                 if member is None:
                     # Handles the edge case of a user leaving the guild while still temp-AFK
-                    await self.db.afk.remove_afk(entry.member_id)
+                    await self.db.afk.remove_afk(entry.member_id, guild.id)
                 else:
                     await del_afk(self.db, member, entry.nickname)
 
