@@ -105,8 +105,9 @@ class Tickets(commands.Cog):
         ticket_log_cog = self.bot.get_cog("TicketLog")
         if not ticket_log_cog:
             return
-        closer_id = getattr(getattr(ctx, "author", None), "id", None) or getattr(getattr(ctx, "user", None), "id", None)
-        if closer_id:
+        if closer_id := getattr(
+            getattr(ctx, "author", None), "id", None
+        ) or getattr(getattr(ctx, "user", None), "id", None):
             ticket_log_cog.add_ticket_event(
                 channel_id,
                 "TICKET_CLOSED",
