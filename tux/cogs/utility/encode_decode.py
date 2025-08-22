@@ -1,7 +1,7 @@
 import base64
 import binascii
 
-from discord import AllowedMentions
+from discord import AllowedMentions, app_commands
 from discord.ext import commands
 
 from tux.bot import Tux
@@ -44,16 +44,23 @@ class EncodeDecode(commands.Cog):
         await ctx.reply(
             content=data,
             allowed_mentions=allowed_mentions,
-            ephemeral=False,
+            ephemeral=True,
         )
 
-    @commands.hybrid_command(
-        name="encode",
+    @commands.hybrid_command(name="encode", aliases=["ec"], description="Encode a message")
+    @app_commands.describe(text="Text to encode")
+    @app_commands.choices(
+        codesystem=[
+            app_commands.Choice(name="base16", value="base16"),
+            app_commands.Choice(name="base32", value="base32"),
+            app_commands.Choice(name="base64", value="base64"),
+            app_commands.Choice(name="base85", value="base85"),
+        ],
     )
     async def encode(
         self,
         ctx: commands.Context[Tux],
-        cs: str,
+        codesystem: str,
         *,
         text: str,
     ) -> None:
@@ -64,23 +71,23 @@ class EncodeDecode(commands.Cog):
         ----------
         ctx : commands.Context[Tux]
             The context of the command.
-        cs : str
+        codesystem : str
             The coding system.
         text : str
             The text you want to encode.
         """
 
-        cs = cs.lower()
+        codesystem = codesystem.lower()
         btext = text.encode(encoding="utf-8")
 
         try:
-            if cs == "base16":
+            if codesystem == "base16":
                 data = base64.b16encode(btext)
-            elif cs == "base32":
+            elif codesystem == "base32":
                 data = base64.b32encode(btext)
-            elif cs == "base64":
+            elif codesystem == "base64":
                 data = base64.b64encode(btext)
-            elif cs == "base85":
+            elif codesystem == "base85":
                 data = base64.b85encode(btext)
             else:
                 await ctx.reply(
@@ -98,13 +105,21 @@ class EncodeDecode(commands.Cog):
                 ephemeral=True,
             )
 
-    @commands.hybrid_command(
-        name="decode",
+    @commands.hybrid_command(name="decode", aliases=["dc"], description="Decode a message")
+    @app_commands.describe(codesystem="Which Coding System to use")
+    @app_commands.describe(text="Text to decode")
+    @app_commands.choices(
+        codesystem=[
+            app_commands.Choice(name="base16", value="base16"),
+            app_commands.Choice(name="base32", value="base32"),
+            app_commands.Choice(name="base64", value="base64"),
+            app_commands.Choice(name="base85", value="base85"),
+        ],
     )
     async def decode(
         self,
         ctx: commands.Context[Tux],
-        cs: str,
+        codesystem: str,
         *,
         text: str,
     ) -> None:
@@ -115,23 +130,23 @@ class EncodeDecode(commands.Cog):
         ----------
         ctx : commands.Context[Tux]
             The context of the command.
-        cs : str
+        codesystem : str
             The coding system.
         text : str
             The text you want to decode.
         """
 
-        cs = cs.lower()
+        codesystem = codesystem.lower()
         btext = text.encode(encoding="utf-8")
 
         try:
-            if cs == "base16":
+            if codesystem == "base16":
                 data = base64.b16decode(btext)
-            elif cs == "base32":
+            elif codesystem == "base32":
                 data = base64.b32decode(btext)
-            elif cs == "base64":
+            elif codesystem == "base64":
                 data = base64.b64decode(btext)
-            elif cs == "base85":
+            elif codesystem == "base85":
                 data = base64.b85decode(btext)
             else:
                 await ctx.reply(
