@@ -50,8 +50,7 @@ class Tickets(commands.Cog):
             await interaction.followup.send("Transcript system not available.", ephemeral=True)
             return
 
-        channel = interaction.guild.get_channel(ticket.channel_id)
-        if channel:
+        if channel := interaction.guild.get_channel(ticket.channel_id):
             try:
                 messages = [msg async for msg in channel.history(limit=100, oldest_first=True)]
                 success = await ticket_log_cog.log_transcript(interaction.guild, channel, ticket, messages)
