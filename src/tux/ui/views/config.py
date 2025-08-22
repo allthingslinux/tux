@@ -2,21 +2,24 @@ from typing import Any
 
 import discord
 
-from tux.core.interfaces import IDatabaseService
-from tux.database.utils import get_db_controller_from
+from tux.database.service import DatabaseService
+from tux.database.utils import get_db_service_from
 
 
 class ConfigSetPrivateLogs(discord.ui.View):
-    def __init__(self, *, timeout: float = 180, bot: Any | None = None, db_service: IDatabaseService | None = None):
-        controller = None
+    def __init__(self, *, timeout: float = 180, bot: Any | None = None, db_service: DatabaseService | None = None):
         if db_service is not None:
-            controller = db_service.get_controller()
+            self.db: DatabaseService = db_service
         elif bot is not None:
-            controller = get_db_controller_from(bot, fallback_to_direct=False)
-        if controller is None:
-            message = "IDatabaseService not available. DI is required for ConfigSetPrivateLogs."
+            # Get the database service
+            db_service = get_db_service_from(bot)
+            if db_service is None:
+                message = "DatabaseService not available. DI is required for ConfigSetPrivateLogs."
+                raise RuntimeError(message)
+            self.db = db_service
+        else:
+            message = "DatabaseService not available. DI is required for ConfigSetPrivateLogs."
             raise RuntimeError(message)
-        self.db = controller.guild_config
         super().__init__(timeout=timeout)
 
     @discord.ui.select(
@@ -32,7 +35,7 @@ class ConfigSetPrivateLogs(discord.ui.View):
         if interaction.guild is None:
             return
 
-        await self.db.update_private_log_id(interaction.guild.id, select.values[0].id)
+        await self.db.guild_config.update_private_log_id(interaction.guild.id, select.values[0].id)
         await interaction.response.send_message(
             f"Private log channel set to {select.values[0]}.",
             ephemeral=True,
@@ -52,7 +55,7 @@ class ConfigSetPrivateLogs(discord.ui.View):
         if interaction.guild is None:
             return
 
-        await self.db.update_report_log_id(interaction.guild.id, select.values[0].id)
+        await self.db.guild_config.update_report_log_id(interaction.guild.id, select.values[0].id)
         await interaction.response.send_message(
             f"Report log channel set to {select.values[0]}.",
             ephemeral=True,
@@ -72,7 +75,7 @@ class ConfigSetPrivateLogs(discord.ui.View):
         if interaction.guild is None:
             return
 
-        await self.db.update_dev_log_id(interaction.guild.id, select.values[0].id)
+        await self.db.guild_config.update_dev_log_id(interaction.guild.id, select.values[0].id)
         await interaction.response.send_message(
             f"Dev log channel set to {select.values[0]}.",
             ephemeral=True,
@@ -81,16 +84,19 @@ class ConfigSetPrivateLogs(discord.ui.View):
 
 
 class ConfigSetPublicLogs(discord.ui.View):
-    def __init__(self, *, timeout: float = 180, bot: Any | None = None, db_service: IDatabaseService | None = None):
-        controller = None
+    def __init__(self, *, timeout: float = 180, bot: Any | None = None, db_service: DatabaseService | None = None):
         if db_service is not None:
-            controller = db_service.get_controller()
+            self.db: DatabaseService = db_service
         elif bot is not None:
-            controller = get_db_controller_from(bot, fallback_to_direct=False)
-        if controller is None:
-            message = "IDatabaseService not available. DI is required for ConfigSetPublicLogs."
+            # Get the database service
+            db_service = get_db_service_from(bot)
+            if db_service is None:
+                message = "DatabaseService not available. DI is required for ConfigSetPublicLogs."
+                raise RuntimeError(message)
+            self.db = db_service
+        else:
+            message = "DatabaseService not available. DI is required for ConfigSetPublicLogs."
             raise RuntimeError(message)
-        self.db = controller.guild_config
         super().__init__(timeout=timeout)
 
     @discord.ui.select(
@@ -106,7 +112,7 @@ class ConfigSetPublicLogs(discord.ui.View):
         if interaction.guild is None:
             return
 
-        await self.db.update_mod_log_id(interaction.guild.id, select.values[0].id)
+        await self.db.guild_config.update_mod_log_id(interaction.guild.id, select.values[0].id)
         await interaction.response.send_message(
             f"Mod log channel set to {select.values[0]}.",
             ephemeral=True,
@@ -126,7 +132,7 @@ class ConfigSetPublicLogs(discord.ui.View):
         if interaction.guild is None:
             return
 
-        await self.db.update_audit_log_id(interaction.guild.id, select.values[0].id)
+        await self.db.guild_config.update_audit_log_id(interaction.guild.id, select.values[0].id)
         await interaction.response.send_message(
             f"Audit log channel set to {select.values[0]}.",
             ephemeral=True,
@@ -146,7 +152,7 @@ class ConfigSetPublicLogs(discord.ui.View):
         if interaction.guild is None:
             return
 
-        await self.db.update_join_log_id(interaction.guild.id, select.values[0].id)
+        await self.db.guild_config.update_join_log_id(interaction.guild.id, select.values[0].id)
         await interaction.response.send_message(
             f"Join log channel set to {select.values[0]}.",
             ephemeral=True,
@@ -155,16 +161,19 @@ class ConfigSetPublicLogs(discord.ui.View):
 
 
 class ConfigSetChannels(discord.ui.View):
-    def __init__(self, *, timeout: float = 180, bot: Any | None = None, db_service: IDatabaseService | None = None):
-        controller = None
+    def __init__(self, *, timeout: float = 180, bot: Any | None = None, db_service: DatabaseService | None = None):
         if db_service is not None:
-            controller = db_service.get_controller()
+            self.db: DatabaseService = db_service
         elif bot is not None:
-            controller = get_db_controller_from(bot, fallback_to_direct=False)
-        if controller is None:
-            message = "IDatabaseService not available. DI is required for ConfigSetChannels."
+            # Get the database service
+            db_service = get_db_service_from(bot)
+            if db_service is None:
+                message = "DatabaseService not available. DI is required for ConfigSetChannels."
+                raise RuntimeError(message)
+            self.db = db_service
+        else:
+            message = "DatabaseService not available. DI is required for ConfigSetChannels."
             raise RuntimeError(message)
-        self.db = controller.guild_config
         super().__init__(timeout=timeout)
 
     @discord.ui.select(
@@ -180,7 +189,7 @@ class ConfigSetChannels(discord.ui.View):
         if interaction.guild is None:
             return
 
-        await self.db.update_jail_channel_id(interaction.guild.id, select.values[0].id)
+        await self.db.guild_config.update_jail_channel_id(interaction.guild.id, select.values[0].id)
         await interaction.response.send_message(
             f"Jail channel set to {select.values[0]}.",
             ephemeral=True,
@@ -200,7 +209,7 @@ class ConfigSetChannels(discord.ui.View):
         if interaction.guild is None:
             return
 
-        await self.db.update_starboard_channel_id(interaction.guild.id, select.values[0].id)
+        await self.db.guild_config.update_starboard_channel_id(interaction.guild.id, select.values[0].id)
         await interaction.response.send_message(
             f"Starboard channel set to {select.values[0]}.",
             ephemeral=True,
@@ -220,7 +229,7 @@ class ConfigSetChannels(discord.ui.View):
         if interaction.guild is None:
             return
 
-        await self.db.update_general_channel_id(interaction.guild.id, select.values[0].id)
+        await self.db.guild_config.update_general_channel_id(interaction.guild.id, select.values[0].id)
         await interaction.response.send_message(
             f"General channel set to {select.values[0]}.",
             ephemeral=True,

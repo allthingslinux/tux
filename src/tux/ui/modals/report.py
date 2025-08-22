@@ -13,7 +13,7 @@ class ReportModal(discord.ui.Modal):
         # Resolve config via shared DB utility (strict DI required)
         controller = get_db_controller_from(self.bot, fallback_to_direct=False)
         if controller is None:
-            error_msg = "IDatabaseService not available. DI is required for ReportModal"
+            error_msg = "DatabaseService not available. DI is required for ReportModal"
             raise RuntimeError(error_msg)
         self.config = controller.guild_config
 
