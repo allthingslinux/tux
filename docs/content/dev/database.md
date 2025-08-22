@@ -35,7 +35,7 @@ Located at `src/tux/database/`, this directory contains:
 
 The `core/` directory contains the database management layer:
 
-- `database.py`: DatabaseManager class for session management
+- `database.py`: DatabaseService class for session management (DatabaseManager is deprecated)
 - `base.py`: Base model definitions and common functionality
 
 #### Services Module

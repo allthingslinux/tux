@@ -387,7 +387,7 @@ RUN set -eux; \
     # Compile Python bytecode for performance optimization
     # PERFORMANCE: Pre-compiled bytecode improves startup time
     # Note: Some compilation errors are expected and ignored
-    /app/.venv/bin/python -m compileall -b -q /app/tux /app/.venv/lib/python3.13/site-packages 2>/dev/null || true
+    /app/.venv/bin/python -m compileall -b -q /app/src/tux /app/.venv/lib/python3.13/site-packages 2>/dev/null || true
 
 # Switch back to non-root user for runtime
 USER nonroot
