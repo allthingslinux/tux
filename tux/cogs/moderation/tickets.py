@@ -825,9 +825,7 @@ class Tickets(commands.Cog):
             reason="Added to ticket by staff",
         )
 
-        # Track the event
-        ticket_log_cog = self.bot.get_cog("TicketLog")
-        if ticket_log_cog:
+        if ticket_log_cog := self.bot.get_cog("TicketLog"):
             actor_id = ctx.author.id if hasattr(ctx, "author") else ctx.user.id
             event_type = "ROLE_ADDED" if isinstance(target_obj, discord.Role) else "USER_ADDED"
             target_name = getattr(target_obj, "name", str(target_obj))
