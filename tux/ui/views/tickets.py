@@ -295,6 +295,5 @@ class TicketManagementView(discord.ui.View):
                 reason="Ticket unclaimed - restoring staff access",
             )
 
-        author = interaction.guild.get_member(ticket.author_id)
-        if author:
+        if author := interaction.guild.get_member(ticket.author_id):
             await channel.set_permissions(author, view_channel=True, send_messages=True, read_messages=True)
