@@ -72,7 +72,7 @@ class SentryHandler(commands.Cog):
         if not self._is_sentry_available():
             return
 
-        # Set command-specific tags
+        # Set command-specific span attributes for tracing
         if isinstance(ctx, commands.Context):
             set_span_attributes(
                 {
