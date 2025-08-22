@@ -21,7 +21,7 @@ class Ban(ModerationCogBase):
     async def ban(
         self,
         ctx: commands.Context[Tux],
-        user: discord.User,
+        member: discord.Member | discord.User,
         *,
         flags: BanFlags,
     ) -> None:
@@ -32,7 +32,7 @@ class Ban(ModerationCogBase):
         ----------
         ctx : commands.Context[Tux]
             The context in which the command is being invoked.
-        member : discord.Member
+        member : discord.Member | discord.User
             The member to ban.
         flags : BanFlags
             The flags for the command. (reason: str, purge: int (< 7), silent: bool)
@@ -48,19 +48,19 @@ class Ban(ModerationCogBase):
         assert ctx.guild
 
         # Check if moderator has permission to ban the member
-        if not await self.check_conditions(ctx, user, ctx.author, "ban"):
+        if not await self.check_conditions(ctx, member, ctx.author, "ban"):
             return
 
         # Execute ban with case creation and DM
         await self.execute_mod_action(
             ctx=ctx,
             case_type=DBCaseType.BAN,
-            user=user,
+            user=member,
             reason=flags.reason,
             silent=flags.silent,
             dm_action="banned",
             actions=[
-                (ctx.guild.ban(user, reason=flags.reason, delete_message_seconds=flags.purge * 86400), type(None)),
+                (ctx.guild.ban(member, reason=flags.reason, delete_message_seconds=flags.purge * 86400), type(None)),
             ],
         )
 

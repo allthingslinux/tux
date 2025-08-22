@@ -50,6 +50,14 @@ class BaseHelpView(discord.ui.View):
     def __init__(self, help_command: HelpCommandProtocol, timeout: int = 180):
         super().__init__(timeout=timeout)
         self.help_command = help_command
+        self.author = help_command.context.author
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        """Ensure only the invoker can interact with this view."""
+        if interaction.user != self.author:
+            await interaction.response.send_message("You can't interact with others help menus!", ephemeral=True)
+            return False
+        return True
 
 
 class BaseSelectMenu(discord.ui.Select[BaseHelpView]):
