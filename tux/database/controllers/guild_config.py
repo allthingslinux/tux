@@ -46,6 +46,7 @@ class GuildConfigController:
             "private": "private_log_id",
             "report": "report_log_id",
             "dev": "dev_log_id",
+            "ticket": "ticket_log_id",
         }
         return await self.get_guild_config_field_value(guild_id, log_channel_ids[log_type])
 
@@ -128,6 +129,9 @@ class GuildConfigController:
 
     async def get_dev_log_id(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "dev_log_id")
+
+    async def get_ticket_log_id(self, guild_id: int) -> int | None:
+        return await self.get_guild_config_field_value(guild_id, "ticket_log_id")
 
     async def get_jail_channel_id(self, guild_id: int) -> int | None:
         return await self.get_guild_config_field_value(guild_id, "jail_channel_id")
@@ -297,6 +301,24 @@ class GuildConfigController:
                     "dev_log_id": dev_log_id,
                 },
                 "update": {"dev_log_id": dev_log_id},
+            },
+        )
+
+    async def update_ticket_log_id(
+        self,
+        guild_id: int,
+        ticket_log_id: int,
+    ) -> Any:
+        await self.ensure_guild_exists(guild_id)
+
+        return await self.table.upsert(
+            where={"guild_id": guild_id},
+            data={
+                "create": {
+                    "guild_id": guild_id,
+                    "ticket_log_id": ticket_log_id,
+                },
+                "update": {"ticket_log_id": ticket_log_id},
             },
         )
 

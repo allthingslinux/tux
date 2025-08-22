@@ -49,7 +49,7 @@ class RequestCloseView(discord.ui.View):
         except Exception as e:
             logger.error(f"Error in confirm_close: {e}")
             # Try to send an error message if the interaction hasn't been responded to
-            try:
+            with suppress(Exception):
                 if not interaction.response.is_done():
                     await interaction.response.send_message(
                         "An error occurred while closing the ticket.",
@@ -57,8 +57,6 @@ class RequestCloseView(discord.ui.View):
                     )
                 else:
                     await interaction.followup.send("An error occurred while closing the ticket.", ephemeral=True)
-            except Exception:
-                pass
 
     async def on_timeout(self):
         for item in self.children:

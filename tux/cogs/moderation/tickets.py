@@ -106,7 +106,9 @@ class Tickets(commands.Cog):
         if not ticket_log_cog:
             return
         if closer_id := getattr(
-            getattr(ctx, "author", None), "id", None
+            getattr(ctx, "author", None),
+            "id",
+            None,
         ) or getattr(getattr(ctx, "user", None), "id", None):
             ticket_log_cog.add_ticket_event(
                 channel_id,
@@ -181,7 +183,7 @@ class Tickets(commands.Cog):
         try:
             messages = [msg async for msg in channel.history(oldest_first=True)]
             success = await ticket_log_cog.log_transcript(ctx.guild, channel, ticket, messages)
-            log_func = logger.info if success else logger.warning
+            log_func = logger.debug if success else logger.warning
             log_func(
                 f"{'Successfully' if success else 'Failed to'} log transcript for ticket {ticket.ticket_id}",
             )
@@ -213,7 +215,7 @@ class Tickets(commands.Cog):
 
         Returns discord.Member | discord.Role | None
         """
-        if isinstance(target, discord.Member | discord.Role):  # UP038
+        if isinstance(target, discord.Member | discord.Role):
             return target
 
         s = str(target).strip()
@@ -296,9 +298,10 @@ class Tickets(commands.Cog):
             await send(error, ephemeral=True)
             return
         title = self._normalize_title(title)
-
-        if hasattr(ctx, "response") and hasattr(ctx.response, "defer"):
+        is_interaction = hasattr(ctx, "response") and hasattr(ctx.response, "defer")
+        if is_interaction:
             await ctx.response.defer(ephemeral=True)
+            send = ctx.followup.send
 
         try:
             await self._ensure_guild_config(guild.id)
@@ -805,7 +808,7 @@ class Tickets(commands.Cog):
         # Support @role mention
         if target.startswith("<@&") and target.endswith(">"):
             role_id = target[3:-1]
-            target_obj = ctx.guild.get_role(int(role_id)) if role_id.isdigit() else None  # SIM108
+            target_obj = ctx.guild.get_role(int(role_id)) if role_id.isdigit() else None
         else:
             target_obj = self._resolve_target(ctx, target)
 
@@ -934,8 +937,8 @@ class Tickets(commands.Cog):
                         inline=True,
                     )
         total_tickets = len(tickets)
-        total_claimed = sum(bool(t.claimed_by)
-        total_closed = sum(bool(t.status == TicketStatus.CLOSED)
+        total_claimed = sum(bool(t.claimed_by) for t in tickets)
+        total_closed = sum(bool(t.status == TicketStatus.CLOSED) for t in tickets)
         embed.add_field(
             name="📈 Server Summary",
             value=f"Total: {total_tickets}\nClaimed: {total_claimed}\nClosed: {total_closed}",
