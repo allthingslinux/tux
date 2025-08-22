@@ -139,8 +139,7 @@ class Tickets(commands.Cog):
         claimed_by = getattr(ticket, "claimed_by", None)
         if not claimed_by:
             return overwrites
-        claimed_member = ctx.guild.get_member(claimed_by)
-        if claimed_member:
+        if claimed_member := ctx.guild.get_member(claimed_by):
             overwrites[claimed_member] = discord.PermissionOverwrite(
                 view_channel=True,
                 send_messages=False,
