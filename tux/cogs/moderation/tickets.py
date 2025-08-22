@@ -934,7 +934,7 @@ class Tickets(commands.Cog):
                         inline=True,
                     )
         total_tickets = len(tickets)
-        total_claimed = sum(1 for t in tickets if t.claimed_by)
+        total_claimed = sum(bool(t.claimed_by)
         total_closed = sum(1 for t in tickets if t.status == TicketStatus.CLOSED)
         embed.add_field(
             name="📈 Server Summary",
