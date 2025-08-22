@@ -292,9 +292,7 @@ class Tickets(commands.Cog):
         """Create a new support ticket (hybrid command)."""
         user, guild, send = self._extract_ctx(ctx)
         self._maybe_delete_invocation(ctx)
-        # Validate context & title
-        error = self._validate_creation_prereqs(guild, user, title)
-        if error:
+        if error := self._validate_creation_prereqs(guild, user, title):
             await send(error, ephemeral=True)
             return
         title = self._normalize_title(title)
