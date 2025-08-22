@@ -859,8 +859,7 @@ class Tickets(commands.Cog):
 
     async def _log_removal_event(self, ctx, target_obj):
         """Log the removal event to ticket log."""
-        ticket_log_cog = self.bot.get_cog("TicketLog")
-        if ticket_log_cog:
+        if ticket_log_cog := self.bot.get_cog("TicketLog"):
             actor_id = ctx.author.id if hasattr(ctx, "author") else ctx.user.id
             event_type = "ROLE_REMOVED" if isinstance(target_obj, discord.Role) else "USER_REMOVED"
             target_name = getattr(target_obj, "name", str(target_obj))
