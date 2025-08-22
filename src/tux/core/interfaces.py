@@ -10,8 +10,6 @@ from typing import Any, Protocol, runtime_checkable
 
 import discord
 
-from tux.database.controllers import DatabaseController
-
 
 class IGithubService(Protocol):
     """Protocol for GitHub service operations.
@@ -40,50 +38,6 @@ class ILoggerService(Protocol):
         Args:
             level: The logging level to use
         """
-        ...
-
-
-class IDatabaseService(Protocol):
-    """Protocol for database service operations.
-
-    Provides access to database controllers and query execution capabilities.
-    """
-
-    def get_controller(self) -> DatabaseController:
-        """Get the database controller instance.
-
-        Returns:
-            The database controller for performing database operations
-        """
-        ...
-
-    async def execute_query(self, operation: str, *args: Any, **kwargs: Any) -> Any:
-        """Execute a database query operation.
-
-        Args:
-            operation: The operation name to execute
-            *args: Positional arguments for the operation
-            **kwargs: Keyword arguments for the operation
-
-        Returns:
-            The result of the database operation
-        """
-        ...
-
-    async def connect(self) -> None:
-        """Establish the database connection."""
-        ...
-
-    def is_connected(self) -> bool:
-        """Check if the database client is connected."""
-        ...
-
-    def is_registered(self) -> bool:
-        """Check if the database models are registered/ready."""
-        ...
-
-    async def disconnect(self) -> None:
-        """Close the database connection if connected."""
         ...
 
 

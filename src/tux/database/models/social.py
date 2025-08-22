@@ -3,12 +3,10 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from sqlalchemy import BigInteger, Float, Index
-from sqlmodel import Field
-
-from tux.database.core.base import BaseModel
+from sqlmodel import Field, SQLModel
 
 
-class AFK(BaseModel, table=True):
+class AFK(SQLModel, table=True):
     member_id: int = Field(primary_key=True, sa_type=BigInteger)
     nickname: str = Field(max_length=100)
     reason: str = Field(max_length=500)
@@ -21,7 +19,7 @@ class AFK(BaseModel, table=True):
     __table_args__ = (Index("idx_afk_member_guild", "member_id", "guild_id", unique=True),)
 
 
-class Levels(BaseModel, table=True):
+class Levels(SQLModel, table=True):
     member_id: int = Field(primary_key=True, sa_type=BigInteger)
     guild_id: int = Field(primary_key=True, foreign_key="guild.guild_id", sa_type=BigInteger)
     xp: float = Field(default=0.0, sa_type=Float)

@@ -3,12 +3,10 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from sqlalchemy import BigInteger, Index
-from sqlmodel import Field, Relationship
-
-from tux.database.core.base import BaseModel
+from sqlmodel import Field, Relationship, SQLModel
 
 
-class Guild(BaseModel, table=True):
+class Guild(SQLModel, table=True):
     guild_id: int = Field(primary_key=True, sa_type=BigInteger)
     guild_joined_at: datetime | None = Field(default_factory=lambda: datetime.now(UTC))
     case_count: int = Field(default=0)
@@ -18,7 +16,7 @@ class Guild(BaseModel, table=True):
     __table_args__ = (Index("idx_guild_id", "guild_id"),)
 
 
-class GuildConfig(BaseModel, table=True):
+class GuildConfig(SQLModel, table=True):
     guild_id: int = Field(primary_key=True, foreign_key="guild.guild_id", sa_type=BigInteger)
     prefix: str | None = Field(default=None, max_length=10)
 

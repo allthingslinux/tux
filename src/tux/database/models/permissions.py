@@ -4,9 +4,7 @@ from datetime import datetime
 from enum import Enum
 
 from sqlalchemy import BigInteger, Index
-from sqlmodel import Field
-
-from tux.database.core.base import BaseModel
+from sqlmodel import Field, SQLModel
 
 
 class PermissionType(str, Enum):
@@ -24,7 +22,7 @@ class AccessType(str, Enum):
     IGNORE = "ignore"
 
 
-class GuildPermission(BaseModel, table=True):
+class GuildPermission(SQLModel, table=True):
     id: int = Field(primary_key=True, sa_type=BigInteger)
     guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger)
 

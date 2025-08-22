@@ -6,9 +6,7 @@ from enum import Enum
 from sqlalchemy import BigInteger, Column, Index, Integer, UniqueConstraint
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlmodel import Field
-
-from tux.database.core.base import BaseModel
+from sqlmodel import Field, SQLModel
 
 
 class CaseType(str, Enum):
@@ -28,7 +26,7 @@ class CaseType(str, Enum):
     POLLUNBAN = "POLLUNBAN"
 
 
-class CustomCaseType(BaseModel, table=True):
+class CustomCaseType(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True, sa_type=Integer)
     guild_id: int = Field(foreign_key="guild.guild_id", sa_type=BigInteger)
     type_name: str = Field(max_length=50)
@@ -38,9 +36,9 @@ class CustomCaseType(BaseModel, table=True):
     requires_duration: bool = Field(default=False)
 
 
-class Case(BaseModel, table=True):
+class Case(SQLModel, table=True):
     case_id: int | None = Field(default=None, primary_key=True, sa_type=Integer)
-    case_status: bool | None = Field(default=True)
+    case_status: bool = Field(default=True)
 
     case_type: CaseType | None = Field(
         default=None,
@@ -65,7 +63,7 @@ class Case(BaseModel, table=True):
     )
 
 
-class Note(BaseModel, table=True):
+class Note(SQLModel, table=True):
     note_id: int | None = Field(default=None, primary_key=True, sa_type=Integer)
     note_content: str = Field(max_length=2000)
     note_moderator_id: int = Field(sa_type=BigInteger)

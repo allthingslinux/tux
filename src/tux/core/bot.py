@@ -17,10 +17,10 @@ from rich.console import Console
 
 from tux.core.cog_loader import CogLoader
 from tux.core.container import ServiceContainer
-from tux.core.interfaces import IDatabaseService
 from tux.core.service_registry import ServiceRegistry
 from tux.core.task_monitor import TaskMonitor
 from tux.database.migrations.runner import upgrade_head_if_needed
+from tux.database.service import DatabaseService
 from tux.services.emoji_manager import EmojiManager
 from tux.services.sentry_manager import SentryManager
 from tux.services.tracing import (
@@ -144,11 +144,11 @@ class Tux(commands.Bot):
 
             try:
                 # Prefer DI service; fall back to shared client early in startup
-                db_service = self.container.get_optional(IDatabaseService) if self.container else None
+                db_service = self.container.get_optional(DatabaseService) if self.container else None
                 if db_service is None:
                     _raise_db_connection_error()
                 # Narrow type for type checker
-                db_service = cast(IDatabaseService, db_service)
+                db_service = cast(DatabaseService, db_service)
                 await db_service.connect()
                 connected, registered = db_service.is_connected(), db_service.is_registered()
                 if not (connected and registered):
@@ -438,7 +438,7 @@ class Tux(commands.Bot):
                 # Database connection via DI when available
                 logger.debug("Closing database connections.")
 
-                db_service = self.container.get(IDatabaseService) if self.container else None
+                db_service = self.container.get(DatabaseService) if self.container else None
                 if db_service is not None:
                     await db_service.disconnect()
                 logger.debug("Database connections closed.")

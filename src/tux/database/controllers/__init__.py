@@ -8,12 +8,15 @@ from tux.database.controllers.levels import LevelsController
 from tux.database.controllers.reminder import ReminderController
 from tux.database.controllers.snippet import SnippetController
 from tux.database.controllers.starboard import StarboardController, StarboardMessageController
-from tux.database.services.database import DatabaseService
+from tux.database.service import DatabaseService
 
 
-class DatabaseController:
+class DatabaseCoordinator:
     def __init__(self, db: DatabaseService | None = None) -> None:
-        self.db = db or DatabaseService()
+        if db is None:
+            error_msg = "DatabaseService must be provided. Use DI container to get the service."
+            raise RuntimeError(error_msg)
+        self.db = db
         self._guild: GuildController | None = None
         self._guild_config: GuildConfigController | None = None
         self._afk: AfkController | None = None

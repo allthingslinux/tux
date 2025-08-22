@@ -4,14 +4,12 @@ This module provides concrete implementations of the service interfaces,
 wrapping existing functionality while maintaining backward compatibility.
 """
 
-import asyncio
 from typing import Any
 
 import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.database.controllers import DatabaseController
 from tux.services.logger import setup_logging as setup_rich_logging
 from tux.services.wrappers.github import GithubService as GitHubWrapper
 from tux.shared.config.env import is_dev_mode
@@ -78,105 +76,6 @@ class LoggerService:
         except Exception as e:
             logger.error(f"Failed to setup logging: {e}")
             raise
-
-
-class DatabaseService:
-    """Concrete implementation of IDatabaseService.
-
-    Wraps the existing DatabaseController to provide a clean service interface
-    while maintaining backward compatibility with existing functionality.
-    """
-
-    def __init__(self) -> None:
-        """Initialize the database service."""
-        self._controller: DatabaseController | None = None
-        logger.debug("DatabaseService initialized")
-
-    def get_controller(self) -> DatabaseController:
-        """Get the database controller instance.
-
-        Returns:
-            The database controller for performing database operations
-        """
-        if self._controller is None:
-            self._controller = DatabaseController()
-            logger.debug("DatabaseController instantiated")
-
-        return self._controller
-
-    async def execute_query(self, operation: str, *args: Any, **kwargs: Any) -> Any:
-        """Execute a database query operation.
-
-        Args:
-            operation: The operation name to execute
-            *args: Positional arguments for the operation
-            **kwargs: Keyword arguments for the operation
-
-        Returns:
-            The result of the database operation
-
-        Raises:
-            AttributeError: If the operation doesn't exist on the controller
-            Exception: If the database operation fails
-        """
-
-        def _raise_operation_error() -> None:
-            """Raise an error for missing operation."""
-            error_msg = f"DatabaseController has no operation '{operation}'"
-            raise AttributeError(error_msg)
-
-        try:
-            controller = self.get_controller()
-
-            if not hasattr(controller, operation):
-                _raise_operation_error()
-
-            method = getattr(controller, operation)
-
-            if not callable(method):
-                logger.warning(f"Operation '{operation}' is not callable")
-                value = method
-            else:
-                if asyncio.iscoroutinefunction(method):
-                    value = await method(*args, **kwargs)
-                else:
-                    value = method(*args, **kwargs)
-                logger.debug(f"Executed database operation: {operation}")
-        except Exception as e:
-            logger.error(f"Database operation '{operation}' failed: {e}")
-            raise
-        else:
-            return value
-
-    async def connect(self) -> None:
-        """No-op for SQLModel async sessions; kept for compatibility."""
-        return
-
-    def is_connected(self) -> bool:
-        """Always true for controller-based access."""
-        return True
-
-    def is_registered(self) -> bool:
-        """Always true; SQLModel models are imported and metadata is available."""
-        return True
-
-    async def disconnect(self) -> None:
-        """No-op for SQLModel async sessions; kept for compatibility."""
-        return
-
-    def _validate_operation(self, controller: DatabaseController, operation: str) -> None:
-        """Validate that an operation exists on the controller.
-
-        Args:
-            controller: The database controller
-            operation: The operation name to validate
-
-        Raises:
-            AttributeError: If the operation doesn't exist
-        """
-        if not hasattr(controller, operation):
-            error_msg = f"DatabaseController has no operation '{operation}'"
-            raise AttributeError(error_msg)
 
 
 class BotService:

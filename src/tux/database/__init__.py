@@ -1,3 +1,4 @@
-from .core.database import DatabaseManager
+from .service import DatabaseService
 
-__all__ = ["DatabaseManager"]
+# Clean, unified database service
+__all__ = ["DatabaseService"]

@@ -28,13 +28,13 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.types import Tux
-from tux.database.controllers import DatabaseController
+from tux.database.controllers import DatabaseCoordinator
 from tux.database.utils import get_db_controller_from
 from tux.shared.config.settings import CONFIG
 from tux.shared.exceptions import AppCommandPermissionLevelError, PermissionLevelError
 
 
-def _get_db_controller_from_source(source: commands.Context[Tux] | discord.Interaction) -> DatabaseController:
+def _get_db_controller_from_source(source: commands.Context[Tux] | discord.Interaction) -> DatabaseCoordinator:
     """Resolve a `DatabaseController` via shared DB utils (with fallback)."""
     controller = get_db_controller_from(source, fallback_to_direct=True)
     assert controller is not None  # fallback ensures non-None
@@ -45,7 +45,7 @@ def _get_db_controller_from_source(source: commands.Context[Tux] | discord.Inter
 
 
 async def fetch_guild_config(source: commands.Context[Tux] | discord.Interaction) -> dict[str, Any]:
-    """Fetch all relevant guild config data in a single DB call.
+    """Fetch guild configuration for permission checks.
 
     Parameters
     ----------
@@ -60,7 +60,7 @@ async def fetch_guild_config(source: commands.Context[Tux] | discord.Interaction
     """
     assert source.guild is not None
     db_controller = _get_db_controller_from_source(source)
-    config = await db_controller.guild_config.get_guild_config(source.guild.id)
+    config = await db_controller.guild_config.get_config_by_guild_id(source.guild.id)
     return {f"perm_level_{i}_role_id": getattr(config, f"perm_level_{i}_role_id", None) for i in range(8)}
 
 

@@ -24,21 +24,11 @@ from tux.shared.config.settings import CONFIG
 
 
 async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
-    """Resolve the command prefix for a guild.
+    """Get the command prefix for a guild.
 
-    Parameters
-    ----------
-    bot : Tux
-        The running bot instance.
-    message : discord.Message
-        The incoming message used to determine guild context.
-
-    Returns
-    -------
-    list[str]
-        A 1-item list containing the resolved prefix. Falls back to
-        `CONFIG.DEFAULT_PREFIX` when the guild is unavailable or the database
-        cannot be resolved.
+    This function retrieves the guild-specific prefix from the database,
+    falling back to `CONFIG.DEFAULT_PREFIX` when the guild is unavailable or the database
+    cannot be resolved.
     """
     if not message.guild:
         return [CONFIG.DEFAULT_PREFIX]
@@ -50,7 +40,10 @@ async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
         if controller is None:
             logger.warning("Database unavailable; using default prefix")
         else:
-            prefix = await controller.guild_config.get_guild_prefix(message.guild.id)
+            # Get guild config and extract prefix
+            guild_config = await controller.guild_config.get_config_by_guild_id(message.guild.id)
+            if guild_config and hasattr(guild_config, "prefix"):
+                prefix = guild_config.prefix
 
     except Exception as e:
         logger.error(f"Error getting guild prefix: {e}")

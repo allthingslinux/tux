@@ -10,8 +10,9 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.container import ServiceContainer, ServiceRegistrationError
-from tux.core.interfaces import IBotService, IConfigService, IDatabaseService, IGithubService, ILoggerService
-from tux.core.services import BotService, ConfigService, DatabaseService, GitHubService, LoggerService
+from tux.core.interfaces import IBotService, IConfigService, IGithubService, ILoggerService
+from tux.core.services import BotService, ConfigService, GitHubService, LoggerService
+from tux.database.service import DatabaseService
 
 
 class ServiceRegistry:
@@ -47,7 +48,8 @@ class ServiceRegistry:
             logger.debug("Registering core singleton services")
 
             # Database service - singleton for connection pooling and performance
-            container.register_singleton(IDatabaseService, DatabaseService)
+            db_service = DatabaseService()
+            container.register_instance(DatabaseService, db_service)
             logger.debug("Registered DatabaseService as singleton")
 
             # Config service - singleton for consistent configuration access
@@ -98,7 +100,8 @@ class ServiceRegistry:
             container = ServiceContainer()
 
             # Register only essential services for testing
-            container.register_singleton(IDatabaseService, DatabaseService)
+            db_service = DatabaseService()
+            container.register_instance(DatabaseService, db_service)
             container.register_singleton(IConfigService, ConfigService)
             # Do not register IBotService in test container to match unit tests expectations
 
@@ -121,7 +124,7 @@ class ServiceRegistry:
             True if all required services are registered, False otherwise
         """
         # Core required services that should always be present
-        core_required_services = [IDatabaseService, IConfigService, ILoggerService]
+        core_required_services = [DatabaseService, IConfigService, ILoggerService]
         required_services = core_required_services
 
         logger.debug("Validating service container configuration")
@@ -165,7 +168,7 @@ class ServiceRegistry:
         try:
             service_types: list[type] = container.get_registered_service_types()
             # Only return the core services expected by tests
-            core = {IDatabaseService.__name__, IConfigService.__name__, IBotService.__name__}
+            core = {DatabaseService.__name__, IConfigService.__name__, IBotService.__name__}
             return [service_type.__name__ for service_type in service_types if service_type.__name__ in core]
         except AttributeError:
             # Fallback for containers that don't have the method

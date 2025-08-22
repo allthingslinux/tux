@@ -3,12 +3,10 @@ from __future__ import annotations
 from datetime import datetime
 
 from sqlalchemy import BigInteger, Index, Integer
-from sqlmodel import Field
-
-from tux.database.core.base import BaseModel
+from sqlmodel import Field, SQLModel
 
 
-class Snippet(BaseModel, table=True):
+class Snippet(SQLModel, table=True):
     snippet_id: int | None = Field(default=None, primary_key=True, sa_type=Integer)
     snippet_name: str = Field(max_length=100)
     snippet_content: str | None = Field(default=None, max_length=4000)
@@ -21,7 +19,7 @@ class Snippet(BaseModel, table=True):
     __table_args__ = (Index("idx_snippet_name_guild", "snippet_name", "guild_id", unique=True),)
 
 
-class Reminder(BaseModel, table=True):
+class Reminder(SQLModel, table=True):
     reminder_id: int | None = Field(default=None, primary_key=True, sa_type=Integer)
     reminder_content: str = Field(max_length=2000)
     reminder_expires_at: datetime
