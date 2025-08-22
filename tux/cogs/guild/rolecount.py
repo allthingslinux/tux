@@ -42,6 +42,7 @@ des_ids = [
 distro_ids = [
     [1175176142899122246, "_arch"],  # Arch
     [1175176866928263220, "_debian"],  # Debian
+    [1407741260726272000, "_debian"],  # Debian-based
     [1175176922460860517, "_fedora"],  # Fedora
     [1175176812293271652, "_ubuntu"],  # Ubuntu
     [1175235143707918436, "_windows"],  # Windows
@@ -61,6 +62,7 @@ distro_ids = [
     [1192177499413684226, "_asahi"],  # Asahi
     [1207599112585740309, "_fedoraatomic"],  # Fedora Atomic
     [1210000519272079411, "_redhat"],  # RHEL
+    [1407749794822094938, "_redhat"],  # RedHat-based
     [1212028841103597679, "_plan9"],  # Plan 9
     [1237704018629885983, "_cachyos"],  # CachyOS
     [1237701203404783698, "_fedora"],  # Fedora-based
