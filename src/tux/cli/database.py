@@ -11,9 +11,9 @@ from alembic import command
 from alembic.config import Config
 from loguru import logger
 from sqlalchemy.ext.asyncio import create_async_engine
+from sqlmodel import SQLModel
 
 from tux.cli.core import command_registration_decorator, create_group
-from tux.database.core.base import BaseModel
 from tux.shared.config.env import get_database_url
 
 # Type for command functions
@@ -41,7 +41,7 @@ async def _create_database_schema() -> None:
 
     async def create_schema():
         async with engine.begin() as conn:
-            await conn.run_sync(BaseModel.metadata.create_all)
+            await conn.run_sync(SQLModel.metadata.create_all)
         await engine.dispose()
 
     await create_schema()
