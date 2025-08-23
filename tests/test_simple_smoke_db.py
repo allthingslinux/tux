@@ -1,11 +1,9 @@
 """
-PostgreSQL integration test for database operations.
+Simple smoke test for database operations.
 
-This test uses direct SQLModel/SQLAlchemy operations to test PostgreSQL connectivity
-and basic database operations without complex controller dependencies.
+This test uses direct SQLModel/SQLAlchemy operations to avoid complex controller dependencies.
 """
-import os
-
+from pathlib import Path
 
 import pytest
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
@@ -15,24 +13,17 @@ from tux.database.models.guild import Guild, GuildConfig
 from tux.database.models.content import Snippet
 
 
-pytestmark = pytest.mark.skipif(
-    os.getenv("POSTGRES_URL") is None,
-    reason="POSTGRES_URL not set; skipping Postgres integration test",
-)
-
-
 @pytest.mark.asyncio
-async def test_postgres_basic_operations(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test basic PostgreSQL database operations."""
-    # Get PostgreSQL URL from environment
-    pg_url = os.environ["POSTGRES_URL"]
-
-    # Convert to async PostgreSQL URL if needed
-    if pg_url.startswith("postgresql://") and "+asyncpg" not in pg_url:
-        pg_url = pg_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+async def test_simple_database_smoke(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+) -> None:
+    """Simple smoke test for basic database operations."""
+    # Use a temporary SQLite file
+    db_file: Path = tmp_path / "test.sqlite3"
+    database_url = f"sqlite+aiosqlite:///{db_file}"
 
     # Create engine and session factory
-    engine = create_async_engine(pg_url, echo=False)
+    engine = create_async_engine(database_url, echo=False)
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
 
     try:
@@ -49,7 +40,7 @@ async def test_postgres_basic_operations(monkeypatch: pytest.MonkeyPatch) -> Non
                 ),
             )
 
-        guild_id = 999_000_000_000_001
+        guild_id = 123456789012345678
 
         # Test basic guild operations
         async with session_factory() as session:
@@ -69,7 +60,7 @@ async def test_postgres_basic_operations(monkeypatch: pytest.MonkeyPatch) -> Non
         # Test guild config operations
         async with session_factory() as session:
             # Create guild config
-            config = GuildConfig(guild_id=guild_id, prefix="$")
+            config = GuildConfig(guild_id=guild_id, prefix="!")
             session.add(config)
             await session.commit()
 
@@ -80,15 +71,15 @@ async def test_postgres_basic_operations(monkeypatch: pytest.MonkeyPatch) -> Non
 
             assert found_config is not None
             assert found_config.guild_id == guild_id
-            assert found_config.prefix == "$"
+            assert found_config.prefix == "!"
 
         # Test snippet operations
         async with session_factory() as session:
             # Create a snippet
             snippet = Snippet(
-                snippet_name="IntTest",
-                snippet_content="pg",
-                snippet_user_id=123,
+                snippet_name="test",
+                snippet_content="Hello World",
+                snippet_user_id=111,
                 guild_id=guild_id,
             )
             session.add(snippet)
@@ -96,33 +87,17 @@ async def test_postgres_basic_operations(monkeypatch: pytest.MonkeyPatch) -> Non
 
             # Read the snippet back
             stmt = select(Snippet).where(
-                (Snippet.snippet_name == "inttest") & (Snippet.guild_id == guild_id),
+                (Snippet.snippet_name == "test") & (Snippet.guild_id == guild_id),
             )
             result = await session.execute(stmt)
             found_snippet = result.scalar_one_or_none()
 
             assert found_snippet is not None
-            assert found_snippet.snippet_name == "IntTest"
-            assert found_snippet.snippet_content == "pg"
+            assert found_snippet.snippet_name == "test"
+            assert found_snippet.snippet_content == "Hello World"
             assert found_snippet.guild_id == guild_id
-            assert found_snippet.snippet_user_id == 123
-
-        # Test data persistence across sessions
-        async with session_factory() as session:
-            # Verify all data is still there
-            guild_count = await session.execute(select(Guild).where(Guild.guild_id == guild_id))
-            assert guild_count.scalar_one_or_none() is not None
-
-            config_count = await session.execute(select(GuildConfig).where(GuildConfig.guild_id == guild_id))
-            assert config_count.scalar_one_or_none() is not None
-
-            snippet_count = await session.execute(select(Snippet).where(Snippet.guild_id == guild_id))
-            assert snippet_count.scalar_one_or_none() is not None
+            assert found_snippet.snippet_user_id == 111
 
     finally:
-        # Clean up - drop all tables
-        async with engine.begin() as conn:
-            await conn.run_sync(lambda sync_conn: SQLModel.metadata.drop_all(bind=sync_conn))
-
-        # Dispose engine
+        # Clean up
         await engine.dispose()

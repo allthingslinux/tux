@@ -19,6 +19,7 @@ from typing import Any
 import sentry_sdk
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlmodel import SQLModel
 
 import tux.database.models  # noqa: F401  # pyright: ignore[reportUnusedImport]
 from tux.shared.config.env import get_database_url
@@ -97,6 +98,16 @@ class DatabaseService:
         )
 
         logger.info("Successfully connected to database via SQLAlchemy")
+
+    async def create_tables(self) -> None:
+        """Create all tables in the database."""
+        if not self.is_connected():
+            await self.connect()
+
+        assert self._engine is not None
+        async with self._engine.begin() as conn:
+            await conn.run_sync(SQLModel.metadata.create_all)
+        logger.info("Created all database tables")
 
     async def disconnect(self) -> None:
         """Dispose the engine and tear-down the connection pool."""
@@ -251,6 +262,11 @@ class DatabaseService:
         except Exception as exc:
             logger.error(f"Transaction failed: {exc}")
             raise
+
+    @property
+    def engine(self) -> AsyncEngine | None:
+        """Get the async engine for testing purposes."""
+        return self._engine
 
     # Legacy compatibility
     @property
