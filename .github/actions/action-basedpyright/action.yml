@@ -49,7 +49,7 @@ runs:
           -level=${{ inputs.level }} \
           -filter-mode=${{ inputs.filter_mode }} \
           -fail-level=${{ inputs.fail_level }} \
-          -tool-name=${{ inputs.tool_name }} \
+          -name=${{ inputs.tool_name }} \
           ${{ inputs.reviewdog_flags }}
       env:
         REVIEWDOG_GITHUB_API_TOKEN: ${{ inputs.github_token }}

@@ -154,7 +154,7 @@ COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --locked --no-install-project
+    uv sync --locked --no-install-project --group main
 
 # Copy application files in order of change frequency (Docker layer optimization)
 # STRATEGY: Files that change less frequently are copied first to maximize cache reuse
@@ -203,7 +203,7 @@ RUN set -eux; \
 
 # Sync the project
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked
+    uv sync --locked --group main
 
 # ==============================================================================
 # DEVELOPMENT STAGE - Development Environment

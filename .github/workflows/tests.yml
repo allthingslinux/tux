@@ -116,6 +116,14 @@ jobs:
               --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} | tee pytest-coverage.txt
           fi
           echo "Unit test coverage generation completed"
+      - name: Upload Unit Test Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-coverage
+          path: |
+            pytest-coverage.txt
+            junit-unit.xml
+          if-no-files-found: ignore
   database:
     name: Database Tests
     runs-on: ubuntu-latest
@@ -156,6 +164,14 @@ jobs:
             --junitxml=junit-database.xml \
             -o junit_family=legacy \
             --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} | tee pytest-database-coverage.txt
+      - name: Upload Database Test Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-test-coverage
+          path: |
+            pytest-database-coverage.txt
+            junit-database.xml
+          if-no-files-found: ignore
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
@@ -196,6 +212,14 @@ jobs:
             --junitxml=junit-e2e.xml \
             -o junit_family=legacy \
             --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} | tee pytest-e2e-coverage.txt
+      - name: Upload E2E Test Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-coverage
+          path: |
+            pytest-e2e-coverage.txt
+            junit-e2e.xml
+          if-no-files-found: ignore
   coverage-report:
     name: Coverage Report
     runs-on: ubuntu-latest
@@ -211,6 +235,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Download Unit Test Coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-test-coverage
+          path: .
+      - name: Download Database Test Coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: database-test-coverage
+          path: .
+      - name: Download E2E Test Coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-test-coverage
+          path: .
       - name: Generate Coverage Report
         uses: MishaKav/pytest-coverage-comment@main
         with:
