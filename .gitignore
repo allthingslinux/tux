@@ -87,8 +87,8 @@ ipython_config.py
 # Pipenv
 Pipfile.lock
 
-# Poetry
-poetry.lock
+# uv
+uv.lock
 
 # Pdm
 .pdm.toml
@@ -181,3 +181,11 @@ prisma_binaries/
 .archive/
 
 reports/
+
+.kiro
+.audit
+
+.prisma-archive
+sqlmodel-refactor
+.database-archive
+data/

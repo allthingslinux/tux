@@ -1,75 +1,31 @@
-# ==============================================================================
-# TUX DISCORD BOT - AUTOMATED RELEASE MANAGEMENT WORKFLOW
-# ==============================================================================
-#
-# This workflow automates the release process for the Tux Discord bot,
-# providing intelligent version management, comprehensive changelog generation,
-# and automated release deployment. It ensures releases are properly tested,
-# documented, and deployed with appropriate versioning and metadata.
-#
-# RELEASE CAPABILITIES:
-# ---------------------
-# 1. Automated release creation from git tags or manual triggers
-# 2. Intelligent prerelease detection and handling
-# 3. Comprehensive changelog generation from commit history
-# 4. Integration with test suite validation before release
-# 5. Automated GitHub release creation with proper metadata
-#
-# VERSIONING STRATEGY:
-# --------------------
-# - Semantic Versioning (SemVer): v1.2.3 format for releases
-# - Prerelease Support: Alpha, beta, rc versions with special handling
-# - Manual Override: Administrative control for custom release scenarios
-# - Git Tag Integration: Automatic detection and processing of version tags
-#
-# QUALITY ASSURANCE:
-# ------------------
-# - Test Suite Integration: Waits for test completion before release
-# - Version Validation: Ensures proper version format and consistency
-# - Changelog Generation: Automated documentation of changes
-# - Release Notes: Enhanced GitHub release notes with commit details
-#
-# ==============================================================================
 name: Release
-# TRIGGER CONFIGURATION
-# Supports both automated and manual release creation workflows
-# Provides flexibility for different release scenarios and administrative needs
 on:
-  # AUTOMATED GIT TAG RELEASES
-  # Triggered by semantic version tags pushed to the repository
   push:
     tags:
-      - v*      # Matches v1.0.0, v2.1.3-beta, v1.0.0-rc1, etc.
-
-  # MANUAL RELEASE TRIGGER
-  # Administrative control for custom release scenarios and testing
+      - v*
   workflow_dispatch:
     inputs:
-      # VERSION SPECIFICATION
-      # Manual version input with validation and format requirements
       version:
         description: Version to release (e.g., v1.2.3)
         required: true
         type: string
-# RELEASE PERMISSIONS
-# Comprehensive permissions for release creation and artifact management
 permissions:
-  contents: write        # Required for release creation and tag management
-  packages: write       # Required for container image publishing
-  pull-requests: read   # Required for changelog generation and integration
+  contents: write
+  packages: write
+  pull-requests: read
 jobs:
-  validate-release:
-    name: Validate Release
+  validate:
+    name: Validate
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
       is_prerelease: ${{ steps.version.outputs.is_prerelease }}
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Determine version
+      - name: Determine Version
         id: version
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -87,32 +43,30 @@ jobs:
           fi
           echo "Release version: $VERSION"
           echo "Is prerelease: $([ "$VERSION" != "${VERSION/alpha/}" ] || [ "$VERSION" != "${VERSION/beta/}" ] || [ "$VERSION" != "${VERSION/rc/}" ] && echo "true" || echo "false")"
-
-  # Wait for tests to pass before creating release
-  wait-for-tests:
+  wait:
     name: Wait for Tests
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for test workflow
-        uses: lewagon/wait-on-check-action@0dceb95e7c4cad8cc7422aee3885998f5cab9c79 # v1.4.0
+      - name: Wait
+        uses: lewagon/wait-on-check-action@v1.4.0
         with:
           ref: ${{ github.sha }}
-          check-name: Tests (Python 3.13)    # Wait for the main test job
+          check-name: Tests (Unit Tests)
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 30
           allowed-conclusions: success
-  create-release:
+  create:
     name: Create Release
     runs-on: ubuntu-latest
     needs:
-      - validate-release
-      - wait-for-tests
+      - validate
+      - wait
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Generate changelog
+      - name: Generate Changelog
         id: changelog
         run: |
           # Get the previous tag
@@ -132,24 +86,12 @@ jobs:
               echo "EOF"
             } >> "$GITHUB_OUTPUT"
           fi
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.validate-release.outputs.version }}
-          name: Release ${{ needs.validate-release.outputs.version }}
+          tag_name: ${{ needs.validate.outputs.version }}
+          name: Release ${{ needs.validate.outputs.version }}
           body: ${{ steps.changelog.outputs.changelog }}
-          prerelease: ${{ needs.validate-release.outputs.is_prerelease == 'true' }}
+          prerelease: ${{ needs.validate.outputs.is_prerelease == 'true' }}
           generate_release_notes: true
-          make_latest: ${{ needs.validate-release.outputs.is_prerelease == 'false' }}
-  notify-release:
-    name: Notify Release
-    runs-on: ubuntu-latest
-    needs:
-      - validate-release
-      - create-release
-    if: always() && needs.create-release.result == 'success'
-    steps:
-      - name: Release notification
-        run: |-
-          echo "🎉 Release ${{ needs.validate-release.outputs.version }} created successfully!"
-          echo "📋 Check the release page for details"
+          make_latest: ${{ needs.validate.outputs.is_prerelease == 'false' }}

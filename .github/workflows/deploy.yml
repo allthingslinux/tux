@@ -29,8 +29,8 @@ jobs:
       deployments: write
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: Get Docker image
+        uses: actions/checkout@v4
+      - name: Get Image
         id: image
         run: |
           if [ "${{ github.event_name }}" = "release" ]; then
@@ -43,7 +43,7 @@ jobs:
           IMAGE="ghcr.io/${{ github.repository }}:${IMAGE_TAG}"
           echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
           echo "Deploying image: $IMAGE"
-      - name: Deploy to environment
+      - name: Deploy
         id: deploy
         run: |
           ENV="${{ github.event.inputs.environment || 'production' }}"
@@ -66,7 +66,7 @@ jobs:
           else
             echo "url=https://staging.your-app.com" >> "$GITHUB_OUTPUT"
           fi
-      - name: Deployment notification
+      - name: Notify
         if: always()
         run: |-
           ENV="${{ github.event.inputs.environment || 'production' }}"

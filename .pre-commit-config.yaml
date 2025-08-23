@@ -68,7 +68,7 @@ repos:
         additional_dependencies:
           - '@commitlint/cli'
           - '@commitlint/config-conventional'
-exclude: ^(\.archive/|.*typings/|node_modules/|\.venv/).*$
+exclude: ^(\.archive/|.*typings/|node_modules/|\.venv/|\.kiro/).*$
 ci:
   autofix_commit_msg: 'style: auto fixes from pre-commit hooks'
   autoupdate_commit_msg: 'chore: update pre-commit hook versions'

@@ -29,3 +29,11 @@ prisma/
 typings/
 
 .github/
+
+.kiro/
+
+.audit/
+
+# Project-specific ignores
+sqlmodel-refactor/**
+docs/db/README.md

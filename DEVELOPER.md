@@ -26,7 +26,7 @@ Explore the following pages for more detailed information on specific developmen
   * Using `tux test run`, `tux test coverage`, and related commands.
 * **[Database Management](./docs/content/dev/database.md)**
   * Detailed usage of `tux db` commands (push, migrate, generate, pull, reset).
-  * Working with Prisma migrations.
+  * Working with Alembic database migrations.
 * **[Database Controller Patterns](./docs/content/dev/database_patterns.md)**
   * Using controllers for CRUD, transactions, relations.
   * Best practices for database interactions in code.
