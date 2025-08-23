@@ -35,7 +35,7 @@ inputs:
   ### Flags for basedpyright ###
   basedpyright_flags:
     description: Additional flags for basedpyright command.
-    default: --outputformat json
+    default: --outputjson
 runs:
   using: composite
   steps:
