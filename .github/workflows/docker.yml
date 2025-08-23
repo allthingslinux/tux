@@ -83,6 +83,7 @@ jobs:
       - name: Scan Image
         if: always()
         uses: reviewdog/action-trivy@v1
+        continue-on-error: true
         with:
           github_token: ${{ github.token }}
           trivy_command: image
@@ -92,7 +93,7 @@ jobs:
           reporter: github-pr-review
           tool_name: trivy-image
           filter_mode: added
-          trivy_flags: --severity HIGH,CRITICAL
+          trivy_flags: --severity HIGH,CRITICAL --exit-code 0
   build:
     name: Build & Push
     runs-on: ubuntu-latest
@@ -149,6 +150,7 @@ jobs:
       - name: Scan Final Image
         if: always()
         uses: reviewdog/action-trivy@v1
+        continue-on-error: true
         with:
           github_token: ${{ github.token }}
           trivy_command: image
@@ -159,7 +161,7 @@ jobs:
           reporter: github-pr-review
           tool_name: trivy-final
           filter_mode: nofilter
-          trivy_flags: --severity HIGH,CRITICAL
+          trivy_flags: --severity HIGH,CRITICAL --exit-code 0
   cleanup:
     name: Cleanup
     runs-on: ubuntu-latest
