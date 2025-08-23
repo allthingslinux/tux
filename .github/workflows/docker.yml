@@ -74,6 +74,7 @@ jobs:
           github_token: ${{ github.token }}
           trivy_command: config
           trivy_target: ./Dockerfile
+          trivy_version: v0.63.0
           level: warning
           reporter: github-pr-review
           tool_name: trivy-dockerfile
@@ -86,11 +87,12 @@ jobs:
           github_token: ${{ github.token }}
           trivy_command: image
           trivy_target: tux:pr-${{ github.event.number }}
+          trivy_version: v0.63.0
           level: warning
           reporter: github-pr-review
           tool_name: trivy-image
           filter_mode: added
-          trivy_flags: --severity HIGH,CRITICAL --format checkstyle
+          trivy_flags: --severity HIGH,CRITICAL
   build:
     name: Build & Push
     runs-on: ubuntu-latest
@@ -152,11 +154,12 @@ jobs:
           trivy_command: image
           trivy_target: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version
             }}
+          trivy_version: v0.63.0
           level: warning
           reporter: github-pr-review
           tool_name: trivy-final
           filter_mode: nofilter
-          trivy_flags: --severity HIGH,CRITICAL --format checkstyle
+          trivy_flags: --severity HIGH,CRITICAL
   cleanup:
     name: Cleanup
     runs-on: ubuntu-latest
