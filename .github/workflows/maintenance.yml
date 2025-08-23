@@ -1,268 +1,107 @@
-# ==============================================================================
-# TUX DISCORD BOT - AUTOMATED MAINTENANCE & HOUSEKEEPING WORKFLOW
-# ==============================================================================
-#
-# This workflow handles automated maintenance tasks for the Tux Discord bot
-# project, ensuring repository health, code quality tracking, and resource
-# management. It provides intelligent automation for routine maintenance
-# tasks while offering manual controls for administrative operations.
-#
-# MAINTENANCE CAPABILITIES:
-# -------------------------
-# 1. Automated TODO/FIXME conversion to GitHub issues for task tracking
-# 2. Docker image registry cleanup to prevent storage bloat
-# 3. Repository health monitoring and reporting
-# 4. Dependency freshness tracking and alerts
-# 5. Repository statistics and metrics collection
-#
-# AUTOMATION STRATEGY:
-# --------------------
-# - TODO Management: Real-time conversion on code changes
-# - Image Cleanup: Monthly scheduled cleanup with configurable retention
-# - Health Checks: Monthly comprehensive repository analysis
-# - Manual Override: Administrative controls for immediate execution
-#
-# RESOURCE MANAGEMENT:
-# --------------------
-# - Intelligent scheduling spread across different days
-# - Configurable retention policies for different resource types
-# - Non-blocking execution with graceful failure handling
-# - Comprehensive logging for audit trails and debugging
-#
-# ==============================================================================
 name: Maintenance
-# TRIGGER CONFIGURATION
-# Comprehensive maintenance scheduling with manual override capabilities
-# Balances automated maintenance with administrative control
 on:
-  # REAL-TIME TODO TRACKING
-  # Converts TODOs to issues immediately when code changes are pushed
   push:
     branches:
       - main
-
-  # MANUAL ADMINISTRATIVE CONTROLS
-  # Provides immediate access to maintenance operations for administrators
   workflow_dispatch:
     inputs:
-      # DOCKER IMAGE CLEANUP CONTROLS
-      # Manual override for immediate image cleanup operations
       cleanup_images:
         description: Clean up old Docker images
         type: boolean
         default: false
-
-      # RETENTION POLICY CONFIGURATION
-      # Configurable image retention for different cleanup scenarios
       keep_amount:
         description: Number of images to keep
         required: false
         default: '10'
-
-      # UNTAGGED IMAGE MANAGEMENT
-      # Control over untagged image cleanup (typically development artifacts)
       remove_untagged:
         description: Remove untagged images
         type: boolean
         default: false
-
-      # TODO TRACKING MANUAL CONTROLS
-      # Administrative overrides for TODO to issue conversion
       manual_commit_ref:
         description: SHA to compare for TODOs
         required: false
       manual_base_ref:
         description: Optional earlier SHA for TODOs
         required: false
-
-  # SCHEDULED AUTOMATED MAINTENANCE
-  # Monthly comprehensive maintenance spread to avoid resource conflicts
   schedule:
-    - cron: 0 3 1 * *  # Monthly cleanup on the 1st at 3 AM
-# CONCURRENCY MANAGEMENT
-# Prevents conflicting maintenance operations while allowing manual execution
+    - cron: 0 3 1 * *
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false    # Maintenance operations should complete
+  cancel-in-progress: false
+env:
+  ADMIN_PAT: ${{ secrets.ADMIN_PAT }}
 jobs:
-  # ============================================================================
-  # TODO TO ISSUES CONVERSION - Automated Task Tracking
-  # ============================================================================
-  # Purpose: Converts code TODOs and FIXMEs into trackable GitHub issues
-  # Strategy: Real-time conversion on code changes with intelligent categorization
-  # Benefits: Ensures no tasks are forgotten and provides proper project tracking
-  # Integration: Automatic assignment and labeling for efficient task management
-  # ============================================================================
-  todo-to-issues:
-    name: Convert TODOs to Issues
+  todos:
+    name: TODOs
     runs-on: ubuntu-latest
-    # EXECUTION CONDITIONS
-    # Runs on code pushes or manual trigger with commit reference
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' &&
       github.event.inputs.manual_commit_ref)
     permissions:
-      contents: read    # Required for repository access
-      issues: write    # Required for issue creation and management
+      contents: read
+      issues: write
     steps:
-      # REPOSITORY CHECKOUT
-      # Full history required for accurate TODO comparison and tracking
-      - name: Checkout Repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      # INTELLIGENT TODO CONVERSION
-      # Automated conversion with smart categorization and issue management
-      - name: Convert TODOs to Issues
-        uses: alstr/todo-to-issue-action@c45b007d85c8edf3365b139a9d4c65793e7c674f # v5.1.13
+      - name: Convert
+        uses: alstr/todo-to-issue-action@v5.1.13
         with:
-          CLOSE_ISSUES: true              # Auto-close resolved TODOs
-          INSERT_ISSUE_URLS: true         # Link issues back to code
-          AUTO_ASSIGN: true              # Assign to commit authors
-          # CATEGORIZATION STRATEGY
-          # Different keywords map to different issue types and labels
-          IDENTIFIERS: '[{"name": "TODO", "labels": ["enhancement"]}, {"name": "FIXME",
-            "labels": ["bug"]}]'
-          ESCAPE: true                   # Handle special characters safely
-          # EXCLUSION PATTERNS
-          # Skip maintenance-heavy directories and lock files
-          IGNORE: .github/,node_modules/,dist/,build/,vendor/,uv.lock
-          PROJECTS_SECRET: ${{ secrets.ADMIN_PAT }}
+          CLOSE_ISSUES: true
+          INSERT_ISSUE_URLS: true
+          AUTO_ASSIGN: true
+          IDENTIFIERS: |
+            [{"name": "TODO", "labels": ["enhancement"]}, {"name": "FIXME", "labels": ["bug"]}]
+          ESCAPE: true
+          IGNORE: |
+            .github/,node_modules/,dist/,build/,vendor/,uv.lock
+          PROJECTS_SECRET: ${{ env.ADMIN_PAT }}
         env:
-          # MANUAL OVERRIDE SUPPORT
-          # Allows administrative control over TODO scanning scope
           MANUAL_COMMIT_REF: ${{ github.event.inputs.manual_commit_ref }}
           MANUAL_BASE_REF: ${{ github.event.inputs.manual_base_ref }}
-
-  # ============================================================================
-  # DOCKER IMAGE CLEANUP - Container Registry Maintenance
-  # ============================================================================
-  # Purpose: Automated cleanup of old Docker images to prevent storage bloat
-  # Strategy: Configurable retention policies with manual override capabilities
-  # Safety: Conservative defaults with explicit administrator controls
-  # Scope: Targets project-specific container images with version management
-  # ============================================================================
-  cleanup-docker-images:
-    name: Cleanup Docker Images
+  cleanup:
+    name: Cleanup
     runs-on: ubuntu-latest
-    # EXECUTION CONDITIONS
-    # Runs on scheduled maintenance or manual trigger with image cleanup flag
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch'
       && github.event.inputs.cleanup_images == 'true')
     permissions:
-      packages: write    # Required for container registry management
-      contents: read    # Required for repository access
+      packages: write
+      contents: read
     steps:
-      # AUTOMATED IMAGE CLEANUP
-      # Configurable cleanup with safety mechanisms and retention policies
-      - name: Delete old container versions
-        uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5
+      - name: Clean Old Images
+        uses: actions/delete-package-versions@v5
         with:
-          package-name: tux                    # Target specific package
-          package-type: container             # Container images only
-          # CONFIGURABLE RETENTION POLICY
-          # Default 10 images, override via manual trigger
+          package-name: tux
+          package-type: container
           min-versions-to-keep: ${{ github.event.inputs.keep_amount || '10' }}
-          # UNTAGGED IMAGE HANDLING
-          # Configurable untagged image cleanup (typically safe to remove)
           delete-only-untagged-versions: ${{ github.event.inputs.remove_untagged || 'false' }}
-
-  # ============================================================================
-  # REPOSITORY HEALTH CHECK - Comprehensive Project Analysis
-  # ============================================================================
-  # Purpose: Monthly comprehensive analysis of repository health and metrics
-  # Scope: File size analysis, dependency freshness, and project statistics
-  # Output: Structured reporting for project maintenance and planning
-  # Integration: Potential future integration with issue creation for problems
-  # ============================================================================
-  health-check:
-    name: Repository Health Check
+  health:
+    name: Health Check
     runs-on: ubuntu-latest
-    # SCHEDULING
-    # Only runs on monthly scheduled maintenance for comprehensive analysis
     if: github.event_name == 'schedule'
     permissions:
-      contents: read    # Required for repository analysis
-      issues: write    # Required for future issue creation capabilities
+      contents: read
+      issues: write
     steps:
-      # REPOSITORY CHECKOUT
-      # Required for comprehensive file and dependency analysis
-      - name: Checkout Repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-
-      # STORAGE HEALTH ANALYSIS
-      # Identifies large files that may impact repository performance
-      - name: Check for large files
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check Large Files
         run: |
           echo "Checking for files larger than 50MB..."
           find . -type f -size +50M -not -path "./.git/*" || echo "No large files found"
-
-      # DEPENDENCY FRESHNESS ANALYSIS
-      # Monitors for outdated dependencies requiring security or feature updates
-      - name: Check for outdated dependencies
+      - name: Check Dependencies
         run: |
-          if command -v uv &> /dev/null; then
-            echo "Checking for outdated dependencies..."
-            uv pip list --outdated || echo "All dependencies up to date"
-          fi
-
-      # PROJECT METRICS COLLECTION
-      # Comprehensive repository statistics for project health monitoring
-      - name: Repository statistics
+          echo "Checking for outdated dependencies..."
+          uv outdated || echo "No outdated dependencies found"
+      - name: Check Repository Size
+        run: |
+          echo "Repository size analysis..."
+          du -sh . || echo "Could not determine repository size"
+      - name: Check Stale Branches
+        run: |
+          echo "Checking for stale branches..."
+          git branch -r --sort=-committerdate | head -10 || echo "Could not check branches"
+      - name: Check Large Commits
         run: |-
-          echo "Repository Statistics:"
-          echo "====================="
-          echo "Total files: $(find . -type f -not -path "./.git/*" | wc -l)"
-          echo "Python files: $(find . -name "*.py" -not -path "./.git/*" | wc -l)"
-          echo "Lines of Python code: $(find . -name "*.py" -not -path "./.git/*" -exec wc -l {} + 2>/dev/null | tail -1 || echo "0")"
-          echo "Docker files: $(find . -name "Dockerfile*" -o -name "docker-compose*.yml" | wc -l)"
-# ==============================================================================
-# MAINTENANCE WORKFLOW BEST PRACTICES IMPLEMENTED
-# ==============================================================================
-#
-# 1. AUTOMATED TASK MANAGEMENT:
-#    - Real-time TODO to issue conversion for comprehensive task tracking
-#    - Intelligent categorization (TODO → enhancement, FIXME → bug)
-#    - Automatic assignment to commit authors for accountability
-#    - Smart exclusion patterns to avoid maintenance noise
-#
-# 2. RESOURCE MANAGEMENT:
-#    - Configurable Docker image retention policies
-#    - Scheduled cleanup to prevent storage bloat
-#    - Manual override capabilities for immediate administrative action
-#    - Conservative defaults with explicit administrative controls
-#
-# 3. REPOSITORY HEALTH MONITORING:
-#    - Comprehensive file size analysis for performance optimization
-#    - Dependency freshness tracking for security and feature updates
-#    - Project metrics collection for development planning
-#    - Structured reporting for maintenance decision making
-#
-# 4. OPERATIONAL EXCELLENCE:
-#    - Non-blocking execution with graceful failure handling
-#    - Comprehensive logging for audit trails and debugging
-#    - Intelligent scheduling to avoid resource conflicts
-#    - Manual override capabilities for emergency situations
-#
-# MAINTENANCE SCHEDULE:
-# ---------------------
-# - TODO Conversion: Real-time on every main branch push
-# - Image Cleanup: Monthly on the 1st at 3 AM UTC
-# - Health Checks: Monthly comprehensive analysis
-# - Manual Triggers: Available for immediate administrative needs
-#
-# RETENTION POLICIES:
-# -------------------
-# - Docker Images: 10 versions by default (configurable)
-# - Untagged Images: Preserved by default (configurable)
-# - Issues: Automatically closed when TODOs are resolved
-# - Logs: Retained according to GitHub Actions standard retention
-#
-# ADMINISTRATIVE CONTROLS:
-# ------------------------
-# - Manual image cleanup with custom retention settings
-# - Custom TODO scanning with specific commit ranges
-# - Immediate execution override for emergency maintenance
-# - Configurable cleanup policies for different scenarios
-#
-# ==============================================================================
+          echo "Checking for large commits..."
+          git log --stat --oneline | head -20 || echo "Could not check commits"

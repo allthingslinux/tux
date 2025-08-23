@@ -188,3 +188,4 @@ reports/
 .prisma-archive
 sqlmodel-refactor
 .database-archive
+data/
