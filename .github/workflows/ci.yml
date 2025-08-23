@@ -325,6 +325,7 @@ jobs:
     env:
       DEV_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/postgres
       POSTGRES_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/postgres
+      TUX_ENV: dev
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -346,7 +347,9 @@ jobs:
       - name: Run Alembic migrations
         run: |
           export PYTHONPATH=src:$PYTHONPATH
-          uv run alembic -c alembic.ini upgrade head
+          export TUX_ENV=dev
+          export DATABASE_URL=$DEV_DATABASE_URL
+          uv run tux database upgrade
       - name: Lint
         run: |
           uv run ruff check .
