@@ -131,7 +131,7 @@ jobs:
           reporter: ${{ env.REVIEWDOG_REPORTER }}
           filter_mode: ${{ env.REVIEWDOG_FILTER_MODE }}
           fail_level: ${{ env.REVIEWDOG_FAIL_LEVEL }}
-      - name: Lint
+      - name: Run ruff with reviewdog
         uses: benny123tw/action-ruff@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -139,6 +139,9 @@ jobs:
           reporter: ${{ env.REVIEWDOG_REPORTER }}
           filter_mode: ${{ env.REVIEWDOG_FILTER_MODE }}
           fail_level: ${{ env.REVIEWDOG_FAIL_LEVEL }}
+          ruff_flags: --config pyproject.toml
+          workdir: .
+          tool_name: ruff
           changed_files: true
   markdown:
     name: Markdown
