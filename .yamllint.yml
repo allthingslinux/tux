@@ -1,5 +1,7 @@
 extends: default
 rules:
+  document-start: disable
+
   # Allow longer lines for readability in configuration files
   line-length:
     max: 120

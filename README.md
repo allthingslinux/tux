@@ -39,10 +39,14 @@
 
 ## Table of Contents
 
+- [Table of Contents](#table-of-contents)
 - [About](#about)
 - [Tech Stack](#tech-stack)
 - [Bot Features](#bot-features)
 - [Installation and Development](#installation-and-development)
+  - [Prerequisites](#prerequisites)
+  - [Setup \& Workflow](#setup--workflow)
+  - [Please refer to the **DEVELOPER.md** guide for more information](#please-refer-to-the-developermd-guide-for-more-information)
 - [License](#license)
 - [Metrics](#metrics)
 - [Contributors](#contributors)
@@ -110,7 +114,7 @@ It is designed to provide a variety of features to the server, including moderat
     - linting/formatting
     - understanding the `tux` CLI commands
 
-   ### Please refer to the **[DEVELOPER.md](DEVELOPER.md)** guide for more information
+### Please refer to the **[DEVELOPER.md](DEVELOPER.md)** guide for more information
 
 ## License
 
