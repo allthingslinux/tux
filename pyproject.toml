@@ -121,10 +121,13 @@ exclude = [
     "examples",
     ".archive",
     "typings/**",
+    "tests",
     "tests/**",
+    "**/tests/**",
     ".kiro/**",
     ".audit/**",
-    "src/tux/database/migrations/**",
+    "src/tux/database/migrations/versions/**",
+    "**/migrations/**",
 ]
 indent-width = 4
 line-length = 120
