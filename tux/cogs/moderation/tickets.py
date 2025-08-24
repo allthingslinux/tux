@@ -45,8 +45,7 @@ class Tickets(commands.Cog):
             await interaction.followup.send("Ticket not found.", ephemeral=True)
             return
 
-        ticket_log_cog = self.bot.get_cog("TicketLog")
-        if not ticket_log_cog:
+        if not (ticket_log_cog := self.bot.get_cog("TicketLog")):
             await interaction.followup.send("Transcript system not available.", ephemeral=True)
             return
 
@@ -102,8 +101,7 @@ class Tickets(commands.Cog):
         await self._delete_channel_and_category(channel)
 
     def _log_ticket_closed_event(self, ctx, channel_id: int) -> None:
-        ticket_log_cog = self.bot.get_cog("TicketLog")
-        if not ticket_log_cog:
+        if not (ticket_log_cog := self.bot.get_cog("TicketLog")):
             return
         if closer_id := getattr(
             getattr(ctx, "author", None),
@@ -177,8 +175,7 @@ class Tickets(commands.Cog):
             logger.error(f"Failed sending closure embed in {channel.id}: {e}")
 
     async def _attempt_transcript_log(self, ctx, channel: discord.TextChannel, ticket) -> None:
-        ticket_log_cog = self.bot.get_cog("TicketLog")
-        if not ticket_log_cog:
+        if not (ticket_log_cog := self.bot.get_cog("TicketLog")):
             return
         try:
             messages = [msg async for msg in channel.history(oldest_first=True)]
@@ -210,6 +207,21 @@ class Tickets(commands.Cog):
         with suppress(Exception):
             await msg.delete()
 
+    def _parse_role_mention(self, guild: discord.Guild, target: str) -> discord.Role | None:
+        """Parse a role mention and return the role object if found.
+
+        Args:
+            guild: The guild to search for the role
+            target: The target string (could be role mention, ID, or name)
+
+        Returns:
+            discord.Role | None: The role if found, None otherwise
+        """
+        if target.startswith("<@&") and target.endswith(">"):
+            role_id = target[3:-1]
+            return guild.get_role(int(role_id)) if role_id.isdigit() else None
+        return None
+
     def _resolve_target(self, ctx, target):
         """Resolve a user or role from a string or object.
 
@@ -218,30 +230,30 @@ class Tickets(commands.Cog):
         if isinstance(target, discord.Member | discord.Role):
             return target
 
+        # First try role mention parsing
+        if role := self._parse_role_mention(ctx.guild, target):
+            return role
+
         s = str(target).strip()
         guild = ctx.guild
         id_candidates: set[int] = set()
         if s.isdigit():
             id_candidates.add(int(s))
         for pattern in (r"<@!?([0-9]+)>", r"<@&([0-9]+)>"):
-            match = re.fullmatch(pattern, s)
-            if match:
-                id_candidates.add(int(match.group(1)))
+            if match := re.fullmatch(pattern, s):
+                id_candidates.add(int(match[1]))
 
         for cid in id_candidates:
-            member = guild.get_member(cid)
-            if member:
+            if member := guild.get_member(cid):
                 return member
-            role = guild.get_role(cid)
-            if role:
+            if role := guild.get_role(cid):
                 return role
 
         lowered = s.lower()
-        member = discord.utils.find(
+        if member := discord.utils.find(
             lambda m: m.name.lower() == lowered or m.display_name.lower() == lowered,
             guild.members,
-        )
-        if member:
+        ):
             return member
         return discord.utils.find(lambda r: r.name.lower() == lowered, guild.roles)
 
@@ -298,8 +310,7 @@ class Tickets(commands.Cog):
             await send(error, ephemeral=True)
             return
         title = self._normalize_title(title)
-        is_interaction = hasattr(ctx, "response") and hasattr(ctx.response, "defer")
-        if is_interaction:
+        if hasattr(ctx, "response") and hasattr(ctx.response, "defer"):
             await ctx.response.defer(ephemeral=True)
             send = ctx.followup.send
 
@@ -805,12 +816,7 @@ class Tickets(commands.Cog):
                     await ctx.message.delete()
             return
 
-        # Support @role mention
-        if target.startswith("<@&") and target.endswith(">"):
-            role_id = target[3:-1]
-            target_obj = ctx.guild.get_role(int(role_id)) if role_id.isdigit() else None
-        else:
-            target_obj = self._resolve_target(ctx, target)
+        target_obj = self._resolve_target(ctx, target)
 
         if not target_obj:
             await self._ephemeral_msg(ctx, f"Could not find user or role for '{target}'.")
@@ -937,8 +943,8 @@ class Tickets(commands.Cog):
                         inline=True,
                     )
         total_tickets = len(tickets)
-        total_claimed = sum(bool(t.claimed_by) for t in tickets)
-        total_closed = sum(bool(t.status == TicketStatus.CLOSED) for t in tickets)
+        total_claimed = sum(t.claimed_by for t in tickets)
+        total_closed = sum(t.status == TicketStatus.CLOSED for t in tickets)
         embed.add_field(
             name="📈 Server Summary",
             value=f"Total: {total_tickets}\nClaimed: {total_claimed}\nClosed: {total_closed}",
@@ -1015,9 +1021,8 @@ class Tickets(commands.Cog):
         return True, ticket
 
     def _parse_target(self, ctx, target: str):
-        if target.startswith("<@&") and target.endswith(">"):
-            role_id = target.strip("<@&>")
-            return ctx.guild.get_role(int(role_id)) if role_id.isdigit() else None
+        if role := self._parse_role_mention(ctx.guild, target):
+            return role
         return self._resolve_target(ctx, target)
 
     async def _maybe_delete_command_message(self, ctx):
