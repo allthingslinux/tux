@@ -1,5 +1,5 @@
 # Tux Database Operations Makefile
-# Use this to test database operations without the CLI
+# Unified database management using scripts/db.py
 
 .PHONY: help help-db db-connect db-current db-upgrade db-downgrade db-revision db-reset db-init test-unit test-integration test-e2e test-db test-alembic test-migrations test-models test-controllers test-service test-db-all test-coverage test-smoke test-clean
 
@@ -32,50 +32,53 @@ help:
 	@echo "  MODE=dev|prod  - Environment mode (default: dev)"
 	@echo ""
 	@echo "Examples:"
-	@echo "  make db-connect"
-	@echo "  make MODE=prod db-current"
-	@echo "  make db-upgrade"
+	@echo "  make db-connect    # Test database connection"
+	@echo "  make MODE=prod db-current  # Check current migration in prod"
+	@echo "  make db-upgrade    # Upgrade database to latest"
+	@echo "  make db-init       # Initialize fresh database"
+	@echo "  make db-reset      # Reset database (with confirmation)"
 
 # Environment setup
 MODE ?= dev
 PYTHON := uv run python
 
-# Database connection test
+# Database operations using unified db.py script
+# All commands delegate to scripts/db.py with appropriate arguments
 db-connect:
 	@echo "🔍 Testing database connection..."
-	@MODE=$(MODE) $(PYTHON) scripts/db_connect_test.py
+	@MODE=$(MODE) $(PYTHON) scripts/db.py test
 
 # Show current migration
 db-current:
 	@echo "📊 Getting current migration version..."
-	@MODE=$(MODE) $(PYTHON) scripts/db_current.py
+	@MODE=$(MODE) $(PYTHON) scripts/db.py current
 
 # Upgrade database
 db-upgrade:
 	@echo "⬆️  Upgrading database to latest migration..."
-	@MODE=$(MODE) $(PYTHON) scripts/db_upgrade.py
+	@MODE=$(MODE) $(PYTHON) scripts/db.py upgrade
 
 # Downgrade database
 db-downgrade:
 	@echo "⬇️  Downgrading database by one migration..."
-	@MODE=$(MODE) $(PYTHON) scripts/db_downgrade.py
+	@MODE=$(MODE) $(PYTHON) scripts/db.py downgrade
 
 # Create new migration
 db-revision:
 	@echo "📝 Creating new migration revision..."
-	@MODE=$(MODE) $(PYTHON) scripts/db_revision.py
+	@MODE=$(MODE) $(PYTHON) scripts/db.py revision
 
 # Initialize database schema
 db-init:
 	@echo "🏗️  Initializing database schema..."
-	@MODE=$(MODE) $(PYTHON) scripts/db_init.py
+	@MODE=$(MODE) $(PYTHON) scripts/db.py init
 
 # Reset database (DANGER!)
 db-reset:
 	@echo "⚠️  WARNING: This will reset the database and destroy all data!"
 	@read -p "Are you sure? (type 'yes' to continue): " confirm && [ "$$confirm" = "yes" ] || (echo "Operation cancelled" && exit 1)
 	@echo "🔄 Resetting database..."
-	@MODE=$(MODE) $(PYTHON) scripts/db_reset.py
+	@MODE=$(MODE) $(PYTHON) scripts/db.py reset
 
 # ============================================================================
 # TESTING TARGETS
@@ -86,15 +89,13 @@ test-unit:
 	@echo "🧪 Running database unit tests..."
 	$(PYTHON) -m pytest tests/unit/ -v --tb=short
 
-# Run database integration tests
+# Run database integration tests (currently empty)
 test-integration:
-	@echo "🔗 Running database integration tests..."
-	$(PYTHON) -m pytest --run-integration tests/integration/ -v --tb=short
+	@echo "🔗 Database integration tests directory is empty - skipping..."
 
-# Run database end-to-end tests
+# Run database end-to-end tests (currently empty)
 test-e2e:
-	@echo "🌍 Running database E2E tests..."
-	$(PYTHON) -m pytest --run-e2e tests/e2e/ -v --tb=short
+	@echo "🌍 Database E2E tests directory is empty - skipping..."
 
 # Run all database tests
 test-db: test-unit test-integration test-e2e
@@ -108,26 +109,47 @@ test-alembic:
 # Run migration-specific tests
 test-migrations:
 	@echo "🔄 Running migration tests..."
-	$(PYTHON) -m pytest tests/unit/test_database_migrations.py -v --tb=short
+	$(PYTHON) -m pytest tests/unit/test_database_migrations.py -m "not integration" -v --tb=short
 
 # Run model-specific tests
 test-models:
 	@echo "📊 Running model tests..."
 	$(PYTHON) -m pytest tests/unit/test_database_models.py -v --tb=short
 
-# Run controller-specific tests
+# Run controller-specific tests (unit tests only by default)
 test-controllers:
 	@echo "🎛️  Running controller tests..."
-	$(PYTHON) -m pytest tests/unit/test_database_controllers.py -v --tb=short
+	$(PYTHON) -m pytest tests/unit/test_database_controllers.py -m "not integration" -v --tb=short
 
-# Run database service tests
+# Run database service tests (unit tests only by default)
 test-service:
 	@echo "🔧 Running database service tests..."
-	$(PYTHON) -m pytest tests/unit/test_database_service.py -v --tb=short
+	$(PYTHON) -m pytest tests/unit/test_database_service.py -m "not integration" -v --tb=short
 
-# Comprehensive database test suite
-test-db-all: test-alembic test-migrations test-models test-controllers test-service test-integration test-e2e
+# Integration test targets (require real database)
+test-controllers-integration:
+	@echo "🎛️  Running controller integration tests..."
+	$(PYTHON) -m pytest tests/unit/test_database_controllers.py -m "integration" --integration -v --tb=short
+
+test-service-integration:
+	@echo "🔧 Running service integration tests..."
+	$(PYTHON) -m pytest tests/unit/test_database_service.py -m "integration" --integration -v --tb=short
+
+test-migrations-integration:
+	@echo "🔄 Running migration integration tests..."
+	$(PYTHON) -m pytest tests/unit/test_database_migrations.py -m "integration" --integration -v --tb=short
+
+# Run all integration tests
+test-integration-all: test-controllers-integration test-service-integration test-migrations-integration
+	@echo "🎉 All integration tests passed!"
+
+# Comprehensive database test suite (unit tests only - fast & reliable)
+test-db-all: test-alembic test-migrations test-models test-controllers test-service
 	@echo "🎉 Complete database test suite passed!"
+
+# Full test suite including integration tests (requires test database)
+test-db-full: test-alembic test-migrations test-models test-controllers test-service test-integration-all test-e2e
+	@echo "🎉 Complete database test suite with integration tests passed!"
 
 # Run database tests with coverage
 test-coverage:
@@ -180,9 +202,10 @@ help-db:
 	@echo "  test-clean     - Clean test artifacts"
 	@echo ""
 	@echo "Usage examples:"
-	@echo "  make db-connect"
-	@echo "  make MODE=prod db-current"
-	@echo "  make test-unit"
-	@echo "  make test-db"
-	@echo "  make test-alembic"
-	@echo "  make test-db-all"
+	@echo "  make db-connect          # Test database connection"
+	@echo "  make MODE=prod db-current # Check current migration in prod"
+	@echo "  make db-upgrade          # Upgrade database to latest"
+	@echo "  make test-unit           # Run unit tests"
+	@echo "  make test-db             # Run database test suite"
+	@echo "  make test-alembic        # Run alembic-specific tests"
+	@echo "  make test-db-all         # Run comprehensive test suite"
