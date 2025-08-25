@@ -13,9 +13,11 @@ class Wiki(commands.Cog):
         self.bot = bot
         self.arch_wiki_api_url = "https://wiki.archlinux.org/api.php"
         self.atl_wiki_api_url = "https://atl.wiki/api.php"
+        self.wikipedia_api_url = "https://en.wikipedia.org/w/api.php"
         self.wiki.usage = generate_usage(self.wiki)
         self.arch_wiki.usage = generate_usage(self.arch_wiki)
         self.atl_wiki.usage = generate_usage(self.atl_wiki)
+        self.wikipedia.usage = generate_usage(self.wikipedia)
 
     def create_embed(self, title: tuple[str, str], ctx: commands.Context[Tux]) -> discord.Embed:
         """
@@ -90,6 +92,8 @@ class Wiki(commands.Cog):
                     url_title = title.replace(" ", "_")
                     if "atl.wiki" in base_url:
                         url = f"https://atl.wiki/{url_title}"
+                    elif "wikipedia.org" in base_url:
+                        url = f"https://en.wikipedia.org/wiki/{url_title}"
                     else:
                         url = f"https://wiki.archlinux.org/title/{url_title}"
                     return title, url
@@ -150,6 +154,28 @@ class Wiki(commands.Cog):
         """
 
         title: tuple[str, str] = self.query_wiki(self.atl_wiki_api_url, query)
+
+        embed = self.create_embed(title, ctx)
+
+        await ctx.send(embed=embed)
+
+    @wiki.command(
+        name="wikipedia",
+        aliases=["wp"],
+    )
+    async def wikipedia(self, ctx: commands.Context[Tux], *, query: str) -> None:
+        """
+        Search Wikipedia
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context object for the command.
+        query : str
+            The search query.
+        """
+
+        title: tuple[str, str] = self.query_wiki(self.wikipedia_api_url, query)
 
         embed = self.create_embed(title, ctx)
 
