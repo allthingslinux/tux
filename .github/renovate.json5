@@ -4,7 +4,7 @@
         "config:best-practices"
     ],
     "schedule": [
-        "every 12 hours"
+        "0 */12 * * *"
     ],
     "ignoreDeps": [
         "basedpyright" // see pyproject.toml
