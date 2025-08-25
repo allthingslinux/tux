@@ -391,7 +391,7 @@ RUN set -eux; \
     find /app/.venv -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true; \
     # Remove test directories from installed packages (but preserve prisma binaries)
     # These directories contain test files that are not needed in production
-    for test_dir in tests testing "*test*"; do \
+    for test_dir in tests testing "test*"; do \
       find /app/.venv -name "$test_dir" -type d -not -path "*/prisma*" -exec rm -rf {} + 2>/dev/null || true; \
     done; \
     # Remove documentation files from installed packages (but preserve prisma docs)
