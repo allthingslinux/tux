@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from tux.database.controllers.base import BaseController
-from tux.database.models.moderation import Case
+from tux.database.models import Case
 from tux.database.service import DatabaseService
 
 

@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from tux.database.controllers.base import BaseController
-from tux.database.models.social import AFK
+from tux.database.models import AFK
 from tux.database.service import DatabaseService
 
 

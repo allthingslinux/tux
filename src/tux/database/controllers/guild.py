@@ -5,7 +5,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tux.database.controllers.base import BaseController
-from tux.database.models.guild import Guild, GuildConfig
+from tux.database.models import Guild, GuildConfig
 from tux.database.service import DatabaseService
 
 

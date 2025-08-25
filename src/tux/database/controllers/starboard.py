@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from tux.database.controllers.base import BaseController
-from tux.database.models.starboard import Starboard, StarboardMessage
+from tux.database.models import Starboard, StarboardMessage
 from tux.database.service import DatabaseService
 
 
@@ -35,9 +35,7 @@ class StarboardController(BaseController[Starboard]):
     async def delete_starboard(self, guild_id: int) -> bool:
         """Delete starboard configuration for a guild."""
         starboard = await self.get_starboard_by_guild(guild_id)
-        if starboard is None:
-            return False
-        return await self.delete_by_id(guild_id)
+        return False if starboard is None else await self.delete_by_id(guild_id)
 
     async def get_all_starboards(self) -> list[Starboard]:
         """Get all starboard configurations."""
@@ -92,9 +90,7 @@ class StarboardMessageController(BaseController[StarboardMessage]):
         messages = await self.find_all(filters=StarboardMessage.message_guild_id == guild_id)
         # Sort by star count descending and limit
         sorted_messages = sorted(messages, key=lambda x: x.star_count, reverse=True)
-        if limit:
-            return sorted_messages[:limit]
-        return sorted_messages
+        return sorted_messages[:limit] if limit else sorted_messages
 
     async def create_starboard_message(
         self,

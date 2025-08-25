@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from math import ceil
 from typing import Any, TypeVar
 
 from loguru import logger
-from sqlalchemy import delete, func, select, update
+from pydantic import BaseModel
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import SQLModel
+from sqlalchemy.orm import selectinload
+from sqlmodel import SQLModel, delete, select, update
 
 from tux.database.service import DatabaseService
 
@@ -15,24 +18,23 @@ R = TypeVar("R")
 
 
 class BaseController[ModelT]:
-    """Clean, type-safe base controller with direct CRUD operations.
-
-    This controller provides:
-    - Full type safety with generics
-    - Direct SQLAlchemy operations (no mixin dependencies)
-    - Session management
-    - Clean, simple architecture
-
-    For Sentry integration, use the @span decorator from tux.services.tracing
-    on your business logic methods.
-    """
-
     def __init__(self, model: type[ModelT], db: DatabaseService | None = None):
         self.model = model
         if db is None:
             error_msg = "DatabaseService must be provided. Use DI container to get the service."
             raise RuntimeError(error_msg)
         self.db = db
+
+    # Properties for test compatibility
+    @property
+    def db_service(self) -> DatabaseService:
+        """Database service property for test compatibility."""
+        return self.db
+
+    @property
+    def model_class(self) -> type[ModelT]:
+        """Model class property for test compatibility."""
+        return self.model
 
     # ------------------------------------------------------------------
     # Core CRUD Methods - Direct SQLAlchemy Implementation
@@ -43,7 +45,7 @@ class BaseController[ModelT]:
         async with self.db.session() as session:
             instance = self.model(**kwargs)
             session.add(instance)
-            await session.flush()
+            await session.commit()
             await session.refresh(instance)
             return instance
 
@@ -70,13 +72,42 @@ class BaseController[ModelT]:
         limit: int | None = None,
         offset: int | None = None,
     ) -> list[ModelT]:
-        """Find all records."""
+        """Find all records with performance optimizations."""
         async with self.db.session() as session:
             stmt = select(self.model)
             if filters is not None:
                 stmt = stmt.where(filters)
             if order_by is not None:
                 stmt = stmt.order_by(order_by)
+            if limit is not None:
+                stmt = stmt.limit(limit)
+            if offset is not None:
+                stmt = stmt.offset(offset)
+            result = await session.execute(stmt)
+            return list(result.scalars().all())
+
+    async def find_all_with_options(
+        self,
+        filters: Any | None = None,
+        order_by: Any | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        load_relationships: list[str] | None = None,
+    ) -> list[ModelT]:
+        """Find all records with relationship loading options."""
+        async with self.db.session() as session:
+            stmt = select(self.model)
+            if filters is not None:
+                stmt = stmt.where(filters)
+            if order_by is not None:
+                stmt = stmt.order_by(order_by)
+
+            # Optimized relationship loading
+            if load_relationships:
+                for relationship in load_relationships:
+                    if hasattr(self.model, relationship):
+                        stmt = stmt.options(selectinload(getattr(self.model, relationship)))
+
             if limit is not None:
                 stmt = stmt.limit(limit)
             if offset is not None:
@@ -93,6 +124,285 @@ class BaseController[ModelT]:
             result = await session.execute(stmt)
             return int(result.scalar_one() or 0)
 
+    # Test compatibility methods
+    async def get_all(self, filters: Any | None = None, order_by: Any | None = None) -> list[ModelT]:
+        """Get all records. Alias for find_all for test compatibility."""
+        return await self.find_all(filters=filters, order_by=order_by)
+
+    async def exists(self, filters: Any) -> bool:
+        """Check if any record exists matching the filters."""
+        count = await self.count(filters=filters)
+        return count > 0
+
+    async def execute_query(self, query: Any) -> Any:
+        """Execute an arbitrary query."""
+        async with self.db.session() as session:
+            return await session.execute(query)
+
+    async def update(self, record_id: Any, **values: Any) -> ModelT | None:
+        """Update a record. Alias for update_by_id for test compatibility."""
+        return await self.update_by_id(record_id, **values)
+
+    async def delete(self, record_id: Any) -> bool:
+        """Delete a record. Alias for delete_by_id for test compatibility."""
+        return await self.delete_by_id(record_id)
+
+    # ------------------------------------------------------------------
+    # Upsert Operations - Professional Patterns from SQLModel Examples
+    # ------------------------------------------------------------------
+
+    async def upsert_by_field(
+        self,
+        field_name: str,
+        field_value: Any,
+        **create_values: Any,
+    ) -> tuple[ModelT, bool]:
+        """
+        Create or update a record by a specific field.
+
+        Args:
+            field_name: Name of the field to check for existing record
+            field_value: Value of the field to check
+            **create_values: Values to use when creating new record
+
+        Returns:
+            Tuple of (record, created) where created is True if new record was created
+
+        Example:
+            user, created = await controller.upsert_by_field(
+                "email", "user@example.com",
+                name="John Doe", email="user@example.com"
+            )
+        """
+        async with self.db.session() as session:
+            # Check if record exists
+            existing = await session.execute(select(self.model).where(getattr(self.model, field_name) == field_value))
+            existing_record = existing.scalars().first()
+
+            if existing_record is not None:
+                # Update existing record with new values
+                for key, value in create_values.items():
+                    setattr(existing_record, key, value)
+                await session.commit()
+                await session.refresh(existing_record)
+                return existing_record, False
+            # Create new record
+            instance = self.model(**create_values)
+            session.add(instance)
+            await session.commit()
+            await session.refresh(instance)
+            return instance, True
+
+    async def upsert_by_id(
+        self,
+        record_id: Any,
+        **update_values: Any,
+    ) -> tuple[ModelT, bool]:
+        """
+        Create or update a record by ID.
+
+        Args:
+            record_id: ID of the record to upsert
+            **update_values: Values to set on the record
+
+        Returns:
+            Tuple of (record, created) where created is True if new record was created
+
+        Note:
+            This method requires the ID to be provided in update_values for creation.
+        """
+        async with self.db.session() as session:
+            # Check if record exists
+            existing_record = await session.get(self.model, record_id)
+
+            if existing_record is not None:
+                # Update existing record
+                for key, value in update_values.items():
+                    setattr(existing_record, key, value)
+                await session.commit()
+                await session.refresh(existing_record)
+                return existing_record, False
+            # Create new record - ID must be in update_values
+            if "id" not in update_values and record_id is not None:
+                update_values["id"] = record_id
+            instance = self.model(**update_values)
+            session.add(instance)
+            await session.commit()
+            await session.refresh(instance)
+            return instance, True
+
+    async def get_or_create_by_field(
+        self,
+        field_name: str,
+        field_value: Any,
+        **create_values: Any,
+    ) -> tuple[ModelT, bool]:
+        """
+        Get existing record or create new one by field value.
+
+        Args:
+            field_name: Name of the field to check
+            field_value: Value of the field to check
+            **create_values: Values to use when creating new record
+
+        Returns:
+            Tuple of (record, created) where created is True if new record was created
+        """
+        async with self.db.session() as session:
+            # Check if record exists
+            existing = await session.execute(select(self.model).where(getattr(self.model, field_name) == field_value))
+            existing_record = existing.scalars().first()
+
+            if existing_record is not None:
+                return existing_record, False
+            # Create new record
+            instance = self.model(**create_values)
+            session.add(instance)
+            await session.commit()
+            await session.refresh(instance)
+            return instance, True
+
+    # ------------------------------------------------------------------
+    # Pagination Support - Professional Patterns from SQLModel Examples
+    # ------------------------------------------------------------------
+
+    class Page(BaseModel):
+        """
+        Represents a page of data in a paginated result set.
+
+        Attributes:
+            data: List of items on the current page
+            page: Current page number (1-based)
+            page_size: Number of items per page
+            total: Total number of items across all pages
+            total_pages: Total number of pages
+            has_previous: Whether there is a previous page
+            has_next: Whether there is a next page
+            previous_page: Previous page number (or None)
+            next_page: Next page number (or None)
+        """
+
+        data: list[ModelT]
+        page: int
+        page_size: int
+        total: int
+        total_pages: int
+        has_previous: bool
+        has_next: bool
+        previous_page: int | None
+        next_page: int | None
+
+        @classmethod
+        def create(
+            cls,
+            data: list[ModelT],
+            page: int,
+            page_size: int,
+            total: int,
+        ) -> BaseController.Page[ModelT]:
+            """Create a Page instance with calculated pagination information."""
+            total_pages = ceil(total / page_size) if page_size > 0 else 0
+
+            return cls(
+                data=data,
+                page=page,
+                page_size=page_size,
+                total=total,
+                total_pages=total_pages,
+                has_previous=page > 1,
+                has_next=page < total_pages,
+                previous_page=page - 1 if page > 1 else None,
+                next_page=page + 1 if page < total_pages else None,
+            )
+
+    async def paginate(
+        self,
+        page: int = 1,
+        page_size: int = 25,
+        filters: Any | None = None,
+        order_by: Any | None = None,
+    ) -> Page[ModelT]:
+        """
+        Get a paginated list of records.
+
+        Args:
+            page: Page number (1-based, default: 1)
+            page_size: Number of items per page (default: 25)
+            filters: SQLAlchemy filters to apply
+            order_by: SQLAlchemy order by clause
+
+        Returns:
+            Page object with data and pagination metadata
+
+        Raises:
+            ValueError: If page or page_size are invalid
+
+        Example:
+            page = await controller.paginate(page=2, page_size=10)
+            print(f"Page {page.page} of {page.total_pages}")
+            print(f"Showing {len(page.data)} items of {page.total}")
+        """
+        if page < 1:
+            msg = "Page number must be >= 1"
+            raise ValueError(msg)
+        if page_size < 1:
+            msg = "Page size must be >= 1"
+            raise ValueError(msg)
+
+        # Get total count
+        total = await self.count(filters=filters)
+
+        # Calculate offset
+        offset = (page - 1) * page_size
+
+        # Get paginated data
+        data = await self.find_all(
+            filters=filters,
+            order_by=order_by,
+            limit=page_size,
+            offset=offset,
+        )
+
+        return self.Page.create(
+            data=data,
+            page=page,
+            page_size=page_size,
+            total=total,
+        )
+
+    async def find_paginated(
+        self,
+        page: int = 1,
+        page_size: int = 25,
+        **filters: Any,
+    ) -> Page[ModelT]:
+        """
+        Convenience method for simple paginated queries with keyword filters.
+
+        Args:
+            page: Page number (1-based, default: 1)
+            page_size: Number of items per page (default: 25)
+            **filters: Keyword filters to apply
+
+        Returns:
+            Page object with data and pagination metadata
+
+        Example:
+            page = await controller.find_paginated(page=1, page_size=10, active=True)
+        """
+        # Convert keyword filters to SQLAlchemy expressions
+        if filters:
+            filter_expressions = [getattr(self.model, key) == value for key, value in filters.items()]
+            combined_filters = filter_expressions[0] if len(filter_expressions) == 1 else filter_expressions
+        else:
+            combined_filters = None
+
+        return await self.paginate(
+            page=page,
+            page_size=page_size,
+            filters=combined_filters,
+        )
+
     async def update_by_id(self, record_id: Any, **values: Any) -> ModelT | None:
         """Update record by ID."""
         async with self.db.session() as session:
@@ -101,7 +411,7 @@ class BaseController[ModelT]:
                 return None
             for key, value in values.items():
                 setattr(instance, key, value)
-            await session.flush()
+            await session.commit()
             await session.refresh(instance)
             return instance
 
@@ -119,7 +429,7 @@ class BaseController[ModelT]:
             if instance is None:
                 return False
             await session.delete(instance)
-            await session.flush()
+            await session.commit()
             return True
 
     async def delete_where(self, filters: Any) -> int:
@@ -142,7 +452,7 @@ class BaseController[ModelT]:
                 return await self.create(**create_values)
             for key, value in update_values.items():
                 setattr(existing, key, value)
-            await session.flush()
+            await session.commit()
             await session.refresh(existing)
             return existing
 
@@ -187,7 +497,7 @@ class BaseController[ModelT]:
         # Create new record with filters + defaults
         create_data = {**filters}
         if defaults:
-            create_data.update(defaults)
+            create_data |= defaults
 
         new_record = await self.create(**create_data)
         return new_record, True
@@ -201,61 +511,62 @@ class BaseController[ModelT]:
             logger.exception(f"Transaction failed in {self.model.__name__}: {exc}")
             raise
 
+    async def bulk_create(self, items: list[dict[str, Any]]) -> list[ModelT]:
+        """Create multiple records in a single transaction."""
+        if not items:
+            return []
+
+        async with self.db.session() as session:
+            instances: list[ModelT] = []
+            for item_data in items:
+                instance: ModelT = self.model(**item_data)
+                session.add(instance)
+                instances.append(instance)
+
+            await session.commit()
+
+            # Refresh all instances to get their IDs
+            for instance in instances:
+                await session.refresh(instance)
+
+            return instances
+
+    async def bulk_update(self, updates: list[tuple[Any, dict[str, Any]]]) -> int:
+        """Update multiple records in a single transaction.
+
+        Args:
+            updates: List of tuples (record_id, update_data)
+        """
+        if not updates:
+            return 0
+
+        async with self.db.session() as session:
+            total_updated = 0
+            for record_id, update_data in updates:
+                instance = await session.get(self.model, record_id)
+                if instance:
+                    for key, value in update_data.items():
+                        setattr(instance, key, value)
+                    total_updated += 1
+
+            await session.commit()
+            return total_updated
+
+    async def bulk_delete(self, record_ids: list[Any]) -> int:
+        """Delete multiple records in a single transaction."""
+        if not record_ids:
+            return 0
+
+        async with self.db.session() as session:
+            for record_id in record_ids:
+                instance = await session.get(self.model, record_id)
+                if instance:
+                    await session.delete(instance)
+
+            await session.commit()
+            return len(record_ids)
+
     @staticmethod
     def safe_get_attr(obj: Any, attr: str, default: Any = None) -> Any:
         """Return getattr(obj, attr, default) - keeps old helper available."""
         return getattr(obj, attr, default)
-
-
-# Example usage:
-"""
-# Clean, simple controller usage:
-from tux.database.controllers.base import BaseController
-from tux.database.models.moderation import Case
-from tux.services.tracing import span
-
-class CaseController(BaseController[Case]):
-    def __init__(self):
-        super().__init__(Case)
-
-    # All CRUD methods are available with full type safety:
-    # - create(**kwargs) -> Case
-# - get_by_id(id) -> Case | None
-# - get_or_create(defaults=None, **filters) -> tuple[Case, bool]
-# - find_one(filters=None, order_by=None) -> Case | None
-# - find_all(filters=None, order_by=None, limit=None, offset=None) -> list[Case]
-# - count(filters=None) -> int
-# - update_by_id(id, **values) -> Case | None
-# - update_where(filters, values) -> int
-# - delete_by_id(id) -> bool
-# - delete_where(filters) -> int
-# - upsert(match_filter, create_values, update_values) -> Case
-
-    # Custom business logic methods with Sentry integration:
-    @span(op="db.query", description="get_active_cases_for_user")
-    async def get_active_cases_for_user(self, user_id: int) -> list[Case]:
-        return await self.find_all(
-            filters=(Case.case_target_id == user_id) & (Case.case_status == True)
-        )
-
-    @span(op="db.query", description="close_case")
-    async def close_case(self, case_id: int) -> Case | None:
-        return await self.update_by_id(case_id, case_status=False)
-
-    # For complex operations, use with_session:
-    async def bulk_update_cases(self, case_ids: list[int], **updates: Any) -> None:
-        async def _bulk_op(session: AsyncSession) -> None:
-            for case_id in case_ids:
-                instance = await session.get(Case, case_id)
-                if instance:
-                    for key, value in updates.items():
-                        setattr(instance, key, value)
-            await session.flush()
-
-        await self.with_session(_bulk_op)
-
-# Usage:
-# controller = CaseController()
-# case = await controller.create(case_type="BAN", case_target_id=12345)
-# cases = await controller.get_active_cases_for_user(12345)
-"""

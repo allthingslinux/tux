@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from tux.database.controllers.base import BaseController
-from tux.database.models.guild import GuildConfig
+from tux.database.models import GuildConfig
 from tux.database.service import DatabaseService
 
 
