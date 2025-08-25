@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from tux.core.converters import CaseTypeConverter, TimeConverter, convert_bool
-from tux.database.models.moderation import CaseType
+from tux.database.models import CaseType
 from tux.shared.constants import CONST
 
 # TODO: Figure out how to use boolean flags with empty values

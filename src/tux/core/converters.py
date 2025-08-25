@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.database.models.moderation import CaseType
+from tux.database.models import CaseType
 
 if TYPE_CHECKING:
     from tux.core.types import Tux
