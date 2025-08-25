@@ -44,6 +44,7 @@ dependencies = [
     "aiosqlite>=0.20.0",
     "redis>=5.0.0",
     "psycopg2-binary>=2.9.10",
+    "alembic-utils>=0.8.8",
 ]
 
 [project.urls]
@@ -75,6 +76,14 @@ test = [
     "pytest-timeout>=2.3.1,<3",
     "pytest-html>=4.1.1,<5",
     "pytest-benchmark>=5.1.0,<6",
+    "pytest-alembic>=0.12.0,<0.13",
+    # https://pypi.org/project/pytest-clean-database/
+    # https://pypi.org/project/pytest-click/
+    # https://pypi.org/project/pytest-codecov/
+    # https://pypi.org/project/pytest-databases/
+    # https://pypi.org/project/pytest-postgresql/
+    # https://pypi.org/project/pytest-sqlalchemy/
+    # https://pypi.org/project/pytest-sqlguard/
 ]
 docs = [
     "mkdocs-material>=9.5.30,<10",
@@ -258,4 +267,9 @@ file_template = "%%(year)d_%%(month).2d_%%(day).2d_%%(hour).2d%%(minute).2d-%%(r
 timezone = "UTC"
 
 [tool.alembic.sqlalchemy]
-url = ""
+url = "sqlite:///test.db"
+
+# pytest-alembic configuration
+[tool.pytest-alembic]
+script_location = "src/tux/database/migrations"
+version_locations = ["src/tux/database/migrations/versions"]

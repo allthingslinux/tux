@@ -189,3 +189,4 @@ reports/
 sqlmodel-refactor
 .database-archive
 data/
+examples/

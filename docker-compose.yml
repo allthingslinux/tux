@@ -1,4 +1,27 @@
 services:
+  tux-postgres:
+    container_name: tux-postgres
+    hostname: tux-postgres
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tuxdb
+      POSTGRES_USER: tuxuser
+      POSTGRES_PASSWORD: tuxpass
+      POSTGRES_INITDB_ARGS: --encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    ports:
+      - 5432:5432
+    volumes:
+      - tux_postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U tuxuser -d tuxdb
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
   tux:
     container_name: tux
     hostname: tux
@@ -23,6 +46,9 @@ services:
     environment:
       TUX_VERSION: ${VERSION}
     restart: unless-stopped
+    depends_on:
+      tux-postgres:
+        condition: service_healthy
     healthcheck:
       test:
         - CMD
@@ -58,4 +84,6 @@ volumes:
   tux_temp:
     driver: local
   tux_user_home:
+    driver: local
+  tux_postgres_data:
     driver: local

@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: tuxpass
       POSTGRES_INITDB_ARGS: --encoding=UTF-8 --lc-collate=C --lc-ctype=C
     ports:
-      - 5433:5432
+      - 5432:5432
     volumes:
       - tux_dev_postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
@@ -25,7 +25,7 @@ services:
   tux-dev:
     container_name: tux-dev
     hostname: tux-dev
-    image: tux:${TUX_IMAGE_TAG:-dev}
+    image: allthingslinux/tux:${TUX_IMAGE_TAG:-dev}
     build:
       context: .
       args:
