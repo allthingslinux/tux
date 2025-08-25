@@ -118,6 +118,8 @@ jobs:
       # basedpyright provides comprehensive type checking for Python
       # Annotations appear directly in PR for developer feedback
       - name: Run basedpyright type checker
+        if: steps.python_changes.outputs.any_changed == 'true' || github.event_name
+          == 'workflow_dispatch'
         run: poetry run basedpyright
 
   # ============================================================================
