@@ -6,7 +6,7 @@ from typing import Any, TypeVar
 
 from loguru import logger
 from pydantic import BaseModel
-from sqlalchemy import func
+from sqlalchemy import Table, and_, func, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import SQLModel, delete, select, update
@@ -58,8 +58,9 @@ class BaseController[ModelT]:
         """Find one record."""
         async with self.db.session() as session:
             stmt = select(self.model)
-            if filters is not None:
-                stmt = stmt.where(filters)
+            filter_expr = self._build_filters(filters)
+            if filter_expr is not None:
+                stmt = stmt.where(filter_expr)
             if order_by is not None:
                 stmt = stmt.order_by(order_by)
             result = await session.execute(stmt)
@@ -75,8 +76,9 @@ class BaseController[ModelT]:
         """Find all records with performance optimizations."""
         async with self.db.session() as session:
             stmt = select(self.model)
-            if filters is not None:
-                stmt = stmt.where(filters)
+            filter_expr = self._build_filters(filters)
+            if filter_expr is not None:
+                stmt = stmt.where(filter_expr)
             if order_by is not None:
                 stmt = stmt.order_by(order_by)
             if limit is not None:
@@ -474,6 +476,18 @@ class BaseController[ModelT]:
     # Utility Methods
     # ------------------------------------------------------------------
 
+    def _build_filters(self, filters: Any) -> Any:
+        """Convert dictionary filters to SQLAlchemy filter expressions."""
+        if filters is None:
+            return None
+
+        if isinstance(filters, dict):
+            filter_expressions: list[Any] = [getattr(self.model, key) == value for key, value in filters.items()]  # type: ignore[reportUnknownArgumentType]
+            return and_(*filter_expressions) if filter_expressions else None  # type: ignore[arg-type]
+
+        # If it's already a proper filter expression, return as-is
+        return filters
+
     async def get_or_create(self, defaults: dict[str, Any] | None = None, **filters: Any) -> tuple[ModelT, bool]:
         """Get a record by filters, or create it if it doesn't exist.
 
@@ -565,6 +579,242 @@ class BaseController[ModelT]:
 
             await session.commit()
             return len(record_ids)
+
+    # ------------------------------------------------------------------
+    # PostgreSQL-Specific Features - Based on py-pglite Examples
+    # ------------------------------------------------------------------
+
+    async def find_with_json_query(
+        self,
+        json_field: str,
+        json_path: str,
+        value: Any,
+        order_by: Any | None = None,
+    ) -> list[ModelT]:
+        """
+        Query records using PostgreSQL JSON operators.
+
+        Args:
+            json_field: Name of the JSON field to query
+            json_path: JSON path expression (e.g., "$.metadata.key")
+            value: Value to match
+            order_by: Optional ordering clause
+
+        Example:
+            guilds = await controller.find_with_json_query(
+                "metadata", "$.settings.auto_mod", True
+            )
+        """
+        async with self.db.session() as session:
+            # Use PostgreSQL JSON path operators
+            stmt = select(self.model).where(
+                text(f"{json_field}::jsonb @> :value::jsonb"),
+            )
+
+            if order_by is not None:
+                stmt = stmt.order_by(order_by)
+
+            result = await session.execute(stmt, {"value": f'{{"{json_path.replace("$.", "")}": {value}}}'})
+            return list(result.scalars().all())
+
+    async def find_with_array_contains(
+        self,
+        array_field: str,
+        value: str | list[str],
+        order_by: Any | None = None,
+    ) -> list[ModelT]:
+        """
+        Query records where array field contains specific value(s).
+
+        Args:
+            array_field: Name of the array field
+            value: Single value or list of values to check for
+            order_by: Optional ordering clause
+
+        Example:
+            guilds = await controller.find_with_array_contains("tags", "gaming")
+        """
+        async with self.db.session() as session:
+            if isinstance(value, str):
+                # Single value containment check
+                stmt = select(self.model).where(
+                    text(f":value = ANY({array_field})"),
+                )
+                params = {"value": value}
+            else:
+                # Multiple values overlap check
+                stmt = select(self.model).where(
+                    text(f"{array_field} && :values"),
+                )
+                params = {"values": value}
+
+            if order_by is not None:
+                stmt = stmt.order_by(order_by)
+
+            result = await session.execute(stmt, params)
+            return list(result.scalars().all())
+
+    async def find_with_full_text_search(
+        self,
+        text_field: str,
+        search_query: str,
+        rank_order: bool = True,
+    ) -> list[tuple[ModelT, float]]:
+        """
+        Perform full-text search using PostgreSQL's built-in capabilities.
+
+        Args:
+            text_field: Field to search in
+            search_query: Search query
+            rank_order: Whether to order by relevance rank
+
+        Returns:
+            List of tuples (model, rank) if rank_order=True, else just models
+        """
+        async with self.db.session() as session:
+            if rank_order:
+                stmt = (
+                    select(
+                        self.model,
+                        func.ts_rank(
+                            func.to_tsvector("english", getattr(self.model, text_field)),
+                            func.plainto_tsquery("english", search_query),
+                        ).label("rank"),
+                    )
+                    .where(
+                        func.to_tsvector("english", getattr(self.model, text_field)).match(
+                            func.plainto_tsquery("english", search_query),
+                        ),
+                    )
+                    .order_by(text("rank DESC"))
+                )
+
+                result = await session.execute(stmt)
+                return [(row[0], float(row[1])) for row in result.fetchall()]
+            stmt = select(self.model).where(
+                func.to_tsvector("english", getattr(self.model, text_field)).match(
+                    func.plainto_tsquery("english", search_query),
+                ),
+            )
+            result = await session.execute(stmt)
+            return [(model, 0.0) for model in result.scalars().all()]
+
+    async def bulk_upsert_with_conflict_resolution(
+        self,
+        records: list[dict[str, Any]],
+        conflict_columns: list[str],
+        update_columns: list[str] | None = None,
+    ) -> int:
+        """
+        Bulk upsert using PostgreSQL's ON CONFLICT capabilities.
+
+        Args:
+            records: List of record dictionaries
+            conflict_columns: Columns that define uniqueness
+            update_columns: Columns to update on conflict (if None, updates all)
+
+        Returns:
+            Number of records processed
+        """
+        if not records:
+            return 0
+
+        async with self.db.session() as session:
+            # Use PostgreSQL's INSERT ... ON CONFLICT for high-performance upserts
+            table: Table = self.model.__table__  # pyright: ignore[reportAttributeAccessIssue,reportUnknownMemberType,reportUnknownVariableType]
+
+            # Build the ON CONFLICT clause
+            conflict_clause = ", ".join(conflict_columns)
+
+            if update_columns is None:
+                # Update all columns except the conflict columns
+                update_columns = [col.name for col in table.columns if col.name not in conflict_columns]  # pyright: ignore[reportUnknownMemberType,reportUnknownVariableType]
+
+            update_clause = ", ".join([f"{col} = EXCLUDED.{col}" for col in update_columns])
+
+            # Build the SQL statement
+            columns = ", ".join(records[0].keys())
+            placeholders = ", ".join([f":{key}" for key in records[0]])
+
+            table_name_attr = getattr(table, "name", "unknown")  # pyright: ignore[reportUnknownArgumentType]
+            sql = f"""
+                INSERT INTO {table_name_attr} ({columns})
+                VALUES ({placeholders})
+                ON CONFLICT ({conflict_clause})
+                DO UPDATE SET {update_clause}
+            """
+
+            # Execute for all records
+            await session.execute(text(sql), records)
+            await session.commit()
+
+            return len(records)
+
+    async def get_table_statistics(self) -> dict[str, Any]:
+        """
+        Get PostgreSQL table statistics for this model.
+
+        Based on py-pglite monitoring patterns.
+        """
+        async with self.db.session() as session:
+            table_name: str = self.model.__tablename__  # pyright: ignore[reportAttributeAccessIssue,reportUnknownMemberType,reportUnknownVariableType]
+
+            result = await session.execute(
+                text("""
+                SELECT
+                    schemaname,
+                    tablename,
+                    n_tup_ins as total_inserts,
+                    n_tup_upd as total_updates,
+                    n_tup_del as total_deletes,
+                    n_live_tup as live_tuples,
+                    n_dead_tup as dead_tuples,
+                    seq_scan as sequential_scans,
+                    seq_tup_read as sequential_tuples_read,
+                    idx_scan as index_scans,
+                    idx_tup_fetch as index_tuples_fetched,
+                    n_tup_hot_upd as hot_updates,
+                    n_tup_newpage_upd as newpage_updates
+                FROM pg_stat_user_tables
+                WHERE tablename = :table_name
+            """),
+                {"table_name": table_name},
+            )
+
+            stats = result.fetchone()
+            return dict(stats._mapping) if stats else {}  # pyright: ignore[reportPrivateUsage]
+
+    async def explain_query_performance(
+        self,
+        filters: Any | None = None,
+        order_by: Any | None = None,
+    ) -> dict[str, Any]:
+        """
+        Analyze query performance using EXPLAIN ANALYZE.
+
+        Development utility based on py-pglite optimization patterns.
+        """
+        async with self.db.session() as session:
+            stmt = select(self.model)
+            if filters is not None:
+                stmt = stmt.where(filters)
+            if order_by is not None:
+                stmt = stmt.order_by(order_by)
+
+            # Get the compiled SQL
+            compiled = stmt.compile(compile_kwargs={"literal_binds": True})
+            sql_query = str(compiled)
+
+            # Analyze with EXPLAIN
+            explain_stmt = text(f"EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) {sql_query}")
+            result = await session.execute(explain_stmt)
+            plan_data = result.scalar()
+
+            return {
+                "query": sql_query,
+                "plan": plan_data[0] if plan_data else {},
+                "model": self.model.__name__,
+            }
 
     @staticmethod
     def safe_get_attr(obj: Any, attr: str, default: Any = None) -> Any:

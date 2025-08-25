@@ -6,7 +6,7 @@ from typing import Any, cast
 from uuid import UUID, uuid4
 
 from pydantic import field_serializer
-from sqlalchemy import JSON, BigInteger, Column, Float, Index, Integer, UniqueConstraint
+from sqlalchemy import ARRAY, JSON, BigInteger, Column, Float, Index, Integer, String, UniqueConstraint
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.orm import Mapped, relationship
 from sqlmodel import Field, Relationship, SQLModel
@@ -202,70 +202,95 @@ class CaseType(str, Enum):
     POLLUNBAN = "POLLUNBAN"
 
 
-class Guild(SQLModel, table=True):
+class Guild(BaseModel, table=True):
     guild_id: int = Field(primary_key=True, sa_type=BigInteger)
-    guild_joined_at: datetime | None = Field(default_factory=lambda: datetime.now(UTC))
+    guild_joined_at: datetime | None = Field(default_factory=datetime.now)
     case_count: int = Field(default=0)
 
+    # PostgreSQL-specific features based on py-pglite examples
+    guild_metadata: dict[str, Any] | None = Field(
+        default=None,
+        sa_column=Column(JSON),
+        description="Flexible metadata storage using PostgreSQL JSONB",
+    )
+    tags: list[str] = Field(
+        default_factory=list,
+        sa_column=Column(ARRAY(String)),
+        description="Guild tags using PostgreSQL arrays",
+    )
+    feature_flags: dict[str, bool] = Field(
+        default_factory=dict,
+        sa_column=Column(JSON),
+        description="Feature toggles stored as JSON",
+    )
+
     # Relationships with cascade delete - using sa_relationship to bypass SQLModel parsing issues
-    snippets: Mapped[list[Snippet]] = Relationship(
+    snippets = Relationship(
         sa_relationship=relationship(
+            "Snippet",
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
             lazy="selectin",
         ),
     )
-    cases: Mapped[list[Case]] = Relationship(
+    cases = Relationship(
         sa_relationship=relationship(
+            "Case",
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
             lazy="selectin",
         ),
     )
-    notes: Mapped[list[Note]] = Relationship(
+    notes = Relationship(
         sa_relationship=relationship(
+            "Note",
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
             lazy="selectin",
         ),
     )
-    reminders: Mapped[list[Reminder]] = Relationship(
+    reminders = Relationship(
         sa_relationship=relationship(
+            "Reminder",
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
             lazy="selectin",
         ),
     )
-    afks: Mapped[list[AFK]] = Relationship(
+    afks = Relationship(
         sa_relationship=relationship(
+            "AFK",
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
             lazy="selectin",
         ),
     )
-    levels_entries: Mapped[list[Levels]] = Relationship(
+    levels_entries = Relationship(
         sa_relationship=relationship(
+            "Levels",
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
             lazy="selectin",
         ),
     )
-    starboard_messages: Mapped[list[StarboardMessage]] = Relationship(
+    starboard_messages = Relationship(
         sa_relationship=relationship(
+            "StarboardMessage",
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
             lazy="selectin",
         ),
     )
-    permissions: Mapped[list[GuildPermission]] = Relationship(
+    permissions = Relationship(
         sa_relationship=relationship(
+            "GuildPermission",
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
@@ -274,16 +299,18 @@ class Guild(SQLModel, table=True):
     )
 
     # One-to-one relationships
-    guild_config: Mapped[GuildConfig] | None = Relationship(
+    guild_config = Relationship(
         sa_relationship=relationship(
+            "GuildConfig",
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
             lazy="joined",
         ),
     )
-    starboard: Mapped[Starboard] | None = Relationship(
+    starboard = Relationship(
         sa_relationship=relationship(
+            "Starboard",
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
@@ -334,7 +361,7 @@ class Reminder(SQLModel, table=True):
     )
 
 
-class GuildConfig(SQLModel, table=True):
+class GuildConfig(BaseModel, table=True):
     guild_id: int = Field(primary_key=True, foreign_key="guild.guild_id", ondelete="CASCADE", sa_type=BigInteger)
     prefix: str | None = Field(default=None, max_length=10)
 
@@ -367,7 +394,7 @@ class GuildConfig(SQLModel, table=True):
     guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="guild_config"))
 
 
-class Case(SQLModel, table=True):
+class Case(BaseModel, table=True):
     # case is a reserved word in postgres, so we need to use a custom table name
     __tablename__ = "cases"  # pyright: ignore[reportAssignmentType]
 

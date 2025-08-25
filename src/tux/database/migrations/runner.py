@@ -7,7 +7,6 @@ from alembic import command
 from alembic.config import Config
 from loguru import logger
 
-from tux.database.service import DatabaseService
 from tux.shared.config.env import get_database_url, is_dev_mode
 
 
