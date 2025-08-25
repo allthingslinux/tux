@@ -1,3 +1,4 @@
+---
 # ==============================================================================
 # TUX DISCORD BOT - CODECOV CONFIGURATION
 # ==============================================================================
@@ -90,8 +91,7 @@ coverage:
         target: 80%
         threshold: 2%  # Stricter threshold for critical code
         informational: true  # Don't block PRs while building up test suite
-        flags:         # Covered by main unit test suite
-          - unit
+        flags: [unit]  # Covered by main unit test suite
         paths:
           - tux/bot.py  # Main bot class and Discord client setup
           - tux/cog_loader.py  # Extension loading and management
@@ -107,9 +107,7 @@ coverage:
         target: 90%
         threshold: 1%  # Very strict threshold for data operations
         informational: true  # Don't block PRs while building up test suite
-        flags:                   # Covered by both unit and database-specific tests
-          - unit
-          - database
+        flags: [unit, database]  # Covered by both unit and database-specific tests
         paths:
           - tux/database/**/*  # All database controllers, models, and utilities
         only_pulls: true
@@ -121,8 +119,7 @@ coverage:
         target: 75%
         threshold: 2%
         informational: true  # Don't block PRs while building up test suite
-        flags:
-          - unit
+        flags: [unit]
         paths:
           - tux/modules/**/*  # All command modules and Discord slash commands
         only_pulls: true
@@ -134,8 +131,7 @@ coverage:
         target: 70%
         threshold: 3%  # More lenient for utility functions
         informational: true  # Don't block PRs while building up test suite
-        flags:
-          - unit
+        flags: [unit]
         paths:
           - tux/utils/**/*  # Configuration, helpers, constants, etc.
         only_pulls: true
@@ -147,8 +143,7 @@ coverage:
         target: 65%
         threshold: 3%
         informational: true  # Don't block PRs while building up test suite
-        flags:
-          - unit
+        flags: [unit]
         paths:
           - tux/cli/**/*  # Development and management CLI tools
         only_pulls: true
@@ -160,8 +155,7 @@ coverage:
         target: 80%
         threshold: 2%
         informational: true  # Don't block PRs while building up test suite
-        flags:
-          - unit
+        flags: [unit]
         paths:
           - tux/handlers/**/*  # Error handlers, event processors, activity handlers
         only_pulls: true
@@ -173,8 +167,7 @@ coverage:
         target: 70%
         threshold: 3%
         informational: true  # Don't block PRs while building up test suite
-        flags:
-          - unit
+        flags: [unit]
         paths:
           - tux/ui/**/*  # Discord embeds, buttons, modals, views
         only_pulls: true
@@ -186,8 +179,7 @@ coverage:
         target: 60%
         threshold: 4%  # Most lenient threshold due to external dependencies
         informational: true  # Don't block PRs while building up test suite
-        flags:
-          - unit
+        flags: [unit]
         paths:
           - tux/wrappers/**/*  # GitHub, XKCD, Godbolt, and other API wrappers
         only_pulls: true
@@ -216,8 +208,7 @@ coverage:
         target: 95%
         threshold: 2%  # Very strict for new database operations
         informational: true  # Don't block PRs while building up test suite
-        flags:
-          - database
+        flags: [database]
         paths:
           - tux/database/**/*
 
@@ -227,8 +218,7 @@ coverage:
         target: 90%
         threshold: 3%
         informational: true  # Don't block PRs while building up test suite
-        flags:
-          - unit
+        flags: [unit]
         paths:
           - tux/bot.py
           - tux/cog_loader.py
@@ -240,8 +230,7 @@ coverage:
         target: 90%
         threshold: 3%
         informational: true  # Don't block PRs while building up test suite
-        flags:
-          - unit
+        flags: [unit]
         paths:
           - tux/handlers/**/*
 # ==============================================================================
@@ -331,8 +320,7 @@ component_management:
   # DEFAULT COMPONENT RULES
   # Applied to all components unless overridden
   default_rules:
-    flag_regexes:         # Most components covered by unit tests
-      - unit
+    flag_regexes: [unit]  # Most components covered by unit tests
     statuses:
       - type: project
         target: auto  # Progressive improvement for all components
@@ -360,12 +348,10 @@ component_management:
       name: Database Layer
       paths:
         - tux/database/**/*  # Controllers, models, client, and utilities
-      flag_regexes:                   # Covered by both unit and DB-specific tests
+      flag_regexes: [unit, database]  # Covered by both unit and DB-specific tests
 
     # BOT COMMANDS AND FEATURES COMPONENT
     # User-facing Discord commands and integrations
-        - unit
-        - database
     - component_id: modules
       name: Bot Commands & Features
       paths:
@@ -439,22 +425,19 @@ flag_management:
     # UNIT TESTS FLAG
     # Main test suite covering individual functions and classes
     - name: unit
-      paths:         # Covers all application code
-        - tux/
+      paths: [tux/]  # Covers all application code
       carryforward: true
 
     # DATABASE TESTS FLAG
     # Specific tests for database operations and data integrity
     - name: database
-      paths:                      # Only covers database-related code
-        - tux/database/**/*
+      paths: [tux/database/**/*]  # Only covers database-related code
       carryforward: true
 
     # INTEGRATION TESTS FLAG
     # End-to-end tests covering full user workflows
     - name: integration
-      paths:         # Covers all application code in integrated scenarios
-        - tux/
+      paths: [tux/]  # Covers all application code in integrated scenarios
       carryforward: true
 # ==============================================================================
 # ADVANCED CODECOV SETTINGS

@@ -1,3 +1,4 @@
+---
 codecov:
   require_ci_to_pass: true
 coverage:
@@ -10,9 +11,7 @@ coverage:
       default:
         target: auto
         threshold: 1%
-ignore:
-  - tests/**
-  - typings/**
+ignore: [tests/**, typings/**]
 parsers:
   gcov:
     branch_detection:

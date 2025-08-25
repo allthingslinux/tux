@@ -1,3 +1,4 @@
+---
 name: action-basedpyright
 description: Run basedpyright with reviewdog on pull requests to improve code review
   experience
@@ -8,7 +9,7 @@ inputs:
   workdir:
     description: Working directory relative to the root directory.
     default: .
-  ### Flags for reviewdog ###
+  ### Flags for reviewdog  ###
   tool_name:
     description: Tool name to use for reviewdog reporter.
     default: basedpyright
@@ -32,7 +33,7 @@ inputs:
   reviewdog_flags:
     description: Additional reviewdog flags.
     default: ''
-  ### Flags for basedpyright ###
+  ### Flags for basedpyright  ###
   basedpyright_flags:
     description: Additional flags for basedpyright command.
     default: --outputjson

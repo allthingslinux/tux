@@ -1,8 +1,8 @@
+---
 name: Release
 on:
   push:
-    tags:
-      - v*
+    tags: [v*]
   workflow_dispatch:
     inputs:
       version:
@@ -58,9 +58,7 @@ jobs:
   create:
     name: Create Release
     runs-on: ubuntu-latest
-    needs:
-      - validate
-      - wait
+    needs: [validate, wait]
     steps:
       - name: Checkout
         uses: actions/checkout@v4

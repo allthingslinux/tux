@@ -1,3 +1,4 @@
+---
 default_language_version:
   python: python3.13
 repos:
@@ -14,8 +15,7 @@ repos:
     rev: v0.24.1
     hooks:
       - id: validate-pyproject
-        additional_dependencies:
-          - validate-pyproject-schema-store[all]
+        additional_dependencies: ['validate-pyproject-schema-store[all]']
   - repo: https://github.com/lyz-code/yamlfix
     rev: 1.17.0
     hooks:
@@ -25,8 +25,7 @@ repos:
     rev: v1.37.1
     hooks:
       - id: yamllint
-        args:
-          - -c=.yamllint.yml
+        args: [-c=.yamllint.yml]
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.7
     hooks:
@@ -39,8 +38,8 @@ repos:
     rev: v3.20.0
     hooks:
       - id: pyupgrade
-        args:
-          - --py313-plus
+        args: [--py313-plus]
+        exclude: ^(src/tux/database/models/.*\.py)$
   - repo: https://github.com/asottile/add-trailing-comma
     rev: v3.2.0
     hooks:
@@ -49,8 +48,7 @@ repos:
     rev: v0.12.7
     hooks:
       - id: ruff-check
-        args:
-          - --fix
+        args: [--fix]
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.12.7
     hooks:
@@ -63,8 +61,7 @@ repos:
     rev: v9.22.0
     hooks:
       - id: commitlint
-        stages:
-          - commit-msg
+        stages: [commit-msg]
         additional_dependencies:
           - '@commitlint/cli'
           - '@commitlint/config-conventional'

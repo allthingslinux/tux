@@ -191,6 +191,19 @@ wheels = [
 ]
 
 [[package]]
+name = "asyncpg-stubs"
+version = "0.30.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "asyncpg" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a3/e5/1a06ecec2a77a75974ba6b22d3bed697193177c0ed7595cce4dd2362735d/asyncpg_stubs-0.30.2.tar.gz", hash = "sha256:b8a1b7cb790a7b8a0e4e64e438a97c3fac77ea02441b563b1975748f18af33ab", size = 20250, upload-time = "2025-06-27T20:03:15.712Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a4/22/77a4a08cc9ef4f8bbb5e7ffbf4be008e596b535a3533a28c3465e9400d75/asyncpg_stubs-0.30.2-py3-none-any.whl", hash = "sha256:e57818bbaf10945a60ff3219da3c5ce97e1b424503b6a6f0a18db99797397cbb", size = 26929, upload-time = "2025-06-27T20:03:14.847Z" },
+]
+
+[[package]]
 name = "asynctempfile"
 version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
@@ -514,15 +527,15 @@ wheels = [
 
 [[package]]
 name = "discord-py"
-version = "2.6.0"
+version = "2.6.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "audioop-lts" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f3/8b/863b00eca14ead80d24ca3ca934cdb2c809bbc3f9729a941109b26b8d32f/discord_py-2.6.0.tar.gz", hash = "sha256:8aa0f017524734653e6ddddb7878e1cdf8c3868bd7d1a386c36cd8373e5fba02", size = 1091126, upload-time = "2025-08-18T19:06:27.606Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e7/e2/12e0e058bd2722632a828a7bc4492d780edbf3beb430275dde8fc6e04846/discord_py-2.6.2.tar.gz", hash = "sha256:e3ac5b0353211c831f046a258f4e91c6745ecd544286d29868988ebf7a695d1d", size = 1091985, upload-time = "2025-08-24T17:25:48.985Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/af/36/de063dd38ae5f45a1b0888211a1e286d262cdeae7c2696162d784f5dd406/discord_py-2.6.0-py3-none-any.whl", hash = "sha256:3248291c31e69fb1c59b091c378b550cb919b3fb2b38139edd5cd6d9b3013f3f", size = 1205899, upload-time = "2025-08-18T19:06:26.083Z" },
+    { url = "https://files.pythonhosted.org/packages/36/82/bdb47824d8640711c7ceee7d4224690509a0a6a1cd790f39039b7be4a87b/discord_py-2.6.2-py3-none-any.whl", hash = "sha256:6b257b02ef1a6374a2ddc4cdbfcfa6edbf88674dddeef66800c5d9403b710a2e", size = 1208887, upload-time = "2025-08-24T17:25:46.992Z" },
 ]
 
 [[package]]
@@ -1450,6 +1463,18 @@ wheels = [
 ]
 
 [[package]]
+name = "psycopg"
+version = "3.2.9"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "tzdata", marker = "sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/27/4a/93a6ab570a8d1a4ad171a1f4256e205ce48d828781312c0bbaff36380ecb/psycopg-3.2.9.tar.gz", hash = "sha256:2fbb46fcd17bc81f993f28c47f1ebea38d66ae97cc2dbc3cad73b37cefbff700", size = 158122, upload-time = "2025-05-13T16:11:15.533Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/44/b0/a73c195a56eb6b92e937a5ca58521a5c3346fb233345adc80fd3e2f542e2/psycopg-3.2.9-py3-none-any.whl", hash = "sha256:01a8dadccdaac2123c916208c96e06631641c0566b22005493f09663c7a8d3b6", size = 202705, upload-time = "2025-05-13T16:06:26.584Z" },
+]
+
+[[package]]
 name = "psycopg2-binary"
 version = "2.9.10"
 source = { registry = "https://pypi.org/simple" }
@@ -1475,6 +1500,26 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/37/a8/d832f7293ebb21690860d2e01d8115e5ff6f2ae8bbdc953f0eb0fa4bd2c7/py-cpuinfo-9.0.0.tar.gz", hash = "sha256:3cdbbf3fac90dc6f118bfd64384f309edeadd902d7c8fb17f02ffa1fc3f49690", size = 104716, upload-time = "2022-10-25T20:38:06.303Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e0/a9/023730ba63db1e494a271cb018dcd361bd2c917ba7004c3e49d5daf795a2/py_cpuinfo-9.0.0-py3-none-any.whl", hash = "sha256:859625bc251f64e21f077d099d4162689c762b5d6a4c3c97553d56241c9674d5", size = 22335, upload-time = "2022-10-25T20:38:27.636Z" },
+]
+
+[[package]]
+name = "py-pglite"
+version = "0.4.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "psutil" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/84/75/5e6adeb27bdfc792275ac94c567eb9b73eac7e018666c23be88a9eb3e9b2/py_pglite-0.4.1.tar.gz", hash = "sha256:853a3b7b9a78660c08d6290a99a967d9d04cd001a43aeb4ba6e013cd3d29e3d1", size = 273366, upload-time = "2025-06-15T11:54:44.495Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/08/70/4bc28d4067bb85fe2e70cf40f5be68af1fcfd7f3a06d6452ff62b3371e36/py_pglite-0.4.1-py3-none-any.whl", hash = "sha256:2741a5e02002d6e3e6b786d1d6f064ebe161a3d6d0cab4722f7d89a8b047dad6", size = 40474, upload-time = "2025-06-15T11:54:42.747Z" },
+]
+
+[package.optional-dependencies]
+asyncpg = [
+    { name = "asyncpg" },
+]
+sqlalchemy = [
+    { name = "sqlalchemy" },
 ]
 
 [[package]]
@@ -2127,7 +2172,9 @@ dependencies = [
     { name = "loguru" },
     { name = "pillow" },
     { name = "psutil" },
+    { name = "psycopg" },
     { name = "psycopg2-binary" },
+    { name = "pydantic" },
     { name = "pynacl" },
     { name = "python-dotenv" },
     { name = "pytz" },
@@ -2146,6 +2193,7 @@ dependencies = [
 dev = [
     { name = "basedpyright" },
     { name = "pre-commit" },
+    { name = "pytest-asyncio" },
     { name = "ruff" },
     { name = "yamlfix" },
     { name = "yamllint" },
@@ -2168,6 +2216,7 @@ docs = [
     { name = "pymdown-extensions" },
 ]
 test = [
+    { name = "py-pglite", extra = ["asyncpg", "sqlalchemy"] },
     { name = "pytest" },
     { name = "pytest-alembic" },
     { name = "pytest-asyncio" },
@@ -2181,6 +2230,8 @@ test = [
     { name = "pytest-xdist" },
 ]
 types = [
+    { name = "annotated-types" },
+    { name = "asyncpg-stubs" },
     { name = "types-aiofiles" },
     { name = "types-click" },
     { name = "types-colorama" },
@@ -2189,8 +2240,10 @@ types = [
     { name = "types-jinja2" },
     { name = "types-pillow" },
     { name = "types-psutil" },
+    { name = "types-psycopg2" },
     { name = "types-pytz" },
     { name = "types-pyyaml" },
+    { name = "typing-extensions" },
 ]
 
 [package.metadata]
@@ -2221,7 +2274,9 @@ requires-dist = [
     { name = "loguru", specifier = ">=0.7.2" },
     { name = "pillow", specifier = ">=11.3.0,<11.4.0" },
     { name = "psutil", specifier = ">=6.0.0" },
+    { name = "psycopg", specifier = ">=3.2.9" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
+    { name = "pydantic", specifier = ">=2.11.7" },
     { name = "pynacl", specifier = ">=1.5.0" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "pytz", specifier = ">=2024.1" },
@@ -2240,6 +2295,7 @@ requires-dist = [
 dev = [
     { name = "basedpyright", specifier = "==1.31.1" },
     { name = "pre-commit", specifier = "==4.2.0" },
+    { name = "pytest-asyncio", specifier = ">=1.1.0" },
     { name = "ruff", specifier = "==0.12.4" },
     { name = "yamlfix", specifier = "==1.17.0" },
     { name = "yamllint", specifier = "==1.37.1" },
@@ -2262,6 +2318,7 @@ docs = [
     { name = "pymdown-extensions", specifier = ">=10.14.3,<11" },
 ]
 test = [
+    { name = "py-pglite", extras = ["sqlalchemy", "asyncpg"], specifier = ">=0.2.0,<1" },
     { name = "pytest", specifier = ">=8.0.0,<9" },
     { name = "pytest-alembic", specifier = ">=0.12.0,<0.13" },
     { name = "pytest-asyncio", specifier = ">=1.0.0,<2" },
@@ -2275,6 +2332,8 @@ test = [
     { name = "pytest-xdist", specifier = ">=3.6.0,<4" },
 ]
 types = [
+    { name = "annotated-types", specifier = ">=0.7.0" },
+    { name = "asyncpg-stubs", specifier = ">=0.30.2" },
     { name = "types-aiofiles", specifier = ">=24.1.0.20250326,<25" },
     { name = "types-click", specifier = ">=7.1.8,<8" },
     { name = "types-colorama", specifier = ">=0.4.15.20240311,<0.5" },
@@ -2283,8 +2342,10 @@ types = [
     { name = "types-jinja2", specifier = ">=2.11.9,<3" },
     { name = "types-pillow", specifier = ">=10.2.0.20240822,<11" },
     { name = "types-psutil", specifier = ">=7.0.0.20250401,<8" },
+    { name = "types-psycopg2", specifier = ">=2.9.21.20250809" },
     { name = "types-pytz", specifier = ">=2025.2.0.20250326,<2026" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20250402,<7" },
+    { name = "typing-extensions", specifier = ">=4.14.1" },
 ]
 
 [[package]]
@@ -2372,6 +2433,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/6d/aa/09699c829d7cc4624138d3ae67eecd4de9574e55729b1c63ca3e5a657f86/types_psutil-7.0.0.20250822.tar.gz", hash = "sha256:226cbc0c0ea9cc0a50b8abcc1d91a26c876dcb40be238131f697883690419698", size = 20358, upload-time = "2025-08-22T03:02:04.556Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7d/46/45006309e20859e12c024d91bb913e6b89a706cd6f9377031c9f7e274ece/types_psutil-7.0.0.20250822-py3-none-any.whl", hash = "sha256:81c82f01aba5a4510b9d8b28154f577b780be75a08954aed074aa064666edc09", size = 23110, upload-time = "2025-08-22T03:02:03.38Z" },
+]
+
+[[package]]
+name = "types-psycopg2"
+version = "2.9.21.20250809"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/17/d0/66f3f04bab48bfdb2c8b795b2b3e75eb20c7d1fb0516916db3be6aa4a683/types_psycopg2-2.9.21.20250809.tar.gz", hash = "sha256:b7c2cbdcf7c0bd16240f59ba694347329b0463e43398de69784ea4dee45f3c6d", size = 26539, upload-time = "2025-08-09T03:14:54.711Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7b/98/182497602921c47fadc8470d51a32e5c75343c8931c0b572a5c4ae3b948b/types_psycopg2-2.9.21.20250809-py3-none-any.whl", hash = "sha256:59b7b0ed56dcae9efae62b8373497274fc1a0484bdc5135cdacbe5a8f44e1d7b", size = 24824, upload-time = "2025-08-09T03:14:53.908Z" },
 ]
 
 [[package]]

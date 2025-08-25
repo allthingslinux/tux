@@ -1,11 +1,10 @@
+---
 name: Security
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
   schedule:
     - cron: 20 7 * * 1
 concurrency:

@@ -45,6 +45,8 @@ dependencies = [
     "redis>=5.0.0",
     "psycopg2-binary>=2.9.10",
     "alembic-utils>=0.8.8",
+    "psycopg>=3.2.9",
+    "pydantic>=2.11.7",
 ]
 
 [project.urls]
@@ -64,6 +66,7 @@ dev = [
     "ruff==0.12.4",
     "yamllint==1.37.1",
     "yamlfix==1.17.0",
+    "pytest-asyncio>=1.1.0",
 ]
 test = [
     "pytest>=8.0.0,<9",
@@ -77,13 +80,7 @@ test = [
     "pytest-html>=4.1.1,<5",
     "pytest-benchmark>=5.1.0,<6",
     "pytest-alembic>=0.12.0,<0.13",
-    # https://pypi.org/project/pytest-clean-database/
-    # https://pypi.org/project/pytest-click/
-    # https://pypi.org/project/pytest-codecov/
-    # https://pypi.org/project/pytest-databases/
-    # https://pypi.org/project/pytest-postgresql/
-    # https://pypi.org/project/pytest-sqlalchemy/
-    # https://pypi.org/project/pytest-sqlguard/
+    "py-pglite[sqlalchemy, asyncpg]>=0.2.0,<1",
 ]
 docs = [
     "mkdocs-material>=9.5.30,<10",
@@ -113,6 +110,10 @@ types = [
     "types-aiofiles>=24.1.0.20250326,<25",
     "types-influxdb-client>=1.45.0.20241221,<2",
     "types-jinja2>=2.11.9,<3",
+    "annotated-types>=0.7.0",
+    "typing-extensions>=4.14.1",
+    "types-psycopg2>=2.9.21.20250809",
+    "asyncpg-stubs>=0.30.2",
 ]
 
 [tool.uv]
@@ -247,27 +248,12 @@ addopts = [
     # "-v",
 ]
 asyncio_mode = "auto"
+
+# pytest-alembic configuration
+# Note: experimental tests disabled due to URL parsing issues with py-pglite
 asyncio_default_fixture_loop_scope = "function"
+asyncio_default_test_loop_scope = "function"
 pythonpath = ["src"]
-
-[tool.yamlfix]
-comments_min_spaces_from_content = 1
-explicit_start = false
-indent_mapping = 2
-indent_sequence = 4
-line_length = 80
-preserve_quotes = false
-sequence_style = "block_style"
-
-[tool.alembic]
-script_location = "src/tux/database/migrations"
-version_locations = ["src/tux/database/migrations/versions"]
-prepend_sys_path = ["src"]
-file_template = "%%(year)d_%%(month).2d_%%(day).2d_%%(hour).2d%%(minute).2d-%%(rev)s_%%(slug)s"
-timezone = "UTC"
-
-[tool.alembic.sqlalchemy]
-url = "sqlite:///test.db"
 
 # pytest-alembic configuration
 [tool.pytest-alembic]

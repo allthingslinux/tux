@@ -1,3 +1,4 @@
+---
 services:
   tux-postgres-dev:
     container_name: tux-postgres-dev
@@ -9,15 +10,12 @@ services:
       POSTGRES_USER: tuxuser
       POSTGRES_PASSWORD: tuxpass
       POSTGRES_INITDB_ARGS: --encoding=UTF-8 --lc-collate=C --lc-ctype=C
-    ports:
-      - 5432:5432
+    ports: [5432:5432]
     volumes:
       - tux_dev_postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     healthcheck:
-      test:
-        - CMD-SHELL
-        - pg_isready -U tuxuser -d tuxdb
+      test: [CMD-SHELL, pg_isready -U tuxuser -d tuxdb]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -34,10 +32,7 @@ services:
         BUILD_DATE: ${BUILD_DATE}
       dockerfile: Dockerfile
       target: dev
-    command:
-      - sh
-      - -c
-      - exec uv run tux --dev start
+    command: [sh, -c, exec uv run tux --dev start]
     depends_on:
       tux-postgres-dev:
         condition: service_healthy
@@ -66,8 +61,7 @@ services:
       - tux_dev_cache:/app/.cache
       - tux_dev_temp:/app/temp
       - tux_dev_user_home:/home/nonroot
-    env_file:
-      - .env
+    env_file: [.env]
     environment:
       TUX_VERSION: ${VERSION}
     restart: unless-stopped

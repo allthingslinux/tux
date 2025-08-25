@@ -1,8 +1,8 @@
+---
 name: Maintenance
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
     inputs:
       cleanup_images:

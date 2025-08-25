@@ -1,11 +1,10 @@
+---
 name: CI
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -106,8 +105,7 @@ jobs:
   quality:
     name: Python
     runs-on: ubuntu-latest
-    needs:
-      - changes
+    needs: [changes]
     if: needs.changes.outputs.python == 'true' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
@@ -150,8 +148,7 @@ jobs:
   markdown:
     name: Markdown
     runs-on: ubuntu-latest
-    needs:
-      - changes
+    needs: [changes]
     if: needs.changes.outputs.markdown == 'true'
     permissions:
       contents: read
@@ -170,8 +167,7 @@ jobs:
   shell:
     name: Shell
     runs-on: ubuntu-latest
-    needs:
-      - changes
+    needs: [changes]
     if: needs.changes.outputs.shell == 'true'
     permissions:
       contents: read
@@ -197,8 +193,7 @@ jobs:
   workflows:
     name: Workflows
     runs-on: ubuntu-latest
-    needs:
-      - changes
+    needs: [changes]
     if: needs.changes.outputs.workflows == 'true'
     permissions:
       contents: read
@@ -217,8 +212,7 @@ jobs:
   docker:
     name: Docker
     runs-on: ubuntu-latest
-    needs:
-      - changes
+    needs: [changes]
     if: needs.changes.outputs.docker == 'true'
     permissions:
       contents: read
@@ -238,8 +232,7 @@ jobs:
   yaml:
     name: YAML
     runs-on: ubuntu-latest
-    needs:
-      - changes
+    needs: [changes]
     if: needs.changes.outputs.yaml == 'true'
     permissions:
       contents: read
@@ -258,8 +251,7 @@ jobs:
   security:
     name: Security
     runs-on: ubuntu-latest
-    needs:
-      - changes
+    needs: [changes]
     if: always()
     permissions:
       contents: read

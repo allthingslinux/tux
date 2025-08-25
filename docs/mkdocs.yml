@@ -1,3 +1,4 @@
+---
 site_name: Tux
 site_url: https://tux.atl.dev
 
@@ -262,8 +263,7 @@ plugins:
             # https://mkdocstrings.github.io/python/usage/configuration/signatures/#unwrap_annotated
             unwrap_annotated: false
   - api-autonav:
-      modules:
-        - ../tux
+      modules: [../tux]
       nav_section_title: Tux Reference
       api_root_uri: reference
       exclude_private: false

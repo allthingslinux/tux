@@ -1,17 +1,15 @@
+---
 name: Deploy
 on:
   release:
-    types:
-      - published
+    types: [published]
   workflow_dispatch:
     inputs:
       environment:
         description: Environment to deploy to
         required: true
         type: choice
-        options:
-          - staging
-          - production
+        options: [staging, production]
         default: staging
 concurrency:
   group: deploy-${{ github.event.inputs.environment || 'production' }}

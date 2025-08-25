@@ -1,3 +1,4 @@
+---
 extends: default
 rules:
   document-start: disable
@@ -17,16 +18,7 @@ rules:
     spaces: 2
     indent-sequences: true
     check-multi-line-strings: false
-
-  # Allow truthy values like 'yes', 'no', 'on', 'off'
   truthy:
-    allowed-values:
-      - 'true'
-      - 'false'
-      - 'yes'
-      - 'no'
-      - 'on'
-      - 'off'
     check-keys: false
 
   # Allow comments to start anywhere
