@@ -22,15 +22,26 @@ CommandFunction = Callable[[], int]
 
 
 def _create_alembic_config() -> Config:
-    """Create an Alembic Config object with pyproject.toml configuration."""
-    # Create config with pyproject.toml support
-    config = Config(toml_file="pyproject.toml")
+    """Create an Alembic Config object with proper configuration."""
+    # Create config manually (toml_file parameter has issues)
+    config = Config()
 
     # Set the database URL from environment
     database_url = get_database_url()
     config.set_main_option("sqlalchemy.url", database_url)
 
+    # Set other required alembic options
+    config.set_main_option("script_location", "src/tux/database/migrations")
+    config.set_main_option("version_locations", "src/tux/database/migrations/versions")
+    config.set_main_option("prepend_sys_path", "src")
+    config.set_main_option(
+        "file_template",
+        "%%(year)d_%%(month).2d_%%(day).2d_%%(hour).2d%%(minute).2d-%%(rev)s_%%(slug)s",
+    )
+    config.set_main_option("timezone", "UTC")
+
     logger.info(f"Using database URL: {database_url}")
+    logger.debug(f"Script location: {config.get_main_option('script_location')}")
     return config
 
 
