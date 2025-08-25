@@ -1,6 +1,6 @@
 from typing import TypeVar
 
-from tux.database.models.moderation import Case
+from tux.database.models import Case
 
 
 class PermissionLevelError(Exception):
