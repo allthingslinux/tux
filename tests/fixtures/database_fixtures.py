@@ -1,295 +1,450 @@
 """
-Database test fixtures and utilities.
+🚀 Database Test Fixtures - Hybrid Architecture
 
-This module provides common fixtures, test data, and utilities for database testing
-across all test categories (unit, integration, e2e).
+Provides test data fixtures for both unit and integration testing:
+- UNIT FIXTURES: Fast sync SQLModel operations using py-pglite
+- INTEGRATION FIXTURES: Async controller operations using DatabaseService
+
+Key Features:
+- Pre-populated test data using real database operations
+- Proper fixture scoping for performance
+- Clean separation between unit and integration fixtures
+- Shared SQLModel definitions across both approaches
 """
 
-import asyncio
-import os
-import tempfile
-from pathlib import Path
 from typing import Any
-from collections.abc import AsyncGenerator
-
 import pytest
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncEngine, AsyncSession
-from sqlmodel import SQLModel
+import pytest_asyncio
+from sqlmodel import Session
 
-from tux.database.models import (
-    Guild, GuildConfig, Snippet, Reminder, Case, CaseType,
-    Note, GuildPermission, PermissionType, AccessType, AFK, Levels,
-    Starboard, StarboardMessage,
-)
+from tux.database.service import DatabaseService
+from tux.database.models.models import Guild, GuildConfig
 
-
-# Test data constants
+# Test constants - Discord-compatible snowflake IDs
 TEST_GUILD_ID = 123456789012345678
 TEST_USER_ID = 987654321098765432
-TEST_CHANNEL_ID = 555666777888999000
-TEST_MESSAGE_ID = 111222333444555666
+TEST_CHANNEL_ID = 876543210987654321
+TEST_MODERATOR_ID = 555666777888999000
+
+
+# =============================================================================
+# UNIT TEST FIXTURES - Sync SQLModel + py-pglite
+# =============================================================================
+
+@pytest.fixture
+def sample_guild(db_session: Session) -> Guild:
+    """Sample guild created through sync SQLModel session."""
+    guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
+    db_session.add(guild)
+    db_session.commit()
+    db_session.refresh(guild)
+    return guild
 
 
 @pytest.fixture
-async def in_memory_db() -> AsyncGenerator[AsyncEngine]:
-    """Create an in-memory SQLite database for testing."""
-    database_url = "sqlite+aiosqlite:///:memory:"
-
-    engine = create_async_engine(database_url, echo=False)
-
-    # Create all tables
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
-
-    try:
-        yield engine
-    finally:
-        await engine.dispose()
-
-
-@pytest.fixture
-async def temp_file_db(tmp_path: Path) -> AsyncGenerator[AsyncEngine]:
-    """Create a temporary file-based SQLite database for testing."""
-    db_file = tmp_path / "test.db"
-    database_url = f"sqlite+aiosqlite:///{db_file}"
-
-    engine = create_async_engine(database_url, echo=False)
-
-    # Create all tables
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
-
-    try:
-        yield engine
-    finally:
-        await engine.dispose()
-
-
-@pytest.fixture
-async def session_factory(in_memory_db: AsyncEngine) -> AsyncGenerator[async_sessionmaker[AsyncSession]]:
-    """Create a session factory for testing."""
-    factory = async_sessionmaker(in_memory_db, expire_on_commit=False)
-    yield factory
-
-
-@pytest.fixture
-async def db_session(session_factory: async_sessionmaker[AsyncSession]) -> AsyncGenerator[AsyncSession]:
-    """Create a database session for testing."""
-    async with session_factory() as session:
-        try:
-            yield session
-        finally:
-            await session.rollback()
-
-
-# Test data fixtures
-@pytest.fixture
-def sample_guild() -> Guild:
-    """Create a sample guild for testing."""
-    return Guild(
-        guild_id=TEST_GUILD_ID,
-        guild_joined_at=None,  # Will be set automatically
+def sample_guild_config(db_session: Session, sample_guild: Guild) -> GuildConfig:
+    """Sample guild config created through sync SQLModel session."""
+    config = GuildConfig(
+        guild_id=sample_guild.guild_id,
+        prefix="!",
+        mod_log_id=TEST_CHANNEL_ID,
+        audit_log_id=TEST_CHANNEL_ID + 1,
+        starboard_channel_id=TEST_CHANNEL_ID + 2,
     )
+    db_session.add(config)
+    db_session.commit()
+    db_session.refresh(config)
+    return config
 
 
 @pytest.fixture
-def sample_guild_config() -> GuildConfig:
-    """Create a sample guild config for testing."""
-    return GuildConfig(
-        guild_id=TEST_GUILD_ID,
+def sample_guild_with_config(db_session: Session) -> dict[str, Any]:
+    """Sample guild with config created through sync SQLModel."""
+    # Create guild
+    guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
+    db_session.add(guild)
+    db_session.commit()
+    db_session.refresh(guild)
+
+    # Create config
+    config = GuildConfig(
+        guild_id=guild.guild_id,
+        prefix="!",
+        mod_log_id=TEST_CHANNEL_ID,
+        audit_log_id=TEST_CHANNEL_ID + 1,
+        starboard_channel_id=TEST_CHANNEL_ID + 2,
+    )
+    db_session.add(config)
+    db_session.commit()
+    db_session.refresh(config)
+
+    return {
+        'guild': guild,
+        'config': config,
+        'guild_id': TEST_GUILD_ID,
+        'channel_ids': {
+            'mod_log': TEST_CHANNEL_ID,
+            'audit_log': TEST_CHANNEL_ID + 1,
+            'starboard': TEST_CHANNEL_ID + 2,
+        },
+    }
+
+
+@pytest.fixture
+def multiple_guilds(db_session: Session) -> list[Guild]:
+    """Multiple guilds for testing bulk operations."""
+    guilds: list[Guild] = []
+    for i in range(5):
+        guild_id = TEST_GUILD_ID + i
+        guild = Guild(guild_id=guild_id, case_count=i)
+        db_session.add(guild)
+        guilds.append(guild)
+
+    db_session.commit()
+
+    # Refresh all guilds
+    for guild in guilds:
+        db_session.refresh(guild)
+
+    return guilds
+
+
+@pytest.fixture
+def populated_test_database(db_session: Session) -> dict[str, Any]:
+    """Fully populated test database with multiple entities."""
+    # Create multiple guilds with configs
+    guilds_data = []
+
+    for i in range(3):
+        guild_id = TEST_GUILD_ID + i
+
+        # Create guild
+        guild = Guild(guild_id=guild_id, case_count=i)
+        db_session.add(guild)
+
+        # Create config
+        config = GuildConfig(
+            guild_id=guild_id,
+            prefix=f"!{i}",
+            mod_log_id=TEST_CHANNEL_ID + i,
+            audit_log_id=TEST_CHANNEL_ID + i + 10,
+        )
+        db_session.add(config)
+
+        guilds_data.append({
+            'guild': guild,
+            'config': config,
+            'guild_id': guild_id,
+        })
+
+    db_session.commit()
+
+    # Refresh all entities
+    for data in guilds_data:
+        db_session.refresh(data['guild'])
+        db_session.refresh(data['config'])
+
+    return {
+        'guilds': guilds_data,
+        'total_guilds': len(guilds_data),
+        'test_constants': {
+            'base_guild_id': TEST_GUILD_ID,
+            'base_channel_id': TEST_CHANNEL_ID,
+        },
+    }
+
+
+# =============================================================================
+# INTEGRATION TEST FIXTURES - Async DatabaseService + Real PostgreSQL
+# =============================================================================
+
+@pytest_asyncio.fixture
+async def async_sample_guild(async_db_service: DatabaseService) -> Guild:
+    """Sample guild created through async controller."""
+    return await async_db_service.guild.get_or_create_guild(guild_id=TEST_GUILD_ID)
+
+
+@pytest_asyncio.fixture
+async def async_sample_guild_config(async_db_service: DatabaseService) -> dict[str, Any]:
+    """Sample guild with config created through async controllers."""
+    # Create guild through controller
+    guild = await async_db_service.guild.get_or_create_guild(guild_id=TEST_GUILD_ID)
+
+    # Create config through controller
+    config = await async_db_service.guild_config.get_or_create_config(
+        guild_id=guild.guild_id,
         prefix="!",
         mod_log_id=TEST_CHANNEL_ID,
         audit_log_id=TEST_CHANNEL_ID + 1,
         starboard_channel_id=TEST_CHANNEL_ID + 2,
     )
 
-
-@pytest.fixture
-def sample_snippet() -> Snippet:
-    """Create a sample snippet for testing."""
-    return Snippet(
-        snippet_name="test_snippet",
-        snippet_content="This is a test snippet content",
-        snippet_user_id=TEST_USER_ID,
-        guild_id=TEST_GUILD_ID,
-        uses=5,
-        locked=False,
-    )
-
-
-@pytest.fixture
-def sample_reminder() -> Reminder:
-    """Create a sample reminder for testing."""
-    from datetime import datetime, UTC
-    return Reminder(
-        reminder_content="Test reminder",
-        reminder_expires_at=datetime.now(UTC),
-        reminder_channel_id=TEST_CHANNEL_ID,
-        reminder_user_id=TEST_USER_ID,
-        reminder_sent=False,
-        guild_id=TEST_GUILD_ID,
-    )
-
-
-@pytest.fixture
-def sample_case() -> Case:
-    """Create a sample case for testing."""
-    return Case(
-        case_status=True,
-        case_reason="Test case reason",
-        case_moderator_id=TEST_USER_ID,
-        case_user_id=TEST_USER_ID + 1,
-        case_user_roles=[TEST_USER_ID + 2, TEST_USER_ID + 3],
-        case_number=1,
-        guild_id=TEST_GUILD_ID,
-    )
-
-
-@pytest.fixture
-def sample_note() -> Note:
-    """Create a sample note for testing."""
-    return Note(
-        note_content="Test note content",
-        note_moderator_id=TEST_USER_ID,
-        note_user_id=TEST_USER_ID + 1,
-        note_number=1,
-        guild_id=TEST_GUILD_ID,
-    )
-
-
-@pytest.fixture
-def sample_guild_permission() -> GuildPermission:
-    """Create a sample guild permission for testing."""
-    return GuildPermission(
-        id=1,
-        guild_id=TEST_GUILD_ID,
-        permission_type=PermissionType.MEMBER,
-        access_type=AccessType.WHITELIST,
-        target_id=TEST_USER_ID,
-        target_name="Test User",
-        is_active=True,
-    )
-
-
-@pytest.fixture
-def sample_afk() -> AFK:
-    """Create a sample AFK record for testing."""
-    from datetime import datetime, UTC
-    return AFK(
-        member_id=TEST_USER_ID,
-        nickname="TestUser",
-        reason="Testing AFK functionality",
-        since=datetime.now(UTC),
-        guild_id=TEST_GUILD_ID,
-        enforced=False,
-        perm_afk=False,
-    )
-
-
-@pytest.fixture
-def sample_levels() -> Levels:
-    """Create a sample levels record for testing."""
-    from datetime import datetime, UTC
-    return Levels(
-        member_id=TEST_USER_ID,
-        guild_id=TEST_GUILD_ID,
-        xp=150.5,
-        level=3,
-        blacklisted=False,
-        last_message=datetime.now(UTC),
-    )
-
-
-@pytest.fixture
-def sample_starboard() -> Starboard:
-    """Create a sample starboard for testing."""
-    return Starboard(
-        guild_id=TEST_GUILD_ID,
-        starboard_channel_id=TEST_CHANNEL_ID,
-        starboard_emoji="⭐",
-        starboard_threshold=3,
-    )
-
-
-@pytest.fixture
-def sample_starboard_message() -> StarboardMessage:
-    """Create a sample starboard message for testing."""
-    from datetime import datetime, UTC
-    return StarboardMessage(
-        message_id=TEST_MESSAGE_ID,
-        message_content="This is a test message for starboard",
-        message_expires_at=datetime.now(UTC),
-        message_channel_id=TEST_CHANNEL_ID + 1,
-        message_user_id=TEST_USER_ID,
-        message_guild_id=TEST_GUILD_ID,
-        star_count=5,
-        starboard_message_id=TEST_MESSAGE_ID + 1,
-    )
-
-
-# Utility functions
-async def create_test_data(session: AsyncSession) -> dict[str, Any]:
-    """Create a comprehensive set of test data for testing."""
-    # Create base guild
-    guild = Guild(guild_id=TEST_GUILD_ID)
-    session.add(guild)
-
-    # Create guild config
-    guild_config = GuildConfig(
-        guild_id=TEST_GUILD_ID,
-        prefix="!",
-        mod_log_id=TEST_CHANNEL_ID,
-    )
-    session.add(guild_config)
-
-    await session.commit()
-
     return {
         'guild': guild,
-        'guild_config': guild_config,
+        'config': config,
+        'guild_id': TEST_GUILD_ID,
+        'guild_controller': async_db_service.guild,
+        'guild_config_controller': async_db_service.guild_config,
+        'channel_ids': {
+            'mod_log': TEST_CHANNEL_ID,
+            'audit_log': TEST_CHANNEL_ID + 1,
+            'starboard': TEST_CHANNEL_ID + 2,
+        },
     }
 
 
-async def cleanup_test_data(session: AsyncSession) -> None:
-    """Clean up test data after tests."""
-    # Get all tables that exist in the database
-    result = await session.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
-    existing_tables = {row[0] for row in result.fetchall()}
-
-    # Tables to clean up in reverse order of dependencies
-    tables_to_cleanup = [
-        "starboard_message", "starboard", "levels", "afk", "guild_permission",
-        "note", "cases", "reminder", "snippet", "guild_config", "guild",
-    ]
-
-    # Only delete from tables that exist
-    for table in tables_to_cleanup:
-        if table in existing_tables:
-            await session.execute(text(f"DELETE FROM {table}"))
-
-    await session.commit()
+@pytest_asyncio.fixture
+async def async_multiple_guilds(async_db_service: DatabaseService) -> list[Guild]:
+    """Multiple guilds created through async controllers."""
+    guilds: list[Guild] = []
+    for i in range(5):
+        guild_id = TEST_GUILD_ID + i
+        guild = await async_db_service.guild.get_or_create_guild(guild_id=guild_id)
+        guilds.append(guild)
+    return guilds
 
 
-# Test environment setup
-@pytest.fixture(scope="session", autouse=True)
-def setup_test_env():
-    """Set up test environment variables."""
-    os.environ.setdefault("ENV", "test")
-    os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
-    os.environ.setdefault("DEV_DATABASE_URL", "sqlite+aiosqlite:///:memory:")
-    os.environ.setdefault("PROD_DATABASE_URL", "sqlite+aiosqlite:///:memory:")
+@pytest_asyncio.fixture
+async def async_performance_test_setup(async_db_service: DatabaseService) -> dict[str, Any]:
+    """Performance test setup with async controllers."""
+    # Create base guild and config through controllers
+    guild = await async_db_service.guild.get_or_create_guild(guild_id=TEST_GUILD_ID)
+    config = await async_db_service.guild_config.get_or_create_config(
+        guild_id=guild.guild_id,
+        prefix="!perf",
+        mod_log_id=TEST_CHANNEL_ID,
+    )
+
+    return {
+        'guild': guild,
+        'config': config,
+        'db_service': async_db_service,
+        'test_constants': {
+            'guild_id': TEST_GUILD_ID,
+            'user_id': TEST_USER_ID,
+            'channel_id': TEST_CHANNEL_ID,
+            'moderator_id': TEST_MODERATOR_ID,
+        },
+    }
 
 
-# Test database URL configurations
-TEST_DATABASE_URLS = {
-    "sqlite_memory": "sqlite+aiosqlite:///:memory:",
-    "sqlite_file": "sqlite+aiosqlite:///test.db",
-    "postgres_mock": "postgresql+asyncpg://test:test@localhost:5432/test",
-}
+# =============================================================================
+# RELATIONSHIP TEST FIXTURES
+# =============================================================================
+
+@pytest.fixture
+def guild_relationships_setup(db_session: Session) -> dict[str, Any]:
+    """Setup for testing model relationships through sync SQLModel."""
+    # Create guild with full config
+    guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
+    db_session.add(guild)
+    db_session.commit()
+    db_session.refresh(guild)
+
+    config = GuildConfig(
+        guild_id=guild.guild_id,
+        prefix="!",
+        mod_log_id=TEST_CHANNEL_ID,
+        audit_log_id=TEST_CHANNEL_ID + 1,
+        join_log_id=TEST_CHANNEL_ID + 2,
+        private_log_id=TEST_CHANNEL_ID + 3,
+        report_log_id=TEST_CHANNEL_ID + 4,
+        dev_log_id=TEST_CHANNEL_ID + 5,
+    )
+    db_session.add(config)
+    db_session.commit()
+    db_session.refresh(config)
+
+    return {
+        'guild': guild,
+        'config': config,
+        'session': db_session,
+        'relationship_data': {
+            'guild_to_config': guild.guild_id == config.guild_id,
+            'log_channels': {
+                'mod_log_id': config.mod_log_id,
+                'audit_log_id': config.audit_log_id,
+                'join_log_id': config.join_log_id,
+                'private_log_id': config.private_log_id,
+                'report_log_id': config.report_log_id,
+                'dev_log_id': config.dev_log_id,
+            },
+        },
+    }
 
 
-@pytest.fixture(params=list(TEST_DATABASE_URLS.values()))
-def database_url(request: pytest.FixtureRequest) -> str:
-    """Parameterized fixture for different database URLs."""
-    return request.param
+@pytest_asyncio.fixture
+async def async_guild_relationships_setup(async_db_service: DatabaseService) -> dict[str, Any]:
+    """Setup for testing relationships through async controllers."""
+    # Create guild with full config through controllers
+    guild = await async_db_service.guild.get_or_create_guild(guild_id=TEST_GUILD_ID)
+
+    config = await async_db_service.guild_config.get_or_create_config(
+        guild_id=guild.guild_id,
+        prefix="!",
+        mod_log_id=TEST_CHANNEL_ID,
+        audit_log_id=TEST_CHANNEL_ID + 1,
+        join_log_id=TEST_CHANNEL_ID + 2,
+        private_log_id=TEST_CHANNEL_ID + 3,
+        report_log_id=TEST_CHANNEL_ID + 4,
+        dev_log_id=TEST_CHANNEL_ID + 5,
+    )
+
+    return {
+        'guild': guild,
+        'config': config,
+        'db_service': async_db_service,
+        'relationship_data': {
+            'guild_to_config': guild.guild_id == config.guild_id,
+            'log_channels': {
+                'mod_log_id': config.mod_log_id,
+                'audit_log_id': config.audit_log_id,
+                'join_log_id': config.join_log_id,
+                'private_log_id': config.private_log_id,
+                'report_log_id': config.report_log_id,
+                'dev_log_id': config.dev_log_id,
+            },
+        },
+    }
+
+
+# =============================================================================
+# ERROR TEST FIXTURES
+# =============================================================================
+
+@pytest.fixture
+def invalid_guild_scenario() -> dict[str, Any]:
+    """Setup for testing invalid guild scenarios."""
+    return {
+        'invalid_guild_id': 999999999999999999,  # Non-existent guild
+        'valid_guild_id': TEST_GUILD_ID,
+        'test_prefix': "!invalid",
+    }
+
+
+@pytest_asyncio.fixture
+async def async_invalid_guild_scenario(async_db_service: DatabaseService) -> dict[str, Any]:
+    """Setup for testing invalid guild scenarios with async controllers."""
+    return {
+        'guild_config_controller': async_db_service.guild_config,
+        'invalid_guild_id': 999999999999999999,  # Non-existent guild
+        'valid_guild_id': TEST_GUILD_ID,
+        'test_prefix': "!invalid",
+    }
+
+
+# =============================================================================
+# VALIDATION HELPERS
+# =============================================================================
+
+def validate_guild_structure(guild: Guild) -> bool:
+    """Validate guild model structure and required fields."""
+    return (
+        hasattr(guild, 'guild_id') and
+        hasattr(guild, 'case_count') and
+        hasattr(guild, 'guild_joined_at') and
+        isinstance(guild.guild_id, int) and
+        isinstance(guild.case_count, int)
+    )
+
+
+def validate_guild_config_structure(config: GuildConfig) -> bool:
+    """Validate guild config model structure and required fields."""
+    return (
+        hasattr(config, 'guild_id') and
+        hasattr(config, 'prefix') and
+        isinstance(config.guild_id, int) and
+        (config.prefix is None or isinstance(config.prefix, str))
+    )
+
+
+def validate_relationship_integrity(guild: Guild, config: GuildConfig) -> bool:
+    """Validate relationship integrity between guild and config."""
+    return guild.guild_id == config.guild_id
+
+
+# =============================================================================
+# BENCHMARK FIXTURES
+# =============================================================================
+
+@pytest.fixture
+def benchmark_data_unit(db_session: Session) -> dict[str, Any]:
+    """Benchmark data setup for unit tests."""
+    # Create multiple entities for performance testing
+    guilds = []
+    configs = []
+
+    for i in range(10):
+        guild_id = TEST_GUILD_ID + i
+
+        guild = Guild(guild_id=guild_id, case_count=i)
+        db_session.add(guild)
+        guilds.append(guild)
+
+        config = GuildConfig(
+            guild_id=guild_id,
+            prefix=f"!bench{i}",
+            mod_log_id=TEST_CHANNEL_ID + i,
+        )
+        db_session.add(config)
+        configs.append(config)
+
+    db_session.commit()
+
+    return {
+        'guilds': guilds,
+        'configs': configs,
+        'session': db_session,
+        'count': 10,
+    }
+
+
+@pytest_asyncio.fixture
+async def async_benchmark_data(async_db_service: DatabaseService) -> dict[str, Any]:
+    """Benchmark data setup for integration tests."""
+    guilds = []
+    configs = []
+
+    for i in range(10):
+        guild_id = TEST_GUILD_ID + i
+
+        guild = await async_db_service.guild.get_or_create_guild(guild_id=guild_id)
+        guilds.append(guild)
+
+        config = await async_db_service.guild_config.get_or_create_config(
+            guild_id=guild_id,
+            prefix=f"!bench{i}",
+            mod_log_id=TEST_CHANNEL_ID + i,
+        )
+        configs.append(config)
+
+    return {
+        'guilds': guilds,
+        'configs': configs,
+        'db_service': async_db_service,
+        'count': 10,
+    }
+
+
+# =============================================================================
+# LEGACY COMPATIBILITY - For Gradual Migration
+# =============================================================================
+
+def sample_guild_dict() -> dict[str, Any]:
+    """Legacy dict-based guild fixture (DEPRECATED - use SQLModel fixtures)."""
+    return {
+        'guild_id': TEST_GUILD_ID,
+        'case_count': 0,
+        'guild_joined_at': None,
+    }
+
+
+def sample_guild_config_dict() -> dict[str, Any]:
+    """Legacy dict-based config fixture (DEPRECATED - use SQLModel fixtures)."""
+    return {
+        'guild_id': TEST_GUILD_ID,
+        'prefix': "!",
+        'mod_log_id': TEST_CHANNEL_ID,
+        'audit_log_id': TEST_CHANNEL_ID + 1,
+        'starboard_channel_id': TEST_CHANNEL_ID + 2,
+    }

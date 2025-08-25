@@ -1,344 +1,352 @@
 """
-Unit tests for database service functionality.
+🚀 Database Service Tests - Hybrid Architecture
 
-Tests the DatabaseService class and its methods.
+This test suite demonstrates the hybrid approach:
+- UNIT TESTS: Fast sync SQLModel operations using py-pglite
+- INTEGRATION TESTS: Full async DatabaseService testing with PostgreSQL
+
+Test Categories:
+- @pytest.mark.unit: Fast tests using db_session fixture (py-pglite)
+- @pytest.mark.integration: Full async tests using async_db_service fixture (PostgreSQL)
+
+Run modes:
+- pytest tests/unit/test_database_service.py                    # Unit tests only
+- pytest tests/unit/test_database_service.py --integration     # All tests
+- pytest tests/unit/test_database_service.py --unit-only       # Unit tests only
 """
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
-from sqlalchemy.exc import OperationalError
+from sqlalchemy import text
+from sqlmodel import SQLModel, Session, select
 
+from tux.database.models.models import Guild, GuildConfig
 from tux.database.service import DatabaseService
-from tux.shared.config.env import configure_environment
-
-
-class TestDatabaseService:
-    """Test DatabaseService functionality."""
-
-    @pytest.fixture
-    def db_service(self):
-        """Create a fresh DatabaseService instance for each test."""
-        # Reset singleton
-        DatabaseService._instance = None
-        service = DatabaseService()
-        yield service
-        # Clean up
-        DatabaseService._instance = None
-
-    @pytest.fixture
-    async def connected_service(self, db_service):
-        """Create a connected database service."""
-        with patch('tux.database.service.create_async_engine') as mock_create_engine:
-            mock_engine = AsyncMock(spec=AsyncEngine)
-            mock_create_engine.return_value = mock_engine
-
-            with patch.object(db_service, 'get_database_url', return_value='sqlite+aiosqlite:///:memory:'):
-                await db_service.connect()
-                yield db_service, mock_engine
-
-    def test_singleton_pattern(self, db_service):
-        """Test that DatabaseService follows singleton pattern."""
-        service1 = DatabaseService()
-        service2 = DatabaseService()
-
-        assert service1 is service2
-        assert service1 is db_service
-
-    def test_initial_state(self, db_service):
-        """Test initial state of database service."""
-        assert db_service._engine is None
-        assert db_service._session_factory is None
-        assert db_service._echo is False
-        assert not db_service.is_connected()
-        assert not db_service.is_registered()
-
-    def test_connect_success(self, db_service):
-        """Test successful database connection."""
-        with patch('tux.database.service.create_async_engine') as mock_create_engine, \
-             patch.object(db_service, 'get_database_url', return_value='sqlite+aiosqlite:///:memory:'):
-
-            mock_engine = AsyncMock(spec=AsyncEngine)
-            mock_create_engine.return_value = mock_engine
-
-            # Test successful connection
-            assert not db_service.is_connected()
-
-            # This should work without await since we're mocking
-            db_service._engine = mock_engine
-            db_service._session_factory = AsyncMock()
-
-            assert db_service.is_connected()
-            assert db_service.is_registered()
-
-    def test_connect_failure_no_url(self, db_service):
-        """Test connection failure when no database URL is available."""
-        with patch.object(db_service, 'get_database_url', return_value=None):
-            # In the actual implementation, connect() is async, but for unit testing
-            # we can test that the method exists and would fail appropriately
-            assert hasattr(db_service, 'connect')
-            # The actual async test would be done in integration tests
 
-    def test_connect_failure_sqlalchemy_error(self, db_service):
-        """Test connection failure due to SQLAlchemy errors."""
-        with patch('tux.database.service.create_async_engine', side_effect=OperationalError(None, None, None)), \
-             patch.object(db_service, 'get_database_url', return_value='invalid://url'):
-
-            # Test that the method exists and would handle errors appropriately
-            assert hasattr(db_service, 'connect')
-            # The actual async test would be done in integration tests
 
-    def test_disconnect_success(self, connected_service):
-        """Test successful disconnection."""
-        db_service, mock_engine = connected_service
-
-        # Mock the dispose method
-        mock_engine.dispose = AsyncMock()
-
-        # Test disconnection
-        assert db_service.is_connected()
-
-        # This should work without await since we're mocking
-        db_service._engine = None
-        db_service._session_factory = None
-
-        assert not db_service.is_connected()
-
-    def test_disconnect_not_connected(self, db_service):
-        """Test disconnection when not connected."""
-        # Should not raise any errors
-        assert not db_service.is_connected()
-
-    def test_create_tables_not_connected(self, db_service):
-        """Test create_tables when not connected."""
-        with patch.object(db_service, 'connect') as mock_connect:
-            mock_connect.return_value = None
-
-            # This should call connect first
-            # Note: This is a simplified test - in real usage, connect() would be awaited
-
-    def test_session_context_manager(self, connected_service):
-        """Test session context manager."""
-        db_service, mock_engine = connected_service
-
-        # Mock session factory and session
-        mock_session = AsyncMock()
-        mock_session_factory = AsyncMock()
-        mock_session_factory.return_value.__aenter__.return_value = mock_session
-        mock_session_factory.return_value.__aexit__.return_value = None
-
-        db_service._session_factory = mock_session_factory
-
-        # Test session usage (this would normally be async)
-        # assert db_service._session_factory is not None
-
-    def test_transaction_context_manager(self, connected_service):
-        """Test transaction context manager."""
-        db_service, mock_engine = connected_service
-
-        # Transaction is just an alias for session
-        assert hasattr(db_service, 'transaction')
-
-    def test_execute_query_success(self, connected_service):
-        """Test successful query execution."""
-        db_service, mock_engine = connected_service
-
-        # Mock session
-        mock_session = AsyncMock()
-        mock_session_factory = AsyncMock()
-        mock_session_factory.return_value.__aenter__.return_value = mock_session
-
-        db_service._session_factory = mock_session_factory
-
-        # Test query execution (simplified - would be async in real usage)
-        # assert db_service._session_factory is not None
-
-    def test_execute_query_with_sentry(self, connected_service):
-        """Test query execution with Sentry enabled."""
-        db_service, mock_engine = connected_service
-
-        with patch('tux.database.service.sentry_sdk.is_initialized', return_value=True), \
-             patch('tux.database.service.sentry_sdk.start_span') as mock_span:
-
-            mock_span_instance = MagicMock()
-            mock_span.return_value.__enter__.return_value = mock_span_instance
-            mock_span.return_value.__exit__.return_value = None
-
-            # Mock session
-            mock_session = AsyncMock()
-            mock_session_factory = AsyncMock()
-            mock_session_factory.return_value.__aenter__.return_value = mock_session
-
-            db_service._session_factory = mock_session_factory
-
-            # Test with Sentry (would be async in real usage)
-
-    def test_execute_query_without_sentry(self, connected_service):
-        """Test query execution without Sentry."""
-        db_service, mock_engine = connected_service
-
-        with patch('tux.database.service.sentry_sdk.is_initialized', return_value=False):
-            # Mock session
-            mock_session = AsyncMock()
-            mock_session_factory = AsyncMock()
-            mock_session_factory.return_value.__aenter__.return_value = mock_session
-
-            db_service._session_factory = mock_session_factory
-
-            # Test without Sentry (would be async in real usage)
-
-    def test_execute_transaction_success(self, connected_service):
-        """Test successful transaction execution."""
-        db_service, mock_engine = connected_service
-
-        mock_callback = AsyncMock(return_value="success")
-
-        # Test transaction (would be async in real usage)
-        # This is a placeholder for the actual test
-
-    def test_execute_transaction_failure(self, connected_service):
-        """Test transaction execution failure."""
-        db_service, mock_engine = connected_service
-
-        mock_callback = AsyncMock(side_effect=Exception("Test error"))
-
-        # Test transaction failure (would be async in real usage)
-        # This is a placeholder for the actual test
-
-    def test_engine_property(self, connected_service):
-        """Test engine property access."""
-        db_service, mock_engine = connected_service
-
-        db_service._engine = mock_engine
-        assert db_service.engine is mock_engine
-
-    def test_manager_property(self, connected_service):
-        """Test manager property (legacy compatibility)."""
-        db_service, mock_engine = connected_service
-
-        assert db_service.manager is db_service
-
-    def test_controller_properties(self, connected_service):
-        """Test lazy-loaded controller properties."""
-        db_service, mock_engine = connected_service
-
-        # Test that controller properties exist
-        assert hasattr(db_service, 'guild')
-        assert hasattr(db_service, 'guild_config')
-        assert hasattr(db_service, 'afk')
-        assert hasattr(db_service, 'levels')
-        assert hasattr(db_service, 'snippet')
-        assert hasattr(db_service, 'case')
-        assert hasattr(db_service, 'starboard')
-        assert hasattr(db_service, 'reminder')
-
-    def test_lazy_loading_controllers(self, connected_service):
-        """Test that controllers are lazy-loaded."""
-        db_service, mock_engine = connected_service
-
-        # Initially, controller attributes should not exist
-        assert not hasattr(db_service, '_guild_controller')
-
-        # Accessing the property should create the controller
-        # Note: In real usage, this would import and create the controller
-        # Here we're just testing the property exists
-
-    def test_url_conversion_postgresql(self, db_service):
-        """Test PostgreSQL URL conversion."""
-        with patch.object(db_service, 'get_database_url', return_value='postgresql://user:pass@host:5432/db'):
-            # Test the URL conversion logic
-            # This would normally happen in connect()
-            # For now, this is a placeholder test
-            assert db_service is not None
-
-    def test_url_conversion_already_asyncpg(self, db_service):
-        """Test URL that already has asyncpg driver."""
-        with patch.object(db_service, 'get_database_url', return_value='postgresql+asyncpg://user:pass@host:5432/db'):
-            # URL should not be modified
-            # This would normally happen in connect()
-            # For now, this is a placeholder test
-            assert db_service is not None
-
-
-class TestDatabaseServiceEnvironment:
-    """Test DatabaseService with different environment configurations."""
-
-    def test_dev_environment_connection(self):
-        """Test connection with dev environment."""
-        DatabaseService._instance = None
-        service = DatabaseService()
-
-        with patch.object(service, 'get_database_url', return_value='sqlite+aiosqlite:///:memory:'), \
-             patch('tux.database.service.create_async_engine') as mock_create_engine:
-
-            mock_engine = AsyncMock(spec=AsyncEngine)
-            mock_create_engine.return_value = mock_engine
-
-            # Configure dev environment
-            configure_environment(dev_mode=True)
-
-            # Test connection (would be async in real usage)
-            # assert service.get_database_url() would return dev URL
-
-    def test_prod_environment_connection(self):
-        """Test connection with prod environment."""
-        DatabaseService._instance = None
-        service = DatabaseService()
-
-        with patch.object(service, 'get_database_url', return_value='sqlite+aiosqlite:///:memory:'), \
-             patch('tux.database.service.create_async_engine') as mock_create_engine:
-
-            mock_engine = AsyncMock(spec=AsyncEngine)
-            mock_create_engine.return_value = mock_engine
-
-            # Configure prod environment
-            configure_environment(dev_mode=False)
-
-            # Test connection (would be async in real usage)
-            # assert service.get_database_url() would return prod URL
-
-
-class TestDatabaseServiceErrors:
-    """Test DatabaseService error handling."""
-
-    @pytest.fixture
-    def db_service(self):
-        """Create a fresh DatabaseService instance."""
-        DatabaseService._instance = None
-        service = DatabaseService()
-        yield service
-        DatabaseService._instance = None
-
-    def test_connection_error_handling(self, db_service):
-        """Test error handling during connection."""
-        with patch.object(db_service, 'get_database_url', return_value='invalid://url'), \
-             patch('tux.database.service.create_async_engine', side_effect=Exception("Connection failed")):
-
-            # Test that the method exists and would handle errors appropriately
-            assert hasattr(db_service, 'connect')
-            # The actual async test would be done in integration tests
-
-    def test_multiple_connect_calls(self, db_service):
-        """Test behavior with multiple connect calls."""
-        with patch.object(db_service, 'get_database_url', return_value='sqlite+aiosqlite:///:memory:'), \
-             patch('tux.database.service.create_async_engine') as mock_create_engine:
-
-            mock_engine = AsyncMock(spec=AsyncEngine)
-            mock_create_engine.return_value = mock_engine
-
-            # First connect should work
-            db_service._engine = mock_engine
-            db_service._session_factory = AsyncMock()
-
-            # Second connect should be a no-op (already connected)
-
-    def test_engine_disposal_error(self, db_service):
-        """Test error handling during engine disposal."""
-        mock_engine = AsyncMock(spec=AsyncEngine)
-        mock_engine.dispose.side_effect = Exception("Disposal failed")
-
-        db_service._engine = mock_engine
-        db_service._session_factory = AsyncMock()
-
-        # Should handle disposal errors gracefully
-        # In real usage, this would be awaited
+# =============================================================================
+# UNIT TESTS - Fast Sync SQLModel + py-pglite
+# =============================================================================
+
+class TestDatabaseModelsUnit:
+    """🏃‍♂️ Unit tests for database models using sync SQLModel + py-pglite."""
+
+    @pytest.mark.unit
+    def test_guild_model_creation(self, db_session: Session) -> None:
+        """Test Guild model creation and basic operations."""
+        # Create guild using sync SQLModel
+        guild = Guild(guild_id=123456789, case_count=0)
+        db_session.add(guild)
+        db_session.commit()
+        db_session.refresh(guild)
+
+        # Verify creation
+        assert guild.guild_id == 123456789
+        assert guild.case_count == 0
+        assert guild.guild_joined_at is not None
+
+        # Test query
+        result = db_session.get(Guild, 123456789)
+        assert result is not None
+        assert result.guild_id == 123456789
+
+    @pytest.mark.unit
+    def test_guild_config_model_creation(self, db_session: Session) -> None:
+        """Test GuildConfig model creation and relationships."""
+        # Create guild first
+        guild = Guild(guild_id=123456789, case_count=0)
+        db_session.add(guild)
+        db_session.commit()
+
+        # Create config
+        config = GuildConfig(
+            guild_id=123456789,
+            prefix="!",
+            mod_log_id=555666777888999000,
+            audit_log_id=555666777888999001,
+        )
+        db_session.add(config)
+        db_session.commit()
+        db_session.refresh(config)
+
+        # Verify creation
+        assert config.guild_id == 123456789
+        assert config.prefix == "!"
+        assert config.mod_log_id == 555666777888999000
+
+        # Test relationship
+        guild_from_config = db_session.get(Guild, config.guild_id)
+        assert guild_from_config is not None
+        assert guild_from_config.guild_id == guild.guild_id
+
+    @pytest.mark.unit
+    def test_model_serialization(self, db_session: Session) -> None:
+        """Test model to_dict serialization."""
+        guild = Guild(guild_id=123456789, case_count=5)
+        db_session.add(guild)
+        db_session.commit()
+        db_session.refresh(guild)
+
+        # Test serialization
+        guild_dict = guild.to_dict()
+        assert isinstance(guild_dict, dict)
+        assert guild_dict["guild_id"] == 123456789
+        assert guild_dict["case_count"] == 5
+
+    @pytest.mark.unit
+    def test_multiple_guilds_query(self, db_session: Session) -> None:
+        """Test querying multiple guilds."""
+        # Create multiple guilds
+        guilds_data = [
+            Guild(guild_id=123456789, case_count=1),
+            Guild(guild_id=123456790, case_count=2),
+            Guild(guild_id=123456791, case_count=3),
+        ]
+
+        for guild in guilds_data:
+            db_session.add(guild)
+        db_session.commit()
+
+        # Query all guilds
+        statement = select(Guild)
+        results = db_session.exec(statement).unique().all()
+        assert len(results) == 3
+
+        # Test ordering
+        statement = select(Guild).order_by(Guild.case_count)
+        results = db_session.exec(statement).unique().all()
+        assert results[0].case_count == 1
+        assert results[2].case_count == 3
+
+    @pytest.mark.unit
+    def test_database_constraints(self, db_session: Session) -> None:
+        """Test database constraints and validation."""
+        # Test unique guild_id constraint
+        guild1 = Guild(guild_id=123456789, case_count=0)
+        guild2 = Guild(guild_id=123456789, case_count=1)  # Same ID
+
+        db_session.add(guild1)
+        db_session.commit()
+
+        # This should raise an integrity error
+        db_session.add(guild2)
+        with pytest.raises(Exception):  # SQLAlchemy integrity error
+            db_session.commit()
+
+    @pytest.mark.unit
+    def test_raw_sql_execution(self, db_session: Session) -> None:
+        """Test raw SQL execution with py-pglite."""
+        # Test basic query
+        result = db_session.execute(text("SELECT 1 as test_value"))
+        value = result.scalar()
+        assert value == 1
+
+        # Test PostgreSQL-specific features work with py-pglite
+        result = db_session.execute(text("SELECT version()"))
+        version = result.scalar()
+        assert "PostgreSQL" in version
+
+
+# =============================================================================
+# INTEGRATION TESTS - Full Async DatabaseService + Real PostgreSQL
+# =============================================================================
+
+class TestDatabaseServiceIntegration:
+    """🌐 Integration tests for DatabaseService using async SQLModel + PostgreSQL."""
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_async_service_initialization(self, async_db_service: DatabaseService) -> None:
+        """Test async database service initialization."""
+        assert async_db_service.is_connected() is True
+
+        # Test health check
+        health = await async_db_service.health_check()
+        assert health["status"] == "healthy"
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_async_session_operations(self, async_db_service: DatabaseService) -> None:
+        """Test async session operations with DatabaseService."""
+        # Test session creation
+        async with async_db_service.session() as session:
+            # Create guild through async session
+            guild = Guild(guild_id=123456789, case_count=0)
+            session.add(guild)
+            await session.commit()
+
+            # Query through async session
+            result = await session.get(Guild, 123456789)
+            assert result is not None
+            assert result.guild_id == 123456789
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_async_controllers_access(self, async_db_service: DatabaseService) -> None:
+        """Test async controller access through DatabaseService."""
+        # Test guild controller
+        guild_controller = async_db_service.guild
+        assert guild_controller is not None
+
+        # Test controller operation
+        guild = await guild_controller.get_or_create_guild(guild_id=123456789)
+        assert guild.guild_id == 123456789
+
+        # Test guild config controller
+        config_controller = async_db_service.guild_config
+        assert config_controller is not None
+
+        config = await config_controller.get_or_create_config(
+            guild_id=123456789,
+            prefix="!test",
+        )
+        assert config.guild_id == 123456789
+        assert config.prefix == "!test"
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_async_execute_query_utility(self, async_db_service: DatabaseService) -> None:
+        """Test execute_query utility with async operations."""
+        async def create_test_guild(session):
+            guild = Guild(guild_id=999888777, case_count=42)
+            session.add(guild)
+            await session.commit()
+            await session.refresh(guild)
+            return guild
+
+        result = await async_db_service.execute_query(create_test_guild, "create test guild")
+        assert result.guild_id == 999888777
+        assert result.case_count == 42
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_async_transaction_utility(self, async_db_service: DatabaseService) -> None:
+        """Test execute_transaction utility."""
+        async def transaction_operation():
+            async with async_db_service.session() as session:
+                guild = Guild(guild_id=888777666, case_count=10)
+                session.add(guild)
+                await session.commit()
+                return "transaction_completed"
+
+        result = await async_db_service.execute_transaction(transaction_operation)
+        assert result == "transaction_completed"
+
+        # Verify the guild was created
+        async with async_db_service.session() as session:
+            guild = await session.get(Guild, 888777666)
+            assert guild is not None
+            assert guild.case_count == 10
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_async_connection_lifecycle(self, disconnected_async_db_service: DatabaseService) -> None:
+        """Test async connection lifecycle management."""
+        service = disconnected_async_db_service
+
+        # Initially disconnected
+        assert service.is_connected() is False
+
+        # Connect
+        await service.connect()
+        assert service.is_connected() is True
+
+        # Disconnect
+        await service.disconnect()
+        assert service.is_connected() is False
+
+
+# =============================================================================
+# PERFORMANCE COMPARISON TESTS
+# =============================================================================
+
+class TestPerformanceComparison:
+    """⚡ Compare performance between unit tests (py-pglite) and integration tests."""
+
+    @pytest.mark.unit
+    def test_unit_test_performance(self, db_session: Session, benchmark) -> None:
+        """Benchmark unit test performance with py-pglite."""
+        import random
+
+        def create_guild():
+            # Use random guild ID to avoid duplicate key conflicts during benchmarking
+            guild_id = random.randint(100000000000, 999999999999)
+            guild = Guild(guild_id=guild_id, case_count=0)
+            db_session.add(guild)
+            db_session.commit()
+            db_session.refresh(guild)
+            return guild
+
+        result = benchmark(create_guild)
+        assert result.guild_id is not None
+        assert result.case_count == 0
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_integration_test_performance(self, async_db_service: DatabaseService, benchmark) -> None:
+        """Benchmark integration test performance with PostgreSQL."""
+        async def create_guild_async():
+            async with async_db_service.session() as session:
+                guild = Guild(guild_id=123456789, case_count=0)
+                session.add(guild)
+                await session.commit()
+                await session.refresh(guild)
+                return guild
+
+        # Note: async benchmarking requires special handling
+        result = await create_guild_async()
+        assert result.guild_id == 123456789
+
+
+# =============================================================================
+# MIXED SCENARIO TESTS
+# =============================================================================
+
+class TestMixedScenarios:
+    """🔄 Tests that demonstrate the hybrid approach benefits."""
+
+    @pytest.mark.unit
+    def test_complex_query_unit(self, db_session: Session) -> None:
+        """Complex query test using fast unit testing."""
+        # Create test data quickly with py-pglite
+        guilds = [
+            Guild(guild_id=100000 + i, case_count=i)
+            for i in range(10)
+        ]
+
+        for guild in guilds:
+            db_session.add(guild)
+        db_session.commit()
+
+        # Complex query
+        statement = select(Guild).where(Guild.case_count > 5).order_by(Guild.case_count.desc())
+        results = db_session.exec(statement).unique().all()
+
+        assert len(results) == 4
+        assert results[0].case_count == 9
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_complex_integration_scenario(self, async_db_service: DatabaseService) -> None:
+        """Complex integration scenario using full async stack."""
+        # Create guild through controller
+        guild = await async_db_service.guild.get_or_create_guild(555666777)
+
+        # Create config through controller
+        config = await async_db_service.guild_config.get_or_create_config(
+            guild_id=guild.guild_id,
+            prefix="!int",
+            mod_log_id=888999000111,
+        )
+
+        # Verify through async queries
+        async with async_db_service.session() as session:
+            # Test join operation
+            from sqlalchemy.orm import selectinload
+            guild_with_config = await session.get(Guild, guild.guild_id)
+
+            assert guild_with_config is not None
+            assert guild_with_config.guild_id == config.guild_id
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
