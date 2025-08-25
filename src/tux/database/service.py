@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 from typing import Any
 
 import sentry_sdk
@@ -54,6 +55,10 @@ class DatabaseService:
         self._session_factory: async_sessionmaker[AsyncSession] | None = None
         self._echo = echo
 
+    def get_database_url(self) -> str:
+        """Get the current database URL from configuration."""
+        return get_database_url()
+
     # =====================================================================
     # Connection & Session Management
     # =====================================================================
@@ -84,12 +89,35 @@ class DatabaseService:
         echo_setting = echo if echo is not None else self._echo
 
         logger.debug(f"Creating async SQLAlchemy engine (echo={echo_setting})")
+
+        # Enhanced connection configuration based on SQLModel best practices
+        connect_args = {}
+        if "sqlite" in database_url:
+            # SQLite-specific optimizations
+            connect_args = {
+                "check_same_thread": False,
+                "timeout": 30,
+            }
+        elif "postgresql" in database_url:
+            # PostgreSQL-specific optimizations
+            connect_args = {
+                "server_settings": {
+                    "timezone": "UTC",
+                    "application_name": "TuxBot",
+                },
+            }
+
         self._engine = create_async_engine(
             database_url,
             echo=echo_setting,
-            pool_pre_ping=True,
+            future=True,  # Enable SQLAlchemy 2.0 style
+            # Connection pooling configuration
+            pool_pre_ping=True,  # Verify connections before use
             pool_size=10,
             max_overflow=20,
+            pool_timeout=30,  # Connection timeout
+            pool_recycle=1800,  # Recycle connections after 30 minutes
+            connect_args=connect_args,
         )
         self._session_factory = async_sessionmaker(
             self._engine,
@@ -120,6 +148,34 @@ class DatabaseService:
         self._engine = None
         self._session_factory = None
         logger.info("Disconnected from database")
+
+    async def health_check(self) -> dict[str, Any]:
+        """Perform a database health check."""
+        if not self.is_connected():
+            return {"status": "disconnected", "error": "Database engine not connected"}
+
+        try:
+            async with self.session() as session:
+                # Simple query to test connectivity
+                from sqlalchemy import text  # noqa: PLC0415
+
+                result = await session.execute(text("SELECT 1"))
+                value = result.scalar()
+
+                if value == 1:
+                    return {
+                        "status": "healthy",
+                        "pool_size": getattr(self._engine.pool, "size", "unknown") if self._engine else "unknown",
+                        "checked_connections": getattr(self._engine.pool, "checkedin", "unknown")
+                        if self._engine
+                        else "unknown",
+                        "timestamp": datetime.now(UTC).isoformat(),
+                    }
+                return {"status": "unhealthy", "error": "Unexpected query result"}
+
+        except Exception as exc:
+            logger.error(f"Database health check failed: {exc}")
+            return {"status": "unhealthy", "error": str(exc)}
 
     @asynccontextmanager
     async def session(self) -> AsyncGenerator[AsyncSession]:
