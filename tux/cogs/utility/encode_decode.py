@@ -160,6 +160,7 @@ class EncodeDecode(commands.Cog):
         except binascii.Error as e:
             await ctx.reply(
                 content=f"Decoding error: {e}",
+                ephemeral=True,
             )
             return
         except UnicodeDecodeError:
