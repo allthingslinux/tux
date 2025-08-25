@@ -16,9 +16,10 @@
     "packageRules": [
         {
             // these will fail tests if they are broken
-            "matchDepTypes": [
-                "devDependencies"
-            ],
+            // idk if this works with python, either way it doesnt matter
+            //"matchDepTypes": [
+            //    "devDependencies"
+            //],
             "matchPackageNames": [
                 "pre-commit",
                 "ruff",
