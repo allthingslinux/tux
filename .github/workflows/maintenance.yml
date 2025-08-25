@@ -107,7 +107,7 @@ jobs:
       # REPOSITORY CHECKOUT
       # Full history required for accurate TODO comparison and tracking
       - name: Checkout Repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
         with:
           fetch-depth: 0
 
@@ -188,7 +188,7 @@ jobs:
       # REPOSITORY CHECKOUT
       # Required for comprehensive file and dependency analysis
       - name: Checkout Repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
 
       # STORAGE HEALTH ANALYSIS
       # Identifies large files that may impact repository performance
