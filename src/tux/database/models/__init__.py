@@ -1,12 +1,35 @@
 from __future__ import annotations
 
-from . import content, guild, moderation, permissions, social, starboard
+from .models import (
+    AFK,
+    AccessType,
+    Case,
+    CaseType,
+    Guild,
+    GuildConfig,
+    GuildPermission,
+    Levels,
+    Note,
+    PermissionType,
+    Reminder,
+    Snippet,
+    Starboard,
+    StarboardMessage,
+)
 
 __all__ = [
-    "content",
-    "guild",
-    "moderation",
-    "permissions",
-    "social",
-    "starboard",
+    "AFK",
+    "AccessType",
+    "Case",
+    "CaseType",
+    "Guild",
+    "GuildConfig",
+    "GuildPermission",
+    "Levels",
+    "Note",
+    "PermissionType",
+    "Reminder",
+    "Snippet",
+    "Starboard",
+    "StarboardMessage",
 ]
