@@ -164,3 +164,28 @@ def pytest_report_header(config: pytest.Config) -> str:
         f"locale={os.environ.get('LC_ALL') or os.environ.get('LANG')} "
         f"network={'allowed' if config.getoption('--allow-network') else 'blocked (unit)'}"
     )
+
+
+# -----------------------------
+# Pytest-alembic fixtures
+# -----------------------------
+
+@pytest.fixture
+def alembic_config():
+    """Configure pytest-alembic to use our migration setup."""
+    from pytest_alembic.config import Config
+
+    return Config(
+        config_options={
+            "script_location": "src/tux/database/migrations",
+        },
+    )
+
+
+@pytest.fixture
+def alembic_engine():
+    """Provide a test database engine for pytest-alembic."""
+    from sqlalchemy import create_engine
+
+    # Use SQLite for pytest-alembic tests (simpler and more reliable)
+    return create_engine("sqlite:///test_alembic.db")
