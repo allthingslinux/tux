@@ -7,8 +7,8 @@ from loguru import logger
 from tux.core import checks
 from tux.core.flags import UnjailFlags
 from tux.core.types import Tux
-from tux.database.models.moderation import Case
-from tux.database.models.moderation import CaseType as DBCaseType
+from tux.database.models import Case
+from tux.database.models import CaseType as DBCaseType
 from tux.shared.functions import generate_usage
 
 from . import ModerationCogBase

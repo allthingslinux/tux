@@ -9,8 +9,8 @@ from reactionmenu import ViewButton, ViewMenu
 from tux.core import checks
 from tux.core.flags import CaseModifyFlags, CasesViewFlags
 from tux.core.types import Tux
-from tux.database.models.moderation import Case
-from tux.database.models.moderation import CaseType as DBCaseType
+from tux.database.models import Case
+from tux.database.models import CaseType as DBCaseType
 from tux.shared.constants import CONST
 from tux.shared.functions import generate_usage
 from tux.ui.embeds import EmbedCreator, EmbedType

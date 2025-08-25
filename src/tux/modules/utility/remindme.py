@@ -8,7 +8,7 @@ from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
-from tux.database.models.content import Reminder
+from tux.database.models import Reminder
 from tux.shared.functions import convert_to_seconds
 from tux.ui.embeds import EmbedCreator
 

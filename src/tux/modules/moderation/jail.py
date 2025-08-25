@@ -5,7 +5,7 @@ from loguru import logger
 from tux.core import checks
 from tux.core.flags import JailFlags
 from tux.core.types import Tux
-from tux.database.models.moderation import CaseType
+from tux.database.models import CaseType
 from tux.shared.functions import generate_usage
 
 from . import ModerationCogBase

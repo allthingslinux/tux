@@ -2,7 +2,7 @@ from discord.ext import commands
 from reactionmenu import ViewButton, ViewMenu
 
 from tux.core.types import Tux
-from tux.database.models.content import Snippet
+from tux.database.models import Snippet
 from tux.shared.constants import CONST
 
 from . import SnippetsBaseCog

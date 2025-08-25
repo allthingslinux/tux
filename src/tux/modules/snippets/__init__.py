@@ -5,8 +5,8 @@ from loguru import logger
 from tux.core import checks
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
-from tux.database.models.content import Snippet
-from tux.database.models.moderation import CaseType as DBCaseType
+from tux.database.models import CaseType as DBCaseType
+from tux.database.models import Snippet
 from tux.shared.config.settings import Config
 from tux.shared.constants import CONST
 from tux.shared.exceptions import PermissionLevelError
