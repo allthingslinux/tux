@@ -81,13 +81,12 @@ RUN echo 'path-exclude /usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends --no-install-suggests \
-        ffmpeg=7:5.1.6-0+deb12u1 \
-        git=1:2.39.5-0+deb12u2 \
-        libcairo2=1.16.0-7 \
-        libgdk-pixbuf2.0-0=2.40.2-2 \
-        libpango1.0-0=1.50.12+ds-1 \
-        libpangocairo-1.0-0=1.50.12+ds-1 \
-        shared-mime-info=2.2-1 \
+        git=1:2.47.2-0.2 \
+        libcairo2=1.18.4-1+b1 \
+        libgdk-pixbuf-2.0-0=2.42.12+dfsg-4 \
+        libpango-1.0-0=1.56.3-1 \
+        libpangocairo-1.0-0=1.56.3-1 \
+        shared-mime-info=2.4-5+b2 \
     # Cleanup package manager caches to reduce layer size
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -122,13 +121,13 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
         # GCC compiler and build essentials for native extensions
-        build-essential=12.9 \
+        build-essential=12.12 \
         # Additional utilities required by some Python packages
-        findutils=4.9.0-4 \
+        findutils=4.10.0-3 \
         # Development headers for graphics libraries
-        libcairo2-dev=1.16.0-7 \
+        libcairo2-dev=1.18.4-1+b1 \
         # Foreign Function Interface library for Python extensions
-        libffi-dev=3.4.4-1 \
+        libffi8=3.4.8-2 \
     # Cleanup to reduce intermediate layer size
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -321,9 +320,9 @@ RUN echo 'path-exclude /usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends --no-install-suggests \
-        libcairo2=1.16.0-7 \
-        libffi8=3.4.4-1 \
-        coreutils=9.1-1 \
+        libcairo2=1.18.4-1+b1 \
+        libffi8=3.4.8-2 \
+        coreutils=9.7-3 \
     # Aggressive cleanup to minimize image size
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
