@@ -367,18 +367,19 @@ RUN set -eux; \
     # Remove Python bytecode files (will be regenerated as needed)
     find /app/.venv -name "*.pyc" -delete; \
     find /app/.venv -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true; \
-    # Remove test directories from installed packages
+    # Remove test directories from installed packages (but preserve prisma binaries)
     # These directories contain test files that are not needed in production
-    for test_dir in tests testing "*test*"; do \
-      find /app/.venv -name "$test_dir" -type d -exec rm -rf {} + 2>/dev/null || true; \
+    for test_dir in tests testing "test*"; do \
+      find /app/.venv -name "$test_dir" -type d -not -path "*/prisma*" -exec rm -rf {} + 2>/dev/null || true; \
     done; \
-    # Remove documentation files from installed packages
+    # Remove documentation files from installed packages (but preserve prisma docs)
     # These files take up significant space and are not needed in production
     for doc_pattern in "*.md" "*.txt" "*.rst" "LICENSE*" "NOTICE*" "COPYING*" "CHANGELOG*" "README*" "HISTORY*" "AUTHORS*" "CONTRIBUTORS*"; do \
-      find /app/.venv -name "$doc_pattern" -delete 2>/dev/null || true; \
+      find /app/.venv -name "$doc_pattern" -not -path "*/prisma*" -delete 2>/dev/null || true; \
     done; \
     # Remove large development packages that are not needed in production
     # These packages (pip, setuptools, wheel) are only needed for installing packages
+    # NOTE: Preserving packages that Prisma might need
     for pkg in setuptools wheel pkg_resources; do \
       rm -rf /app/.venv/lib/python3.13/site-packages/${pkg}* 2>/dev/null || true; \
       rm -rf /app/.venv/bin/${pkg}* 2>/dev/null || true; \

@@ -1,0 +1,41 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        "config:best-practices"
+    ],
+    "schedule": [
+        "* */12 * * *"
+    ],
+    "ignoreDeps": [
+        "basedpyright" // see pyproject.toml
+    ],
+    "lockFileMaintenance": {
+        "enabled": true,
+        "automerge": true
+    },
+    "packageRules": [
+        {
+            // these will fail tests if they are broken
+            // idk if this works with python, either way it doesnt matter
+            //"matchDepTypes": [
+            //    "devDependencies"
+            //],
+            "matchPackageNames": [
+                "pre-commit",
+                "ruff",
+                "poetry",
+                "pytest"
+            ],
+            "automerge": true
+        },
+        {
+            // no breaking changes
+            "matchUpdateTypes": [
+                "minor",
+                "patch"
+            ],
+            "matchCurrentVersion": "!/^0/",
+            "automerge": true
+        }
+    ]
+}
