@@ -146,7 +146,7 @@ target-version = "py313"
 [tool.ruff.lint]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 fixable = ["ALL"]
-ignore = ["E501", "N814", "PLR0913", "PLR2004"]
+ignore = ["E501", "N814", "PLR0913", "PLR2004", "E402"]
 select = [
     "I",     # isort
     "E",     # pycodestyle-error

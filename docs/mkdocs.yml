@@ -263,7 +263,7 @@ plugins:
             # https://mkdocstrings.github.io/python/usage/configuration/signatures/#unwrap_annotated
             unwrap_annotated: false
   - api-autonav:
-      modules: [../tux]
+      modules: [../src/tux]
       nav_section_title: Tux Reference
       api_root_uri: reference
       exclude_private: false
@@ -314,4 +314,5 @@ nav:
       - Database: dev/database.md
       - Database Patterns: dev/database_patterns.md
       - Permissions: dev/permissions.md
-  - CLI Reference: dev/cli/index.md
+      - Self Hosting: dev/self_hosting.md
+  # - CLI Reference: dev/cli/index.md
