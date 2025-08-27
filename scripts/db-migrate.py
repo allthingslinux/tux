@@ -11,7 +11,7 @@ src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
 # Import and initialize the custom Tux logger
-import logger_setup  # noqa: F401 - Auto-initializes logger
+import logger_setup  # noqa: F401 # pyright: ignore[reportUnusedImport]
 from loguru import logger
 
 from tux.shared.config.env import get_database_url
@@ -30,6 +30,49 @@ def setup_environment():
     except Exception as e:
         logger.error(f"❌ Failed to configure database: {e}")
         sys.exit(1)
+
+
+async def reset_migrations():
+    """Reset all migrations and create a clean baseline."""
+    import alembic.command as alembic_cmd  # noqa: PLC0415
+    from alembic.config import Config  # noqa: PLC0415
+
+    # Create alembic config
+    config = Config()
+    config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
+    config.set_main_option("script_location", "src/tux/database/migrations")
+    config.set_main_option("version_locations", "src/tux/database/migrations/versions")
+    config.set_main_option("prepend_sys_path", "src")
+    config.set_main_option("timezone", "UTC")
+
+    try:
+        # Step 1: Drop all database data by downgrading to base
+        logger.info("1️⃣ Dropping all database data...")
+        alembic_cmd.downgrade(config, "base")
+
+        # Step 2: Delete all migration files
+        logger.info("2️⃣ Deleting all migration files...")
+        versions_dir = Path("src/tux/database/migrations/versions")
+        if versions_dir.exists():
+            for migration_file in versions_dir.glob("*.py"):
+                if migration_file.name != "__init__.py":
+                    migration_file.unlink()
+                    logger.info(f"   Deleted: {migration_file.name}")
+
+        # Step 3: Create a fresh baseline migration
+        logger.info("3️⃣ Creating fresh baseline migration...")
+        alembic_cmd.revision(config, autogenerate=True, message="baseline")
+
+        # Step 4: Apply the new migration
+        logger.info("4️⃣ Applying new baseline migration...")
+        alembic_cmd.upgrade(config, "head")
+
+        logger.success("✅ Migration reset completed successfully!")
+    except Exception as e:
+        logger.error(f"❌ Migration reset failed: {e}")
+        return 1
+    else:
+        return 0
 
 
 async def run_migration_command(command: str, **kwargs: Any):
@@ -60,10 +103,7 @@ async def run_migration_command(command: str, **kwargs: Any):
             logger.warning("⚠️  Resetting database...")
             alembic_cmd.downgrade(config, "base")
         elif command == "reset-migrations":
-            logger.warning("⚠️  Resetting migrations...")
-            # This is complex, would need more implementation
-            logger.error("❌ reset-migrations not implemented in simple script")
-            return 1
+            return await reset_migrations()
         else:
             logger.error(f"❌ Unknown command: {command}")
             return 1
@@ -85,7 +125,7 @@ def main():
     command = sys.argv[1]
     setup_environment()
 
-    if command in ["upgrade", "downgrade", "revision", "current", "history", "reset"]:
+    if command in ["upgrade", "downgrade", "revision", "current", "history", "reset", "reset-migrations"]:
         exit_code = asyncio.run(run_migration_command(command))
         sys.exit(exit_code)
     else:
