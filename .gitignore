@@ -90,6 +90,9 @@ Pipfile.lock
 # uv
 uv.lock
 
+# Poetry
+poetry.lock
+
 # Pdm
 .pdm.toml
 
