@@ -10,6 +10,8 @@ from typing import Any
 src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
+# Import and initialize the custom Tux logger
+import logger_setup  # noqa: F401 - Auto-initializes logger
 from loguru import logger
 
 from tux.shared.config.env import get_database_url

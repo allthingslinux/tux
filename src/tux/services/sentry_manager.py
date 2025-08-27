@@ -389,7 +389,7 @@ class SentryManager:
                     message=f"Received termination signal {signum}",
                     level="info",
                 )
-        raise KeyboardInterrupt
+        # Don't raise KeyboardInterrupt here - let the signal handler work normally
 
     @staticmethod
     def flush() -> None:

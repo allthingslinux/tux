@@ -10,8 +10,10 @@ including:
 """
 
 import asyncio
+import contextlib
 import signal
 import sys
+from types import FrameType
 
 import discord
 from loguru import logger
@@ -75,8 +77,7 @@ class TuxApp:
         """
         asyncio.run(self.start())
 
-    @staticmethod
-    def setup_signals(loop: asyncio.AbstractEventLoop) -> None:
+    def setup_signals(self, loop: asyncio.AbstractEventLoop) -> None:
         """Register signal handlers for graceful shutdown.
 
         Parameters
@@ -92,9 +93,21 @@ class TuxApp:
 
         def _sigterm() -> None:
             SentryManager.report_signal(signal.SIGTERM, None)
+            # Trigger graceful shutdown by closing the bot
+            if hasattr(self, "bot") and self.bot and not self.bot.is_closed():
+                # Schedule the close operation in the event loop
+                bot = self.bot  # Type narrowing
+                with contextlib.suppress(Exception):
+                    loop.call_soon_threadsafe(lambda: asyncio.create_task(bot.close()))
 
         def _sigint() -> None:
             SentryManager.report_signal(signal.SIGINT, None)
+            # Trigger graceful shutdown by closing the bot
+            if hasattr(self, "bot") and self.bot and not self.bot.is_closed():
+                # Schedule the close operation in the event loop
+                bot = self.bot  # Type narrowing
+                with contextlib.suppress(Exception):
+                    loop.call_soon_threadsafe(lambda: asyncio.create_task(bot.close()))
 
         try:
             loop.add_signal_handler(signal.SIGTERM, _sigterm)
@@ -102,8 +115,12 @@ class TuxApp:
 
         except NotImplementedError:
             # Fallback for platforms that do not support add_signal_handler (e.g., Windows)
-            signal.signal(signal.SIGTERM, SentryManager.report_signal)
-            signal.signal(signal.SIGINT, SentryManager.report_signal)
+            def _signal_handler(signum: int, frame: FrameType | None) -> None:
+                SentryManager.report_signal(signum, frame)
+                # For Windows fallback, just log the signal
+
+            signal.signal(signal.SIGTERM, _signal_handler)
+            signal.signal(signal.SIGINT, _signal_handler)
 
         if sys.platform.startswith("win"):
             logger.warning(
@@ -151,7 +168,11 @@ class TuxApp:
         )
 
         try:
+            # Start the bot normally - this handles login() + connect() properly
             await self.bot.start(CONFIG.BOT_TOKEN, reconnect=True)
+        except asyncio.CancelledError:
+            # Handle cancellation gracefully
+            logger.info("Bot startup was cancelled")
         except KeyboardInterrupt:
             logger.info("Shutdown requested (KeyboardInterrupt)")
         except Exception as e:

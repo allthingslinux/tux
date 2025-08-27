@@ -8,6 +8,8 @@ from pathlib import Path
 src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
+# Import and initialize the custom Tux logger
+import logger_setup  # noqa: F401 # pyright: ignore[reportUnusedImport]
 from loguru import logger
 
 from tux.main import run
@@ -30,6 +32,17 @@ def main():
         else:
             logger.error(f"❌ Bot exited with code {exit_code}")
         sys.exit(exit_code)
+    except KeyboardInterrupt:
+        logger.info("🛑 Bot shutdown requested by user (Ctrl+C)")
+        sys.exit(0)
+    except RuntimeError as e:
+        # Handle "Event loop stopped before Future completed" error
+        if "Event loop stopped before Future completed" in str(e):
+            logger.info("🛑 Bot shutdown completed")
+            sys.exit(0)
+        else:
+            logger.error(f"❌ Runtime error: {e}")
+            sys.exit(1)
     except Exception as e:
         logger.error(f"❌ Failed to start bot: {e}")
         sys.exit(1)
