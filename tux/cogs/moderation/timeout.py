@@ -19,7 +19,7 @@ class Timeout(ModerationCogBase):
 
     @commands.hybrid_command(
         name="timeout",
-        aliases=["t", "to", "mute", "m"],
+        aliases=["to", "mute", "m"],
     )
     @commands.guild_only()
     @checks.has_pl(2)
