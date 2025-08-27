@@ -107,7 +107,7 @@ ENV PYTHONUNBUFFERED=1 \
 # ==============================================================================
 # BUILD STAGE - Development Tools and Dependency Installation
 # ==============================================================================
-# Purpose: Installs build tools, Poetry, and application dependencies
+# Purpose: Installs build tools, Uv, and application dependencies
 # Contains: Compilers, headers, build tools, complete Python environment
 # Size Impact: ~1.3GB (includes all build dependencies and Python packages)
 # ==============================================================================
@@ -132,26 +132,10 @@ RUN apt-get update && \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Poetry configuration for dependency management
-# These settings optimize Poetry for containerized builds
+ENV UV_VERSION=0.8.0
 
-# POETRY_NO_INTERACTION=1        : Disables interactive prompts for CI/CD
-# POETRY_VIRTUALENVS_CREATE=1    : Ensures virtual environment creation
-# POETRY_VIRTUALENVS_IN_PROJECT=1: Creates .venv in project directory
-# POETRY_CACHE_DIR=/tmp/poetry_cache: Uses temporary directory for cache
-# POETRY_INSTALLER_PARALLEL=true : Enables parallel package installation
-
-ENV POETRY_VERSION=2.1.1 \
-    POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_CREATE=1 \
-    POETRY_VIRTUALENVS_IN_PROJECT=1 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache \
-    POETRY_INSTALLER_PARALLEL=true
-
-# Install Poetry using pip with BuildKit cache mount for efficiency
-# Cache mount prevents re-downloading Poetry on subsequent builds
-RUN --mount=type=cache,target=/root/.cache \
-    pip install poetry==$POETRY_VERSION
+# Install Uv using pip
+RUN pip install uv==$UV_VERSION
 
 # Set working directory for all subsequent operations
 WORKDIR /app
@@ -163,15 +147,13 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Copy dependency files first for optimal Docker layer caching
 # Changes to these files will invalidate subsequent layers
 # OPTIMIZATION: This pattern maximizes cache hits during development
-COPY pyproject.toml poetry.lock ./
+COPY pyproject.toml uv.lock ./
 
-# Install Python dependencies using Poetry
-# PERFORMANCE: Cache mount speeds up subsequent builds
-# SECURITY: --only main excludes development dependencies from production
-# NOTE: Install dependencies only first, package itself will be installed later with git context
-RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
-    --mount=type=cache,target=/root/.cache/pip \
-    poetry install --only main --no-root --no-directory
+# Install dependencies
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --locked --no-install-project
 
 # Copy application files in order of change frequency (Docker layer optimization)
 # STRATEGY: Files that change less frequently are copied first to maximize cache reuse
@@ -180,13 +162,16 @@ RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
 # These are typically static configuration that changes infrequently
 COPY config/ ./config/
 
-# 2. Database schema files (change infrequently)
-# Prisma schema and migrations are relatively stable
-COPY prisma/ ./prisma/
+# 2. Database migration files (change infrequently)
+# Alembic migrations are relatively stable
+COPY src/tux/database/migrations/ ./src/tux/database/migrations/
 
 # 3. Main application code (changes more frequently)
 # The core bot code is most likely to change during development
-COPY tux/ ./tux/
+# Copy the entire src tree so Poetry can find packages from "src"
+COPY src/ ./src/
+# Keep runtime path stable at /app/tux for later stages and health checks
+RUN cp -a src/tux ./tux
 
 # 4. Root level files needed for installation
 # These include metadata and licensing information
@@ -215,12 +200,9 @@ RUN set -eux; \
     fi; \
     echo "Building version: $(cat /app/VERSION)"
 
-# Install the application and generate Prisma client
-# COMPLEXITY: This step requires multiple operations that must be done together
-RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
-    --mount=type=cache,target=/root/.cache \
-    # Install the application package itself
-    poetry install --only main
+# Sync the project
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked
 
 # ==============================================================================
 # DEVELOPMENT STAGE - Development Environment
@@ -249,7 +231,7 @@ RUN set -eux; \
         chsh -s /usr/bin/zsh && \
         apt-get clean && \
         rm -rf /var/lib/apt/lists/*; \
-    fi; \
+    fi
 # Fix ownership of all application files for non-root user
 # SECURITY: Ensures the application runs with proper permissions
 COPY --from=build --chown=nonroot:nonroot /app /app
@@ -258,22 +240,21 @@ RUN set -eux; \
     # Create application cache and temporary directories
     # These directories are used by the bot for caching and temporary files
     mkdir -p /app/.cache/tldr /app/temp; \
-    # Create user cache directories (fixes permission issues for Prisma/npm)
+    # Create user cache directories (fixes permission issues for npm and other tools)
     mkdir -p /home/nonroot/.cache /home/nonroot/.npm; \
+    # Ensure correct ownership for nonroot user to write into these directories
+    chown -R nonroot:nonroot /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm
 # Switch to non-root user for all subsequent operations
 # SECURITY: Follows principle of least privilege
 USER nonroot
 
-# Install development dependencies and setup Prisma
+# Install development dependencies
 # DEVELOPMENT: These tools are needed for linting, testing, and development workflow
-RUN poetry install --only dev --no-root --no-directory && \
-    poetry run prisma py fetch && \
-    poetry run prisma generate
+RUN uv sync --dev
 
 # Development container startup command
-# WORKFLOW: Regenerates Prisma client and starts the bot in development mode
-# This ensures the database client is always up-to-date with schema changes
-CMD ["sh", "-c", "poetry run prisma generate && exec poetry run tux --dev start"]
+# WORKFLOW: Starts the bot in development mode with automatic database migrations
+CMD ["uv", "run", "tux", "--dev", "start"]
 
 # ==============================================================================
 # PRODUCTION STAGE - Minimal Runtime Environment
@@ -311,8 +292,7 @@ RUN echo 'path-exclude /usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
     echo 'path-exclude /usr/share/man/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
     echo 'path-exclude /usr/share/groff/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
     echo 'path-exclude /usr/share/info/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
-    echo 'path-exclude /usr/share/lintian/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
-    echo 'path-exclude /usr/share/linda/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc
+    echo 'path-exclude /usr/share/lintian/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc
 
 # Install ONLY runtime dependencies (minimal subset of base stage)
 # SECURITY: Update all packages first, then install minimal runtime dependencies
@@ -355,7 +335,7 @@ ENV VIRTUAL_ENV=/app/.venv \
 # EFFICIENCY: Only copies what's needed for runtime
 COPY --from=build --chown=nonroot:nonroot /app/.venv /app/.venv
 COPY --from=build --chown=nonroot:nonroot /app/tux /app/tux
-COPY --from=build --chown=nonroot:nonroot /app/prisma /app/prisma
+
 COPY --from=build --chown=nonroot:nonroot /app/config /app/config
 COPY --from=build --chown=nonroot:nonroot /app/pyproject.toml /app/pyproject.toml
 COPY --from=build --chown=nonroot:nonroot /app/VERSION /app/VERSION
@@ -372,15 +352,13 @@ RUN set -eux; \
   rm -rf /home/nonroot/.npm/_cacache_; \
   chown nonroot:nonroot /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm
 
-# Switch to non-root user and finalize Prisma binaries
+# Switch to non-root user for final optimizations
 USER nonroot
-RUN /app/.venv/bin/python -m prisma py fetch \
- && /app/.venv/bin/python -m prisma generate
 
 USER root
-# Aggressive cleanup and optimization after Prisma setup
+# Aggressive cleanup and optimization
 # PERFORMANCE: Single RUN reduces layer count and enables atomic cleanup
-# SIZE: Removes unnecessary files to minimize final image size but preserves Prisma binaries
+# SIZE: Removes unnecessary files to minimize final image size
 RUN set -eux; \
     # VIRTUAL ENVIRONMENT CLEANUP
     # The following operations remove unnecessary files from the Python environment
@@ -409,7 +387,7 @@ RUN set -eux; \
     # Compile Python bytecode for performance optimization
     # PERFORMANCE: Pre-compiled bytecode improves startup time
     # Note: Some compilation errors are expected and ignored
-    /app/.venv/bin/python -m compileall -b -q /app/tux /app/.venv/lib/python3.13/site-packages 2>/dev/null || true
+    /app/.venv/bin/python -m compileall -b -q /app/src/tux /app/.venv/lib/python3.13/site-packages 2>/dev/null || true
 
 # Switch back to non-root user for runtime
 USER nonroot
@@ -418,7 +396,7 @@ USER nonroot
 # MONITORING: Allows Docker/Kubernetes to monitor application health
 # RELIABILITY: Enables automatic restart of unhealthy containers
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import tux.cli.core; import tux.utils.env; print('Health check passed')" || exit 1
+    CMD python -c "import tux.cli.core; import tux.shared.config.env; print('Health check passed')" || exit 1
 
 # --interval=30s    : Check health every 30 seconds
 # --timeout=10s     : Allow 10 seconds for health check to complete

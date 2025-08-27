@@ -1,1 +1,1 @@
-"""Test suite for Tux."""
+# New tests package

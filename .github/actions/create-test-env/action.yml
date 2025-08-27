@@ -1,3 +1,4 @@
+---
 name: Create Test Environment
 description: Create .env file with test configuration for CI/testing purposes
 inputs:

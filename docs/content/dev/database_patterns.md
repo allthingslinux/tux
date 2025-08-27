@@ -17,12 +17,12 @@ All controllers extend the `BaseController` class ([`tux/database/controllers/ba
 ```python
 # Example Structure
 from tux.database.controllers.base import BaseController
-from prisma.models import YourModel
+from tux.database.models.your_model import YourModel
 
 class YourController(BaseController[YourModel]):
-    def __init__(self):
-        # Initialize with the Prisma model name (lowercase table name)
-        super().__init__("yourModel") # Corresponds to YourModel in Prisma schema
+    def __init__(self, db: DatabaseService):
+        # Initialize with the database service
+        super().__init__(db)
 ```
 
 ### Relations Management
@@ -77,7 +77,7 @@ async def update_score(self, user_id: int, points_to_add: int) -> User | None:
 
 ### Safe Attribute Access
 
-When accessing attributes from a model instance returned by Prisma, especially optional fields or fields within included relations, use `safe_get_attr` to handle `None` values or potentially missing attributes gracefully by providing a default value.
+When accessing attributes from a model instance returned by SQLModel/SQLAlchemy, especially optional fields or fields within relationships, use `safe_get_attr` to handle `None` values or potentially missing attributes gracefully by providing a default value.
 
 ```python
 # Instead of risking AttributeError or TypeError:
@@ -89,13 +89,13 @@ count = self.safe_get_attr(entity, "count", 0) + 1
 
 ## Best Practices
 
-1. **Unique Identifiers**: Use `find_unique` for lookups based on primary keys or `@unique` fields defined in your Prisma schema.
+1. **Unique Identifiers**: Use SQLAlchemy's `select` with appropriate `where` clauses for lookups based on primary keys or unique fields defined in your SQLModel schema.
 2. **Relation Handling**: Always use `connect_or_create_relation` when creating/updating entities with foreign key relationships.
 3. **Batch Operations**: Utilize `update_many` and `delete_many` for bulk operations where applicable to improve performance.
 4. **Transactions**: Wrap sequences of operations that must succeed or fail together (especially read-modify-write patterns) in `execute_transaction`.
 5. **Error Handling**: Leverage the `BaseController`'s error handling. Add specific `try...except` blocks within controller methods only if custom error logging or handling is needed beyond the base implementation.
 6. **Documentation**: Document all public controller methods using NumPy-style docstrings, explaining parameters, return values, and potential exceptions.
-7. **Type Safety**: Use specific Prisma model types (e.g., `prisma.models.User`) and type hints for parameters and return values.
+7. **Type Safety**: Use specific SQLModel types (e.g., `tux.database.models.guild.Guild`) and type hints for parameters and return values.
 
 ## Common Controller Methods
 

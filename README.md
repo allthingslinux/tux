@@ -25,8 +25,8 @@
             <img alt="Repo size" src="https://img.shields.io/github/repo-size/allthingslinux/tux"></a>
         <a href="https://python.org">
             <img alt="Python" src="https://img.shields.io/badge/python-3.13+-blue.svg"></a>
-        <a href="https://python-poetry.org">
-            <img alt="Poetry" src="https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json"></a>
+        <a href="https://docs.astral.sh/uv">
+            <img alt="Uv" src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json"></a>
         <a href="https://github.com/allthingslinux/tux/blob/main/LICENSE">
             <img alt="License" src="https://img.shields.io/github/license/allthingslinux/tux"></a>
         <a href="https://discord.gg/linux">
@@ -39,10 +39,14 @@
 
 ## Table of Contents
 
+- [Table of Contents](#table-of-contents)
 - [About](#about)
 - [Tech Stack](#tech-stack)
 - [Bot Features](#bot-features)
 - [Installation and Development](#installation-and-development)
+  - [Prerequisites](#prerequisites)
+  - [Setup \& Workflow](#setup--workflow)
+  - [Please refer to the **DEVELOPER.md** guide for more information](#please-refer-to-the-developermd-guide-for-more-information)
 - [License](#license)
 - [Metrics](#metrics)
 - [Contributors](#contributors)
@@ -56,12 +60,12 @@ It is designed to provide a variety of features to the server, including moderat
 ## Tech Stack
 
 - Python 3.13+ alongside the `discord.py` library
-- Poetry for dependency management
+- Uv for dependency management
 - Docker and Docker Compose for optional containerized environments
 - Strict typing with `basedpyright` and type hints
-- Type safe ORM using `prisma`
+- Type safe ORM using `SQLModel` with `SQLAlchemy`
 - Linting and formatting via `ruff`
-- Custom CLI via `click` and `poetry` scripts
+- Custom CLI via `click` and `uv` scripts
 - Rich logging with `loguru`
 - Exception handling with `sentry-sdk`
 - Request handling with `httpx`
@@ -79,14 +83,14 @@ It is designed to provide a variety of features to the server, including moderat
 - Custom help command
 - Configuration system (`config/settings.yml.example`)
 - Dynamic role-based (access level) permission system
-- Basic extensions system (see [extensions](tux/extensions/README.md))
+- Basic extensions system (see [extensions](src/tux/extensions/README.md))
 
 ## Installation and Development
 
 ### Prerequisites
 
 - Python 3.13+
-- [Poetry](https://python-poetry.org/docs/)
+- [Uv](https://docs.astral.sh/uv/)
 - A PostgreSQL database (e.g. via [Supabase](https://supabase.io/) or local installation)
 - Optional: [Docker](https://docs.docker.com/get-docker/) & [Docker Compose](https://docs.docker.com/compose/install/)
 
@@ -110,7 +114,7 @@ It is designed to provide a variety of features to the server, including moderat
     - linting/formatting
     - understanding the `tux` CLI commands
 
-   ### Please refer to the **[DEVELOPER.md](DEVELOPER.md)** guide for more information
+### Please refer to the **[DEVELOPER.md](DEVELOPER.md)** guide for more information
 
 ## License
 

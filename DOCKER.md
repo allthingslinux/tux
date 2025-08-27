@@ -79,30 +79,30 @@ All Docker operations are now available through a single, powerful script:
 
 ```bash
 # Start development environment
-poetry run tux --dev docker up
+uv run tux --dev docker up
 
 # Monitor logs
-poetry run tux --dev docker logs -f
+uv run tux --dev docker logs -f
 
 # Execute commands in container
-poetry run tux --dev docker exec tux bash
+uv run tux --dev docker exec tux bash
 
 # Stop environment
-poetry run tux --dev docker down
+uv run tux --dev docker down
 ```
 
 ### **Production Deployment**
 
 ```bash
 # Build and start production
-poetry run tux docker build
-poetry run tux docker up -d
+uv run tux docker build
+uv run tux docker up -d
 
 # Check health status
-poetry run tux docker ps
+uv run tux docker ps
 
 # View logs
-poetry run tux docker logs -f
+uv run tux docker logs -f
 ```
 
 ## 🧪 Testing Strategy
@@ -141,18 +141,18 @@ BUILD_THRESHOLD=180000 MEMORY_THRESHOLD=256 ./scripts/docker-toolkit.sh test
 
 ### **When to Use Each Test Tier**
 
-| Scenario | Quick | Standard | Comprehensive |
-|----------|-------|----------|---------------|
-| **Daily development** | ✅ | | |
-| **Before commit** | ✅ | | |
-| **Docker file changes** | | ✅ | |
-| **Performance investigation** | | ✅ | |
-| **Before release** | | ✅ | ✅ |
-| **CI/CD pipeline** | | ✅ | |
-| **Major refactoring** | | | ✅ |
-| **New developer onboarding** | | | ✅ |
-| **Production deployment** | | ✅ | |
-| **Issue investigation** | | ✅ | ✅ |
+| Scenario                      | Quick | Standard | Comprehensive |
+| ----------------------------- | ----- | -------- | ------------- |
+| **Daily development**         | ✅     |          |               |
+| **Before commit**             | ✅     |          |               |
+| **Docker file changes**       |       | ✅        |               |
+| **Performance investigation** |       | ✅        |               |
+| **Before release**            |       | ✅        | ✅             |
+| **CI/CD pipeline**            |       | ✅        |               |
+| **Major refactoring**         |       |          | ✅             |
+| **New developer onboarding**  |       |          | ✅             |
+| **Production deployment**     |       | ✅        |               |
+| **Issue investigation**       |       | ✅        | ✅             |
 
 ### **Performance Thresholds**
 
@@ -195,7 +195,7 @@ FROM python:3.13.5-slim AS production # Minimal production runtime
 ### **Build Security**
 
 - ✅ **Multi-stage separation** (build tools excluded from production)
-- ✅ **Dependency locking** (Poetry with `poetry.lock`)
+- ✅ **Dependency locking** (Uv with `uv.lock`)
 - ✅ **Vulnerability scanning** (Docker Scout integration)
 - ✅ **Minimal attack surface** (slim base images)
 
@@ -255,7 +255,7 @@ develop:
     - action: rebuild   # Rebuild triggers
       path: pyproject.toml
     - action: rebuild
-      path: prisma/schema/
+      path: src/tux/database/migrations/
 ```
 
 ### **Development Tools**
@@ -297,14 +297,14 @@ jq '.performance | to_entries[] | "\(.key): \(.value.value) \(.value.unit)"' log
 
 ```bash
 # Development mode (default)
-poetry run tux --dev docker up
+uv run tux --dev docker up
 
 # Production mode
-poetry run tux --prod docker up
+uv run tux --prod docker up
 
 # CLI environment flags
-poetry run tux --dev docker build    # Development build
-poetry run tux --prod docker build   # Production build
+uv run tux --dev docker build    # Development build
+uv run tux --prod docker build   # Production build
 ```
 
 ### **Configuration Files**
@@ -320,10 +320,10 @@ poetry run tux --prod docker build   # Production build
 
 ```bash
 # Preview cleanup (safe)
-poetry run tux docker cleanup --dry-run
+uv run tux docker cleanup --dry-run
 
 # Remove tux resources only
-poetry run tux docker cleanup --force --volumes
+uv run tux docker cleanup --force --volumes
 
 # Standard test with cleanup
 ./scripts/docker-toolkit.sh test --force-clean
@@ -359,7 +359,7 @@ Verify that cleanup operations only affect tux resources:
 docker images | grep -E "(python|ubuntu|alpine)" > /tmp/before_images.txt
 
 # Run safe cleanup
-poetry run tux docker cleanup --force --volumes
+uv run tux docker cleanup --force --volumes
 
 # After cleanup - verify system images still present
 docker images | grep -E "(python|ubuntu|alpine)" > /tmp/after_images.txt
@@ -385,13 +385,13 @@ docker container prune -f            # Removes ALL stopped containers
 
 ### **Expected Performance Targets**
 
-| Metric | Development | Production | Threshold |
-|--------|-------------|------------|-----------|
-| **Fresh Build** | ~108s | ~115s | < 300s |
-| **Cached Build** | ~0.3s | ~0.3s | < 60s |
-| **Container Startup** | < 5s | < 3s | < 10s |
-| **Memory Usage** | < 1GB | < 512MB | Configurable |
-| **Image Size** | ~2GB | ~500MB | Monitored |
+| Metric                | Development | Production | Threshold    |
+| --------------------- | ----------- | ---------- | ------------ |
+| **Fresh Build**       | ~108s       | ~115s      | < 300s       |
+| **Cached Build**      | ~0.3s       | ~0.3s      | < 60s        |
+| **Container Startup** | < 5s        | < 3s       | < 10s        |
+| **Memory Usage**      | < 1GB       | < 512MB    | Configurable |
+| **Image Size**        | ~2GB        | ~500MB     | Monitored    |
 
 ### **Performance Alerts**
 
@@ -419,13 +419,13 @@ healthcheck:
 
 ```bash
 # Health status
-poetry run tux docker health
+uv run tux docker health
 
 # Resource usage
 docker stats tux
 
 # Container logs
-poetry run tux docker logs -f
+uv run tux docker logs -f
 
 # System overview
 docker system df
@@ -442,7 +442,7 @@ docker system df
 docker builder prune -f
 
 # Rebuild without cache
-poetry run tux docker build --no-cache
+uv run tux docker build --no-cache
 ```
 
 #### **Permission Issues**
@@ -472,7 +472,7 @@ docker stats --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
 
 ```bash
 # Restart with rebuild
-poetry run tux --dev docker up --build
+uv run tux --dev docker up --build
 
 # Check sync logs
 docker compose -f docker-compose.dev.yml logs -f
@@ -483,17 +483,17 @@ docker compose -f docker-compose.dev.yml exec tux test -f /app/test_file.py
 rm test_file.py
 ```
 
-#### **Prisma Issues**
+#### **Database Issues**
 
 ```bash
-# Regenerate Prisma client
-poetry run tux --dev docker exec tux poetry run prisma generate
+# Check database connection
+uv run tux --dev docker exec tux tux db current
 
-# Check Prisma binaries
-poetry run tux --dev docker exec tux ls -la .venv/lib/python*/site-packages/prisma
+# Upgrade database to latest migration
+uv run tux --dev docker exec tux tux db upgrade
 
-# Test database operations
-poetry run tux --dev docker exec tux poetry run prisma db push --accept-data-loss
+# Reset database (use with caution - will lose all data)
+uv run tux --dev docker exec tux tux db reset
 ```
 
 #### **Memory and Resource Issues**
@@ -515,7 +515,7 @@ docker stop memory-test && docker rm memory-test
 
 ```bash
 # Safe emergency cleanup
-poetry run tux docker cleanup --force --volumes
+uv run tux docker cleanup --force --volumes
 docker builder prune -f
 
 # Check system state

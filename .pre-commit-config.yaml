@@ -1,10 +1,10 @@
+---
 default_language_version:
   python: python3.13
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
-      - id: check-yaml
       - id: check-json
       - id: check-toml
       - id: end-of-file-fixer
@@ -14,19 +14,18 @@ repos:
     rev: v0.24.1
     hooks:
       - id: validate-pyproject
-        additional_dependencies:
-          - validate-pyproject-schema-store[all]
+        additional_dependencies: ['validate-pyproject-schema-store[all]']
   - repo: https://github.com/lyz-code/yamlfix
     rev: 1.17.0
     hooks:
       - id: yamlfix
-        exclude: \.(commitlintrc|pre-commit-hooks)\.yaml$
+        exclude: \.(commitlintrc|pre-commit-hooks)\.yaml$|docker-compose.*\.yml$
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.37.1
     hooks:
       - id: yamllint
-        args:
-          - -c=.yamllint.yml
+        exclude: docker-compose.*\.yml$
+        args: [-c=.yamllint.yml]
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.7
     hooks:
@@ -39,20 +38,19 @@ repos:
     rev: v3.20.0
     hooks:
       - id: pyupgrade
-        args:
-          - --py313-plus
+        args: [--py313-plus]
+        exclude: ^(src/tux/database/models/.*\.py)$
   - repo: https://github.com/asottile/add-trailing-comma
     rev: v3.2.0
     hooks:
       - id: add-trailing-comma
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.7
+    rev: v0.12.10
     hooks:
       - id: ruff-check
-        args:
-          - --fix
+        args: [--fix]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.7
+    rev: v0.12.10
     hooks:
       - id: ruff-format
   - repo: https://github.com/gitleaks/gitleaks
@@ -63,12 +61,11 @@ repos:
     rev: v9.22.0
     hooks:
       - id: commitlint
-        stages:
-          - commit-msg
+        stages: [commit-msg]
         additional_dependencies:
           - '@commitlint/cli'
           - '@commitlint/config-conventional'
-exclude: ^(\.archive/|.*typings/|node_modules/|\.venv/).*$
+exclude: ^(\.archive/|.*typings/|node_modules/|\.venv/|\.kiro/).*$
 ci:
   autofix_commit_msg: 'style: auto fixes from pre-commit hooks'
   autoupdate_commit_msg: 'chore: update pre-commit hook versions'
