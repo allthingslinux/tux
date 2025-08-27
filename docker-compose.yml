@@ -16,7 +16,13 @@ services:
       - tux_postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     healthcheck:
-      test: [CMD-SHELL, pg_isready -U tuxuser -d tuxdb]
+      test:
+        - CMD-SHELL
+        - pg_isready
+        - -U
+        - tuxuser
+        - -d
+        - tuxdb
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,7 +46,8 @@ services:
       - tux_cache:/app/.cache
       - tux_temp:/app/temp
       - tux_user_home:/home/nonroot
-    env_file: [.env]
+    env_file:
+      - .env
     environment:
       TUX_VERSION: ${VERSION}
     restart: unless-stopped
@@ -48,7 +55,11 @@ services:
       tux-postgres:
         condition: service_healthy
     healthcheck:
-      test: [CMD, python, -c, import sys; sys.exit(0)]
+      test:
+        - CMD
+        - python
+        - -c
+        - import sys; sys.exit(0)
       interval: 30s
       timeout: 10s
       retries: 3
@@ -61,9 +72,12 @@ services:
         reservations:
           memory: 256M
           cpus: '0.25'
-    security_opt: [no-new-privileges:true]
+    security_opt:
+      - no-new-privileges:true
     read_only: true
-    tmpfs: [/tmp:size=100m, /var/tmp:size=50m]
+    tmpfs:
+      - /tmp:size=100m
+      - /var/tmp:size=50m
     logging:
       driver: json-file
       options:
