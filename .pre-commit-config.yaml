@@ -20,7 +20,7 @@ repos:
     rev: 1.17.0
     hooks:
       - id: yamlfix
-        exclude: \.(commitlintrc|pre-commit-hooks)\.yaml$
+        exclude: \.(commitlintrc|pre-commit-hooks)\.yaml$|docker-compose.*\.yml$
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.37.1
     hooks:
