@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -9,15 +8,14 @@ from pathlib import Path
 src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
+# Import and initialize the custom Tux logger
+import logger_setup  # noqa: F401 # pyright: ignore[reportUnusedImport]
 from loguru import logger
 
 
 def get_compose_base_cmd() -> list[str]:
-    """Get the base docker compose command with appropriate -f flags."""
-    base = ["docker", "compose", "-f", "docker-compose.yml"]
-    if os.getenv("MODE", "dev") == "dev":
-        base.extend(["-f", "docker-compose.dev.yml"])
-    return base
+    """Get the base docker compose command."""
+    return ["docker", "compose", "-f", "docker-compose.yml"]
 
 
 def run_command(cmd: list[str], env: dict[str, str] | None = None) -> int:
@@ -42,7 +40,25 @@ def run_simple_command(command: str, compose_args: list[str], log_message: str) 
     return run_command(cmd)
 
 
-def main():  # noqa: PLR0912, PLR0915  # sourcery skip: low-code-quality
+def parse_args_flags(args: list[str]) -> tuple[list[str], list[str]]:
+    """Parse arguments into service names and flags.
+
+    Returns:
+        tuple: (service_args, flag_args)
+    """
+    service_args: list[str] = []
+    flag_args: list[str] = []
+
+    for arg in args:
+        if arg.startswith("-"):
+            flag_args.append(arg)
+        else:
+            service_args.append(arg)
+
+    return service_args, flag_args
+
+
+def main():  # noqa: PLR0912, PLR0915  # sourcery skip: extract-method, inline-immediately-returned-variable, low-code-quality
     """Main entry point."""
     if len(sys.argv) < 2:
         logger.error("❌ No command specified")
@@ -65,37 +81,62 @@ def main():  # noqa: PLR0912, PLR0915  # sourcery skip: low-code-quality
     elif command == "up":
         logger.info("🚀 Starting Docker services...")
         cmd = [*get_compose_base_cmd(), "up"]
-        if "-d" in args or "--detach" in args:
+
+        # Parse arguments into service names and flags
+        service_args, flag_args = parse_args_flags(args)
+
+        # Add service names if provided
+        if service_args:
+            cmd.extend(service_args)
+
+        # Add flags
+        if "-d" in flag_args or "--detach" in flag_args:
             cmd.append("-d")
-        if "--build" in args:
+        if "--build" in flag_args:
             cmd.append("--build")
-        if "--watch" in args:
+        if "--watch" in flag_args:
             cmd.append("--watch")
+
         exit_code = run_command(cmd)
 
     elif command == "down":
         logger.info("🛑 Stopping Docker services...")
         cmd = [*get_compose_base_cmd(), "down"]
-        if "-v" in args or "--volumes" in args:
+
+        # Parse arguments into service names and flags
+        service_args, flag_args = parse_args_flags(args)
+
+        # Add service names if provided
+        if service_args:
+            cmd.extend(service_args)
+
+        # Add flags
+        if "-v" in flag_args or "--volumes" in flag_args:
             cmd.append("--volumes")
-        if "--remove-orphans" in args:
+        if "--remove-orphans" in flag_args:
             cmd.append("--remove-orphans")
+
         exit_code = run_command(cmd)
 
     elif command == "logs":
         logger.info("📋 Showing Docker service logs...")
         cmd = [*get_compose_base_cmd(), "logs"]
-        if "-f" in args or "--follow" in args:
+
+        # Parse arguments into service names and flags
+        service_args, flag_args = parse_args_flags(args)
+
+        # Add service names if provided
+        if service_args:
+            cmd.extend(service_args)
+
+        # Add flags
+        if "-f" in flag_args or "--follow" in flag_args:
             cmd.append("-f")
-        if "-n" in args or "--tail" in args:
-            tail_idx = args.index("-n") if "-n" in args else args.index("--tail")
-            if tail_idx + 1 < len(args):
-                cmd.extend(["-n", args[tail_idx + 1]])
-        # Add service name if provided
-        for i, arg in enumerate(args):
-            if not arg.startswith("-") and i > 0:
-                cmd.append(arg)
-                break
+        if "-n" in flag_args or "--tail" in flag_args:
+            tail_idx = flag_args.index("-n") if "-n" in flag_args else flag_args.index("--tail")
+            if tail_idx + 1 < len(flag_args):
+                cmd.extend(["-n", flag_args[tail_idx + 1]])
+
         exit_code = run_command(cmd)
 
     elif command == "ps":

@@ -9,8 +9,10 @@ from pathlib import Path
 src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
+# Import and initialize the custom Tux logger
 from typing import TypedDict
 
+import logger_setup  # noqa: F401 # pyright: ignore[reportUnusedImport]
 from loguru import logger
 
 
@@ -23,43 +25,42 @@ class CommandConfig(TypedDict):
 
 def build_coverage_command(args: list[str]) -> list[str]:
     """Build coverage command with various options."""
-    # Add coverage path
-    specific = next((args[i + 1] for i, arg in enumerate(args) if arg == "--specific" and i + 1 < len(args)), None)
-    cmd = ["uv", "run", "pytest", f"--cov={specific}" if specific else "--cov=tux"]
+    # Start with base pytest command (coverage options come from pyproject.toml)
+    cmd = ["uv", "run", "pytest"]
 
-    # Add coverage report format
+    # Handle specific path override
+    specific = next((args[i + 1] for i, arg in enumerate(args) if arg == "--specific" and i + 1 < len(args)), None)
+    if specific:
+        cmd.append(f"--cov={specific}")
+
+    # Handle coverage format overrides
     if "--quick" in args:
         cmd.append("--cov-report=")
-    else:
-        format_val = None
-        if "--format" in args:
-            format_idx = args.index("--format")
-            if format_idx + 1 < len(args):
-                format_val = args[format_idx + 1]
+    elif "--format" in args:
+        format_idx = args.index("--format")
+        if format_idx + 1 < len(args):
+            format_val = args[format_idx + 1]
+            match format_val:
+                case "html":
+                    cmd.append("--cov-report=html")
+                case "xml":
+                    xml_file = next(
+                        (args[xml_idx + 1] for xml_idx in [args.index("--xml-file")] if xml_idx + 1 < len(args)),
+                        "coverage.xml",
+                    )
+                    cmd.append(f"--cov-report=xml:{xml_file}")
+                case "json":
+                    cmd.append("--cov-report=json")
+                case _:
+                    # For unsupported formats, let pyproject.toml handle it
+                    pass
 
-        match format_val:
-            case "html":
-                cmd.append("--cov-report=html")
-            case "xml":
-                xml_file = next(
-                    (args[xml_idx + 1] for xml_idx in [args.index("--xml-file")] if xml_idx + 1 < len(args)),
-                    "coverage.xml",
-                )
-                cmd.append(f"--cov-report=xml:{xml_file}")
-            case "json":
-                cmd.append("--cov-report=json")
-            case _:
-                cmd.append("--cov-report=term-missing")
-
-    # Add fail-under if specified
+    # Handle fail-under override
     if "--fail-under" in args:
         fail_idx = args.index("--fail-under")
         if fail_idx + 1 < len(args):
             fail_val = args[fail_idx + 1]
             cmd.extend(["--cov-fail-under", fail_val])
-
-    # Add randomization
-    cmd.extend(["--randomly-seed=last"])
 
     return cmd
 
@@ -99,41 +100,23 @@ def main():
     command = sys.argv[1]
     args = sys.argv[2:]
 
-    # Command configurations
+    # Command configurations - simplified to rely on pyproject.toml
     commands: dict[str, CommandConfig] = {
         "run": {
             "description": "🧪 Running tests with coverage and enhanced output...",
-            "cmd": ["uv", "run", "pytest", "--cov=tux", "--cov-report=term-missing", "--randomly-seed=last"],
+            "cmd": ["uv", "run", "pytest"],
         },
         "quick": {
             "description": "⚡ Running tests without coverage (faster)...",
-            "cmd": ["uv", "run", "pytest", "--no-cov", "--randomly-seed=last"],
+            "cmd": ["uv", "run", "pytest", "--no-cov"],
         },
         "plain": {
             "description": "📝 Running tests with plain output...",
-            "cmd": [
-                "uv",
-                "run",
-                "pytest",
-                "-p",
-                "no:sugar",
-                "--cov=tux",
-                "--cov-report=term-missing",
-                "--randomly-seed=last",
-            ],
+            "cmd": ["uv", "run", "pytest", "-p", "no:sugar"],
         },
         "parallel": {
             "description": "🔄 Running tests in parallel...",
-            "cmd": [
-                "uv",
-                "run",
-                "pytest",
-                "--cov=tux",
-                "--cov-report=term-missing",
-                "-n",
-                "auto",
-                "--randomly-seed=last",
-            ],
+            "cmd": ["uv", "run", "pytest", "-n", "auto"],
         },
         "html": {
             "description": "🌐 Running tests and generating HTML report...",
@@ -141,11 +124,9 @@ def main():
                 "uv",
                 "run",
                 "pytest",
-                "--cov=tux",
                 "--cov-report=html",
                 "--html=reports/test_report.html",
                 "--self-contained-html",
-                "--randomly-seed=last",
             ],
         },
         "benchmark": {

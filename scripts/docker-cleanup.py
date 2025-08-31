@@ -10,6 +10,8 @@ from typing import Any
 src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
+# Import and initialize the custom Tux logger
+import logger_setup  # noqa: F401 # pyright: ignore[reportUnusedImport]
 from loguru import logger
 
 
@@ -132,7 +134,6 @@ def cleanup_dangling_resources() -> None:
             ["docker", "images", "--filter", "dangling=true", "--format", "{{.ID}}"],
             capture_output=True,
             text=True,
-            check=True,
         )
         stdout_content = result.stdout or ""
         if dangling_ids := [line.strip() for line in stdout_content.strip().split("\n") if line.strip()]:
@@ -140,7 +141,6 @@ def cleanup_dangling_resources() -> None:
                 ["docker", "rmi", "-f", *dangling_ids],
                 capture_output=True,
                 text=True,
-                check=True,
             )
             logger.success(f"Removed {len(dangling_ids)} dangling images")
         else:

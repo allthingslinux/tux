@@ -12,6 +12,8 @@ from typing import Any
 src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
+# Import and initialize the custom Tux logger
+import logger_setup  # noqa: F401 # pyright: ignore[reportUnusedImport]
 from loguru import logger
 
 
@@ -176,7 +178,7 @@ def run_compatibility_tests() -> None:
     # Test compose compatibility
     try:
         safe_run(
-            ["docker", "compose", "-f", "docker-compose.dev.yml", "config"],
+            ["python", "scripts/docker-compose.py", "config"],
             capture_output=True,
             timeout=30,
         )

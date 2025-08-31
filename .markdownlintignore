@@ -7,6 +7,9 @@
 docker-compose*.yml
 *.lock
 
+# Exclude auto-generated files
+CONFIG.md
+
 # Exclude build and cache directories
 .venv/
 .pytest_cache/

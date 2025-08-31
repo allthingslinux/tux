@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import asyncio
-import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -10,26 +9,19 @@ from typing import Any
 src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
-# Import and initialize the custom Tux logger
-import logger_setup  # noqa: F401 # pyright: ignore[reportUnusedImport]
 from loguru import logger
 
-from tux.shared.config.env import get_database_url
+from tux.shared.config import CONFIG
 
 
 def setup_environment():
     """Setup environment variables."""
-    mode = os.getenv("MODE", "dev")
-    os.environ["MODE"] = mode
+    logger.info("Setting up database migration...")
 
-    try:
-        db_url = get_database_url()
-        os.environ["DATABASE_URL"] = db_url
-        logger.info(f"Running in {mode} mode")
-        logger.info(f"Database: {db_url.split('@')[1] if '@' in db_url else 'local'}")
-    except Exception as e:
-        logger.error(f"❌ Failed to configure database: {e}")
-        sys.exit(1)
+    # Get configuration
+    db_url = CONFIG.get_database_url()
+
+    logger.info(f"Database: {db_url.split('@')[1] if '@' in db_url else 'local'}")
 
 
 async def reset_migrations():
@@ -37,9 +29,12 @@ async def reset_migrations():
     import alembic.command as alembic_cmd  # noqa: PLC0415
     from alembic.config import Config  # noqa: PLC0415
 
+    # Get configuration
+    db_url = CONFIG.get_database_url()
+
     # Create alembic config
     config = Config()
-    config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
+    config.set_main_option("sqlalchemy.url", db_url)
     config.set_main_option("script_location", "src/tux/database/migrations")
     config.set_main_option("version_locations", "src/tux/database/migrations/versions")
     config.set_main_option("prepend_sys_path", "src")
@@ -75,14 +70,17 @@ async def reset_migrations():
         return 0
 
 
-async def run_migration_command(command: str, **kwargs: Any):
+async def run_migration_command(command: str, **kwargs: Any) -> int:
     """Run a migration command."""
     import alembic.command as alembic_cmd  # noqa: PLC0415
     from alembic.config import Config  # noqa: PLC0415
 
+    # Get configuration
+    db_url = CONFIG.get_database_url()
+
     # Create alembic config
     config = Config()
-    config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
+    config.set_main_option("sqlalchemy.url", db_url)
     config.set_main_option("script_location", "src/tux/database/migrations")
     config.set_main_option("version_locations", "src/tux/database/migrations/versions")
     config.set_main_option("prepend_sys_path", "src")
@@ -99,39 +97,37 @@ async def run_migration_command(command: str, **kwargs: Any):
             alembic_cmd.current(config)
         elif command == "history":
             alembic_cmd.history(config)
-        elif command == "reset":
-            logger.warning("⚠️  Resetting database...")
-            alembic_cmd.downgrade(config, "base")
-        elif command == "reset-migrations":
+        elif command in {"reset", "reset-migrations"}:
             return await reset_migrations()
         else:
-            logger.error(f"❌ Unknown command: {command}")
+            logger.error(f"Unknown command: {command}")
             return 1
 
-        logger.success(f"✅ {command} completed successfully")
+        logger.success(f"✅ {command} completed successfully!")
+
     except Exception as e:
         logger.error(f"❌ {command} failed: {e}")
         return 1
-    else:
-        return 0
+
+    return 0
 
 
-def main():
+async def main() -> int:
     """Main entry point."""
     if len(sys.argv) < 2:
-        logger.error("❌ No command specified")
-        sys.exit(1)
+        logger.error("Usage: python db-migrate.py <command>")
+        logger.info("Available commands: upgrade, downgrade, revision, current, history, reset")
+        return 1
 
     command = sys.argv[1]
+    logger.info(f"Running migration command: {command}")
+
+    # Setup environment
     setup_environment()
 
-    if command in ["upgrade", "downgrade", "revision", "current", "history", "reset", "reset-migrations"]:
-        exit_code = asyncio.run(run_migration_command(command))
-        sys.exit(exit_code)
-    else:
-        logger.error(f"❌ Unknown command: {command}")
-        sys.exit(1)
+    return await run_migration_command(command)
 
 
 if __name__ == "__main__":
-    main()
+    exit_code = asyncio.run(main())
+    sys.exit(exit_code)

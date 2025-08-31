@@ -83,14 +83,16 @@ repos:
         language: system
         types: [file, python]
         pass_filenames: false
-      - id: settings-doc-env-example
-        name: Generate env.example template
-        description: This hook generates env.example from pydantic.BaseSettings to
-          a file.
-        entry: make docs-env-example
-        language: system
-        types: [file, python]
-        pass_filenames: false
+      # Temporarily disabled - causes conflicts with end-of-file-fixer
+      # TODO: Re-enable once we resolve the newline handling issue
+      # - id: settings-doc-env-example
+      #   name: Generate env.example template
+      #   description: This hook generates env.example from pydantic.BaseSettings to
+      #     a file.
+      #   entry: make docs-env-example
+      #   language: system
+      #   types: [file, python]
+      #   pass_filenames: false
 exclude: ^(\.archive/|.*typings/|node_modules/|\.venv/|\.kiro/).*$
 ci:
   autofix_commit_msg: 'style: auto fixes from pre-commit hooks'
