@@ -46,7 +46,7 @@
 - [Installation and Development](#installation-and-development)
   - [Prerequisites](#prerequisites)
   - [Setup \& Workflow](#setup--workflow)
-  - [Please refer to the **DEVELOPER.md** guide for more information](#please-refer-to-the-developermd-guide-for-more-information)
+  - [Quick Commands](#quick-commands)
 - [License](#license)
 - [Metrics](#metrics)
 - [Contributors](#contributors)
@@ -81,7 +81,7 @@ It is designed to provide a variety of features to the server, including moderat
 - Robust error handling
 - Activity rotation
 - Custom help command
-- Configuration system (`config/settings.yml.example`)
+- Configuration system (environment variables + `.env` file)
 - Dynamic role-based (access level) permission system
 - Basic extensions system (see [extensions](src/tux/extensions/README.md))
 
@@ -97,24 +97,58 @@ It is designed to provide a variety of features to the server, including moderat
 ### Setup & Workflow
 
 1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/allthingslinux/tux.git
+   cd tux
+   ```
 
-    ```bash
-    git clone https://github.com/allthingslinux/tux && cd tux
-    ```
+2. **Install dependencies:**
+   ```bash
+   uv sync
+   ```
 
-2. **Follow the Developer Guide:**
+3. **Configure your environment:**
+   ```bash
+   cp env.example .env
+   # Edit .env with your bot tokens and database URLs
+   ```
 
-    For detailed instructions on setting up:
-    - your environment (local or Docker)
-    - installing dependencies
-    - configuring `.env` and `settings.yml`
-    - managing the database
-    - running the bot
-    - using hot-reloading
-    - linting/formatting
-    - understanding the `tux` CLI commands
+4. **Start the bot:**
+   ```bash
+   # Auto-detects environment (defaults to development)
+   make start
+   
+   # Or explicitly set environment
+   make dev    # Development mode
+   make prod   # Production mode
+   ```
 
-### Please refer to the **[DEVELOPER.md](DEVELOPER.md)** guide for more information
+### Quick Commands
+
+```bash
+# Development
+make dev              # Start in development mode
+make test             # Run tests
+make lint             # Check code quality
+
+# Production
+make prod             # Start in production mode
+make docker-prod      # Start production Docker environment
+
+# Database
+make db-upgrade       # Upgrade database
+make db-revision      # Create migration
+
+# Docker
+make docker-dev       # Start development Docker environment
+make docker-prod      # Start production Docker environment
+```
+
+**For detailed setup instructions, see [SETUP.md](SETUP.md)**
+
+**For developer information, see [DEVELOPER.md](DEVELOPER.md)**
+
+**For configuration documentation, see [CONFIG.md](CONFIG.md)**
 
 ## License
 

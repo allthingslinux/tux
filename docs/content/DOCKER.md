@@ -246,16 +246,9 @@ with tempfile.NamedTemporaryFile(dir="/tmp") as tmp_file:
 ### **File Watching & Hot Reload**
 
 ```yaml
-# docker-compose.dev.yml
-develop:
-  watch:
-    - action: sync      # Instant file sync
-      path: .
-      target: /app/
-    - action: rebuild   # Rebuild triggers
-      path: pyproject.toml
-    - action: rebuild
-      path: src/tux/database/migrations/
+# Development configuration in docker-compose.yml
+# The main docker-compose.yml now includes development-specific configurations
+# using environment variables and profiles
 ```
 
 ### **Development Tools**
@@ -310,7 +303,7 @@ uv run tux --prod docker build   # Production build
 ### **Configuration Files**
 
 - **`docker-compose.yml`** - Production configuration
-- **`docker-compose.dev.yml`** - Development overrides
+- **`docker-compose.yml`** - Single configuration with environment-based overrides
 - **`Dockerfile`** - Multi-stage build definition
 - **`.dockerignore`** - Build context optimization
 
@@ -475,11 +468,11 @@ docker stats --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
 uv run tux --dev docker up --build
 
 # Check sync logs
-docker compose -f docker-compose.dev.yml logs -f
+docker compose -f docker-compose.yml logs -f
 
 # Test file sync manually
 echo "# Test change $(date)" > test_file.py
-docker compose -f docker-compose.dev.yml exec tux test -f /app/test_file.py
+docker compose -f docker-compose.yml exec tux test -f /app/test_file.py
 rm test_file.py
 ```
 
@@ -677,7 +670,7 @@ Our optimized Docker setup achieves:
 - **[DEVELOPER.md](DEVELOPER.md)** - General development setup and prerequisites
 - **[Dockerfile](Dockerfile)** - Multi-stage build definition
 - **[docker-compose.yml](docker-compose.yml)** - Production configuration
-- **[docker-compose.dev.yml](docker-compose.dev.yml)** - Development overrides
+- **[docker-compose.yml](docker-compose.yml)** - Single configuration with environment-based overrides
 - **[scripts/docker-toolkit.sh](scripts/docker-toolkit.sh)** - Unified Docker toolkit (all operations)
 
 **This Docker setup represents a complete transformation from the original implementation, delivering exceptional performance, security, and developer experience.** 🚀

@@ -20,7 +20,7 @@
 
 2. Copy the `.env.example` file to `.env` and fill in the required values.
 
-3. Copy the `config/settings.yml.example` file to `config/settings.yml` and fill in the required values.
+3. Copy the `.env.example` file to `.env` and fill in the required values.
 
 4. Start the bot
 
