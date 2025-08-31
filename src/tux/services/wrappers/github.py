@@ -9,7 +9,7 @@ from githubkit.versions.latest.models import (
 )
 from loguru import logger
 
-from tux.shared.config.settings import CONFIG
+from tux.shared.config import CONFIG
 from tux.shared.exceptions import (
     APIConnectionError,
     APIPermissionError,
@@ -20,13 +20,41 @@ from tux.shared.exceptions import (
 
 class GithubService:
     def __init__(self) -> None:
+        # Check if GitHub configuration is available
+        if not CONFIG.EXTERNAL_SERVICES.GITHUB_APP_ID:
+            msg = "GitHub App ID is not configured. Please set EXTERNAL_SERVICES__GITHUB_APP_ID in your .env file."
+            raise ValueError(
+                msg,
+            )
+
+        if not CONFIG.EXTERNAL_SERVICES.GITHUB_PRIVATE_KEY:
+            msg = "GitHub private key is not configured. Please set EXTERNAL_SERVICES__GITHUB_PRIVATE_KEY in your .env file."
+            raise ValueError(
+                msg,
+            )
+
+        if not CONFIG.EXTERNAL_SERVICES.GITHUB_INSTALLATION_ID:
+            msg = "GitHub installation ID is not configured. Please set EXTERNAL_SERVICES__GITHUB_INSTALLATION_ID in your .env file."
+            raise ValueError(
+                msg,
+            )
+
+        # Try to convert installation ID to int, with better error handling
+        try:
+            installation_id = int(CONFIG.EXTERNAL_SERVICES.GITHUB_INSTALLATION_ID)
+        except ValueError as e:
+            msg = "GitHub installation ID must be a valid integer. Please check EXTERNAL_SERVICES__GITHUB_INSTALLATION_ID in your .env file."
+            raise ValueError(
+                msg,
+            ) from e
+
         self.github = GitHub(
             AppInstallationAuthStrategy(
-                CONFIG.GITHUB_APP_ID,
-                CONFIG.GITHUB_PRIVATE_KEY,
-                int(CONFIG.GITHUB_INSTALLATION_ID),
-                CONFIG.GITHUB_CLIENT_ID,
-                CONFIG.GITHUB_CLIENT_SECRET,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_APP_ID,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_PRIVATE_KEY,
+                installation_id,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_CLIENT_ID,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_CLIENT_SECRET,
             ),
         )
 
@@ -41,8 +69,8 @@ class GithubService:
         """
         try:
             response: Response[FullRepository] = await self.github.rest.repos.async_get(
-                CONFIG.GITHUB_REPO_OWNER,
-                CONFIG.GITHUB_REPO,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO,
             )
 
             repo: FullRepository = response.parsed_data
@@ -53,7 +81,7 @@ class GithubService:
                 if e.response.status_code == 404:
                     raise APIResourceNotFoundError(
                         service_name="GitHub",
-                        resource_identifier=f"{CONFIG.GITHUB_REPO_OWNER}/{CONFIG.GITHUB_REPO}",
+                        resource_identifier=f"{CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER}/{CONFIG.EXTERNAL_SERVICES.GITHUB_REPO}",
                     ) from e
                 if e.response.status_code == 403:
                     raise APIPermissionError(service_name="GitHub") from e
@@ -87,8 +115,8 @@ class GithubService:
         """
         try:
             response: Response[Issue] = await self.github.rest.issues.async_create(
-                CONFIG.GITHUB_REPO_OWNER,
-                CONFIG.GITHUB_REPO,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO,
                 title=title,
                 body=body,
             )
@@ -131,8 +159,8 @@ class GithubService:
         """
         try:
             response: Response[IssueComment] = await self.github.rest.issues.async_create_comment(
-                CONFIG.GITHUB_REPO_OWNER,
-                CONFIG.GITHUB_REPO,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO,
                 issue_number,
                 body=body,
             )
@@ -177,8 +205,8 @@ class GithubService:
         """
         try:
             response: Response[Issue] = await self.github.rest.issues.async_update(
-                CONFIG.GITHUB_REPO_OWNER,
-                CONFIG.GITHUB_REPO,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO,
                 issue_number,
                 state="closed",
             )
@@ -224,8 +252,8 @@ class GithubService:
 
         try:
             response: Response[Issue] = await self.github.rest.issues.async_get(
-                CONFIG.GITHUB_REPO_OWNER,
-                CONFIG.GITHUB_REPO,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO,
                 issue_number,
             )
 
@@ -263,8 +291,8 @@ class GithubService:
 
         try:
             response: Response[list[Issue]] = await self.github.rest.issues.async_list_for_repo(
-                CONFIG.GITHUB_REPO_OWNER,
-                CONFIG.GITHUB_REPO,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO,
                 state="open",
             )
 
@@ -297,8 +325,8 @@ class GithubService:
 
         try:
             response: Response[list[Issue]] = await self.github.rest.issues.async_list_for_repo(
-                CONFIG.GITHUB_REPO_OWNER,
-                CONFIG.GITHUB_REPO,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO,
                 state="closed",
             )
 
@@ -331,8 +359,8 @@ class GithubService:
 
         try:
             response: Response[list[PullRequestSimple]] = await self.github.rest.pulls.async_list(
-                CONFIG.GITHUB_REPO_OWNER,
-                CONFIG.GITHUB_REPO,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO,
                 state="open",
             )
 
@@ -365,8 +393,8 @@ class GithubService:
 
         try:
             response: Response[list[PullRequestSimple]] = await self.github.rest.pulls.async_list(
-                CONFIG.GITHUB_REPO_OWNER,
-                CONFIG.GITHUB_REPO,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO,
                 state="closed",
             )
 
@@ -404,8 +432,8 @@ class GithubService:
 
         try:
             response: Response[PullRequest] = await self.github.rest.pulls.async_get(
-                CONFIG.GITHUB_REPO_OWNER,
-                CONFIG.GITHUB_REPO,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
+                CONFIG.EXTERNAL_SERVICES.GITHUB_REPO,
                 pr_number,
             )
 

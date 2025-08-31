@@ -3,7 +3,7 @@ from discord.ext import commands
 
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
-from tux.shared.config.settings import CONFIG
+from tux.shared.config import CONFIG
 from tux.shared.functions import is_harmful, strip_formatting
 from tux.ui.embeds import EmbedCreator, EmbedType
 
@@ -35,7 +35,7 @@ class EventHandler(BaseCog):
         None
         """
 
-        if message.author.bot and message.webhook_id not in CONFIG.BRIDGE_WEBHOOK_IDS:
+        if message.author.bot and message.webhook_id not in CONFIG.IRC_CONFIG.BRIDGE_WEBHOOK_IDS:
             return
 
         stripped_content = strip_formatting(message.content)
@@ -69,9 +69,9 @@ class EventHandler(BaseCog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         # Allow the IRC bridge to use the snippet command only
-        if message.webhook_id in CONFIG.BRIDGE_WEBHOOK_IDS and (
-            message.content.startswith(f"{CONFIG.DEFAULT_PREFIX}s ")
-            or message.content.startswith(f"{CONFIG.DEFAULT_PREFIX}snippet ")
+        if message.webhook_id in CONFIG.IRC_CONFIG.BRIDGE_WEBHOOK_IDS and (
+            message.content.startswith(f"{CONFIG.get_prefix()}s ")
+            or message.content.startswith(f"{CONFIG.get_prefix()}snippet ")
         ):
             ctx = await self.bot.get_context(message)
             await self.bot.invoke(ctx)

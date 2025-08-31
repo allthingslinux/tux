@@ -7,7 +7,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.types import Tux
-from tux.shared.config.settings import Config
+from tux.shared.config import CONFIG
 from tux.shared.substitutions import handle_substitution
 
 # Map the string type to the discord.ActivityType enum.
@@ -37,14 +37,14 @@ class ActivityHandler(commands.Cog):
             A list of activity objects.
         """
 
-        if not Config.ACTIVITIES or not Config.ACTIVITIES.strip():
-            logger.warning("Config.ACTIVITIES is empty or None. Returning an empty list.")
+        if not CONFIG.BOT_INFO.ACTIVITIES or not CONFIG.BOT_INFO.ACTIVITIES.strip():
+            logger.warning("CONFIG.BOT_INFO.ACTIVITIES is empty or None. Returning an empty list.")
             return []
 
         try:
-            activity_data = json.loads(Config.ACTIVITIES)  # Safely parse JSON
+            activity_data = json.loads(CONFIG.BOT_INFO.ACTIVITIES)  # Safely parse JSON
         except json.JSONDecodeError:
-            logger.error(f"Failed to parse ACTIVITIES JSON: {Config.ACTIVITIES!r}")
+            logger.error(f"Failed to parse ACTIVITIES JSON: {CONFIG.BOT_INFO.ACTIVITIES!r}")
             raise  # Re-raise after logging
 
         activities: list[discord.Activity | discord.Streaming] = []

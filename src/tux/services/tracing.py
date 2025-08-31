@@ -26,6 +26,8 @@ import sentry_sdk
 from discord.ext import commands
 from loguru import logger
 
+from tux.shared.config import CONFIG
+
 # Type variables for better type hints with generic functions
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -574,10 +576,7 @@ def enhanced_span(op: str, name: str = "", **initial_data: Any) -> Generator[Dum
         return
 
     # In production, skip tracing for certain frequent operations
-    env = initial_data.get("environment", "development")
-    if env not in ("dev", "development") and any(
-        skip_term in name.lower() for skip_term in ["safe_get_attr", "connect_or_create"]
-    ):
+    if not CONFIG.DEBUG and any(skip_term in name.lower() for skip_term in ["safe_get_attr", "connect_or_create"]):
         yield DummySpan()
         return
 

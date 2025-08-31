@@ -30,8 +30,7 @@ from sentry_sdk.integrations.loguru import LoguruIntegration
 from sentry_sdk.types import Event, Hint
 
 from tux.core.context import get_interaction_context
-from tux.shared.config.env import get_current_env
-from tux.shared.config.settings import CONFIG
+from tux.shared.config import CONFIG
 
 # Type alias for Sentry's log level strings.
 LogLevelStr = Literal["fatal", "critical", "error", "warning", "info", "debug"]
@@ -276,7 +275,7 @@ class SentryManager:
         transaction_name = sampling_context.get("transaction_context", {}).get("name", "")
 
         # Full sampling in development for debugging
-        if get_current_env() in ("dev", "development"):
+        if CONFIG.DEBUG:
             return 1.0
 
         # Production sampling rates using dictionary lookup
@@ -302,7 +301,7 @@ class SentryManager:
         This method configures the release version, environment, tracing, and
         enables Sentry's logging integration.
         """
-        if not CONFIG.SENTRY_DSN:
+        if not CONFIG.EXTERNAL_SERVICES.SENTRY_DSN:
             logger.warning("No Sentry DSN configured, skipping Sentry setup")
             return
 
@@ -311,11 +310,11 @@ class SentryManager:
         try:
             sentry_sdk.init(
                 # https://docs.sentry.io/platforms/python/configuration/options/#dsn
-                dsn=CONFIG.SENTRY_DSN,
+                dsn=CONFIG.EXTERNAL_SERVICES.SENTRY_DSN,
                 # https://docs.sentry.io/platforms/python/configuration/options/#release
-                release=CONFIG.BOT_VERSION,
+                release=CONFIG.BOT_INFO.BOT_VERSION,
                 # https://docs.sentry.io/platforms/python/configuration/options/#environment
-                environment=get_current_env(),
+                environment="development" if CONFIG.DEBUG else "production",
                 integrations=[
                     AsyncioIntegration(),
                     LoguruIntegration(),
@@ -327,10 +326,10 @@ class SentryManager:
                 send_default_pii=False,
                 # https://docs.sentry.io/platforms/python/configuration/options/#traces_sample_rate
                 # Adjust sampling based on environment - 100% for dev, lower for production
-                traces_sample_rate=1.0 if get_current_env() in ("dev", "development") else 0.1,
+                traces_sample_rate=1.0 if CONFIG.DEBUG else 0.1,
                 # Set profiles_sample_rate to profile transactions.
                 # We recommend adjusting this value in production.
-                profiles_sample_rate=1.0 if get_current_env() in ("dev", "development") else 0.01,
+                profiles_sample_rate=1.0 if CONFIG.DEBUG else 0.01,
                 # https://docs.sentry.io/platforms/python/configuration/filtering/#using-before-send
                 before_send=SentryManager._before_send,
                 before_send_transaction=SentryManager._before_send_transaction,
