@@ -3,9 +3,8 @@ Unit tests for Tux database components.
 
 These tests focus on individual components in isolation:
 - Model validation and relationships
-- Database service functionality
-- Controller operations
-- Migration operations
+- PostgreSQL features and model behavior
+- Fast, isolated testing with py-pglite
 
-Run with: pytest tests/unit/
+Run with: pytest tests/unit/ or pytest -m unit
 """

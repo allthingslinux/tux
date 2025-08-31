@@ -39,7 +39,7 @@ class TestModelCreation:
     """🏗️ Test basic model creation and validation."""
 
     @pytest.mark.unit
-    def test_guild_model_creation(self, db_session: Session) -> None:
+    async def test_guild_model_creation(self, db_session) -> None:
         """Test Guild model creation with all fields."""
         # Create guild with explicit values
         guild = Guild(
@@ -48,8 +48,8 @@ class TestModelCreation:
         )
 
         db_session.add(guild)
-        db_session.commit()
-        db_session.refresh(guild)
+        await db_session.commit()
+        await db_session.refresh(guild)
 
         # Verify all fields
         assert guild.guild_id == TEST_GUILD_ID
@@ -59,12 +59,12 @@ class TestModelCreation:
         assert validate_guild_structure(guild)
 
     @pytest.mark.unit
-    def test_guild_config_model_creation(self, db_session: Session) -> None:
+    async def test_guild_config_model_creation(self, db_session) -> None:
         """Test GuildConfig model creation with comprehensive config."""
         # Create guild first (foreign key requirement)
         guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
         db_session.add(guild)
-        db_session.commit()
+        await db_session.commit()
 
         # Create comprehensive config
         config = GuildConfig(
@@ -80,8 +80,8 @@ class TestModelCreation:
         )
 
         db_session.add(config)
-        db_session.commit()
-        db_session.refresh(config)
+        await db_session.commit()
+        await db_session.refresh(config)
 
         # Verify all fields
         assert config.guild_id == TEST_GUILD_ID
@@ -96,12 +96,12 @@ class TestModelCreation:
         assert validate_guild_config_structure(config)
 
     @pytest.mark.unit
-    def test_case_model_creation(self, db_session: Session) -> None:
+    async def test_case_model_creation(self, db_session) -> None:
         """Test Case model creation with enum types."""
         # Create guild first
         guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
         db_session.add(guild)
-        db_session.commit()
+        await db_session.commit()
 
         # Create case with enum
         case = Case(
@@ -114,8 +114,8 @@ class TestModelCreation:
         )
 
         db_session.add(case)
-        db_session.commit()
-        db_session.refresh(case)
+        await db_session.commit()
+        await db_session.refresh(case)
 
         # Verify case creation and enum handling
         assert case.guild_id == TEST_GUILD_ID
@@ -135,12 +135,12 @@ class TestModelRelationships:
     """🔗 Test model relationships and database constraints."""
 
     @pytest.mark.unit
-    def test_guild_to_config_relationship(self, db_session: Session) -> None:
+    async def test_guild_to_config_relationship(self, db_session) -> None:
         """Test relationship between Guild and GuildConfig."""
         # Create guild
         guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
         db_session.add(guild)
-        db_session.commit()
+        await db_session.commit()
 
         # Create config
         config = GuildConfig(
@@ -149,21 +149,21 @@ class TestModelRelationships:
             mod_log_id=TEST_CHANNEL_ID,
         )
         db_session.add(config)
-        db_session.commit()
+        await db_session.commit()
 
         # Test relationship integrity
         assert validate_relationship_integrity(guild, config)
 
         # Test queries through relationship
-        guild_from_db = db_session.get(Guild, TEST_GUILD_ID)
-        config_from_db = db_session.get(GuildConfig, TEST_GUILD_ID)
+        guild_from_db = await db_session.get(Guild, TEST_GUILD_ID)
+        config_from_db = await db_session.get(GuildConfig, TEST_GUILD_ID)
 
         assert guild_from_db is not None
         assert config_from_db is not None
         assert guild_from_db.guild_id == config_from_db.guild_id
 
     @pytest.mark.unit
-    def test_foreign_key_constraints(self, db_session: Session) -> None:
+    async def test_foreign_key_constraints(self, db_session) -> None:
         """Test foreign key constraints are enforced."""
         # Try to create config without guild (should fail)
         config = GuildConfig(
@@ -175,49 +175,63 @@ class TestModelRelationships:
         db_session.add(config)
 
         # This should raise a foreign key violation
-        with pytest.raises(Exception):  # SQLAlchemy integrity error
-            db_session.commit()
+        try:
+            await db_session.commit()
+            pytest.fail("Expected foreign key constraint violation, but commit succeeded")
+        except Exception as e:
+            # Expected exception occurred
+            assert "foreign key" in str(e).lower() or "constraint" in str(e).lower()
+            # Rollback the session for cleanup
+            await db_session.rollback()
 
     @pytest.mark.unit
-    def test_unique_constraints(self, db_session: Session) -> None:
+    async def test_unique_constraints(self, db_session) -> None:
         """Test unique constraints are enforced."""
         # Create first guild
         guild1 = Guild(guild_id=TEST_GUILD_ID, case_count=0)
         db_session.add(guild1)
-        db_session.commit()
+        await db_session.commit()
 
         # Try to create duplicate guild (should fail)
+        # Note: This intentionally creates an identity key conflict to test constraint behavior
+        # The SAWarning is expected and indicates the test is working correctly
         guild2 = Guild(guild_id=TEST_GUILD_ID, case_count=1)  # Same ID
         db_session.add(guild2)
 
-        with pytest.raises(Exception):  # Unique constraint violation
-            db_session.commit()
+        try:
+            await db_session.commit()
+            pytest.fail("Expected unique constraint violation, but commit succeeded")
+        except Exception as e:
+            # Expected exception occurred
+            assert "unique" in str(e).lower() or "constraint" in str(e).lower()
+            # Rollback the session for cleanup
+            await db_session.rollback()
 
     @pytest.mark.unit
-    def test_cascade_behavior(self, db_session: Session) -> None:
+    async def test_cascade_behavior(self, db_session) -> None:
         """Test cascade behavior with related models."""
         # Create guild with config
         guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
         db_session.add(guild)
-        db_session.commit()
+        await db_session.commit()
 
         config = GuildConfig(
             guild_id=TEST_GUILD_ID,
             prefix="!cascade",
         )
         db_session.add(config)
-        db_session.commit()
+        await db_session.commit()
 
         # Verify both exist
-        assert db_session.get(Guild, TEST_GUILD_ID) is not None
-        assert db_session.get(GuildConfig, TEST_GUILD_ID) is not None
+        assert await db_session.get(Guild, TEST_GUILD_ID) is not None
+        assert await db_session.get(GuildConfig, TEST_GUILD_ID) is not None
 
         # Delete guild (config should be handled based on cascade rules)
-        db_session.delete(guild)
-        db_session.commit()
+        await db_session.delete(guild)
+        await db_session.commit()
 
         # Verify guild is deleted
-        assert db_session.get(Guild, TEST_GUILD_ID) is None
+        assert await db_session.get(Guild, TEST_GUILD_ID) is None
 
 
 # =============================================================================
@@ -257,12 +271,12 @@ class TestModelSerialization:
         assert config_dict['prefix'] == sample_guild_config.prefix
 
     @pytest.mark.unit
-    def test_enum_serialization(self, db_session: Session) -> None:
+    async def test_enum_serialization(self, db_session) -> None:
         """Test enum field serialization in Case model."""
         # Create guild first
         guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
         db_session.add(guild)
-        db_session.commit()
+        await db_session.commit()
 
         # Create case with enum
         case = Case(
@@ -274,8 +288,8 @@ class TestModelSerialization:
             case_moderator_id=67890,
         )
         db_session.add(case)
-        db_session.commit()
-        db_session.refresh(case)
+        await db_session.commit()
+        await db_session.refresh(case)
 
         # Test enum serialization
         case_dict = case.to_dict()
@@ -301,7 +315,7 @@ class TestModelQueries:
             assert guild.case_count == i
 
     @pytest.mark.unit
-    def test_complex_queries(self, db_session: Session) -> None:
+    async def test_complex_queries(self, db_session) -> None:
         """Test complex SQLModel queries with filtering and ordering."""
         # Create test data
         guilds = [
@@ -311,33 +325,33 @@ class TestModelQueries:
 
         for guild in guilds:
             db_session.add(guild)
-        db_session.commit()
+        await db_session.commit()
 
         # Test filtering
         statement = select(Guild).where(Guild.case_count > 10)
-        high_case_guilds = db_session.exec(statement).unique().all()
+        high_case_guilds = (await db_session.execute(statement)).scalars().unique().all()
         assert len(high_case_guilds) == 4  # case_count 12, 14, 16, 18
 
         # Test ordering
         statement = select(Guild).order_by(desc(Guild.case_count)).limit(3)
-        top_guilds = db_session.exec(statement).unique().all()
+        top_guilds = (await db_session.execute(statement)).scalars().unique().all()
         assert len(top_guilds) == 3
         assert top_guilds[0].case_count == 18
         assert top_guilds[1].case_count == 16
         assert top_guilds[2].case_count == 14
 
         # Test aggregation with raw SQL
-        result = db_session.execute(text("SELECT COUNT(*) FROM guild"))  # type: ignore
+        result = await db_session.execute(text("SELECT COUNT(*) FROM guild"))  # type: ignore
         count = result.scalar()
         assert count == 10
 
     @pytest.mark.unit
-    def test_join_queries(self, db_session: Session) -> None:
+    async def test_join_queries(self, db_session) -> None:
         """Test join queries between related models."""
         # Create guild with config
         guild = Guild(guild_id=TEST_GUILD_ID, case_count=5)
         db_session.add(guild)
-        db_session.commit()
+        await db_session.commit()
 
         config = GuildConfig(
             guild_id=TEST_GUILD_ID,
@@ -345,10 +359,10 @@ class TestModelQueries:
             mod_log_id=TEST_CHANNEL_ID,
         )
         db_session.add(config)
-        db_session.commit()
+        await db_session.commit()
 
         # Test join query using raw SQL (use proper table names)
-        result = db_session.execute(  # type: ignore
+        result = await db_session.execute(  # type: ignore
             text("""
             SELECT g.guild_id, g.case_count, gc.prefix
             FROM guild g
@@ -372,41 +386,41 @@ class TestDataIntegrity:
     """🛡️ Test data integrity and validation rules."""
 
     @pytest.mark.unit
-    def test_required_fields(self, db_session: Session) -> None:
+    async def test_required_fields(self, db_session) -> None:
         """Test required field validation."""
         # Guild requires guild_id, test that it works when provided
         guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
         db_session.add(guild)
-        db_session.commit()
+        await db_session.commit()
 
         # Verify guild was created successfully
         assert guild.guild_id == TEST_GUILD_ID
 
     @pytest.mark.unit
-    def test_data_types(self, db_session: Session) -> None:
+    async def test_data_types(self, db_session) -> None:
         """Test data type enforcement."""
         # Test integer fields
         guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
         db_session.add(guild)
-        db_session.commit()
+        await db_session.commit()
 
         # Verify types are preserved
         assert isinstance(guild.guild_id, int)
         assert isinstance(guild.case_count, int)
 
     @pytest.mark.unit
-    def test_null_handling(self, db_session: Session) -> None:
+    async def test_null_handling(self, db_session) -> None:
         """Test NULL value handling for optional fields."""
         # Create guild with minimal data
         guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
         db_session.add(guild)
-        db_session.commit()
+        await db_session.commit()
 
         # Create config with minimal data (most fields optional)
         config = GuildConfig(guild_id=TEST_GUILD_ID)
         db_session.add(config)
-        db_session.commit()
-        db_session.refresh(config)
+        await db_session.commit()
+        await db_session.refresh(config)
 
         # Verify NULL handling
         assert config.guild_id == TEST_GUILD_ID
@@ -414,28 +428,30 @@ class TestDataIntegrity:
         assert config.mod_log_id is None  # Optional field
 
     @pytest.mark.unit
-    def test_transaction_rollback(self, db_session: Session) -> None:
+    async def test_transaction_rollback(self, db_session) -> None:
         """Test transaction rollback behavior."""
         # First commit a valid guild
         guild1 = Guild(guild_id=TEST_GUILD_ID, case_count=0)
         db_session.add(guild1)
-        db_session.commit()  # Commit first guild
+        await db_session.commit()  # Commit first guild
 
         # Verify guild was committed
-        result = db_session.get(Guild, TEST_GUILD_ID)
+        result = await db_session.get(Guild, TEST_GUILD_ID)
         assert result is not None
         assert result.case_count == 0
 
         # Now try to add duplicate in a new transaction
+        # Note: This intentionally creates an identity key conflict to test constraint behavior
+        # The SAWarning is expected and indicates the test is working correctly
         try:
             guild2 = Guild(guild_id=TEST_GUILD_ID, case_count=1)  # Same ID - should fail
             db_session.add(guild2)
-            db_session.commit()  # This should fail due to unique constraint
+            await db_session.commit()  # This should fail due to unique constraint
         except Exception:
-            db_session.rollback()  # Rollback the failed transaction
+            await db_session.rollback()  # Rollback the failed transaction
 
         # Verify original guild still exists and wasn't affected by the rollback
-        result = db_session.get(Guild, TEST_GUILD_ID)
+        result = await db_session.get(Guild, TEST_GUILD_ID)
         assert result is not None
         assert result.case_count == 0  # Original value preserved
 
@@ -448,7 +464,7 @@ class TestModelPerformance:
     """⚡ Test model performance characteristics."""
 
     @pytest.mark.unit
-    def test_bulk_operations(self, db_session: Session) -> None:
+    async def test_bulk_operations(self, db_session) -> None:
         """Test bulk model operations."""
         # Create multiple guilds
         guilds = [
@@ -458,15 +474,15 @@ class TestModelPerformance:
 
         for guild in guilds:
             db_session.add(guild)
-        db_session.commit()
+        await db_session.commit()
 
         # Verify all were created
         statement = select(Guild)
-        results = db_session.exec(statement).unique().all()
+        results = (await db_session.execute(statement)).scalars().unique().all()
         assert len(results) == 10
 
     @pytest.mark.unit
-    def test_query_performance(self, db_session: Session) -> None:
+    async def test_query_performance(self, db_session) -> None:
         """Test query performance with filtering and ordering."""
         # Create test data
         guilds = [
@@ -476,16 +492,16 @@ class TestModelPerformance:
 
         for guild in guilds:
             db_session.add(guild)
-        db_session.commit()
+        await db_session.commit()
 
         # Test filtering query
         statement = select(Guild).where(Guild.case_count > 10)
-        results = db_session.exec(statement).unique().all()
+        results = (await db_session.execute(statement)).scalars().unique().all()
         assert len(results) == 9  # case_count 11-19
 
         # Test ordering query
         statement = select(Guild).order_by(desc(Guild.case_count)).limit(5)
-        results = db_session.exec(statement).unique().all()
+        results = (await db_session.execute(statement)).scalars().unique().all()
         assert len(results) == 5
         assert results[0].case_count == 19
 

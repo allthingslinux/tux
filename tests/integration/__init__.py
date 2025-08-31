@@ -7,5 +7,5 @@ These tests verify component interactions and system behavior:
 - Self-hosting simulation
 - Error handling and edge cases
 
-Run with: pytest --run-integration tests/integration/
+Run with: pytest tests/integration/ or pytest -m integration
 """

@@ -15,7 +15,7 @@ These tests showcase production-ready patterns for modern PostgreSQL usage.
 """
 
 import pytest
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from tux.database.models.models import Guild, GuildConfig, CaseType, Case
 from tests.fixtures.database_fixtures import TEST_GUILD_ID
@@ -25,7 +25,7 @@ class TestPostgreSQLAdvancedFeatures:
     """🚀 Test PostgreSQL-specific features added to our enhanced database layer."""
 
     @pytest.mark.unit
-    def test_guild_with_postgresql_features(self, db_session: Session) -> None:
+    async def test_guild_with_postgresql_features(self, db_session) -> None:
         """Test Guild model with new PostgreSQL features."""
         guild = Guild(
             guild_id=TEST_GUILD_ID,
@@ -49,8 +49,8 @@ class TestPostgreSQLAdvancedFeatures:
         )
 
         db_session.add(guild)
-        db_session.commit()
-        db_session.refresh(guild)
+        await db_session.commit()
+        await db_session.refresh(guild)
 
         # Verify PostgreSQL features
         assert guild.guild_metadata is not None
@@ -69,7 +69,7 @@ class TestPostgreSQLQueries:
     """🔍 Test advanced PostgreSQL query capabilities."""
 
     @pytest.mark.unit
-    def test_json_query_operations(self, db_session: Session) -> None:
+    async def test_json_query_operations(self, db_session) -> None:
         """Test JSON path queries (conceptual - requires controller implementation)."""
         # Create test guilds with JSON metadata
         guilds_data = [
@@ -97,16 +97,20 @@ class TestPostgreSQLQueries:
             guild = Guild(**data)
             db_session.add(guild)
 
-        db_session.commit()
+        await db_session.commit()
 
         # Basic verification that data is stored correctly
-        all_guilds = db_session.query(Guild).all()
+        all_guilds = (await db_session.execute(select(Guild))).scalars().unique().all()
         assert len(all_guilds) == 2
 
         # Verify JSON data integrity
-        gaming_guild = db_session.query(Guild).filter(
-            Guild.guild_id == TEST_GUILD_ID + 1,
-        ).first()
+        gaming_guild = (
+            await db_session.execute(
+                select(Guild).where(
+                    Guild.guild_id == TEST_GUILD_ID + 1,
+                ),
+            )
+        ).scalars().first()
 
         assert gaming_guild is not None
         assert gaming_guild.guild_metadata["settings"]["auto_mod"] is True
@@ -114,7 +118,7 @@ class TestPostgreSQLQueries:
         assert gaming_guild.feature_flags["premium"] is True
 
     @pytest.mark.unit
-    def test_array_operations_concept(self, db_session: Session) -> None:
+    async def test_array_operations_concept(self, db_session) -> None:
         """Test array operations concept (demonstrates PostgreSQL array usage)."""
         # Create guilds with different tag combinations
         guild1 = Guild(
@@ -137,17 +141,17 @@ class TestPostgreSQLQueries:
 
         for guild in [guild1, guild2, guild3]:
             db_session.add(guild)
-        db_session.commit()
+        await db_session.commit()
 
         # Basic array functionality verification
-        all_guilds = db_session.query(Guild).all()
+        all_guilds = (await db_session.execute(select(Guild))).scalars().unique().all()
         gaming_guilds = [g for g in all_guilds if "gaming" in g.tags]
 
         assert len(gaming_guilds) == 2
         assert all(isinstance(guild.tags, list) for guild in all_guilds)
 
     @pytest.mark.unit
-    def test_bulk_operations_concept(self, db_session: Session) -> None:
+    async def test_bulk_operations_concept(self, db_session) -> None:
         """Test bulk operations concept for PostgreSQL."""
         # Create multiple guilds efficiently
         guild_data = []
@@ -164,12 +168,16 @@ class TestPostgreSQLQueries:
         guilds = [Guild(**data) for data in guild_data]
         for guild in guilds:
             db_session.add(guild)
-        db_session.commit()
+        await db_session.commit()
 
         # Verify bulk operation success
-        created_guilds = db_session.query(Guild).filter(
-            Guild.guild_id >= TEST_GUILD_ID + 100,
-        ).all()
+        created_guilds = (
+            await db_session.execute(
+                select(Guild).where(
+                    Guild.guild_id >= TEST_GUILD_ID + 100,
+                ),
+            )
+        ).scalars().unique().all()
 
         assert len(created_guilds) == 5
 
@@ -186,7 +194,7 @@ class TestDatabaseMonitoring:
     """📊 Test database monitoring and analysis capabilities."""
 
     @pytest.mark.unit
-    def test_model_serialization_with_postgresql_features(self, db_session: Session) -> None:
+    async def test_model_serialization_with_postgresql_features(self, db_session) -> None:
         """Test that serialization works correctly with PostgreSQL features."""
         guild = Guild(
             guild_id=TEST_GUILD_ID,
@@ -196,8 +204,8 @@ class TestDatabaseMonitoring:
         )
 
         db_session.add(guild)
-        db_session.commit()
-        db_session.refresh(guild)
+        await db_session.commit()
+        await db_session.refresh(guild)
 
         # Test serialization
         guild_dict = guild.to_dict()
@@ -214,7 +222,7 @@ class TestDatabaseMonitoring:
         assert guild_dict["feature_flags"]["test_mode"] is True
 
     @pytest.mark.unit
-    def test_performance_monitoring_concept(self, db_session: Session) -> None:
+    async def test_performance_monitoring_concept(self, db_session) -> None:
         """Test performance monitoring concepts."""
         # Create data for performance testing
         guilds = []
@@ -229,13 +237,17 @@ class TestDatabaseMonitoring:
             guilds.append(guild)
             db_session.add(guild)
 
-        db_session.commit()
+        await db_session.commit()
 
         # Performance verification through queries
         # Test query performance with different filters
-        high_case_guilds = db_session.query(Guild).filter(
-            Guild.case_count > 50,
-        ).all()
+        high_case_guilds = (
+            await db_session.execute(
+                select(Guild).where(
+                    Guild.case_count > 50,
+                ),
+            )
+        ).scalars().unique().all()
 
         benchmark_guilds = [g for g in guilds if "benchmark" in g.tags]
 
@@ -244,10 +256,14 @@ class TestDatabaseMonitoring:
         assert len(benchmark_guilds) == 10  # All have benchmark tag
 
         # Test that complex queries work efficiently
-        complex_results = db_session.query(Guild).filter(
-            Guild.guild_id.between(TEST_GUILD_ID + 200, TEST_GUILD_ID + 210),
-            Guild.case_count > 0,
-        ).order_by(Guild.case_count.desc()).limit(5).all()
+        complex_results = (
+            await db_session.execute(
+                select(Guild).where(
+                    Guild.guild_id.between(TEST_GUILD_ID + 200, TEST_GUILD_ID + 210),
+                    Guild.case_count > 0,
+                ).order_by(Guild.case_count.desc()).limit(5),
+            )
+        ).scalars().unique().all()
 
         assert len(complex_results) == 5
         assert complex_results[0].case_count > complex_results[-1].case_count
@@ -257,7 +273,7 @@ class TestPostgreSQLIntegration:
     """🔧 Test integration of PostgreSQL features with existing models."""
 
     @pytest.mark.unit
-    def test_guild_config_compatibility(self, db_session: Session) -> None:
+    async def test_guild_config_compatibility(self, db_session) -> None:
         """Test that enhanced Guild works with existing GuildConfig."""
         # Create enhanced guild
         guild = Guild(
@@ -267,7 +283,7 @@ class TestPostgreSQLIntegration:
             feature_flags={"config_compatible": True},
         )
         db_session.add(guild)
-        db_session.commit()
+        await db_session.commit()
 
         # Create traditional guild config
         config = GuildConfig(
@@ -276,22 +292,30 @@ class TestPostgreSQLIntegration:
             mod_log_id=123456789,
         )
         db_session.add(config)
-        db_session.commit()
+        await db_session.commit()
 
         # Test relationship integrity
-        guild_from_db = db_session.query(Guild).filter(
-            Guild.guild_id == TEST_GUILD_ID,
-        ).first()
-        config_from_db = db_session.query(GuildConfig).filter(
-            GuildConfig.guild_id == TEST_GUILD_ID,
-        ).first()
+        guild_from_db = (
+            await db_session.execute(
+                select(Guild).where(
+                    Guild.guild_id == TEST_GUILD_ID,
+                ),
+            )
+        ).scalars().first()
+        config_from_db = (
+            await db_session.execute(
+                select(GuildConfig).where(
+                    GuildConfig.guild_id == TEST_GUILD_ID,
+                ),
+            )
+        ).scalars().first()
 
         assert guild_from_db is not None
         assert config_from_db is not None
         assert guild_from_db.guild_id == config_from_db.guild_id
 
     @pytest.mark.unit
-    def test_case_integration_with_enhanced_guild(self, db_session: Session) -> None:
+    async def test_case_integration_with_enhanced_guild(self, db_session) -> None:
         """Test that Cases work with enhanced Guild model."""
         # Create enhanced guild
         guild = Guild(
@@ -302,7 +326,7 @@ class TestPostgreSQLIntegration:
             feature_flags={"case_tracking": True},
         )
         db_session.add(guild)
-        db_session.commit()
+        await db_session.commit()
 
         # Create case
         case = Case(
@@ -314,16 +338,20 @@ class TestPostgreSQLIntegration:
             case_moderator_id=123456789,
         )
         db_session.add(case)
-        db_session.commit()
+        await db_session.commit()
 
         # Update guild case count
         guild.case_count = 1
-        db_session.commit()
+        await db_session.commit()
 
         # Verify integration
-        updated_guild = db_session.query(Guild).filter(
-            Guild.guild_id == TEST_GUILD_ID,
-        ).first()
+        updated_guild = (
+            await db_session.execute(
+                select(Guild).where(
+                    Guild.guild_id == TEST_GUILD_ID,
+                ),
+            )
+        ).scalars().first()
 
         assert updated_guild is not None
         assert updated_guild.case_count == 1
