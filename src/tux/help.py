@@ -19,8 +19,7 @@ from discord import SelectOption
 from discord.ext import commands
 from loguru import logger
 
-from tux.shared.config.env import get_current_env
-from tux.shared.config.settings import CONFIG
+from tux.shared.config import CONFIG
 from tux.shared.constants import CONST
 from tux.ui.embeds import EmbedCreator
 from tux.ui.help_components import (
@@ -132,7 +131,7 @@ class TuxHelp(commands.HelpCommand):
 
         if guild_id not in self._prefix_cache:
             # Fetch and cache the prefix specific to the guild
-            self._prefix_cache[guild_id] = self.context.clean_prefix or CONFIG.DEFAULT_PREFIX
+            self._prefix_cache[guild_id] = self.context.clean_prefix or CONFIG.get_prefix()
 
         return self._prefix_cache[guild_id]
 
@@ -285,8 +284,8 @@ class TuxHelp(commands.HelpCommand):
 
     async def _get_command_categories(
         self,
-        mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]],
-    ) -> tuple[dict[str, dict[str, str]], dict[str, dict[str, commands.Command[Any, Any, Any]]]]:
+        mapping: Mapping[commands.Cog | None, list[commands.Command[Any, ..., Any]]],
+    ) -> tuple[dict[str, dict[str, str]], dict[str, dict[str, commands.Command[Any, ..., Any]]]]:
         """
         Retrieve command categories and mapping.
 
@@ -518,11 +517,11 @@ class TuxHelp(commands.HelpCommand):
         discord.Embed
             The main help embed to be displayed.
         """
-        if CONFIG.BOT_NAME != "Tux":
+        if CONFIG.BOT_INFO.BOT_NAME != "Tux":
             logger.info("Bot name is not Tux, using different help message.")
             embed = self._embed_base(
                 "Hello! Welcome to the help command.",
-                f"{CONFIG.BOT_NAME} is a self-hosted instance of Tux. The bot is written in Python using discord.py.\n\nIf you enjoy using {CONFIG.BOT_NAME}, consider contributing to the original project.",
+                f"{CONFIG.BOT_INFO.BOT_NAME} is a self-hosted instance of Tux. The bot is written in Python using discord.py.\n\nIf you enjoy using {CONFIG.BOT_INFO.BOT_NAME}, consider contributing to the original project.",
             )
         else:
             embed = self._embed_base(
@@ -735,13 +734,16 @@ class TuxHelp(commands.HelpCommand):
             inline=True,
         )
 
-        bot_name_display = "Tux" if CONFIG.BOT_NAME == "Tux" else f"{CONFIG.BOT_NAME} (Tux)"
-        environment = get_current_env()
-        owner_info = f"Bot Owner: <@{CONFIG.BOT_OWNER_ID}>" if not CONFIG.HIDE_BOT_OWNER and CONFIG.BOT_OWNER_ID else ""
+        bot_name_display = "Tux" if CONFIG.BOT_INFO.BOT_NAME == "Tux" else f"{CONFIG.BOT_INFO.BOT_NAME} (Tux)"
+        owner_info = (
+            f"Bot Owner: <@{CONFIG.USER_IDS.BOT_OWNER_ID}>"
+            if not CONFIG.BOT_INFO.HIDE_BOT_OWNER and CONFIG.USER_IDS.BOT_OWNER_ID
+            else ""
+        )
 
         embed.add_field(
             name="Bot Instance",
-            value=f"-# Running {bot_name_display} v `{CONFIG.BOT_VERSION}` in `{environment}` mode"
+            value=f"-# Running {bot_name_display} v `{CONFIG.BOT_INFO.BOT_VERSION}`"
             + (f"\n-# {owner_info}" if owner_info else ""),
             inline=False,
         )
@@ -1124,7 +1126,7 @@ class TuxHelp(commands.HelpCommand):
 
     # Help command overrides
 
-    async def send_bot_help(self, mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]]) -> None:
+    async def send_bot_help(self, mapping: Mapping[commands.Cog | None, list[commands.Command[Any, ..., Any]]]) -> None:
         """
         Send the main help screen with command categories.
 
