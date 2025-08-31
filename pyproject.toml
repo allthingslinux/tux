@@ -43,10 +43,10 @@ dependencies = [
     "asyncpg>=0.30.0",
     "aiosqlite>=0.20.0",
     "redis>=5.0.0",
-    "psycopg2-binary>=2.9.10",
     "alembic-utils>=0.8.8",
-    "psycopg>=3.2.9",
+    "psycopg[binary,pool]>=3.2.9",
     "pydantic>=2.11.7",
+    "pydantic-settings>=2.10.1",
 ]
 
 [project.urls]
@@ -54,6 +54,7 @@ repository = "https://github.com/allthingslinux/tux"
 
 [project.scripts]
 tux = "tux.cli:main"
+settings-doc = "settings_doc.main:app"
 
 [build-system]
 requires = ["hatchling"]
@@ -66,7 +67,7 @@ dev = [
     "ruff==0.12.4",
     "yamllint==1.37.1",
     "yamlfix==1.17.0",
-    "pytest-asyncio>=1.1.0",
+    "settings-doc>=4.3.2",
 ]
 test = [
     "pytest>=8.0.0,<9",
@@ -74,13 +75,15 @@ test = [
     "pytest-mock>=3.14.0,<4",
     "pytest-cov>=6.0.0,<7",
     "pytest-sugar>=1.0.0,<2",
-    "pytest-xdist>=3.6.0,<4",
+    # Temporarily disabled pytest-xdist to prevent py-pglite concurrency issues
+    # "pytest-xdist>=3.6.0,<4",
     "pytest-randomly>=3.15.0,<4",
     "pytest-timeout>=2.3.1,<3",
     "pytest-html>=4.1.1,<5",
     "pytest-benchmark>=5.1.0,<6",
     "pytest-alembic>=0.12.0,<0.13",
     "py-pglite[sqlalchemy, asyncpg]>=0.2.0,<1",
+    "pytest-parallel>=0.1.1",
 ]
 docs = [
     "mkdocs-material>=9.5.30,<10",
@@ -112,7 +115,6 @@ types = [
     "types-jinja2>=2.11.9,<3",
     "annotated-types>=0.7.0",
     "typing-extensions>=4.14.1",
-    "types-psycopg2>=2.9.21.20250809",
     "asyncpg-stubs>=0.30.2",
 ]
 
@@ -187,6 +189,7 @@ quote-style = "double"
 defineConstant = { DEBUG = true }
 exclude = [
     "__pypackages__",
+    "**/__pycache__",
     "_build",
     "examples",
     ".archive",
@@ -194,6 +197,7 @@ exclude = [
     "tests/**",
     "src/tux/database/migrations/**",
 ]
+ignore = ["**/tests/**"]
 include = ["src"]
 stubPath = "typings"
 pythonPlatform = "Linux"
@@ -203,29 +207,53 @@ typeCheckingMode = "strict"
 # venvPath = "."
 
 [tool.coverage.run]
-source = ["tux"]
+source = ["src/tux"]
 branch = true
 parallel = true
+relative_files = true
+concurrency = ["thread", "multiprocessing"]
+sigterm = true
 omit = [
     "*/tests/*",
     "*/test_*",
+    "conftest.py",
     "*/__pycache__/*",
-    "*/migrations/*",
+    ".pytest_cache/*",
+    ".ruff_cache/*",
+    "htmlcov/*",
     "*/venv/*",
     "*/.venv/*",
+    "typings/*",
+    "docs/*",
+    "scripts/*",
+    "assets/*",
+    "logs/*",
+    "*.md",
+    "*.toml",
+    "*.lock",
+    "*.nix",
+    "flake.*",
+    "shell.nix",
+    "prisma/*",
 ]
 
 [tool.coverage.report]
 precision = 2
 show_missing = true
 skip_covered = false
+skip_empty = false
+sort = "name"
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
     "raise AssertionError",
     "raise NotImplementedError",
     "if __name__ == .__main__.:",
-    "@abstract",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+    "if TYPE_CHECKING:",
 ]
 
 [tool.coverage.html]
@@ -234,26 +262,82 @@ directory = "htmlcov"
 [tool.coverage.xml]
 output = "coverage.xml"
 
+[tool.coverage.json]
+output = "coverage.json"
+
+[tool.coverage.lcov]
+output = "lcov.info"
+
 [tool.pytest.ini_options]
+# Test discovery
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = [
-    "--cov=tux",
-    "--cov-report=term-missing",
-    "--cov-report=html",
-    "--cov-report=xml",
-    "--cov-branch",
-    # "-v",
-]
-asyncio_mode = "auto"
 
-# pytest-alembic configuration
-# Note: experimental tests disabled due to URL parsing issues with py-pglite
+# Default options for all pytest runs
+addopts = [
+    # Coverage
+    "--cov=src/tux",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+    "--cov-report=json",
+    "--cov-report=lcov",
+    "--cov-branch",
+    # Output formatting
+    "--strict-markers",
+    "--tb=short",
+    "--randomly-seed=last",
+    # Async support
+    "--asyncio-mode=auto",
+]
+
+# AsyncIO configuration
+asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 asyncio_default_test_loop_scope = "function"
+
+# Python path for imports
 pythonpath = ["src"]
+
+# Test markers for organization
+markers = [
+    "unit: Unit tests (fast, isolated with py-pglite)",
+    "integration: Integration tests (slower, real PostgreSQL)",
+    "e2e: End-to-end tests (full system)",
+    "slow: Tests that take longer to run (>5 seconds)",
+    "benchmark: Performance benchmark tests",
+]
+
+# Directories to skip during test discovery
+norecursedirs = [
+    ".git",
+    ".venv",
+    "venv",
+    "node_modules",
+    "build",
+    "dist",
+    "__pycache__",
+    ".pytest_cache",
+]
+
+# Console output style
+console_output_style = "progress"
+
+# Test result logging
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+# JUnit XML output for CI
+junit_family = "xunit2"
+junit_logging = "no"
+
+# Performance and timeout settings
+timeout = 300
+timeout_method = "thread"
+
 
 # pytest-alembic configuration
 [tool.pytest-alembic]

@@ -1,25 +1,123 @@
 ---
+# ==============================================================================
+# TUX DISCORD BOT - MODERN CODECOV CONFIGURATION
+# ==============================================================================
+#
+# This configuration follows current Codecov best practices and aligns with
+# your current test organization (unit vs integration tests).
+#
+# DOCUMENTATION: https://docs.codecov.com/docs/codecov-yaml
+# ==============================================================================
+# ==============================================================================
+# CODECOV BEHAVIOR SETTINGS
+# ==============================================================================
 codecov:
   require_ci_to_pass: true
+  # yamllint disable-line rule:truthy
+  max_report_age: false
+  disable_default_path_fixes: false
+# ==============================================================================
+# COVERAGE REQUIREMENTS
+# ==============================================================================
 coverage:
+  precision: 2
+  round: down
+  range: 70...100
   status:
     project:
+      # Overall project coverage - progressive improvement
       default:
         target: auto
         threshold: 1%
+        informational: true  # Don't block PRs while building up test suite
+
+      # Critical components with higher standards
+      database:
+        target: 85%
+        threshold: 2%
+        informational: true
+        paths: [src/tux/database/]
+      core:
+        target: 80%
+        threshold: 2%
+        informational: true
+        paths: [src/tux/core/, src/tux/main.py, src/tux/help.py]
     patch:
+      # New code coverage requirements
       default:
-        target: auto
-        threshold: 1%
-ignore: [tests/**, typings/**]
+        target: 80%
+        threshold: 5%
+        informational: true
+        only_pulls: true
+# ==============================================================================
+# TEST FLAG DEFINITIONS
+# ==============================================================================
+# These align with your pytest markers and test organization
+flags:
+  unit:
+    paths: [src/tux/]
+    carryforward: true
+  integration:
+    paths: [src/tux/]
+    carryforward: true
+  e2e:
+    paths: [src/tux/]
+    carryforward: true
+# ==============================================================================
+# FILE IGNORING
+# ==============================================================================
+ignore:
+  # Test files and development artifacts
+  - tests/
+  - conftest.py
+  - .pytest_cache/
+  - .ruff_cache/
+  - htmlcov/
+
+  # Build and environment files
+  - .venv/
+  - typings/
+  - __pycache__/
+
+  # Project management files
+  - docs/
+  - scripts/
+  - assets/
+  - logs/
+  - '*.md'
+  - '*.toml'
+  - '*.lock'
+  - '*.nix'
+  - flake.*
+  - shell.nix
+
+  # Generated files
+  - prisma/
+# ==============================================================================
+# PARSER CONFIGURATION
+# ==============================================================================
 parsers:
-  gcov:
-    branch_detection:
-      conditional: true
-      loop: true
-      method: false
-      macro: false
+  v1:
+    include_full_missed_files: true
+# ==============================================================================
+# COMMENT CONFIGURATION
+# ==============================================================================
 comment:
-  layout: reach, diff, flags, files
+  layout: condensed_header, diff, flags, components, condensed_files, condensed_footer
   behavior: default
-  require_changes: false
+  require_changes: true
+  require_base: false
+  require_head: true
+  after_n_builds: 1
+  show_carryforward_flags: true
+# ==============================================================================
+# GITHUB INTEGRATION
+# ==============================================================================
+# Enhanced integration with GitHub's pull request interface
+github_checks:
+  annotations: true  # Show line-by-line coverage in PR file diffs
+# ==============================================================================
+# PATH NORMALIZATION
+# ==============================================================================
+# Fix coverage.py path mapping for src/tux structure
+fixes: [.*/src/tux/::src/tux/, src/tux/::src/tux/]

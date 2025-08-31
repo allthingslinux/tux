@@ -11,8 +11,9 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 env:
   PYTHON_VERSION: '3.13'
-  COVERAGE_THRESHOLD: 0
-  TEST_MARKERS: not slow and not docker
+  COVERAGE_THRESHOLD: 70  # Set reasonable coverage threshold
+  UNIT_MARKERS: unit and not slow
+  INTEGRATION_MARKERS: integration and not slow
 jobs:
   changes:
     name: File Detection
@@ -83,35 +84,17 @@ jobs:
           additional-vars: |
             PROD_DATABASE_URL=sqlite:///tmp/test.db
             PROD_BOT_TOKEN=test_token_for_ci
-      - name: Run Tests
+      - name: Run Unit Tests
         run: |
           echo "Running unit tests with coverage..."
-          # Adaptive parallel execution based on test count
-          TEST_COUNT=$(uv run pytest --collect-only -q tests/ -m "${{ env.TEST_MARKERS }}" 2>/dev/null | grep -c "test session starts" || echo "0")
-          if [ "$TEST_COUNT" -gt 10 ]; then
-            echo "Running $TEST_COUNT tests in parallel..."
-            uv run pytest tests/ -v \
-              --cov=tux \
-              --cov-branch \
-              --cov-report=xml:coverage-unit.xml \
-              --cov-report=term-missing:skip-covered \
-              -m "${{ env.TEST_MARKERS }}" \
-              --junitxml=junit-unit.xml \
-              -o junit_family=legacy \
-              --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} \
-              -n auto | tee pytest-coverage.txt
-          else
-            echo "Running $TEST_COUNT tests sequentially..."
-            uv run pytest tests/ -v \
-              --cov=tux \
-              --cov-branch \
-              --cov-report=xml:coverage-unit.xml \
-              --cov-report=term-missing:skip-covered \
-              -m "${{ env.TEST_MARKERS }}" \
-              --junitxml=junit-unit.xml \
-              -o junit_family=legacy \
-              --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} | tee pytest-coverage.txt
-          fi
+          # Run only unit tests (py-pglite based)
+          uv run pytest tests/unit/ \
+            --cov-report=xml:coverage-unit.xml \
+            --cov-report=term-missing:skip-covered \
+            -m "${{ env.UNIT_MARKERS }}" \
+            --junitxml=junit-unit.xml \
+            --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} \
+            -n auto | tee pytest-coverage.txt
           echo "Unit test coverage generation completed"
       - name: Upload Unit Test Coverage
         uses: actions/upload-artifact@v4
@@ -121,8 +104,8 @@ jobs:
             pytest-coverage.txt
             junit-unit.xml
           if-no-files-found: ignore
-  database:
-    name: Database Tests
+  integration:
+    name: Integration Tests
     runs-on: ubuntu-latest
     needs: [changes]
     if: needs.changes.outputs.any == 'true' || github.event_name == 'workflow_dispatch'
@@ -147,25 +130,24 @@ jobs:
         uses: ./.github/actions/create-test-env
         with:
           additional-vars: |
-            PROD_DATABASE_URL=sqlite:///tmp/test.db
+            PROD_DATABASE_URL=postgresql://test:test@localhost:5432/test_db
             PROD_BOT_TOKEN=test_token_for_ci
-      - name: Run Database Tests
+      - name: Run Integration Tests
         run: |
-          uv run pytest tests/tux/database/ -v \
-            --cov=tux/database \
-            --cov-branch \
-            --cov-report=xml:coverage-database.xml \
+          uv run pytest tests/integration/ \
+            --cov-report=xml:coverage-integration.xml \
             --cov-report=term-missing:skip-covered \
-            --junitxml=junit-database.xml \
-            -o junit_family=legacy \
-            --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} | tee pytest-database-coverage.txt
-      - name: Upload Database Test Coverage
+            -m "${{ env.INTEGRATION_MARKERS }}" \
+            --junitxml=junit-integration.xml \
+            --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} \
+            --integration | tee pytest-integration-coverage.txt
+      - name: Upload Integration Test Coverage
         uses: actions/upload-artifact@v4
         with:
-          name: database-test-coverage
+          name: integration-test-coverage
           path: |
-            pytest-database-coverage.txt
-            junit-database.xml
+            pytest-integration-coverage.txt
+            junit-integration.xml
           if-no-files-found: ignore
   e2e:
     name: E2E Tests
@@ -197,13 +179,10 @@ jobs:
             PROD_BOT_TOKEN=test_token_for_ci
       - name: Run E2E Tests
         run: |
-          uv run pytest tests/e2e/ -v \
-            --cov=tux \
-            --cov-branch \
+          uv run pytest tests/e2e/ \
             --cov-report=xml:coverage-e2e.xml \
             --cov-report=term-missing:skip-covered \
             --junitxml=junit-e2e.xml \
-            -o junit_family=legacy \
             --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} | tee pytest-e2e-coverage.txt
       - name: Upload E2E Test Coverage
         uses: actions/upload-artifact@v4
@@ -216,11 +195,12 @@ jobs:
   coverage-report:
     name: Coverage Report
     runs-on: ubuntu-latest
-    needs: [changes, unit, database, e2e]
+    needs: [changes, unit, integration, e2e]
     if: always() && (needs.changes.outputs.any == 'true' || github.event_name == 'workflow_dispatch')
     permissions:
       contents: read
       pull-requests: write
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -229,10 +209,10 @@ jobs:
         with:
           name: unit-test-coverage
           path: .
-      - name: Download Database Test Coverage
+      - name: Download Integration Test Coverage
         uses: actions/download-artifact@v4
         with:
-          name: database-test-coverage
+          name: integration-test-coverage
           path: .
       - name: Download E2E Test Coverage
         uses: actions/download-artifact@v4
@@ -244,8 +224,20 @@ jobs:
         with:
           multiple-files: |
             Unit Tests, ./pytest-coverage.txt, ./junit-unit.xml
-            Database Tests, ./pytest-database-coverage.txt, ./junit-database.xml
+            Integration Tests, ./pytest-integration-coverage.txt, ./junit-integration.xml
             E2E Tests, ./pytest-e2e-coverage.txt, ./junit-e2e.xml
           title: Comprehensive Test Coverage Report
           badge-title: Coverage
           report-only-changed-files: true
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: |
+            coverage-unit.xml
+            coverage-integration.xml
+            coverage-e2e.xml
+          flags: unit,integration,e2e
+          name: tux-coverage
+          fail_ci_if_error: false
+          verbose: true
+          use_oidc: true

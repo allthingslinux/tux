@@ -65,6 +65,32 @@ repos:
         additional_dependencies:
           - '@commitlint/cli'
           - '@commitlint/config-conventional'
+  - repo: local
+    hooks:
+      - id: settings-doc-markdown
+        name: Generate settings-doc Markdown
+        description: This hook generates a Markdown documentation from pydantic.BaseSettings
+          to a file.
+        entry: make docs-config-markdown
+        language: system
+        types: [file, python]
+        pass_filenames: false
+      - id: settings-doc-dotenv
+        name: Generate settings-doc .env
+        description: This hook generates a .env template from pydantic.BaseSettings
+          to a file.
+        entry: make docs-env
+        language: system
+        types: [file, python]
+        pass_filenames: false
+      - id: settings-doc-env-example
+        name: Generate env.example template
+        description: This hook generates env.example from pydantic.BaseSettings to
+          a file.
+        entry: make docs-env-example
+        language: system
+        types: [file, python]
+        pass_filenames: false
 exclude: ^(\.archive/|.*typings/|node_modules/|\.venv/|\.kiro/).*$
 ci:
   autofix_commit_msg: 'style: auto fixes from pre-commit hooks'

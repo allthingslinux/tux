@@ -47,6 +47,8 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+coverage.json
+lcov.info
 *.cover
 *.py,cover
 .hypothesis/
@@ -158,8 +160,8 @@ github-private-key.pem
 
 # Miscellaneous
 /debug.csv
-config/settings*
-!config/settings.yml.example
+
+
 
 # MacOS
 .DS_Store

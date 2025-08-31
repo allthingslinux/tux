@@ -1,48 +1,3 @@
-# ==============================================================================
-# TUX DISCORD BOT - MULTI-STAGE DOCKERFILE
-# ==============================================================================
-#
-# This Dockerfile uses a multi-stage build approach to create optimized images
-# for different use cases while maintaining consistency across environments.
-#
-# STAGES:
-# -------
-# 1. base       - Common foundation with runtime dependencies
-# 2. build      - Development tools and dependency installation
-# 3. dev        - Development environment with debugging tools
-# 4. production - Minimal, secure runtime environment
-#
-# USAGE:
-# ------
-# Development:  docker-compose -f docker-compose.dev.yml up
-# Production:   docker build --target production -t tux:latest .
-# With version: docker build --build-arg VERSION=$(git describe --tags --always --dirty | sed 's/^v//') -t tux:latest .
-#
-# SECURITY FEATURES:
-# ------------------
-# - Non-root user execution (uid/gid 1001)
-# - Read-only filesystem support via tmpfs mounts
-# - Minimal attack surface (only required dependencies)
-# - Pinned package versions for reproducibility
-# - Health checks for container monitoring
-#
-# SIZE OPTIMIZATION:
-# ------------------
-# - Multi-stage builds to exclude build tools from final image
-# - Aggressive cleanup of unnecessary files (~73% size reduction)
-# - Efficient layer caching through strategic COPY ordering
-# - Loop-based cleanup to reduce Dockerfile complexity
-#
-# ==============================================================================
-
-# ==============================================================================
-# BASE STAGE - Common Foundation
-# ==============================================================================
-# Purpose: Establishes the common base for all subsequent stages
-# Contains: Python runtime, essential system dependencies, security setup
-# Size Impact: ~150MB (Python slim + runtime deps)
-# ==============================================================================
-
 FROM python:3.13.7-slim@sha256:27f90d79cc85e9b7b2560063ef44fa0e9eaae7a7c3f5a9f74563065c5477cc24 AS base
 
 # OCI Labels for container metadata and registry compliance
@@ -160,7 +115,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # 1. Configuration files (rarely change)
 # These are typically static configuration that changes infrequently
-COPY config/ ./config/
+# Note: Configuration is now handled via environment variables
 
 # 2. Database migration files (change infrequently)
 # Alembic migrations are relatively stable
@@ -243,18 +198,27 @@ RUN set -eux; \
     # Create user cache directories (fixes permission issues for npm and other tools)
     mkdir -p /home/nonroot/.cache /home/nonroot/.npm; \
     # Ensure correct ownership for nonroot user to write into these directories
-    chown -R nonroot:nonroot /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm
+    chown -R nonroot:nonroot /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm; \
+    chmod -R 755 /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm
+
+# Install development dependencies BEFORE switching to non-root user
+# DEVELOPMENT: These tools are needed for linting, testing, and development workflow
+RUN uv sync --dev
+
+# Set development environment variables
+ENV VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:$PATH" \
+    PYTHONPATH="/app" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
 # Switch to non-root user for all subsequent operations
 # SECURITY: Follows principle of least privilege
 USER nonroot
 
-# Install development dependencies
-# DEVELOPMENT: These tools are needed for linting, testing, and development workflow
-RUN uv sync --dev
-
 # Development container startup command
 # WORKFLOW: Starts the bot in development mode with automatic database migrations
-CMD ["uv", "run", "tux", "--dev", "start"]
+CMD ["python", "-m", "tux.main"]
 
 # ==============================================================================
 # PRODUCTION STAGE - Minimal Runtime Environment
@@ -317,13 +281,13 @@ WORKDIR /app
 
 # VIRTUAL_ENV=/app/.venv    : Points to the virtual environment
 # PATH="/app/.venv/bin:$PATH" : Ensures venv binaries are found first
-# PYTHONPATH="/app"         : Allows imports from the app directory
+# PYTHONPATH="/app:/app/src" : Allows imports from both app and src directories
 # PYTHONOPTIMIZE=2          : Maximum Python bytecode optimization
 # Other vars inherited from base stage for consistency
 
 ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH" \
-    PYTHONPATH="/app" \
+    PYTHONPATH="/app:/app/src" \
     PYTHONOPTIMIZE=2 \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -335,8 +299,8 @@ ENV VIRTUAL_ENV=/app/.venv \
 # EFFICIENCY: Only copies what's needed for runtime
 COPY --from=build --chown=nonroot:nonroot /app/.venv /app/.venv
 COPY --from=build --chown=nonroot:nonroot /app/tux /app/tux
+COPY --from=build --chown=nonroot:nonroot /app/src /app/src
 
-COPY --from=build --chown=nonroot:nonroot /app/config /app/config
 COPY --from=build --chown=nonroot:nonroot /app/pyproject.toml /app/pyproject.toml
 COPY --from=build --chown=nonroot:nonroot /app/VERSION /app/VERSION
 
@@ -350,7 +314,8 @@ RUN set -eux; \
   mkdir -p /app/.cache/tldr /app/temp; \
   mkdir -p /home/nonroot/.cache /home/nonroot/.npm; \
   rm -rf /home/nonroot/.npm/_cacache_; \
-  chown nonroot:nonroot /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm
+  chown -R nonroot:nonroot /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm; \
+  chmod -R 755 /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm
 
 # Switch to non-root user for final optimizations
 USER nonroot
@@ -387,7 +352,7 @@ RUN set -eux; \
     # Compile Python bytecode for performance optimization
     # PERFORMANCE: Pre-compiled bytecode improves startup time
     # Note: Some compilation errors are expected and ignored
-    /app/.venv/bin/python -m compileall -b -q /app/src/tux /app/.venv/lib/python3.13/site-packages 2>/dev/null || true
+    /app/.venv/bin/python -m compileall -b -q /app/tux /app/.venv/lib/python3.13/site-packages 2>/dev/null || true
 
 # Switch back to non-root user for runtime
 USER nonroot
@@ -396,7 +361,7 @@ USER nonroot
 # MONITORING: Allows Docker/Kubernetes to monitor application health
 # RELIABILITY: Enables automatic restart of unhealthy containers
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import tux.cli.core; import tux.shared.config.env; print('Health check passed')" || exit 1
+    CMD python -c "import tux.shared.config.env; print('Health check passed')" || exit 1
 
 # --interval=30s    : Check health every 30 seconds
 # --timeout=10s     : Allow 10 seconds for health check to complete
@@ -405,41 +370,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 
 # Application entry point and default command
 # DEPLOYMENT: Configures how the container starts in production
-ENTRYPOINT ["tux"]
-CMD ["--prod", "start"]
-
-# ENTRYPOINT ["tux"]     : Always runs the tux command
-# CMD ["--prod", "start"]: Default arguments for production mode
-# FLEXIBILITY: CMD can be overridden, ENTRYPOINT cannot (security)
-
-# ==============================================================================
-# DOCKERFILE BEST PRACTICES IMPLEMENTED
-# ==============================================================================
-#
-# 1. MULTI-STAGE BUILDS: Separates build and runtime environments
-# 2. LAYER OPTIMIZATION: Ordered operations to maximize cache hits
-# 3. SECURITY: Non-root user, pinned versions, minimal attack surface
-# 4. SIZE OPTIMIZATION: Aggressive cleanup, minimal dependencies
-# 5. MAINTAINABILITY: Comprehensive documentation, organized structure
-# 6. RELIABILITY: Health checks, proper error handling
-# 7. PERFORMANCE: Optimized Python settings, pre-compiled bytecode
-# 8. COMPLIANCE: OCI labels, standard conventions
-#
-# USAGE EXAMPLES:
-# ---------------
-# Build production image:
-#   docker build --target production -t tux:latest .
-#
-# Build development image:
-#   docker build --target dev -t tux:dev .
-#
-# Build with devcontainer tools:
-#   docker build --target dev --build-arg DEVCONTAINER=1 -t tux:devcontainer .
-#
-# Run production container:
-#   docker run -d --name tux-bot --env-file .env tux:latest
-#
-# Run development container:
-#   docker-compose -f docker-compose.dev.yml up
-#
-# ==============================================================================
+ENTRYPOINT ["python", "-m", "tux.main"]
+CMD []

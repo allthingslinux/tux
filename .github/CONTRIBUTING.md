@@ -94,9 +94,9 @@ Follow these steps to set up your local development environment. For more compre
 
     Copy the example settings file.
 
-    `cp config/settings.yml.example config/settings.yml`
+    `cp .env.example .env`
 
-    Review `config/settings.yml` and customize it.
+    Review `.env` and customize it.
 
     **Crucially, add your Discord User ID to the `BOT_OWNER` list.**
 
