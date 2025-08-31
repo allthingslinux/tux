@@ -469,7 +469,7 @@ class BaseController[ModelT]:
 
     async def with_transaction[R](self, operation: Callable[[AsyncSession], Awaitable[R]]) -> R:
         """Execute operation within a transaction."""
-        async with self.db.transaction() as session:
+        async with self.db.session() as session:
             return await operation(session)
 
     # ------------------------------------------------------------------
@@ -519,8 +519,7 @@ class BaseController[ModelT]:
     async def execute_transaction(self, callback: Callable[[], Any]) -> Any:
         """Execute callback inside a transaction."""
         try:
-            async with self.db.transaction():
-                return await callback()
+            return await self.db.execute_transaction(callback)
         except Exception as exc:
             logger.exception(f"Transaction failed in {self.model.__name__}: {exc}")
             raise
@@ -763,7 +762,7 @@ class BaseController[ModelT]:
                 text("""
                 SELECT
                     schemaname,
-                    tablename,
+                    relname as tablename,
                     n_tup_ins as total_inserts,
                     n_tup_upd as total_updates,
                     n_tup_del as total_deletes,
@@ -773,10 +772,9 @@ class BaseController[ModelT]:
                     seq_tup_read as sequential_tuples_read,
                     idx_scan as index_scans,
                     idx_tup_fetch as index_tuples_fetched,
-                    n_tup_hot_upd as hot_updates,
-                    n_tup_newpage_upd as newpage_updates
+                    n_tup_hot_upd as hot_updates
                 FROM pg_stat_user_tables
-                WHERE tablename = :table_name
+                WHERE relname = :table_name
             """),
                 {"table_name": table_name},
             )

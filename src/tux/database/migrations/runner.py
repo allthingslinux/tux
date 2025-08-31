@@ -7,7 +7,8 @@ from alembic import command
 from alembic.config import Config
 from loguru import logger
 
-from tux.shared.config.env import get_database_url, is_dev_mode
+
+from tux.shared.config import CONFIG
 
 
 def _find_project_root(start: Path) -> Path:
@@ -24,7 +25,7 @@ def _build_alembic_config() -> Config:
     cfg = Config(str(root / "alembic.ini"))
 
     # Set all required Alembic configuration options
-    cfg.set_main_option("sqlalchemy.url", get_database_url())
+    cfg.set_main_option("sqlalchemy.url", CONFIG.get_database_url())
     cfg.set_main_option("script_location", "src/tux/database/migrations")
     cfg.set_main_option("version_locations", "src/tux/database/migrations/versions")
     cfg.set_main_option("prepend_sys_path", "src")
@@ -49,37 +50,79 @@ def _run_alembic_command(operation: str, target: str = "head") -> int:  # pyrigh
 
         if operation == "upgrade":
             command.upgrade(cfg, target)
-            logger.info(f"Successfully upgraded to {target}")
+            logger.info(f"✅ Successfully upgraded to {target}")
         elif operation == "downgrade":
             command.downgrade(cfg, target)
-            logger.info(f"Successfully downgraded to {target}")
+            logger.info(f"✅ Successfully downgraded to {target}")
         elif operation == "current":
             command.current(cfg)
-            logger.info("Current migration version displayed")
+            logger.info("✅ Current migration version displayed")
         elif operation == "history":
             command.history(cfg)
-            logger.info("Migration history displayed")
+            logger.info("✅ Migration history displayed")
         elif operation == "revision":
             command.revision(cfg, target)
-            logger.info(f"New revision {target} created")
+            logger.info(f"✅ New revision {target} created")
         else:
             raise ValueError(f"Unknown migration operation: {operation}")
 
         return 0  # Success
 
     except Exception as e:
-        logger.error(f"Error running migration command '{operation}': {e}")
+        logger.error(f"❌ Error running migration command '{operation}': {type(e).__name__}: {e}")
         return 1  # Error
 
 async def upgrade_head_if_needed() -> None:
-    """Run Alembic upgrade to head in non-dev environments.
+    """Run Alembic upgrade to head on startup.
 
-    This call is idempotent and safe to run on startup. In dev, we skip to
-    allow local workflows to manage migrations explicitly.
+    This call is idempotent and safe to run on startup.
     """
-    if is_dev_mode():
-        return
+    import concurrent.futures
+    import threading
 
-    cfg = _build_alembic_config()
-    # Alembic commands are synchronous; run in a thread to avoid blocking.
-    await asyncio.to_thread(command.upgrade, cfg, "head")
+    def run_upgrade():
+        """Run the upgrade in a separate thread with timeout."""
+        cfg = _build_alembic_config()
+        logger.info("🔄 Running database migrations...")
+        try:
+            command.upgrade(cfg, "head")
+            logger.info("✅ Database migrations completed")
+            return True
+        except Exception as e:
+            # Check if this is a database connection error
+            if "connection failed" in str(e) or "Connection refused" in str(e):
+                logger.error("❌ Database migration failed: Cannot connect to database")
+                logger.info("💡 Ensure PostgreSQL is running: make docker-up")
+                raise RuntimeError("Database connection failed during migrations") from e
+            else:
+                logger.error(f"❌ Database migration failed: {type(e).__name__}")
+                logger.info("💡 Check database connection settings")
+                raise
+
+    try:
+        # Use ThreadPoolExecutor for cancellable execution
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            # Submit the task
+            future = executor.submit(run_upgrade)
+
+            # Wait for completion with timeout, but allow cancellation
+            while not future.done():
+                # Check if we've been cancelled
+                if asyncio.current_task().cancelled():
+                    logger.warning("⚠️ Migration cancelled, shutting down...")
+                    future.cancel()
+                    raise asyncio.CancelledError("Migration was cancelled")
+
+                # Small wait to avoid busy loop
+                await asyncio.sleep(0.1)
+
+            # Get the result (will raise exception if failed)
+            return future.result()
+
+    except concurrent.futures.CancelledError:
+        logger.warning("⚠️ Migration thread cancelled")
+        raise asyncio.CancelledError("Migration was cancelled")
+    except Exception:
+        # Re-raise any other exceptions
+        raise

@@ -20,6 +20,8 @@ class GuildConfigController(BaseController[GuildConfig]):
 
     async def get_or_create_config(self, guild_id: int, **defaults: Any) -> GuildConfig:
         """Get guild configuration, or create it with defaults if it doesn't exist."""
+        # Note: Guild existence should be ensured at a higher level (service/application)
+        # This method assumes the guild exists to avoid circular dependencies
         config, _ = await self.get_or_create(defaults=defaults, guild_id=guild_id)
         return config
 

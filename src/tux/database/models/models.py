@@ -363,7 +363,7 @@ class Reminder(SQLModel, table=True):
 
 class GuildConfig(BaseModel, table=True):
     guild_id: int = Field(primary_key=True, foreign_key="guild.guild_id", ondelete="CASCADE", sa_type=BigInteger)
-    prefix: str | None = Field(default=None, max_length=10)
+    prefix: str = Field(default="$", max_length=3)
 
     mod_log_id: int | None = Field(default=None, sa_type=BigInteger)
     audit_log_id: int | None = Field(default=None, sa_type=BigInteger)

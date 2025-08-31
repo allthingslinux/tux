@@ -1,11 +1,10 @@
-from collections.abc import Callable
-from typing import Any, Literal, cast
+from __future__ import annotations
+
+from typing import Literal
 
 import alembic_postgresql_enum  # noqa: F401  # pyright: ignore[reportUnusedImport]
 from alembic import context
 from sqlalchemy import MetaData
-from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlalchemy.sql.schema import SchemaItem
 from sqlmodel import SQLModel
 
@@ -27,7 +26,7 @@ from tux.database.models import (
     Starboard,
     StarboardMessage,
 )
-from tux.shared.config.env import get_database_url
+from tux.shared.config import CONFIG
 
 # Get config from context if available, otherwise create a minimal one
 try:
@@ -36,7 +35,7 @@ except AttributeError:
     # Not in an Alembic context, create a minimal config for testing
     from alembic.config import Config
     config = Config()
-    config.set_main_option("sqlalchemy.url", get_database_url())
+    config.set_main_option("sqlalchemy.url", CONFIG.DATABASE_URL)
 
 naming_convention = {
     "ix": "ix_%(table_name)s_%(column_0_N_name)s",  # More specific index naming
@@ -82,7 +81,17 @@ def include_object(
 
 
 def run_migrations_offline() -> None:
-    url = config.get_main_option("sqlalchemy.url")
+    """Run migrations in 'offline' mode."""
+    # Use CONFIG.database_url for offline migrations too
+    url = CONFIG.database_url
+
+    # Convert to sync format for offline mode
+    if url.startswith("postgresql+psycopg_async://"):
+        url = url.replace("postgresql+psycopg_async://", "postgresql+psycopg://", 1)
+    elif url.startswith("postgresql+asyncpg://"):
+        url = url.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
+    elif url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+psycopg://", 1)
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -106,80 +115,85 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode - handles both sync and async."""
-    # Check if pytest-alembic has provided a connection
-    connectable = context.config.attributes.get("connection", None)
+    """Run migrations in 'online' mode."""
+    # Get the database URL from our config (auto-handles async/sync conversion)
+    database_url = CONFIG.database_url
 
-    if connectable is None:
-        # Get configuration section, providing default URL if not found
-        config_section = config.get_section(config.config_ini_section, {})
+    # For Alembic operations, we need a sync URL
+    # Convert async URLs to sync for Alembic compatibility
+    if database_url.startswith("postgresql+psycopg_async://"):
+        database_url = database_url.replace("postgresql+psycopg_async://", "postgresql+psycopg://", 1)
+    elif database_url.startswith("postgresql+asyncpg://"):
+        database_url = database_url.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
+    elif database_url.startswith("postgresql://"):
+        # Ensure we're using psycopg3 for sync operations
+        database_url = database_url.replace("postgresql://", "postgresql+psycopg://", 1)
 
-        # If URL is not in the config section, get it from our environment function
-        if "sqlalchemy.url" not in config_section:
-            from tux.shared.config.env import get_database_url
-            config_section["sqlalchemy.url"] = get_database_url()
+    # Log the database URL (without password) for debugging
+    import re
+    debug_url = re.sub(r':([^:@]{4})[^:@]*@', r':****@', database_url)
+    print(f"DEBUG: Migration database URL: {debug_url}")
 
-        connectable = async_engine_from_config(
-            config_section,
-            prefix="sqlalchemy.",
-            pool_pre_ping=True,
+    # Create a sync engine for Alembic with better connection settings
+    from sqlalchemy import create_engine, text
+    from sqlalchemy.exc import OperationalError
+    import time
+
+    # Retry connection a few times in case database is starting up
+    max_retries = 5
+    retry_delay = 2
+
+    for attempt in range(max_retries):
+        try:
+            connectable = create_engine(
+                database_url,
+                pool_pre_ping=True,
+                pool_recycle=3600,
+                connect_args={
+                    'connect_timeout': 10,
+                    'options': '-c statement_timeout=300000',  # 5 minute timeout
+                },
+            )
+
+            # Test the connection before proceeding
+            with connectable.connect() as connection:
+                result = connection.execute(text("SELECT 1"))
+                break
+
+        except OperationalError as e:
+            if attempt == max_retries - 1:
+                print(f"DEBUG: Failed to connect after {max_retries} attempts: {e}")
+                raise
+
+            print(f"DEBUG: Connection attempt {attempt + 1} failed, retrying in {retry_delay}s")
+
+            time.sleep(retry_delay)
+
+    with connectable.connect() as connection:
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            compare_type=True,
+            compare_server_default=True,
+            render_as_batch=True,
+            include_object=include_object,
+            # Enhanced configuration for better migration generation
+            process_revision_directives=None,
+            # Additional options for better migration quality
+            include_schemas=False,  # Focus on public schema
+            upgrade_token="upgrades",
+            downgrade_token="downgrades",
+            alembic_module_prefix="op.",
+            sqlalchemy_module_prefix="sa.",
+            # Enable transaction per migration for safety
+            transaction_per_migration=True,
         )
 
-    # Handle both sync and async connections
-    if hasattr(connectable, 'connect') and hasattr(connectable, 'dispose') and hasattr(connectable, '_is_asyncio'):
-        # This is an async engine - run async migrations
-        import asyncio
-        asyncio.run(run_async_migrations(connectable))
-    elif hasattr(connectable, 'connect'):
-        # It's a sync engine, get connection from it
-        with cast(Connection, connectable.connect()) as connection:
-            do_run_migrations(connection)
-    else:
-        # It's already a connection
-        do_run_migrations(connectable)  # type: ignore[arg-type]
+        with context.begin_transaction():
+            context.run_migrations()
 
 
-async def run_async_migrations(connectable: Any) -> None:
-    """Run async migrations when we have an async engine."""
-    async with connectable.connect() as connection:
-        callback: Callable[[Connection], None] = do_run_migrations
-        await connection.run_sync(callback)
-
-    await connectable.dispose()
-
-
-def do_run_migrations(connection: Connection) -> None:
-    context.configure(
-        connection=connection,
-        target_metadata=target_metadata,
-        compare_type=True,
-        compare_server_default=True,
-        render_as_batch=True,
-        include_object=include_object,
-        # Enhanced configuration for better migration generation
-        process_revision_directives=None,
-        # Additional options for better migration quality
-        include_schemas=False,  # Focus on public schema
-        upgrade_token="upgrades",
-        downgrade_token="downgrades",
-        alembic_module_prefix="op.",
-        sqlalchemy_module_prefix="sa.",
-        # Enable transaction per migration for safety
-        transaction_per_migration=True,
-    )
-
-    with context.begin_transaction():
-        context.run_migrations()
-
-
-# Only run migrations if we're in an Alembic context
-
-# sourcery skip: use-contextlib-suppress
-import contextlib
-with contextlib.suppress(NameError):
-    try:
-        if hasattr(context, 'is_offline_mode') and context.is_offline_mode():
-            run_migrations_offline()
-    except (AttributeError, NameError):
-        # Context is not available or not properly initialized
-        pass
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()
