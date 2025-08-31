@@ -9,7 +9,7 @@ from loguru import logger
 
 if TYPE_CHECKING:  # Avoid runtime import cycle
     from tux.core.types import Tux
-from tux.shared.config.settings import Config
+from tux.shared.config import CONFIG
 from tux.shared.constants import CONST
 
 
@@ -146,7 +146,7 @@ class EmbedCreator:
     ) -> tuple[str, str | None]:
         try:
             text: str = (
-                f"{user_name}@discord $" if user_name else f"{Config.BOT_NAME.lower()}@discord $"
+                f"{user_name}@discord $" if user_name else f"{CONFIG.BOT_INFO.BOT_NAME.lower()}@discord $"
             )  # TODO: Make this configurable with the new config system.
             text += f" {round(bot.latency * 1000)}ms" if bot else ""
 

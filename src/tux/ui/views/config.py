@@ -2,23 +2,26 @@ from typing import Any
 
 import discord
 
+from tux.database.controllers import DatabaseCoordinator
 from tux.database.service import DatabaseService
-from tux.database.utils import get_db_service_from
+from tux.database.utils import get_db_controller_from
 
 
 class ConfigSetPrivateLogs(discord.ui.View):
     def __init__(self, *, timeout: float = 180, bot: Any | None = None, db_service: DatabaseService | None = None):
         if db_service is not None:
-            self.db: DatabaseService = db_service
+            # If we have a DatabaseService, create a coordinator from it
+
+            self.db: DatabaseCoordinator = DatabaseCoordinator(db_service)
         elif bot is not None:
-            # Get the database service
-            db_service = get_db_service_from(bot)
-            if db_service is None:
-                message = "DatabaseService not available. DI is required for ConfigSetPrivateLogs."
+            # Get the database coordinator
+            db_controller = get_db_controller_from(bot)
+            if db_controller is None:
+                message = "DatabaseCoordinator not available. DI is required for ConfigSetPrivateLogs."
                 raise RuntimeError(message)
-            self.db = db_service
+            self.db = db_controller
         else:
-            message = "DatabaseService not available. DI is required for ConfigSetPrivateLogs."
+            message = "DatabaseCoordinator not available. DI is required for ConfigSetPrivateLogs."
             raise RuntimeError(message)
         super().__init__(timeout=timeout)
 
@@ -86,16 +89,18 @@ class ConfigSetPrivateLogs(discord.ui.View):
 class ConfigSetPublicLogs(discord.ui.View):
     def __init__(self, *, timeout: float = 180, bot: Any | None = None, db_service: DatabaseService | None = None):
         if db_service is not None:
-            self.db: DatabaseService = db_service
+            # If we have a DatabaseService, create a coordinator from it
+
+            self.db: DatabaseCoordinator = DatabaseCoordinator(db_service)
         elif bot is not None:
-            # Get the database service
-            db_service = get_db_service_from(bot)
-            if db_service is None:
-                message = "DatabaseService not available. DI is required for ConfigSetPublicLogs."
+            # Get the database coordinator
+            db_controller = get_db_controller_from(bot)
+            if db_controller is None:
+                message = "DatabaseCoordinator not available. DI is required for ConfigSetPublicLogs."
                 raise RuntimeError(message)
-            self.db = db_service
+            self.db = db_controller
         else:
-            message = "DatabaseService not available. DI is required for ConfigSetPublicLogs."
+            message = "DatabaseCoordinator not available. DI is required for ConfigSetPublicLogs."
             raise RuntimeError(message)
         super().__init__(timeout=timeout)
 
@@ -163,16 +168,18 @@ class ConfigSetPublicLogs(discord.ui.View):
 class ConfigSetChannels(discord.ui.View):
     def __init__(self, *, timeout: float = 180, bot: Any | None = None, db_service: DatabaseService | None = None):
         if db_service is not None:
-            self.db: DatabaseService = db_service
+            # If we have a DatabaseService, create a coordinator from it
+
+            self.db: DatabaseCoordinator = DatabaseCoordinator(db_service)
         elif bot is not None:
-            # Get the database service
-            db_service = get_db_service_from(bot)
-            if db_service is None:
-                message = "DatabaseService not available. DI is required for ConfigSetChannels."
+            # Get the database coordinator
+            db_controller = get_db_controller_from(bot)
+            if db_controller is None:
+                message = "DatabaseCoordinator not available. DI is required for ConfigSetChannels."
                 raise RuntimeError(message)
-            self.db = db_service
+            self.db = db_controller
         else:
-            message = "DatabaseService not available. DI is required for ConfigSetChannels."
+            message = "DatabaseCoordinator not available. DI is required for ConfigSetChannels."
             raise RuntimeError(message)
         super().__init__(timeout=timeout)
 

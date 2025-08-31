@@ -31,7 +31,6 @@ class BannerConfig:
     guild_count: int = 0
     user_count: int = 0
     prefix: str = "~"
-    dev_mode: bool = False
     colors: BannerColors = field(default_factory=BannerColors)
 
 
@@ -68,9 +67,6 @@ class BannerBuilder:
         ascii_lines = ascii_art.plain.splitlines()
 
         # Create info data
-        mode_style = self.config.colors.warning if self.config.dev_mode else self.config.colors.success
-        mode_text = "Development" if self.config.dev_mode else "Production"
-
         info_data = [
             ("", ""),  # Empty row to shift content down
             ("Bot Name", f"{self.config.bot_name} (Tux)"),
@@ -78,7 +74,6 @@ class BannerBuilder:
             ("Bot ID", str(self.config.bot_id or "Unknown")),
             ("Status", f"Watching {self.config.guild_count} servers with {self.config.user_count} users"),
             ("Prefix", self.config.prefix),
-            ("Mode", Text(mode_text, style=mode_style)),
         ]
 
         # Add rows, combining ASCII art with info
@@ -108,7 +103,6 @@ def create_banner(
     guild_count: int = 0,
     user_count: int = 0,
     prefix: str = "~",
-    dev_mode: bool = False,
 ) -> Panel:
     """Create a banner panel with bot information."""
     config = BannerConfig(
@@ -118,7 +112,6 @@ def create_banner(
         guild_count=guild_count,
         user_count=user_count,
         prefix=prefix,
-        dev_mode=dev_mode,
     )
 
     return BannerBuilder(config).build()
