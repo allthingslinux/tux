@@ -16,8 +16,10 @@ from typing import TYPE_CHECKING, Any
 from discord.ext import commands
 from loguru import logger
 
-from tux.core.interfaces import IBotService, IConfigService, ILoggerService
+from tux.core.interfaces import IBotService, ILoggerService
+from tux.database.controllers import DatabaseCoordinator
 from tux.database.service import DatabaseService
+from tux.shared.config import CONFIG
 from tux.shared.functions import generate_usage as _generate_usage_shared
 
 if TYPE_CHECKING:
@@ -51,9 +53,9 @@ class BaseCog(commands.Cog):
         # Initialize service properties first
         self.db_service: DatabaseService | None = None
         self.bot_service: IBotService | None = None
-        self.config_service: IConfigService | None = None
+
         self.logger_service: ILoggerService | None = None
-        self._db_controller = None  # legacy attribute removed; kept for type stability only
+        self._db_coordinator: DatabaseCoordinator | None = None  # Database coordinator for accessing controllers
 
         # Get the bot instance
         self.bot = bot
@@ -79,7 +81,7 @@ class BaseCog(commands.Cog):
         # Inject services in order of dependency
         self._inject_database_service()
         self._inject_bot_service()
-        self._inject_config_service()
+
         self._inject_logger_service()
 
         # Single summary log for this cog's injection results
@@ -87,16 +89,17 @@ class BaseCog(commands.Cog):
             f"[BaseCog] Injected services for {self.__class__.__name__} "
             f"(db={self.db_service is not None}, "
             f"bot={self.bot_service is not None}, "
-            f"config={self.config_service is not None}, "
             f"logger={self.logger_service is not None})",
         )
 
     def _inject_database_service(self) -> None:
-        """Inject the database service."""
+        """Inject the database service and create database coordinator."""
         try:
             self.db_service = self._container.get_optional(DatabaseService)
             if self.db_service:
-                logger.trace(f"Injected database service into {self.__class__.__name__}")
+                # Create the database coordinator for accessing controllers
+                self._db_coordinator = DatabaseCoordinator(self.db_service)
+                logger.trace(f"Injected database service and coordinator into {self.__class__.__name__}")
             else:
                 logger.warning(f"Database service not available for {self.__class__.__name__}")
         except Exception as e:
@@ -112,17 +115,6 @@ class BaseCog(commands.Cog):
                 logger.warning(f"[BaseCog] Bot service not available for {self.__class__.__name__}")
         except Exception as e:
             logger.error(f"[BaseCog] Bot service injection failed for {self.__class__.__name__}: {e}", exc_info=True)
-
-    def _inject_config_service(self) -> None:
-        """Inject the config service."""
-        try:
-            self.config_service = self._container.get_optional(IConfigService)
-            if self.config_service:
-                logger.trace(f"Injected config service into {self.__class__.__name__}")
-            else:
-                logger.warning(f"Config service not available for {self.__class__.__name__}")
-        except Exception as e:
-            logger.error(f"Config service injection failed for {self.__class__.__name__}: {e}")
 
     def _inject_logger_service(self) -> None:
         """Inject the logger service (optional)."""
@@ -190,22 +182,22 @@ class BaseCog(commands.Cog):
     # (Embed helpers and error handling intentionally omitted as requested.)
 
     @property
-    def db(self):
-        """Get the database controller from the injected database service.
+    def db(self) -> DatabaseCoordinator:
+        """Get the database coordinator for accessing database controllers.
 
         Returns:
-            The database controller instance
+            The database coordinator instance
 
         Raises:
-            RuntimeError: If the database service is not available
+            RuntimeError: If the database coordinator is not available
         """
-        if self.db_service is None:
-            error_msg = "Database service not injected. DI is required."
+        if self._db_coordinator is None:
+            error_msg = "Database coordinator not available. DI is required."
             raise RuntimeError(error_msg)
-        return self.db_service
+        return self._db_coordinator
 
     def get_config(self, key: str, default: Any = None) -> Any:
-        """Get a configuration value with service injection support.
+        """Get a configuration value directly from CONFIG.
 
         Args:
             key: The configuration key to retrieve
@@ -213,13 +205,23 @@ class BaseCog(commands.Cog):
 
         Returns:
             The configuration value or default
-
-        This method uses the injected config service only.
         """
-        if self.config_service is None:
-            error_msg = "Config service not injected. DI is required."
-            raise RuntimeError(error_msg)
-        return self.config_service.get(key, default)
+
+        try:
+            # Handle nested keys like "BOT_INFO.BOT_NAME"
+            keys = key.split(".")
+            value = CONFIG
+
+            for k in keys:
+                if hasattr(value, k):
+                    value = getattr(value, k)
+                else:
+                    return default
+        except Exception as e:
+            logger.error(f"Failed to get config value {key}: {e}")
+            return default
+        else:
+            return value
 
     def get_bot_latency(self) -> float:
         """Get the bot's latency with service injection support.

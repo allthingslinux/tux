@@ -16,18 +16,16 @@ from tux.core.container import (
     ServiceRegistrationError,
     ServiceResolutionError,
 )
-from tux.core.interfaces import IBotService, IConfigService
+from tux.core.interfaces import IBotService
 from tux.core.service_registry import ServiceRegistry
-from tux.core.services import BotService, ConfigService
+from tux.core.services import BotService
 from tux.database.service import DatabaseService
 
 __all__ = [
     "BaseCog",
     "BotService",
-    "ConfigService",
     "DatabaseService",
     "IBotService",
-    "IConfigService",
     "ServiceContainer",
     "ServiceDescriptor",
     "ServiceLifetime",

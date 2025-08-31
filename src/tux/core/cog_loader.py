@@ -19,7 +19,7 @@ from tux.services.tracing import (
     start_span,
     transaction,
 )
-from tux.shared.config.settings import CONFIG
+from tux.shared.config import CONFIG
 
 
 class CogLoadError(Exception):
@@ -37,7 +37,7 @@ class CogLoadError(Exception):
 class CogLoader(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.cog_ignore_list: set[str] = CONFIG.COG_IGNORE_LIST
+        self.cog_ignore_list: set[str] = CONFIG.get_cog_ignore_list()
         # Track load times for performance monitoring
         self.load_times: defaultdict[str, float] = defaultdict(float)
         # Define load order priorities (higher number = higher priority)
@@ -140,9 +140,23 @@ class CogLoader(commands.Cog):
             logger.debug(f"Successfully loaded cog {module} in {load_time * 1000:.0f}ms")
 
         except Exception as e:
+            # Handle configuration errors more gracefully
+            module_name = str(path)
+
+            # Check if this is a configuration error (including Discord ExtensionFailed wrapping our errors)
+            error_str = str(e).lower()
+            keywords = ["not configured", "configuration", "empty", "must be a valid"]
+            matches = [keyword for keyword in keywords if keyword in error_str]
+
+            if matches:
+                set_span_attributes({"cog.status": "skipped", "cog.skip_reason": "configuration"})
+                logger.warning(f"⚠️  Skipping cog {module_name} due to missing configuration: {e}")
+                logger.info("💡 To enable this cog, configure the required settings in your .env file")
+                return  # Skip this cog but don't fail the entire load process
+
+            # Handle other exceptions normally
             set_span_attributes({"cog.status": "failed"})
             capture_span_exception(e, traceback=traceback.format_exc(), module=str(path))
-            module_name = str(path)
             error_msg = f"Failed to load cog {module_name}. Error: {e}\n{traceback.format_exc()}"
             logger.error(error_msg)
             raise CogLoadError(error_msg) from e
@@ -187,8 +201,24 @@ class CogLoader(commands.Cog):
         end_time = time.perf_counter()
 
         # Calculate success/failure rates
-        success_count = len([r for r in results if not isinstance(r, Exception)])
-        failure_count = len(results) - success_count
+        # Note: Configuration errors are handled gracefully and don't count as failures
+        success_count = len([r for r in results if r is None])  # Only count explicitly returned None (successful skip)
+        failure_count = len(
+            [
+                r
+                for r in results
+                if isinstance(r, Exception)
+                and all(
+                    keyword not in str(r).lower()
+                    for keyword in [
+                        "not configured",
+                        "configuration",
+                        "empty",
+                        "must be a valid",
+                    ]
+                )
+            ],
+        )
 
         set_span_attributes(
             {

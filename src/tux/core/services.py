@@ -12,8 +12,6 @@ from loguru import logger
 
 from tux.services.logger import setup_logging as setup_rich_logging
 from tux.services.wrappers.github import GithubService as GitHubWrapper
-from tux.shared.config.env import is_dev_mode
-from tux.shared.config.settings import Config
 
 
 class GitHubService:
@@ -49,7 +47,8 @@ class GitHubService:
             wrapper = self.get_wrapper()
             return await wrapper.get_repo()
         except Exception as e:
-            logger.error(f"Failed to get repository: {e}")
+            logger.error(f"❌ Failed to get repository: {type(e).__name__}")
+            logger.info("💡 Check your GitHub API configuration and network connection")
             raise
 
 
@@ -74,7 +73,8 @@ class LoggerService:
             setup_rich_logging()
             logger.debug(f"Logging configured with level: {level}")
         except Exception as e:
-            logger.error(f"Failed to setup logging: {e}")
+            logger.error(f"❌ Failed to setup logging: {type(e).__name__}")
+            logger.info("💡 Check your logging configuration and dependencies")
             raise
 
 
@@ -152,77 +152,3 @@ class BotService:
             List of guild objects
         """
         return list(self._bot.guilds)
-
-
-class ConfigService:
-    """Concrete implementation of IConfigService.
-
-    Provides access to configuration values and settings while wrapping
-    the existing Config utility.
-    """
-
-    def __init__(self) -> None:
-        """Initialize the config service."""
-        self._config = Config()
-        logger.debug("ConfigService initialized")
-
-    def get(self, key: str, default: Any = None) -> Any:
-        """Get a configuration value by key.
-
-        Args:
-            key: The configuration key to retrieve
-            default: Default value if key is not found
-
-        Returns:
-            The configuration value or default
-        """
-        try:
-            # Try to get the attribute from Config class
-            if hasattr(self._config, key):
-                value = getattr(self._config, key)
-            else:
-                logger.warning(
-                    f"Configuration key '{key}' not found, returning default: {default}",
-                )
-                value = default
-        except Exception as e:
-            logger.error(f"Failed to get config key '{key}': {e}")
-            return default
-        else:
-            return value
-
-    def get_database_url(self) -> str:
-        """Get the database URL for the current environment.
-
-        Returns:
-            The database connection URL
-        """
-        try:
-            return self._config.DATABASE_URL
-        except Exception as e:
-            logger.error(f"Failed to get database URL: {e}")
-            raise
-
-    def get_bot_token(self) -> str:
-        """Get the bot token for the current environment.
-
-        Returns:
-            The Discord bot token
-        """
-        try:
-            return self._config.BOT_TOKEN
-        except Exception as e:
-            logger.error(f"Failed to get bot token: {e}")
-            raise
-
-    def is_dev_mode(self) -> bool:
-        """Check if the bot is running in development mode.
-
-        Returns:
-            True if in development mode, False otherwise
-        """
-        try:
-            return is_dev_mode()
-        except Exception as e:
-            logger.error(f"Failed to check dev mode: {e}")
-            return False

@@ -22,18 +22,18 @@ from tux.core.bot import Tux
 from tux.database.utils import get_db_controller_from
 from tux.help import TuxHelp
 from tux.services.sentry_manager import SentryManager
-from tux.shared.config.settings import CONFIG
+from tux.shared.config import CONFIG
 
 
 async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
     """Get the command prefix for a guild.
 
     This function retrieves the guild-specific prefix from the database,
-    falling back to `CONFIG.DEFAULT_PREFIX` when the guild is unavailable or the database
+    falling back to `CONFIG.get_prefix()` when the guild is unavailable or the database
     cannot be resolved.
     """
     if not message.guild:
-        return [CONFIG.DEFAULT_PREFIX]
+        return [CONFIG.get_prefix()]
 
     prefix: str | None = None
 
@@ -42,15 +42,22 @@ async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
         if controller is None:
             logger.warning("Database unavailable; using default prefix")
         else:
-            # Get guild config and extract prefix
-            guild_config = await controller.guild_config.get_config_by_guild_id(message.guild.id)
+            # Ensure the guild exists in the database first
+            await controller.guild.get_or_create_guild(message.guild.id)
+
+            # Get or create guild config with default prefix
+            guild_config = await controller.guild_config.get_or_create_config(
+                message.guild.id,
+                prefix=CONFIG.get_prefix(),  # Use the default prefix as the default value
+            )
             if guild_config and hasattr(guild_config, "prefix"):
                 prefix = guild_config.prefix
 
     except Exception as e:
-        logger.error(f"Error getting guild prefix: {e}")
+        logger.error(f"❌ Error getting guild prefix: {type(e).__name__}")
+        logger.info("💡 Using default prefix due to database or configuration error")
 
-    return [prefix or CONFIG.DEFAULT_PREFIX]
+    return [prefix or CONFIG.get_prefix()]
 
 
 class TuxApp:
@@ -142,18 +149,18 @@ class TuxApp:
         self.setup_signals(loop)
 
         if not CONFIG.BOT_TOKEN:
-            logger.critical("No bot token provided. Set DEV_BOT_TOKEN or PROD_BOT_TOKEN in your .env file.")
-            return
+            logger.critical("No bot token provided. Set BOT_TOKEN in your .env file.")
+            sys.exit(1)
 
-        owner_ids = {CONFIG.BOT_OWNER_ID}
+        owner_ids = {CONFIG.USER_IDS.BOT_OWNER_ID}
 
         if CONFIG.ALLOW_SYSADMINS_EVAL:
             logger.warning(
-                "⚠️ Eval is enabled for sysadmins, this is potentially dangerous; see settings.yml.example for more info.",
+                "⚠️ Eval is enabled for sysadmins, this is potentially dangerous; see .env file for more info.",
             )
-            owner_ids.update(CONFIG.SYSADMIN_IDS)
+            owner_ids.update(CONFIG.USER_IDS.SYSADMINS)
         else:
-            logger.warning("🔒️ Eval is disabled for sysadmins; see settings.yml.example for more info.")
+            logger.warning("🔒️ Eval is disabled for sysadmins; see .env file for more info.")
 
         self.bot = Tux(
             command_prefix=get_prefix,
@@ -176,7 +183,8 @@ class TuxApp:
         except KeyboardInterrupt:
             logger.info("Shutdown requested (KeyboardInterrupt)")
         except Exception as e:
-            logger.critical(f"Bot failed to start: {e}")
+            logger.critical(f"❌ Bot failed to start: {type(e).__name__}")
+            logger.info("💡 Check your configuration and ensure all services are properly set up")
         finally:
             await self.shutdown()
 

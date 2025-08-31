@@ -10,8 +10,8 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.container import ServiceContainer, ServiceRegistrationError
-from tux.core.interfaces import IBotService, IConfigService, IGithubService, ILoggerService
-from tux.core.services import BotService, ConfigService, GitHubService, LoggerService
+from tux.core.interfaces import IBotService, IGithubService, ILoggerService
+from tux.core.services import BotService, GitHubService, LoggerService
 from tux.database.service import DatabaseService
 
 
@@ -53,8 +53,6 @@ class ServiceRegistry:
             logger.debug("Registered DatabaseService as singleton")
 
             # Config service - singleton for consistent configuration access
-            container.register_singleton(IConfigService, ConfigService)
-            logger.debug("Registered ConfigService as singleton")
 
             # GitHub service - singleton for API rate limiting and connection pooling
             container.register_singleton(IGithubService, GitHubService)
@@ -70,11 +68,13 @@ class ServiceRegistry:
             container.register_instance(IBotService, bot_service)
             logger.debug("Registered BotService instance")
 
-        except ServiceRegistrationError as e:
-            logger.error(f"Service registration failed: {e}")
+        except ServiceRegistrationError:
+            logger.error("❌ Service registration failed")
+            logger.info("💡 Check your service configurations and dependencies")
             raise
         except Exception as e:
-            logger.error(f"Unexpected error during service registration: {e}")
+            logger.error(f"❌ Unexpected error during service registration: {type(e).__name__}")
+            logger.info("💡 Check your service dependencies and configurations")
             error_msg = f"Failed to configure service container: {e}"
             raise ServiceRegistrationError(error_msg) from e
         else:
@@ -102,11 +102,12 @@ class ServiceRegistry:
             # Register only essential services for testing
             db_service = DatabaseService()
             container.register_instance(DatabaseService, db_service)
-            container.register_singleton(IConfigService, ConfigService)
+
             # Do not register IBotService in test container to match unit tests expectations
 
         except Exception as e:
-            logger.error(f"Failed to configure test container: {e}")
+            logger.error(f"❌ Failed to configure test container: {type(e).__name__}")
+            logger.info("💡 Check your test service dependencies")
             error_msg = f"Failed to configure test container: {e}"
             raise ServiceRegistrationError(error_msg) from e
         else:
@@ -124,7 +125,7 @@ class ServiceRegistry:
             True if all required services are registered, False otherwise
         """
         # Core required services that should always be present
-        core_required_services = [DatabaseService, IConfigService, ILoggerService]
+        core_required_services = [DatabaseService, ILoggerService]
         required_services = core_required_services
 
         logger.debug("Validating service container configuration")
@@ -168,7 +169,7 @@ class ServiceRegistry:
         try:
             service_types: list[type] = container.get_registered_service_types()
             # Only return the core services expected by tests
-            core = {DatabaseService.__name__, IConfigService.__name__, IBotService.__name__}
+            core = {DatabaseService.__name__, IBotService.__name__}
             return [service_type.__name__ for service_type in service_types if service_type.__name__ in core]
         except AttributeError:
             # Fallback for containers that don't have the method

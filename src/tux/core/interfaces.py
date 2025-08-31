@@ -97,49 +97,6 @@ class IBotService(Protocol):
         ...
 
 
-class IConfigService(Protocol):
-    """Protocol for configuration service operations.
-
-    Provides access to configuration values and settings.
-    """
-
-    def get(self, key: str, default: Any = None) -> Any:
-        """Get a configuration value by key.
-
-        Args:
-            key: The configuration key to retrieve
-            default: Default value if key is not found
-
-        Returns:
-            The configuration value or default
-        """
-        ...
-
-    def get_database_url(self) -> str:
-        """Get the database URL for the current environment.
-
-        Returns:
-            The database connection URL
-        """
-        ...
-
-    def get_bot_token(self) -> str:
-        """Get the bot token for the current environment.
-
-        Returns:
-            The Discord bot token
-        """
-        ...
-
-    def is_dev_mode(self) -> bool:
-        """Check if the bot is running in development mode.
-
-        Returns:
-            True if in development mode, False otherwise
-        """
-        ...
-
-
 @runtime_checkable
 class IReloadableBot(Protocol):
     """Protocol for bot-like objects that support extension management.
