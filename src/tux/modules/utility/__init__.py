@@ -4,7 +4,7 @@ from types import NoneType
 
 import discord
 
-from tux.database.service import DatabaseService
+from tux.database.controllers import DatabaseCoordinator
 from tux.shared.constants import CONST
 
 __all__ = ("add_afk", "del_afk")
@@ -25,7 +25,7 @@ def _generate_afk_nickname(display_name: str) -> str:
 
 
 async def add_afk(
-    db: DatabaseService,
+    db: DatabaseCoordinator,
     reason: str,
     target: discord.Member,
     guild_id: int,
@@ -43,7 +43,7 @@ async def add_afk(
         await target.edit(nick=new_name)
 
 
-async def del_afk(db: DatabaseService, target: discord.Member, nickname: str) -> None:
+async def del_afk(db: DatabaseCoordinator, target: discord.Member, nickname: str) -> None:
     """Removes a member's AFK status, restores their nickname, and updates the database."""
     await db.afk.remove_afk(target.id, target.guild.id)
 

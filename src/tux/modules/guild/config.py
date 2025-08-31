@@ -6,7 +6,7 @@ from discord.ext import commands
 
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
-from tux.shared.config.settings import CONFIG
+from tux.shared.config import CONFIG
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.ui.views.config import ConfigSetChannels, ConfigSetPrivateLogs, ConfigSetPublicLogs
 
@@ -387,7 +387,7 @@ class Config(BaseCog, commands.GroupCog, group_name="config"):
                 user_display_avatar=interaction.user.display_avatar.url,
                 embed_type=EmbedCreator.SUCCESS,
                 title="Guild Config",
-                description=f"The prefix was reset to `{CONFIG.DEFAULT_PREFIX}`",
+                description=f"The prefix was reset to `{CONFIG.BOT_INFO.PREFIX}`",
             ),
         )
 

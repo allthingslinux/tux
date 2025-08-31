@@ -7,7 +7,7 @@ from loguru import logger
 from tux.core import checks
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
-from tux.shared.config.settings import CONFIG
+from tux.shared.config import CONFIG
 from tux.ui.embeds import EmbedCreator
 
 
@@ -71,7 +71,7 @@ class Eval(BaseCog):
             return
 
         if ctx.author.id not in self.bot.owner_ids:
-            if not CONFIG.ALLOW_SYSADMINS_EVAL and ctx.author.id in CONFIG.SYSADMIN_IDS:
+            if not CONFIG.ALLOW_SYSADMINS_EVAL and ctx.author.id in CONFIG.USER_IDS.SYSADMINS:
                 logger.warning(
                     f"{ctx.author} tried to run eval but is not the bot owner. (User ID: {ctx.author.id})",
                 )

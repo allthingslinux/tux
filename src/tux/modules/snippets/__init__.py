@@ -7,7 +7,7 @@ from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
 from tux.database.models import CaseType as DBCaseType
 from tux.database.models import Snippet
-from tux.shared.config.settings import Config
+from tux.shared.config import CONFIG
 from tux.shared.constants import CONST
 from tux.shared.exceptions import PermissionLevelError
 from tux.ui.embeds import EmbedCreator, EmbedType
@@ -152,11 +152,11 @@ class SnippetsBaseCog(BaseCog):
             return False, "You are banned from using snippets."
 
         if (
-            Config.LIMIT_TO_ROLE_IDS
+            CONFIG.SNIPPETS.LIMIT_TO_ROLE_IDS
             and isinstance(ctx.author, discord.Member)
-            and all(role.id not in Config.ACCESS_ROLE_IDS for role in ctx.author.roles)
+            and all(role.id not in CONFIG.SNIPPETS.ACCESS_ROLE_IDS for role in ctx.author.roles)
         ):
-            roles_str = ", ".join([f"<@&{role_id}>" for role_id in Config.ACCESS_ROLE_IDS])
+            roles_str = ", ".join([f"<@&{role_id}>" for role_id in CONFIG.SNIPPETS.ACCESS_ROLE_IDS])
             return (
                 False,
                 f"You do not have a role that allows you to manage snippets. Accepted roles: {roles_str}",

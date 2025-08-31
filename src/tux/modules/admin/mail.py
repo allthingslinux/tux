@@ -8,7 +8,7 @@ from loguru import logger
 from tux.core import checks
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
-from tux.shared.config.settings import CONFIG
+from tux.shared.config import CONFIG
 
 MailboxData = dict[str, str | list[str]]
 
@@ -16,12 +16,12 @@ MailboxData = dict[str, str | list[str]]
 class Mail(BaseCog):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
-        self.api_url = CONFIG.MAILCOW_API_URL
+        self.api_url = CONFIG.EXTERNAL_SERVICES.MAILCOW_API_URL
         self.headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "X-API-Key": CONFIG.MAILCOW_API_KEY,
-            "Authorization": f"Bearer {CONFIG.MAILCOW_API_KEY}",
+            "X-API-Key": CONFIG.EXTERNAL_SERVICES.MAILCOW_API_KEY,
+            "Authorization": f"Bearer {CONFIG.EXTERNAL_SERVICES.MAILCOW_API_KEY}",
         }
         self.default_options: dict[str, str | list[str]] = {
             "active": "1",

@@ -4,7 +4,7 @@ from discord.ext import commands
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
 from tux.modules.services.levels import LevelsService
-from tux.shared.config.settings import CONFIG
+from tux.shared.config import CONFIG
 from tux.ui.embeds import EmbedCreator, EmbedType
 
 
@@ -52,7 +52,7 @@ class Level(BaseCog):
             level_display = level
             xp_display = f"{round(xp)}"
 
-        if CONFIG.SHOW_XP_PROGRESS:
+        if CONFIG.XP_CONFIG.SHOW_XP_PROGRESS:
             xp_progress: int
             xp_required: int
             xp_progress, xp_required = self.levels_service.get_level_progress(xp, level)

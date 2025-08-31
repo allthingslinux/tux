@@ -1,5 +1,6 @@
 import random
 import tomllib
+from pathlib import Path
 from typing import Any
 
 import discord
@@ -10,9 +11,11 @@ from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
-from tux.shared.config.settings import workspace_root
 from tux.shared.substitutions import handle_substitution
 from tux.ui.embeds import EmbedCreator
+
+# Define workspace root relative to the project root
+workspace_root = Path(__file__).parent.parent.parent.parent.parent
 
 
 class Fact(BaseCog):

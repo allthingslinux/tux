@@ -8,19 +8,25 @@ from loguru import logger
 from tux.core.app import get_prefix
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
-from tux.shared.config.settings import CONFIG
+from tux.shared.config import CONFIG
 from tux.ui.embeds import EmbedCreator
 
 
 class LevelsService(BaseCog):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
-        self.xp_cooldown = CONFIG.XP_COOLDOWN
-        self.levels_exponent = CONFIG.LEVELS_EXPONENT
-        self.xp_roles = {role["level"]: role["role_id"] for role in CONFIG.XP_ROLES}
-        self.xp_multipliers = {role["role_id"]: role["multiplier"] for role in CONFIG.XP_MULTIPLIERS}
-        self.max_level = max(item["level"] for item in CONFIG.XP_ROLES)
-        self.enable_xp_cap = CONFIG.ENABLE_XP_CAP
+
+        # Check if XP roles are configured
+        if not CONFIG.XP_CONFIG.XP_ROLES:
+            msg = "XP_ROLES configuration is empty. Please configure XP roles in your .env file."
+            raise ValueError(msg)
+
+        self.xp_cooldown = CONFIG.XP_CONFIG.XP_COOLDOWN
+        self.levels_exponent = CONFIG.XP_CONFIG.LEVELS_EXPONENT
+        self.xp_roles = {role["level"]: role["role_id"] for role in CONFIG.XP_CONFIG.XP_ROLES}
+        self.xp_multipliers = {role["role_id"]: role["multiplier"] for role in CONFIG.XP_CONFIG.XP_MULTIPLIERS}
+        self.max_level = max(item["level"] for item in CONFIG.XP_CONFIG.XP_ROLES)
+        self.enable_xp_cap = CONFIG.XP_CONFIG.ENABLE_XP_CAP
 
     @commands.Cog.listener("on_message")
     async def xp_listener(self, message: discord.Message) -> None:
@@ -32,7 +38,7 @@ class LevelsService(BaseCog):
         message : discord.Message
             The message object.
         """
-        if message.author.bot or message.guild is None or message.channel.id in CONFIG.XP_BLACKLIST_CHANNELS:
+        if message.author.bot or message.guild is None or message.channel.id in CONFIG.XP_CONFIG.XP_BLACKLIST_CHANNELS:
             return
 
         prefixes = await get_prefix(self.bot, message)

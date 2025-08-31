@@ -11,7 +11,7 @@ from PIL import Image
 
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
-from tux.shared.config.settings import CONFIG
+from tux.shared.config import CONFIG
 from tux.ui.embeds import EmbedCreator
 
 
@@ -20,7 +20,7 @@ class Wolfram(BaseCog):
         super().__init__(bot)
 
         # Verify AppID configuration; unload cog if missing
-        if not CONFIG.WOLFRAM_APP_ID:
+        if not CONFIG.EXTERNAL_SERVICES.WOLFRAM_APP_ID:
             logger.warning("Wolfram Alpha API ID is not set. Some Science/Math commands will not work.")
             # Store the task reference
             self._unload_task = asyncio.create_task(self._unload_self())
@@ -55,7 +55,7 @@ class Wolfram(BaseCog):
 
         # Build the Simple API endpoint URL with URL-encoded query
         encoded = quote_plus(query)
-        url = f"https://api.wolframalpha.com/v1/simple?appid={CONFIG.WOLFRAM_APP_ID}&i={encoded}"
+        url = f"https://api.wolframalpha.com/v1/simple?appid={CONFIG.EXTERNAL_SERVICES.WOLFRAM_APP_ID}&i={encoded}"
 
         try:
             # Perform async HTTP GET with a 10-second timeout

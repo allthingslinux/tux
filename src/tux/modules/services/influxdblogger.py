@@ -8,7 +8,7 @@ from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
-from tux.shared.config.settings import CONFIG
+from tux.shared.config import CONFIG
 
 
 class InfluxLogger(BaseCog):
@@ -31,9 +31,9 @@ class InfluxLogger(BaseCog):
         bool
             True if initialization was successful, False otherwise
         """
-        influx_token: str = CONFIG.INFLUXDB_TOKEN
-        influx_url: str = CONFIG.INFLUXDB_URL
-        self.influx_org = CONFIG.INFLUXDB_ORG
+        influx_token: str = CONFIG.EXTERNAL_SERVICES.INFLUXDB_TOKEN
+        influx_url: str = CONFIG.EXTERNAL_SERVICES.INFLUXDB_URL
+        self.influx_org = CONFIG.EXTERNAL_SERVICES.INFLUXDB_ORG
 
         if (influx_token != "") and (influx_url != "") and (self.influx_org != ""):
             write_client = InfluxDBClient(url=influx_url, token=influx_token, org=self.influx_org)

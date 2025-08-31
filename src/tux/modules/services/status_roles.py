@@ -6,7 +6,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.base_cog import BaseCog
-from tux.shared.config.settings import CONFIG
+from tux.shared.config import CONFIG
 
 
 class StatusRoles(BaseCog):
@@ -14,16 +14,15 @@ class StatusRoles(BaseCog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.status_roles = CONFIG.STATUS_ROLES
         self._unload_task = None  # Store task reference here
 
-        # Check if config exists and is valid
-        if not self.status_roles:
-            logger.warning("No status roles configurations found. Unloading StatusRoles cog.")
+        # Check if mappings exist and are valid
+        if not CONFIG.STATUS_ROLES.MAPPINGS:
+            logger.warning("No status role mappings found. Unloading StatusRoles cog.")
             # Store the task reference
             self._unload_task = asyncio.create_task(self._unload_self())
         else:
-            logger.info(f"StatusRoles cog initialized with {len(self.status_roles)} role configurations")
+            logger.info(f"StatusRoles cog initialized with {len(CONFIG.STATUS_ROLES.MAPPINGS)} mappings")
 
     async def _unload_self(self):
         """Unload this cog if configuration is missing."""
@@ -86,17 +85,17 @@ class StatusRoles(BaseCog):
         if status_text is None:
             status_text = ""  # Use empty string for regex matching if no status
 
-        for config in self.status_roles:
-            # Skip if the config is for a different server
-            if int(config.get("server_id", 0)) != member.guild.id:
+        for mapping in CONFIG.STATUS_ROLES.MAPPINGS:
+            # Skip if the mapping is for a different server
+            if int(mapping.get("server_id", 0)) != member.guild.id:
                 continue
 
-            role_id = int(config.get("role_id", 0))
-            pattern = str(config.get("status_regex", ".*"))
+            role_id = int(mapping.get("role_id", 0))
+            pattern = str(mapping.get("status_regex", ".*"))
 
             role = member.guild.get_role(role_id)
             if not role:
-                logger.warning(f"Role {role_id} configured in STATUS_ROLES not found in guild {member.guild.name}")
+                logger.warning(f"Role {role_id} configured in status roles not found in guild {member.guild.name}")
                 continue
 
             try:

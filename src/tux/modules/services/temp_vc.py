@@ -3,7 +3,7 @@ from discord.ext import commands
 
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
-from tux.shared.config.settings import CONFIG
+from tux.shared.config import CONFIG
 
 
 class TempVc(BaseCog):
@@ -33,8 +33,8 @@ class TempVc(BaseCog):
         """
 
         # Ensure CONFIGants are set correctly
-        temp_channel_id = int(CONFIG.TEMPVC_CHANNEL_ID or "0")
-        temp_category_id = int(CONFIG.TEMPVC_CATEGORY_ID or "0")
+        temp_channel_id = int(CONFIG.TEMPVC.TEMPVC_CHANNEL_ID or "0")
+        temp_category_id = int(CONFIG.TEMPVC.TEMPVC_CATEGORY_ID or "0")
         if temp_channel_id == 0 or temp_category_id == 0:
             return
 

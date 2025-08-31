@@ -7,7 +7,7 @@ from discord.ext import commands, tasks
 
 from tux.core.base_cog import BaseCog
 from tux.core.types import Tux
-from tux.shared.config.settings import CONFIG
+from tux.shared.config import CONFIG
 
 
 class GifLimiter(BaseCog):
@@ -21,15 +21,15 @@ class GifLimiter(BaseCog):
         super().__init__(bot)
 
         # Max age for a GIF to be considered a recent post
-        self.recent_gif_age: int = CONFIG.RECENT_GIF_AGE
+        self.recent_gif_age: int = CONFIG.GIF_LIMITER.RECENT_GIF_AGE
 
         # Max number of GIFs sent recently in a channel
-        self.channelwide_gif_limits: dict[int, int] = CONFIG.GIF_LIMITS_CHANNEL
+        self.channelwide_gif_limits: dict[int, int] = CONFIG.GIF_LIMITER.GIF_LIMITS_CHANNEL
         # Max number of GIFs sent recently by a user to be able to post one in specified channels
-        self.user_gif_limits: dict[int, int] = CONFIG.GIF_LIMITS
+        self.user_gif_limits: dict[int, int] = CONFIG.GIF_LIMITER.GIF_LIMITS_USER
 
         # list of channels in which not to count GIFs
-        self.gif_limit_exclude: list[int] = CONFIG.GIF_LIMIT_EXCLUDE
+        self.gif_limit_exclude: list[int] = CONFIG.GIF_LIMITER.GIF_LIMIT_EXCLUDE
 
         # Timestamps for recently-sent GIFs for the server, and channels
 
