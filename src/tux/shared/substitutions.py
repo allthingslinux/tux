@@ -1,5 +1,5 @@
 from tux.core.types import Tux
-from tux.shared.config.settings import CONFIG
+from tux.shared.config import CONFIG
 
 
 def _get_member_count(bot: Tux) -> int:
@@ -30,10 +30,10 @@ async def handle_substitution(
     if text and "{guild_count}" in text:
         text = text.replace("{guild_count}", str(len(bot.guilds)))
     if text and "{bot_name}" in text:
-        text = text.replace("{bot_name}", CONFIG.BOT_NAME)
+        text = text.replace("{bot_name}", CONFIG.BOT_INFO.BOT_NAME)
     if text and "{bot_version}" in text:
-        text = text.replace("{bot_version}", CONFIG.BOT_VERSION)
+        text = text.replace("{bot_version}", CONFIG.BOT_INFO.BOT_VERSION)
     if text and "{prefix}" in text:
-        text = text.replace("{prefix}", CONFIG.DEFAULT_PREFIX)
+        text = text.replace("{prefix}", CONFIG.get_prefix())
 
     return text
