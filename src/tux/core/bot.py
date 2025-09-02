@@ -17,7 +17,6 @@ from rich.console import Console
 
 from tux.core.cog_loader import CogLoader
 from tux.core.container import ServiceContainer
-from tux.core.prefix_manager import PrefixManager
 from tux.core.service_registry import ServiceRegistry
 from tux.core.task_monitor import TaskMonitor
 from tux.database.migrations.runner import upgrade_head_if_needed
@@ -304,6 +303,9 @@ class Tux(commands.Bot):
             logger.info("🔧 Initializing prefix manager...")
 
             try:
+                # Import here to avoid circular imports
+                from tux.core.prefix_manager import PrefixManager  # noqa: PLC0415
+
                 # Initialize the prefix manager
                 self.prefix_manager = PrefixManager(self)
 

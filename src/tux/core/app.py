@@ -19,45 +19,34 @@ import discord
 from loguru import logger
 
 from tux.core.bot import Tux
-from tux.database.utils import get_db_controller_from
 from tux.help import TuxHelp
 from tux.services.sentry_manager import SentryManager
 from tux.shared.config import CONFIG
 
 
 async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
-    """Get the command prefix for a guild.
+    """Get the command prefix for a guild using the prefix manager.
 
-    This function retrieves the guild-specific prefix from the database,
-    falling back to `CONFIG.get_prefix()` when the guild is unavailable or the database
-    cannot be resolved.
+    This function uses the in-memory prefix cache for optimal performance,
+    falling back to the default prefix when the guild is unavailable.
+
+    If BOT_INFO__PREFIX is set in environment variables, all guilds will use
+    that prefix, ignoring database settings.
     """
+    # Check if prefix override is enabled by environment variable
+    if CONFIG.is_prefix_override_enabled():
+        return [CONFIG.get_prefix()]
+
     if not message.guild:
         return [CONFIG.get_prefix()]
 
-    prefix: str | None = None
+    # Use the prefix manager for efficient prefix resolution
+    if hasattr(bot, "prefix_manager") and bot.prefix_manager:
+        prefix = await bot.prefix_manager.get_prefix(message.guild.id)
+        return [prefix]
 
-    try:
-        controller = get_db_controller_from(bot, fallback_to_direct=False)
-        if controller is None:
-            logger.warning("Database unavailable; using default prefix")
-        else:
-            # Ensure the guild exists in the database first
-            await controller.guild.get_or_create_guild(message.guild.id)
-
-            # Get or create guild config with default prefix
-            guild_config = await controller.guild_config.get_or_create_config(
-                message.guild.id,
-                prefix=CONFIG.get_prefix(),  # Use the default prefix as the default value
-            )
-            if guild_config and hasattr(guild_config, "prefix"):
-                prefix = guild_config.prefix
-
-    except Exception as e:
-        logger.error(f"❌ Error getting guild prefix: {type(e).__name__}")
-        logger.info("💡 Using default prefix due to database or configuration error")
-
-    return [prefix or CONFIG.get_prefix()]
+    # Fallback to default prefix if prefix manager is not available
+    return [CONFIG.get_prefix()]
 
 
 class TuxApp:
@@ -82,7 +71,29 @@ class TuxApp:
 
         This is the synchronous entrypoint typically invoked by the CLI.
         """
-        asyncio.run(self.start())
+        try:
+            # Use a more direct approach to handle signals
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+            try:
+                # Run the bot with the event loop
+                loop.run_until_complete(self.start())
+            finally:
+                loop.close()
+
+        except KeyboardInterrupt:
+            logger.info("Application interrupted by user")
+        except RuntimeError as e:
+            # Handle event loop stopped errors gracefully (these are expected during shutdown)
+            if "Event loop stopped" in str(e):
+                logger.debug("Event loop stopped during shutdown")
+            else:
+                logger.error(f"Application error: {e}")
+                raise
+        except Exception as e:
+            logger.error(f"Application error: {e}")
+            raise
 
     def setup_signals(self, loop: asyncio.AbstractEventLoop) -> None:
         """Register signal handlers for graceful shutdown.
@@ -100,21 +111,39 @@ class TuxApp:
 
         def _sigterm() -> None:
             SentryManager.report_signal(signal.SIGTERM, None)
-            # Trigger graceful shutdown by closing the bot
+            logger.info("SIGTERM received, forcing shutdown...")
+            # Set shutdown event for the monitor
+            if hasattr(self, "_shutdown_event"):
+                self._shutdown_event.set()
+            # Cancel ALL tasks in the event loop
+            for task in asyncio.all_tasks(loop):
+                if not task.done():
+                    task.cancel()
+            # Force close the bot connection if it exists
             if hasattr(self, "bot") and self.bot and not self.bot.is_closed():
-                # Schedule the close operation in the event loop
-                bot = self.bot  # Type narrowing
-                with contextlib.suppress(Exception):
-                    loop.call_soon_threadsafe(lambda: asyncio.create_task(bot.close()))
+                close_task = asyncio.create_task(self.bot.close())
+                # Store reference to prevent garbage collection
+                _ = close_task
+            # Stop the event loop
+            loop.call_soon_threadsafe(loop.stop)
 
         def _sigint() -> None:
             SentryManager.report_signal(signal.SIGINT, None)
-            # Trigger graceful shutdown by closing the bot
+            logger.info("SIGINT received, forcing shutdown...")
+            # Set shutdown event for the monitor
+            if hasattr(self, "_shutdown_event"):
+                self._shutdown_event.set()
+            # Cancel ALL tasks in the event loop
+            for task in asyncio.all_tasks(loop):
+                if not task.done():
+                    task.cancel()
+            # Force close the bot connection if it exists
             if hasattr(self, "bot") and self.bot and not self.bot.is_closed():
-                # Schedule the close operation in the event loop
-                bot = self.bot  # Type narrowing
-                with contextlib.suppress(Exception):
-                    loop.call_soon_threadsafe(lambda: asyncio.create_task(bot.close()))
+                close_task = asyncio.create_task(self.bot.close())
+                # Store reference to prevent garbage collection
+                _ = close_task
+            # Stop the event loop
+            loop.call_soon_threadsafe(loop.stop)
 
         try:
             loop.add_signal_handler(signal.SIGTERM, _sigterm)
@@ -124,7 +153,9 @@ class TuxApp:
             # Fallback for platforms that do not support add_signal_handler (e.g., Windows)
             def _signal_handler(signum: int, frame: FrameType | None) -> None:
                 SentryManager.report_signal(signum, frame)
-                # For Windows fallback, just log the signal
+                logger.info(f"Signal {signum} received, shutting down...")
+                # For Windows fallback, raise KeyboardInterrupt to stop the event loop
+                raise KeyboardInterrupt
 
             signal.signal(signal.SIGTERM, _signal_handler)
             signal.signal(signal.SIGINT, _signal_handler)
@@ -175,8 +206,26 @@ class TuxApp:
         )
 
         try:
-            # Start the bot normally - this handles login() + connect() properly
-            await self.bot.start(CONFIG.BOT_TOKEN, reconnect=True)
+            # Use login() + connect() separately to avoid blocking
+            logger.info("🔐 Logging in to Discord...")
+            await self.bot.login(CONFIG.BOT_TOKEN)
+
+            logger.info("🌐 Connecting to Discord...")
+            # Create a task for the connection
+            self._connect_task = asyncio.create_task(self.bot.connect(reconnect=True), name="bot_connect")
+
+            # Create a task to monitor for shutdown signals
+            shutdown_task = asyncio.create_task(self._monitor_shutdown(), name="shutdown_monitor")
+
+            # Wait for either the connection to complete or shutdown to be requested
+            done, pending = await asyncio.wait([self._connect_task, shutdown_task], return_when=asyncio.FIRST_COMPLETED)
+
+            # Cancel any pending tasks
+            for task in pending:
+                task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
+
         except asyncio.CancelledError:
             # Handle cancellation gracefully
             logger.info("Bot startup was cancelled")
@@ -187,6 +236,16 @@ class TuxApp:
             logger.info("💡 Check your configuration and ensure all services are properly set up")
         finally:
             await self.shutdown()
+
+    async def _monitor_shutdown(self) -> None:
+        """Monitor for shutdown signals while the bot is running."""
+        # Create an event to track shutdown requests
+        self._shutdown_event = asyncio.Event()
+
+        # Wait for shutdown event
+        await self._shutdown_event.wait()
+
+        logger.info("Shutdown requested via monitor")
 
     async def shutdown(self) -> None:
         """Gracefully shut down the bot and flush telemetry.
