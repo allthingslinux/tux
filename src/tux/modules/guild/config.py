@@ -348,6 +348,10 @@ class Config(BaseCog, commands.GroupCog, group_name="config"):
 
         await self.db_config.update_guild_prefix(interaction.guild.id, prefix)
 
+        # Update the prefix cache
+        if self.bot.prefix_manager:
+            await self.bot.prefix_manager.set_prefix(interaction.guild.id, prefix)
+
         await interaction.followup.send(
             embed=EmbedCreator.create_embed(
                 bot=self.bot,
@@ -379,6 +383,10 @@ class Config(BaseCog, commands.GroupCog, group_name="config"):
         await interaction.response.defer(ephemeral=True)
 
         await self.db_config.delete_guild_prefix(interaction.guild.id)
+
+        # Update the prefix cache to use default prefix
+        if self.bot.prefix_manager:
+            self.bot.prefix_manager.invalidate_cache(interaction.guild.id)
 
         await interaction.followup.send(
             embed=EmbedCreator.create_embed(

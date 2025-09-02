@@ -139,6 +139,15 @@ class Config(BaseSettings):
         """Get command prefix for current environment."""
         return self.BOT_INFO.PREFIX
 
+    def is_prefix_override_enabled(self) -> bool:
+        """Check if prefix override is enabled by environment variable.
+
+        Returns True if BOT_INFO__PREFIX was explicitly set in environment variables,
+        indicating the user wants to override all database prefix settings.
+        """
+
+        return "BOT_INFO__PREFIX" in os.environ
+
     def is_debug_enabled(self) -> bool:
         """Check if debug mode is enabled."""
         return self.DEBUG

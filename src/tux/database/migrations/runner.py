@@ -83,10 +83,23 @@ async def upgrade_head_if_needed() -> None:
     def run_upgrade():
         """Run the upgrade in a separate thread with timeout."""
         cfg = _build_alembic_config()
-        logger.info("🔄 Running database migrations...")
+        logger.info("🔄 Checking database migrations...")
         try:
-            command.upgrade(cfg, "head")
-            logger.info("✅ Database migrations completed")
+            # Check current revision first
+            current_rev = command.current(cfg)
+            logger.debug(f"Current database revision: {current_rev}")
+
+            # Check if we need to upgrade
+            head_rev = command.heads(cfg)
+            logger.debug(f"Head revision: {head_rev}")
+
+            # Only run upgrade if we're not already at head
+            if current_rev != head_rev:
+                logger.info("🔄 Running database migrations...")
+                command.upgrade(cfg, "head")
+                logger.info("✅ Database migrations completed")
+            else:
+                logger.info("✅ Database is already up to date")
             return True
         except Exception as e:
             # Check if this is a database connection error
