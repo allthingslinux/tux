@@ -3,12 +3,12 @@ FROM python:3.13.7-slim@sha256:27f90d79cc85e9b7b2560063ef44fa0e9eaae7a7c3f5a9f74
 # OCI Labels for container metadata and registry compliance
 # These labels provide important metadata for container registries and tools
 LABEL org.opencontainers.image.source="https://github.com/allthingslinux/tux" \
-      org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community" \
-      org.opencontainers.image.licenses="GPL-3.0" \
-      org.opencontainers.image.authors="All Things Linux" \
-      org.opencontainers.image.vendor="All Things Linux" \
-      org.opencontainers.image.title="Tux" \
-      org.opencontainers.image.documentation="https://github.com/allthingslinux/tux/blob/main/README.md"
+    org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community" \
+    org.opencontainers.image.licenses="GPL-3.0" \
+    org.opencontainers.image.authors="All Things Linux" \
+    org.opencontainers.image.vendor="All Things Linux" \
+    org.opencontainers.image.title="Tux" \
+    org.opencontainers.image.documentation="https://github.com/allthingslinux/tux/blob/main/README.md"
 
 # Create non-root user early for security best practices
 # Using system user (no login shell) with fixed UID/GID for consistency
@@ -36,12 +36,12 @@ RUN echo 'path-exclude /usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends --no-install-suggests \
-        git=1:2.47.2-0.2 \
-        libcairo2=1.18.4-1+b1 \
-        libgdk-pixbuf-2.0-0=2.42.12+dfsg-4 \
-        libpango-1.0-0=1.56.3-1 \
-        libpangocairo-1.0-0=1.56.3-1 \
-        shared-mime-info=2.4-5+b2 \
+    git=1:2.47.2-0.2 \
+    libcairo2=1.18.4-1+b1 \
+    libgdk-pixbuf-2.0-0=2.42.12+dfsg-4 \
+    libpango-1.0-0=1.56.3-1 \
+    libpangocairo-1.0-0=1.56.3-1 \
+    shared-mime-info=2.4-5+b2 \
     # Cleanup package manager caches to reduce layer size
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -75,14 +75,14 @@ FROM base AS build
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
-        # GCC compiler and build essentials for native extensions
-        build-essential=12.12 \
-        # Additional utilities required by some Python packages
-        findutils=4.10.0-3 \
-        # Development headers for graphics libraries
-        libcairo2-dev=1.18.4-1+b1 \
-        # Foreign Function Interface library for Python extensions
-        libffi8=3.4.8-2 \
+    # GCC compiler and build essentials for native extensions
+    build-essential=12.12 \
+    # Additional utilities required by some Python packages
+    findutils=4.10.0-3 \
+    # Development headers for graphics libraries
+    libcairo2-dev=1.18.4-1+b1 \
+    # Foreign Function Interface library for Python extensions
+    libffi8=3.4.8-2 \
     # Cleanup to reduce intermediate layer size
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -130,7 +130,10 @@ RUN cp -a src/tux ./tux
 
 # 4. Root level files needed for installation
 # These include metadata and licensing information
-COPY README.md LICENSE pyproject.toml ./
+COPY README.md LICENSE pyproject.toml alembic.ini ./
+
+# 5. Copy scripts directory for entry points
+COPY scripts/ ./scripts/
 
 # Build arguments for version information
 # These allow passing version info without requiring git history in build context
@@ -143,15 +146,15 @@ ARG BUILD_DATE=""
 # SECURITY: Git operations happen outside container, only VERSION string is passed in
 RUN set -eux; \
     if [ -n "$VERSION" ]; then \
-        # Use provided version from build args (preferred for all builds)
-        echo "Using provided version: $VERSION"; \
-        echo "$VERSION" > /app/VERSION; \
+    # Use provided version from build args (preferred for all builds)
+    echo "Using provided version: $VERSION"; \
+    echo "$VERSION" > /app/VERSION; \
     else \
-        # Fallback for builds without version info
-        # NOTE: .git directory is excluded by .dockerignore for security/performance
-        # Version should be passed via --build-arg VERSION=$(git describe --tags --always --dirty | sed 's/^v//')
-        echo "No version provided, using fallback"; \
-        echo "dev" > /app/VERSION; \
+    # Fallback for builds without version info
+    # NOTE: .git directory is excluded by .dockerignore for security/performance
+    # Version should be passed via --build-arg VERSION=$(git describe --tags --always --dirty | sed 's/^v//')
+    echo "No version provided, using fallback"; \
+    echo "dev" > /app/VERSION; \
     fi; \
     echo "Building version: $(cat /app/VERSION)"
 
@@ -181,11 +184,11 @@ RUN set -eux; \
     # Conditionally install zsh for enhanced development experience
     # Only installs if DEVCONTAINER build arg is set to 1
     if [ "$DEVCONTAINER" = "1" ]; then \
-        apt-get update && \
-        apt-get install -y --no-install-recommends zsh=5.9-4+b6 && \
-        chsh -s /usr/bin/zsh && \
-        apt-get clean && \
-        rm -rf /var/lib/apt/lists/*; \
+    apt-get update && \
+    apt-get install -y --no-install-recommends zsh=5.9-4+b6 && \
+    chsh -s /usr/bin/zsh && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*; \
     fi
 # Fix ownership of all application files for non-root user
 # SECURITY: Ensures the application runs with proper permissions
@@ -218,7 +221,9 @@ USER nonroot
 
 # Development container startup command
 # WORKFLOW: Starts the bot in development mode with automatic database migrations
-CMD ["python", "-m", "tux.main"]
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+CMD ["/entrypoint.sh"]
 
 # ==============================================================================
 # PRODUCTION STAGE - Minimal Runtime Environment
@@ -234,12 +239,12 @@ FROM python:3.13.7-slim@sha256:27f90d79cc85e9b7b2560063ef44fa0e9eaae7a7c3f5a9f74
 # Duplicate OCI labels for production image metadata
 # COMPLIANCE: Ensures production images have proper metadata for registries
 LABEL org.opencontainers.image.source="https://github.com/allthingslinux/tux" \
-      org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community" \
-      org.opencontainers.image.licenses="GPL-3.0" \
-      org.opencontainers.image.authors="All Things Linux" \
-      org.opencontainers.image.vendor="All Things Linux" \
-      org.opencontainers.image.title="Tux" \
-      org.opencontainers.image.documentation="https://github.com/allthingslinux/tux/blob/main/README.md"
+    org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community" \
+    org.opencontainers.image.licenses="GPL-3.0" \
+    org.opencontainers.image.authors="All Things Linux" \
+    org.opencontainers.image.vendor="All Things Linux" \
+    org.opencontainers.image.title="Tux" \
+    org.opencontainers.image.documentation="https://github.com/allthingslinux/tux/blob/main/README.md"
 
 # Create non-root user (same as base stage)
 # SECURITY: Consistent user across all stages for permission compatibility
@@ -264,9 +269,9 @@ RUN echo 'path-exclude /usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends --no-install-suggests \
-        libcairo2=1.18.4-1+b1 \
-        libffi8=3.4.8-2 \
-        coreutils=9.7-3 \
+    libcairo2=1.18.4-1+b1 \
+    libffi8=3.4.8-2 \
+    coreutils=9.7-3 \
     # Aggressive cleanup to minimize image size
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
@@ -303,6 +308,8 @@ COPY --from=build --chown=nonroot:nonroot /app/src /app/src
 
 COPY --from=build --chown=nonroot:nonroot /app/pyproject.toml /app/pyproject.toml
 COPY --from=build --chown=nonroot:nonroot /app/VERSION /app/VERSION
+COPY --from=build --chown=nonroot:nonroot /app/alembic.ini /app/alembic.ini
+COPY --from=build --chown=nonroot:nonroot /app/scripts /app/scripts
 
 # Create convenient symlinks for Python and application binaries
 # USABILITY: Allows running 'python' and 'tux' commands without full paths
@@ -311,11 +318,11 @@ RUN ln -sf /app/.venv/bin/python /usr/local/bin/python && \
     ln -sf /app/.venv/bin/tux /usr/local/bin/tux
 
 RUN set -eux; \
-  mkdir -p /app/.cache/tldr /app/temp; \
-  mkdir -p /home/nonroot/.cache /home/nonroot/.npm; \
-  rm -rf /home/nonroot/.npm/_cacache_; \
-  chown -R nonroot:nonroot /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm; \
-  chmod -R 755 /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm
+    mkdir -p /app/.cache/tldr /app/temp; \
+    mkdir -p /home/nonroot/.cache /home/nonroot/.npm; \
+    rm -rf /home/nonroot/.npm/_cacache_; \
+    chown -R nonroot:nonroot /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm; \
+    chmod -R 755 /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm
 
 # Switch to non-root user for final optimizations
 USER nonroot
@@ -334,19 +341,19 @@ RUN set -eux; \
     # Remove test directories from installed packages (but preserve prisma binaries)
     # These directories contain test files that are not needed in production
     for test_dir in tests testing "test*"; do \
-      find /app/.venv -name "$test_dir" -type d -not -path "*/prisma*" -exec rm -rf {} + 2>/dev/null || true; \
+    find /app/.venv -name "$test_dir" -type d -not -path "*/prisma*" -exec rm -rf {} + 2>/dev/null || true; \
     done; \
     # Remove documentation files from installed packages (but preserve prisma docs)
     # These files take up significant space and are not needed in production
     for doc_pattern in "*.md" "*.txt" "*.rst" "LICENSE*" "NOTICE*" "COPYING*" "CHANGELOG*" "README*" "HISTORY*" "AUTHORS*" "CONTRIBUTORS*"; do \
-      find /app/.venv -name "$doc_pattern" -not -path "*/prisma*" -delete 2>/dev/null || true; \
+    find /app/.venv -name "$doc_pattern" -not -path "*/prisma*" -delete 2>/dev/null || true; \
     done; \
     # Remove large development packages that are not needed in production
     # These packages (pip, setuptools, wheel) are only needed for installing packages
     # NOTE: Preserving packages that Prisma might need
     for pkg in setuptools wheel pkg_resources; do \
-      rm -rf /app/.venv/lib/python3.13/site-packages/${pkg}* 2>/dev/null || true; \
-      rm -rf /app/.venv/bin/${pkg}* 2>/dev/null || true; \
+    rm -rf /app/.venv/lib/python3.13/site-packages/${pkg}* 2>/dev/null || true; \
+    rm -rf /app/.venv/bin/${pkg}* 2>/dev/null || true; \
     done; \
     rm -rf /app/.venv/bin/easy_install* 2>/dev/null || true; \
     # Compile Python bytecode for performance optimization
@@ -370,5 +377,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 
 # Application entry point and default command
 # DEPLOYMENT: Configures how the container starts in production
-ENTRYPOINT ["python", "-m", "tux.main"]
+COPY --chmod=755 docker/entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
 CMD []
