@@ -40,3 +40,6 @@ typings/
 # Project-specific ignores
 sqlmodel-refactor/**
 docs/db/README.md
+
+.archive
+.archive/**
