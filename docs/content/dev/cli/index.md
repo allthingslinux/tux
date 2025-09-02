@@ -1,40 +1,19 @@
 # CLI Reference
 
-This section provides details on using the custom `tux` command-line interface, built with Click.
+This page provides comprehensive documentation for all Tux CLI commands. The CLI is organized into several command groups, each handling specific aspects of the project.
 
-## Environment Selection
+## Overview
 
-The `tux` CLI defaults to **development mode** for all command groups (`db`, `dev`, `docker`). This ensures that operations like database migrations or starting the bot target your development resources unless explicitly specified otherwise.
+The Tux CLI provides a unified interface for all project operations. You can access individual command groups using the following commands:
 
-* **Production Mode:**
-    To run a command targeting production resources (e.g., production database, production bot token), you **must** use the global `--prod` flag immediately after `tux`:
+- `uv run db` - Database operations and management
+- `uv run dev` - Development tools and workflows  
+- `uv run docker` - Docker operations and management
+- `uv run docs` - Documentation operations and management
+- `uv run test` - Testing operations and management
+- `uv run tux` - Tux bot operations and management
 
-    ```bash
-    # Example: Apply migrations to production database
-    uv run tux db migrate --prod
-
-    # Example: Start the bot using production token/DB
-    uv run tux start --prod
-    ```
-
-* **Development Mode (Default / Explicit):**
-    Running any command without `--prod` automatically uses development mode. You can also explicitly use the `--dev` flag, although it is redundant.
-
-    ```bash
-    # These are equivalent and run in development mode:
-    uv run tux db push
-    uv run tux db push --dev
-
-    uv run tux start
-    uv run tux start --dev
-    ```
-
-This default-to-development approach prioritizes safety by preventing accidental operations on production environments. The environment determination logic can be found in `tux/utils/env.py`.
-
-::: mkdocs-click
-    :module: tux.cli
+::: mkdocs-typer
+    :module: scripts.cli
     :command: cli
-    :prog_name: tux
-    :depth: 0
-    :style: table
-    :list_subcommands: True
+    :depth: 1
