@@ -65,25 +65,26 @@ repos:
         additional_dependencies:
           - '@commitlint/cli'
           - '@commitlint/config-conventional'
-  - repo: local
-    hooks:
-      - id: settings-doc-markdown
-        name: Generate settings-doc Markdown
-        description: This hook generates a Markdown documentation from pydantic.BaseSettings
-          to a file.
-        entry: make docs-config-markdown
-        language: system
-        types: [file, python]
-        pass_filenames: false
-      - id: settings-doc-dotenv
-        name: Generate settings-doc env.example
-        description: This hook generates an env.example template from pydantic.BaseSettings
-          to a file.
-        entry: uv run settings-doc generate --module tux.shared.config.settings --output-format
-          dotenv --update env.example
-        language: system
-        types: [file, python]
-        pass_filenames: false
+  # - repo: local
+  #   hooks:
+  #     - id: settings-doc-markdown
+  #       name: Generate settings-doc Markdown
+  #       description: This hook generates a Markdown documentation from pydantic.BaseSettings
+  #         to a file.
+  # yamllint disable-line rule:line-length
+  #       entry: uv run settings-doc generate --module tux.shared.config.settings --output-format markdown --update CONFIG.md --between "<!-- CONFIGURATION START -->" "<!-- CONFIGURATION END -->" --heading-offset 1
+  #       language: system
+  #       types: [file, python]
+  #       pass_filenames: false
+  #     - id: settings-doc-dotenv
+  #       name: Generate settings-doc env.example
+  #       description: This hook generates an env.example template from pydantic.BaseSettings
+  #         to a file.
+  #       entry: uv run settings-doc generate --module tux.shared.config.settings --output-format
+  #         dotenv --update env.example
+  #       language: system
+  #       types: [file, python]
+  #       pass_filenames: false
       # Temporarily disabled - causes conflicts with end-of-file-fixer
       # TODO: Re-enable once we resolve the newline handling issue
       # - id: settings-doc-env-example

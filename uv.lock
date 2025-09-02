@@ -1093,19 +1093,6 @@ wheels = [
 ]
 
 [[package]]
-name = "mkdocs-click"
-version = "0.9.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "click" },
-    { name = "markdown" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/a1/c7/8c25f3a3b379def41e6d0bb5c4beeab7aa8a394b17e749f498504102cfa5/mkdocs_click-0.9.0.tar.gz", hash = "sha256:6050917628d4740517541422b607404d044117bc31b770c4f9e9e1939a50c908", size = 18720, upload-time = "2025-04-07T16:59:36.387Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e9/fc/9124ab36e2341e78d8d9c669511bd70f52ea0de8105760c31fabec1f9396/mkdocs_click-0.9.0-py3-none-any.whl", hash = "sha256:5208e828f4f68f63c847c1ef7be48edee9964090390afc8f5b3d4cbe5ea9bbed", size = 15104, upload-time = "2025-04-07T16:59:34.807Z" },
-]
-
-[[package]]
 name = "mkdocs-get-deps"
 version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1193,6 +1180,33 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/52/67/fe4b77e7a8ae7628392e28b14122588beaf6078b53eb91c7ed000fd158ac/mkdocs-minify-plugin-0.8.0.tar.gz", hash = "sha256:bc11b78b8120d79e817308e2b11539d790d21445eb63df831e393f76e52e753d", size = 8366, upload-time = "2024-01-29T16:11:32.982Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1b/cd/2e8d0d92421916e2ea4ff97f10a544a9bd5588eb747556701c983581df13/mkdocs_minify_plugin-0.8.0-py3-none-any.whl", hash = "sha256:5fba1a3f7bd9a2142c9954a6559a57e946587b21f133165ece30ea145c66aee6", size = 6723, upload-time = "2024-01-29T16:11:31.851Z" },
+]
+
+[[package]]
+name = "mkdocs-typer"
+version = "0.0.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "markdown" },
+    { name = "typer" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/91/1a/b2ac21a04c8e487a1fccc3982f9d91319b83a64c3fc3dc51d89658f43b57/mkdocs_typer-0.0.3.tar.gz", hash = "sha256:4dd37f024190a82aaf0f6c984faafb15167d34eab7e29a6a85e61362423a4eb7", size = 11381, upload-time = "2023-06-21T16:33:39.93Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/38/34/4d6722b7cdb5e37474272205df6f2080ad01aff74570820a83dedb314f1b/mkdocs_typer-0.0.3-py3-none-any.whl", hash = "sha256:b2a9a44da590a7100114fde4de9123fedfea692d229379984db20ee3b3f12d7c", size = 11564, upload-time = "2023-06-21T16:33:38.597Z" },
+]
+
+[[package]]
+name = "mkdocs-typer2"
+version = "0.1.6"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "mkdocs" },
+    { name = "pydantic" },
+    { name = "typer" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/53/bd/571e81ca812af99b64d6576539dafafd7adcd94afc02fb80e461bb95120a/mkdocs_typer2-0.1.6.tar.gz", hash = "sha256:0d83e01ddd108ebb2f61229d73317bc3ee9d94e98c68efeb4a5ef8492d163a75", size = 24995, upload-time = "2025-09-01T13:51:41.562Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/90/3f/aa2fcbf9740500b4a67c08794643cdac46b011a0789473387a4ca7b5007e/mkdocs_typer2-0.1.6-py3-none-any.whl", hash = "sha256:1642d0bd3efc3b2efe1efe3ee0231dcbc69602d592613264b621636e9169151f", size = 12073, upload-time = "2025-09-01T13:51:40.802Z" },
 ]
 
 [[package]]
@@ -2081,6 +2095,15 @@ wheels = [
 ]
 
 [[package]]
+name = "shellingham"
+version = "1.5.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/58/15/8b3609fd3830ef7b27b655beb4b4e9c62313a4e8da8c676e142cc210d58e/shellingham-1.5.4.tar.gz", hash = "sha256:8dbca0739d487e5bd35ab3ca4b36e11c4078f3a234bfce294b0a0291363404de", size = 10310, upload-time = "2023-10-24T04:13:40.426Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl", hash = "sha256:7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686", size = 9755, upload-time = "2023-10-24T04:13:38.866Z" },
+]
+
+[[package]]
 name = "six"
 version = "1.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2234,6 +2257,7 @@ dependencies = [
     { name = "sentry-sdk", extra = ["httpx", "loguru"] },
     { name = "sqlalchemy" },
     { name = "sqlmodel" },
+    { name = "typer" },
     { name = "watchdog" },
 ]
 
@@ -2254,11 +2278,12 @@ docs = [
     { name = "griffe-typingdoc" },
     { name = "mkdocs" },
     { name = "mkdocs-api-autonav" },
-    { name = "mkdocs-click" },
     { name = "mkdocs-git-committers-plugin-2" },
     { name = "mkdocs-git-revision-date-localized-plugin" },
     { name = "mkdocs-material" },
     { name = "mkdocs-minify-plugin" },
+    { name = "mkdocs-typer" },
+    { name = "mkdocs-typer2" },
     { name = "mkdocstrings" },
     { name = "mkdocstrings-python" },
     { name = "pymdown-extensions" },
@@ -2335,6 +2360,7 @@ requires-dist = [
     { name = "sentry-sdk", extras = ["httpx", "loguru"], specifier = ">=2.7.0" },
     { name = "sqlalchemy", specifier = ">=2.0.14" },
     { name = "sqlmodel", specifier = ">=0.0.24" },
+    { name = "typer", specifier = ">=0.17.3" },
     { name = "watchdog", specifier = ">=6.0.0,<7" },
 ]
 
@@ -2355,11 +2381,12 @@ docs = [
     { name = "griffe-typingdoc", specifier = ">=0.2.7,<0.3" },
     { name = "mkdocs", specifier = ">=1.6.1,<2" },
     { name = "mkdocs-api-autonav", specifier = ">=0.3.0,<0.4" },
-    { name = "mkdocs-click", specifier = ">=0.9.0,<0.10" },
     { name = "mkdocs-git-committers-plugin-2", specifier = ">=2.5.0,<3" },
     { name = "mkdocs-git-revision-date-localized-plugin", specifier = ">=1.3.0,<2" },
     { name = "mkdocs-material", specifier = ">=9.5.30,<10" },
     { name = "mkdocs-minify-plugin", specifier = ">=0.8.0,<0.9" },
+    { name = "mkdocs-typer", specifier = ">=0.0.3" },
+    { name = "mkdocs-typer2", specifier = ">=0.1.6" },
     { name = "mkdocstrings", specifier = ">=0.29.0,<0.30" },
     { name = "mkdocstrings-python", specifier = ">=1.14.3,<2" },
     { name = "pymdown-extensions", specifier = ">=10.14.3,<11" },
@@ -2392,6 +2419,21 @@ types = [
     { name = "types-pytz", specifier = ">=2025.2.0.20250326,<2026" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20250402,<7" },
     { name = "typing-extensions", specifier = ">=4.14.1" },
+]
+
+[[package]]
+name = "typer"
+version = "0.17.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "rich" },
+    { name = "shellingham" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/dd/82/f4bfed3bc18c6ebd6f828320811bbe4098f92a31adf4040bee59c4ae02ea/typer-0.17.3.tar.gz", hash = "sha256:0c600503d472bcf98d29914d4dcd67f80c24cc245395e2e00ba3603c9332e8ba", size = 103517, upload-time = "2025-08-30T12:35:24.05Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ca/e8/b3d537470e8404659a6335e7af868e90657efb73916ef31ddf3d8b9cb237/typer-0.17.3-py3-none-any.whl", hash = "sha256:643919a79182ab7ac7581056d93c6a2b865b026adf2872c4d02c72758e6f095b", size = 46494, upload-time = "2025-08-30T12:35:22.391Z" },
 ]
 
 [[package]]
