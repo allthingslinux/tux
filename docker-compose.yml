@@ -135,8 +135,10 @@ services:
         # Restart when environment or Docker config changes
         - action: sync+restart
           path: .env
+          target: /app/.env
         - action: sync+restart
           path: docker-compose.yml
+          target: /app/docker-compose.yml
 
   tux-adminer:
     image: adminer:latest
