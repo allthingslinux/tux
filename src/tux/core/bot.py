@@ -17,6 +17,7 @@ from rich.console import Console
 
 from tux.core.cog_loader import CogLoader
 from tux.core.container import ServiceContainer
+from tux.core.prefix_manager import PrefixManager
 from tux.core.service_registry import ServiceRegistry
 from tux.core.task_monitor import TaskMonitor
 from tux.database.migrations.runner import upgrade_head_if_needed
@@ -90,6 +91,8 @@ class Tux(commands.Bot):
         self.container: ServiceContainer | None = None
         # Sentry manager instance for error handling and context utilities
         self.sentry_manager: SentryManager = SentryManager()
+        # Prefix manager for efficient prefix resolution
+        self.prefix_manager: Any | None = None
 
         # UI / misc
         self.emoji_manager = EmojiManager(self)
@@ -135,6 +138,8 @@ class Tux(commands.Bot):
                         raise DatabaseConnectionError(db_migration_error) from e
                     raise
                 set_setup_phase_tag(span, "database", "finished")
+                await self._setup_prefix_manager()
+                set_setup_phase_tag(span, "prefix_manager", "finished")
                 await self._load_drop_in_extensions()
                 set_setup_phase_tag(span, "extensions", "finished")
                 await self._load_cogs()
@@ -293,6 +298,38 @@ class Tux(commands.Bot):
                 error_msg = f"Container initialization failed: {e}"
                 raise ContainerInitializationError(error_msg) from e
 
+    async def _setup_prefix_manager(self) -> None:
+        """Set up the prefix manager for efficient prefix resolution."""
+        with start_span("bot.setup_prefix_manager", "Setting up prefix manager") as span:
+            logger.info("🔧 Initializing prefix manager...")
+
+            try:
+                # Initialize the prefix manager
+                self.prefix_manager = PrefixManager(self)
+
+                # Load all existing prefixes into cache with timeout
+                await asyncio.wait_for(
+                    self.prefix_manager.load_all_prefixes(),
+                    timeout=15.0,  # 15 second timeout for the entire setup
+                )
+
+                span.set_tag("prefix_manager.initialized", True)
+                logger.info("✅ Prefix manager initialized successfully")
+
+            except TimeoutError:
+                logger.warning("⚠️  Prefix manager setup timed out - continuing without cache")
+                span.set_tag("prefix_manager.initialized", False)
+                span.set_data("error", "timeout")
+                self.prefix_manager = None
+            except Exception as e:
+                logger.error(f"❌ Failed to initialize prefix manager: {type(e).__name__}: {e}")
+                span.set_tag("prefix_manager.initialized", False)
+                span.set_data("error", str(e))
+
+                # Don't fail startup if prefix manager fails - bot can still work with default prefix
+                logger.warning("⚠️  Bot will use default prefix for all guilds")
+                self.prefix_manager = None
+
     async def _load_drop_in_extensions(self) -> None:
         """Load optional drop-in extensions (e.g., Jishaku)."""
         with start_span("bot.load_drop_in_extensions", "Loading drop-in extensions") as span:
@@ -392,6 +429,18 @@ class Tux(commands.Bot):
                 capture_exception_safe(e)
 
         self._record_bot_stats()
+
+    def get_prefix_cache_stats(self) -> dict[str, int]:
+        """Get prefix cache statistics for monitoring.
+
+        Returns
+        -------
+        dict[str, int]
+            Prefix cache statistics
+        """
+        if self.prefix_manager:
+            return self.prefix_manager.get_cache_stats()
+        return {"cached_prefixes": 0, "cache_loaded": 0, "default_prefix": 0}
 
     def _record_bot_stats(self) -> None:
         """Record basic bot stats to Sentry context (if available)."""
