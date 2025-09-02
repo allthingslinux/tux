@@ -75,14 +75,15 @@ repos:
         language: system
         types: [file, python]
         pass_filenames: false
-      - id: settings-doc-dotenv
-        name: Generate settings-doc .env
-        description: This hook generates a .env template from pydantic.BaseSettings
-          to a file.
-        entry: make docs-env
-        language: system
-        types: [file, python]
-        pass_filenames: false
+      # Temporarily disabled - overwrites user's .env file with template
+      # - id: settings-doc-dotenv
+      #   name: Generate settings-doc .env
+      #   description: This hook generates a .env template from pydantic.BaseSettings
+      #     to a file.
+      #   entry: make docs-env
+      #   language: system
+      #   types: [file, python]
+      #   pass_filenames: false
       # Temporarily disabled - causes conflicts with end-of-file-fixer
       # TODO: Re-enable once we resolve the newline handling issue
       # - id: settings-doc-env-example
