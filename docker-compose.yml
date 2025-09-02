@@ -52,8 +52,10 @@ services:
         DEVCONTAINER: ${DEVCONTAINER:-0}
     volumes:
       - ./config:/app/config:ro
-      - ./src/tux/extensions:/app/tux/extensions:ro
+      - ./src/tux/custom_modules:/app/tux/custom_modules:ro
       - ./assets:/app/assets:ro
+      # Migration mount - always mounted, controlled by USE_LOCAL_MIGRATIONS env var
+      - ./src/tux/database/migrations:/app/tux/database/migrations:ro
       - tux_cache:/app/.cache
       - tux_temp:/app/temp
       - tux_user_home:/home/nonroot
@@ -63,6 +65,9 @@ services:
       TUX_VERSION: ${VERSION:-dev}
       # Development-specific overrides
       DEBUG: ${DEBUG:-false}
+      # Migration control
+      USE_LOCAL_MIGRATIONS: ${USE_LOCAL_MIGRATIONS:-true}
+      FORCE_MIGRATE: ${FORCE_MIGRATE:-false}
       # Database configuration for Docker
       POSTGRES_HOST: tux-postgres
       POSTGRES_PORT: 5432
@@ -95,6 +100,44 @@ services:
         max-size: 10m
         max-file: '3'
 
+    # Development mode with hot reload (only active when using --watch)
+    develop:
+      watch:
+        # Sync Python source code changes for hot reload
+        - action: sync
+          path: ./src
+          target: /app/src
+          ignore:
+            - __pycache__/
+            - "*.pyc"
+            - "*.pyo"
+            - "*.pyd"
+            - .pytest_cache/
+            - .mypy_cache/
+            - .coverage
+        # Sync configuration changes
+        - action: sync
+          path: ./config
+          target: /app/config
+        # Sync custom modules
+        - action: sync
+          path: ./src/tux/custom_modules
+          target: /app/tux/custom_modules
+        # Sync assets
+        - action: sync
+          path: ./assets
+          target: /app/assets
+        # Rebuild when dependencies change
+        - action: rebuild
+          path: pyproject.toml
+        - action: rebuild
+          path: uv.lock
+        # Restart when environment or Docker config changes
+        - action: sync+restart
+          path: .env
+        - action: sync+restart
+          path: docker-compose.yml
+
   tux-adminer:
     image: adminer:latest
     container_name: tux-adminer
@@ -114,8 +157,8 @@ services:
       ADMINER_DEFAULT_SERVER: "tux-postgres"
       ADMINER_DEFAULT_DB: ${POSTGRES_DB:-tuxdb}
       ADMINER_DEFAULT_USERNAME: ${POSTGRES_USER:-tuxuser}
-      ADMINER_DEFAULT_PASSWORD: ${POSTGRES_PASSWORD:-tuxpass}
-      ADMINER_AUTO_LOGIN: "${ADMINER_AUTO_LOGIN:-false}"
+      ADMINER_DEFAULT_PASSWORD: ${POSTGRES_PASSWORD:-ChangeThisToAStrongPassword123!}
+      ADMINER_AUTO_LOGIN: "${ADMINER_AUTO_LOGIN:-true}"
       ADMINER_PLUGINS: "backward-keys tables-filter dump-date dump-json dump-xml dump-zip edit-calendar enum-option foreign-system json-column pretty-json-column table-indexes-structure table-structure"
 
     configs:
