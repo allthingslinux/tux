@@ -13,7 +13,7 @@ if (getenv('ADMINER_AUTO_LOGIN') === 'true' && empty($_GET)) {
   $_POST['auth'] = [
     'server' => getenv('ADMINER_DEFAULT_SERVER') ?: 'tux-postgres',
     'username' => getenv('ADMINER_DEFAULT_USERNAME') ?: 'tuxuser',
-    'password' => getenv('ADMINER_DEFAULT_PASSWORD') ?: 'tuxpass',
+    'password' => getenv('ADMINER_DEFAULT_PASSWORD') ?: 'ChangeThisToAStrongPassword123!',
     'driver' => getenv('ADMINER_DEFAULT_DRIVER') ?: 'pgsql',
     'db' => getenv('ADMINER_DEFAULT_DB') ?: 'tuxdb',
   ];
