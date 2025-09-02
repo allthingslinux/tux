@@ -7,7 +7,7 @@ services:
     container_name: tux-postgres
     hostname: tux-postgres
     image: postgres:15-alpine
-    restart: unless-stopped
+    restart: "no"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
       POSTGRES_USER: ${POSTGRES_USER:-tuxuser}
@@ -74,7 +74,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
       POSTGRES_USER: ${POSTGRES_USER:-tuxuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeThisToAStrongPassword123!}
-    restart: unless-stopped
+    restart: "no"
     depends_on:
       tux-postgres:
         condition: service_healthy
@@ -144,7 +144,7 @@ services:
     image: adminer:latest
     container_name: tux-adminer
     hostname: tux-adminer
-    restart: unless-stopped
+    restart: "no"
     depends_on:
       tux-postgres:
         condition: service_healthy
