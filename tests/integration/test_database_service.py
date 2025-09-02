@@ -203,10 +203,10 @@ class TestDatabaseServiceIntegration:
 
         config = await integration_guild_config_controller.get_or_create_config(
             guild_id=123456789,
-            prefix="!test",
+            prefix="!t",  # Use valid prefix length (max 3 chars)
         )
         assert config.guild_id == 123456789
-        assert config.prefix == "!test"
+        assert config.prefix == "!t"
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -342,7 +342,7 @@ class TestMixedScenarios:
         # Create config through controller
         config = await integration_guild_config_controller.get_or_create_config(
             guild_id=guild.guild_id,
-            prefix="!int",
+            prefix="!i",  # Use valid prefix length (max 3 chars)
             mod_log_id=888999000111,
         )
 

@@ -69,7 +69,7 @@ class TestModelCreation:
         # Create comprehensive config
         config = GuildConfig(
             guild_id=TEST_GUILD_ID,
-            prefix="!test",
+            prefix="!t",  # Use valid prefix length (max 3 chars)
             mod_log_id=TEST_CHANNEL_ID,
             audit_log_id=TEST_CHANNEL_ID + 1,
             join_log_id=TEST_CHANNEL_ID + 2,
@@ -85,7 +85,7 @@ class TestModelCreation:
 
         # Verify all fields
         assert config.guild_id == TEST_GUILD_ID
-        assert config.prefix == "!test"
+        assert config.prefix == "!t"
         assert config.mod_log_id == TEST_CHANNEL_ID
         assert config.audit_log_id == TEST_CHANNEL_ID + 1
         assert config.join_log_id == TEST_CHANNEL_ID + 2
@@ -145,7 +145,7 @@ class TestModelRelationships:
         # Create config
         config = GuildConfig(
             guild_id=TEST_GUILD_ID,
-            prefix="!rel",
+            prefix="!r",  # Use valid prefix length (max 3 chars)
             mod_log_id=TEST_CHANNEL_ID,
         )
         db_session.add(config)
@@ -168,7 +168,7 @@ class TestModelRelationships:
         # Try to create config without guild (should fail)
         config = GuildConfig(
             guild_id=999999999999999999,  # Non-existent guild
-            prefix="!fail",
+            prefix="!f",  # Use valid prefix length (max 3 chars)
             mod_log_id=TEST_CHANNEL_ID,
         )
 
@@ -217,7 +217,7 @@ class TestModelRelationships:
 
         config = GuildConfig(
             guild_id=TEST_GUILD_ID,
-            prefix="!cascade",
+            prefix="!c",  # Use valid prefix length (max 3 chars)
         )
         db_session.add(config)
         await db_session.commit()
@@ -355,7 +355,7 @@ class TestModelQueries:
 
         config = GuildConfig(
             guild_id=TEST_GUILD_ID,
-            prefix="!join",
+            prefix="!j",  # Use valid prefix length (max 3 chars)
             mod_log_id=TEST_CHANNEL_ID,
         )
         db_session.add(config)
@@ -375,7 +375,7 @@ class TestModelQueries:
         assert row is not None
         assert row[0] == TEST_GUILD_ID
         assert row[1] == 5
-        assert row[2] == "!join"
+        assert row[2] == "!j"
 
 
 # =============================================================================
@@ -424,7 +424,7 @@ class TestDataIntegrity:
 
         # Verify NULL handling
         assert config.guild_id == TEST_GUILD_ID
-        assert config.prefix is None  # Optional field
+        assert config.prefix == "$"  # Default value, not None
         assert config.mod_log_id is None  # Optional field
 
     @pytest.mark.unit

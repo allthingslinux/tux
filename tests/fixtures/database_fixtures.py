@@ -211,7 +211,7 @@ async def async_performance_test_setup(async_db_service: DatabaseService) -> dic
     guild = await async_db_service.guild.get_or_create_guild(guild_id=TEST_GUILD_ID)
     config = await async_db_service.guild_config.get_or_create_config(
         guild_id=guild.guild_id,
-        prefix="!perf",
+        prefix="!p",  # Use valid prefix length (max 3 chars)
         mod_log_id=TEST_CHANNEL_ID,
     )
 
