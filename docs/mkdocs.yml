@@ -11,7 +11,7 @@ repo_name: allthingslinux/tux
 # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#code-actions
 edit_uri: edit/main/docs/
 docs_dir: ./content
-site_dir: ../build/docs
+site_dir: ../data/build/docs
 extra:
   # https://squidfunk.github.io/mkdocs-material/setup/setting-up-the-footer/#social-links
   social:
