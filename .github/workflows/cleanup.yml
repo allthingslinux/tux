@@ -1,0 +1,161 @@
+---
+name: Registry Cleanup
+on:
+  workflow_dispatch:
+    inputs:
+      cleanup_type:
+        description: Type of cleanup to perform
+        required: true
+        default: standard
+        type: choice
+        options: [standard, aggressive, build-cache-only]
+      keep_versions:
+        description: Number of versions to keep
+        required: false
+        default: '10'
+      dry_run:
+        description: Dry run (don't actually delete)
+        type: boolean
+        default: false
+  schedule:
+    - cron: 0 1 1 * *  # Monthly aggressive cleanup on 1st at 1 AM
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  PACKAGE_NAME: tux
+  PACKAGE_TYPE: container
+jobs:
+  cleanup:
+    name: Registry Cleanup
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Cleanup Parameters
+        id: params
+        run: |
+          case "${{ github.event.inputs.cleanup_type || 'standard' }}" in
+            "standard")
+              KEEP_VERSIONS="${{ github.event.inputs.keep_versions || '15' }}"
+              REMOVE_UNTAGGED="true"
+              CLEAN_BUILD_CACHE="true"
+              ;;
+            "aggressive")
+              KEEP_VERSIONS="${{ github.event.inputs.keep_versions || '5' }}"
+              REMOVE_UNTAGGED="true"
+              CLEAN_BUILD_CACHE="true"
+              ;;
+            "build-cache-only")
+              KEEP_VERSIONS="999"
+              REMOVE_UNTAGGED="false"
+              CLEAN_BUILD_CACHE="true"
+              ;;
+          esac
+          echo "keep_versions=$KEEP_VERSIONS" >> "$GITHUB_OUTPUT"
+          echo "remove_untagged=$REMOVE_UNTAGGED" >> "$GITHUB_OUTPUT"
+          echo "clean_build_cache=$CLEAN_BUILD_CACHE" >> "$GITHUB_OUTPUT"
+          echo "cleanup_type=${{ github.event.inputs.cleanup_type || 'standard' }}" >> "$GITHUB_OUTPUT"
+          echo "dry_run=${{ github.event.inputs.dry_run || 'false' }}" >> "$GITHUB_OUTPUT"
+      - name: Registry Analysis
+        id: analysis
+        run: |
+          {
+            echo "## 🔍 Registry Analysis"
+            echo "**Cleanup Type**: ${{ steps.params.outputs.cleanup_type }}"
+            echo "**Keep Versions**: ${{ steps.params.outputs.keep_versions }}"
+            echo "**Dry Run**: ${{ steps.params.outputs.dry_run }}"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # Get current registry info
+          PACKAGE_INFO=$(gh api user/packages/${{ env.PACKAGE_TYPE }}/${{ env.PACKAGE_NAME }} 2>/dev/null || echo '{"size_in_bytes": 0, "version_count": 0}')
+          SIZE_BYTES=$(echo "$PACKAGE_INFO" | jq -r '.size_in_bytes // 0')
+          VERSION_COUNT=$(echo "$PACKAGE_INFO" | jq -r '.version_count // 0')
+          SIZE_GB=$(echo "scale=2; $SIZE_BYTES / 1024 / 1024 / 1024" | bc -l 2>/dev/null || echo "0")
+                    {
+            echo "**Current Registry Size**: ${SIZE_GB}GB"
+            echo "**Current Version Count**: $VERSION_COUNT"
+            echo ""
+            echo "**Current Versions:**"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # List current versions
+          gh api user/packages/${{ env.PACKAGE_TYPE }}/${{ env.PACKAGE_NAME }}/versions | \
+            jq -r '.[] | "\(.name) - \(.created_at) - \(.size_in_bytes) bytes"' | \
+            head -20 >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo "Could not list versions" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo '```'
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "size_gb=$SIZE_GB" >> "$GITHUB_OUTPUT"
+          echo "version_count=$VERSION_COUNT" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Clean Old Versions
+        if: steps.params.outputs.cleanup_type != 'build-cache-only'
+        run: |
+          {
+            echo "## 🧹 Cleaning Old Versions"
+            if [ "${{ steps.params.outputs.dry_run }}" = "true" ]; then
+              echo "**DRY RUN**: Would keep ${{ steps.params.outputs.keep_versions }} versions"
+              echo "**DRY RUN**: Would remove untagged: ${{ steps.params.outputs.remove_untagged }}"
+            else
+              echo "Cleaning old versions..."
+              gh api -X DELETE user/packages/${{ env.PACKAGE_TYPE }}/${{ env.PACKAGE_NAME }}/versions \
+                --field min-versions-to-keep="${{ steps.params.outputs.keep_versions }}" \
+                --field delete-only-untagged-versions="${{ steps.params.outputs.remove_untagged }}" || \
+                echo "Cleanup completed or no versions to clean"
+            fi
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Clean Build Cache
+        if: steps.params.outputs.clean_build_cache == 'true'
+        run: |
+          echo "## 🗑️ Cleaning Build Cache" >> "$GITHUB_STEP_SUMMARY"
+
+          # Find build cache images older than 7 days
+          CUTOFF_DATE=$(date -d '7 days ago' -Iseconds)
+          BUILD_CACHE_IMAGES=$(gh api user/packages/${{ env.PACKAGE_TYPE }}/${{ env.PACKAGE_NAME }}/versions | \
+            jq -r --arg cutoff "$CUTOFF_DATE" '.[] | select(.name | contains("buildcache")) | select(.created_at < $cutoff) | .id' 2>/dev/null || echo "")
+          if [ -n "$BUILD_CACHE_IMAGES" ]; then
+            {
+              echo "**Found build cache images to clean:**"
+              echo '```'
+              echo "$BUILD_CACHE_IMAGES"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            if [ "${{ steps.params.outputs.dry_run }}" = "true" ]; then
+              echo "**DRY RUN**: Would delete these build cache images" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "$BUILD_CACHE_IMAGES" | xargs -I {} gh api -X DELETE user/packages/${{ env.PACKAGE_TYPE }}/${{ env.PACKAGE_NAME }}/versions/{} || \
+                echo "Build cache cleanup completed" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          else
+            echo "**No build cache images to clean**" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Cleanup Summary
+        run: |-
+          {
+            echo "## ✅ Cleanup Summary"
+            echo "**Cleanup Type**: ${{ steps.params.outputs.cleanup_type }}"
+            echo "**Versions Kept**: ${{ steps.params.outputs.keep_versions }}"
+            echo "**Untagged Removed**: ${{ steps.params.outputs.remove_untagged }}"
+            echo "**Build Cache Cleaned**: ${{ steps.params.outputs.clean_build_cache }}"
+            echo "**Dry Run**: ${{ steps.params.outputs.dry_run }}"
+            echo ""
+            if [ "${{ steps.params.outputs.dry_run }}" = "false" ]; then
+              echo "**Status**: ✅ Cleanup completed successfully"
+            else
+              echo "**Status**: 🔍 Dry run completed - no changes made"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

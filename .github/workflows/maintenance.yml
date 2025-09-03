@@ -24,7 +24,8 @@ on:
         description: Optional earlier SHA for TODOs
         required: false
   schedule:
-    - cron: 0 3 1 * *
+    - cron: 0 3 1 * *  # Monthly cleanup on 1st at 3 AM
+    - cron: 0 2 * * 0  # Weekly cleanup on Sundays at 2 AM
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
@@ -68,13 +69,56 @@ jobs:
       packages: write
       contents: read
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Registry Size Check
+        id: registry_size
+        run: |
+          echo "Checking registry size..."
+          # Get package info to check size
+          PACKAGE_INFO=$(gh api user/packages/container/tux 2>/dev/null || echo '{"size_in_bytes": 0}')
+          SIZE_BYTES=$(echo "$PACKAGE_INFO" | jq -r '.size_in_bytes // 0')
+          SIZE_GB=$(echo "scale=2; $SIZE_BYTES / 1024 / 1024 / 1024" | bc -l 2>/dev/null || echo "0")
+          echo "size_gb=$SIZE_GB" >> "$GITHUB_OUTPUT"
+          echo "Registry size: ${SIZE_GB}GB"
+
+          # Alert if size is too large
+          if (( $(echo "$SIZE_GB > 5" | bc -l) )); then
+            echo "⚠️ Registry size exceeds 5GB: ${SIZE_GB}GB"
+            echo "size_warning=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "✅ Registry size is acceptable: ${SIZE_GB}GB"
+            echo "size_warning=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Clean Old Images
         uses: actions/delete-package-versions@v5
         with:
           package-name: tux
           package-type: container
-          min-versions-to-keep: ${{ github.event.inputs.keep_amount || '10' }}
-          delete-only-untagged-versions: ${{ github.event.inputs.remove_untagged || 'false' }}
+          min-versions-to-keep: ${{ github.event.inputs.keep_amount || '15' }}
+          delete-only-untagged-versions: ${{ github.event.inputs.remove_untagged || 'true' }}
+      - name: Clean Build Cache Images
+        run: |
+          echo "Cleaning up build cache images..."
+          # Delete build cache images older than 30 days
+          gh api user/packages/container/tux/versions | \
+            jq -r '.[] | select(.name | contains("buildcache")) | select(.created_at < "'$(date -d '30 days ago' -Iseconds)'") | .id' | \
+            xargs -I {} gh api -X DELETE user/packages/container/tux/versions/{} || echo "No build cache images to clean"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Registry Cleanup Summary
+        run: |
+          echo "## 🧹 Registry Cleanup Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Registry Size**: ${{ steps.registry_size.outputs.size_gb }}GB" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Cleanup Policy**: Keep 15 versions, remove untagged" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Build Cache**: Cleaned images older than 30 days" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.registry_size.outputs.size_warning }}" = "true" ]; then
+            echo "- **⚠️ Warning**: Registry size exceeds 5GB" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- **✅ Status**: Registry size is acceptable" >> "$GITHUB_STEP_SUMMARY"
+          fi
   health:
     name: Health Check
     runs-on: ubuntu-latest
@@ -82,26 +126,89 @@ jobs:
     permissions:
       contents: read
       issues: write
+      packages: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Repository Health Summary
+        run: |
+          echo "## 📊 Repository Health Check" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Date**: $(date)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
       - name: Check Large Files
         run: |
-          echo "Checking for files larger than 50MB..."
-          find . -type f -size +50M -not -path "./.git/*" || echo "No large files found"
+          echo "### 📁 Large Files Check" >> "$GITHUB_STEP_SUMMARY"
+          echo "Checking for files larger than 50MB..." >> "$GITHUB_STEP_SUMMARY"
+          LARGE_FILES=$(find . -type f -size +50M -not -path "./.git/*" 2>/dev/null || echo "")
+          if [ -n "$LARGE_FILES" ]; then
+            echo "⚠️ **Large files found:**" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "$LARGE_FILES" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "✅ **No large files found**" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "" >> "$GITHUB_STEP_SUMMARY"
       - name: Check Dependencies
         run: |
-          echo "Checking for outdated dependencies..."
-          uv outdated || echo "No outdated dependencies found"
+          echo "### 📦 Dependencies Check" >> "$GITHUB_STEP_SUMMARY"
+          echo "Checking for outdated dependencies..." >> "$GITHUB_STEP_SUMMARY"
+          if command -v uv >/dev/null 2>&1; then
+            OUTDATED=$(uv outdated 2>/dev/null || echo "No outdated dependencies found")
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "$OUTDATED" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "⚠️ **uv not available for dependency check**" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "" >> "$GITHUB_STEP_SUMMARY"
       - name: Check Repository Size
         run: |
-          echo "Repository size analysis..."
-          du -sh . || echo "Could not determine repository size"
+          echo "### 💾 Repository Size Analysis" >> "$GITHUB_STEP_SUMMARY"
+          REPO_SIZE=$(du -sh . 2>/dev/null | cut -f1 || echo "Unknown")
+          echo "**Repository Size**: $REPO_SIZE" >> "$GITHUB_STEP_SUMMARY"
+
+          # Check .git size
+          GIT_SIZE=$(du -sh .git 2>/dev/null | cut -f1 || echo "Unknown")
+          echo "**Git History Size**: $GIT_SIZE" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
       - name: Check Stale Branches
         run: |
-          echo "Checking for stale branches..."
-          git branch -r --sort=-committerdate | head -10 || echo "Could not check branches"
-      - name: Check Large Commits
+          echo "### 🌿 Branch Analysis" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Recent branches:**" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          git branch -r --sort=-committerdate | head -10 >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo "Could not check branches" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+      - name: Check Registry Health
+        run: |
+          echo "### 🐳 Container Registry Health" >> "$GITHUB_STEP_SUMMARY"
+          if command -v gh >/dev/null 2>&1; then
+            # Get package info
+            PACKAGE_INFO=$(gh api user/packages/container/tux 2>/dev/null || echo '{"size_in_bytes": 0, "version_count": 0}')
+            SIZE_BYTES=$(echo "$PACKAGE_INFO" | jq -r '.size_in_bytes // 0')
+            VERSION_COUNT=$(echo "$PACKAGE_INFO" | jq -r '.version_count // 0')
+            SIZE_GB=$(echo "scale=2; $SIZE_BYTES / 1024 / 1024 / 1024" | bc -l 2>/dev/null || echo "0")
+            echo "**Registry Size**: ${SIZE_GB}GB" >> "$GITHUB_STEP_SUMMARY"
+            echo "**Version Count**: $VERSION_COUNT" >> "$GITHUB_STEP_SUMMARY"
+            if (( $(echo "$SIZE_GB > 5" | bc -l) )); then
+              echo "⚠️ **Warning**: Registry size exceeds 5GB" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "✅ **Status**: Registry size is acceptable" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          else
+            echo "⚠️ **GitHub CLI not available for registry check**" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check Recent Activity
         run: |-
-          echo "Checking for large commits..."
-          git log --stat --oneline | head -20 || echo "Could not check commits"
+          echo "### 📈 Recent Activity" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Recent commits:**" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          git log --oneline --since="1 week ago" | head -10 >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo "Could not check recent commits" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"

@@ -209,5 +209,11 @@ jobs:
         with:
           package-name: tux
           package-type: container
-          min-versions-to-keep: 10
+          min-versions-to-keep: 15
           delete-only-untagged-versions: true
+      - name: Cleanup Summary
+        run: |-
+          echo "## 🐳 Docker Registry Cleanup" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Policy**: Keep 15 versions, remove untagged" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Schedule**: Weekly cleanup" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Status**: ✅ Cleanup completed" >> "$GITHUB_STEP_SUMMARY"
