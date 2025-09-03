@@ -49,15 +49,29 @@ jobs:
     steps:
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Prepare Version
-        id: version
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: tux
+          tags: |
+            type=raw,value=pr-${{ github.event.number }}
+          labels: |
+            org.opencontainers.image.title=Tux
+            org.opencontainers.image.description=Tux - The all in one discord bot for the All Things Linux Community
+            org.opencontainers.image.source=https://github.com/allthingslinux/tux
+            org.opencontainers.image.licenses=GPL-3.0
+            org.opencontainers.image.authors=All Things Linux
+            org.opencontainers.image.vendor=All Things Linux
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.documentation=https://github.com/allthingslinux/tux/blob/main/README.md
+      - name: Generate PR Version
+        id: pr_version
         run: |
-          VERSION="pr-${{ github.event.number }}-$(echo "${{ github.sha }}" | cut -c1-7)"
-          {
-            echo "version=$VERSION"
-            echo "git_sha=${{ github.sha }}"
-            echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-          } >> "$GITHUB_OUTPUT"
+          # Generate git describe format for PR builds to match VERSIONING.md expectations
+          PR_VERSION="pr-${{ github.event.number }}-$(echo "${{ github.sha }}" | cut -c1-7)"
+          echo "version=$PR_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Generated PR version: $PR_VERSION"
       - name: Build
         uses: docker/build-push-action@v6
         timeout-minutes: 10
@@ -67,20 +81,12 @@ jobs:
           load: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: tux:pr-${{ github.event.number }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            VERSION=${{ steps.version.outputs.version }}
-            GIT_SHA=${{ steps.version.outputs.git_sha }}
-            BUILD_DATE=${{ steps.version.outputs.build_date }}
-          annotations: |
-            org.opencontainers.image.title="Tux"
-            org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community"
-            org.opencontainers.image.source="https://github.com/allthingslinux/tux"
-            org.opencontainers.image.licenses="GPL-3.0"
-            org.opencontainers.image.authors="All Things Linux"
-            org.opencontainers.image.vendor="All Things Linux"
-            org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.documentation="https://github.com/allthingslinux/tux/blob/main/README.md"
+            VERSION=${{ steps.pr_version.outputs.version }}
+            GIT_SHA=${{ github.sha }}
+            BUILD_DATE=${{ fromJSON(steps.meta.outputs.labels)['org.opencontainers.image.created'] }}
       - name: Complete
         run: |
           echo "✅ Docker build validation completed successfully"
@@ -133,15 +139,33 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Prepare Version
-        id: version
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+          labels: |
+            org.opencontainers.image.title=Tux
+            org.opencontainers.image.description=Tux - The all in one discord bot for the All Things Linux Community
+            org.opencontainers.image.source=https://github.com/allthingslinux/tux
+            org.opencontainers.image.licenses=GPL-3.0
+            org.opencontainers.image.authors=All Things Linux
+            org.opencontainers.image.vendor=All Things Linux
+            org.opencontainers.image.documentation=https://github.com/allthingslinux/tux/blob/main/README.md
+      - name: Generate Release Version
+        id: release_version
         run: |
-          VERSION="${GITHUB_REF#refs/tags/}"
-          {
-            echo "version=$VERSION"
-            echo "git_sha=${{ github.sha }}"
-            echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-          } >> "$GITHUB_OUTPUT"
+          # Generate git describe format for release builds to match VERSIONING.md expectations
+          # This ensures the VERSION file contains the exact format expected by __init__.py
+          TAG_VERSION="${GITHUB_REF#refs/tags/}"
+          CLEAN_VERSION="${TAG_VERSION#v}"  # Remove 'v' prefix if present
+          RELEASE_VERSION="$CLEAN_VERSION"
+          echo "version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Generated release version: $RELEASE_VERSION"
       - name: Build & Push
         uses: docker/build-push-action@v6
         timeout-minutes: 15
@@ -150,22 +174,12 @@ jobs:
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            VERSION=${{ steps.version.outputs.version }}
-            GIT_SHA=${{ steps.version.outputs.git_sha }}
-            BUILD_DATE=${{ steps.version.outputs.build_date }}
-          annotations: |
-            org.opencontainers.image.title="Tux"
-            org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community"
-            org.opencontainers.image.source="https://github.com/allthingslinux/tux"
-            org.opencontainers.image.licenses="GPL-3.0"
-            org.opencontainers.image.authors="All Things Linux"
-            org.opencontainers.image.vendor="All Things Linux"
-            org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.documentation="https://github.com/allthingslinux/tux/blob/main/README.md"
+            VERSION=${{ steps.release_version.outputs.version }}
+            GIT_SHA=${{ github.sha }}
+            BUILD_DATE=${{ fromJSON(steps.meta.outputs.labels)['org.opencontainers.image.created'] }}
       - name: Scan Final Image
         if: always()
         uses: reviewdog/action-trivy@v1
@@ -173,8 +187,7 @@ jobs:
         with:
           github_token: ${{ github.token }}
           trivy_command: image
-          trivy_target: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version
-            }}
+          trivy_target: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           trivy_version: v0.63.0
           level: warning
           reporter: github-pr-review

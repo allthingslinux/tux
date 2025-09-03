@@ -144,6 +144,7 @@ ARG BUILD_DATE=""
 # Generate version file using build args with fallback
 # PERFORMANCE: Version is determined at build time, not runtime
 # SECURITY: Git operations happen outside container, only VERSION string is passed in
+# The new unified version system will use this VERSION file as priority 2
 RUN set -eux; \
     if [ -n "$VERSION" ]; then \
     # Use provided version from build args (preferred for all builds)
