@@ -97,23 +97,27 @@ It is designed to provide a variety of features to the server, including moderat
 ### Setup & Workflow
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/allthingslinux/tux.git
    cd tux
    ```
 
 2. **Install dependencies:**
+
    ```bash
    uv sync
    ```
 
 3. **Configure your environment:**
+
    ```bash
    cp env.example .env
    # Edit .env with your bot tokens and database URLs
    ```
 
 4. **Start the bot:**
+
    ```bash
    # Auto-detects environment (defaults to development)
    make start
