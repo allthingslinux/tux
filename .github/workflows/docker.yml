@@ -86,7 +86,7 @@ jobs:
           build-args: |
             VERSION=${{ steps.pr_version.outputs.version }}
             GIT_SHA=${{ github.sha }}
-            BUILD_DATE=${{ fromJSON(steps.meta.outputs.labels)['org.opencontainers.image.created'] }}
+            BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
       - name: Complete
         run: |
           echo "✅ Docker build validation completed successfully"
@@ -179,7 +179,7 @@ jobs:
           build-args: |
             VERSION=${{ steps.release_version.outputs.version }}
             GIT_SHA=${{ github.sha }}
-            BUILD_DATE=${{ fromJSON(steps.meta.outputs.labels)['org.opencontainers.image.created'] }}
+            BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
       - name: Scan Final Image
         if: always()
         uses: reviewdog/action-trivy@v1
@@ -213,7 +213,9 @@ jobs:
           delete-only-untagged-versions: true
       - name: Cleanup Summary
         run: |-
-          echo "## 🐳 Docker Registry Cleanup" >> "$GITHUB_STEP_SUMMARY"
-          echo "- **Policy**: Keep 15 versions, remove untagged" >> "$GITHUB_STEP_SUMMARY"
-          echo "- **Schedule**: Weekly cleanup" >> "$GITHUB_STEP_SUMMARY"
-          echo "- **Status**: ✅ Cleanup completed" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "## 🐳 Docker Registry Cleanup"
+            echo "- **Policy**: Keep 15 versions, remove untagged"
+            echo "- **Schedule**: Weekly cleanup"
+            echo "- **Status**: ✅ Cleanup completed"
+          } >> "$GITHUB_STEP_SUMMARY"

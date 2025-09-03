@@ -44,7 +44,7 @@ runs:
       shell: bash
       working-directory: ${{ inputs.workdir }}
       run: |
-        uv run basedpyright ${{ inputs.basedpyright_flags }} | \
+        (uv run basedpyright ${{ inputs.basedpyright_flags }} || true) | \
         reviewdog -f=rdjson \
           -reporter=${{ inputs.reporter }} \
           -level=${{ inputs.level }} \
