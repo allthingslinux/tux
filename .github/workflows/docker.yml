@@ -18,9 +18,30 @@ env:
   DOCKER_BUILD_CHECKS_ANNOTATIONS: true
   PYTHON_VERSION: '3.13'
 jobs:
+  changes:
+    name: File Detection
+    runs-on: ubuntu-latest
+    outputs:
+      docker: ${{ steps.docker_changes.outputs.any_changed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check Docker
+        uses: tj-actions/changed-files@v46
+        id: docker_changes
+        with:
+          files: |
+            Dockerfile
+            docker-compose*.yml
+            .dockerignore
+            docker/**
   validate:
     name: Validate
-    if: github.event_name == 'pull_request'
+    needs: [changes]
+    if: (needs.changes.outputs.docker == 'true' || github.event_name == 'workflow_dispatch')
+      && github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read

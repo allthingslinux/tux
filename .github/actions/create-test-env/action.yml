@@ -1,11 +1,8 @@
 ---
 name: Create Test Environment
-description: Create .env file with test configuration for CI/testing purposes
+description: Create .env file with test configuration for CI/testing purposes using
+  pydantic settings
 inputs:
-  database-url:
-    description: Database URL for testing
-    required: false
-    default: sqlite:///tmp/test.db
   bot-token:
     description: Bot token for testing
     required: false
@@ -18,20 +15,33 @@ runs:
   using: composite
   steps:
     # TEST ENVIRONMENT CONFIGURATION
-    # Creates isolated test environment with safe defaults
+    # Creates isolated test environment with safe defaults for pydantic settings
     - name: Create test environment file
       shell: bash
       run: |-
-        # Create .env file for CI/testing with required values
+        # Create .env file for CI/testing with pydantic settings format
         cat > .env << EOF
-        DEV_DATABASE_URL=${{ inputs.database-url }}
-        PROD_DATABASE_URL=${{ inputs.database-url }}
-        DEV_BOT_TOKEN=${{ inputs.bot-token }}
-        PROD_BOT_TOKEN=${{ inputs.bot-token }}
+        # Core configuration
+        DEBUG=True
+
+        # Bot token
+        BOT_TOKEN=${{ inputs.bot-token }}
+
+        # Database configuration (tests use py-pglite, so these are just defaults)
+        POSTGRES_HOST=localhost
+        POSTGRES_PORT=5432
+        POSTGRES_DB=tuxdb_test
+        POSTGRES_USER=tuxuser_test
+        POSTGRES_PASSWORD=tuxpass_test
+
+        # Bot info defaults
+        BOT_INFO__BOT_NAME=Tux Test
+        BOT_INFO__BOT_VERSION=0.0.0-test
+        BOT_INFO__PREFIX=$
         EOF
 
         # Add any additional environment variables if provided
         if [ -n "${{ inputs.additional-vars }}" ]; then
           echo "${{ inputs.additional-vars }}" >> .env
         fi
-        echo "✅ Test environment file created"
+        echo "✅ Test environment file created with pydantic settings format"

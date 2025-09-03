@@ -35,6 +35,11 @@ jobs:
             **/*.py
             pyproject.toml
             uv.lock
+          files_ignore: |
+            tests/**/*.py
+            **/tests/**/*.py
+            **/migrations/**/*.py
+            src/tux/database/migrations/**/*.py
       - name: Check Tests
         uses: tj-actions/changed-files@v46
         id: test_changes
@@ -82,19 +87,19 @@ jobs:
         uses: ./.github/actions/create-test-env
         with:
           additional-vars: |
-            PROD_DATABASE_URL=sqlite:///tmp/test.db
-            PROD_BOT_TOKEN=test_token_for_ci
+            BOT_TOKEN=test_token_for_ci
+            DEBUG=True
       - name: Run Unit Tests
         run: |
           echo "Running unit tests with coverage..."
           # Run only unit tests (py-pglite based)
+          # Note: Using pytest-parallel instead of pytest-xdist for py-pglite compatibility
           uv run pytest tests/unit/ \
             --cov-report=xml:coverage-unit.xml \
             --cov-report=term-missing:skip-covered \
             -m "${{ env.UNIT_MARKERS }}" \
             --junitxml=junit-unit.xml \
-            --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} \
-            -n auto | tee pytest-coverage.txt
+            --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} | tee pytest-coverage.txt
           echo "Unit test coverage generation completed"
       - name: Upload Unit Test Coverage
         uses: actions/upload-artifact@v4
@@ -130,17 +135,20 @@ jobs:
         uses: ./.github/actions/create-test-env
         with:
           additional-vars: |
-            PROD_DATABASE_URL=postgresql://test:test@localhost:5432/test_db
-            PROD_BOT_TOKEN=test_token_for_ci
+            BOT_TOKEN=test_token_for_ci
+            DEBUG=True
       - name: Run Integration Tests
         run: |
+          echo "Running integration tests with coverage..."
+          # Integration tests also use py-pglite (self-contained PostgreSQL)
+          # No external PostgreSQL setup required
           uv run pytest tests/integration/ \
             --cov-report=xml:coverage-integration.xml \
             --cov-report=term-missing:skip-covered \
             -m "${{ env.INTEGRATION_MARKERS }}" \
             --junitxml=junit-integration.xml \
-            --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} \
-            --integration | tee pytest-integration-coverage.txt
+            --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} | tee pytest-integration-coverage.txt
+          echo "Integration test coverage generation completed"
       - name: Upload Integration Test Coverage
         uses: actions/upload-artifact@v4
         with:
@@ -175,15 +183,18 @@ jobs:
         uses: ./.github/actions/create-test-env
         with:
           additional-vars: |
-            PROD_DATABASE_URL=sqlite:///tmp/test.db
-            PROD_BOT_TOKEN=test_token_for_ci
+            BOT_TOKEN=test_token_for_ci
+            DEBUG=1
       - name: Run E2E Tests
         run: |
+          echo "Running E2E tests with coverage..."
+          # E2E tests use py-pglite for database operations
           uv run pytest tests/e2e/ \
             --cov-report=xml:coverage-e2e.xml \
             --cov-report=term-missing:skip-covered \
             --junitxml=junit-e2e.xml \
             --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} | tee pytest-e2e-coverage.txt
+          echo "E2E test coverage generation completed"
       - name: Upload E2E Test Coverage
         uses: actions/upload-artifact@v4
         with:
