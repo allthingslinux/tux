@@ -8,7 +8,7 @@ with proper separation of concerns and extensibility.
 from scripts.base import BaseCLI
 from scripts.db import DatabaseCLI
 from scripts.dev import DevCLI
-from scripts.docker import DockerCLI
+from scripts.docker_cli import DockerCLI
 from scripts.docs import DocsCLI
 from scripts.registry import Command, CommandGroup, CommandRegistry
 from scripts.rich_utils import RichCLI

@@ -6,6 +6,7 @@ A unified interface for all Docker operations using the clean CLI infrastructure
 """
 
 import contextlib
+import os
 import re
 import subprocess
 import sys
@@ -14,6 +15,12 @@ from pathlib import Path
 from typing import Annotated, Any
 
 import typer
+
+# Import docker at module level to avoid import issues
+try:
+    import docker
+except ImportError:
+    docker = None
 
 # Add src to path
 src_path = Path(__file__).parent.parent / "src"
@@ -45,8 +52,22 @@ class DockerCLI(BaseCLI):
 
     def __init__(self):
         super().__init__(name="docker", description="Docker CLI - A unified interface for all Docker operations")
+        self._docker_client = None
         self._setup_command_registry()
         self._setup_commands()
+
+    def _get_docker_client(self):
+        """Get or create Docker client."""
+        if self._docker_client is None:
+            if docker is None:
+                msg = "Docker SDK not available. Install with: pip install docker"
+                raise ImportError(msg)
+            try:
+                self._docker_client = docker.from_env()
+            except Exception as e:
+                self.rich.print_error(f"Failed to connect to Docker: {e}")
+                raise
+        return self._docker_client
 
     def _setup_command_registry(self) -> None:
         """Setup the command registry with all Docker commands."""
@@ -54,7 +75,7 @@ class DockerCLI(BaseCLI):
         all_commands = [
             # Docker Compose commands
             Command("build", self.build, "Build Docker images"),
-            Command("up", self.up, "Start Docker services"),
+            Command("up", self.up, "Start Docker services with smart orchestration"),
             Command("down", self.down, "Stop Docker services"),
             Command("logs", self.logs, "Show Docker service logs"),
             Command("ps", self.ps, "List running Docker containers"),
@@ -88,6 +109,30 @@ class DockerCLI(BaseCLI):
         """Get the system Docker command path."""
         return "/usr/bin/docker"
 
+    def _get_docker_host(self) -> str | None:
+        """Get the Docker host from environment variables."""
+        return os.environ.get("DOCKER_HOST")
+
+    def _setup_docker_host(self) -> bool:
+        """Auto-detect and setup Docker host."""
+        # Check if we're already configured
+        if self._get_docker_host():
+            return True
+
+        # Try common Docker socket locations
+        docker_sockets = [
+            f"{os.environ.get('XDG_RUNTIME_DIR', '/run/user/1000')}/docker.sock",
+            "/run/user/1000/docker.sock",
+            "/var/run/docker.sock",
+        ]
+
+        for socket_path in docker_sockets:
+            if Path(socket_path).exists():
+                os.environ["DOCKER_HOST"] = f"unix://{socket_path}"
+                return True
+
+        return False
+
     def _get_compose_base_cmd(self) -> list[str]:
         """Get the base docker compose command."""
         # Use the system docker command to avoid conflicts with the virtual env docker script
@@ -96,6 +141,13 @@ class DockerCLI(BaseCLI):
     def _run_command(self, cmd: list[str], env: dict[str, str] | None = None) -> bool:
         """Run a command and return success status."""
         try:
+            # Ensure DOCKER_HOST is set
+            if env is None:
+                env = os.environ.copy()
+            if not env.get("DOCKER_HOST"):
+                self._setup_docker_host()
+                env.update(os.environ)
+
             self.rich.print_info(f"Running: {' '.join(cmd)}")
             subprocess.run(cmd, check=True, env=env)
         except subprocess.CalledProcessError as e:
@@ -115,20 +167,32 @@ class DockerCLI(BaseCLI):
             self.rich.print_error(f"Command failed: {' '.join(cmd)}")
             raise
 
-    def _check_docker(self) -> bool:
+    def _check_docker(self) -> bool:  # sourcery skip: class-extract-method, extract-duplicate-method
         """Check if Docker is available and running."""
+        # Auto-detect Docker host
+        self._setup_docker_host()
+
         try:
-            result = subprocess.run(
-                [self._get_docker_cmd(), "version"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                check=True,
-            )
-        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
+            client = self._get_docker_client()
+            # Test basic connectivity
+            client.ping()
+            # Test if we can list containers
+            client.containers.list()
+        except Exception:
+            if docker_host := self._get_docker_host():
+                self.rich.print_error(f"Docker daemon not accessible at {docker_host}")
+                self.rich.print_info("💡 Try:")
+                self.rich.print_info("   - Start Docker: systemctl --user start docker")
+                self.rich.print_info("   - Or use system Docker: sudo systemctl start docker")
+            else:
+                self.rich.print_error("Docker daemon not running or accessible")
+                self.rich.print_info("💡 Try:")
+                self.rich.print_info("   - Start Docker: systemctl --user start docker")
+                self.rich.print_info("   - Or use system Docker: sudo systemctl start docker")
+                self.rich.print_info("   - Or set DOCKER_HOST: export DOCKER_HOST=unix://$XDG_RUNTIME_DIR/docker.sock")
             return False
         else:
-            return result.returncode == 0
+            return True
 
     def _get_tux_resources(self, resource_type: str) -> list[str]:
         """Get Tux-related Docker resources safely."""
@@ -278,8 +342,7 @@ class DockerCLI(BaseCLI):
         if target:
             cmd.extend(["--target", target])
 
-        success = self._run_command(cmd)
-        if success:
+        if self._run_command(cmd):
             self.rich.print_success("Docker build completed successfully")
 
     def up(
@@ -287,26 +350,143 @@ class DockerCLI(BaseCLI):
         detach: Annotated[bool, typer.Option("-d", "--detach", help="Run in detached mode")] = False,
         build: Annotated[bool, typer.Option("--build", help="Build images before starting")] = False,
         watch: Annotated[bool, typer.Option("--watch", help="Watch for changes")] = False,
+        production: Annotated[bool, typer.Option("--production", help="Enable production mode features")] = False,
+        monitor: Annotated[bool, typer.Option("--monitor", help="Enable monitoring and auto-cleanup")] = True,
+        max_restart_attempts: Annotated[
+            int,
+            typer.Option("--max-restart-attempts", help="Maximum restart attempts"),
+        ] = 3,
+        restart_delay: Annotated[
+            int,
+            typer.Option("--restart-delay", help="Delay between restart attempts (seconds)"),
+        ] = 5,
         services: Annotated[list[str] | None, typer.Argument(help="Services to start")] = None,
     ) -> None:
-        """Start Docker services."""
+        """Start Docker services with smart orchestration."""
         self.rich.print_section("🚀 Starting Docker Services", "blue")
 
-        cmd = [*self._get_compose_base_cmd(), "up"]
+        # Check if Docker is available
+        if not self._check_docker():
+            self.rich.print_error("Cannot start services - Docker is not available")
+            return
 
+        # Set environment variables
+        env = {}
+        if production:
+            env |= {
+                "MAX_STARTUP_ATTEMPTS": "5",
+                "STARTUP_DELAY": "10",
+            }
+            self.rich.print_info("🏭 Production mode enabled:")
+            self.rich.print_info("   - Enhanced retry logic (5 attempts, 10s delay)")
+            self.rich.print_info("   - Production-optimized settings")
+        else:
+            env["DEBUG"] = "true"
+            self.rich.print_info("🚀 Development mode enabled:")
+            self.rich.print_info("   - Debug mode")
+            self.rich.print_info("   - Development-friendly logging")
+
+        if watch:
+            self.rich.print_info("   - Hot reload enabled")
+
+        if monitor:
+            self.rich.print_info("   - Smart monitoring enabled")
+            self.rich.print_info("   - Auto-cleanup on configuration errors")
+            self.rich.print_info("   - Automatic service orchestration")
+
+        # If monitoring is enabled and not in detached mode, use monitoring logic
+        if monitor and not detach:
+            self._start_with_monitoring(
+                build=build,
+                watch=watch,
+                services=services,
+                env=env,
+                max_restart_attempts=max_restart_attempts,
+                restart_delay=restart_delay,
+            )
+        else:
+            # Standard docker compose up
+            cmd = [*self._get_compose_base_cmd(), "up"]
+            if services:
+                cmd.extend(services)
+            if detach:
+                cmd.append("-d")
+            if build:
+                cmd.append("--build")
+            if watch:
+                cmd.append("--watch")
+
+            if self._run_command(cmd, env=env):
+                self.rich.print_success("Docker services started successfully")
+
+    def _start_with_monitoring(
+        self,
+        build: bool,
+        watch: bool,
+        services: list[str] | None,
+        env: dict[str, str],
+        max_restart_attempts: int,
+        restart_delay: int,
+    ) -> None:
+        """Start services with monitoring and auto-cleanup."""
+        # Start services first
+        self.rich.print_info("⏳ Starting services...")
+        cmd = [*self._get_compose_base_cmd(), "up", "-d"]
+        if build:
+            cmd.append("--build")
         if services:
             cmd.extend(services)
 
-        if detach:
-            cmd.append("-d")
-        if build:
-            cmd.append("--build")
-        if watch:
-            cmd.append("--watch")
+        if not self._run_command(cmd, env=env):
+            self.rich.print_error("❌ Failed to start services")
+            return
 
-        success = self._run_command(cmd)
-        if success:
-            self.rich.print_success("Docker services started successfully")
+        # Monitor loop
+        self.rich.print_info("👀 Starting monitor loop...")
+        restart_attempts = 0
+        bot_container = "tux"
+
+        try:
+            while True:
+                # Check bot health
+                if not self._check_container_health(bot_container):
+                    restart_attempts += 1
+                    self.rich.print_warning(
+                        f"⚠️  Bot failure detected (attempt {restart_attempts}/{max_restart_attempts})",
+                    )
+
+                    # Check for configuration errors
+                    if self._has_configuration_error(bot_container):
+                        self.rich.print_error("❌ Bot has configuration issues (likely missing/invalid token)")
+                        self.rich.print_info("📋 Recent logs:")
+                        self._show_container_logs(bot_container, tail=20)
+                        self.rich.print_error(
+                            "🛑 Shutting down all services - configuration issues won't be fixed by restarting",
+                        )
+                        break
+
+                    if restart_attempts >= max_restart_attempts:
+                        self.rich.print_error("❌ Maximum restart attempts reached. Shutting down all services.")
+                        break
+
+                    self.rich.print_info(f"🔄 Restarting services in {restart_delay} seconds...")
+                    time.sleep(restart_delay)
+
+                    if not self._run_command(cmd, env=env):
+                        self.rich.print_error("❌ Failed to restart services")
+                        break
+                else:
+                    # Reset restart counter on successful health check
+                    restart_attempts = 0
+
+                time.sleep(10)  # Check every 10 seconds
+
+        except KeyboardInterrupt:
+            self.rich.print_info("🛑 Monitor stopped by user (Ctrl+C)")
+        finally:
+            self.rich.print_info("🧹 Cleaning up all services...")
+            self._run_command([*self._get_compose_base_cmd(), "down"])
+            self.rich.print_success("✅ Cleanup complete")
 
     def down(
         self,
@@ -327,8 +507,7 @@ class DockerCLI(BaseCLI):
         if remove_orphans:
             cmd.append("--remove-orphans")
 
-        success = self._run_command(cmd)
-        if success:
+        if self._run_command(cmd):
             self.rich.print_success("Docker services stopped successfully")
 
     def logs(
@@ -350,15 +529,13 @@ class DockerCLI(BaseCLI):
         if tail:
             cmd.extend(["-n", str(tail)])
 
-        success = self._run_command(cmd)
-        if success:
+        if self._run_command(cmd):
             self.rich.print_success("Logs displayed successfully")
 
     def ps(self) -> None:
         """List running Docker containers."""
         self.rich.print_section("📊 Docker Containers", "blue")
-        success = self._run_command([*self._get_compose_base_cmd(), "ps"])
-        if success:
+        if self._run_command([*self._get_compose_base_cmd(), "ps"]):
             self.rich.print_success("Container list displayed successfully")
 
     def exec(
@@ -375,8 +552,7 @@ class DockerCLI(BaseCLI):
         else:
             cmd.append("bash")
 
-        success = self._run_command(cmd)
-        if success:
+        if self._run_command(cmd):
             self.rich.print_success("Command executed successfully")
 
     def shell(
@@ -389,8 +565,7 @@ class DockerCLI(BaseCLI):
         service_name = service or "tux"
         cmd = [*self._get_compose_base_cmd(), "exec", service_name, "bash"]
 
-        success = self._run_command(cmd)
-        if success:
+        if self._run_command(cmd):
             self.rich.print_success("Shell opened successfully")
 
     def restart(
@@ -403,30 +578,93 @@ class DockerCLI(BaseCLI):
         service_name = service or "tux"
         cmd = [*self._get_compose_base_cmd(), "restart", service_name]
 
-        success = self._run_command(cmd)
-        if success:
+        if self._run_command(cmd):
             self.rich.print_success("Docker services restarted successfully")
 
     def health(self) -> None:
         """Check container health status."""
         self.rich.print_section("🏥 Container Health Status", "blue")
-        success = self._run_command([*self._get_compose_base_cmd(), "ps"])
-        if success:
+        if self._run_command([*self._get_compose_base_cmd(), "ps"]):
             self.rich.print_success("Health check completed successfully")
 
     def config(self) -> None:
         """Validate Docker Compose configuration."""
         self.rich.print_section("⚙️ Docker Compose Configuration", "blue")
-        success = self._run_command([*self._get_compose_base_cmd(), "config"])
-        if success:
+        if self._run_command([*self._get_compose_base_cmd(), "config"]):
             self.rich.print_success("Configuration validation completed successfully")
 
     def pull(self) -> None:
         """Pull latest Docker images."""
         self.rich.print_section("⬇️ Pulling Docker Images", "blue")
-        success = self._run_command([*self._get_compose_base_cmd(), "pull"])
-        if success:
+        if self._run_command([*self._get_compose_base_cmd(), "pull"]):
             self.rich.print_success("Docker images pulled successfully")
+
+    def _check_container_health(self, container_name: str) -> bool:
+        # sourcery skip: assign-if-exp, boolean-if-exp-identity, hoist-statement-from-if, reintroduce-else
+        """Check if a container is running and healthy."""
+        try:
+            client = self._get_docker_client()
+            container = client.containers.get(container_name)
+
+            if container.status != "running":
+                return False
+
+            if health := container.attrs.get("State", {}).get("Health", {}):
+                health_status = health.get("Status", "")
+                if health_status == "unhealthy":
+                    return False
+                if health_status == "healthy":
+                    return True
+                # Starting or no health check
+                return True
+
+                # No health check configured, assume healthy if running
+        except Exception:
+            return False
+        else:
+            return True
+
+    def _has_configuration_error(self, container_name: str) -> bool:
+        """Check if container logs indicate configuration errors."""
+        try:
+            client = self._get_docker_client()
+            container = client.containers.get(container_name)
+            logs = container.logs(tail=20, timestamps=False).decode("utf-8")
+            # Strip ANSI codes and convert to lowercase for pattern matching
+            clean_logs = self._strip_ansi_codes(logs).lower()
+
+            # Look for configuration error patterns
+            error_patterns = [
+                "token.*missing",
+                "discord.*token",
+                "bot.*token.*invalid",
+                "configuration.*error",
+                "no bot token provided",
+            ]
+
+            return any(pattern in clean_logs for pattern in error_patterns)
+        except Exception:
+            return False
+
+    def _show_container_logs(self, container_name: str, tail: int = 20) -> None:
+        """Show container logs."""
+        try:
+            client = self._get_docker_client()
+            container = client.containers.get(container_name)
+            logs = container.logs(tail=tail, timestamps=False).decode("utf-8")
+            for line in logs.split("\n"):
+                if line.strip():
+                    # Strip ANSI color codes for cleaner display
+                    clean_line = self._strip_ansi_codes(line)
+                    self.rich.print_info(f"  {clean_line}")
+        except Exception as e:
+            self.rich.print_warning(f"Failed to get logs: {e}")
+
+    def _strip_ansi_codes(self, text: str) -> str:
+        """Strip ANSI color codes from text."""
+        # Remove ANSI escape sequences
+        ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+        return ansi_escape.sub("", text)
 
     # ============================================================================
     # DOCKER MANAGEMENT COMMANDS

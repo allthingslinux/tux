@@ -42,6 +42,7 @@ RUN apt-get update && \
     libpango-1.0-0=1.56.3-1 \
     libpangocairo-1.0-0=1.56.3-1 \
     shared-mime-info=2.4-5+b2 \
+    tini=0.19.0-1 \
     # Cleanup package manager caches to reduce layer size
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -378,6 +379,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 
 # Application entry point and default command
 # DEPLOYMENT: Configures how the container starts in production
+# Use tini as init system for proper signal handling and zombie process cleanup
 COPY --chmod=755 docker/entrypoint.sh /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
 CMD []

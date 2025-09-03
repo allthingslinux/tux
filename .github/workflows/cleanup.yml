@@ -55,11 +55,13 @@ jobs:
               CLEAN_BUILD_CACHE="true"
               ;;
           esac
-          echo "keep_versions=$KEEP_VERSIONS" >> "$GITHUB_OUTPUT"
-          echo "remove_untagged=$REMOVE_UNTAGGED" >> "$GITHUB_OUTPUT"
-          echo "clean_build_cache=$CLEAN_BUILD_CACHE" >> "$GITHUB_OUTPUT"
-          echo "cleanup_type=${{ github.event.inputs.cleanup_type || 'standard' }}" >> "$GITHUB_OUTPUT"
-          echo "dry_run=${{ github.event.inputs.dry_run || 'false' }}" >> "$GITHUB_OUTPUT"
+          {
+            echo "keep_versions=$KEEP_VERSIONS"
+            echo "remove_untagged=$REMOVE_UNTAGGED"
+            echo "clean_build_cache=$CLEAN_BUILD_CACHE"
+            echo "cleanup_type=${{ github.event.inputs.cleanup_type || 'standard' }}"
+            echo "dry_run=${{ github.event.inputs.dry_run || 'false' }}"
+          } >> "$GITHUB_OUTPUT"
       - name: Registry Analysis
         id: analysis
         run: |
@@ -92,8 +94,10 @@ jobs:
             echo '```'
             echo ""
           } >> "$GITHUB_STEP_SUMMARY"
-          echo "size_gb=$SIZE_GB" >> "$GITHUB_OUTPUT"
-          echo "version_count=$VERSION_COUNT" >> "$GITHUB_OUTPUT"
+          {
+            echo "size_gb=$SIZE_GB"
+            echo "version_count=$VERSION_COUNT"
+          } >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Clean Old Versions

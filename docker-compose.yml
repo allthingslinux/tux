@@ -68,13 +68,16 @@ services:
       # Migration control
       USE_LOCAL_MIGRATIONS: ${USE_LOCAL_MIGRATIONS:-true}
       FORCE_MIGRATE: ${FORCE_MIGRATE:-false}
+      # Startup configuration
+      MAX_STARTUP_ATTEMPTS: ${MAX_STARTUP_ATTEMPTS:-3}
+      STARTUP_DELAY: ${STARTUP_DELAY:-5}
       # Database configuration for Docker
       POSTGRES_HOST: tux-postgres
       POSTGRES_PORT: 5432
       POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
       POSTGRES_USER: ${POSTGRES_USER:-tuxuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeThisToAStrongPassword123!}
-    restart: "no"
+    restart: unless-stopped
     depends_on:
       tux-postgres:
         condition: service_healthy
@@ -83,11 +86,25 @@ services:
         - CMD
         - python
         - -c
-        - "import sys; sys.exit(0)"
+        - |
+          import sys
+          try:
+              import tux.shared.config.env
+              # Additional check: ensure bot token is configured
+              from tux.shared.config.env import CONFIG
+              if not CONFIG.bot_token:
+                  print("Bot token not configured", file=sys.stderr)
+                  sys.exit(1)
+              print("Health check passed")
+          except Exception as e:
+              print(f"Health check failed: {e}", file=sys.stderr)
+              sys.exit(1)
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    # Production: Stop dependent services when this service fails
+    stop_grace_period: 30s
     security_opt:
       - no-new-privileges:true
     read_only: true
