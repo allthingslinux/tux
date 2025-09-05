@@ -107,7 +107,12 @@ class EmbedCreator:
                 EmbedType.NOTE: (CONST.EMBED_COLORS["NOTE"], CONST.EMBED_ICONS["NOTE"], "Note"),
             }
 
-            embed.color = custom_color or type_settings[embed_type][0]
+            embed.color = type_settings[embed_type][0] if custom_color is None else custom_color
+            # Ensure color is a discord.Colour object
+            if isinstance(embed.color, int):
+                embed.color = discord.Colour(embed.color)  # type: ignore
+            elif embed.color is None or not isinstance(embed.color, discord.Colour):
+                embed.color = type_settings[embed_type][0]
 
             if not hide_author:
                 embed.set_author(
