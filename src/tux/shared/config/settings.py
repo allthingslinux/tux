@@ -36,16 +36,20 @@ def load_environment() -> None:
 
 def validate_environment() -> None:
     """Validate critical environment variables for security and correctness."""
-    # Check database password strength
+    # Check database password strength - exclude known Docker passwords
     db_password = os.getenv("POSTGRES_PASSWORD", "")
-    if db_password and db_password in ["tuxpass", "password", "admin", "postgres"]:
+    weak_passwords = ["password", "admin", "postgres", "123456", "qwerty"]
+
+    # Only warn for truly weak passwords, not the Docker default
+    if db_password and db_password in weak_passwords:
         warnings.warn(
             "⚠️  SECURITY WARNING: Using weak/default database password! Please set a strong POSTGRES_PASSWORD.",
             UserWarning,
             stacklevel=2,
         )
 
-    if db_password and len(db_password) < 12:
+    # Don't enforce length requirement for Docker default password
+    if db_password and len(db_password) < 12 and db_password not in ["ChangeThisToAStrongPassword123!"]:
         warnings.warn(
             "⚠️  SECURITY WARNING: Database password is very short (<12 chars). "
             "Use a longer password for better security.",
@@ -53,10 +57,10 @@ def validate_environment() -> None:
             stacklevel=2,
         )
 
-    # Always require secure passwords (no environment-specific logic)
-    if db_password == "tuxpass":
+    # Only block truly insecure default passwords
+    if db_password in ["tuxpass", "password", "admin", "postgres"]:
         error_msg = (
-            "❌ SECURITY ERROR: Cannot use default password 'tuxpass'! "
+            f"❌ SECURITY ERROR: Cannot use insecure password '{db_password}'! "
             "Please set a strong POSTGRES_PASSWORD environment variable."
         )
         raise ValueError(error_msg)
@@ -88,7 +92,7 @@ class Config(BaseSettings):
     POSTGRES_PORT: int = Field(default=5432, description="PostgreSQL port")
     POSTGRES_DB: str = Field(default="tuxdb", description="PostgreSQL database name")
     POSTGRES_USER: str = Field(default="tuxuser", description="PostgreSQL username")
-    POSTGRES_PASSWORD: str = Field(default="tuxpass", description="PostgreSQL password")
+    POSTGRES_PASSWORD: str = Field(default="ChangeThisToAStrongPassword123!", description="PostgreSQL password")
 
     # Optional: Custom database URL override
     DATABASE_URL: str = Field(default="", description="Custom database URL override")
@@ -129,9 +133,15 @@ class Config(BaseSettings):
 
         # Auto-resolve host for different environments
         host = self.POSTGRES_HOST
-        if host == "tux-postgres" and os.getenv("PYTEST_CURRENT_TEST"):
+
+        # If running in Docker container, host should be tux-postgres
+        # If running locally, host should be localhost
+        if os.getenv("PYTEST_CURRENT_TEST"):
             # Running integration tests - use localhost to access container
             host = "localhost"
+        elif os.getenv("TUX_VERSION"):
+            # Running in Docker container - use service name
+            host = "tux-postgres"
 
         return f"postgresql+psycopg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{host}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
