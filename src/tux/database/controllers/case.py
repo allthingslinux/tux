@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from tux.database.controllers.base import BaseController
+from tux.database.controllers.guild import GuildController
 from tux.database.models import Case
 from tux.database.service import DatabaseService
 
@@ -39,7 +41,26 @@ class CaseController(BaseController[Case]):
         case_status: bool = True,
         **kwargs: Any,
     ) -> Case:
-        """Create a new case."""
+        """Create a new case with auto-generated case number."""
+        # Generate case number based on guild's case count
+        logger = logging.getLogger(__name__)
+
+        guild_controller = GuildController(self.db)
+        guild = await guild_controller.get_by_id(guild_id)
+
+        if not guild:
+            msg = f"Guild {guild_id} not found"
+            raise ValueError(msg)
+
+        # Increment case count to get the next case number
+        case_number = guild.case_count + 1
+        logger.info(f"Generated case number {case_number} for guild {guild_id} (current count: {guild.case_count})")
+
+        # Update guild's case count
+        await guild_controller.update_by_id(guild_id, case_count=case_number)
+        logger.info(f"Updated guild {guild_id} case count to {case_number}")
+
+        # Create the case with the generated case number
         return await self.create(
             case_type=case_type,
             case_user_id=case_user_id,
@@ -47,12 +68,17 @@ class CaseController(BaseController[Case]):
             guild_id=guild_id,
             case_reason=case_reason,
             case_status=case_status,
+            case_number=case_number,
             **kwargs,
         )
 
     async def update_case(self, case_id: int, **kwargs: Any) -> Case | None:
         """Update a case by ID."""
         return await self.update_by_id(case_id, **kwargs)
+
+    async def update_audit_log_message_id(self, case_id: int, message_id: int) -> Case | None:
+        """Update the audit log message ID for a case."""
+        return await self.update_by_id(case_id, audit_log_message_id=message_id)
 
     async def close_case(self, case_id: int) -> Case | None:
         """Close a case by setting its status to False."""
@@ -82,7 +108,7 @@ class CaseController(BaseController[Case]):
     # Additional methods that module files expect
     async def insert_case(self, **kwargs: Any) -> Case:
         """Insert a new case - alias for create for backward compatibility."""
-        return await self.create(**kwargs)
+        return await self.create_case(**kwargs)
 
     async def is_user_under_restriction(
         self,

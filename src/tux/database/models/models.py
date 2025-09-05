@@ -414,6 +414,9 @@ class Case(BaseModel, table=True):
     case_expires_at: datetime | None = Field(default=None)
     case_metadata: dict[str, str] | None = Field(default=None, sa_type=JSON)
 
+    # Discord message ID for audit log message - allows editing the message if case is updated
+    audit_log_message_id: int | None = Field(default=None, sa_type=BigInteger)
+
     guild_id: int = Field(foreign_key="guild.guild_id", ondelete="CASCADE", sa_type=BigInteger)
 
     # Relationship back to Guild - using sa_relationship
