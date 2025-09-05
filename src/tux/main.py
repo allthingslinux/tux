@@ -38,7 +38,7 @@ def run() -> int:
 
     except SystemExit as e:
         # Handle SystemExit from bot setup failures
-        return e.code
+        return int(e.code) if e.code is not None else 1
 
     except KeyboardInterrupt:
         logger.info("Shutdown requested by user")

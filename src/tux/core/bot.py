@@ -244,7 +244,7 @@ class Tux(commands.Bot):
                             async with engine.begin() as conn:
                                 await conn.run_sync(SQLModel.metadata.create_all, checkfirst=True)
                         else:  # Sync engine
-                            SQLModel.metadata.create_all(engine, checkfirst=True)
+                            SQLModel.metadata.create_all(engine, checkfirst=True)  # type: ignore
                         logger.info("✅ Database tables created/verified")
                 except Exception as table_error:
                     logger.warning(f"⚠️  Table creation failed (may already exist): {table_error}")

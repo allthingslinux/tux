@@ -206,6 +206,17 @@ class TuxApp:
         )
 
         try:
+            # Wait for bot setup to complete before connecting to Discord
+            logger.info("🔧 Waiting for bot setup to complete...")
+            if self.bot.setup_task:
+                try:
+                    await self.bot.setup_task
+                    logger.info("✅ Bot setup completed successfully")
+                except Exception as setup_error:
+                    logger.error(f"❌ Bot setup failed: {setup_error}")
+                    # Re-raise to be handled by main exception handler
+                    raise
+
             # Use login() + connect() separately to avoid blocking
             logger.info("🔐 Logging in to Discord...")
             await self.bot.login(CONFIG.BOT_TOKEN)
@@ -218,7 +229,7 @@ class TuxApp:
             shutdown_task = asyncio.create_task(self._monitor_shutdown(), name="shutdown_monitor")
 
             # Wait for either the connection to complete or shutdown to be requested
-            done, pending = await asyncio.wait([self._connect_task, shutdown_task], return_when=asyncio.FIRST_COMPLETED)
+            _, pending = await asyncio.wait([self._connect_task, shutdown_task], return_when=asyncio.FIRST_COMPLETED)
 
             # Cancel any pending tasks
             for task in pending:
