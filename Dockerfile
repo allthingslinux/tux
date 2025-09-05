@@ -36,13 +36,13 @@ RUN echo 'path-exclude /usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends --no-install-suggests \
-    git=1:2.47.2-0.2 \
-    libcairo2=1.18.4-1+b1 \
-    libgdk-pixbuf-2.0-0=2.42.12+dfsg-4 \
-    libpango-1.0-0=1.56.3-1 \
-    libpangocairo-1.0-0=1.56.3-1 \
-    shared-mime-info=2.4-5+b2 \
-    tini=0.19.0-1 \
+    git \
+    libcairo2 \
+    libgdk-pixbuf-2.0-0 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    shared-mime-info \
+    # tini \
     # Cleanup package manager caches to reduce layer size
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -381,5 +381,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 # DEPLOYMENT: Configures how the container starts in production
 # Use tini as init system for proper signal handling and zombie process cleanup
 COPY --chmod=755 docker/entrypoint.sh /entrypoint.sh
-ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
 CMD []

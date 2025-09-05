@@ -77,7 +77,7 @@ validate_config() {
     fi
 
     # Test configuration loading
-    if ! python -c "import tux.shared.config.env; print('✅ Configuration loaded successfully')"; then
+    if ! python -c "import tux.shared.config.settings; print('✅ Configuration loaded successfully')"; then
         echo "❌ Failed to load configuration"
         return 1
     fi

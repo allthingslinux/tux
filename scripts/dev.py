@@ -84,6 +84,8 @@ class DevCLI(BaseCLI):
         success = self._run_tool_command(["uv", "run", "ruff", "check", "."], "Linting completed successfully")
         if not success:
             self.rich.print_error("Linting failed - check output above for details")
+            msg = "Linting failed"
+            raise RuntimeError(msg)
 
     def lint_fix(self) -> None:
         self.rich.print_section("🔧 Running Linting with Fixes", "blue")
@@ -105,6 +107,8 @@ class DevCLI(BaseCLI):
         success = self._run_tool_command(["uv", "run", "basedpyright"], "Type checking completed successfully")
         if not success:
             self.rich.print_error("Type checking failed - check output above for details")
+            msg = "Type checking failed"
+            raise RuntimeError(msg)
 
     def pre_commit(self) -> None:
         self.rich.print_section("✅ Running Pre-commit Checks", "blue")
@@ -114,6 +118,8 @@ class DevCLI(BaseCLI):
         )
         if not success:
             self.rich.print_error("Pre-commit checks failed - check output above for details")
+            msg = "Pre-commit checks failed"
+            raise RuntimeError(msg)
 
     def run_all_checks(self) -> None:
         self.rich.print_section("🚀 Running All Development Checks", "blue")

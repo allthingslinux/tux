@@ -93,7 +93,7 @@ test = [
     "pytest-html>=4.1.1,<5",
     "pytest-benchmark>=5.1.0,<6",
     "pytest-alembic>=0.12.0,<0.13",
-    "py-pglite[sqlalchemy, asyncpg]>=0.2.0,<1",
+    "py-pglite[sqlalchemy, asyncpg]>=0.5.1,<1",
     "pytest-parallel>=0.1.1",
 ]
 docs = [
@@ -300,26 +300,54 @@ addopts = [
     "--strict-markers",
     "--tb=short",
     "--randomly-seed=last",
+    # Verbose logging
+    "-v",
+    "--color=yes",
+    "--durations=10",
+    "--capture=no",
+    "--log-cli-level=DEBUG",
+    "--log-cli-format=%(asctime)s [%(levelname)8s] %(name)s: %(message)s",
+    "--log-cli-date-format=%H:%M:%S",
+    "--log-file=logs/pytest.log",
+    "--log-file-level=DEBUG",
+    "--log-file-format=%(asctime)s [%(levelname)8s] %(filename)s:%(lineno)d %(funcName)s(): %(message)s",
+    "--log-file-date-format=%Y-%m-%d %H:%M:%S",
     # Async support
     "--asyncio-mode=auto",
 ]
 
+# Markers
+markers = [
+    "unit: Unit tests (uses py-pglite)",
+    "integration: Integration tests (uses py-pglite)",
+    "slow: Slow tests (>5 seconds)",
+    "database: Tests requiring database access",
+    "async: Async tests",
+]
+
+# Filter warnings
+filterwarnings = [
+    "ignore::sqlalchemy.exc.SAWarning",
+    "ignore::ResourceWarning",
+    "ignore::RuntimeWarning",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+# Minimum version
+minversion = "7.0"
+
+# Test timeout (in seconds)
+timeout = 300
+
 # AsyncIO configuration
 asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
+asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "function"
 
 # Python path for imports
 pythonpath = ["src"]
 
-# Test markers for organization
-markers = [
-    "unit: Unit tests (fast, isolated with py-pglite)",
-    "integration: Integration tests (slower, real PostgreSQL)",
-    "e2e: End-to-end tests (full system)",
-    "slow: Tests that take longer to run (>5 seconds)",
-    "benchmark: Performance benchmark tests",
-]
 
 # Directories to skip during test discovery
 norecursedirs = [
@@ -346,9 +374,6 @@ log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 junit_family = "xunit2"
 junit_logging = "no"
 
-# Performance and timeout settings
-timeout = 300
-timeout_method = "thread"
 
 # pytest-alembic configuration
 [tool.pytest-alembic]

@@ -345,13 +345,13 @@ class DockerCLI(BaseCLI):
         if self._run_command(cmd):
             self.rich.print_success("Docker build completed successfully")
 
-    def up(
+    def up(  # noqa: PLR0912
         self,
         detach: Annotated[bool, typer.Option("-d", "--detach", help="Run in detached mode")] = False,
         build: Annotated[bool, typer.Option("--build", help="Build images before starting")] = False,
         watch: Annotated[bool, typer.Option("--watch", help="Watch for changes")] = False,
         production: Annotated[bool, typer.Option("--production", help="Enable production mode features")] = False,
-        monitor: Annotated[bool, typer.Option("--monitor", help="Enable monitoring and auto-cleanup")] = True,
+        monitor: Annotated[bool, typer.Option("--monitor", help="Enable monitoring and auto-cleanup")] = False,
         max_restart_attempts: Annotated[
             int,
             typer.Option("--max-restart-attempts", help="Maximum restart attempts"),
@@ -394,8 +394,21 @@ class DockerCLI(BaseCLI):
             self.rich.print_info("   - Auto-cleanup on configuration errors")
             self.rich.print_info("   - Automatic service orchestration")
 
+        # If not in detached mode and no monitoring requested, use standard foreground mode
+        if not detach and not monitor:
+            # Standard docker compose up in foreground
+            cmd = [*self._get_compose_base_cmd(), "up"]
+            if services:
+                cmd.extend(services)
+            if build:
+                cmd.append("--build")
+            if watch:
+                cmd.append("--watch")
+
+            if self._run_command(cmd, env=env):
+                self.rich.print_success("Docker services started successfully")
         # If monitoring is enabled and not in detached mode, use monitoring logic
-        if monitor and not detach:
+        elif monitor and not detach:
             self._start_with_monitoring(
                 build=build,
                 watch=watch,
@@ -405,7 +418,7 @@ class DockerCLI(BaseCLI):
                 restart_delay=restart_delay,
             )
         else:
-            # Standard docker compose up
+            # Standard docker compose up in detached mode
             cmd = [*self._get_compose_base_cmd(), "up"]
             if services:
                 cmd.extend(services)
