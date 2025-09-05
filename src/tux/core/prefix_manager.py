@@ -233,5 +233,4 @@ class PrefixManager:
         return {
             "cached_prefixes": len(self._prefix_cache),
             "cache_loaded": int(self._cache_loaded),
-            "default_prefix": self._default_prefix,
         }
