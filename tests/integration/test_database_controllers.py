@@ -1,12 +1,4 @@
 import pytest
-from collections.abc import Generator
-
-from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.engine import Engine
-
-from py_pglite.config import PGliteConfig
-from py_pglite.sqlalchemy import SQLAlchemyPGliteManager
-
 from tux.database.controllers import (
     GuildController, GuildConfigController,
 )
@@ -16,30 +8,6 @@ from tux.database.controllers import (
 TEST_GUILD_ID = 123456789012345678
 TEST_USER_ID = 987654321098765432
 TEST_CHANNEL_ID = 876543210987654321
-
-
-@pytest.fixture(scope="module")
-def sqlalchemy_pglite_engine() -> Generator[Engine]:
-    """Module-scoped PGlite engine for clean test isolation."""
-    manager = SQLAlchemyPGliteManager(PGliteConfig())
-    manager.start()
-    manager.wait_for_ready()
-
-    try:
-        yield manager.get_engine()
-    finally:
-        manager.stop()
-
-
-@pytest.fixture(scope="function")
-def sqlalchemy_session(sqlalchemy_pglite_engine: Engine) -> Generator[Session]:
-    """Function-scoped session with automatic cleanup."""
-    session_local = sessionmaker(bind=sqlalchemy_pglite_engine)
-    session = session_local()
-    try:
-        yield session
-    finally:
-        session.close()
 
 
 class TestGuildController:

@@ -23,6 +23,7 @@ from sqlmodel import SQLModel, Session, select
 from tux.database.models.models import Guild, GuildConfig
 from tux.database.service import DatabaseService
 from tux.database.controllers import GuildController, GuildConfigController
+from tests.conftest import TEST_GUILD_ID, TEST_CHANNEL_ID, TEST_USER_ID, TEST_MODERATOR_ID
 
 
 # =============================================================================
@@ -33,23 +34,24 @@ class TestDatabaseModelsUnit:
     """🏃‍♂️ Unit tests for database models using sync SQLModel + py-pglite."""
 
     @pytest.mark.unit
-    async def test_guild_model_creation(self, db_session) -> None:
+    async def test_guild_model_creation(self, db_service: DatabaseService) -> None:
         """Test Guild model creation and basic operations."""
-        # Create guild using SQLModel with py-pglite
-        guild = Guild(guild_id=123456789, case_count=0)
-        db_session.add(guild)
-        await db_session.commit()
-        await db_session.refresh(guild)
+        async with db_service.session() as session:
+            # Create guild using SQLModel with py-pglite
+            guild = Guild(guild_id=123456789, case_count=0)
+            session.add(guild)
+            await session.commit()
+            await session.refresh(guild)
 
-        # Verify creation
-        assert guild.guild_id == 123456789
-        assert guild.case_count == 0
-        assert guild.guild_joined_at is not None
+            # Verify creation
+            assert guild.guild_id == 123456789
+            assert guild.case_count == 0
+            assert guild.guild_joined_at is not None
 
-        # Test query
-        result = await db_session.get(Guild, 123456789)
-        assert result is not None
-        assert result.guild_id == 123456789
+            # Test query
+            result = await session.get(Guild, 123456789)
+            assert result is not None
+            assert result.guild_id == 123456789
 
     @pytest.mark.unit
     async def test_guild_config_model_creation(self, db_session) -> None:

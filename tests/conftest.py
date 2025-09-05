@@ -1,433 +1,491 @@
 """
-Clean Test Configuration - Self-Contained Testing
+🧪 Clean Test Configuration - Simplified Architecture
 
-This provides clean, maintainable test fixtures using the async-agnostic
-DatabaseService architecture with self-contained databases:
-
-- ALL TESTS: py-pglite (self-contained PostgreSQL in-memory)
-- No external dependencies required - tests run anywhere
-- Clean separation of concerns with proper dependency injection
-
-Key Features:
-- Simple, clean fixtures using DatabaseServiceFactory
-- Self-contained testing with py-pglite
-- Full PostgreSQL compatibility
-- Module-scoped managers with function-scoped sessions for optimal performance
-- Unique socket paths to prevent conflicts between test modules
-- Robust cleanup with retry logic
+This conftest.py follows the clean slate approach:
+- Function-scoped fixtures (not session-scoped)
+- Simple py-pglite integration
+- No complex schema management
+- Follows py-pglite examples exactly
 """
 
-import tempfile
-import time
-import uuid
-from collections.abc import AsyncGenerator
-from datetime import datetime, UTC
-from pathlib import Path
+import logging
+import pytest
+import pytest_asyncio
+import subprocess
+import atexit
 from typing import Any
 
-import pytest
-from loguru import logger
+from py_pglite import PGliteConfig
+from py_pglite.sqlalchemy import SQLAlchemyAsyncPGliteManager
+from sqlmodel import SQLModel
 
-from tux.database.service import DatabaseServiceABC, DatabaseServiceFactory, DatabaseMode
-from tux.database.models.models import Guild, GuildConfig
-from tests.fixtures.database_fixtures import TEST_GUILD_ID, TEST_CHANNEL_ID
+from tux.database.service import DatabaseService
+from tux.database.controllers import GuildController, GuildConfigController
 
-# ============================================================================
-# PYTEST CONFIGURATION
-# ============================================================================
+# Test constants
+TEST_GUILD_ID = 123456789012345678
+TEST_USER_ID = 987654321098765432
+TEST_CHANNEL_ID = 876543210987654321
+TEST_MODERATOR_ID = 555666777888999000
 
-def pytest_configure(config: pytest.Config) -> None:
-    """Configure pytest with custom markers and settings."""
-    # Note: Integration tests now use py-pglite (self-contained)
-    # No need to set DATABASE_URL - fixtures handle connection setup
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-    # Add custom markers
-    config.addinivalue_line("markers", "unit: mark test as a unit test (uses py-pglite)")
-    config.addinivalue_line("markers", "integration: mark test as an integration test (uses py-pglite)")
-    config.addinivalue_line("markers", "slow: mark test as slow (>5 seconds)")
+# =============================================================================
+# PGLITE PROCESS CLEANUP - Prevent process accumulation
+# =============================================================================
 
-    # Filter expected warnings to reduce noise in test output
-    config.addinivalue_line(
-        "filterwarnings",
-        "ignore:New instance .* with identity key .* conflicts with persistent instance:sqlalchemy.exc.SAWarning",
-    )
+def _cleanup_all_pglite_processes() -> None:
+    """Clean up all pglite_manager.js processes.
 
-
-# ============================================================================
-# DATABASE FIXTURES - Self-contained py-pglite (Optimized!)
-# ============================================================================
-
-@pytest.fixture
-def db_service() -> DatabaseServiceABC:
-    """Function-scoped async database service using py-pglite."""
-    return DatabaseServiceFactory.create(DatabaseMode.ASYNC, echo=False)
-
-
-@pytest.fixture
-async def fresh_db(db_service: DatabaseServiceABC) -> AsyncGenerator[DatabaseServiceABC]:
-    """Function-scoped fresh test database with optimized py-pglite setup.
-
-    PERFORMANCE OPTIMIZATION: Creates unique work directories but reuses
-    node_modules from a shared location. Creates unique socket paths for isolation.
+    This function ensures all PGlite processes are terminated to prevent
+    memory leaks and process accumulation during testing.
     """
-    logger.info("🔧 Setting up optimized fresh database")
-
-    # Create unique configuration for this test to prevent conflicts
-    from py_pglite import PGliteManager, PGliteConfig
-
-    config = PGliteConfig()
-
-    # Create unique work directory for this test to prevent conflicts
-    unique_work_dir = Path(tempfile.gettempdir()) / f"tux_pglite_work_{uuid.uuid4().hex[:8]}"
-    unique_work_dir.mkdir(mode=0o700, exist_ok=True)
-    config.work_dir = unique_work_dir
-
-    # Increase timeout for npm install reliability
-    config.timeout = 120  # 2 minutes for npm install
-
-    # Create unique socket directory for this test to prevent conflicts
-    socket_dir = (
-        Path(tempfile.gettempdir()) / f"tux-pglite-{uuid.uuid4().hex[:8]}"
-    )
-    socket_dir.mkdir(mode=0o700, exist_ok=True)  # Restrict to user only
-    config.socket_path = str(socket_dir / ".s.PGSQL.5432")
-
-    logger.info(f"📂 Socket path: {config.socket_path}")
-    logger.info(f"📁 Work dir: {config.work_dir}")
-
-    manager = PGliteManager(config)
+    logger.info("🧹 Starting comprehensive PGlite process cleanup...")
 
     try:
-        logger.info("⚡ Starting PGlite (npm install should be cached!)")
-        manager.start()
-        logger.info("✅ PGlite ready!")
+        # Use ps command to find PGlite processes
+        result = subprocess.run(
+            ["ps", "aux"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
 
-        # Get connection string from the manager
-        pglite_url = manager.get_connection_string()
+        if result.returncode != 0:
+            logger.warning("⚠️ Failed to get process list")
+            return
 
-        await db_service.connect(pglite_url)
-        logger.info("✅ Database connected")
+        pglite_processes = []
+        for line in result.stdout.split('\n'):
+            if 'pglite_manager.js' in line and 'grep' not in line:
+                parts = line.split()
+                if len(parts) >= 2:
+                    pid = parts[1]
+                    pglite_processes.append(pid)
+                    logger.debug(f"🔍 Found PGlite process: PID {pid}")
 
-        # Initial database schema setup
-        await _reset_database_schema(db_service)
-        logger.info("🏗️ Schema setup complete")
+        if not pglite_processes:
+            logger.info("✅ No PGlite processes found to clean up")
+            return
 
-        yield db_service
+        logger.info(f"🔧 Found {len(pglite_processes)} PGlite processes to clean up")
 
-    except Exception as e:
-        logger.error(f"❌ Failed to setup database: {e}")
-        raise
-    finally:
-        try:
-            await db_service.disconnect()
-            logger.info("🔌 Database disconnected")
-        except Exception as e:
-            logger.warning(f"⚠️ Error disconnecting database: {e}")
-        finally:
+        # Kill all PGlite processes
+        for pid in pglite_processes:
             try:
-                manager.stop()
-                logger.info("🛑 PGlite stopped")
+                logger.info(f"🔪 Terminating PGlite process: PID {pid}")
+                subprocess.run(
+                    ["kill", "-TERM", pid],
+                    timeout=5,
+                    check=False,
+                )
+                # Wait a moment for graceful shutdown
+                subprocess.run(
+                    ["sleep", "0.5"],
+                    timeout=1,
+                    check=False,
+                )
+                # Force kill if still running
+                subprocess.run(
+                    ["kill", "-KILL", pid],
+                    timeout=5,
+                    check=False,
+                )
+                logger.debug(f"✅ Successfully terminated PGlite process: PID {pid}")
+            except subprocess.TimeoutExpired:
+                logger.warning(f"⚠️ Timeout killing process {pid}")
             except Exception as e:
-                logger.warning(f"⚠️ Error stopping PGlite: {e}")
+                logger.warning(f"⚠️ Error killing process {pid}: {e}")
 
-
-@pytest.fixture
-async def db_session(fresh_db: DatabaseServiceABC) -> AsyncGenerator[Any]:
-    """Function-scoped database session with per-test data cleanup.
-
-    PERFORMANCE: Uses fast truncation instead of full schema reset.
-    """
-    logger.debug("⚡ Setting up database session with fast cleanup...")
-
-    try:
-        # Fast per-test cleanup: just truncate data, don't recreate schema
-        await _fast_cleanup_database(fresh_db)
-
-        async with fresh_db.session() as session:
-            logger.debug("✅ Database session ready")
-            yield session
+        logger.info("✅ PGlite process cleanup completed")
 
     except Exception as e:
-        logger.error(f"❌ Failed to setup database session: {e}")
-        raise
-    finally:
-        logger.debug("🧹 Session cleanup complete")
-
-
-# Alias for backward compatibility
-@pytest.fixture
-def integration_db_service(db_service: DatabaseServiceABC) -> DatabaseServiceABC:
-    """Alias for db_service for backward compatibility."""
-    return db_service
-
-
-@pytest.fixture
-async def fresh_integration_db(fresh_db: DatabaseServiceABC) -> AsyncGenerator[DatabaseServiceABC]:
-    """Alias for fresh_db for backward compatibility."""
-    yield fresh_db
-
-
-async def _fast_cleanup_database(service: DatabaseServiceABC) -> None:
-    """Fast per-test cleanup: truncate data without recreating schema.
-
-    This is MUCH faster than full schema reset - just clears data while
-    keeping the table structure intact. Perfect for session-scoped databases.
-    """
-    from sqlalchemy import text
-
-    logger.debug("🧹 Starting fast database cleanup (truncate only)...")
-
-    try:
-        async with service.session() as session:
-            # Get all table names from information_schema
-            result = await session.execute(
-                text("""
-                SELECT table_name
-                FROM information_schema.tables
-                WHERE table_schema = 'public'
-                AND table_type = 'BASE TABLE'
-            """),
-            )
-
-            table_names = [row[0] for row in result]
-            logger.debug(f"Found tables to truncate: {table_names}")
-
-            if table_names:
-                # Disable foreign key checks for faster cleanup
-                await session.execute(text("SET session_replication_role = replica;"))
-
-                # Truncate all tables (fast data cleanup)
-                for table_name in table_names:
-                    await session.execute(
-                        text(
-                            f'TRUNCATE TABLE "{table_name}" '
-                            "RESTART IDENTITY CASCADE;",
-                        ),
-                    )
-
-                # Re-enable foreign key checks
-                await session.execute(text("SET session_replication_role = DEFAULT;"))
-
-                # Commit the cleanup
-                await session.commit()
-                logger.debug("✅ Fast database cleanup completed")
-            else:
-                logger.debug("ℹ️ No tables found to clean")
-
-    except Exception as e:
-        logger.error(f"❌ Fast database cleanup failed: {e}")
-        raise
-
-
-async def _reset_database_schema(service: DatabaseServiceABC) -> None:
-    """Full database schema reset with retry logic and robust cleanup.
-
-    Used only once per session for initial setup. For per-test cleanup,
-    use _fast_cleanup_database() instead - it's much faster!
-    """
-    from sqlalchemy import text
-
-    logger.info("🏗️ Starting full database schema reset (session setup)...")
-
-    # Retry logic for robust cleanup
-    retry_count = 3
-    for attempt in range(retry_count):
+        logger.error(f"❌ Error during PGlite cleanup: {e}")
+        # Fallback to psutil if subprocess approach fails
         try:
-            async with service.session() as session:
-                # Clean up data before schema reset with retry logic
-                logger.info("Starting database cleanup before schema reset...")
-
-                # Get all table names from information_schema
-                result = await session.execute(
-                    text("""
-                    SELECT table_name
-                    FROM information_schema.tables
-                    WHERE table_schema = 'public'
-                    AND table_type = 'BASE TABLE'
-                """),
-                )
-
-                table_names = [row[0] for row in result]
-                logger.info(f"Found tables to clean: {table_names}")
-
-                if table_names:
-                    # Disable foreign key checks for faster cleanup
-                    await session.execute(text("SET session_replication_role = replica;"))
-
-                    # Truncate all tables
-                    for table_name in table_names:
-                        logger.info(f"Truncating table: {table_name}")
-                        await session.execute(
-                            text(
-                                f'TRUNCATE TABLE "{table_name}" '
-                                "RESTART IDENTITY CASCADE;",
-                            ),
-                        )
-
-                    # Re-enable foreign key checks
-                    await session.execute(text("SET session_replication_role = DEFAULT;"))
-
-                    # Commit the cleanup
-                    await session.commit()
-                    logger.info("Database cleanup completed successfully")
-                else:
-                    logger.info("No tables found to clean")
-
-                # Now drop and recreate schema
-                # Drop all tables first
-                result = await session.execute(
-                    text("""
-                    SELECT tablename FROM pg_tables
-                    WHERE schemaname = 'public'
-                """),
-                )
-                tables = result.fetchall()
-
-                for (table_name,) in tables:
-                    await session.execute(text(f"DROP TABLE IF EXISTS {table_name} CASCADE"))
-
-                # Drop all enum types
-                result = await session.execute(
-                    text("""
-                    SELECT typname FROM pg_type
-                    WHERE typtype = 'e' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public')
-                """),
-                )
-                enums = result.fetchall()
-
-                for (enum_name,) in enums:
+            import psutil
+            logger.info("🔄 Attempting fallback cleanup with psutil...")
+            for proc in psutil.process_iter(["pid", "name", "cmdline"]):
+                if proc.info["cmdline"] and any("pglite_manager.js" in cmd for cmd in proc.info["cmdline"]):
                     try:
-                        await session.execute(text(f"DROP TYPE IF EXISTS {enum_name} CASCADE"))
+                        logger.info(f"🔪 Fallback: Killing PGlite process PID {proc.info['pid']}")
+                        proc.kill()
+                        proc.wait(timeout=2)
+                        logger.debug(f"✅ Fallback: Successfully killed PID {proc.info['pid']}")
+                    except (psutil.NoSuchProcess, psutil.AccessDenied):
+                        pass
                     except Exception as e:
-                        logger.warning(f"Could not drop enum {enum_name}: {e}")
-                        # Some enums might be referenced, continue anyway
-
-                await session.commit()
-
-                # Create tables using SQLModel with retry logic
-                from sqlmodel import SQLModel
-
-                if service.engine:
-                    for create_attempt in range(3):
-                        try:
-                            async with service.engine.begin() as conn:
-                                await conn.run_sync(SQLModel.metadata.create_all, checkfirst=False)
-                            break
-                        except Exception as e:
-                            logger.warning(f"Table creation attempt {create_attempt + 1} failed: {e}")
-                            if create_attempt == 2:
-                                raise
-                            time.sleep(0.5)
-
-                logger.info("✅ Database schema reset complete")
-                return  # Success, exit retry loop
-
+                        logger.warning(f"⚠️ Fallback: Error killing PID {proc.info['pid']}: {e}")
+            logger.info("✅ Fallback cleanup completed")
+        except ImportError:
+            logger.warning("⚠️ psutil not available for fallback cleanup")
         except Exception as e:
-            logger.info(f"Database cleanup/schema reset attempt {attempt + 1} failed: {e}")
-            if attempt == retry_count - 1:
-                logger.error("Database cleanup/schema reset failed after all retries")
-                raise
-            else:
-                time.sleep(0.5)  # Brief pause before retry
+            logger.error(f"❌ Fallback cleanup failed: {e}")
 
 
+def _monitor_pglite_processes() -> int:
+    """Monitor and count current PGlite processes.
+
+    Returns:
+        Number of PGlite processes currently running
+    """
+    try:
+        result = subprocess.run(
+            ["ps", "aux"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+
+        if result.returncode != 0:
+            return 0
+
+        return sum(
+            'pglite_manager.js' in line and 'grep' not in line
+            for line in result.stdout.split('\n')
+        )
+
+    except Exception as e:
+        logger.warning(f"⚠️ Error monitoring PGlite processes: {e}")
+        return 0
 
 
-
-# ============================================================================
-# ADDITIONAL FIXTURES FOR EXISTING TESTS
-# ============================================================================
-
-@pytest.fixture
-async def clean_db_service(fresh_db: DatabaseServiceABC) -> AsyncGenerator[DatabaseServiceABC]:
-    """Clean database service."""
-    yield fresh_db
-
-
-@pytest.fixture
-def async_db_service(db_service: DatabaseServiceABC) -> DatabaseServiceABC:
-    """Async database service."""
-    return db_service
-
-
-@pytest.fixture
-def integration_guild_controller(fresh_db: DatabaseServiceABC) -> Any:
-    """Guild controller for tests."""
-    from tux.database.controllers.guild import GuildController
-    return GuildController(fresh_db)
-
-
-@pytest.fixture
-def integration_guild_config_controller(fresh_db: DatabaseServiceABC) -> Any:
-    """Guild config controller for tests."""
-    from tux.database.controllers.guild_config import GuildConfigController
-    return GuildConfigController(fresh_db)
-
-
-@pytest.fixture
-def disconnected_async_db_service() -> DatabaseServiceABC:
-    """Disconnected async database service for testing connection scenarios."""
-    return DatabaseServiceFactory.create(DatabaseMode.ASYNC, echo=False)
+# Register cleanup function to run on exit
+atexit.register(_cleanup_all_pglite_processes)
 
 
 # =============================================================================
-# MODEL SAMPLE FIXTURES - For serialization and basic model tests
+# PYTEST HOOKS - Ensure cleanup happens
 # =============================================================================
 
-@pytest.fixture
-def sample_guild() -> Guild:
-    """Sample Guild model instance for testing."""
-    return Guild(
-        guild_id=TEST_GUILD_ID,
-        case_count=5,
-        guild_joined_at=datetime.now(UTC),
+def pytest_sessionfinish(session, exitstatus):
+    """Clean up PGlite processes after test session finishes."""
+    logger.info("🏁 Test session finished - cleaning up PGlite processes")
+    _cleanup_all_pglite_processes()
+
+    # Final verification
+    final_count = _monitor_pglite_processes()
+    if final_count > 0:
+        logger.warning(f"⚠️ {final_count} PGlite processes still running after session cleanup")
+    else:
+        logger.info("✅ All PGlite processes cleaned up after test session")
+
+
+def pytest_runtest_teardown(item, nextitem):
+    """Clean up PGlite processes after each test."""
+    # Disabled periodic cleanup to avoid interfering with running tests
+    # Cleanup is now handled at fixture level and session end
+    pass
+
+
+# =============================================================================
+# CORE DATABASE FIXTURES - Function-scoped, Simple
+# =============================================================================
+
+@pytest.fixture(scope="function")
+async def pglite_async_manager():
+    """Function-scoped PGlite async manager - fresh for each test."""
+    # Monitor processes before starting
+    initial_count = _monitor_pglite_processes()
+    if initial_count > 0:
+        logger.warning(f"⚠️ Found {initial_count} PGlite processes before test start - cleaning up")
+        _cleanup_all_pglite_processes()
+
+    logger.info("🔧 Creating fresh PGlite async manager")
+    config = PGliteConfig(use_tcp=False, cleanup_on_exit=True)  # Use Unix socket for simplicity
+    manager = SQLAlchemyAsyncPGliteManager(config)
+    manager.start()
+
+    # Verify process started
+    process_count = _monitor_pglite_processes()
+    logger.info(f"📊 PGlite processes after start: {process_count}")
+
+    yield manager
+
+    logger.info("🧹 Cleaning up PGlite async manager")
+    try:
+        manager.stop()
+        logger.info("✅ PGlite manager stopped successfully")
+    except Exception as e:
+        logger.warning(f"⚠️ Error stopping PGlite manager: {e}")
+
+    # Small delay to ensure test has fully completed
+    import time
+    time.sleep(0.1)
+
+    # Force cleanup of any remaining processes
+    _cleanup_all_pglite_processes()
+
+    # Verify cleanup
+    final_count = _monitor_pglite_processes()
+    if final_count > 0:
+        logger.warning(f"⚠️ {final_count} PGlite processes still running after cleanup")
+    else:
+        logger.info("✅ All PGlite processes cleaned up successfully")
+
+
+@pytest.fixture(scope="function")
+async def pglite_engine(pglite_async_manager):
+    """Function-scoped async engine with fresh schema per test."""
+    logger.info("🔧 Creating async engine from PGlite async manager")
+    engine = pglite_async_manager.get_engine()
+
+    # Create schema using py-pglite's recommended pattern
+    logger.info("🔧 Creating database schema")
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all, checkfirst=True)
+
+    logger.info("✅ Database schema created successfully")
+    yield engine
+    logger.info("🧹 Engine cleanup complete")
+
+
+@pytest.fixture(scope="function")
+async def db_service(pglite_engine):
+    """DatabaseService with fresh database per test."""
+    logger.info("🔧 Creating DatabaseService")
+    from tux.database.service import AsyncDatabaseService
+    service = AsyncDatabaseService(echo=False)
+
+    # Manually set the engine and session factory to use our PGlite engine
+    from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+    service._engine = pglite_engine
+    service._session_factory = async_sessionmaker(
+        pglite_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
     )
 
+    yield service
+    logger.info("🧹 DatabaseService cleanup complete")
 
-@pytest.fixture
-def sample_guild_config() -> GuildConfig:
-    """Sample GuildConfig model instance for testing."""
-    return GuildConfig(
-        guild_id=TEST_GUILD_ID,
-        prefix="!test",
+
+# =============================================================================
+# CONTROLLER FIXTURES - Simple and Direct
+# =============================================================================
+
+@pytest.fixture(scope="function")
+async def guild_controller(db_service: DatabaseService) -> GuildController:
+    """GuildController with fresh database per test."""
+    logger.info("🔧 Creating GuildController")
+    return GuildController(db_service)
+
+
+@pytest.fixture(scope="function")
+async def guild_config_controller(db_service: DatabaseService) -> GuildConfigController:
+    """GuildConfigController with fresh database per test."""
+    logger.info("🔧 Creating GuildConfigController")
+    return GuildConfigController(db_service)
+
+
+# =============================================================================
+# TEST DATA FIXTURES - Simple and Focused
+# =============================================================================
+
+@pytest.fixture(scope="function")
+async def sample_guild(guild_controller: GuildController) -> Any:
+    """Sample guild for testing."""
+    logger.info("🔧 Creating sample guild")
+    guild = await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
+    logger.info(f"✅ Created sample guild: {guild.guild_id}")
+    return guild
+
+
+@pytest.fixture(scope="function")
+async def sample_guild_with_config(guild_controller: GuildController, guild_config_controller: GuildConfigController) -> dict[str, Any]:
+    """Sample guild with config for testing."""
+    logger.info("🔧 Creating sample guild with config")
+
+    # Create guild
+    guild = await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
+
+    # Create config
+    config = await guild_config_controller.create_config(
+        guild_id=guild.guild_id,
+        prefix="!",
         mod_log_id=TEST_CHANNEL_ID,
+        audit_log_id=TEST_CHANNEL_ID + 1,
+        starboard_channel_id=TEST_CHANNEL_ID + 2,
+    )
+
+    logger.info(f"✅ Created guild with config: {guild.guild_id}")
+    return {
+        'guild': guild,
+        'config': config,
+        'guild_controller': guild_controller,
+        'guild_config_controller': guild_config_controller,
+    }
+
+
+# =============================================================================
+# INTEGRATION TEST FIXTURES - For complex integration scenarios
+# =============================================================================
+
+@pytest.fixture(scope="function")
+async def fresh_integration_db(pglite_engine):
+    """Fresh database service for integration tests."""
+    logger.info("🔧 Creating fresh integration database service")
+    from tux.database.service import AsyncDatabaseService
+    service = AsyncDatabaseService(echo=False)
+
+    # Manually set the engine and session factory to use our PGlite engine
+    from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+    service._engine = pglite_engine
+    service._session_factory = async_sessionmaker(
+        pglite_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+
+    yield service
+    logger.info("🧹 Fresh integration database cleanup complete")
+
+
+@pytest.fixture(scope="function")
+async def disconnected_async_db_service():
+    """Database service that's not connected for testing error scenarios."""
+    logger.info("🔧 Creating disconnected database service")
+    from tux.database.service import AsyncDatabaseService
+    # Don't set up engine or session factory - leave it disconnected
+    yield AsyncDatabaseService(echo=False)
+    logger.info("🧹 Disconnected database service cleanup complete")
+
+
+@pytest.fixture(scope="function")
+async def db_session(db_service: DatabaseService):
+    """Database session for direct database operations."""
+    logger.info("🔧 Creating database session")
+    async with db_service.session() as session:
+        yield session
+    logger.info("🧹 Database session cleanup complete")
+
+
+@pytest.fixture(scope="function")
+async def fresh_db(pglite_engine):
+    """Fresh database service for integration tests (alias for fresh_integration_db)."""
+    logger.info("🔧 Creating fresh database service")
+    from tux.database.service import AsyncDatabaseService
+    service = AsyncDatabaseService(echo=False)
+
+    # Manually set the engine and session factory to use our PGlite engine
+    from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+    service._engine = pglite_engine
+    service._session_factory = async_sessionmaker(
+        pglite_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+
+    yield service
+    logger.info("🧹 Fresh database cleanup complete")
+
+
+@pytest.fixture(scope="function")
+async def clean_db_service(pglite_engine):
+    """Clean database service for integration tests (alias for fresh_db)."""
+    logger.info("🔧 Creating clean database service")
+    from tux.database.service import AsyncDatabaseService
+    service = AsyncDatabaseService(echo=False)
+
+    # Manually set the engine and session factory to use our PGlite engine
+    from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+    service._engine = pglite_engine
+    service._session_factory = async_sessionmaker(
+        pglite_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+
+    yield service
+    logger.info("🧹 Clean database cleanup complete")
+
+
+@pytest.fixture(scope="function")
+async def integration_db_service(pglite_engine):
+    """Integration database service for integration tests (alias for fresh_integration_db)."""
+    logger.info("🔧 Creating integration database service")
+    from tux.database.service import AsyncDatabaseService
+    service = AsyncDatabaseService(echo=False)
+
+    # Manually set the engine and session factory to use our PGlite engine
+    from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+    service._engine = pglite_engine
+    service._session_factory = async_sessionmaker(
+        pglite_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+
+    yield service
+    logger.info("🧹 Integration database cleanup complete")
+
+
+# =============================================================================
+# PYTEST CONFIGURATION
+# =============================================================================
+
+def pytest_configure(config):
+    """Configure pytest with clean settings."""
+    config.addinivalue_line("markers", "integration: mark test as integration test")
+    config.addinivalue_line("markers", "unit: mark test as unit test")
+    config.addinivalue_line("markers", "slow: mark test as slow running")
+
+
+def pytest_collection_modifyitems(config, items):
+    """Modify test collection to add markers automatically."""
+    for item in items:
+        # Auto-mark integration tests
+        if "integration" in item.nodeid:
+            item.add_marker(pytest.mark.integration)
+        # Auto-mark unit tests
+        elif "unit" in item.nodeid:
+            item.add_marker(pytest.mark.unit)
+
+
+# =============================================================================
+# VALIDATION HELPERS
+# =============================================================================
+
+def validate_guild_structure(guild: Any) -> bool:
+    """Validate guild model structure and required fields."""
+    return (
+        hasattr(guild, 'guild_id') and
+        hasattr(guild, 'case_count') and
+        hasattr(guild, 'guild_joined_at') and
+        isinstance(guild.guild_id, int) and
+        isinstance(guild.case_count, int)
     )
 
 
-@pytest.fixture
-def multiple_guilds() -> list[Guild]:
-    """List of Guild model instances for testing."""
-    return [
-        Guild(
-            guild_id=TEST_GUILD_ID + i,
-            case_count=i,
-            guild_joined_at=datetime.now(UTC),
-        )
-        for i in range(5)
-    ]
+def validate_guild_config_structure(config: Any) -> bool:
+    """Validate guild config model structure and required fields."""
+    return (
+        hasattr(config, 'guild_id') and
+        hasattr(config, 'prefix') and
+        isinstance(config.guild_id, int) and
+        (config.prefix is None or isinstance(config.prefix, str))
+    )
 
 
-@pytest.fixture
-def populated_test_database() -> dict[str, Any]:
-    """Populated test database with sample data for performance testing."""
-    guilds = []
-    configs = []
+def validate_relationship_integrity(guild: Any, config: Any) -> bool:
+    """Validate relationship integrity between guild and config."""
+    return guild.guild_id == config.guild_id
 
-    for i in range(10):
-        guild = Guild(
-            guild_id=TEST_GUILD_ID + i,
-            case_count=i * 2,
-            guild_joined_at=datetime.now(UTC),
-        )
-        config = GuildConfig(
-            guild_id=TEST_GUILD_ID + i,
-            prefix=f"!guild{i}",
-            mod_log_id=TEST_CHANNEL_ID + i,
-        )
-        guilds.append(guild)
-        configs.append(config)
 
-    return {
-        "guilds": [{"guild": guild, "config": config} for guild, config in zip(guilds, configs)],
-        "total_guilds": len(guilds),
-    }
+# =============================================================================
+# LEGACY COMPATIBILITY - For Gradual Migration
+# =============================================================================
+
+# Keep these for any existing tests that might depend on them
+@pytest.fixture(scope="function")
+async def integration_guild_controller(guild_controller: GuildController) -> GuildController:
+    """Legacy compatibility - same as guild_controller."""
+    return guild_controller
+
+
+@pytest.fixture(scope="function")
+async def integration_guild_config_controller(guild_config_controller: GuildConfigController) -> GuildConfigController:
+    """Legacy compatibility - same as guild_config_controller."""
+    return guild_config_controller
