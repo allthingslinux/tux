@@ -81,7 +81,7 @@ RUN echo 'path-exclude /usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends --no-install-suggests \
-        git=1:2.47.2-0.2 \
+        git=1:2.47.3-0+deb13u1 \
         libcairo2=1.18.4-1+b1 \
         libgdk-pixbuf-2.0-0=2.42.12+dfsg-4 \
         libpango-1.0-0=1.56.3-1 \
