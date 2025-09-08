@@ -1326,14 +1326,14 @@ test = ["coverage[toml]", "ddt (>=1.1.1,!=1.4.3)", "mock ; python_version < \"3.
 
 [[package]]
 name = "griffe"
-version = "1.12.1"
+version = "1.14.0"
 description = "Signatures for entire Python programs. Extract the structure, the frame, the skeleton of your project, to generate API documentation or find breaking changes in your API."
 optional = false
 python-versions = ">=3.9"
 groups = ["docs"]
 files = [
-    {file = "griffe-1.12.1-py3-none-any.whl", hash = "sha256:2d7c12334de00089c31905424a00abcfd931b45b8b516967f224133903d302cc"},
-    {file = "griffe-1.12.1.tar.gz", hash = "sha256:29f5a6114c0aeda7d9c86a570f736883f8a2c5b38b57323d56b3d1c000565567"},
+    {file = "griffe-1.14.0-py3-none-any.whl", hash = "sha256:0e9d52832cccf0f7188cfe585ba962d2674b241c01916d780925df34873bceb0"},
+    {file = "griffe-1.14.0.tar.gz", hash = "sha256:9d2a15c1eca966d68e00517de5d69dd1bc5c9f2335ef6c1775362ba5b8651a13"},
 ]
 
 [package.dependencies]
@@ -1391,18 +1391,18 @@ griffe = ">=0.38"
 
 [[package]]
 name = "griffe-typingdoc"
-version = "0.2.8"
+version = "0.2.9"
 description = "Griffe extension for PEP 727 – Documentation Metadata in Typing."
 optional = false
 python-versions = ">=3.9"
 groups = ["docs"]
 files = [
-    {file = "griffe_typingdoc-0.2.8-py3-none-any.whl", hash = "sha256:a4ed3dd73b9d48311b138d8b317916a0589325a73c525236bf5969a8fe2626b1"},
-    {file = "griffe_typingdoc-0.2.8.tar.gz", hash = "sha256:36f2c2f2568240a5d0ab462153d1f3cfec01a9cc56b2291f16ce7869f0f7af05"},
+    {file = "griffe_typingdoc-0.2.9-py3-none-any.whl", hash = "sha256:cc6b1e34d64e1659da5b3d37506214834bc8fbb62b081b2fb43563ee5cdaf8f5"},
+    {file = "griffe_typingdoc-0.2.9.tar.gz", hash = "sha256:99c05bf09a9c391464e3937718c9a5a1055bb95ed549f4f7706be9a71578669c"},
 ]
 
 [package.dependencies]
-griffe = ">=0.49"
+griffe = ">=1.14"
 typing-extensions = ">=4.7"
 
 [[package]]
