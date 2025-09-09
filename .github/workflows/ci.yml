@@ -164,6 +164,7 @@ jobs:
           reporter: ${{ env.REVIEWDOG_REPORTER }}
           filter_mode: ${{ env.REVIEWDOG_FILTER_MODE }}
           fail_level: ${{ env.REVIEWDOG_FAIL_LEVEL }}
+          markdownlint_flags: -c .markdownlint.yaml
   shell:
     name: Shell
     runs-on: ubuntu-latest
