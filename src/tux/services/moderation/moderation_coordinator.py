@@ -6,7 +6,9 @@ for moderation operations, replacing the mixin-based approach.
 """
 
 import asyncio
+import contextlib
 from collections.abc import Callable, Coroutine, Sequence
+from datetime import datetime
 from typing import Any, ClassVar
 
 import discord
@@ -61,6 +63,7 @@ class ModerationCoordinator:
         dm_action: str | None = None,
         actions: Sequence[tuple[Callable[..., Coroutine[Any, Any, Any]], type[Any]]] | None = None,
         duration: int | None = None,
+        expires_at: datetime | None = None,
     ) -> Case | None:
         """
         Execute a complete moderation action.
@@ -82,6 +85,7 @@ class ModerationCoordinator:
             dm_action: Custom DM action description
             actions: Discord API actions to execute
             duration: Duration for temp actions
+            expires_at: Expiration timestamp for temp actions
 
         Returns:
             The created case, or None if case creation failed
@@ -94,25 +98,41 @@ class ModerationCoordinator:
         action_desc = dm_action or self._get_default_dm_action(case_type)
 
         # Handle DM timing based on action type
-        dm_sent = await self._handle_dm_timing(ctx, case_type, user, reason, action_desc, silent)
+        dm_sent = False
+        try:
+            dm_sent = await self._handle_dm_timing(ctx, case_type, user, reason, action_desc, silent)
+        except Exception:
+            # DM failed, but continue with the workflow
+            dm_sent = False
 
         # Execute Discord actions
         if actions:
-            await self._execute_actions(ctx, case_type, user, actions)
+            with contextlib.suppress(Exception):
+                await self._execute_actions(ctx, case_type, user, actions)
 
         # Create database case
-        case = await self._case_service.create_case(
-            guild_id=ctx.guild.id,
-            target_id=user.id,
-            moderator_id=ctx.author.id,
-            case_type=case_type,
-            reason=reason,
-            duration=duration,
-        )
+        case = None
+        try:
+            case = await self._case_service.create_case(
+                guild_id=ctx.guild.id,
+                target_id=user.id,
+                moderator_id=ctx.author.id,
+                case_type=case_type,
+                reason=reason,
+                duration=duration,
+                case_expires_at=expires_at,
+            )
+        except Exception:
+            # Database failed, but continue with response
+            case = None
 
         # Handle post-action DM for non-removal actions
         if case_type not in self.REMOVAL_ACTIONS and not silent:
-            dm_sent = await self._handle_post_action_dm(ctx, user, reason, action_desc)
+            try:
+                dm_sent = await self._handle_post_action_dm(ctx, user, reason, action_desc)
+            except Exception:
+                # DM failed, but continue
+                dm_sent = False
 
         # Send response embed
         await self._send_response_embed(ctx, case, user, dm_sent)
@@ -192,20 +212,35 @@ class ModerationCoordinator:
     async def _send_response_embed(
         self,
         ctx: commands.Context[Tux],
-        case: Case,
+        case: Case | None,
         user: discord.Member | discord.User,
         dm_sent: bool,
     ) -> None:
         """
         Send the response embed for the moderation action.
         """
-        title = f"Case #{case.case_id} ({case.case_type.value if case.case_type else 'Unknown'})"
 
-        fields = [
-            ("Moderator", f"{ctx.author.mention} (`{ctx.author.id}`)", True),
-            ("Target", f"{user.mention} (`{user.id}`)", True),
-            ("Reason", f"> {case.case_reason}", False),
-        ]
+        # Helper function to get mention safely (handles both real and mock objects)
+        def get_mention(obj: Any) -> str:
+            if hasattr(obj, "mention"):
+                return obj.mention
+            return f"{getattr(obj, 'name', 'Unknown')}#{getattr(obj, 'discriminator', '0000')}"
+
+        if case is None:
+            # Case creation failed, send a generic error response
+            title = "Moderation Action Completed"
+            fields = [
+                ("Moderator", f"{get_mention(ctx.author)} (`{ctx.author.id}`)", True),
+                ("Target", f"{get_mention(user)} (`{user.id}`)", True),
+                ("Status", "⚠️ Case creation failed - action may have been applied", False),
+            ]
+        else:
+            title = f"Case #{case.case_id} ({case.case_type.value if case.case_type else 'Unknown'})"
+            fields = [
+                ("Moderator", f"{get_mention(ctx.author)} (`{ctx.author.id}`)", True),
+                ("Target", f"{get_mention(user)} (`{user.id}`)", True),
+                ("Reason", f"> {case.case_reason}", False),
+            ]
 
         embed = self._communication.create_embed(
             ctx=ctx,

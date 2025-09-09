@@ -63,7 +63,7 @@ class CommunicationService:
             author_user = author if isinstance(author, discord.User) else author.user  # type: ignore[attr-defined]
             embed = self._create_dm_embed(dm_action, reason, cast(discord.User, author_user))
             await user.send(embed=embed)
-        except (discord.Forbidden, discord.HTTPException, AttributeError):
+        except (discord.Forbidden, discord.HTTPException, AttributeError, TimeoutError):
             return False
         else:
             return True
