@@ -5,7 +5,7 @@ Provides Rich formatting utilities for consistent CLI output.
 """
 
 from rich.console import Console
-from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
+from rich.progress import BarColumn, Progress, ProgressColumn, SpinnerColumn, TextColumn
 from rich.table import Table
 
 
@@ -39,7 +39,7 @@ class RichCLI:
         """Print a rich formatted message."""
         self.console.print(message)
 
-    def print_rich_table(self, title: str, columns: list[tuple[str, str]], data: list[tuple]) -> None:
+    def print_rich_table(self, title: str, columns: list[tuple[str, str]], data: list[tuple[str, ...]]) -> None:
         """Print a Rich table with title, columns, and data."""
         table = Table(title=title)
         for column_name, style in columns:
@@ -52,12 +52,26 @@ class RichCLI:
 
     def create_progress_bar(self, description: str = "Processing...", total: int | None = None) -> Progress:
         """Create a Rich progress bar with spinner and text."""
-        return Progress(
+        # Build columns list conditionally based on whether total is provided
+        columns: list[ProgressColumn] = [
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
-            BarColumn() if total else None,
-            TextColumn("[progress.percentage]{task.percentage:>3.0f}%") if total else None,
-            TimeElapsedColumn(),
-            transient=True,
+        ]
+
+        # Add progress bar and percentage columns only if total is provided
+        if total is not None:
+            columns.extend(
+                [
+                    BarColumn(),
+                    TextColumn("[progress.percentage]{task.percentage:>3.0f}% "),
+                ],
+            )
+
+        # Always include elapsed time
+        columns.append(TextColumn("[progress.elapsed]{task.elapsed:.1f}s "))
+
+        return Progress(
+            *columns,
+            transient=False,
             console=self.console,
         )

@@ -7,6 +7,7 @@ A unified interface for all development operations using the clean CLI infrastru
 
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 # Add src to path
@@ -55,17 +56,35 @@ class DevCLI(BaseCLI):
                 help_text=command.help_text,
             )
 
+    def _print_output(self, output: str, is_error: bool = False) -> None:
+        """Print tool output with proper formatting for single/multi-line content."""
+        if "\n" in output:
+            # Multi-line output: start on new line
+            cleaned_output = output.rstrip("\n")
+            self.console.print()  # Start on new line
+            if is_error:
+                self.console.print(f"[red]{cleaned_output}[/red]")
+            else:
+                self.console.print(cleaned_output)
+        else:
+            # Single-line output: strip trailing newlines for clean inline display
+            cleaned_output = output.rstrip("\n")
+            if is_error:
+                self.console.print(f"[red]{cleaned_output}[/red]")
+            else:
+                self.console.print(cleaned_output)
+
     def _run_tool_command(self, command: list[str], success_message: str) -> bool:
         """Run a tool command and return success status."""
         try:
             result = subprocess.run(command, check=True, capture_output=True, text=True)
             if result.stdout:
-                self.console.print(result.stdout)
+                self._print_output(result.stdout)
         except subprocess.CalledProcessError as e:
             if e.stdout:
-                self.console.print(e.stdout)
+                self._print_output(e.stdout)
             if e.stderr:
-                self.console.print(f"[red]{e.stderr}[/red]")
+                self._print_output(e.stderr, is_error=True)
             return False
         except FileNotFoundError:
             self.rich.print_error(f"❌ Command not found: {command[0]}")
@@ -123,14 +142,14 @@ class DevCLI(BaseCLI):
 
     def run_all_checks(self) -> None:
         self.rich.print_section("🚀 Running All Development Checks", "blue")
-        checks = [
+        checks: list[tuple[str, Callable[[], None]]] = [
             ("Linting", self.lint),
             ("Code Formatting", self.format_code),
             ("Type Checking", self.type_check),
             ("Pre-commit Checks", self.pre_commit),
         ]
 
-        results = []
+        results: list[tuple[str, bool]] = []
 
         # Run checks with progress bar
         with self.rich.create_progress_bar("Running Development Checks", len(checks)) as progress:
@@ -138,6 +157,7 @@ class DevCLI(BaseCLI):
 
             for check_name, check_func in checks:
                 progress.update(task, description=f"Running {check_name}...")
+                progress.refresh()  # Force refresh to show the update
 
                 try:
                     check_func()
@@ -147,20 +167,27 @@ class DevCLI(BaseCLI):
                     # Don't exit early, continue with other checks
 
                 progress.advance(task)
+                progress.refresh()  # Force refresh after advance
+
+        # Add newline after progress bar completes
+        self.console.print()
 
         # Summary using Rich table
         self.rich.print_section("📊 Development Checks Summary", "blue")
-        passed = sum(success for _, success in results)
+
+        passed = sum(bool(success) for _, success in results)
         total = len(results)
 
         # Create Rich table for results
+        table_data: list[tuple[str, str, str]] = [
+            (check_name, "✅ PASSED" if success else "❌ FAILED", "Completed" if success else "Failed")
+            for check_name, success in results
+        ]
+
         self.rich.print_rich_table(
-            "Check Results",
+            "",
             [("Check", "cyan"), ("Status", "green"), ("Details", "white")],
-            [
-                (check_name, "✅ PASSED" if success else "❌ FAILED", "Completed" if success else "Failed")
-                for check_name, success in results
-            ],
+            table_data,
         )
 
         self.console.print()

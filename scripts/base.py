@@ -5,6 +5,7 @@ Provides the base CLI class that all CLI applications should inherit from.
 """
 
 import subprocess
+from collections.abc import Callable
 
 import typer
 from rich.console import Console
@@ -42,10 +43,10 @@ class BaseCLI:
 
     def add_command(
         self,
-        func: callable,
+        func: Callable[..., None],
         name: str | None = None,
         help_text: str | None = None,
-        sub_app: typer.Typer = None,
+        sub_app: typer.Typer | None = None,
     ) -> None:
         """Add a command to the CLI."""
         target_app = sub_app or self.app
