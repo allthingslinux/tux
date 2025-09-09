@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from tux.core import checks
+from tux.core.checks import require_junior_mod
 from tux.core.flags import WarnFlags
 from tux.core.types import Tux
 from tux.database.models import CaseType as DBCaseType
@@ -20,7 +20,7 @@ class Warn(ModerationCogBase):
         aliases=["w"],
     )
     @commands.guild_only()
-    @checks.has_pl(2)
+    @require_junior_mod()
     async def warn(
         self,
         ctx: commands.Context[Tux],
@@ -42,20 +42,18 @@ class Warn(ModerationCogBase):
         """
         assert ctx.guild
 
-        # Check if moderator has permission to warn the member
-        if not await self.check_conditions(ctx, member, ctx.author, "warn"):
-            return
+        # Permission checks are handled by the @require_moderator() decorator
+        # Additional validation will be handled by the ModerationCoordinator service
 
         # Execute warn with case creation and DM
-        await self.execute_mod_action(
+        await self.moderate_user(
             ctx=ctx,
             case_type=DBCaseType.WARN,
             user=member,
             reason=flags.reason,
             silent=flags.silent,
             dm_action="warned",
-            # Use dummy coroutine for actions that don't need Discord API calls
-            actions=[(self._dummy_action(), type(None))],
+            actions=[],  # No Discord API actions needed for warnings
         )
 
 

@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from tux.core import checks
+from tux.core.checks import require_moderator
 from tux.core.flags import PollBanFlags
 from tux.core.types import Tux
 from tux.database.models import CaseType as DBCaseType
@@ -20,7 +20,7 @@ class PollBan(ModerationCogBase):
         aliases=["pb"],
     )
     @commands.guild_only()
-    @checks.has_pl(3)
+    @require_moderator()
     async def poll_ban(
         self,
         ctx: commands.Context[Tux],
@@ -44,23 +44,21 @@ class PollBan(ModerationCogBase):
 
         # Check if user is already poll banned
         if await self.is_pollbanned(ctx.guild.id, member.id):
-            await ctx.send("User is already poll banned.", ephemeral=True)
+            await ctx.reply("User is already poll banned.", mention_author=False)
             return
 
-        # Check if moderator has permission to poll ban the member
-        if not await self.check_conditions(ctx, member, ctx.author, "poll ban"):
-            return
+        # Permission checks are handled by the @require_moderator() decorator
+        # Additional validation will be handled by the ModerationCoordinator service
 
         # Execute poll ban with case creation and DM
-        await self.execute_mod_action(
+        await self.moderate_user(
             ctx=ctx,
             case_type=DBCaseType.POLLBAN,
             user=member,
             reason=flags.reason,
             silent=flags.silent,
             dm_action="poll banned",
-            # Use dummy coroutine for actions that don't need Discord API calls
-            actions=[(self._dummy_action(), type(None))],
+            actions=[],  # No Discord API actions needed for poll ban
         )
 
 

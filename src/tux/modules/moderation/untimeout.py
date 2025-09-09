@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from tux.core import checks
+from tux.core.checks import require_junior_mod
 from tux.core.flags import UntimeoutFlags
 from tux.core.types import Tux
 from tux.database.models import CaseType as DBCaseType
@@ -20,7 +20,7 @@ class Untimeout(ModerationCogBase):
         aliases=["ut", "uto", "unmute"],
     )
     @commands.guild_only()
-    @checks.has_pl(2)
+    @require_junior_mod()
     async def untimeout(
         self,
         ctx: commands.Context[Tux],
@@ -52,12 +52,11 @@ class Untimeout(ModerationCogBase):
             await ctx.send(f"{member} is not timed out.", ephemeral=True)
             return
 
-        # Check if moderator has permission to untimeout the member
-        if not await self.check_conditions(ctx, member, ctx.author, "untimeout"):
-            return
+        # Permission checks are handled by the @require_junior_mod() decorator
+        # Additional validation will be handled by the ModerationCoordinator service
 
         # Execute untimeout with case creation and DM
-        await self.execute_mod_action(
+        await self.moderate_user(
             ctx=ctx,
             case_type=DBCaseType.UNTIMEOUT,
             user=member,

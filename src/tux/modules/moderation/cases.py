@@ -6,7 +6,7 @@ from discord.ext import commands
 from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
-from tux.core import checks
+from tux.core.checks import require_junior_mod
 from tux.core.flags import CaseModifyFlags, CasesViewFlags
 from tux.core.types import Tux
 from tux.database.models import Case
@@ -90,7 +90,7 @@ class Cases(ModerationCogBase):
         aliases=["case", "c"],
     )
     @commands.guild_only()
-    @checks.has_pl(2)
+    @require_junior_mod()
     async def cases(self, ctx: commands.Context[Tux], case_number: str | None = None) -> None:
         """
         Manage moderation cases in the server.
@@ -112,7 +112,7 @@ class Cases(ModerationCogBase):
         aliases=["v", "ls", "list"],
     )
     @commands.guild_only()
-    @checks.has_pl(2)
+    @require_junior_mod()
     async def cases_view(
         self,
         ctx: commands.Context[Tux],
@@ -144,7 +144,7 @@ class Cases(ModerationCogBase):
         aliases=["m", "edit"],
     )
     @commands.guild_only()
-    @checks.has_pl(2)
+    @require_junior_mod()
     async def cases_modify(
         self,
         ctx: commands.Context[Tux],
@@ -222,16 +222,16 @@ class Cases(ModerationCogBase):
         try:
             case_number = int(number)
         except ValueError:
-            await self.send_error_response(ctx, "Case number must be a valid integer.")
+            await ctx.reply("Case number must be a valid integer.", mention_author=False)
             return
 
         case = await self.db.case.get_case_by_number(ctx.guild.id, case_number)
         if not case:
-            await self.send_error_response(ctx, "Case not found.")
+            await ctx.reply("Case not found.", mention_author=False)
             return
 
         user = await self._resolve_user(case.case_user_id)
-        await self._handle_case_response(ctx, case, "viewed", case.case_reason, user)
+        await self._send_case_embed(ctx, case, "viewed", case.case_reason, user)
 
     async def _view_cases_with_flags(
         self,
@@ -298,11 +298,11 @@ class Cases(ModerationCogBase):
         )
 
         if not updated_case:
-            await self.send_error_response(ctx, "Failed to update case.")
+            await ctx.reply("Failed to update case.", mention_author=False)
             return
 
         user = await self._resolve_user(case.case_user_id)
-        await self._handle_case_response(ctx, updated_case, "updated", updated_case.case_reason, user)
+        await self._send_case_embed(ctx, updated_case, "updated", updated_case.case_reason, user)
 
     async def _resolve_user(self, user_id: int) -> discord.User | MockUser:
         """
@@ -350,7 +350,7 @@ class Cases(ModerationCogBase):
         """
         return await self._resolve_user(moderator_id)
 
-    async def _handle_case_response(
+    async def _send_case_embed(
         self,
         ctx: commands.Context[Tux],
         case: Case | None,
@@ -359,14 +359,14 @@ class Cases(ModerationCogBase):
         user: discord.User | MockUser,
     ) -> None:
         """
-        Handle the response for a case.
+        Send an embed response for a case.
 
         Parameters
         ----------
         ctx : commands.Context[Tux]
             The context in which the command is being invoked.
         case : Optional[Case]
-            The case to handle the response for.
+            The case to send the response for.
         action : str
             The action being performed on the case.
         reason : str
@@ -375,25 +375,26 @@ class Cases(ModerationCogBase):
             The target of the case.
         """
         if not case:
-            embed = EmbedCreator.create_embed(
-                embed_type=EmbedType.ERROR,
+            embed = discord.Embed(
                 title=f"Case {action}",
                 description="Failed to find case.",
+                color=CONST.EMBED_COLORS["ERROR"],
             )
-
             await ctx.send(embed=embed, ephemeral=True)
             return
 
         moderator = await self._resolve_moderator(case.case_moderator_id)
         fields = self._create_case_fields(moderator, user, reason)
 
-        embed = self.create_embed(
-            ctx,
+        embed = discord.Embed(
             title=f"Case #{case.case_number} ({case.case_type}) {action}",
-            fields=fields,
             color=CONST.EMBED_COLORS["CASE"],
-            icon_url=CONST.EMBED_ICONS["ACTIVE_CASE"] if case.case_status else CONST.EMBED_ICONS["INACTIVE_CASE"],
         )
+
+        # Add fields to embed
+        for field in fields:
+            name, value, inline = field
+            embed.add_field(name=name, value=value, inline=inline)
 
         # Safe avatar access that works with MockUser
         if hasattr(user, "avatar") and user.avatar:

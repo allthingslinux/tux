@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from tux.core import checks
+from tux.core.checks import require_moderator
 from tux.core.flags import PollUnbanFlags
 from tux.core.types import Tux
 from tux.database.models import CaseType as DBCaseType
@@ -20,7 +20,7 @@ class PollUnban(ModerationCogBase):
         aliases=["pub"],
     )
     @commands.guild_only()
-    @checks.has_pl(3)
+    @require_moderator()
     async def poll_unban(
         self,
         ctx: commands.Context[Tux],
@@ -44,23 +44,21 @@ class PollUnban(ModerationCogBase):
 
         # Check if user is poll banned
         if not await self.is_pollbanned(ctx.guild.id, member.id):
-            await ctx.send("User is not poll banned.", ephemeral=True)
+            await ctx.reply("User is not poll banned.", mention_author=False)
             return
 
-        # Check if moderator has permission to poll unban the member
-        if not await self.check_conditions(ctx, member, ctx.author, "poll unban"):
-            return
+        # Permission checks are handled by the @require_moderator() decorator
+        # Additional validation will be handled by the ModerationCoordinator service
 
         # Execute poll unban with case creation and DM
-        await self.execute_mod_action(
+        await self.moderate_user(
             ctx=ctx,
             case_type=DBCaseType.POLLUNBAN,
             user=member,
             reason=flags.reason,
             silent=flags.silent,
             dm_action="poll unbanned",
-            # Use dummy coroutine for actions that don't need Discord API calls
-            actions=[(self._dummy_action(), type(None))],
+            actions=[],  # No Discord API actions needed for poll unban
         )
 
 

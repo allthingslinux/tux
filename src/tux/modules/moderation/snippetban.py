@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from tux.core import checks
+from tux.core.checks import require_moderator
 from tux.core.flags import SnippetBanFlags
 from tux.core.types import Tux
 from tux.database.models import CaseType
@@ -20,7 +20,7 @@ class SnippetBan(ModerationCogBase):
         aliases=["sb"],
     )
     @commands.guild_only()
-    @checks.has_pl(3)
+    @require_moderator()
     async def snippet_ban(
         self,
         ctx: commands.Context[Tux],
@@ -44,23 +44,21 @@ class SnippetBan(ModerationCogBase):
 
         # Check if user is already snippet banned
         if await self.is_snippetbanned(ctx.guild.id, member.id):
-            await ctx.send("User is already snippet banned.", ephemeral=True)
+            await ctx.reply("User is already snippet banned.", mention_author=False)
             return
 
-        # Check if moderator has permission to snippet ban the member
-        if not await self.check_conditions(ctx, member, ctx.author, "snippet ban"):
-            return
+        # Permission checks are handled by the @require_moderator() decorator
+        # Additional validation will be handled by the ModerationCoordinator service
 
         # Execute snippet ban with case creation and DM
-        await self.execute_mod_action(
+        await self.moderate_user(
             ctx=ctx,
             case_type=CaseType.SNIPPETBAN,
             user=member,
             reason=flags.reason,
             silent=flags.silent,
             dm_action="snippet banned",
-            # Use dummy coroutine for actions that don't need Discord API calls
-            actions=[(self._dummy_action(), type(None))],
+            actions=[],  # No Discord API actions needed for snippet ban
         )
 
 

@@ -3,7 +3,7 @@ import datetime
 import discord
 from discord.ext import commands
 
-from tux.core import checks
+from tux.core.checks import require_junior_mod
 from tux.core.flags import TimeoutFlags
 from tux.core.types import Tux
 from tux.database.models import CaseType as DBCaseType
@@ -22,7 +22,7 @@ class Timeout(ModerationCogBase):
         aliases=["t", "to", "mute", "m"],
     )
     @commands.guild_only()
-    @checks.has_pl(2)
+    @require_junior_mod()
     async def timeout(
         self,
         ctx: commands.Context[Tux],
@@ -54,9 +54,8 @@ class Timeout(ModerationCogBase):
             await ctx.send(f"{member} is already timed out.", ephemeral=True)
             return
 
-        # Check if moderator has permission to timeout the member
-        if not await self.check_conditions(ctx, member, ctx.author, "timeout"):
-            return
+        # Permission checks are handled by the @require_junior_mod() decorator
+        # Additional validation will be handled by the ModerationCoordinator service
 
         # Parse and validate duration
         try:
@@ -77,7 +76,7 @@ class Timeout(ModerationCogBase):
             return
 
         # Execute timeout with case creation and DM
-        await self.execute_mod_action(
+        await self.moderate_user(
             ctx=ctx,
             case_type=DBCaseType.TIMEOUT,
             user=member,
@@ -85,7 +84,7 @@ class Timeout(ModerationCogBase):
             silent=flags.silent,
             dm_action=f"timed out for {flags.duration}",
             actions=[(member.timeout(duration, reason=flags.reason), type(None))],
-            duration=flags.duration,
+            duration=int(duration.total_seconds()),  # Convert timedelta to seconds
         )
 
 

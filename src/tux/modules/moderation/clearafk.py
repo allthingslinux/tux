@@ -3,8 +3,8 @@ import contextlib
 import discord
 from discord.ext import commands
 
-from tux.core import checks
 from tux.core.base_cog import BaseCog
+from tux.core.checks import require_junior_mod
 from tux.core.types import Tux
 
 
@@ -19,7 +19,7 @@ class ClearAFK(BaseCog):
         description="Clear a member's AFK status and reset their nickname.",
     )
     @commands.guild_only()
-    @checks.has_pl(2)  # Ensure the user has the required permission level
+    @require_junior_mod()  # Ensure the user has the required permission level
     async def clear_afk(
         self,
         ctx: commands.Context[Tux],

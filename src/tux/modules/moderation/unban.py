@@ -3,7 +3,7 @@ from contextlib import suppress
 import discord
 from discord.ext import commands
 
-from tux.core import checks
+from tux.core.checks import require_moderator
 from tux.core.flags import UnbanFlags
 from tux.core.types import Tux
 from tux.database.models import CaseType as DBCaseType
@@ -70,7 +70,7 @@ class Unban(ModerationCogBase):
         """Executes the core unban action and case creation."""
         # We already checked that user is not None in the main command
         assert user is not None, "User cannot be None at this point"
-        await self.execute_mod_action(
+        await self.moderate_user(
             ctx=ctx,
             case_type=DBCaseType.UNBAN,
             user=user,
@@ -85,7 +85,7 @@ class Unban(ModerationCogBase):
         aliases=["ub"],
     )
     @commands.guild_only()
-    @checks.has_pl(3)
+    @require_moderator()
     async def unban(
         self,
         ctx: commands.Context[Tux],
@@ -126,38 +126,24 @@ class Unban(ModerationCogBase):
             # If that fails, try more flexible ban list matching
             user = await self.resolve_user_from_ban_list(ctx, username_or_id)
             if not user:
-                await self.send_error_response(
-                    ctx,
+                await ctx.reply(
                     f"Could not find '{username_or_id}' in the ban list. Try using the exact username or ID.",
+                    mention_author=False,
                 )
                 return
 
         # Check if the user is banned
         try:
             await ctx.guild.fetch_ban(user)
-        except discord.NotFound:
-            await self.send_error_response(ctx, f"{user} is not banned.")
-            return
 
-        # Check if moderator has permission to unban the user
-        if not await self.check_conditions(ctx, user, ctx.author, "unban"):
+        except discord.NotFound:
+            await ctx.reply(f"{user} is not banned.", mention_author=False)
             return
 
         final_reason = reason or CONST.DEFAULT_REASON
         guild = ctx.guild
 
-        try:
-            # Call the lock executor with a lambda referencing the new private method
-            await self.execute_user_action_with_lock(
-                user.id,
-                lambda: self._perform_unban(ctx, user, final_reason, guild),
-            )
-        except discord.NotFound:
-            # This might occur if the user was unbanned between the fetch_ban check and the lock acquisition
-            await self.send_error_response(ctx, f"{user} is no longer banned.")
-        except discord.HTTPException as e:
-            # Catch potential errors during the unban action forwarded by execute_mod_action
-            await self.send_error_response(ctx, f"Failed to unban {user}", e)
+        await self._perform_unban(ctx, user, final_reason, guild)
 
 
 async def setup(bot: Tux) -> None:

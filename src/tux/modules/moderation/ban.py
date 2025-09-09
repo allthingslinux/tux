@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from tux.core import checks
+from tux.core.checks import require_moderator
 from tux.core.flags import BanFlags
 from tux.core.types import Tux
 from tux.database.models import CaseType as DBCaseType
@@ -17,7 +17,7 @@ class Ban(ModerationCogBase):
 
     @commands.hybrid_command(name="ban", aliases=["b"])
     @commands.guild_only()
-    @checks.has_pl(3)
+    @require_moderator()
     async def ban(
         self,
         ctx: commands.Context[Tux],
@@ -47,12 +47,11 @@ class Ban(ModerationCogBase):
 
         assert ctx.guild
 
-        # Check if moderator has permission to ban the member
-        if not await self.check_conditions(ctx, member, ctx.author, "ban"):
-            return
+        # Permission checks are handled by the @require_moderator() decorator
+        # Additional validation will be handled by the ModerationCoordinator service
 
         # Execute ban with case creation and DM
-        await self.execute_mod_action(
+        await self.moderate_user(
             ctx=ctx,
             case_type=DBCaseType.BAN,
             user=member,

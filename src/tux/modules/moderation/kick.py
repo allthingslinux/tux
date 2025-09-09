@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from tux.core import checks
+from tux.core.checks import require_junior_mod
 from tux.core.flags import KickFlags
 from tux.core.types import Tux
 from tux.database.models import CaseType as DBCaseType
@@ -20,7 +20,7 @@ class Kick(ModerationCogBase):
         aliases=["k"],
     )
     @commands.guild_only()
-    @checks.has_pl(2)
+    @require_junior_mod()
     async def kick(
         self,
         ctx: commands.Context[Tux],
@@ -49,12 +49,11 @@ class Kick(ModerationCogBase):
         """
         assert ctx.guild
 
-        # Check if moderator has permission to kick the member
-        if not await self.check_conditions(ctx, member, ctx.author, "kick"):
-            return
+        # Permission checks are handled by the @require_moderator() decorator
+        # Additional validation will be handled by the ModerationCoordinator service
 
         # Execute kick with case creation and DM
-        await self.execute_mod_action(
+        await self.moderate_user(
             ctx=ctx,
             case_type=DBCaseType.KICK,
             user=member,

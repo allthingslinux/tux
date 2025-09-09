@@ -1,10 +1,10 @@
-from datetime import UTC, datetime, timedelta
+# Removed unused datetime imports
 
 import discord
 from discord.ext import commands, tasks
 from loguru import logger
 
-from tux.core import checks
+from tux.core.checks import require_moderator
 from tux.core.flags import TempBanFlags
 from tux.core.types import Tux
 from tux.database.models import Case
@@ -23,7 +23,7 @@ class TempBan(ModerationCogBase):
 
     @commands.hybrid_command(name="tempban", aliases=["tb"])
     @commands.guild_only()
-    @checks.has_pl(3)
+    @require_moderator()
     async def tempban(
         self,
         ctx: commands.Context[Tux],
@@ -53,20 +53,11 @@ class TempBan(ModerationCogBase):
 
         assert ctx.guild
 
-        # Check if moderator has permission to temp ban the member
-        if not await self.check_conditions(ctx, member, ctx.author, "temp ban"):
-            return
-
-        # Calculate expiration datetime from duration in seconds
-        # Store as timezone-naive to match database column format (TIMESTAMP WITHOUT TIME ZONE)
-        expires_at = (datetime.now(UTC) + timedelta(seconds=flags.duration)).replace(tzinfo=None)
-
-        # Create a simple duration string for logging/display
-        # TODO: Implement a more robust human-readable duration formatter
-        duration_display_str = str(timedelta(seconds=int(flags.duration)))  # Simple representation
+        # Permission checks are handled by the @require_moderator() decorator
+        # Additional validation will be handled by the ModerationCoordinator service
 
         # Execute tempban with case creation and DM
-        await self.execute_mod_action(
+        await self.moderate_user(
             ctx=ctx,
             case_type=DBCaseType.TEMPBAN,
             user=member,
@@ -76,8 +67,7 @@ class TempBan(ModerationCogBase):
             actions=[
                 (ctx.guild.ban(member, reason=flags.reason, delete_message_seconds=flags.purge * 86400), type(None)),
             ],
-            duration=duration_display_str,  # Pass readable string for logging
-            expires_at=expires_at,  # Pass calculated expiration datetime
+            duration=int(flags.duration),  # Convert float to int for duration in seconds
         )
 
     async def _process_tempban_case(self, case: Case) -> tuple[int, int]:

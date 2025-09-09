@@ -4,8 +4,8 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.core import checks
 from tux.core.base_cog import BaseCog
+from tux.core.checks import require_junior_mod
 from tux.core.types import Tux
 
 # Type for channels that support slowmode
@@ -24,7 +24,7 @@ class Slowmode(BaseCog):
         usage="slowmode [channel] [seconds]",
     )
     @commands.guild_only()
-    @checks.has_pl(2)
+    @require_junior_mod()
     async def slowmode(
         self,
         ctx: commands.Context[Tux],

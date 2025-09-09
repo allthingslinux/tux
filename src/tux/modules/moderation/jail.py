@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.core import checks
+from tux.core.checks import require_junior_mod
 from tux.core.flags import JailFlags
 from tux.core.types import Tux
 from tux.database.models import CaseType
@@ -41,37 +41,12 @@ class Jail(ModerationCogBase):
         channel = guild.get_channel(jail_channel_id) if jail_channel_id is not None else None
         return channel if isinstance(channel, discord.TextChannel) else None
 
-    async def is_jailed(self, guild_id: int, user_id: int) -> bool:
-        """
-        Check if a user is jailed.
-
-        Parameters
-        ----------
-        guild_id : int
-            The ID of the guild to check in.
-        user_id : int
-            The ID of the user to check.
-
-        Returns
-        -------
-        bool
-            True if the user is jailed, False otherwise.
-        """
-        # Get latest case for this user (more efficient than counting all cases)
-        latest_case = await self.db.case.get_latest_case_by_user(
-            guild_id=guild_id,
-            user_id=user_id,
-        )
-
-        # If no cases exist or latest case is an unjail, user is not jailed
-        return bool(latest_case and latest_case.case_type == CaseType.JAIL)
-
     @commands.hybrid_command(
         name="jail",
         aliases=["j"],
     )
     @commands.guild_only()
-    @checks.has_pl(2)
+    @require_junior_mod()
     async def jail(
         self,
         ctx: commands.Context[Tux],
@@ -120,9 +95,8 @@ class Jail(ModerationCogBase):
             await ctx.send("User is already jailed.", ephemeral=True)
             return
 
-        # Check if moderator has permission to jail the member
-        if not await self.check_conditions(ctx, member, ctx.author, "jail"):
-            return
+        # Permission checks are handled by the @require_junior_mod() decorator
+        # Additional validation will be handled by the ModerationCoordinator service
 
         # Use a transaction-like pattern to ensure consistency
         try:
@@ -131,24 +105,21 @@ class Jail(ModerationCogBase):
 
             # Convert roles to IDs (not used presently)
 
-            # First create the case - if this fails, no role changes are made
-            case = await self.db.case.insert_case(
-                guild_id=ctx.guild.id,
-                case_user_id=member.id,
-                case_moderator_id=ctx.author.id,
-                case_type=CaseType.JAIL,
-                case_reason=flags.reason,
-                # store user roles as metadata if needed later
-            )
-
             # Add jail role immediately - this is the most important part
             await member.add_roles(jail_role, reason=flags.reason)
 
-            # Send DM to member
-            dm_sent = await self.send_dm(ctx, flags.silent, member, flags.reason, "jailed")
-
-            # Handle case response - send embed immediately
-            await self.handle_case_response(ctx, CaseType.JAIL, case.case_number, flags.reason, member, dm_sent)
+            # Send DM to member and handle case response using the moderation service
+            # The moderation service will handle case creation, DM sending, and response
+            await self.moderate_user(
+                ctx=ctx,
+                case_type=CaseType.JAIL,
+                user=member,
+                reason=flags.reason,
+                silent=flags.silent,
+                dm_action="jailed",
+                actions=[],  # No additional Discord actions needed for jail
+                duration=None,
+            )
 
             # Remove old roles in the background after sending the response
             if user_roles:
