@@ -542,6 +542,9 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         send_to_sentry=True,
         sentry_status=SentryManager.STATUS["ERROR"],
     ),
+    # === Database Errors ===
+    # These commonly occur during moderation operations (case creation, updates, etc.)
+    # and are handled gracefully by the centralized error handler.
     # === Common Python Built-in Errors ===
     # These usually indicate internal logic errors, so show a generic message to the user
     # but log them as errors and report to Sentry for debugging.
