@@ -36,7 +36,6 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import Session, sessionmaker
 from sqlmodel import SQLModel
 
-import tux.database.models  # noqa: F401  # pyright: ignore[reportUnusedImport]
 from tux.shared.config import CONFIG
 
 T = TypeVar("T")

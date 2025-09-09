@@ -414,8 +414,8 @@ class GuildPermission(BaseModel, table=True):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     __table_args__ = (
-        UniqueConstraint("guild_id", "level", name="unique_guild_level"),
-        UniqueConstraint("guild_id", "role_id", name="unique_guild_role"),
+        UniqueConstraint("guild_id", "level", name="unique_guild_permissions_level"),
+        UniqueConstraint("guild_id", "role_id", name="unique_guild_permissions_role"),
         Index("idx_guild_permissions_guild_level", "guild_id", "level"),
     )
 
@@ -580,14 +580,19 @@ class GuildPermissionLevel(BaseModel, table=True):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Relationship to permission assignments
-    assignments: Mapped[list[GuildPermissionAssignment]] = Relationship(
-        back_populates="permission_level",
-        sa_relationship_kwargs={"cascade": "all, delete-orphan"},
+    assignments = Relationship(
+        sa_relationship=relationship(
+            "GuildPermissionAssignment",
+            back_populates="permission_level",
+            cascade="all, delete-orphan",
+            passive_deletes=True,
+            lazy="selectin",
+        ),
     )
 
     __table_args__ = (
-        UniqueConstraint("guild_id", "level", name="unique_guild_level"),
-        UniqueConstraint("guild_id", "name", name="unique_guild_level_name"),
+        UniqueConstraint("guild_id", "level", name="unique_guild_permission_levels_level"),
+        UniqueConstraint("guild_id", "name", name="unique_guild_permission_levels_name"),
         Index("idx_guild_perm_levels_guild", "guild_id"),
         Index("idx_guild_perm_levels_position", "guild_id", "position"),
     )
@@ -600,13 +605,19 @@ class GuildPermissionAssignment(BaseModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     guild_id: int = Field(sa_type=BigInteger, index=True)
-    permission_level_id: int = Field(sa_type=Integer, index=True)
+    permission_level_id: int = Field(sa_type=Integer, index=True, foreign_key="guild_permission_levels.id")
     role_id: int = Field(sa_type=BigInteger, index=True)
     assigned_by: int = Field(sa_type=BigInteger)  # User who assigned it
     assigned_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Relationships
-    permission_level: Mapped[GuildPermissionLevel] = Relationship(back_populates="assignments")
+    permission_level = Relationship(
+        sa_relationship=relationship(
+            "GuildPermissionLevel",
+            back_populates="assignments",
+            lazy="selectin",
+        ),
+    )
 
     __table_args__ = (
         UniqueConstraint("guild_id", "role_id", name="unique_guild_role_assignment"),
