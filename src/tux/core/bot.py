@@ -17,8 +17,10 @@ from rich.console import Console
 
 from tux.core.cog_loader import CogLoader
 from tux.core.container import ServiceContainer
+from tux.core.permission_system import init_permission_system
 from tux.core.service_registry import ServiceRegistry
 from tux.core.task_monitor import TaskMonitor
+from tux.database.controllers import DatabaseCoordinator
 from tux.database.migrations.runner import upgrade_head_if_needed
 from tux.database.service import DatabaseService
 from tux.services.emoji_manager import EmojiManager
@@ -137,6 +139,8 @@ class Tux(commands.Bot):
                         raise DatabaseConnectionError(db_migration_error) from e
                     raise
                 set_setup_phase_tag(span, "database", "finished")
+                await self._setup_permission_system()
+                set_setup_phase_tag(span, "permission_system", "finished")
                 await self._setup_prefix_manager()
                 set_setup_phase_tag(span, "prefix_manager", "finished")
                 await self._load_drop_in_extensions()
@@ -331,6 +335,58 @@ class Tux(commands.Bot):
                 # Don't fail startup if prefix manager fails - bot can still work with default prefix
                 logger.warning("⚠️  Bot will use default prefix for all guilds")
                 self.prefix_manager = None
+
+    async def _setup_permission_system(self) -> None:
+        """Set up the permission system for command authorization."""
+        with start_span("bot.setup_permission_system", "Setting up permission system") as span:
+            logger.info("🔧 Initializing permission system...")
+
+            def _raise_container_error(message: str) -> None:
+                raise RuntimeError(message)
+
+            try:
+                # Get the database service from the container and create coordinator
+                if self.container is None:
+                    _raise_container_error("Container not initialized")
+
+                # Type checker doesn't understand the flow control above, so we cast
+                container = cast(ServiceContainer, self.container)
+                db_service = container.get_optional(DatabaseService)
+
+                # DatabaseService should never be None if properly registered
+                if db_service is None:
+                    _raise_container_error("DatabaseService not found in container")
+                db_coordinator = DatabaseCoordinator(db_service)
+
+                # Initialize the permission system
+                init_permission_system(self, db_coordinator)
+
+                span.set_tag("permission_system.initialized", True)
+                logger.info("✅ Permission system initialized successfully")
+
+            except Exception as e:
+                error_msg = f"❌ Failed to initialize permission system: {type(e).__name__}: {e}"
+                logger.error(error_msg)
+                span.set_tag("permission_system.initialized", False)
+                span.set_data("error", str(e))
+
+                # This is a critical failure - permission system is required
+                msg = f"Permission system initialization failed: {e}"
+                raise RuntimeError(msg) from e
+
+    @property
+    def db(self) -> DatabaseCoordinator:
+        """Get the database coordinator for accessing database controllers."""
+        if self.container is None:
+            msg = "Container not initialized"
+            raise RuntimeError(msg)
+
+        # Type checker now understands the flow control
+        db_service = self.container.get_optional(DatabaseService)
+        if db_service is None:
+            msg = "DatabaseService not found in container"
+            raise RuntimeError(msg)
+        return DatabaseCoordinator(db_service)
 
     async def _load_drop_in_extensions(self) -> None:
         """Load optional drop-in extensions (e.g., Jishaku)."""
