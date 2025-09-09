@@ -36,12 +36,12 @@ RUN echo 'path-exclude /usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends --no-install-suggests \
-    git \
-    libcairo2 \
-    libgdk-pixbuf-2.0-0 \
-    libpango-1.0-0 \
-    libpangocairo-1.0-0 \
-    shared-mime-info \
+        git \
+        libcairo2 \
+        libgdk-pixbuf-2.0-0 \
+        libpango-1.0-0 \
+        libpangocairo-1.0-0 \
+        shared-mime-info \
     # Cleanup package manager caches to reduce layer size
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -75,14 +75,14 @@ FROM base AS build
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
-    # GCC compiler and build essentials for native extensions
-    build-essential \
-    # Additional utilities required by some Python packages
-    findutils \
-    # Development headers for graphics libraries
-    libcairo2-dev \
-    # Foreign Function Interface library for Python extensions
-    libffi8 \
+        # GCC compiler and build essentials for native extensions
+        build-essential \
+        # Additional utilities required by some Python packages
+        findutils \
+        # Development headers for graphics libraries
+        libcairo2-dev \
+        # Foreign Function Interface library for Python extensions
+        libffi8 \
     # Cleanup to reduce intermediate layer size
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -185,11 +185,11 @@ RUN set -eux; \
     # Conditionally install zsh for enhanced development experience
     # Only installs if DEVCONTAINER build arg is set to 1
     if [ "$DEVCONTAINER" = "1" ]; then \
-    apt-get update && \
-    apt-get install -y --no-install-recommends zsh && \
-    chsh -s /usr/bin/zsh && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*; \
+        apt-get update && \
+        apt-get install -y --no-install-recommends zsh && \
+        chsh -s /usr/bin/zsh && \
+        apt-get clean && \
+        rm -rf /var/lib/apt/lists/*; \
     fi; \
     # Fix ownership of all application files for non-root user
     # SECURITY: Ensures the application runs with proper permissions
