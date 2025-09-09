@@ -4,7 +4,7 @@ This module provides the ServiceRegistry class that handles the centralized
 configuration of all services in the dependency injection container.
 """
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from discord.ext import commands
 from loguru import logger
@@ -15,12 +15,10 @@ from tux.core.services import BotService, GitHubService, LoggerService
 from tux.core.types import Tux
 from tux.database.controllers import DatabaseCoordinator
 from tux.database.service import DatabaseService
-from tux.services.moderation import (
-    CaseService,
-    CommunicationService,
-    ExecutionService,
-    ModerationCoordinator,
-)
+
+# Import moderation services for type checking only to avoid circular imports
+if TYPE_CHECKING:
+    from tux.services.moderation import CaseService, ExecutionService
 
 
 class ServiceRegistry:
@@ -105,6 +103,14 @@ class ServiceRegistry:
             ServiceRegistrationError: If service registration fails
         """
         try:
+            # Import moderation services (avoiding circular imports)
+            from tux.services.moderation import (  # noqa: PLC0415
+                CaseService,
+                CommunicationService,
+                ExecutionService,
+                ModerationCoordinator,
+            )
+
             # Get database service for case controller dependency
             db_service = container.get(DatabaseService)
 
@@ -222,7 +228,14 @@ class ServiceRegistry:
         """
         # Core required services that should always be present
         core_required_services = [DatabaseService, ILoggerService]
-        # Moderation services that should be present in full containers
+        # Moderation services that should be present in full containers (imported lazily)
+        from tux.services.moderation import (  # noqa: PLC0415
+            CaseService,
+            CommunicationService,
+            ExecutionService,
+            ModerationCoordinator,
+        )
+
         moderation_services = [CaseService, CommunicationService, ExecutionService, ModerationCoordinator]
         required_services = core_required_services + moderation_services
 
@@ -267,6 +280,8 @@ class ServiceRegistry:
         try:
             service_types: list[type] = container.get_registered_service_types()
             # Return core services expected by tests plus moderation services
+            from tux.services.moderation import CaseService, ExecutionService  # noqa: PLC0415
+
             core = {DatabaseService.__name__, IBotService.__name__, CaseService.__name__, ExecutionService.__name__}
             return [service_type.__name__ for service_type in service_types if service_type.__name__ in core]
         except AttributeError:
