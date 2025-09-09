@@ -3,8 +3,10 @@ from discord.ext import commands
 from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
-from tux.core import checks
 from tux.core.base_cog import BaseCog
+from tux.core.checks import (
+    require_bot_owner,
+)
 from tux.core.types import Tux
 
 
@@ -18,7 +20,7 @@ class Dev(BaseCog):
         aliases=["d"],
     )
     @commands.guild_only()
-    @checks.has_pl(8)
+    @require_bot_owner()
     async def dev(self, ctx: commands.Context[Tux]) -> None:
         """
         Dev related commands.
@@ -44,7 +46,7 @@ class Dev(BaseCog):
         aliases=["st", "sync", "s"],
     )
     @commands.guild_only()
-    @checks.has_pl(8)
+    @require_bot_owner()
     async def sync_tree(self, ctx: commands.Context[Tux], guild: discord.Guild) -> None:
         """
         Syncs the app command tree.
@@ -75,7 +77,7 @@ class Dev(BaseCog):
         aliases=["ct", "clear", "c"],
     )
     @commands.guild_only()
-    @checks.has_pl(8)
+    @require_bot_owner()
     async def clear_tree(self, ctx: commands.Context[Tux]) -> None:
         """
         Clears the app command tree.
@@ -107,7 +109,7 @@ class Dev(BaseCog):
         aliases=["em"],
     )
     @commands.guild_only()
-    @checks.has_pl(8)
+    @require_bot_owner()
     async def emoji(self, ctx: commands.Context[Tux]) -> None:
         """
         Emoji management commands.
@@ -125,7 +127,7 @@ class Dev(BaseCog):
         aliases=["s"],
     )
     @commands.guild_only()
-    @checks.has_pl(8)
+    @require_bot_owner()
     async def sync_emojis(self, ctx: commands.Context[Tux]) -> None:
         """
         Synchronize emojis from the local assets directory to the application.
@@ -179,7 +181,7 @@ class Dev(BaseCog):
         aliases=["r"],
     )
     @commands.guild_only()
-    @checks.has_pl(8)
+    @require_bot_owner()
     async def resync_emoji(self, ctx: commands.Context[Tux], emoji_name: str) -> None:
         """
         Resync a specific emoji from the local assets directory.
@@ -225,7 +227,7 @@ class Dev(BaseCog):
         aliases=["da", "clear"],
     )
     @commands.guild_only()
-    @checks.has_pl(8)
+    @require_bot_owner()
     async def delete_all_emojis(self, ctx: commands.Context[Tux]) -> None:
         """
         Delete all application emojis that match names from the emoji assets directory.
@@ -305,7 +307,7 @@ class Dev(BaseCog):
         aliases=["ls", "l"],
     )
     @commands.guild_only()
-    @checks.has_pl(8)
+    @require_bot_owner()
     async def list_emojis(self, ctx: commands.Context[Tux]) -> None:
         """
         List all emojis currently in the emoji manager's cache.
@@ -419,7 +421,7 @@ class Dev(BaseCog):
         aliases=["lc", "load", "l"],
     )
     @commands.guild_only()
-    @checks.has_pl(8)
+    @require_bot_owner()
     async def load_cog(self, ctx: commands.Context[Tux], *, cog: str) -> None:
         """
         Loads a cog into the bot.
@@ -440,7 +442,7 @@ class Dev(BaseCog):
         aliases=["uc", "unload", "u"],
     )
     @commands.guild_only()
-    @checks.has_pl(8)
+    @require_bot_owner()
     async def unload_cog(self, ctx: commands.Context[Tux], *, cog: str) -> None:
         """
         Unloads a cog from the bot.
@@ -461,7 +463,7 @@ class Dev(BaseCog):
         aliases=["rc", "reload", "r"],
     )
     @commands.guild_only()
-    @checks.has_pl(8)
+    @require_bot_owner()
     async def reload_cog(self, ctx: commands.Context[Tux], *, cog: str) -> None:
         """
         Reloads a cog in the bot.
@@ -482,7 +484,7 @@ class Dev(BaseCog):
         name="stop",
     )
     @commands.guild_only()
-    @checks.has_pl(8)
+    @require_bot_owner()
     async def stop(self, ctx: commands.Context[Tux]) -> None:
         """
         Stops the bot. If Tux is running with Docker Compose, this will restart the container.

@@ -5,8 +5,10 @@ import httpx
 from discord import app_commands
 from loguru import logger
 
-from tux.core import checks
 from tux.core.base_cog import BaseCog
+from tux.core.checks import (
+    require_bot_owner,
+)
 from tux.core.types import Tux
 from tux.shared.config import CONFIG
 
@@ -38,7 +40,7 @@ class Mail(BaseCog):
     mail = app_commands.Group(name="mail", description="Mail commands.")
 
     @mail.command(name="register")
-    @checks.ac_has_pl(5)
+    @require_bot_owner()
     async def register(
         self,
         interaction: discord.Interaction,

@@ -1,8 +1,10 @@
 from discord.ext import commands
 from loguru import logger
 
-from tux.core import checks
 from tux.core.base_cog import BaseCog
+from tux.core.checks import (
+    require_bot_owner,
+)
 from tux.core.types import Tux
 from tux.services.wrappers.github import GithubService
 from tux.shared.config import CONFIG
@@ -22,7 +24,7 @@ class Git(BaseCog):
         aliases=["g"],
     )
     @commands.guild_only()
-    @checks.has_pl(8)
+    @require_bot_owner()
     async def git(self, ctx: commands.Context[Tux]) -> None:
         """
         Github related commands.
@@ -41,7 +43,7 @@ class Git(BaseCog):
         aliases=["r"],
     )
     @commands.guild_only()
-    @checks.has_pl(8)
+    @require_bot_owner()
     async def get_repo(self, ctx: commands.Context[Tux]) -> None:
         """
         Get repository information.
@@ -81,7 +83,7 @@ class Git(BaseCog):
         aliases=["ci"],
     )
     @commands.guild_only()
-    @checks.has_pl(8)
+    @require_bot_owner()
     async def create_issue(self, ctx: commands.Context[Tux], title: str, body: str) -> None:
         """
         Create an issue.
@@ -125,7 +127,7 @@ class Git(BaseCog):
         aliases=["gi", "issue", "i"],
     )
     @commands.guild_only()
-    @checks.has_pl(8)
+    @require_bot_owner()
     async def get_issue(self, ctx: commands.Context[Tux], issue_number: int) -> None:
         """
         Get an issue by issue number.

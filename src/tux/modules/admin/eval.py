@@ -4,8 +4,10 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.core import checks
 from tux.core.base_cog import BaseCog
+from tux.core.checks import (
+    require_bot_owner,
+)
 from tux.core.types import Tux
 from tux.shared.config import CONFIG
 from tux.ui.embeds import EmbedCreator
@@ -50,7 +52,7 @@ class Eval(BaseCog):
         aliases=["e"],
     )
     @commands.guild_only()
-    @checks.has_pl(8)  # sysadmin or higher
+    @require_bot_owner()  # sysadmin or higher
     async def eval(self, ctx: commands.Context[Tux], *, expression: str) -> None:
         """
         Evaluate a Python expression. (Owner only)
