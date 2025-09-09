@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.core import checks
+from tux.core.checks import require_junior_mod
 from tux.core.types import Tux
 from tux.shared.constants import CONST
 
@@ -21,7 +21,7 @@ class ToggleSnippetLock(SnippetsBaseCog):
         aliases=["tsl"],
     )
     @commands.guild_only()
-    @checks.has_pl(2)
+    @require_junior_mod()
     async def toggle_snippet_lock(self, ctx: commands.Context[Tux], name: str) -> None:
         """Toggle the lock status of a snippet.
 

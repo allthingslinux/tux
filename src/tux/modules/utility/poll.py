@@ -103,7 +103,9 @@ class Poll(ModerationCogBase):
         # Remove any leading or trailing whitespaces from the options
         options_list = [option.strip() for option in options_list]
 
-        if await self.is_pollbanned(interaction.guild_id, interaction.user.id):
+        # TODO: Implement poll banning check
+        # if await self.is_pollbanned(interaction.guild_id, interaction.user.id):
+        if False:  # Poll banning not yet implemented
             embed = EmbedCreator.create_embed(
                 bot=self.bot,
                 embed_type=EmbedCreator.ERROR,

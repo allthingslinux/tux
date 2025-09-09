@@ -4,8 +4,8 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.core import checks
 from tux.core.base_cog import BaseCog
+from tux.core.checks import require_admin
 from tux.core.converters import get_channel_safe
 from tux.core.types import Tux
 from tux.ui.embeds import EmbedCreator, EmbedType
@@ -36,7 +36,7 @@ class Starboard(BaseCog):
         name="starboard",
     )
     @commands.guild_only()
-    @checks.has_pl(5)
+    @require_admin()
     async def starboard(self, ctx: commands.Context[Tux]) -> None:
         """
         Configure the starboard for this server.
@@ -48,7 +48,7 @@ class Starboard(BaseCog):
         name="setup",
         aliases=["s"],
     )
-    @checks.has_pl(5)
+    @require_admin()
     async def setup_starboard(
         self,
         ctx: commands.Context[Tux],
@@ -140,7 +140,7 @@ class Starboard(BaseCog):
         name="remove",
         aliases=["r"],
     )
-    @checks.has_pl(5)
+    @require_admin()
     async def remove_starboard(self, ctx: commands.Context[Tux]) -> None:
         """
         Remove the starboard configuration for this server.

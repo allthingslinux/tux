@@ -2,14 +2,13 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.core import checks
 from tux.core.base_cog import BaseCog
+from tux.core.permission_system import PermissionLevel, get_permission_system
 from tux.core.types import Tux
 from tux.database.models import CaseType as DBCaseType
 from tux.database.models import Snippet
 from tux.shared.config import CONFIG
 from tux.shared.constants import CONST
-from tux.shared.exceptions import PermissionLevelError
 from tux.ui.embeds import EmbedCreator, EmbedType
 
 
@@ -108,10 +107,8 @@ class SnippetsBaseCog(BaseCog):
     async def check_if_user_has_mod_override(self, ctx: commands.Context[Tux]) -> bool:
         """Check if the user invoking the command has moderator permissions (PL >= configured level)."""
         try:
-            await checks.has_pl(2).predicate(ctx)
-        except PermissionLevelError:
-            # this happens if the user is not a mod
-            return False
+            permission_system = get_permission_system()
+            await permission_system.require_permission(ctx, PermissionLevel.JUNIOR_MODERATOR)
         except Exception as e:
             logger.error(f"Unexpected error in check_if_user_has_mod_override: {e}")
             return False
