@@ -24,6 +24,9 @@ class BaseModel(SQLModel):
     with support for relationship inclusion and enum handling.
     """
 
+    # Allow SQLModel annotations without Mapped[] for SQLAlchemy 2.0 compatibility
+    __allow_unmapped__ = True
+
     def to_dict(self, include_relationships: bool = False, relationships: list[str] | None = None) -> dict[str, Any]:
         """
         Convert model instance to dictionary with relationship support.
@@ -288,15 +291,7 @@ class Guild(BaseModel, table=True):
             lazy="selectin",
         ),
     )
-    permissions = Relationship(
-        sa_relationship=relationship(
-            "GuildPermission",
-            back_populates="guild",
-            cascade="all, delete",
-            passive_deletes=True,
-            lazy="selectin",
-        ),
-    )
+    # Removed permissions relationship - using new dynamic permission system
 
     # One-to-one relationships
     guild_config = Relationship(
@@ -381,17 +376,48 @@ class GuildConfig(BaseModel, table=True):
     jail_role_id: int | None = Field(default=None, sa_type=BigInteger)
     quarantine_role_id: int | None = Field(default=None, sa_type=BigInteger)
 
-    perm_level_0_role_id: int | None = Field(default=None, sa_type=BigInteger)
-    perm_level_1_role_id: int | None = Field(default=None, sa_type=BigInteger)
-    perm_level_2_role_id: int | None = Field(default=None, sa_type=BigInteger)
-    perm_level_3_role_id: int | None = Field(default=None, sa_type=BigInteger)
-    perm_level_4_role_id: int | None = Field(default=None, sa_type=BigInteger)
-    perm_level_5_role_id: int | None = Field(default=None, sa_type=BigInteger)
-    perm_level_6_role_id: int | None = Field(default=None, sa_type=BigInteger)
-    perm_level_7_role_id: int | None = Field(default=None, sa_type=BigInteger)
+    # Dynamic permission system - see GuildPermission model below
 
     # Relationship back to Guild - using sa_relationship
     guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="guild_config"))
+
+
+class GuildPermission(BaseModel, table=True):
+    """Dynamic permission system for guilds.
+
+    Allows each server to define their own permission levels and map them to Discord roles.
+    This provides external control over moderation permissions without hardcoding role names.
+    """
+
+    __tablename__ = "guild_permissions"  # type: ignore[assignment]
+
+    id: int | None = Field(default=None, primary_key=True)
+    guild_id: int = Field(sa_type=BigInteger, index=True)
+
+    # Permission level (0-9, matching the decorator system)
+    level: int = Field(sa_type=Integer)
+
+    # Human-readable name for this permission level (customizable per server)
+    name: str = Field(max_length=100)
+
+    # Discord role ID that grants this permission level
+    role_id: int = Field(sa_type=BigInteger)
+
+    # Optional description
+    description: str | None = Field(default=None, max_length=500)
+
+    # Whether this permission is enabled
+    enabled: bool = Field(default=True)
+
+    # Created/updated timestamps
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    __table_args__ = (
+        UniqueConstraint("guild_id", "level", name="unique_guild_level"),
+        UniqueConstraint("guild_id", "role_id", name="unique_guild_role"),
+        Index("idx_guild_permissions_guild_level", "guild_id", "level"),
+    )
 
 
 class Case(BaseModel, table=True):
@@ -452,31 +478,7 @@ class Note(SQLModel, table=True):
     )
 
 
-class GuildPermission(SQLModel, table=True):
-    id: int = Field(primary_key=True, sa_type=BigInteger)
-    guild_id: int = Field(foreign_key="guild.guild_id", ondelete="CASCADE", sa_type=BigInteger)
-
-    permission_type: PermissionType
-    access_type: AccessType
-
-    target_id: int = Field(sa_type=BigInteger)
-    target_name: str | None = Field(default=None, max_length=100)
-    command_name: str | None = Field(default=None, max_length=100)
-    module_name: str | None = Field(default=None, max_length=100)
-
-    expires_at: datetime | None = Field(default=None)
-    is_active: bool = Field(default=True)
-
-    # Relationship back to Guild - using sa_relationship
-    guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="permissions"))
-
-    __table_args__ = (
-        Index("idx_guild_perm_guild_type", "guild_id", "permission_type"),
-        Index("idx_guild_perm_target", "target_id", "permission_type"),
-        Index("idx_guild_perm_active", "is_active"),
-        Index("idx_guild_perm_expires", "expires_at"),
-        Index("idx_guild_perm_guild_active", "guild_id", "is_active"),
-    )
+# Removed old complex GuildPermission model - replaced with simpler dynamic system below
 
 
 class AFK(SQLModel, table=True):
@@ -555,4 +557,124 @@ class StarboardMessage(SQLModel, table=True):
         Index("idx_starboard_msg_user", "message_user_id"),
         Index("idx_starboard_msg_channel", "message_channel_id"),
         Index("idx_starboard_msg_star_count", "star_count"),
+    )
+
+
+# ===== DYNAMIC PERMISSION SYSTEM =====
+
+
+class GuildPermissionLevel(BaseModel, table=True):
+    """Dynamic permission levels that servers can customize."""
+
+    __tablename__ = "guild_permission_levels"  # type: ignore[assignment]
+
+    id: int | None = Field(default=None, primary_key=True)
+    guild_id: int = Field(sa_type=BigInteger, index=True)
+    level: int = Field(sa_type=Integer)  # 0-100 (flexible hierarchy)
+    name: str = Field(max_length=100)  # "Junior Mod", "Moderator", etc.
+    description: str | None = Field(default=None, max_length=500)
+    color: int | None = Field(default=None, sa_type=Integer)  # Role color for UI
+    position: int = Field(default=0, sa_type=Integer)  # Display order
+    enabled: bool = Field(default=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    # Relationship to permission assignments
+    assignments: Mapped[list[GuildPermissionAssignment]] = Relationship(
+        back_populates="permission_level",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"},
+    )
+
+    __table_args__ = (
+        UniqueConstraint("guild_id", "level", name="unique_guild_level"),
+        UniqueConstraint("guild_id", "name", name="unique_guild_level_name"),
+        Index("idx_guild_perm_levels_guild", "guild_id"),
+        Index("idx_guild_perm_levels_position", "guild_id", "position"),
+    )
+
+
+class GuildPermissionAssignment(BaseModel, table=True):
+    """Assigns permission levels to Discord roles in each server."""
+
+    __tablename__ = "guild_permission_assignments"  # type: ignore[assignment]
+
+    id: int | None = Field(default=None, primary_key=True)
+    guild_id: int = Field(sa_type=BigInteger, index=True)
+    permission_level_id: int = Field(sa_type=Integer, index=True)
+    role_id: int = Field(sa_type=BigInteger, index=True)
+    assigned_by: int = Field(sa_type=BigInteger)  # User who assigned it
+    assigned_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    # Relationships
+    permission_level: Mapped[GuildPermissionLevel] = Relationship(back_populates="assignments")
+
+    __table_args__ = (
+        UniqueConstraint("guild_id", "role_id", name="unique_guild_role_assignment"),
+        Index("idx_guild_perm_assignments_guild", "guild_id"),
+        Index("idx_guild_perm_assignments_level", "permission_level_id"),
+        Index("idx_guild_perm_assignments_role", "role_id"),
+    )
+
+
+class GuildCommandPermission(BaseModel, table=True):
+    """Assigns permission requirements to specific commands."""
+
+    __tablename__ = "guild_command_permissions"  # type: ignore[assignment]
+
+    id: int | None = Field(default=None, primary_key=True)
+    guild_id: int = Field(sa_type=BigInteger, index=True)
+    command_name: str = Field(max_length=200, index=True)  # "ban", "kick", etc.
+    required_level: int = Field(sa_type=Integer)  # Permission level required
+    category: str | None = Field(default=None, max_length=100)  # "moderation", "admin", etc.
+    description: str | None = Field(default=None, max_length=500)
+    enabled: bool = Field(default=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    __table_args__ = (
+        UniqueConstraint("guild_id", "command_name", name="unique_guild_command"),
+        Index("idx_guild_cmd_perms_guild", "guild_id"),
+        Index("idx_guild_cmd_perms_category", "guild_id", "category"),
+        Index("idx_guild_cmd_perms_level", "required_level"),
+    )
+
+
+class GuildBlacklist(BaseModel, table=True):
+    """Blacklist users, roles, or channels from using commands."""
+
+    __tablename__ = "guild_blacklists"  # type: ignore[assignment]
+
+    id: int | None = Field(default=None, primary_key=True)
+    guild_id: int = Field(sa_type=BigInteger, index=True)
+    target_type: str = Field(max_length=20)  # "user", "role", "channel"
+    target_id: int = Field(sa_type=BigInteger, index=True)
+    reason: str | None = Field(default=None, max_length=500)
+    blacklisted_by: int = Field(sa_type=BigInteger)
+    blacklisted_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    expires_at: datetime | None = Field(default=None)
+
+    __table_args__ = (
+        Index("idx_guild_blacklist_guild", "guild_id"),
+        Index("idx_guild_blacklist_target", "guild_id", "target_type", "target_id"),
+        Index("idx_guild_blacklist_expires", "expires_at"),
+    )
+
+
+class GuildWhitelist(BaseModel, table=True):
+    """Whitelist users, roles, or channels for premium features."""
+
+    __tablename__ = "guild_whitelists"  # type: ignore[assignment]
+
+    id: int | None = Field(default=None, primary_key=True)
+    guild_id: int = Field(sa_type=BigInteger, index=True)
+    target_type: str = Field(max_length=20)  # "user", "role", "channel"
+    target_id: int = Field(sa_type=BigInteger, index=True)
+    feature: str = Field(max_length=100)  # "premium", "admin", etc.
+    whitelisted_by: int = Field(sa_type=BigInteger)
+    whitelisted_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    __table_args__ = (
+        Index("idx_guild_whitelist_guild", "guild_id"),
+        Index("idx_guild_whitelist_target", "guild_id", "target_type", "target_id"),
+        Index("idx_guild_whitelist_feature", "guild_id", "feature"),
     )
