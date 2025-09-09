@@ -1,145 +1,146 @@
 """
-Condition checking for moderation actions.
+Permission checking decorators for moderation commands.
 
-Handles permission checks, role hierarchy validation, and other preconditions for moderation actions.
+Provides typed decorator functions for permission checking that integrate
+with the existing permission system.
 """
 
-import discord
+import functools
+from collections.abc import Awaitable, Callable
+from typing import Any, TypeVar
+
 from discord.ext import commands
 
+from tux.core.permission_system import PermissionLevel, get_permission_system
 from tux.core.types import Tux
+
+F = TypeVar("F", bound=Callable[..., Awaitable[Any]])
+
+
+def _create_permission_decorator(required_level: PermissionLevel) -> Callable[[F], F]:
+    """Create a permission decorator for the given level."""
+
+    def decorator(func: F) -> F:
+        @functools.wraps(func)
+        async def wrapper(ctx: commands.Context[Tux], *args: Any, **kwargs: Any) -> Any:
+            # Get the permission system
+            permission_system = get_permission_system()
+
+            # Use the existing permission system's require_permission method
+            # This will raise an appropriate exception if permission is denied
+            try:
+                await permission_system.require_permission(ctx, required_level)
+            except Exception:
+                # The permission system will handle sending error messages
+                return None
+
+            # Execute the original function if permission check passed
+            return await func(ctx, *args, **kwargs)
+
+        return wrapper  # type: ignore[return-value]
+
+    return decorator
 
 
 class ConditionChecker:
-    """
-    Checks conditions and permissions for moderation actions.
+    """Helper class for advanced permission checking operations."""
 
-    This mixin provides functionality to:
-    - Validate moderator permissions
-    - Check role hierarchies
-    - Prevent self-moderation
-    - Validate guild ownership rules
-    """
+    def __init__(self) -> None:
+        self.permission_system = get_permission_system()
 
-    async def check_bot_permissions(
+    async def check_condition(
         self,
         ctx: commands.Context[Tux],
-        action: str,
-    ) -> tuple[bool, str | None]:
-        """
-        Check if the bot has the required permissions to perform the action.
-
-        Parameters
-        ----------
-        ctx : commands.Context[Tux]
-            The context of the command.
-        action : str
-            The action being performed.
-
-        Returns
-        -------
-        tuple[bool, str | None]
-            (has_permissions, error_message)
-        """
-        assert ctx.guild
-        assert ctx.bot and ctx.bot.user
-
-        bot_member = ctx.guild.get_member(ctx.bot.user.id)
-        if not bot_member:
-            return False, "Bot is not a member of this server."
-
-        # Define permission requirements for each action
-        action_permissions = {
-            "ban": ["ban_members"],
-            "kick": ["kick_members"],
-            "timeout": ["moderate_members"],
-            "mute": ["moderate_members"],
-            "unmute": ["moderate_members"],
-            "warn": [],  # No special permissions needed
-            "note": [],  # No special permissions needed
-        }
-
-        required_perms = action_permissions.get(action.lower(), [])
-        if not required_perms:
-            return True, None  # Action doesn't require special permissions
-
-        # Check each required permission
-        missing_perms = [
-            perm.replace("_", " ").title()
-            for perm in required_perms
-            if not getattr(bot_member.guild_permissions, perm, False)
-        ]
-
-        if missing_perms:
-            perm_list = ", ".join(missing_perms)
-            return False, f"Bot is missing required permissions: {perm_list}"
-
-        return True, None
-
-    async def check_conditions(
-        self,
-        ctx: commands.Context[Tux],
-        user: discord.Member | discord.User,
-        moderator: discord.Member | discord.User,
+        target_user: Any,
+        moderator: Any,
         action: str,
     ) -> bool:
         """
-        Check if the conditions for the moderation action are met.
+        Advanced permission checking with hierarchy validation.
 
-        This includes bot permission validation, user validation, and hierarchy checks.
+        This method provides more detailed permission checking beyond basic
+        role requirements, including hierarchy checks and target validation.
 
-        Parameters
-        ----------
-        ctx : commands.Context[Tux]
-            The context of the command.
-        user : Union[discord.Member, discord.User]
-            The target of the moderation action.
-        moderator : Union[discord.Member, discord.User]
-            The moderator of the moderation action.
-        action : str
-            The action being performed.
+        Args:
+            ctx: Command context
+            target_user: User being moderated
+            moderator: User performing moderation
+            action: Action being performed
 
-        Returns
-        -------
-        bool
-            Whether the conditions are met.
+        Returns:
+            True if all conditions are met, False otherwise
         """
-
-        assert ctx.guild
-
-        # 🔍 PHASE 1: Bot Permission Validation
-        bot_has_perms, bot_error = await self.check_bot_permissions(ctx, action)
-        if not bot_has_perms:
-            await self.send_error_response(ctx, bot_error)  # type: ignore
+        if not ctx.guild:
             return False
 
-        # 🔍 PHASE 2: User Validation
-        fail_reason = None
+        # Basic permission check - map actions to permission levels
+        base_level = {
+            "ban": PermissionLevel.MODERATOR,
+            "kick": PermissionLevel.JUNIOR_MODERATOR,
+            "timeout": PermissionLevel.JUNIOR_MODERATOR,
+            "warn": PermissionLevel.JUNIOR_MODERATOR,
+            "jail": PermissionLevel.JUNIOR_MODERATOR,
+        }.get(action, PermissionLevel.MODERATOR)
 
-        # Self-moderation check
-        if user.id == moderator.id:
-            fail_reason = f"You cannot {action} yourself."
-        # Guild owner check
-        elif user.id == ctx.guild.owner_id:
-            fail_reason = f"You cannot {action} the server owner."
-        # Role hierarchy check - only applies when both are Members
-        elif (
-            isinstance(user, discord.Member)
-            and isinstance(moderator, discord.Member)
-            and user.top_role >= moderator.top_role
-        ):
-            fail_reason = f"You cannot {action} a user with a higher or equal role."
-        # Bot hierarchy check
-        elif isinstance(user, discord.Member):
-            assert ctx.bot and ctx.bot.user
-            bot_member = ctx.guild.get_member(ctx.bot.user.id)
-            if bot_member and user.top_role >= bot_member.top_role:
-                fail_reason = f"Cannot {action} user with higher or equal role than bot."
+        # Use the permission system for detailed checking
+        return await self.permission_system.check_permission(ctx, base_level.value)
 
-        # If we have a failure reason, send the embed and return False
-        if fail_reason:
-            await self.send_error_response(ctx, fail_reason)  # type: ignore
-            return False
 
-        # All checks passed
-        return True
+# Semantic permission decorators - DYNAMIC & CONFIGURABLE
+def require_member() -> Callable[[F], F]:
+    """Require member-level permissions."""
+    return _create_permission_decorator(PermissionLevel.MEMBER)
+
+
+def require_trusted() -> Callable[[F], F]:
+    """Require trusted-level permissions."""
+    return _create_permission_decorator(PermissionLevel.TRUSTED)
+
+
+def require_junior_mod() -> Callable[[F], F]:
+    """Require junior moderator permissions."""
+    return _create_permission_decorator(PermissionLevel.JUNIOR_MODERATOR)
+
+
+def require_moderator() -> Callable[[F], F]:
+    """Require moderator permissions."""
+    return _create_permission_decorator(PermissionLevel.MODERATOR)
+
+
+def require_senior_mod() -> Callable[[F], F]:
+    """Require senior moderator permissions."""
+    return _create_permission_decorator(PermissionLevel.SENIOR_MODERATOR)
+
+
+def require_admin() -> Callable[[F], F]:
+    """Require administrator permissions."""
+    return _create_permission_decorator(PermissionLevel.ADMINISTRATOR)
+
+
+def require_head_admin() -> Callable[[F], F]:
+    """Require head administrator permissions."""
+    return _create_permission_decorator(PermissionLevel.HEAD_ADMINISTRATOR)
+
+
+def require_owner() -> Callable[[F], F]:
+    """Require server owner permissions."""
+    return _create_permission_decorator(PermissionLevel.SERVER_OWNER)
+
+
+def require_bot_owner() -> Callable[[F], F]:
+    """Require bot owner permissions."""
+    return _create_permission_decorator(PermissionLevel.BOT_OWNER)
+
+
+__all__ = [
+    "ConditionChecker",
+    "require_admin",
+    "require_bot_owner",
+    "require_head_admin",
+    "require_junior_mod",
+    "require_member",
+    "require_moderator",
+    "require_owner",
+    "require_senior_mod",
+    "require_trusted",
+]
