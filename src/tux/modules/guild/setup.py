@@ -2,8 +2,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from tux.core import checks
 from tux.core.base_cog import BaseCog
+from tux.core.checks import require_owner
 from tux.core.types import Tux
 
 
@@ -16,7 +16,7 @@ class Setup(BaseCog):
 
     @setup.command(name="jail")
     @commands.guild_only()
-    @checks.ac_has_pl(7)
+    @require_owner()
     async def setup_jail(self, interaction: discord.Interaction) -> None:
         """
         Set up the jail role channel permissions for the server.

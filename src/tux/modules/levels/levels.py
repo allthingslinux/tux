@@ -3,8 +3,8 @@ import datetime
 import discord
 from discord.ext import commands
 
-from tux.core import checks
 from tux.core.base_cog import BaseCog
+from tux.core.checks import require_junior_mod
 from tux.core.types import Tux
 from tux.modules.services.levels import LevelsService
 from tux.ui.embeds import EmbedCreator, EmbedType
@@ -32,7 +32,7 @@ class Levels(BaseCog):
         if ctx.invoked_subcommand is None:
             await ctx.send_help("levels")
 
-    @checks.has_pl(2)
+    @require_junior_mod()
     @commands.guild_only()
     @levels.command(name="set", aliases=["s"])
     async def set(self, ctx: commands.Context[Tux], member: discord.Member, new_level: int) -> None:
@@ -78,7 +78,7 @@ class Levels(BaseCog):
 
         await ctx.send(embed=embed)
 
-    @checks.has_pl(2)
+    @require_junior_mod()
     @commands.guild_only()
     @levels.command(name="setxp", aliases=["sxp"])
     async def set_xp(self, ctx: commands.Context[Tux], member: discord.Member, xp_amount: int) -> None:
@@ -123,7 +123,7 @@ class Levels(BaseCog):
 
         await ctx.send(embed=embed)
 
-    @checks.has_pl(2)
+    @require_junior_mod()
     @commands.guild_only()
     @levels.command(name="reset", aliases=["r"])
     async def reset(self, ctx: commands.Context[Tux], member: discord.Member) -> None:
@@ -152,7 +152,7 @@ class Levels(BaseCog):
 
         await ctx.send(embed=embed)
 
-    @checks.has_pl(2)
+    @require_junior_mod()
     @commands.guild_only()
     @levels.command(name="blacklist", aliases=["bl"])
     async def blacklist(self, ctx: commands.Context[Tux], member: discord.Member) -> None:
