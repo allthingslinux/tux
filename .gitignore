@@ -47,6 +47,8 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+coverage.json
+lcov.info
 *.cover
 *.py,cover
 .hypothesis/
@@ -86,6 +88,9 @@ ipython_config.py
 
 # Pipenv
 Pipfile.lock
+
+# uv
+uv.lock
 
 # Poetry
 poetry.lock
@@ -155,8 +160,8 @@ github-private-key.pem
 
 # Miscellaneous
 /debug.csv
-config/settings*
-!config/settings.yml.example
+
+
 
 # MacOS
 .DS_Store
@@ -181,3 +186,12 @@ prisma_binaries/
 .archive/
 
 reports/
+
+.kiro
+.audit
+
+.prisma-archive
+sqlmodel-refactor
+.database-archive
+data/
+examples/

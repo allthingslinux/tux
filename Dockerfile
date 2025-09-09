@@ -1,59 +1,14 @@
-# ==============================================================================
-# TUX DISCORD BOT - MULTI-STAGE DOCKERFILE
-# ==============================================================================
-#
-# This Dockerfile uses a multi-stage build approach to create optimized images
-# for different use cases while maintaining consistency across environments.
-#
-# STAGES:
-# -------
-# 1. base       - Common foundation with runtime dependencies
-# 2. build      - Development tools and dependency installation
-# 3. dev        - Development environment with debugging tools
-# 4. production - Minimal, secure runtime environment
-#
-# USAGE:
-# ------
-# Development:  docker-compose -f docker-compose.dev.yml up
-# Production:   docker build --target production -t tux:latest .
-# With version: docker build --build-arg VERSION=$(git describe --tags --always --dirty | sed 's/^v//') -t tux:latest .
-#
-# SECURITY FEATURES:
-# ------------------
-# - Non-root user execution (uid/gid 1001)
-# - Read-only filesystem support via tmpfs mounts
-# - Minimal attack surface (only required dependencies)
-# - Pinned package versions for reproducibility
-# - Health checks for container monitoring
-#
-# SIZE OPTIMIZATION:
-# ------------------
-# - Multi-stage builds to exclude build tools from final image
-# - Aggressive cleanup of unnecessary files (~73% size reduction)
-# - Efficient layer caching through strategic COPY ordering
-# - Loop-based cleanup to reduce Dockerfile complexity
-#
-# ==============================================================================
-
-# ==============================================================================
-# BASE STAGE - Common Foundation
-# ==============================================================================
-# Purpose: Establishes the common base for all subsequent stages
-# Contains: Python runtime, essential system dependencies, security setup
-# Size Impact: ~150MB (Python slim + runtime deps)
-# ==============================================================================
-
 FROM python:3.13.7-slim@sha256:27f90d79cc85e9b7b2560063ef44fa0e9eaae7a7c3f5a9f74563065c5477cc24 AS base
 
 # OCI Labels for container metadata and registry compliance
 # These labels provide important metadata for container registries and tools
 LABEL org.opencontainers.image.source="https://github.com/allthingslinux/tux" \
-      org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community" \
-      org.opencontainers.image.licenses="GPL-3.0" \
-      org.opencontainers.image.authors="All Things Linux" \
-      org.opencontainers.image.vendor="All Things Linux" \
-      org.opencontainers.image.title="Tux" \
-      org.opencontainers.image.documentation="https://github.com/allthingslinux/tux/blob/main/README.md"
+    org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community" \
+    org.opencontainers.image.licenses="GPL-3.0" \
+    org.opencontainers.image.authors="All Things Linux" \
+    org.opencontainers.image.vendor="All Things Linux" \
+    org.opencontainers.image.title="Tux" \
+    org.opencontainers.image.documentation="https://github.com/allthingslinux/tux/blob/main/README.md"
 
 # Create non-root user early for security best practices
 # Using system user (no login shell) with fixed UID/GID for consistency
@@ -107,7 +62,7 @@ ENV PYTHONUNBUFFERED=1 \
 # ==============================================================================
 # BUILD STAGE - Development Tools and Dependency Installation
 # ==============================================================================
-# Purpose: Installs build tools, Poetry, and application dependencies
+# Purpose: Installs build tools, Uv, and application dependencies
 # Contains: Compilers, headers, build tools, complete Python environment
 # Size Impact: ~1.3GB (includes all build dependencies and Python packages)
 # ==============================================================================
@@ -132,26 +87,10 @@ RUN apt-get update && \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Poetry configuration for dependency management
-# These settings optimize Poetry for containerized builds
+ENV UV_VERSION=0.8.0
 
-# POETRY_NO_INTERACTION=1        : Disables interactive prompts for CI/CD
-# POETRY_VIRTUALENVS_CREATE=1    : Ensures virtual environment creation
-# POETRY_VIRTUALENVS_IN_PROJECT=1: Creates .venv in project directory
-# POETRY_CACHE_DIR=/tmp/poetry_cache: Uses temporary directory for cache
-# POETRY_INSTALLER_PARALLEL=true : Enables parallel package installation
-
-ENV POETRY_VERSION=2.1.1 \
-    POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_CREATE=1 \
-    POETRY_VIRTUALENVS_IN_PROJECT=1 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache \
-    POETRY_INSTALLER_PARALLEL=true
-
-# Install Poetry using pip with BuildKit cache mount for efficiency
-# Cache mount prevents re-downloading Poetry on subsequent builds
-RUN --mount=type=cache,target=/root/.cache \
-    pip install poetry==$POETRY_VERSION
+# Install Uv using pip
+RUN pip install uv==$UV_VERSION
 
 # Set working directory for all subsequent operations
 WORKDIR /app
@@ -163,34 +102,38 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Copy dependency files first for optimal Docker layer caching
 # Changes to these files will invalidate subsequent layers
 # OPTIMIZATION: This pattern maximizes cache hits during development
-COPY pyproject.toml poetry.lock ./
+COPY pyproject.toml uv.lock ./
 
-# Install Python dependencies using Poetry
-# PERFORMANCE: Cache mount speeds up subsequent builds
-# SECURITY: --only main excludes development dependencies from production
-# NOTE: Install dependencies only first, package itself will be installed later with git context
-RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
-    --mount=type=cache,target=/root/.cache/pip \
-    poetry install --only main --no-root --no-directory
+# Install dependencies
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --locked --no-install-project
 
 # Copy application files in order of change frequency (Docker layer optimization)
 # STRATEGY: Files that change less frequently are copied first to maximize cache reuse
 
 # 1. Configuration files (rarely change)
 # These are typically static configuration that changes infrequently
-COPY config/ ./config/
+# Note: Configuration is now handled via environment variables
 
-# 2. Database schema files (change infrequently)
-# Prisma schema and migrations are relatively stable
-COPY prisma/ ./prisma/
+# 2. Database migration files (change infrequently)
+# Alembic migrations are relatively stable
+COPY src/tux/database/migrations/ ./src/tux/database/migrations/
 
 # 3. Main application code (changes more frequently)
 # The core bot code is most likely to change during development
-COPY tux/ ./tux/
+# Copy the entire src tree so Poetry can find packages from "src"
+COPY src/ ./src/
+# Keep runtime path stable at /app/tux for later stages and health checks
+RUN cp -a src/tux ./tux
 
 # 4. Root level files needed for installation
 # These include metadata and licensing information
-COPY README.md LICENSE pyproject.toml ./
+COPY README.md LICENSE pyproject.toml alembic.ini ./
+
+# 5. Copy scripts directory for entry points
+COPY scripts/ ./scripts/
 
 # Build arguments for version information
 # These allow passing version info without requiring git history in build context
@@ -201,26 +144,24 @@ ARG BUILD_DATE=""
 # Generate version file using build args with fallback
 # PERFORMANCE: Version is determined at build time, not runtime
 # SECURITY: Git operations happen outside container, only VERSION string is passed in
+# The new unified version system will use this VERSION file as priority 2
 RUN set -eux; \
     if [ -n "$VERSION" ]; then \
-        # Use provided version from build args (preferred for all builds)
-        echo "Using provided version: $VERSION"; \
-        echo "$VERSION" > /app/VERSION; \
+    # Use provided version from build args (preferred for all builds)
+    echo "Using provided version: $VERSION"; \
+    echo "$VERSION" > /app/VERSION; \
     else \
-        # Fallback for builds without version info
-        # NOTE: .git directory is excluded by .dockerignore for security/performance
-        # Version should be passed via --build-arg VERSION=$(git describe --tags --always --dirty | sed 's/^v//')
-        echo "No version provided, using fallback"; \
-        echo "dev" > /app/VERSION; \
+    # Fallback for builds without version info
+    # NOTE: .git directory is excluded by .dockerignore for security/performance
+    # Version should be passed via --build-arg VERSION=$(git describe --tags --always --dirty | sed 's/^v//')
+    echo "No version provided, using fallback"; \
+    echo "dev" > /app/VERSION; \
     fi; \
     echo "Building version: $(cat /app/VERSION)"
 
-# Install the application and generate Prisma client
-# COMPLEXITY: This step requires multiple operations that must be done together
-RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
-    --mount=type=cache,target=/root/.cache \
-    # Install the application package itself
-    poetry install --only main
+# Sync the project
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked
 
 # ==============================================================================
 # DEVELOPMENT STAGE - Development Environment
@@ -250,30 +191,40 @@ RUN set -eux; \
         apt-get clean && \
         rm -rf /var/lib/apt/lists/*; \
     fi; \
-# Fix ownership of all application files for non-root user
-# SECURITY: Ensures the application runs with proper permissions
-COPY --from=build --chown=nonroot:nonroot /app /app
+    # Fix ownership of all application files for non-root user
+    # SECURITY: Ensures the application runs with proper permissions
+    COPY --from=build --chown=nonroot:nonroot /app /app
 
 RUN set -eux; \
     # Create application cache and temporary directories
     # These directories are used by the bot for caching and temporary files
     mkdir -p /app/.cache/tldr /app/temp; \
-    # Create user cache directories (fixes permission issues for Prisma/npm)
+    # Create user cache directories (fixes permission issues for npm and other tools)
     mkdir -p /home/nonroot/.cache /home/nonroot/.npm; \
+    # Ensure correct ownership for nonroot user to write into these directories
+    chown -R nonroot:nonroot /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm; \
+    chmod -R 755 /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm
+
+# Install development dependencies BEFORE switching to non-root user
+# DEVELOPMENT: These tools are needed for linting, testing, and development workflow
+RUN uv sync --dev
+
+# Set development environment variables
+ENV VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:$PATH" \
+    PYTHONPATH="/app" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
 # Switch to non-root user for all subsequent operations
 # SECURITY: Follows principle of least privilege
 USER nonroot
 
-# Install development dependencies and setup Prisma
-# DEVELOPMENT: These tools are needed for linting, testing, and development workflow
-RUN poetry install --only dev --no-root --no-directory && \
-    poetry run prisma py fetch && \
-    poetry run prisma generate
-
 # Development container startup command
-# WORKFLOW: Regenerates Prisma client and starts the bot in development mode
-# This ensures the database client is always up-to-date with schema changes
-CMD ["sh", "-c", "poetry run prisma generate && exec poetry run tux --dev start"]
+# WORKFLOW: Starts the bot in development mode with automatic database migrations
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+CMD ["/entrypoint.sh"]
 
 # ==============================================================================
 # PRODUCTION STAGE - Minimal Runtime Environment
@@ -289,12 +240,12 @@ FROM python:3.13.7-slim@sha256:27f90d79cc85e9b7b2560063ef44fa0e9eaae7a7c3f5a9f74
 # Duplicate OCI labels for production image metadata
 # COMPLIANCE: Ensures production images have proper metadata for registries
 LABEL org.opencontainers.image.source="https://github.com/allthingslinux/tux" \
-      org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community" \
-      org.opencontainers.image.licenses="GPL-3.0" \
-      org.opencontainers.image.authors="All Things Linux" \
-      org.opencontainers.image.vendor="All Things Linux" \
-      org.opencontainers.image.title="Tux" \
-      org.opencontainers.image.documentation="https://github.com/allthingslinux/tux/blob/main/README.md"
+    org.opencontainers.image.description="Tux - The all in one discord bot for the All Things Linux Community" \
+    org.opencontainers.image.licenses="GPL-3.0" \
+    org.opencontainers.image.authors="All Things Linux" \
+    org.opencontainers.image.vendor="All Things Linux" \
+    org.opencontainers.image.title="Tux" \
+    org.opencontainers.image.documentation="https://github.com/allthingslinux/tux/blob/main/README.md"
 
 # Create non-root user (same as base stage)
 # SECURITY: Consistent user across all stages for permission compatibility
@@ -311,8 +262,7 @@ RUN echo 'path-exclude /usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
     echo 'path-exclude /usr/share/man/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
     echo 'path-exclude /usr/share/groff/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
     echo 'path-exclude /usr/share/info/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
-    echo 'path-exclude /usr/share/lintian/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc && \
-    echo 'path-exclude /usr/share/linda/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc
+    echo 'path-exclude /usr/share/lintian/*' >> /etc/dpkg/dpkg.cfg.d/01_nodoc
 
 # Install ONLY runtime dependencies (minimal subset of base stage)
 # SECURITY: Update all packages first, then install minimal runtime dependencies
@@ -320,9 +270,9 @@ RUN echo 'path-exclude /usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends --no-install-suggests \
-        libcairo2 \
-        libffi8 \
-        coreutils \
+    libcairo2 \
+    libffi8 \
+    coreutils \
     # Aggressive cleanup to minimize image size
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
@@ -337,13 +287,13 @@ WORKDIR /app
 
 # VIRTUAL_ENV=/app/.venv    : Points to the virtual environment
 # PATH="/app/.venv/bin:$PATH" : Ensures venv binaries are found first
-# PYTHONPATH="/app"         : Allows imports from the app directory
+# PYTHONPATH="/app:/app/src" : Allows imports from both app and src directories
 # PYTHONOPTIMIZE=2          : Maximum Python bytecode optimization
 # Other vars inherited from base stage for consistency
 
 ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH" \
-    PYTHONPATH="/app" \
+    PYTHONPATH="/app:/app/src" \
     PYTHONOPTIMIZE=2 \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -355,10 +305,12 @@ ENV VIRTUAL_ENV=/app/.venv \
 # EFFICIENCY: Only copies what's needed for runtime
 COPY --from=build --chown=nonroot:nonroot /app/.venv /app/.venv
 COPY --from=build --chown=nonroot:nonroot /app/tux /app/tux
-COPY --from=build --chown=nonroot:nonroot /app/prisma /app/prisma
-COPY --from=build --chown=nonroot:nonroot /app/config /app/config
+COPY --from=build --chown=nonroot:nonroot /app/src /app/src
+
 COPY --from=build --chown=nonroot:nonroot /app/pyproject.toml /app/pyproject.toml
 COPY --from=build --chown=nonroot:nonroot /app/VERSION /app/VERSION
+COPY --from=build --chown=nonroot:nonroot /app/alembic.ini /app/alembic.ini
+COPY --from=build --chown=nonroot:nonroot /app/scripts /app/scripts
 
 # Create convenient symlinks for Python and application binaries
 # USABILITY: Allows running 'python' and 'tux' commands without full paths
@@ -367,20 +319,19 @@ RUN ln -sf /app/.venv/bin/python /usr/local/bin/python && \
     ln -sf /app/.venv/bin/tux /usr/local/bin/tux
 
 RUN set -eux; \
-  mkdir -p /app/.cache/tldr /app/temp; \
-  mkdir -p /home/nonroot/.cache /home/nonroot/.npm; \
-  rm -rf /home/nonroot/.npm/_cacache_; \
-  chown nonroot:nonroot /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm
+    mkdir -p /app/.cache/tldr /app/temp; \
+    mkdir -p /home/nonroot/.cache /home/nonroot/.npm; \
+    rm -rf /home/nonroot/.npm/_cacache_; \
+    chown -R nonroot:nonroot /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm; \
+    chmod -R 755 /app/.cache /app/temp /home/nonroot/.cache /home/nonroot/.npm
 
-# Switch to non-root user and finalize Prisma binaries
+# Switch to non-root user for final optimizations
 USER nonroot
-RUN /app/.venv/bin/python -m prisma py fetch \
- && /app/.venv/bin/python -m prisma generate
 
 USER root
-# Aggressive cleanup and optimization after Prisma setup
+# Aggressive cleanup and optimization
 # PERFORMANCE: Single RUN reduces layer count and enables atomic cleanup
-# SIZE: Removes unnecessary files to minimize final image size but preserves Prisma binaries
+# SIZE: Removes unnecessary files to minimize final image size
 RUN set -eux; \
     # VIRTUAL ENVIRONMENT CLEANUP
     # The following operations remove unnecessary files from the Python environment
@@ -391,19 +342,19 @@ RUN set -eux; \
     # Remove test directories from installed packages (but preserve prisma binaries)
     # These directories contain test files that are not needed in production
     for test_dir in tests testing "test*"; do \
-      find /app/.venv -name "$test_dir" -type d -not -path "*/prisma*" -exec rm -rf {} + 2>/dev/null || true; \
+    find /app/.venv -name "$test_dir" -type d -not -path "*/prisma*" -exec rm -rf {} + 2>/dev/null || true; \
     done; \
     # Remove documentation files from installed packages (but preserve prisma docs)
     # These files take up significant space and are not needed in production
     for doc_pattern in "*.md" "*.txt" "*.rst" "LICENSE*" "NOTICE*" "COPYING*" "CHANGELOG*" "README*" "HISTORY*" "AUTHORS*" "CONTRIBUTORS*"; do \
-      find /app/.venv -name "$doc_pattern" -not -path "*/prisma*" -delete 2>/dev/null || true; \
+    find /app/.venv -name "$doc_pattern" -not -path "*/prisma*" -delete 2>/dev/null || true; \
     done; \
     # Remove large development packages that are not needed in production
     # These packages (pip, setuptools, wheel) are only needed for installing packages
     # NOTE: Preserving packages that Prisma might need
     for pkg in setuptools wheel pkg_resources; do \
-      rm -rf /app/.venv/lib/python3.13/site-packages/${pkg}* 2>/dev/null || true; \
-      rm -rf /app/.venv/bin/${pkg}* 2>/dev/null || true; \
+    rm -rf /app/.venv/lib/python3.13/site-packages/${pkg}* 2>/dev/null || true; \
+    rm -rf /app/.venv/bin/${pkg}* 2>/dev/null || true; \
     done; \
     rm -rf /app/.venv/bin/easy_install* 2>/dev/null || true; \
     # Compile Python bytecode for performance optimization
@@ -418,7 +369,7 @@ USER nonroot
 # MONITORING: Allows Docker/Kubernetes to monitor application health
 # RELIABILITY: Enables automatic restart of unhealthy containers
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import tux.cli.core; import tux.utils.env; print('Health check passed')" || exit 1
+    CMD python -c "import tux.shared.config.env; print('Health check passed')" || exit 1
 
 # --interval=30s    : Check health every 30 seconds
 # --timeout=10s     : Allow 10 seconds for health check to complete
@@ -427,41 +378,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 
 # Application entry point and default command
 # DEPLOYMENT: Configures how the container starts in production
-ENTRYPOINT ["tux"]
-CMD ["--prod", "start"]
-
-# ENTRYPOINT ["tux"]     : Always runs the tux command
-# CMD ["--prod", "start"]: Default arguments for production mode
-# FLEXIBILITY: CMD can be overridden, ENTRYPOINT cannot (security)
-
-# ==============================================================================
-# DOCKERFILE BEST PRACTICES IMPLEMENTED
-# ==============================================================================
-#
-# 1. MULTI-STAGE BUILDS: Separates build and runtime environments
-# 2. LAYER OPTIMIZATION: Ordered operations to maximize cache hits
-# 3. SECURITY: Non-root user, pinned versions, minimal attack surface
-# 4. SIZE OPTIMIZATION: Aggressive cleanup, minimal dependencies
-# 5. MAINTAINABILITY: Comprehensive documentation, organized structure
-# 6. RELIABILITY: Health checks, proper error handling
-# 7. PERFORMANCE: Optimized Python settings, pre-compiled bytecode
-# 8. COMPLIANCE: OCI labels, standard conventions
-#
-# USAGE EXAMPLES:
-# ---------------
-# Build production image:
-#   docker build --target production -t tux:latest .
-#
-# Build development image:
-#   docker build --target dev -t tux:dev .
-#
-# Build with devcontainer tools:
-#   docker build --target dev --build-arg DEVCONTAINER=1 -t tux:devcontainer .
-#
-# Run production container:
-#   docker run -d --name tux-bot --env-file .env tux:latest
-#
-# Run development container:
-#   docker-compose -f docker-compose.dev.yml up
-#
-# ==============================================================================
+# Use tini as init system for proper signal handling and zombie process cleanup
+COPY --chmod=755 docker/entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+CMD []

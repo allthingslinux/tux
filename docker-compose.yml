@@ -1,243 +1,216 @@
-# ==============================================================================
-# SERVICES CONFIGURATION
-# ==============================================================================
+---
+# Docker Compose configuration for Tux
+# Simple self-hosted setup
+
 services:
-  # ============================================================================
-  # TUX BOT SERVICE - Main Application Container
-  # ============================================================================
-  # Purpose: Runs the Tux Discord bot in production mode
-  # Security: Hardened with read-only filesystem and security options
-  # Monitoring: Health checks and structured logging enabled
-  # ============================================================================
-  tux:
-    # CONTAINER IDENTIFICATION
-    # Fixed name for easier management and log identification
-    # Allows direct docker commands: docker logs tux, docker exec tux sh
-    container_name: tux
-
-    # IMAGE CONFIGURATION
-    # Uses pre-built image from GitHub Container Registry for faster deployment
-    # Falls back to local build if image is not available in registry
-    image: ghcr.io/allthingslinux/tux:latest
-
-    # BUILD CONFIGURATION
-    # Local build fallback when registry image is unavailable
-    # Uses production target for optimized, minimal image
-    build:
-      # Build context includes entire project directory
-      context: .
-      # Dockerfile location (can be omitted if using default)
-      dockerfile: Dockerfile
-      # Target production stage for minimal, secure image
-      target: production
-
-    # VOLUME MOUNTS
-    # Strategic mounting for configuration, code, and persistent data
+  tux-postgres:
+    container_name: tux-postgres
+    hostname: tux-postgres
+    image: postgres:15-alpine
+    restart: "no"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
+      POSTGRES_USER: ${POSTGRES_USER:-tuxuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeThisToAStrongPassword123!}
+      POSTGRES_INITDB_ARGS: --encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      # CONFIGURATION MOUNT (Read-Only)
-      # Bot configuration files - mounted read-only for security
-      # Changes require container restart to take effect
+      - tux_postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+
+    # Enhanced logging configuration
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        compress: "true"
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${POSTGRES_USER:-tuxuser} -d ${POSTGRES_DB:-tuxdb} -h localhost
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  tux:
+    container_name: tux
+    hostname: tux
+    image: ${TUX_IMAGE:-ghcr.io/allthingslinux/tux}:${TUX_IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        VERSION: ${VERSION:-dev}
+        GIT_SHA: ${GIT_SHA:-}
+        BUILD_DATE: ${BUILD_DATE:-}
+        DEVCONTAINER: ${DEVCONTAINER:-0}
+    volumes:
       - ./config:/app/config:ro
-
-      # EXTENSIONS MOUNT (Read-Only)
-      # Bot extensions/plugins - mounted read-only for security
-      # Allows hot-reloading of extensions without full rebuild
-      - ./tux/extensions:/app/tux/extensions:ro
-
-      # ASSETS MOUNT (Read-Only)
-      # Static assets like images, sounds, etc. - read-only for security
-      # Shared between development and production for consistency
+      - ./src/tux/custom_modules:/app/tux/custom_modules:ro
       - ./assets:/app/assets:ro
-
-      # CACHE VOLUME (Read-Write, Persistent)
-      # Named volume for bot cache data (user data, API responses, etc.)
-      # Persists across container restarts for better performance
+      # Migration mount - always mounted, controlled by USE_LOCAL_MIGRATIONS env var
+      - ./src/tux/database/migrations:/app/tux/database/migrations:ro
       - tux_cache:/app/.cache
-
-      # TEMPORARY FILES VOLUME (Read-Write, Persistent)
-      # Named volume for temporary files that need persistence
-      # Separate from system /tmp for better control and persistence
       - tux_temp:/app/temp
-
-      # USER HOME VOLUME (Read-Write, Persistent)
-      # Named volume for all user cache/config directories
-      # Prevents read-only filesystem errors for all CLI operations
       - tux_user_home:/home/nonroot
-
-    # ENVIRONMENT CONFIGURATION
-    # Environment variables loaded from .env file
-    # Contains sensitive data like bot tokens, API keys, database URLs
-    # SECURITY: .env file should be in .gitignore and properly secured
     env_file:
       - .env
-
-    # RESTART POLICY
-    # Automatically restart container unless explicitly stopped
-    # Handles bot crashes, system reboots, and temporary failures
-    # Options: no, always, on-failure, unless-stopped
+    environment:
+      TUX_VERSION: ${VERSION:-dev}
+      # Development-specific overrides
+      DEBUG: ${DEBUG:-false}
+      # Migration control
+      USE_LOCAL_MIGRATIONS: ${USE_LOCAL_MIGRATIONS:-true}
+      FORCE_MIGRATE: ${FORCE_MIGRATE:-false}
+      # Startup configuration
+      MAX_STARTUP_ATTEMPTS: ${MAX_STARTUP_ATTEMPTS:-3}
+      STARTUP_DELAY: ${STARTUP_DELAY:-5}
+      # Database configuration for Docker
+      POSTGRES_HOST: tux-postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
+      POSTGRES_USER: ${POSTGRES_USER:-tuxuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeThisToAStrongPassword123!}
     restart: unless-stopped
-
-    # HEALTH CHECK CONFIGURATION
-    # Monitors container health for automatic restart and load balancer integration
-    # More sophisticated than Dockerfile health check for production monitoring
+    depends_on:
+      tux-postgres:
+        condition: service_healthy
     healthcheck:
-      # Simple Python import test to verify bot can start
-      # Lighter than full bot initialization for faster health checks
       test:
         - CMD
         - python
         - -c
-        - import sys; sys.exit(0)
-
-      # Health check timing configuration
-      interval: 30s  # Check every 30 seconds
-      timeout: 10s  # Allow 10 seconds for check to complete
-      retries: 3  # Mark unhealthy after 3 consecutive failures
-      start_period: 40s  # Wait 40 seconds before first check (startup time)
-
-    # RESOURCE MANAGEMENT
-    # Production resource limits and reservations for stable operation
-    # Prevents bot from consuming excessive resources and affecting other services
-    deploy:
-      resources:
-        # RESOURCE LIMITS (Hard Caps)
-        # Container will be killed if it exceeds these limits
-        limits:
-          memory: 512M  # Maximum 512MB RAM usage
-          cpus: '0.5'  # Maximum 0.5 CPU cores (50% of one core)
-
-        # RESOURCE RESERVATIONS (Guaranteed Resources)
-        # Docker ensures these resources are always available to the container
-        reservations:
-          memory: 256M  # Guaranteed 256MB RAM
-          cpus: '0.25'  # Guaranteed 0.25 CPU cores (25% of one core)
-
-    # SECURITY HARDENING
-    # Additional security options for production deployment
+        - |
+          import sys
+          try:
+              import tux.shared.config.env
+              # Additional check: ensure bot token is configured
+              from tux.shared.config.env import CONFIG
+              if not CONFIG.bot_token:
+                  print("Bot token not configured", file=sys.stderr)
+                  sys.exit(1)
+              print("Health check passed")
+          except Exception as e:
+              print(f"Health check failed: {e}", file=sys.stderr)
+              sys.exit(1)
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Production: Stop dependent services when this service fails
+    stop_grace_period: 30s
     security_opt:
-      # Prevents container from gaining new privileges during execution
-      # Protects against privilege escalation attacks
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=100m
+      - /var/tmp:size=50m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+
+    # Development mode with hot reload (only active when using --watch)
+    develop:
+      watch:
+        # Sync Python source code changes for hot reload
+        - action: sync
+          path: ./src
+          target: /app/src
+          ignore:
+            - __pycache__/
+            - "*.pyc"
+            - "*.pyo"
+            - "*.pyd"
+            - .pytest_cache/
+            - .mypy_cache/
+            - .coverage
+        # Sync configuration changes
+        - action: sync
+          path: ./config
+          target: /app/config
+        # Sync custom modules
+        - action: sync
+          path: ./src/tux/custom_modules
+          target: /app/tux/custom_modules
+        # Sync assets
+        - action: sync
+          path: ./assets
+          target: /app/assets
+        # Rebuild when dependencies change
+        - action: rebuild
+          path: pyproject.toml
+        - action: rebuild
+          path: uv.lock
+        # Restart when environment or Docker config changes
+        - action: sync+restart
+          path: .env
+          target: /app/.env
+        - action: sync+restart
+          path: docker-compose.yml
+          target: /app/docker-compose.yml
+
+  tux-adminer:
+    image: adminer:latest
+    container_name: tux-adminer
+    hostname: tux-adminer
+    restart: "no"
+    depends_on:
+      tux-postgres:
+        condition: service_healthy
+
+    # Port mapping
+    ports:
+      - '${ADMINER_PORT:-8081}:8080'
+
+    # Adminer configuration
+    environment:
+      ADMINER_DEFAULT_DRIVER: "pgsql"
+      ADMINER_DEFAULT_SERVER: "tux-postgres"
+      ADMINER_DEFAULT_DB: ${POSTGRES_DB:-tuxdb}
+      ADMINER_DEFAULT_USERNAME: ${POSTGRES_USER:-tuxuser}
+      ADMINER_DEFAULT_PASSWORD: ${POSTGRES_PASSWORD:-ChangeThisToAStrongPassword123!}
+      ADMINER_AUTO_LOGIN: "${ADMINER_AUTO_LOGIN:-true}"
+      ADMINER_PLUGINS: "backward-keys tables-filter dump-date dump-json dump-xml dump-zip edit-calendar enum-option foreign-system json-column pretty-json-column table-indexes-structure table-structure"
+
+    configs:
+      - source: adminer-index.php
+        target: /var/www/html/index.php
+      - source: adminer-theme.css
+        target: /var/www/html/adminer.css
+
+    # Enhanced logging configuration
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        compress: "true"
+
+    # Security configuration
+    security_opt:
       - no-new-privileges:true
 
-    # READ-ONLY FILESYSTEM
-    # Makes the root filesystem read-only for enhanced security
-    # Prevents malicious code from modifying system files
-    # Writable areas provided via tmpfs mounts below
-    read_only: true
-
-    # TEMPORARY FILESYSTEM MOUNTS
-    # Provides writable areas for system operations while maintaining security
-    # These are ephemeral and cleared on container restart
-    tmpfs:
-      # Standard temporary directory with size limit
-      - /tmp:size=100m
-
-      # Variable temporary directory with smaller size limit
-      - /var/tmp:size=50m
-
-    # LOGGING CONFIGURATION
-    # Structured logging for production monitoring and debugging
-    # Prevents log files from consuming excessive disk space
-    logging:
-      # JSON structured logging for better parsing by log aggregators
-      driver: json-file
-
-      # Log rotation configuration to prevent disk space issues
-      options:
-        max-size: 10m  # Rotate logs when they reach 10MB
-        max-file: '3'  # Keep maximum 3 rotated log files
-# ==============================================================================
-# VOLUMES CONFIGURATION
-# ==============================================================================
-# Named volumes for persistent data that survives container restarts
-# These volumes are managed by Docker and provide better performance
-# and portability compared to bind mounts for application data
-# ==============================================================================
 volumes:
-  # BOT CACHE VOLUME
-  # Stores bot cache data for improved performance across restarts
-  # Contains: Discord API cache, user data cache, command cache, etc.
-  # Persistence: Survives container restarts and updates
-  # Size: Grows based on bot usage, monitor in production
+  # Persistent data volumes
   tux_cache:
-    driver: local  # Local Docker volume driver (default)
-
-  # TEMPORARY FILES VOLUME
-  # Stores temporary files that need persistence across container restarts
-  # Contains: Downloaded files, processing artifacts, session data, etc.
-  # Persistence: Survives container restarts but can be cleared if needed
-  # Size: Should be monitored and cleaned periodically in production
+    driver: local
   tux_temp:
-    driver: local  # Local Docker volume driver (default)
-
-  # USER HOME VOLUME
-  # Stores all user cache and config directories
-  # Contains: .cache (Prisma), .npm, .config, and other CLI tool data
-  # Persistence: Critical for avoiding re-downloads and CLI performance
-  # Size: Relatively small but covers all user-space tool requirements
+    driver: local
   tux_user_home:
-    driver: local  # Local Docker volume driver (default)
-# ==============================================================================
-# PRODUCTION DEPLOYMENT BEST PRACTICES IMPLEMENTED
-# ==============================================================================
-#
-# 1. SECURITY HARDENING:
-#    - Read-only root filesystem with tmpfs for writable areas
-#    - No new privileges security option
-#    - Non-root user execution (configured in Dockerfile)
-#    - Read-only mounts for configuration and code
-#
-# 2. RESOURCE MANAGEMENT:
-#    - Memory and CPU limits to prevent resource exhaustion
-#    - Resource reservations to ensure minimum performance
-#    - Restart policy for automatic recovery
-#
-# 3. MONITORING & OBSERVABILITY:
-#    - Health checks for container health monitoring
-#    - Structured JSON logging for log aggregation
-#    - Log rotation to prevent disk space issues
-#    - Fixed container name for easier management
-#
-# 4. DATA PERSISTENCE:
-#    - Named volumes for cache and temporary data
-#    - Proper separation of read-only and read-write data
-#    - Volume organization for backup and maintenance
-#
-# 5. OPERATIONAL EXCELLENCE:
-#    - Clear restart policy for reliability
-#    - Environment file separation for security
-#    - Build fallback for deployment flexibility
-#    - Registry image for faster deployments
-#
-# ==============================================================================
-#
-# TUX CLI COMMANDS (Recommended):
-# --------------------------------
-# Build:     poetry run tux --prod docker build
-# Start:     poetry run tux --prod docker up [-d|--build]
-# Logs:      poetry run tux --prod docker logs -f
-# Shell:     poetry run tux --prod docker shell
-# Stop:      poetry run tux --prod docker down
-# Database:  poetry run tux --prod docker exec tux "tux db <command>"
-#
-# PRODUCTION COMMANDS:
-# --------------------
-# Production deployment:
-#   docker-compose up -d
-#
-# View logs:
-#   docker-compose logs -f tux
-#
-# Update bot:
-#   docker-compose pull && docker-compose up -d
-#
-# Rebuild from source:
-#   docker-compose up -d --build
-#
-# Stop bot:
-#   docker-compose down
-#
-# Stop and remove volumes (WARNING: destroys cache):
-#   docker-compose down -v
-#
-# ==============================================================================
+    driver: local
+  tux_postgres_data:
+    driver: local
+
+configs:
+  adminer-index.php:
+    file: ./docker/adminer/index.php
+  adminer-theme.css:
+    file: ./docker/adminer/adminer-theme.css

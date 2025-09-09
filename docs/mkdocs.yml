@@ -1,3 +1,4 @@
+---
 site_name: Tux
 site_url: https://tux.atl.dev
 
@@ -10,7 +11,7 @@ repo_name: allthingslinux/tux
 # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#code-actions
 edit_uri: edit/main/docs/
 docs_dir: ./content
-site_dir: ../build/docs
+site_dir: ../data/build/docs
 extra:
   # https://squidfunk.github.io/mkdocs-material/setup/setting-up-the-footer/#social-links
   social:
@@ -120,6 +121,10 @@ plugins:
         # https://mkdocstrings.github.io/python/usage/customization/#css-classes
         - assets/stylesheets/extra.css
         - assets/stylesheets/mkdocstrings.css
+
+  #  # https://pypi.org/project/mkdocs-typer2/
+  # - mkdocs-typer2:
+  #     pretty: true
 
   # https://mkdocstrings.github.io/
   - mkdocstrings:
@@ -262,12 +267,11 @@ plugins:
             # https://mkdocstrings.github.io/python/usage/configuration/signatures/#unwrap_annotated
             unwrap_annotated: false
   - api-autonav:
-      modules:
-        - ../tux
+      modules: [../src/tux]
       nav_section_title: Tux Reference
       api_root_uri: reference
       exclude_private: false
-      on_implicit_namespace_packge: raise
+      on_implicit_namespace_package: raise
 # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#revisioning
 # - git-revision-date-localized:
 #     enable_creation_date: false
@@ -280,8 +284,6 @@ plugins:
 #
 markdown_extensions:
   - attr_list
-  # https://github.com/mkdocs/mkdocs-click
-  - mkdocs-click:
   # https://mkdocstrings.github.io/usage/theming/#syntax-highlighting
   - pymdownx.highlight:
       use_pygments: true
@@ -293,6 +295,7 @@ markdown_extensions:
       anchor_linenums: true
   - toc:
       permalink: true
+  - mkdocs-typer:
   - pymdownx.superfences
   - pymdownx.inlinehilite
   # - pymdownx.snippets
@@ -314,4 +317,5 @@ nav:
       - Database: dev/database.md
       - Database Patterns: dev/database_patterns.md
       - Permissions: dev/permissions.md
+      - Self Hosting: dev/self_hosting.md
   - CLI Reference: dev/cli/index.md

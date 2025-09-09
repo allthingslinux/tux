@@ -7,6 +7,9 @@
 docker-compose*.yml
 *.lock
 
+# Exclude auto-generated files
+CONFIG.md
+
 # Exclude build and cache directories
 .venv/
 .pytest_cache/
@@ -29,3 +32,14 @@ prisma/
 typings/
 
 .github/
+
+.kiro/
+
+.audit/
+
+# Project-specific ignores
+sqlmodel-refactor/**
+docs/db/README.md
+
+.archive
+.archive/**
