@@ -34,7 +34,7 @@ indent_size = 2
 
 # Docker files
 [{Dockerfile,*.dockerfile}]
-indent_size = 4
+indent_size = 8
 
 [docker-compose*.yml]
 indent_size = 2
