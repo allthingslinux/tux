@@ -1,16 +1,14 @@
 """
-🚀 ConditionChecker Unit Tests - Permission & Hierarchy Validation
+🚀 ConditionChecker Unit Tests - Permission Decorator System
 
-Tests for the ConditionChecker mixin that handles permission checks,
-role hierarchy validation, and other preconditions for moderation actions.
+Tests for the ConditionChecker class that provides permission decorators
+and advanced permission checking operations for moderation commands.
 
 Test Coverage:
-- Bot permission validation
-- User role hierarchy checks
-- Self-moderation prevention
-- Guild owner protection
-- Error response handling
-- Condition validation flow
+- Permission decorator creation and functionality
+- Condition checking with permission system integration
+- Advanced permission validation
+- Decorator application to commands
 """
 
 import pytest
@@ -19,9 +17,19 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import discord
 from discord.ext import commands
 
-from tux.services.moderation.condition_checker import ConditionChecker
-from tux.services.moderation.moderation_service import ModerationError
+from tux.services.moderation.condition_checker import ConditionChecker, require_moderator
 from tux.core.types import Tux
+
+# Mock the permission system at module level to avoid initialization issues
+@pytest.fixture(autouse=True)
+def mock_permission_system():
+    """Mock the permission system globally for all tests."""
+    with patch('tux.services.moderation.condition_checker.get_permission_system') as mock_get_perm:
+        mock_perm_system = MagicMock()
+        mock_perm_system.check_permission = AsyncMock()
+        mock_perm_system.require_permission = AsyncMock()
+        mock_get_perm.return_value = mock_perm_system
+        yield mock_perm_system
 
 
 class TestConditionChecker:
@@ -30,6 +38,7 @@ class TestConditionChecker:
     @pytest.fixture
     def condition_checker(self) -> ConditionChecker:
         """Create a ConditionChecker instance for testing."""
+        # The permission system is already mocked at module level
         return ConditionChecker()
 
     @pytest.fixture
@@ -38,10 +47,9 @@ class TestConditionChecker:
         ctx = MagicMock(spec=commands.Context)
         ctx.guild = MagicMock(spec=discord.Guild)
         ctx.guild.id = 123456789
-        ctx.guild.owner_id = 999999999
+        ctx.author = MagicMock(spec=discord.Member)
+        ctx.author.id = 987654321
         ctx.bot = MagicMock(spec=Tux)
-        ctx.bot.user = MagicMock(spec=discord.User)
-        ctx.bot.user.id = 111111111
         return ctx
 
     @pytest.fixture
@@ -52,234 +60,144 @@ class TestConditionChecker:
         member.name = "TestUser"
         return member
 
-    @pytest.fixture
-    def mock_moderator(self) -> discord.Member:
-        """Create a mock Discord moderator."""
-        moderator = MagicMock(spec=discord.Member)
-        moderator.id = 987654321
-        moderator.name = "Moderator"
-        return moderator
-
     @pytest.mark.unit
-    async def test_check_bot_permissions_success(
+    async def test_condition_checker_initialization(
         self,
         condition_checker: ConditionChecker,
-        mock_ctx: commands.Context[Tux],
     ) -> None:
-        """Test successful bot setup check."""
-        # Mock bot member present in server (administrator permissions assumed)
-        bot_member = MagicMock(spec=discord.Member)
-        mock_ctx.guild.get_member.return_value = bot_member
-
-        has_perms, error_msg = await condition_checker.check_bot_permissions(mock_ctx, "ban")
-
-        assert has_perms is True
-        assert error_msg is None
+        """Test ConditionChecker initialization and permission system integration."""
+        assert condition_checker is not None
+        assert hasattr(condition_checker, 'permission_system')
+        assert condition_checker.permission_system is not None
 
     @pytest.mark.unit
-    async def test_check_bot_permissions_bot_not_member(
-        self,
-        condition_checker: ConditionChecker,
-        mock_ctx: commands.Context[Tux],
-    ) -> None:
-        """Test bot permission check when bot is not a guild member."""
-        mock_ctx.guild.get_member.return_value = None
-
-        has_perms, error_msg = await condition_checker.check_bot_permissions(mock_ctx, "ban")
-
-        assert has_perms is False
-        assert error_msg == "Bot is not a member of this server."
-
-    @pytest.mark.unit
-    async def test_check_bot_permissions_bot_not_member(
-        self,
-        condition_checker: ConditionChecker,
-        mock_ctx: commands.Context[Tux],
-    ) -> None:
-        """Test bot setup check when bot is not a member of the server."""
-        # Mock bot not being a member of the server
-        mock_ctx.guild.get_member.return_value = None
-
-        has_perms, error_msg = await condition_checker.check_bot_permissions(mock_ctx, "ban")
-
-        assert has_perms is False
-        assert error_msg == "Bot is not a member of this server."
-
-    @pytest.mark.unit
-    async def test_check_conditions_self_moderation(
+    async def test_check_condition_success(
         self,
         condition_checker: ConditionChecker,
         mock_ctx: commands.Context[Tux],
         mock_member: discord.Member,
-        mock_moderator: discord.Member,
     ) -> None:
-        """Test prevention of self-moderation."""
-        mock_member.id = mock_moderator.id  # Same user
+        """Test successful condition checking."""
+        # Mock permission system to return True
+        condition_checker.permission_system.check_permission = AsyncMock(return_value=True)
 
-        # Mock the send_error_response method since ConditionChecker is a standalone mixin
-        condition_checker.send_error_response = AsyncMock()
-
-        # Test that self-moderation returns False
-        result = await condition_checker.check_conditions(
+        result = await condition_checker.check_condition(
             ctx=mock_ctx,
-            user=mock_member,
-            moderator=mock_moderator,
+            target_user=mock_member,
+            moderator=mock_ctx.author,
             action="ban",
         )
 
-        assert result is False  # Should return False for self-moderation
-        condition_checker.send_error_response.assert_called_once()
+        assert result is True
+        condition_checker.permission_system.check_permission.assert_called_once()
 
     @pytest.mark.unit
-    async def test_check_conditions_guild_owner_protection(
-        self,
-        condition_checker: ConditionChecker,
-        mock_ctx: commands.Context[Tux],
-        mock_member: discord.Member,
-        mock_moderator: discord.Member,
-    ) -> None:
-        """Test protection of guild owner from moderation."""
-        mock_member.id = mock_ctx.guild.owner_id
-
-        # Guild owner should be protected
-        assert mock_member.id == mock_ctx.guild.owner_id
-
-    @pytest.mark.unit
-    async def test_check_conditions_role_hierarchy_member_to_member(
-        self,
-        condition_checker: ConditionChecker,
-        mock_ctx: commands.Context[Tux],
-        mock_member: discord.Member,
-        mock_moderator: discord.Member,
-    ) -> None:
-        """Test role hierarchy check between two members."""
-        # Setup role hierarchy
-        higher_role = MagicMock(spec=discord.Role)
-        higher_role.position = 10
-
-        lower_role = MagicMock(spec=discord.Role)
-        lower_role.position = 5
-
-        # Target has higher role than moderator
-        mock_member.top_role = higher_role
-        mock_moderator.top_role = lower_role
-
-        # Both are Members (not just Users)
-        assert isinstance(mock_member, discord.Member)
-        assert isinstance(mock_moderator, discord.Member)
-
-        # Hierarchy check should fail
-        assert mock_member.top_role.position > mock_moderator.top_role.position
-
-    @pytest.mark.unit
-    async def test_check_conditions_bot_role_hierarchy(
+    async def test_check_condition_permission_denied(
         self,
         condition_checker: ConditionChecker,
         mock_ctx: commands.Context[Tux],
         mock_member: discord.Member,
     ) -> None:
-        """Test bot role hierarchy check."""
-        # Setup bot with lower role
-        bot_member = MagicMock(spec=discord.Member)
-        bot_role = MagicMock(spec=discord.Role)
-        bot_role.position = 5
-        bot_member.top_role = bot_role
-        mock_ctx.guild.get_member.return_value = bot_member
+        """Test condition checking when permission is denied."""
+        # Mock permission system to return False
+        condition_checker.permission_system.check_permission = AsyncMock(return_value=False)
 
-        # Target has higher role than bot
-        member_role = MagicMock(spec=discord.Role)
-        member_role.position = 10
-        mock_member.top_role = member_role
+        result = await condition_checker.check_condition(
+            ctx=mock_ctx,
+            target_user=mock_member,
+            moderator=mock_ctx.author,
+            action="ban",
+        )
 
-        # Bot hierarchy check should fail
-        assert mock_member.top_role.position > bot_member.top_role.position
+        assert result is False
 
     @pytest.mark.unit
-    async def test_check_conditions_user_not_member(
+    async def test_check_condition_no_guild(
         self,
         condition_checker: ConditionChecker,
-        mock_ctx: commands.Context[Tux],
-        mock_moderator: discord.Member,
+        mock_member: discord.Member,
     ) -> None:
-        """Test conditions when target is a User (not Member)."""
-        # Target is a User, not a Member
-        mock_user = MagicMock(spec=discord.User)
-        mock_user.id = 555666777
+        """Test condition checking when context has no guild."""
+        # Create context without guild
+        ctx = MagicMock(spec=commands.Context)
+        ctx.guild = None
 
-        # Should not do role hierarchy checks for Users
-        assert not isinstance(mock_user, discord.Member)
+        result = await condition_checker.check_condition(
+            ctx=ctx,
+            target_user=mock_member,
+            moderator=MagicMock(),
+            action="ban",
+        )
+
+        assert result is False
+        # Permission system should not be called when no guild
+        condition_checker.permission_system.check_permission.assert_not_called()
 
     @pytest.mark.unit
-    async def test_check_conditions_moderator_not_member(
+    async def test_check_condition_action_mapping(
         self,
         condition_checker: ConditionChecker,
         mock_ctx: commands.Context[Tux],
         mock_member: discord.Member,
     ) -> None:
-        """Test conditions when moderator is a User (not Member)."""
-        # Moderator is a User, not a Member
-        mock_user_moderator = MagicMock(spec=discord.User)
-        mock_user_moderator.id = 987654321
+        """Test that different actions map to appropriate permission levels."""
+        condition_checker.permission_system.check_permission = AsyncMock(return_value=True)
 
-        # Should not do role hierarchy checks for Users
-        assert not isinstance(mock_user_moderator, discord.Member)
+        # Test ban action (should map to MODERATOR level)
+        await condition_checker.check_condition(
+            ctx=mock_ctx,
+            target_user=mock_member,
+            moderator=mock_ctx.author,
+            action="ban",
+        )
+
+        # Verify it was called with the correct permission level value
+        from tux.core.permission_system import PermissionLevel
+        call_args = condition_checker.permission_system.check_permission.call_args
+        assert call_args[0][1] == PermissionLevel.MODERATOR.value
 
     @pytest.mark.unit
-    async def test_check_conditions_success_case(
+    async def test_permission_decorator_creation(self) -> None:
+        """Test that permission decorators can be created."""
+        # Test that we can import and create decorators
+        from tux.services.moderation.condition_checker import (
+            require_moderator,
+            require_admin,
+            require_junior_mod,
+        )
+
+        # These should be callable decorator functions
+        assert callable(require_moderator)
+        assert callable(require_admin)
+        assert callable(require_junior_mod)
+
+    @pytest.mark.unit
+    async def test_decorator_application(
         self,
-        condition_checker: ConditionChecker,
         mock_ctx: commands.Context[Tux],
         mock_member: discord.Member,
-        mock_moderator: discord.Member,
     ) -> None:
-        """Test successful condition validation."""
-        # Setup valid scenario
-        mock_member.id = 555666777  # Different from moderator and owner
-        mock_moderator.id = 987654321
-        mock_ctx.guild.owner_id = 999999999
+        """Test applying permission decorator to a command function."""
+        # Create a mock command function
+        async def mock_command(ctx: commands.Context[Tux], member: discord.Member) -> str:
+            return f"Banned {member.name}"
 
-        # Setup role hierarchy (moderator higher than target)
-        mod_role = MagicMock(spec=discord.Role)
-        mod_role.position = 10
-        mock_moderator.top_role = mod_role
+        # Apply the decorator
+        decorated_command = require_moderator()(mock_command)
 
-        member_role = MagicMock(spec=discord.Role)
-        member_role.position = 5
-        mock_member.top_role = member_role
+        # Verify the decorated function is callable
+        assert callable(decorated_command)
 
-        # Setup bot permissions and role
-        bot_member = MagicMock(spec=discord.Member)
-        bot_member.guild_permissions.ban_members = True
-        bot_role = MagicMock(spec=discord.Role)
-        bot_role.position = 3  # Lower than member role
-        bot_member.top_role = bot_role
-        mock_ctx.guild.get_member.return_value = bot_member
+        # Mock the permission system to succeed
+        with patch('tux.services.moderation.condition_checker.get_permission_system') as mock_get_perm:
+            mock_perm_system = MagicMock()
+            mock_perm_system.require_permission = AsyncMock(return_value=None)
+            mock_get_perm.return_value = mock_perm_system
 
-        # All conditions should pass
-        assert mock_member.id != mock_moderator.id
-        assert mock_member.id != mock_ctx.guild.owner_id
-        assert mock_moderator.top_role.position > mock_member.top_role.position
-        assert mock_member.top_role.position > bot_member.top_role.position
+            # Call the decorated function
+            result = await decorated_command(mock_ctx, mock_member)
 
-
-
-    @pytest.mark.unit
-    async def test_role_hierarchy_edge_cases(self) -> None:
-        """Test edge cases in role hierarchy logic."""
-        # Test with equal role positions
-        role1 = MagicMock(spec=discord.Role)
-        role1.position = 5
-
-        role2 = MagicMock(spec=discord.Role)
-        role2.position = 5
-
-        # Equal positions should be handled
-        assert role1.position == role2.position
-
-        # Test with None roles (edge case)
-        # This would need to be handled in the actual implementation
-        member_no_role = MagicMock(spec=discord.Member)
-        member_no_role.top_role = None
-
-        # Should handle None gracefully
-        assert member_no_role.top_role is None
+            # Should return the original function's result
+            assert result == f"Banned {mock_member.name}"
+            from tux.core.permission_system import PermissionLevel
+            mock_perm_system.require_permission.assert_called_once_with(mock_ctx, PermissionLevel.MODERATOR)
