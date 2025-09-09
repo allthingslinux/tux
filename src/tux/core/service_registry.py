@@ -12,7 +12,15 @@ from loguru import logger
 from tux.core.container import ServiceContainer, ServiceRegistrationError
 from tux.core.interfaces import IBotService, IGithubService, ILoggerService
 from tux.core.services import BotService, GitHubService, LoggerService
+from tux.core.types import Tux
+from tux.database.controllers import DatabaseCoordinator
 from tux.database.service import DatabaseService
+from tux.services.moderation import (
+    CaseService,
+    CommunicationService,
+    ExecutionService,
+    ModerationCoordinator,
+)
 
 
 class ServiceRegistry:
@@ -68,6 +76,10 @@ class ServiceRegistry:
             container.register_instance(IBotService, bot_service)
             logger.debug("Registered BotService instance")
 
+            # Register moderation services
+            ServiceRegistry._configure_moderation_services(container, bot)
+            logger.debug("Registered moderation services")
+
         except ServiceRegistrationError:
             logger.error("❌ Service registration failed")
             logger.info("💡 Check your service configurations and dependencies")
@@ -80,6 +92,53 @@ class ServiceRegistry:
         else:
             logger.info("Service container configuration completed successfully")
             return container
+
+    @staticmethod
+    def _configure_moderation_services(container: ServiceContainer, bot: commands.Bot) -> None:
+        """Configure moderation services in the DI container.
+
+        Args:
+            container: The service container to register services in
+            bot: The Discord bot instance for bot-dependent services
+
+        Raises:
+            ServiceRegistrationError: If service registration fails
+        """
+        try:
+            # Get database service for case controller dependency
+            db_service = container.get(DatabaseService)
+
+            # Create database coordinator to access controllers
+            db_coordinator = DatabaseCoordinator(db_service)
+
+            # Create and register CaseService with database dependency
+            case_service = CaseService(db_coordinator.case)  # type: ignore[arg-type]
+            container.register_instance(CaseService, case_service)
+            logger.debug("Registered CaseService instance")
+
+            # Create and register ExecutionService (no dependencies)
+            execution_service = ExecutionService()
+            container.register_instance(ExecutionService, execution_service)
+            logger.debug("Registered ExecutionService instance")
+
+            # Create and register CommunicationService with bot dependency
+            communication_service = CommunicationService(cast("Tux", bot))  # type: ignore[arg-type]
+            container.register_instance(CommunicationService, communication_service)
+            logger.debug("Registered CommunicationService instance")
+
+            # Create and register ModerationCoordinator with all dependencies
+            moderation_coordinator = ModerationCoordinator(
+                case_service=case_service,
+                communication_service=communication_service,
+                execution_service=execution_service,
+            )
+            container.register_instance(ModerationCoordinator, moderation_coordinator)
+            logger.debug("Registered ModerationCoordinator instance")
+
+        except Exception as e:
+            error_msg = f"Failed to configure moderation services: {e}"
+            logger.error(f"❌ {error_msg}")
+            raise ServiceRegistrationError(error_msg) from e
 
     @staticmethod
     def configure_test_container() -> ServiceContainer:
@@ -103,6 +162,9 @@ class ServiceRegistry:
             db_service = DatabaseService()
             container.register_instance(DatabaseService, db_service)
 
+            # Register moderation services for testing
+            ServiceRegistry._configure_test_moderation_services(container)
+
             # Do not register IBotService in test container to match unit tests expectations
 
         except Exception as e:
@@ -113,6 +175,40 @@ class ServiceRegistry:
         else:
             logger.debug("Test service container configuration completed")
             return container
+
+    @staticmethod
+    def _configure_test_moderation_services(container: ServiceContainer) -> None:
+        """Configure moderation services for testing.
+
+        Args:
+            container: The test service container to register services in
+
+        Raises:
+            ServiceRegistrationError: If service registration fails
+        """
+        try:
+            # Get database service for case controller dependency
+            db_service = container.get(DatabaseService)
+
+            # Create database coordinator to access controllers
+            db_coordinator = DatabaseCoordinator(db_service)
+
+            # Create and register CaseService with database dependency
+            case_service = CaseService(db_coordinator.case)
+            container.register_instance(CaseService, case_service)
+
+            # Create and register ExecutionService (no dependencies)
+            execution_service = ExecutionService()
+            container.register_instance(ExecutionService, execution_service)
+
+            # Note: CommunicationService and ModerationCoordinator require a bot instance
+            # which is not available in test containers. Tests that need these services
+            # should mock them or use integration tests.
+
+        except Exception as e:
+            error_msg = f"Failed to configure test moderation services: {e}"
+            logger.error(f"❌ {error_msg}")
+            raise ServiceRegistrationError(error_msg) from e
 
     @staticmethod
     def validate_container(container: ServiceContainer) -> bool:
@@ -126,7 +222,9 @@ class ServiceRegistry:
         """
         # Core required services that should always be present
         core_required_services = [DatabaseService, ILoggerService]
-        required_services = core_required_services
+        # Moderation services that should be present in full containers
+        moderation_services = [CaseService, CommunicationService, ExecutionService, ModerationCoordinator]
+        required_services = core_required_services + moderation_services
 
         logger.debug("Validating service container configuration")
 
@@ -168,8 +266,8 @@ class ServiceRegistry:
         # Use the public method to get registered service types
         try:
             service_types: list[type] = container.get_registered_service_types()
-            # Only return the core services expected by tests
-            core = {DatabaseService.__name__, IBotService.__name__}
+            # Return core services expected by tests plus moderation services
+            core = {DatabaseService.__name__, IBotService.__name__, CaseService.__name__, ExecutionService.__name__}
             return [service_type.__name__ for service_type in service_types if service_type.__name__ in core]
         except AttributeError:
             # Fallback for containers that don't have the method
