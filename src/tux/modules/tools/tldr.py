@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 
 import discord
@@ -24,38 +25,48 @@ class Tldr(BaseCog):
         self._cache_checked = False  # Track if cache has been checked
 
     async def cog_load(self):
-        """Check cache age and update if necessary when the cog is loaded (initial startup only)."""
-
+        """Schedule cache check when the cog is loaded (initial startup only)."""
         # Skip cache checks during hot reloads - only check on initial startup
         if self._cache_checked:
             logger.debug("TLDR Cog: Skipping cache check (hot reload detected)")
             return
 
-        logger.debug("TLDR Cog: Checking cache status...")
+        # Schedule cache initialization to run after the event loop is fully ready
+        # This avoids the "loop attribute cannot be accessed in non-async contexts" error
+        self._cache_task = asyncio.create_task(self._initialize_cache_async())
+        logger.debug("TLDR Cog: Cache initialization scheduled.")
 
-        # Normalize detected language before adding to set
-        normalized_default_lang = self.default_language
-        if normalized_default_lang.startswith("en") and normalized_default_lang != "en":
-            normalized_default_lang = "en"  # Treat en_US, en_GB as 'en' for tldr pages
+    async def _initialize_cache_async(self):
+        """Asynchronously initialize TLDR cache after event loop is ready."""
+        try:
+            logger.debug("TLDR Cog: Checking cache status...")
 
-        languages_to_check = {normalized_default_lang, "en"}
+            # Normalize detected language before adding to set
+            normalized_default_lang = self.default_language
+            if normalized_default_lang.startswith("en") and normalized_default_lang != "en":
+                normalized_default_lang = "en"  # Treat en_US, en_GB as 'en' for tldr pages
 
-        for lang_code in languages_to_check:
-            if TldrClient.cache_needs_update(lang_code):
-                logger.info(f"TLDR Cog: Cache for '{lang_code}' is older than 168 hours, updating...")
-                try:
-                    result_msg = await self.bot.loop.run_in_executor(None, TldrClient.update_tldr_cache, lang_code)
-                    if "Failed" in result_msg:
-                        logger.error(f"TLDR Cog: Cache update for '{lang_code}' - {result_msg}")
-                    else:
-                        logger.debug(f"TLDR Cog: Cache update for '{lang_code}' - {result_msg}")
-                except Exception as e:
-                    logger.error(f"TLDR Cog: Exception during cache update for '{lang_code}': {e}", exc_info=True)
-            else:
-                logger.debug(f"TLDR Cog: Cache for '{lang_code}' is recent, skipping update.")
+            languages_to_check = {normalized_default_lang, "en"}
 
-        self._cache_checked = True
-        logger.debug("TLDR Cog: Cache check completed.")
+            for lang_code in languages_to_check:
+                if TldrClient.cache_needs_update(lang_code):
+                    logger.info(f"TLDR Cog: Cache for '{lang_code}' is older than 168 hours, updating...")
+                    try:
+                        # Use asyncio.to_thread for cleaner async execution
+                        result_msg = await asyncio.to_thread(TldrClient.update_tldr_cache, lang_code)
+                        if "Failed" in result_msg:
+                            logger.error(f"TLDR Cog: Cache update for '{lang_code}' - {result_msg}")
+                        else:
+                            logger.debug(f"TLDR Cog: Cache update for '{lang_code}' - {result_msg}")
+                    except Exception as e:
+                        logger.error(f"TLDR Cog: Exception during cache update for '{lang_code}': {e}", exc_info=True)
+                else:
+                    logger.debug(f"TLDR Cog: Cache for '{lang_code}' is recent, skipping update.")
+
+            self._cache_checked = True
+            logger.debug("TLDR Cog: Cache check completed.")
+        except Exception as e:
+            logger.error(f"TLDR Cog: Critical error during cache initialization: {e}", exc_info=True)
 
     def detect_bot_language(self) -> str:
         """Detect the bot's default language. For Discord bots, default to English."""
