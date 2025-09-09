@@ -15,8 +15,8 @@
   "python.terminal.activateEnvInCurrentTerminal": true,
   "python.terminal.executeInFileDir": false,
   "python.testing.pytestEnabled": true,
-  "python.testing.unittestEnabled": false,
-  "python.testing.autoTestDiscoverOnSaveEnabled": true,
+  "python.testing.autoTestDiscoverOnSaveEnabled": false,
+  "basedpyright.analysis.typeCheckingMode": "strict",
   "autoDocstring.docstringFormat": "numpy",
   "coverage-gutters.coverageFileNames": [
     "coverage.xml",

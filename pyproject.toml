@@ -74,7 +74,7 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
     "pre-commit==4.2.0",
-    "basedpyright==1.31.1",
+    "basedpyright==1.29.5",
     "ruff==0.12.4",
     "yamllint==1.37.1",
     "yamlfix==1.17.0",
@@ -215,8 +215,6 @@ stubPath = "typings"
 pythonPlatform = "Linux"
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
-# venv = ".venv"
-# venvPath = "."
 
 [tool.coverage.run]
 source = ["src/tux"]

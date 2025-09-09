@@ -13,6 +13,7 @@
     "usernamehw.errorlens",
     "sourcery.sourcery",
     "redhat.vscode-yaml",
-    "ryanluker.vscode-coverage-gutters"
+    "ryanluker.vscode-coverage-gutters",
+    "ms-azuretools.vscode-containers"
   ]
 }

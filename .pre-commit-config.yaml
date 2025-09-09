@@ -16,7 +16,7 @@ repos:
       - id: validate-pyproject
         additional_dependencies: ['validate-pyproject-schema-store[all]']
   - repo: https://github.com/lyz-code/yamlfix
-    rev: 1.17.0
+    rev: 1.18.0
     hooks:
       - id: yamlfix
         exclude: \.(commitlintrc|pre-commit-hooks)\.yaml$|docker-compose.*\.yml$
@@ -45,12 +45,12 @@ repos:
     hooks:
       - id: add-trailing-comma
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.10
+    rev: v0.12.12
     hooks:
       - id: ruff-check
         args: [--fix]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.10
+    rev: v0.12.12
     hooks:
       - id: ruff-format
   - repo: https://github.com/gitleaks/gitleaks
