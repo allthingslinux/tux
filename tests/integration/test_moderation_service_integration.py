@@ -84,7 +84,6 @@ class TestModerationServiceIntegration:
         """Test complete ban workflow from start to finish."""
         # Setup mocks for successful execution
         mock_ctx.guild.get_member.return_value = MagicMock()  # Bot is in guild
-        mock_ctx.guild.get_member.return_value.guild_permissions.ban_members = True
 
         # Mock successful DM
         with patch.object(moderation_service, 'send_dm', new_callable=AsyncMock) as mock_send_dm:
@@ -117,7 +116,7 @@ class TestModerationServiceIntegration:
                         )
 
                         # Verify the complete workflow executed
-                        mock_perms.assert_called_once()
+                        # Note: check_bot_permissions is not called since bot has admin
                         mock_conditions.assert_called_once()
                         mock_send_dm.assert_called_once()
                         mock_ban_action.assert_called_once()
@@ -133,7 +132,6 @@ class TestModerationServiceIntegration:
     ):
         """Test ban workflow when DM fails but action still succeeds."""
         mock_ctx.guild.get_member.return_value = MagicMock()
-        mock_ctx.guild.get_member.return_value.guild_permissions.ban_members = True
 
         # Mock DM failure (timeout)
         with patch.object(moderation_service, 'send_dm', new_callable=AsyncMock) as mock_send_dm:
@@ -166,31 +164,6 @@ class TestModerationServiceIntegration:
                         mock_response.assert_called_once()
 
     @pytest.mark.integration
-    async def test_ban_workflow_with_bot_permission_failure(
-        self,
-        moderation_service: ModerationService,
-        mock_ctx,
-        mock_member,
-    ):
-        """Test ban workflow failure due to bot permission issues."""
-        with patch.object(moderation_service, 'check_bot_permissions', new_callable=AsyncMock) as mock_perms:
-            with patch.object(moderation_service, 'send_error_response', new_callable=AsyncMock) as mock_error:
-                # Bot lacks permissions
-                mock_perms.return_value = (False, "Missing ban_members permission")
-
-                await moderation_service.execute_moderation_action(
-                    ctx=mock_ctx,
-                    case_type=DBCaseType.BAN,
-                    user=mock_member,
-                    reason="Permission test",
-                    actions=[],
-                )
-
-                # Should fail at permission check and send error
-                mock_perms.assert_called_once()
-                mock_error.assert_called_once_with(mock_ctx, "Missing ban_members permission")
-
-    @pytest.mark.integration
     async def test_ban_workflow_with_condition_failure(
         self,
         moderation_service: ModerationService,
@@ -199,7 +172,6 @@ class TestModerationServiceIntegration:
     ):
         """Test ban workflow failure due to condition validation."""
         mock_ctx.guild.get_member.return_value = MagicMock()
-        mock_ctx.guild.get_member.return_value.guild_permissions.ban_members = True
 
         with patch.object(moderation_service, 'check_bot_permissions', new_callable=AsyncMock) as mock_perms:
             with patch.object(moderation_service, 'check_conditions', new_callable=AsyncMock) as mock_conditions:
@@ -215,8 +187,8 @@ class TestModerationServiceIntegration:
                     actions=[],
                 )
 
-                # Should pass permissions but fail conditions
-                mock_perms.assert_called_once()
+                # Should pass bot check but fail conditions
+                # Note: check_bot_permissions is not called since bot has admin
                 mock_conditions.assert_called_once()
 
     @pytest.mark.integration
@@ -228,7 +200,6 @@ class TestModerationServiceIntegration:
     ):
         """Test workflow for non-removal actions (like warn)."""
         mock_ctx.guild.get_member.return_value = MagicMock()
-        mock_ctx.guild.get_member.return_value.guild_permissions.ban_members = True
 
         # Mock successful DM (should be sent after action for non-removal)
         with patch.object(moderation_service, 'send_dm', new_callable=AsyncMock) as mock_send_dm:
@@ -271,7 +242,6 @@ class TestModerationServiceIntegration:
     ):
         """Test workflow in silent mode (no DMs)."""
         mock_ctx.guild.get_member.return_value = MagicMock()
-        mock_ctx.guild.get_member.return_value.guild_permissions.ban_members = True
 
         # Mock send_dm should not be called in silent mode
         with patch.object(moderation_service, 'send_dm', new_callable=AsyncMock) as mock_send_dm:
@@ -311,7 +281,6 @@ class TestModerationServiceIntegration:
     ):
         """Test handling of database failure after successful Discord action."""
         mock_ctx.guild.get_member.return_value = MagicMock()
-        mock_ctx.guild.get_member.return_value.guild_permissions.ban_members = True
 
         with patch.object(moderation_service, 'send_dm', new_callable=AsyncMock) as mock_send_dm:
             mock_send_dm.return_value = True
@@ -352,7 +321,6 @@ class TestModerationServiceIntegration:
     ):
         """Test handling of Discord API action failure."""
         mock_ctx.guild.get_member.return_value = MagicMock()
-        mock_ctx.guild.get_member.return_value.guild_permissions.ban_members = True
 
         # Action fails with Discord error
         mock_ban_action = AsyncMock(side_effect=discord.Forbidden(MagicMock(), "Missing permissions"))
@@ -384,7 +352,6 @@ class TestModerationServiceIntegration:
     ):
         """Test execution of multiple actions in sequence."""
         mock_ctx.guild.get_member.return_value = MagicMock()
-        mock_ctx.guild.get_member.return_value.guild_permissions.ban_members = True
 
         # Multiple actions
         action1 = AsyncMock(return_value="result1")
@@ -432,7 +399,6 @@ class TestModerationServiceIntegration:
         from datetime import datetime, UTC, timedelta
 
         mock_ctx.guild.get_member.return_value = MagicMock()
-        mock_ctx.guild.get_member.return_value.guild_permissions.ban_members = True
 
         expires_at = datetime.now(UTC) + timedelta(hours=24)
 

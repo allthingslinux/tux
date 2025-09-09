@@ -66,10 +66,9 @@ class TestConditionChecker:
         condition_checker: ConditionChecker,
         mock_ctx: commands.Context[Tux],
     ) -> None:
-        """Test successful bot permission check."""
-        # Mock bot member with required permissions
+        """Test successful bot setup check."""
+        # Mock bot member present in server (administrator permissions assumed)
         bot_member = MagicMock(spec=discord.Member)
-        bot_member.guild_permissions.ban_members = True
         mock_ctx.guild.get_member.return_value = bot_member
 
         has_perms, error_msg = await condition_checker.check_bot_permissions(mock_ctx, "ban")
@@ -92,55 +91,19 @@ class TestConditionChecker:
         assert error_msg == "Bot is not a member of this server."
 
     @pytest.mark.unit
-    async def test_check_bot_permissions_missing_permission(
+    async def test_check_bot_permissions_bot_not_member(
         self,
         condition_checker: ConditionChecker,
         mock_ctx: commands.Context[Tux],
     ) -> None:
-        """Test bot permission check when bot lacks required permission."""
-        # Mock bot member without ban permission
-        bot_member = MagicMock(spec=discord.Member)
-        bot_member.guild_permissions.ban_members = False
-        mock_ctx.guild.get_member.return_value = bot_member
+        """Test bot setup check when bot is not a member of the server."""
+        # Mock bot not being a member of the server
+        mock_ctx.guild.get_member.return_value = None
 
         has_perms, error_msg = await condition_checker.check_bot_permissions(mock_ctx, "ban")
 
         assert has_perms is False
-        assert "Bot is missing required permissions: Ban Members" == error_msg
-
-    @pytest.mark.unit
-    async def test_check_bot_permissions_multiple_missing(
-        self,
-        condition_checker: ConditionChecker,
-        mock_ctx: commands.Context[Tux],
-    ) -> None:
-        """Test bot permission check with multiple missing permissions."""
-        # Mock bot member without required permissions
-        bot_member = MagicMock(spec=discord.Member)
-        bot_member.guild_permissions.ban_members = False
-        bot_member.guild_permissions.kick_members = False
-        mock_ctx.guild.get_member.return_value = bot_member
-
-        has_perms, error_msg = await condition_checker.check_bot_permissions(mock_ctx, "ban")
-
-        assert has_perms is False
-        assert "Bot is missing required permissions: Ban Members" == error_msg
-        assert "kick members" not in error_msg  # Only ban_members required for ban
-
-    @pytest.mark.unit
-    async def test_check_bot_permissions_no_special_perms_needed(
-        self,
-        condition_checker: ConditionChecker,
-        mock_ctx: commands.Context[Tux],
-    ) -> None:
-        """Test bot permission check for actions that don't need special permissions."""
-        bot_member = MagicMock(spec=discord.Member)
-        mock_ctx.guild.get_member.return_value = bot_member
-
-        has_perms, error_msg = await condition_checker.check_bot_permissions(mock_ctx, "warn")
-
-        assert has_perms is True
-        assert error_msg is None
+        assert error_msg == "Bot is not a member of this server."
 
     @pytest.mark.unit
     async def test_check_conditions_self_moderation(
@@ -298,50 +261,7 @@ class TestConditionChecker:
         assert mock_moderator.top_role.position > mock_member.top_role.position
         assert mock_member.top_role.position > bot_member.top_role.position
 
-    @pytest.mark.unit
-    async def test_check_conditions_with_bot_permission_failure(
-        self,
-        condition_checker: ConditionChecker,
-        mock_ctx: commands.Context[Tux],
-        mock_member: discord.Member,
-        mock_moderator: discord.Member,
-    ) -> None:
-        """Test condition validation with bot permission failure."""
-        # Setup scenario with bot lacking permissions
-        bot_member = MagicMock(spec=discord.Member)
-        bot_member.guild_permissions.ban_members = False  # Bot lacks permission
-        mock_ctx.guild.get_member.return_value = bot_member
 
-        # Bot permission check should fail
-        has_perms, error_msg = await condition_checker.check_bot_permissions(mock_ctx, "ban")
-        assert has_perms is False
-        assert "Bot is missing required permissions: Ban Members" == error_msg
-
-    @pytest.mark.unit
-    async def test_check_conditions_error_response_handling(
-        self,
-        condition_checker: ConditionChecker,
-        mock_ctx: commands.Context[Tux],
-        mock_member: discord.Member,
-        mock_moderator: discord.Member,
-    ) -> None:
-        """Test that error responses are sent appropriately."""
-        # This test verifies that error handling methods are called
-        # In a real scenario, send_error_response would be available from EmbedManager
-
-        # Mock the send_error_response method
-        condition_checker.send_error_response = AsyncMock()
-
-        # Test bot permission failure triggers error response
-        bot_member = MagicMock(spec=discord.Member)
-        bot_member.guild_permissions.ban_members = False
-        mock_ctx.guild.get_member.return_value = bot_member
-
-        has_perms, error_msg = await condition_checker.check_bot_permissions(mock_ctx, "ban")
-
-        # In the full check_conditions method, this would trigger send_error_response
-        assert has_perms is False
-        assert error_msg is not None
 
     @pytest.mark.unit
     async def test_role_hierarchy_edge_cases(self) -> None:
