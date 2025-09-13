@@ -14,6 +14,8 @@ from loguru import logger
 from tux.utils.config import CONFIG
 from tux.utils.sentry import safe_set_name, span, start_span, transaction
 
+SENTRY_INITIALIZED: bool = sentry_sdk.is_initialized()
+
 
 class CogLoadError(Exception):
     """Raised when a cog fails to load."""
@@ -90,7 +92,7 @@ class CogLoader(commands.Cog):
         cog_name = path.stem
 
         # Add span tags for the current cog
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
+        if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
             current_span.set_tag("cog.name", cog_name)
             current_span.set_tag("cog.path", str(path))
 
@@ -101,7 +103,7 @@ class CogLoader(commands.Cog):
             # Convert path to module format (e.g., tux.cogs.admin.dev)
             module = f"tux.{str(relative_path).replace('/', '.').replace('\\', '.')[:-3]}"
 
-            if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
+            if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
                 current_span.set_tag("cog.module", module)
 
             # Check if this module or any parent module is already loaded
@@ -112,7 +114,7 @@ class CogLoader(commands.Cog):
                 check_module = ".".join(module_parts[:i])
                 if check_module in self.bot.extensions:
                     logger.warning(f"Skipping {module} as {check_module} is already loaded")
-                    if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
+                    if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
                         current_span.set_tag("cog.status", "skipped")
                         current_span.set_tag("cog.skip_reason", "already_loaded")
                         current_span.set_data("already_loaded_module", check_module)
@@ -124,7 +126,7 @@ class CogLoader(commands.Cog):
             self.load_times[module] = load_time
 
             # Add telemetry data to span
-            if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
+            if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
                 current_span.set_tag("cog.status", "loaded")
                 current_span.set_data("load_time_ms", load_time * 1000)
                 current_span.set_data("load_time_s", load_time)
@@ -132,7 +134,7 @@ class CogLoader(commands.Cog):
             logger.debug(f"Successfully loaded cog {module} in {load_time * 1000:.0f}ms")
 
         except Exception as e:
-            if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
+            if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
                 current_span.set_status("internal_error")
                 current_span.set_tag("cog.status", "failed")
                 current_span.set_data("error", str(e))
@@ -173,7 +175,7 @@ class CogLoader(commands.Cog):
             return
 
         # Add basic info for the group
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
+        if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
             current_span.set_data("cog_count", len(cogs))
 
             if categories := {cog.parent.name for cog in cogs if cog.parent}:
@@ -188,7 +190,7 @@ class CogLoader(commands.Cog):
         success_count = len([r for r in results if not isinstance(r, Exception)])
         failure_count = len(results) - success_count
 
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
+        if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
             current_span.set_data("load_time_s", end_time - start_time)
             current_span.set_data("success_count", success_count)
             current_span.set_data("failure_count", failure_count)
@@ -200,14 +202,14 @@ class CogLoader(commands.Cog):
 
     async def _process_single_file(self, path: Path) -> None:
         """Process a single file path."""
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
+        if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
             current_span.set_tag("path.is_dir", False)
         if await self.is_cog_eligible(path):
             await self._load_single_cog(path)
 
     async def _process_directory(self, path: Path) -> None:
         """Process a directory of cogs."""
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
+        if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
             current_span.set_tag("path.is_dir", True)
 
         # Collect and sort eligible cogs by priority
@@ -216,7 +218,7 @@ class CogLoader(commands.Cog):
         ]
         cog_paths.sort(key=lambda x: x[0], reverse=True)
 
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
+        if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
             current_span.set_data("eligible_cog_count", len(cog_paths))
 
             # Priority groups info for observability
@@ -254,7 +256,7 @@ class CogLoader(commands.Cog):
             The path to the directory containing cogs.
         """
         # Add span context
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
+        if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
             current_span.set_tag("cog.path", str(path))
 
         try:
@@ -268,7 +270,7 @@ class CogLoader(commands.Cog):
             path_str = path.as_posix()
             logger.error(f"An error occurred while processing {path_str}: {e}")
 
-            if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
+            if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
                 current_span.set_status("internal_error")
                 current_span.set_data("error", str(e))
                 current_span.set_data("traceback", traceback.format_exc())
@@ -286,7 +288,7 @@ class CogLoader(commands.Cog):
             The name of the folder containing the cogs.
         """
         # Add span info
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
+        if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
             current_span.set_tag("cog.folder", folder_name)
             # Use safe_set_name instead of direct set_name call
             safe_set_name(current_span, f"Load Cogs: {folder_name}")
@@ -294,14 +296,14 @@ class CogLoader(commands.Cog):
         start_time = time.perf_counter()
         cog_path: Path = Path(__file__).parent / folder_name
 
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
+        if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
             current_span.set_data("full_path", str(cog_path))
 
         try:
             await self.load_cogs(path=cog_path)
             load_time = time.perf_counter() - start_time
 
-            if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
+            if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
                 current_span.set_data("load_time_s", load_time)
                 current_span.set_data("load_time_ms", load_time * 1000)
 
@@ -311,12 +313,12 @@ class CogLoader(commands.Cog):
                 # Log individual cog load times for performance monitoring
                 slow_threshold = 1.0  # seconds
                 if slow_cogs := {k: v for k, v in self.load_times.items() if v > slow_threshold}:
-                    if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
+                    if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
                         current_span.set_data("slow_cogs", slow_cogs)
                     logger.warning(f"Slow loading cogs (>{slow_threshold * 1000:.0f}ms): {slow_cogs}")
 
         except Exception as e:
-            if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
+            if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
                 current_span.set_status("internal_error")
                 current_span.set_data("error", str(e))
                 current_span.set_data("traceback", traceback.format_exc())
@@ -335,11 +337,11 @@ class CogLoader(commands.Cog):
         bot : commands.Bot
             The bot instance.
         """
-        if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
-            current_span.set_tag("bot.id", bot.user.id if bot.user else "unknown")
-
         start_time = time.perf_counter()
         cog_loader = cls(bot)
+
+        if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
+            current_span.set_tag("bot.id", bot.user.id if bot.user else "unknown")
 
         try:
             # Load handlers first (they have highest priority)
@@ -356,7 +358,7 @@ class CogLoader(commands.Cog):
 
             total_time = time.perf_counter() - start_time
 
-            if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
+            if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
                 current_span.set_data("total_load_time_s", total_time)
                 current_span.set_data("total_load_time_ms", total_time * 1000)
 
@@ -367,7 +369,7 @@ class CogLoader(commands.Cog):
             logger.info(f"Total cog loading time: {total_time * 1000:.0f}ms")
 
         except Exception as e:
-            if sentry_sdk.is_initialized() and (current_span := sentry_sdk.get_current_span()):
+            if SENTRY_INITIALIZED and (current_span := sentry_sdk.get_current_span()):
                 current_span.set_status("internal_error")
                 current_span.set_data("error", str(e))
                 current_span.set_data("traceback", traceback.format_exc())
