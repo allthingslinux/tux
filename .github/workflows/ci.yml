@@ -75,7 +75,7 @@ jobs:
       # REPOSITORY CHECKOUT
       # Full history needed for accurate change detection
       - name: Checkout Repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
         with:
           fetch-depth: 0
 
@@ -118,6 +118,8 @@ jobs:
       # basedpyright provides comprehensive type checking for Python
       # Annotations appear directly in PR for developer feedback
       - name: Run basedpyright type checker
+        if: steps.python_changes.outputs.any_changed == 'true' || github.event_name
+          == 'workflow_dispatch'
         run: poetry run basedpyright
 
   # ============================================================================
@@ -136,7 +138,7 @@ jobs:
       # REPOSITORY CHECKOUT
       # Shallow clone sufficient for linting current state
       - name: Checkout Repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
 
       # SMART CHANGE DETECTION
       # Only runs when documentation files change
@@ -215,7 +217,7 @@ jobs:
       # REPOSITORY CHECKOUT
       # Shallow clone sufficient for infrastructure validation
       - name: Checkout Repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
 
       # SMART CHANGE DETECTION
       # Each matrix job only runs if relevant files changed

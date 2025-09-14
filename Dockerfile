@@ -43,7 +43,7 @@
 # Size Impact: ~150MB (Python slim + runtime deps)
 # ==============================================================================
 
-FROM python:3.13.5-slim@sha256:4c2cf9917bd1cbacc5e9b07320025bdb7cdf2df7b0ceaccb55e9dd7e30987419 AS base
+FROM python:3.13.7-slim@sha256:27f90d79cc85e9b7b2560063ef44fa0e9eaae7a7c3f5a9f74563065c5477cc24 AS base
 
 # OCI Labels for container metadata and registry compliance
 # These labels provide important metadata for container registries and tools
@@ -81,13 +81,12 @@ RUN echo 'path-exclude /usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends --no-install-suggests \
-        ffmpeg=7:5.1.6-0+deb12u1 \
-        git=1:2.39.5-0+deb12u2 \
-        libcairo2=1.16.0-7 \
-        libgdk-pixbuf2.0-0=2.40.2-2 \
-        libpango1.0-0=1.50.12+ds-1 \
-        libpangocairo-1.0-0=1.50.12+ds-1 \
-        shared-mime-info=2.2-1 \
+        git \
+        libcairo2 \
+        libgdk-pixbuf-2.0-0 \
+        libpango-1.0-0 \
+        libpangocairo-1.0-0 \
+        shared-mime-info \
     # Cleanup package manager caches to reduce layer size
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -122,13 +121,13 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
         # GCC compiler and build essentials for native extensions
-        build-essential=12.9 \
+        build-essential \
         # Additional utilities required by some Python packages
-        findutils=4.9.0-4 \
+        findutils \
         # Development headers for graphics libraries
-        libcairo2-dev=1.16.0-7 \
+        libcairo2-dev \
         # Foreign Function Interface library for Python extensions
-        libffi-dev=3.4.4-1 \
+        libffi8 \
     # Cleanup to reduce intermediate layer size
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -246,7 +245,7 @@ RUN set -eux; \
     # Only installs if DEVCONTAINER build arg is set to 1
     if [ "$DEVCONTAINER" = "1" ]; then \
         apt-get update && \
-        apt-get install -y --no-install-recommends zsh=5.9-4+b6 && \
+        apt-get install -y --no-install-recommends zsh && \
         chsh -s /usr/bin/zsh && \
         apt-get clean && \
         rm -rf /var/lib/apt/lists/*; \
@@ -285,7 +284,7 @@ CMD ["sh", "-c", "poetry run prisma generate && exec poetry run tux --dev start"
 # Size Impact: ~440MB (73% reduction from development image)
 # ==============================================================================
 
-FROM python:3.13.5-slim@sha256:4c2cf9917bd1cbacc5e9b07320025bdb7cdf2df7b0ceaccb55e9dd7e30987419 AS production
+FROM python:3.13.7-slim@sha256:27f90d79cc85e9b7b2560063ef44fa0e9eaae7a7c3f5a9f74563065c5477cc24 AS production
 
 # Duplicate OCI labels for production image metadata
 # COMPLIANCE: Ensures production images have proper metadata for registries
@@ -321,9 +320,9 @@ RUN echo 'path-exclude /usr/share/doc/*' > /etc/dpkg/dpkg.cfg.d/01_nodoc && \
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends --no-install-suggests \
-        libcairo2=1.16.0-7 \
-        libffi8=3.4.4-1 \
-        coreutils=9.1-1 \
+        libcairo2 \
+        libffi8 \
+        coreutils \
     # Aggressive cleanup to minimize image size
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
@@ -391,7 +390,7 @@ RUN set -eux; \
     find /app/.venv -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true; \
     # Remove test directories from installed packages (but preserve prisma binaries)
     # These directories contain test files that are not needed in production
-    for test_dir in tests testing "*test*"; do \
+    for test_dir in tests testing "test*"; do \
       find /app/.venv -name "$test_dir" -type d -not -path "*/prisma*" -exec rm -rf {} + 2>/dev/null || true; \
     done; \
     # Remove documentation files from installed packages (but preserve prisma docs)
