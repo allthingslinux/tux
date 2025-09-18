@@ -126,7 +126,6 @@ types = [
     "types-influxdb-client>=1.45.0.20241221,<2",
     "types-jinja2>=2.11.9,<3",
     "annotated-types>=0.7.0",
-    "typing-extensions>=4.14.1",
     "asyncpg-stubs>=0.30.2",
 ]
 
@@ -205,16 +204,16 @@ exclude = [
     "_build",
     "examples",
     ".archive",
-    "typings/**",
     "tests/**",
     "src/tux/database/migrations/**",
 ]
 ignore = ["**/tests/**"]
-include = ["src"]
+include = ["src", "scripts"]
 stubPath = "typings"
 pythonPlatform = "Linux"
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
+reportUnnecessaryTypeIgnoreComment = "warning"
 
 [tool.coverage.run]
 source = ["src/tux"]
