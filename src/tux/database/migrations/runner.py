@@ -6,7 +6,7 @@ from pathlib import Path
 from alembic import command
 from alembic.config import Config
 from loguru import logger
-
+import sqlalchemy.exc
 
 from tux.shared.config import CONFIG
 
@@ -76,11 +76,14 @@ async def upgrade_head_if_needed() -> None:
     """Run Alembic upgrade to head on startup.
 
     This call is idempotent and safe to run on startup.
+
+    Raises:
+        ConnectionError: When database connection fails
+        RuntimeError: When migration execution fails
     """
     import concurrent.futures
-    import threading
 
-    def run_upgrade():
+    def run_upgrade() -> None:
         """Run the upgrade in a separate thread with timeout."""
         cfg = _build_alembic_config()
         logger.info("🔄 Checking database migrations...")
@@ -100,21 +103,18 @@ async def upgrade_head_if_needed() -> None:
                 logger.info("✅ Database migrations completed")
             else:
                 logger.info("✅ Database is already up to date")
-            return True
+        except sqlalchemy.exc.OperationalError as e:
+            logger.error("❌ Database migration failed: Cannot connect to database")
+            logger.info("💡 Ensure PostgreSQL is running: make docker-up")
+            raise ConnectionError("Database connection failed during migrations") from e
         except Exception as e:
-            # Check if this is a database connection error
-            if "connection failed" in str(e) or "Connection refused" in str(e):
-                logger.error("❌ Database migration failed: Cannot connect to database")
-                logger.info("💡 Ensure PostgreSQL is running: make docker-up")
-                raise RuntimeError("Database connection failed during migrations") from e
-            else:
-                logger.error(f"❌ Database migration failed: {type(e).__name__}")
-                logger.info("💡 Check database connection settings")
-                raise
+            logger.error(f"❌ Database migration failed: {type(e).__name__}")
+            logger.info("💡 Check database connection settings")
+            migration_error_msg = f"Migration execution failed: {e}"
+            raise RuntimeError(migration_error_msg) from e
 
     try:
         # Use ThreadPoolExecutor for cancellable execution
-        loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             # Submit the task
             future = executor.submit(run_upgrade)
@@ -122,7 +122,8 @@ async def upgrade_head_if_needed() -> None:
             # Wait for completion with timeout, but allow cancellation
             while not future.done():
                 # Check if we've been cancelled
-                if asyncio.current_task().cancelled():
+                current_task = asyncio.current_task()
+                if current_task and current_task.cancelled():
                     logger.warning("⚠️ Migration cancelled, shutting down...")
                     future.cancel()
                     raise asyncio.CancelledError("Migration was cancelled")
@@ -131,7 +132,7 @@ async def upgrade_head_if_needed() -> None:
                 await asyncio.sleep(0.1)
 
             # Get the result (will raise exception if failed)
-            return future.result()
+            future.result()
 
     except concurrent.futures.CancelledError:
         logger.warning("⚠️ Migration thread cancelled")

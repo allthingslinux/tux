@@ -164,7 +164,7 @@ class AsyncDatabaseService(DatabaseServiceABC):
 
     async def execute_query(self, operation: Callable[[AsyncSession], Awaitable[T]], span_desc: str) -> T:
         """Execute async database operation with retry logic."""
-        return await self._execute_with_retry(operation, span_desc)  # type: ignore
+        return await self._execute_with_retry(operation, span_desc)
 
     async def _execute_with_retry(
         self,
@@ -291,7 +291,7 @@ class SyncDatabaseService(DatabaseServiceABC):
 
     async def execute_query(self, operation: Callable[[Session], T], span_desc: str) -> T:
         """Execute sync database operation with retry logic."""
-        return await self._execute_with_retry(operation, span_desc)  # type: ignore
+        return await self._execute_with_retry(operation, span_desc)
 
     async def _execute_with_retry(
         self,

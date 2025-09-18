@@ -46,7 +46,7 @@ naming_convention = {
 }
 
 metadata = MetaData(naming_convention=naming_convention)
-SQLModel.metadata.naming_convention = naming_convention  # type: ignore[attr-defined]
+SQLModel.metadata.naming_convention = naming_convention
 
 target_metadata = SQLModel.metadata
 
@@ -142,6 +142,7 @@ def run_migrations_online() -> None:
     # Retry connection a few times in case database is starting up
     max_retries = 5
     retry_delay = 2
+    connectable = None
 
     for attempt in range(max_retries):
         try:
@@ -157,7 +158,7 @@ def run_migrations_online() -> None:
 
             # Test the connection before proceeding
             with connectable.connect() as connection:
-                result = connection.execute(text("SELECT 1"))
+                connection.execute(text("SELECT 1"))
                 break
 
         except OperationalError as e:
@@ -168,6 +169,9 @@ def run_migrations_online() -> None:
             print(f"DEBUG: Connection attempt {attempt + 1} failed, retrying in {retry_delay}s")
 
             time.sleep(retry_delay)
+
+    if connectable is None:
+        raise RuntimeError("Failed to create database connection")
 
     with connectable.connect() as connection:
         context.configure(

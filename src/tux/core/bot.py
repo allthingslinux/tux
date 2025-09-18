@@ -105,7 +105,7 @@ class Tux(commands.Bot):
         # Remove callback to prevent exception re-raising
         # Task completion will be handled in setup_hook instead
 
-    async def setup(self) -> None:  # noqa: PLR0912, PLR0915
+    async def setup(self) -> None:  # noqa: PLR0915
         """Perform one-time bot setup.
 
         Steps
@@ -126,18 +126,17 @@ class Tux(commands.Bot):
                 # Ensure DB schema is up-to-date in non-dev
                 try:
                     await upgrade_head_if_needed()
+                except ConnectionError as e:
+                    logger.error("❌ Database connection failed during migrations")
+                    logger.info("💡 To start the database, run: make docker-up")
+                    logger.info("   Or start just PostgreSQL: docker compose up tux-postgres -d")
+                    connection_error_msg = "Database connection failed during migrations"
+                    raise DatabaseConnectionError(connection_error_msg) from e
                 except RuntimeError as e:
-                    # Migration failed with a clean error message
-                    if "Database connection failed during migrations" in str(e):
-                        db_migration_error = "Database connection failed during migrations"
-                        raise DatabaseConnectionError(db_migration_error) from e
-                    raise
-                except Exception as e:
-                    # Other migration errors
-                    if "connection failed" in str(e) or "Connection refused" in str(e):
-                        db_migration_error = "Database connection failed during migrations"
-                        raise DatabaseConnectionError(db_migration_error) from e
-                    raise
+                    logger.error("❌ Database migration execution failed")
+                    logger.info("💡 Check database schema and migration files")
+                    migration_error_msg = "Database migration failed"
+                    raise RuntimeError(migration_error_msg) from e
                 set_setup_phase_tag(span, "database", "finished")
                 await self._setup_permission_system()
                 set_setup_phase_tag(span, "permission_system", "finished")
