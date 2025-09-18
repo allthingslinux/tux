@@ -54,8 +54,8 @@ class CogLoader(commands.Cog):
             "info": 20,
             "fun": 10,
             "tools": 5,
-            # Custom modules have lower priority to ensure core modules load first
-            "custom_modules": 1,
+            # Plugins have lower priority to ensure core modules load first
+            "plugins": 1,
         }
 
     async def is_cog_eligible(self, filepath: Path) -> bool:
@@ -381,9 +381,9 @@ class CogLoader(commands.Cog):
             with enhanced_span("cog.load_modules", "Load modules"):
                 await cog_loader.load_cogs_from_folder(folder_name="modules")
 
-            # Load custom modules (for self-hosters)
-            with enhanced_span("cog.load_custom_modules", "Load custom modules"):
-                await cog_loader.load_cogs_from_folder(folder_name="custom_modules")
+            # Load custom plugins (for self-hosters)
+            with enhanced_span("cog.load_plugins", "Load plugins"):
+                await cog_loader.load_cogs_from_folder(folder_name="plugins")
 
             total_time = time.perf_counter() - start_time
 

@@ -52,7 +52,7 @@ services:
         DEVCONTAINER: ${DEVCONTAINER:-0}
     volumes:
       - ./config:/app/config:ro
-      - ./src/tux/custom_modules:/app/tux/custom_modules:ro
+      - ./src/tux/plugins:/app/tux/plugins:ro
       - ./assets:/app/assets:ro
       # Migration mount - always mounted, controlled by USE_LOCAL_MIGRATIONS env var
       - ./src/tux/database/migrations:/app/tux/database/migrations:ro
@@ -138,8 +138,8 @@ services:
           target: /app/config
         # Sync custom modules
         - action: sync
-          path: ./src/tux/custom_modules
-          target: /app/tux/custom_modules
+          path: ./src/tux/plugins
+          target: /app/tux/plugins
         # Sync assets
         - action: sync
           path: ./assets
