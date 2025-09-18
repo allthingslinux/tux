@@ -11,8 +11,8 @@ import sys
 from pathlib import Path
 from typing import Annotated
 
-import typer
 import yaml
+from typer import Argument, Option  # type: ignore[attr-defined]
 
 # Add src to path
 src_path = Path(__file__).parent.parent / "src"
@@ -85,19 +85,17 @@ class DocsCLI(BaseCLI):
         self.rich.print_error("Can't find mkdocs.yml file. Please run from the project root or docs directory.")
         return None
 
-    def _run_command(self, cmd: list[str], env: dict[str, str] | None = None) -> bool:
+    def _run_command(self, command: list[str]) -> None:
         """Run a command and return success status."""
         try:
-            self.rich.print_info(f"Running: {' '.join(cmd)}")
-            subprocess.run(cmd, check=True, env=env)
+            self.rich.print_info(f"Running: {' '.join(command)}")
+            subprocess.run(command, check=True)
         except subprocess.CalledProcessError as e:
             self.rich.print_error(f"Command failed with exit code {e.returncode}")
-            return False
+            raise
         except FileNotFoundError:
-            self.rich.print_error(f"Command not found: {cmd[0]}")
-            return False
-        else:
-            return True
+            self.rich.print_error(f"Command not found: {command[0]}")
+            raise
 
     def _clean_directory(self, path: Path, name: str) -> None:
         """Clean a directory if it exists."""
@@ -109,12 +107,12 @@ class DocsCLI(BaseCLI):
 
     def serve(
         self,
-        host: Annotated[str, typer.Option("--host", "-h", help="Host to serve on")] = "127.0.0.1",
-        port: Annotated[int, typer.Option("--port", "-p", help="Port to serve on")] = 8000,
-        dirty: Annotated[bool, typer.Option("--dirty", help="Only re-build files that have changed")] = True,
-        no_livereload: Annotated[bool, typer.Option("--no-livereload", help="Disable live reloading")] = False,
-        clean: Annotated[bool, typer.Option("--clean", help="Build without effects of mkdocs serve")] = False,
-        strict: Annotated[bool, typer.Option("--strict", help="Enable strict mode")] = False,
+        host: Annotated[str, Option("--host", "-h", help="Host to serve on")] = "127.0.0.1",
+        port: Annotated[int, Option("--port", "-p", help="Port to serve on")] = 8000,
+        dirty: Annotated[bool, Option("--dirty", help="Only re-build files that have changed")] = True,
+        no_livereload: Annotated[bool, Option("--no-livereload", help="Disable live reloading")] = False,
+        clean: Annotated[bool, Option("--clean", help="Build without effects of mkdocs serve")] = False,
+        strict: Annotated[bool, Option("--strict", help="Enable strict mode")] = False,
     ) -> None:
         """Serve documentation locally with live reload."""
         self.rich.print_section("📚 Serving Documentation", "blue")
@@ -135,9 +133,10 @@ class DocsCLI(BaseCLI):
 
         cmd.extend(["-f", mkdocs_path])
 
-        if self._run_command(cmd):
+        try:
+            self._run_command(cmd)
             self.rich.print_success(f"Documentation server started at http://{host}:{port}")
-        else:
+        except subprocess.CalledProcessError:
             self.rich.print_error("Failed to start documentation server")
 
     def _run_mkdocs_command(self, command: str, *args: str, success_msg: str, error_msg: str) -> None:
@@ -147,26 +146,27 @@ class DocsCLI(BaseCLI):
 
         cmd = ["uv", "run", "mkdocs", command, "-f", mkdocs_path, *args]
 
-        if self._run_command(cmd):
+        try:
+            self._run_command(cmd)
             self.rich.print_success(success_msg)
-        else:
+        except subprocess.CalledProcessError:
             self.rich.print_error(error_msg)
 
     def build(
         self,
-        clean: Annotated[bool, typer.Option("--clean", help="Remove old files from site_dir before building")] = True,
-        strict: Annotated[bool, typer.Option("--strict", help="Enable strict mode")] = False,
-        theme: Annotated[str, typer.Option("--theme", "-t", help="Theme to use (mkdocs or readthedocs)")] = "",
-        site_dir: Annotated[str, typer.Option("--site-dir", "-d", help="Directory to output the build result")] = "",
+        clean: Annotated[bool, Option("--clean", help="Remove old files from site_dir before building")] = True,
+        strict: Annotated[bool, Option("--strict", help="Enable strict mode")] = False,
+        theme: Annotated[str, Option("--theme", "-t", help="Theme to use (mkdocs or readthedocs)")] = "",
+        site_dir: Annotated[str, Option("--site-dir", "-d", help="Directory to output the build result")] = "",
         use_directory_urls: Annotated[
             bool,
-            typer.Option("--use-directory-urls", help="Use directory URLs when building pages"),
+            Option("--use-directory-urls", help="Use directory URLs when building pages"),
         ] = True,
     ) -> None:
         """Build documentation site for production."""
         self.rich.print_section("🏗️ Building Documentation", "blue")
 
-        args = []
+        args: list[str] = []
         if clean:
             args.append("--clean")
         if strict:
@@ -187,23 +187,23 @@ class DocsCLI(BaseCLI):
 
     def deploy(
         self,
-        message: Annotated[str, typer.Option("--message", "-m", help="Commit message")] = "Deploy documentation",
-        remote: Annotated[str, typer.Option("--remote", help="Remote repository")] = "origin",
-        branch: Annotated[str, typer.Option("--branch", help="Branch to deploy to")] = "gh-pages",
-        force: Annotated[bool, typer.Option("--force", help="Force the push to the repository")] = False,
+        message: Annotated[str, Option("--message", "-m", help="Commit message")] = "Deploy documentation",
+        remote: Annotated[str, Option("--remote", help="Remote repository")] = "origin",
+        branch: Annotated[str, Option("--branch", help="Branch to deploy to")] = "gh-pages",
+        force: Annotated[bool, Option("--force", help="Force the push to the repository")] = False,
         no_history: Annotated[
             bool,
-            typer.Option("--no-history", help="Replace the whole Git history with one new commit"),
+            Option("--no-history", help="Replace the whole Git history with one new commit"),
         ] = False,
         ignore_version: Annotated[
             bool,
-            typer.Option(
+            Option(
                 "--ignore-version",
                 help="Ignore check that build is not being deployed with an older version of MkDocs",
             ),
         ] = False,
-        clean: Annotated[bool, typer.Option("--clean", help="Remove old files from site_dir before building")] = True,
-        strict: Annotated[bool, typer.Option("--strict", help="Enable strict mode")] = False,
+        clean: Annotated[bool, Option("--clean", help="Remove old files from site_dir before building")] = True,
+        strict: Annotated[bool, Option("--strict", help="Enable strict mode")] = False,
     ) -> None:
         """Deploy documentation to GitHub Pages."""
         self.rich.print_section("🚀 Deploying Documentation", "blue")
@@ -237,7 +237,7 @@ class DocsCLI(BaseCLI):
 
     def gh_deploy(
         self,
-        message: Annotated[str, typer.Option("--message", "-m", help="Commit message")] = "Deploy documentation",
+        message: Annotated[str, Option("--message", "-m", help="Commit message")] = "Deploy documentation",
     ) -> None:
         """Deploy to GitHub Pages (alias for deploy)."""
         self.deploy(message=message)
@@ -273,7 +273,7 @@ class DocsCLI(BaseCLI):
             return
 
         # Check for common issues
-        issues = []
+        issues: list[str] = []
 
         # Check if mkdocs.yml exists and is valid
         try:
@@ -302,17 +302,18 @@ class DocsCLI(BaseCLI):
 
     def new_project(
         self,
-        project_dir: Annotated[str, typer.Argument(help="Project directory name")],
+        project_dir: Annotated[str, Argument(help="Project directory name")],
     ) -> None:
         """Create a new MkDocs project."""
         self.rich.print_section("🆕 Creating New MkDocs Project", "blue")
 
         cmd = ["uv", "run", "mkdocs", "new", project_dir]
 
-        if self._run_command(cmd):
+        try:
+            self._run_command(cmd)
             self.rich.print_success(f"New MkDocs project created in '{project_dir}'")
             self.rich.print_info(f"To get started, run: cd {project_dir} && uv run mkdocs serve")
-        else:
+        except subprocess.CalledProcessError:
             self.rich.print_error("Failed to create new MkDocs project")
 
     def get_deps(self) -> None:
@@ -324,15 +325,16 @@ class DocsCLI(BaseCLI):
 
         cmd = ["uv", "run", "mkdocs", "get-deps", "-f", mkdocs_path]
 
-        if self._run_command(cmd):
+        try:
+            self._run_command(cmd)
             self.rich.print_success("Dependencies retrieved successfully")
-        else:
+        except subprocess.CalledProcessError:
             self.rich.print_error("Failed to get dependencies")
 
     def new_page(
         self,
-        title: Annotated[str, typer.Argument(help="Page title")],
-        path: Annotated[str, typer.Option("--path", "-p", help="Page path (e.g., dev/new-feature)")] = "",
+        title: Annotated[str, Argument(help="Page title")],
+        path: Annotated[str, Option("--path", "-p", help="Page path (e.g., dev/new-feature)")] = "",
     ) -> None:
         """Create a new documentation page."""
         self.rich.print_section("📄 Creating New Page", "blue")
@@ -399,7 +401,7 @@ class DocsCLI(BaseCLI):
             self.rich.print_error("docs/content directory not found")
             return
 
-        issues = []
+        issues: list[str] = []
         for md_file in docs_dir.rglob("*.md"):
             try:
                 content = md_file.read_text()
@@ -465,7 +467,7 @@ class DocsCLI(BaseCLI):
             return
 
         # Create a table of pages
-        table_data = []
+        table_data: list[tuple[str, str]] = []
         for md_file in sorted(md_files):
             rel_path = md_file.relative_to(docs_dir)
             try:

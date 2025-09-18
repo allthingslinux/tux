@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """
 Tux Bot CLI Script
 
@@ -9,7 +10,7 @@ import sys
 from pathlib import Path
 from typing import Annotated
 
-import typer
+from typer import Option  # type: ignore[attr-defined]
 
 # Add src to path
 src_path = Path(__file__).parent.parent / "src"
@@ -49,13 +50,13 @@ class TuxCLI(BaseCLI):
                 help_text=command.help_text,
             )
 
-    # ============================================================================
+    # ========================================================================
     # BOT COMMANDS
-    # ============================================================================
+    # ========================================================================
 
     def start_bot(
         self,
-        debug: Annotated[bool, typer.Option("--debug", help="Enable debug mode")] = False,
+        debug: Annotated[bool, Option("--debug", help="Enable debug mode")] = False,
     ) -> None:
         """Start the Tux Discord bot.
 

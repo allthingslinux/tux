@@ -10,7 +10,7 @@ from collections.abc import Callable
 class Command:
     """Represents a single CLI command."""
 
-    def __init__(self, name: str, func: Callable[[], None], help_text: str):
+    def __init__(self, name: str, func: Callable[..., None], help_text: str):
         self.name = name
         self.func = func
         self.help_text = help_text

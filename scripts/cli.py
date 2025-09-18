@@ -9,7 +9,7 @@ It combines all CLI modules into a single Typer application for documentation ge
 import sys
 from pathlib import Path
 
-import typer
+from typer import Typer
 
 # Add src to path
 src_path = Path(__file__).parent.parent / "src"
@@ -17,17 +17,17 @@ sys.path.insert(0, str(src_path))
 
 from scripts.db import DatabaseCLI
 from scripts.dev import DevCLI
-from scripts.docker import DockerCLI
+from scripts.docker_cli import DockerCLI
 from scripts.docs import DocsCLI
 from scripts.test import TestCLI
 from scripts.tux import TuxCLI
 
 
-def create_unified_cli() -> typer.Typer:
+def create_unified_cli() -> Typer:
     """Create a unified CLI application that combines all CLI modules."""
 
     # Create the main app
-    cli = typer.Typer(
+    cli = Typer(
         name="uv run",
         help="Tux - All Things Linux Discord Bot",
         rich_markup_mode="rich",

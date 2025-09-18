@@ -11,7 +11,7 @@ import webbrowser
 from pathlib import Path
 from typing import Annotated
 
-import typer
+from typer import Option  # type: ignore[attr-defined]
 
 # Add src to path
 src_path = Path(__file__).parent.parent / "src"
@@ -157,13 +157,13 @@ class TestCLI(BaseCLI):
 
     def coverage_report(
         self,
-        specific: Annotated[str | None, typer.Option(help="Specific path to include in coverage")] = None,
-        format_type: Annotated[str | None, typer.Option(help="Coverage report format: html, xml, or json")] = None,
-        quick: Annotated[bool, typer.Option(help="Quick run without generating coverage report")] = False,
-        fail_under: Annotated[str | None, typer.Option(help="Fail if coverage percentage is below this value")] = None,
+        specific: Annotated[str | None, Option(help="Specific path to include in coverage")] = None,
+        format_type: Annotated[str | None, Option(help="Coverage report format: html, xml, or json")] = None,
+        quick: Annotated[bool, Option(help="Quick run without generating coverage report")] = False,
+        fail_under: Annotated[str | None, Option(help="Fail if coverage percentage is below this value")] = None,
         open_browser: Annotated[
             bool,
-            typer.Option(help="Automatically open browser for HTML coverage reports"),
+            Option(help="Automatically open browser for HTML coverage reports"),
         ] = False,
     ) -> None:
         """Generate comprehensive coverage reports."""

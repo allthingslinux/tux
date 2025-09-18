@@ -7,8 +7,8 @@ Provides the base CLI class that all CLI applications should inherit from.
 import subprocess
 from collections.abc import Callable
 
-import typer
 from rich.console import Console
+from typer import Typer
 
 from scripts.registry import CommandRegistry
 from scripts.rich_utils import RichCLI
@@ -18,7 +18,7 @@ class BaseCLI:
     """Base class for all CLI applications."""
 
     def __init__(self, name: str = "cli", description: str = "CLI Application"):
-        self.app = typer.Typer(
+        self.app = Typer(
             name=name,
             help=description,
             rich_markup_mode="rich",
@@ -32,9 +32,9 @@ class BaseCLI:
     def _setup_commands(self) -> None:
         """Setup commands - to be overridden by subclasses."""
 
-    def create_subcommand_group(self, name: str, help_text: str, rich_help_panel: str | None = None) -> typer.Typer:
+    def create_subcommand_group(self, name: str, help_text: str, rich_help_panel: str | None = None) -> Typer:
         """Create a subcommand group."""
-        return typer.Typer(
+        return Typer(
             name=name,
             help=help_text,
             rich_markup_mode="rich",
@@ -46,14 +46,14 @@ class BaseCLI:
         func: Callable[..., None],
         name: str | None = None,
         help_text: str | None = None,
-        sub_app: typer.Typer | None = None,
+        sub_app: Typer | None = None,
     ) -> None:
         """Add a command to the CLI."""
         target_app = sub_app or self.app
         # Always use help_text from command registry as single source of truth
         target_app.command(name=name, help=help_text)(func)
 
-    def add_subcommand_group(self, sub_app: typer.Typer, name: str, rich_help_panel: str | None = None) -> None:
+    def add_subcommand_group(self, sub_app: Typer, name: str, rich_help_panel: str | None = None) -> None:
         """Add a subcommand group to the main app."""
         self.app.add_typer(sub_app, name=name, rich_help_panel=rich_help_panel)
 

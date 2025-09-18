@@ -8,8 +8,8 @@ import asyncio
 import subprocess
 from typing import Annotated, Any
 
-import typer
 from sqlalchemy import text
+from typer import Argument, Option  # type: ignore[attr-defined]
 
 from scripts.base import BaseCLI
 from scripts.registry import Command
@@ -81,8 +81,8 @@ class DatabaseCLI(BaseCLI):
 
     def migrate_dev(
         self,
-        create_only: Annotated[bool, typer.Option("--create-only", help="Create migration but don't apply it")] = False,
-        name: Annotated[str | None, typer.Option("--name", "-n", help="Name for the migration")] = None,
+        create_only: Annotated[bool, Option("--create-only", help="Create migration but don't apply it")] = False,
+        name: Annotated[str | None, Option("--name", "-n", help="Name for the migration")] = None,
     ) -> None:
         """Create and apply migrations for development.
 
@@ -105,10 +105,10 @@ class DatabaseCLI(BaseCLI):
 
     def migrate_generate(
         self,
-        message: Annotated[str, typer.Argument(help="Descriptive message for the migration", metavar="MESSAGE")],
+        message: Annotated[str, Argument(help="Descriptive message for the migration", metavar="MESSAGE")],
         auto_generate: Annotated[
             bool,
-            typer.Option("--auto", help="Auto-generate migration from model changes"),
+            Option("--auto", help="Auto-generate migration from model changes"),
         ] = True,
     ) -> None:
         """Generate a new migration from model changes.

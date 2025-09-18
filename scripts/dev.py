@@ -57,6 +57,7 @@ class DevCLI(BaseCLI):
             )
 
     def _print_output(self, output: str, is_error: bool = False) -> None:
+        # sourcery skip: hoist-similar-statement-from-if, hoist-statement-from-if
         """Print tool output with proper formatting for single/multi-line content."""
         if "\n" in output:
             # Multi-line output: start on new line
@@ -97,7 +98,7 @@ class DevCLI(BaseCLI):
     # DEVELOPMENT COMMANDS
     # ============================================================================
 
-    def lint(self) -> None:
+    def lint(self) -> None:  # sourcery skip: class-extract-method
         self.rich.print_section("🔍 Running Linting", "blue")
         self.rich.print_info("Checking code quality with Ruff...")
         success = self._run_tool_command(["uv", "run", "ruff", "check", "."], "Linting completed successfully")
