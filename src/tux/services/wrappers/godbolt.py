@@ -211,10 +211,9 @@ async def getoutput(code: str, lang: str, compileroptions: str | None = None) ->
         "lang": f"{lang}",
         "allowStoreCodeDebug": True,
     }
-    uri = await http_client.post(url_comp, json=payload, timeout=15.0)
 
     try:
-        return uri.text if uri.status_code == 200 else None
+        uri = await http_client.post(url_comp, json=payload, timeout=15.0)
 
     except httpx.ReadTimeout as e:
         raise TuxAPIConnectionError(service_name="Godbolt", original_error=e) from e
@@ -228,6 +227,8 @@ async def getoutput(code: str, lang: str, compileroptions: str | None = None) ->
             status_code=e.response.status_code,
             reason=e.response.text,
         ) from e
+    else:
+        return uri.text if uri.status_code == 200 else None
 
 
 async def generateasm(code: str, lang: str, compileroptions: str | None = None) -> str | None:
@@ -283,10 +284,8 @@ async def generateasm(code: str, lang: str, compileroptions: str | None = None) 
         "allowStoreCodeDebug": True,
     }
 
-    uri = await http_client.post(url_comp, json=payload, timeout=15.0)
-
     try:
-        return uri.text if uri.status_code == 200 else None
+        uri = await http_client.post(url_comp, json=payload, timeout=15.0)
 
     except httpx.ReadTimeout as e:
         raise TuxAPIConnectionError(service_name="Godbolt", original_error=e) from e
@@ -300,3 +299,5 @@ async def generateasm(code: str, lang: str, compileroptions: str | None = None) 
             status_code=e.response.status_code,
             reason=e.response.text,
         ) from e
+    else:
+        return uri.text if uri.status_code == 200 else None

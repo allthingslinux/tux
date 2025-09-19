@@ -96,7 +96,9 @@ class HTTPClient:
             The HTTP response.
         """
         client = await self.get_client()
-        return await client.get(url, **kwargs)
+        response = await client.get(url, **kwargs)
+        response.raise_for_status()
+        return response
 
     async def post(self, url: str, **kwargs: Any) -> httpx.Response:
         """Make a POST request.
@@ -114,7 +116,9 @@ class HTTPClient:
             The HTTP response.
         """
         client = await self.get_client()
-        return await client.post(url, **kwargs)
+        response = await client.post(url, **kwargs)
+        response.raise_for_status()
+        return response
 
     async def put(self, url: str, **kwargs: Any) -> httpx.Response:
         """Make a PUT request.
@@ -132,7 +136,9 @@ class HTTPClient:
             The HTTP response.
         """
         client = await self.get_client()
-        return await client.put(url, **kwargs)
+        response = await client.put(url, **kwargs)
+        response.raise_for_status()
+        return response
 
     async def delete(self, url: str, **kwargs: Any) -> httpx.Response:
         """Make a DELETE request.
@@ -150,7 +156,9 @@ class HTTPClient:
             The HTTP response.
         """
         client = await self.get_client()
-        return await client.delete(url, **kwargs)
+        response = await client.delete(url, **kwargs)
+        response.raise_for_status()
+        return response
 
     async def request(self, method: str, url: str, **kwargs: Any) -> httpx.Response:
         """Make a request with the specified method.
@@ -170,7 +178,9 @@ class HTTPClient:
             The HTTP response.
         """
         client = await self.get_client()
-        return await client.request(method, url, **kwargs)
+        response = await client.request(method, url, **kwargs)
+        response.raise_for_status()
+        return response
 
 
 # Global HTTP client instance
