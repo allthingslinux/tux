@@ -3,8 +3,8 @@ from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
+from tux.core.bot import Tux
 from tux.core.converters import get_channel_safe
-from tux.core.types import Tux
 from tux.modules.moderation import ModerationCogBase
 from tux.ui.embeds import EmbedCreator
 

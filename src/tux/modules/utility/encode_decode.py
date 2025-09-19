@@ -5,7 +5,7 @@ from discord import AllowedMentions
 from discord.ext import commands
 
 from tux.core.base_cog import BaseCog
-from tux.core.types import Tux
+from tux.core.bot import Tux
 
 
 def wrap_strings(wrapper: str, contents: list[str]) -> list[str]:

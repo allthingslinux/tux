@@ -7,7 +7,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.base_cog import BaseCog
-from tux.core.types import Tux
+from tux.core.bot import Tux
 from tux.database.models import Reminder
 from tux.shared.functions import convert_to_seconds
 from tux.ui.embeds import EmbedCreator

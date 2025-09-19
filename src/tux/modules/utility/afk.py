@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands, tasks
 
 from tux.core.base_cog import BaseCog
-from tux.core.types import Tux
+from tux.core.bot import Tux
 from tux.database.models import AFK as AFKMODEL
 from tux.modules.utility import add_afk, del_afk
 

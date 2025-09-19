@@ -4,7 +4,8 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.base_cog import BaseCog
-from tux.core.types import Tux
+from tux.core.bot import Tux
+from tux.shared.constants import CONST
 from tux.ui.embeds import EmbedCreator
 
 
@@ -78,7 +79,7 @@ class Wiki(BaseCog):
             logger.info(f"GET request to {base_url} with params {params}")
 
         # Check if the request was successful
-        if response.status_code == 200:
+        if response.status_code == CONST.HTTP_OK:
             data = response.json()
             logger.info(data)
             if data.get("query") and data["query"].get("search"):
