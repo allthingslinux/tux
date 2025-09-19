@@ -20,11 +20,11 @@ class TuxRuntimeError(TuxError):
 # === Database Exceptions ===
 
 
-class DatabaseError(TuxError):
+class TuxDatabaseError(TuxError):
     """Base exception for database-related errors."""
 
 
-class DatabaseConnectionError(DatabaseError):
+class TuxDatabaseConnectionError(TuxDatabaseError):
     """Raised when database connection fails."""
 
     def __init__(self, message: str = "Database connection failed", original_error: Exception | None = None):
@@ -32,11 +32,11 @@ class DatabaseConnectionError(DatabaseError):
         super().__init__(message)
 
 
-class DatabaseMigrationError(DatabaseError):
+class TuxDatabaseMigrationError(TuxDatabaseError):
     """Raised when database migration fails."""
 
 
-class DatabaseQueryError(DatabaseError):
+class TuxDatabaseQueryError(TuxDatabaseError):
     """Raised when a database query fails."""
 
 
@@ -47,7 +47,7 @@ class TuxPermissionError(TuxError):
     """Base exception for permission-related errors."""
 
 
-class PermissionLevelError(TuxPermissionError):
+class TuxPermissionLevelError(TuxPermissionError):
     """Raised when a user doesn't have the required permission level."""
 
     def __init__(self, permission: str) -> None:
@@ -55,7 +55,7 @@ class PermissionLevelError(TuxPermissionError):
         super().__init__(f"Missing required permission: {permission}")
 
 
-class AppCommandPermissionLevelError(TuxPermissionError):
+class TuxAppCommandPermissionLevelError(TuxPermissionError):
     """Raised when a user doesn't have the required permission level for an app command."""
 
     def __init__(self, permission: str) -> None:
@@ -66,11 +66,11 @@ class AppCommandPermissionLevelError(TuxPermissionError):
 # === API Exceptions ===
 
 
-class APIError(TuxError):
+class TuxAPIError(TuxError):
     """Base exception for API-related errors."""
 
 
-class APIConnectionError(APIError):
+class TuxAPIConnectionError(TuxAPIError):
     """Raised when there's an issue connecting to an external API."""
 
     def __init__(self, service_name: str, original_error: Exception):
@@ -79,7 +79,7 @@ class APIConnectionError(APIError):
         super().__init__(f"Connection error with {service_name}: {original_error}")
 
 
-class APIRequestError(APIError):
+class TuxAPIRequestError(TuxAPIError):
     """Raised when an API request fails with a specific status code."""
 
     def __init__(self, service_name: str, status_code: int, reason: str):
@@ -89,7 +89,7 @@ class APIRequestError(APIError):
         super().__init__(f"API request to {service_name} failed with status {status_code}: {reason}")
 
 
-class APIResourceNotFoundError(APIRequestError):
+class TuxAPIResourceNotFoundError(TuxAPIRequestError):
     """Raised when an API request results in a 404 or similar resource not found error."""
 
     def __init__(self, service_name: str, resource_identifier: str, status_code: int = 404):
@@ -101,7 +101,7 @@ class APIResourceNotFoundError(APIRequestError):
         )
 
 
-class APIPermissionError(APIRequestError):
+class TuxAPIPermissionError(TuxAPIRequestError):
     """Raised when an API request fails due to permissions (e.g., 403 Forbidden)."""
 
     def __init__(self, service_name: str, status_code: int = 403):
@@ -115,11 +115,11 @@ class APIPermissionError(APIRequestError):
 # === Code Execution Exceptions ===
 
 
-class CodeExecutionError(TuxError):
+class TuxCodeExecutionError(TuxError):
     """Base exception for code execution errors."""
 
 
-class MissingCodeError(CodeExecutionError):
+class TuxMissingCodeError(TuxCodeExecutionError):
     """Raised when no code is provided for execution."""
 
     def __init__(self) -> None:
@@ -129,7 +129,7 @@ class MissingCodeError(CodeExecutionError):
         )
 
 
-class InvalidCodeFormatError(CodeExecutionError):
+class TuxInvalidCodeFormatError(TuxCodeExecutionError):
     """Raised when code format is invalid."""
 
     def __init__(self) -> None:
@@ -139,7 +139,7 @@ class InvalidCodeFormatError(CodeExecutionError):
         )
 
 
-class UnsupportedLanguageError(CodeExecutionError):
+class TuxUnsupportedLanguageError(TuxCodeExecutionError):
     """Raised when the specified language is not supported."""
 
     def __init__(self, language: str, supported_languages: list[str]) -> None:
@@ -162,7 +162,7 @@ class UnsupportedLanguageError(CodeExecutionError):
         )
 
 
-class CompilationError(CodeExecutionError):
+class TuxCompilationError(TuxCodeExecutionError):
     """Raised when code compilation fails."""
 
     def __init__(self) -> None:
@@ -172,31 +172,31 @@ class CompilationError(CodeExecutionError):
 # === Service Exceptions ===
 
 
-class ServiceError(TuxError):
+class TuxServiceError(TuxError):
     """Base exception for service-related errors."""
 
 
-class CogLoadError(ServiceError):
+class TuxCogLoadError(TuxServiceError):
     """Raised when a cog fails to load."""
 
 
-class HotReloadError(ServiceError):
+class TuxHotReloadError(TuxServiceError):
     """Base exception for hot reload errors."""
 
 
-class DependencyResolutionError(HotReloadError):
+class TuxDependencyResolutionError(TuxHotReloadError):
     """Raised when dependency resolution fails."""
 
 
-class FileWatchError(HotReloadError):
+class TuxFileWatchError(TuxHotReloadError):
     """Raised when file watching fails."""
 
 
-class ModuleReloadError(HotReloadError):
+class TuxModuleReloadError(TuxHotReloadError):
     """Raised when module reloading fails."""
 
 
-class ConfigurationError(HotReloadError):
+class TuxHotReloadConfigurationError(TuxHotReloadError):
     """Raised when hot reload configuration is invalid."""
 
 

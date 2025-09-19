@@ -4,7 +4,7 @@ from loguru import logger
 
 from tux.core.app import TuxApp
 from tux.core.logging import configure_logging
-from tux.shared.exceptions import DatabaseError, TuxError
+from tux.shared.exceptions import TuxDatabaseError, TuxError
 
 
 def run() -> int:
@@ -27,9 +27,9 @@ def run() -> int:
         app = TuxApp()
         app.run()
 
-    except (DatabaseError, TuxError, RuntimeError, SystemExit, KeyboardInterrupt, Exception) as e:
+    except (TuxDatabaseError, TuxError, RuntimeError, SystemExit, KeyboardInterrupt, Exception) as e:
         # Handle all errors in one place
-        if isinstance(e, DatabaseError):
+        if isinstance(e, TuxDatabaseError):
             logger.error("❌ Database connection failed")
             logger.info("💡 To start the database, run: make docker-up")
         elif isinstance(e, TuxError):

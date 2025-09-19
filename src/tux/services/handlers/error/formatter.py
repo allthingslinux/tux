@@ -1,189 +1,97 @@
 """Error message formatting utilities."""
 
-import typing
+from typing import Any
 
 import discord
-from discord import app_commands
 from discord.ext import commands
 
-from tux.shared.exceptions import (
-    AppCommandPermissionLevelError,
-    CodeExecutionError,
-    CompilationError,
-    InvalidCodeFormatError,
-    MissingCodeError,
-    PermissionLevelError,
-    UnsupportedLanguageError,
-)
+from tux.core.bot import Tux
 
-from .config import DEFAULT_ERROR_MESSAGE, ErrorHandlerConfig
-from .extractors import (
-    extract_bad_flag_argument_details,
-    extract_missing_any_role_details,
-    extract_missing_argument_details,
-    extract_missing_flag_details,
-    extract_missing_role_details,
-    extract_permissions_details,
-    fallback_format_message,
-)
-
-# Error configuration mapping for different error types
-ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
-    # === Application Commands (discord.app_commands) ===
-    app_commands.AppCommandError: ErrorHandlerConfig(
-        delete_error_messages=False,  # App commands are ephemeral by default
-        suggest_similar_commands=False,
-    ),
-    # === Traditional Commands (discord.ext.commands) ===
-    commands.CommandError: ErrorHandlerConfig(
-        delete_error_messages=True,
-        suggest_similar_commands=True,
-    ),
-    # === Permission Errors ===
-    commands.MissingPermissions: ErrorHandlerConfig(
-        delete_error_messages=True,
-        suggest_similar_commands=False,
-    ),
-    commands.BotMissingPermissions: ErrorHandlerConfig(
-        delete_error_messages=True,
-        suggest_similar_commands=False,
-    ),
-    # === Custom Errors ===
-    PermissionLevelError: ErrorHandlerConfig(
-        delete_error_messages=True,
-        suggest_similar_commands=False,
-    ),
-    AppCommandPermissionLevelError: ErrorHandlerConfig(
-        delete_error_messages=False,
-        suggest_similar_commands=False,
-    ),
-}
+from .config import ERROR_CONFIG_MAP, ErrorHandlerConfig
+from .extractors import fallback_format_message
 
 
 class ErrorFormatter:
-    """Formats error messages into user-friendly embeds."""
+    """Formats errors into user-friendly Discord embeds."""
 
-    # Error message templates for different error types
-    ERROR_MESSAGES: typing.ClassVar[dict[type[Exception], str]] = {
-        # Permission-related errors
-        commands.MissingPermissions: "You don't have the required permissions: {missing_permissions}",
-        commands.BotMissingPermissions: "I don't have the required permissions: {missing_permissions}",
-        commands.MissingRole: "You don't have the required role: `{missing_role}`",
-        commands.BotMissingRole: "I don't have the required role: `{missing_role}`",
-        commands.MissingAnyRole: "You don't have any of the required roles: {missing_roles}",
-        commands.BotMissingAnyRole: "I don't have any of the required roles: {missing_roles}",
-        commands.NotOwner: "This command can only be used by the bot owner.",
-        PermissionLevelError: "You don't have the required permission level to use this command.",
-        AppCommandPermissionLevelError: "You don't have the required permission level to use this command.",
-        # Command usage errors
-        commands.MissingRequiredArgument: "Missing required argument: `{param_name}`",
-        commands.BadArgument: "Invalid argument provided. Please check your input and try again.",
-        commands.BadUnionArgument: "Invalid argument type. Please check the expected format.",
-        commands.BadLiteralArgument: "Invalid choice. Please select from the available options.",
-        commands.ArgumentParsingError: "Error parsing arguments. Please check your input format.",
-        commands.TooManyArguments: "Too many arguments provided.",
-        commands.BadFlagArgument: "Invalid flag argument for `{flag_name}`.",
-        commands.MissingFlagArgument: "Missing required flag: `{flag_name}`",
-        commands.TooManyFlags: "Too many flags provided.",
-        # Command state errors
-        commands.CommandOnCooldown: "This command is on cooldown. Try again in {error.retry_after:.1f} seconds.",
-        commands.MaxConcurrencyReached: "This command is already running. Please wait for it to finish.",
-        commands.DisabledCommand: "This command is currently disabled.",
-        commands.CheckFailure: "You don't have permission to use this command.",
-        commands.CheckAnyFailure: "You don't meet any of the required conditions for this command.",
-        # Code execution errors (custom)
-        MissingCodeError: "No code provided. Please include code in your message.",
-        InvalidCodeFormatError: "Invalid code format. Please use proper code blocks.",
-        UnsupportedLanguageError: "Unsupported programming language: `{error.language}`",
-        CompilationError: "Code compilation failed:\n```\n{error.message}\n```",
-        CodeExecutionError: "Code execution failed:\n```\n{error.message}\n```",
-        # Generic errors
-        commands.CommandError: "An error occurred while executing the command.",
-        Exception: DEFAULT_ERROR_MESSAGE,
-    }
-    # Error detail extractors for specific error types
-    ERROR_EXTRACTORS: typing.ClassVar[dict[type[Exception], typing.Callable[[Exception], dict[str, typing.Any]]]] = {
-        commands.MissingPermissions: extract_permissions_details,
-        commands.BotMissingPermissions: extract_permissions_details,
-        commands.MissingRole: extract_missing_role_details,
-        commands.BotMissingRole: extract_missing_role_details,
-        commands.MissingAnyRole: extract_missing_any_role_details,
-        commands.BotMissingAnyRole: extract_missing_any_role_details,
-        commands.MissingRequiredArgument: extract_missing_argument_details,
-        commands.BadFlagArgument: extract_bad_flag_argument_details,
-        commands.MissingFlagArgument: extract_missing_flag_details,
-    }
+    def format_error_embed(
+        self,
+        error: Exception,
+        source: commands.Context[Tux] | discord.Interaction,
+        config: ErrorHandlerConfig,
+    ) -> discord.Embed:
+        """Create user-friendly error embed."""
+        # Format the error message
+        message = self._format_error_message(error, source, config)
 
-    def format_error_embed(self, error: Exception, command_signature: str | None = None) -> discord.Embed:
-        """
-        Creates a user-friendly error embed for the given exception.
-
-        Args:
-            error: The exception that occurred.
-            command_signature: Optional command signature for context.
-
-        Returns:
-            A Discord embed containing the formatted error message.
-        """
-        error_type = type(error)
-
-        # Find the most specific error message template
-        message_template = self._get_error_message_template(error_type)
-
-        # Extract error-specific details
-        error_details = self._extract_error_details(error)
-
-        # Format the message with error details
-        try:
-            formatted_message = message_template.format(error=error, **error_details)
-        except (KeyError, AttributeError, ValueError):
-            formatted_message = fallback_format_message(message_template, error)
-
-        # Create the embed
+        # Create embed
         embed = discord.Embed(
             title="Command Error",
-            description=formatted_message,
+            description=message,
             color=discord.Color.red(),
         )
 
-        # Add command signature if available
-        if command_signature:
-            embed.add_field(
-                name="Usage",
-                value=f"`{command_signature}`",
-                inline=False,
-            )
+        # Add command usage if available and configured
+        if config.include_usage and isinstance(source, commands.Context):
+            usage = self._get_command_usage(source)
+            if usage:
+                embed.add_field(name="Usage", value=f"`{usage}`", inline=False)
 
         return embed
 
-    def _get_error_message_template(self, error_type: type) -> str:
-        # sourcery skip: use-next
-        """Get the most appropriate error message template for the error type."""
-        # Check for exact match first
-        if error_type in self.ERROR_MESSAGES:
-            return self.ERROR_MESSAGES[error_type]
+    def _format_error_message(
+        self,
+        error: Exception,
+        source: commands.Context[Tux] | discord.Interaction,
+        config: ErrorHandlerConfig,
+    ) -> str:
+        """Format error message using configuration."""
+        message_format = config.message_format
+        kwargs: dict[str, Any] = {"error": error}
 
-        # Check parent classes (MRO - Method Resolution Order)
-        for base_type in error_type.__mro__:
-            if base_type in self.ERROR_MESSAGES:
-                return self.ERROR_MESSAGES[base_type]
+        # Add context for prefix commands
+        if isinstance(source, commands.Context):
+            kwargs["ctx"] = source
+            if source.command and "{usage}" in message_format:
+                kwargs["usage"] = self._get_command_usage(source)
 
-        # Fallback to generic error message
-        return DEFAULT_ERROR_MESSAGE
+        # Extract error-specific details
+        if config.detail_extractor:
+            try:
+                details = config.detail_extractor(error)
+                kwargs.update(details)
+            except Exception:
+                pass  # Ignore extractor failures
 
-    def _extract_error_details(self, error: Exception) -> dict[str, str]:
-        # sourcery skip: use-next
-        """Extract error-specific details using the appropriate extractor."""
+        # Format message with fallback
+        try:
+            return message_format.format(**kwargs)
+        except Exception:
+            return fallback_format_message(message_format, error)
+
+    def _get_command_usage(self, ctx: commands.Context[Tux]) -> str | None:
+        """Get command usage string."""
+        if not ctx.command:
+            return None
+
+        signature = ctx.command.signature.strip()
+        qualified_name = ctx.command.qualified_name
+        prefix = ctx.prefix
+
+        return f"{prefix}{qualified_name}{f' {signature}' if signature else ''}"
+
+    def get_error_config(self, error: Exception) -> ErrorHandlerConfig:
+        """Get configuration for error type."""
         error_type = type(error)
 
-        # Check for exact match first
-        if error_type in self.ERROR_EXTRACTORS:
-            return self.ERROR_EXTRACTORS[error_type](error)
+        # Check exact match
+        if error_type in ERROR_CONFIG_MAP:
+            return ERROR_CONFIG_MAP[error_type]
 
         # Check parent classes
         for base_type in error_type.__mro__:
-            if base_type in self.ERROR_EXTRACTORS:
-                return self.ERROR_EXTRACTORS[base_type](error)
+            if base_type in ERROR_CONFIG_MAP:
+                return ERROR_CONFIG_MAP[base_type]
 
-        # No specific extractor found
-        return {}
+        # Default config
+        return ErrorHandlerConfig()

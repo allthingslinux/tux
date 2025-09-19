@@ -40,7 +40,7 @@ def capture_tux_exception(
     context: dict[str, Any] | None = None,
     tags: dict[str, str] | None = None,
     level: str = "error",
-) -> None:
+) -> str | None:
     """Capture an exception with Tux-specific context.
 
     Args:
@@ -48,6 +48,9 @@ def capture_tux_exception(
         context: Additional context data
         tags: Tags to add to the event
         level: Sentry level (error, warning, info, debug)
+
+    Returns:
+        Sentry event ID if captured, None otherwise
     """
     try:
         # Set Tux-specific context
@@ -68,13 +71,14 @@ def capture_tux_exception(
             # Set level
             scope.level = level
 
-            # Capture the exception
-            sentry_sdk.capture_exception(exception)
+            # Capture the exception and return event ID
+            return sentry_sdk.capture_exception(exception)
 
     except Exception as e:
         # Fallback logging if Sentry fails
         logger.error(f"Failed to capture exception to Sentry: {e}")
         logger.exception(f"Original exception: {exception}")
+        return None
 
 
 def capture_database_error(

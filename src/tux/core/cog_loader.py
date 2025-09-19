@@ -21,7 +21,7 @@ from tux.services.tracing import (
 )
 from tux.shared.config import CONFIG
 from tux.shared.constants import CONST
-from tux.shared.exceptions import CogLoadError, TuxConfigurationError
+from tux.shared.exceptions import TuxCogLoadError, TuxConfigurationError
 
 
 class CogLoader(commands.Cog):
@@ -67,7 +67,7 @@ class CogLoader(commands.Cog):
 
         Raises
         ------
-        CogLoadError
+        TuxCogLoadError
             If the cog fails to load.
         """
         start_time = time.perf_counter()
@@ -152,7 +152,7 @@ class CogLoader(commands.Cog):
             capture_span_exception(e, traceback=traceback.format_exc(), module=str(path))
             error_msg = f"Failed to load cog {module_name}. Error: {e}\n{traceback.format_exc()}"
             logger.opt(exception=True).error(f"Failed to load cog {module_name}", module=module_name)
-            raise CogLoadError(error_msg) from e
+            raise TuxCogLoadError(error_msg) from e
 
     def _get_cog_priority(self, path: Path) -> int:
         """
@@ -293,7 +293,7 @@ class CogLoader(commands.Cog):
             logger.error(f"An error occurred while processing {path_str}: {e}")
             capture_span_exception(e, path=path_str)
             msg = "Failed to load cogs"
-            raise CogLoadError(msg) from e
+            raise TuxCogLoadError(msg) from e
 
     @transaction("cog.load_folder", description="Loading all cogs from folder")
     async def load_cogs_from_folder(self, folder_name: str) -> None:
@@ -349,7 +349,7 @@ class CogLoader(commands.Cog):
             capture_span_exception(e, folder=folder_name, operation="load_folder")
             logger.error(f"Failed to load cogs from folder {folder_name}: {e}")
             msg = "Failed to load cogs from folder"
-            raise CogLoadError(msg) from e
+            raise TuxCogLoadError(msg) from e
 
     @classmethod
     @transaction("cog.setup", name="CogLoader Setup", description="Initialize CogLoader and load all cogs")
@@ -394,4 +394,4 @@ class CogLoader(commands.Cog):
             capture_span_exception(e, operation="cog_setup")
             logger.error(f"Failed to set up cog loader: {e}")
             msg = "Failed to initialize cog loader"
-            raise CogLoadError(msg) from e
+            raise TuxCogLoadError(msg) from e
