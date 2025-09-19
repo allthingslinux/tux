@@ -2,6 +2,7 @@ from typing import TypedDict
 
 import httpx
 
+from tux.shared.constants import CONST
 from tux.shared.exceptions import (
     APIConnectionError,
     APIRequestError,
@@ -63,13 +64,13 @@ def checkresponse(res: httpx.Response) -> str | None:
     """
 
     try:
-        return res.text if res.status_code == 200 else None
+        return res.text if res.status_code == CONST.HTTP_OK else None
     except httpx.ReadTimeout:
         return None
     except httpx.RequestError as e:
         raise APIConnectionError(service_name="Godbolt", original_error=e) from e
     except httpx.HTTPStatusError as e:
-        if e.response.status_code == 404:
+        if e.response.status_code == CONST.HTTP_NOT_FOUND:
             raise APIResourceNotFoundError(service_name="Godbolt", resource_identifier=str(e.request.url)) from e
         raise APIRequestError(service_name="Godbolt", status_code=e.response.status_code, reason=e.response.text) from e
 
@@ -97,11 +98,11 @@ def sendresponse(url: str) -> str | None:
     except httpx.RequestError as e:
         raise APIConnectionError(service_name="Godbolt", original_error=e) from e
     except httpx.HTTPStatusError as e:
-        if e.response.status_code == 404:
+        if e.response.status_code == CONST.HTTP_NOT_FOUND:
             raise APIResourceNotFoundError(service_name="Godbolt", resource_identifier=url) from e
         raise APIRequestError(service_name="Godbolt", status_code=e.response.status_code, reason=e.response.text) from e
     else:
-        return response.text if response.status_code == 200 else None
+        return response.text if response.status_code == CONST.HTTP_OK else None
 
 
 def getlanguages() -> str | None:
@@ -212,7 +213,7 @@ def getoutput(code: str, lang: str, compileroptions: str | None = None) -> str |
     except httpx.RequestError as e:
         raise APIConnectionError(service_name="Godbolt", original_error=e) from e
     except httpx.HTTPStatusError as e:
-        if e.response.status_code == 404:
+        if e.response.status_code == CONST.HTTP_NOT_FOUND:
             raise APIResourceNotFoundError(service_name="Godbolt", resource_identifier=lang) from e
         raise APIRequestError(service_name="Godbolt", status_code=e.response.status_code, reason=e.response.text) from e
 
@@ -280,6 +281,6 @@ def generateasm(code: str, lang: str, compileroptions: str | None = None) -> str
     except httpx.RequestError as e:
         raise APIConnectionError(service_name="Godbolt", original_error=e) from e
     except httpx.HTTPStatusError as e:
-        if e.response.status_code == 404:
+        if e.response.status_code == CONST.HTTP_NOT_FOUND:
             raise APIResourceNotFoundError(service_name="Godbolt", resource_identifier=lang) from e
         raise APIRequestError(service_name="Godbolt", status_code=e.response.status_code, reason=e.response.text) from e
