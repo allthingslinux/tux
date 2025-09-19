@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import logging
 from typing import Any
+
+from loguru import logger
 
 from tux.database.controllers.base import BaseController
 from tux.database.controllers.guild import GuildController
@@ -43,7 +44,6 @@ class CaseController(BaseController[Case]):
     ) -> Case:
         """Create a new case with auto-generated case number."""
         # Generate case number based on guild's case count
-        logger = logging.getLogger(__name__)
 
         guild_controller = GuildController(self.db)
         guild = await guild_controller.get_by_id(guild_id)

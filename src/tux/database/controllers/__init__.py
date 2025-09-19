@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from tux.database.controllers.afk import AfkController
+from tux.database.controllers.base import BaseController as BaseController  # Explicit re-export
 from tux.database.controllers.case import CaseController
 from tux.database.controllers.guild import GuildController
 from tux.database.controllers.guild_config import GuildConfigController
@@ -19,7 +20,7 @@ from tux.database.service import DatabaseService
 
 
 class DatabaseCoordinator:
-    def __init__(self, db: DatabaseService | None = None) -> None:
+    def __init__(self, db: DatabaseService | None = None):
         if db is None:
             error_msg = "DatabaseService must be provided. Use DI container to get the service."
             raise RuntimeError(error_msg)
