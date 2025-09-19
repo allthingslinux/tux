@@ -66,6 +66,7 @@ class Constants:
 
     # Message timings
     DEFAULT_DELETE_AFTER = 30
+    HTTP_TIMEOUT = 10
 
     # AFK constants
     AFK_PREFIX = "[AFK] "
@@ -78,6 +79,74 @@ class Constants:
     # Bookmark constants
     ADD_BOOKMARK = "🔖"
     REMOVE_BOOKMARK = "🗑️"
+
+    # Cog loading priorities
+    COG_PRIORITIES: Final[dict[str, int]] = {
+        "services": 90,
+        "admin": 80,
+        "levels": 70,
+        "moderation": 60,
+        "snippets": 50,
+        "guild": 40,
+        "utility": 30,
+        "info": 20,
+        "fun": 10,
+        "tools": 5,
+        "plugins": 1,
+    }
+
+    # Performance thresholds
+    SLOW_RESOLUTION_THRESHOLD = 0.001  # 1ms in seconds
+    MILLISECONDS_PER_SECOND = 1000
+
+    # Pagination limits
+    ROLES_PER_PAGE = 32
+    EMOTES_PER_PAGE = 128
+    BANS_LIMIT = 2000
+
+    # Database field lengths
+    DB_DESCRIPTION_LENGTH = 500
+    DB_COMMAND_NAME_LENGTH = 200
+    DB_TARGET_TYPE_LENGTH = 20
+
+    # Service configuration
+    RELOAD_TIMEOUT = 30.0
+    MAX_DEPENDENCY_DEPTH = 10
+    DEPENDENCY_CACHE_SIZE = 1000
+    GODBOLT_TIMEOUT = 15
+
+    # HTTP status codes
+    HTTP_OK = 200
+    HTTP_NOT_FOUND = 404
+    HTTP_INTERNAL_ERROR = 500
+
+    # Common file extensions
+    FILE_EXT_PY = ".py"
+    FILE_EXT_PNG = ".png"
+    FILE_EXT_JPG = ".jpg"
+    FILE_EXT_JPEG = ".jpeg"
+    FILE_EXT_GIF = ".gif"
+    FILE_EXT_WEBP = ".webp"
+    FILE_EXT_MD = ".md"
+    FILE_EXT_ENV = ".env"
+    FILE_EXT_GIT = ".git"
+
+    # Common encoding
+    ENCODING_UTF8 = "utf-8"
+
+    # API URLs
+    XKCD_BASE_URL = "https://xkcd.com"
+    EXPLAINXKCD_BASE_URL = "https://www.explainxkcd.com/wiki/index.php/"
+    WANDBOX_API_URL = "https://wandbox.org/api/compile.json"
+    TLDR_PAGES_URL = "https://raw.githubusercontent.com/tldr-pages/tldr/main/pages"
+    ARCH_WIKI_API_URL = "https://wiki.archlinux.org/api.php"
+    ARCH_WIKI_BASE_URL = "https://wiki.archlinux.org/title/"
+
+    # Common field names
+    FIELD_GUILD_ID = "guild_id"
+    FIELD_USER = "user"
+    FIELD_NAME = "name"
+    FIELD_LEVEL = "level"
 
 
 CONST = Constants()
