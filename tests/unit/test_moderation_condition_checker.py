@@ -18,7 +18,7 @@ import discord
 from discord.ext import commands
 
 from tux.services.moderation.condition_checker import ConditionChecker, require_moderator
-from tux.core.types import Tux
+from tux.core.bot import Tux
 
 # Mock the permission system at module level to avoid initialization issues
 @pytest.fixture(autouse=True)

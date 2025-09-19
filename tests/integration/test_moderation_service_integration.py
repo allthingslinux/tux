@@ -26,7 +26,7 @@ from tux.services.moderation.case_service import CaseService
 from tux.services.moderation.communication_service import CommunicationService
 from tux.services.moderation.execution_service import ExecutionService
 from tux.database.models import CaseType as DBCaseType
-from tux.core.types import Tux
+from tux.core.bot import Tux
 
 
 class TestModerationCoordinatorIntegration:

@@ -8,19 +8,25 @@ This conftest.py follows the clean slate approach:
 - Follows py-pglite examples exactly
 """
 
-import logging
-import pytest
-import pytest_asyncio
-import subprocess
 import atexit
+import logging
+import subprocess
 from typing import Any
 
+import pytest
 from py_pglite import PGliteConfig
 from py_pglite.sqlalchemy import SQLAlchemyAsyncPGliteManager
 from sqlmodel import SQLModel
 
+from tux.database.controllers import GuildConfigController, GuildController
 from tux.database.service import DatabaseService
-from tux.database.controllers import GuildController, GuildConfigController
+
+# Import loguru logger for use in conftest functions
+from loguru import logger
+
+
+# pytest-loguru plugin automatically handles caplog fixture for loguru logs
+# No custom fixtures needed - the plugin takes care of everything
 
 # Test constants
 TEST_GUILD_ID = 123456789012345678
@@ -28,9 +34,7 @@ TEST_USER_ID = 987654321098765432
 TEST_CHANNEL_ID = 876543210987654321
 TEST_MODERATOR_ID = 555666777888999000
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Logging is configured via configure_testing_logging() in pytest_configure
 
 # =============================================================================
 # PGLITE PROCESS CLEANUP - Prevent process accumulation
@@ -51,6 +55,7 @@ def _cleanup_all_pglite_processes() -> None:
             capture_output=True,
             text=True,
             timeout=10,
+            check=False,
         )
 
         if result.returncode != 0:
@@ -58,8 +63,8 @@ def _cleanup_all_pglite_processes() -> None:
             return
 
         pglite_processes = []
-        for line in result.stdout.split('\n'):
-            if 'pglite_manager.js' in line and 'grep' not in line:
+        for line in result.stdout.split("\n"):
+            if "pglite_manager.js" in line and "grep" not in line:
                 parts = line.split()
                 if len(parts) >= 2:
                     pid = parts[1]
@@ -137,14 +142,15 @@ def _monitor_pglite_processes() -> int:
             capture_output=True,
             text=True,
             timeout=5,
+            check=False,
         )
 
         if result.returncode != 0:
             return 0
 
         return sum(
-            'pglite_manager.js' in line and 'grep' not in line
-            for line in result.stdout.split('\n')
+            "pglite_manager.js" in line and "grep" not in line
+            for line in result.stdout.split("\n")
         )
 
     except Exception as e:
@@ -177,7 +183,6 @@ def pytest_runtest_teardown(item, nextitem):
     """Clean up PGlite processes after each test."""
     # Disabled periodic cleanup to avoid interfering with running tests
     # Cleanup is now handled at fixture level and session end
-    pass
 
 
 # =============================================================================
@@ -250,7 +255,7 @@ async def db_service(pglite_engine):
     service = AsyncDatabaseService(echo=False)
 
     # Manually set the engine and session factory to use our PGlite engine
-    from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
     service._engine = pglite_engine
     service._session_factory = async_sessionmaker(
         pglite_engine,
@@ -312,10 +317,10 @@ async def sample_guild_with_config(guild_controller: GuildController, guild_conf
 
     logger.info(f"✅ Created guild with config: {guild.guild_id}")
     return {
-        'guild': guild,
-        'config': config,
-        'guild_controller': guild_controller,
-        'guild_config_controller': guild_config_controller,
+        "guild": guild,
+        "config": config,
+        "guild_controller": guild_controller,
+        "guild_config_controller": guild_config_controller,
     }
 
 
@@ -331,7 +336,7 @@ async def fresh_integration_db(pglite_engine):
     service = AsyncDatabaseService(echo=False)
 
     # Manually set the engine and session factory to use our PGlite engine
-    from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
     service._engine = pglite_engine
     service._session_factory = async_sessionmaker(
         pglite_engine,
@@ -370,7 +375,7 @@ async def fresh_db(pglite_engine):
     service = AsyncDatabaseService(echo=False)
 
     # Manually set the engine and session factory to use our PGlite engine
-    from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
     service._engine = pglite_engine
     service._session_factory = async_sessionmaker(
         pglite_engine,
@@ -390,7 +395,7 @@ async def clean_db_service(pglite_engine):
     service = AsyncDatabaseService(echo=False)
 
     # Manually set the engine and session factory to use our PGlite engine
-    from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
     service._engine = pglite_engine
     service._session_factory = async_sessionmaker(
         pglite_engine,
@@ -410,7 +415,7 @@ async def integration_db_service(pglite_engine):
     service = AsyncDatabaseService(echo=False)
 
     # Manually set the engine and session factory to use our PGlite engine
-    from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
     service._engine = pglite_engine
     service._session_factory = async_sessionmaker(
         pglite_engine,
@@ -427,7 +432,17 @@ async def integration_db_service(pglite_engine):
 # =============================================================================
 
 def pytest_configure(config):
-    """Configure pytest with clean settings."""
+    """Configure pytest with clean settings and custom logger."""
+    import sys
+    from pathlib import Path
+
+    # Add src to path
+    src_path = Path(__file__).parent.parent / "src"
+    sys.path.insert(0, str(src_path))
+
+    from tux.core.logging import configure_testing_logging
+    configure_testing_logging()
+
     config.addinivalue_line("markers", "integration: mark test as integration test")
     config.addinivalue_line("markers", "unit: mark test as unit test")
     config.addinivalue_line("markers", "slow: mark test as slow running")
@@ -451,9 +466,9 @@ def pytest_collection_modifyitems(config, items):
 def validate_guild_structure(guild: Any) -> bool:
     """Validate guild model structure and required fields."""
     return (
-        hasattr(guild, 'guild_id') and
-        hasattr(guild, 'case_count') and
-        hasattr(guild, 'guild_joined_at') and
+        hasattr(guild, "guild_id") and
+        hasattr(guild, "case_count") and
+        hasattr(guild, "guild_joined_at") and
         isinstance(guild.guild_id, int) and
         isinstance(guild.case_count, int)
     )
@@ -462,8 +477,8 @@ def validate_guild_structure(guild: Any) -> bool:
 def validate_guild_config_structure(config: Any) -> bool:
     """Validate guild config model structure and required fields."""
     return (
-        hasattr(config, 'guild_id') and
-        hasattr(config, 'prefix') and
+        hasattr(config, "guild_id") and
+        hasattr(config, "prefix") and
         isinstance(config.guild_id, int) and
         (config.prefix is None or isinstance(config.prefix, str))
     )
