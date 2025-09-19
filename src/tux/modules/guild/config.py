@@ -5,7 +5,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from tux.core.base_cog import BaseCog
-from tux.core.types import Tux
+from tux.core.bot import Tux
 from tux.shared.config import CONFIG
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.ui.views.config import ConfigSetChannels, ConfigSetPrivateLogs, ConfigSetPublicLogs

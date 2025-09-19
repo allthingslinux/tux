@@ -3,8 +3,8 @@ from discord import app_commands
 from discord.ext import commands
 
 from tux.core.base_cog import BaseCog
+from tux.core.bot import Tux
 from tux.core.checks import require_owner
-from tux.core.types import Tux
 
 
 class Setup(BaseCog):
