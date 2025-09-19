@@ -8,7 +8,7 @@ import discord
 from loguru import logger
 
 if TYPE_CHECKING:  # Avoid runtime import cycle
-    from tux.core.types import Tux
+    from tux.core.bot import Tux
 from tux.shared.config import CONFIG
 from tux.shared.constants import CONST
 
