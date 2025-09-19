@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from tux.core.base_cog import BaseCog
-from tux.core.types import Tux
+from tux.core.bot import Tux
 from tux.shared.config import CONFIG
 from tux.shared.functions import is_harmful, strip_formatting
 from tux.ui.embeds import EmbedCreator, EmbedType
