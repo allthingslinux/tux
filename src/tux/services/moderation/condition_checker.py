@@ -11,8 +11,8 @@ from typing import Any, TypeVar
 
 from discord.ext import commands
 
+from tux.core.bot import Tux
 from tux.core.permission_system import PermissionLevel, get_permission_system
-from tux.core.types import Tux
 
 F = TypeVar("F", bound=Callable[..., Awaitable[Any]])
 

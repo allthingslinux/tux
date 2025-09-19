@@ -14,7 +14,7 @@ from typing import Any, ClassVar
 import discord
 from discord.ext import commands
 
-from tux.core.types import Tux
+from tux.core.bot import Tux
 from tux.database.models import Case
 from tux.database.models import CaseType as DBCaseType
 from tux.shared.exceptions import handle_gather_result

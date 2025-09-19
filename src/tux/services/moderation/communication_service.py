@@ -12,7 +12,7 @@ from typing import cast
 import discord
 from discord.ext import commands
 
-from tux.core.types import Tux
+from tux.core.bot import Tux
 from tux.shared.constants import CONST
 
 
