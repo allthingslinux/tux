@@ -4,9 +4,9 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.core.bot import Tux
 from tux.core.checks import require_junior_mod
 from tux.core.flags import UnjailFlags
-from tux.core.types import Tux
 from tux.database.models import Case
 from tux.database.models import CaseType as DBCaseType
 from tux.shared.functions import generate_usage

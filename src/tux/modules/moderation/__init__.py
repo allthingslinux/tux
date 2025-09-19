@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 
 from tux.core.base_cog import BaseCog
-from tux.core.types import Tux
+from tux.core.bot import Tux
 from tux.database.models import CaseType as DBCaseType
 from tux.services.moderation import ModerationCoordinator
 
@@ -29,11 +29,10 @@ class ModerationCogBase(BaseCog):
     REMOVAL_ACTIONS: ClassVar[set[DBCaseType]] = {DBCaseType.BAN, DBCaseType.KICK, DBCaseType.TEMPBAN}
 
     def __init__(self, bot: Tux) -> None:
-        """Initialize the moderation cog base with service injection."""
+        """Initialize the moderation cog base."""
         super().__init__(bot)
-
-        # Inject ModerationCoordinator service from container
-        self.moderation = self._container.get(ModerationCoordinator)
+        # Note: ModerationCoordinator will be initialized when needed
+        self.moderation: ModerationCoordinator | None = None
 
     async def moderate_user(
         self,
@@ -47,6 +46,10 @@ class ModerationCogBase(BaseCog):
         duration: int | None = None,
     ) -> None:
         """Execute moderation action using the service architecture."""
+        if self.moderation is None:
+            msg = "Moderation service not initialized"
+            raise RuntimeError(msg)
+
         await self.moderation.execute_moderation_action(
             ctx=ctx,
             case_type=case_type,

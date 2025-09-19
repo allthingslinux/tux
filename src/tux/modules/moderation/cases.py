@@ -6,9 +6,9 @@ from discord.ext import commands
 from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
+from tux.core.bot import Tux
 from tux.core.checks import require_junior_mod
 from tux.core.flags import CaseModifyFlags, CasesViewFlags
-from tux.core.types import Tux
 from tux.database.models import Case
 from tux.database.models import CaseType as DBCaseType
 from tux.shared.constants import CONST

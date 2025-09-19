@@ -1,9 +1,9 @@
 import discord
 from discord.ext import commands
 
+from tux.core.bot import Tux
 from tux.core.checks import require_moderator
 from tux.core.flags import PollUnbanFlags
-from tux.core.types import Tux
 from tux.database.models import CaseType as DBCaseType
 from tux.shared.functions import generate_usage
 

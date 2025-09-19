@@ -4,8 +4,8 @@ import discord
 from discord.ext import commands
 
 from tux.core.base_cog import BaseCog
+from tux.core.bot import Tux
 from tux.core.checks import require_junior_mod
-from tux.core.types import Tux
 
 
 class ClearAFK(BaseCog):
