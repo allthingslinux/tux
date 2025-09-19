@@ -7,7 +7,8 @@ from discord import app_commands
 from discord.ext import commands
 
 from tux.core.base_cog import BaseCog
-from tux.core.types import Tux
+from tux.core.bot import Tux
+from tux.shared.constants import CONST
 
 client = httpx.AsyncClient()
 
@@ -88,9 +89,13 @@ class Avatar(BaseCog):
             else:
                 message = "Member has no avatar."
                 if isinstance(source, discord.Interaction):
-                    await source.response.send_message(content=message, ephemeral=True, delete_after=30)
+                    await source.response.send_message(
+                        content=message,
+                        ephemeral=True,
+                        delete_after=CONST.DEFAULT_DELETE_AFTER,
+                    )
                 else:
-                    await source.reply(content=message, ephemeral=True, delete_after=30)
+                    await source.reply(content=message, ephemeral=True, delete_after=CONST.DEFAULT_DELETE_AFTER)
 
         elif isinstance(source, commands.Context):
             member = await commands.MemberConverter().convert(source, str(source.author.id))
@@ -102,7 +107,7 @@ class Avatar(BaseCog):
             if files:
                 await source.reply(files=files)
             else:
-                await source.reply("You have no avatar.", ephemeral=True, delete_after=30)
+                await source.reply("You have no avatar.", ephemeral=True, delete_after=CONST.DEFAULT_DELETE_AFTER)
 
     @staticmethod
     async def create_avatar_file(url: str) -> discord.File:
@@ -120,7 +125,7 @@ class Avatar(BaseCog):
             The discord file.
         """
 
-        response = await client.get(url, timeout=10)
+        response = await client.get(url, timeout=CONST.HTTP_TIMEOUT)
         response.raise_for_status()
 
         content_type = response.headers.get("Content-Type")
