@@ -4,13 +4,13 @@ from pathlib import Path
 from typing import Any
 
 import discord
-import httpx
 from discord import app_commands
 from discord.ext import commands
 from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
+from tux.services.http_client import http_client
 from tux.shared.substitutions import handle_substitution
 from tux.ui.embeds import EmbedCreator
 
@@ -59,10 +59,9 @@ class Fact(BaseCog):
         # Fetch via API if configured
         if cfg.get("fact_api_url") and cfg.get("fact_api_field"):
             try:
-                async with httpx.AsyncClient(timeout=10.0) as client:
-                    resp = await client.get(cfg["fact_api_url"])
-                    resp.raise_for_status()
-                    fact_raw = resp.json().get(cfg["fact_api_field"])
+                resp = await http_client.get(cfg["fact_api_url"])
+                resp.raise_for_status()
+                fact_raw = resp.json().get(cfg["fact_api_field"])
             except Exception:
                 fact_raw = None
             fact = await handle_substitution(self.bot, fact_raw or "No fact available.")

@@ -1,13 +1,13 @@
 import io
 
 import discord
-import httpx
 from discord import app_commands
 from loguru import logger
 from PIL import Image, ImageEnhance, ImageOps
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
+from tux.services.http_client import http_client
 from tux.ui.embeds import EmbedCreator
 
 
@@ -40,8 +40,7 @@ class ImgEffect(BaseCog):
 
     @staticmethod
     async def fetch_image(url: str) -> Image.Image:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url)
+        response = await http_client.get(url)
 
         return Image.open(io.BytesIO(response.content)).convert("RGB")
 

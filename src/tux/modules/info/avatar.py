@@ -2,15 +2,13 @@ import mimetypes
 from io import BytesIO
 
 import discord
-import httpx
 from discord import app_commands
 from discord.ext import commands
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
+from tux.services.http_client import http_client
 from tux.shared.constants import CONST
-
-client = httpx.AsyncClient()
 
 
 class Avatar(BaseCog):
@@ -125,7 +123,7 @@ class Avatar(BaseCog):
             The discord file.
         """
 
-        response = await client.get(url, timeout=CONST.HTTP_TIMEOUT)
+        response = await http_client.get(url, timeout=CONST.HTTP_TIMEOUT)
         response.raise_for_status()
 
         content_type = response.headers.get("Content-Type")

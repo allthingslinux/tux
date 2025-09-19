@@ -11,10 +11,10 @@ from loguru import logger
 
 from tux.shared.config import CONFIG
 from tux.shared.exceptions import (
-    APIConnectionError,
-    APIPermissionError,
-    APIRequestError,
-    APIResourceNotFoundError,
+    TuxAPIConnectionError,
+    TuxAPIPermissionError,
+    TuxAPIRequestError,
+    TuxAPIResourceNotFoundError,
 )
 
 
@@ -79,19 +79,19 @@ class GithubService:
             logger.error(f"Error fetching repository: {e}")
             if isinstance(e, httpx.HTTPStatusError):
                 if e.response.status_code == 404:
-                    raise APIResourceNotFoundError(
+                    raise TuxAPIResourceNotFoundError(
                         service_name="GitHub",
                         resource_identifier=f"{CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER}/{CONFIG.EXTERNAL_SERVICES.GITHUB_REPO}",
                     ) from e
                 if e.response.status_code == 403:
-                    raise APIPermissionError(service_name="GitHub") from e
-                raise APIRequestError(
+                    raise TuxAPIPermissionError(service_name="GitHub") from e
+                raise TuxAPIRequestError(
                     service_name="GitHub",
                     status_code=e.response.status_code,
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise APIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
             raise  # Re-raise other unexpected exceptions
 
         else:
@@ -127,15 +127,15 @@ class GithubService:
             logger.error(f"Error creating issue: {e}")
             if isinstance(e, httpx.HTTPStatusError):
                 if e.response.status_code == 403:
-                    raise APIPermissionError(service_name="GitHub") from e
+                    raise TuxAPIPermissionError(service_name="GitHub") from e
                 # Add more specific error handling if needed, e.g., 422 for validation
-                raise APIRequestError(
+                raise TuxAPIRequestError(
                     service_name="GitHub",
                     status_code=e.response.status_code,
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise APIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
             raise
 
         else:
@@ -171,19 +171,19 @@ class GithubService:
             logger.error(f"Error creating comment: {e}")
             if isinstance(e, httpx.HTTPStatusError):
                 if e.response.status_code == 403:
-                    raise APIPermissionError(service_name="GitHub") from e
+                    raise TuxAPIPermissionError(service_name="GitHub") from e
                 if e.response.status_code == 404:  # Issue not found
-                    raise APIResourceNotFoundError(
+                    raise TuxAPIResourceNotFoundError(
                         service_name="GitHub",
                         resource_identifier=f"Issue #{issue_number}",
                     ) from e
-                raise APIRequestError(
+                raise TuxAPIRequestError(
                     service_name="GitHub",
                     status_code=e.response.status_code,
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise APIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
             raise
 
         else:
@@ -217,19 +217,19 @@ class GithubService:
             logger.error(f"Error closing issue: {e}")
             if isinstance(e, httpx.HTTPStatusError):
                 if e.response.status_code == 404:  # Issue not found
-                    raise APIResourceNotFoundError(
+                    raise TuxAPIResourceNotFoundError(
                         service_name="GitHub",
                         resource_identifier=f"Issue #{issue_number}",
                     ) from e
                 if e.response.status_code == 403:
-                    raise APIPermissionError(service_name="GitHub") from e
-                raise APIRequestError(
+                    raise TuxAPIPermissionError(service_name="GitHub") from e
+                raise TuxAPIRequestError(
                     service_name="GitHub",
                     status_code=e.response.status_code,
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise APIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
             raise
 
         else:
@@ -263,17 +263,17 @@ class GithubService:
             logger.error(f"Error fetching issue: {e}")
             if isinstance(e, httpx.HTTPStatusError):
                 if e.response.status_code == 404:
-                    raise APIResourceNotFoundError(
+                    raise TuxAPIResourceNotFoundError(
                         service_name="GitHub",
                         resource_identifier=f"Issue #{issue_number}",
                     ) from e
-                raise APIRequestError(
+                raise TuxAPIRequestError(
                     service_name="GitHub",
                     status_code=e.response.status_code,
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise APIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
             raise
 
         else:
@@ -301,13 +301,13 @@ class GithubService:
         except Exception as e:
             logger.error(f"Error fetching issues: {e}")
             if isinstance(e, httpx.HTTPStatusError):
-                raise APIRequestError(
+                raise TuxAPIRequestError(
                     service_name="GitHub",
                     status_code=e.response.status_code,
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise APIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
             raise
 
         else:
@@ -335,13 +335,13 @@ class GithubService:
         except Exception as e:
             logger.error(f"Error fetching issues: {e}")
             if isinstance(e, httpx.HTTPStatusError):
-                raise APIRequestError(
+                raise TuxAPIRequestError(
                     service_name="GitHub",
                     status_code=e.response.status_code,
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise APIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
             raise
 
         else:
@@ -369,13 +369,13 @@ class GithubService:
         except Exception as e:
             logger.error(f"Error fetching PRs: {e}")
             if isinstance(e, httpx.HTTPStatusError):
-                raise APIRequestError(
+                raise TuxAPIRequestError(
                     service_name="GitHub",
                     status_code=e.response.status_code,
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise APIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
             raise
 
         else:
@@ -403,13 +403,13 @@ class GithubService:
         except Exception as e:
             logger.error(f"Error fetching PRs: {e}")
             if isinstance(e, httpx.HTTPStatusError):
-                raise APIRequestError(
+                raise TuxAPIRequestError(
                     service_name="GitHub",
                     status_code=e.response.status_code,
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise APIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
             raise
 
         else:
@@ -443,17 +443,17 @@ class GithubService:
             logger.error(f"Error fetching PR: {e}")
             if isinstance(e, httpx.HTTPStatusError):
                 if e.response.status_code == 404:
-                    raise APIResourceNotFoundError(
+                    raise TuxAPIResourceNotFoundError(
                         service_name="GitHub",
                         resource_identifier=f"Pull Request #{pr_number}",
                     ) from e
-                raise APIRequestError(
+                raise TuxAPIRequestError(
                     service_name="GitHub",
                     status_code=e.response.status_code,
                     reason=e.response.text,
                 ) from e
             if isinstance(e, httpx.RequestError):
-                raise APIConnectionError(service_name="GitHub", original_error=e) from e
+                raise TuxAPIConnectionError(service_name="GitHub", original_error=e) from e
             raise
 
         else:

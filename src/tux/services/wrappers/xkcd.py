@@ -8,9 +8,9 @@ import httpx
 from PIL import Image, UnidentifiedImageError
 
 from tux.shared.exceptions import (
-    APIConnectionError,
-    APIRequestError,
-    APIResourceNotFoundError,
+    TuxAPIConnectionError,
+    TuxAPIRequestError,
+    TuxAPIResourceNotFoundError,
 )
 
 
@@ -302,14 +302,14 @@ class Client:
 
         except httpx.HTTPStatusError as exc:
             if exc.response.status_code == 404:
-                raise APIResourceNotFoundError(service_name="xkcd", resource_identifier=str(comic_id)) from exc
-            raise APIRequestError(
+                raise TuxAPIResourceNotFoundError(service_name="xkcd", resource_identifier=str(comic_id)) from exc
+            raise TuxAPIRequestError(
                 service_name="xkcd",
                 status_code=exc.response.status_code,
                 reason=exc.response.reason_phrase,
             ) from exc
         except httpx.RequestError as exc:
-            raise APIConnectionError(service_name="xkcd", original_error=exc) from exc
+            raise TuxAPIConnectionError(service_name="xkcd", original_error=exc) from exc
 
         return response.text
 
@@ -335,7 +335,7 @@ class Client:
         """
 
         if not raw_image_url:
-            raise APIResourceNotFoundError(service_name="xkcd", resource_identifier="image_url_not_provided")
+            raise TuxAPIResourceNotFoundError(service_name="xkcd", resource_identifier="image_url_not_provided")
 
         try:
             response = httpx.get(raw_image_url)
@@ -343,14 +343,14 @@ class Client:
 
         except httpx.HTTPStatusError as exc:
             if exc.response.status_code == 404:
-                raise APIResourceNotFoundError(service_name="xkcd", resource_identifier=raw_image_url) from exc
-            raise APIRequestError(
+                raise TuxAPIResourceNotFoundError(service_name="xkcd", resource_identifier=raw_image_url) from exc
+            raise TuxAPIRequestError(
                 service_name="xkcd",
                 status_code=exc.response.status_code,
                 reason=exc.response.reason_phrase,
             ) from exc
         except httpx.RequestError as exc:
-            raise APIConnectionError(service_name="xkcd", original_error=exc) from exc
+            raise TuxAPIConnectionError(service_name="xkcd", original_error=exc) from exc
 
         return response.content
 

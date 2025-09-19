@@ -2,17 +2,17 @@ from typing import Any
 
 import httpx
 
+from tux.services.http_client import http_client
 from tux.shared.exceptions import (
-    APIConnectionError,
-    APIRequestError,
-    APIResourceNotFoundError,
+    TuxAPIConnectionError,
+    TuxAPIRequestError,
+    TuxAPIResourceNotFoundError,
 )
 
-client = httpx.Client(timeout=15)
 url = "https://wandbox.org/api/compile.json"
 
 
-def getoutput(code: str, compiler: str, options: str | None) -> dict[str, Any] | None:
+async def getoutput(code: str, compiler: str, options: str | None) -> dict[str, Any] | None:
     """
     Compile and execute code using a specified compiler and return the output.
 
@@ -39,21 +39,25 @@ def getoutput(code: str, compiler: str, options: str | None) -> dict[str, Any] |
     payload = {"compiler": compiler, "code": code, "options": copt}
 
     try:
-        uri = client.post(url, json=payload, headers=headers)
+        uri = await http_client.post(url, json=payload, headers=headers, timeout=15.0)
         uri.raise_for_status()
     except httpx.ReadTimeout as e:
-        # Changed to raise APIConnectionError for timeouts
-        raise APIConnectionError(service_name="Wandbox", original_error=e) from e
+        # Changed to raise TuxAPIConnectionError for timeouts
+        raise TuxAPIConnectionError(service_name="Wandbox", original_error=e) from e
     except httpx.RequestError as e:
         # General connection/request error
-        raise APIConnectionError(service_name="Wandbox", original_error=e) from e
+        raise TuxAPIConnectionError(service_name="Wandbox", original_error=e) from e
     except httpx.HTTPStatusError as e:
         # Specific HTTP status errors
         if e.response.status_code == 404:
-            raise APIResourceNotFoundError(
+            raise TuxAPIResourceNotFoundError(
                 service_name="Wandbox",
                 resource_identifier=compiler,
             ) from e  # Using compiler as resource identifier
-        raise APIRequestError(service_name="Wandbox", status_code=e.response.status_code, reason=e.response.text) from e
+        raise TuxAPIRequestError(
+            service_name="Wandbox",
+            status_code=e.response.status_code,
+            reason=e.response.text,
+        ) from e
     else:
         return uri.json() if uri.status_code == 200 else None

@@ -1,10 +1,10 @@
 import discord
-import httpx
 from discord.ext import commands
 from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
+from tux.services.http_client import http_client
 from tux.shared.constants import CONST
 from tux.ui.embeds import EmbedCreator
 
@@ -52,7 +52,7 @@ class Wiki(BaseCog):
             )
         return embed
 
-    def query_wiki(self, base_url: str, search_term: str) -> tuple[str, str]:
+    async def query_wiki(self, base_url: str, search_term: str) -> tuple[str, str]:
         """
         Query a wiki API for a search term and return the title and URL of the first search result.
 
@@ -74,9 +74,8 @@ class Wiki(BaseCog):
         params: dict[str, str] = {"action": "query", "format": "json", "list": "search", "srsearch": search_term}
 
         # Send a GET request to the wiki API
-        with httpx.Client() as client:
-            response = client.get(base_url, params=params)
-            logger.info(f"GET request to {base_url} with params {params}")
+        response = await http_client.get(base_url, params=params)
+        logger.info(f"GET request to {base_url} with params {params}")
 
         # Check if the request was successful
         if response.status_code == CONST.HTTP_OK:
@@ -127,7 +126,7 @@ class Wiki(BaseCog):
             The search query.
         """
 
-        title: tuple[str, str] = self.query_wiki(self.arch_wiki_api_url, query)
+        title: tuple[str, str] = await self.query_wiki(self.arch_wiki_api_url, query)
 
         embed = self.create_embed(title, ctx)
 
@@ -148,7 +147,7 @@ class Wiki(BaseCog):
             The search query.
         """
 
-        title: tuple[str, str] = self.query_wiki(self.atl_wiki_api_url, query)
+        title: tuple[str, str] = await self.query_wiki(self.atl_wiki_api_url, query)
 
         embed = self.create_embed(title, ctx)
 

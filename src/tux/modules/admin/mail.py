@@ -10,6 +10,7 @@ from tux.core.bot import Tux
 from tux.core.checks import (
     require_bot_owner,
 )
+from tux.services.http_client import http_client
 from tux.shared.config import CONFIG
 from tux.shared.constants import CONST
 
@@ -77,23 +78,23 @@ class Mail(BaseCog):
             password = self._generate_password()
             mailbox_data = self._prepare_mailbox_data(username, password, member.id)
 
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                try:
-                    response = await client.post(
-                        f"{self.api_url}/add/mailbox",
-                        headers=self.headers,
-                        json=mailbox_data,
-                    )
+            try:
+                response = await http_client.post(
+                    f"{self.api_url}/add/mailbox",
+                    headers=self.headers,
+                    json=mailbox_data,
+                    timeout=10.0,
+                )
 
-                    await self._handle_response(interaction, response, member, password)
+                await self._handle_response(interaction, response, member, password)
 
-                except httpx.RequestError as exc:
-                    await interaction.response.send_message(
-                        f"An error occurred while requesting {exc.request.url!r}.",
-                        ephemeral=True,
-                        delete_after=30,
-                    )
-                    logger.error(f"HTTP request error: {exc}")
+            except httpx.RequestError as exc:
+                await interaction.response.send_message(
+                    f"An error occurred while requesting {exc.request.url!r}.",
+                    ephemeral=True,
+                    delete_after=30,
+                )
+                logger.error(f"HTTP request error: {exc}")
         else:
             await interaction.response.send_message(
                 "This command can only be used in a guild (server).",

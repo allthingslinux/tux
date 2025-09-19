@@ -22,6 +22,7 @@ from tux.database.controllers import DatabaseCoordinator
 from tux.database.migrations.runner import upgrade_head_if_needed
 from tux.database.service import DatabaseService
 from tux.services.emoji_manager import EmojiManager
+from tux.services.http_client import http_client
 from tux.services.sentry_manager import SentryManager
 from tux.services.tracing import (
     instrument_bot_commands,
@@ -31,7 +32,7 @@ from tux.services.tracing import (
     start_transaction,
 )
 from tux.shared.config import CONFIG
-from tux.shared.exceptions import DatabaseConnectionError, DatabaseError
+from tux.shared.exceptions import TuxDatabaseConnectionError, TuxDatabaseError
 from tux.shared.sentry_utils import capture_database_error, capture_exception_safe, capture_tux_exception
 from tux.ui.banner import create_banner
 
@@ -107,7 +108,7 @@ class Tux(commands.Bot):
                     logger.info("💡 To start the database, run: make docker-up")
                     logger.info("   Or start just PostgreSQL: docker compose up tux-postgres -d")
                     connection_error_msg = "Database connection failed during migrations"
-                    raise DatabaseConnectionError(connection_error_msg) from e
+                    raise TuxDatabaseConnectionError(connection_error_msg) from e
                 except RuntimeError as e:
                     logger.error("❌ Database migration execution failed")
                     logger.info("💡 Check database schema and migration files")
@@ -127,7 +128,7 @@ class Tux(commands.Bot):
                 self.task_monitor.start()
                 set_setup_phase_tag(span, "monitoring", "finished")
 
-        except DatabaseConnectionError as e:
+        except TuxDatabaseConnectionError as e:
             logger.error("❌ Database connection failed")
             logger.info("💡 To start the database, run: make docker-up")
             logger.info("   Or start just PostgreSQL: docker compose up tux-postgres -d")
@@ -165,7 +166,7 @@ class Tux(commands.Bot):
     def _raise_connection_test_failed(self) -> None:
         """Raise a database connection test failure error."""
         msg = "Database connection test failed"
-        raise DatabaseConnectionError(msg)
+        raise TuxDatabaseConnectionError(msg)
 
     async def _setup_database(self) -> None:
         """Set up and validate the database connection."""
@@ -206,15 +207,15 @@ class Tux(commands.Bot):
                 # Handle specific database connection errors
                 if isinstance(e, ConnectionError | OSError):
                     msg = "Cannot connect to database - is PostgreSQL running?"
-                    raise DatabaseConnectionError(msg, e) from e
+                    raise TuxDatabaseConnectionError(msg, e) from e
 
-                # Re-raise DatabaseError as-is
-                if isinstance(e, DatabaseError):
+                # Re-raise TuxDatabaseError as-is
+                if isinstance(e, TuxDatabaseError):
                     raise
 
                 # Wrap other database errors
                 msg = f"Database setup failed: {e}"
-                raise DatabaseConnectionError(msg, e) from e
+                raise TuxDatabaseConnectionError(msg, e) from e
 
     async def _setup_prefix_manager(self) -> None:
         """Set up the prefix manager for efficient prefix resolution."""
@@ -484,6 +485,20 @@ class Tux(commands.Bot):
                 logger.error(f"⚠️  Error during database disconnection: {e}")
                 span.set_tag("db_closed", False)
                 span.set_data("db_error", str(e))
+
+                capture_exception_safe(e)
+
+            try:
+                # HTTP client connection pool
+                logger.debug("Closing HTTP client connections")
+                await http_client.close()
+                logger.debug("HTTP client connections closed")
+                span.set_tag("http_closed", True)
+
+            except Exception as e:
+                logger.error(f"⚠️  Error during HTTP client shutdown: {e}")
+                span.set_tag("http_closed", False)
+                span.set_data("http_error", str(e))
 
                 capture_exception_safe(e)
 

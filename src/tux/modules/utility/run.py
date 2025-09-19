@@ -17,10 +17,10 @@ from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.services.wrappers import godbolt, wandbox
 from tux.shared.exceptions import (
-    CompilationError,
-    InvalidCodeFormatError,
-    MissingCodeError,
-    UnsupportedLanguageError,
+    TuxCompilationError,
+    TuxInvalidCodeFormatError,
+    TuxMissingCodeError,
+    TuxUnsupportedLanguageError,
 )
 from tux.ui.embeds import EmbedCreator
 
@@ -227,7 +227,7 @@ class GodboltService(CodeDispatch):
         str | None
             The execution output with header lines removed, or None if execution failed.
         """
-        output = godbolt.getoutput(code, compiler, options)
+        output = await godbolt.getoutput(code, compiler, options)
         if not output:
             return None
 
@@ -261,7 +261,7 @@ class WandboxService(CodeDispatch):
         -----
         Nim compiler errors are filtered out due to excessive verbosity.
         """
-        result = wandbox.getoutput(code, compiler, options)
+        result = await wandbox.getoutput(code, compiler, options)
         if not result:
             return None
 
@@ -447,13 +447,13 @@ class Run(BaseCog):
 
         Raises
         ------
-        MissingCodeError
+        TuxMissingCodeError
             When no code is provided and no replied message contains code.
-        InvalidCodeFormatError
+        TuxInvalidCodeFormatError
             When the code format is invalid or missing language specification.
-        UnsupportedLanguageError
+        TuxUnsupportedLanguageError
             When the specified language is not supported.
-        CompilationError
+        TuxCompilationError
             When code compilation or execution fails.
         """
 
@@ -461,18 +461,18 @@ class Run(BaseCog):
         extracted_code = await self._extract_code_from_message(ctx, code)
 
         if not extracted_code:
-            raise MissingCodeError
+            raise TuxMissingCodeError
 
         # Parse the code block
         language, source_code = self._parse_code_block(extracted_code)
 
         if not language or not source_code.strip():
-            raise InvalidCodeFormatError
+            raise TuxInvalidCodeFormatError
 
         # Determine service to use
         service = self._determine_service(language)
         if not service:
-            raise UnsupportedLanguageError(language, SUPPORTED_LANGUAGES)
+            raise TuxUnsupportedLanguageError(language, SUPPORTED_LANGUAGES)
 
         # Add loading reaction
         await ctx.message.add_reaction(LOADING_REACTION)
@@ -482,7 +482,7 @@ class Run(BaseCog):
             output = await self.services[service].run(language, source_code)
 
             if output is None:
-                raise CompilationError
+                raise TuxCompilationError
 
             # Create and send result embed
             cleaned_output = _remove_ansi(output)
