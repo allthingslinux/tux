@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 from pathlib import Path
 
 from alembic import command
@@ -81,62 +80,31 @@ async def upgrade_head_if_needed() -> None:
         ConnectionError: When database connection fails
         RuntimeError: When migration execution fails
     """
-    import concurrent.futures
-
-    def run_upgrade() -> None:
-        """Run the upgrade in a separate thread with timeout."""
-        cfg = _build_alembic_config()
-        logger.info("🔄 Checking database migrations...")
-        try:
-            # Check current revision first
-            current_rev = command.current(cfg)
-            logger.debug(f"Current database revision: {current_rev}")
-
-            # Check if we need to upgrade
-            head_rev = command.heads(cfg)
-            logger.debug(f"Head revision: {head_rev}")
-
-            # Only run upgrade if we're not already at head
-            if current_rev != head_rev:
-                logger.info("🔄 Running database migrations...")
-                command.upgrade(cfg, "head")
-                logger.info("✅ Database migrations completed")
-            else:
-                logger.info("✅ Database is already up to date")
-        except sqlalchemy.exc.OperationalError as e:
-            logger.error("❌ Database migration failed: Cannot connect to database")
-            logger.info("💡 Ensure PostgreSQL is running: make docker-up")
-            raise ConnectionError("Database connection failed during migrations") from e
-        except Exception as e:
-            logger.error(f"❌ Database migration failed: {type(e).__name__}")
-            logger.info("💡 Check database connection settings")
-            migration_error_msg = f"Migration execution failed: {e}"
-            raise RuntimeError(migration_error_msg) from e
+    cfg = _build_alembic_config()
+    logger.info("🔄 Checking database migrations...")
 
     try:
-        # Use ThreadPoolExecutor for cancellable execution
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            # Submit the task
-            future = executor.submit(run_upgrade)
+        # Check current revision first
+        current_rev = command.current(cfg)
+        logger.debug(f"Current database revision: {current_rev}")
 
-            # Wait for completion with timeout, but allow cancellation
-            while not future.done():
-                # Check if we've been cancelled
-                current_task = asyncio.current_task()
-                if current_task and current_task.cancelled():
-                    logger.warning("⚠️ Migration cancelled, shutting down...")
-                    future.cancel()
-                    raise asyncio.CancelledError("Migration was cancelled")
+        # Check if we need to upgrade
+        head_rev = command.heads(cfg)
+        logger.debug(f"Head revision: {head_rev}")
 
-                # Small wait to avoid busy loop
-                await asyncio.sleep(0.1)
-
-            # Get the result (will raise exception if failed)
-            future.result()
-
-    except concurrent.futures.CancelledError:
-        logger.warning("⚠️ Migration thread cancelled")
-        raise asyncio.CancelledError("Migration was cancelled")
-    except Exception:
-        # Re-raise any other exceptions
-        raise
+        # Only run upgrade if we're not already at head
+        if current_rev != head_rev:
+            logger.info("🔄 Running database migrations...")
+            command.upgrade(cfg, "head")
+            logger.info("✅ Database migrations completed")
+        else:
+            logger.info("✅ Database is already up to date")
+    except sqlalchemy.exc.OperationalError as e:
+        logger.error("❌ Database migration failed: Cannot connect to database")
+        logger.info("💡 Ensure PostgreSQL is running: make docker-up")
+        raise ConnectionError("Database connection failed during migrations") from e
+    except Exception as e:
+        logger.error(f"❌ Database migration failed: {type(e).__name__}")
+        logger.info("💡 Check database connection settings")
+        migration_error_msg = f"Migration execution failed: {e}"
+        raise RuntimeError(migration_error_msg) from e
