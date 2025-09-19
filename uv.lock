@@ -1788,6 +1788,18 @@ wheels = [
 ]
 
 [[package]]
+name = "pytest-loguru"
+version = "0.4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "loguru" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b1/f2/8ca6c8780e714fbfd35d7dcc772af99310272a01457b0887c90c75f2ec52/pytest_loguru-0.4.0.tar.gz", hash = "sha256:0d9e4e72ae9bfd92f774c666e7353766af11b0b78edd59c290e89be116050f03", size = 6696, upload-time = "2024-03-20T00:52:14.16Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/33/ef/b0c2e96e3508bca8d1874e39789d541cd7f4731b38bcf9c7098f0b882001/pytest_loguru-0.4.0-py3-none-any.whl", hash = "sha256:3cc7b9c6b22cb158209ccbabf0d678dacd3f3c7497d6f46f1c338c13bee1ac77", size = 3886, upload-time = "2024-03-20T00:52:12.72Z" },
+]
+
+[[package]]
 name = "pytest-metadata"
 version = "3.1.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2349,6 +2361,7 @@ test = [
     { name = "pytest-benchmark" },
     { name = "pytest-cov" },
     { name = "pytest-html" },
+    { name = "pytest-loguru" },
     { name = "pytest-mock" },
     { name = "pytest-parallel" },
     { name = "pytest-randomly" },
@@ -2453,6 +2466,7 @@ test = [
     { name = "pytest-benchmark", specifier = ">=5.1.0,<6" },
     { name = "pytest-cov", specifier = ">=6.0.0,<7" },
     { name = "pytest-html", specifier = ">=4.1.1,<5" },
+    { name = "pytest-loguru", specifier = ">=0.4.0,<1" },
     { name = "pytest-mock", specifier = ">=3.14.0,<4" },
     { name = "pytest-parallel", specifier = ">=0.1.1" },
     { name = "pytest-randomly", specifier = ">=3.15.0,<4" },

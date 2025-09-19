@@ -93,6 +93,7 @@ test = [
     "pytest-html>=4.1.1,<5",
     "pytest-benchmark>=5.1.0,<6",
     "pytest-alembic>=0.12.0,<0.13",
+    "pytest-loguru>=0.4.0,<1",
     "py-pglite[sqlalchemy, asyncpg]>=0.5.1,<1",
     "pytest-parallel>=0.1.1",
 ]
