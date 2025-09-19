@@ -10,6 +10,10 @@ import sys
 from collections.abc import Callable
 from pathlib import Path
 
+# Add current directory to path for scripts imports
+scripts_path = Path(__file__).parent
+sys.path.insert(0, str(scripts_path))
+
 # Add src to path
 src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))

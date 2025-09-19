@@ -491,7 +491,7 @@ app = DocsCLI().app
 def main() -> None:
     """Entry point for the Documentation CLI script."""
     cli = DocsCLI()
-    cli.app()
+    cli.run()
 
 
 if __name__ == "__main__":

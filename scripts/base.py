@@ -12,6 +12,7 @@ from typer import Typer
 
 from scripts.registry import CommandRegistry
 from scripts.rich_utils import RichCLI
+from tux.core.logging import configure_logging
 
 
 class BaseCLI:
@@ -70,5 +71,6 @@ class BaseCLI:
             raise
 
     def run(self) -> None:
-        """Run the CLI application."""
+        """Run the CLI application with automatic logging configuration."""
+        configure_logging()
         self.app()

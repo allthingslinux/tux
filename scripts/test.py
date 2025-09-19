@@ -17,6 +17,9 @@ from typer import Option  # type: ignore[attr-defined]
 src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
+# Note: Logging is configured by pytest via conftest.py
+# No need to configure here as pytest will handle it
+
 from scripts.base import BaseCLI
 from scripts.registry import Command
 
@@ -62,10 +65,11 @@ class TestCLI(BaseCLI):
         """Run a test command and return success status."""
         try:
             self.rich.print_info(f"Running: {' '.join(command)}")
-            subprocess.run(command, check=True)
-        except subprocess.CalledProcessError as e:
-            self.rich.print_error(f"❌ {description} failed with exit code {e.returncode}")
-            return False
+            # Let typer handle signals - just run the command
+            result = subprocess.run(command, check=False)
+            if result.returncode != 0:
+                self.rich.print_error(f"❌ {description} failed with exit code {result.returncode}")
+                return False
         except FileNotFoundError:
             self.rich.print_error(f"❌ Command not found: {command[0]}")
             return False
