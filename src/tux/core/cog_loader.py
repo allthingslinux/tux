@@ -20,18 +20,8 @@ from tux.services.tracing import (
     transaction,
 )
 from tux.shared.config import CONFIG
-
-
-class CogLoadError(Exception):
-    """Raised when a cog fails to load."""
-
-    FAILED_TO_LOAD = "Failed to load cogs"
-    FAILED_TO_LOAD_FOLDER = "Failed to load cogs from folder"
-    FAILED_TO_INITIALIZE = "Failed to initialize cog loader"
-
-    def __init__(self, message: str) -> None:
-        self.message = message
-        super().__init__(self.message)
+from tux.shared.constants import CONST
+from tux.shared.exceptions import CogLoadError, TuxConfigurationError
 
 
 class CogLoader(commands.Cog):
@@ -41,22 +31,7 @@ class CogLoader(commands.Cog):
         # Track load times for performance monitoring
         self.load_times: defaultdict[str, float] = defaultdict(float)
         # Define load order priorities (higher number = higher priority)
-        self.load_priorities = {
-            # Core services and infrastructure
-            "services": 90,
-            "admin": 80,
-            # Feature modules
-            "levels": 70,
-            "moderation": 60,
-            "snippets": 50,
-            "guild": 40,
-            "utility": 30,
-            "info": 20,
-            "fun": 10,
-            "tools": 5,
-            # Plugins have lower priority to ensure core modules load first
-            "plugins": 1,
-        }
+        self.load_priorities = CONST.COG_PRIORITIES
 
     async def is_cog_eligible(self, filepath: Path) -> bool:
         """
@@ -135,20 +110,38 @@ class CogLoader(commands.Cog):
             self.load_times[module] = load_time
 
             # Add telemetry data to span
-            set_span_attributes({"cog.status": "loaded", "load_time_ms": load_time * 1000, "load_time_s": load_time})
+            set_span_attributes(
+                {
+                    "cog.status": "loaded",
+                    "load_time_ms": load_time * CONST.MILLISECONDS_PER_SECOND,
+                    "load_time_s": load_time,
+                },
+            )
 
-            logger.debug(f"Successfully loaded cog {module} in {load_time * 1000:.0f}ms")
+            logger.bind(operation_type="performance").info("cog_load", load_time, cog=module, status="success")
+
+        except TuxConfigurationError as config_error:
+            # Handle configuration errors gracefully
+            module_name = str(path)
+            set_span_attributes({"cog.status": "skipped", "cog.skip_reason": "configuration"})
+            logger.warning(f"⚠️  Skipping cog {module_name} due to missing configuration: {config_error}")
+            logger.info("💡 To enable this cog, configure the required settings in your .env file")
+            return  # Skip this cog but don't fail the entire load process
 
         except Exception as e:
             # Handle configuration errors more gracefully
             module_name = str(path)
 
-            # Check if this is a configuration error (including Discord ExtensionFailed wrapping our errors)
-            error_str = str(e).lower()
-            keywords = ["not configured", "configuration", "empty", "must be a valid"]
-            matches = [keyword for keyword in keywords if keyword in error_str]
+            # Check if this is a configuration error by examining the exception chain
+            current_exception = e
+            is_config_error = False
+            while current_exception:
+                if isinstance(current_exception, TuxConfigurationError):
+                    is_config_error = True
+                    break
+                current_exception = current_exception.__cause__ or current_exception.__context__
 
-            if matches:
+            if is_config_error:
                 set_span_attributes({"cog.status": "skipped", "cog.skip_reason": "configuration"})
                 logger.warning(f"⚠️  Skipping cog {module_name} due to missing configuration: {e}")
                 logger.info("💡 To enable this cog, configure the required settings in your .env file")
@@ -158,7 +151,7 @@ class CogLoader(commands.Cog):
             set_span_attributes({"cog.status": "failed"})
             capture_span_exception(e, traceback=traceback.format_exc(), module=str(path))
             error_msg = f"Failed to load cog {module_name}. Error: {e}\n{traceback.format_exc()}"
-            logger.error(error_msg)
+            logger.opt(exception=True).error(f"Failed to load cog {module_name}", module=module_name)
             raise CogLoadError(error_msg) from e
 
     def _get_cog_priority(self, path: Path) -> int:
@@ -299,7 +292,8 @@ class CogLoader(commands.Cog):
             path_str = path.as_posix()
             logger.error(f"An error occurred while processing {path_str}: {e}")
             capture_span_exception(e, path=path_str)
-            raise CogLoadError(CogLoadError.FAILED_TO_LOAD) from e
+            msg = "Failed to load cogs"
+            raise CogLoadError(msg) from e
 
     @transaction("cog.load_folder", description="Loading all cogs from folder")
     async def load_cogs_from_folder(self, folder_name: str) -> None:
@@ -354,7 +348,8 @@ class CogLoader(commands.Cog):
         except Exception as e:
             capture_span_exception(e, folder=folder_name, operation="load_folder")
             logger.error(f"Failed to load cogs from folder {folder_name}: {e}")
-            raise CogLoadError(CogLoadError.FAILED_TO_LOAD_FOLDER) from e
+            msg = "Failed to load cogs from folder"
+            raise CogLoadError(msg) from e
 
     @classmethod
     @transaction("cog.setup", name="CogLoader Setup", description="Initialize CogLoader and load all cogs")
@@ -398,4 +393,5 @@ class CogLoader(commands.Cog):
         except Exception as e:
             capture_span_exception(e, operation="cog_setup")
             logger.error(f"Failed to set up cog loader: {e}")
-            raise CogLoadError(CogLoadError.FAILED_TO_INITIALIZE) from e
+            msg = "Failed to initialize cog loader"
+            raise CogLoadError(msg) from e

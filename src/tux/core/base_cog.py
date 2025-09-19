@@ -1,11 +1,8 @@
-"""Enhanced base cog with automatic dependency injection and usage generation.
+"""Enhanced base cog with database access and usage generation.
 
 This module provides the `BaseCog` class that:
-- Injects services via the dependency injection container
+- Provides access to database services
 - Generates command usage strings from function signatures
-
-Backwards-compatibility fallbacks have been removed; cogs are expected to run
-with a configured service container.
 """
 
 from __future__ import annotations
@@ -16,114 +13,32 @@ from typing import TYPE_CHECKING, Any
 from discord.ext import commands
 from loguru import logger
 
-from tux.core.interfaces import IBotService, ILoggerService
 from tux.database.controllers import DatabaseCoordinator
-from tux.database.service import DatabaseService
 from tux.shared.config import CONFIG
 from tux.shared.functions import generate_usage as _generate_usage_shared
 
 if TYPE_CHECKING:
-    from tux.core.types import Tux
+    from tux.core.bot import Tux
 
 
 class BaseCog(commands.Cog):
-    """Enhanced base cog class with automatic dependency injection support.
+    """Enhanced base cog class with database access.
 
-    This class injects services through the dependency injection container.
-    No legacy fallbacks are provided; the container should be available on the
-    bot instance and services should be registered as needed by each cog.
-
-    Injected properties:
-    - db_service: Database service for database operations
-    - bot_service: Bot service for bot-related operations
-    - config_service: Configuration service for accessing settings
-    - logger_service: Logger service for logging
+    This class provides access to database services and configuration.
     """
 
     def __init__(self, bot: Tux) -> None:
-        """Initialize the base cog with automatic service injection.
+        """Initialize the base cog.
 
         Args:
             bot: The Tux bot instance
-
-        The constructor injects services through the dependency injection
-        container. The container is required; no fallbacks are provided.
         """
         super().__init__()
-        # Initialize service properties first
-        self.db_service: DatabaseService | None = None
-        self.bot_service: IBotService | None = None
-
-        self.logger_service: ILoggerService | None = None
-        self._db_coordinator: DatabaseCoordinator | None = None  # Database coordinator for accessing controllers
-
         # Get the bot instance
         self.bot = bot
 
-        # Require a container on the bot
-        if not hasattr(bot, "container") or bot.container is None:
-            error_msg = f"Service container not available for {self.__class__.__name__}. DI is required."
-            raise RuntimeError(error_msg)
-
-        self._container = bot.container
-        # Attempt injection
-        self._inject_services()
-
         # Configure automatic usage strings for commands that do not set one
         self._setup_command_usage()
-
-    def _inject_services(self) -> None:
-        """Inject services through the dependency injection container.
-
-        Attempts to resolve and inject all available services. If any service
-        injection fails, it will be logged; no legacy fallbacks are provided.
-        """
-        # Inject services in order of dependency
-        self._inject_database_service()
-        self._inject_bot_service()
-
-        self._inject_logger_service()
-
-        # Single summary log for this cog's injection results
-        logger.debug(
-            f"[BaseCog] Injected services for {self.__class__.__name__} "
-            f"(db={self.db_service is not None}, "
-            f"bot={self.bot_service is not None}, "
-            f"logger={self.logger_service is not None})",
-        )
-
-    def _inject_database_service(self) -> None:
-        """Inject the database service and create database coordinator."""
-        try:
-            self.db_service = self._container.get_optional(DatabaseService)
-            if self.db_service:
-                # Create the database coordinator for accessing controllers
-                self._db_coordinator = DatabaseCoordinator(self.db_service)
-                logger.trace(f"Injected database service and coordinator into {self.__class__.__name__}")
-            else:
-                logger.warning(f"Database service not available for {self.__class__.__name__}")
-        except Exception as e:
-            logger.error(f"Database service injection failed for {self.__class__.__name__}: {e}")
-
-    def _inject_bot_service(self) -> None:
-        """Inject the bot service."""
-        try:
-            self.bot_service = self._container.get_optional(IBotService)
-            if self.bot_service:
-                logger.trace(f"[BaseCog] Injected bot service into {self.__class__.__name__}")
-            else:
-                logger.warning(f"[BaseCog] Bot service not available for {self.__class__.__name__}")
-        except Exception as e:
-            logger.error(f"[BaseCog] Bot service injection failed for {self.__class__.__name__}: {e}", exc_info=True)
-
-    def _inject_logger_service(self) -> None:
-        """Inject the logger service (optional)."""
-        try:
-            self.logger_service = self._container.get_optional(ILoggerService)
-            if self.logger_service:
-                logger.trace(f"Injected logger service into {self.__class__.__name__}")
-        except Exception as e:
-            logger.error(f"Logger service injection failed for {self.__class__.__name__}: {e}")
 
     # ---------- Usage generation ----------
     def _setup_command_usage(self) -> None:
@@ -153,7 +68,7 @@ class BaseCog(commands.Cog):
         """
         flag_converter: type[commands.FlagConverter] | None = None
         try:
-            signature = inspect.signature(command.callback)  # type: ignore[attr-defined]
+            signature = inspect.signature(command.callback)
             for name, param in signature.parameters.items():
                 if name != "flags":
                     continue
@@ -166,7 +81,7 @@ class BaseCog(commands.Cog):
                         commands.FlagConverter,
                     )
                 ):
-                    flag_converter = ann  # type: ignore[assignment]
+                    flag_converter = ann
                     break
         except Exception:
             # If inspection fails, defer to simple name
@@ -179,22 +94,14 @@ class BaseCog(commands.Cog):
             # Final fallback: minimal usage string
             return command.qualified_name
 
-    # (Embed helpers and error handling intentionally omitted as requested.)
-
     @property
     def db(self) -> DatabaseCoordinator:
         """Get the database coordinator for accessing database controllers.
 
         Returns:
             The database coordinator instance
-
-        Raises:
-            RuntimeError: If the database coordinator is not available
         """
-        if self._db_coordinator is None:
-            error_msg = "Database coordinator not available. DI is required."
-            raise RuntimeError(error_msg)
-        return self._db_coordinator
+        return self.bot.db
 
     def get_config(self, key: str, default: Any = None) -> Any:
         """Get a configuration value directly from CONFIG.
@@ -224,74 +131,36 @@ class BaseCog(commands.Cog):
             return value
 
     def get_bot_latency(self) -> float:
-        """Get the bot's latency with service injection support.
+        """Get the bot's latency.
 
         Returns:
             The bot's latency in seconds
-
-        This method uses the injected bot service only.
         """
-        if self.bot_service is None:
-            error_msg = "Bot service not injected. DI is required."
-            raise RuntimeError(error_msg)
-        return self.bot_service.latency
+        return self.bot.latency
 
     def get_bot_user(self, user_id: int) -> Any:
-        """Get a user by ID with service injection support.
+        """Get a user by ID.
 
         Args:
             user_id: The Discord user ID
 
         Returns:
             The user object if found, None otherwise
-
-        This method uses the injected bot service only.
         """
-        if self.bot_service is None:
-            error_msg = "Bot service not injected. DI is required."
-            raise RuntimeError(error_msg)
-        return self.bot_service.get_user(user_id)
+        return self.bot.get_user(user_id)
 
     def get_bot_emoji(self, emoji_id: int) -> Any:
-        """Get an emoji by ID with service injection support.
+        """Get an emoji by ID.
 
         Args:
             emoji_id: The Discord emoji ID
 
         Returns:
             The emoji object if found, None otherwise
-
-        This method uses the injected bot service only.
         """
-        if self.bot_service is None:
-            error_msg = "Bot service not injected. DI is required."
-            raise RuntimeError(error_msg)
-        return self.bot_service.get_emoji(emoji_id)
-
-    async def execute_database_query(self, operation: str, *args: Any, **kwargs: Any) -> Any:
-        """Execute a database query with service injection support.
-
-        Args:
-            operation: The operation name to execute
-            *args: Positional arguments for the operation
-            **kwargs: Keyword arguments for the operation
-
-        Returns:
-            The result of the database operation
-
-        This method uses the injected database service only.
-        """
-        if self.db_service is None:
-            error_msg = "Database service not injected. DI is required."
-            raise RuntimeError(error_msg)
-        # For now, just return None since execute_query expects a callable
-        # This method needs to be refactored to use proper database operations
-        return None
+        return self.bot.get_emoji(emoji_id)
 
     def __repr__(self) -> str:
         """Return a string representation of the cog."""
-        # Container is required by design; reflect presence based on attribute existence
-        has_container = hasattr(self, "_container")
-        injection_status = "injected" if has_container else "fallback"
         bot_user = getattr(self.bot, "user", "Unknown")
-        return f"<{self.__class__.__name__} bot={bot_user} injection={injection_status}>"
+        return f"<{self.__class__.__name__} bot={bot_user}>"

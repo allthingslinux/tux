@@ -10,7 +10,7 @@ from loguru import logger
 from tux.database.models import CaseType
 
 if TYPE_CHECKING:
-    from tux.core.types import Tux
+    from tux.core.bot import Tux
 
 time_regex = re.compile(r"(\d{1,5}(?:[.,]?\d{1,5})?)([smhd])")
 time_dict = {"h": 3600, "s": 1, "m": 60, "d": 86400}

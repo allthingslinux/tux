@@ -12,7 +12,8 @@ from typing import Any
 from discord.ext import tasks
 from loguru import logger
 
-from tux.services.tracing import capture_exception_safe, start_span
+from tux.services.tracing import start_span
+from tux.shared.sentry_utils import capture_exception_safe
 
 
 class TaskMonitor:

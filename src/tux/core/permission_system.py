@@ -20,7 +20,6 @@ Architecture:
 
 from __future__ import annotations
 
-import logging
 import sys
 from datetime import datetime
 from enum import Enum
@@ -29,6 +28,7 @@ from typing import TYPE_CHECKING, Any
 import discord
 from discord import app_commands
 from discord.ext import commands
+from loguru import logger
 
 from tux.database.controllers import DatabaseCoordinator
 
@@ -78,8 +78,6 @@ from tux.database.models.models import (
 
 if TYPE_CHECKING:
     from tux.core.bot import Tux
-
-logger = logging.getLogger(__name__)
 
 
 class PermissionSystem:
@@ -648,4 +646,4 @@ def init_permission_system(bot: Tux, db: DatabaseCoordinator) -> PermissionSyste
     # Use a more explicit approach to avoid global statement warning
     current_module = sys.modules[__name__]
     current_module._permission_system = PermissionSystem(bot, db)  # type: ignore[attr-defined]
-    return current_module._permission_system  # type: ignore[attr-defined]
+    return current_module._permission_system

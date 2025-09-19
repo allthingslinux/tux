@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-from typing import Any, cast
+from typing import Any
 
 import discord
 from discord.ext import commands
@@ -16,9 +16,7 @@ from loguru import logger
 from rich.console import Console
 
 from tux.core.cog_loader import CogLoader
-from tux.core.container import ServiceContainer
 from tux.core.permission_system import init_permission_system
-from tux.core.service_registry import ServiceRegistry
 from tux.core.task_monitor import TaskMonitor
 from tux.database.controllers import DatabaseCoordinator
 from tux.database.migrations.runner import upgrade_head_if_needed
@@ -26,7 +24,6 @@ from tux.database.service import DatabaseService
 from tux.services.emoji_manager import EmojiManager
 from tux.services.sentry_manager import SentryManager
 from tux.services.tracing import (
-    capture_exception_safe,
     instrument_bot_commands,
     set_setup_phase_tag,
     set_span_error,
@@ -34,22 +31,11 @@ from tux.services.tracing import (
     start_transaction,
 )
 from tux.shared.config import CONFIG
+from tux.shared.exceptions import DatabaseConnectionError, DatabaseError
+from tux.shared.sentry_utils import capture_database_error, capture_exception_safe, capture_tux_exception
 from tux.ui.banner import create_banner
 
-# Re-export the T type for backward compatibility
-__all__ = ["ContainerInitializationError", "DatabaseConnectionError", "Tux"]
-
-
-class DatabaseConnectionError(RuntimeError):
-    """Raised when database connection fails."""
-
-    CONNECTION_FAILED = "Failed to establish database connection"
-
-
-class ContainerInitializationError(RuntimeError):
-    """Raised when dependency injection container initialization fails."""
-
-    INITIALIZATION_FAILED = "Failed to initialize dependency injection container"
+__all__ = ["Tux"]
 
 
 class Tux(commands.Bot):
@@ -58,17 +44,10 @@ class Tux(commands.Bot):
     Responsibilities
     ----------------
     - Connect to the database and validate readiness
-    - Initialize the DI container and load cogs/extensions
+    - Load cogs/extensions
     - Configure Sentry tracing and enrich spans
     - Start background task monitoring and perform graceful shutdown
     """
-
-    # Error message constants
-    _DB_SERVICE_UNAVAILABLE = "Database service not available in container"
-    _DB_CONNECTION_TEST_FAILED = "Database connection test failed"
-    _CONTAINER_VALIDATION_FAILED = "Container validation failed - missing required services"
-    _CONTAINER_NOT_INITIALIZED = "Container is not initialized"
-    _CONTAINER_VALIDATION_FAILED_GENERIC = "Container validation failed"
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the Tux bot and start setup process."""
@@ -88,8 +67,8 @@ class Tux(commands.Bot):
         self.task_monitor = TaskMonitor(self)
 
         # --- Integration points -------------------------------------------
-        # Dependency injection container
-        self.container: ServiceContainer | None = None
+        # Database service
+        self.db_service = DatabaseService()
         # Sentry manager instance for error handling and context utilities
         self.sentry_manager: SentryManager = SentryManager()
         # Prefix manager for efficient prefix resolution
@@ -111,7 +90,6 @@ class Tux(commands.Bot):
         Steps
         -----
         - Connect to the database and validate connection
-        - Initialize and validate DI container
         - Load extensions and cogs
         - Initialize hot reload (if enabled)
         - Start background task monitoring
@@ -120,8 +98,6 @@ class Tux(commands.Bot):
             # High-level setup pipeline with tracing
             with start_span("bot.setup", "Bot setup process") as span:
                 set_setup_phase_tag(span, "starting")
-                await self._setup_container()
-                set_setup_phase_tag(span, "container", "finished")
                 await self._setup_database()
                 # Ensure DB schema is up-to-date in non-dev
                 try:
@@ -156,29 +132,11 @@ class Tux(commands.Bot):
             logger.info("💡 To start the database, run: make docker-up")
             logger.info("   Or start just PostgreSQL: docker compose up tux-postgres -d")
 
-            if self.sentry_manager.is_initialized:
-                self.sentry_manager.set_context("setup_failure", {"error": str(e), "error_type": "database_connection"})
-            capture_exception_safe(e)
+            capture_database_error(e, operation="connection")
 
             # Don't call shutdown here - let main function handle it to avoid recursion
             # Let the main function handle the exit
             error_msg = "Database setup failed"
-            raise RuntimeError(error_msg) from e
-
-        except ContainerInitializationError as e:
-            logger.error("❌ Dependency injection container failed to initialize")
-            logger.info("💡 Check your configuration and service registrations")
-
-            if self.sentry_manager.is_initialized:
-                self.sentry_manager.set_context(
-                    "setup_failure",
-                    {"error": str(e), "error_type": "container_initialization"},
-                )
-            capture_exception_safe(e)
-
-            # Don't call shutdown here - let main function handle it to avoid recursion
-            # Let the main function handle the exit
-            error_msg = "Container setup failed"
             raise RuntimeError(error_msg) from e
 
         except Exception as e:
@@ -191,9 +149,7 @@ class Tux(commands.Bot):
                 logger.error(f"❌ Critical error during setup: {type(e).__name__}: {e}")
                 logger.info("💡 Check the logs above for more details")
 
-            if self.sentry_manager.is_initialized:
-                self.sentry_manager.set_context("setup_failure", {"error": str(e), "error_type": type(e).__name__})
-            capture_exception_safe(e)
+            capture_tux_exception(e, context={"phase": "setup"})
 
             # Don't call shutdown here - let main function handle it to avoid recursion
             # Let the main function handle the exit
@@ -206,42 +162,33 @@ class Tux(commands.Bot):
             error_msg = "Bot setup failed with critical error"
             raise RuntimeError(error_msg) from e
 
+    def _raise_connection_test_failed(self) -> None:
+        """Raise a database connection test failure error."""
+        msg = "Database connection test failed"
+        raise DatabaseConnectionError(msg)
+
     async def _setup_database(self) -> None:
         """Set up and validate the database connection."""
         with start_span("bot.database_connect", "Setting up database connection") as span:
             logger.info("🔌 Connecting to database...")
 
-            def _raise_db_error(message: str) -> None:
-                """Raise database connection error with given message."""
-                raise DatabaseConnectionError(message)
-
             try:
-                # Prefer DI service; fall back to shared client early in startup
-                db_service = self.container.get_optional(DatabaseService) if self.container else None
-                if db_service is None:
-                    _raise_db_error(self._DB_SERVICE_UNAVAILABLE)
-
-                # Narrow type for type checker
-                db_service = cast(DatabaseService, db_service)
-                await db_service.connect(CONFIG.database_url)
-                connected = db_service.is_connected()
+                await self.db_service.connect(CONFIG.database_url)
+                connected = self.db_service.is_connected()
 
                 if not connected:
-                    _raise_db_error(self._DB_CONNECTION_TEST_FAILED)
+                    self._raise_connection_test_failed()
 
                 # Minimal telemetry for connection health
                 span.set_tag("db.connected", connected)
                 logger.info("✅ Database connected successfully")
 
-                # Create tables if they don't exist (for development/production)
-                # This ensures the schema is available even if migrations are incomplete
+                # Try to create tables, but don't fail if we can't connect
                 try:
                     from sqlmodel import SQLModel  # noqa: PLC0415
 
-                    # Get the underlying SQLAlchemy engine
-                    engine = db_service.engine
+                    engine = self.db_service.engine
                     if engine:
-                        # Create tables using SQLAlchemy metadata
                         logger.info("🏗️  Creating database tables...")
                         if hasattr(engine, "begin"):  # Async engine
                             async with engine.begin() as conn:
@@ -250,55 +197,24 @@ class Tux(commands.Bot):
                             SQLModel.metadata.create_all(engine, checkfirst=True)  # type: ignore
                         logger.info("✅ Database tables created/verified")
                 except Exception as table_error:
-                    logger.warning(f"⚠️  Table creation failed (may already exist): {table_error}")
-                    # Don't fail the startup for table creation issues
+                    logger.warning(f"⚠️  Could not create tables (database may be unavailable): {table_error}")
+                    # Don't fail startup - tables can be created later
 
             except Exception as e:
                 set_span_error(span, e, "db_error")
 
-                if isinstance(e, DatabaseConnectionError):
+                # Handle specific database connection errors
+                if isinstance(e, ConnectionError | OSError):
+                    msg = "Cannot connect to database - is PostgreSQL running?"
+                    raise DatabaseConnectionError(msg, e) from e
+
+                # Re-raise DatabaseError as-is
+                if isinstance(e, DatabaseError):
                     raise
 
                 # Wrap other database errors
-                error_msg = f"Database connection failed: {e}"
-                raise DatabaseConnectionError(error_msg) from e
-
-    async def _setup_container(self) -> None:
-        """Set up and configure the dependency injection container."""
-        with start_span("bot.container_setup", "Setting up dependency injection container") as span:
-            logger.info("🔧 Initializing dependency injection container...")
-
-            def _raise_container_error(message: str) -> None:
-                """Raise container initialization error with given message."""
-                raise ContainerInitializationError(message)
-
-            try:
-                # Configure the service container with all required services
-                self.container = ServiceRegistry.configure_container(self)
-
-                # Validate that all required services are registered
-                if not ServiceRegistry.validate_container(self.container):
-                    error_msg = self._CONTAINER_VALIDATION_FAILED
-                    logger.error(f"❌ {error_msg}")
-                    _raise_container_error(error_msg)
-
-                # Log registered services for debugging/observability
-                registered_services = ServiceRegistry.get_registered_services(self.container)
-                logger.info(f"✅ Container initialized with {len(registered_services)} services")
-
-                span.set_tag("container.initialized", True)
-                span.set_tag("container.services_count", len(registered_services))
-                span.set_data("container.services", registered_services)
-
-            except Exception as e:
-                set_span_error(span, e, "container_error")
-
-                if isinstance(e, ContainerInitializationError):
-                    raise
-
-                # Wrap other container errors
-                error_msg = f"Container initialization failed: {e}"
-                raise ContainerInitializationError(error_msg) from e
+                msg = f"Database setup failed: {e}"
+                raise DatabaseConnectionError(msg, e) from e
 
     async def _setup_prefix_manager(self) -> None:
         """Set up the prefix manager for efficient prefix resolution."""
@@ -340,22 +256,9 @@ class Tux(commands.Bot):
         with start_span("bot.setup_permission_system", "Setting up permission system") as span:
             logger.info("🔧 Initializing permission system...")
 
-            def _raise_container_error(message: str) -> None:
-                raise RuntimeError(message)
-
             try:
-                # Get the database service from the container and create coordinator
-                if self.container is None:
-                    _raise_container_error("Container not initialized")
-
-                # Type checker doesn't understand the flow control above, so we cast
-                container = cast(ServiceContainer, self.container)
-                db_service = container.get_optional(DatabaseService)
-
-                # DatabaseService should never be None if properly registered
-                if db_service is None:
-                    _raise_container_error("DatabaseService not found in container")
-                db_coordinator = DatabaseCoordinator(db_service)
+                # Create database coordinator with direct service
+                db_coordinator = DatabaseCoordinator(self.db_service)
 
                 # Initialize the permission system
                 init_permission_system(self, db_coordinator)
@@ -376,16 +279,7 @@ class Tux(commands.Bot):
     @property
     def db(self) -> DatabaseCoordinator:
         """Get the database coordinator for accessing database controllers."""
-        if self.container is None:
-            msg = "Container not initialized"
-            raise RuntimeError(msg)
-
-        # Type checker now understands the flow control
-        db_service = self.container.get_optional(DatabaseService)
-        if db_service is None:
-            msg = "DatabaseService not found in container"
-            raise RuntimeError(msg)
-        return DatabaseCoordinator(db_service)
+        return DatabaseCoordinator(self.db_service)
 
     async def _load_drop_in_extensions(self) -> None:
         """Load optional drop-in extensions (e.g., Jishaku)."""
@@ -403,22 +297,6 @@ class Tux(commands.Bot):
     @staticmethod
     def _validate_db_connection() -> None:
         return None
-
-    def _validate_container(self) -> None:
-        """Raise if the dependency injection container is not properly initialized."""
-        # Ensure container object exists before attempting to use it
-        if self.container is None:
-            error_msg = self._CONTAINER_NOT_INITIALIZED
-            raise ContainerInitializationError(error_msg)
-
-        # Validate registered services and basic invariants via the registry
-        if not ServiceRegistry.validate_container(self.container):
-            error_msg = self._CONTAINER_VALIDATION_FAILED_GENERIC
-            raise ContainerInitializationError(error_msg)
-
-    def _raise_container_validation_error(self, message: str) -> None:
-        """Helper method to raise container validation errors."""
-        raise ContainerInitializationError(message)
 
     async def setup_hook(self) -> None:
         """One-time async setup before connecting to Discord (``discord.py`` hook)."""
@@ -440,16 +318,6 @@ class Tux(commands.Bot):
                 # Record success in Sentry
                 if self.sentry_manager.is_initialized:
                     self.sentry_manager.set_tag("bot.setup_complete", True)
-                    if self.container:
-                        registered_services = ServiceRegistry.get_registered_services(self.container)
-                        self.sentry_manager.set_context(
-                            "container_info",
-                            {
-                                "initialized": True,
-                                "services_count": len(registered_services),
-                                "services": registered_services,
-                            },
-                        )
 
         if self._startup_task is None or self._startup_task.done():
             self._startup_task = self.loop.create_task(self._post_ready_startup())
@@ -569,9 +437,6 @@ class Tux(commands.Bot):
             await self._close_connections()
             transaction.set_tag("connections_closed", True)
 
-            self._cleanup_container()
-            transaction.set_tag("container_cleaned", True)
-
             logger.info("✅ Bot shutdown complete")
 
     async def _handle_setup_task(self) -> None:
@@ -609,12 +474,9 @@ class Tux(commands.Bot):
                 capture_exception_safe(e)
 
             try:
-                # Database connection via DI when available
+                # Database connection
                 logger.debug("Closing database connections")
-
-                db_service = self.container.get(DatabaseService) if self.container else None
-                if db_service is not None:
-                    await db_service.disconnect()
+                await self.db_service.disconnect()
                 logger.debug("Database connections closed")
                 span.set_tag("db_closed", True)
 
@@ -624,15 +486,6 @@ class Tux(commands.Bot):
                 span.set_data("db_error", str(e))
 
                 capture_exception_safe(e)
-
-    def _cleanup_container(self) -> None:
-        """Clean up the dependency injection container."""
-        with start_span("bot.cleanup_container", "Cleaning up dependency injection container"):
-            if self.container is not None:
-                logger.debug("Cleaning up dependency injection container")
-                # The container doesn't need explicit cleanup, just clear the reference
-                self.container = None
-                logger.debug("Dependency injection container cleaned up")
 
     async def _load_cogs(self) -> None:
         """Load bot cogs using CogLoader."""
