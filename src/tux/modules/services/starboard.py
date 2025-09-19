@@ -5,9 +5,9 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.base_cog import BaseCog
+from tux.core.bot import Tux
 from tux.core.checks import require_admin
 from tux.core.converters import get_channel_safe
-from tux.core.types import Tux
 from tux.ui.embeds import EmbedCreator, EmbedType
 
 

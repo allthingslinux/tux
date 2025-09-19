@@ -7,7 +7,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
 
 from tux.core.base_cog import BaseCog
-from tux.core.types import Tux
+from tux.core.bot import Tux
 from tux.shared.config import CONFIG
 
 
@@ -90,9 +90,9 @@ class InfluxLogger(BaseCog):
                 # The InfluxDB client's type hints are incomplete
                 points: list[Point] = [
                     Point("guild stats").tag("guild", guild_id).field("starboard count", len(starboard_messages)),  # type: ignore
-                    Point("guild stats").tag("guild", guild_id).field("snippet count", len(snippet_stats)),  # type: ignore
-                    Point("guild stats").tag("guild", guild_id).field("afk count", len(afk_stats)),  # type: ignore
-                    Point("guild stats").tag("guild", guild_id).field("case count", len(case_stats)),  # type: ignore
+                    Point("guild stats").tag("guild", guild_id).field("snippet count", len(snippet_stats)),
+                    Point("guild stats").tag("guild", guild_id).field("afk count", len(afk_stats)),
+                    Point("guild stats").tag("guild", guild_id).field("case count", len(case_stats)),
                 ]
 
                 # Write to InfluxDB
