@@ -7,11 +7,11 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.base_cog import BaseCog
+from tux.core.bot import Tux
 from tux.core.checks import (
     require_bot_owner,
 )
-from tux.core.types import Tux
-from tux.services.handlers.error import ERROR_CONFIG_MAP
+from tux.services.handlers.error.formatter import ERROR_CONFIG_MAP
 from tux.ui.embeds import EmbedCreator
 
 
@@ -69,10 +69,10 @@ class ErrorTestDefinition:
             return None
 
         return {
-            "message_format": config.message_format,
-            "log_level": config.log_level,
-            "send_to_sentry": config.send_to_sentry,
-            "has_detail_extractor": config.detail_extractor is not None,
+            "delete_error_messages": config.delete_error_messages,
+            "error_message_delete_after": config.error_message_delete_after,
+            "suggest_similar_commands": config.suggest_similar_commands,
+            "suggestion_delete_after": config.suggestion_delete_after,
         }
 
 

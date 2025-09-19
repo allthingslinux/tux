@@ -4,10 +4,10 @@ from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
 from tux.core.base_cog import BaseCog
+from tux.core.bot import Tux
 from tux.core.checks import (
     require_bot_owner,
 )
-from tux.core.types import Tux
 
 
 class Dev(BaseCog):

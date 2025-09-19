@@ -6,11 +6,12 @@ from discord import app_commands
 from loguru import logger
 
 from tux.core.base_cog import BaseCog
+from tux.core.bot import Tux
 from tux.core.checks import (
     require_bot_owner,
 )
-from tux.core.types import Tux
 from tux.shared.config import CONFIG
+from tux.shared.constants import CONST
 
 MailboxData = dict[str, str | list[str]]
 
@@ -169,7 +170,7 @@ class Mail(BaseCog):
         password : str
             The password to register for mail.
         """
-        if response.status_code == 200:
+        if response.status_code == CONST.HTTP_OK:
             result: list[dict[str, str | None]] = response.json()
             logger.info(f"Response JSON: {result}")
 
