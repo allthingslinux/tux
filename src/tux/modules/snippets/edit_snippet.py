@@ -1,7 +1,7 @@
 from discord.ext import commands
 from loguru import logger
 
-from tux.core.types import Tux
+from tux.core.bot import Tux
 from tux.shared.constants import CONST
 
 from . import SnippetsBaseCog

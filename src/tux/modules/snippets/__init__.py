@@ -3,8 +3,8 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.base_cog import BaseCog
+from tux.core.bot import Tux
 from tux.core.permission_system import PermissionLevel, get_permission_system
-from tux.core.types import Tux
 from tux.database.models import CaseType as DBCaseType
 from tux.database.models import Snippet
 from tux.shared.config import CONFIG

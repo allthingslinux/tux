@@ -2,7 +2,7 @@ from discord import AllowedMentions, Message
 from discord.ext import commands
 from reactionmenu import ViewButton, ViewMenu
 
-from tux.core.types import Tux
+from tux.core.bot import Tux
 
 # from tux.shared.functions import truncate
 from . import SnippetsBaseCog

@@ -4,8 +4,8 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from tux.core.bot import Tux
 from tux.core.checks import require_junior_mod
-from tux.core.types import Tux
 from tux.shared.constants import CONST
 
 from . import SnippetsBaseCog
