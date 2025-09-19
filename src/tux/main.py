@@ -3,9 +3,8 @@ import sys
 from loguru import logger
 
 from tux.core.app import TuxApp
-from tux.services.logger import setup_logging
-
-setup_logging()
+from tux.core.logging import configure_logging
+from tux.shared.exceptions import DatabaseError, TuxError
 
 
 def run() -> int:
@@ -20,32 +19,31 @@ def run() -> int:
     int
         Exit code: 0 for success, non-zero for failure
     """
+    # Configure logging first (loguru best practice)
+    configure_logging()
 
     try:
         logger.info("🚀 Starting Tux...")
-
         app = TuxApp()
         app.run()
 
-    except RuntimeError as e:
-        # Handle setup failures (database, container, etc.)
-        if "setup failed" in str(e).lower():
-            # Error already logged in setup method, just return failure
-            logger.error("❌ Bot startup failed")
-            return 1
-        logger.critical(f"❌ Application failed to start: {e}")
-        return 1
+    except (DatabaseError, TuxError, RuntimeError, SystemExit, KeyboardInterrupt, Exception) as e:
+        # Handle all errors in one place
+        if isinstance(e, DatabaseError):
+            logger.error("❌ Database connection failed")
+            logger.info("💡 To start the database, run: make docker-up")
+        elif isinstance(e, TuxError):
+            logger.error(f"❌ Bot startup failed: {e}")
+        elif isinstance(e, RuntimeError):
+            logger.critical(f"❌ Application failed to start: {e}")
+        elif isinstance(e, SystemExit):
+            return int(e.code) if e.code is not None else 1
+        elif isinstance(e, KeyboardInterrupt):
+            logger.info("Shutdown requested by user")
+            return 0
+        else:
+            logger.opt(exception=True).critical(f"Application failed to start: {e}")
 
-    except SystemExit as e:
-        # Handle SystemExit from bot setup failures
-        return int(e.code) if e.code is not None else 1
-
-    except KeyboardInterrupt:
-        logger.info("Shutdown requested by user")
-        return 0
-
-    except Exception as e:
-        logger.critical(f"Application failed to start: {e}")
         return 1
 
     else:
