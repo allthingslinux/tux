@@ -195,13 +195,4 @@ sqlmodel-refactor
 .database-archive
 data/
 examples/
-.amazonq/cli-todo-lists/1758245792320.json
-.amazonq/cli-todo-lists/1758247546540.json
-.amazonq/cli-todo-lists/1758250203392.json
-.amazonq/cli-todo-lists/1758250518186.json
-.amazonq/cli-todo-lists/1758250724062.json
-.amazonq/cli-todo-lists/1758253822606.json
-.amazonq/cli-todo-lists/1758257209873.json
-.amazonq/cli-todo-lists/1758258258402.json
-.amazonq/cli-todo-lists/1758272359175.json
-.amazonq/cli-todo-lists/1758273792202.json
+.amazonq/cli-todo-lists/
