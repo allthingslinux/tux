@@ -5,7 +5,7 @@ Test CLI Script
 A unified interface for all testing operations using the clean CLI infrastructure.
 """
 
-import subprocess
+import os
 import sys
 import webbrowser
 from pathlib import Path
@@ -65,17 +65,15 @@ class TestCLI(BaseCLI):
         """Run a test command and return success status."""
         try:
             self.rich.print_info(f"Running: {' '.join(command)}")
-            # Let typer handle signals - just run the command
-            result = subprocess.run(command, check=False)
-            if result.returncode != 0:
-                self.rich.print_error(f"❌ {description} failed with exit code {result.returncode}")
-                return False
+            # Use exec to replace the current process so signals are properly forwarded
+
+            os.execvp(command[0], command)
         except FileNotFoundError:
             self.rich.print_error(f"❌ Command not found: {command[0]}")
             return False
-        else:
-            self.rich.print_success(f"✅ {description} completed successfully")
-            return True
+        except KeyboardInterrupt:
+            self.rich.print_info("🛑 Test run interrupted")
+            return False
 
     def _build_coverage_command(
         self,
