@@ -44,11 +44,11 @@ class TestDatabaseSchemaThroughService:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_table_creation_through_service(self, fresh_db: DatabaseServiceABC) -> None:
+    async def test_table_creation_through_service(self, db_service: DatabaseServiceABC) -> None:
         """Test that tables are created correctly through DatabaseService."""
         # Database is already connected and fresh via fixture
         # Verify we can create sessions and perform operations
-        async with fresh_db.session() as session:
+        async with db_service.session() as session:
             # Test basic connectivity and table access
             assert session is not None
 
@@ -64,14 +64,14 @@ class TestDatabaseSchemaThroughService:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_schema_persistence_across_restarts(self, fresh_db: DatabaseServiceABC, integration_guild_controller: GuildController) -> None:
+    async def test_schema_persistence_across_restarts(self, db_service: DatabaseServiceABC, guild_controller: GuildController) -> None:
         """Test that schema persists across database restarts."""
         # Database is already connected and fresh via fixture
         # Create a guild
-        await integration_guild_controller.create_guild(guild_id=TEST_GUILD_ID)
+        await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
 
-        # Data should persist (fresh_db_service provides clean state each time)
-        retrieved = await integration_guild_controller.get_guild_by_id(TEST_GUILD_ID)
+        # Data should persist (db_service_service provides clean state each time)
+        retrieved = await guild_controller.get_guild_by_id(TEST_GUILD_ID)
 
         assert retrieved is not None
         assert retrieved.guild_id == TEST_GUILD_ID
@@ -82,13 +82,13 @@ class TestSchemaConstraintsThroughControllers:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_foreign_key_constraints_through_controllers(self, clean_db_service: DatabaseService, integration_guild_controller: GuildController, integration_guild_config_controller: GuildConfigController) -> None:
+    async def test_foreign_key_constraints_through_controllers(self, db_service: DatabaseService, guild_controller: GuildController, guild_config_controller: GuildConfigController) -> None:
         """Test foreign key constraints through controller operations."""
         # Database is already connected and clean via fixture
 
         # Test 1: Create config without guild (should raise IntegrityError)
         with pytest.raises(Exception) as exc_info:
-            await integration_guild_config_controller.get_or_create_config(
+            await guild_config_controller.get_or_create_config(
                 guild_id=999999999999999999,  # Non-existent guild
                 prefix="!",
             )
@@ -96,8 +96,8 @@ class TestSchemaConstraintsThroughControllers:
         assert "foreign key" in str(exc_info.value).lower() or "constraint" in str(exc_info.value).lower()
 
         # Test 2: Create config with valid guild
-        guild = await integration_guild_controller.create_guild(guild_id=TEST_GUILD_ID)
-        valid_config = await integration_guild_config_controller.get_or_create_config(
+        guild = await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
+        valid_config = await guild_config_controller.get_or_create_config(
             guild_id=guild.guild_id,
             prefix="?",
         )
@@ -105,48 +105,48 @@ class TestSchemaConstraintsThroughControllers:
         assert valid_config.guild_id == guild.guild_id
 
         # Test 3: Verify relationship integrity
-        retrieved_config = await integration_guild_config_controller.get_config_by_guild_id(guild.guild_id)
+        retrieved_config = await guild_config_controller.get_config_by_guild_id(guild.guild_id)
         assert retrieved_config is not None
         assert retrieved_config.guild_id == guild.guild_id
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_unique_constraints_through_controllers(self, clean_db_service: DatabaseService, integration_guild_controller: GuildController) -> None:
+    async def test_unique_constraints_through_controllers(self, db_service: DatabaseService, guild_controller: GuildController) -> None:
         """Test unique constraints through controller operations."""
         # Database is already connected and clean via fixture
 
         # Create first guild
-        guild1 = await integration_guild_controller.create_guild(guild_id=TEST_GUILD_ID)
+        guild1 = await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
         assert guild1.guild_id == TEST_GUILD_ID
 
         # Try to create guild with same ID (should work due to get_or_create pattern)
-        guild2 = await integration_guild_controller.get_or_create_guild(TEST_GUILD_ID)
+        guild2 = await guild_controller.get_or_create_guild(TEST_GUILD_ID)
         assert guild2.guild_id == TEST_GUILD_ID
 
         # Should be the same guild (uniqueness maintained)
         assert guild1.guild_id == guild2.guild_id
 
         # Verify only one guild exists
-        retrieved = await integration_guild_controller.get_guild_by_id(TEST_GUILD_ID)
+        retrieved = await guild_controller.get_guild_by_id(TEST_GUILD_ID)
         assert retrieved is not None
         assert retrieved.guild_id == TEST_GUILD_ID
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_data_integrity_through_operations(self, clean_db_service: DatabaseService, integration_guild_controller: GuildController, integration_guild_config_controller: GuildConfigController) -> None:
+    async def test_data_integrity_through_operations(self, db_service: DatabaseService, guild_controller: GuildController, guild_config_controller: GuildConfigController) -> None:
         """Test data integrity through multiple controller operations."""
         # Database is already connected and clean via fixture
 
         # Create guild and config
-        guild = await integration_guild_controller.create_guild(guild_id=TEST_GUILD_ID)
-        config = await integration_guild_config_controller.get_or_create_config(
+        guild = await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
+        config = await guild_config_controller.get_or_create_config(
             guild_id=guild.guild_id,
             prefix="!",
             mod_log_id=TEST_CHANNEL_ID,
         )
 
         # Update config multiple times
-        updated_config = await integration_guild_config_controller.update_config(
+        updated_config = await guild_config_controller.update_config(
             guild_id=config.guild_id,
             prefix="?",
             audit_log_id=TEST_CHANNEL_ID + 1,
@@ -157,8 +157,8 @@ class TestSchemaConstraintsThroughControllers:
             assert updated_config.prefix == "?"
 
         # Verify all data is consistent across controllers
-        retrieved_guild = await integration_guild_controller.get_guild_by_id(guild.guild_id)
-        retrieved_config = await integration_guild_config_controller.get_config_by_guild_id(guild.guild_id)
+        retrieved_guild = await guild_controller.get_guild_by_id(guild.guild_id)
+        retrieved_config = await guild_config_controller.get_config_by_guild_id(guild.guild_id)
 
         assert retrieved_guild is not None
         assert retrieved_config is not None
@@ -170,13 +170,13 @@ class TestSchemaMigrationsThroughService:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_multiple_table_creation(self, clean_db_service: DatabaseService, integration_guild_controller: GuildController, integration_guild_config_controller: GuildConfigController) -> None:
+    async def test_multiple_table_creation(self, db_service: DatabaseService, guild_controller: GuildController, guild_config_controller: GuildConfigController) -> None:
         """Test creation of multiple related tables through service."""
         # Database is already connected and clean via fixture
 
         # Create interrelated data
-        guild = await integration_guild_controller.create_guild(guild_id=TEST_GUILD_ID)
-        config = await integration_guild_config_controller.get_or_create_config(
+        guild = await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
+        config = await guild_config_controller.get_or_create_config(
             guild_id=guild.guild_id,
             prefix="!",
         )
@@ -186,7 +186,7 @@ class TestSchemaMigrationsThroughService:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_schema_compatibility_across_operations(self, clean_db_service: DatabaseService, integration_guild_controller: GuildController) -> None:
+    async def test_schema_compatibility_across_operations(self, db_service: DatabaseService, guild_controller: GuildController) -> None:
         """Test that schema remains compatible across different operations."""
         # Database is already connected and clean via fixture
 
@@ -196,27 +196,27 @@ class TestSchemaMigrationsThroughService:
         # Create multiple guilds
         for i in range(3):
             guild_id = TEST_GUILD_ID + i
-            guild = await integration_guild_controller.create_guild(guild_id=guild_id)
+            guild = await guild_controller.create_guild(guild_id=guild_id)
             operations.append(guild)
 
         # Retrieve all guilds
         for i in range(3):
             guild_id = TEST_GUILD_ID + i
-            retrieved = await integration_guild_controller.get_guild_by_id(guild_id)
+            retrieved = await guild_controller.get_guild_by_id(guild_id)
             assert retrieved is not None
             assert retrieved.guild_id == guild_id
 
         # Delete a guild
-        result = await integration_guild_controller.delete_guild(TEST_GUILD_ID + 1)
+        result = await guild_controller.delete_guild(TEST_GUILD_ID + 1)
         assert result is True
 
         # Verify deletion
-        deleted = await integration_guild_controller.get_guild_by_id(TEST_GUILD_ID + 1)
+        deleted = await guild_controller.get_guild_by_id(TEST_GUILD_ID + 1)
         assert deleted is None
 
         # Verify others still exist
-        remaining1 = await integration_guild_controller.get_guild_by_id(TEST_GUILD_ID)
-        remaining2 = await integration_guild_controller.get_guild_by_id(TEST_GUILD_ID + 2)
+        remaining1 = await guild_controller.get_guild_by_id(TEST_GUILD_ID)
+        remaining2 = await guild_controller.get_guild_by_id(TEST_GUILD_ID + 2)
         assert remaining1 is not None
         assert remaining2 is not None
 
@@ -241,13 +241,13 @@ class TestSchemaErrorHandlingThroughService:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_double_connection_handling(self, integration_db_service: DatabaseService) -> None:
+    async def test_double_connection_handling(self, db_service: DatabaseService) -> None:
         """Test handling of double connections."""
         # Database is already connected via fixture
 
         # Second connection should be handled gracefully
-        await integration_db_service.connect(database_url=TEST_DATABASE_URL)
-        assert integration_db_service.is_connected() is True
+        await db_service.connect(database_url=TEST_DATABASE_URL)
+        assert db_service.is_connected() is True
 
     @pytest.mark.integration
     @pytest.mark.asyncio

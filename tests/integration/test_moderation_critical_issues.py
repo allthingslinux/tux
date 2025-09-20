@@ -33,10 +33,10 @@ class TestCriticalIssuesIntegration:
     """🚨 Test critical issues from moderation analysis."""
 
     @pytest.fixture
-    async def case_service(self, fresh_db):
+    async def case_service(self, db_service):
         """Create a CaseService instance."""
         from tux.database.controllers import DatabaseCoordinator
-        coordinator = DatabaseCoordinator(fresh_db)
+        coordinator = DatabaseCoordinator(db_service)
         return CaseService(coordinator.case)
 
     @pytest.fixture
@@ -96,7 +96,7 @@ class TestCriticalIssuesIntegration:
         self,
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
-        fresh_db,
+        db_service,
     ):
         """
         🔴 SPECIFICATION TEST: DM failure MUST NOT prevent moderation action.
@@ -112,7 +112,7 @@ class TestCriticalIssuesIntegration:
         CRITICAL: This test should FAIL on current buggy implementation and PASS after fix.
         """
         # Create the guild record first (required for case creation)
-        async with fresh_db.session() as session:
+        async with db_service.session() as session:
             from tux.database.models import Guild
             guild = Guild(guild_id=mock_ctx.guild.id, case_count=0)
             session.add(guild)
@@ -150,7 +150,7 @@ class TestCriticalIssuesIntegration:
                         mock_send_dm.assert_called_once()
 
                                         # Verify case was created in real database
-                        async with fresh_db.session() as session:
+                        async with db_service.session() as session:
                             from tux.database.models import Case, Guild
                             from sqlmodel import select
 
@@ -173,7 +173,7 @@ class TestCriticalIssuesIntegration:
         self,
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
-        fresh_db,
+        db_service,
     ):
         """
         Test Issue #2 variant: DM timeout should NOT prevent the moderation action.
@@ -188,7 +188,7 @@ class TestCriticalIssuesIntegration:
             mock_ban_action = AsyncMock(return_value=None)
 
             # Create the guild record first (required for case creation)
-            async with fresh_db.session() as session:
+            async with db_service.session() as session:
                 from tux.database.models import Guild
                 guild = Guild(guild_id=mock_ctx.guild.id, case_count=0)
                 session.add(guild)
@@ -211,7 +211,7 @@ class TestCriticalIssuesIntegration:
                         mock_ban_action.assert_called_once()
 
                         # Verify case was created in real database
-                        async with fresh_db.session() as session:
+                        async with db_service.session() as session:
                             from tux.database.models import Case
                             from sqlmodel import select
 
@@ -272,7 +272,7 @@ class TestCriticalIssuesIntegration:
         self,
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
-        fresh_db,
+        db_service,
     ):
         """
         Test that bot permission checks pass when bot has required permissions.
@@ -288,7 +288,7 @@ class TestCriticalIssuesIntegration:
             mock_ban_action = AsyncMock(return_value=None)
 
             # Create the guild record first (required for case creation)
-            async with fresh_db.session() as session:
+            async with db_service.session() as session:
                 from tux.database.models import Guild
                 guild = Guild(guild_id=mock_ctx.guild.id, case_count=0)
                 session.add(guild)
@@ -312,7 +312,7 @@ class TestCriticalIssuesIntegration:
                     mock_ban_action.assert_called_once()
 
                     # Verify case was created in real database
-                    async with fresh_db.session() as session:
+                    async with db_service.session() as session:
                         from tux.database.models import Case
                         from sqlmodel import select
 
@@ -327,7 +327,7 @@ class TestCriticalIssuesIntegration:
         self,
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
-        fresh_db,
+        db_service,
     ):
         """
         🔴 SPECIFICATION TEST: Database failure MUST NOT crash the entire system.
@@ -382,7 +382,7 @@ class TestCriticalIssuesIntegration:
         self,
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
-        fresh_db,
+        db_service,
     ):
         """
         🔴 SPECIFICATION TEST: User state changes during execution MUST be handled gracefully.
@@ -437,7 +437,7 @@ class TestCriticalIssuesIntegration:
         self,
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
-        fresh_db,
+        db_service,
     ):
         """
         🔴 SPECIFICATION TEST: Lock manager MUST prevent race conditions.
@@ -466,7 +466,7 @@ class TestCriticalIssuesIntegration:
         mock_ban_action2 = AsyncMock(return_value=None)
 
         # Create the guild record first (required for case creation)
-        async with fresh_db.session() as session:
+        async with db_service.session() as session:
             from tux.database.models import Guild
             guild = Guild(guild_id=mock_ctx.guild.id, case_count=0)
             session.add(guild)
@@ -520,7 +520,7 @@ class TestCriticalIssuesIntegration:
 
                         # Verify cases were created in real database (may be 1 or 2 depending on race prevention)
                         # Use the same database service that the coordinator uses
-                        async with fresh_db.session() as session:
+                        async with db_service.session() as session:
                             from tux.database.models import Case
                             from sqlmodel import select
 
@@ -660,7 +660,7 @@ class TestCriticalIssuesIntegration:
         self,
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
-        fresh_db,
+        db_service,
     ):
         """
         Test that audit trails maintain data integrity even during failures.
@@ -674,7 +674,7 @@ class TestCriticalIssuesIntegration:
             mock_ban_action = AsyncMock(return_value=None)
 
             # Create the guild record first (required for case creation)
-            async with fresh_db.session() as session:
+            async with db_service.session() as session:
                 from tux.database.models import Guild
                 guild = Guild(guild_id=mock_ctx.guild.id, case_count=0)
                 session.add(guild)
@@ -694,7 +694,7 @@ class TestCriticalIssuesIntegration:
                         )
 
                         # ✅ Verify database was called with correct audit data
-                        async with fresh_db.session() as session:
+                        async with db_service.session() as session:
                             from tux.database.models import Case
                             from sqlmodel import select
 

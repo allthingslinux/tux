@@ -149,11 +149,10 @@ class TestImageEffectModuleHTTP:
         """Test error handling when fetching images."""
         httpx_mock.add_response(status_code=404)
 
-        response = await http_client.get("https://example.com/missing.png")
+        with pytest.raises(httpx.HTTPStatusError) as exc_info:
+            await http_client.get("https://example.com/missing.png")
 
-        assert response.status_code == 404
-        with pytest.raises(httpx.HTTPStatusError):
-            response.raise_for_status()
+        assert exc_info.value.response.status_code == 404
 
 
 class TestMailModuleHTTP:
@@ -194,14 +193,15 @@ class TestMailModuleHTTP:
             json={"type": "error", "msg": "Invalid domain"},
         )
 
-        response = await http_client.post(
-            "https://mail.example.com/api/v1/add/mailbox",
-            json={"local": "testuser", "domain": "invalid"},
-            timeout=10.0,
-        )
+        with pytest.raises(httpx.HTTPStatusError) as exc_info:
+            await http_client.post(
+                "https://mail.example.com/api/v1/add/mailbox",
+                json={"local": "testuser", "domain": "invalid"},
+                timeout=10.0,
+            )
 
-        assert response.status_code == 400
-        assert response.json()["type"] == "error"
+        assert exc_info.value.response.status_code == 400
+        assert exc_info.value.response.json()["type"] == "error"
 
 
 class TestFactModuleHTTP:

@@ -162,23 +162,23 @@ class TestDatabaseServiceIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_async_service_initialization(self, fresh_integration_db: DatabaseService) -> None:
+    async def test_async_service_initialization(self, db_service: DatabaseService) -> None:
         """Test async database service initialization."""
-        assert fresh_integration_db.is_connected() is True
+        assert db_service.is_connected() is True
 
         # Test health check
-        health = await fresh_integration_db.health_check()
+        health = await db_service.health_check()
         assert health["status"] == "healthy"
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_async_session_operations(self, fresh_integration_db: DatabaseService) -> None:
+    async def test_async_session_operations(self, db_service: DatabaseService) -> None:
         """Test async session operations with DatabaseService."""
         # Use a unique guild ID to avoid conflicts with other tests
         test_guild_id = 999888777666555444
 
         # Test session creation
-        async with fresh_integration_db.session() as session:
+        async with db_service.session() as session:
             # Create guild through async session
             guild = Guild(guild_id=test_guild_id, case_count=0)
             session.add(guild)
@@ -191,19 +191,19 @@ class TestDatabaseServiceIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_async_controllers_access(self, fresh_integration_db: DatabaseService, integration_guild_controller: GuildController, integration_guild_config_controller: GuildConfigController) -> None:
+    async def test_async_controllers_access(self, db_service: DatabaseService, guild_controller: GuildController, guild_config_controller: GuildConfigController) -> None:
         """Test async controller access through DatabaseService."""
         # Test guild controller
-        assert integration_guild_controller is not None
+        assert guild_controller is not None
 
         # Test controller operation
-        guild = await integration_guild_controller.get_or_create_guild(guild_id=123456789)
+        guild = await guild_controller.get_or_create_guild(guild_id=123456789)
         assert guild.guild_id == 123456789
 
         # Test guild config controller
-        assert integration_guild_config_controller is not None
+        assert guild_config_controller is not None
 
-        config = await integration_guild_config_controller.get_or_create_config(
+        config = await guild_config_controller.get_or_create_config(
             guild_id=123456789,
             prefix="!t",  # Use valid prefix length (max 3 chars)
         )
@@ -212,7 +212,7 @@ class TestDatabaseServiceIntegration:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_async_execute_query_utility(self, fresh_integration_db: DatabaseService) -> None:
+    async def test_async_execute_query_utility(self, db_service: DatabaseService) -> None:
         """Test execute_query utility with async operations."""
         async def create_test_guild(session):
             guild = Guild(guild_id=999888777, case_count=42)
@@ -221,26 +221,26 @@ class TestDatabaseServiceIntegration:
             await session.refresh(guild)
             return guild
 
-        result = await fresh_integration_db.execute_query(create_test_guild, "create test guild")
+        result = await db_service.execute_query(create_test_guild, "create test guild")
         assert result.guild_id == 999888777
         assert result.case_count == 42
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_async_transaction_utility(self, fresh_integration_db: DatabaseService) -> None:
+    async def test_async_transaction_utility(self, db_service: DatabaseService) -> None:
         """Test execute_transaction utility."""
         async def transaction_operation():
-            async with fresh_integration_db.session() as session:
+            async with db_service.session() as session:
                 guild = Guild(guild_id=888777666, case_count=10)
                 session.add(guild)
                 await session.commit()
                 return "transaction_completed"
 
-        result = await fresh_integration_db.execute_transaction(transaction_operation)
+        result = await db_service.execute_transaction(transaction_operation)
         assert result == "transaction_completed"
 
         # Verify the guild was created
-        async with fresh_integration_db.session() as session:
+        async with db_service.session() as session:
             guild = await session.get(Guild, 888777666)
             assert guild is not None
             assert guild.case_count == 10
@@ -292,10 +292,10 @@ class TestPerformanceComparison:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_integration_test_performance(self, fresh_integration_db: DatabaseService, benchmark) -> None:
+    async def test_integration_test_performance(self, db_service: DatabaseService, benchmark) -> None:
         """Benchmark integration test performance with PostgreSQL."""
         async def create_guild_async():
-            async with fresh_integration_db.session() as session:
+            async with db_service.session() as session:
                 guild = Guild(guild_id=123456789, case_count=0)
                 session.add(guild)
                 await session.commit()
@@ -336,20 +336,20 @@ class TestMixedScenarios:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_complex_integration_scenario(self, fresh_integration_db: DatabaseService, integration_guild_controller: GuildController, integration_guild_config_controller: GuildConfigController) -> None:
+    async def test_complex_integration_scenario(self, db_service: DatabaseService, guild_controller: GuildController, guild_config_controller: GuildConfigController) -> None:
         """Complex integration scenario using full async stack."""
         # Create guild through controller
-        guild = await integration_guild_controller.get_or_create_guild(555666777)
+        guild = await guild_controller.get_or_create_guild(555666777)
 
         # Create config through controller
-        config = await integration_guild_config_controller.get_or_create_config(
+        config = await guild_config_controller.get_or_create_config(
             guild_id=guild.guild_id,
             prefix="!i",  # Use valid prefix length (max 3 chars)
             mod_log_id=888999000111,
         )
 
         # Verify through async queries
-        async with fresh_integration_db.session() as session:
+        async with db_service.session() as session:
             # Test join operation
             from sqlalchemy.orm import selectinload
             guild_with_config = await session.get(Guild, guild.guild_id)

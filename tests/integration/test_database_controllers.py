@@ -15,46 +15,46 @@ class TestGuildController:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_create_and_retrieve_guild(self, integration_guild_controller: GuildController) -> None:
+    async def test_create_and_retrieve_guild(self, guild_controller: GuildController) -> None:
         """Test guild creation and retrieval - clean and focused."""
         # Create guild using real async controller (matches actual API)
-        guild = await integration_guild_controller.create_guild(guild_id=TEST_GUILD_ID)
+        guild = await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
 
         assert guild.guild_id == TEST_GUILD_ID
         assert guild.case_count == 0  # Default value
 
         # Retrieve guild using real async controller
-        retrieved = await integration_guild_controller.get_guild_by_id(guild.guild_id)
+        retrieved = await guild_controller.get_guild_by_id(guild.guild_id)
         assert retrieved is not None
         assert retrieved.guild_id == TEST_GUILD_ID
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_get_or_create_guild(self, integration_guild_controller: GuildController) -> None:
+    async def test_get_or_create_guild(self, guild_controller: GuildController) -> None:
         """Test get_or_create guild functionality."""
         # First create
-        guild1 = await integration_guild_controller.get_or_create_guild(TEST_GUILD_ID)
+        guild1 = await guild_controller.get_or_create_guild(TEST_GUILD_ID)
         assert guild1.guild_id == TEST_GUILD_ID
 
         # Then get existing (should return the same guild)
-        guild2 = await integration_guild_controller.get_or_create_guild(TEST_GUILD_ID)
+        guild2 = await guild_controller.get_or_create_guild(TEST_GUILD_ID)
         assert guild2.guild_id == TEST_GUILD_ID
         # Should have the same ID
         assert guild1.guild_id == guild2.guild_id
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_delete_guild(self, integration_guild_controller: GuildController) -> None:
+    async def test_delete_guild(self, guild_controller: GuildController) -> None:
         """Test guild deletion."""
         # Create guild using real async controller
-        guild = await integration_guild_controller.create_guild(guild_id=TEST_GUILD_ID)
+        guild = await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
 
         # Delete guild using real async controller
-        result = await integration_guild_controller.delete_guild(guild.guild_id)
+        result = await guild_controller.delete_guild(guild.guild_id)
         assert result is True
 
         # Verify deletion
-        retrieved = await integration_guild_controller.get_guild_by_id(guild.guild_id)
+        retrieved = await guild_controller.get_guild_by_id(guild.guild_id)
         assert retrieved is None
 
 
@@ -63,14 +63,14 @@ class TestGuildConfigController:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_create_and_retrieve_config(self, integration_guild_config_controller: GuildConfigController) -> None:
+    async def test_create_and_retrieve_config(self, guild_config_controller: GuildConfigController) -> None:
         """Test guild config creation and retrieval."""
         # Create guild first (foreign key requirement)
-        guild_controller = GuildController(integration_guild_config_controller.db_service)
+        guild_controller = GuildController(guild_config_controller.db_service)
         await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
 
         # Create config using real async controller
-        config = await integration_guild_config_controller.get_or_create_config(
+        config = await guild_config_controller.get_or_create_config(
             guild_id=TEST_GUILD_ID,
             prefix="?",
             mod_log_id=TEST_CHANNEL_ID,
@@ -82,25 +82,25 @@ class TestGuildConfigController:
         assert config.prefix == "?"
 
         # Retrieve config using real async controller
-        retrieved = await integration_guild_config_controller.get_config_by_guild_id(config.guild_id)
+        retrieved = await guild_config_controller.get_config_by_guild_id(config.guild_id)
         assert retrieved is not None
         assert retrieved.prefix == "?"
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_update_guild_config(self, integration_guild_config_controller: GuildConfigController) -> None:
+    async def test_update_guild_config(self, guild_config_controller: GuildConfigController) -> None:
         """Test updating guild config."""
         # Create guild and config
-        guild_controller = GuildController(integration_guild_config_controller.db_service)
+        guild_controller = GuildController(guild_config_controller.db_service)
         await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
 
-        config = await integration_guild_config_controller.get_or_create_config(
+        config = await guild_config_controller.get_or_create_config(
             guild_id=TEST_GUILD_ID,
             prefix="!",
         )
 
         # Update prefix using real async controller
-        updated_config = await integration_guild_config_controller.update_config(
+        updated_config = await guild_config_controller.update_config(
             guild_id=config.guild_id,
             prefix="?",
         )
@@ -109,7 +109,7 @@ class TestGuildConfigController:
         assert updated_config.prefix == "?"
 
         # Verify update
-        retrieved = await integration_guild_config_controller.get_config_by_guild_id(config.guild_id)
+        retrieved = await guild_config_controller.get_config_by_guild_id(config.guild_id)
         assert retrieved is not None
         assert retrieved.prefix == "?"
 
