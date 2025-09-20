@@ -1,7 +1,6 @@
 """Comprehensive error handler for Discord commands."""
 
 import traceback
-from typing import Any
 
 import discord
 from discord import app_commands
@@ -9,7 +8,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.bot import Tux
-from tux.services.sentry_manager import SentryManager
+from tux.services.sentry import capture_exception_safe, set_command_context, set_user_context, track_command_end
 
 from .config import ERROR_CONFIG_MAP, ErrorHandlerConfig
 from .extractors import unwrap_error
@@ -24,7 +23,6 @@ class ErrorHandler(commands.Cog):
         self.bot = bot
         self.formatter = ErrorFormatter()
         self.suggester = CommandSuggester()
-        self.sentry = SentryManager()
         self._old_tree_error = None
 
     async def cog_load(self) -> None:
@@ -48,6 +46,10 @@ class ErrorHandler(commands.Cog):
         # Get error configuration
         config = self._get_error_config(root_error)
 
+        # Set Sentry context for enhanced error reporting
+        if config.send_to_sentry:
+            self._set_sentry_context(source, root_error)
+
         # Log error
         self._log_error(root_error, config)
 
@@ -58,7 +60,28 @@ class ErrorHandler(commands.Cog):
 
         # Report to Sentry if configured
         if config.send_to_sentry:
-            self._report_to_sentry(root_error, source)
+            capture_exception_safe(root_error)
+
+    def _set_sentry_context(self, source: commands.Context[Tux] | discord.Interaction, error: Exception) -> None:
+        """Set enhanced Sentry context for error reporting."""
+        # Set command context (includes Discord info, performance data, etc.)
+        set_command_context(source)
+
+        # Set user context (includes permissions, roles, etc.)
+        if isinstance(source, discord.Interaction):
+            set_user_context(source.user)
+        else:
+            set_user_context(source.author)
+
+        # Track command failure for performance metrics
+        command_name = None
+        if isinstance(source, discord.Interaction):
+            command_name = source.command.qualified_name if source.command else "unknown"
+        else:
+            command_name = source.command.qualified_name if source.command else "unknown"
+
+        if command_name and command_name != "unknown":
+            track_command_end(command_name, success=False, error=error)
 
     def _get_error_config(self, error: Exception) -> ErrorHandlerConfig:
         """Get configuration for error type."""
@@ -109,52 +132,6 @@ class ErrorHandler(commands.Cog):
                 await source.reply(embed=embed, mention_author=False)
         except discord.HTTPException as e:
             logger.warning(f"Failed to send error response: {e}")
-
-    def _report_to_sentry(self, error: Exception, source: commands.Context[Tux] | discord.Interaction) -> None:
-        """Report error to Sentry with context."""
-        if not self.sentry.is_initialized:
-            return
-
-        # Build context
-        context: dict[str, Any] = {
-            "error_type": type(error).__name__,
-            "error_message": str(error),
-        }
-
-        # Add source-specific context
-        if isinstance(source, discord.Interaction):
-            context.update(
-                {
-                    "command_type": "app_command",
-                    "command_name": source.command.qualified_name if source.command else "unknown",
-                    "user_id": source.user.id,
-                    "guild_id": source.guild_id,
-                    "channel_id": source.channel_id,
-                },
-            )
-        else:
-            context.update(
-                {
-                    "command_type": "prefix_command",
-                    "command_name": source.command.qualified_name if source.command else "unknown",
-                    "user_id": source.author.id,
-                    "guild_id": source.guild.id if source.guild else None,
-                    "channel_id": source.channel.id,
-                },
-            )
-
-        # Add Discord-specific error context
-        if isinstance(error, discord.HTTPException):
-            context.update(
-                {
-                    "http_status": error.status,
-                    "discord_code": getattr(error, "code", None),
-                },
-            )
-        elif isinstance(error, discord.RateLimited):
-            context["retry_after"] = error.retry_after
-
-        self.sentry.capture_exception(error, context=context)
 
     @commands.Cog.listener("on_command_error")
     async def on_command_error(self, ctx: commands.Context[Tux], error: commands.CommandError) -> None:

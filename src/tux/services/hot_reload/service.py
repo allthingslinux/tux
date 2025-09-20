@@ -9,8 +9,8 @@ import sentry_sdk
 from discord.ext import commands
 from loguru import logger
 
+from tux.services.sentry import capture_exception_safe
 from tux.services.tracing import span
-from tux.shared.sentry_utils import capture_exception_safe
 
 from .config import HotReloadConfig, ModuleReloadError, validate_config
 from .dependencies import ClassDefinitionTracker, DependencyGraph

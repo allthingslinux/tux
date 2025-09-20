@@ -4,7 +4,7 @@ from typing import Any
 
 from loguru import logger
 
-from tux.shared.error_utils import log_and_capture_error
+from tux.services.sentry import capture_exception_safe, capture_tux_exception, set_context, set_tag
 from tux.shared.exceptions import TuxError
 
 
@@ -32,14 +32,21 @@ class ErrorHandlerMixin:
         Returns:
             User-friendly error message
         """
-        # Log and capture the error
-        log_and_capture_error(
-            error,
-            operation,
-            log_level=log_level,
-            context=context,
-            tags={"component": getattr(self, "__class__", {}).get("__name__", "unknown")},
-        )
+        # Log the error
+        getattr(logger, log_level)(f"❌ {operation} failed: {error}")
+
+        # Set Sentry context and tags
+        if context:
+            set_context("operation_context", context)
+
+        set_tag("component", getattr(self.__class__, "__name__", "unknown"))
+        set_tag("operation", operation)
+
+        # Capture to Sentry with appropriate function
+        if isinstance(error, TuxError):
+            capture_tux_exception(error)
+        else:
+            capture_exception_safe(error)
 
         # Return user-friendly message
         if user_message:
@@ -47,24 +54,3 @@ class ErrorHandlerMixin:
         if isinstance(error, TuxError):
             return str(error)
         return "An unexpected error occurred. Please try again later."
-
-    def log_warning(self, message: str, **context: Any) -> None:
-        """Log a warning with optional context."""
-        if context:
-            logger.bind(**context).warning(message)
-        else:
-            logger.warning(message)
-
-    def log_info(self, message: str, **context: Any) -> None:
-        """Log an info message with optional context."""
-        if context:
-            logger.bind(**context).info(message)
-        else:
-            logger.info(message)
-
-    def log_debug(self, message: str, **context: Any) -> None:
-        """Log a debug message with optional context."""
-        if context:
-            logger.bind(**context).debug(message)
-        else:
-            logger.debug(message)

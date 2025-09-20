@@ -36,6 +36,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import Session, sessionmaker
 from sqlmodel import SQLModel
 
+from tux.services.sentry import capture_database_error
 from tux.shared.config import CONFIG
 
 T = TypeVar("T")
@@ -113,6 +114,7 @@ class AsyncDatabaseService(DatabaseServiceABC):
             logger.error(f"❌ Failed to connect to async database: {type(e).__name__}")
             logger.info("💡 Check your database connection settings and ensure PostgreSQL is running")
             logger.info("   You can start it with: make docker-up")
+            capture_database_error(e, operation="async_connection")
             raise
 
     async def disconnect(self) -> None:
@@ -249,6 +251,7 @@ class SyncDatabaseService(DatabaseServiceABC):
 
         except Exception as e:
             logger.error(f"Failed to connect to sync database: {e}")
+            capture_database_error(e, operation="sync_connection")
             raise
 
     async def disconnect(self) -> None:

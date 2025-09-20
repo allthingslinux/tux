@@ -23,7 +23,7 @@ from tux.database.migrations.runner import upgrade_head_if_needed
 from tux.database.service import DatabaseService
 from tux.services.emoji_manager import EmojiManager
 from tux.services.http_client import http_client
-from tux.services.sentry_manager import SentryManager
+from tux.services.sentry import SentryManager, capture_database_error, capture_exception_safe
 from tux.services.tracing import (
     instrument_bot_commands,
     set_setup_phase_tag,
@@ -33,7 +33,6 @@ from tux.services.tracing import (
 )
 from tux.shared.config import CONFIG
 from tux.shared.exceptions import TuxDatabaseConnectionError, TuxDatabaseError
-from tux.shared.sentry_utils import capture_database_error, capture_exception_safe, capture_tux_exception
 from tux.ui.banner import create_banner
 
 __all__ = ["Tux"]
@@ -150,7 +149,7 @@ class Tux(commands.Bot):
                 logger.error(f"❌ Critical error during setup: {type(e).__name__}: {e}")
                 logger.info("💡 Check the logs above for more details")
 
-            capture_tux_exception(e, context={"phase": "setup"})
+            capture_exception_safe(e)
 
             # Don't call shutdown here - let main function handle it to avoid recursion
             # Let the main function handle the exit
@@ -188,8 +187,7 @@ class Tux(commands.Bot):
                 try:
                     from sqlmodel import SQLModel  # noqa: PLC0415
 
-                    engine = self.db_service.engine
-                    if engine:
+                    if engine := self.db_service.engine:
                         logger.info("🏗️  Creating database tables...")
                         if hasattr(engine, "begin"):  # Async engine
                             async with engine.begin() as conn:
@@ -512,7 +510,7 @@ class Tux(commands.Bot):
                 span.set_tag("cogs_loaded", True)
 
                 # Load Sentry handler cog to enrich spans and handle command errors
-                sentry_ext = "tux.services.handlers.sentry"
+                sentry_ext = "tux.services.sentry.cog"
                 if sentry_ext not in self.extensions:
                     try:
                         await self.load_extension(sentry_ext)
@@ -523,6 +521,20 @@ class Tux(commands.Bot):
                         capture_exception_safe(sentry_err)
                 else:
                     span.set_tag("sentry_handler.loaded", True)
+
+                # Load error handler cog for comprehensive error handling
+                error_handler_ext = "tux.services.handlers.error.handler"
+                if error_handler_ext not in self.extensions:
+                    try:
+                        await self.load_extension(error_handler_ext)
+                        span.set_tag("error_handler.loaded", True)
+                        logger.info("✅ Error handler loaded")
+                    except Exception as error_err:
+                        logger.warning(f"⚠️  Failed to load error handler: {error_err}")
+                        span.set_tag("error_handler.loaded", False)
+                        capture_exception_safe(error_err)
+                else:
+                    span.set_tag("error_handler.loaded", True)
 
             except Exception as e:
                 logger.error(f"❌ Error loading cogs: {type(e).__name__}: {e}")

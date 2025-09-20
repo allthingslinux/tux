@@ -20,7 +20,7 @@ from loguru import logger
 
 from tux.core.bot import Tux
 from tux.help import TuxHelp
-from tux.services.sentry_manager import SentryManager
+from tux.services.sentry import SentryManager, capture_exception_safe
 from tux.shared.config import CONFIG
 
 
@@ -93,6 +93,7 @@ class TuxApp:
                 raise
         except Exception as e:
             logger.error(f"Application error: {e}")
+            capture_exception_safe(e)
             raise
 
     def setup_signals(self, loop: asyncio.AbstractEventLoop) -> None:
@@ -214,6 +215,7 @@ class TuxApp:
                     logger.info("✅ Bot setup completed successfully")
                 except Exception as setup_error:
                     logger.error(f"❌ Bot setup failed: {setup_error}")
+                    capture_exception_safe(setup_error)
                     # Re-raise to be handled by main exception handler
                     raise
 
@@ -245,6 +247,7 @@ class TuxApp:
         except Exception as e:
             logger.critical(f"❌ Bot failed to start: {type(e).__name__}")
             logger.info("💡 Check your configuration and ensure all services are properly set up")
+            capture_exception_safe(e)
         finally:
             await self.shutdown()
 
