@@ -1,3 +1,16 @@
+"""
+All Things Linux Discord Server - Role Count Plugin
+
+This plugin is specifically designed for the All Things Linux Discord server
+and contains hardcoded role IDs that are specific to that server.
+
+DO NOT USE this plugin on other Discord servers - it will not work correctly
+and may cause errors due to missing roles.
+
+This serves as an example of server-specific functionality that should be
+implemented as a plugin rather than core bot functionality.
+"""
+
 import discord
 from discord import app_commands
 from reactionmenu import ViewButton, ViewMenu
@@ -5,10 +18,6 @@ from reactionmenu import ViewButton, ViewMenu
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.ui.embeds import EmbedCreator
-
-# FIXME: THIS IS A ALL THINGS LINUX SPECIFIC FILE
-# This will be moved to a plugin as soon as possible
-# Please do not enable this cog in your bot if you are not All Things Linux
 
 des_ids = [
     [1175177565086953523, "_kde"],
@@ -133,10 +142,6 @@ editor_ids = [
     [1392616344075243570, "_Cursor"],
     [1367199970587050035, "_zed"],
 ]
-
-# TODO: Shell Roles (needs emojis)
-
-# TODO: Figure out how to make rolecount work without hard coded ids
 
 
 class RoleCount(BaseCog):
