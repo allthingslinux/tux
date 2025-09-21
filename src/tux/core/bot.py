@@ -84,83 +84,47 @@ class Tux(commands.Bot):
         # Remove callback to prevent exception re-raising
         # Task completion will be handled in setup_hook instead
 
-    async def setup(self) -> None:  # noqa: PLR0915
-        """Perform one-time bot setup.
-
-        Steps
-        -----
-        - Connect to the database and validate connection
-        - Load extensions and cogs
-        - Initialize hot reload (if enabled)
-        - Start background task monitoring
-        """
+    async def setup(self) -> None:
+        """Perform one-time bot setup."""
         try:
-            # High-level setup pipeline with tracing
             with start_span("bot.setup", "Bot setup process") as span:
-                set_setup_phase_tag(span, "starting")
-                await self._setup_database()
-                # Ensure DB schema is up-to-date in non-dev
-                try:
-                    await upgrade_head_if_needed()
-                except ConnectionError as e:
-                    logger.error("❌ Database connection failed during migrations")
-                    logger.info("💡 To start the database, run: make docker-up")
-                    logger.info("   Or start just PostgreSQL: docker compose up tux-postgres -d")
-                    connection_error_msg = "Database connection failed during migrations"
-                    raise TuxDatabaseConnectionError(connection_error_msg) from e
-                except RuntimeError as e:
-                    logger.error("❌ Database migration execution failed")
-                    logger.info("💡 Check database schema and migration files")
-                    migration_error_msg = "Database migration failed"
-                    raise RuntimeError(migration_error_msg) from e
-                set_setup_phase_tag(span, "database", "finished")
-                await self._setup_permission_system()
-                set_setup_phase_tag(span, "permission_system", "finished")
-                await self._setup_prefix_manager()
-                set_setup_phase_tag(span, "prefix_manager", "finished")
-                await self._load_drop_in_extensions()
-                set_setup_phase_tag(span, "extensions", "finished")
-                await self._load_cogs()
-                set_setup_phase_tag(span, "cogs", "finished")
-                await self._setup_hot_reload()
-                set_setup_phase_tag(span, "hot_reload", "finished")
-                self.task_monitor.start()
-                set_setup_phase_tag(span, "monitoring", "finished")
-
-        except TuxDatabaseConnectionError as e:
+                await self._run_setup_steps(span)
+        except (TuxDatabaseConnectionError, ConnectionError) as e:
             logger.error("❌ Database connection failed")
-            logger.info("💡 To start the database, run: make docker-up")
-            logger.info("   Or start just PostgreSQL: docker compose up tux-postgres -d")
-
+            logger.info("💡 To start the database, run: uv run docker up")
             capture_database_error(e, operation="connection")
+            msg = "Database setup failed"
+            raise RuntimeError(msg) from e
 
-            # Don't call shutdown here - let main function handle it to avoid recursion
-            # Let the main function handle the exit
-            error_msg = "Database setup failed"
-            raise RuntimeError(error_msg) from e
+    async def _run_setup_steps(self, span: Any) -> None:
+        """Execute all setup steps with tracing."""
+        set_setup_phase_tag(span, "starting")
+        await self._setup_database()
 
-        except Exception as e:
-            # Check if this is a database connection error that we haven't caught yet
-            if "connection failed" in str(e) or "Connection refused" in str(e):
-                logger.error("❌ Database connection failed")
-                logger.info("💡 To start the database, run: make docker-up")
-                logger.info("   Or start just PostgreSQL: docker compose up tux-postgres -d")
-            else:
-                logger.error(f"❌ Critical error during setup: {type(e).__name__}: {e}")
-                logger.info("💡 Check the logs above for more details")
+        try:
+            await upgrade_head_if_needed()
+        except ConnectionError as e:
+            msg = "Database connection failed during migrations"
+            raise TuxDatabaseConnectionError(msg) from e
+        except RuntimeError as e:
+            logger.error("❌ Database migration execution failed")
+            logger.info("💡 Check database schema and migration files")
+            msg = "Database migration failed"
+            raise RuntimeError(msg) from e
 
-            capture_exception_safe(e)
-
-            # Don't call shutdown here - let main function handle it to avoid recursion
-            # Let the main function handle the exit
-            error_msg = "Bot setup failed"
-            raise RuntimeError(error_msg) from e
-
-        except BaseException as e:
-            # Catch any remaining exceptions (including KeyboardInterrupt, SystemExit)
-            # Let the main function handle the exit
-            error_msg = "Bot setup failed with critical error"
-            raise RuntimeError(error_msg) from e
+        set_setup_phase_tag(span, "database", "finished")
+        await self._setup_permission_system()
+        set_setup_phase_tag(span, "permission_system", "finished")
+        await self._setup_prefix_manager()
+        set_setup_phase_tag(span, "prefix_manager", "finished")
+        await self._load_drop_in_extensions()
+        set_setup_phase_tag(span, "extensions", "finished")
+        await self._load_cogs()
+        set_setup_phase_tag(span, "cogs", "finished")
+        await self._setup_hot_reload()
+        set_setup_phase_tag(span, "hot_reload", "finished")
+        self.task_monitor.start()
+        set_setup_phase_tag(span, "monitoring", "finished")
 
     def _raise_connection_test_failed(self) -> None:
         """Raise a database connection test failure error."""
@@ -292,10 +256,6 @@ class Tux(commands.Bot):
                 logger.warning(f"⚠️  Jishaku extension not loaded: {e}")
                 span.set_tag("jishaku.loaded", False)
                 span.set_data("error", str(e))
-
-    @staticmethod
-    def _validate_db_connection() -> None:
-        return None
 
     async def setup_hook(self) -> None:
         """One-time async setup before connecting to Discord (``discord.py`` hook)."""
