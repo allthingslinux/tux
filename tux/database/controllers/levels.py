@@ -3,9 +3,9 @@ import math
 from typing import NoReturn, cast
 
 from loguru import logger
-
 from prisma.actions import GuildActions
 from prisma.models import Guild, Levels
+
 from tux.database.client import db
 from tux.database.controllers.base import BaseController
 

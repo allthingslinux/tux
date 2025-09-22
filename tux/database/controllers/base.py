@@ -5,7 +5,6 @@ from typing import Any, TypeVar
 
 import sentry_sdk
 from loguru import logger
-
 from prisma.models import (
     AFKModel,
     Case,
@@ -18,6 +17,7 @@ from prisma.models import (
     Starboard,
     StarboardMessage,
 )
+
 from tux.database.client import db
 
 # Explicitly define ModelType to cover all potential models used by controllers
