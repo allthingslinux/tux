@@ -28,11 +28,7 @@ def _create_permission_decorator(required_level: PermissionLevel) -> Callable[[F
 
             # Use the existing permission system's require_permission method
             # This will raise an appropriate exception if permission is denied
-            try:
-                await permission_system.require_permission(ctx, required_level)
-            except Exception:
-                # The permission system will handle sending error messages
-                return None
+            await permission_system.require_permission(ctx, required_level)
 
             # Execute the original function if permission check passed
             return await func(ctx, *args, **kwargs)

@@ -90,9 +90,21 @@ class EncodeDecode(BaseCog):
                 return
 
             await self.send_message(ctx, data.decode(encoding="utf-8"))
+        except binascii.Error as e:
+            await ctx.reply(
+                content=f"Invalid base64 encoding: {e}",
+                allowed_mentions=allowed_mentions,
+                ephemeral=True,
+            )
+        except UnicodeDecodeError as e:
+            await ctx.reply(
+                content=f"Cannot decode as UTF-8: {e}",
+                allowed_mentions=allowed_mentions,
+                ephemeral=True,
+            )
         except Exception as e:
             await ctx.reply(
-                content=f"Unknown excpetion: {type(e)}: {e}",
+                content=f"Unknown exception: {type(e).__name__}: {e}",
                 allowed_mentions=allowed_mentions,
                 ephemeral=True,
             )
@@ -154,7 +166,7 @@ class EncodeDecode(BaseCog):
             )
         except Exception as e:
             await ctx.reply(
-                content=f"Unknown excpetion: {type(e)}: {e}",
+                content=f"Unknown exception: {type(e).__name__}: {e}",
                 allowed_mentions=allowed_mentions,
                 ephemeral=True,
             )

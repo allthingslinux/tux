@@ -31,7 +31,7 @@ class MemberCount(BaseCog):
         bots = sum(member.bot for member in interaction.guild.members if member.bot)
         # Get the number of staff members in the server
         staff_role = discord.utils.get(interaction.guild.roles, name="%wheel")
-        staff = len(staff_role.members) if staff_role else 0
+        staff = len(staff_role.members) if staff_role and hasattr(staff_role, "members") else 0
 
         embed = EmbedCreator.create_embed(
             bot=self.bot,

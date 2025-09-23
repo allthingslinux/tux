@@ -115,16 +115,22 @@ class Config(BaseCog, commands.GroupCog, group_name="config"):
         assert interaction.guild
         await interaction.response.defer(ephemeral=True)
 
-        await self.db_config.update_perm_level_role(
-            interaction.guild.id,
-            setting.value,
-            role.id,
-        )
+        try:
+            await self.db_config.update_perm_level_role(
+                interaction.guild.id,
+                setting.value,
+                role.id,
+            )
 
-        await interaction.followup.send(
-            f"Perm level {setting.value} role set to {role.mention}.",
-            ephemeral=True,
-        )
+            await interaction.followup.send(
+                f"Perm level {setting.value} role set to {role.mention}.",
+                ephemeral=True,
+            )
+        except Exception as e:
+            await interaction.followup.send(
+                f"Failed to update permission level: {e}",
+                ephemeral=True,
+            )
 
     @roles.command(name="set")
     @app_commands.guild_only()
@@ -159,10 +165,16 @@ class Config(BaseCog, commands.GroupCog, group_name="config"):
         assert interaction.guild
         await interaction.response.defer(ephemeral=True)
 
-        if setting.value == "jail_role_id":
-            await self.db_config.update_perm_level_role(interaction.guild.id, "jail", role.id)
+        try:
+            if setting.value == "jail_role_id":
+                await self.db_config.update_perm_level_role(interaction.guild.id, "jail", role.id)
+                await interaction.followup.send(
+                    f"{setting.value} role set to {role.mention}.",
+                    ephemeral=True,
+                )
+        except Exception as e:
             await interaction.followup.send(
-                f"{setting.value} role set to {role.mention}.",
+                f"Failed to update role: {e}",
                 ephemeral=True,
             )
 

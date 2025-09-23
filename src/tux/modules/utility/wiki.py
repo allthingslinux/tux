@@ -5,7 +5,6 @@ from loguru import logger
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.services.http_client import http_client
-from tux.shared.constants import CONST
 from tux.ui.embeds import EmbedCreator
 
 
@@ -68,19 +67,19 @@ class Wiki(BaseCog):
         tuple[str, str]
             The title and URL of the first search result.
         """
-
         search_term = search_term.capitalize()
-
         params: dict[str, str] = {"action": "query", "format": "json", "list": "search", "srsearch": search_term}
 
-        # Send a GET request to the wiki API
-        response = await http_client.get(base_url, params=params)
-        logger.info(f"GET request to {base_url} with params {params}")
+        try:
+            # Send a GET request to the wiki API
+            response = await http_client.get(base_url, params=params)
+            logger.info(f"GET request to {base_url} with params {params}")
+            response.raise_for_status()
 
-        # Check if the request was successful
-        if response.status_code == CONST.HTTP_OK:
+            # Parse JSON response
             data = response.json()
             logger.info(data)
+
             if data.get("query") and data["query"].get("search"):
                 search_results = data["query"]["search"]
                 if search_results:
@@ -91,7 +90,10 @@ class Wiki(BaseCog):
                     else:
                         url = f"https://wiki.archlinux.org/title/{url_title}"
                     return title, url
+        except Exception as e:
+            logger.error(f"Wiki API request failed: {e}")
             return "error", "error"
+
         return "error", "error"
 
     @commands.hybrid_group(

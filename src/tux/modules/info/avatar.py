@@ -121,19 +121,27 @@ class Avatar(BaseCog):
         -------
         discord.File
             The discord file.
+
+        Raises
+        ------
+        RuntimeError
+            If the avatar cannot be fetched or processed.
         """
+        try:
+            response = await http_client.get(url, timeout=CONST.HTTP_TIMEOUT)
+            response.raise_for_status()
 
-        response = await http_client.get(url, timeout=CONST.HTTP_TIMEOUT)
-        response.raise_for_status()
+            content_type = response.headers.get("Content-Type")
+            extension = mimetypes.guess_extension(content_type) or ".png"
 
-        content_type = response.headers.get("Content-Type")
-        extension = mimetypes.guess_extension(content_type) or ".png"
+            image_data = response.content
+            image_file = BytesIO(image_data)
+            image_file.seek(0)
 
-        image_data = response.content
-        image_file = BytesIO(image_data)
-        image_file.seek(0)
-
-        return discord.File(image_file, filename=f"avatar{extension}")
+            return discord.File(image_file, filename=f"avatar{extension}")
+        except Exception as e:
+            msg = f"Failed to fetch avatar from {url}"
+            raise RuntimeError(msg) from e
 
 
 async def setup(bot: Tux) -> None:

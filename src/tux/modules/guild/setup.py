@@ -29,28 +29,37 @@ class Setup(BaseCog):
 
         assert interaction.guild
 
-        jail_role_id = await self.config.get_jail_role_id(interaction.guild.id)
-        if not jail_role_id:
-            await interaction.response.send_message("No jail role has been set up for this server.", ephemeral=True)
-            return
+        try:
+            jail_role_id = await self.config.get_jail_role_id(interaction.guild.id)
+            if not jail_role_id:
+                await interaction.response.send_message("No jail role has been set up for this server.", ephemeral=True)
+                return
 
-        jail_role = interaction.guild.get_role(jail_role_id)
-        if not jail_role:
-            await interaction.response.send_message("The jail role has been deleted.", ephemeral=True)
-            return
+            jail_role = interaction.guild.get_role(jail_role_id)
+            if not jail_role:
+                await interaction.response.send_message("The jail role has been deleted.", ephemeral=True)
+                return
 
-        jail_channel_id = await self.config.get_jail_channel_id(interaction.guild.id)
-        if not jail_channel_id:
-            await interaction.response.send_message("No jail channel has been set up for this server.", ephemeral=True)
-            return
+            jail_channel_id = await self.config.get_jail_channel_id(interaction.guild.id)
+            if not jail_channel_id:
+                await interaction.response.send_message(
+                    "No jail channel has been set up for this server.",
+                    ephemeral=True,
+                )
+                return
 
-        await interaction.response.defer(ephemeral=True)
+            await interaction.response.defer(ephemeral=True)
 
-        await self._set_permissions_for_channels(interaction, jail_role, jail_channel_id)
+            await self._set_permissions_for_channels(interaction, jail_role, jail_channel_id)
 
-        await interaction.edit_original_response(
-            content="Permissions have been set up for the jail role.",
-        )
+            await interaction.edit_original_response(
+                content="Permissions have been set up for the jail role.",
+            )
+        except Exception as e:
+            if not interaction.response.is_done():
+                await interaction.response.send_message(f"Failed to set up jail: {e}", ephemeral=True)
+            else:
+                await interaction.edit_original_response(content=f"Failed to set up jail: {e}")
 
     async def _set_permissions_for_channels(
         self,
@@ -73,23 +82,26 @@ class Setup(BaseCog):
 
         assert interaction.guild
 
-        for channel in interaction.guild.channels:
-            if not isinstance(channel, discord.TextChannel | discord.VoiceChannel | discord.ForumChannel):
-                continue
+        try:
+            for channel in interaction.guild.channels:
+                if not isinstance(channel, discord.TextChannel | discord.VoiceChannel | discord.ForumChannel):
+                    continue
 
-            if (
-                jail_role in channel.overwrites
-                and channel.overwrites[jail_role].send_messages is False
-                and channel.overwrites[jail_role].read_messages is False
-                and channel.id != jail_channel_id
-            ):
-                continue
+                if (
+                    jail_role in channel.overwrites
+                    and channel.overwrites[jail_role].send_messages is False
+                    and channel.overwrites[jail_role].read_messages is False
+                    and channel.id != jail_channel_id
+                ):
+                    continue
 
-            await channel.set_permissions(jail_role, send_messages=False, read_messages=False)
-            if channel.id == jail_channel_id:
-                await channel.set_permissions(jail_role, send_messages=True, read_messages=True)
+                await channel.set_permissions(jail_role, send_messages=False, read_messages=False)
+                if channel.id == jail_channel_id:
+                    await channel.set_permissions(jail_role, send_messages=True, read_messages=True)
 
-            await interaction.edit_original_response(content=f"Setting up permissions for {channel.name}.")
+                await interaction.edit_original_response(content=f"Setting up permissions for {channel.name}.")
+        except Exception as e:
+            await interaction.edit_original_response(content=f"Failed to set channel permissions: {e}")
 
 
 async def setup(bot: Tux) -> None:

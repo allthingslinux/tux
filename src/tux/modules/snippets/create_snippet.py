@@ -49,8 +49,14 @@ class CreateSnippet(SnippetsBaseCog):
         guild_id = ctx.guild.id
 
         # Check if a snippet with this name already exists
-        if await self.db.snippet.get_snippet_by_name_and_guild_id(name, guild_id) is not None:
-            await self.send_snippet_error(ctx, description="Snippet with this name already exists.")
+        try:
+            existing_snippet = await self.db.snippet.get_snippet_by_name_and_guild_id(name, guild_id)
+            if existing_snippet is not None:
+                await self.send_snippet_error(ctx, description="Snippet with this name already exists.")
+                return
+        except Exception as e:
+            logger.error(f"Failed to check existing snippet: {e}")
+            await self.send_snippet_error(ctx, description="Database error occurred.")
             return
 
         # Validate snippet name format and length
@@ -62,38 +68,43 @@ class CreateSnippet(SnippetsBaseCog):
             return
 
         # Check if content matches another snippet name to automatically create an alias
-        existing_snippet_for_alias = await self.db.snippet.get_snippet_by_name_and_guild_id(
-            content,
-            guild_id,
-        )
+        try:
+            existing_snippet_for_alias = await self.db.snippet.get_snippet_by_name_and_guild_id(
+                content,
+                guild_id,
+            )
 
-        if existing_snippet_for_alias:
-            await self.db.snippet.create_snippet_alias(
-                original_name=content,
-                alias_name=name,
+            if existing_snippet_for_alias:
+                await self.db.snippet.create_snippet_alias(
+                    original_name=content,
+                    alias_name=name,
+                    guild_id=guild_id,
+                )
+
+                await ctx.send(
+                    f"Snippet `{name}` created as an alias pointing to `{content}`.",
+                    delete_after=CONST.DEFAULT_DELETE_AFTER,
+                    ephemeral=True,
+                )
+
+                logger.info(f"{ctx.author} created snippet '{name}' as an alias to '{content}'.")
+                return
+
+            # Create the new snippet
+            await self.db.snippet.create_snippet(
+                snippet_name=name,
+                snippet_content=content,
+                snippet_user_id=author_id,
                 guild_id=guild_id,
             )
 
-            await ctx.send(
-                f"Snippet `{name}` created as an alias pointing to `{content}`.",
-                delete_after=CONST.DEFAULT_DELETE_AFTER,
-                ephemeral=True,
-            )
+            await ctx.send("Snippet created.", delete_after=CONST.DEFAULT_DELETE_AFTER, ephemeral=True)
+            logger.info(f"{ctx.author} created snippet '{name}'.")
 
-            logger.info(f"{ctx.author} created snippet '{name}' as an alias to '{content}'.")
+        except Exception as e:
+            logger.error(f"Failed to create snippet: {e}")
+            await self.send_snippet_error(ctx, description="Failed to create snippet.")
             return
-
-        # Create the new snippet
-        await self.db.snippet.create_snippet(
-            snippet_name=name,
-            snippet_content=content,
-            snippet_user_id=author_id,
-            guild_id=guild_id,
-        )
-
-        await ctx.send("Snippet created.", delete_after=CONST.DEFAULT_DELETE_AFTER, ephemeral=True)
-
-        logger.info(f"{ctx.author} created snippet '{name}'.")
 
 
 async def setup(bot: Tux) -> None:

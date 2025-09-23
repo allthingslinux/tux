@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 
 import psutil
 from discord.ext import commands
+from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
@@ -27,39 +28,48 @@ class Ping(BaseCog):
             The discord context object.
         """
 
-        # Get the latency of the bot in milliseconds
-        discord_ping = round(self.bot.latency * 1000)
+        try:
+            # Get the latency of the bot in milliseconds
+            discord_ping = round(self.bot.latency * 1000)
 
-        # Handles Time (turning POSIX time datetime)
-        bot_start_time = datetime.fromtimestamp(self.bot.uptime, UTC)
-        current_time = datetime.now(UTC)  # Get current time
-        uptime_delta = current_time - bot_start_time
+            # Handles Time (turning POSIX time datetime)
+            bot_start_time = datetime.fromtimestamp(self.bot.uptime, UTC)
+            current_time = datetime.now(UTC)  # Get current time
+            uptime_delta = current_time - bot_start_time
 
-        # Convert it into Human comprehensible times
-        days = uptime_delta.days
-        hours, remainder = divmod(uptime_delta.seconds, 3600)
-        minutes, seconds = divmod(remainder, 60)
+            # Convert it into Human comprehensible times
+            days = uptime_delta.days
+            hours, remainder = divmod(uptime_delta.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
 
-        # Format it for the command
-        bot_uptime_parts = [
-            f"{days}d" if days else "",
-            f"{hours}h" if hours else "",
-            f"{minutes}m" if minutes else "",
-            f"{seconds}s",
-        ]
-        bot_uptime_readable = " ".join(part for part in bot_uptime_parts if part).strip()
+            # Format it for the command
+            bot_uptime_parts = [
+                f"{days}d" if days else "",
+                f"{hours}h" if hours else "",
+                f"{minutes}m" if minutes else "",
+                f"{seconds}s",
+            ]
+            bot_uptime_readable = " ".join(part for part in bot_uptime_parts if part).strip()
 
-        # Get the CPU usage and RAM usage of the bot
-        cpu_usage = psutil.Process().cpu_percent()
-        # Get the amount of RAM used by the bot
-        ram_amount_in_bytes = psutil.Process().memory_info().rss
-        ram_amount_in_mb = ram_amount_in_bytes / (1024 * 1024)
+            # Get the CPU usage and RAM usage of the bot
+            cpu_usage = psutil.Process().cpu_percent()
+            # Get the amount of RAM used by the bot
+            ram_amount_in_bytes = psutil.Process().memory_info().rss
+            ram_amount_in_mb = ram_amount_in_bytes / (1024 * 1024)
 
-        # Format the RAM usage to be in GB or MB, rounded to nearest integer
-        if ram_amount_in_mb >= 1024:
-            ram_amount_formatted = f"{round(ram_amount_in_mb / 1024)}GB"
-        else:
-            ram_amount_formatted = f"{round(ram_amount_in_mb)}MB"
+            # Format the RAM usage to be in GB or MB, rounded to nearest integer
+            if ram_amount_in_mb >= 1024:
+                ram_amount_formatted = f"{round(ram_amount_in_mb / 1024)}GB"
+            else:
+                ram_amount_formatted = f"{round(ram_amount_in_mb)}MB"
+
+        except (OSError, ValueError) as e:
+            # Handle psutil errors gracefully
+            discord_ping = round(self.bot.latency * 1000)
+            bot_uptime_readable = "Unknown"
+            cpu_usage = 0.0
+            ram_amount_formatted = "Unknown"
+            logger.warning(f"Failed to get system stats: {e}")
 
         embed = EmbedCreator.create_embed(
             embed_type=EmbedCreator.INFO,
