@@ -50,6 +50,7 @@ theme:
   palette:
     scheme: custom
     primary: custom
+    accent: sky
 
   # https://squidfunk.github.io/mkdocs-material/setup/changing-the-fonts/
   font:
@@ -103,6 +104,11 @@ plugins:
   - autorefs:
       # https://mkdocstrings.github.io/autorefs/#non-unique-headings
       resolve_closest: true
+
+  # Custom Tux Plugin
+  - tux:
+      modules_path: src/tux/modules
+      enable_commands: true
 
   # https://squidfunk.github.io/mkdocs-material/plugins/social/
   - social:
@@ -266,12 +272,12 @@ plugins:
             show_overloads: true
             # https://mkdocstrings.github.io/python/usage/configuration/signatures/#unwrap_annotated
             unwrap_annotated: false
-  - api-autonav:
-      modules: [../src/tux]
-      nav_section_title: Tux Reference
-      api_root_uri: reference
-      exclude_private: false
-      on_implicit_namespace_package: raise
+  # - api-autonav:
+  #     modules: [../src/tux]
+  #     nav_section_title: Tux Reference
+  #     api_root_uri: reference
+  #     exclude_private: false
+  #     on_implicit_namespace_package: raise
 # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#revisioning
 # - git-revision-date-localized:
 #     enable_creation_date: false
@@ -305,17 +311,98 @@ markdown_extensions:
   - md_in_html
   - def_list
   - tables
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.tabbed:
+      alternate_style: true
 #
 ### NAVIGATION
 #
 nav:
   - Home: index.md
+
+  # User Documentation
+  - User Guide:
+      - Getting Started:
+          - Overview: user-guide/getting-started/index.md
+          - Installation: user-guide/getting-started/installation.md
+          - First Steps: user-guide/getting-started/first-steps.md
+      - Commands:
+          - Overview: user-guide/commands/index.md
+          - Auto-Generated: user-guide/commands/auto-generated.md
+          - Moderation: user-guide/commands/moderation.md
+          - Information: user-guide/commands/information.md
+          - Fun: user-guide/commands/fun.md
+          - Utility: user-guide/commands/utility.md
+          - Configuration: user-guide/commands/configuration.md
+          - Admin: user-guide/commands/admin.md
+      - Features:
+          - Permission System: user-guide/features/permissions.md
+          - Moderation Tools: user-guide/features/moderation.md
+          - Starboard: user-guide/features/starboard.md
+          - Levels & XP: user-guide/features/levels.md
+          - Snippets: user-guide/features/snippets.md
+
+  # Development Documentation
   - Development:
-      - Contributing: dev/contributing.md
-      - Local Development: dev/local_development.md
-      - Docker Development: dev/docker_development.md
-      - Database: dev/database.md
-      - Database Patterns: dev/database_patterns.md
-      - Permissions: dev/permissions.md
-      - Self Hosting: dev/self_hosting.md
-  - CLI Reference: dev/cli/index.md
+      - Setup:
+          - Quick Start: dev/setup/index.md
+          - Local Development: dev/setup/local-development.md
+          - Docker Development: dev/setup/docker-development.md
+          - Database Setup: dev/setup/database-setup.md
+          - Testing: dev/setup/testing.md
+      - Guides:
+          - Architecture: dev/guides/architecture.md
+          - Adding Commands: dev/guides/adding-commands.md
+          - Database Migrations: dev/guides/database-migrations.md
+          - Error Handling: dev/guides/error-handling.md
+          - Performance: dev/guides/performance.md
+          - Security: dev/guides/security.md
+      - Standards:
+          - Error Handling: dev/standards/error-handling.md
+          - Database Patterns: dev/standards/database-patterns.md
+          - Sentry Integration: dev/standards/sentry-integration.md
+          - Code Style: dev/standards/code-style.md
+          - Testing Standards: dev/standards/testing.md
+          - Documentation: dev/standards/documentation.md
+      - API Reference:
+          - Core: dev/api/core.md
+          - Database: dev/api/database.md
+          - Services: dev/api/services.md
+          - Utilities: dev/api/utilities.md
+
+  # Administration Documentation
+  - Administration:
+      - Deployment:
+          - Overview: admin/deployment/index.md
+          - Docker: admin/deployment/docker.md
+          - Cloud Platforms: admin/deployment/cloud.md
+          - VPS: admin/deployment/vps.md
+          - Self-Hosting: admin/deployment/self-hosting.md
+      - Configuration:
+          - Environment Variables: admin/configuration/environment.md
+          - Database Config: admin/configuration/database.md
+          - Discord Setup: admin/configuration/discord.md
+          - External Services: admin/configuration/external-services.md
+      - Monitoring:
+          - Health Checks: admin/monitoring/health-checks.md
+          - Logging: admin/monitoring/logging.md
+          - Metrics: admin/monitoring/metrics.md
+          - Alerting: admin/monitoring/alerting.md
+          - Troubleshooting: admin/monitoring/troubleshooting.md
+
+  # Community Documentation
+  - Community:
+      - Contributing:
+          - Overview: community/contributing/index.md
+          - Bug Reports: community/contributing/bug-reports.md
+          - Feature Requests: community/contributing/feature-requests.md
+          - Code Contributions: community/contributing/code-contributions.md
+          - Documentation: community/contributing/documentation.md
+          - Code of Conduct: community/contributing/code-of-conduct.md
+      - Support:
+          - FAQ: community/support/faq.md
+          - Troubleshooting: community/support/troubleshooting.md
+          - Discord Server: community/support/discord.md
+          - GitHub Issues: community/support/github.md
