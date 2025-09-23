@@ -109,7 +109,7 @@ class DocsCLI(BaseCLI):
         self,
         host: Annotated[str, Option("--host", "-h", help="Host to serve on")] = "127.0.0.1",
         port: Annotated[int, Option("--port", "-p", help="Port to serve on")] = 8000,
-        dirty: Annotated[bool, Option("--dirty", help="Only re-build files that have changed")] = True,
+        dirty: Annotated[bool, Option("--dirty", help="Only re-build files that have changed")] = False,
         no_livereload: Annotated[bool, Option("--no-livereload", help="Disable live reloading")] = False,
         clean: Annotated[bool, Option("--clean", help="Build without effects of mkdocs serve")] = False,
         strict: Annotated[bool, Option("--strict", help="Enable strict mode")] = False,
