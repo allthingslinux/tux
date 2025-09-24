@@ -379,3 +379,7 @@ junit_logging = "no"
 [tool.pytest-alembic]
 script_location = "src/tux/database/migrations"
 version_locations = ["src/tux/database/migrations/versions"]
+
+# MkDocs plugin entry point
+[project.entry-points."mkdocs.plugins"]
+tux = "docs.plugins.mkdocs_tux_plugin:TuxPlugin"
