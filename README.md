@@ -65,7 +65,7 @@ It is designed to provide a variety of features to the server, including moderat
 - Strict typing with `basedpyright` and type hints
 - Type safe ORM using `SQLModel` with `SQLAlchemy`
 - Linting and formatting via `ruff`
-- Custom CLI via `click` and `uv` scripts
+- Custom CLI via `typer` and `uv` scripts
 - Rich logging with `loguru`
 - Exception handling with `sentry-sdk`
 - Request handling with `httpx`
@@ -83,7 +83,7 @@ It is designed to provide a variety of features to the server, including moderat
 - Custom help command
 - Configuration system (environment variables + `.env` file)
 - Dynamic role-based (access level) permission system
-- Basic extensions system (see [extensions](src/tux/extensions/README.md))
+- Plugin system (see [plugins](src/tux/plugins/README.md))
 
 ## Installation and Development
 
@@ -119,33 +119,44 @@ It is designed to provide a variety of features to the server, including moderat
 4. **Start the bot:**
 
    ```bash
-   # Auto-detects environment (defaults to development)
-   make start
-   
-   # Or explicitly set environment
-   make dev    # Development mode
-   make prod   # Production mode
+   # Start the bot (auto-detects environment, defaults to development)
+   uv run tux start
+
+   # Start with debug mode
+   uv run tux start --debug
    ```
 
 ### Quick Commands
 
 ```bash
 # Development
-make dev              # Start in development mode
-make test             # Run tests
-make lint             # Check code quality
+uv run tux start                # Start bot in development mode
+uv run tux start --debug        # Start bot with debug mode
+uv run dev lint                 # Check code quality with Ruff
+uv run dev format               # Format code with Ruff
+uv run dev type-check           # Check types with basedpyright
+uv run dev pre-commit           # Run pre-commit checks
+uv run dev all                  # Run all development checks
 
-# Production
-make prod             # Start in production mode
-make docker-prod      # Start production Docker environment
+# Testing
+uv run test run                 # Run tests with coverage
+uv run test quick               # Run tests without coverage (faster)
+uv run test html                # Run tests and generate HTML report
+uv run test coverage            # Generate coverage reports
 
 # Database
-make db-upgrade       # Upgrade database
-make db-revision      # Create migration
+uv run db migrate-dev           # Create and apply migrations for development
+uv run db migrate-push          # Push pending migrations to database
+uv run db migrate-generate "message"  # Generate a new migration
+uv run db health                # Check database health
 
 # Docker
-make docker-dev       # Start development Docker environment
-make docker-prod      # Start production Docker environment
+uv run docker up                # Start Docker services
+uv run docker down              # Stop Docker services
+uv run docker build             # Build Docker images
+uv run docker logs              # Show Docker service logs
+uv run docker ps                # List running containers
+uv run docker shell             # Open shell in container
 ```
 
 **For detailed setup instructions, see [SETUP.md](SETUP.md)**
