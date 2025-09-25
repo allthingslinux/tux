@@ -196,3 +196,6 @@ sqlmodel-refactor
 data/
 examples/
 .amazonq/cli-todo-lists/
+
+# solution for developers who switch between branches a lot
+config/settings.yml
