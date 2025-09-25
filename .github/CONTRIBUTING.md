@@ -13,15 +13,15 @@ Before you start, ensure you have:
 * [Python](https://www.python.org/) (3.13+ recommended)
   * If you don't have Python installed, we suggest using something like [mise](https://mise.jdx.dev/) or [pyenv](https://github.com/pyenv/pyenv) to manage your Python installations.
   
-* [Poetry](https://python-poetry.org/docs/) (1.2+ recommended)
-  * If you don't have Poetry installed, you can use one of the official methods. We recommend using the official installer:
+* [Uv](https://docs.astral.sh/uv/) (recommended)
+  * If you don't have Uv installed, use the official installer and verify:
 
     ```bash
-    # Linux, macOS, Windows (WSL)
-    curl -sSL https://install.python-poetry.org | python3 -
+    # Linux/macOS
+    curl -LsSf https://astral.sh/uv/install.sh | sh
 
-    # After installation and ensuring Poetry is in your PATH, you can verify it by running:
-    poetry --version
+    # Verify installation
+    uv --version
     ```
 
 * A PostgreSQL Database (local or remote)
@@ -61,19 +61,19 @@ Follow these steps to set up your local development environment. For more compre
     git remote -v
     ```
 
-2. **Install Dependencies with Poetry**
+2. **Install Dependencies with Uv**
 
-    Ensure Poetry is installed and configured to use the correct Python version (e.g., 3.13.5).
+    Ensure Uv is installed and using the correct Python version (project requires 3.13.x).
 
     ```bash
-    # Create a virtual environment
-    poetry env use 3.13.5
+    # (Optional) Pin the Python version used by uv
+    uv python pin 3.13.5
 
-    # Install project dependencies and dev tools
-    poetry install
+    # Create the virtual environment and install all dependencies
+    uv sync
 
     # Install pre-commit hooks for quality checks
-    poetry run pre-commit install
+    uv run pre-commit install
     ```
 
 3. **Configure Environment Variables**
@@ -94,19 +94,19 @@ Follow these steps to set up your local development environment. For more compre
 
     Copy the example settings file.
 
-    `cp config/settings.yml.example config/settings.yml`
+    `cp .env.example .env`
 
-    Review `config/settings.yml` and customize it.
+    Review `.env` and customize it.
 
     **Crucially, add your Discord User ID to the `BOT_OWNER` list.**
 
 5. **Initialize Development Database**
 
-    Push the Prisma schema to your development database. This also generates the Prisma client.
+    Run database migrations to set up your development database.
 
     ```bash
     # Use --dev or rely on the default development mode
-    poetry run tux --dev db push
+    uv run tux --dev db upgrade
     ```
 
 ## Development Workflow
@@ -164,16 +164,16 @@ Follow these steps to set up your local development environment. For more compre
 
     ```bash
     # Format code using Ruff
-    poetry run tux dev format
+    uv run tux dev format
 
     # Lint code using Ruff
-    poetry run tux dev lint-fix
+    uv run tux dev lint-fix
 
-    # Type-check code using basedpyright
-    poetry run tux dev type-check
+    # Type-check code using Pyright
+    uv run tux dev type-check
 
     # Run all pre-commit checks (includes formatting, linting, etc.)
-    poetry run tux dev pre-commit
+    uv run tux dev pre-commit
     ```
 
     Fix any issues reported by these tools.

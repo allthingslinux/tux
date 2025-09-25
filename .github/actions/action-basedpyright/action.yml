@@ -1,0 +1,56 @@
+---
+name: action-basedpyright
+description: Run basedpyright with reviewdog on pull requests to improve code review
+  experience
+inputs:
+  github_token:
+    description: GITHUB_TOKEN
+    default: ${{ github.token }}
+  workdir:
+    description: Working directory relative to the root directory.
+    default: .
+  ### Flags for reviewdog  ###
+  tool_name:
+    description: Tool name to use for reviewdog reporter.
+    default: basedpyright
+  level:
+    description: Report level for reviewdog [info,warning,error].
+    default: warning
+  reporter:
+    description: Reporter of reviewdog command [github-check,github-pr-review,github-pr-check,sarif].
+    default: github-pr-review
+  filter_mode:
+    description: |
+      Filtering mode for the reviewdog command [added,diff_context,file,nofilter].
+      Default is `added` except that sarif reporter uses `nofilter`.
+    default: file
+  fail_level:
+    description: |
+      If set to `none`, always use exit code 0 for reviewdog. Otherwise, exit code 1 for reviewdog if it finds at least 1 issue with severity greater than or equal to the given level.
+      Possible values: [none,any,info,warning,error]
+      Default is `none`.
+    default: none
+  reviewdog_flags:
+    description: Additional reviewdog flags.
+    default: ''
+  ### Flags for basedpyright  ###
+  basedpyright_flags:
+    description: Additional flags for basedpyright command.
+    default: --outputjson
+runs:
+  using: composite
+  steps:
+    - name: Run basedpyright with reviewdog
+      shell: bash
+      working-directory: ${{ inputs.workdir }}
+      run: |
+        (uv run basedpyright ${{ inputs.basedpyright_flags }} || true) | \
+        reviewdog -f=rdjson \
+          -reporter=${{ inputs.reporter }} \
+          -level=${{ inputs.level }} \
+          -filter-mode=${{ inputs.filter_mode }} \
+          -fail-level=${{ inputs.fail_level }} \
+          -name=${{ inputs.tool_name }} \
+          ${{ inputs.reviewdog_flags }}
+      env:
+        REVIEWDOG_GITHUB_API_TOKEN: ${{ inputs.github_token }}

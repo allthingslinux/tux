@@ -1,3 +1,4 @@
+---
 site_name: Tux
 site_url: https://tux.atl.dev
 
@@ -10,7 +11,7 @@ repo_name: allthingslinux/tux
 # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#code-actions
 edit_uri: edit/main/docs/
 docs_dir: ./content
-site_dir: ../build/docs
+site_dir: ../data/build/docs
 extra:
   # https://squidfunk.github.io/mkdocs-material/setup/setting-up-the-footer/#social-links
   social:
@@ -49,6 +50,7 @@ theme:
   palette:
     scheme: custom
     primary: custom
+    accent: purple
 
   # https://squidfunk.github.io/mkdocs-material/setup/changing-the-fonts/
   font:
@@ -103,6 +105,11 @@ plugins:
       # https://mkdocstrings.github.io/autorefs/#non-unique-headings
       resolve_closest: true
 
+  # Custom Tux Plugin
+  - tux:
+      modules_path: src/tux/modules
+      enable_commands: true
+
   # https://squidfunk.github.io/mkdocs-material/plugins/social/
   - social:
       enabled: true
@@ -120,6 +127,10 @@ plugins:
         # https://mkdocstrings.github.io/python/usage/customization/#css-classes
         - assets/stylesheets/extra.css
         - assets/stylesheets/mkdocstrings.css
+
+  #  # https://pypi.org/project/mkdocs-typer2/
+  # - mkdocs-typer2:
+  #     pretty: true
 
   # https://mkdocstrings.github.io/
   - mkdocstrings:
@@ -262,12 +273,11 @@ plugins:
             # https://mkdocstrings.github.io/python/usage/configuration/signatures/#unwrap_annotated
             unwrap_annotated: false
   - api-autonav:
-      modules:
-        - ../tux
+      modules: [../src/tux]
       nav_section_title: Tux Reference
       api_root_uri: reference
       exclude_private: false
-      on_implicit_namespace_packge: raise
+      on_implicit_namespace_package: raise
 # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#revisioning
 # - git-revision-date-localized:
 #     enable_creation_date: false
@@ -280,8 +290,6 @@ plugins:
 #
 markdown_extensions:
   - attr_list
-  # https://github.com/mkdocs/mkdocs-click
-  - mkdocs-click:
   # https://mkdocstrings.github.io/usage/theming/#syntax-highlighting
   - pymdownx.highlight:
       use_pygments: true
@@ -293,6 +301,7 @@ markdown_extensions:
       anchor_linenums: true
   - toc:
       permalink: true
+  - mkdocs-typer:
   - pymdownx.superfences
   - pymdownx.inlinehilite
   # - pymdownx.snippets
@@ -302,16 +311,35 @@ markdown_extensions:
   - md_in_html
   - def_list
   - tables
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.tabbed:
+      alternate_style: true
 #
 ### NAVIGATION
 #
 nav:
   - Home: index.md
-  - Development:
-      - Contributing: dev/contributing.md
-      - Local Development: dev/local_development.md
-      - Docker Development: dev/docker_development.md
-      - Database: dev/database.md
-      - Database Patterns: dev/database_patterns.md
-      - Permissions: dev/permissions.md
-  - CLI Reference: dev/cli/index.md
+  - Setup:
+      - Installation: setup/installation.md
+      - Configuration: setup/configuration.md
+      - Development: setup/development.md
+  - Guides:
+      - User Guide: guides/user-guide.md
+      - Admin Guide: guides/admin-guide.md
+      - Developer Guide: guides/developer-guide.md
+  - Developer:
+      - Database Patterns: developer/database-patterns.md
+      - Error Handling: developer/error-handling.md
+      - Sentry Integration: developer/sentry-integration.md
+  - API Reference:
+      - Core: reference/api/core.md
+      - Database: reference/api/database.md
+      - Services: reference/api/services.md
+      - Modules: reference/api/modules.md
+  - CLI Reference: reference/cli.md
+  - Community:
+      - FAQ: community/faq.md
+      - Support: community/support.md
+      - Contributing: community/contributing.md

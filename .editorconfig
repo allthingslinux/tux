@@ -34,7 +34,7 @@ indent_size = 2
 
 # Docker files
 [{Dockerfile,*.dockerfile}]
-indent_size = 4
+indent_size = 8
 
 [docker-compose*.yml]
 indent_size = 2
@@ -65,7 +65,7 @@ indent_size = 4
 indent_size = 4
 
 # Lock files (read-only, preserve formatting)
-[{poetry.lock,package-lock.json,yarn.lock,Pipfile.lock}]
+[{uv.lock,package-lock.json,yarn.lock,Pipfile.lock}]
 insert_final_newline = false
 trim_trailing_whitespace = false
 

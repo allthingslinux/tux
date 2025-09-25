@@ -1,35 +1,32 @@
-"""Global pytest configuration and fixtures."""
+"""
+🧪 Clean Test Configuration
 
-import subprocess
+Minimal conftest.py that imports fixtures from fixtures/ directory.
+All complex fixture logic has been moved to dedicated fixture files.
+"""
 
 import pytest
 
-
-def pytest_configure(config: pytest.Config) -> None:
-    """Configure pytest with custom markers."""
-    config.addinivalue_line("markers", "slow: marks tests as slow (may take several minutes)")
-    config.addinivalue_line("markers", "docker: marks tests that require Docker to be running")
-    config.addinivalue_line("markers", "integration: marks tests as integration tests")
+# Import all fixtures from fixtures directory
+from tests.fixtures import *
 
 
-@pytest.fixture(scope="session")
-def docker_available() -> bool:
-    """Check if Docker is available for testing."""
-    try:
-        subprocess.run(["docker", "version"], capture_output=True, text=True, timeout=10, check=True)
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
-        return False
-    else:
-        return True
+# =============================================================================
+# PYTEST HOOKS
+# =============================================================================
 
+def pytest_configure(config):
+    """Configure pytest with clean settings and custom logger."""
+    import sys
+    from pathlib import Path
 
-@pytest.fixture(autouse=True)
-def skip_if_no_docker(request: pytest.FixtureRequest, docker_available: bool) -> None:
-    """Skip tests that require Docker if Docker is not available."""
+    # Add src to path
+    src_path = Path(__file__).parent.parent / "src"
+    sys.path.insert(0, str(src_path))
 
-    # Make type-checker happy
-    node = getattr(request, "node", None)
-    get_marker = getattr(node, "get_closest_marker", None)
+    from tux.core.logging import configure_testing_logging
+    configure_testing_logging()
 
-    if callable(get_marker) and get_marker("docker") and not docker_available:
-        pytest.skip("Docker is not available")
+    config.addinivalue_line("markers", "integration: mark test as integration test")
+    config.addinivalue_line("markers", "unit: mark test as unit test")
+    config.addinivalue_line("markers", "slow: mark test as slow running")
