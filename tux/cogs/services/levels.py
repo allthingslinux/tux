@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.app import get_prefix
+from prisma.models import Levels
 from tux.bot import Tux
 from tux.database.controllers import DatabaseController
 from tux.ui.embeds import EmbedCreator
@@ -33,20 +33,40 @@ class LevelsService(commands.Cog):
         message : discord.Message
             The message object.
         """
-        if message.author.bot or message.guild is None or message.channel.id in CONFIG.XP_BLACKLIST_CHANNELS:
+        if message.author.bot or not message.guild or message.channel.id in CONFIG.XP_BLACKLIST_CHANNELS:
             return
 
-        prefixes = await get_prefix(self.bot, message)
-        if any(message.content.startswith(prefix) for prefix in prefixes):
+        # Ignore messages that are commands
+        ctx = await self.bot.get_context(message)
+        if ctx.valid:
             return
 
+        # Fetch member object
         member = message.guild.get_member(message.author.id)
-        if member is None:
+        if not member:
             return
 
-        await self.process_xp_gain(member, message.guild)
+        # Fetch all user level data in one query to minimize DB calls
+        user_level_data = await self.db.levels.get_user_level_data(member.id, message.guild.id)
 
-    async def process_xp_gain(self, member: discord.Member, guild: discord.Guild) -> None:
+        # Check if the user is blacklisted
+        if user_level_data and user_level_data.blacklisted:
+            return
+
+        # Check if the user is on cooldown
+        last_message_time = user_level_data.last_message if user_level_data else None
+        if last_message_time and self.is_on_cooldown(last_message_time):
+            return
+
+        # Process XP gain with the already fetched data
+        await self.process_xp_gain(member, message.guild, user_level_data)
+
+    async def process_xp_gain(
+        self,
+        member: discord.Member,
+        guild: discord.Guild,
+        user_level_data: Levels | None,
+    ) -> None:
         """
         Processes XP gain for a member.
 
@@ -56,17 +76,11 @@ class LevelsService(commands.Cog):
             The member gaining XP.
         guild : discord.Guild
             The guild where the member is gaining XP.
+        user_level_data : Levels | None
+            The existing level data for the user.
         """
-        # Get blacklist status
-        is_blacklisted = await self.db.levels.is_blacklisted(member.id, guild.id)
-        if is_blacklisted:
-            return
-
-        last_message_time = await self.db.levels.get_last_message_time(member.id, guild.id)
-        if last_message_time and self.is_on_cooldown(last_message_time):
-            return
-
-        current_xp, current_level = await self.db.levels.get_xp_and_level(member.id, guild.id)
+        current_xp = user_level_data.xp if user_level_data else 0.0
+        current_level = user_level_data.level if user_level_data else 0
 
         xp_increment = self.calculate_xp_increment(member)
         new_xp = current_xp + xp_increment
