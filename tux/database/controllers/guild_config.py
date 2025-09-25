@@ -1,13 +1,13 @@
 from typing import Any
 
 from loguru import logger
-
 from prisma.actions import GuildActions, GuildConfigActions
 from prisma.models import Guild, GuildConfig
 from prisma.types import (
     GuildConfigScalarFieldKeys,
     GuildConfigUpdateInput,
 )
+
 from tux.database.client import db
 
 

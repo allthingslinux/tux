@@ -3,11 +3,11 @@ from typing import Any, Protocol
 import discord
 from discord.ext import commands
 from loguru import logger
-from reactionmenu import ViewButton, ViewMenu
-
 from prisma.enums import CaseType
 from prisma.models import Case
 from prisma.types import CaseWhereInput
+from reactionmenu import ViewButton, ViewMenu
+
 from tux.bot import Tux
 from tux.ui.embeds import EmbedCreator, EmbedType
 from tux.utils import checks
