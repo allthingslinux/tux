@@ -11,6 +11,7 @@ model Guild {
   StarboardMessage StarboardMessage[]
   case_count       BigInt             @default(0)
   levels           Levels[]
+  tickets          Ticket[]
 
   @@index([guild_id])
 }
