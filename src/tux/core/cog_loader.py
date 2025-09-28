@@ -1,4 +1,5 @@
 import asyncio
+import importlib
 import time
 import traceback
 from collections import defaultdict
@@ -53,7 +54,36 @@ class CogLoader(commands.Cog):
             logger.warning(f"Skipping {cog_name} as it is in the ignore list.")
             return False
 
-        return filepath.suffix == ".py" and not cog_name.startswith("_") and await aiofiles.os.path.isfile(filepath)
+        # Basic file checks
+        if not (filepath.suffix == ".py" and not cog_name.startswith("_") and await aiofiles.os.path.isfile(filepath)):
+            return False
+
+        # Check if the module has a setup function
+        try:
+            # Convert file path to module name
+            # Find the src directory in the path
+            src_index = None
+            for i, part in enumerate(filepath.parts):
+                if part == "src":
+                    src_index = i
+                    break
+
+            if src_index is None:
+                return False
+
+            # Get path relative to src
+            relative_parts = filepath.parts[src_index + 1 :]
+            module_name = ".".join(relative_parts[:-1]) + "." + filepath.stem
+
+            # Import the module to check for setup function
+            module = importlib.import_module(module_name)
+
+            # Check if it has a setup function
+            return hasattr(module, "setup") and callable(module.setup)
+
+        except Exception:
+            # If we can't import or check the module, skip it
+            return False
 
     @span("cog.load_single")
     async def _load_single_cog(self, path: Path) -> None:
@@ -105,6 +135,7 @@ class CogLoader(commands.Cog):
                     return
 
             # Actually load the extension
+            logger.info(f"🔧 Loading cog: {module}")
             await self.bot.load_extension(name=module)
             load_time = time.perf_counter() - start_time
             self.load_times[module] = load_time
@@ -118,7 +149,7 @@ class CogLoader(commands.Cog):
                 },
             )
 
-            logger.bind(operation_type="performance").info("cog_load", load_time, cog=module, status="success")
+            logger.info(f"✅ Loaded {module} in {load_time * 1000:.1f}ms")
 
         except TuxConfigurationError as config_error:
             # Handle configuration errors gracefully
@@ -237,9 +268,14 @@ class CogLoader(commands.Cog):
         set_span_attributes({"path.is_dir": True})
 
         # Collect and sort eligible cogs by priority
-        cog_paths: list[tuple[int, Path]] = [
-            (self._get_cog_priority(item), item) for item in path.rglob("*.py") if await self.is_cog_eligible(item)
-        ]
+        all_py_files = list(path.rglob("*.py"))
+
+        cog_paths: list[tuple[int, Path]] = []
+        for item in all_py_files:
+            if await self.is_cog_eligible(item):
+                priority = self._get_cog_priority(item)
+                cog_paths.append((priority, item))
+
         cog_paths.sort(key=lambda x: x[0], reverse=True)
 
         set_span_attributes({"eligible_cog_count": len(cog_paths)})
@@ -337,7 +373,9 @@ class CogLoader(commands.Cog):
             )
 
             if load_time:
-                logger.info(f"Loaded all cogs from {folder_name} in {load_time * 1000:.0f}ms")
+                # Count successful loads for this folder
+                folder_cogs = [k for k in self.load_times if folder_name in k]
+                logger.info(f"Loaded {len(folder_cogs)} cogs from {folder_name} in {load_time * 1000:.0f}ms")
 
                 # Log individual cog load times for performance monitoring
                 slow_threshold = 1.0  # seconds
