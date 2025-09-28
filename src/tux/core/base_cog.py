@@ -7,6 +7,7 @@ This module provides the `BaseCog` class that:
 
 from __future__ import annotations
 
+import asyncio
 import inspect
 from typing import TYPE_CHECKING, Any
 
@@ -164,3 +165,28 @@ class BaseCog(commands.Cog):
         """Return a string representation of the cog."""
         bot_user = getattr(self.bot, "user", "Unknown")
         return f"<{self.__class__.__name__} bot={bot_user}>"
+
+    def unload_if_missing_config(self, condition: bool, config_name: str, extension_name: str) -> bool:
+        """Gracefully unload this cog if configuration is missing.
+
+        Args:
+            condition: True if config is missing (will trigger unload)
+            config_name: Name of the missing configuration for logging
+            extension_name: Full extension name for unloading
+
+        Returns:
+            True if unload was triggered, False otherwise
+        """
+        if condition:
+            logger.warning(f"{config_name} is not configured. {self.__class__.__name__} will be unloaded.")
+            self._unload_task = asyncio.create_task(self._unload_self(extension_name))
+            return True
+        return False
+
+    async def _unload_self(self, extension_name: str) -> None:
+        """Unload this cog if configuration is missing."""
+        try:
+            await self.bot.unload_extension(extension_name)
+            logger.info(f"{self.__class__.__name__} has been unloaded due to missing configuration")
+        except Exception as e:
+            logger.error(f"Failed to unload {self.__class__.__name__}: {e}")
