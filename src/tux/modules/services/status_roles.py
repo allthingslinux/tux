@@ -1,4 +1,3 @@
-import asyncio
 import re
 
 import discord
@@ -6,31 +5,25 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.base_cog import BaseCog
+from tux.core.bot import Tux
 from tux.shared.config import CONFIG
 
 
 class StatusRoles(BaseCog):
     """Assign roles to users based on their status."""
 
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-        self._unload_task = None  # Store task reference here
+    def __init__(self, bot: Tux) -> None:
+        super().__init__(bot)
 
         # Check if mappings exist and are valid
-        if not CONFIG.STATUS_ROLES.MAPPINGS:
-            logger.warning("No status role mappings found. Unloading StatusRoles cog.")
-            # Store the task reference
-            self._unload_task = asyncio.create_task(self._unload_self())
-        else:
-            logger.info(f"StatusRoles cog initialized with {len(CONFIG.STATUS_ROLES.MAPPINGS)} mappings")
+        if self.unload_if_missing_config(
+            not CONFIG.STATUS_ROLES.MAPPINGS,
+            "Status role mappings",
+            "tux.modules.services.status_roles",
+        ):
+            return
 
-    async def _unload_self(self):
-        """Unload this cog if configuration is missing."""
-        try:
-            await self.bot.unload_extension("tux.modules.services.status_roles")
-            logger.info("StatusRoles cog has been unloaded due to missing configuration")
-        except Exception as e:
-            logger.error(f"Failed to unload StatusRoles cog: {e}")
+        logger.info(f"StatusRoles cog initialized with {len(CONFIG.STATUS_ROLES.MAPPINGS)} mappings")
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -125,5 +118,5 @@ class StatusRoles(BaseCog):
                 logger.exception(f"Error updating roles for {member.display_name}")
 
 
-async def setup(bot: commands.Bot):
+async def setup(bot: Tux) -> None:
     await bot.add_cog(StatusRoles(bot))

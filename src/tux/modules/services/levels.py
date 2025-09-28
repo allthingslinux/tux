@@ -17,9 +17,12 @@ class LevelsService(BaseCog):
         super().__init__(bot)
 
         # Check if XP roles are configured
-        if not CONFIG.XP_CONFIG.XP_ROLES:
-            msg = "XP_ROLES configuration is empty. Please configure XP roles in your .env file."
-            raise ValueError(msg)
+        if self.unload_if_missing_config(
+            not CONFIG.XP_CONFIG.XP_ROLES,
+            "XP_ROLES configuration",
+            "tux.modules.services.levels",
+        ):
+            return
 
         self.xp_cooldown = CONFIG.XP_CONFIG.XP_COOLDOWN
         self.levels_exponent = CONFIG.XP_CONFIG.LEVELS_EXPONENT
