@@ -104,14 +104,12 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         # Schedule the task
         try:
             loop = asyncio.get_event_loop()
+            if loop.is_closed():
+                return  # Don't reload if loop is closed
             self._debounce_tasks[extension] = loop.create_task(debounced_reload())
         except RuntimeError:
-            # No event loop running, call directly
-            logger.warning("No event loop running, calling reload directly")
-            try:
-                self.reload_callback(extension)
-            except Exception as e:
-                logger.error(f"Error in reload callback for {extension}: {e}")
+            # No event loop running, skip reload during shutdown
+            return
 
 
 class FileWatcher:

@@ -93,9 +93,12 @@ class HotReload(commands.Cog):
         # Schedule async reload
         try:
             loop = asyncio.get_event_loop()
+            if loop.is_closed():
+                return  # Don't reload if loop is closed
             loop.create_task(self._reload_extension_async(extension))  # noqa: RUF006
         except RuntimeError:
-            logger.warning("No event loop running for hot reload")
+            # No event loop running, skip reload during shutdown
+            return
 
     async def _reload_extension_async(self, extension: str) -> None:
         """Asynchronously reload an extension."""
