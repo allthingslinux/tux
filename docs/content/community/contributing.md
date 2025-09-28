@@ -55,7 +55,7 @@ cd tux
 
 # Add upstream remote
 git remote add upstream https://github.com/allthingslinux/tux.git
-```text
+```
 
 ### 2. Create Feature Branch
 
@@ -68,7 +68,7 @@ git checkout -b feature/your-feature-name
 # fix/description      - Bug fixes
 # docs/description     - Documentation updates
 # refactor/description - Code refactoring
-```text
+```
 
 ### 3. Set Up Development Environment
 
@@ -86,7 +86,7 @@ cp .env.example .env
 # Set up database
 createdb tux_dev
 uv run db migrate-push
-```text
+```
 
 ### 4. Make Changes
 
@@ -109,7 +109,7 @@ fix(database): resolve connection pool issue
 docs(api): update database documentation
 refactor(core): simplify permission system
 test(moderation): add ban command tests
-```text
+```
 
 ### 5. Test Your Changes
 
@@ -122,7 +122,7 @@ uv run test run
 
 # Test manually with your bot
 uv run tux start --debug
-```text
+```
 
 ### 6. Submit Pull Request
 
@@ -132,7 +132,7 @@ git push origin feature/your-feature-name
 
 # Create pull request on GitHub
 # Fill out the PR template completely
-```text
+```
 
 ## Code Guidelines
 
@@ -158,7 +158,7 @@ async def create_case(
 ) -> Case:
     """Create a new moderation case."""
     pass
-```text
+```
 
 **Docstrings:**
 
@@ -177,7 +177,7 @@ async def ban_user(self, user_id: int, reason: str) -> Case:
         PermissionError: If bot lacks ban permissions
         ValueError: If user_id is invalid
     """
-```text
+```
 
 **Error Handling:**
 
@@ -191,7 +191,7 @@ except SpecificError as e:
 except Exception as e:
     logger.error(f"Unexpected error: {e}", exc_info=True)
     raise
-```text
+```
 
 ### Discord.py Best Practices
 
@@ -222,7 +222,7 @@ async def example(self, ctx: TuxContext, user: discord.Member, *, reason: str = 
     except Exception as e:
         # Error handling is done by global error handler
         raise
-```text
+```
 
 **Database Operations:**
 
@@ -237,7 +237,7 @@ async def create_case_example(self, user_id: int, guild_id: int):
         case_reason="Example ban"
     )
     return case
-```text
+```
 
 ### Testing Guidelines
 
@@ -261,7 +261,7 @@ async def test_ban_command(mock_ctx, mock_db):
     # Assert
     mock_db.case.create_case.assert_called_once()
     mock_ctx.send.assert_called_once()
-```text
+```
 
 **Test Categories:**
 
@@ -305,7 +305,7 @@ async def example_function():
         case_reason="Example warning"
     )
     return case
-```text
+```
 
 ### Documentation Types
 
@@ -364,12 +364,12 @@ Command fails with database error
 - Database: PostgreSQL 15
 
 **Logs:**
-```text
+```
 
 ERROR: value too long for type character varying(50)
 
 ```text
-```text
+```
 
 ### Feature Requests
 
@@ -398,7 +398,7 @@ Add duration parameter to ban command:
 - Reduces moderator workload
 - Ensures consistent enforcement
 - Prevents forgotten unbans
-```text
+```
 
 ## Pull Request Guidelines
 
@@ -445,7 +445,7 @@ Closes #123
 
 ### Breaking Changes
 None
-```text
+```
 
 ### Review Process
 

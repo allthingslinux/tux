@@ -93,7 +93,7 @@ TuxError
         ├── TuxFileWatchError
         ├── TuxModuleReloadError
         └── TuxConfigurationError
-```text
+```
 
 ### Using Specific Exceptions
 
@@ -121,7 +121,7 @@ except TuxDatabaseError:
     # handle database errors
 except Exception as e:
     # handle other errors
-```text
+```
 
 ## Patterns & Examples
 
@@ -155,7 +155,7 @@ except Exception as e:
 # ❌ BAD: Raw Sentry calls
 import sentry_sdk
 sentry_sdk.capture_exception(e)  # Missing context and standardization
-```text
+```
 
 ### ✅ HTTP Operations
 
@@ -175,7 +175,7 @@ async def fetch_data(self, url: str) -> dict | None:
     except Exception as e:
         logger.error(f"Unexpected error fetching {url}: {e}")
         return None
-```text
+```
 
 ### ✅ Database Operations
 
@@ -192,7 +192,7 @@ async def create_user_record(self, user_id: int, data: dict) -> bool:
     except Exception as e:
         logger.error(f"Failed to create user {user_id}: {e}")
         return False
-```text
+```
 
 ### ✅ Command Error Handling
 
@@ -211,7 +211,7 @@ async def my_command(self, ctx: commands.Context[Tux]) -> None:
         return
     
     # Process data...
-```text
+```
 
 ### ✅ Service Initialization
 
@@ -226,7 +226,7 @@ async def initialize_service(self) -> None:
         logger.error(f"Service initialization failed: {e}")
         self.enabled = False
         # Continue without this service
-```text
+```
 
 ## Anti-Patterns to Avoid
 
@@ -245,7 +245,7 @@ try:
 except Exception as e:
     logger.error(f"Operation failed: {e}")
     raise  # Let global handler provide user feedback
-```text
+```
 
 ### ❌ Exposing Internal Errors
 
@@ -258,7 +258,7 @@ except Exception as e:
 except Exception as e:
     logger.error(f"Command failed: {e}")
     await ctx.reply("Something went wrong. Please try again later.")
-```text
+```
 
 ### ❌ Overly Broad Catches
 
@@ -275,7 +275,7 @@ try:
 except (JSONDecodeError, KeyError) as e:
     logger.warning(f"Invalid JSON response: {e}")
     return None
-```text
+```
 
 ## Error Categories & Handling
 
@@ -288,7 +288,7 @@ except (JSONDecodeError, KeyError) as e:
 # Let global handler catch these
 raise commands.BadArgument("Invalid user ID format")
 raise commands.MissingPermissions(["manage_messages"])
-```text
+```
 
 ### Infrastructure Errors
 
@@ -301,7 +301,7 @@ try:
 except (httpx.TimeoutException, httpx.ConnectError):
     # Graceful fallback
     result = get_cached_result()
-```text
+```
 
 ### System Errors
 
@@ -314,7 +314,7 @@ try:
 except ConfigError as e:
     logger.critical(f"Invalid configuration: {e}")
     raise SystemExit(1)
-```text
+```
 
 ## Logging Standards
 
@@ -333,7 +333,7 @@ except ConfigError as e:
 logger.info(f"User {user_id} executed command '{command}' in guild {guild_id}")
 logger.error(f"Database query failed for user {user_id}: {error}")
 logger.warning(f"Rate limit hit for guild {guild_id}, using cached data")
-```text
+```
 
 ## Error Recovery & Graceful Degradation
 
@@ -347,7 +347,7 @@ class MyService:
         except Exception as e:
             capture_exception_safe(e, extra_context={"service": "MyService"})
             raise TuxConfigurationError(f"Failed to initialize MyService: {e}") from e
-```text
+```
 
 ### Graceful Degradation
 
@@ -361,7 +361,7 @@ except TuxAPIConnectionError:
 except TuxConfigurationError as e:
     logger.warning(f"Skipping feature due to configuration: {e}")
     return  # Skip feature gracefully
-```text
+```
 
 ### Command Error Handling
 
@@ -379,7 +379,7 @@ async def my_command(self, ctx: commands.Context[Tux]) -> None:
         capture_exception_safe(e, extra_context={"command": "my_command", "user_id": ctx.author.id})
         await ctx.send("❌ An unexpected error occurred")
         raise  # Re-raise for global error handler
-```text
+```
 
 ## Testing Error Handling
 
@@ -392,7 +392,7 @@ async def test_http_error_handling():
         mock_get.side_effect = httpx.TimeoutException()
         result = await service.fetch_data("http://example.com")
         assert result is None
-```text
+```
 
 ### Integration Tests
 
@@ -402,7 +402,7 @@ async def test_command_with_db_error():
     with patch.object(db, 'create_user') as mock_create:
         mock_create.side_effect = DatabaseError()
         # Verify graceful handling
-```text
+```
 
 ## Sentry Integration
 
@@ -423,7 +423,7 @@ except Exception as e:
     logger.error(f"Critical operation failed: {e}")
     capture_exception_safe(e, extra_context={"user_id": user_id})
     raise
-```text
+```
 
 ## Migration Guidelines
 
@@ -483,7 +483,7 @@ async def process_file(self, file_path: str) -> None:
     finally:
         if file_handle:
             await file_handle.close()
-```text
+```
 
 ## Monitoring & Alerting
 
@@ -530,7 +530,7 @@ try:
 except Exception as e:
     logger.error(f"Service init failed: {e}")
     self.enabled = False
-```text
+```
 
 ### When to Use Global vs Local
 

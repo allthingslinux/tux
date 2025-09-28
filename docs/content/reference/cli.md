@@ -13,7 +13,7 @@ uv run db       # Database management
 uv run test     # Testing operations
 uv run docker   # Docker operations
 uv run docs     # Documentation tools
-```text
+```
 
 ## Quick Examples
 
@@ -31,7 +31,7 @@ uv run dev all
 
 # Database operations
 uv run db upgrade
-```text
+```
 
 ### Common Operations
 
@@ -48,7 +48,7 @@ uv run db revision       # Create migration
 # Docker
 uv run docker up         # Start services
 uv run docker logs       # View logs
-```text
+```
 
 ## Auto-Generated CLI Documentation
 

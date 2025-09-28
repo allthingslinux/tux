@@ -18,7 +18,7 @@ sudo apt install python3.13 python3.13-dev python3.13-venv
 
 # macOS with Homebrew
 brew install python@3.13
-```text
+```
 
 ### uv (Python Package Manager)
 
@@ -29,7 +29,7 @@ source ~/.bashrc
 
 # Verify installation
 uv --version
-```text
+```
 
 ### PostgreSQL
 
@@ -43,7 +43,7 @@ brew install postgresql
 # Start PostgreSQL
 sudo systemctl start postgresql  # Linux
 brew services start postgresql   # macOS
-```text
+```
 
 ### Git
 
@@ -57,7 +57,7 @@ brew install git
 # Configure Git
 git config --global user.name "Your Name"
 git config --global user.email "your.email@example.com"
-```text
+```
 
 ### Optional Software
 
@@ -70,7 +70,7 @@ sudo usermod -aG docker $USER
 
 # macOS
 brew install docker docker-compose
-```text
+```
 
 ### VS Code (Recommended IDE)
 
@@ -84,7 +84,7 @@ brew install docker docker-compose
 # - Ruff
 # - GitLens
 # - Docker
-```text
+```
 
 ## Local Development Setup
 
@@ -97,7 +97,7 @@ cd tux
 
 # Create development branch
 git checkout -b feature/your-feature-name
-```text
+```
 
 ### 2. Python Environment
 
@@ -108,7 +108,7 @@ uv sync
 # Verify installation
 uv run python --version
 uv run python -c "import tux; print('Tux imported successfully')"
-```text
+```
 
 ### 3. Database Setup
 
@@ -123,7 +123,7 @@ CREATE DATABASE tux_dev;
 CREATE USER tux_dev WITH PASSWORD 'dev_password';
 GRANT ALL PRIVILEGES ON DATABASE tux_dev TO tux_dev;
 \q
-```text
+```
 
 **Configure Environment:**
 
@@ -133,7 +133,7 @@ cp .env.example .env
 
 # Edit .env file
 nano .env
-```text
+```
 
 **Example .env for development:**
 
@@ -153,7 +153,7 @@ DEBUG=true
 
 # Optional: Sentry (use test project)
 EXTERNAL_SERVICES__SENTRY_DSN=https://your-test-dsn@sentry.io/project-id
-```text
+```
 
 **Run Migrations:**
 
@@ -163,7 +163,7 @@ uv run db migrate-push
 
 # Verify database setup
 uv run db health
-```text
+```
 
 ### 4. Pre-commit Hooks
 
@@ -173,7 +173,7 @@ uv run dev pre-commit install
 
 # Test pre-commit hooks
 uv run dev pre-commit run --all-files
-```text
+```
 
 ### 5. Start Development
 
@@ -183,7 +183,7 @@ uv run tux start --debug
 
 # Or with auto-reload (if available)
 uv run tux start --debug --reload
-```text
+```
 
 ## Docker Development Setup
 
@@ -200,7 +200,7 @@ uv run docker logs -f
 
 # Stop services
 uv run docker down
-```text
+```
 
 **Services:**
 
@@ -221,7 +221,7 @@ docker-compose restart tux
 
 # View service logs
 uv run docker logs tux
-```text
+```
 
 **Database Operations:**
 
@@ -231,7 +231,7 @@ docker-compose exec tux uv run db migrate-push
 
 # Access database
 docker-compose exec postgres psql -U tux tux
-```text
+```
 
 **Shell Access:**
 
@@ -241,7 +241,7 @@ uv run docker shell
 
 # Run commands in container
 docker-compose exec tux uv run tux --help
-```text
+```
 
 ## Development Tools
 
@@ -257,7 +257,7 @@ uv run dev all
 uv run dev lint        # Ruff linting
 uv run dev format      # Code formatting
 uv run dev type-check  # Type checking with basedpyright
-```text
+```
 
 **Pre-commit Checks:**
 
@@ -267,7 +267,7 @@ uv run dev pre-commit run --all-files
 
 # Run pre-commit on staged files
 uv run dev pre-commit
-```text
+```
 
 ### Testing
 
@@ -285,7 +285,7 @@ uv run test run tests/test_specific.py
 
 # Run tests with specific marker
 uv run test run -m "not slow"
-```text
+```
 
 **Coverage Reports:**
 
@@ -297,7 +297,7 @@ uv run test html
 uv run test coverage
 
 # Coverage reports available in htmlcov/
-```text
+```
 
 ### Database Development
 
@@ -315,7 +315,7 @@ uv run db status
 
 # Rollback migration (if needed)
 uv run db migrate-rollback
-```text
+```
 
 **Database Utilities:**
 
@@ -328,7 +328,7 @@ uv run db reset
 
 # Seed database with test data
 uv run db seed
-```text
+```
 
 ## IDE Configuration
 
@@ -352,7 +352,7 @@ uv run db seed
         "htmlcov": true
     }
 }
-```text
+```
 
 **Recommended Extensions:**
 
@@ -397,7 +397,7 @@ uv run db migrate-push
 
 # Start development server
 uv run tux start --debug
-```text
+```
 
 **Code Quality Workflow:**
 
@@ -407,7 +407,7 @@ uv run dev all          # Run all quality checks
 uv run test run         # Run tests
 git add .               # Stage changes
 git commit -m "feat: add new feature"  # Commit with conventional format
-```text
+```
 
 ### Testing Workflow
 
@@ -428,7 +428,7 @@ uv run test run tests/test_new_feature.py
 
 # Run all tests
 uv run test run
-```text
+```
 
 **Integration Testing:**
 
@@ -439,7 +439,7 @@ uv run tux start --debug
 # Test commands in Discord
 # Verify database changes
 # Check logs for errors
-```text
+```
 
 ## Debugging
 
@@ -453,7 +453,7 @@ uv run tux start --debug
 
 # Enable specific debug categories
 LOG_LEVEL=DEBUG uv run tux start
-```text
+```
 
 **Python Debugger:**
 
@@ -463,7 +463,7 @@ import pdb; pdb.set_trace()
 
 # Or use built-in breakpoint()
 breakpoint()
-```text
+```
 
 **VS Code Debugging:**
 
@@ -484,7 +484,7 @@ breakpoint()
         }
     ]
 }
-```text
+```
 
 ### Database Debugging
 
@@ -493,7 +493,7 @@ breakpoint()
 ```bash
 # Enable SQL query logging
 DATABASE_URL=postgresql://user:pass@host:5432/db?echo=true
-```text
+```
 
 **Database Console:**
 
@@ -503,7 +503,7 @@ psql postgresql://tux_dev:dev_password@localhost:5432/tux_dev
 
 # Or through Docker
 docker-compose exec postgres psql -U tux tux
-```text
+```
 
 **Migration Debugging:**
 
@@ -516,7 +516,7 @@ uv run db current
 
 # Show pending migrations
 uv run db pending
-```text
+```
 
 ## Performance Profiling
 
@@ -530,7 +530,7 @@ uv add memory-profiler
 
 # Profile memory usage
 python -m memory_profiler src/tux/__main__.py
-```text
+```
 
 **Performance Profiling:**
 
@@ -549,7 +549,7 @@ def profile_function():
     stats = pstats.Stats(profiler)
     stats.sort_stats('cumulative')
     stats.print_stats()
-```text
+```
 
 ### Database Profiling
 
@@ -567,7 +567,7 @@ SELECT query, mean_time, calls
 FROM pg_stat_statements 
 ORDER BY mean_time DESC 
 LIMIT 10;
-```text
+```
 
 ## Troubleshooting
 
@@ -581,7 +581,7 @@ uv sync --reinstall
 
 # Check Python path
 uv run python -c "import sys; print(sys.path)"
-```text
+```
 
 **Database Connection Issues:**
 
@@ -594,7 +594,7 @@ psql postgresql://tux_dev:dev_password@localhost:5432/tux_dev
 
 # Check environment variables
 echo $DATABASE_URL
-```text
+```
 
 **Bot Permission Issues:**
 
@@ -603,7 +603,7 @@ echo $DATABASE_URL
 # Verify bot permissions in Discord
 # Check OAuth2 scopes
 # Re-invite bot if necessary
-```text
+```
 
 **Docker Issues:**
 
@@ -617,7 +617,7 @@ uv run docker build --no-cache
 
 # Check container logs
 uv run docker logs tux
-```text
+```
 
 ### Getting Help
 
@@ -648,7 +648,7 @@ nslookup discord.com
 # Check application logs
 journalctl -u tux -f
 tail -f /var/log/tux/tux.log
-```text
+```
 
 This development setup guide provides everything needed to start contributing to Tux. Follow the
 steps appropriate for your development environment and preferred tools.

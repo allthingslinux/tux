@@ -90,7 +90,7 @@ Check with server administrators about your permission level.
 !<name>                          # Use snippet
 !listsnippets                    # List all snippets
 !deletesnippet <name>            # Delete snippet
-```text
+```
 
 ### How does the leveling system work?
 
@@ -113,21 +113,21 @@ Use `/remindme <time> <message>`. Examples:
 /kick @user <reason>     # Kick user  
 /warn @user <reason>     # Warn user
 /timeout @user 1h <reason> # Timeout for 1 hour
-```text
+```
 
 ### How do I view moderation history?
 
 ```text
 /case <number>           # View specific case
 /cases @user             # View all cases for user
-```text
+```
 
 ### How do I edit or delete cases?
 
 ```text
 /editcase <number> reason "New reason"  # Edit case
 /deletecase <number>                    # Delete case
-```text
+```
 
 ### What's the difference between timeout and jail?
 

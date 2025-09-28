@@ -22,7 +22,7 @@ architecture principles with proper separation of concerns.
                        │     Models       │    │   PostgreSQL    │
                        │   (SQLModel)     │    │   Database      │
                        └──────────────────┘    └─────────────────┘
-```text
+```
 
 ### Layer Responsibilities
 
@@ -47,7 +47,7 @@ class MyCog(BaseCog):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
         self.guild_controller = GuildConfigController()  # Missing DB service
-```text
+```
 
 ### Service Access Patterns
 
@@ -61,7 +61,7 @@ async def advanced_operation(self) -> None:
     async with self.db.session() as session:
         # Complex multi-table operations
         result = await session.execute(custom_query)
-```text
+```
 
 ## Controller Patterns
 
@@ -90,7 +90,7 @@ class MyController(BaseController[MyModel]):
             raise ValueError("Invalid data")
         
         return await self.create(**data)
-```text
+```
 
 ### CRUD Operations
 
@@ -117,7 +117,7 @@ class UserController(BaseController[User]):
     async def find_users_by_guild(self, guild_id: int) -> list[User]:
         """Find users in specific guild."""
         return await self.find_all(filters=User.guild_id == guild_id)
-```text
+```
 
 ## Error Handling Patterns
 
@@ -142,7 +142,7 @@ async def get_or_create_config(self, guild_id: int) -> GuildConfig | None:
     except Exception as e:
         logger.error(f"Failed to get/create config for guild {guild_id}: {e}")
         return None
-```text
+```
 
 ### Transaction Error Handling
 
@@ -166,7 +166,7 @@ async def complex_operation(self, data: dict) -> bool:
         logger.error(f"Complex operation failed: {e}")
         # Transaction automatically rolled back
         return False
-```text
+```
 
 ## Query Patterns
 
@@ -184,7 +184,7 @@ users = await self.db.user.find_all(
 user = await self.db.user.get_by_id(user_id)
 if not user:
     user = await self.db.user.create(user_id=user_id, **defaults)
-```text
+```
 
 ### Complex Queries
 
@@ -201,7 +201,7 @@ async def get_top_users_by_activity(self, guild_id: int, limit: int = 10) -> lis
         )
         result = await session.execute(query)
         return result.scalars().all()
-```text
+```
 
 ### Relationship Queries
 
@@ -223,7 +223,7 @@ async def get_users_with_active_cases(self, guild_id: int) -> list[User]:
             User.cases.any(Case.is_active == True)
         )
     )
-```text
+```
 
 ## Transaction Management
 
@@ -234,7 +234,7 @@ async def get_users_with_active_cases(self, guild_id: int) -> list[User]:
 async def update_user_stats(self, user_id: int, **stats) -> User | None:
     """Update user statistics (automatically transactional)."""
     return await self.db.user.update_by_id(user_id, **stats)
-```text
+```
 
 ### Manual Transactions
 
@@ -267,7 +267,7 @@ async def transfer_points(self, from_user: int, to_user: int, points: int) -> bo
     except Exception as e:
         logger.error(f"Points transfer failed: {e}")
         return False
-```text
+```
 
 ## Performance Patterns
 
@@ -287,7 +287,7 @@ async def get_all_users_paginated(self, guild_id: int, page: int = 1) -> Paginat
 async def update_multiple_users(self, updates: list[dict]) -> int:
     """Bulk update users."""
     return await self.db.user.bulk_update(updates)
-```text
+```
 
 ### Caching Patterns
 
@@ -308,7 +308,7 @@ class GuildConfigController(BaseController[GuildConfig]):
         # Clear cache for this guild
         self.get_cached_config.cache_clear()
         return result
-```text
+```
 
 ## Model Patterns
 
@@ -347,7 +347,7 @@ class User(SQLModel, table=True):
         if not v or len(v.strip()) == 0:
             raise ValueError('Username cannot be empty')
         return v.strip()
-```text
+```
 
 ### Relationship Patterns
 
@@ -368,7 +368,7 @@ class User(SQLModel, table=True):
     # Many-to-one
     guild: Guild = Relationship(back_populates="users")
     cases: list[Case] = Relationship(back_populates="user")
-```text
+```
 
 ## Migration Patterns
 
@@ -400,7 +400,7 @@ def downgrade() -> None:
     """Remove points column from users table."""
     op.drop_index('ix_users_points', 'users')
     op.drop_column('users', 'points')
-```text
+```
 
 ### Data Migration
 
@@ -418,7 +418,7 @@ def upgrade() -> None:
     
     # Cleanup
     op.drop_column('users', 'old_field')
-```text
+```
 
 ## Testing Patterns
 
@@ -452,7 +452,7 @@ async def test_get_nonexistent_user(user_controller: UserController):
     """Test getting non-existent user."""
     user = await user_controller.get_user(999999)
     assert user is None
-```text
+```
 
 ### Integration Testing
 
@@ -480,7 +480,7 @@ async def test_user_points_transfer(db_service: DatabaseService):
     
     assert updated_sender.points == 50
     assert updated_receiver.points == 50
-```text
+```
 
 ## Anti-Patterns to Avoid
 
@@ -493,7 +493,7 @@ async def bad_command(self, ctx):
     async with self.bot.db.session() as session:
         user = await session.get(User, ctx.author.id)
         # Complex logic here...
-```text
+```
 
 ### ❌ Missing Error Handling
 
@@ -512,7 +512,7 @@ async def create_user(self, **data):
     except Exception as e:
         logger.error(f"Failed to create user: {e}")
         raise
-```text
+```
 
 ### ❌ N+1 Query Problems
 
@@ -526,7 +526,7 @@ for user in users:
 users = await self.db.user.find_all(
     options=[selectinload(User.cases)]
 )
-```text
+```
 
 ## Performance Guidelines
 
@@ -559,7 +559,7 @@ async def update_user_points(self, user_id: int, points: int) -> User | None:
         raise ValueError(f"Points cannot exceed {MAX_POINTS}")
     
     return await self.update_by_id(user_id, points=points)
-```text
+```
 
 ### SQL Injection Prevention
 
@@ -569,7 +569,7 @@ users = await self.find_all(filters=User.username == username)
 
 # ❌ BAD: Never use string formatting for queries
 # query = f"SELECT * FROM users WHERE username = '{username}'"  # NEVER DO THIS
-```text
+```
 
 ---
 
@@ -603,7 +603,7 @@ result = await self.db.user.paginate(page=1, per_page=20)
 async with self.db.transaction() as session:
     # Multiple operations
     pass
-```text
+```
 
 ### Error Handling Checklist
 

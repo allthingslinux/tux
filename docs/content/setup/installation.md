@@ -99,7 +99,7 @@ docker-compose up -d
 
 # Check logs
 docker-compose logs -f tux
-```text
+```
 
 **Environment Configuration:**
 
@@ -109,7 +109,7 @@ DISCORD_TOKEN=your_bot_token_here
 DATABASE_URL=postgresql://tux:password@postgres:5432/tux
 LOG_LEVEL=INFO
 ENVIRONMENT=production
-```text
+```
 
 ### Local Installation
 
@@ -143,7 +143,7 @@ uv run db migrate-push
 
 # Start bot
 uv run tux start
-```text
+```
 
 ### Cloud Platforms
 
@@ -156,7 +156,6 @@ uv run tux start
    - Connect Railway to your GitHub account
    - Create new project from your forked repository
    - Add PostgreSQL plugin
-
 
 3. **Configure Environment Variables**
 
@@ -280,7 +279,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable tux
 sudo systemctl start tux
 sudo systemctl status tux
-```text
+```
 
 ## Getting a Discord Bot Token
 
@@ -383,7 +382,7 @@ docker-compose logs -f tux
 
 # Database logs
 sudo tail -f /var/log/postgresql/postgresql-*.log
-```text
+```
 
 This installation guide covers all major deployment methods. Choose the option that best fits your
 technical expertise and requirements.

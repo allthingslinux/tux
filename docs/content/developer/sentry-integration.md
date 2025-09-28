@@ -22,7 +22,7 @@ effective debugging and monitoring.
                        │  Context &       │    │   Sentry.io     │
                        │  Utilities       │    │   Dashboard     │
                        └──────────────────┘    └─────────────────┘
-```text
+```
 
 ### Key Files
 
@@ -43,7 +43,7 @@ SENTRY_DSN=https://your-dsn@sentry.io/project-id
 # Optional
 SENTRY_ENVIRONMENT=production  # or development
 SENTRY_RELEASE=v1.0.0
-```text
+```
 
 ### Initialization
 
@@ -57,7 +57,7 @@ sentry_manager.setup()
 # Check if initialized
 if sentry_manager.is_initialized:
     logger.info("Sentry is ready")
-```text
+```
 
 ## Error Capture Patterns
 
@@ -72,7 +72,7 @@ except Exception as e:
     # Safe capture with automatic context
     capture_exception_safe(e, extra_context={"operation": "user_update"})
     raise  # Re-raise for normal error handling
-```text
+```
 
 ### Specialized Error Capture
 
@@ -91,7 +91,7 @@ except Exception as e:
         query="INSERT INTO users..."  # Optional
     )
     raise
-```text
+```
 
 #### API Errors
 
@@ -109,7 +109,7 @@ except httpx.HTTPStatusError as e:
         response_data=e.response.json() if e.response else None
     )
     raise
-```text
+```
 
 #### Cog Errors
 
@@ -125,7 +125,7 @@ except Exception as e:
         command_name="reload"  # Optional
     )
     raise
-```text
+```
 
 #### Tux-Specific Errors
 
@@ -143,7 +143,7 @@ except TuxConfigurationError as e:
         guild_id=str(ctx.guild.id)
     )
     raise
-```text
+```
 
 ## Context Management
 
@@ -159,7 +159,7 @@ sentry.set_user_context(ctx.author)
 
 # Or use in command context
 sentry.set_command_context(ctx)
-```text
+```
 
 ### Custom Context
 
@@ -174,7 +174,7 @@ sentry.set_context("database", {
 # Add tags for filtering
 sentry.set_tag("feature", "moderation")
 sentry.set_tag("guild_size", "large")
-```text
+```
 
 ### Breadcrumbs
 
@@ -199,7 +199,7 @@ sentry.add_breadcrumb(
     level="debug",
     data={"table": "cases", "operation": "insert"}
 )
-```text
+```
 
 ## Performance Monitoring
 
@@ -214,7 +214,7 @@ with sentry.start_transaction(op="command", name="ban_user") as transaction:
     # Add transaction data
     transaction.set_data("user_count", len(users))
     transaction.set_tag("command_type", "moderation")
-```text
+```
 
 ### Span Tracking
 
@@ -227,7 +227,7 @@ with sentry.start_span(op="database", description="fetch_user_cases") as span:
 with sentry.start_span(op="discord_api", description="send_dm") as span:
     await user.send("You have been banned")
     span.set_tag("message_type", "dm")
-```text
+```
 
 ### Command Performance
 
@@ -248,7 +248,7 @@ async def my_command(self, ctx: commands.Context[Tux]) -> None:
         # Track failed completion
         sentry.track_command_end("my_command", success=False, error=e)
         raise
-```text
+```
 
 ## Integration Patterns
 
@@ -288,7 +288,7 @@ class MyCog(BaseCog):
             )
             await ctx.send("An unexpected error occurred.")
             raise  # Let global error handler manage user feedback
-```text
+```
 
 ### Service Initialization
 
@@ -317,7 +317,7 @@ class MyService:
                 }
             )
             raise
-```text
+```
 
 ### Background Tasks
 
@@ -350,7 +350,7 @@ async def background_cleanup_task():
             )
             transaction.set_status("internal_error")
             raise
-```text
+```
 
 ## Event Filtering & Sampling
 
@@ -372,7 +372,7 @@ def before_send(event, hint):
         return None
     
     return event
-```text
+```
 
 ### Sampling Configuration
 
@@ -393,7 +393,7 @@ def traces_sampler(sampling_context):
         return 0.01
     
     return 0.1  # Default 10% sampling
-```text
+```
 
 ## Testing with Sentry
 
@@ -420,7 +420,7 @@ def mock_sentry():
     with patch('tux.services.sentry.is_initialized', return_value=True):
         with patch('sentry_sdk.capture_exception') as mock_capture:
             yield mock_capture
-```text
+```
 
 ### Integration Tests
 
@@ -437,7 +437,7 @@ async def test_command_with_sentry(mock_sentry):
     # Verify context was set correctly
     call_args = mock_sentry.call_args
     assert "command" in str(call_args)
-```text
+```
 
 ## Monitoring & Alerting
 
@@ -465,7 +465,7 @@ if command_duration > 5 seconds:
 # Database connection issues
 if database_errors > 5 per minute:
     notify_infrastructure_team()
-```text
+```
 
 ### Dashboard Setup
 
@@ -497,7 +497,7 @@ sentry.set_user_context(ctx.author)
 # Use transactions for performance monitoring
 with sentry.start_transaction(op="command", name="ban"):
     # Command logic
-```text
+```
 
 ### ❌ DON'T
 
@@ -520,7 +520,7 @@ for item in large_list:
         process(item)
     except Exception as e:
         capture_exception_safe(e)  # Will spam Sentry
-```text
+```
 
 ## Troubleshooting
 
@@ -533,7 +533,7 @@ for item in large_list:
 if not sentry.is_initialized:
     logger.warning("Sentry not initialized - check SENTRY_DSN")
     return
-```text
+```
 
 #### Too Many Events
 
@@ -550,7 +550,7 @@ def should_capture_error(error_type: str, timestamp_minute: int) -> bool:
 # Usage
 if should_capture_error(type(e).__name__, int(time() // 60)):
     capture_exception_safe(e)
-```text
+```
 
 #### Missing Context
 
@@ -566,7 +566,7 @@ capture_exception_safe(
         "reason": ban_reason
     }
 )
-```text
+```
 
 ### Debug Mode
 
@@ -577,7 +577,7 @@ sentry_sdk.init(
     debug=True,  # Enables verbose logging
     # ... other config
 )
-```text
+```
 
 ## Performance Considerations
 
@@ -601,7 +601,7 @@ sentry_sdk.init(
 with sentry_sdk.push_scope():
     # Temporary context
     pass  # Context automatically cleared
-```text
+```
 
 ## Security Considerations
 
@@ -623,7 +623,7 @@ def sanitize_user_data(data):
     return sanitized
 
 capture_exception_safe(e, extra_context=sanitize_user_data(user_data))
-```text
+```
 
 ### Data Retention
 
@@ -653,7 +653,7 @@ capture_cog_error(e, cog_name="moderation", command_name="ban")
 # Performance monitoring
 with sentry.start_transaction(op="command", name="ban_user"):
     # Command logic
-```text
+```
 
 ### Advanced Context Management
 
@@ -669,7 +669,7 @@ sentry.set_context("database", {"pool_size": 10})
 
 # Add tags
 sentry.set_tag("feature", "moderation")
-```text
+```
 
 ---
 

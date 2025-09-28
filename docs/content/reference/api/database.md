@@ -7,7 +7,7 @@ The architecture provides type-safe database operations with both async and sync
 
 ```text
 Bot → DatabaseCoordinator → Controllers → BaseController → Specialized Services
-```text
+```
 
 - **DatabaseService**: Connection management and session handling
 - **DatabaseCoordinator**: Central access point for all controllers
@@ -31,7 +31,7 @@ class MyCog(BaseCog):
             guild_id=ctx.guild.id,
             case_reason="Spam"
         )
-```text
+```
 
 ### Available Controllers
 
@@ -75,7 +75,7 @@ success = await self.db.case.delete_by_id(case_id)
 
 # Count
 total_cases = await self.db.case.count(filters={"guild_id": guild_id})
-```text
+```
 
 ### Advanced Query Operations
 
@@ -97,7 +97,7 @@ guild, created = await self.db.guild.get_or_create(
     guild_id=guild_id,
     defaults={"guild_name": guild.name}
 )
-```text
+```
 
 ### Bulk Operations
 
@@ -112,7 +112,7 @@ updated_count = await self.db.case.update_where(
 deleted_count = await self.db.case.delete_where(
     filters={"guild_id": guild_id, "case_type": "TEMP"}
 )
-```text
+```
 
 ### Upsert Operations
 
@@ -129,7 +129,7 @@ permission, created = await self.db.guild_permissions.upsert(
     defaults={"permission_level": "MEMBER"},
     permission_level="MODERATOR"
 )
-```text
+```
 
 ## Models
 
@@ -151,7 +151,7 @@ case = Case(
     case_status=True,             # Active/inactive
     case_created_at=datetime.now()
 )
-```text
+```
 
 #### Guild
 
@@ -163,7 +163,7 @@ guild = Guild(
     guild_name="My Server",
     case_count=42  # Auto-incremented
 )
-```text
+```
 
 #### GuildConfig
 
@@ -177,7 +177,7 @@ config = GuildConfig(
     jail_channel_id=777888999,
     jail_role_id=123123123
 )
-```text
+```
 
 ### Enums
 
@@ -193,7 +193,7 @@ CaseType.JAIL
 CaseType.TEMPBAN
 CaseType.POLLBAN
 CaseType.SNIPPETBAN
-```text
+```
 
 ## Controller-Specific Methods
 
@@ -220,7 +220,7 @@ case = await self.db.case.get_case_by_number(42, guild_id)
 
 # Get recent cases with limit
 recent = await self.db.case.get_recent_cases(guild_id, limit=10)
-```text
+```
 
 ### GuildConfigController
 
@@ -240,7 +240,7 @@ prefix = await self.db.guild_config.get_config_field(
     "prefix", 
     default="!"
 )
-```text
+```
 
 ### AfkController
 
@@ -260,7 +260,7 @@ await self.db.afk.remove_member_afk(user_id, guild_id)
 
 # Get AFK information
 afk_info = await self.db.afk.get_afk_by_member(user_id, guild_id)
-```text
+```
 
 ## Database Service
 
@@ -279,7 +279,7 @@ if self.db_service.is_connected():
 
 # Cleanup on shutdown
 await self.db_service.disconnect()
-```text
+```
 
 ### Session Handling
 
@@ -292,7 +292,7 @@ async with self.db.case.with_session() as session:
     case1 = await self.db.case.create(...)
     case2 = await self.db.case.create(...)
     # Automatically committed
-```text
+```
 
 ## Migrations
 
@@ -307,7 +307,7 @@ uv run db migrate-push
 
 # Check database health
 uv run db health
-```text
+```
 
 ## Testing
 
@@ -330,7 +330,7 @@ async def test_case_creation(db_service):
     controller = CaseController(db_service)
     case = await controller.create_case(...)
     assert case.case_id is not None
-```text
+```
 
 ### Mocking Database Operations
 
@@ -344,7 +344,7 @@ async def test_with_mock():
     # Test your logic with mocked database
     result = await some_function(mock_db)
     assert result is not None
-```text
+```
 
 ## Performance Considerations
 
@@ -365,7 +365,7 @@ recent = await self.db.case.find_all(
 
 # Use count() instead of len(find_all())
 total = await self.db.case.count(filters={"guild_id": guild_id})
-```text
+```
 
 ### Using Bulk Operations
 
@@ -381,7 +381,7 @@ await self.db.case.update_where(
     filters={"case_id": {"in": case_ids}},
     values={"case_status": False}
 )
-```text
+```
 
 ## Error Handling
 
@@ -397,7 +397,7 @@ except Exception as e:
     # Handle other database errors
     logger.error(f"Database error: {e}")
     await ctx.send("An error occurred")
-```text
+```
 
 ## Best Practices
 
@@ -408,7 +408,7 @@ from tux.database.models import Case
 
 async def get_user_cases(self, user_id: int, guild_id: int) -> list[Case]:
     return await self.db.case.get_cases_by_user(user_id, guild_id)
-```text
+```
 
 ### 2. Handle None Results
 
@@ -419,7 +419,7 @@ if case is None:
     return
 
 # Continue with case operations
-```text
+```
 
 ### 3. Use Transactions for Related Operations
 
@@ -432,7 +432,7 @@ async with self.db.case.with_session() as session:
     await self.db.guild.update_by_id(guild_id, case_count=guild.case_count + 1)
     
     # Both operations committed together
-```text
+```
 
 ### 4. Validate Input Data
 
@@ -444,7 +444,7 @@ case = await self.db.case.create_case(
     case_user_id=user_id,
     # ... other fields
 )
-```text
+```
 
 ## Common Patterns
 
@@ -461,7 +461,7 @@ async def get_cases_paginated(self, guild_id: int, page: int = 1, per_page: int 
     )
     total = await self.db.case.count(filters={"guild_id": guild_id})
     return cases, total
-```text
+```
 
 ### Soft Delete Pattern
 
@@ -473,7 +473,7 @@ await self.db.case.update_by_id(case_id, case_status=False)
 active_cases = await self.db.case.find_all(
     filters={"guild_id": guild_id, "case_status": True}
 )
-```text
+```
 
 ### Configuration with Defaults
 
@@ -481,7 +481,7 @@ active_cases = await self.db.case.find_all(
 async def get_guild_prefix(self, guild_id: int) -> str:
     config = await self.db.guild_config.get_config_by_guild_id(guild_id)
     return config.prefix if config else "!"
-```text
+```
 
 This database layer provides a robust, type-safe foundation for all data operations in Tux while
 maintaining clean separation of concerns and excellent performance.

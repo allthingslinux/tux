@@ -208,7 +208,7 @@ Tux uses a flexible permission system with role-based access control:
 ```bash
 /config prefix set ?         # Set your preferred command prefix
 /config logs set Public      # Configure where logs are sent
-```text
+```
 
 **Optional Configuration:**
 
@@ -238,21 +238,21 @@ Server administrators may need to configure these environment variables:
 
 ```text
 /config log_channel #mod-logs
-```text
+```
 
 **Jail Channel:**
 
 ```text
 /config jail_channel #jail
 /config jail_role @Jailed
-```text
+```
 
 **Starboard:**
 
 ```text
 /config starboard_channel #starboard
 /config starboard_threshold 5
-```text
+```
 
 ## Troubleshooting
 

@@ -28,7 +28,7 @@ nano .env
 
 # Start with Docker Compose
 docker-compose up -d
-```text
+```
 
 **Docker Compose Configuration:**
 
@@ -59,7 +59,7 @@ services:
 
 volumes:
   postgres_data:
-```text
+```
 
 **Production Considerations:**
 
@@ -139,7 +139,7 @@ uv run db migrate-push
 
 # Create systemd service
 sudo nano /etc/systemd/system/tux.service
-```text
+```
 
 **Systemd Service Configuration:**
 
@@ -159,7 +159,7 @@ RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
-```text
+```
 
 **Enable and Start Service:**
 
@@ -168,7 +168,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable tux
 sudo systemctl start tux
 sudo systemctl status tux
-```text
+```
 
 ### Self-Hosting Considerations
 
@@ -213,7 +213,7 @@ POSTGRES_PASSWORD=secure_password
 
 # Optional: Debug mode
 DEBUG=true
-```text
+```
 
 **Optional Variables:**
 
@@ -231,7 +231,7 @@ POOL_SIZE=20
 # Features
 ENABLE_METRICS=true
 ENABLE_TRACING=false
-```text
+```
 
 ### Database Configuration
 
@@ -245,14 +245,14 @@ GRANT ALL PRIVILEGES ON DATABASE tux TO tux;
 
 -- Configure connection limits (optional)
 ALTER USER tux CONNECTION LIMIT 20;
-```text
+```
 
 **Connection Pool Settings:**
 
 ```python
 # In production, configure connection pooling
 DATABASE_URL=postgresql://user:pass@host:5432/db?pool_size=20&max_overflow=30
-```text
+```
 
 **Database Maintenance:**
 
@@ -268,7 +268,7 @@ pg_dump -h localhost -U tux tux > backup_$(date +%Y%m%d).sql
 
 # Restore database
 psql -h localhost -U tux tux < backup_20240101.sql
-```text
+```
 
 ### Discord Bot Configuration
 
@@ -298,7 +298,7 @@ Required permissions for full functionality:
 
 ```text
 https://discord.com/api/oauth2/authorize?client_id=YOUR_BOT_ID&permissions=1099511627775&scope=bot%20applications.commands
-```text
+```
 
 ### External Services
 
@@ -332,7 +332,7 @@ uv run db health
 htop
 df -h
 free -h
-```text
+```
 
 **Automated Health Checks:**
 
@@ -344,7 +344,7 @@ if ! systemctl is-active --quiet tux; then
     systemctl restart tux
     # Send alert notification
 fi
-```text
+```
 
 ### Logging
 
@@ -371,7 +371,7 @@ fi
         systemctl reload tux
     endscript
 }
-```text
+```
 
 ### Performance Monitoring
 
@@ -402,14 +402,14 @@ pg_dump -h localhost -U tux tux | gzip > /backups/tux_$DATE.sql.gz
 
 # Keep only last 30 days
 find /backups -name "tux_*.sql.gz" -mtime +30 -delete
-```text
+```
 
 **Configuration Backups:**
 
 ```bash
 # Backup configuration files
 tar -czf config_backup_$(date +%Y%m%d).tar.gz .env docker-compose.yml
-```text
+```
 
 **Recovery Procedures:**
 
@@ -462,7 +462,7 @@ journalctl -u tux -f
 
 # Check database logs
 sudo tail -f /var/log/postgresql/postgresql-*.log
-```text
+```
 
 ### Scaling Considerations
 

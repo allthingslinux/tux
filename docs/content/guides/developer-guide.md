@@ -27,14 +27,14 @@ development patterns.
 git clone https://github.com/allthingslinux/tux.git
 cd tux
 uv sync
-```text
+```
 
 **2. Configure Environment:**
 
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
-```text
+```
 
 **3. Database Setup:**
 
@@ -45,13 +45,13 @@ uv run db migrate-push
 
 # Or use Docker
 uv run docker up
-```text
+```
 
 **4. Start Development:**
 
 ```bash
 uv run tux start --debug
-```text
+```
 
 ### Development Environment Options
 
@@ -78,7 +78,7 @@ uv run db migrate-push
 
 # Start bot
 uv run tux start --debug
-```text
+```
 
 **Environment Variables:**
 
@@ -88,7 +88,7 @@ DISCORD_TOKEN=your_bot_token
 DATABASE_URL=postgresql://localhost:5432/tux
 LOG_LEVEL=DEBUG
 ENVIRONMENT=development
-```text
+```
 
 #### Docker Development
 
@@ -112,7 +112,7 @@ uv run docker shell
 
 # Stop services
 uv run docker down
-```text
+```
 
 **Docker Compose Services:**
 
@@ -138,7 +138,7 @@ uv run db migrate-push
 
 # Start bot with debug logging
 uv run tux start --debug
-```text
+```
 
 **Code Quality Checks:**
 
@@ -150,7 +150,7 @@ uv run dev all
 uv run dev lint      # Ruff linting
 uv run dev format    # Code formatting
 uv run dev type-check # Type checking
-```text
+```
 
 **Testing:**
 
@@ -166,7 +166,7 @@ uv run test html
 
 # Run benchmark tests
 uv run test benchmark
-```text
+```
 
 ### Git Workflow
 
@@ -186,7 +186,7 @@ type(scope): description
 feat(moderation): add timeout command
 fix(database): resolve connection pool issue
 docs(api): update database documentation
-```text
+```
 
 **Pull Request Process:**
 
@@ -209,7 +209,7 @@ src/tux/
 ├── services/       # External services integration
 ├── shared/         # Shared utilities and types
 └── __main__.py     # Application entry point
-```text
+```
 
 **Module Structure:**
 
@@ -227,7 +227,7 @@ class ExampleCog(BaseCog):
 
 async def setup(bot):
     await bot.add_cog(ExampleCog(bot))
-```text
+```
 
 ## Architecture Overview
 
@@ -261,7 +261,7 @@ async def setup(bot):
 ```python
 # Database access through repositories
 cases = await self.db.case.get_cases_by_user(user_id, guild_id)
-```text
+```
 
 **Dependency Injection:**
 
@@ -271,7 +271,7 @@ class MyCog(BaseCog):
     def __init__(self, bot):
         super().__init__(bot)
         self.db = bot.db  # Database coordinator
-```text
+```
 
 **Error Handling:**
 
@@ -280,7 +280,7 @@ class MyCog(BaseCog):
 @commands.Cog.listener()
 async def on_command_error(self, ctx, error):
     # Automatic error categorization and user feedback
-```text
+```
 
 ## Adding Features
 
@@ -294,7 +294,7 @@ async def hello(self, ctx, name: str = None):
     """Say hello to someone."""
     target = name or ctx.author.mention
     await ctx.send(f"Hello, {target}!")
-```text
+```
 
 **Slash Command:**
 
@@ -305,7 +305,7 @@ async def info(self, interaction: discord.Interaction, user: discord.Member = No
     target = user or interaction.user
     embed = discord.Embed(title=f"Info for {target}")
     await interaction.response.send_message(embed=embed)
-```text
+```
 
 **Hybrid Command:**
 
@@ -315,7 +315,7 @@ async def ping(self, ctx):
     """Check bot latency."""
     latency = round(self.bot.latency * 1000)
     await ctx.send(f"Pong! {latency}ms")
-```text
+```
 
 ### Database Operations
 
@@ -329,7 +329,7 @@ class MyModel(SQLModel, table=True):
     id: int = Field(primary_key=True)
     name: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
-```text
+```
 
 **Database Operations:**
 
@@ -346,7 +346,7 @@ updated = await self.db.my_model.update_by_id(1, name="new_name")
 
 # Delete
 success = await self.db.my_model.delete_by_id(1)
-```text
+```
 
 ### Adding Permissions
 
@@ -360,7 +360,7 @@ from tux.core.checks import has_permission
 async def moderate(self, ctx):
     """Moderator-only command."""
     pass
-```text
+```
 
 **Custom Checks:**
 
@@ -375,7 +375,7 @@ def is_guild_owner():
 async def owner_only(self, ctx):
     """Guild owner only command."""
     pass
-```text
+```
 
 ## Testing
 
@@ -389,7 +389,7 @@ tests/
 ├── integration/    # Integration tests
 ├── fixtures/       # Test data and fixtures
 └── conftest.py     # Pytest configuration
-```text
+```
 
 **Writing Tests:**
 
@@ -409,7 +409,7 @@ async def test_create_case(db_service):
     )
     assert case.case_type == "BAN"
     assert case.case_user_id == 123
-```text
+```
 
 **Test Commands:**
 
@@ -425,7 +425,7 @@ uv run test run -m "not slow"
 
 # Generate coverage report
 uv run test html
-```text
+```
 
 ### Mocking
 
@@ -439,7 +439,7 @@ def mock_db():
     db = AsyncMock()
     db.case.create_case.return_value = Case(case_id=1, ...)
     return db
-```text
+```
 
 **Discord Mocking:**
 
@@ -452,7 +452,7 @@ def mock_ctx():
     ctx.author.id = 123
     ctx.guild.id = 456
     return ctx
-```text
+```
 
 ## Database Development
 
@@ -469,7 +469,7 @@ uv run db migrate-push
 
 # Check migration status
 uv run db migrate-status
-```text
+```
 
 **Migration Best Practices:**
 
@@ -489,7 +489,7 @@ class UserRepository:
     
     async def get_user_by_discord_id(self, discord_id: int) -> User | None:
         return await self.db.user.find_one({"discord_id": discord_id})
-```text
+```
 
 **Transaction Management:**
 
@@ -498,7 +498,7 @@ async with self.db.case.with_session() as session:
     # Multiple operations in same transaction
     case = await self.db.case.create(...)
     await self.db.guild.update_case_count(guild_id)
-```text
+```
 
 ## Error Handling & Monitoring
 
@@ -519,7 +519,7 @@ async def risky_command(self, ctx):
     except Exception as e:
         await ctx.send("An unexpected error occurred.")
         logger.error(f"Unexpected error: {e}", exc_info=True)
-```text
+```
 
 **Global Error Handler:**
 
@@ -527,7 +527,7 @@ async def risky_command(self, ctx):
 # Automatically handles uncaught command errors
 # Provides user-friendly messages
 # Logs errors to Sentry for monitoring
-```text
+```
 
 ### Logging
 
@@ -543,7 +543,7 @@ logger.info("Command executed",
            command="ban", 
            user_id=ctx.author.id,
            guild_id=ctx.guild.id)
-```text
+```
 
 **Log Levels:**
 
@@ -563,7 +563,7 @@ import sentry_sdk
 # Performance monitoring
 # Release tracking
 # User context
-```text
+```
 
 ## Performance Considerations
 
@@ -583,7 +583,7 @@ recent = await self.db.case.find_all(
     order_by=Case.created_at.desc(),
     limit=10
 )
-```text
+```
 
 **Connection Pooling:**
 
@@ -591,7 +591,7 @@ recent = await self.db.case.find_all(
 # Configured automatically
 # Monitor connection usage
 # Tune pool size for load
-```text
+```
 
 ### Memory Management
 
@@ -604,7 +604,7 @@ from functools import lru_cache
 def expensive_computation(data):
     # Cache expensive operations
     return result
-```text
+```
 
 **Resource Cleanup:**
 
@@ -613,7 +613,7 @@ def expensive_computation(data):
 async with self.db.session() as session:
     # Session automatically closed
     pass
-```text
+```
 
 ## Contributing Guidelines
 
@@ -651,7 +651,7 @@ async def create_case(self, case_type: str, user_id: int) -> Case:
     Raises:
         ValueError: If case_type is invalid
     """
-```text
+```
 
 **Code Comments:**
 
@@ -660,7 +660,7 @@ async def create_case(self, case_type: str, user_id: int) -> Case:
 # Complex business logic
 # Non-obvious optimizations
 # Temporary workarounds
-```text
+```
 
 ### Pull Request Guidelines
 

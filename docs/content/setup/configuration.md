@@ -12,7 +12,7 @@ configuration.
 ```bash
 # Your Discord bot token
 DISCORD_TOKEN=<your_discord_token>
-```text
+```
 
 **Database Configuration:**
 
@@ -26,7 +26,7 @@ POSTGRES_PASSWORD=your_secure_password
 
 # OR use complete database URL override
 DATABASE_URL=postgresql+psycopg://user:password@host:port/database
-```text
+```
 
 ### Optional Variables
 
@@ -38,7 +38,7 @@ DEBUG=true  # true/false
 
 # External services (optional)
 EXTERNAL_SERVICES__SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id
-```text
+```
 
 **Performance Tuning:**
 
@@ -53,7 +53,7 @@ MAX_WORKERS=4
 # Enable performance monitoring
 ENABLE_METRICS=true
 ENABLE_TRACING=false
-```text
+```
 
 **Feature Toggles:**
 
@@ -62,7 +62,7 @@ ENABLE_TRACING=false
 ENABLE_LEVELS=true
 ENABLE_STARBOARD=true
 ENABLE_SNIPPETS=true
-```text
+```
 
 ### Environment File Setup
 
@@ -74,7 +74,7 @@ cp .env.example .env
 
 # Edit with your settings
 nano .env
-```text
+```
 
 **Example .env file:**
 
@@ -94,7 +94,7 @@ DEBUG=false
 
 # Optional: Error tracking
 EXTERNAL_SERVICES__SENTRY_DSN=https://abc123@o123456.ingest.sentry.io/123456
-```text
+```
 
 ## Discord Bot Setup
 
@@ -132,7 +132,7 @@ Attach Files                   - File uploads
 Read Message History           - Context awareness
 Use External Emojis           - Custom emojis
 Add Reactions                 - Reaction features
-```text
+```
 
 **Moderation Permissions:**
 
@@ -142,7 +142,7 @@ Kick Members                  - Kick command
 Ban Members                   - Ban command
 Moderate Members              - Timeout command
 Manage Roles                  - Jail system
-```text
+```
 
 **Permission Integer:** `1099511627775`
 
@@ -157,7 +157,7 @@ Manage Roles                  - Jail system
 
 ```text
 https://discord.com/api/oauth2/authorize?client_id=YOUR_BOT_ID&permissions=1099511627775&scope=bot%20applications.commands
-```text
+```
 
 ### Intents Configuration
 
@@ -169,7 +169,7 @@ intents = discord.Intents.default()
 intents.message_content = True  # For prefix commands
 intents.members = True          # For member events
 intents.guilds = True          # For guild events
-```text
+```
 
 ## Database Configuration
 
@@ -188,7 +188,7 @@ brew install postgresql
 sudo systemctl start postgresql
 # or
 brew services start postgresql
-```text
+```
 
 **Database Creation:**
 
@@ -203,7 +203,7 @@ GRANT ALL PRIVILEGES ON DATABASE tux TO tux;
 
 -- Optional: Set connection limit
 ALTER USER tux CONNECTION LIMIT 20;
-```text
+```
 
 **Connection String Format:**
 
@@ -214,7 +214,7 @@ Examples:
 postgresql://tux:password@localhost:5432/tux
 postgresql://tux:password@localhost:5432/tux?sslmode=require
 postgresql://tux:password@db.example.com:5432/tux?pool_size=20
-```text
+```
 
 ### Database Migrations
 
@@ -229,7 +229,7 @@ uv run db status
 
 # Check database health
 uv run db health
-```text
+```
 
 **Creating Migrations:**
 
@@ -242,7 +242,7 @@ uv run db migrate-generate "description of changes"
 
 # Apply migration
 uv run db migrate-push
-```text
+```
 
 ### Connection Pooling
 
@@ -254,13 +254,13 @@ DB_POOL_SIZE=20        # Initial pool size
 DB_MAX_OVERFLOW=30     # Maximum overflow connections
 DB_POOL_TIMEOUT=30     # Connection timeout (seconds)
 DB_POOL_RECYCLE=3600   # Connection recycle time (seconds)
-```text
+```
 
 **Connection String Parameters:**
 
 ```text
 postgresql://user:pass@host:5432/db?pool_size=20&max_overflow=30&pool_timeout=30
-```text
+```
 
 ### Backup Configuration
 
@@ -274,14 +274,14 @@ pg_dump -h localhost -U tux tux | gzip > /backups/tux_$DATE.sql.gz
 
 # Keep only last 30 days
 find /backups -name "tux_*.sql.gz" -mtime +30 -delete
-```text
+```
 
 **Cron Job:**
 
 ```bash
 # Daily backup at 2 AM
 0 2 * * * /path/to/backup.sh
-```text
+```
 
 ## Bot Configuration
 
@@ -298,7 +298,7 @@ find /backups -name "tux_*.sql.gz" -mtime +30 -delete
 
 # Change command prefix
 /config prefix set ?
-```text
+```
 
 **Permission Levels:**
 
@@ -310,7 +310,7 @@ find /backups -name "tux_*.sql.gz" -mtime +30 -delete
 # Available levels:
 # member, supporter, junior_moderator, moderator, 
 # senior_moderator, administrator, owner
-```text
+```
 
 **Feature Configuration:**
 
@@ -325,7 +325,7 @@ find /backups -name "tux_*.sql.gz" -mtime +30 -delete
 # Welcome messages
 !config welcome_channel #general
 !config welcome_message "Welcome {user} to {guild}!"
-```text
+```
 
 ### Configuration File
 
@@ -344,7 +344,7 @@ global:
   default_prefix: "!"
   max_cases_per_page: 10
   command_cooldown: 5
-```text
+```
 
 ## External Services Configuration
 
@@ -367,7 +367,7 @@ SENTRY_RELEASE=v1.0.0
 # Optional: Performance monitoring
 SENTRY_TRACES_SAMPLE_RATE=0.1
 SENTRY_PROFILES_SAMPLE_RATE=0.1
-```text
+```
 
 **Features:**
 
@@ -398,7 +398,7 @@ SENTRY_PROFILES_SAMPLE_RATE=0.1
   "user_id": 123456789,
   "guild_id": 987654321
 }
-```text
+```
 
 **Log Rotation:**
 
@@ -413,7 +413,7 @@ SENTRY_PROFILES_SAMPLE_RATE=0.1
     notifempty
     create 644 tux tux
 }
-```text
+```
 
 ## Security Configuration
 
@@ -437,7 +437,7 @@ kubectl create secret generic tux-secrets --from-literal=discord-token=your_toke
 
 # HashiCorp Vault
 vault kv put secret/tux discord_token=your_token
-```text
+```
 
 ### Database Security
 
@@ -449,7 +449,7 @@ DATABASE_URL=postgresql://user:pass@host:5432/db?sslmode=require
 
 # Certificate verification
 DATABASE_URL=postgresql://user:pass@host:5432/db?sslmode=verify-full&sslcert=client.crt&sslkey=client.key&sslrootcert=ca.crt
-```text
+```
 
 **Access Control:**
 
@@ -461,7 +461,7 @@ GRANT CONNECT ON DATABASE tux TO tux;
 -- Limit connection sources
 # pg_hba.conf
 host tux tux 10.0.0.0/8 md5
-```text
+```
 
 ### Network Security
 
@@ -476,7 +476,7 @@ sudo ufw enable
 # iptables
 iptables -A INPUT -p tcp --dport 5432 -s 10.0.0.0/8 -j ACCEPT
 iptables -A INPUT -p tcp --dport 5432 -j DROP
-```text
+```
 
 ## Monitoring Configuration
 
@@ -493,7 +493,7 @@ uv run db health
 
 # Bot status check
 uv run tux status
-```text
+```
 
 **Automated Monitoring:**
 
@@ -505,7 +505,7 @@ if ! systemctl is-active --quiet tux; then
     systemctl restart tux
     # Send alert
 fi
-```text
+```
 
 ### Metrics Collection
 
@@ -517,7 +517,7 @@ ENABLE_METRICS=true
 METRICS_PORT=8080
 
 # Metrics available at http://localhost:8080/metrics
-```text
+```
 
 **Key Metrics:**
 

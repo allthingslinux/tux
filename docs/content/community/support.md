@@ -13,20 +13,20 @@ questions.
 /help                    # Show all commands
 /help <command>          # Get help for specific command
 !help                    # Prefix version
-```text
+```
 
 **Check Bot Status:**
 
 ```text
 /ping                    # Check bot latency
-```text
+```
 
 **Configuration:**
 
 ```text
 /config prefix set ?         # Change command prefix
 /config logs set Public      # Set log channel
-```text
+```
 
 ### First Steps Checklist
 
@@ -108,7 +108,7 @@ If Tux isn't working properly:
 /ping                    # Test basic functionality
 !ping                    # Test prefix commands
 /help                    # Check if slash commands work
-```text
+```
 
 ### Commands Not Working
 
@@ -128,7 +128,7 @@ If Tux isn't working properly:
 # Incorrect
 /ban user spam          # Missing @ mention
 /ban @user              # Missing reason (if required)
-```text
+```
 
 ### Moderation Issues
 
@@ -150,7 +150,7 @@ If Tux isn't working properly:
 ```text
 /case 123               # Check if case exists
 /cases @user            # Check user's case history
-```text
+```
 
 ### Database/Configuration Issues
 
@@ -160,13 +160,13 @@ If Tux isn't working properly:
 /config                 # View current configuration
 /config log_channel #logs # Set log channel
 /config prefix !        # Reset prefix
-```text
+```
 
 **Permission System:**
 
 ```text
 # Check with server administrators about permissions
-```text
+```
 
 ## Frequently Asked Questions
 
@@ -272,7 +272,7 @@ A: Join our Discord server and ask in the `#self-hosting` channel.
 ```text
 /ping                   # Bot latency
 /config                 # Current configuration
-```text
+```
 
 **Include in Bug Reports:**
 
