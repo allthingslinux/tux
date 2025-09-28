@@ -50,17 +50,23 @@ def get_db_service_from(source: commands.Context[Tux] | discord.Interaction | Tu
     bot = _resolve_bot(source)
     if bot is None:
         return None
-    container = getattr(bot, "container", None)
-    if container is None:
-        return None
-    try:
-        # Try to get DatabaseService directly
-        db_service = container.get_optional(DatabaseService)
-        if db_service is not None:
-            return db_service
 
-    except Exception as e:
-        logger.debug(f"Failed to resolve DatabaseService from container: {e}")
+    # First try to get from container (if it exists)
+    container = getattr(bot, "container", None)
+    if container is not None:
+        try:
+            # Try to get DatabaseService directly
+            db_service = container.get_optional(DatabaseService)
+            if db_service is not None:
+                return db_service
+        except Exception as e:
+            logger.debug(f"Failed to resolve DatabaseService from container: {e}")
+
+    # Fallback: try to get db_service directly from bot
+    db_service = getattr(bot, "db_service", None)
+    if db_service is not None:
+        return db_service
+
     return None
 
 
