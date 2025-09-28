@@ -29,7 +29,7 @@ _state = _LoggingState()
 
 
 def configure_logging(
-    environment: str | None = None,
+    environment: str | None = None,  # Keep for backward compatibility but ignore
     level: str | None = None,
     enable_file_logging: bool | None = None,
 ) -> None:
@@ -39,12 +39,9 @@ def configure_logging(
     This function can be called multiple times but will only configure logging once.
     Subsequent calls will be ignored to prevent duplicate configuration.
 
-    It configures logging based on environment variables and parameters.
-
     Args:
-        environment: Environment type ("development", "production").
-                    If None, auto-detects from ENVIRONMENT env var.
-        level: Override log level. If None, uses environment-appropriate default.
+        environment: Deprecated parameter, kept for backward compatibility.
+        level: Override log level. If None, uses LOG_LEVEL env var (defaults to INFO).
         enable_file_logging: Override file logging. If None, uses default behavior.
     """
     # Prevent multiple configurations using state object
@@ -56,12 +53,9 @@ def configure_logging(
     # Remove default handler first (loguru best practice)
     logger.remove()
 
-    # Application configuration
-    env = environment or os.getenv("ENVIRONMENT", "development").lower()
-    log_level = level or os.getenv("LOG_LEVEL", "DEBUG" if env == "development" else "INFO")
-    console_format = _get_console_format(env)
-    backtrace = True
-    diagnose = env == "development"
+    # Application configuration - simplified to single source
+    log_level = level or os.getenv("LOG_LEVEL", "INFO")
+    console_format = _get_console_format()
     file_logging = enable_file_logging if enable_file_logging is not None else _should_enable_file_logging()
 
     # Console logging configuration
@@ -70,30 +64,25 @@ def configure_logging(
         format=console_format,
         level=log_level,
         colorize=True,
-        backtrace=backtrace,
-        diagnose=diagnose,
+        backtrace=True,
+        diagnose=True,
         enqueue=False,  # Keep synchronous for console output
         catch=True,
     )
 
     # File logging configuration (if enabled)
     if file_logging:
-        _configure_file_logging(env, log_level)
+        _configure_file_logging(log_level)
 
     # Configure third-party library logging
     _configure_third_party_logging()
 
     # Log configuration summary
-    logger.info(f"Logging configured for {env} environment at {log_level} level")
+    logger.info(f"Logging configured at {log_level} level")
 
 
-def _get_console_format(env: str) -> str:
-    """Get console log format based on environment."""
-    if env == "production":
-        # Structured format for production
-        return "{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} | {message}"
-
-    # Rich format for development
+def _get_console_format() -> str:
+    """Get console log format."""
     return "<green>{time:HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | <level>{message}</level>"
 
 
@@ -102,7 +91,7 @@ def _should_enable_file_logging() -> bool:
     return os.getenv("ENABLE_FILE_LOGGING", "true").lower() == "true"
 
 
-def _configure_file_logging(env: str, log_level: str) -> None:
+def _configure_file_logging(log_level: str) -> None:
     """Configure file logging with rotation and retention."""
     logs_dir = Path("logs")
     logs_dir.mkdir(exist_ok=True)
@@ -118,7 +107,7 @@ def _configure_file_logging(env: str, log_level: str) -> None:
         serialize=False,  # Human-readable format
         enqueue=True,  # Thread-safe for multiprocessing
         backtrace=True,
-        diagnose=env == "development",
+        diagnose=True,
         catch=True,
     )
 
@@ -136,22 +125,6 @@ def _configure_file_logging(env: str, log_level: str) -> None:
         diagnose=True,  # Always diagnose errors
         catch=True,
     )
-
-    # JSON log file for structured logging (production)
-    if env == "production":
-        logger.add(
-            logs_dir / "tux_structured_{time:YYYY-MM-DD}.log",
-            format="{message}",
-            level="INFO",
-            rotation="00:00",
-            retention="7 days",
-            compression="gz",
-            serialize=True,  # JSON format
-            enqueue=True,
-            backtrace=False,
-            diagnose=False,
-            catch=True,
-        )
 
 
 def _configure_third_party_logging() -> None:
