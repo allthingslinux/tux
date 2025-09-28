@@ -75,11 +75,7 @@ class ErrorHandler(commands.Cog):
 
         # Track command failure for performance metrics
         command_name = None
-        if isinstance(source, discord.Interaction):
-            command_name = source.command.qualified_name if source.command else "unknown"
-        else:
-            command_name = source.command.qualified_name if source.command else "unknown"
-
+        command_name = source.command.qualified_name if source.command else "unknown"
         if command_name and command_name != "unknown":
             track_command_end(command_name, success=False, error=error)
 
