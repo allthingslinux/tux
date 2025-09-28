@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch, AsyncMock
 import discord
 from discord.ext import commands
 
-from tux.services.handlers.error.handler import ErrorHandler
+from tux.services.handlers.error.cog import ErrorHandler
 from tux.services.handlers.error.config import ErrorHandlerConfig
 from tux.shared.exceptions import TuxError, TuxPermissionError
 
@@ -68,7 +68,7 @@ class TestErrorHandler:
         assert isinstance(config, ErrorHandlerConfig)
         assert config.send_to_sentry is True
 
-    @patch("tux.services.handlers.error.handler.logger")
+    @patch("tux.services.handlers.error.cog.logger")
     def test_log_error_with_sentry(self, mock_logger, error_handler):
         """Test _log_error with Sentry enabled."""
         error = ValueError("Test error")
@@ -78,7 +78,7 @@ class TestErrorHandler:
 
         mock_logger.error.assert_called_once()
 
-    @patch("tux.services.handlers.error.handler.logger")
+    @patch("tux.services.handlers.error.cog.logger")
     def test_log_error_without_sentry(self, mock_logger, error_handler):
         """Test _log_error with Sentry disabled."""
         error = ValueError("Test error")
@@ -88,9 +88,9 @@ class TestErrorHandler:
 
         mock_logger.info.assert_called_once()
 
-    @patch("tux.services.handlers.error.handler.set_command_context")
-    @patch("tux.services.handlers.error.handler.set_user_context")
-    @patch("tux.services.handlers.error.handler.track_command_end")
+    @patch("tux.services.handlers.error.cog.set_command_context")
+    @patch("tux.services.handlers.error.cog.set_user_context")
+    @patch("tux.services.handlers.error.cog.track_command_end")
     def test_set_sentry_context_with_interaction(
         self, mock_track_end, mock_set_user, mock_set_command, error_handler,
     ):
@@ -106,9 +106,9 @@ class TestErrorHandler:
         mock_set_user.assert_called_once_with(mock_interaction.user)
         mock_track_end.assert_called_once_with("test_command", success=False, error=error)
 
-    @patch("tux.services.handlers.error.handler.set_command_context")
-    @patch("tux.services.handlers.error.handler.set_user_context")
-    @patch("tux.services.handlers.error.handler.track_command_end")
+    @patch("tux.services.handlers.error.cog.set_command_context")
+    @patch("tux.services.handlers.error.cog.set_user_context")
+    @patch("tux.services.handlers.error.cog.track_command_end")
     def test_set_sentry_context_with_context(
         self, mock_track_end, mock_set_user, mock_set_command, error_handler,
     ):

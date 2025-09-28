@@ -6,7 +6,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from tux.services.handlers.error.handler import ErrorHandler
+from tux.services.handlers.error.cog import ErrorHandler
 from tux.shared.exceptions import TuxError
 
 
