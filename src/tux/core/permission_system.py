@@ -213,7 +213,7 @@ class PermissionSystem:
             guild_id = ctx.guild.id if ctx.guild else None
         else:  # discord.Interaction
             # Create proper context from interaction using Discord.py's built-in method
-            ctx = await commands.Context.from_interaction(ctx_or_interaction)  # type: ignore[arg-type]
+            ctx = await commands.Context.from_interaction(ctx_or_interaction)  # type: ignore[misc]
             is_slash = True
             guild_id = ctx_or_interaction.guild.id if ctx_or_interaction.guild else None
 
@@ -295,11 +295,11 @@ class PermissionSystem:
             is_slash = False
         else:  # discord.Interaction
             # Create proper context from interaction using Discord.py's built-in method
-            ctx = await commands.Context.from_interaction(ctx_or_interaction)  # type: ignore[arg-type]
+            ctx = await commands.Context.from_interaction(ctx_or_interaction)  # type: ignore[misc]
             is_slash = True
 
         # Check permission
-        has_permission = await self.check_permission(ctx, required_level.value, command_name)  # type: ignore[arg-type]
+        has_permission = await self.check_permission(ctx, required_level.value, command_name)  # type: ignore[misc]
 
         if not has_permission:
             if is_slash:
