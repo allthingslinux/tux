@@ -211,6 +211,27 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         message_format="Invalid argument: {error}",
         send_to_sentry=False,
     ),
+    # === Extension Management Errors ===
+    commands.ExtensionAlreadyLoaded: ErrorHandlerConfig(
+        message_format="Extension `{error.name}` is already loaded.",
+        send_to_sentry=False,
+    ),
+    commands.ExtensionNotLoaded: ErrorHandlerConfig(
+        message_format="Extension `{error.name}` is not loaded.",
+        send_to_sentry=False,
+    ),
+    commands.ExtensionNotFound: ErrorHandlerConfig(
+        message_format="Extension `{error.name}` not found.",
+        send_to_sentry=False,
+    ),
+    commands.NoEntryPointError: ErrorHandlerConfig(
+        message_format="Extension `{error.name}` has no setup function.",
+        send_to_sentry=False,
+    ),
+    commands.ExtensionFailed: ErrorHandlerConfig(
+        message_format="Extension `{error.name}` failed to load: {error.original}",
+        log_level="ERROR",
+    ),
     # === Entity Not Found Errors ===
     commands.MemberNotFound: ErrorHandlerConfig(
         message_format="Member not found: {error.argument}",
