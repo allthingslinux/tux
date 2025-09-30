@@ -48,7 +48,7 @@ class TestDatabaseSchemaThroughService:
         """Test that tables are created correctly through DatabaseService."""
         # Database is already connected and fresh via fixture
         # Verify we can create sessions and perform operations
-        async with db_service.session() as session:
+        async with db_service.session() as session:  # type: ignore[attr-defined]
             # Test basic connectivity and table access
             assert session is not None
 

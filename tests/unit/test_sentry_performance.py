@@ -1,3 +1,4 @@
+from typing import Any
 """Unit tests for Sentry performance tracking and command monitoring."""
 
 import pytest
@@ -13,7 +14,7 @@ from tux.services.sentry import track_command_start, track_command_end
 class TestSentryPerformanceTracking:
     """Test Sentry performance tracking functions."""
 
-    def test_track_command_start_creates_transaction(self):
+    def test_track_command_start_creates_transaction(self) -> None:
         """Test track_command_start records start time."""
         # Clear any existing start times
         from tux.services.sentry.context import _command_start_times
@@ -26,7 +27,7 @@ class TestSentryPerformanceTracking:
         assert isinstance(_command_start_times["test_command"], float)
 
     @patch("tux.services.sentry.sentry_sdk")
-    def test_track_command_start_when_not_initialized(self, mock_sentry_sdk):
+    def test_track_command_start_when_not_initialized(self, mock_sentry_sdk) -> None:
         """Test track_command_start when Sentry not initialized."""
         mock_sentry_sdk.is_initialized.return_value = False
 
@@ -36,7 +37,7 @@ class TestSentryPerformanceTracking:
 
     @patch("tux.services.sentry.context.is_initialized")
     @patch("tux.services.sentry.context.set_tag")
-    def test_track_command_end_success(self, mock_set_tag, mock_is_initialized):
+    def test_track_command_end_success(self, mock_set_tag, mock_is_initialized) -> None:
         """Test track_command_end with successful command."""
         mock_is_initialized.return_value = True
 
@@ -53,7 +54,7 @@ class TestSentryPerformanceTracking:
     @patch("tux.services.sentry.context.is_initialized")
     @patch("tux.services.sentry.context.set_tag")
     @patch("tux.services.sentry.context.set_context")
-    def test_track_command_end_failure_with_error(self, mock_set_context, mock_set_tag, mock_is_initialized):
+    def test_track_command_end_failure_with_error(self, mock_set_context, mock_set_tag, mock_is_initialized) -> None:
         """Test track_command_end with failed command and error."""
         mock_is_initialized.return_value = True
 
@@ -70,7 +71,7 @@ class TestSentryPerformanceTracking:
         mock_set_context.assert_called_once()
 
     @patch("tux.services.sentry.context.is_initialized")
-    def test_track_command_end_no_current_span(self, mock_is_initialized):
+    def test_track_command_end_no_current_span(self, mock_is_initialized) -> None:
         """Test track_command_end when sentry is not initialized."""
         mock_is_initialized.return_value = False
 
@@ -88,7 +89,7 @@ class TestSentryHandlerCog:
         return bot
 
     @pytest.fixture
-    def sentry_handler(self, mock_bot):
+    def sentry_handler(self, mock_bot: Any):
         """Create SentryHandler instance."""
         return SentryHandler(mock_bot)
 
@@ -98,7 +99,7 @@ class TestSentryHandlerCog:
     @patch("tux.services.sentry.cog.track_command_start")
     async def test_on_command_sets_context_and_tracks(
         self, mock_track_start, mock_set_user, mock_set_command, sentry_handler,
-    ):
+    ) -> None:
         """Test on_command sets context and starts tracking."""
         mock_ctx = MagicMock()
         mock_ctx.command = MagicMock()
@@ -112,7 +113,7 @@ class TestSentryHandlerCog:
         mock_track_start.assert_called_once_with("test_command")
 
     @pytest.mark.asyncio
-    async def test_on_command_without_command(self, sentry_handler):
+    async def test_on_command_without_command(self, sentry_handler) -> None:
         """Test on_command when context has no command."""
         mock_ctx = MagicMock(spec=commands.Context)
         mock_ctx.command = None
@@ -125,7 +126,7 @@ class TestSentryHandlerCog:
     @patch("tux.services.sentry.cog.track_command_end")
     async def test_on_command_completion_tracks_success(
         self, mock_track_end, sentry_handler,
-    ):
+    ) -> None:
         """Test on_command_completion tracks successful completion."""
         mock_ctx = MagicMock()
         mock_ctx.command = MagicMock()
@@ -136,7 +137,7 @@ class TestSentryHandlerCog:
         mock_track_end.assert_called_once_with("test_command", success=True)
 
     @pytest.mark.asyncio
-    async def test_on_command_completion_without_command(self, sentry_handler):
+    async def test_on_command_completion_without_command(self, sentry_handler) -> None:
         """Test on_command_completion when context has no command."""
         mock_ctx = MagicMock(spec=commands.Context)
         mock_ctx.command = None
@@ -151,7 +152,7 @@ class TestSentryHandlerCog:
     @patch("tux.services.sentry.cog.track_command_end")
     async def test_on_app_command_completion_sets_context_and_tracks(
         self, mock_track_end, mock_set_user, mock_set_command, sentry_handler,
-    ):
+    ) -> None:
         """Test on_app_command_completion sets context and tracks completion."""
         mock_interaction = MagicMock(spec=discord.Interaction)
         mock_interaction.command.qualified_name = "test_app_command"
@@ -164,7 +165,7 @@ class TestSentryHandlerCog:
         mock_track_end.assert_called_once_with("test_app_command", success=True)
 
     @pytest.mark.asyncio
-    async def test_on_app_command_completion_without_command(self, sentry_handler):
+    async def test_on_app_command_completion_without_command(self, sentry_handler) -> None:
         """Test on_app_command_completion when interaction has no command."""
         mock_interaction = MagicMock(spec=discord.Interaction)
         mock_interaction.command = None
@@ -180,7 +181,7 @@ class TestCommandPerformanceIntegration:
     @pytest.mark.asyncio
     @patch("tux.services.sentry.context.is_initialized")
     @patch("tux.services.sentry.context.set_tag")
-    async def test_full_command_lifecycle_tracking(self, mock_set_tag, mock_is_initialized):
+    async def test_full_command_lifecycle_tracking(self, mock_set_tag, mock_is_initialized) -> None:
         """Test full command lifecycle from start to completion."""
         mock_is_initialized.return_value = True
 
@@ -205,7 +206,7 @@ class TestCommandPerformanceIntegration:
     @patch("tux.services.sentry.context.set_context")
     @patch("tux.services.sentry.context.set_tag")
     @patch("tux.services.sentry.context.is_initialized")
-    async def test_command_error_tracking_with_context(self, mock_is_initialized, mock_set_tag, mock_set_context):
+    async def test_command_error_tracking_with_context(self, mock_is_initialized, mock_set_tag, mock_set_context) -> None:
         """Test command error tracking includes proper context."""
         mock_is_initialized.return_value = True
 
@@ -224,7 +225,7 @@ class TestCommandPerformanceIntegration:
     @pytest.mark.asyncio
     @patch("tux.services.sentry.context.set_tag")
     @patch("tux.services.sentry.context.is_initialized")
-    async def test_concurrent_command_tracking(self, mock_is_initialized, mock_set_tag):
+    async def test_concurrent_command_tracking(self, mock_is_initialized, mock_set_tag) -> None:
         """Test tracking multiple concurrent commands."""
         mock_is_initialized.return_value = True
 

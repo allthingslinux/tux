@@ -576,7 +576,7 @@ class TestModelPerformance:
                 assert 'guild' in result
                 assert 'config' in result
                 assert 'guild_id' in result['guild']
-            assert 'guild_id' in result['config']
+                assert 'guild_id' in result['config']
 
 
 if __name__ == "__main__":

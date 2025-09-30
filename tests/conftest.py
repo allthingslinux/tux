@@ -5,8 +5,6 @@ Minimal conftest.py that imports fixtures from fixtures/ directory.
 All complex fixture logic has been moved to dedicated fixture files.
 """
 
-import pytest
-
 # Import all fixtures from fixtures directory
 from tests.fixtures import *
 

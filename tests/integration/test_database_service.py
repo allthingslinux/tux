@@ -116,7 +116,7 @@ class TestDatabaseModelsUnit:
         assert len(results) == 3
 
         # Test ordering
-        statement = select(Guild).order_by(Guild.case_count)
+        statement = select(Guild).order_by(Guild.case_count)  # type: ignore[arg-type]
         results = (await db_session.execute(statement)).scalars().unique().all()
         assert results[0].case_count == 1
         assert results[2].case_count == 3

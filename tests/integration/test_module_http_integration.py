@@ -1,3 +1,4 @@
+from typing import Any
 """Tests for module HTTP integrations with centralized client."""
 
 import pytest
@@ -12,7 +13,7 @@ class TestAvatarModuleHTTP:
     """Test avatar module HTTP functionality."""
 
     @pytest.mark.asyncio
-    async def test_avatar_image_fetch(self, httpx_mock):
+    async def test_avatar_image_fetch(self, httpx_mock) -> None:
         """Test fetching avatar image data."""
         # Mock image data
         fake_image = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01"
@@ -30,7 +31,7 @@ class TestAvatarModuleHTTP:
         assert "discord.com" in str(request.url)
 
     @pytest.mark.asyncio
-    async def test_avatar_different_formats(self, httpx_mock):
+    async def test_avatar_different_formats(self, httpx_mock) -> None:
         """Test different image format handling."""
         formats = [
             ("image/jpeg", b"\xff\xd8\xff"),
@@ -54,7 +55,7 @@ class TestWikiModuleHTTP:
     """Test wiki module HTTP functionality."""
 
     @pytest.mark.asyncio
-    async def test_arch_wiki_api_call(self, httpx_mock):
+    async def test_arch_wiki_api_call(self, httpx_mock) -> None:
         """Test Arch Wiki API integration."""
         from tux.modules.utility.wiki import Wiki
 
@@ -83,7 +84,7 @@ class TestWikiModuleHTTP:
         assert "Installation" in str(request.url)
 
     @pytest.mark.asyncio
-    async def test_atl_wiki_api_call(self, httpx_mock):
+    async def test_atl_wiki_api_call(self, httpx_mock) -> None:
         """Test ATL Wiki API integration."""
         from tux.modules.utility.wiki import Wiki
 
@@ -108,7 +109,7 @@ class TestWikiModuleHTTP:
         assert "atl.wiki" in result[1]
 
     @pytest.mark.asyncio
-    async def test_wiki_no_results(self, httpx_mock):
+    async def test_wiki_no_results(self, httpx_mock) -> None:
         """Test wiki API with no search results."""
         from tux.modules.utility.wiki import Wiki
 
@@ -127,7 +128,7 @@ class TestImageEffectModuleHTTP:
     """Test image effect module HTTP functionality."""
 
     @pytest.mark.asyncio
-    async def test_fetch_image_for_processing(self, httpx_mock):
+    async def test_fetch_image_for_processing(self, httpx_mock) -> None:
         """Test fetching images for effect processing."""
         # Create a minimal valid PNG
         fake_png = (
@@ -145,7 +146,7 @@ class TestImageEffectModuleHTTP:
         assert len(response.content) > 0
 
     @pytest.mark.asyncio
-    async def test_image_fetch_error_handling(self, httpx_mock):
+    async def test_image_fetch_error_handling(self, httpx_mock) -> None:
         """Test error handling when fetching images."""
         httpx_mock.add_response(status_code=404)
 
@@ -159,7 +160,7 @@ class TestMailModuleHTTP:
     """Test mail module HTTP functionality."""
 
     @pytest.mark.asyncio
-    async def test_mailcow_api_call(self, httpx_mock):
+    async def test_mailcow_api_call(self, httpx_mock) -> None:
         """Test Mailcow API integration."""
         mock_response = [{"type": "success", "msg": "Mailbox created"}]
         httpx_mock.add_response(json=mock_response)
@@ -186,7 +187,7 @@ class TestMailModuleHTTP:
         assert request.headers["Authorization"] == "Bearer test-key"
 
     @pytest.mark.asyncio
-    async def test_mailcow_api_error(self, httpx_mock):
+    async def test_mailcow_api_error(self, httpx_mock) -> None:
         """Test Mailcow API error handling."""
         httpx_mock.add_response(
             status_code=400,
@@ -208,7 +209,7 @@ class TestFactModuleHTTP:
     """Test fact module HTTP functionality."""
 
     @pytest.mark.asyncio
-    async def test_fact_api_calls(self, httpx_mock):
+    async def test_fact_api_calls(self, httpx_mock) -> None:
         """Test various fact API integrations."""
         from tux.modules.fun.fact import Fact
 
@@ -259,7 +260,7 @@ class TestFactModuleHTTP:
             assert "Facts" in category_name
 
     @pytest.mark.asyncio
-    async def test_fact_api_timeout(self, httpx_mock):
+    async def test_fact_api_timeout(self, httpx_mock) -> None:
         """Test fact API timeout handling."""
         from tux.modules.fun.fact import Fact
 
@@ -288,7 +289,7 @@ class TestHTTPClientPerformance:
     """Test HTTP client performance characteristics."""
 
     @pytest.mark.asyncio
-    async def test_concurrent_requests(self, httpx_mock):
+    async def test_concurrent_requests(self, httpx_mock) -> None:
         """Test handling multiple concurrent requests."""
         import asyncio
 
@@ -309,7 +310,7 @@ class TestHTTPClientPerformance:
             assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_connection_reuse(self, httpx_mock):
+    async def test_connection_reuse(self, httpx_mock) -> None:
         """Test that connections are reused (indirectly)."""
         # Add multiple responses for the same host
         for _ in range(5):

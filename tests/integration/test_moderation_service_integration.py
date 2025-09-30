@@ -1,3 +1,4 @@
+from typing import Any
 """
 🚀 ModerationService Integration Tests - Full Workflow Testing
 
@@ -50,12 +51,12 @@ class TestModerationCoordinatorIntegration:
         return bot
 
     @pytest.fixture
-    def case_service(self, mock_db_service):
+    def case_service(self, mock_db_service: Any):
         """Create a CaseService instance."""
         return CaseService(mock_db_service.case)
 
     @pytest.fixture
-    def communication_service(self, mock_bot):
+    def communication_service(self, mock_bot: Any):
         """Create a CommunicationService instance."""
         return CommunicationService(mock_bot)
 
@@ -101,7 +102,7 @@ class TestModerationCoordinatorIntegration:
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         mock_member,
-    ):
+    ) -> None:
         """Test complete ban workflow from start to finish."""
         # Setup mocks for successful execution
         mock_ctx.guild.get_member.return_value = MagicMock()  # Bot is in guild
@@ -143,7 +144,7 @@ class TestModerationCoordinatorIntegration:
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         mock_member,
-    ):
+    ) -> None:
         """Test ban workflow when DM fails but action still succeeds."""
         mock_ctx.guild.get_member.return_value = MagicMock()
 
@@ -179,7 +180,7 @@ class TestModerationCoordinatorIntegration:
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         mock_member,
-    ):
+    ) -> None:
         """Test ban workflow failure due to condition validation."""
         mock_ctx.guild.get_member.return_value = MagicMock()
 
@@ -195,7 +196,7 @@ class TestModerationCoordinatorIntegration:
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         mock_member,
-    ):
+    ) -> None:
         """Test workflow for non-removal actions (like warn)."""
         mock_ctx.guild.get_member.return_value = MagicMock()
 
@@ -233,7 +234,7 @@ class TestModerationCoordinatorIntegration:
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         mock_member,
-    ):
+    ) -> None:
         """Test workflow in silent mode (no DMs)."""
         mock_ctx.guild.get_member.return_value = MagicMock()
 
@@ -269,7 +270,7 @@ class TestModerationCoordinatorIntegration:
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         mock_member,
-    ):
+    ) -> None:
         """Test handling of database failure after successful Discord action."""
         mock_ctx.guild.get_member.return_value = MagicMock()
 
@@ -305,7 +306,7 @@ class TestModerationCoordinatorIntegration:
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         mock_member,
-    ):
+    ) -> None:
         """Test handling of Discord API action failure."""
         mock_ctx.guild.get_member.return_value = MagicMock()
 
@@ -331,7 +332,7 @@ class TestModerationCoordinatorIntegration:
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         mock_member,
-    ):
+    ) -> None:
         """Test execution of multiple actions in sequence."""
         mock_ctx.guild.get_member.return_value = MagicMock()
 
@@ -345,7 +346,7 @@ class TestModerationCoordinatorIntegration:
         moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
         with patch.object(moderation_coordinator._communication, 'create_embed') as mock_embed:
-            with patch.object(moderation_coordinator._communication, 'send_embed', new_callable=AsyncMock) as mock_send_embed:
+            with patch.object(moderation_coordinator._communication, 'send_embed', new_callable=AsyncMock) as _mock_send_embed:
                 mock_embed_obj = MagicMock()
                 mock_embed_obj.description = None  # Allow setting description attribute
                 mock_embed.return_value = mock_embed_obj
@@ -376,7 +377,7 @@ class TestModerationCoordinatorIntegration:
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         mock_member,
-    ):
+    ) -> None:
         """Test workflow with duration and expiration parameters."""
         from datetime import datetime, UTC, timedelta
 
@@ -403,7 +404,7 @@ class TestModerationCoordinatorIntegration:
                     silent=True,
                     dm_action="temp banned",
                     actions=[(mock_action, type(None))],
-                    duration="24h",
+                    duration=None,  # type: ignore[arg-type]
                     expires_at=expires_at,
                 )
 
@@ -417,7 +418,7 @@ class TestModerationCoordinatorIntegration:
     async def test_get_system_status(
         self,
         moderation_coordinator: ModerationCoordinator,
-    ):
+    ) -> None:
         """Test system status reporting."""
         # The ModerationCoordinator doesn't have get_system_status method
         # System status is likely handled by individual services
@@ -428,7 +429,7 @@ class TestModerationCoordinatorIntegration:
     async def test_cleanup_old_data(
         self,
         moderation_coordinator: ModerationCoordinator,
-    ):
+    ) -> None:
         """Test old data cleanup functionality."""
         # The ModerationCoordinator doesn't have cleanup_old_data method
         # Cleanup is likely handled by individual services

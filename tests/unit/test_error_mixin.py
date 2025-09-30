@@ -1,3 +1,4 @@
+from typing import Any
 """Unit tests for error handling mixin."""
 
 import pytest
@@ -25,7 +26,7 @@ class TestErrorHandlerMixin:
     @patch("tux.shared.error_mixin.capture_exception_safe")
     def test_handle_error_with_generic_exception(
         self, mock_capture, mock_set_tag, mock_set_context, mock_logger, service,
-    ):
+    ) -> None:
         """Test handle_error with generic exception."""
         error = ValueError("Test error")
         operation = "test_operation"
@@ -53,7 +54,7 @@ class TestErrorHandlerMixin:
     @patch("tux.shared.error_mixin.capture_tux_exception")
     def test_handle_error_with_tux_exception(
         self, mock_capture_tux, mock_set_tag, mock_set_context, mock_logger, service,
-    ):
+    ) -> None:
         """Test handle_error with TuxError exception."""
         error = TuxDatabaseError("Database connection failed")
         operation = "database_query"
@@ -78,7 +79,7 @@ class TestErrorHandlerMixin:
     @patch("tux.shared.error_mixin.capture_exception_safe")
     def test_handle_error_with_custom_user_message(
         self, mock_capture, mock_set_tag, mock_logger, service,
-    ):
+    ) -> None:
         """Test handle_error with custom user message."""
         error = RuntimeError("Internal error")
         operation = "test_operation"
@@ -94,7 +95,7 @@ class TestErrorHandlerMixin:
     @patch("tux.shared.error_mixin.capture_exception_safe")
     def test_handle_error_with_different_log_level(
         self, mock_capture, mock_set_tag, mock_logger, service,
-    ):
+    ) -> None:
         """Test handle_error with different log level."""
         error = ValueError("Test error")
         operation = "test_operation"
@@ -110,7 +111,7 @@ class TestErrorHandlerMixin:
     @patch("tux.shared.error_mixin.capture_exception_safe")
     def test_handle_error_without_context(
         self, mock_capture, mock_set_tag, mock_set_context, mock_logger, service,
-    ):
+    ) -> None:
         """Test handle_error without additional context."""
         error = ValueError("Test error")
         operation = "test_operation"
@@ -130,7 +131,7 @@ class TestErrorHandlerMixin:
     @patch("tux.shared.error_mixin.getattr")
     def test_handle_error_component_name_fallback(
         self, mock_getattr, mock_capture_tux, mock_set_tag, mock_logger, service,
-    ):
+    ) -> None:
         """Test handle_error component name fallback."""
         error = TuxError("Test error")
         operation = "test_operation"

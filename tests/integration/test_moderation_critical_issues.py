@@ -1,3 +1,4 @@
+from typing import Any
 """
 🚨 Critical Issues Integration Tests - Testing Analysis Findings
 
@@ -40,7 +41,7 @@ class TestCriticalIssuesIntegration:
         return CaseService(coordinator.case)
 
     @pytest.fixture
-    def communication_service(self, mock_bot):
+    def communication_service(self, mock_bot: Any):
         """Create a CommunicationService instance."""
         return CommunicationService(mock_bot)
 
@@ -67,7 +68,7 @@ class TestCriticalIssuesIntegration:
         return bot
 
     @pytest.fixture
-    def mock_ctx(self, mock_bot):
+    def mock_ctx(self, mock_bot: Any):
         """Create a mock command context."""
         ctx = MagicMock(spec=commands.Context)
         ctx.guild = MagicMock(spec=discord.Guild)
@@ -97,7 +98,7 @@ class TestCriticalIssuesIntegration:
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         db_service,
-    ):
+    ) -> None:
         """
         🔴 SPECIFICATION TEST: DM failure MUST NOT prevent moderation action.
 
@@ -136,7 +137,7 @@ class TestCriticalIssuesIntegration:
                         await moderation_coordinator.execute_moderation_action(
                             ctx=mock_ctx,
                             case_type=DBCaseType.BAN,  # Removal action requiring DM attempt
-                            user=mock_member,
+                            user=mock_member,  # type: ignore[arg-type]
                             reason="DM failure test",
                             silent=False,  # Explicitly try to send DM
                             dm_action="banned",
@@ -174,7 +175,7 @@ class TestCriticalIssuesIntegration:
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         db_service,
-    ):
+    ) -> None:
         """
         Test Issue #2 variant: DM timeout should NOT prevent the moderation action.
         """
@@ -200,7 +201,7 @@ class TestCriticalIssuesIntegration:
                         await moderation_coordinator.execute_moderation_action(
                             ctx=mock_ctx,
                             case_type=DBCaseType.KICK,
-                            user=mock_member,
+                            user=mock_member,  # type: ignore[arg-type]
                             reason="DM timeout test",
                             silent=False,
                             dm_action="kicked",
@@ -226,7 +227,7 @@ class TestCriticalIssuesIntegration:
         self,
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
-    ):
+    ) -> None:
         """
         🔴 SPECIFICATION TEST: Bot MUST validate its own permissions before action.
 
@@ -255,7 +256,7 @@ class TestCriticalIssuesIntegration:
                 await moderation_coordinator.execute_moderation_action(
                     ctx=mock_ctx,
                     case_type=DBCaseType.BAN,
-                    user=mock_member,
+                    user=mock_member,  # type: ignore[arg-type]
                     reason="Permission check test",
                     actions=[],
                 )
@@ -273,7 +274,7 @@ class TestCriticalIssuesIntegration:
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         db_service,
-    ):
+    ) -> None:
         """
         Test that bot permission checks pass when bot has required permissions.
         """
@@ -301,7 +302,7 @@ class TestCriticalIssuesIntegration:
                     await moderation_coordinator.execute_moderation_action(
                         ctx=mock_ctx,
                         case_type=DBCaseType.BAN,
-                        user=mock_member,
+                        user=mock_member,  # type: ignore[arg-type]
                         reason="Permission success test",
                         silent=True,
                         dm_action="banned",
@@ -328,7 +329,7 @@ class TestCriticalIssuesIntegration:
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         db_service,
-    ):
+    ) -> None:
         """
         🔴 SPECIFICATION TEST: Database failure MUST NOT crash the entire system.
 
@@ -358,7 +359,7 @@ class TestCriticalIssuesIntegration:
                     await moderation_coordinator.execute_moderation_action(
                         ctx=mock_ctx,
                         case_type=DBCaseType.BAN,
-                        user=mock_member,
+                        user=mock_member,  # type: ignore[arg-type]
                         reason="Database failure test",
                         silent=False,
                         dm_action="banned",
@@ -383,7 +384,7 @@ class TestCriticalIssuesIntegration:
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         db_service,
-    ):
+    ) -> None:
         """
         🔴 SPECIFICATION TEST: User state changes during execution MUST be handled gracefully.
 
@@ -417,7 +418,7 @@ class TestCriticalIssuesIntegration:
         await moderation_coordinator.execute_moderation_action(
             ctx=mock_ctx,
             case_type=DBCaseType.BAN,
-            user=mock_member,
+            user=mock_member,  # type: ignore[arg-type]
             reason="User state change test",
             actions=[(mock_ban_action, type(None))],
         )
@@ -438,7 +439,7 @@ class TestCriticalIssuesIntegration:
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         db_service,
-    ):
+    ) -> None:
         """
         🔴 SPECIFICATION TEST: Lock manager MUST prevent race conditions.
 
@@ -485,7 +486,7 @@ class TestCriticalIssuesIntegration:
                             moderation_coordinator.execute_moderation_action(
                                 ctx=mock_ctx,
                                 case_type=DBCaseType.BAN,
-                                user=mock_member,
+                                user=mock_member,  # type: ignore[arg-type]
                                 reason="Concurrent operation 1",
                                 silent=True,
                                 dm_action="banned",
@@ -497,7 +498,7 @@ class TestCriticalIssuesIntegration:
                             moderation_coordinator.execute_moderation_action(
                                 ctx=mock_ctx,
                                 case_type=DBCaseType.BAN,
-                                user=mock_member,
+                                user=mock_member,  # type: ignore[arg-type]
                                 reason="Concurrent operation 2",
                                 silent=True,
                                 dm_action="banned",
@@ -549,7 +550,7 @@ class TestCriticalIssuesIntegration:
         self,
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
-    ):
+    ) -> None:
         """
         Test prevention of privilege escalation attacks.
 
@@ -578,7 +579,7 @@ class TestCriticalIssuesIntegration:
                 await moderation_coordinator.execute_moderation_action(
                     ctx=mock_ctx,
                     case_type=DBCaseType.BAN,
-                    user=mock_member,
+                    user=mock_member,  # type: ignore[arg-type]
                     reason="Privilege escalation test",
                     actions=[],
                 )
@@ -592,7 +593,7 @@ class TestCriticalIssuesIntegration:
         self,
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
-    ):
+    ) -> None:
         """
         Test that guild owners are properly protected from moderation actions.
 
@@ -611,7 +612,7 @@ class TestCriticalIssuesIntegration:
                 await moderation_coordinator.execute_moderation_action(
                     ctx=mock_ctx,
                     case_type=DBCaseType.BAN,
-                    user=mock_member,
+                    user=mock_member,  # type: ignore[arg-type]
                     reason="Owner protection test",
                     actions=[],
                 )
@@ -625,7 +626,7 @@ class TestCriticalIssuesIntegration:
         self,
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
-    ):
+    ) -> None:
         """
         Test that users cannot moderate themselves.
 
@@ -646,7 +647,7 @@ class TestCriticalIssuesIntegration:
                 await moderation_coordinator.execute_moderation_action(
                     ctx=mock_ctx,
                     case_type=DBCaseType.BAN,
-                    user=mock_member,
+                    user=mock_member,  # type: ignore[arg-type]
                     reason="Self-moderation test",
                     actions=[],
                 )
@@ -661,7 +662,7 @@ class TestCriticalIssuesIntegration:
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         db_service,
-    ):
+    ) -> None:
         """
         Test that audit trails maintain data integrity even during failures.
         """
@@ -686,7 +687,7 @@ class TestCriticalIssuesIntegration:
                         await moderation_coordinator.execute_moderation_action(
                             ctx=mock_ctx,
                             case_type=DBCaseType.BAN,
-                            user=mock_member,
+                            user=mock_member,  # type: ignore[arg-type]
                             reason="Audit trail integrity test",
                             silent=False,
                             dm_action="banned",

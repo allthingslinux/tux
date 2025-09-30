@@ -24,7 +24,7 @@ class TestDatabaseErrorHandling:
         """Test that database query errors are handled properly."""
         async def failing_operation(session):
             # Force a database error
-            raise sqlalchemy.exc.OperationalError("Connection lost", None, None)
+            raise sqlalchemy.exc.OperationalError("Connection lost", None, Exception("test"))
 
         with pytest.raises(sqlalchemy.exc.OperationalError):
             await db_service.execute_query(failing_operation, "test_query")
@@ -70,7 +70,7 @@ class TestDatabaseErrorHandling:
             nonlocal call_count
             call_count += 1
             if call_count < 3:  # Fail first 2 attempts
-                raise sqlalchemy.exc.OperationalError("Temporary failure", None, None)
+                raise sqlalchemy.exc.OperationalError("Temporary failure", None, Exception("test"))
             return "success"
 
         # Should succeed on 3rd attempt
@@ -83,7 +83,7 @@ class TestDatabaseErrorHandling:
     async def test_database_retry_exhaustion_captured(self, db_service):
         """Test that retry exhaustion is handled properly."""
         async def always_failing_operation(session):
-            raise sqlalchemy.exc.OperationalError("Persistent failure", None, None)
+            raise sqlalchemy.exc.OperationalError("Persistent failure", None, Exception("test"))
 
         with pytest.raises(sqlalchemy.exc.OperationalError):
             await db_service.execute_query(always_failing_operation, "exhaustion_test")
@@ -106,7 +106,7 @@ class TestDatabaseServiceErrorIntegration:
     async def test_query_error_with_span_context(self, db_service):
         """Test query error includes Sentry span context."""
         async def failing_query(session):
-            raise sqlalchemy.exc.IntegrityError("Constraint violation", None, None)
+            raise sqlalchemy.exc.IntegrityError("Constraint violation", None, Exception("test"))
 
         with patch("tux.database.service.sentry_sdk") as mock_sentry_sdk:
             mock_sentry_sdk.is_initialized.return_value = True
@@ -126,4 +126,4 @@ class TestDatabaseServiceErrorIntegration:
 
         # Test with invalid mode (not a DatabaseMode enum)
         with pytest.raises(ValueError):
-            DatabaseServiceFactory.create("invalid_mode")
+            DatabaseServiceFactory.create("invalid_mode")  # type: ignore[arg-type]
