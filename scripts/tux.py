@@ -112,7 +112,7 @@ class TuxCLI(BaseCLI):
         self.rich.rich_print("[bold blue]Showing Tux version information...[/bold blue]")
 
         try:
-            from tux import __version__  # noqa: PLC0415
+            from tux import __version__  # type: ignore[attr-defined] # noqa: PLC0415
 
             self.rich.rich_print(f"[green]Tux version: {__version__}[/green]")
             self.rich.print_success("Version information displayed")

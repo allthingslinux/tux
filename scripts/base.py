@@ -18,6 +18,11 @@ from tux.core.logging import configure_logging
 class BaseCLI:
     """Base class for all CLI applications."""
 
+    app: Typer
+    console: Console
+    rich: RichCLI
+    _command_registry: CommandRegistry
+
     def __init__(self, name: str = "cli", description: str = "CLI Application"):
         self.app = Typer(
             name=name,
