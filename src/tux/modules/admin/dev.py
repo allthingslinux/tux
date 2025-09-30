@@ -475,8 +475,7 @@ class Dev(BaseCog):
         cog : str
             The name of the cog to reload.
         """
-        await self.bot.unload_extension(cog)
-        await self.bot.load_extension(cog)
+        await self.bot.reload_extension(cog)
         await ctx.send(f"Cog {cog} reloaded.", ephemeral=True, delete_after=30)
         logger.info(f"Cog {cog} reloaded.")
 
