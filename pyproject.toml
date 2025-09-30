@@ -130,6 +130,7 @@ types = [
     "types-jinja2>=2.11.9",
     "annotated-types>=0.7.0",
     "asyncpg-stubs>=0.30.2",
+    "types-mock>=5.2.0.20250924",
 ]
 
 [tool.uv]
@@ -207,16 +208,36 @@ exclude = [
     "_build",
     "examples",
     ".archive",
-    "tests/**",
     "src/tux/database/migrations/**",
 ]
-ignore = ["**/tests/**"]
-include = ["src", "scripts"]
+include = ["src", "scripts", "tests"]
 stubPath = "typings"
 pythonPlatform = "Linux"
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
 reportUnnecessaryTypeIgnoreComment = "warning"
+
+# Execution environments - strict for src/scripts, relaxed for tests
+[[tool.basedpyright.executionEnvironments]]
+root = "tests"
+reportUnknownMemberType = "none"
+reportUnknownArgumentType = "none"
+reportUnknownParameterType = "none"
+reportMissingParameterType = "none"
+reportUnknownVariableType = "none"
+reportPrivateUsage = "none"
+reportUnusedImport = "warning"
+reportAttributeAccessIssue = "none"
+reportUnknownLambdaType = "none"
+reportMissingTypeStubs = "none"
+reportWildcardImportFromLibrary = "none"
+
+[[tool.basedpyright.executionEnvironments]]
+root = "src"
+
+[[tool.basedpyright.executionEnvironments]]
+root = "scripts"
+reportMissingTypeStubs = "none"
 
 [tool.coverage.run]
 source = ["src/tux"]
