@@ -50,7 +50,7 @@
   "git.fetchOnPull": true,
   "[markdown]": {
     "files.trimTrailingWhitespace": false,
-    "editor.defaultFormatter": "yzhang.markdown-all-in-one"
+    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
   },
   "markdownlint.config": {
     "extends": ".markdownlint.yaml"

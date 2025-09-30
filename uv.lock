@@ -2644,6 +2644,7 @@ types = [
     { name = "types-dateparser" },
     { name = "types-influxdb-client" },
     { name = "types-jinja2" },
+    { name = "types-mock" },
     { name = "types-pillow" },
     { name = "types-psutil" },
     { name = "types-pytz" },
@@ -2751,6 +2752,7 @@ types = [
     { name = "types-dateparser", specifier = ">=1.2.0.20250408" },
     { name = "types-influxdb-client", specifier = ">=1.45.0.20241221" },
     { name = "types-jinja2", specifier = ">=2.11.9" },
+    { name = "types-mock", specifier = ">=5.2.0.20250924" },
     { name = "types-pillow", specifier = ">=10.2.0.20240822" },
     { name = "types-psutil", specifier = ">=7.0.0.20250401" },
     { name = "types-pytz", specifier = ">=2025.2.0.20250326" },
@@ -2839,6 +2841,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/39/31/b5f059142d058aec41e913d8e0eff0a967e7bc46f9a2ba2f31bc11cff059/types-MarkupSafe-1.1.10.tar.gz", hash = "sha256:85b3a872683d02aea3a5ac2a8ef590193c344092032f58457287fbf8e06711b1", size = 2986, upload-time = "2021-11-27T03:18:07.558Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/bc/d6/b8effb1c48539260a5eb4196afc55efac4ea1684a4991977555eb266b2ef/types_MarkupSafe-1.1.10-py3-none-any.whl", hash = "sha256:ca2bee0f4faafc45250602567ef38d533e877d2ddca13003b319c551ff5b3cc5", size = 3998, upload-time = "2021-11-27T03:18:06.398Z" },
+]
+
+[[package]]
+name = "types-mock"
+version = "5.2.0.20250924"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/50/c3/00cf1e62c27fd195aaf22b249884f82643141b73f151ff019aa24c99bd17/types_mock-5.2.0.20250924.tar.gz", hash = "sha256:953197543b4183f00363e8e626f6c7abea1a3f7a4dd69d199addb70b01b6bb35", size = 11319, upload-time = "2025-09-24T02:53:33.093Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/05/85/52004fb81add2b05494cbd1c0dab71f3706f19935cabb4ad220643884382/types_mock-5.2.0.20250924-py3-none-any.whl", hash = "sha256:23617ffb4cf948c085db69ec90bd474afbce634ef74995045ae0a5748afbe57d", size = 10499, upload-time = "2025-09-24T02:53:32.054Z" },
 ]
 
 [[package]]
