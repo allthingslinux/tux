@@ -28,6 +28,8 @@ class BaseCog(commands.Cog):
     This class provides access to database services and configuration.
     """
 
+    _unload_task: asyncio.Task[None] | None = None
+
     def __init__(self, bot: Tux) -> None:
         """Initialize the base cog.
 
