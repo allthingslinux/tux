@@ -191,7 +191,6 @@ class PaginationButton(BaseButton):
         disabled = False
         if is_next:
             total_pages = len(help_command.subcommand_pages)
-
             disabled = current_page >= total_pages - 1
         else:  # Previous button
             disabled = current_page <= 0

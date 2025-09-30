@@ -9,12 +9,17 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-import discord
 from discord.ext import commands
+from loguru import logger
 
+from tux.shared.constants import CONST
+from tux.ui.embeds import EmbedCreator
+
+from .components import DirectHelpView
 from .data import HelpData
 from .navigation import HelpNavigation
 from .renderer import HelpRenderer
+from .utils import paginate_items
 
 
 class TuxHelp(commands.HelpCommand):
@@ -49,9 +54,9 @@ class TuxHelp(commands.HelpCommand):
 
     async def send_cog_help(self, cog: commands.Cog) -> None:
         """Send help for a specific cog."""
-        _, renderer, navigation = await self._setup_components()
+        data, renderer, navigation = await self._setup_components()
 
-        categories = await navigation.data.get_command_categories()
+        categories = await data.get_command_categories()
         cog_name = cog.qualified_name
 
         if cog_name in categories:
@@ -67,7 +72,6 @@ class TuxHelp(commands.HelpCommand):
         _, renderer, navigation = await self._setup_components()
 
         embed = await renderer.create_command_embed(command)
-        # Use simple view for direct command help
         view = await navigation.create_command_view()
 
         await self.context.send(embed=embed, view=view)
@@ -77,16 +81,35 @@ class TuxHelp(commands.HelpCommand):
         _, renderer, navigation = await self._setup_components()
 
         navigation.current_command_obj = group
-        embed = await renderer.create_command_embed(group)
-        view = await navigation.create_command_view()
+        navigation.current_command = group.name
+
+        # For large command groups or JSK, use pagination
+        if group.name in {"jsk", "jishaku"} or len(group.commands) > 15:
+            # Paginate subcommands
+            subcommands = sorted(group.commands, key=lambda x: x.name)
+            pages = paginate_items(subcommands, 8)
+
+            # Create direct help view with navigation
+            view = DirectHelpView(navigation, group, pages)
+            embed = await view.get_embed()
+
+        else:
+            embed = await renderer.create_command_embed(group)
+            view = await navigation.create_command_view()
 
         await self.context.send(embed=embed, view=view)
 
     async def send_error_message(self, error: str) -> None:
         """Send an error message."""
-        embed = discord.Embed(
-            title="❌ Help Error",
+        embed = EmbedCreator.create_embed(
+            EmbedCreator.ERROR,
+            user_name=self.context.author.name,
+            user_display_avatar=self.context.author.display_avatar.url,
             description=error,
-            color=discord.Color.red(),
         )
-        await self.context.send(embed=embed, ephemeral=True)
+
+        await self.get_destination().send(embed=embed, delete_after=CONST.DEFAULT_DELETE_AFTER)
+
+        # Only log errors that are not related to command not found
+        if "no command called" not in error.lower():
+            logger.warning(f"An error occurred while sending a help message: {error}")

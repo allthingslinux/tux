@@ -47,9 +47,8 @@ class HelpData:
         if no_cog_commands:
             mapping[None] = no_cog_commands
 
-        # create_cog_category_mapping returns a tuple, we only need the first part
-        categories, _ = create_cog_category_mapping(mapping)
-        self._category_cache = categories
+        # Store both category cache and command mapping
+        self._category_cache, self.command_mapping = create_cog_category_mapping(mapping)
         return self._category_cache
 
     async def _can_run_command(self, command: commands.Command[Any, Any, Any]) -> bool:
@@ -61,7 +60,17 @@ class HelpData:
 
     def find_command(self, command_name: str) -> commands.Command[Any, Any, Any] | None:
         """Find a command by name."""
-        return self.bot.get_command(command_name)
+        # First try direct lookup
+        if found := self.bot.get_command(command_name):
+            return found
+
+        # Then search in command mapping if available
+        if self.command_mapping:
+            for category_commands in self.command_mapping.values():
+                if command_name in category_commands:
+                    return category_commands[command_name]
+
+        return None
 
     def find_parent_command(self, subcommand_name: str) -> tuple[str, commands.Command[Any, Any, Any]] | None:
         """Find parent command for a subcommand."""
