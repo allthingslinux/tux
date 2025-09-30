@@ -56,6 +56,10 @@ class TuxApp:
     providing consistent signal handling and configuration validation.
     """
 
+    bot: Tux | None
+    _connect_task: asyncio.Task[None] | None = None
+    _shutdown_event: asyncio.Event | None = None
+
     def __init__(self):
         """Initialize the application state.
 
@@ -64,7 +68,7 @@ class TuxApp:
         The bot instance is not created until :meth:`start` to ensure the
         event loop and configuration are ready.
         """
-        self.bot: Tux | None = None
+        self.bot = None
 
     def run(self) -> None:
         """Run the Tux bot application.
@@ -114,7 +118,7 @@ class TuxApp:
             SentryManager.report_signal(signal.SIGTERM, None)
             logger.info("SIGTERM received, forcing shutdown...")
             # Set shutdown event for the monitor
-            if hasattr(self, "_shutdown_event"):
+            if hasattr(self, "_shutdown_event") and self._shutdown_event is not None:
                 self._shutdown_event.set()
             # Cancel ALL tasks in the event loop
             for task in asyncio.all_tasks(loop):
@@ -132,7 +136,7 @@ class TuxApp:
             SentryManager.report_signal(signal.SIGINT, None)
             logger.info("SIGINT received, forcing shutdown...")
             # Set shutdown event for the monitor
-            if hasattr(self, "_shutdown_event"):
+            if hasattr(self, "_shutdown_event") and self._shutdown_event is not None:
                 self._shutdown_event.set()
             # Cancel ALL tasks in the event loop
             for task in asyncio.all_tasks(loop):
