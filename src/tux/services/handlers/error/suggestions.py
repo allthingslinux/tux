@@ -46,11 +46,17 @@ class CommandSuggester:
             best_name = cmd.qualified_name
 
             # Check command name and aliases
-            for name in [cmd.qualified_name, *cmd.aliases]:
+            names_to_check = [cmd.qualified_name, *cmd.aliases]
+
+            # Also check just the command name without parent for subcommands
+            if hasattr(cmd, "name") and cmd.name != cmd.qualified_name:
+                names_to_check.append(cmd.name)
+
+            for name in names_to_check:
                 distance = Levenshtein.distance(command_name.lower(), name.lower())
                 if distance < min_dist:
                     min_dist = distance
-                    best_name = name
+                    best_name = cmd.qualified_name  # Always use qualified name for suggestions
 
             # Store if within threshold
             if min_dist <= max_distance:
