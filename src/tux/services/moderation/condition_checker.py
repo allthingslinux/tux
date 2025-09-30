@@ -22,7 +22,18 @@ def _create_permission_decorator(required_level: PermissionLevel) -> Callable[[F
 
     def decorator(func: F) -> F:
         @functools.wraps(func)
-        async def wrapper(ctx: commands.Context[Tux], *args: Any, **kwargs: Any) -> Any:
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+            # Handle both function and method calls
+            if len(args) >= 2 and hasattr(args[0], "__class__") and hasattr(args[1], "bot"):
+                # Method call: args[0] is self, args[1] is ctx
+                ctx = args[1]
+            elif len(args) >= 1 and hasattr(args[0], "bot"):
+                # Function call: args[0] is ctx
+                ctx = args[0]
+            else:
+                msg = "Unable to find context parameter"
+                raise ValueError(msg)
+
             # Get the permission system
             permission_system = get_permission_system()
 
@@ -31,7 +42,7 @@ def _create_permission_decorator(required_level: PermissionLevel) -> Callable[[F
             await permission_system.require_permission(ctx, required_level)
 
             # Execute the original function if permission check passed
-            return await func(ctx, *args, **kwargs)
+            return await func(*args, **kwargs)
 
         return wrapper  # type: ignore[return-value]
 
