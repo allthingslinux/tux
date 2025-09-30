@@ -27,7 +27,7 @@ def run() -> int:
         app = TuxApp()
         app.run()
 
-    except (TuxDatabaseError, TuxError, RuntimeError, SystemExit, KeyboardInterrupt, Exception) as e:
+    except (TuxDatabaseError, TuxError, SystemExit, KeyboardInterrupt, Exception) as e:
         # Handle all errors in one place
         if isinstance(e, TuxDatabaseError):
             logger.error("❌ Database connection failed")
