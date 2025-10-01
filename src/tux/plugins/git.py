@@ -20,7 +20,7 @@ class Git(BaseCog):
         if self.unload_if_missing_config(
             not CONFIG.EXTERNAL_SERVICES.GITHUB_APP_ID,
             "GitHub App ID",
-            "tux.modules.admin.git",
+            "tux.plugins.git",
         ):
             return
 

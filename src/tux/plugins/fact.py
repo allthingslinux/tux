@@ -1,3 +1,4 @@
+import contextlib
 import random
 import tomllib
 from pathlib import Path
@@ -12,6 +13,7 @@ from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.services.http_client import http_client
 from tux.shared.config import CONFIG
+from tux.shared.version import get_version
 from tux.ui.embeds import EmbedCreator
 
 # Define workspace root relative to the project root
@@ -23,7 +25,7 @@ def _substitute_placeholders(bot: Tux, text: str) -> str:
     if not text:
         return text
 
-    try:
+    with contextlib.suppress(Exception):
         if "{member_count}" in text:
             member_count = sum(guild.member_count or 0 for guild in bot.guilds)
             text = text.replace("{member_count}", str(member_count))
@@ -32,12 +34,9 @@ def _substitute_placeholders(bot: Tux, text: str) -> str:
         if "{bot_name}" in text:
             text = text.replace("{bot_name}", CONFIG.BOT_INFO.BOT_NAME)
         if "{bot_version}" in text:
-            text = text.replace("{bot_version}", CONFIG.BOT_INFO.BOT_VERSION)
+            text = text.replace("{bot_version}", get_version())
         if "{prefix}" in text:
             text = text.replace("{prefix}", CONFIG.get_prefix())
-    except Exception:
-        pass  # Return original text if substitution fails
-
     return text
 
 
@@ -70,11 +69,14 @@ class Fact(BaseCog):
         elif ft in self.facts_data:
             key = ft
         else:
-            key = None
-            for k, data in self.facts_data.items():
-                if _substitute_placeholders(self.bot, data.get("name", k.title())).lower() == ft:
-                    key = k
-                    break
+            key = next(
+                (
+                    k
+                    for k, data in self.facts_data.items()
+                    if _substitute_placeholders(self.bot, data.get("name", k.title())).lower() == ft
+                ),
+                None,
+            )
         if not key:
             return None
         cfg = self.facts_data[key]
