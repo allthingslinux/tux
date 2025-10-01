@@ -23,14 +23,14 @@ def _create_permission_decorator(required_level: PermissionLevel) -> Callable[[F
     def decorator(func: F) -> F:
         @functools.wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
-            # Handle both function and method calls
-            if len(args) >= 2 and hasattr(args[0], "__class__") and hasattr(args[1], "bot"):
-                # Method call: args[0] is self, args[1] is ctx
-                ctx = args[1]
-            elif len(args) >= 1 and hasattr(args[0], "bot"):
-                # Function call: args[0] is ctx
-                ctx = args[0]
-            else:
+            # Find the context parameter - it should be the first argument with a 'bot' attribute
+            ctx = None
+            for arg in args:
+                if hasattr(arg, "bot") and hasattr(arg, "guild"):
+                    ctx = arg
+                    break
+
+            if ctx is None:
                 msg = "Unable to find context parameter"
                 raise ValueError(msg)
 
