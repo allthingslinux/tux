@@ -55,18 +55,14 @@ class CogLoader(commands.Cog):
             return False
 
         # Basic file checks
-        if not (filepath.suffix == ".py" and not cog_name.startswith("_") and await aiofiles.os.path.isfile(filepath)):
+        if filepath.suffix != ".py" or cog_name.startswith("_") or not await aiofiles.os.path.isfile(filepath):
             return False
 
         # Check if the module has a setup function
         try:
             # Convert file path to module name
             # Find the src directory in the path
-            src_index = None
-            for i, part in enumerate(filepath.parts):
-                if part == "src":
-                    src_index = i
-                    break
+            src_index = next((i for i, part in enumerate(filepath.parts) if part == "src"), None)
 
             if src_index is None:
                 return False
@@ -374,7 +370,9 @@ class CogLoader(commands.Cog):
 
             if load_time:
                 # Count successful loads for this folder
-                folder_cogs = [k for k in self.load_times if folder_name in k]
+                # Convert folder_name from path format to module format for matching
+                folder_module_prefix = folder_name.replace("/", ".")
+                folder_cogs = [k for k in self.load_times if folder_module_prefix in k]
                 logger.info(f"Loaded {len(folder_cogs)} cogs from {folder_name} in {load_time * 1000:.0f}ms")
 
                 # Log individual cog load times for performance monitoring
