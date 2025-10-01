@@ -1,5 +1,7 @@
 from typing import Final
 
+import discord
+
 # TODO: move to assets/data/ potentially
 
 
@@ -68,9 +70,14 @@ class Constants:
     DEFAULT_DELETE_AFTER = 30
     HTTP_TIMEOUT = 10
 
+    # General constants
+    TRUNCATION_SUFFIX = "..."
+
     # AFK constants
     AFK_PREFIX = "[AFK] "
-    AFK_TRUNCATION_SUFFIX = "..."
+    AFK_SLEEPING_EMOJI = "\N{SLEEPING SYMBOL}"
+    AFK_ALLOWED_MENTIONS = discord.AllowedMentions(users=False, everyone=False, roles=False)
+    AFK_REASON_MAX_LENGTH = 100
 
     # 8ball constants
     EIGHT_BALL_QUESTION_LENGTH_LIMIT = 120

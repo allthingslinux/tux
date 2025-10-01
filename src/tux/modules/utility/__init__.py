@@ -15,9 +15,9 @@ def _generate_afk_nickname(display_name: str) -> str:
     prefix_len = len(CONST.AFK_PREFIX)
 
     if len(display_name) >= CONST.NICKNAME_MAX_LENGTH - prefix_len:
-        suffix_len = len(CONST.AFK_TRUNCATION_SUFFIX)
+        suffix_len = len(CONST.TRUNCATION_SUFFIX)
         available_space = CONST.NICKNAME_MAX_LENGTH - prefix_len - suffix_len
-        truncated_name = f"{display_name[:available_space]}{CONST.AFK_TRUNCATION_SUFFIX}"
+        truncated_name = f"{display_name[:available_space]}{CONST.TRUNCATION_SUFFIX}"
 
         return f"{CONST.AFK_PREFIX}{truncated_name}"
 
