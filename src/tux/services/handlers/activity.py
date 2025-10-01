@@ -8,6 +8,7 @@ from loguru import logger
 
 from tux.core.bot import Tux
 from tux.shared.config import CONFIG
+from tux.shared.version import get_version
 
 # Map the string type to the discord.ActivityType enum.
 ACTIVITY_TYPE_MAP = {
@@ -66,7 +67,7 @@ class ActivityHandler(commands.Cog):
             if "{bot_name}" in text:
                 text = text.replace("{bot_name}", CONFIG.BOT_INFO.BOT_NAME)
             if "{bot_version}" in text:
-                text = text.replace("{bot_version}", CONFIG.BOT_INFO.BOT_VERSION)
+                text = text.replace("{bot_version}", get_version())
             if "{prefix}" in text:
                 text = text.replace("{prefix}", CONFIG.get_prefix())
         return text

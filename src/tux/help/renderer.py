@@ -10,6 +10,7 @@ from discord.ext import commands
 
 from tux.shared.config import CONFIG
 from tux.shared.constants import CONST
+from tux.shared.version import get_version
 
 from .utils import format_multiline_description, truncate_description
 
@@ -133,7 +134,6 @@ class HelpRenderer:
         )
 
         bot_name_display = "Tux" if CONFIG.BOT_INFO.BOT_NAME == "Tux" else f"{CONFIG.BOT_INFO.BOT_NAME} (Tux)"
-        environment = "dev" if CONFIG.DEBUG else "prod"
         owner_info = (
             f"Bot Owner: <@{CONFIG.USER_IDS.BOT_OWNER_ID}>"
             if not CONFIG.BOT_INFO.HIDE_BOT_OWNER and CONFIG.USER_IDS.BOT_OWNER_ID
@@ -142,8 +142,7 @@ class HelpRenderer:
 
         embed.add_field(
             name="Bot Instance",
-            value=f"-# Running {bot_name_display} v `{CONFIG.BOT_INFO.BOT_VERSION}` in `{environment}` mode"
-            + (f"\n-# {owner_info}" if owner_info else ""),
+            value=f"-# Running {bot_name_display} v `{get_version()}`" + (f"\n-# {owner_info}" if owner_info else ""),
             inline=False,
         )
 

@@ -12,7 +12,7 @@ from typing import Any
 import httpx
 from loguru import logger
 
-from tux.shared.config import CONFIG
+from tux.shared.version import get_version
 
 
 class HTTPClient:
@@ -59,7 +59,7 @@ class HTTPClient:
         )
 
         headers = {
-            "User-Agent": f"Tux-Bot/{CONFIG.BOT_INFO.BOT_VERSION} (https://github.com/allthingslinux/tux)",
+            "User-Agent": f"Tux-Bot/{get_version()} (https://github.com/allthingslinux/tux)",
         }
 
         client = httpx.AsyncClient(

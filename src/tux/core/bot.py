@@ -28,6 +28,7 @@ from tux.services.tracing import (
 )
 from tux.shared.config import CONFIG
 from tux.shared.exceptions import TuxDatabaseConnectionError
+from tux.shared.version import get_version
 from tux.ui.banner import create_banner
 
 __all__ = ["Tux"]
@@ -312,7 +313,7 @@ class Tux(commands.Bot):
         with start_span("bot.log_banner", "Displaying startup banner"):
             banner = create_banner(
                 bot_name=CONFIG.BOT_INFO.BOT_NAME,
-                version=CONFIG.BOT_INFO.BOT_VERSION,
+                version=get_version(),
                 bot_id=str(self.user.id) if self.user else None,
                 guild_count=len(self.guilds),
                 user_count=len(self.users),

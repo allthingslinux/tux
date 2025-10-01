@@ -55,8 +55,8 @@ def get_extension_from_path(file_path: Path, base_dir: Path) -> str | None:
                     # Found cog.py with setup, return the cog module name
                     return cog_module_name
 
-        # Fallback to original behavior
-        return "tux." + ".".join(parts)
+        # This is not a cog or cog-related module, don't treat as extension
+        return None  # noqa: TRY300
     except ValueError:
         return None
 

@@ -13,6 +13,7 @@ from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.integrations.loguru import LoguruIntegration
 
 from tux.shared.config import CONFIG
+from tux.shared.version import get_version
 
 from .handlers import before_send, before_send_transaction, traces_sampler
 
@@ -27,7 +28,7 @@ def setup() -> None:
 
     sentry_sdk.init(
         dsn=CONFIG.EXTERNAL_SERVICES.SENTRY_DSN,
-        release=CONFIG.BOT_INFO.BOT_VERSION,
+        release=get_version(),
         environment="development" if CONFIG.DEBUG else "production",
         integrations=[
             AsyncioIntegration(),

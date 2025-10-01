@@ -13,7 +13,6 @@ class BotInfo(BaseModel):
     """Bot information configuration."""
 
     BOT_NAME: str = Field(default="Tux", description="Name of the bot")
-    BOT_VERSION: str = Field(default="0.0.0", description="Bot version")
     ACTIVITIES: str = Field(default="[]", description="Bot activities")
     HIDE_BOT_OWNER: bool = Field(default=False, description="Hide bot owner info")
     PREFIX: str = Field(default="$", description="Command prefix")
