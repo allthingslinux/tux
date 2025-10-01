@@ -73,6 +73,7 @@ class ErrorHandlerConfig:
 # Import extractors here to avoid circular imports
 from .extractors import (
     extract_bad_flag_argument_details,
+    extract_bad_union_argument_details,
     extract_httpx_status_details,
     extract_missing_any_role_details,
     extract_missing_argument_details,
@@ -168,16 +169,16 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         send_to_sentry=False,
     ),
     commands.FlagError: ErrorHandlerConfig(
-        message_format="Flag error: {error}\nUsage: `{ctx.prefix}{usage}`",
+        message_format="Flag error: {error}",
         send_to_sentry=False,
     ),
     commands.BadFlagArgument: ErrorHandlerConfig(
-        message_format="Invalid flag `{flag_name}`: {original_cause}\nUsage: `{ctx.prefix}{usage}`",
+        message_format="Invalid flag `{flag_name}`: {original_cause}",
         detail_extractor=extract_bad_flag_argument_details,
         send_to_sentry=False,
     ),
     commands.MissingRequiredFlag: ErrorHandlerConfig(
-        message_format="Missing required flag: `{flag_name}`\nUsage: `{ctx.prefix}{usage}`",
+        message_format="Missing required flag: `{flag_name}`",
         detail_extractor=extract_missing_flag_details,
         send_to_sentry=False,
     ),
@@ -190,12 +191,17 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         send_to_sentry=False,
     ),
     commands.MissingRequiredArgument: ErrorHandlerConfig(
-        message_format="Missing argument: `{param_name}`\nUsage: `{ctx.prefix}{usage}`",
+        message_format="Missing argument: `{param_name}`",
         detail_extractor=extract_missing_argument_details,
         send_to_sentry=False,
     ),
+    commands.BadUnionArgument: ErrorHandlerConfig(
+        message_format="Invalid argument type: `{argument}`\nExpected: {expected_types}",
+        detail_extractor=extract_bad_union_argument_details,
+        send_to_sentry=False,
+    ),
     commands.TooManyArguments: ErrorHandlerConfig(
-        message_format="Too many arguments.\nUsage: `{ctx.prefix}{usage}`",
+        message_format="Too many arguments.",
         send_to_sentry=False,
     ),
     commands.NotOwner: ErrorHandlerConfig(

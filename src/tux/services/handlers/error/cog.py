@@ -1,5 +1,7 @@
 """Comprehensive error handler for Discord commands."""
 
+import importlib
+import sys
 import traceback
 
 import discord
@@ -37,6 +39,27 @@ class ErrorHandler(commands.Cog):
         if self._old_tree_error:
             self.bot.tree.on_error = self._old_tree_error
         logger.debug("Error handler unloaded")
+
+    async def cog_reload(self) -> None:
+        """Handle cog reload - force reload imported modules."""
+
+        # Force reload the config and extractors modules
+        modules_to_reload = [
+            "tux.services.handlers.error.config",
+            "tux.services.handlers.error.extractors",
+            "tux.services.handlers.error.formatter",
+            "tux.services.handlers.error.suggestions",
+        ]
+
+        for module_name in modules_to_reload:
+            if module_name in sys.modules:
+                try:
+                    importlib.reload(sys.modules[module_name])
+                    logger.debug(f"Force reloaded {module_name}")
+                except Exception as e:
+                    logger.warning(f"Failed to reload {module_name}: {e}")
+
+        logger.debug("Error handler reloaded with fresh modules")
 
     async def _handle_error(self, source: commands.Context[Tux] | discord.Interaction, error: Exception) -> None:
         """Main error processing logic."""

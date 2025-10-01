@@ -1,5 +1,6 @@
 """Error message formatting utilities."""
 
+from contextlib import suppress
 from typing import Any
 
 import discord
@@ -32,10 +33,8 @@ class ErrorFormatter:
         )
 
         # Add command usage if available and configured
-        if config.include_usage and isinstance(source, commands.Context):
-            usage = self._get_command_usage(source)
-            if usage:
-                embed.add_field(name="Usage", value=f"`{usage}`", inline=False)
+        if config.include_usage and isinstance(source, commands.Context) and (usage := self._get_command_usage(source)):
+            embed.add_field(name="Usage", value=f"`{usage}`", inline=False)
 
         return embed
 
@@ -57,11 +56,9 @@ class ErrorFormatter:
 
         # Extract error-specific details
         if config.detail_extractor:
-            try:
+            with suppress(Exception):
                 details = config.detail_extractor(error)
-                kwargs.update(details)
-            except Exception:
-                pass  # Ignore extractor failures
+                kwargs |= details
 
         # Format message with fallback
         try:
@@ -74,9 +71,15 @@ class ErrorFormatter:
         if not ctx.command:
             return None
 
+        prefix = ctx.prefix
+
+        # Use the command's usage attribute if it exists (e.g., custom generated usage)
+        if ctx.command.usage:
+            return f"{prefix}{ctx.command.usage}"
+
+        # Otherwise, construct from signature
         signature = ctx.command.signature.strip()
         qualified_name = ctx.command.qualified_name
-        prefix = ctx.prefix
 
         return f"{prefix}{qualified_name}{f' {signature}' if signature else ''}"
 

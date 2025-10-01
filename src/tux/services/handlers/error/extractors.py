@@ -107,3 +107,36 @@ def extract_missing_argument_details(error: Exception) -> dict[str, Any]:
     """Extract missing argument details."""
     param_name = getattr(getattr(error, "param", None), "name", "unknown_argument")
     return {"param_name": param_name}
+
+
+def extract_bad_union_argument_details(error: Exception) -> dict[str, Any]:
+    """Extract bad union argument details."""
+    # Try to extract the actual argument value
+    argument_raw = getattr(error, "argument", getattr(error, "param", "unknown"))
+
+    # If argument_raw is a Parameter object, get its name
+    if hasattr(argument_raw, "name"):
+        argument = getattr(argument_raw, "name", "unknown")
+    elif isinstance(argument_raw, str):
+        # Parse string format like "member: Union[...]"
+        argument = argument_raw.split(": ")[0] if ": " in argument_raw else argument_raw
+    else:
+        argument = str(argument_raw) if argument_raw is not None else "unknown"
+
+    converters = getattr(error, "converters", [])
+
+    # Format the expected types
+    expected_types: list[str] = []
+    for converter in converters:
+        try:
+            if hasattr(converter, "__name__"):
+                expected_types.append(str(converter.__name__))
+            elif hasattr(converter, "_type"):
+                expected_types.append(str(converter._type))
+            else:
+                expected_types.append(str(converter))
+        except Exception:
+            expected_types.append("unknown")
+
+    expected_types_str = " or ".join(expected_types) if expected_types else "unknown type"
+    return {"argument": argument, "expected_types": expected_types_str}
