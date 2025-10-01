@@ -172,7 +172,7 @@ class Cases(ModerationCogBase):
             await ctx.send("Case number must be a valid integer.", ephemeral=True)
             return
 
-        case = await self.db.case.get_case_by_number(ctx.guild.id, case_number)
+        case = await self.db.case.get_case_by_number(case_number, ctx.guild.id)
         if not case:
             await ctx.send("Case not found.", ephemeral=True)
             return
@@ -225,7 +225,7 @@ class Cases(ModerationCogBase):
             await ctx.reply("Case number must be a valid integer.", mention_author=False)
             return
 
-        case = await self.db.case.get_case_by_number(ctx.guild.id, case_number)
+        case = await self.db.case.get_case_by_number(case_number, ctx.guild.id)
         if not case:
             await ctx.reply("Case not found.", mention_author=False)
             return
@@ -387,7 +387,7 @@ class Cases(ModerationCogBase):
         fields = self._create_case_fields(moderator, user, reason)
 
         embed = discord.Embed(
-            title=f"Case #{case.case_number} ({case.case_type}) {action}",
+            title=f"Case #{case.case_number} ({case.case_type.value if case.case_type else 'UNKNOWN'}) {action}",
             color=CONST.EMBED_COLORS["CASE"],
         )
 
@@ -573,7 +573,7 @@ class Cases(ModerationCogBase):
             # Format date - Case model doesn't have created_at, use case_id as proxy for age
             case_date = (
                 discord.utils.format_dt(
-                    datetime.fromtimestamp(0, UTC),  # Default timestamp since no created_at
+                    datetime.fromtimestamp(((case.case_id >> 22) + 1420070400000) / 1000, UTC),
                     "R",
                 )
                 if case.case_id
