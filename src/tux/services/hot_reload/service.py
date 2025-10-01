@@ -48,6 +48,7 @@ class HotReload(commands.Cog):
         # State
         self._is_enabled = self.config.enabled
         self._reload_lock = asyncio.Lock()
+        self._pending_reloads: dict[str, asyncio.Task[None]] = {}
 
     async def cog_load(self) -> None:
         """Initialize the hot reload system when cog is loaded."""
@@ -87,21 +88,43 @@ class HotReload(commands.Cog):
 
     def _handle_file_change(self, extension: str) -> None:
         """Handle file change events."""
+        logger.info(f"📁 Hot reload: File change detected for extension {extension}")
         if not self._is_enabled:
+            logger.warning("Hot reload: System disabled, ignoring file change")
             return
 
-        # Schedule async reload
+        # Schedule async reload with debouncing
         try:
             loop = asyncio.get_event_loop()
             if loop.is_closed():
                 return  # Don't reload if loop is closed
-            loop.create_task(self._reload_extension_async(extension))  # noqa: RUF006
+
+            # Check if we already have a pending reload for this extension
+            if extension in self._pending_reloads:
+                # Cancel existing timer and create new one
+                self._pending_reloads[extension].cancel()
+
+            # Create debounced reload
+            async def debounced_reload():
+                await asyncio.sleep(self.config.debounce_delay)
+                if extension in self._pending_reloads:
+                    del self._pending_reloads[extension]
+                logger.info(f"Hot reload: Executing debounced reload for {extension}")
+                await self._reload_extension_async(extension)
+
+            # Schedule the debounced reload
+            task = loop.create_task(debounced_reload())
+            self._pending_reloads[extension] = task
+            logger.info(f"Hot reload: Scheduled debounced reload for {extension}")
+
         except RuntimeError:
             # No event loop running, skip reload during shutdown
+            logger.warning("Hot reload: No event loop available, skipping reload")
             return
 
     async def _reload_extension_async(self, extension: str) -> None:
         """Asynchronously reload an extension."""
+        logger.info(f"🔄 Hot reload: Starting reload of {extension}")
         async with self._reload_lock:
             await self._reload_extension_with_monitoring(extension)
 

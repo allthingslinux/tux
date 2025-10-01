@@ -4,7 +4,7 @@ import ast
 import hashlib
 import importlib
 import sys
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from pathlib import Path
 
 from loguru import logger
@@ -30,7 +30,32 @@ def get_extension_from_path(file_path: Path, base_dir: Path) -> str | None:
             return None
 
         # Convert path to dot notation
-        parts = [*list(relative_path.parts[:-1]), relative_path.stem]
+        *path_parts, filename = relative_path.parts
+        stem = Path(filename).stem
+        parts = [*path_parts, stem]
+
+        # For files in cog directories, return the cog extension, not the individual module
+        # Check if this is a cog by looking for setup function in the module
+        module_name = "tux." + ".".join(parts)
+        with suppress(ImportError):
+            module = importlib.import_module(module_name)
+            if hasattr(module, "setup") and callable(module.setup):
+                # This is a cog, return its full path
+                return module_name
+
+        # Not a cog, check if parent directory contains a cog
+        # Remove the last part (filename) and check the parent module
+        if len(parts) > 1:
+            parent_module_name = "tux." + ".".join(parts[:-1])
+            # Check if there's a cog.py file in the parent directory
+            cog_module_name = f"{parent_module_name}.cog"
+            with suppress(ImportError):
+                cog_module = importlib.import_module(cog_module_name)
+                if hasattr(cog_module, "setup") and callable(cog_module.setup):
+                    # Found cog.py with setup, return the cog module name
+                    return cog_module_name
+
+        # Fallback to original behavior
         return "tux." + ".".join(parts)
     except ValueError:
         return None
