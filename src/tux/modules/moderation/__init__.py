@@ -3,6 +3,7 @@ from typing import Any, ClassVar
 
 import discord
 from discord.ext import commands
+from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
@@ -31,8 +32,37 @@ class ModerationCogBase(BaseCog):
     def __init__(self, bot: Tux) -> None:
         """Initialize the moderation cog base."""
         super().__init__(bot)
-        # Note: ModerationCoordinator will be initialized when needed
         self.moderation: ModerationCoordinator | None = None
+
+    async def cog_load(self) -> None:
+        """Initialize moderation services when the cog is loaded."""
+        await super().cog_load()
+
+        # Initialize moderation services if not already done
+        if self.moderation is None:
+            logger.debug(f"Initializing moderation services for {self.__class__.__name__}")
+
+            # Create the moderation services
+            from tux.services.moderation import (  # noqa: PLC0415
+                CaseService,
+                CommunicationService,
+                ExecutionService,
+                ModerationCoordinator,
+            )
+
+            case_service = CaseService(self.db.case)
+            communication_service = CommunicationService(self.bot)
+            execution_service = ExecutionService()
+
+            self.moderation = ModerationCoordinator(
+                case_service=case_service,
+                communication_service=communication_service,
+                execution_service=execution_service,
+            )
+
+            logger.debug(f"Moderation services initialized successfully for {self.__class__.__name__}")
+        else:
+            logger.debug(f"Moderation services already initialized for {self.__class__.__name__}")
 
     async def moderate_user(
         self,
