@@ -86,7 +86,7 @@ def create_cog_category_mapping(
             command_mapping.setdefault(cog_group, {})
 
             for command in cog_commands:
-                # Format command aliases
+                # Format command aliases for category display
                 cmd_aliases = (
                     ", ".join(f"`{alias}`" for alias in command.aliases) if command.aliases else "`No aliases`"
                 )

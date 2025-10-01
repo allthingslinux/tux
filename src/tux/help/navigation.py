@@ -21,7 +21,7 @@ from .components import (
 )
 from .data import HelpData
 from .renderer import HelpRenderer
-from .utils import paginate_items
+from .utils import format_multiline_description, paginate_items
 
 
 class HelpState(Enum):
@@ -96,6 +96,49 @@ class HelpNavigation:
             # Reset to first page when paginating
             self.current_subcommand_page = 0
 
+    async def _create_paginated_embed(self) -> discord.Embed:
+        """Create an embed showing the current page of subcommands."""
+        if not self.current_command_obj:
+            # Create a basic embed if no command object
+            return self.renderer.create_base_embed("Help", "No command information available.")
+
+        if not isinstance(self.current_command_obj, commands.Group):
+            # Fallback to regular embed if not a group
+            return await self.renderer.create_command_embed(self.current_command_obj)
+
+        valid_page = self.subcommand_pages and 0 <= self.current_subcommand_page < len(self.subcommand_pages)
+        current_page_cmds = self.subcommand_pages[self.current_subcommand_page] if valid_page else []
+
+        # Create embed similar to command embed but with paginated subcommands
+        help_text = format_multiline_description(self.current_command_obj.help)
+        embed = self.renderer.create_base_embed(
+            title=f"{self.renderer.prefix}{self.current_command_obj.qualified_name}",
+            description=help_text,
+        )
+
+        await self.renderer.add_command_help_fields(embed, self.current_command_obj)
+
+        # Add flag details if present
+        if flag_details := self.renderer.format_flag_details(self.current_command_obj):
+            embed.add_field(name="Flags", value=f"```\n{flag_details}\n```", inline=False)
+
+        # Show current page subcommands
+        if current_page_cmds:
+            page_num = self.current_subcommand_page + 1
+            total_pages = len(self.subcommand_pages)
+
+            subcommands_list = "\n".join(
+                f"• `{c.name}`{' ≡' if isinstance(c, commands.Group) and c.commands else ''} - {c.short_doc or 'No description'}"
+                for c in current_page_cmds
+            )
+            embed.add_field(
+                name=f"Subcommands (Page {page_num}/{total_pages})",
+                value=f"Showing {len(current_page_cmds)} of {sum(len(page) for page in self.subcommand_pages)} subcommands:\n\n{subcommands_list}",
+                inline=False,
+            )
+
+        return embed
+
     async def _find_parent_command(self, subcommand_name: str) -> tuple[str, commands.Command[Any, Any, Any]] | None:
         """Find the parent command for a given subcommand."""
         if not self.data.command_mapping:
@@ -121,7 +164,8 @@ class HelpNavigation:
         """Create category view."""
         categories = await self.data.get_command_categories()
         commands_dict = categories.get(category, {})
-        options = self.renderer.create_command_options(commands_dict)
+        command_mapping = self.data.command_mapping.get(category, {}) if self.data.command_mapping else {}
+        options = self.renderer.create_command_options(commands_dict, command_mapping)
 
         view = HelpView(self)
         view.add_item(CommandSelectMenu(self, options, f"Select a command from {category}"))
@@ -168,7 +212,7 @@ class HelpNavigation:
                     )
                     for cmd in current_page_cmds
                 ]:
-                    jsk_select = CommandSelectMenu(self, jsk_select_options, "Select a command")
+                    jsk_select = SubcommandSelectMenu(self, jsk_select_options, "Select a subcommand")
                     view.add_item(jsk_select)
             else:
                 logger.info(
@@ -223,7 +267,15 @@ class HelpNavigation:
         self.current_command = command_name
         self.current_command_obj = command
 
-        embed = await self.renderer.create_command_embed(command)
+        # For large command groups, initialize pagination and use paginated embed
+        if isinstance(command, commands.Group) and (command.name in {"jsk", "jishaku"} or len(command.commands) > 15):
+            # Initialize pagination for large groups
+            if not self.subcommand_pages:
+                sorted_cmds = sorted(command.commands, key=lambda x: x.name)
+                self._paginate_subcommands(sorted_cmds, preserve_page=False)
+            embed = await self._create_paginated_embed()
+        else:
+            embed = await self.renderer.create_command_embed(command)
         view = await self.create_command_view()
 
         # Special handling for nested command groups (groups within groups)
@@ -371,7 +423,7 @@ class HelpNavigation:
         # Update the embed with the new page
         if self.current_command and self.current_command_obj:
             if interaction.message:
-                embed = await self.renderer.create_command_embed(self.current_command_obj)
+                embed = await self._create_paginated_embed()
                 view = await self.create_command_view()
                 await interaction.message.edit(embed=embed, view=view)
             else:
@@ -395,7 +447,7 @@ class HelpNavigation:
         # Update the embed with the new page
         if self.current_command and self.current_command_obj:
             if interaction.message:
-                embed = await self.renderer.create_command_embed(self.current_command_obj)
+                embed = await self._create_paginated_embed()
                 view = await self.create_command_view()
                 await interaction.message.edit(embed=embed, view=view)
             else:

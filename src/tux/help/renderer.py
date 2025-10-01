@@ -71,13 +71,13 @@ class HelpRenderer:
 
     async def add_command_help_fields(self, embed: discord.Embed, command: commands.Command[Any, Any, Any]) -> None:
         """Add help fields for a command to embed."""
-        usage = command.usage or self.generate_default_usage(command)
-        embed.add_field(name="Usage", value=f"`{self.prefix}{usage}`", inline=False)
         embed.add_field(
             name="Aliases",
             value=(f"`{', '.join(command.aliases)}`" if command.aliases else "No aliases"),
             inline=False,
         )
+        usage = command.usage or self.generate_default_usage(command)
+        embed.add_field(name="Usage", value=f"`{self.prefix}{usage}`", inline=False)
 
     def add_command_field(self, embed: discord.Embed, command: commands.Command[Any, Any, Any]) -> None:
         """Add a single command field to embed."""
@@ -177,30 +177,40 @@ class HelpRenderer:
         if isinstance(command, commands.Group) and command.commands:
             sorted_cmds = sorted(command.commands, key=lambda x: x.name)
 
-            if nested_groups := [cmd for cmd in sorted_cmds if isinstance(cmd, commands.Group) and cmd.commands]:
-                nested_groups_text = "\n".join(
-                    f"• `{g.name}` - {truncate_description(g.short_doc or 'No description')} ({len(g.commands)} subcommands)"
-                    for g in nested_groups
+            # Skip subcommands field for large command groups like jishaku that use pagination
+            is_large_group = command.name in {"jsk", "jishaku"} or len(sorted_cmds) > 15
+            if not is_large_group:
+                if nested_groups := [cmd for cmd in sorted_cmds if isinstance(cmd, commands.Group) and cmd.commands]:
+                    nested_groups_text = "\n".join(
+                        f"• `{g.name}` - {truncate_description(g.short_doc or 'No description')} ({len(g.commands)} subcommands)"
+                        for g in nested_groups
+                    )
+                    embed.add_field(
+                        name="Nested Command Groups",
+                        value=(
+                            f"This command has the following subcommand groups:\n\n{nested_groups_text}\n\nSelect a group command to see its subcommands."
+                        ),
+                        inline=False,
+                    )
+
+                subcommands_list = "\n".join(
+                    f"• `{c.name}`{' ≡' if isinstance(c, commands.Group) and c.commands else ''} - {c.short_doc or 'No description'}"
+                    for c in sorted_cmds
                 )
                 embed.add_field(
-                    name="Nested Command Groups",
+                    name="Subcommands",
                     value=(
-                        f"This command has the following subcommand groups:\n\n{nested_groups_text}\n\nSelect a group command to see its subcommands."
+                        f"This command group has the following subcommands:\n\n{subcommands_list}\n\nSelect a subcommand from the dropdown to see more details."
                     ),
                     inline=False,
                 )
-
-            subcommands_list = "\n".join(
-                f"• `{c.name}{'†' if isinstance(c, commands.Group) and c.commands else ''}` - {c.short_doc or 'No description'}"
-                for c in sorted_cmds
-            )
-            embed.add_field(
-                name="Subcommands",
-                value=(
-                    f"This command group has the following subcommands:\n\n{subcommands_list}\n\nSelect a subcommand from the dropdown to see more details."
-                ),
-                inline=False,
-            )
+            else:
+                # For large groups, just mention the count and let the select menu handle navigation
+                embed.add_field(
+                    name="Subcommands",
+                    value=f"This command group has {len(sorted_cmds)} subcommands.\n\nUse the dropdown below to select a subcommand.",
+                    inline=False,
+                )
 
         return embed
 
@@ -254,12 +264,18 @@ class HelpRenderer:
 
         return sorted(options, key=lambda o: o.label)
 
-    def create_command_options(self, commands_dict: dict[str, str]) -> list[discord.SelectOption]:
+    def create_command_options(
+        self,
+        commands_dict: dict[str, str],
+        command_mapping: dict[str, commands.Command[Any, Any, Any]],
+    ) -> list[discord.SelectOption]:
         """Create select options for commands."""
         options: list[discord.SelectOption] = []
 
-        for cmd_name, description in commands_dict.items():
-            truncated_desc = truncate_description(description or "No description")
+        for cmd_name in commands_dict:
+            command = command_mapping.get(cmd_name)
+            description = command.short_doc if command else "No description"
+            truncated_desc = truncate_description(description)
             options.append(SelectOption(label=cmd_name, value=cmd_name, description=truncated_desc))
 
         return sorted(options, key=lambda o: o.label)
