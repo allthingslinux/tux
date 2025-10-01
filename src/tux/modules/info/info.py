@@ -5,6 +5,7 @@ from typing import Any
 
 import discord
 from discord.ext import commands
+from discord.utils import TimestampStyle
 from reactionmenu import ViewButton, ViewMenu
 
 from tux.core.base_cog import BaseCog
@@ -23,7 +24,7 @@ class Info(BaseCog):
             discord.User: self._show_user_info,
             discord.Message: self._show_message_info,
             discord.abc.GuildChannel: self._show_channel_info,
-            discord.Guild: self._show_guild_info,  # Add guild handler
+            discord.Guild: self._show_guild_info,
             discord.Role: self._show_role_info,
             discord.Emoji: self._show_emoji_info,
             discord.GuildSticker: self._show_sticker_info,
@@ -38,12 +39,12 @@ class Info(BaseCog):
         return "✅" if value else "❌"
 
     @staticmethod
-    def _format_datetime(dt: datetime | None, style: str = "R") -> str:
+    def _format_datetime(dt: datetime | None, style: TimestampStyle = "R") -> str:
         """Format datetime to Discord relative format or fallback."""
         if dt is None:
             return "Unknown"
         try:
-            return discord.utils.format_dt(dt, style)  # type: ignore[arg-type]
+            return discord.utils.format_dt(dt, style)
         except (TypeError, ValueError):
             return "Unknown"
 
