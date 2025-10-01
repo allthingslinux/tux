@@ -211,7 +211,7 @@ class TestFactModuleHTTP:
     @pytest.mark.asyncio
     async def test_fact_api_calls(self, httpx_mock) -> None:
         """Test various fact API integrations."""
-        from tux.modules.fun.fact import Fact
+        from tux.plugins.fact import Fact
 
         # Mock different fact APIs
         fact_apis = [
@@ -262,7 +262,7 @@ class TestFactModuleHTTP:
     @pytest.mark.asyncio
     async def test_fact_api_timeout(self, httpx_mock) -> None:
         """Test fact API timeout handling."""
-        from tux.modules.fun.fact import Fact
+        from tux.plugins.fact import Fact
 
         httpx_mock.add_exception(httpx.ReadTimeout("API timeout"))
 

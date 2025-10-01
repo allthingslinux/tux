@@ -145,7 +145,7 @@ class TestHTTPClientIntegration:
     @pytest.mark.asyncio
     async def test_fact_module_integration(self, httpx_mock) -> None:
         """Test that fact module works with centralized HTTP client."""
-        from tux.modules.fun.fact import Fact
+        from tux.plugins.fact import Fact
         from unittest.mock import MagicMock
 
         # Mock the bot and fact data
