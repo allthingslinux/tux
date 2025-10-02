@@ -6,9 +6,12 @@ Clean database CLI implementation using the CLI infrastructure.
 
 import asyncio
 import subprocess
+import sys
+import traceback
 from typing import Annotated, Any
 
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
+from sqlmodel import SQLModel
 from typer import Argument, Option  # type: ignore[attr-defined]
 
 from scripts.base import BaseCLI
@@ -53,6 +56,7 @@ class DatabaseCLI(BaseCLI):
             Command("reindex", self.reindex, "Reindex database tables for performance optimization"),
             # Admin commands
             Command("reset", self.reset, "Reset database to clean state (development only)"),
+            Command("hard-reset", self.hard_reset, "Nuclear option: drop all tables and alembic_version, start fresh"),
             Command("force", self.force, "Force database to head revision (fixes migration issues)"),
             Command("version", self.version, "Show version information"),
         ]
@@ -457,6 +461,74 @@ class DatabaseCLI(BaseCLI):
             self.rich.print_success("Database reset completed")
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to reset database")
+
+    def hard_reset(
+        self,
+        force: Annotated[bool, Option("--force", "-f", help="Skip confirmation prompt")] = False,
+    ) -> None:
+        """Nuclear option: drop all tables and alembic_version, start fresh.
+
+        This command will:
+        1. Drop ALL tables in the public schema (including alembic_version)
+        2. Recreate tables from SQLModel metadata
+        3. Generate a new baseline migration
+
+        ⚠️  WARNING: This is extremely destructive and will DELETE ALL DATA!
+        Only use this in development when migrations are completely broken.
+        """
+        self.rich.print_section("💥 Hard Reset Database", "red")
+        self.rich.rich_print("[bold red]⚠️  WARNING: This will DELETE ALL DATA![/bold red]")
+        self.rich.rich_print("[bold yellow]This operation will:[/bold yellow]")
+        self.rich.rich_print("  1. Drop ALL tables in the public schema")
+        self.rich.rich_print("  2. Drop alembic_version tracking table")
+        self.rich.rich_print("  3. Recreate tables from SQLModel metadata")
+        self.rich.rich_print("")
+
+        # Require explicit confirmation unless --force is used
+        if not force:
+            if not sys.stdin.isatty():
+                self.rich.print_error("Cannot run hard-reset in non-interactive mode without --force flag")
+                return
+
+            response = input("Type 'yes' to continue: ")
+            if response.lower() != "yes":
+                self.rich.print_info("Hard reset cancelled")
+                return
+
+        async def _hard_reset():
+            try:
+                service = DatabaseService(echo=False)
+                await service.connect(CONFIG.database_url)
+
+                # Drop all tables including alembic_version
+                async def _drop_all_tables(session: Any) -> None:
+                    await session.execute(text("DROP SCHEMA public CASCADE"))
+                    await session.execute(text("CREATE SCHEMA public"))
+                    await session.execute(text("GRANT ALL ON SCHEMA public TO public"))
+                    await session.commit()
+
+                self.rich.rich_print("[yellow]Dropping all tables...[/yellow]")
+                await service.execute_query(_drop_all_tables, "drop_all_tables")
+                await service.disconnect()
+
+                # Recreate tables from metadata using sync engine with psycopg (not psycopg2)
+                self.rich.rich_print("[yellow]Recreating tables from models...[/yellow]")
+                # Convert async psycopg URL to sync psycopg URL
+                sync_url = CONFIG.database_url.replace("postgresql+psycopg://", "postgresql+psycopg://")
+                sync_engine = create_engine(sync_url)
+                SQLModel.metadata.create_all(sync_engine)
+                sync_engine.dispose()
+
+                self.rich.print_success("Hard reset completed - database is now empty with fresh schema")
+                self.rich.rich_print("[yellow]Next steps:[/yellow]")
+                self.rich.rich_print("  1. Generate baseline migration: uv run db migrate-generate 'initial schema'")
+                self.rich.rich_print("  2. Mark as applied: uv run db force")
+
+            except Exception as e:
+                self.rich.print_error(f"Failed to hard reset database: {e}")
+                traceback.print_exc()
+
+        asyncio.run(_hard_reset())
 
     def force(self) -> None:
         """Force database to head revision (fixes migration issues).
