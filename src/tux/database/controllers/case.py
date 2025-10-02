@@ -3,10 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from loguru import logger
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import noload
 
 from tux.database.controllers.base import BaseController
-from tux.database.controllers.guild import GuildController
-from tux.database.models import Case
+from tux.database.models import Case, Guild
 from tux.database.service import DatabaseService
 
 
@@ -38,38 +40,67 @@ class CaseController(BaseController[Case]):
         case_moderator_id: int,
         guild_id: int,
         case_reason: str | None = None,
-        case_duration: int | None = None,
         case_status: bool = True,
         **kwargs: Any,
     ) -> Case:
-        """Create a new case with auto-generated case number."""
-        # Generate case number based on guild's case count
+        """Create a new case with auto-generated case number.
 
-        guild_controller = GuildController(self.db)
-        # Get or create the guild if it doesn't exist
-        guild = await guild_controller.get_or_create_guild(guild_id)
+        Uses SELECT FOR UPDATE to prevent race conditions when generating case numbers.
 
-        logger.debug(f"Retrieved guild {guild_id} with case_count={guild.case_count}")
+        Note: Use case_expires_at in kwargs for expiration datetime, not case_duration.
+        """
 
-        # Increment case count to get the next case number
-        case_number = guild.case_count + 1
-        logger.info(f"Generated case number {case_number} for guild {guild_id} (current count: {guild.case_count})")
+        async def _create_with_lock(session: AsyncSession) -> Case:
+            # Lock the guild row to prevent concurrent case number generation
+            # Explicitly avoid loading relationships to prevent outer join issues with FOR UPDATE
+            stmt = (
+                select(Guild)
+                .where(Guild.guild_id == guild_id)  # type: ignore[arg-type]
+                .options(noload("*"))  # Don't load any relationships
+                .with_for_update()
+            )
+            result = await session.execute(stmt)
+            guild = result.scalar_one_or_none()
 
-        # Update guild's case count
-        await guild_controller.update_by_id(guild_id, case_count=case_number)
-        logger.info(f"Updated guild {guild_id} case count to {case_number}")
+            # Create guild if it doesn't exist
+            if guild is None:
+                guild = Guild(guild_id=guild_id, case_count=0)
+                session.add(guild)
+                await session.flush()
+                logger.debug(f"Created new guild {guild_id} with case_count=0")
+            else:
+                logger.debug(f"Locked guild {guild_id} with case_count={guild.case_count}")
 
-        # Create the case with the generated case number
-        return await self.create(
-            case_type=case_type,
-            case_user_id=case_user_id,
-            case_moderator_id=case_moderator_id,
-            guild_id=guild_id,
-            case_reason=case_reason,
-            case_status=case_status,
-            case_number=case_number,
-            **kwargs,
-        )
+            # Increment case count to get the next case number
+            case_number = guild.case_count + 1
+            guild.case_count = case_number
+            logger.info(f"Generated case number {case_number} for guild {guild_id}")
+
+            # Build case data dict
+            case_data: dict[str, Any] = {
+                "case_type": case_type,
+                "case_user_id": case_user_id,
+                "case_moderator_id": case_moderator_id,
+                "guild_id": guild_id,
+                "case_status": case_status,
+                "case_number": case_number,
+            }
+
+            # Add optional reason if provided
+            if case_reason is not None:
+                case_data["case_reason"] = case_reason
+
+            # Add any extra kwargs (like case_expires_at)
+            case_data.update(kwargs)
+
+            # Create the case
+            case = Case(**case_data)
+            session.add(case)
+            await session.flush()
+            await session.refresh(case)
+            return case
+
+        return await self.with_session(_create_with_lock)
 
     async def update_case(self, case_id: int, **kwargs: Any) -> Case | None:
         """Update a case by ID."""
@@ -103,11 +134,6 @@ class CaseController(BaseController[Case]):
     async def get_case_count_by_guild(self, guild_id: int) -> int:
         """Get the total number of cases in a guild."""
         return await self.count(filters=Case.guild_id == guild_id)
-
-    # Additional methods that module files expect
-    async def insert_case(self, **kwargs: Any) -> Case:
-        """Insert a new case - alias for create for backward compatibility."""
-        return await self.create_case(**kwargs)
 
     async def is_user_under_restriction(
         self,
