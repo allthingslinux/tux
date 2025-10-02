@@ -288,24 +288,3 @@ class BaseController[ModelT]:
     ) -> tuple[ModelT, bool]:
         """Generic upsert operation."""
         return await self._upsert.upsert(filters, defaults, **kwargs)
-
-    # ------------------------------------------------------------------
-    # Legacy Methods - For backward compatibility
-    # ------------------------------------------------------------------
-
-    async def update(self, record_id: Any, **values: Any) -> ModelT | None:
-        """Update a record by ID (legacy method)."""
-        return await self.update_by_id(record_id, **values)
-
-    async def delete(self, record_id: Any) -> bool:
-        """Delete a record by ID (legacy method)."""
-        return await self.delete_by_id(record_id)
-
-    def _build_filters(self, filters: Any) -> Any:
-        """Build filter expressions (legacy method)."""
-        return self._query.build_filters(filters)
-
-    @staticmethod
-    def safe_get_attr(obj: Any, attr: str, default: Any = None) -> Any:
-        """Safely get attribute from object (legacy method)."""
-        return TransactionController.safe_get_attr(obj, attr, default)
