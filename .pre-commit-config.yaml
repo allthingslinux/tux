@@ -95,7 +95,7 @@ repos:
       #   language: system
       #   types: [file, python]
       #   pass_filenames: false
-exclude: ^(\.archive/|.*typings/|node_modules/|\.venv/|\.kiro/).*$
+exclude: ^(\.archive/|.*typings/|node_modules/|\.venv/|\.kiro/|src/tux/database/migrations/versions/).*$
 ci:
   autofix_commit_msg: 'style: auto fixes from pre-commit hooks'
   autoupdate_commit_msg: 'chore: update pre-commit hook versions'
