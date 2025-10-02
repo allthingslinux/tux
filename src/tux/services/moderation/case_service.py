@@ -32,11 +32,10 @@ class CaseService:
     async def create_case(
         self,
         guild_id: int,
-        target_id: int,
+        user_id: int,
         moderator_id: int,
         case_type: DBCaseType,
         reason: str,
-        duration: int | None = None,
         **kwargs: Any,
     ) -> Case:
         """
@@ -44,23 +43,21 @@ class CaseService:
 
         Args:
             guild_id: ID of the guild
-            target_id: ID of the target user
+            user_id: ID of the target user
             moderator_id: ID of the moderator
             case_type: Type of moderation action
             reason: Reason for the action
-            duration: Optional duration for temp actions
-            **kwargs: Additional case data
+            **kwargs: Additional case data (use case_expires_at for expiration datetime)
 
         Returns:
             The created case
         """
         return await self._case_controller.create_case(
             case_type=case_type.value,
-            case_user_id=target_id,
+            case_user_id=user_id,
             case_moderator_id=moderator_id,
             guild_id=guild_id,
             case_reason=reason,
-            case_duration=duration,
             **kwargs,
         )
 
@@ -101,19 +98,3 @@ class CaseService:
             List of active cases for the user
         """
         return await self._case_controller.get_active_cases_by_user(user_id, guild_id)
-
-    @staticmethod
-    def get_operation_type(case_type: DBCaseType) -> str:
-        """
-        Get the operation type for circuit breaker based on case type.
-
-        Uses the case type name directly as the operation type for simplicity
-        and clear correlation between operations and their failure patterns.
-
-        Args:
-            case_type: The type of moderation case
-
-        Returns:
-            Operation type string for circuit breaker configuration
-        """
-        return case_type.value

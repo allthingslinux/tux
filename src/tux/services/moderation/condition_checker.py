@@ -7,7 +7,7 @@ with the existing permission system.
 
 import functools
 from collections.abc import Awaitable, Callable
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from discord.ext import commands
 
@@ -44,7 +44,7 @@ def _create_permission_decorator(required_level: PermissionLevel) -> Callable[[F
             # Execute the original function if permission check passed
             return await func(*args, **kwargs)
 
-        return wrapper  # type: ignore[return-value]
+        return cast(F, wrapper)
 
     return decorator
 

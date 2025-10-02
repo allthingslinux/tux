@@ -6,6 +6,7 @@ using proper service composition.
 """
 
 import asyncio
+import time
 from collections.abc import Callable, Coroutine
 from typing import Any
 
@@ -23,18 +24,31 @@ class ExecutionService:
     for Discord API operations.
     """
 
-    def __init__(self):
-        """Initialize the execution service."""
+    def __init__(
+        self,
+        failure_threshold: int = 5,
+        recovery_timeout: float = 60.0,
+        max_retries: int = 3,
+        base_delay: float = 1.0,
+    ):
+        """Initialize the execution service.
+
+        Args:
+            failure_threshold: Number of failures before opening circuit breaker
+            recovery_timeout: Seconds to wait before retrying after circuit opens
+            max_retries: Maximum number of retry attempts for operations
+            base_delay: Base delay in seconds for exponential backoff
+        """
         # Circuit breaker state
         self._circuit_open: dict[str, bool] = {}
         self._failure_count: dict[str, int] = {}
         self._last_failure_time: dict[str, float] = {}
 
         # Configuration
-        self._failure_threshold = 5
-        self._recovery_timeout = 60.0  # seconds
-        self._max_retries = 3
-        self._base_delay = 1.0
+        self._failure_threshold = failure_threshold
+        self._recovery_timeout = recovery_timeout
+        self._max_retries = max_retries
+        self._base_delay = base_delay
 
     async def execute_with_retry(  # noqa: PLR0912
         self,
@@ -127,7 +141,7 @@ class ExecutionService:
 
         # Check if recovery timeout has passed
         last_failure = self._last_failure_time.get(operation_type, 0)
-        if asyncio.get_event_loop().time() - last_failure > self._recovery_timeout:
+        if time.monotonic() - last_failure > self._recovery_timeout:
             # Reset circuit breaker
             self._circuit_open[operation_type] = False
             self._failure_count[operation_type] = 0
@@ -156,7 +170,7 @@ class ExecutionService:
 
         if self._failure_count[operation_type] >= self._failure_threshold:
             self._circuit_open[operation_type] = True
-            self._last_failure_time[operation_type] = asyncio.get_event_loop().time()
+            self._last_failure_time[operation_type] = time.monotonic()
 
     def _calculate_delay(self, attempt: int, base_delay: float) -> float:
         """
@@ -171,7 +185,7 @@ class ExecutionService:
         """
         # Exponential backoff with jitter
         delay = base_delay * (2**attempt)
-        jitter = delay * 0.1 * (asyncio.get_event_loop().time() % 1)  # 10% jitter
+        jitter = delay * 0.1 * (time.monotonic() % 1)  # 10% jitter
         return min(delay + jitter, 30.0)  # Cap at 30 seconds
 
     def get_operation_type(self, case_type: DBCaseType) -> str:

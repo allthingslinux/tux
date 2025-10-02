@@ -17,7 +17,6 @@ from loguru import logger
 from tux.core.bot import Tux
 from tux.database.models import Case
 from tux.database.models import CaseType as DBCaseType
-from tux.shared.exceptions import handle_gather_result
 
 from .case_service import CaseService
 from .communication_service import CommunicationService
@@ -127,11 +126,11 @@ class ModerationCoordinator:
         case = None
         try:
             logger.debug(
-                f"Creating case: type={case_type.value}, target={user.id}, moderator={ctx.author.id}, guild={ctx.guild.id}, duration={duration}, expires_at={expires_at}",
+                f"Creating case: type={case_type.value}, user={user.id}, moderator={ctx.author.id}, guild={ctx.guild.id}, duration={duration}, expires_at={expires_at}",
             )
             case = await self._case_service.create_case(
                 guild_id=ctx.guild.id,
-                target_id=user.id,
+                user_id=user.id,
                 moderator_id=ctx.author.id,
                 case_type=case_type,
                 reason=reason,
@@ -141,7 +140,10 @@ class ModerationCoordinator:
             logger.info(f"Successfully created case #{case.case_number} (ID: {case.case_id}) for {case_type.value}")
         except Exception as e:
             # Database failed, but continue with response
-            logger.error(f"Failed to create case for {case_type.value} on user {user.id}: {e}", exc_info=True)
+            logger.error(
+                f"Failed to create case for {case_type.value} on user {user.id}: {e!r}",
+                exc_info=True,
+            )
             case = None
 
         # Handle post-action DM for non-removal actions
@@ -206,12 +208,12 @@ class ModerationCoordinator:
         """
         results: list[Any] = []
 
-        for idx, (action, expected_type) in enumerate(actions, 1):
+        for idx, (action, _expected_type) in enumerate(actions, 1):
             operation_type = self._execution.get_operation_type(case_type)
             logger.debug(f"Executing action {idx}/{len(actions)} for {case_type.value} (operation: {operation_type})")
             try:
                 result = await self._execution.execute_with_retry(operation_type, action)
-                results.append(handle_gather_result(result, expected_type))
+                results.append(result)
                 logger.debug(f"Action {idx}/{len(actions)} completed successfully")
             except Exception as e:
                 logger.error(f"Action {idx}/{len(actions)} failed for {case_type.value}: {e}")
