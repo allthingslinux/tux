@@ -46,11 +46,10 @@ class CaseController(BaseController[Case]):
         # Generate case number based on guild's case count
 
         guild_controller = GuildController(self.db)
-        guild = await guild_controller.get_by_id(guild_id)
+        # Get or create the guild if it doesn't exist
+        guild = await guild_controller.get_or_create_guild(guild_id)
 
-        if not guild:
-            msg = f"Guild {guild_id} not found"
-            raise ValueError(msg)
+        logger.debug(f"Retrieved guild {guild_id} with case_count={guild.case_count}")
 
         # Increment case count to get the next case number
         case_number = guild.case_count + 1
