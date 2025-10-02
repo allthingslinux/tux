@@ -15,7 +15,7 @@ class ClearAFK(BaseCog):
 
     @commands.hybrid_command(
         name="clearafk",
-        aliases=["cafk", "removeafk"],
+        aliases=["unafk"],
         description="Clear a member's AFK status and reset their nickname.",
     )
     @commands.guild_only()
