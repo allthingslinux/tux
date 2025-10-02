@@ -17,7 +17,7 @@ class Untimeout(ModerationCogBase):
 
     @commands.hybrid_command(
         name="untimeout",
-        aliases=["ut", "uto", "unmute"],
+        aliases=["uto", "unmute"],
     )
     @commands.guild_only()
     @require_junior_mod()
@@ -52,9 +52,6 @@ class Untimeout(ModerationCogBase):
             await ctx.send(f"{member} is not timed out.", ephemeral=True)
             return
 
-        # Permission checks are handled by the @require_junior_mod() decorator
-        # Additional validation will be handled by the ModerationCoordinator service
-
         # Execute untimeout with case creation and DM
         await self.moderate_user(
             ctx=ctx,
@@ -63,7 +60,7 @@ class Untimeout(ModerationCogBase):
             reason=flags.reason,
             silent=flags.silent,
             dm_action="removed from timeout",
-            actions=[(member.timeout(None, reason=flags.reason), type(None))],
+            actions=[(lambda: member.timeout(None, reason=flags.reason), type(None))],
         )
 
 

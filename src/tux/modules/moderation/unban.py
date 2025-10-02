@@ -8,7 +8,6 @@ from tux.core.checks import require_moderator
 from tux.core.flags import UnbanFlags
 from tux.database.models import CaseType as DBCaseType
 from tux.shared.constants import CONST
-from tux.shared.functions import generate_usage
 
 from . import ModerationCogBase
 
@@ -16,7 +15,6 @@ from . import ModerationCogBase
 class Unban(ModerationCogBase):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
-        self.unban.usage = generate_usage(self.unban, UnbanFlags)
 
     async def resolve_user_from_ban_list(self, ctx: commands.Context[Tux], identifier: str) -> discord.User | None:
         """
@@ -65,7 +63,7 @@ class Unban(ModerationCogBase):
         ctx: commands.Context[Tux],
         user: discord.User,
         final_reason: str,
-        guild: discord.Guild,  # Pass guild explicitly
+        guild: discord.Guild,
     ) -> None:
         """Executes the core unban action and case creation."""
         # We already checked that user is not None in the main command
@@ -77,7 +75,7 @@ class Unban(ModerationCogBase):
             reason=final_reason,
             silent=True,  # No DM for unbans due to user not being in the guild
             dm_action="",  # No DM for unbans
-            actions=[(guild.unban(user, reason=final_reason), type(None))],  # Use passed guild
+            actions=[(lambda: guild.unban(user, reason=final_reason), type(None))],
         )
 
     @commands.hybrid_command(

@@ -5,7 +5,6 @@ from tux.core.bot import Tux
 from tux.core.checks import require_junior_mod
 from tux.core.flags import WarnFlags
 from tux.database.models import CaseType as DBCaseType
-from tux.shared.functions import generate_usage
 
 from . import ModerationCogBase
 
@@ -13,7 +12,6 @@ from . import ModerationCogBase
 class Warn(ModerationCogBase):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
-        self.warn.usage = generate_usage(self.warn, WarnFlags)
 
     @commands.hybrid_command(
         name="warn",
@@ -41,9 +39,6 @@ class Warn(ModerationCogBase):
             The flags for the command. (reason: str, silent: bool)
         """
         assert ctx.guild
-
-        # Permission checks are handled by the @require_moderator() decorator
-        # Additional validation will be handled by the ModerationCoordinator service
 
         # Execute warn with case creation and DM
         await self.moderate_user(

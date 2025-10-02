@@ -6,7 +6,6 @@ from tux.core.bot import Tux
 from tux.core.checks import require_junior_mod
 from tux.core.flags import JailFlags
 from tux.database.models import CaseType
-from tux.shared.functions import generate_usage
 
 from . import ModerationCogBase
 
@@ -14,7 +13,6 @@ from . import ModerationCogBase
 class Jail(ModerationCogBase):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
-        self.jail.usage = generate_usage(self.jail, JailFlags)
 
     async def get_jail_role(self, guild: discord.Guild) -> discord.Role | None:
         """
@@ -94,9 +92,6 @@ class Jail(ModerationCogBase):
         if await self.is_jailed(ctx.guild.id, member.id):
             await ctx.send("User is already jailed.", ephemeral=True)
             return
-
-        # Permission checks are handled by the @require_junior_mod() decorator
-        # Additional validation will be handled by the ModerationCoordinator service
 
         # Use a transaction-like pattern to ensure consistency
         try:

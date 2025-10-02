@@ -5,7 +5,6 @@ from tux.core.bot import Tux
 from tux.core.checks import require_moderator
 from tux.core.flags import BanFlags
 from tux.database.models import CaseType as DBCaseType
-from tux.shared.functions import generate_usage
 
 from . import ModerationCogBase
 
@@ -13,7 +12,6 @@ from . import ModerationCogBase
 class Ban(ModerationCogBase):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
-        self.ban.usage = generate_usage(self.ban, BanFlags)
 
     @commands.hybrid_command(name="ban", aliases=["b"])
     @commands.guild_only()
@@ -47,9 +45,6 @@ class Ban(ModerationCogBase):
 
         assert ctx.guild
 
-        # Permission checks are handled by the @require_moderator() decorator
-        # Additional validation will be handled by the ModerationCoordinator service
-
         # Execute ban with case creation and DM
         await self.moderate_user(
             ctx=ctx,
@@ -59,7 +54,12 @@ class Ban(ModerationCogBase):
             silent=flags.silent,
             dm_action="banned",
             actions=[
-                (ctx.guild.ban(member, reason=flags.reason, delete_message_seconds=flags.purge * 86400), type(None)),
+                (
+                    lambda: ctx.guild.ban(member, reason=flags.reason, delete_message_seconds=flags.purge * 86400)
+                    if ctx.guild
+                    else None,
+                    type(None),
+                ),
             ],
         )
 

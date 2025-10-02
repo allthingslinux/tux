@@ -9,7 +9,6 @@ from tux.core.checks import require_moderator
 from tux.core.flags import TempBanFlags
 from tux.database.models import Case
 from tux.database.models import CaseType as DBCaseType
-from tux.shared.functions import generate_usage
 
 from . import ModerationCogBase
 
@@ -17,7 +16,6 @@ from . import ModerationCogBase
 class TempBan(ModerationCogBase):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
-        self.tempban.usage = generate_usage(self.tempban, TempBanFlags)
         self._processing_tempbans = False  # Lock to prevent overlapping task runs
         self.tempban_check.start()
 
@@ -53,9 +51,6 @@ class TempBan(ModerationCogBase):
 
         assert ctx.guild
 
-        # Permission checks are handled by the @require_moderator() decorator
-        # Additional validation will be handled by the ModerationCoordinator service
-
         # Execute tempban with case creation and DM
         await self.moderate_user(
             ctx=ctx,
@@ -65,7 +60,12 @@ class TempBan(ModerationCogBase):
             silent=flags.silent,
             dm_action="temp banned",
             actions=[
-                (ctx.guild.ban(member, reason=flags.reason, delete_message_seconds=flags.purge * 86400), type(None)),
+                (
+                    lambda: ctx.guild.ban(member, reason=flags.reason, delete_message_seconds=flags.purge * 86400)
+                    if ctx.guild
+                    else None,
+                    type(None),
+                ),
             ],
             duration=int(flags.duration),  # Convert float to int for duration in seconds
         )

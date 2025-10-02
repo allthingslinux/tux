@@ -9,7 +9,6 @@ from tux.core.checks import require_junior_mod
 from tux.core.flags import UnjailFlags
 from tux.database.models import Case
 from tux.database.models import CaseType as DBCaseType
-from tux.shared.functions import generate_usage
 
 from . import ModerationCogBase
 
@@ -17,7 +16,6 @@ from . import ModerationCogBase
 class Unjail(ModerationCogBase):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
-        self.unjail.usage = generate_usage(self.unjail, UnjailFlags)
 
     async def get_jail_role(self, guild: discord.Guild) -> discord.Role | None:
         """

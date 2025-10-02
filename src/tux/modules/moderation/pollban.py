@@ -5,7 +5,6 @@ from tux.core.bot import Tux
 from tux.core.checks import require_moderator
 from tux.core.flags import PollBanFlags
 from tux.database.models import CaseType as DBCaseType
-from tux.shared.functions import generate_usage
 
 from . import ModerationCogBase
 
@@ -13,7 +12,6 @@ from . import ModerationCogBase
 class PollBan(ModerationCogBase):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
-        self.poll_ban.usage = generate_usage(self.poll_ban, PollBanFlags)
 
     @commands.hybrid_command(
         name="pollban",

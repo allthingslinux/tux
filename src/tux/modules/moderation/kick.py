@@ -5,7 +5,6 @@ from tux.core.bot import Tux
 from tux.core.checks import require_junior_mod
 from tux.core.flags import KickFlags
 from tux.database.models import CaseType as DBCaseType
-from tux.shared.functions import generate_usage
 
 from . import ModerationCogBase
 
@@ -13,7 +12,6 @@ from . import ModerationCogBase
 class Kick(ModerationCogBase):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
-        self.kick.usage = generate_usage(self.kick, KickFlags)
 
     @commands.hybrid_command(
         name="kick",
@@ -60,7 +58,7 @@ class Kick(ModerationCogBase):
             reason=flags.reason,
             silent=flags.silent,
             dm_action="kicked",
-            actions=[(member.kick(reason=flags.reason), type(None))],
+            actions=[(lambda: member.kick(reason=flags.reason), type(None))],
         )
 
 

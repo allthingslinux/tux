@@ -5,7 +5,6 @@ from tux.core.bot import Tux
 from tux.core.checks import require_moderator
 from tux.core.flags import SnippetBanFlags
 from tux.database.models import CaseType
-from tux.shared.functions import generate_usage
 
 from . import ModerationCogBase
 
@@ -13,7 +12,6 @@ from . import ModerationCogBase
 class SnippetBan(ModerationCogBase):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
-        self.snippet_ban.usage = generate_usage(self.snippet_ban, SnippetBanFlags)
 
     @commands.hybrid_command(
         name="snippetban",
