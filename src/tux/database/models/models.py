@@ -6,7 +6,7 @@ from typing import Any, cast
 from uuid import UUID, uuid4
 
 from pydantic import field_serializer
-from sqlalchemy import ARRAY, JSON, BigInteger, Column, Float, Index, Integer, String, UniqueConstraint
+from sqlalchemy import ARRAY, JSON, BigInteger, Column, Float, Index, Integer, String, UniqueConstraint, text
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.orm import Mapped, relationship
 from sqlmodel import Field, Relationship, SQLModel
@@ -18,14 +18,36 @@ from sqlmodel import Field, Relationship, SQLModel
 
 class BaseModel(SQLModel):
     """
-    Base model with serialization capabilities.
+    Base model with serialization capabilities and automatic timestamp management.
 
     Provides to_dict() method for converting model instances to dictionaries,
     with support for relationship inclusion and enum handling.
+
+    Automatically includes created_at and updated_at timestamps for all models.
     """
 
     # Allow SQLModel annotations without Mapped[] for SQLAlchemy 2.0 compatibility
     __allow_unmapped__ = True
+
+    # Timestamp fields
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC),
+        nullable=False,
+        description="Timestamp for record creation",
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
+    )
+
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC),
+        nullable=False,
+        description="Timestamp for last record update",
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP"), "onupdate": text("CURRENT_TIMESTAMP")},
+    )
+
+    @field_serializer("created_at", "updated_at")
+    def serialize_datetimes(self, value: datetime | None) -> str | None:
+        """Serialize datetime fields to ISO format strings."""
+        return value.isoformat() if value else None
 
     def to_dict(self, include_relationships: bool = False, relationships: list[str] | None = None) -> dict[str, Any]:
         """
@@ -106,35 +128,6 @@ class UUIDMixin(SQLModel):
         index=True,
         description="Unique identifier (UUID) for the record",
     )
-
-
-class TimestampMixin(SQLModel):
-    """
-    Mixin for automatic timestamp management.
-
-    Provides:
-    - created_at: Set once when record is created
-    - updated_at: Updated on every modification (database-level)
-    """
-
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC),
-        nullable=False,
-        description="Timestamp for record creation",
-        sa_column_kwargs={"server_default": "CURRENT_TIMESTAMP"},
-    )
-
-    updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC),
-        nullable=False,
-        description="Timestamp for last record update",
-        sa_column_kwargs={"server_default": "CURRENT_TIMESTAMP", "onupdate": "CURRENT_TIMESTAMP"},
-    )
-
-    @field_serializer("created_at", "updated_at")
-    def serialize_datetimes(self, value: datetime | None) -> str | None:
-        """Serialize datetime fields to ISO format strings."""
-        return value.isoformat() if value else None
 
 
 class SoftDeleteMixin(SQLModel):
@@ -459,7 +452,7 @@ class Case(BaseModel, table=True):
     )
 
 
-class Note(SQLModel, table=True):
+class Note(BaseModel, table=True):
     note_id: int | None = Field(default=None, primary_key=True, sa_type=Integer)
     note_content: str = Field(max_length=2000)
     note_moderator_id: int = Field(sa_type=BigInteger)
