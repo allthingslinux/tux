@@ -10,6 +10,7 @@ from collections.abc import Callable, Coroutine
 from typing import Any
 
 import discord
+from loguru import logger
 
 from tux.database.models import CaseType as DBCaseType
 
@@ -47,7 +48,7 @@ class ExecutionService:
 
         Args:
             operation_type: Type of operation for circuit breaker
-            action: The async action to execute
+            action: The async callable to execute (must be a callable, not a coroutine)
             *args: Positional arguments for the action
             **kwargs: Keyword arguments for the action
 
@@ -65,6 +66,7 @@ class ExecutionService:
 
         for attempt in range(self._max_retries):
             try:
+                logger.debug(f"Executing action for {operation_type} (attempt {attempt + 1}/{self._max_retries})")
                 result = await action(*args, **kwargs)
             except discord.RateLimited as e:
                 last_exception = e
