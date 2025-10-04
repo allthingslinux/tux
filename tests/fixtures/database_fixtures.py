@@ -6,7 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlmodel import SQLModel
 from loguru import logger
 
-from tux.database.controllers import GuildConfigController, GuildController
+from tux.database.controllers import (
+    GuildConfigController,
+    GuildController,
+    GuildPermissionController,
+    GuildPermissionAssignmentController,
+    GuildCommandPermissionController,
+)
 from tux.database.service import DatabaseService
 
 
@@ -103,3 +109,24 @@ async def disconnected_async_db_service():
     # Don't connect - leave it disconnected for error testing
     yield service
     logger.info("🧹 Disconnected database service cleanup complete")
+
+
+@pytest.fixture(scope="function")
+async def guild_permission_controller(db_service: DatabaseService) -> GuildPermissionController:
+    """GuildPermissionController with fresh database per test."""
+    logger.info("🔧 Creating GuildPermissionController")
+    return GuildPermissionController(db_service)
+
+
+@pytest.fixture(scope="function")
+async def guild_permission_assignment_controller(db_service: DatabaseService) -> GuildPermissionAssignmentController:
+    """GuildPermissionAssignmentController with fresh database per test."""
+    logger.info("🔧 Creating GuildPermissionAssignmentController")
+    return GuildPermissionAssignmentController(db_service)
+
+
+@pytest.fixture(scope="function")
+async def guild_command_permission_controller(db_service: DatabaseService) -> GuildCommandPermissionController:
+    """GuildCommandPermissionController with fresh database per test."""
+    logger.info("🔧 Creating GuildCommandPermissionController")
+    return GuildCommandPermissionController(db_service)

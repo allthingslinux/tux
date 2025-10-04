@@ -7,7 +7,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from tux.services.handlers.error.cog import ErrorHandler
-from tux.shared.exceptions import TuxError
+from tux.shared.exceptions import TuxError, TuxPermissionDeniedError
 
 
 class TestErrorHandlingEndToEnd:
@@ -83,3 +83,95 @@ class TestErrorHandlingEndToEnd:
         mock_interaction.response.send_message.assert_called_once()
         call_args = mock_interaction.response.send_message.call_args
         assert "embed" in call_args.kwargs
+
+    @pytest.mark.asyncio
+    async def test_permission_denied_unconfigured_command(self, error_handler):
+        """Test that unconfigured command shows helpful setup message."""
+        mock_ctx = MagicMock()
+        mock_ctx.reply = AsyncMock()
+        mock_ctx.command = MagicMock()
+        mock_ctx.command.qualified_name = "dev clear_tree"
+        mock_ctx.command.has_error_handler.return_value = False
+        mock_ctx.cog = None
+
+        # Simulate unconfigured command (both ranks are 0)
+        error = TuxPermissionDeniedError(
+            required_rank=0,
+            user_rank=0,
+            command_name="dev clear_tree",
+        )
+
+        await error_handler.on_command_error(mock_ctx, error)
+
+        # Verify response was sent with configuration instructions
+        mock_ctx.reply.assert_called_once()
+        call_args = mock_ctx.reply.call_args
+        embed = call_args.kwargs["embed"]
+        description = str(embed.description)
+
+        # Check for key phrases in the message
+        assert "not been configured yet" in description
+        assert "/config command assign" in description
+        assert "dev clear_tree" in description
+
+    @pytest.mark.asyncio
+    async def test_permission_denied_insufficient_rank(self, error_handler):
+        """Test that insufficient rank shows clear rank requirement."""
+        mock_ctx = MagicMock()
+        mock_ctx.reply = AsyncMock()
+        mock_ctx.command = MagicMock()
+        mock_ctx.command.qualified_name = "ban"
+        mock_ctx.command.has_error_handler.return_value = False
+        mock_ctx.cog = None
+
+        # Simulate insufficient rank
+        error = TuxPermissionDeniedError(
+            required_rank=5,
+            user_rank=2,
+            command_name="ban",
+        )
+
+        await error_handler.on_command_error(mock_ctx, error)
+
+        # Verify response was sent with rank information
+        mock_ctx.reply.assert_called_once()
+        call_args = mock_ctx.reply.call_args
+        embed = call_args.kwargs["embed"]
+        description = str(embed.description)
+
+        # Check for key information in the message
+        assert "permission rank" in description.lower()
+        assert "5" in description  # Required rank
+        assert "2" in description  # User's rank
+        assert "ban" in description
+
+    @pytest.mark.asyncio
+    async def test_permission_denied_app_command(self, error_handler):
+        """Test that permission denied works with app commands."""
+        mock_interaction = MagicMock(spec=discord.Interaction)
+        mock_interaction.response.send_message = AsyncMock()
+        mock_interaction.followup.send = AsyncMock()
+        mock_interaction.response.is_done.return_value = False
+        mock_interaction.command = MagicMock()
+        mock_interaction.command.qualified_name = "config"
+
+        # Simulate permission denied for slash command
+        error = TuxPermissionDeniedError(
+            required_rank=3,
+            user_rank=1,
+            command_name="config",
+        )
+
+        await error_handler.on_app_command_error(mock_interaction, error)
+
+        # Verify interaction got ephemeral response
+        mock_interaction.response.send_message.assert_called_once()
+        call_args = mock_interaction.response.send_message.call_args
+        assert "embed" in call_args.kwargs
+        assert call_args.kwargs["ephemeral"] is True
+
+        # Verify message content
+        embed = call_args.kwargs["embed"]
+        description = str(embed.description)
+        assert "3" in description  # Required rank
+        assert "1" in description  # User's rank

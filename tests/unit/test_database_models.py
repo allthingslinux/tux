@@ -74,7 +74,6 @@ class TestModelCreation:
                 private_log_id=TEST_CHANNEL_ID + 3,
                 report_log_id=TEST_CHANNEL_ID + 4,
                 dev_log_id=TEST_CHANNEL_ID + 5,
-                starboard_channel_id=TEST_CHANNEL_ID + 6,
             )
 
             session.add(config)
@@ -90,7 +89,6 @@ class TestModelCreation:
             assert config.private_log_id == TEST_CHANNEL_ID + 3
             assert config.report_log_id == TEST_CHANNEL_ID + 4
             assert config.dev_log_id == TEST_CHANNEL_ID + 5
-            assert config.starboard_channel_id == TEST_CHANNEL_ID + 6
             assert validate_guild_config_structure(config)
 
     @pytest.mark.unit
