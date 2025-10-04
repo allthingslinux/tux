@@ -1,59 +1,36 @@
 """
-Permission checking utilities for command access control.
+Dynamic Permission System - Fully Database-Driven
 
-This module provides backward compatibility for the permission system.
-All functionality has been migrated to tux.services.moderation.condition_checker.
+This module provides dynamic permission decorators with ZERO hardcoded opinions.
+All permission requirements are stored in the database and configured per-guild.
 
-Permission Levels
------------------
-The permission system uses numeric levels from 0 to 8, each with an associated role:
+Usage:
+    @requires_command_permission()  # 100% dynamic, reads from database
+    async def ban(self, ctx, user): ...
 
-0. Member (default)
-1. Trusted
-2. Junior Moderator
-3. Moderator
-4. Senior Moderator
-5. Administrator
-6. Head Administrator
-7. Server Owner
-8. Bot Owner (system-level)
+Configuration:
+    Guilds configure permissions via /config permission commands.
+    Without configuration, commands are denied by default (secure).
 """
 
-# Re-export from the core permission system
+# Dynamic permission decorator
+from tux.core.decorators import requires_command_permission
+
+# Core permission system functions
 from tux.core.permission_system import (
-    PermissionLevel,
     get_permission_system,
     init_permission_system,
 )
-from tux.services.moderation.condition_checker import (
-    ConditionChecker,
-    require_admin,
-    require_bot_owner,
-    require_head_admin,
-    require_junior_mod,
-    # Semantic decorators - DYNAMIC & CONFIGURABLE
-    require_member,
-    require_moderator,
-    require_owner,
-    require_senior_mod,
-    require_trusted,
-)
+
+# Permission exceptions
+from tux.shared.exceptions import TuxPermissionDeniedError
 
 __all__ = [
-    # Classes
-    "ConditionChecker",
-    "PermissionLevel",
+    # Exceptions
+    "TuxPermissionDeniedError",
     # Core functions
     "get_permission_system",
     "init_permission_system",
-    # Semantic decorators - DYNAMIC & CONFIGURABLE (RECOMMENDED)
-    "require_admin",
-    "require_bot_owner",
-    "require_head_admin",
-    "require_junior_mod",
-    "require_member",
-    "require_moderator",
-    "require_owner",
-    "require_senior_mod",
-    "require_trusted",
+    # The ONLY decorator - 100% dynamic
+    "requires_command_permission",
 ]
