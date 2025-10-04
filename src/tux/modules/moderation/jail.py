@@ -3,7 +3,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.bot import Tux
-from tux.core.checks import require_junior_mod
+from tux.core.checks import requires_command_permission
 from tux.core.flags import JailFlags
 from tux.database.models import CaseType
 
@@ -44,7 +44,7 @@ class Jail(ModerationCogBase):
         aliases=["j"],
     )
     @commands.guild_only()
-    @require_junior_mod()
+    @requires_command_permission()
     async def jail(
         self,
         ctx: commands.Context[Tux],

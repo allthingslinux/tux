@@ -6,7 +6,7 @@ from loguru import logger
 from reactionmenu import ViewButton, ViewMenu
 
 from tux.core.bot import Tux
-from tux.core.checks import require_junior_mod
+from tux.core.checks import requires_command_permission
 from tux.core.flags import CaseModifyFlags, CasesViewFlags
 from tux.database.models import Case
 from tux.database.models import CaseType as DBCaseType
@@ -82,7 +82,7 @@ class Cases(ModerationCogBase):
         aliases=["case", "c"],
     )
     @commands.guild_only()
-    @require_junior_mod()
+    @requires_command_permission()
     async def cases(self, ctx: commands.Context[Tux]) -> None:
         """
         View all moderation cases in the server.
@@ -96,7 +96,7 @@ class Cases(ModerationCogBase):
         aliases=["v", "show", "get"],
     )
     @commands.guild_only()
-    @require_junior_mod()
+    @requires_command_permission()
     async def cases_view(
         self,
         ctx: commands.Context[Tux],
@@ -119,7 +119,7 @@ class Cases(ModerationCogBase):
         aliases=["filter", "find"],
     )
     @commands.guild_only()
-    @require_junior_mod()
+    @requires_command_permission()
     async def cases_search(
         self,
         ctx: commands.Context[Tux],
@@ -143,7 +143,7 @@ class Cases(ModerationCogBase):
         aliases=["edit", "update"],
     )
     @commands.guild_only()
-    @require_junior_mod()
+    @requires_command_permission()
     async def cases_modify(
         self,
         ctx: commands.Context[Tux],

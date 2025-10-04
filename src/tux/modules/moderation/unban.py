@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 
 from tux.core.bot import Tux
-from tux.core.checks import require_moderator
+from tux.core.checks import requires_command_permission
 from tux.core.flags import UnbanFlags
 from tux.database.models import CaseType as DBCaseType
 from tux.shared.constants import CONST
@@ -83,7 +83,7 @@ class Unban(ModerationCogBase):
         aliases=["ub"],
     )
     @commands.guild_only()
-    @require_moderator()
+    @requires_command_permission()
     async def unban(
         self,
         ctx: commands.Context[Tux],

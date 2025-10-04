@@ -6,9 +6,7 @@ from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
-from tux.core.checks import (
-    require_bot_owner,
-)
+from tux.core.checks import requires_command_permission
 from tux.shared.config import CONFIG
 from tux.ui.embeds import EmbedCreator
 
@@ -52,7 +50,7 @@ class Eval(BaseCog):
         aliases=["e"],
     )
     @commands.guild_only()
-    @require_bot_owner()  # sysadmin or higher
+    @requires_command_permission()  # sysadmin or higher
     async def eval(self, ctx: commands.Context[Tux], *, expression: str) -> None:
         """
         Evaluate a Python expression. (Owner only)

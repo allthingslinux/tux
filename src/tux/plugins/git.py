@@ -3,9 +3,7 @@ from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
-from tux.core.checks import (
-    require_bot_owner,
-)
+from tux.core.checks import requires_command_permission
 from tux.services.wrappers.github import GithubService
 from tux.shared.config import CONFIG
 from tux.ui.buttons import GithubButton
@@ -33,7 +31,7 @@ class Git(BaseCog):
         aliases=["g"],
     )
     @commands.guild_only()
-    @require_bot_owner()
+    @requires_command_permission()
     async def git(self, ctx: commands.Context[Tux]) -> None:
         """
         Github related commands.
@@ -52,7 +50,7 @@ class Git(BaseCog):
         aliases=["r"],
     )
     @commands.guild_only()
-    @require_bot_owner()
+    @requires_command_permission()
     async def get_repo(self, ctx: commands.Context[Tux]) -> None:
         """
         Get repository information.
@@ -92,7 +90,7 @@ class Git(BaseCog):
         aliases=["ci"],
     )
     @commands.guild_only()
-    @require_bot_owner()
+    @requires_command_permission()
     async def create_issue(self, ctx: commands.Context[Tux], title: str, body: str) -> None:
         """
         Create an issue.
@@ -136,7 +134,7 @@ class Git(BaseCog):
         aliases=["gi", "issue", "i"],
     )
     @commands.guild_only()
-    @require_bot_owner()
+    @requires_command_permission()
     async def get_issue(self, ctx: commands.Context[Tux], issue_number: int) -> None:
         """
         Get an issue by issue number.

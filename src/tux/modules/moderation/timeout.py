@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 
 from tux.core.bot import Tux
-from tux.core.checks import require_junior_mod
+from tux.core.checks import requires_command_permission
 from tux.core.flags import TimeoutFlags
 from tux.database.models import CaseType as DBCaseType
 from tux.shared.constants import CONST
@@ -22,7 +22,7 @@ class Timeout(ModerationCogBase):
         aliases=["to", "mute"],
     )
     @commands.guild_only()
-    @require_junior_mod()
+    @requires_command_permission()
     async def timeout(
         self,
         ctx: commands.Context[Tux],

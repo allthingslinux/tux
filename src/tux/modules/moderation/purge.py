@@ -7,7 +7,7 @@ from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
-from tux.core.checks import require_junior_mod
+from tux.core.checks import requires_command_permission
 
 
 class Purge(BaseCog):
@@ -16,7 +16,7 @@ class Purge(BaseCog):
 
     @app_commands.command(name="purge")
     @app_commands.guild_only()
-    @require_junior_mod()
+    @requires_command_permission()
     async def slash_purge(
         self,
         interaction: discord.Interaction,
@@ -113,7 +113,7 @@ class Purge(BaseCog):
         aliases=["p"],
     )
     @commands.guild_only()
-    @require_junior_mod()
+    @requires_command_permission()
     async def prefix_purge(
         self,
         ctx: commands.Context[Tux],

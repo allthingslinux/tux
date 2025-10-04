@@ -5,7 +5,7 @@ from discord.ext import commands, tasks
 from loguru import logger
 
 from tux.core.bot import Tux
-from tux.core.checks import require_moderator
+from tux.core.checks import requires_command_permission
 from tux.core.flags import TempBanFlags
 from tux.database.models import Case
 from tux.database.models import CaseType as DBCaseType
@@ -21,7 +21,7 @@ class TempBan(ModerationCogBase):
 
     @commands.hybrid_command(name="tempban", aliases=["tb"])
     @commands.guild_only()
-    @require_moderator()
+    @requires_command_permission()
     async def tempban(
         self,
         ctx: commands.Context[Tux],

@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from tux.core.bot import Tux
-from tux.core.checks import require_moderator
+from tux.core.checks import requires_command_permission
 from tux.core.flags import PollBanFlags
 from tux.database.models import CaseType as DBCaseType
 
@@ -18,7 +18,7 @@ class PollBan(ModerationCogBase):
         aliases=["pb"],
     )
     @commands.guild_only()
-    @require_moderator()
+    @requires_command_permission()
     async def poll_ban(
         self,
         ctx: commands.Context[Tux],
@@ -45,7 +45,7 @@ class PollBan(ModerationCogBase):
             await ctx.reply("User is already poll banned.", mention_author=False)
             return
 
-        # Permission checks are handled by the @require_moderator() decorator
+        # Permission checks are handled by the @requires_command_permission() decorator
         # Additional validation will be handled by the ModerationCoordinator service
 
         # Execute poll ban with case creation and DM

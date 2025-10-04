@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from tux.core.bot import Tux
-from tux.core.checks import require_moderator
+from tux.core.checks import requires_command_permission
 from tux.core.flags import BanFlags
 from tux.database.models import CaseType as DBCaseType
 
@@ -15,7 +15,7 @@ class Ban(ModerationCogBase):
 
     @commands.hybrid_command(name="ban", aliases=["b"])
     @commands.guild_only()
-    @require_moderator()
+    @requires_command_permission()
     async def ban(
         self,
         ctx: commands.Context[Tux],
@@ -55,7 +55,11 @@ class Ban(ModerationCogBase):
             dm_action="banned",
             actions=[
                 (
-                    lambda: ctx.guild.ban(member, reason=flags.reason, delete_message_seconds=flags.purge * 86400)
+                    lambda: ctx.guild.ban(
+                        member,
+                        reason=flags.reason,
+                        delete_message_seconds=flags.purge * 86400,
+                    )
                     if ctx.guild
                     else None,
                     type(None),

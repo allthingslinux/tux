@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from tux.core.bot import Tux
-from tux.core.checks import require_junior_mod
+from tux.core.checks import requires_command_permission
 from tux.core.flags import UntimeoutFlags
 from tux.database.models import CaseType as DBCaseType
 from tux.shared.functions import generate_usage
@@ -20,7 +20,7 @@ class Untimeout(ModerationCogBase):
         aliases=["uto", "unmute"],
     )
     @commands.guild_only()
-    @require_junior_mod()
+    @requires_command_permission()
     async def untimeout(
         self,
         ctx: commands.Context[Tux],

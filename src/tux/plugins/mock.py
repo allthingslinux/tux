@@ -8,9 +8,7 @@ from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
-from tux.core.checks import (
-    require_bot_owner,
-)
+from tux.core.checks import requires_command_permission
 from tux.services.handlers.error.formatter import ERROR_CONFIG_MAP
 from tux.ui.embeds import EmbedCreator
 
@@ -592,7 +590,7 @@ class Mock(BaseCog):
         await ctx.send(embed=embed)
 
     @commands.hybrid_group(name="mock", description="Commands to mock bot behaviors for testing.")
-    @require_bot_owner()
+    @requires_command_permission()
     async def mock(self, ctx: commands.Context[Tux]) -> None:
         """
         Base command group for mocking various bot behaviors.
@@ -675,7 +673,7 @@ class Mock(BaseCog):
         ],
     )
     @app_commands.autocomplete(error_name=error_name_autocomplete)
-    @require_bot_owner()
+    @requires_command_permission()
     async def mock_error(self, ctx: commands.Context[Tux], category: str, error_name: str | None = None) -> None:
         """
         Raises a specified error to test the global error handler.
@@ -866,7 +864,7 @@ class Mock(BaseCog):
     # Add a separate command for the old-style interface for prefix commands
     @mock.command(name="test", description="Test a specific error by name (with autocomplete).")
     @app_commands.autocomplete(error_type=error_type_autocomplete)
-    @require_bot_owner()
+    @requires_command_permission()
     async def mock_test(self, ctx: commands.Context[Tux], *, error_type: str) -> None:
         """
         Alternative error testing command with autocomplete support.

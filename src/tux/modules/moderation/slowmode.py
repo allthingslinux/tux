@@ -6,7 +6,7 @@ from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
-from tux.core.checks import require_junior_mod
+from tux.core.checks import requires_command_permission
 
 # Type for channels that support slowmode
 SlowmodeChannel = (
@@ -24,7 +24,7 @@ class Slowmode(BaseCog):
         usage="slowmode [channel] [seconds]",
     )
     @commands.guild_only()
-    @require_junior_mod()
+    @requires_command_permission()
     async def slowmode(
         self,
         ctx: commands.Context[Tux],

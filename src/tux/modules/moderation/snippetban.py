@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from tux.core.bot import Tux
-from tux.core.checks import require_moderator
+from tux.core.checks import requires_command_permission
 from tux.core.flags import SnippetBanFlags
 from tux.database.models import CaseType
 
@@ -18,7 +18,7 @@ class SnippetBan(ModerationCogBase):
         aliases=["sb"],
     )
     @commands.guild_only()
-    @require_moderator()
+    @requires_command_permission()
     async def snippet_ban(
         self,
         ctx: commands.Context[Tux],
@@ -45,7 +45,7 @@ class SnippetBan(ModerationCogBase):
             await ctx.reply("User is already snippet banned.", mention_author=False)
             return
 
-        # Permission checks are handled by the @require_moderator() decorator
+        # Permission checks are handled by the @requires_command_permission() decorator
         # Additional validation will be handled by the ModerationCoordinator service
 
         # Execute snippet ban with case creation and DM

@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from tux.core.bot import Tux
-from tux.core.checks import require_junior_mod
+from tux.core.checks import requires_command_permission
 from tux.core.flags import WarnFlags
 from tux.database.models import CaseType as DBCaseType
 
@@ -18,7 +18,7 @@ class Warn(ModerationCogBase):
         aliases=["w"],
     )
     @commands.guild_only()
-    @require_junior_mod()
+    @requires_command_permission()
     async def warn(
         self,
         ctx: commands.Context[Tux],

@@ -7,9 +7,7 @@ from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
-from tux.core.checks import (
-    require_bot_owner,
-)
+from tux.core.checks import requires_command_permission
 from tux.services.http_client import http_client
 from tux.shared.config import CONFIG
 from tux.shared.constants import CONST
@@ -42,7 +40,7 @@ class Mail(BaseCog):
     mail = app_commands.Group(name="mail", description="Mail commands.")
 
     @mail.command(name="register")
-    @require_bot_owner()
+    @requires_command_permission()
     async def register(
         self,
         interaction: discord.Interaction,
