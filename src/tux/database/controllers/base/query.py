@@ -2,7 +2,7 @@
 
 from typing import Any, TypeVar
 
-from sqlalchemy import func
+from sqlalchemy import UnaryExpression, func
 from sqlalchemy.orm import selectinload
 from sqlmodel import SQLModel, select
 
@@ -11,6 +11,9 @@ from tux.database.service import DatabaseService
 from .filters import build_filters_for_model
 
 ModelT = TypeVar("ModelT", bound=SQLModel)
+
+# Type alias for order_by parameter - accepts column expressions from .asc()/.desc()
+OrderByType = UnaryExpression[Any] | tuple[UnaryExpression[Any], ...] | list[UnaryExpression[Any]]
 
 
 class QueryController[ModelT]:
@@ -24,7 +27,11 @@ class QueryController[ModelT]:
         """Build filter expressions from various input types."""
         return build_filters_for_model(filters, self.model)
 
-    async def find_one(self, filters: Any | None = None, order_by: Any | None = None) -> ModelT | None:
+    async def find_one(
+        self,
+        filters: Any | None = None,
+        order_by: OrderByType | None = None,
+    ) -> ModelT | None:
         """Find one record."""
         async with self.db.session() as session:
             stmt = select(self.model)
@@ -32,14 +39,15 @@ class QueryController[ModelT]:
             if filter_expr is not None:
                 stmt = stmt.where(filter_expr)
             if order_by is not None:
-                stmt = stmt.order_by(order_by)
+                # Unpack tuple/list for multiple order_by columns
+                stmt = stmt.order_by(*order_by) if isinstance(order_by, (tuple, list)) else stmt.order_by(order_by)
             result = await session.execute(stmt)
             return result.scalars().first()
 
     async def find_all(
         self,
         filters: Any | None = None,
-        order_by: Any | None = None,
+        order_by: OrderByType | None = None,
         limit: int | None = None,
         offset: int | None = None,
     ) -> list[ModelT]:
@@ -50,7 +58,8 @@ class QueryController[ModelT]:
             if filter_expr is not None:
                 stmt = stmt.where(filter_expr)
             if order_by is not None:
-                stmt = stmt.order_by(order_by)
+                # Unpack tuple/list for multiple order_by columns
+                stmt = stmt.order_by(*order_by) if isinstance(order_by, (tuple, list)) else stmt.order_by(order_by)
             if limit is not None:
                 stmt = stmt.limit(limit)
             if offset is not None:
@@ -61,7 +70,7 @@ class QueryController[ModelT]:
     async def find_all_with_options(
         self,
         filters: Any | None = None,
-        order_by: Any | None = None,
+        order_by: OrderByType | None = None,
         limit: int | None = None,
         offset: int | None = None,
         load_relationships: list[str] | None = None,
@@ -73,7 +82,8 @@ class QueryController[ModelT]:
             if filter_expr is not None:
                 stmt = stmt.where(filter_expr)
             if order_by is not None:
-                stmt = stmt.order_by(order_by)
+                # Unpack tuple/list for multiple order_by columns
+                stmt = stmt.order_by(*order_by) if isinstance(order_by, (tuple, list)) else stmt.order_by(order_by)
             if limit is not None:
                 stmt = stmt.limit(limit)
             if offset is not None:

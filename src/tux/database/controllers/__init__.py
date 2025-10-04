@@ -6,11 +6,9 @@ from tux.database.controllers.case import CaseController
 from tux.database.controllers.guild import GuildController
 from tux.database.controllers.guild_config import GuildConfigController
 from tux.database.controllers.guild_permissions import (
-    GuildBlacklistController,
     GuildCommandPermissionController,
     GuildPermissionAssignmentController,
     GuildPermissionController,
-    GuildWhitelistController,
 )
 from tux.database.controllers.levels import LevelsController
 from tux.database.controllers.reminder import ReminderController
@@ -30,8 +28,6 @@ class DatabaseCoordinator:
         self._guild_permissions: GuildPermissionController | None = None
         self._guild_permission_assignments: GuildPermissionAssignmentController | None = None
         self._guild_command_permissions: GuildCommandPermissionController | None = None
-        self._guild_blacklist: GuildBlacklistController | None = None
-        self._guild_whitelist: GuildWhitelistController | None = None
         self._afk: AfkController | None = None
         self._levels: LevelsController | None = None
         self._snippet: SnippetController | None = None
@@ -51,12 +47,6 @@ class DatabaseCoordinator:
         if self._guild_config is None:
             self._guild_config = GuildConfigController(self.db)
         return self._guild_config
-
-    @property
-    def guild_permission(self) -> GuildPermissionController:
-        if self._guild_permission is None:  # type: ignore[comparison-overlap]
-            self._guild_permission = GuildPermissionController(self.db)
-        return self._guild_permission
 
     @property
     def afk(self) -> AfkController:
@@ -117,15 +107,3 @@ class DatabaseCoordinator:
         if self._guild_command_permissions is None:
             self._guild_command_permissions = GuildCommandPermissionController(self.db)
         return self._guild_command_permissions
-
-    @property
-    def guild_blacklist(self) -> GuildBlacklistController:
-        if self._guild_blacklist is None:
-            self._guild_blacklist = GuildBlacklistController(self.db)
-        return self._guild_blacklist
-
-    @property
-    def guild_whitelist(self) -> GuildWhitelistController:
-        if self._guild_whitelist is None:
-            self._guild_whitelist = GuildWhitelistController(self.db)
-        return self._guild_whitelist
