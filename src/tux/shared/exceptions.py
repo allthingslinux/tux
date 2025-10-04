@@ -48,7 +48,7 @@ class TuxPermissionError(TuxError):
 
 
 class TuxPermissionLevelError(TuxPermissionError):
-    """Raised when a user doesn't have the required permission level."""
+    """Raised when a user doesn't have the required permission rank."""
 
     def __init__(self, permission: str) -> None:
         self.permission = permission
@@ -56,11 +56,29 @@ class TuxPermissionLevelError(TuxPermissionError):
 
 
 class TuxAppCommandPermissionLevelError(TuxPermissionError):
-    """Raised when a user doesn't have the required permission level for an app command."""
+    """Raised when a user doesn't have the required permission rank for an app command."""
 
     def __init__(self, permission: str) -> None:
         self.permission = permission
         super().__init__(f"Missing required permission: {permission}")
+
+
+class TuxPermissionDeniedError(TuxPermissionError):
+    """Raised when a user doesn't have permission to run a command (dynamic system)."""
+
+    def __init__(self, required_rank: int, user_rank: int, command_name: str | None = None):
+        self.required_rank = required_rank
+        self.user_rank = user_rank
+        self.command_name = command_name
+
+        if command_name:
+            message = (
+                f"You need permission rank **{required_rank}** to use `{command_name}`. Your rank: **{user_rank}**"
+            )
+        else:
+            message = f"You need permission rank **{required_rank}**. Your rank: **{user_rank}**"
+
+        super().__init__(message)
 
 
 # === API Exceptions ===
