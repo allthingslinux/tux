@@ -17,7 +17,7 @@ The moderation system is built around a service-oriented architecture with four 
 
 **Supporting Components**:
 
-- **ConditionChecker**: Utility class for permission validation and hierarchy checks
+- **Permission System**: Dynamic database-driven permission validation and hierarchy checks
 - **ModerationCogBase**: Base class providing service initialization for moderation commands
 
 ### Key Benefits
@@ -153,7 +153,7 @@ result = await execution_service.execute_with_retry(
 
 ### ConditionChecker
 
-**Location**: `src/tux/services/moderation/condition_checker.py`
+**Location**: `src/tux/core/permission_system.py` and `src/tux/core/decorators.py`
 
 **Responsibilities**:
 
@@ -177,7 +177,7 @@ result = await execution_service.execute_with_retry(
 
 ```python
 # Decorator-based permission checking
-@require_moderator()
+@requires_command_permission()
 async def ban_command(ctx, user):
     # Command logic here
     pass
@@ -279,7 +279,7 @@ Each moderation command integrates with the service architecture:
 ```python
 class Ban(ModerationCogBase):
     @commands.hybrid_command(name="ban")
-    @require_moderator()
+    @requires_command_permission()
     async def ban(self, ctx, member, *, flags: BanFlags):
         await self.moderate_user(
             ctx=ctx,
@@ -554,7 +554,7 @@ Here's how a complete moderation case flows through the system:
 ```python
 # 1. User triggers moderation command
 @commands.hybrid_command(name="warn")
-@require_junior_mod()
+@requires_command_permission()
 async def warn(self, ctx, member, *, flags: WarnFlags):
     # 2. Service coordinator handles the complete workflow
     case = await self.moderation.execute_moderation_action(
@@ -571,7 +571,7 @@ async def warn(self, ctx, member, *, flags: WarnFlags):
 
 **Internal Workflow**:
 
-1. **Permission Check**: `ConditionChecker` validates moderator permissions
+1. **Permission Check**: Dynamic permission system validates user permissions via `@requires_command_permission()`
 2. **DM Decision**: `CommunicationService` determines if/when to send DM
 3. **Case Creation**: `CaseService` creates database record with atomic case number
 4. **Response Generation**: `CommunicationService` creates and sends embed
@@ -610,7 +610,7 @@ await case_controller.update_case_by_number(
 - **CaseService** depends on database access and guild management
 - **CommunicationService** depends on Discord bot instance and embed utilities
 - **ExecutionService** operates independently for retry logic
-- **ConditionChecker** integrates with the permission system
+- **Permission System** integrates with the database for dynamic role-based access control
 - **ModerationCoordinator** orchestrates all services together
 
 **Data Flow**:
@@ -618,7 +618,7 @@ await case_controller.update_case_by_number(
 ```text
 Discord Event → Permission Check → DM Decision → Discord Actions → Database Case → Response
      ↓              ↓              ↓              ↓              ↓              ↓
-ConditionChecker → Communication → ExecutionService → CaseService → Communication
+Permission Check → Communication → ExecutionService → CaseService → Communication
      ↑              ↑              ↑              ↑              ↑              ↑
 ModerationCoordinator ←────────── Orchestrates ──────────→ Response Generation
 ```
@@ -708,7 +708,7 @@ class CaseType(str, Enum):
 # Create custom moderation command
 class CustomAction(ModerationCogBase):
     @commands.hybrid_command(name="custom")
-    @require_moderator()
+    @requires_command_permission()
     async def custom_action(self, ctx, member, *, flags):
         await self.moderate_user(
             ctx=ctx,
@@ -892,7 +892,7 @@ The system provides built-in monitoring through:
 
 ### Documentation Issues Identified
 
-1. **Service Count Inconsistency**: ~~The documentation initially stated there are 5 core services, but there are actually 4 main components (3 services + ModerationCoordinator) with ConditionChecker as a supporting utility class.~~ ✅ **RESOLVED** - Documentation updated.
+1. **Service Count Inconsistency**: ~~The documentation initially stated there are 5 core services, but there are actually 4 main components (3 services + ModerationCoordinator) with dynamic permission system.~~ ✅ **RESOLVED** - Documentation updated.
 
 2. **Method Signature Accuracy**: ~~Some method signatures in examples may need verification against actual implementations.~~ ✅ **RESOLVED** - All examples updated to match current API.
 
@@ -902,7 +902,7 @@ The system provides built-in monitoring through:
 
 ### Potential Refactoring Opportunities
 
-1. **Service Naming**: Consider renaming `ConditionChecker` to `PermissionChecker` for clarity about its purpose.
+1. **Service Naming**: ~~Consider renaming `ConditionChecker` to `PermissionChecker` for clarity about its purpose.~~ ✅ **RESOLVED** - Migrated to dynamic permission system with `@requires_command_permission()` decorator.
 
 2. **Method Consolidation**: ✅ **RESOLVED** - The `get_operation_type` method existed in both `CaseService` and `ExecutionService` but was removed from CaseService as it was unused dead code.
 
