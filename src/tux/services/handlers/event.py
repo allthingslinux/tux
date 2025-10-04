@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
@@ -11,6 +12,27 @@ from tux.ui.embeds import EmbedCreator, EmbedType
 class EventHandler(BaseCog):
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
+        self._guilds_registered = False
+
+    @commands.Cog.listener()
+    async def on_ready(self) -> None:
+        """Register all guilds the bot is in on startup."""
+        if self._guilds_registered:
+            return
+
+        logger.info("🔄 Registering all guilds in database...")
+        registered_count = 0
+
+        for guild in self.bot.guilds:
+            try:
+                await self.db.guild.insert_guild_by_id(guild.id)
+                registered_count += 1
+            except Exception as e:
+                # Guild might already exist, that's fine
+                logger.trace(f"Guild {guild.id} ({guild.name}) already registered or error: {e}")
+
+        logger.info(f"✅ Registered {registered_count} guilds in database")
+        self._guilds_registered = True
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild) -> None:

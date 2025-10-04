@@ -15,6 +15,7 @@ from tux.shared.exceptions import (
     TuxCompilationError,
     TuxInvalidCodeFormatError,
     TuxMissingCodeError,
+    TuxPermissionDeniedError,
     TuxPermissionLevelError,
     TuxUnsupportedLanguageError,
 )
@@ -79,6 +80,7 @@ from .extractors import (
     extract_missing_argument_details,
     extract_missing_flag_details,
     extract_missing_role_details,
+    extract_permission_denied_details,
     extract_permissions_details,
 )
 
@@ -270,6 +272,12 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
     ),
     TuxAppCommandPermissionLevelError: ErrorHandlerConfig(
         message_format="You need permission level `{error.permission}`.",
+        send_to_sentry=False,
+        delete_error_messages=False,
+    ),
+    TuxPermissionDeniedError: ErrorHandlerConfig(
+        message_format="{message}",
+        detail_extractor=extract_permission_denied_details,
         send_to_sentry=False,
         delete_error_messages=False,
     ),

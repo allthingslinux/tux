@@ -140,3 +140,18 @@ def extract_bad_union_argument_details(error: Exception) -> dict[str, Any]:
 
     expected_types_str = " or ".join(expected_types) if expected_types else "unknown type"
     return {"argument": argument, "expected_types": expected_types_str}
+
+
+def extract_permission_denied_details(error: Exception) -> dict[str, Any]:
+    """Extract permission denied error details."""
+    required_rank = getattr(error, "required_rank", 0)
+    user_rank = getattr(error, "user_rank", 0)
+    command_name = getattr(error, "command_name", "this command")
+
+    # Check if this is an unconfigured command error (both ranks are 0)
+    if required_rank == 0 and user_rank == 0:
+        message = f"**`{command_name}`** has not been configured yet.\n\nAn administrator must use `/config command assign {command_name} <rank>` to set permission requirements."
+    else:
+        message = f"You need permission rank **{required_rank}** to use **`{command_name}`**.\n\nYour current rank: **{user_rank}**"
+
+    return {"message": message}
