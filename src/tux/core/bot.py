@@ -189,6 +189,7 @@ class Tux(commands.Bot):
             },
         )
 
+    # TODO: fix presence changing here, SEE: activity.py, why is there two?
     async def on_ready(self) -> None:
         """Handle the Discord READY event."""
         await self._set_presence()
