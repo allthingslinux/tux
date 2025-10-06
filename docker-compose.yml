@@ -1,12 +1,10 @@
 ---
-# Docker Compose configuration for Tux
-# Simple self-hosted setup
 
 services:
   tux-postgres:
     container_name: tux-postgres
     hostname: tux-postgres
-    image: postgres:15-alpine
+    image: postgres:17-alpine
     restart: "no"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
@@ -89,10 +87,8 @@ services:
         - |
           import sys
           try:
-              import tux.shared.config.env
-              # Additional check: ensure bot token is configured
-              from tux.shared.config.env import CONFIG
-              if not CONFIG.bot_token:
+              from tux.shared.config import CONFIG
+              if not CONFIG.BOT_TOKEN:
                   print("Bot token not configured", file=sys.stderr)
                   sys.exit(1)
               print("Health check passed")
