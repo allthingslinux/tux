@@ -163,6 +163,27 @@ class PermissionSystem:
         logger.info(f"Assigned rank {rank} to role {role_id} in guild {guild_id}")
         return assignment
 
+    async def remove_role_assignment(self, guild_id: int, role_id: int) -> bool:
+        """
+        Remove permission rank assignment from a role.
+
+        Args:
+            guild_id: Guild ID
+            role_id: Discord role ID
+
+        Returns:
+            True if assignment was removed, False if no assignment existed
+        """
+        removed = await self.db.permission_assignments.remove_role_assignment(guild_id, role_id)
+
+        # Clear cache for this guild
+        self._clear_guild_cache(guild_id)
+
+        if removed:
+            logger.info(f"Removed permission assignment for role {role_id} in guild {guild_id}")
+
+        return removed
+
     async def create_custom_permission_rank(
         self,
         guild_id: int,
