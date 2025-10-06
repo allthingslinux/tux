@@ -1,5 +1,4 @@
 import asyncio
-import importlib
 import time
 import traceback
 from collections import defaultdict
@@ -58,27 +57,14 @@ class CogLoader(commands.Cog):
         if filepath.suffix != ".py" or cog_name.startswith("_") or not await aiofiles.os.path.isfile(filepath):
             return False
 
-        # Check if the module has a setup function
+        # Check if the file contains a setup function by reading it
         try:
-            # Convert file path to module name
-            # Find the src directory in the path
-            src_index = next((i for i, part in enumerate(filepath.parts) if part == "src"), None)
-
-            if src_index is None:
-                return False
-
-            # Get path relative to src
-            relative_parts = filepath.parts[src_index + 1 :]
-            module_name = ".".join(relative_parts[:-1]) + "." + filepath.stem
-
-            # Import the module to check for setup function
-            module = importlib.import_module(module_name)
-
-            # Check if it has a setup function
-            return hasattr(module, "setup") and callable(module.setup)
-
+            async with aiofiles.open(filepath, encoding="utf-8") as f:
+                content = await f.read()
+                # Check if it has a setup function
+                return "async def setup(" in content or "def setup(" in content
         except Exception:
-            # If we can't import or check the module, skip it
+            # If we can't read the file, skip it
             return False
 
     @span("cog.load_single")
