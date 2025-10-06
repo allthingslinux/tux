@@ -13,7 +13,6 @@ import inspect
 import logging
 import os
 import sys
-from pathlib import Path
 from typing import Any
 
 from loguru import logger
@@ -31,7 +30,6 @@ _state = _LoggingState()
 def configure_logging(
     environment: str | None = None,  # Keep for backward compatibility but ignore
     level: str | None = None,
-    enable_file_logging: bool | None = None,
 ) -> None:
     """
     Configure the global loguru logger for the Tux application.
@@ -42,7 +40,6 @@ def configure_logging(
     Args:
         environment: Deprecated parameter, kept for backward compatibility.
         level: Override log level. If None, uses LOG_LEVEL env var (defaults to INFO).
-        enable_file_logging: Override file logging. If None, uses default behavior.
     """
     # Prevent multiple configurations using state object
     if _state.configured:
@@ -56,7 +53,6 @@ def configure_logging(
     # Application configuration - simplified to single source
     log_level = level or os.getenv("LOG_LEVEL", "INFO")
     console_format = _get_console_format()
-    file_logging = enable_file_logging if enable_file_logging is not None else _should_enable_file_logging()
 
     # Console logging configuration
     logger.add(
@@ -70,10 +66,6 @@ def configure_logging(
         catch=True,
     )
 
-    # File logging configuration (if enabled)
-    if file_logging:
-        _configure_file_logging(log_level)
-
     # Configure third-party library logging
     _configure_third_party_logging()
 
@@ -84,47 +76,6 @@ def configure_logging(
 def _get_console_format() -> str:
     """Get console log format."""
     return "<green>{time:HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | <level>{message}</level>"
-
-
-def _should_enable_file_logging() -> bool:
-    """Determine if file logging should be enabled."""
-    return os.getenv("ENABLE_FILE_LOGGING", "true").lower() == "true"
-
-
-def _configure_file_logging(log_level: str) -> None:
-    """Configure file logging with rotation and retention."""
-    logs_dir = Path("logs")
-    logs_dir.mkdir(exist_ok=True)
-
-    # Main log file with rotation
-    logger.add(
-        logs_dir / "tux_{time:YYYY-MM-DD}.log",
-        format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {process.name}:{thread.name} | {name}:{function}:{line} | {message}",
-        level=log_level,
-        rotation="00:00",  # Rotate daily at midnight
-        retention="30 days",  # Keep logs for 30 days
-        compression="gz",  # Compress old logs
-        serialize=False,  # Human-readable format
-        enqueue=True,  # Thread-safe for multiprocessing
-        backtrace=True,
-        diagnose=True,
-        catch=True,
-    )
-
-    # Error-only log file
-    logger.add(
-        logs_dir / "tux_errors_{time:YYYY-MM-DD}.log",
-        format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {process.name}:{thread.name} | {name}:{function}:{line} | {message}\n{exception}",
-        level="ERROR",
-        rotation="00:00",
-        retention="90 days",  # Keep error logs longer
-        compression="gz",
-        serialize=False,
-        enqueue=True,
-        backtrace=True,
-        diagnose=True,  # Always diagnose errors
-        catch=True,
-    )
 
 
 def _configure_third_party_logging() -> None:
