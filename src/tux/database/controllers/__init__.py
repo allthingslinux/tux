@@ -8,7 +8,7 @@ from tux.database.controllers.guild_config import GuildConfigController
 from tux.database.controllers.guild_permissions import (
     GuildCommandPermissionController,
     GuildPermissionAssignmentController,
-    GuildPermissionController,
+    GuildPermissionRankController,
 )
 from tux.database.controllers.levels import LevelsController
 from tux.database.controllers.reminder import ReminderController
@@ -25,7 +25,7 @@ class DatabaseCoordinator:
         self.db = db
         self._guild: GuildController | None = None
         self._guild_config: GuildConfigController | None = None
-        self._guild_permissions: GuildPermissionController | None = None
+        self._guild_permissions: GuildPermissionRankController | None = None
         self._guild_permission_assignments: GuildPermissionAssignmentController | None = None
         self._guild_command_permissions: GuildCommandPermissionController | None = None
         self._afk: AfkController | None = None
@@ -91,9 +91,9 @@ class DatabaseCoordinator:
         return self._reminder
 
     @property
-    def guild_permissions(self) -> GuildPermissionController:
+    def guild_permissions(self) -> GuildPermissionRankController:
         if self._guild_permissions is None:
-            self._guild_permissions = GuildPermissionController(self.db)
+            self._guild_permissions = GuildPermissionRankController(self.db)
         return self._guild_permissions
 
     @property

@@ -49,6 +49,26 @@ class GuildConfigController(BaseController[GuildConfig]):
         """Update a specific field in guild configuration."""
         return await self.update_by_id(guild_id, **{field_name: field_value})
 
+    # Onboarding-specific methods
+    async def update_onboarding_stage(self, guild_id: int, stage: str) -> GuildConfig | None:
+        """Update the onboarding stage for a guild."""
+        return await self.update_by_id(guild_id, onboarding_stage=stage)
+
+    async def mark_onboarding_completed(self, guild_id: int) -> GuildConfig | None:
+        """Mark onboarding as completed for a guild."""
+        return await self.update_by_id(guild_id, onboarding_completed=True, onboarding_stage="completed")
+
+    async def reset_onboarding(self, guild_id: int) -> GuildConfig | None:
+        """Reset onboarding status for a guild."""
+        return await self.update_by_id(guild_id, onboarding_completed=False, onboarding_stage="not_started")
+
+    async def get_onboarding_status(self, guild_id: int) -> tuple[bool, str | None]:
+        """Get onboarding status for a guild. Returns (completed, stage)."""
+        config = await self.get_config_by_guild_id(guild_id)
+        if config:
+            return config.onboarding_completed, config.onboarding_stage
+        return False, None
+
     async def update_channel_field(self, guild_id: int, channel_field: str, channel_id: int) -> GuildConfig | None:
         """Update a channel field in guild configuration."""
         return await self.update_config_field(guild_id, channel_field, channel_id)

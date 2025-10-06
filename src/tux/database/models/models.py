@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, relationship
 from sqlmodel import Field, Relationship, SQLModel
 
 from .base import BaseModel
-from .enums import CaseType
+from .enums import CaseType, OnboardingStage
 
 
 class Guild(BaseModel, table=True):
@@ -185,20 +185,23 @@ class GuildConfig(BaseModel, table=True):
     guild_id: int = Field(primary_key=True, foreign_key="guild.guild_id", ondelete="CASCADE", sa_type=BigInteger)
     prefix: str = Field(default="$", max_length=3)
 
-    mod_log_id: int | None = Field(default=None, sa_type=BigInteger)
-    audit_log_id: int | None = Field(default=None, sa_type=BigInteger)
-    join_log_id: int | None = Field(default=None, sa_type=BigInteger)
-    private_log_id: int | None = Field(default=None, sa_type=BigInteger)
-    report_log_id: int | None = Field(default=None, sa_type=BigInteger)
-    dev_log_id: int | None = Field(default=None, sa_type=BigInteger)
+    mod_log_id: int | None = Field(default=None, sa_type=BigInteger)  # log mod cases
+    audit_log_id: int | None = Field(default=None, sa_type=BigInteger)  # log guild events
+    join_log_id: int | None = Field(default=None, sa_type=BigInteger)  # log joins and leaves
+    private_log_id: int | None = Field(default=None, sa_type=BigInteger)  # log edits, deletes, etc
+    report_log_id: int | None = Field(default=None, sa_type=BigInteger)  # log reports and other important events
+    dev_log_id: int | None = Field(default=None, sa_type=BigInteger)  # log dev events / tux verbose logs / sentry
 
     jail_channel_id: int | None = Field(default=None, sa_type=BigInteger)
-    general_channel_id: int | None = Field(default=None, sa_type=BigInteger)
 
-    base_staff_role_id: int | None = Field(default=None, sa_type=BigInteger)
-    base_member_role_id: int | None = Field(default=None, sa_type=BigInteger)
     jail_role_id: int | None = Field(default=None, sa_type=BigInteger)
-    quarantine_role_id: int | None = Field(default=None, sa_type=BigInteger)
+
+    # Onboarding tracking
+    onboarding_completed: bool = Field(default=False)
+    onboarding_stage: OnboardingStage | None = Field(
+        default=None,
+        sa_column=Column(PgEnum(OnboardingStage, name="onboarding_stage_enum"), nullable=True),
+    )
 
     # Relationship back to Guild - using sa_relationship
     guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="guild_config"))
@@ -359,9 +362,9 @@ class GuildPermissionRank(BaseModel, table=True):
     rank: int = Field(sa_type=Integer)  # 0-100 (permission rank hierarchy)
     name: str = Field(max_length=100)  # "Junior Mod", "Moderator", etc.
     description: str | None = Field(default=None, max_length=500)
-    color: int | None = Field(default=None, sa_type=Integer)  # Role color for UI
-    position: int = Field(default=0, sa_type=Integer)  # Display order
-    enabled: bool = Field(default=True)
+    color: int | None = Field(default=None, sa_type=Integer)  # Role color for UI # TODO: remove
+    position: int = Field(default=0, sa_type=Integer)  # Display order # TODO: remove
+    enabled: bool = Field(default=True)  # TODO: remove
 
     # Relationship to Guild
     guild: Mapped[Guild] = Relationship(

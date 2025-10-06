@@ -21,8 +21,8 @@ if TYPE_CHECKING:
     from tux.database.service import DatabaseService
 
 
-class GuildPermissionController(BaseController[GuildPermissionRank]):
-    """Controller for managing guild permission levels."""
+class GuildPermissionRankController(BaseController[GuildPermissionRank]):
+    """Controller for managing guild permission ranks."""
 
     def __init__(self, db: DatabaseService | None = None):
         super().__init__(GuildPermissionRank, db)
@@ -101,7 +101,7 @@ class GuildPermissionController(BaseController[GuildPermissionRank]):
 
 
 class GuildPermissionAssignmentController(BaseController[GuildPermissionAssignment]):
-    """Controller for managing permission level assignments to roles."""
+    """Controller for managing guild permission assignments."""
 
     def __init__(self, db: DatabaseService | None = None):
         super().__init__(GuildPermissionAssignment, db)
@@ -124,6 +124,13 @@ class GuildPermissionAssignmentController(BaseController[GuildPermissionAssignme
     async def get_assignments_by_guild(self, guild_id: int) -> list[GuildPermissionAssignment]:
         """Get all permission assignments for a guild."""
         return await self.find_all(filters=GuildPermissionAssignment.guild_id == guild_id)
+
+    async def remove_role_assignment(self, guild_id: int, role_id: int) -> bool:
+        """Remove a permission level assignment from a role."""
+        deleted_count = await self.delete_where(
+            filters=(GuildPermissionAssignment.guild_id == guild_id) & (GuildPermissionAssignment.role_id == role_id),
+        )
+        return deleted_count > 0
 
     async def get_user_permission_rank(self, guild_id: int, user_id: int, user_roles: list[int]) -> int:
         """Get the highest permission rank a user has based on their roles."""
@@ -163,13 +170,6 @@ class GuildPermissionAssignmentController(BaseController[GuildPermissionAssignme
                 max_rank = int(rank_record.rank)
 
         return max_rank
-
-    async def remove_role_assignment(self, guild_id: int, role_id: int) -> bool:
-        """Remove a permission level assignment from a role."""
-        deleted_count = await self.delete_where(
-            filters=(GuildPermissionAssignment.guild_id == guild_id) & (GuildPermissionAssignment.role_id == role_id),
-        )
-        return deleted_count > 0
 
 
 class GuildCommandPermissionController(BaseController[GuildCommandPermission]):

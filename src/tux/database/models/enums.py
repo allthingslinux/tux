@@ -12,6 +12,14 @@ class PermissionType(str, Enum):
     MODULE = "module"
 
 
+class OnboardingStage(str, Enum):
+    NOT_STARTED = "not_started"
+    DISCOVERED = "discovered"
+    INITIALIZED = "initialized"
+    CONFIGURED = "configured"
+    COMPLETED = "completed"
+
+
 class CaseType(str, Enum):
     BAN = "BAN"
     UNBAN = "UNBAN"
