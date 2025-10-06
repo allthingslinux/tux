@@ -206,6 +206,7 @@ class TestGuildPermissionAssignmentController:
             rank=3,
             name="Moderator",
         )
+        assert rank.id is not None
 
         # Assign rank to role
         assignment = await guild_permission_assignment_controller.assign_permission_rank(
@@ -235,11 +236,13 @@ class TestGuildPermissionAssignmentController:
             rank=1,
             name="Member",
         )
+        assert rank1.id is not None
         rank2 = await guild_permission_controller.create_permission_rank(
             guild_id=TEST_GUILD_ID,
             rank=3,
             name="Moderator",
         )
+        assert rank2.id is not None
 
         # Create assignments
         await guild_permission_assignment_controller.assign_permission_rank(
@@ -281,11 +284,13 @@ class TestGuildPermissionAssignmentController:
             rank=1,
             name="Member",
         )
+        assert rank1.id is not None
         rank2 = await guild_permission_controller.create_permission_rank(
             guild_id=TEST_GUILD_ID,
             rank=3,
             name="Moderator",
         )
+        assert rank2.id is not None
 
         # Assign ranks to roles
         await guild_permission_assignment_controller.assign_permission_rank(
@@ -327,6 +332,7 @@ class TestGuildPermissionAssignmentController:
             rank=3,
             name="Moderator",
         )
+        assert rank.id is not None
         await guild_permission_assignment_controller.assign_permission_rank(
             guild_id=TEST_GUILD_ID,
             role_id=TEST_ROLE_ID_1,
