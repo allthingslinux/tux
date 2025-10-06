@@ -28,24 +28,21 @@ class Deepfry(BaseCog):
     async def deepfry(
         self,
         ctx: commands.Context[Any],
-        image: discord.Attachment | str | None = None,
+        image: discord.Attachment,
     ) -> None:
         """Deepfry an image using various image processing effects."""
 
-        # Extract image URL from various input sources
-        image_url = self._extract_image_url(ctx, image)
-        if not image_url:
-            await self._send_error_embed(ctx, "No Image", "Please attach an image or provide an image URL.")
-            return
-
-        # Validate attachment if present
-        if ctx.message.attachments and not self._is_valid_attachment(ctx.message.attachments[0]):
+        # Validate the attachment
+        if not self._is_valid_attachment(image):
             await self._send_error_embed(
                 ctx,
                 "Invalid File",
                 "The file must be an image. Allowed types are PNG, JPEG, and JPG.",
             )
             return
+
+        # Extract image URL from the attachment
+        image_url = self._extract_image_url(ctx, image)
 
         # Defer for slash commands
         if ctx.interaction:
@@ -60,13 +57,9 @@ class Deepfry(BaseCog):
             logger.error(f"Error processing deepfry: {e}")
             await self._send_error_embed(ctx, "Error", "An error occurred while processing the image.")
 
-    def _extract_image_url(self, ctx: commands.Context[Any], image: discord.Attachment | str | None) -> str | None:
-        """Extract image URL from various input sources."""
-        if isinstance(image, discord.Attachment):
-            return image.url
-        if isinstance(image, str):
-            return ctx.message.attachments[0].url if ctx.message.attachments else image
-        return ctx.message.attachments[0].url if ctx.message.attachments else None
+    def _extract_image_url(self, ctx: commands.Context[Any], image: discord.Attachment) -> str:
+        """Extract image URL from the attachment."""
+        return image.url
 
     def _is_valid_attachment(self, attachment: discord.Attachment) -> bool:
         """Check if an attachment is a valid image."""
