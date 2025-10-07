@@ -4,7 +4,6 @@ from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
-from tux.services.onboarding import GuildOnboardingService
 from tux.shared.config import CONFIG
 from tux.shared.functions import is_harmful, strip_formatting
 
@@ -38,9 +37,8 @@ class EventHandler(BaseCog):
     async def on_guild_join(self, guild: discord.Guild) -> None:
         await self.db.guild.insert_guild_by_id(guild.id)
 
-        # Initialize onboarding for new guild
-        onboarding = GuildOnboardingService(self.bot)
-        await onboarding.initialize_new_guild(guild)
+        # Initialize basic guild data (permissions only)
+        await self.bot.db.guild_config.update_onboarding_stage(guild.id, "not_started")
 
     # TODO: Define data expiration policy for guilds
     @commands.Cog.listener()
