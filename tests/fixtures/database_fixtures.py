@@ -9,7 +9,7 @@ from loguru import logger
 from tux.database.controllers import (
     GuildConfigController,
     GuildController,
-    GuildPermissionController,
+    GuildPermissionRankController,
     GuildPermissionAssignmentController,
     GuildCommandPermissionController,
 )
@@ -112,10 +112,10 @@ async def disconnected_async_db_service():
 
 
 @pytest.fixture(scope="function")
-async def guild_permission_controller(db_service: DatabaseService) -> GuildPermissionController:
-    """GuildPermissionController with fresh database per test."""
-    logger.info("🔧 Creating GuildPermissionController")
-    return GuildPermissionController(db_service)
+async def guild_permission_controller(db_service: DatabaseService) -> GuildPermissionRankController:
+    """GuildPermissionRankController with fresh database per test."""
+    logger.info("🔧 Creating GuildPermissionRankController")
+    return GuildPermissionRankController(db_service)
 
 
 @pytest.fixture(scope="function")

@@ -2,7 +2,7 @@
 🛡️ Guild Permission Controllers Integration Tests
 
 Comprehensive tests for the permission rank system including:
-- GuildPermissionController (permission ranks CRUD)
+- GuildPermissionRankController (permission ranks CRUD)
 - GuildPermissionAssignmentController (role-to-rank assignments)
 - GuildCommandPermissionController (command permission requirements)
 
@@ -12,7 +12,7 @@ Tests follow the established patterns from test_database_controllers.py
 import pytest
 from tux.database.controllers import (
     GuildController,
-    GuildPermissionController,
+    GuildPermissionRankController,
     GuildPermissionAssignmentController,
     GuildCommandPermissionController,
 )
@@ -25,15 +25,15 @@ TEST_ROLE_ID_2 = 987654321098765433
 TEST_USER_ID = 876543210987654321
 
 
-class TestGuildPermissionController:
-    """🚀 Test GuildPermissionController for permission rank management."""
+class TestGuildPermissionRankController:
+    """🚀 Test GuildPermissionRankController for permission rank management."""
 
     @pytest.mark.integration
     @pytest.mark.asyncio
     async def test_create_permission_rank(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionController,
+        guild_permission_controller: GuildPermissionRankController,
     ) -> None:
         """Test creating a permission rank."""
         # Create guild first (foreign key requirement)
@@ -60,7 +60,7 @@ class TestGuildPermissionController:
     async def test_get_permission_ranks_by_guild(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionController,
+        guild_permission_controller: GuildPermissionRankController,
     ) -> None:
         """Test retrieving all permission ranks for a guild."""
         # Create guild first
@@ -97,7 +97,7 @@ class TestGuildPermissionController:
     async def test_get_permission_rank(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionController,
+        guild_permission_controller: GuildPermissionRankController,
     ) -> None:
         """Test retrieving a specific permission rank."""
         # Create guild and rank
@@ -120,7 +120,7 @@ class TestGuildPermissionController:
     async def test_get_permission_rank_not_found(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionController,
+        guild_permission_controller: GuildPermissionRankController,
     ) -> None:
         """Test retrieving a non-existent permission rank returns None."""
         # Create guild only
@@ -136,7 +136,7 @@ class TestGuildPermissionController:
     async def test_update_permission_rank(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionController,
+        guild_permission_controller: GuildPermissionRankController,
     ) -> None:
         """Test updating a permission rank."""
         # Create guild and rank
@@ -167,7 +167,7 @@ class TestGuildPermissionController:
     async def test_delete_permission_rank(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionController,
+        guild_permission_controller: GuildPermissionRankController,
     ) -> None:
         """Test deleting a permission rank."""
         # Create guild and rank
@@ -195,7 +195,7 @@ class TestGuildPermissionAssignmentController:
     async def test_assign_permission_rank(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionController,
+        guild_permission_controller: GuildPermissionRankController,
         guild_permission_assignment_controller: GuildPermissionAssignmentController,
     ) -> None:
         """Test assigning a permission rank to a role."""
@@ -225,7 +225,7 @@ class TestGuildPermissionAssignmentController:
     async def test_get_assignments_by_guild(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionController,
+        guild_permission_controller: GuildPermissionRankController,
         guild_permission_assignment_controller: GuildPermissionAssignmentController,
     ) -> None:
         """Test retrieving all role assignments for a guild."""
@@ -273,7 +273,7 @@ class TestGuildPermissionAssignmentController:
     async def test_get_user_permission_rank(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionController,
+        guild_permission_controller: GuildPermissionRankController,
         guild_permission_assignment_controller: GuildPermissionAssignmentController,
     ) -> None:
         """Test retrieving the highest permission rank for a user's roles."""
@@ -321,7 +321,7 @@ class TestGuildPermissionAssignmentController:
     async def test_remove_role_assignment(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionController,
+        guild_permission_controller: GuildPermissionRankController,
         guild_permission_assignment_controller: GuildPermissionAssignmentController,
     ) -> None:
         """Test removing a role's permission assignment."""
