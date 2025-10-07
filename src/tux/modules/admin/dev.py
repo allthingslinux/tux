@@ -479,6 +479,7 @@ class Dev(BaseCog):
 
     @dev.command(
         name="stop",
+        aliases=["shutdown"],
     )
     @commands.guild_only()
     @requires_command_permission()
