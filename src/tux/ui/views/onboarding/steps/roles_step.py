@@ -83,12 +83,12 @@ class RolesStep(BaseWizardStep):
         )
         group1_container.add_item(group1_desc)
 
-        self.add_item(group1_container)
-
         # Add ranks 1-3 individually (3 ranks x 2 components each = 6 components)
-        self._add_rank_select(1, "Trusted", "Trusted server member")
-        self._add_rank_select(2, "Junior Moderator", "Can warn, timeout, jail")
-        self._add_rank_select(3, "Moderator", "Can kick, ban")
+        self._add_rank_select_to_container(1, "Trusted", "Trusted server member", group1_container)
+        self._add_rank_select_to_container(2, "Junior Moderator", "Can warn, timeout, jail", group1_container)
+        self._add_rank_select_to_container(3, "Moderator", "Can kick, ban", group1_container)
+
+        self.add_item(group1_container)
 
     def _add_permission_rank_group_2(self) -> None:
         """Add permission rank selectors for ranks 4-7."""
@@ -110,16 +110,22 @@ class RolesStep(BaseWizardStep):
         )
         group2_container.add_item(group2_desc)
 
+        # Add ranks 4-7 individually (4 ranks x 2 components each = 8 components)
+        self._add_rank_select_to_container(4, "Senior Moderator", "Can unban, manage others", group2_container)
+        self._add_rank_select_to_container(5, "Administrator", "Server administration", group2_container)
+        self._add_rank_select_to_container(6, "Head Administrator", "Full server control", group2_container)
+        self._add_rank_select_to_container(7, "Server Owner", "Complete access", group2_container)
+
         self.add_item(group2_container)
 
-        # Add ranks 4-7 individually (4 ranks x 2 components each = 8 components)
-        self._add_rank_select(4, "Senior Moderator", "Can unban, manage others")
-        self._add_rank_select(5, "Administrator", "Server administration")
-        self._add_rank_select(6, "Head Administrator", "Full server control")
-        self._add_rank_select(7, "Server Owner", "Complete access")
-
-    def _add_rank_select(self, rank: int, rank_name: str, description: str) -> None:
-        """Add a single permission rank selector with description."""
+    def _add_rank_select_to_container(
+        self,
+        rank: int,
+        rank_name: str,
+        description: str,
+        container: discord.ui.Container[SetupWizardView],
+    ) -> None:
+        """Add a single permission rank selector to a container."""
         # Action row with role select
         action_row: discord.ui.ActionRow[SetupWizardView] = discord.ui.ActionRow(id=800 + rank)
         role_select: PermissionRankRoleSelect = PermissionRankRoleSelect(
@@ -128,7 +134,7 @@ class RolesStep(BaseWizardStep):
             placeholder=f"Choose {rank_name} role...",
         )
         action_row.add_item(role_select)
-        self.add_item(action_row)
+        container.add_item(action_row)
 
     def _add_jail_role_section(self) -> None:
         """Add jail role section."""
@@ -149,13 +155,13 @@ class RolesStep(BaseWizardStep):
         )
         jail_role_container.add_item(jail_role_desc)
 
-        self.add_item(jail_role_container)
-
         # Action row with jail role select
         jail_role_action_row: discord.ui.ActionRow[SetupWizardView] = discord.ui.ActionRow(id=900)
         jail_role_select: JailRoleSelect = JailRoleSelect()
         jail_role_action_row.add_item(jail_role_select)
-        self.add_item(jail_role_action_row)
+        jail_role_container.add_item(jail_role_action_row)
+
+        self.add_item(jail_role_container)
 
     def _add_action_buttons(self) -> None:
         """Add action buttons."""

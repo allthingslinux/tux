@@ -82,25 +82,25 @@ class ChannelsStep(BaseWizardStep):
         )
         group1_container.add_item(group1_desc)
 
-        self.add_item(group1_container)
-
         # Moderation channel select
         mod_action_row: discord.ui.ActionRow[SetupWizardView] = discord.ui.ActionRow()
         mod_select: ModLogChannelSelect = ModLogChannelSelect()
         mod_action_row.add_item(mod_select)
-        self.add_item(mod_action_row)
+        group1_container.add_item(mod_action_row)
 
         # Audit channel select
         audit_action_row: discord.ui.ActionRow[SetupWizardView] = discord.ui.ActionRow()
         audit_select: AuditLogChannelSelect = AuditLogChannelSelect()
         audit_action_row.add_item(audit_select)
-        self.add_item(audit_action_row)
+        group1_container.add_item(audit_action_row)
 
         # Join channel select
         join_action_row: discord.ui.ActionRow[SetupWizardView] = discord.ui.ActionRow()
         join_select: JoinLogChannelSelect = JoinLogChannelSelect()
         join_action_row.add_item(join_select)
-        self.add_item(join_action_row)
+        group1_container.add_item(join_action_row)
+
+        self.add_item(group1_container)
 
     def _add_channel_selectors_group_2(self) -> None:
         """Add second group of channel selectors: Private, Report, Dev logs."""
@@ -122,25 +122,25 @@ class ChannelsStep(BaseWizardStep):
         )
         group2_container.add_item(group2_desc)
 
-        self.add_item(group2_container)
-
         # Private channel select
         private_action_row: discord.ui.ActionRow[SetupWizardView] = discord.ui.ActionRow()
         private_select: PrivateLogChannelSelect = PrivateLogChannelSelect()
         private_action_row.add_item(private_select)
-        self.add_item(private_action_row)
+        group2_container.add_item(private_action_row)
 
         # Report channel select
         report_action_row: discord.ui.ActionRow[SetupWizardView] = discord.ui.ActionRow()
         report_select: ReportLogChannelSelect = ReportLogChannelSelect()
         report_action_row.add_item(report_select)
-        self.add_item(report_action_row)
+        group2_container.add_item(report_action_row)
 
         # Dev channel select
         dev_action_row: discord.ui.ActionRow[SetupWizardView] = discord.ui.ActionRow()
         dev_select: DevLogChannelSelect = DevLogChannelSelect()
         dev_action_row.add_item(dev_select)
-        self.add_item(dev_action_row)
+        group2_container.add_item(dev_action_row)
+
+        self.add_item(group2_container)
 
     def _add_channel_selectors_group_3(self) -> None:
         """Add third group of channel selectors: Jail channel."""
@@ -162,13 +162,13 @@ class ChannelsStep(BaseWizardStep):
         )
         group3_container.add_item(group3_desc)
 
-        self.add_item(group3_container)
-
         # Jail channel select
         jail_action_row: discord.ui.ActionRow[SetupWizardView] = discord.ui.ActionRow()
         jail_select: JailChannelSelect = JailChannelSelect()
         jail_action_row.add_item(jail_select)
-        self.add_item(jail_action_row)
+        group3_container.add_item(jail_action_row)
+
+        self.add_item(group3_container)
 
     def _add_selection_display(self) -> None:
         """Add selected channels display container."""

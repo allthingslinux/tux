@@ -8,8 +8,6 @@ import discord
 from loguru import logger
 
 from tux.core.permission_system import get_permission_system
-from tux.database.models.enums import OnboardingStage
-from tux.services.onboarding import GuildOnboardingService
 
 from .callbacks import (
     handle_audit_log_channel_select,
@@ -32,7 +30,6 @@ from .steps import (
 
 if TYPE_CHECKING:
     from tux.core.bot import Tux
-    from tux.services.onboarding import GuildOnboardingService
 
 
 class SetupWizardView(discord.ui.LayoutView):
@@ -46,8 +43,6 @@ class SetupWizardView(discord.ui.LayoutView):
         self.permission_system = get_permission_system()
 
         logger.info(f"Creating SetupWizardView for guild {guild.id} with author {author}")
-
-        self.onboarding: GuildOnboardingService = GuildOnboardingService(bot)
 
         # Setup state
         self.current_step = 0
@@ -86,8 +81,6 @@ class SetupWizardView(discord.ui.LayoutView):
             4: CompletionStep(self),
         }
 
-        # Build the initial view
-        self.build_welcome_step()
         logger.info(f"SetupWizardView initialized with {len(self.children)} children")
 
     def build_welcome_step(self) -> None:
@@ -222,7 +215,7 @@ class SetupWizardView(discord.ui.LayoutView):
 
             logger.info(f"Calling initialize_new_guild for guild {self.guild.id}")
             # Initialize permissions
-            await self.onboarding.initialize_new_guild(self.guild)
+            await self.permission_system.initialize_guild(self.guild.id)
             self.setup_data["permissions_initialized"] = True
             logger.info(f"Successfully initialized permissions for guild {self.guild.id}")
 
@@ -254,7 +247,7 @@ class SetupWizardView(discord.ui.LayoutView):
             await self._save_log_channels()
 
             # Update onboarding stage
-            await self.onboarding.update_onboarding_stage(self.guild.id, OnboardingStage.COMPLETED)
+            await self.bot.db.guild_config.mark_onboarding_completed(self.guild.id)
 
             # Build completion step
             self._build_completion_step()
@@ -296,4 +289,5 @@ class SetupWizardView(discord.ui.LayoutView):
     async def on_timeout(self) -> None:
         """Handle view timeout."""
         logger.info(f"Setup wizard timed out for guild {self.guild.id}")
+
         self.stop()

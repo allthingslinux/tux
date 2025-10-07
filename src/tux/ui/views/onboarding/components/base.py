@@ -76,7 +76,3 @@ class WizardComponent:
             )
             return False
         return True
-
-
-# Note: The require_wizard_author decorator is not currently used
-# Components use the validation methods directly for better type safety
