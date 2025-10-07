@@ -25,12 +25,18 @@ class CrudController[ModelT]:
             session.add(instance)
             await session.commit()
             await session.refresh(instance)
+            # Expunge the instance so it can be used in other sessions
+            session.expunge(instance)
             return instance
 
     async def get_by_id(self, record_id: Any) -> ModelT | None:
         """Get a record by ID."""
         async with self.db.session() as session:
-            return await session.get(self.model, record_id)
+            instance = await session.get(self.model, record_id)
+            if instance:
+                # Expunge the instance so it can be used in other sessions
+                session.expunge(instance)
+            return instance
 
     async def update_by_id(self, record_id: Any, **values: Any) -> ModelT | None:
         """Update a record by ID."""
@@ -41,6 +47,8 @@ class CrudController[ModelT]:
                     setattr(instance, key, value)
                 await session.commit()
                 await session.refresh(instance)
+                # Expunge the instance so it can be used in other sessions
+                session.expunge(instance)
             return instance
 
     async def delete_by_id(self, record_id: Any) -> bool:

@@ -42,7 +42,11 @@ class QueryController[ModelT]:
                 # Unpack tuple/list for multiple order_by columns
                 stmt = stmt.order_by(*order_by) if isinstance(order_by, (tuple, list)) else stmt.order_by(order_by)
             result = await session.execute(stmt)
-            return result.scalars().first()
+            instance = result.scalars().first()
+            if instance:
+                # Expunge the instance so it can be used in other sessions
+                session.expunge(instance)
+            return instance
 
     async def find_all(
         self,
@@ -65,7 +69,11 @@ class QueryController[ModelT]:
             if offset is not None:
                 stmt = stmt.offset(offset)
             result = await session.execute(stmt)
-            return list(result.scalars().all())
+            instances = list(result.scalars().all())
+            # Expunge all instances so they can be used in other sessions
+            for instance in instances:
+                session.expunge(instance)
+            return instances
 
     async def find_all_with_options(
         self,
@@ -92,7 +100,11 @@ class QueryController[ModelT]:
                 for relationship in load_relationships:
                     stmt = stmt.options(selectinload(getattr(self.model, relationship)))
             result = await session.execute(stmt)
-            return list(result.scalars().all())
+            instances = list(result.scalars().all())
+            # Expunge all instances so they can be used in other sessions
+            for instance in instances:
+                session.expunge(instance)
+            return instances
 
     async def count(self, filters: Any | None = None) -> int:
         """Count records."""

@@ -151,10 +151,14 @@ class UpsertController[ModelT]:
                 update_data |= defaults
 
             async with self.db.session() as session:
+                # Merge the detached instance into this session
+                existing = await session.merge(existing)
                 for key, value in update_data.items():
                     setattr(existing, key, value)
                 await session.commit()
                 await session.refresh(existing)
+                # Expunge the instance so it can be used in other sessions
+                session.expunge(existing)
                 return existing, False
 
         # Create new record
