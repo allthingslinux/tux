@@ -90,6 +90,7 @@ class Constants:
     # Cog loading priorities
     COG_PRIORITIES: Final[dict[str, int]] = {
         "services": 90,
+        "config": 85,
         "admin": 80,
         "levels": 70,
         "moderation": 60,
