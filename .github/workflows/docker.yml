@@ -326,7 +326,7 @@ jobs:
       # TRIVY CACHE OPTIMIZATION
       # Caches vulnerability database for faster subsequent scans
       - name: Cache Trivy
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.cache/trivy
           key: cache-trivy-${{ hashFiles('Dockerfile') }}-${{ github.run_id }}
