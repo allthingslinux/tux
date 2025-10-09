@@ -98,7 +98,7 @@ jobs:
       # REPOSITORY CHECKOUT
       # Full repository access required for comprehensive analysis
       - name: Checkout repository
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
 
       # CODEQL INITIALIZATION
       # Configures language-specific analysis parameters
@@ -136,7 +136,7 @@ jobs:
       # REPOSITORY CHECKOUT
       # Required for dependency comparison between base and head branches
       - name: Checkout Repository
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
 
       # DEPENDENCY VULNERABILITY ANALYSIS
       # Analyzes dependency changes for security vulnerabilities
@@ -167,7 +167,7 @@ jobs:
       # REPOSITORY CHECKOUT
       # Required for dependency file access and analysis
       - name: Checkout Repository
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
 
       # PYTHON ENVIRONMENT SETUP (COMPOSITE ACTION)
       # Uses centralized Python setup for production dependency analysis
