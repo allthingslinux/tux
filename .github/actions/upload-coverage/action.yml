@@ -27,7 +27,7 @@ runs:
     # COVERAGE UPLOAD TO CODECOV
     # Uploads coverage data with specific flags for categorization
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5
+      uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5
       with:
         files: ${{ inputs.coverage-file }}
         flags: ${{ inputs.flags }}
