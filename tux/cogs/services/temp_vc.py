@@ -1,3 +1,5 @@
+import asyncio
+
 import discord
 from discord.ext import commands
 
@@ -8,7 +10,7 @@ from tux.utils.config import CONFIG
 class TempVc(commands.Cog):
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
-        self.base_vc_name: str = "/tmp/"
+        self.base_vc_name: str = CONFIG.TEMPVC_BASE_NAME or "/tmp/"
 
     @commands.Cog.listener()
     async def on_voice_state_update(
@@ -34,7 +36,8 @@ class TempVc(commands.Cog):
         # Ensure CONFIGants are set correctly
         temp_channel_id = int(CONFIG.TEMPVC_CHANNEL_ID or "0")
         temp_category_id = int(CONFIG.TEMPVC_CATEGORY_ID or "0")
-        if temp_channel_id == 0 or temp_category_id == 0:
+
+        if 0 in {temp_category_id, temp_channel_id}:
             return
 
         # When user joins the temporary voice channel
@@ -42,7 +45,7 @@ class TempVc(commands.Cog):
             await self._handle_user_join(member, after.channel)
 
         # When user leaves any voice channel
-        elif before.channel:
+        if before.channel:
             await self._handle_user_leave(before.channel, after.channel, temp_channel_id, temp_category_id)
 
     async def _handle_user_join(
@@ -61,11 +64,12 @@ class TempVc(commands.Cog):
             The channel that the member joined.
         """
 
-        for voice_channel in channel.guild.voice_channels:
-            # Check if the channel is a temporary channel and if it is the user's channel
-            if voice_channel.name == self.base_vc_name + member.name:
-                await member.move_to(voice_channel)
-                return
+        tasks = [
+            member.move_to(voice_channel)
+            for voice_channel in channel.guild.voice_channels
+            if voice_channel.name == self.base_vc_name + member.name
+        ]
+        asyncio.gather(*tasks)
 
         # Create a new channel for the user if it doesn't exist
         new_channel = await channel.clone(name=self.base_vc_name + member.name)
@@ -107,19 +111,16 @@ class TempVc(commands.Cog):
             return
 
         # Delete the channel if it is empty
-        if len(before_channel.members) == 0:
+        if before_channel.members == []:
             await before_channel.delete()
 
         # Search and delete all empty temporary channels
-        for channel in category.voice_channels:
-            if (
-                not channel.name.startswith(self.base_vc_name)
-                or len(channel.members) != 0
-                or channel.id == temp_channel_id
-            ):
-                continue
-
-            await channel.delete()
+        tasks = [
+            channel.delete()
+            for channel in category.voice_channels
+            if channel.name.startswith(self.base_vc_name) and channel.members == [] and channel.id == temp_channel_id
+        ]
+        await asyncio.gather(*tasks)
 
 
 async def setup(bot: Tux) -> None:
