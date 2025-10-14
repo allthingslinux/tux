@@ -1,8 +1,10 @@
-"""Enhanced base cog with database access and usage generation.
+"""
+Enhanced base cog with database access and automatic usage generation.
 
-This module provides the `BaseCog` class that:
-- Provides access to database services
-- Generates command usage strings from function signatures
+This module provides the BaseCog class, which serves as the foundation for all
+bot cogs. It provides convenient access to database services, configuration
+values, and automatically generates command usage strings from function signatures
+and type hints.
 """
 
 from __future__ import annotations
@@ -23,170 +25,334 @@ if TYPE_CHECKING:
 
 
 class BaseCog(commands.Cog):
-    """Enhanced base cog class with database access.
+    """
+    Enhanced base cog class providing database access and automatic usage generation.
 
-    This class provides access to database services and configuration.
+    This class serves as the foundation for all bot cogs, offering convenient
+    access to database controllers, configuration values, and automatic command
+    usage string generation based on function signatures.
+
+    Attributes
+    ----------
+    bot : Tux
+        The bot instance this cog is attached to.
+    _unload_task : asyncio.Task[None] | None
+        Background task for graceful cog unloading when config is missing.
+
+    Notes
+    -----
+    All cogs should inherit from this class to gain access to:
+    - Database operations via ``self.db``
+    - Configuration access via ``self.get_config()``
+    - Automatic command usage generation
+    - Graceful unloading on missing configuration
     """
 
     _unload_task: asyncio.Task[None] | None = None
 
     def __init__(self, bot: Tux) -> None:
-        """Initialize the base cog.
+        """
+        Initialize the base cog with bot instance and command usage setup.
 
-        Args:
-            bot: The Tux bot instance
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance this cog will be attached to.
+
+        Notes
+        -----
+        Automatically generates usage strings for all commands in this cog
+        that don't have explicit usage strings defined.
         """
         super().__init__()
-        # Get the bot instance
+
+        # Store bot instance for access to services and state
         self.bot = bot
 
-        # Configure automatic usage strings for commands that do not set one
+        # Automatically generate usage strings for commands without explicit usage
         self._setup_command_usage()
 
-    # ---------- Usage generation ----------
     def _setup_command_usage(self) -> None:
-        """Generate usage strings for all commands on this cog when missing.
+        """
+        Generate usage strings for all commands in this cog that lack explicit usage.
 
         The generated usage follows the pattern:
-        "<qualified_name> <param tokens>"
-        where each required parameter is denoted as "<name: Type>" and optional
-        parameters are denoted as "[name: Type]". The prefix is intentionally
-        omitted because it's context-dependent and provided by `ctx.prefix`.
+        ``<qualified_name> <param tokens>``
+
+        Where:
+        - Required parameters are denoted as ``<name: Type>``
+        - Optional parameters are denoted as ``[name: Type]``
+        - The prefix is intentionally omitted (provided by ``ctx.prefix``)
+
+        Examples
+        --------
+        ``ban <member: Member> [reason: str]``
+        ``config set <key: str> <value: str>``
+
+        Notes
+        -----
+        Respects explicit usage strings if already set on a command.
+        Errors during generation are logged but don't prevent cog loading.
         """
         try:
             for command in self.get_commands():
-                # Respect explicit usage if provided by the command
+                # Skip commands that already have explicit usage defined
                 if getattr(command, "usage", None):
                     continue
+
+                # Generate usage from command signature and type hints
                 command.usage = self._generate_usage(command)
+
         except Exception as e:
+            # Log but don't crash - cog can still load without usage strings
             logger.debug(f"Failed to setup command usage for {self.__class__.__name__}: {e}")
 
     def _generate_usage(self, command: commands.Command[Any, ..., Any]) -> str:
-        """Generate a usage string with flag support when available.
+        """
+        Generate a usage string with support for flags and positional parameters.
 
-        Detects a `flags` parameter annotated with a `commands.FlagConverter` subclass
-        and delegates to the shared usage generator for consistent formatting.
-        Fallbacks to simple positional/optional parameter rendering otherwise.
+        This method inspects the command's callback signature to detect:
+        - FlagConverter parameters (e.g., ``--flag value``)
+        - Positional parameters (e.g., ``<required>`` or ``[optional]``)
+
+        Parameters
+        ----------
+        command : commands.Command
+            The command to generate usage for.
+
+        Returns
+        -------
+        str
+            Generated usage string, or qualified command name as fallback.
+
+        Notes
+        -----
+        Delegates to shared usage generator for consistency across all cogs.
+        Falls back gracefully to command name if generation fails.
         """
         flag_converter: type[commands.FlagConverter] | None = None
+
         try:
+            # Inspect the command callback's signature to detect flag parameters
             signature = inspect.signature(command.callback)
+
             for name, param in signature.parameters.items():
+                # Look specifically for a parameter named "flags"
                 if name != "flags":
                     continue
+
+                # Check if it's annotated with a FlagConverter subclass
                 ann = param.annotation
                 if (
                     ann is not inspect.Signature.empty
                     and isinstance(ann, type)
-                    and issubclass(
-                        ann,
-                        commands.FlagConverter,
-                    )
+                    and issubclass(ann, commands.FlagConverter)
                 ):
                     flag_converter = ann
                     break
+
         except Exception:
-            # If inspection fails, defer to simple name
+            # If signature inspection fails, fall back to minimal usage
             return command.qualified_name
 
-        # Use the shared generator to keep behavior consistent across cogs
+        # Delegate to shared usage generator for consistent formatting
         try:
             return _generate_usage_shared(command, flag_converter)
         except Exception:
-            # Final fallback: minimal usage string
+            # Final fallback: just return the command name
             return command.qualified_name
 
     @property
     def db(self) -> DatabaseCoordinator:
-        """Get the database coordinator for accessing database controllers.
+        """
+        Get the database coordinator for accessing database controllers.
 
-        Returns:
-            The database coordinator instance
+        Returns
+        -------
+        DatabaseCoordinator
+            Coordinator providing access to all database controllers.
+
+        Examples
+        --------
+        >>> await self.db.guild_config.get_guild_config(guild_id)
+        >>> await self.db.cases.create_case(...)
+
+        Notes
+        -----
+        This property provides convenient access to database operations without
+        needing to access ``self.bot.db`` directly.
         """
         return self.bot.db
 
     def get_config(self, key: str, default: Any = None) -> Any:
-        """Get a configuration value directly from CONFIG.
-
-        Args:
-            key: The configuration key to retrieve
-            default: Default value if key is not found
-
-        Returns:
-            The configuration value or default
         """
+        Get a configuration value from CONFIG with support for nested keys.
 
+        Parameters
+        ----------
+        key : str
+            The configuration key to retrieve. Supports dot notation for
+            nested values (e.g., ``"BOT_INFO.BOT_NAME"``).
+        default : Any, optional
+            Default value to return if key is not found, by default None.
+
+        Returns
+        -------
+        Any
+            The configuration value or default if not found.
+
+        Examples
+        --------
+        >>> self.get_config("BOT_INFO.BOT_NAME")
+        'Tux'
+        >>> self.get_config("MISSING_KEY", "fallback")
+        'fallback'
+
+        Notes
+        -----
+        Errors during retrieval are logged but don't raise exceptions.
+        Returns the default value on any error.
+        """
         try:
-            # Handle nested keys like "BOT_INFO.BOT_NAME"
+            # Support nested keys like "BOT_INFO.BOT_NAME"
             keys = key.split(".")
             value = CONFIG
 
+            # Navigate through nested attributes
             for k in keys:
                 if hasattr(value, k):
                     value = getattr(value, k)
                 else:
                     return default
+
         except Exception as e:
+            # Log error but return default gracefully
             logger.error(f"Failed to get config value {key}: {e}")
             return default
         else:
             return value
 
     def get_bot_latency(self) -> float:
-        """Get the bot's latency.
+        """
+        Get the bot's WebSocket latency to Discord.
 
-        Returns:
-            The bot's latency in seconds
+        Returns
+        -------
+        float
+            The bot's latency in seconds.
+
+        Notes
+        -----
+        This is the latency of the WebSocket connection, measured as the
+        time between sending a HEARTBEAT and receiving a HEARTBEAT_ACK.
         """
         return self.bot.latency
 
     def get_bot_user(self, user_id: int) -> Any:
-        """Get a user by ID.
+        """
+        Get a Discord user by ID from the bot's cache.
 
-        Args:
-            user_id: The Discord user ID
+        Parameters
+        ----------
+        user_id : int
+            The Discord user ID to look up.
 
-        Returns:
-            The user object if found, None otherwise
+        Returns
+        -------
+        discord.User | None
+            The user object if found in cache, None otherwise.
+
+        Notes
+        -----
+        Only returns users that are cached by the bot. May not include all
+        Discord users. Use ``bot.fetch_user()`` for API queries.
         """
         return self.bot.get_user(user_id)
 
     def get_bot_emoji(self, emoji_id: int) -> Any:
-        """Get an emoji by ID.
+        """
+        Get a custom emoji by ID from the bot's cache.
 
-        Args:
-            emoji_id: The Discord emoji ID
+        Parameters
+        ----------
+        emoji_id : int
+            The Discord emoji ID to look up.
 
-        Returns:
-            The emoji object if found, None otherwise
+        Returns
+        -------
+        discord.Emoji | None
+            The emoji object if found in cache, None otherwise.
+
+        Notes
+        -----
+        Only returns emojis from guilds the bot is in. Does not include
+        standard Unicode emojis.
         """
         return self.bot.get_emoji(emoji_id)
 
     def __repr__(self) -> str:
-        """Return a string representation of the cog."""
+        """
+        Return a string representation of the cog instance.
+
+        Returns
+        -------
+        str
+            String representation in format ``<CogName bot=BotUser>``.
+        """
         bot_user = getattr(self.bot, "user", "Unknown")
         return f"<{self.__class__.__name__} bot={bot_user}>"
 
     def unload_if_missing_config(self, condition: bool, config_name: str, extension_name: str) -> bool:
-        """Gracefully unload this cog if configuration is missing.
+        """
+        Gracefully unload this cog if required configuration is missing.
 
-        Args:
-            condition: True if config is missing (will trigger unload)
-            config_name: Name of the missing configuration for logging
-            extension_name: Full extension name for unloading
+        This allows cogs to self-unload when they detect missing configuration
+        at load time, preventing errors during command execution.
 
-        Returns:
-            True if unload was triggered, False otherwise
+        Parameters
+        ----------
+        condition : bool
+            True if config is missing (triggers unload), False otherwise.
+        config_name : str
+            Name of the missing configuration for logging purposes.
+        extension_name : str
+            Full extension name for unloading (e.g., ``"tux.cogs.mycog"``).
+
+        Returns
+        -------
+        bool
+            True if unload was triggered, False if config is present.
+
+        Examples
+        --------
+        >>> self.unload_if_missing_config(not CONFIG.GITHUB_TOKEN, "GITHUB_TOKEN", "tux.cogs.github")
+
+        Notes
+        -----
+        Unloading happens asynchronously in a background task to avoid
+        blocking cog initialization.
         """
         if condition:
             logger.warning(f"{config_name} is not configured. {self.__class__.__name__} will be unloaded.")
+            # Schedule async unload in background to avoid blocking
             self._unload_task = asyncio.create_task(self._unload_self(extension_name))
             return True
         return False
 
     async def _unload_self(self, extension_name: str) -> None:
-        """Unload this cog if configuration is missing."""
+        """
+        Perform the actual cog unload operation.
+
+        Parameters
+        ----------
+        extension_name : str
+            Full extension name to unload.
+
+        Notes
+        -----
+        This is called as a background task by ``unload_if_missing_config()``.
+        Errors during unload are logged but don't raise exceptions.
+        """
         try:
             await self.bot.unload_extension(extension_name)
             logger.info(f"{self.__class__.__name__} has been unloaded due to missing configuration")
