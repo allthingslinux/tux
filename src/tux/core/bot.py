@@ -1,7 +1,10 @@
-"""Tux Discord bot core implementation.
+"""
+Tux Discord bot core implementation.
 
-Defines the Tux bot class, which extends discord.py's Bot and manages
-setup, cog loading, error handling, and resource cleanup.
+This module defines the main Tux bot class, which extends discord.py's Bot
+and provides comprehensive lifecycle management including setup orchestration,
+cog loading, database integration, error handling, telemetry, and graceful
+resource cleanup.
 """
 
 from __future__ import annotations
@@ -35,58 +38,122 @@ __all__ = ["Tux"]
 
 
 class Tux(commands.Bot):
-    """Main bot class for Tux, extending discord.py's commands.Bot.
+    """
+    Main bot class for Tux, extending discord.py's commands.Bot.
 
-    Responsibilities
-    ----------------
-    - Connect to the database and validate readiness
-    - Load cogs/extensions
-    - Configure Sentry tracing and enrich spans
-    - Start background task monitoring and perform graceful shutdown
+    This class orchestrates the complete bot lifecycle including database
+    connections, cog loading, Sentry telemetry, background task monitoring,
+    and graceful shutdown procedures.
+
+    Attributes
+    ----------
+    is_shutting_down : bool
+        Flag indicating if shutdown is in progress (prevents duplicate shutdown).
+    setup_complete : bool
+        Flag indicating if initial setup has completed successfully.
+    start_time : float | None
+        Unix timestamp when bot became ready, used for uptime calculations.
+    setup_task : asyncio.Task[None] | None
+        Background task that handles async initialization.
+    task_monitor : TaskMonitor
+        Manages background tasks and ensures proper cleanup.
+    db_service : DatabaseService
+        Database connection manager and query executor.
+    sentry_manager : SentryManager
+        Error tracking and telemetry manager.
+    prefix_manager : Any | None
+        Cache manager for guild-specific command prefixes.
+    emoji_manager : EmojiManager
+        Custom emoji resolver for the bot.
+    console : Console
+        Rich console for formatted terminal output.
+    uptime : float
+        Unix timestamp when bot instance was created.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the Tux bot and start setup process."""
+        """
+        Initialize the Tux bot and schedule async setup.
+
+        Parameters
+        ----------
+        *args : Any
+            Positional arguments passed to discord.py's Bot.__init__.
+        **kwargs : Any
+            Keyword arguments passed to discord.py's Bot.__init__.
+
+        Notes
+        -----
+        The actual bot setup happens asynchronously in the setup task to avoid
+        blocking initialization. The setup task is created after a brief delay
+        to ensure the event loop is ready.
+        """
         super().__init__(*args, **kwargs)
-        # --- Core state ----------------------------------------------------
+
+        # Core state flags for lifecycle tracking
         self.is_shutting_down: bool = False
         self.setup_complete: bool = False
         self.start_time: float | None = None
         self.setup_task: asyncio.Task[None] | None = None
-        self._emoji_manager_initialized = False
-        self._hot_reload_loaded = False
-        self._banner_logged = False
-        self._startup_task: asyncio.Task[None] | None = None
-        self._commands_instrumented = False
 
-        # Background task monitor (encapsulates loops/cleanup)
+        # Internal flags to prevent duplicate initialization
+        self._emoji_manager_initialized: bool = False
+        self._banner_logged: bool = False
+        self._startup_task: asyncio.Task[None] | None = None
+        self._commands_instrumented: bool = False
+
+        # Background task monitor (manages periodic tasks and cleanup)
         self.task_monitor = TaskMonitor(self)
 
-        # --- Integration points -------------------------------------------
-        # Database service
+        # Service integrations
         self.db_service = DatabaseService()
-        # Sentry manager instance for error handling and context utilities
-        self.sentry_manager: SentryManager = SentryManager()
-        # Prefix manager for efficient prefix resolution
-        self.prefix_manager: Any | None = None
+        self.sentry_manager = SentryManager()
+        self.prefix_manager: Any | None = None  # Initialized during setup
 
-        # UI / misc
+        # UI components
         self.emoji_manager = EmojiManager(self)
         self.console = Console(stderr=True, force_terminal=True)
         self.uptime = discord.utils.utcnow().timestamp()
 
         logger.debug("Bot initialization complete")
-        # Create setup task after a brief delay to ensure event loop is ready
+
+        # Schedule setup task creation on the next event loop iteration
+        # This ensures the event loop is fully ready before we create async tasks
         asyncio.get_event_loop().call_soon(self._create_setup_task)
 
     def _create_setup_task(self) -> None:
-        """Create the setup task in the proper event loop context."""
+        """
+        Create the async setup task in the proper event loop context.
+
+        Notes
+        -----
+        Called by ``call_soon`` to ensure we're in the event loop's execution
+        context. Prevents ``RuntimeError`` when creating tasks too early.
+        """
         if self.setup_task is None:
             logger.debug("Creating bot setup task")
             self.setup_task = asyncio.create_task(self.setup(), name="bot_setup")
 
     async def setup(self) -> None:
-        """Perform one-time bot setup."""
+        """
+        Perform one-time bot setup and initialization.
+
+        This method delegates to BotSetupOrchestrator which handles:
+        - Database connection and validation
+        - Cog loading
+        - Cache initialization (prefixes, etc.)
+        - Background task startup
+
+        Raises
+        ------
+        RuntimeError
+            If database setup fails (wrapped from connection errors).
+
+        Notes
+        -----
+        Uses lazy import of BotSetupOrchestrator to avoid circular dependencies.
+        All setup operations are traced with Sentry spans for monitoring.
+        """
         try:
             with start_span("bot.setup", "Bot setup process") as span:
                 # Lazy import to avoid circular imports
@@ -94,7 +161,9 @@ class Tux(commands.Bot):
 
                 orchestrator = BotSetupOrchestrator(self)
                 await orchestrator.setup(span)
+
         except (TuxDatabaseConnectionError, ConnectionError) as e:
+            # Database connection failure is critical - provide helpful error message
             logger.error("❌ Database connection failed")
             logger.info("💡 To start the database, run: uv run docker up")
             capture_database_error(e, operation="connection")
@@ -103,55 +172,91 @@ class Tux(commands.Bot):
 
     @property
     def db(self) -> DatabaseCoordinator:
-        """Get the database coordinator for accessing database controllers."""
+        """
+        Get the database coordinator for accessing database controllers.
+
+        Returns
+        -------
+        DatabaseCoordinator
+            Coordinator providing access to all database controllers.
+
+        Notes
+        -----
+        This property provides convenient access to database operations via
+        controllers like ``bot.db.guild_config.get_guild_config()``.
+        """
         return DatabaseCoordinator(self.db_service)
 
     async def setup_hook(self) -> None:
-        """One-time async setup before connecting to Discord (discord.py hook)."""
+        """
+        Discord.py lifecycle hook called before connecting to Discord.
+
+        This hook initializes the emoji manager and checks setup task status.
+        It also schedules post-ready startup tasks.
+
+        Notes
+        -----
+        This is a discord.py callback that runs after __init__ but before
+        the bot connects to Discord. It's a good place for async initialization
+        that doesn't require being connected to Discord yet.
+        """
+        # Initialize emoji manager (loads custom emojis, etc.)
         if not self._emoji_manager_initialized:
             await self.emoji_manager.init()
             self._emoji_manager_initialized = True
 
-        # Check setup task completion without using callbacks
+        # Check if setup task has completed
         if self.setup_task and self.setup_task.done():
-            # Handle setup completion here instead of in callback
+            # Check if setup raised an exception
             if getattr(self.setup_task, "_exception", None) is not None:
-                # Setup failed - this will be handled by the main exception handling
                 self.setup_complete = False
             else:
-                # Setup succeeded
+                # Setup completed successfully
                 self.setup_complete = True
                 logger.info("✅ Bot setup completed successfully")
 
-                # Record success in Sentry
+                # Tag success in Sentry for monitoring
                 if self.sentry_manager.is_initialized:
                     self.sentry_manager.set_tag("bot.setup_complete", True)
 
+        # Schedule post-ready startup (banner, stats, instrumentation)
         if self._startup_task is None or self._startup_task.done():
             self._startup_task = self.loop.create_task(self._post_ready_startup())
 
     async def _post_ready_startup(self) -> None:
-        """Run after the bot is fully ready.
+        """
+        Execute post-ready startup tasks after bot is fully connected.
+
+        This method waits for both Discord READY and internal setup completion,
+        then performs final initialization steps like logging the banner,
+        instrumenting commands for Sentry, and recording bot statistics.
 
         Notes
         -----
-        - Waits for READY and internal setup
-        - Logs the startup banner
-        - Instruments commands (Sentry) and records basic bot stats
+        Execution order:
+        1. Wait for Discord READY event
+        2. Wait for internal bot setup (database, cogs)
+        3. Record start time
+        4. Display startup banner
+        5. Instrument commands for Sentry tracing
+        6. Record initial bot statistics
         """
-        await self.wait_until_ready()  # Wait for Discord connection and READY event
+        # Wait for Discord connection and READY event
+        await self.wait_until_ready()
 
-        # Also wait for internal bot setup (cogs, db, etc.) to complete
+        # Wait for internal bot setup (cogs, database, caches) to complete
         await self._wait_for_setup()
 
+        # Record the timestamp when bot became fully operational
         if not self.start_time:
             self.start_time = discord.utils.utcnow().timestamp()
 
+        # Display startup banner with bot info (once only)
         if not self._banner_logged:
             await self._log_startup_banner()
             self._banner_logged = True
 
-        # Instrument commands once, after cogs are loaded and bot is ready
+        # Enable Sentry command tracing (once only, after cogs loaded)
         if not self._commands_instrumented and self.sentry_manager.is_initialized:
             try:
                 instrument_bot_commands(self)
@@ -161,24 +266,42 @@ class Tux(commands.Bot):
                 logger.error(f"⚠️ Failed to instrument commands for Sentry: {e}")
                 capture_exception_safe(e)
 
+        # Record initial bot statistics to Sentry context
         self._record_bot_stats()
 
     def get_prefix_cache_stats(self) -> dict[str, int]:
-        """Get prefix cache statistics for monitoring.
+        """
+        Get prefix cache statistics for monitoring.
 
         Returns
         -------
         dict[str, int]
-            Prefix cache statistics
+            Dictionary containing prefix cache metrics (cached_prefixes,
+            cache_loaded, default_prefix).
+
+        Notes
+        -----
+        Returns zero values if prefix manager is not initialized yet.
+        Used for monitoring cache hit rates and performance.
         """
         if self.prefix_manager:
             return self.prefix_manager.get_cache_stats()
         return {"cached_prefixes": 0, "cache_loaded": 0, "default_prefix": 0}
 
     def _record_bot_stats(self) -> None:
-        """Record basic bot stats to Sentry context (if available)."""
+        """
+        Record basic bot statistics to Sentry context for monitoring.
+
+        Captures guild count, user count, channel count, and uptime.
+        This data is attached to all Sentry events for debugging context.
+
+        Notes
+        -----
+        Only records stats if Sentry is initialized. Safe to call repeatedly.
+        """
         if not self.sentry_manager.is_initialized:
             return
+
         self.sentry_manager.set_context(
             "bot_stats",
             {
@@ -189,20 +312,21 @@ class Tux(commands.Bot):
             },
         )
 
-    # TODO: fix presence changing here, SEE: activity.py, why is there two?
-    async def on_ready(self) -> None:
-        """Handle the Discord READY event."""
-        await self._set_presence()
-
-    async def _set_presence(self) -> None:
-        """Set the bot's presence (activity and status)."""
-        activity = discord.Activity(type=discord.ActivityType.watching, name="for $help")
-        await self.change_presence(activity=activity, status=discord.Status.online)
-
     async def on_disconnect(self) -> None:
-        """Log and report when the bot disconnects from Discord."""
+        """
+        Discord.py event handler for disconnect events.
+
+        Called when the bot loses connection to Discord. This can happen due
+        to network issues, Discord outages, or intentional reconnection.
+
+        Notes
+        -----
+        Logs a warning and reports to Sentry for monitoring. Disconnects are
+        normal and discord.py will automatically attempt to reconnect.
+        """
         logger.warning("⚠️ Bot disconnected from Discord")
 
+        # Report disconnect to Sentry for monitoring patterns
         if self.sentry_manager.is_initialized:
             self.sentry_manager.set_tag("event_type", "disconnect")
             self.sentry_manager.capture_message(
@@ -211,22 +335,46 @@ class Tux(commands.Bot):
             )
 
     async def _wait_for_setup(self) -> None:
-        """Wait for setup to complete, if not already done."""
+        """
+        Wait for the setup task to complete if still running.
+
+        If setup fails, triggers bot shutdown to prevent running in a
+        partially initialized state.
+
+        Raises
+        ------
+        Exception
+            Any exceptions from the setup task are logged and captured,
+            then the bot shuts down.
+        """
         if self.setup_task and not self.setup_task.done():
             with start_span("bot.wait_setup", "Waiting for setup to complete"):
                 try:
                     await self.setup_task
 
                 except Exception as e:
+                    # Setup failure is critical - cannot continue in degraded state
                     logger.error(f"❌ Setup failed during on_ready: {type(e).__name__}: {e}")
                     capture_exception_safe(e)
-
+                    # Trigger shutdown to prevent running with incomplete setup
                     await self.shutdown()
 
     async def shutdown(self) -> None:
-        """Gracefully shut down the bot and clean up resources."""
+        """
+        Gracefully shut down the bot and clean up all resources.
+
+        Performs shutdown in three phases:
+        1. Cancel setup task if still running
+        2. Clean up background tasks
+        3. Close Discord, database, and HTTP connections
+
+        Notes
+        -----
+        This method is idempotent - calling it multiple times is safe.
+        All phases are traced with Sentry for monitoring shutdown performance.
+        """
         with start_transaction("bot.shutdown", "Bot shutdown process") as transaction:
-            # Idempotent shutdown guard
+            # Idempotent guard - prevent duplicate shutdown attempts
             if self.is_shutting_down:
                 logger.info("Shutdown already in progress")
                 transaction.set_data("already_shutting_down", True)
@@ -236,81 +384,119 @@ class Tux(commands.Bot):
             transaction.set_tag("shutdown_initiated", True)
             logger.info("🔄 Shutting down bot...")
 
+            # Phase 1: Handle setup task if still running
             await self._handle_setup_task()
             transaction.set_tag("setup_task_handled", True)
 
+            # Phase 2: Clean up background tasks (task monitor)
             await self._cleanup_tasks()
             transaction.set_tag("tasks_cleaned", True)
 
+            # Phase 3: Close external connections (Discord, DB, HTTP)
             await self._close_connections()
             transaction.set_tag("connections_closed", True)
 
             logger.info("✅ Bot shutdown complete")
 
     async def _handle_setup_task(self) -> None:
-        """Handle the setup task during shutdown.
+        """
+        Cancel and wait for the setup task if still running.
 
-        Cancels the setup task when still pending and waits for it to finish.
+        This prevents the setup task from continuing to run during shutdown,
+        which could cause errors or resource leaks.
+
+        Notes
+        -----
+        Cancellation is graceful - we suppress CancelledError and wait for
+        the task to fully terminate.
         """
         with start_span("bot.handle_setup_task", "Handling setup task during shutdown"):
             if self.setup_task and not self.setup_task.done():
+                # Cancel the setup task to stop it from continuing
                 self.setup_task.cancel()
 
+                # Wait for cancellation to complete, suppressing the expected error
                 with contextlib.suppress(asyncio.CancelledError):
                     await self.setup_task
 
     async def _cleanup_tasks(self) -> None:
-        """Clean up all running tasks."""
+        """
+        Clean up all background tasks managed by the task monitor.
+
+        Delegates to TaskMonitor which handles canceling and awaiting all
+        background tasks (periodic tasks, cleanup tasks, etc.).
+        """
         await self.task_monitor.cleanup_tasks()
 
     async def _close_connections(self) -> None:
-        """Close Discord and database connections."""
-        with start_span("bot.close_connections", "Closing connections") as span:
-            try:
-                # Discord gateway/session
-                logger.debug("Closing Discord connections")
+        """
+        Close all external connections (Discord, database, HTTP client).
 
-                await self.close()
+        Each connection type is closed independently with error handling to
+        ensure one failure doesn't prevent others from closing properly.
+
+        Notes
+        -----
+        Closing order:
+        1. Discord gateway/WebSocket connection
+        2. Database connection pool
+        3. HTTP client session
+
+        All errors are logged and reported to Sentry but don't prevent
+        other resources from being cleaned up.
+        """
+        with start_span("bot.close_connections", "Closing connections") as span:
+            # Close Discord gateway connection
+            try:
+                logger.debug("Closing Discord connections")
+                await self.close()  # discord.py's close method
                 logger.debug("Discord connections closed")
                 span.set_tag("discord_closed", True)
 
             except Exception as e:
-                logger.error(f"⚠️  Error during Discord shutdown: {e}")
-
+                logger.error(f"⚠️ Error during Discord shutdown: {e}")
                 span.set_tag("discord_closed", False)
                 span.set_data("discord_error", str(e))
                 capture_exception_safe(e)
 
+            # Close database connection pool
             try:
-                # Database connection
                 logger.debug("Closing database connections")
                 await self.db_service.disconnect()
                 logger.debug("Database connections closed")
                 span.set_tag("db_closed", True)
 
             except Exception as e:
-                logger.error(f"⚠️  Error during database disconnection: {e}")
+                logger.error(f"⚠️ Error during database disconnection: {e}")
                 span.set_tag("db_closed", False)
                 span.set_data("db_error", str(e))
-
                 capture_exception_safe(e)
 
+            # Close HTTP client session and connection pool
             try:
-                # HTTP client connection pool
                 logger.debug("Closing HTTP client connections")
                 await http_client.close()
                 logger.debug("HTTP client connections closed")
                 span.set_tag("http_closed", True)
 
             except Exception as e:
-                logger.error(f"⚠️  Error during HTTP client shutdown: {e}")
+                logger.error(f"⚠️ Error during HTTP client shutdown: {e}")
                 span.set_tag("http_closed", False)
                 span.set_data("http_error", str(e))
-
                 capture_exception_safe(e)
 
     async def _log_startup_banner(self) -> None:
-        """Log bot startup information (banner, stats, etc.)."""
+        """
+        Display the startup banner with bot information.
+
+        Creates and prints a formatted banner showing bot name, version,
+        guild count, user count, and configured prefix.
+
+        Notes
+        -----
+        This is called once after the bot is fully ready. The banner is
+        printed to stderr (console) for visibility in logs.
+        """
         with start_span("bot.log_banner", "Displaying startup banner"):
             banner = create_banner(
                 bot_name=CONFIG.BOT_INFO.BOT_NAME,
@@ -320,5 +506,4 @@ class Tux(commands.Bot):
                 user_count=len(self.users),
                 prefix=CONFIG.get_prefix(),
             )
-
             self.console.print(banner)
