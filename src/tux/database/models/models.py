@@ -182,28 +182,28 @@ class Reminder(SQLModel, table=True):
 
 
 class GuildConfig(BaseModel, table=True):
+    __tablename__ = "guild_config"  # pyright: ignore[reportAssignmentType]
+
     guild_id: int = Field(primary_key=True, foreign_key="guild.guild_id", ondelete="CASCADE", sa_type=BigInteger)
     prefix: str = Field(default="$", max_length=3)
 
-    mod_log_id: int | None = Field(default=None, sa_type=BigInteger)  # log mod cases
-    audit_log_id: int | None = Field(default=None, sa_type=BigInteger)  # log guild events
-    join_log_id: int | None = Field(default=None, sa_type=BigInteger)  # log joins and leaves
-    private_log_id: int | None = Field(default=None, sa_type=BigInteger)  # log edits, deletes, etc
-    report_log_id: int | None = Field(default=None, sa_type=BigInteger)  # log reports and other important events
-    dev_log_id: int | None = Field(default=None, sa_type=BigInteger)  # log dev events / tux verbose logs / sentry
+    mod_log_id: int | None = Field(default=None, sa_type=BigInteger)
+    audit_log_id: int | None = Field(default=None, sa_type=BigInteger)
+    join_log_id: int | None = Field(default=None, sa_type=BigInteger)
+    private_log_id: int | None = Field(default=None, sa_type=BigInteger)
+    report_log_id: int | None = Field(default=None, sa_type=BigInteger)
+
+    dev_log_id: int | None = Field(default=None, sa_type=BigInteger)
 
     jail_channel_id: int | None = Field(default=None, sa_type=BigInteger)
-
     jail_role_id: int | None = Field(default=None, sa_type=BigInteger)
 
-    # Onboarding tracking
     onboarding_completed: bool = Field(default=False)
     onboarding_stage: OnboardingStage | None = Field(
         default=None,
         sa_column=Column(PgEnum(OnboardingStage, name="onboarding_stage_enum"), nullable=True),
     )
 
-    # Relationship back to Guild - using sa_relationship
     guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="guild_config"))
 
 
@@ -232,7 +232,6 @@ class Case(BaseModel, table=True):
 
     guild_id: int = Field(foreign_key="guild.guild_id", ondelete="CASCADE", sa_type=BigInteger)
 
-    # Relationship back to Guild - using sa_relationship
     guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="cases"))
 
     __table_args__ = (
@@ -254,7 +253,6 @@ class Note(BaseModel, table=True):
     note_number: int | None = Field(default=None)
     guild_id: int = Field(foreign_key="guild.guild_id", ondelete="CASCADE", sa_type=BigInteger)
 
-    # Relationship back to Guild - using sa_relationship
     guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="notes"))
 
     __table_args__ = (
@@ -275,7 +273,6 @@ class AFK(SQLModel, table=True):
     enforced: bool = Field(default=False)
     perm_afk: bool = Field(default=False)
 
-    # Relationship back to Guild - using sa_relationship
     guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="afks"))
 
     __table_args__ = (
@@ -295,7 +292,6 @@ class Levels(SQLModel, table=True):
     blacklisted: bool = Field(default=False)
     last_message: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
-    # Relationship back to Guild - using sa_relationship
     guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="levels_entries"))
 
     __table_args__ = (
@@ -313,7 +309,6 @@ class Starboard(SQLModel, table=True):
     starboard_emoji: str = Field(max_length=64)
     starboard_threshold: int = Field(default=1)
 
-    # Relationship back to Guild - using proper SQLAlchemy 2.0 style
     guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="starboard"))
 
     __table_args__ = (
@@ -323,6 +318,8 @@ class Starboard(SQLModel, table=True):
 
 
 class StarboardMessage(SQLModel, table=True):
+    __tablename__ = "starboard_message"  # pyright: ignore[reportAssignmentType]
+
     message_id: int = Field(primary_key=True, sa_type=BigInteger)
     message_content: str = Field(max_length=4000)
     message_expires_at: datetime = Field()
@@ -332,7 +329,6 @@ class StarboardMessage(SQLModel, table=True):
     star_count: int = Field(default=0)
     starboard_message_id: int = Field(sa_type=BigInteger)
 
-    # Relationship back to Guild - using proper SQLAlchemy 2.0 style
     guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="starboard_messages"))
 
     __table_args__ = (
@@ -344,12 +340,7 @@ class StarboardMessage(SQLModel, table=True):
     )
 
 
-# ===== DYNAMIC PERMISSION SYSTEM =====
-
-
 class GuildPermissionRank(BaseModel, table=True):
-    """Dynamic permission ranks that servers can customize."""
-
     __tablename__ = "guild_permission_ranks"  # type: ignore[assignment]
 
     id: int | None = Field(default=None, primary_key=True)
@@ -362,9 +353,6 @@ class GuildPermissionRank(BaseModel, table=True):
     rank: int = Field(sa_type=Integer)  # 0-100 (permission rank hierarchy)
     name: str = Field(max_length=100)  # "Junior Mod", "Moderator", etc.
     description: str | None = Field(default=None, max_length=500)
-    color: int | None = Field(default=None, sa_type=Integer)  # Role color for UI # TODO: remove
-    position: int = Field(default=0, sa_type=Integer)  # Display order # TODO: remove
-    enabled: bool = Field(default=True)  # TODO: remove
 
     # Relationship to Guild
     guild: Mapped[Guild] = Relationship(
@@ -388,11 +376,9 @@ class GuildPermissionRank(BaseModel, table=True):
 
     __table_args__ = (
         CheckConstraint("rank >= 0 AND rank <= 100", name="check_rank_range"),
-        CheckConstraint("position >= 0", name="check_position_positive"),
         UniqueConstraint("guild_id", "rank", name="unique_guild_permission_rank"),
         UniqueConstraint("guild_id", "name", name="unique_guild_permission_rank_name"),
         Index("idx_guild_perm_ranks_guild", "guild_id"),
-        Index("idx_guild_perm_ranks_position", "guild_id", "position"),
     )
 
 
@@ -451,7 +437,6 @@ class GuildCommandPermission(BaseModel, table=True):
     required_rank: int = Field(sa_type=Integer)  # Permission rank required (0-100)
     category: str | None = Field(default=None, max_length=100)  # "moderation", "admin", etc.
     description: str | None = Field(default=None, max_length=500)
-    enabled: bool = Field(default=True)
 
     # Relationship to Guild
     guild: Mapped[Guild] = Relationship(

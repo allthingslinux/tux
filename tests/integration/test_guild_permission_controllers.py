@@ -45,15 +45,12 @@ class TestGuildPermissionRankController:
             rank=3,
             name="Moderator",
             description="Server moderator",
-            color=0x00FF00,
         )
 
         assert rank.guild_id == TEST_GUILD_ID
         assert rank.rank == 3
         assert rank.name == "Moderator"
         assert rank.description == "Server moderator"
-        assert rank.color == 0x00FF00
-        assert rank.enabled is True
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -154,13 +151,11 @@ class TestGuildPermissionRankController:
             rank=3,
             name="Senior Moderator",
             description="Experienced moderator",
-            color=0xFF0000,
         )
 
         assert updated is not None
         assert updated.name == "Senior Moderator"
         assert updated.description == "Experienced moderator"
-        assert updated.color == 0xFF0000
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -442,8 +437,7 @@ class TestGuildCommandPermissionController:
     # in other tests. This is a known limitation of the test setup with PGlite.
 
     # Note: There's no delete_command_permission method in the controller
-    # Command permissions use soft deletes via the 'enabled' field
-    # The controller filters by enabled=True in get methods
+    # Command permissions are deleted directly - no soft delete functionality
 
 
 if __name__ == "__main__":

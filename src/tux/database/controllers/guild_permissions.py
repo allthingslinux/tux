@@ -33,8 +33,6 @@ class GuildPermissionRankController(BaseController[GuildPermissionRank]):
         rank: int,
         name: str,
         description: str | None = None,
-        color: int | None = None,
-        position: int = 0,
     ) -> GuildPermissionRank:
         """Create a new permission rank for a guild."""
         return await self.create(
@@ -42,23 +40,19 @@ class GuildPermissionRankController(BaseController[GuildPermissionRank]):
             rank=rank,
             name=name,
             description=description,
-            color=color,
-            position=position,
         )
 
     async def get_permission_ranks_by_guild(self, guild_id: int) -> list[GuildPermissionRank]:
         """Get all permission ranks for a guild."""
         return await self.find_all(
-            filters=(GuildPermissionRank.guild_id == guild_id) & GuildPermissionRank.enabled,
-            order_by=(GuildPermissionRank.position, GuildPermissionRank.rank),
+            filters=GuildPermissionRank.guild_id == guild_id,
+            order_by=GuildPermissionRank.rank,
         )
 
     async def get_permission_rank(self, guild_id: int, rank: int) -> GuildPermissionRank | None:
         """Get a specific permission rank."""
         return await self.find_one(
-            filters=(GuildPermissionRank.guild_id == guild_id)
-            & (GuildPermissionRank.rank == rank)
-            & GuildPermissionRank.enabled,
+            filters=(GuildPermissionRank.guild_id == guild_id) & (GuildPermissionRank.rank == rank),
         )
 
     async def update_permission_rank(
@@ -67,8 +61,6 @@ class GuildPermissionRankController(BaseController[GuildPermissionRank]):
         rank: int,
         name: str | None = None,
         description: str | None = None,
-        color: int | None = None,
-        position: int | None = None,
     ) -> GuildPermissionRank | None:
         """Update a permission rank."""
         # Find the record first
@@ -84,10 +76,6 @@ class GuildPermissionRankController(BaseController[GuildPermissionRank]):
             update_data["name"] = name
         if description is not None:
             update_data["description"] = description
-        if color is not None:
-            update_data["color"] = color
-        if position is not None:
-            update_data["position"] = position
         update_data["updated_at"] = datetime.now(UTC)
 
         return await self.update_by_id(record.id, **update_data)
@@ -166,7 +154,7 @@ class GuildPermissionAssignmentController(BaseController[GuildPermissionAssignme
 
         for level_id in permission_rank_ids:
             rank_record = await rank_controller.get_by_id(level_id)
-            if rank_record and rank_record.enabled and rank_record.rank > max_rank:
+            if rank_record and rank_record.rank > max_rank:
                 max_rank = int(rank_record.rank)
 
         return max_rank
@@ -201,21 +189,18 @@ class GuildCommandPermissionController(BaseController[GuildCommandPermission]):
         """Get the permission requirement for a specific command."""
         return await self.find_one(
             filters=(GuildCommandPermission.guild_id == guild_id)
-            & (GuildCommandPermission.command_name == command_name)
-            & GuildCommandPermission.enabled,
+            & (GuildCommandPermission.command_name == command_name),
         )
 
     async def get_commands_by_category(self, guild_id: int, category: str) -> list[GuildCommandPermission]:
         """Get all commands in a specific category."""
         return await self.find_all(
-            filters=(GuildCommandPermission.guild_id == guild_id)
-            & (GuildCommandPermission.category == category)
-            & GuildCommandPermission.enabled,
+            filters=(GuildCommandPermission.guild_id == guild_id) & (GuildCommandPermission.category == category),
         )
 
     async def get_all_command_permissions(self, guild_id: int) -> list[GuildCommandPermission]:
         """Get all command permissions for a guild."""
         return await self.find_all(
-            filters=(GuildCommandPermission.guild_id == guild_id) & GuildCommandPermission.enabled,
+            filters=GuildCommandPermission.guild_id == guild_id,
             order_by=(GuildCommandPermission.category, GuildCommandPermission.command_name),
         )

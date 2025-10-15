@@ -69,9 +69,7 @@ class TestPermissionSystem:
         assert permission_system is not None
         assert hasattr(permission_system, "db")
         assert hasattr(permission_system, "bot")
-        assert hasattr(permission_system, "_rank_cache")
-        assert hasattr(permission_system, "_assignment_cache")
-        assert hasattr(permission_system, "_command_cache")
+        assert hasattr(permission_system, "_default_ranks")
 
     @pytest.mark.unit
     async def test_get_user_permission_rank_no_roles(
@@ -210,64 +208,6 @@ class TestPermissionDecorator:
         assert callable(test_command)
         # Should be a coroutine function
         assert asyncio.iscoroutinefunction(test_command)
-
-
-class TestPermissionCaching:
-    """📦 Test permission caching behavior."""
-
-    @pytest.fixture
-    def mock_bot(self) -> Tux:
-        """Create a mock bot instance."""
-        bot = MagicMock(spec=Tux)
-        return bot
-
-    @pytest.fixture
-    def mock_db_coordinator(self) -> MagicMock:
-        """Create a mock database coordinator."""
-        db_coordinator = MagicMock(spec=DatabaseCoordinator)
-        db_coordinator.guild_permissions = MagicMock()
-        return db_coordinator
-
-    @pytest.fixture
-    def permission_system(
-        self, mock_bot: Tux, mock_db_coordinator: MagicMock,
-    ) -> PermissionSystem:
-        """Create a PermissionSystem instance for testing."""
-        return PermissionSystem(mock_bot, mock_db_coordinator)
-
-    @pytest.mark.unit
-    async def test_cache_initialization(
-        self,
-        permission_system: PermissionSystem,
-    ) -> None:
-        """Test that caches are initialized."""
-        assert hasattr(permission_system, "_rank_cache")
-        assert hasattr(permission_system, "_assignment_cache")
-        assert hasattr(permission_system, "_command_cache")
-        assert permission_system._rank_cache is not None
-        assert permission_system._assignment_cache is not None
-        assert permission_system._command_cache is not None
-
-    @pytest.mark.unit
-    def test_cache_invalidation_after_config_change(
-        self,
-        permission_system: PermissionSystem,
-    ) -> None:
-        """Test cache is cleared when configuration changes."""
-        guild_id = 123456789
-
-        # Populate caches
-        permission_system._rank_cache[guild_id] = {"test": "data"}  # type: ignore[typeddict-item]
-        permission_system._assignment_cache[guild_id] = {"test": "data"}  # type: ignore[typeddict-item]
-        permission_system._command_cache[guild_id] = {"test": "data"}  # type: ignore[typeddict-item]
-
-        # Clear cache (synchronous method)
-        permission_system._clear_guild_cache(guild_id)
-
-        # Caches should be empty for this guild
-        assert guild_id not in permission_system._rank_cache
-        assert guild_id not in permission_system._assignment_cache
-        assert guild_id not in permission_system._command_cache
 
 
 class TestPermissionError:

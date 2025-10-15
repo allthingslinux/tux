@@ -393,7 +393,7 @@ class TestModelQueries:
                 text("""
                 SELECT g.guild_id, g.case_count, gc.prefix
                 FROM guild g
-                JOIN guildconfig gc ON g.guild_id = gc.guild_id
+                JOIN guild_config gc ON g.guild_id = gc.guild_id
                 WHERE g.guild_id = :guild_id
             """), {"guild_id": TEST_GUILD_ID},
             )
