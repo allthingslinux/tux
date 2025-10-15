@@ -1,15 +1,10 @@
 from __future__ import annotations
 
-from typing import Literal
 
-import alembic_postgresql_enum  # noqa: F401  # pyright: ignore[reportUnusedImport]
 from alembic import context
 from sqlalchemy import MetaData
-from sqlalchemy.sql.schema import SchemaItem
-from sqlmodel import SQLModel
 
-# Import models to populate metadata
-# We need to import the actual model classes, not just the modules
+# First import your models and then import SQLModel otherwise sqlmodel doesn´t recognize all models.
 from tux.database.models import (
     AFK,
     Case,
@@ -27,7 +22,10 @@ from tux.database.models import (
     Starboard,
     StarboardMessage,
 )
+
 from tux.shared.config import CONFIG
+
+from sqlmodel import SQLModel
 
 # Get config from context if available, otherwise create a minimal one
 try:
@@ -71,29 +69,13 @@ _keep_refs = (
 )
 
 
-def include_object(
-    obj: SchemaItem,
-    name: str | None,
-    type_: Literal["schema", "table", "column", "index", "unique_constraint", "foreign_key_constraint"],
-    reflected: bool,
-    compare_to: SchemaItem | None,
-) -> bool:
-    # Include all objects; adjust if we later want to exclude temp tables
-    return True
-
-
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
-    # Use CONFIG.database_url for offline migrations too
+    # Convert async database URL to sync format for offline mode
     url = CONFIG.database_url
-
-    # Convert to sync format for offline mode
     if url.startswith("postgresql+psycopg_async://"):
         url = url.replace("postgresql+psycopg_async://", "postgresql+psycopg://", 1)
-    elif url.startswith("postgresql+asyncpg://"):
-        url = url.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
-    elif url.startswith("postgresql://"):
-        url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -102,8 +84,6 @@ def run_migrations_offline() -> None:
         compare_server_default=True,
         dialect_opts={"paramstyle": "named"},
         render_as_batch=True,
-        include_object=include_object,
-        # Match online configuration for consistency
         include_schemas=False,
         upgrade_token="upgrades",
         downgrade_token="downgrades",
@@ -118,18 +98,11 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
-    # Get the database URL from our config (auto-handles async/sync conversion)
-    database_url = CONFIG.database_url
 
-    # For Alembic operations, we need a sync URL
-    # Convert async URLs to sync for Alembic compatibility
+    # Convert async database URL to sync format for Alembic compatibility
+    database_url = CONFIG.database_url
     if database_url.startswith("postgresql+psycopg_async://"):
         database_url = database_url.replace("postgresql+psycopg_async://", "postgresql+psycopg://", 1)
-    elif database_url.startswith("postgresql+asyncpg://"):
-        database_url = database_url.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
-    elif database_url.startswith("postgresql://"):
-        # Ensure we're using psycopg3 for sync operations
-        database_url = database_url.replace("postgresql://", "postgresql+psycopg://", 1)
 
     # Log the database URL (without password) for debugging
     import re
@@ -182,16 +155,12 @@ def run_migrations_online() -> None:
             compare_type=True,
             compare_server_default=True,
             render_as_batch=True,
-            include_object=include_object,
-            # Enhanced configuration for better migration generation
             process_revision_directives=None,
-            # Additional options for better migration quality
-            include_schemas=False,  # Focus on public schema
+            include_schemas=False,
             upgrade_token="upgrades",
             downgrade_token="downgrades",
             alembic_module_prefix="op.",
             sqlalchemy_module_prefix="sa.",
-            # Enable transaction per migration for safety
             transaction_per_migration=True,
         )
 
