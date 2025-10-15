@@ -5,7 +5,6 @@ from loguru import logger
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.shared.config import CONFIG
-from tux.shared.functions import is_harmful, strip_formatting
 
 
 class EventHandler(BaseCog):
@@ -45,52 +44,6 @@ class EventHandler(BaseCog):
     async def on_guild_remove(self, guild: discord.Guild) -> None:
         await self.db.guild.delete_guild_by_id(guild.id)
 
-    @staticmethod
-    async def handle_harmful_message(message: discord.Message) -> None:
-        """
-        This function detects harmful linux commands and replies to the user with a warning.
-
-        Parameters
-        ----------
-        message : discord.Message
-            The message to check.
-
-        Returns
-        -------
-        None
-        """
-
-        if message.author.bot and message.webhook_id not in CONFIG.IRC_CONFIG.BRIDGE_WEBHOOK_IDS:
-            return
-
-        stripped_content = strip_formatting(message.content)
-        harmful = is_harmful(stripped_content)
-
-        if harmful == "RM_COMMAND":
-            await message.reply(
-                "-# ⚠️ **This command is likely harmful. By running it, all directory contents will be deleted. There is no undo. Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it.**",
-            )
-            return
-        if harmful == "FORK_BOMB":
-            await message.reply(
-                "-# ⚠️ **This command is likely harmful. By running it, all the memory in your system will be used. Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it.**",
-            )
-            return
-        if harmful == "DD_COMMAND":
-            await message.reply(
-                "-# ⚠️ **This command is likely harmful. By running it, your disk will be overwritten or erased irreversibly. Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it.**",
-            )
-            return
-        if harmful == "FORMAT_COMMAND":
-            await message.reply(
-                "-# ⚠️ **This command is likely harmful. By running it, your disk will be formatted. Ensure you fully understand the consequences before proceeding. If you have received this message in error, please disregard it.**",
-            )
-
-    @commands.Cog.listener()
-    async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
-        if not is_harmful(before.content) and is_harmful(after.content):
-            await self.handle_harmful_message(after)
-
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         # Allow the IRC bridge to use the snippet command only
@@ -100,8 +53,6 @@ class EventHandler(BaseCog):
         ):
             ctx = await self.bot.get_context(message)
             await self.bot.invoke(ctx)
-
-        await self.handle_harmful_message(message)
 
 
 async def setup(bot: Tux) -> None:

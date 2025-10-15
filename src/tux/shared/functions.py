@@ -5,27 +5,6 @@ from typing import Any, Union, get_args, get_origin
 
 from discord.ext import commands
 
-DANGEROUS_RM_COMMANDS = (
-    # Privilege escalation prefixes
-    r"(?:sudo\s+|doas\s+|run0\s+)?"
-    # rm command
-    r"rm\s+"
-    # rm options
-    r"(?:-[frR]+|--force|--recursive|--no-preserve-root|\s+)*"
-    # Root/home indicators
-    r"(?:[/\∕~]\s*|\*|"  # noqa: RUF001
-    # Critical system paths
-    r"/(?:bin|boot|etc|lib|proc|rooin|sys|tmp|usr|var(?:/log)?|network\.|system))"
-    # Additional dangerous flags
-    r"(?:\s+--no-preserve-root|\s+\*)*"
-)
-
-FORK_BOMB_PATTERNS = [":(){:&};:", ":(){:|:&};:"]
-
-DANGEROUS_DD_COMMANDS = r"dd\s+.*of=/dev/([hs]d[a-z]|nvme\d+n\d+)"
-
-FORMAT_COMMANDS = r"mkfs\..*\s+/dev/([hs]d[a-z]|nvme\d+n\d+)"
-
 
 def truncate(text: str, length: int) -> str:
     """Truncates a string to a specified length.
@@ -46,40 +25,6 @@ def truncate(text: str, length: int) -> str:
         The truncated string.
     """
     return text if len(text) <= length else f"{text[: length - 3]}..."
-
-
-def is_harmful(command: str) -> str | None:
-    # sourcery skip: assign-if-exp, boolean-if-exp-identity, reintroduce-else
-    """
-    Check if a command is potentially harmful to the system.
-
-    Parameters
-    ----------
-    command : str
-        The command to check.
-
-    Returns
-    -------
-    bool
-        True if the command is harmful, False otherwise.
-    """
-    # Normalize command by removing all whitespace for fork bomb check
-    normalized = "".join(command.strip().lower().split())
-    if normalized in FORK_BOMB_PATTERNS:
-        return "FORK_BOMB"
-
-    # Check for dangerous rm commands
-    if re.search(DANGEROUS_RM_COMMANDS, command, re.IGNORECASE):
-        return "RM_COMMAND"
-
-    # Check for dangerous dd commands
-    if re.search(DANGEROUS_DD_COMMANDS, command, re.IGNORECASE):
-        return "DD_COMMAND"
-
-    # Check for format commands
-    if bool(re.search(FORMAT_COMMANDS, command, re.IGNORECASE)):
-        return "FORMAT_COMMAND"
-    return None
 
 
 def strip_formatting(content: str) -> str:
