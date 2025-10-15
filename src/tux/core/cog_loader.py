@@ -10,6 +10,7 @@ and loading of bot cogs (extensions) from the filesystem. It supports:
 - Follows discord.py's extension loading patterns and best practices
 """
 
+import ast
 import asyncio
 import time
 import traceback
@@ -113,7 +114,44 @@ class CogLoader(commands.Cog):
             return False
 
         # Basic file validation: must be a .py file, not private (_), and exist
-        return filepath.suffix == ".py" and not cog_name.startswith("_") and await aiofiles.os.path.isfile(filepath)
+        if filepath.suffix != ".py" or cog_name.startswith("_") or not await aiofiles.os.path.isfile(filepath):
+            return False
+
+        # Advanced validation: check if file contains a valid extension setup function
+        return await self._contains_cog_or_extension(filepath)
+
+    async def _contains_cog_or_extension(self, filepath: Path) -> bool:
+        """
+        Check if a Python file contains a valid extension setup function using AST.
+
+        A valid extension file must contain an async setup(bot) function.
+
+        Parameters
+        ----------
+        filepath : Path
+            The path to the Python file to analyze.
+
+        Returns
+        -------
+        bool
+            True if the file contains a valid extension setup function, False otherwise.
+        """
+        try:
+            async with aiofiles.open(filepath, encoding="utf-8") as f:
+                content = await f.read()
+
+            # Parse the AST
+            tree = ast.parse(content, filename=str(filepath))
+
+            # Check for extension setup function
+            return any(
+                isinstance(node, ast.AsyncFunctionDef) and node.name == "setup" and node.args.args
+                for node in ast.walk(tree)
+            )
+
+        except (SyntaxError, UnicodeDecodeError, OSError) as e:
+            logger.warning(f"Failed to parse {filepath} for cog validation: {e}")
+            return False
 
     def _is_configuration_error(self, exception: Exception) -> bool:
         """
