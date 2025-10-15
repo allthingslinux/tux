@@ -500,7 +500,7 @@ class DatabaseCLI(BaseCLI):
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to reset database")
 
-    def hard_reset(
+    def hard_reset(  # noqa: PLR0915
         self,
         force: Annotated[bool, Option("--force", "-f", help="Skip confirmation prompt")] = False,
         fresh: Annotated[
@@ -513,15 +513,15 @@ class DatabaseCLI(BaseCLI):
         🚨 DANGER: This is extremely destructive!
 
         This command will:
-        1. Drop ALL tables in the public schema (including alembic_version)
+        1. Drop ALL tables and alembic tracking
         2. Leave database completely empty
         3. With --fresh: Also delete ALL migration files
 
         ⚠️  WARNING: This will DELETE ALL DATA permanently!
         Only use this when you want to start completely from scratch.
 
-        After nuking, run 'db init' if you want to set up the database again.
-        With --fresh, you'll need to regenerate migrations from your models.
+        After nuking, run 'db push' to recreate tables from existing migrations.
+        With --fresh, run 'db init' to create new migrations from scratch.
 
         For normal development, use 'db reset' instead.
         """
@@ -530,7 +530,7 @@ class DatabaseCLI(BaseCLI):
         self.rich.rich_print("[red]This is extremely destructive - only use when migrations are broken![/red]")
         self.rich.rich_print("")
         self.rich.rich_print("[yellow]This operation will:[/yellow]")
-        self.rich.rich_print("  1. Drop ALL tables and schema")
+        self.rich.rich_print("  1. Drop ALL tables and reset migration tracking")
         self.rich.rich_print("  2. Leave database completely empty")
         if fresh:
             self.rich.rich_print("  3. Delete ALL migration files")
@@ -554,6 +554,9 @@ class DatabaseCLI(BaseCLI):
 
                 # Drop all tables including alembic_version
                 async def _drop_all_tables(session: Any) -> None:
+                    # Explicitly drop alembic_version first (it may not be in public schema)
+                    await session.execute(text("DROP TABLE IF EXISTS alembic_version"))
+                    # Drop the entire public schema
                     await session.execute(text("DROP SCHEMA public CASCADE"))
                     await session.execute(text("CREATE SCHEMA public"))
                     await session.execute(text("GRANT ALL ON SCHEMA public TO public"))
