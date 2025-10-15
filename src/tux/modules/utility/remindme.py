@@ -123,7 +123,6 @@ class RemindMe(BaseCog):
         reminder : str
             The reminder message.
         """
-
         seconds = convert_to_seconds(time)
 
         if seconds == 0:

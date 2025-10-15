@@ -55,7 +55,6 @@ class DatabaseSetupService(BaseSetupService):
 
         This call is idempotent and safe to run on startup.
         """
-
         cfg = self._build_alembic_config()
         logger.info("🔄 Checking database migrations...")
 

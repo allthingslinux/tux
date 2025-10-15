@@ -27,7 +27,6 @@ class Ping(BaseCog):
         ctx : commands.Context[Tux]
             The discord context object.
         """
-
         try:
             # Get the latency of the bot in milliseconds
             discord_ping = round(self.bot.latency * 1000)

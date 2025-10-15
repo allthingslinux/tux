@@ -21,7 +21,6 @@ class Report(BaseCog):
         interaction : discord.Interaction
             The interaction that triggered the command.
         """
-
         modal = ReportModal(bot=self.bot)
 
         await interaction.response.send_modal(modal)

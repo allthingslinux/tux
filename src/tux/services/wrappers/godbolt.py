@@ -62,7 +62,6 @@ async def checkresponse(res: httpx.Response) -> str | None:
     str | None
         The response from the Godbolt API if successful, otherwise None.
     """
-
     try:
         return res.text if res.status_code == CONST.HTTP_OK else None
     except httpx.ReadTimeout:
@@ -93,7 +92,6 @@ async def sendresponse(url: str) -> str | None:
     str | None
         The response from the Godbolt API if successful, otherwise None.
     """
-
     try:
         response = await http_client.get(url, timeout=15.0)
         response.raise_for_status()
@@ -135,7 +133,6 @@ async def getcompilers() -> str | None:
     str | None
         The compilers from the Godbolt API if successful, otherwise None.
     """
-
     url_comp = f"{url}/api/compilers"
     return await sendresponse(url_comp)
 
@@ -154,7 +151,6 @@ async def getspecificcompiler(lang: str) -> str | None:
     str | None
         The specific compiler from the Godbolt API if successful, otherwise None.
     """
-
     url_comp = f"{url}/api/compilers/{lang}"
     return await sendresponse(url_comp)
 
@@ -182,7 +178,6 @@ async def getoutput(code: str, lang: str, compileroptions: str | None = None) ->
     httpx.ReadTimeout
         If the request times out.
     """
-
     url_comp = f"{url}/api/compiler/{lang}/compile"
 
     copt = compileroptions if compileroptions is not None else ""
@@ -254,7 +249,6 @@ async def generateasm(code: str, lang: str, compileroptions: str | None = None) 
     httpx.ReadTimeout
         If the request times out.
     """
-
     url_comp = f"{url}/api/compiler/{lang}/compile"
 
     copt = compileroptions if compileroptions is not None else ""

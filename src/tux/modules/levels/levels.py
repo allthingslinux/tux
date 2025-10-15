@@ -38,7 +38,6 @@ class Levels(BaseCog):
         """
         Level and XP management related commands.
         """
-
         if ctx.invoked_subcommand is None:
             await ctx.send_help("levels")
 
@@ -57,7 +56,6 @@ class Levels(BaseCog):
         member : discord.Member
             The member to set the level for.
         """
-
         assert ctx.guild
 
         old_level: int = await self.db.levels.get_level(member.id, ctx.guild.id)
@@ -177,7 +175,6 @@ class Levels(BaseCog):
         member : discord.Member
             The member to XP blacklist.
         """
-
         assert ctx.guild
 
         state: bool = await self.db.levels.toggle_blacklist(member.id, ctx.guild.id)

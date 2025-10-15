@@ -31,7 +31,6 @@ class TempVc(BaseCog):
         after : discord.VoiceState
             The voice state after the event.
         """
-
         # Ensure CONFIGants are set correctly
         temp_channel_id = int(CONFIG.TEMPVC.TEMPVC_CHANNEL_ID or "0")
         temp_category_id = int(CONFIG.TEMPVC.TEMPVC_CATEGORY_ID or "0")
@@ -61,7 +60,6 @@ class TempVc(BaseCog):
         channel : discord.VoiceChannel
             The channel that the member joined.
         """
-
         for voice_channel in channel.guild.voice_channels:
             # Check if the channel is a temporary channel and if it is the user's channel
             if voice_channel.name == self.base_vc_name + member.name:
@@ -93,7 +91,6 @@ class TempVc(BaseCog):
         temp_category_id: int
             The ID of the category holding temporary voice channels.
         """
-
         # Get the category of the temporary channels
         category = discord.utils.get(before_channel.guild.categories, id=temp_category_id)
 

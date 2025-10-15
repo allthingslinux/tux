@@ -41,7 +41,6 @@ class Git(BaseCog):
         ctx : commands.Context[Tux]
             The context object for the command.
         """
-
         if ctx.invoked_subcommand is None:
             await ctx.send_help("git")
 
@@ -60,7 +59,6 @@ class Git(BaseCog):
         ctx : commands.Context[Tux]
             The context object for the command.
         """
-
         try:
             repo = await self.github.get_repo()
 
@@ -104,7 +102,6 @@ class Git(BaseCog):
         body : str
             The body of the issue.
         """
-
         try:
             issue_body = body + "\n\nAuthor: " + str(ctx.author)
             created_issue = await self.github.create_issue(title, issue_body)
@@ -146,7 +143,6 @@ class Git(BaseCog):
         issue_number : int
             The number of the issue to retrieve.
         """
-
         try:
             issue = await self.github.get_issue(issue_number)
 

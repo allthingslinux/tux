@@ -31,7 +31,6 @@ async def getoutput(code: str, compiler: str, options: str | None) -> dict[str, 
         A dictionary containing the compiler output if the request is successful,
         otherwise `None`. Returns `None` on HTTP errors or read timeout.
     """
-
     copt = options if options is not None else ""
     headers = {
         "Content-Type": "application/json",

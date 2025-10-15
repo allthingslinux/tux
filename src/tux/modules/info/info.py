@@ -88,7 +88,8 @@ class Info(BaseCog):
         """
         Information commands. Use without arguments for help, or provide an object to get information about.
 
-        Examples:
+        Examples
+        --------
         >info @user
         >info 123456789
         >info #channel
@@ -462,7 +463,6 @@ class Info(BaseCog):
         invite : discord.Invite
             The invite to get information about.
         """
-
         embed: discord.Embed = (
             EmbedCreator.create_embed(
                 embed_type=EmbedType.INFO,

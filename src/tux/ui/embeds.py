@@ -92,7 +92,6 @@ class EmbedCreator:
         custom_color : int or Colour, optional
             Overrides default color for the embed type if provided.
         """
-
         try:
             embed: discord.Embed = discord.Embed(title=title, description=description)
 

@@ -42,7 +42,6 @@ class ErrorHandler(commands.Cog):
 
     async def cog_reload(self) -> None:
         """Handle cog reload - force reload imported modules."""
-
         # Force reload the config and extractors modules
         modules_to_reload = [
             "tux.services.handlers.error.config",

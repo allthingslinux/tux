@@ -66,10 +66,12 @@ class ExecutionService:
             *args: Positional arguments for the action
             **kwargs: Keyword arguments for the action
 
-        Returns:
+        Returns
+        -------
             The result of the action
 
-        Raises:
+        Raises
+        ------
             The last exception if all retries fail
         """
         if self._is_circuit_open(operation_type):
@@ -133,7 +135,8 @@ class ExecutionService:
         Args:
             operation_type: The operation type to check
 
-        Returns:
+        Returns
+        -------
             True if circuit is open, False otherwise
         """
         if not self._circuit_open.get(operation_type, False):
@@ -180,7 +183,8 @@ class ExecutionService:
             attempt: The current attempt number (0-based)
             base_delay: Base delay in seconds
 
-        Returns:
+        Returns
+        -------
             Delay in seconds
         """
         # Exponential backoff with jitter
@@ -198,7 +202,8 @@ class ExecutionService:
         Args:
             case_type: The case type
 
-        Returns:
+        Returns
+        -------
             Operation type string for circuit breaker configuration
         """
         return case_type.value

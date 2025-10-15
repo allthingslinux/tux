@@ -43,7 +43,6 @@ class Wolfram(BaseCog):
         query : str
             Input string for the Wolfram|Alpha query, e.g. 'integrate x^2'.
         """
-
         await ctx.defer()
 
         # Build the Simple API endpoint URL with URL-encoded query

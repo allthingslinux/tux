@@ -281,7 +281,6 @@ class HelpRenderer:
 
     def create_subcommand_options(self, subcommands: list[commands.Command[Any, Any, Any]]) -> list[SelectOption]:
         """Create select options for subcommands."""
-
         # Special handling for jishaku to prevent loading all subcommands
         if (
             not subcommands

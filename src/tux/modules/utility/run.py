@@ -456,7 +456,6 @@ class Run(BaseCog):
         TuxCompilationError
             When code compilation or execution fails.
         """
-
         # Extract code from command or referenced message
         extracted_code = await self._extract_code_from_message(ctx, code)
 
@@ -506,7 +505,6 @@ class Run(BaseCog):
         ctx : commands.Context[Tux]
             The command context.
         """
-
         languages_text = ", ".join(SUPPORTED_LANGUAGES)
 
         help_text = (

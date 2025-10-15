@@ -24,7 +24,6 @@ class TtyRoles(BaseCog):
         member : discord.Member
             The member that joined the guild.
         """
-
         user_count = member.guild.member_count
         role_name = self._compute_role_name(user_count)
 
@@ -47,7 +46,6 @@ class TtyRoles(BaseCog):
         str
             The name of the role to assign to the user.
         """
-
         if user_count is None:
             return ""
 
@@ -75,7 +73,6 @@ class TtyRoles(BaseCog):
         discord.Role | None
             The created role if successful, otherwise None.
         """
-
         try:
             return await member.guild.create_role(name=role_name)
 
@@ -96,7 +93,6 @@ class TtyRoles(BaseCog):
         role : discord.Role
             The role to assign.
         """
-
         try:
             await discord.utils.sleep_until(datetime.datetime.now(datetime.UTC) + datetime.timedelta(seconds=5))
             await member.add_roles(role)

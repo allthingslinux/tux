@@ -83,7 +83,6 @@ class ErrorTestRegistry:
 
     def _build_test_registry(self) -> None:
         """Build test cases dynamically from ERROR_CONFIG_MAP."""
-
         # Build all tests from ERROR_CONFIG_MAP - this keeps us perfectly in sync
         for error_type in ERROR_CONFIG_MAP:
             if error_type.__module__.startswith("discord.app_commands"):
@@ -463,7 +462,6 @@ class Mock(BaseCog):
         ctx: commands.Context[Tux],
     ) -> discord.Embed:
         """Create an informative embed showing error details and expected handler behavior."""
-
         config = test_def.get_config()
 
         # Create main embed with cleaner title and description
@@ -696,7 +694,6 @@ class Mock(BaseCog):
         These exceptions will propagate up to the global ErrorHandler cog.
         Requires System Administrator permissions (Level 8).
         """
-
         # If no specific error name provided, show available errors in the category
         if not error_name:
             await self._send_category_summary(ctx, category)

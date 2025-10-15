@@ -49,7 +49,8 @@ class CaseService:
             reason: Reason for the action
             **kwargs: Additional case data (use case_expires_at for expiration datetime)
 
-        Returns:
+        Returns
+        -------
             The created case
         """
         return await self._case_controller.create_case(
@@ -68,7 +69,8 @@ class CaseService:
         Args:
             case_id: The case ID to retrieve
 
-        Returns:
+        Returns
+        -------
             The case if found, None otherwise
         """
         return await self._case_controller.get_case_by_id(case_id)
@@ -81,7 +83,8 @@ class CaseService:
             user_id: The user ID
             guild_id: The guild ID
 
-        Returns:
+        Returns
+        -------
             List of cases for the user
         """
         return await self._case_controller.get_cases_by_user(user_id, guild_id)
@@ -94,7 +97,8 @@ class CaseService:
             user_id: The user ID
             guild_id: The guild ID
 
-        Returns:
+        Returns
+        -------
             List of active cases for the user
         """
         return await self._case_controller.get_active_cases_by_user(user_id, guild_id)

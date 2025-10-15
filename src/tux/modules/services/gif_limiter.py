@@ -57,7 +57,6 @@ class GifLimiter(BaseCog):
         bool
             True if the message contains a GIF and was not sent in a blacklisted channel, False otherwise.
         """
-
         return not (
             len(message.embeds) == 0
             or "gif" not in message.content.lower()
@@ -117,7 +116,6 @@ class GifLimiter(BaseCog):
         message : discord.Message
             The message to check.
         """
-
         if await self._should_process_message(message):
             await self._handle_gif_message(message)
 

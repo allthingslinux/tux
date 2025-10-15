@@ -69,7 +69,6 @@ def parse_time_string(time_str: str) -> timedelta:
     timedelta
         The timedelta object representing the time string.
     """
-
     # Define regex pattern to parse time strings
     time_pattern = re.compile(r"^(?P<value>\d+)(?P<unit>[smhdw])$")
 
@@ -113,7 +112,6 @@ def convert_to_seconds(time_str: str) -> int:
     int
         The total seconds from the formatted time string.
     """
-
     # Time conversion factors from units to seconds
     time_units = {
         "M": 2592000,  # Months to seconds
@@ -190,7 +188,6 @@ def is_optional_param(param: commands.Parameter) -> bool:
     bool
         True if the parameter is optional, False otherwise.
     """
-
     if param.default is not inspect.Parameter.empty:
         return True
 
@@ -248,7 +245,6 @@ def generate_usage(
     str
         The usage string for the command.
     """
-
     command_name = command.qualified_name
     usage = f"{command_name}"
 

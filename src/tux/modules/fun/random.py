@@ -44,7 +44,6 @@ class Random(BaseCog):
         ctx : commands.Context[Tux]
             The context object for the command.
         """
-
         await ctx.send(
             content="You got heads!" if random.choice([True, False]) else "You got tails!",
         )
@@ -73,7 +72,6 @@ class Random(BaseCog):
         cow : bool, optional
             Whether to use the cow ASCII art, by default False.
         """
-
         yes_responses = [
             "Hell yeah",
             "Absolutely",
@@ -158,7 +156,6 @@ class Random(BaseCog):
         sides : int, optional
             The number of sides on the dice, by default 6.
         """
-
         if sides < 2:
             await ctx.send(content="The dice must have at least 2 sides.", ephemeral=True, delete_after=30)
             return

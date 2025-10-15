@@ -249,7 +249,6 @@ class GithubService:
         Issue
             The issue.
         """
-
         try:
             response: Response[Issue] = await self.github.rest.issues.async_get(
                 CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
@@ -288,7 +287,6 @@ class GithubService:
         list[Issue]
             The list of open issues.
         """
-
         try:
             response: Response[list[Issue]] = await self.github.rest.issues.async_list_for_repo(
                 CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
@@ -322,7 +320,6 @@ class GithubService:
         list[Issue]
             The list of closed issues.
         """
-
         try:
             response: Response[list[Issue]] = await self.github.rest.issues.async_list_for_repo(
                 CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
@@ -356,7 +353,6 @@ class GithubService:
         list[PullRequestSimple]
             The list of open pulls.
         """
-
         try:
             response: Response[list[PullRequestSimple]] = await self.github.rest.pulls.async_list(
                 CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
@@ -390,7 +386,6 @@ class GithubService:
         list[PullRequestSimple]
             The list of closed pulls.
         """
-
         try:
             response: Response[list[PullRequestSimple]] = await self.github.rest.pulls.async_list(
                 CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,
@@ -429,7 +424,6 @@ class GithubService:
         PullRequest
             The pull request.
         """
-
         try:
             response: Response[PullRequest] = await self.github.rest.pulls.async_get(
                 CONFIG.EXTERNAL_SERVICES.GITHUB_REPO_OWNER,

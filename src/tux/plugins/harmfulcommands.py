@@ -84,7 +84,6 @@ class HarmfulCommands(BaseCog):
         -------
         None
         """
-
         if message.author.bot and message.webhook_id not in CONFIG.IRC_CONFIG.BRIDGE_WEBHOOK_IDS:
             return
 

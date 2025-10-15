@@ -42,7 +42,6 @@ class Purge(BaseCog):
         discord.HTTPException
             If an error occurs while deleting messages.
         """
-
         assert interaction.guild
 
         await interaction.response.defer(ephemeral=True)
@@ -139,7 +138,6 @@ class Purge(BaseCog):
         discord.HTTPException
             If an error occurs while deleting messages.
         """
-
         assert ctx.guild
 
         # Check if the limit is within the valid range

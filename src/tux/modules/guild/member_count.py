@@ -24,7 +24,6 @@ class MemberCount(BaseCog):
         ctx : commands.Context[Tux]
             The discord context object.
         """
-
         assert ctx.guild
 
         # Get the member count for the server (total members)

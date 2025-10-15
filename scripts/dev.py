@@ -146,7 +146,9 @@ class DevCLI(BaseCLI):
 
     def docstring_coverage(self) -> None:
         self.rich.print_section("🔍 Docstring Coverage", "blue")
-        success = self._run_tool_command(["uv", "run", "docstr-coverage", "src/"], "Docstring coverage completed successfully")
+        success = self._run_tool_command(
+            ["uv", "run", "docstr-coverage", "src/"], "Docstring coverage completed successfully"
+        )
         if not success:
             self.rich.print_error("Docstring coverage failed - check output above for details")
             msg = "Docstring coverage failed"

@@ -35,7 +35,6 @@ class Avatar(BaseCog):
         member : discord.Member | None
             The member to get the avatar of. If None, uses the command author.
         """
-
         await self.send_avatar(ctx, member)
 
     async def send_avatar(
@@ -53,7 +52,6 @@ class Avatar(BaseCog):
         member : discord.Member | None
             The member to get the avatar of. If None, uses the context author.
         """
-
         # If no member specified, use the command author
         if member is None:
             # Convert author to Member if possible, otherwise handle as User

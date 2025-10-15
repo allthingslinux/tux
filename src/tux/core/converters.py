@@ -75,7 +75,6 @@ class CaseTypeConverter(commands.Converter[CaseType]):
         CaseType
             The CaseType enum.
         """
-
         try:
             return CaseType[argument.upper()]
         except KeyError as e:

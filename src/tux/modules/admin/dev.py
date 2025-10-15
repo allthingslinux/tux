@@ -35,7 +35,6 @@ class Dev(BaseCog):
         commands.CommandInvokeError
             If the subcommand is not found.
         """
-
         if ctx.invoked_subcommand is None:
             await ctx.send_help("dev")
 
@@ -61,7 +60,6 @@ class Dev(BaseCog):
         commands.MissingRequiredArgument
             If a guild is not specified.
         """
-
         assert ctx.guild
 
         # Copy the global tree to the guild
@@ -90,7 +88,6 @@ class Dev(BaseCog):
         commands.MissingPermissions
             If the user does not have the required permissions.
         """
-
         assert ctx.guild
 
         # Clear the slash command tree for the guild.
@@ -492,7 +489,6 @@ class Dev(BaseCog):
         ctx : commands.Context
             The context in which the command is being invoked.
         """
-
         await ctx.send(
             "Stopping the bot...\n-# Note: if Tux is running with Docker Compose, this will restart the container.",
         )

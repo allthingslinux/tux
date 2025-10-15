@@ -20,7 +20,8 @@ def format_multiline_description(text: str | None) -> str:
     Args:
         text: The text to format
 
-    Returns:
+    Returns
+    -------
         The formatted text with > prepended to each line
     """
     if not text:
@@ -35,7 +36,8 @@ def truncate_description(text: str, max_length: int = 100) -> str:
         text: The text to truncate
         max_length: Maximum length before truncation (default: 100)
 
-    Returns:
+    Returns
+    -------
         The truncated text with ellipsis if needed
     """
     if not text:
@@ -51,7 +53,8 @@ def paginate_items(items: list[Any], page_size: int) -> list[list[Any]]:
         items: The items to paginate
         page_size: Maximum number of items per page
 
-    Returns:
+    Returns
+    -------
         A list of pages, each containing up to page_size items
     """
     pages: list[list[Any]] = []
@@ -72,7 +75,8 @@ def create_cog_category_mapping(
     Args:
         mapping: Mapping of cogs to their commands
 
-    Returns:
+    Returns
+    -------
         A tuple of (category_cache, command_mapping)
     """
     command_categories: dict[str, dict[str, str]] = {}
@@ -102,7 +106,8 @@ def extract_cog_group(cog: commands.Cog) -> str | None:
     Args:
         cog: The cog to extract the group from
 
-    Returns:
+    Returns
+    -------
         The group name or None if no group found
     """
     module = getattr(cog, "__module__", "")
@@ -117,7 +122,8 @@ def extract_cog_group(cog: commands.Cog) -> str | None:
 def get_cog_groups() -> list[str]:
     """Retrieve a list of module groups from the 'modules' folder.
 
-    Returns:
+    Returns
+    -------
         A list of module group names.
     """
     modules_dir = Path(__file__).parent.parent / "modules"
@@ -130,7 +136,8 @@ def is_large_command_group(command: commands.Group[Any, Any, Any]) -> bool:
     Args:
         command: The command group to check
 
-    Returns:
+    Returns
+    -------
         True if the command group is large, False otherwise
     """
     return command.name in {"jsk", "jishaku"} or len(command.commands) > 15

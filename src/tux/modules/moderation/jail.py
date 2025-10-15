@@ -71,7 +71,6 @@ class Jail(ModerationCogBase):
         discord.HTTPException
             If an error occurs while jailing the user.
         """
-
         assert ctx.guild
 
         await ctx.defer(ephemeral=True)
@@ -158,7 +157,6 @@ class Jail(ModerationCogBase):
         list[discord.Role]
             A list of roles that can be managed by the bot.
         """
-
         return [
             role
             for role in member.roles

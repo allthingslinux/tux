@@ -256,8 +256,8 @@ def handle_gather_result(result: T | BaseException, expected_type: type[T]) -> T
 def handle_case_result(case_result: Case | BaseException) -> Case:
     """Handle a case result from asyncio.gather with return_exceptions=True.
 
-        Parameters
-        ----------
+    Parameters
+    ----------
     case_result : Case | BaseException
         The case result from asyncio.gather
 

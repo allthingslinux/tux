@@ -48,7 +48,6 @@ class TempBan(ModerationCogBase):
         discord.HTTPException
             If an error occurs while banning the user.
         """
-
         assert ctx.guild
 
         # Execute tempban with case creation and DM
@@ -72,7 +71,6 @@ class TempBan(ModerationCogBase):
 
     async def _process_tempban_case(self, case: Case) -> tuple[int, int]:
         """Process an individual tempban case. Returns (processed_cases, failed_cases)."""
-
         # Check for essential data first
         if not (case.guild_id and case.case_user_id and case.case_id):
             logger.error(f"Invalid case data: {case}")

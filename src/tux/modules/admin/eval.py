@@ -24,7 +24,6 @@ def insert_returns(body: list[ast.stmt]) -> None:
     -------
     None
     """
-
     # Insert return statement if the last expression is a expression statement
     if isinstance(body[-1], ast.Expr):
         body[-1] = ast.Return(body[-1].value)

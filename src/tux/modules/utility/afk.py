@@ -37,7 +37,6 @@ class Afk(BaseCog):
         reason : str, optional
             The reason you are AFK.
         """
-
         target = ctx.author
 
         assert ctx.guild
@@ -79,7 +78,6 @@ class Afk(BaseCog):
         reason : str, optional
             The reason you are AFK.
         """
-
         target = ctx.author
         assert ctx.guild
         assert isinstance(target, discord.Member)
@@ -154,7 +152,6 @@ class Afk(BaseCog):
         message : discord.Message
             The message to check.
         """
-
         if not message.guild or message.author.bot:
             return
 

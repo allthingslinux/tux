@@ -28,7 +28,8 @@ class BaseSetupService(ABC):
     async def safe_setup(self) -> bool:
         """Execute setup with standardized error handling and tracing.
 
-        Returns:
+        Returns
+        -------
             True if setup succeeded, False if it failed
         """
         with start_span(f"bot.setup_{self.name}", f"Setting up {self.name}") as span:

@@ -88,7 +88,8 @@ def get_interaction_context(source: ContextOrInteraction) -> dict[str, Any]:
     Args:
         source: The command `Context` or `Interaction` object.
 
-    Returns:
+    Returns
+    -------
         A dictionary with standardized context keys like `user_id`,
         `command_name`, `guild_id`, `command_type`, etc.
     """

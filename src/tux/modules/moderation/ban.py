@@ -42,7 +42,6 @@ class Ban(ModerationCogBase):
         discord.HTTPException
             If an error occurs while banning the user.
         """
-
         assert ctx.guild
 
         # Execute ban with case creation and DM

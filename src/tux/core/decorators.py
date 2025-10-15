@@ -132,7 +132,6 @@ async def _get_user_rank_from_interaction(
 
     Uses Discord.py's built-in Context.from_interaction() to create a proper context.
     """
-
     ctx: commands.Context[Any] = await commands.Context.from_interaction(interaction)  # type: ignore[reportUnknownMemberType]
 
     return await permission_system.get_user_permission_rank(ctx)
@@ -144,7 +143,8 @@ def _extract_context_or_interaction(
     """
     Extract Discord context or interaction from function arguments.
 
-    Returns:
+    Returns
+    -------
         Tuple of (context, interaction) - one will be None, the other populated
     """
     for arg in args:

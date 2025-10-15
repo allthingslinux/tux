@@ -68,7 +68,6 @@ class EncodeDecode(BaseCog):
         text : str
             The text you want to encode.
         """
-
         cs = cs.lower()
         btext = text.encode(encoding="utf-8")
 
@@ -131,7 +130,6 @@ class EncodeDecode(BaseCog):
         text : str
             The text you want to decode.
         """
-
         cs = cs.lower()
         btext = text.encode(encoding="utf-8")
 

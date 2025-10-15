@@ -69,7 +69,6 @@ class Comic:
         datetime.date | None
             The date of the comic.
         """
-
         try:
             return datetime.date(
                 int(xkcd_dict["year"]),
@@ -89,7 +88,6 @@ class Comic:
         str | None
             The extension of the image.
         """
-
         if self.image:
             try:
                 image = Image.open(BytesIO(self.image))
@@ -107,7 +105,6 @@ class Comic:
         raw_image : bytes
             The raw image data.
         """
-
         self.image = raw_image
         self.image_extension = self._determine_image_extension()
 
@@ -139,7 +136,6 @@ class Client:
         explanation_wiki_url : str, optional
             The URL of the xkcd explanation wiki, by default "https://www.explainxkcd.com/wiki/index.php/"
         """
-
         self._api_url = api_url
         self._explanation_wiki_url = explanation_wiki_url
 
@@ -152,7 +148,6 @@ class Client:
         str
             The URL for the latest comic.
         """
-
         return f"{self._api_url}/info.0.json"
 
     def comic_id_url(self, comic_id: int) -> str:
@@ -169,7 +164,6 @@ class Client:
         str
             The URL for the specific comic ID.
         """
-
         return f"{self._api_url}/{comic_id}/info.0.json"
 
     def _parse_response(self, response_text: str) -> Comic:
@@ -186,7 +180,6 @@ class Client:
         Comic
             The parsed comic object.
         """
-
         response_dict: dict[str, Any] = json.loads(response_text)
         comic_url: str = f"{self._api_url}/{response_dict['num']}/"
         explanation_url: str = f"{self._explanation_wiki_url}{response_dict['num']}"
@@ -209,7 +202,6 @@ class Client:
         Comic
             The fetched comic.
         """
-
         comic = self._parse_response(self._request_comic(comic_id))
 
         if raw_comic_image:
@@ -232,7 +224,6 @@ class Client:
         Comic
             The latest xkcd comic.
         """
-
         return self._fetch_comic(0, raw_comic_image)
 
     def get_comic(self, comic_id: int, raw_comic_image: bool = False) -> Comic:
@@ -251,7 +242,6 @@ class Client:
         Comic
             The fetched xkcd comic.
         """
-
         return self._fetch_comic(comic_id, raw_comic_image)
 
     def get_random_comic(self, raw_comic_image: bool = False) -> Comic:
@@ -268,7 +258,6 @@ class Client:
         Comic
             The random xkcd comic.
         """
-
         latest_comic_id: int = self._parse_response(self._request_comic(0)).id or 0
         random_id: int = random.randint(1, latest_comic_id)
 
@@ -293,7 +282,6 @@ class Client:
         HttpError
             If the request fails.
         """
-
         comic_url = self.latest_comic_url() if comic_id <= 0 else self.comic_id_url(comic_id)
 
         try:
@@ -333,7 +321,6 @@ class Client:
         HttpError
             If the request fails.
         """
-
         if not raw_image_url:
             raise TuxAPIResourceNotFoundError(service_name="xkcd", resource_identifier="image_url_not_provided")
 

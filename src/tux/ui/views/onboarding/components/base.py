@@ -51,7 +51,8 @@ class WizardComponent:
     def validate_wizard_context(self, interaction: discord.Interaction) -> WizardViewProtocol | None:
         """Validate the interaction is from a valid wizard context.
 
-        Returns:
+        Returns
+        -------
             The wizard view if valid, None otherwise.
         """
         view = self.view  # type: ignore
@@ -67,7 +68,8 @@ class WizardComponent:
     def validate_wizard_author(self, interaction: discord.Interaction, wizard_view: WizardViewProtocol) -> bool:
         """Validate that the interaction user is the wizard author.
 
-        Returns:
+        Returns
+        -------
             True if authorized, False otherwise.
         """
         if interaction.user != wizard_view.author:

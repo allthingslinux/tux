@@ -201,7 +201,8 @@ class DatabaseCLI(BaseCLI):
         Similar to `prisma migrate dev` - creates a new migration from model changes
         and optionally applies it immediately.
 
-        Examples:
+        Examples
+        --------
         uv run db dev                           # Create + apply with auto-generated name
         uv run db dev --name "add user model"   # Create + apply with custom name
         uv run db dev --create-only             # Create only, don't apply
@@ -276,7 +277,8 @@ class DatabaseCLI(BaseCLI):
         Creates a new migration file with the specified message.
         Always review generated migrations before applying them.
 
-        Examples:
+        Examples
+        --------
         uv run db new "add user email field"        # Auto-generate from model changes
         uv run db new "custom migration" --no-auto  # Empty migration for manual edits
         """
@@ -333,7 +335,8 @@ class DatabaseCLI(BaseCLI):
         Displays the full details of a migration including its changes,
         dependencies, and metadata.
 
-        Examples:
+        Examples
+        --------
         uv run db show head          # Show latest migration
         uv run db show base          # Show base revision
         uv run db show abc123        # Show specific migration
@@ -608,7 +611,8 @@ class DatabaseCLI(BaseCLI):
         Reverts the database schema to an earlier migration state.
         Useful for fixing issues or testing different schema versions.
 
-        Examples:
+        Examples
+        --------
         uv run db downgrade -1       # Rollback one migration
         uv run db downgrade base    # Rollback to initial empty state
         uv run db downgrade abc123  # Rollback to specific revision

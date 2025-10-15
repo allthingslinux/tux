@@ -29,7 +29,6 @@ class Deepfry(BaseCog):
         image: discord.Attachment,
     ) -> None:
         """Deepfry an image using various image processing effects."""
-
         # Extract image URL from the attachment
         image_url = self._extract_image_url(ctx, image)
         pil_image = await self._fetch_image(image_url)

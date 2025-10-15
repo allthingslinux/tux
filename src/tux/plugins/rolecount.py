@@ -181,7 +181,6 @@ class RoleCount(BaseCog):
         which : discord.app_commands.Choice[str]
             The role type to list.
         """
-
         if interaction.guild:
             # Get the roles and emojis for the selected option
             roles_emojis: list[list[int | str]] = self.roles_emoji_mapping.get(which.value, [])
@@ -206,7 +205,6 @@ class RoleCount(BaseCog):
         which : discord.app_commands.Choice[str]
             The selected option.
         """
-
         role_data: list[tuple[discord.Role, list[int | str]]] = []
 
         for role_emoji in roles_emojis:
@@ -275,7 +273,6 @@ class RoleCount(BaseCog):
         tuple[int, discord.Embed]
             The updated role count and embed.
         """
-
         if role_count >= 9:
             pages.append(embed)
             embed = self._create_embed(interaction, which)
@@ -313,7 +310,6 @@ class RoleCount(BaseCog):
         discord.Embed
             The created embed.
         """
-
         return EmbedCreator.create_embed(
             bot=self.bot,
             embed_type=EmbedCreator.INFO,
@@ -338,7 +334,6 @@ class RoleCount(BaseCog):
         pages : list[discord.Embed]
             The list of embeds to send.
         """
-
         if pages:
             menu = ViewMenu(interaction, menu_type=ViewMenu.TypeEmbed)
 

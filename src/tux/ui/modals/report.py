@@ -42,7 +42,6 @@ class ReportModal(discord.ui.Modal):
         interaction : discord.Interaction
             The interaction that triggered the command.
         """
-
         if not interaction.guild:
             logger.error("Guild is None")
             return

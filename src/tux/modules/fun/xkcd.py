@@ -21,7 +21,7 @@ class Xkcd(BaseCog):
     @commands.guild_only()
     async def xkcd(self, ctx: commands.Context[Tux], comic_id: int | None = None) -> None:
         """
-        xkcd related commands.
+        Xkcd related commands.
 
         Parameters
         ----------
@@ -30,7 +30,6 @@ class Xkcd(BaseCog):
         comic_id : int | None
             The ID of the xkcd comic to search for.
         """
-
         if comic_id:
             await self.specific(ctx, comic_id)
         else:
@@ -50,7 +49,6 @@ class Xkcd(BaseCog):
         ctx : commands.Context[Tux]
             The context object for the command.
         """
-
         embed, view, ephemeral = await self.get_comic_and_embed(latest=True)
 
         if view:
@@ -72,7 +70,6 @@ class Xkcd(BaseCog):
         ctx : commands.Context[Tux]
             The context object for the
         """
-
         embed, view, ephemeral = await self.get_comic_and_embed()
 
         if view:
@@ -96,7 +93,6 @@ class Xkcd(BaseCog):
         comic_id : int
             The ID of the comic to search for.
         """
-
         embed, view, ephemeral = await self.get_comic_and_embed(number=comic_id)
 
         if view:

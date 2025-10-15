@@ -86,7 +86,8 @@ class ModerationCoordinator:
             duration: Duration for temp actions
             expires_at: Expiration timestamp for temp actions
 
-        Returns:
+        Returns
+        -------
             The created case, or None if case creation failed
         """
         logger.info(
@@ -176,7 +177,8 @@ class ModerationCoordinator:
         """
         Handle DM timing based on action type.
 
-        Returns:
+        Returns
+        -------
             True if DM was sent, False otherwise
         """
         if case_type in self.REMOVAL_ACTIONS:
@@ -203,7 +205,8 @@ class ModerationCoordinator:
         - Guild/user context enrichment
         - Transaction management
 
-        Returns:
+        Returns
+        -------
             List of action results
         """
         results: list[Any] = []
@@ -231,7 +234,8 @@ class ModerationCoordinator:
         """
         Handle DM sending after successful action execution.
 
-        Returns:
+        Returns
+        -------
             True if DM was sent, False otherwise
         """
         try:

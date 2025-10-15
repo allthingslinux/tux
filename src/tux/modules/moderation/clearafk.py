@@ -35,7 +35,6 @@ class ClearAFK(BaseCog):
         member : discord.Member
             The member whose AFK status is to be cleared.
         """
-
         assert ctx.guild
 
         if not await self.db.afk.is_afk(member.id, guild_id=ctx.guild.id):

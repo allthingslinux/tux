@@ -68,7 +68,6 @@ class Starboard(BaseCog):
         threshold : int
             The number of reactions required to trigger the starboard.
         """
-
         assert ctx.guild
 
         if len(emoji) != 1 or not emoji.isprintable():
@@ -150,7 +149,6 @@ class Starboard(BaseCog):
         ctx : commands.Context[Tux]
             The context of the command.
         """
-
         assert ctx.guild
 
         try:
@@ -202,7 +200,6 @@ class Starboard(BaseCog):
         discord.Message | None
             The existing starboard message or None if it does not exist.
         """
-
         assert original_message.guild
 
         try:
@@ -237,7 +234,6 @@ class Starboard(BaseCog):
         reaction_count : int
             The number of reactions on the original message.
         """
-
         if not original_message.guild:
             logger.error("Original message has no guild")
             return

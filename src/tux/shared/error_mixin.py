@@ -29,7 +29,8 @@ class ErrorHandlerMixin:
             context: Additional context for Sentry
             user_message: Custom user-friendly message
 
-        Returns:
+        Returns
+        -------
             User-friendly error message
         """
         # Log the error

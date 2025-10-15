@@ -84,7 +84,6 @@ class EmojiManager:
             Delay in seconds before creating an emoji to mitigate rate limits.
             Defaults to DEFAULT_EMOJI_CREATE_DELAY.
         """
-
         self.bot = bot
         self.cache: dict[str, discord.Emoji] = {}
         self.emojis_path = emojis_path or DEFAULT_EMOJI_ASSETS_PATH
@@ -128,7 +127,6 @@ class EmojiManager:
         bool
             True if initialization was successful or already done, False otherwise.
         """
-
         async with self._init_lock:
             if self._initialized:
                 logger.debug("Emoji cache already initialized.")
@@ -170,7 +168,6 @@ class EmojiManager:
         discord.Emoji | None
             The discord.Emoji object if found, None otherwise.
         """
-
         if not self._initialized:
             logger.warning("Attempted to get emoji before cache initialization. Call await manager.init() first.")
 
@@ -195,7 +192,6 @@ class EmojiManager:
         discord.Emoji | None
             The newly created emoji if successful, otherwise None.
         """
-
         if not _is_valid_emoji_name(name):
             logger.error(f"Attempted to create emoji with invalid name: '{name}'")
             return None
@@ -266,7 +262,6 @@ class EmojiManager:
             - A list of successfully created discord.Emoji objects.
             - A list of file paths for emojis that already existed or failed.
         """
-
         if not await self._ensure_initialized():
             logger.error("Cannot sync emojis: Cache initialization failed.")
             # Attempt to list files anyway for the return value
@@ -326,7 +321,6 @@ class EmojiManager:
         bool
             True if the emoji was deleted, False otherwise.
         """
-
         existing_emoji = self.get(name)
         if not existing_emoji:
             logger.info(f"No existing emoji '{name}' found in cache. Skipping deletion.")
@@ -369,7 +363,6 @@ class EmojiManager:
         Optional[discord.Emoji]
             The newly created emoji if successful, otherwise None.
         """
-
         logger.info(f"Starting resync process for emoji: '{name}'...")
 
         if not await self._ensure_initialized():

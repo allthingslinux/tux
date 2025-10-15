@@ -39,7 +39,6 @@ class Bookmarks(BaseCog):
         payload : discord.RawReactionActionEvent
             The event payload containing information about the reaction.
         """
-
         # If the bot reacted to the message, or the user is the bot, or the emoji is not valid, return
         if not self.bot.user or payload.user_id == self.bot.user.id or not payload.emoji.name:
             return
@@ -122,7 +121,6 @@ class Bookmarks(BaseCog):
         message : discord.Message
             The bookmark message in the user's DMs to be deleted.
         """
-
         try:
             await message.delete()
 
@@ -215,7 +213,6 @@ class Bookmarks(BaseCog):
         discord.Embed
             The generated bookmark embed.
         """
-
         # Get the content of the message
         content = message.content or ""
 

@@ -51,7 +51,8 @@ class CommunicationService:
             reason: Reason for the action
             dm_action: Action description for DM
 
-        Returns:
+        Returns
+        -------
             True if DM was sent successfully, False otherwise
         """
         if silent:
@@ -123,7 +124,8 @@ class CommunicationService:
             timestamp: Optional timestamp
             thumbnail_url: Optional thumbnail URL
 
-        Returns:
+        Returns
+        -------
             The created embed
         """
         embed = discord.Embed(
@@ -161,7 +163,8 @@ class CommunicationService:
             embed: The embed to send
             log_type: Type of log entry
 
-        Returns:
+        Returns
+        -------
             The sent message if successful
         """
         try:
@@ -194,7 +197,8 @@ class CommunicationService:
             reason: Reason for the action
             moderator: The moderator who performed the action
 
-        Returns:
+        Returns
+        -------
             The DM embed
         """
         embed = discord.Embed(

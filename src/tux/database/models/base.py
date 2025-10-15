@@ -51,10 +51,10 @@ class BaseModel(SQLModel):
             include_relationships: Whether to include relationship fields
             relationships: Specific relationships to include (if None, includes all)
 
-        Returns:
+        Returns
+        -------
             Dictionary representation of the model
         """
-
         data: dict[str, Any] = {}
         should_include_relationship = relationships is None
 

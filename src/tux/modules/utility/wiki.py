@@ -109,7 +109,6 @@ class Wiki(BaseCog):
         ctx : commands.Context[Tux]
             The context object for the command.
         """
-
         if ctx.invoked_subcommand is None:
             await ctx.send_help("wiki")
 
@@ -127,7 +126,6 @@ class Wiki(BaseCog):
         query : str
             The search query.
         """
-
         title: tuple[str, str] = await self.query_wiki(self.arch_wiki_api_url, query)
 
         embed = self.create_embed(title, ctx)
@@ -148,7 +146,6 @@ class Wiki(BaseCog):
         query : str
             The search query.
         """
-
         title: tuple[str, str] = await self.query_wiki(self.atl_wiki_api_url, query)
 
         embed = self.create_embed(title, ctx)

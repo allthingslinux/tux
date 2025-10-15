@@ -157,7 +157,6 @@ class Config(BaseSettings):
         Returns True if BOT_INFO__PREFIX was explicitly set in environment variables,
         indicating the user wants to override all database prefix settings.
         """
-
         return "BOT_INFO__PREFIX" in os.environ
 
     def is_debug_enabled(self) -> bool:

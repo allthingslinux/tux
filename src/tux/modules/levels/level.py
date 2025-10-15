@@ -40,7 +40,6 @@ class Level(BaseCog):
         member : discord.User
             The member to fetch XP and level for.
         """
-
         if ctx.guild is None:
             await ctx.send("This command can only be executed within a guild.")
             return

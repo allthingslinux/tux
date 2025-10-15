@@ -31,7 +31,6 @@ class Unjail(ModerationCogBase):
         Optional[discord.Role]
             The jail role, or None if not found.
         """
-
         jail_role_id = await self.db.guild_config.get_jail_role_id(guild.id)
         return None if jail_role_id is None else guild.get_role(jail_role_id)
 
@@ -51,7 +50,6 @@ class Unjail(ModerationCogBase):
         Optional[Case]
             The latest jail case, or None if not found.
         """
-
         return await self.db.case.get_latest_case_by_user(
             guild_id=guild_id,
             user_id=user_id,
@@ -81,7 +79,6 @@ class Unjail(ModerationCogBase):
         Tuple[bool, List[discord.Role]]
             A tuple containing whether the operation was successful and which roles were restored.
         """
-
         if not role_ids:
             return True, []
 
@@ -163,7 +160,6 @@ class Unjail(ModerationCogBase):
         discord.HTTPException
             If an error occurs while unjailing the user.
         """
-
         assert ctx.guild
 
         await ctx.defer(ephemeral=True)
