@@ -42,8 +42,6 @@ class DatabaseCLI(BaseCLI):
             Command("migrate-reset", self.migrate_reset, "Reset database and apply all migrations"),
             Command("migrate-status", self.migrate_status, "Show migration status with rich output"),
             Command("migrate-history", self.migrate_history, "Show migration history with tree view"),
-            Command("migrate-deploy", self.migrate_deploy, "Deploy migrations to production"),
-            Command("migrate-format", self.migrate_format, "Format migration files"),
             Command("migrate-validate", self.migrate_validate, "Validate migration files"),
             # Maintenance commands
             Command("health", self.health, "Check database health and connection status"),
@@ -204,34 +202,6 @@ class DatabaseCLI(BaseCLI):
             self.rich.print_success("Migration history displayed")
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to get migration history")
-
-    def migrate_deploy(self) -> None:
-        """Deploy migrations to production.
-
-        Applies migrations in production environment with safety checks.
-        """
-        self.rich.print_section("🚀 Deploying Migrations", "blue")
-        self.rich.rich_print("[bold blue]Deploying migrations to production...[/bold blue]")
-
-        try:
-            self._run_command(["uv", "run", "alembic", "upgrade", "head"])
-            self.rich.print_success("Migrations deployed successfully")
-        except subprocess.CalledProcessError:
-            self.rich.print_error("Failed to deploy migrations")
-
-    def migrate_format(self) -> None:
-        """Format migration files.
-
-        Formats all migration files for consistency.
-        """
-        self.rich.print_section("🎨 Formatting Migrations", "blue")
-        self.rich.rich_print("[bold blue]Formatting migration files...[/bold blue]")
-
-        try:
-            self._run_command(["uv", "run", "black", "alembic/versions/"])
-            self.rich.print_success("Migration files formatted")
-        except subprocess.CalledProcessError:
-            self.rich.print_error("Failed to format migration files")
 
     def migrate_validate(self) -> None:
         """Validate migration files.
