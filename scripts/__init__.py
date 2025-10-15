@@ -1,5 +1,5 @@
 """
-CLI Infrastructure Package
+CLI Infrastructure Package.
 
 This package provides a clean, object-oriented foundation for building CLI applications
 with proper separation of concerns and extensibility.

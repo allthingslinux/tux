@@ -38,9 +38,7 @@ class Starboard(BaseCog):
     @commands.guild_only()
     @requires_command_permission()
     async def starboard(self, ctx: commands.Context[Tux]) -> None:
-        """
-        Configure the starboard for this server.
-        """
+        """Configure the starboard for this server."""
         if ctx.invoked_subcommand is None:
             await ctx.send_help("starboard")
 
@@ -281,7 +279,7 @@ class Starboard(BaseCog):
             logger.error(f"Error while creating or updating starboard message: {e}")
 
     async def handle_starboard_reaction(self, payload: discord.RawReactionActionEvent) -> None:
-        """Handle starboard reaction add or remove"""
+        """Handle starboard reaction add or remove."""
         if not payload.guild_id:
             return
 
@@ -326,7 +324,7 @@ class Starboard(BaseCog):
         emoji: discord.PartialEmoji | None = None,
     ) -> None:
         """
-        Handle reaction clear for all emojis or a specific emoji
+        Handle reaction clear for all emojis or a specific emoji.
 
         Parameters
         ----------

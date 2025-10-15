@@ -1,5 +1,5 @@
 """
-Dynamic Permission Decorators
+Dynamic Permission Decorators.
 
 This module provides fully dynamic, database-driven permission decorators
 that have NO hardcoded opinions about permission ranks or names.

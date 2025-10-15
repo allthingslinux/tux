@@ -1,5 +1,5 @@
 """
-Dynamic Permission System - Fully Database-Driven
+Dynamic Permission System - Fully Database-Driven.
 
 This module provides dynamic permission decorators with ZERO hardcoded opinions.
 All permission requirements are stored in the database and configured per-guild.

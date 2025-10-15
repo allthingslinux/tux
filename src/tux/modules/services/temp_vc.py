@@ -19,8 +19,10 @@ class TempVc(BaseCog):
         after: discord.VoiceState,
     ) -> None:
         """
-        Temporarily create a voice channel for a user when they join the temporary voice channel.
-        If the user leaves the temporary voice channel, the channel will be deleted.
+        Handle voice state updates for temporary voice channels.
+
+        If the user joins the temporary voice channel, a new channel will be created for them.
+        If the user leaves the temporary voice channel and the channel is empty, it will be deleted.
 
         Parameters
         ----------

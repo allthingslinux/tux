@@ -1,5 +1,5 @@
 """
-Clean Async Database Service Architecture
+Clean Async Database Service Architecture.
 
 This module provides a clean, maintainable database service for async operations.
 
@@ -165,7 +165,7 @@ class AsyncDatabaseService(DatabaseServiceABC):
         max_retries: int = 3,
         backoff_factor: float = 0.5,
     ) -> T:
-        """Internal retry logic for async operations."""
+        """Execute async database operation with retry logic."""
         for attempt in range(max_retries):
             try:
                 if sentry_sdk.is_initialized():
@@ -247,7 +247,6 @@ def create_test_database_service(echo: bool = False) -> DatabaseServiceABC:
 
 
 async def setup_test_database(service: DatabaseServiceABC, database_url: str) -> None:
-    """Setup test database."""
     await service.connect(database_url)
     logger.info("Test database setup complete")
 

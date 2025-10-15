@@ -53,7 +53,25 @@ class ActivityHandler(commands.Cog):
         return activities or [discord.Game(name="with Linux commands")]
 
     def _substitute_placeholders(self, text: str) -> str:
-        """Simple synchronous placeholder substitution."""
+        """Substitute placeholders in text.
+
+        Available placeholders:
+        {member_count} -> Total member count
+        {guild_count} -> Total guild count
+        {bot_name} -> Bot name
+        {bot_version} -> Bot version
+        {prefix} -> Bot prefix
+
+        Parameters
+        ----------
+        text : str
+            Text to substitute placeholders in.
+
+        Returns
+        -------
+        str
+            Text with placeholders substituted.
+        """
         if not text:
             return text
 
@@ -94,7 +112,7 @@ class ActivityHandler(commands.Cog):
             self._activity_task = asyncio.create_task(self._activity_loop())
 
     async def _activity_loop(self) -> None:
-        """Simple activity rotation loop."""
+        """Rotate activities."""
         try:
             await asyncio.sleep(5)  # Wait for bot to be ready
 
@@ -130,5 +148,11 @@ class ActivityHandler(commands.Cog):
 
 
 async def setup(bot: Tux) -> None:
-    """Adds the cog to the bot."""
+    """Cog setup for activity handler.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance.
+    """
     await bot.add_cog(ActivityHandler(bot))

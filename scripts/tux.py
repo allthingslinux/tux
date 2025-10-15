@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Tux Bot CLI Script
+Tux Bot CLI Script.
 
 A unified interface for all Tux bot operations using the clean CLI infrastructure.
 """
@@ -29,7 +29,7 @@ class TuxCLI(BaseCLI):
         self._setup_commands()
 
     def _setup_command_registry(self) -> None:
-        """Setup the command registry with all Tux bot commands."""
+        """Set up command registry with all Tux bot commands."""
         # All commands directly registered without groups
         all_commands = [
             # Bot operations
@@ -41,7 +41,7 @@ class TuxCLI(BaseCLI):
             self._command_registry.register_command(cmd)
 
     def _setup_commands(self) -> None:
-        """Setup all Tux CLI commands using the command registry."""
+        """Set up Tux CLI commands using the command registry."""
         # Register all commands directly to the main app
         for command in self._command_registry.get_commands().values():
             self.add_command(

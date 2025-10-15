@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test CLI Script
+Test CLI Script.
 
 A unified interface for all testing operations using the clean CLI infrastructure.
 """
@@ -33,7 +33,7 @@ class TestCLI(BaseCLI):
         self._setup_commands()
 
     def _setup_command_registry(self) -> None:
-        """Setup the command registry with all test commands."""
+        """Set up the command registry with all test commands."""
         # All commands directly registered without groups
         all_commands = [
             # Basic test commands
@@ -52,7 +52,7 @@ class TestCLI(BaseCLI):
             self._command_registry.register_command(cmd)
 
     def _setup_commands(self) -> None:
-        """Setup all test CLI commands using the command registry."""
+        """Set up all test CLI commands using the command registry."""
         # Register all commands directly to the main app
         for command in self._command_registry.get_commands().values():
             self.add_command(

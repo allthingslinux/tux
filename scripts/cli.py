@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Unified CLI Entry Point for Documentation
+Unified CLI Entry Point for Documentation.
 
 This module provides a unified entry point for all CLI commands to be used with mkdocs-typer.
 It combines all CLI modules into a single Typer application for documentation generation.

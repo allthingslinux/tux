@@ -30,7 +30,7 @@ class Level(BaseCog):
     )
     async def level(self, ctx: commands.Context[Tux], member: discord.User | discord.Member | None = None) -> None:
         """
-        Fetches the XP and level for a member (or the person who runs the command if no member is provided).
+        Fetch the XP and level for a member (or the person who runs the command if no member is provided).
 
         Parameters
         ----------

@@ -24,7 +24,7 @@ class Purge(BaseCog):
         channel: discord.TextChannel | discord.Thread | discord.VoiceChannel | None = None,
     ) -> None:
         """
-        Deletes a set number of messages in a channel.
+        Delete a set number of messages in a channel.
 
         Parameters
         ----------
@@ -120,7 +120,7 @@ class Purge(BaseCog):
         channel: discord.TextChannel | discord.Thread | discord.VoiceChannel | None = None,
     ) -> None:
         """
-        Deletes a set number of messages in a channel.
+        Delete a set number of messages in a channel.
 
         Parameters
         ----------

@@ -26,7 +26,7 @@ ContextOrInteraction = commands.Context[Any] | Interaction
 
 def _get_interaction_details(source: Interaction) -> dict[str, Any]:
     """
-    Extracts context details specifically from a discord.Interaction.
+    Extract context details specifically from a discord.Interaction.
 
     Parameters
     ----------
@@ -51,7 +51,7 @@ def _get_interaction_details(source: Interaction) -> dict[str, Any]:
 
 def _get_context_details(source: commands.Context[Any]) -> dict[str, Any]:
     """
-    Extracts context details specifically from a commands.Context.
+    Extract context details specifically from a commands.Context.
 
     Parameters
     ----------
@@ -78,7 +78,7 @@ def _get_context_details(source: commands.Context[Any]) -> dict[str, Any]:
 
 def get_interaction_context(source: ContextOrInteraction) -> dict[str, Any]:
     """
-    Builds a standardized dictionary of context from a command or interaction.
+    Build a standardized dictionary of context from a command or interaction.
 
     This is the main public function of the module. It takes either a
     `commands.Context` or a `discord.Interaction` and returns a dictionary

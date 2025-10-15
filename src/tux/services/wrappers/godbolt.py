@@ -157,7 +157,7 @@ async def getspecificcompiler(lang: str) -> str | None:
 
 async def getoutput(code: str, lang: str, compileroptions: str | None = None) -> str | None:
     """
-    This function sends a POST request to the Godbolt API to get the output of the given code.
+    Send a POST request to the Godbolt API to get the output of the given code.
 
     Parameters
     ----------

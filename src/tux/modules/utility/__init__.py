@@ -11,7 +11,7 @@ __all__ = ("add_afk", "del_afk")
 
 
 def _generate_afk_nickname(display_name: str) -> str:
-    """Generates the AFK nickname, handling truncation if necessary."""
+    """Generate the AFK nickname, handling truncation if necessary."""
     prefix_len = len(CONST.AFK_PREFIX)
 
     if len(display_name) >= CONST.NICKNAME_MAX_LENGTH - prefix_len:
@@ -33,7 +33,7 @@ async def add_afk(
     until: datetime | NoneType | None = None,
     enforced: bool = False,
 ) -> None:
-    """Sets a member as AFK, updates their nickname, and saves to the database."""
+    """Set a member as AFK, updates their nickname, and saves to the database."""
     new_name = _generate_afk_nickname(target.display_name)
 
     await db.afk.set_afk(target.id, target.display_name, reason, guild_id, is_perm, until, enforced)
@@ -44,7 +44,7 @@ async def add_afk(
 
 
 async def del_afk(db: DatabaseCoordinator, target: discord.Member, nickname: str) -> None:
-    """Removes a member's AFK status, restores their nickname, and updates the database."""
+    """Remove a member's AFK status, restores their nickname, and updates the database."""
     await db.afk.remove_afk(target.id, target.guild.id)
 
     # Suppress Forbidden errors if the bot doesn't have permission to change the nickname

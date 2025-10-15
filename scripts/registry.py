@@ -1,5 +1,5 @@
 """
-Command Registry Infrastructure
+Command Registry Infrastructure.
 
 Provides OOP classes for managing CLI commands in a clean, extensible way.
 """

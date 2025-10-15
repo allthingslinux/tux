@@ -21,7 +21,25 @@ workspace_root = Path(__file__).parent.parent.parent.parent.parent
 
 
 def _substitute_placeholders(bot: Tux, text: str) -> str:
-    """Simple synchronous placeholder substitution."""
+    """Substitute placeholders in text.
+
+    Available placeholders:
+    {member_count} -> Total member count
+    {guild_count} -> Total guild count
+    {bot_name} -> Bot name
+    {bot_version} -> Bot version
+    {prefix} -> Bot prefix
+
+    Parameters
+    ----------
+    text : str
+        Text to substitute placeholders in.
+
+    Returns
+    -------
+    str
+        Text with placeholders substituted.
+    """
     if not text:
         return text
 

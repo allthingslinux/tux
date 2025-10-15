@@ -286,5 +286,5 @@ class BaseController[ModelT]:
         defaults: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> tuple[ModelT, bool]:
-        """Generic upsert operation."""
+        """Upsert a record."""
         return await self._upsert.upsert(filters, defaults, **kwargs)

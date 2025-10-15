@@ -73,7 +73,7 @@ class HarmfulCommands(BaseCog):
 
     async def handle_harmful_message(self, message: discord.Message) -> None:
         """
-        This function detects harmful linux commands and replies to the user with a warning.
+        Detect harmful linux commands and replies to the user with a warning if they are detected.
 
         Parameters
         ----------

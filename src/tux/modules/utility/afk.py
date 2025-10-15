@@ -179,10 +179,7 @@ class Afk(BaseCog):
 
     @tasks.loop(seconds=120)
     async def handle_afk_expiration(self):
-        """
-        Check AFK database at a regular interval,
-        Remove AFK from users with an entry that has expired.
-        """
+        """Check AFK database at a regular interval, remove AFK from users with an entry that has expired."""
         for guild in self.bot.guilds:
             expired_entries = await self._get_expired_afk_entries(guild.id)
 

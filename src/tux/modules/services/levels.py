@@ -34,7 +34,7 @@ class LevelsService(BaseCog):
     @commands.Cog.listener("on_message")
     async def xp_listener(self, message: discord.Message) -> None:
         """
-        Listens for messages to process XP gain.
+        Listen for messages to process XP gain.
 
         Parameters
         ----------
@@ -56,7 +56,7 @@ class LevelsService(BaseCog):
 
     async def process_xp_gain(self, member: discord.Member, guild: discord.Guild) -> None:
         """
-        Processes XP gain for a member.
+        Process XP gain for a member.
 
         Parameters
         ----------
@@ -94,7 +94,7 @@ class LevelsService(BaseCog):
 
     def is_on_cooldown(self, last_message_time: datetime.datetime) -> bool:
         """
-        Checks if the member is on cooldown.
+        Check if the member is on cooldown.
 
         Parameters
         ----------
@@ -112,7 +112,7 @@ class LevelsService(BaseCog):
 
     async def handle_level_up(self, member: discord.Member, guild: discord.Guild, new_level: int) -> None:
         """
-        Handles the level up process for a member.
+        Handle the level up process for a member.
 
         Parameters
         ----------
@@ -128,7 +128,7 @@ class LevelsService(BaseCog):
 
     async def update_roles(self, member: discord.Member, guild: discord.Guild, new_level: int) -> None:
         """
-        Updates the roles of a member based on their new level.
+        Update the roles of a member based on their new level.
 
         Parameters
         ----------
@@ -157,7 +157,7 @@ class LevelsService(BaseCog):
     @staticmethod
     async def try_assign_role(member: discord.Member, role: discord.Role) -> None:
         """
-        Tries to assign a role to a member.
+        Try to assign a role to a member.
 
         Parameters
         ----------
@@ -173,7 +173,7 @@ class LevelsService(BaseCog):
 
     def calculate_xp_for_level(self, level: int) -> float:
         """
-        Calculates the XP required for a given level.
+        Calculate the XP required for a given level.
 
         Parameters
         ----------
@@ -189,7 +189,7 @@ class LevelsService(BaseCog):
 
     def calculate_xp_increment(self, member: discord.Member) -> float:
         """
-        Calculates the XP increment for a member.
+        Calculate the XP increment for a member.
 
         Parameters
         ----------
@@ -205,7 +205,7 @@ class LevelsService(BaseCog):
 
     def calculate_level(self, xp: float) -> int:
         """
-        Calculates the level based on XP.
+        Calculate a level based on XP.
 
         Parameters
         ----------
@@ -257,7 +257,7 @@ class LevelsService(BaseCog):
         bar_length: int = 10,
     ) -> str:
         """
-        Generates an XP progress bar based on the current level and XP.
+        Generate an XP progress bar based on the current level and XP.
 
         Parameters
         ----------

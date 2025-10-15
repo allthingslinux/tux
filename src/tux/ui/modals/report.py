@@ -35,7 +35,7 @@ class ReportModal(discord.ui.Modal):
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
         """
-        Sends the report to the moderation team.
+        Send the report to the moderation team.
 
         Parameters
         ----------

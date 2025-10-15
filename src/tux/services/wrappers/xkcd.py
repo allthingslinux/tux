@@ -32,9 +32,7 @@ class HttpError(Exception):
 
 
 class Comic:
-    """
-    A class representing an xkcd comic.
-    """
+    """A class representing an xkcd comic."""
 
     def __init__(
         self,

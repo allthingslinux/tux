@@ -13,7 +13,7 @@ from tux.ui.embeds import EmbedCreator
 
 def insert_returns(body: list[ast.stmt]) -> None:
     """
-    Inserts return statements into the body of the function definition.
+    Insert return statements into the body of the function definition.
 
     Parameters
     ----------
@@ -52,7 +52,7 @@ class Eval(BaseCog):
     @requires_command_permission()  # sysadmin or higher
     async def eval(self, ctx: commands.Context[Tux], *, expression: str) -> None:
         """
-        Evaluate a Python expression. (Owner only)
+        Evaluate a Python expression. (Owner only).
 
         Parameters
         ----------

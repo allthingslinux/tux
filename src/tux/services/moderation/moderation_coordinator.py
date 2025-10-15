@@ -258,9 +258,7 @@ class ModerationCoordinator:
         user: discord.Member | discord.User,
         dm_sent: bool,
     ) -> None:
-        """
-        Send the response embed for the moderation action.
-        """
+        """Send the response embed for the moderation action."""
         logger.debug(f"Preparing response embed, case={'present' if case else 'None'}, dm_sent={dm_sent}")
 
         # Helper function to get mention safely (handles both real and mock objects)
@@ -301,9 +299,7 @@ class ModerationCoordinator:
         logger.debug("Response embed sent successfully")
 
     def _get_default_dm_action(self, case_type: DBCaseType) -> str:
-        """
-        Get the default DM action description for a case type.
-        """
+        """Get the default DM action description for a case type."""
         action_mapping = {
             DBCaseType.BAN: "banned",
             DBCaseType.KICK: "kicked",

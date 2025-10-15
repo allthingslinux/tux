@@ -65,7 +65,7 @@ class Unban(ModerationCogBase):
         final_reason: str,
         guild: discord.Guild,
     ) -> None:
-        """Executes the core unban action and case creation."""
+        """Execute the core unban action and case creation."""
         # We already checked that user is not None in the main command
         assert user is not None, "User cannot be None at this point"
         await self.moderate_user(

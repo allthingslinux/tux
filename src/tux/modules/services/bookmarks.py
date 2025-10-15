@@ -23,13 +23,13 @@ class Bookmarks(BaseCog):
         self.session = aiohttp.ClientSession()
 
     async def cog_unload(self) -> None:
-        """Cleans up the cog, closing the aiohttp session."""
+        """Clean up the cog, closing the aiohttp session."""
         await self.session.close()
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
         """
-        Handles bookmarking messages via reactions.
+        Handle bookmarking messages via reactions.
 
         This listener checks for specific reaction emojis on messages and triggers
         the bookmarking or unbookmarking process accordingly.
@@ -83,7 +83,7 @@ class Bookmarks(BaseCog):
 
     async def add_bookmark(self, user: discord.User, message: discord.Message) -> None:
         """
-        Sends a bookmarked message to the user's DMs.
+        Send a bookmarked message to the user's DMs.
 
         Parameters
         ----------
@@ -114,7 +114,7 @@ class Bookmarks(BaseCog):
     @staticmethod
     async def remove_bookmark(message: discord.Message) -> None:
         """
-        Deletes a bookmark DM when the user reacts with the remove emoji.
+        Delete a bookmark DM when the user reacts with the remove emoji.
 
         Parameters
         ----------
@@ -198,7 +198,7 @@ class Bookmarks(BaseCog):
 
     def _create_bookmark_embed(self, message: discord.Message) -> discord.Embed:
         """
-        Creates an embed for a bookmarked message.
+        Create an embed for a bookmarked message.
 
         This function constructs a detailed embed that includes the message content,
         author, attachments, and other contextual information.

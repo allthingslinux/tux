@@ -1,5 +1,5 @@
 """
-Base CLI Infrastructure
+Base CLI Infrastructure.
 
 Provides the base CLI class that all CLI applications should inherit from.
 """
@@ -36,7 +36,7 @@ class BaseCLI:
         self._setup_commands()
 
     def _setup_commands(self) -> None:
-        """Setup commands - to be overridden by subclasses."""
+        """Set up commands - to be overridden by subclasses."""
 
     def create_subcommand_group(self, name: str, help_text: str, rich_help_panel: str | None = None) -> Typer:
         """Create a subcommand group."""

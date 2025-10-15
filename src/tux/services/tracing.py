@@ -135,7 +135,7 @@ def create_instrumentation_wrapper[**P, R](
     is_transaction: bool = False,
 ) -> Callable[P, R]:
     """
-    Creates an instrumentation wrapper for both sync and async functions.
+    Create an instrumentation wrapper for both sync and async functions.
 
     This is the core helper that eliminates duplication between transaction
     and span decorators by providing a unified wrapper creation mechanism.
@@ -216,7 +216,7 @@ def transaction(
     description: str | None = None,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """
-    Decorator to wrap a function with a Sentry transaction.
+    Wrap a function with a Sentry transaction.
 
     This handles both synchronous and asynchronous functions automatically.
     It captures the function's execution time, sets the status to 'ok' on
@@ -259,7 +259,7 @@ def transaction(
 
 def span(op: str, description: str | None = None) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """
-    Decorator to wrap a function with a Sentry span.
+    Wrap a function with a Sentry span.
 
     This should be used on functions called within an existing transaction.
     It automatically handles both sync and async functions, captures execution

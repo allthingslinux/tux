@@ -19,12 +19,12 @@ MIN_EMOJI_NAME_LENGTH = 2
 
 
 def _is_valid_emoji_name(name: str) -> bool:
-    """Checks if an emoji name meets basic validity criteria."""
+    """Check if an emoji name meets basic validity criteria."""
     return bool(name and len(name) >= MIN_EMOJI_NAME_LENGTH)
 
 
 def _find_emoji_file(base_path: Path, name: str) -> Path | None:
-    """Finds the local file corresponding to an emoji name within a base path."""
+    """Find the local file corresponding to an emoji name within a base path."""
     if not _is_valid_emoji_name(name):
         logger.warning(f"Attempted to find file for invalid emoji name: '{name}'")
         return None
@@ -42,7 +42,7 @@ def _find_emoji_file(base_path: Path, name: str) -> Path | None:
 
 
 def _read_emoji_file(file_path: Path) -> bytes | None:
-    """Reads image bytes from a file path, handling errors."""
+    """Read image bytes from a file path, handling errors."""
     try:
         with file_path.open("rb") as f:
             img_bytes = f.read()
@@ -71,7 +71,7 @@ class EmojiManager:
         emojis_path: Path | None = None,
         create_delay: float | None = None,
     ) -> None:
-        """Initializes the EmojiManager.
+        """Initialize the EmojiManager.
 
         Parameters
         ----------
@@ -117,7 +117,7 @@ class EmojiManager:
             logger.info(f"Using emoji assets directory: {log_path}")
 
     async def init(self) -> bool:
-        """Initializes the emoji cache by fetching application emojis.
+        """Initialize the emoji cache by fetching application emojis.
 
         Ensures the cache reflects the current state of application emojis on Discord.
         This method is locked to prevent concurrent initialization attempts.
@@ -154,7 +154,7 @@ class EmojiManager:
                 return True
 
     def get(self, name: str) -> discord.Emoji | None:
-        """Retrieves an emoji from the cache.
+        """Retrieve an emoji from the cache.
 
         Ensures initialization before attempting retrieval.
 
@@ -178,7 +178,7 @@ class EmojiManager:
         return self.cache.get(name)
 
     async def _create_discord_emoji(self, name: str, image_bytes: bytes) -> discord.Emoji | None:
-        """Internal helper to create a Discord emoji with error handling and delay.
+        """Create a Discord emoji with error handling and delay.
 
         Parameters
         ----------
@@ -213,7 +213,7 @@ class EmojiManager:
         return None
 
     async def _process_emoji_file(self, file_path: Path) -> tuple[discord.Emoji | None, Path | None]:
-        """Attempts to process a single emoji file.
+        """Process a single emoji file.
 
         Parameters
         ----------
@@ -250,7 +250,7 @@ class EmojiManager:
         return None, file_path  # Failed creation or read
 
     async def sync_emojis(self) -> tuple[list[discord.Emoji], list[Path]]:
-        """Synchronizes emojis from the local assets directory to the application.
+        """Synchronize emojis from the local assets directory to the application.
 
         Ensures the cache is initialized, then iterates through local emoji files.
         If an emoji with the same name doesn't exist in the cache, it attempts to create it.
@@ -300,7 +300,7 @@ class EmojiManager:
         return created_emojis, duplicates_or_failed
 
     async def _ensure_initialized(self) -> bool:
-        """Internal helper: Checks if cache is initialized, logs warning if not."""
+        """Check if cache is initialized, logs warning if not."""
         if self._initialized:
             return True
         logger.warning("Operation called before cache was initialized. Call await manager.init() first.")
@@ -309,7 +309,7 @@ class EmojiManager:
         return False
 
     async def _delete_discord_emoji(self, name: str) -> bool:
-        """Internal helper: Deletes an existing Discord emoji by name and updates cache.
+        """Delete an existing Discord emoji by name and updates cache.
 
         Parameters
         ----------
@@ -351,7 +351,7 @@ class EmojiManager:
         return deleted_on_discord
 
     async def resync_emoji(self, name: str) -> discord.Emoji | None:
-        """Resyncs a specific emoji: Deletes existing, finds local file, creates new.
+        """Resync a specific emoji: Deletes existing, finds local file, creates new.
 
         Parameters
         ----------

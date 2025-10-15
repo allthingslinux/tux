@@ -348,6 +348,7 @@ class Cases(ModerationCogBase):
     async def _resolve_moderator(self, moderator_id: int) -> discord.User | MockUser:
         """
         Resolve a moderator ID to a User object or MockUser if not found.
+
         We use a separate function to potentially add admin-specific
         resolution in the future.
 

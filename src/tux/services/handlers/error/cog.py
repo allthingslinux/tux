@@ -61,7 +61,7 @@ class ErrorHandler(commands.Cog):
         logger.debug("Error handler reloaded with fresh modules")
 
     async def _handle_error(self, source: commands.Context[Tux] | discord.Interaction, error: Exception) -> None:
-        """Main error processing logic."""
+        """Handle errors for commands and interactions."""
         # Unwrap nested errors
         root_error = unwrap_error(error)
 
@@ -181,5 +181,11 @@ class ErrorHandler(commands.Cog):
 
 
 async def setup(bot: Tux) -> None:
-    """Setup error handler cog."""
+    """Cog setup for error handler.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance.
+    """
     await bot.add_cog(ErrorHandler(bot))

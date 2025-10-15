@@ -7,6 +7,12 @@ from tux.services.hot_reload.service import HotReload
 
 
 async def setup(bot: Tux) -> None:
-    """Setup hot reload cog."""
+    """Cog setup for hot reload.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance.
+    """
     await bot.add_cog(HotReload(bot))
     logger.debug("Hot reload cog loaded")

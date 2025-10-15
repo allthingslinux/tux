@@ -138,7 +138,7 @@ class UpsertController[ModelT]:
         defaults: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> tuple[ModelT, bool]:
-        """Generic upsert operation."""
+        """Upsert a record."""
         query_controller = QueryController(self.model, self.db)
 
         # Try to find existing record

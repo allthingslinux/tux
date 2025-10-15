@@ -12,8 +12,9 @@ from tux.shared.config import CONFIG
 
 class GifLimiter(BaseCog):
     """
-    This class is a handler for GIF ratelimiting.
-    It keeps a list of GIF send times and routinely removes old times.
+    Handler for GIF ratelimiting.
+
+    This class keeps a list of GIF send times and routinely removes old times.
     It will prevent people from posting GIFs if the quotas are exceeded.
     """
 
@@ -45,7 +46,7 @@ class GifLimiter(BaseCog):
 
     async def _should_process_message(self, message: discord.Message) -> bool:
         """
-        Checks if a message contains a GIF and was not sent in a blacklisted channel
+        Check if a message contains a GIF and was not sent in a blacklisted channel.
 
         Parameters
         ----------
@@ -65,7 +66,7 @@ class GifLimiter(BaseCog):
 
     async def _handle_gif_message(self, message: discord.Message) -> None:
         """
-        Checks for ratelimit infringements
+        Check for ratelimit infringements.
 
         Parameters
         ----------
@@ -94,7 +95,7 @@ class GifLimiter(BaseCog):
 
     async def _delete_message(self, message: discord.Message, epilogue: str) -> None:
         """
-        Deletes the message passed as an argument, and sends a self-deleting message with the reason
+        Delete the message passed as an argument, and sends a self-deleting message with the reason.
 
         Parameters
         ----------
@@ -109,7 +110,7 @@ class GifLimiter(BaseCog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """
-        Checks for GIFs in every sent message
+        Check for GIFs in every sent message.
 
         Parameters
         ----------
@@ -122,7 +123,7 @@ class GifLimiter(BaseCog):
     @tasks.loop(seconds=20)
     async def old_gif_remover(self) -> None:
         """
-        Regularly cleans old GIF timestamps
+        Regularly clean old GIF timestamps.
 
         Parameters
         ----------

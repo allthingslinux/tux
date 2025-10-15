@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Documentation CLI Script
+Documentation CLI Script.
 
 A unified interface for all documentation operations using the clean CLI infrastructure.
 """
@@ -34,7 +34,7 @@ class DocsCLI(BaseCLI):
         self._setup_commands()
 
     def _setup_command_registry(self) -> None:
-        """Setup the command registry with all documentation commands."""
+        """Set up the command registry with all documentation commands."""
         # All commands directly registered without groups
         all_commands = [
             # Core MkDocs commands
@@ -61,7 +61,7 @@ class DocsCLI(BaseCLI):
             self._command_registry.register_command(cmd)
 
     def _setup_commands(self) -> None:
-        """Setup all documentation CLI commands using the command registry."""
+        """Set up all documentation CLI commands using the command registry."""
         # Register all commands directly to the main app
         for command in self._command_registry.get_commands().values():
             self.add_command(

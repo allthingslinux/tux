@@ -46,7 +46,7 @@ class Dev(BaseCog):
     @requires_command_permission()
     async def sync_tree(self, ctx: commands.Context[Tux], guild: discord.Guild) -> None:
         """
-        Syncs the app command tree.
+        Sync the app command tree.
 
         Parameters
         ----------
@@ -76,7 +76,7 @@ class Dev(BaseCog):
     @requires_command_permission()
     async def clear_tree(self, ctx: commands.Context[Tux]) -> None:
         """
-        Clears the app command tree.
+        Clear the app command tree.
 
         Parameters
         ----------
@@ -419,7 +419,7 @@ class Dev(BaseCog):
     @requires_command_permission()
     async def load_cog(self, ctx: commands.Context[Tux], *, cog: str) -> None:
         """
-        Loads a cog into the bot.
+        Load a cog into the bot.
 
         Parameters
         ----------
@@ -440,7 +440,7 @@ class Dev(BaseCog):
     @requires_command_permission()
     async def unload_cog(self, ctx: commands.Context[Tux], *, cog: str) -> None:
         """
-        Unloads a cog from the bot.
+        Unload a cog from the bot.
 
         Parameters
         ----------
@@ -461,7 +461,7 @@ class Dev(BaseCog):
     @requires_command_permission()
     async def reload_cog(self, ctx: commands.Context[Tux], *, cog: str) -> None:
         """
-        Reloads a cog in the bot.
+        Reload a cog in the bot.
 
         Parameters
         ----------
@@ -482,7 +482,7 @@ class Dev(BaseCog):
     @requires_command_permission()
     async def stop(self, ctx: commands.Context[Tux]) -> None:
         """
-        Stops the bot. If Tux is running with Docker Compose, this will restart the container.
+        Stop the bot. If Tux is running with Docker Compose, this will restart the container.
 
         Parameters
         ----------

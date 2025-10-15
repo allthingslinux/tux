@@ -22,7 +22,7 @@ class SelfTimeout(BaseCog):
     @commands.guild_only()
     async def self_timeout(self, ctx: commands.Context[Tux], duration: str, *, reason: str = "No Reason.") -> None:
         """
-        Time yourself out for a set duration
+        Time yourself out for a set duration.
 
         Parameters
         ----------

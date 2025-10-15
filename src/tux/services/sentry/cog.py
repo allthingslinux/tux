@@ -52,5 +52,11 @@ class SentryHandler(commands.Cog):
 
 
 async def setup(bot: Tux) -> None:
-    """Setup Sentry handler cog."""
+    """Cog setup for Sentry handler.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance.
+    """
     await bot.add_cog(SentryHandler(bot))

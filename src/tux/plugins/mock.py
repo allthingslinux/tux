@@ -591,7 +591,8 @@ class Mock(BaseCog):
     @requires_command_permission()
     async def mock(self, ctx: commands.Context[Tux]) -> None:
         """
-        Base command group for mocking various bot behaviors.
+        Command group for mocking various bot behaviors.
+
         Requires System Administrator permissions (Level 8).
         """
         if ctx.invoked_subcommand is None:
@@ -674,7 +675,7 @@ class Mock(BaseCog):
     @requires_command_permission()
     async def mock_error(self, ctx: commands.Context[Tux], category: str, error_name: str | None = None) -> None:
         """
-        Raises a specified error to test the global error handler.
+        Raise a specified error to test the global error handler.
 
         This command shows detailed information about how the error will be handled,
         then raises the error to demonstrate the actual behavior.

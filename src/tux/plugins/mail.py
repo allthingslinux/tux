@@ -48,7 +48,7 @@ class Mail(BaseCog):
         username: str,
     ) -> None:
         """
-        Registers a user for mail.
+        Register a user for mail.
 
         Parameters
         ----------
@@ -103,7 +103,7 @@ class Mail(BaseCog):
     @staticmethod
     def _generate_password() -> str:
         """
-        Generates a random password for the mailbox.
+        Generate a random password for the mailbox.
 
         Returns
         -------
@@ -121,7 +121,7 @@ class Mail(BaseCog):
         member_id: int,
     ) -> MailboxData:
         """
-        Prepares the mailbox data for the API request.
+        Prepare the mailbox data for the API request.
 
         Parameters
         ----------
@@ -156,7 +156,7 @@ class Mail(BaseCog):
         password: str,
     ) -> None:
         """
-        Handles the response from the API request.
+        Handle the response from the API request.
 
         Parameters
         ----------
@@ -200,7 +200,7 @@ class Mail(BaseCog):
     @staticmethod
     def _extract_mailbox_info(result: list[dict[str, str | None]]) -> str | None:
         """
-        Extracts the mailbox information from the response.
+        Extract the mailbox information from the response.
 
         Parameters
         ----------
@@ -231,7 +231,7 @@ class Mail(BaseCog):
         password: str,
     ) -> None:
         """
-        Sends a DM to the member with the mailbox information.
+        Send a DM to the member with the mailbox information.
 
         Parameters
         ----------

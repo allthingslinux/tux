@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Docker CLI Script
+Docker CLI Script.
 
 A unified interface for all Docker operations using the clean CLI infrastructure.
 """
@@ -71,7 +71,7 @@ class DockerCLI(BaseCLI):
         return self._docker_client
 
     def _setup_command_registry(self) -> None:
-        """Setup the command registry with all Docker commands."""
+        """Set up the command registry with all Docker commands."""
         # All commands directly registered without groups
         all_commands = [
             # Docker Compose commands
@@ -97,7 +97,7 @@ class DockerCLI(BaseCLI):
             self._command_registry.register_command(cmd)
 
     def _setup_commands(self) -> None:
-        """Setup all Docker CLI commands using the command registry."""
+        """Set up all Docker CLI commands using the command registry."""
         # Register all commands directly to the main app
         for command in self._command_registry.get_commands().values():
             self.add_command(

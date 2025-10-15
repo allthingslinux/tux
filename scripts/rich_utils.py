@@ -1,5 +1,5 @@
 """
-Rich Utilities for CLI
+Rich Utilities for CLI.
 
 Provides Rich formatting utilities for consistent CLI output.
 """

@@ -1,5 +1,5 @@
 """
-Database CLI
+Database CLI.
 
 Simple and clean database CLI for SQLModel + Alembic development.
 Provides essential commands for database management with clear workflows.
@@ -33,7 +33,7 @@ class DatabaseCLI(BaseCLI):
         self._setup_commands()
 
     def _setup_command_registry(self) -> None:
-        """Setup the command registry with clean database commands."""
+        """Set up the command registry with clean database commands."""
         all_commands = [
             # ============================================================================
             # CORE WORKFLOW COMMANDS
@@ -74,7 +74,7 @@ class DatabaseCLI(BaseCLI):
             self._command_registry.register_command(cmd)
 
     def _setup_commands(self) -> None:
-        """Setup all database CLI commands using the command registry."""
+        """Set up all database CLI commands using the command registry."""
         # Register all commands directly to the main app
         for command in self._command_registry.get_commands().values():
             self.add_command(

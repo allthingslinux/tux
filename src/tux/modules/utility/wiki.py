@@ -117,7 +117,7 @@ class Wiki(BaseCog):
     )
     async def arch_wiki(self, ctx: commands.Context[Tux], query: str) -> None:
         """
-        Search the Arch Linux Wiki
+        Search the Arch Linux Wiki.
 
         Parameters
         ----------
@@ -137,7 +137,7 @@ class Wiki(BaseCog):
     )
     async def atl_wiki(self, ctx: commands.Context[Tux], query: str) -> None:
         """
-        Search the All Things Linux Wiki
+        Search the All Things Linux Wiki.
 
         Parameters
         ----------

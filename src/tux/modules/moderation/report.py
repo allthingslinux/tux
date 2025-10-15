@@ -14,7 +14,7 @@ class Report(BaseCog):
     @app_commands.guild_only()
     async def report(self, interaction: discord.Interaction) -> None:
         """
-        Report a user or issue anonymously
+        Report a user or issue anonymously.
 
         Parameters
         ----------

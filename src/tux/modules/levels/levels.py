@@ -35,9 +35,7 @@ class Levels(BaseCog):
         self,
         ctx: commands.Context[Tux],
     ) -> None:
-        """
-        Level and XP management related commands.
-        """
+        """Level and XP management related commands."""
         if ctx.invoked_subcommand is None:
             await ctx.send_help("levels")
 
@@ -46,7 +44,7 @@ class Levels(BaseCog):
     @levels.command(name="set", aliases=["s"])
     async def set(self, ctx: commands.Context[Tux], member: discord.Member, new_level: int) -> None:
         """
-        Sets the level of a member.
+        Set the level of a member.
 
         Parameters
         ----------
@@ -91,7 +89,7 @@ class Levels(BaseCog):
     @levels.command(name="setxp", aliases=["sxp"])
     async def set_xp(self, ctx: commands.Context[Tux], member: discord.Member, xp_amount: int) -> None:
         """
-        Sets the xp of a member.
+        Set the xp of a member.
 
         Parameters
         ----------
@@ -136,7 +134,7 @@ class Levels(BaseCog):
     @levels.command(name="reset", aliases=["r"])
     async def reset(self, ctx: commands.Context[Tux], member: discord.Member) -> None:
         """
-        Resets the xp and level of a member.
+        Reset the xp and level of a member.
 
         Parameters
         ----------

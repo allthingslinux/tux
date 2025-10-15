@@ -1,5 +1,5 @@
 """
-All Things Linux Discord Server - Role Count Plugin
+All Things Linux Discord Server - Role Count Plugin.
 
 This plugin is specifically designed for the All Things Linux Discord server
 and contains hardcoded role IDs that are specific to that server.

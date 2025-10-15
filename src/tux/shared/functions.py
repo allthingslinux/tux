@@ -7,7 +7,7 @@ from discord.ext import commands
 
 
 def truncate(text: str, length: int) -> str:
-    """Truncates a string to a specified length.
+    """Truncate a string to a specified length.
 
     If the string is longer than the specified length, it will be truncated
     and an ellipsis will be appended. Otherwise, the original string is returned.
@@ -99,8 +99,7 @@ def parse_time_string(time_str: str) -> timedelta:
 
 def convert_to_seconds(time_str: str) -> int:
     """
-    Converts a formatted time string with the formats Mwdhms
-    Any unexpected format leads to returning 0.
+    Convert a formatted time string with the formats Mwdhms.
 
     Parameters
     ----------
@@ -110,7 +109,7 @@ def convert_to_seconds(time_str: str) -> int:
     Returns
     -------
     int
-        The total seconds from the formatted time string.
+        The total seconds from the formatted time string. Returns 0 if the format is invalid.
     """
     # Time conversion factors from units to seconds
     time_units = {
@@ -144,7 +143,7 @@ def convert_to_seconds(time_str: str) -> int:
 
 def seconds_to_human_readable(seconds: int) -> str:
     """
-    Converts a number of seconds into a human readable string
+    Convert a number of seconds into a human readable string.
 
     Parameters
     ----------
@@ -201,7 +200,7 @@ def is_optional_param(param: commands.Parameter) -> bool:
 
 def get_matching_string(arg: str) -> str:
     """
-    Matches the given argument to a specific string based on common usage.
+    Match the given argument to a specific string based on common usage.
 
     Parameters
     ----------
