@@ -131,13 +131,16 @@ class Deepfry(BaseCog):
             await ctx.send(file=file)
 
     async def _send_animated_result(
-        self, ctx: commands.Context[Any], frames: list[Image.Image], durations: list[int]
+        self,
+        ctx: commands.Context[Any],
+        frames: list[Image.Image],
+        durations: list[int],
     ) -> None:
         """Send the processed animated AVIF result."""
         buffer = io.BytesIO()
         frames[0].save(
             buffer,
-            format="AVIF", # SIGNIFICANTLY better compression compared to GIF
+            format="AVIF",  # SIGNIFICANTLY better compression compared to GIF
             save_all=True,
             append_images=frames[1:],
             loop=0,
