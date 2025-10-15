@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 from loguru import logger
 
 from tux.core.prefix_manager import PrefixManager
-from tux.database.migrations.runner import upgrade_head_if_needed
 from tux.services.tracing import DummySpan, set_setup_phase_tag, start_span
 from tux.shared.exceptions import TuxDatabaseConnectionError
 
@@ -35,14 +34,11 @@ class BotSetupOrchestrator:
         """Execute all setup steps with standardized error handling."""
         set_setup_phase_tag(span, "starting")
 
-        # Database setup
+        # Database setup (includes migrations)
         if not await self.database_setup.safe_setup():
             msg = "Database setup failed"
             raise TuxDatabaseConnectionError(msg)
         set_setup_phase_tag(span, "database", "finished")
-
-        # Run migrations
-        await self._run_migrations(span)
 
         # Permission system setup
         if not await self.permission_setup.safe_setup():
@@ -62,18 +58,6 @@ class BotSetupOrchestrator:
         # Start monitoring
         self.bot.task_monitor.start()
         set_setup_phase_tag(span, "monitoring", "finished")
-
-    async def _run_migrations(self, span: DummySpan | Any) -> None:
-        """Run database migrations."""
-        with start_span("bot.run_migrations", "Running database migrations"):
-            logger.info("🔄 Running database migrations...")
-            try:
-                await upgrade_head_if_needed()
-                logger.info("✅ Database migrations completed")
-            except Exception as e:
-                logger.error(f"❌ Database migrations failed: {e}")
-                raise
-        set_setup_phase_tag(span, "migrations", "finished")
 
     async def _setup_prefix_manager(self, span: DummySpan | Any) -> None:
         """Set up the prefix manager."""
