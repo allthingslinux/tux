@@ -72,10 +72,10 @@ class ConfigOverview:
 
         # Permission overview
         if permission_ranks:
-            enabled_ranks = [r for r in permission_ranks if r.enabled]
+            enabled_ranks = permission_ranks
             embed.add_field(
                 name="🎯 Permission System",
-                value=f"**Ranks:** {len(enabled_ranks)} enabled\n**Assignments:** {len(assignments)} roles\n**Restrictions:** {len(command_perms)} commands",
+                value=f"**Ranks:** {len(enabled_ranks)}\n**Assignments:** {len(assignments)} roles\n**Restrictions:** {len(command_perms)} commands",
                 inline=True,
             )
 

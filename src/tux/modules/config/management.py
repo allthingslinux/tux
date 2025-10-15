@@ -47,12 +47,10 @@ class ConfigManagement:
         )
 
         for rank in sorted(ranks, key=lambda x: x.rank):
-            status_icon = "✅" if rank.enabled else "❌"
+            status_icon = "✅"
             level_title = f"{status_icon} Rank {rank.rank}: {rank.name}"
 
             desc_parts = [rank.description or "*No description*"]
-            if rank.color:
-                desc_parts.append(f"Color: `#{rank.color:06X}`")
 
             embed.add_field(
                 name=level_title,

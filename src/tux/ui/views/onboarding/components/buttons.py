@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING, cast
 
 import discord
@@ -282,8 +283,54 @@ class FinishButton(WizardComponent, discord.ui.Button["SetupWizardView"]):
         logger.info(f"🎉 FINISH BUTTON CLICKED! User: {interaction.user}, Guild: {wizard_view.guild.id}")
 
         try:
-            await interaction.response.send_message("🎉 Setup completed successfully!", ephemeral=True)
-            wizard_view.stop()
+            # Cast to SetupWizardView to access LayoutView methods
+            setup_wizard = cast("SetupWizardView", wizard_view)
+
+            # Replace the completion step content with finished message
+            setup_wizard.clear_items()
+
+            finished_container: discord.ui.Container[SetupWizardView] = discord.ui.Container(
+                accent_color=0x00FF00,  # Green accent for success
+                id=700,
+            )
+
+            finished_title: discord.ui.TextDisplay[SetupWizardView] = discord.ui.TextDisplay(
+                "# ✅ Setup Complete!",
+                id=701,
+            )
+            finished_container.add_item(finished_title)
+
+            finished_text: discord.ui.TextDisplay[SetupWizardView] = discord.ui.TextDisplay(
+                "Your server has been configured and is ready to use Tux!",
+                id=702,
+            )
+            finished_container.add_item(finished_text)
+
+            setup_wizard.add_item(finished_container)
+
+            # Edit the Components V2 message to show finished state
+            await interaction.response.edit_message(view=setup_wizard)
+
+            # Stop the wizard
+            setup_wizard.stop()
+
+            # Schedule deletion after 30 seconds
+            async def delete_after_delay():
+                await asyncio.sleep(30)
+                try:
+                    if interaction.message:
+                        await interaction.message.delete()
+                        logger.info(f"Deleted finished Components V2 message for guild {setup_wizard.guild.id}")
+                except Exception as delete_error:
+                    logger.warning(f"Failed to delete finished message: {delete_error}")
+
+            # Create background task for deletion
+            delete_task = asyncio.create_task(delete_after_delay())
+
+            delete_task.add_done_callback(
+                lambda _: logger.info(f"Deleted finished Components V2 message for guild {setup_wizard.guild.id}"),
+            )
+
         except Exception as e:
             logger.error(f"Failed to finish setup: {e}", exc_info=True)
             await interaction.response.send_message(f"❌ Failed to finish setup: {e}", ephemeral=True)
