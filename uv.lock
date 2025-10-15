@@ -651,6 +651,29 @@ wheels = [
 ]
 
 [[package]]
+name = "docstr-coverage"
+version = "2.3.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "pyyaml" },
+    { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/75/86/d3f02e5baf426eac0f039849272204649137449f050d3fe0eb104c6f399c/docstr-coverage-2.3.2.tar.gz", hash = "sha256:e99a28c502ed21ae8a310cb9e14e8de2d7cff44d365b46fa6dca6de05bf156a0", size = 26750, upload-time = "2024-05-07T16:54:33.514Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/db/f7/7923d915a80aa2e04939260f7a000e1a353b25c7ffcf7771cd777559c27a/docstr_coverage-2.3.2-py3-none-any.whl", hash = "sha256:37a885d6560ad87e289b23bf0e54527885bacbf6b17cf55278d514dd0fef8ff5", size = 25816, upload-time = "2024-05-07T16:54:31.636Z" },
+]
+
+[[package]]
+name = "docstring-parser-fork"
+version = "0.0.14"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/66/bf/27f9cab2f0cd1d17a4420572088bbc19f36d726fbcf165edf226a8926dbc/docstring_parser_fork-0.0.14.tar.gz", hash = "sha256:a2743a63d8d36c09650594f7b4ab5b2758fee8629dcf794d1b221b23179baa5c", size = 34551, upload-time = "2025-09-07T17:27:38.272Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bf/50/98b146aea0f1cd7531d25f12bea69fa9ce8d1662124f93fb30dc4511b65e/docstring_parser_fork-0.0.14-py3-none-any.whl", hash = "sha256:4c544f234ef2cc2749a3df32b70c437d77888b1099143a1ad5454452c574b9af", size = 43063, upload-time = "2025-09-07T17:27:37.012Z" },
+]
+
+[[package]]
 name = "ecdsa"
 version = "0.19.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1834,6 +1857,19 @@ wheels = [
 ]
 
 [[package]]
+name = "pydoclint"
+version = "0.7.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "docstring-parser-fork" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a5/9a/004c6d139a1ded034d300e46f094b806df7cc37ac8939e0b7eedccf44664/pydoclint-0.7.3.tar.gz", hash = "sha256:3351d5eeb19f8831d992714f71f5ea1175af649503d39b9da0071445a4002138", size = 170392, upload-time = "2025-09-03T00:43:25.865Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/96/79/8222ae794558d24bbd827631d343ea9f3e54edbf67345128bf799f667d7d/pydoclint-0.7.3-py3-none-any.whl", hash = "sha256:a656b0e863565644670ded19a4b506450364e4f1f5e8ff7705d6ba8bb5a82982", size = 71586, upload-time = "2025-09-03T00:43:24.665Z" },
+]
+
+[[package]]
 name = "pygments"
 version = "2.19.2"
 source = { registry = "https://pypi.org/simple" }
@@ -2541,6 +2577,18 @@ wheels = [
 ]
 
 [[package]]
+name = "tqdm"
+version = "4.67.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a8/4b/29b4ef32e036bb34e4ab51796dd745cdba7ed47ad142a9f4a1eb8e0c744d/tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2", size = 169737, upload-time = "2024-11-24T20:12:22.481Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d0/30/dc54f88dd4a2b5dc8a0279bdd7270e735851848b762aeb1c1184ed1f6b14/tqdm-4.67.1-py3-none-any.whl", hash = "sha256:26445eca388f82e72884e0d580d5464cd801a3ea01e63e5601bdff9ba6a48de2", size = 78540, upload-time = "2024-11-24T20:12:19.698Z" },
+]
+
+[[package]]
 name = "tux"
 version = "0.0.0"
 source = { editable = "." }
@@ -2595,7 +2643,9 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "basedpyright" },
+    { name = "docstr-coverage" },
     { name = "pre-commit" },
+    { name = "pydoclint" },
     { name = "ruff" },
     { name = "settings-doc" },
     { name = "yamlfix" },
@@ -2703,7 +2753,9 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "basedpyright", specifier = "==1.29.5" },
+    { name = "docstr-coverage", specifier = ">=2.3.2" },
     { name = "pre-commit", specifier = ">=4.3.0" },
+    { name = "pydoclint", specifier = ">=0.7.3" },
     { name = "ruff", specifier = ">=0.12.4" },
     { name = "settings-doc", specifier = ">=4.3.2" },
     { name = "yamlfix", specifier = ">=1.18.0" },

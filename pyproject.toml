@@ -80,6 +80,8 @@ dev = [
     "yamllint>=1.37.1",
     "yamlfix>=1.18.0",
     "settings-doc>=4.3.2",
+    "pydoclint>=0.7.3",
+    "docstr-coverage>=2.3.2",
 ]
 test = [
     "pytest>=8.4.2",
@@ -163,7 +165,14 @@ target-version = "py313"
 [tool.ruff.lint]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 fixable = ["ALL"]
-ignore = ["E501", "N814", "PLR0913", "PLR2004", "E402"]
+ignore = [
+    "E501",     # line-too-long
+    "N814",     # camelcase-imported-as-constant
+    "PLR0913",  # too-many-arguments
+    "PLR2004",  # magic-value-comparison
+    "E402",     # module-import-not-at-top-of-file
+    "D1",       # missing docstrings
+]
 select = [
     "I",     # isort
     "E",     # pycodestyle-error
@@ -189,9 +198,14 @@ select = [
     "INP",   # flake8-no-pep420
     "RSE",   # flake8-raise
     "ICN",   # flake8-import-conventions
+    #"DOC",   # pydoclint (not implemented yet, see https://github.com/astral-sh/ruff/issues/12434 for progress)
+    "D",     # pydocstyle
     "RUF",   # ruff
 ]
 unfixable = []
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
 
 [tool.ruff.format]
 docstring-code-format = true

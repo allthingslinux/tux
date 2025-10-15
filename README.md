@@ -135,6 +135,7 @@ uv run tux start --debug        # Start bot with debug mode
 uv run dev lint                 # Check code quality with Ruff
 uv run dev format               # Format code with Ruff
 uv run dev type-check           # Check types with basedpyright
+uv run dev lint-docstring       # Lint docstrings with pydoclint
 uv run dev pre-commit           # Run pre-commit checks
 uv run dev all                  # Run all development checks
 

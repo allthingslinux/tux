@@ -42,6 +42,8 @@ class DevCLI(BaseCLI):
             Command("lint-fix", self.lint_fix, "Run linting with Ruff and apply fixes"),
             Command("format", self.format_code, "Format code with Ruff"),
             Command("type-check", self.type_check, "Check types with basedpyright"),
+            Command("lint-docstring", self.lint_docstring, "Lint docstrings with pydoclint"),
+            Command("docstring-coverage", self.docstring_coverage, "Check docstring coverage with docstr-coverage"),
             # Workflow commands
             Command("pre-commit", self.pre_commit, "Run pre-commit checks"),
             Command("all", self.run_all_checks, "Run all development checks"),
@@ -134,6 +136,22 @@ class DevCLI(BaseCLI):
             msg = "Type checking failed"
             raise RuntimeError(msg)
 
+    def lint_docstring(self) -> None:
+        self.rich.print_section("🔍 Linting Docstrings", "blue")
+        success = self._run_tool_command(["uv", "run", "pydoclint", "src/"], "Docstring linting completed successfully")
+        if not success:
+            self.rich.print_error("Docstring linting failed - check output above for details")
+            msg = "Docstring linting failed"
+            raise RuntimeError(msg)
+
+    def docstring_coverage(self) -> None:
+        self.rich.print_section("🔍 Docstring Coverage", "blue")
+        success = self._run_tool_command(["uv", "run", "docstr-coverage", "src/"], "Docstring coverage completed successfully")
+        if not success:
+            self.rich.print_error("Docstring coverage failed - check output above for details")
+            msg = "Docstring coverage failed"
+            raise RuntimeError(msg)
+
     def pre_commit(self) -> None:
         self.rich.print_section("✅ Running Pre-commit Checks", "blue")
         success = self._run_tool_command(
@@ -151,6 +169,7 @@ class DevCLI(BaseCLI):
             ("Linting", self.lint),
             ("Code Formatting", self.format_code),
             ("Type Checking", self.type_check),
+            ("Docstring Linting", self.lint_docstring),
             ("Pre-commit Checks", self.pre_commit),
         ]
 
