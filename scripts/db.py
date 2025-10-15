@@ -1,17 +1,19 @@
 """
 Database CLI
 
-Clean database CLI implementation using the CLI infrastructure.
+Simple and clean database CLI for SQLModel + Alembic development.
+Provides essential commands for database management with clear workflows.
 """
 
 import asyncio
+import pathlib
 import subprocess
 import sys
 import traceback
 from typing import Annotated, Any
 
-from sqlalchemy import create_engine, text
-from sqlmodel import SQLModel
+import typer
+from sqlalchemy import text
 from typer import Argument, Option  # type: ignore[attr-defined]
 
 from scripts.base import BaseCLI
@@ -23,41 +25,50 @@ from tux.shared.config import CONFIG
 
 
 class DatabaseCLI(BaseCLI):
-    """Database CLI with unified interface for all database operations."""
+    """Database CLI with clean, workflow-focused commands for SQLModel + Alembic."""
 
     def __init__(self):
-        super().__init__(name="db", description="Database CLI - A unified interface for all database operations")
+        super().__init__(name="db", description="Database CLI - Clean commands for SQLModel + Alembic")
         self._setup_command_registry()
         self._setup_commands()
 
     def _setup_command_registry(self) -> None:
-        """Setup the command registry with all database commands."""
-        # All commands directly registered without groups
+        """Setup the command registry with clean database commands."""
         all_commands = [
-            # Migration commands
-            Command("migrate-dev", self.migrate_dev, "Create and apply migrations for development"),
-            Command("migrate-generate", self.migrate_generate, "Generate a new migration from model changes"),
-            Command("migrate-push", self.migrate_push, "Push pending migrations to database"),
-            Command("migrate-pull", self.migrate_pull, "Pull database schema and generate migration"),
-            Command("migrate-reset", self.migrate_reset, "Reset database and apply all migrations"),
-            Command("migrate-status", self.migrate_status, "Show migration status with rich output"),
-            Command("migrate-history", self.migrate_history, "Show migration history with tree view"),
-            Command("migrate-validate", self.migrate_validate, "Validate migration files"),
-            # Maintenance commands
-            Command("health", self.health, "Check database health and connection status"),
-            Command("stats", self.stats, "Show database statistics and metrics"),
-            Command("tables", self.tables, "List all database tables with their information"),
-            Command("analyze", self.analyze, "Analyze table statistics for performance optimization"),
-            Command("queries", self.queries, "Check for long-running database queries"),
-            Command("optimize", self.optimize, "Analyze database optimization opportunities"),
-            Command("vacuum", self.vacuum, "Show database maintenance information"),
-            Command("reindex", self.reindex, "Reindex database tables for performance optimization"),
-            # Admin commands
-            Command("reset", self.reset, "Reset database to clean state (development only)"),
-            Command("hard-reset", self.hard_reset, "Nuclear option: drop all tables and alembic_version, start fresh"),
-            Command("force", self.force, "Force database to head revision (fixes migration issues)"),
+            # ============================================================================
+            # CORE WORKFLOW COMMANDS
+            # ============================================================================
+            Command("init", self.init, "Initialize database with proper migrations (recommended for new projects)"),
+            Command("dev", self.dev, "Development workflow: generate migration and apply it"),
+            Command("push", self.push, "Apply all pending migrations to database"),
+            Command("status", self.status, "Show current migration status"),
+            # ============================================================================
+            # MIGRATION MANAGEMENT
+            # ============================================================================
+            Command("new", self.new_migration, "Generate new migration from model changes"),
+            Command("history", self.history, "Show migration history"),
+            Command("check", self.check_migrations, "Validate migration files for issues"),
+            Command("show", self.show_migration, "Show details of a specific migration"),
+            # ============================================================================
+            # DATABASE INSPECTION
+            # ============================================================================
+            Command("tables", self.tables, "List all database tables"),
+            Command("health", self.health, "Check database connection health"),
+            Command("queries", self.queries, "Check for long-running queries"),
+            # ============================================================================
+            # ADMIN COMMANDS
+            # ============================================================================
+            Command("reset", self.reset, "Reset database to clean state (safe)"),
+            Command("downgrade", self.downgrade, "Rollback to a previous migration revision"),
+            Command("nuke", self.hard_reset, "Nuclear reset: completely destroy database (dangerous)"),
             Command("version", self.version, "Show version information"),
         ]
+
+        # Note: Some useful alembic commands that are available but not exposed:
+        # - branches: Show branch points (advanced scenarios)
+        # - edit: Edit migration files (advanced users)
+        # - ensure_version: Create alembic_version table if missing
+        # - merge: Merge migration branches (advanced scenarios)
 
         for cmd in all_commands:
             self._command_registry.register_command(cmd)
@@ -78,34 +89,181 @@ class DatabaseCLI(BaseCLI):
         self.rich.rich_print(f"[bold blue]{title}...[/bold blue]")
 
     # ============================================================================
-    # MIGRATION COMMANDS
+    # INITIALIZATION COMMANDS
     # ============================================================================
 
-    def migrate_dev(
+    def init(self) -> None:
+        """Initialize database with proper migration from empty state.
+
+        This is the RECOMMENDED way to set up migrations for a new project.
+        Creates a clean initial migration that contains all table creation SQL.
+
+        Workflow:
+        1. Ensures database is empty
+        2. Generates initial migration with CREATE TABLE statements
+        3. Applies the migration
+
+        Use this for new projects or when you want proper migration files.
+        """
+        self.rich.print_section("🚀 Initialize Database", "green")
+        self.rich.rich_print("[bold green]Initializing database with proper migrations...[/bold green]")
+        self.rich.rich_print("[yellow]This will create a clean initial migration file.[/yellow]")
+        self.rich.rich_print("")
+
+        # Check if tables exist
+        async def _check_tables():
+            try:
+                service = DatabaseService(echo=False)
+                await service.connect(CONFIG.database_url)
+
+                async def _get_table_count(session: Any) -> int:
+                    result = await session.execute(
+                        text(
+                            "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE' AND table_name != 'alembic_version'",
+                        ),
+                    )
+                    return result.scalar()
+
+                table_count = await service.execute_query(_get_table_count, "check_tables")
+                await service.disconnect()
+                return table_count  # noqa: TRY300
+            except Exception:
+                return 0
+
+        table_count = asyncio.run(_check_tables())
+
+        # Check if alembic_version table exists (indicating migrations are already set up)
+        async def _check_migrations():
+            try:
+                service = DatabaseService(echo=False)
+                await service.connect(CONFIG.database_url)
+
+                async def _get_migration_count(session: Any) -> int:
+                    result = await session.execute(text("SELECT COUNT(*) FROM alembic_version"))
+                    return result.scalar()
+
+                migration_count = await service.execute_query(_get_migration_count, "check_migrations")
+                await service.disconnect()
+            except Exception:
+                return 0
+            else:
+                return migration_count
+
+        migration_count = asyncio.run(_check_migrations())
+
+        # Check if migration files already exist
+        migration_dir = pathlib.Path("src/tux/database/migrations/versions")
+        migration_files = list(migration_dir.glob("*.py")) if migration_dir.exists() else []
+        # Exclude __init__.py from count as it's just a package marker
+        migration_file_count = len([f for f in migration_files if f.name != "__init__.py"])
+
+        if table_count > 0 or migration_count > 0 or migration_file_count > 0:
+            self.rich.rich_print(
+                f"[red]⚠️  Database already has {table_count} tables, {migration_count} migrations in DB, and {migration_file_count} migration files![/red]",
+            )
+            self.rich.rich_print(
+                "[yellow]'db init' only works on completely empty databases with no migration files.[/yellow]",
+            )
+            self.rich.rich_print(
+                "[yellow]For existing databases, use 'db nuke --force' to reset the database completely.[/yellow]",
+            )
+            self.rich.rich_print(
+                "[yellow]Use 'db nuke --force --fresh' for a complete fresh start (deletes migration files too).[/yellow]",
+            )
+            self.rich.rich_print("[yellow]Or work with your current database state using other commands.[/yellow]")
+            return
+
+        # Generate initial migration
+        try:
+            self.rich.rich_print("[blue]Generating initial migration...[/blue]")
+            self._run_command(["uv", "run", "alembic", "revision", "--autogenerate", "-m", "initial schema"])
+
+            self.rich.rich_print("[blue]Applying initial migration...[/blue]")
+            self._run_command(["uv", "run", "alembic", "upgrade", "head"])
+
+            self.rich.print_success("Database initialized with proper migrations!")
+            self.rich.rich_print("[green]✅ Ready for development![/green]")
+
+        except subprocess.CalledProcessError:
+            self.rich.print_error("Failed to initialize database")
+
+    # ============================================================================
+    # DEVELOPMENT WORKFLOW COMMANDS
+    # ============================================================================
+
+    def dev(
         self,
         create_only: Annotated[bool, Option("--create-only", help="Create migration but don't apply it")] = False,
         name: Annotated[str | None, Option("--name", "-n", help="Name for the migration")] = None,
     ) -> None:
-        """Create and apply migrations for development.
+        """Development workflow: create migration and apply it.
 
-        This command creates a new migration from model changes and optionally applies it.
-        Similar to `prisma migrate dev` workflow.
+        Similar to `prisma migrate dev` - creates a new migration from model changes
+        and optionally applies it immediately.
 
-        Use this for development workflow with auto-migration.
+        Examples:
+        uv run db dev                           # Create + apply with auto-generated name
+        uv run db dev --name "add user model"   # Create + apply with custom name
+        uv run db dev --create-only             # Create only, don't apply
         """
-        self.rich.print_section("🚀 Development Migration", "blue")
+        self.rich.print_section("🚀 Development Workflow", "blue")
 
-        if create_only:
-            self.rich.rich_print("[bold blue]Creating migration only...[/bold blue]")
-            self._run_command(["uv", "run", "alembic", "revision", "--autogenerate", "-m", name or "auto migration"])
-        else:
-            self.rich.rich_print("[bold blue]Creating and applying migration...[/bold blue]")
-            self._run_command(["uv", "run", "alembic", "revision", "--autogenerate", "-m", name or "auto migration"])
+        try:
+            if create_only:
+                self.rich.rich_print("[bold blue]Creating migration only...[/bold blue]")
+                self._run_command(["uv", "run", "alembic", "revision", "--autogenerate", "-m", name or "dev migration"])
+                self.rich.print_success("Migration created - review and apply with 'db push'")
+            else:
+                self.rich.rich_print("[bold blue]Creating and applying migration...[/bold blue]")
+                self._run_command(["uv", "run", "alembic", "revision", "--autogenerate", "-m", name or "dev migration"])
+                self._run_command(["uv", "run", "alembic", "upgrade", "head"])
+                self.rich.print_success("Migration created and applied!")
+        except subprocess.CalledProcessError:
+            self.rich.print_error("Failed to create migration")
+            raise typer.Exit(1) from None
+
+    def push(self) -> None:
+        """Apply pending migrations to database.
+
+        Applies all pending migrations to bring the database up to date.
+        Safe to run multiple times - only applies what's needed.
+        """
+        self.rich.print_section("⬆️ Apply Migrations", "blue")
+        self.rich.rich_print("[bold blue]Applying pending migrations...[/bold blue]")
+
+        try:
             self._run_command(["uv", "run", "alembic", "upgrade", "head"])
+            self.rich.print_success("All migrations applied!")
+        except subprocess.CalledProcessError:
+            self.rich.print_error("Failed to apply migrations")
 
-        self.rich.print_success("Development migration completed")
+    def status(self) -> None:
+        """Show current migration status and pending changes.
 
-    def migrate_generate(
+        Displays:
+        - Current migration revision
+        - Available migration heads
+        - Any pending migrations to apply
+        """
+        self.rich.print_section("📊 Migration Status", "blue")
+        self.rich.rich_print("[bold blue]Checking migration status...[/bold blue]")
+
+        try:
+            self.rich.rich_print("[cyan]Current revision:[/cyan]")
+            self._run_command(["uv", "run", "alembic", "current"])
+
+            self.rich.rich_print("[cyan]Available heads:[/cyan]")
+            self._run_command(["uv", "run", "alembic", "heads"])
+
+            self.rich.print_success("Status check complete")
+        except subprocess.CalledProcessError:
+            self.rich.print_error("Failed to get migration status")
+
+    # ============================================================================
+    # MIGRATION MANAGEMENT COMMANDS
+    # ============================================================================
+
+    def new_migration(
         self,
         message: Annotated[str, Argument(help="Descriptive message for the migration", metavar="MESSAGE")],
         auto_generate: Annotated[
@@ -113,13 +271,16 @@ class DatabaseCLI(BaseCLI):
             Option("--auto", help="Auto-generate migration from model changes"),
         ] = True,
     ) -> None:
-        """Generate a new migration from model changes.
+        """Generate new migration from model changes.
 
         Creates a new migration file with the specified message.
+        Always review generated migrations before applying them.
 
-        Always review generated migrations before applying.
+        Examples:
+        uv run db new "add user email field"        # Auto-generate from model changes
+        uv run db new "custom migration" --no-auto  # Empty migration for manual edits
         """
-        self.rich.print_section("📝 Generating Migration", "blue")
+        self.rich.print_section("📝 New Migration", "blue")
         self.rich.rich_print(f"[bold blue]Generating migration: {message}[/bold blue]")
 
         try:
@@ -128,151 +289,73 @@ class DatabaseCLI(BaseCLI):
             else:
                 self._run_command(["uv", "run", "alembic", "revision", "-m", message])
             self.rich.print_success(f"Migration generated: {message}")
+            self.rich.rich_print("[yellow]💡 Review the migration file before applying![/yellow]")
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to generate migration")
+            raise typer.Exit(1) from None
 
-    def migrate_push(self) -> None:
-        """Push pending migrations to database.
+    def history(self) -> None:
+        """Show migration history with detailed tree view.
 
-        Applies all pending migrations to the database.
-        """
-        self.rich.print_section("⬆️ Pushing Migrations", "blue")
-        self.rich.rich_print("[bold blue]Applying pending migrations...[/bold blue]")
-
-        try:
-            self._run_command(["uv", "run", "alembic", "upgrade", "head"])
-            self.rich.print_success("Migrations pushed successfully")
-        except subprocess.CalledProcessError:
-            self.rich.print_error("Failed to push migrations")
-
-    def migrate_pull(self) -> None:
-        """Pull database schema and generate migration.
-
-        Introspects the database and generates a migration from the current state.
-        """
-        self.rich.print_section("⬇️ Pulling Schema", "blue")
-        self.rich.rich_print("[bold blue]Pulling database schema...[/bold blue]")
-
-        try:
-            self._run_command(["uv", "run", "alembic", "revision", "--autogenerate", "-m", "pull schema"])
-            self.rich.print_success("Schema pulled successfully")
-        except subprocess.CalledProcessError:
-            self.rich.print_error("Failed to pull schema")
-
-    def migrate_reset(self) -> None:
-        """Reset database and apply all migrations.
-
-        Drops all tables and reapplies all migrations from scratch.
-        """
-        self.rich.print_section("🔄 Resetting Database", "blue")
-        self.rich.rich_print("[bold red]Resetting database to clean state...[/bold red]")
-
-        try:
-            self._run_command(["uv", "run", "alembic", "downgrade", "base"])
-            self._run_command(["uv", "run", "alembic", "upgrade", "head"])
-            self.rich.print_success("Database reset completed")
-        except subprocess.CalledProcessError:
-            self.rich.print_error("Failed to reset database")
-
-    def migrate_status(self) -> None:
-        """Show migration status with rich output.
-
-        Displays current migration status and pending changes.
-        """
-        self.rich.print_section("📊 Migration Status", "blue")
-        self.rich.rich_print("[bold blue]Checking migration status...[/bold blue]")
-
-        try:
-            self._run_command(["uv", "run", "alembic", "current"])
-            self._run_command(["uv", "run", "alembic", "heads"])
-            self.rich.print_success("Migration status displayed")
-        except subprocess.CalledProcessError:
-            self.rich.print_error("Failed to get migration status")
-
-    def migrate_history(self) -> None:
-        """Show migration history with tree view.
-
-        Displays the complete migration history in a tree format.
+        Displays the complete migration history in a tree format
+        showing revision relationships and messages.
         """
         self.rich.print_section("📜 Migration History", "blue")
         self.rich.rich_print("[bold blue]Showing migration history...[/bold blue]")
 
         try:
             self._run_command(["uv", "run", "alembic", "history", "--verbose"])
-            self.rich.print_success("Migration history displayed")
+            self.rich.print_success("History displayed")
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to get migration history")
 
-    def migrate_validate(self) -> None:
-        """Validate migration files.
+    def check_migrations(self) -> None:
+        """Validate migration files for correctness.
 
-        Validates all migration files for correctness.
+        Checks that all migration files are properly formatted and
+        can be applied without conflicts. Useful before deployments.
         """
-        self.rich.print_section("✅ Validating Migrations", "blue")
-        self.rich.rich_print("[bold blue]Validating migration files...[/bold blue]")
+        self.rich.print_section("✅ Validate Migrations", "blue")
+        self.rich.rich_print("[bold blue]Checking migration files for issues...[/bold blue]")
 
         try:
             self._run_command(["uv", "run", "alembic", "check"])
-            self.rich.print_success("Migration files validated")
+            self.rich.print_success("All migrations validated successfully!")
         except subprocess.CalledProcessError:
-            self.rich.print_error("Failed to validate migration files")
+            self.rich.print_error("Migration validation failed - check your migration files")
+
+    def show_migration(
+        self,
+        revision: Annotated[str, Argument(help="Migration revision ID to show (e.g., 'head', 'base', or specific ID)")],
+    ) -> None:
+        """Show details of a specific migration.
+
+        Displays the full details of a migration including its changes,
+        dependencies, and metadata.
+
+        Examples:
+        uv run db show head          # Show latest migration
+        uv run db show base          # Show base revision
+        uv run db show abc123        # Show specific migration
+        """
+        self.rich.print_section("📋 Show Migration", "blue")
+        self.rich.rich_print(f"[bold blue]Showing migration: {revision}[/bold blue]")
+
+        try:
+            self._run_command(["uv", "run", "alembic", "show", revision])
+            self.rich.print_success(f"Migration details displayed for: {revision}")
+        except subprocess.CalledProcessError:
+            self.rich.print_error(f"Failed to show migration: {revision}")
 
     # ============================================================================
-    # MAINTENANCE COMMANDS
+    # INSPECTION COMMANDS
     # ============================================================================
-
-    def health(self) -> None:
-        """Check database health and connection status.
-
-        Performs comprehensive health checks on the database connection
-        and reports system status.
-
-        Use this to monitor database health.
-        """
-        self.rich.print_section("🏥 Database Health Check", "blue")
-        self.rich.rich_print("[bold blue]Checking database health...[/bold blue]")
-
-        async def _health_check():
-            try:
-                service = DatabaseService(echo=False)
-                await service.connect(CONFIG.database_url)
-
-                health = await service.health_check()
-
-                if health["status"] == "healthy":
-                    self.rich.rich_print("[green]✅ Database is healthy![/green]")
-                    self.rich.rich_print(f"[green]Connection: {health.get('connection', 'OK')}[/green]")
-                    self.rich.rich_print(f"[green]Response time: {health.get('response_time', 'N/A')}[/green]")
-                else:
-                    self.rich.rich_print("[red]❌ Database is unhealthy![/red]")
-                    self.rich.rich_print(f"[red]Error: {health.get('error', 'Unknown error')}[/red]")
-
-                await service.disconnect()
-                self.rich.print_success("Database health check completed")
-
-            except Exception as e:
-                self.rich.print_error(f"Failed to check database health: {e}")
-
-        asyncio.run(_health_check())
-
-    def stats(self) -> None:
-        """Show database statistics and metrics.
-
-        Displays comprehensive database statistics including table sizes,
-        index usage, and performance metrics.
-
-        Use this to monitor database performance.
-        """
-        self._print_section_header("Database Statistics", "📊")
-        self.rich.print_info("Database statistics functionality coming soon")
 
     def tables(self) -> None:
-        """List all database tables with their information.
+        """List all database tables and their structure.
 
-        Shows all tables in the database with column counts, row counts,
-        and other metadata.
-
-        Use this to explore database structure.
+        Shows all tables in the database with column counts and basic metadata.
+        Useful for exploring database structure and verifying migrations.
         """
         self._print_section_header("Database Tables", "📋")
 
@@ -314,28 +397,46 @@ class DatabaseCLI(BaseCLI):
 
         asyncio.run(_list_tables())
 
-    def analyze(self) -> None:
-        """Analyze table statistics for performance optimization.
+    def health(self) -> None:
+        """Check database connection and health status.
 
-        Analyzes table statistics and provides recommendations for
-        performance optimization.
-
-        Use this to optimize database performance.
+        Performs health checks on the database connection and reports
+        connection status and response times.
         """
-        self.rich.print_section("🔍 Table Analysis", "blue")
-        self.rich.rich_print("[bold blue]Analyzing table statistics...[/bold blue]")
-        self.rich.print_info("Table analysis functionality coming soon")
+        self.rich.print_section("🏥 Database Health", "blue")
+        self.rich.rich_print("[bold blue]Checking database health...[/bold blue]")
+
+        async def _health_check():
+            try:
+                service = DatabaseService(echo=False)
+                await service.connect(CONFIG.database_url)
+
+                health = await service.health_check()
+
+                if health["status"] == "healthy":
+                    self.rich.rich_print("[green]✅ Database is healthy![/green]")
+                    self.rich.rich_print(f"[green]Connection: {health.get('connection', 'OK')}[/green]")
+                    self.rich.rich_print(f"[green]Response time: {health.get('response_time', 'N/A')}[/green]")
+                else:
+                    self.rich.rich_print("[red]❌ Database is unhealthy![/red]")
+                    self.rich.rich_print(f"[red]Error: {health.get('error', 'Unknown error')}[/red]")
+
+                await service.disconnect()
+                self.rich.print_success("Health check completed")
+
+            except Exception as e:
+                self.rich.print_error(f"Failed to check database health: {e}")
+
+        asyncio.run(_health_check())
 
     def queries(self) -> None:
         """Check for long-running database queries.
 
         Identifies and displays currently running queries that may be
-        causing performance issues.
-
-        Use this to identify performance bottlenecks.
+        causing performance issues or blocking operations.
         """
         self.rich.print_section("⏱️ Query Analysis", "blue")
-        self.rich.rich_print("[bold blue]Checking database queries...[/bold blue]")
+        self.rich.rich_print("[bold blue]Checking for long-running queries...[/bold blue]")
 
         async def _check_queries():
             try:
@@ -376,96 +477,77 @@ class DatabaseCLI(BaseCLI):
 
         asyncio.run(_check_queries())
 
-    def optimize(self) -> None:
-        """Analyze database optimization opportunities.
-
-        Analyzes the database and provides recommendations for optimization
-        including index suggestions and query improvements.
-
-        Use this to improve database performance.
-        """
-        self.rich.print_section("⚡ Database Optimization", "blue")
-        self.rich.rich_print("[bold blue]Analyzing optimization opportunities...[/bold blue]")
-        self.rich.print_info("Database optimization functionality coming soon")
-
-    def vacuum(self) -> None:
-        """Show database maintenance information.
-
-        Displays vacuum statistics and maintenance recommendations.
-
-        Use this to monitor database maintenance needs.
-        """
-        self.rich.print_section("🧹 Database Maintenance", "blue")
-        self.rich.rich_print("[bold blue]Checking maintenance status...[/bold blue]")
-        self.rich.print_info("Database maintenance functionality coming soon")
-
-    def reindex(self) -> None:
-        """Reindex database tables for performance optimization.
-
-        Rebuilds indexes to improve query performance and reduce bloat.
-
-        Use this to optimize database indexes.
-        """
-        self.rich.print_section("🔧 Database Reindexing", "blue")
-        self.rich.rich_print("[bold blue]Reindexing database tables...[/bold blue]")
-        self.rich.print_info("Database reindexing functionality coming soon")
-
     # ============================================================================
     # ADMIN COMMANDS
     # ============================================================================
 
     def reset(self) -> None:
-        """Reset database to clean state (development only).
+        """Reset database to clean state via migrations.
 
-        Drops all tables and recreates the database from scratch.
-        This is a destructive operation and should only be used in development.
+        Resets the database by downgrading to base (empty) and then
+        reapplying all migrations from scratch. Preserves migration files.
 
-        Use this to start fresh in development.
+        Use this to test the full migration chain or fix migration issues.
         """
-        self.rich.print_section("🔄 Database Reset", "blue")
-        self.rich.rich_print("[bold red]Resetting database to clean state...[/bold red]")
+        self.rich.print_section("🔄 Reset Database", "yellow")
+        self.rich.rich_print("[bold yellow]⚠️  This will reset your database![/bold yellow]")
+        self.rich.rich_print("[yellow]Downgrading to base and reapplying all migrations...[/yellow]")
 
         try:
             self._run_command(["uv", "run", "alembic", "downgrade", "base"])
             self._run_command(["uv", "run", "alembic", "upgrade", "head"])
-            self.rich.print_success("Database reset completed")
+            self.rich.print_success("Database reset and migrations reapplied!")
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to reset database")
 
     def hard_reset(
         self,
         force: Annotated[bool, Option("--force", "-f", help="Skip confirmation prompt")] = False,
+        fresh: Annotated[
+            bool,
+            Option("--fresh", help="Also delete all migration files for complete fresh start"),
+        ] = False,
     ) -> None:
-        """Nuclear option: drop all tables and alembic_version, start fresh.
+        """Nuclear reset: completely destroy the database.
+
+        🚨 DANGER: This is extremely destructive!
 
         This command will:
         1. Drop ALL tables in the public schema (including alembic_version)
-        2. Recreate tables from SQLModel metadata
-        3. Generate a new baseline migration
+        2. Leave database completely empty
+        3. With --fresh: Also delete ALL migration files
 
-        ⚠️  WARNING: This is extremely destructive and will DELETE ALL DATA!
-        Only use this in development when migrations are completely broken.
+        ⚠️  WARNING: This will DELETE ALL DATA permanently!
+        Only use this when you want to start completely from scratch.
+
+        After nuking, run 'db init' if you want to set up the database again.
+        With --fresh, you'll need to regenerate migrations from your models.
+
+        For normal development, use 'db reset' instead.
         """
-        self.rich.print_section("💥 Hard Reset Database", "red")
-        self.rich.rich_print("[bold red]⚠️  WARNING: This will DELETE ALL DATA![/bold red]")
-        self.rich.rich_print("[bold yellow]This operation will:[/bold yellow]")
-        self.rich.rich_print("  1. Drop ALL tables in the public schema")
-        self.rich.rich_print("  2. Drop alembic_version tracking table")
-        self.rich.rich_print("  3. Recreate tables from SQLModel metadata")
+        self.rich.print_section("💥 Nuclear Reset", "red")
+        self.rich.rich_print("[bold red]🚨 DANGER: This will DELETE ALL DATA![/bold red]")
+        self.rich.rich_print("[red]This is extremely destructive - only use when migrations are broken![/red]")
+        self.rich.rich_print("")
+        self.rich.rich_print("[yellow]This operation will:[/yellow]")
+        self.rich.rich_print("  1. Drop ALL tables and schema")
+        self.rich.rich_print("  2. Leave database completely empty")
+        if fresh:
+            self.rich.rich_print("  3. Delete ALL migration files")
         self.rich.rich_print("")
 
         # Require explicit confirmation unless --force is used
         if not force:
             if not sys.stdin.isatty():
-                self.rich.print_error("Cannot run hard-reset in non-interactive mode without --force flag")
+                self.rich.print_error("Cannot run nuke in non-interactive mode without --force flag")
                 return
 
-            response = input("Type 'yes' to continue: ")
-            if response.lower() != "yes":
-                self.rich.print_info("Hard reset cancelled")
+            response = input("Type 'NUKE' to confirm (case sensitive): ")
+            if response != "NUKE":
+                self.rich.print_info("Nuclear reset cancelled")
                 return
 
-        async def _hard_reset():
+        async def _nuclear_reset():
             try:
                 service = DatabaseService(echo=False)
                 await service.connect(CONFIG.database_url)
@@ -477,61 +559,96 @@ class DatabaseCLI(BaseCLI):
                     await session.execute(text("GRANT ALL ON SCHEMA public TO public"))
                     await session.commit()
 
-                self.rich.rich_print("[yellow]Dropping all tables...[/yellow]")
+                self.rich.rich_print("[yellow]Dropping all tables and schema...[/yellow]")
                 await service.execute_query(_drop_all_tables, "drop_all_tables")
                 await service.disconnect()
 
-                # Recreate tables from metadata using sync engine with psycopg (not psycopg2)
-                self.rich.rich_print("[yellow]Recreating tables from models...[/yellow]")
-                # Convert async psycopg URL to sync psycopg URL
-                sync_url = CONFIG.database_url.replace("postgresql+psycopg://", "postgresql+psycopg://")
-                sync_engine = create_engine(sync_url)
-                SQLModel.metadata.create_all(sync_engine)
-                sync_engine.dispose()
+                self.rich.print_success("Nuclear reset completed - database is completely empty")
 
-                self.rich.print_success("Hard reset completed - database is now empty with fresh schema")
+                # Delete migration files if --fresh flag is used
+                if fresh:
+                    migration_dir = pathlib.Path("src/tux/database/migrations/versions")
+                    if migration_dir.exists():
+                        self.rich.rich_print("[yellow]Deleting all migration files...[/yellow]")
+                        deleted_count = 0
+                        for migration_file in migration_dir.glob("*.py"):
+                            if migration_file.name != "__init__.py":  # Keep __init__.py
+                                migration_file.unlink()
+                                deleted_count += 1
+                        self.rich.print_success(f"Deleted {deleted_count} migration files")
+
                 self.rich.rich_print("[yellow]Next steps:[/yellow]")
-                self.rich.rich_print("  1. Generate baseline migration: uv run db migrate-generate 'initial schema'")
-                self.rich.rich_print("  2. Mark as applied: uv run db force")
+                if fresh:
+                    self.rich.rich_print("  • Run 'db init' to create new initial migration and setup")
+                else:
+                    self.rich.rich_print("  • Run 'db push' to recreate tables from existing migrations")
+                    self.rich.rich_print("  • For completely fresh start: delete migration files, then run 'db init'")
+                self.rich.rich_print("  • Or manually recreate tables as needed")
 
             except Exception as e:
-                self.rich.print_error(f"Failed to hard reset database: {e}")
+                self.rich.print_error(f"Failed to nuclear reset database: {e}")
                 traceback.print_exc()
 
-        asyncio.run(_hard_reset())
+        asyncio.run(_nuclear_reset())
 
-    def force(self) -> None:
-        """Force database to head revision (fixes migration issues).
+    def downgrade(
+        self,
+        revision: Annotated[
+            str,
+            Argument(
+                help="Revision to downgrade to (e.g., '-1' for one step back, 'base' for initial state, or specific revision ID)",
+            ),
+        ],
+    ) -> None:
+        """Rollback to a previous migration revision.
 
-        Forces the database to the latest migration state, useful for
-        fixing migration inconsistencies.
+        Reverts the database schema to an earlier migration state.
+        Useful for fixing issues or testing different schema versions.
 
-        Use this to fix migration issues.
+        Examples:
+        uv run db downgrade -1       # Rollback one migration
+        uv run db downgrade base    # Rollback to initial empty state
+        uv run db downgrade abc123  # Rollback to specific revision
+
+        ⚠️  WARNING: This can cause data loss if rolling back migrations
+        that added tables/columns. Always backup first!
         """
-        self.rich.print_section("🔧 Force Migration", "blue")
-        self.rich.rich_print("[bold blue]Forcing database to head revision...[/bold blue]")
+        self.rich.print_section("⬇️ Downgrade Database", "yellow")
+        self.rich.rich_print(f"[bold yellow]⚠️  Rolling back to revision: {revision}[/bold yellow]")
+        self.rich.rich_print("[yellow]This may cause data loss - backup your database first![/yellow]")
+        self.rich.rich_print("")
+
+        # Require confirmation for dangerous operations
+        if revision != "-1":  # Allow quick rollback without confirmation
+            response = input(f"Type 'yes' to downgrade to {revision}: ")
+            if response.lower() != "yes":
+                self.rich.print_info("Downgrade cancelled")
+                return
 
         try:
-            self._run_command(["uv", "run", "alembic", "stamp", "head"])
-            self.rich.print_success("Database forced to head revision")
+            self._run_command(["uv", "run", "alembic", "downgrade", revision])
+            self.rich.print_success(f"Successfully downgraded to revision: {revision}")
         except subprocess.CalledProcessError:
-            self.rich.print_error("Failed to force database revision")
+            self.rich.print_error(f"Failed to downgrade to revision: {revision}")
 
     def version(self) -> None:
-        """Show version information.
+        """Show version information for database components.
 
-        Displays version information for the database CLI and related components.
-
-        Use this to check system versions.
+        Displays version information for the database CLI, alembic,
+        and database driver components.
         """
         self.rich.print_section("📌 Version Information", "blue")
         self.rich.rich_print("[bold blue]Showing database version information...[/bold blue]")
 
         try:
+            self.rich.rich_print("[cyan]Current migration:[/cyan]")
             self._run_command(["uv", "run", "alembic", "current"])
+
+            self.rich.rich_print("[cyan]Database driver:[/cyan]")
             self._run_command(
-                ["uv", "run", "python", "-c", "import psycopg; print(f'PostgreSQL version: {psycopg.__version__}')"],
+                ["uv", "run", "python", "-c", "import psycopg; print(f'psycopg version: {psycopg.__version__}')"],
             )
+
             self.rich.print_success("Version information displayed")
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to get version information")
