@@ -1,0 +1,3 @@
+---
+# abomination
+exclude: (?:(?:^|.*/)(?:\.venv|examples|\.archive|typings|tests|\.kiro|\.audit)(?:/|$))|(?:(?:^|.*/)src/tux/database/migrations(?:/versions)?(?:/|$))|(?:(?:^|.*/)migrations(?:/|$))

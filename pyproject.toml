@@ -144,6 +144,22 @@ packages = ["src/tux", "scripts"]
 [tool.hatch.build.targets.wheel]
 packages = ["src/tux", "scripts"]
 
+[tool.pydoclint]
+style = "numpy"
+exclude = [
+    ".venv",
+    "examples",
+    ".archive",
+    "typings/**",
+    "tests",
+    "tests/**",
+    "**/tests/**",
+    ".kiro/**",
+    ".audit/**",
+    "src/tux/database/migrations/versions/**",
+    "**/migrations/**",
+]
+
 [tool.ruff]
 exclude = [
     ".venv",
