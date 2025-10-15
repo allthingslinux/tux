@@ -17,33 +17,6 @@ class Poll(ModerationCogBase):
 
     # Uses ModerationCogBase.is_pollbanned
 
-    @commands.Cog.listener()  # listen for messages
-    async def on_message(self, message: discord.Message) -> None:
-        poll_channel = self.bot.get_channel(1228717294788673656)
-
-        if message.channel != poll_channel:
-            return
-
-        # check if the message is a poll from tux, we can check the author id
-        if self.bot.user is None:
-            logger.error("Something has seriously gone wrong, the bot user is None.")
-            return
-
-        if message.author.id == self.bot.user.id and message.embeds:
-            await message.create_thread(name=f"Poll by {message.author.name}")
-            return
-
-        # check if the message is a discord poll
-        if message.poll:
-            await message.create_thread(name=f"Poll by {message.author.name}")
-            return
-
-        # delete the message
-        await message.delete()
-
-        # Ensure command processing continues for other messages
-        await self.bot.process_commands(message)
-
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
         # get reaction from payload.message_id, payload.channel_id, payload.guild_id, payload.emoji
