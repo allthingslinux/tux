@@ -14,7 +14,6 @@ from .models import (
     GuildPermissionAssignment,
     GuildPermissionRank,
     Levels,
-    Note,
     Reminder,
     Snippet,
     Starboard,
@@ -34,7 +33,6 @@ __all__ = [
     "GuildPermissionAssignment",
     "GuildPermissionRank",
     "Levels",
-    "Note",
     # Enums
     "PermissionType",
     "Reminder",

@@ -214,8 +214,9 @@ select = [
     "INP",   # flake8-no-pep420
     "RSE",   # flake8-raise
     "ICN",   # flake8-import-conventions
-    #"DOC",   # pydoclint (not implemented yet, see https://github.com/astral-sh/ruff/issues/12434 for progress)
+    #"DOC",  # pydoclint (not implemented yet, see https://github.com/astral-sh/ruff/issues/12434 for progress)
     "D",     # pydocstyle
+    #"ERA",  # eradicate
     "RUF",   # ruff
 ]
 unfixable = []

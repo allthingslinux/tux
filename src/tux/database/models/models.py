@@ -53,15 +53,6 @@ class Guild(BaseModel, table=True):
             lazy="selectin",
         ),
     )
-    notes = Relationship(
-        sa_relationship=relationship(
-            "Note",
-            back_populates="guild",
-            cascade="all, delete",
-            passive_deletes=True,
-            lazy="selectin",
-        ),
-    )
     reminders = Relationship(
         sa_relationship=relationship(
             "Reminder",
@@ -242,24 +233,6 @@ class Case(BaseModel, table=True):
         Index("idx_case_expires_at", "case_expires_at"),
         Index("idx_case_number", "case_number"),
         UniqueConstraint("guild_id", "case_number", name="uq_case_guild_case_number"),
-    )
-
-
-class Note(BaseModel, table=True):
-    note_id: int | None = Field(default=None, primary_key=True, sa_type=Integer)
-    note_content: str = Field(max_length=2000)
-    note_moderator_id: int = Field(sa_type=BigInteger)
-    note_user_id: int = Field(sa_type=BigInteger)
-    note_number: int | None = Field(default=None)
-    guild_id: int = Field(foreign_key="guild.guild_id", ondelete="CASCADE", sa_type=BigInteger)
-
-    guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="notes"))
-
-    __table_args__ = (
-        Index("idx_note_user", "note_user_id"),
-        Index("idx_note_moderator", "note_moderator_id"),
-        Index("idx_note_guild_number", "guild_id", "note_number"),
-        UniqueConstraint("guild_id", "note_number", name="uq_note_guild_note_number"),
     )
 
 
