@@ -162,5 +162,5 @@ class EmbedCreator:
             return (
                 text,
                 user_display_avatar
-                or "https://github.com/allthingslinux/tux/blob/main/assets/branding/avatar.png?raw=true",
+                or "https://github.com/allthingslinux/tux/blob/main/assets/branding/avatar.avif?raw=true",
             )

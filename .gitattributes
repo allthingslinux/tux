@@ -87,6 +87,7 @@ uv.lock text eol=lf linguist-generated=true
 *.svg binary
 *.bmp binary
 *.tiff binary
+*.avif binary
 
 #
 # Media Files

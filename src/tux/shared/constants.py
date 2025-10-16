@@ -19,6 +19,7 @@ class Constants:
     }
 
     # Icon constants
+    # TODO: make this work with branches and tags
     EMBED_ICONS: Final[dict[str, str]] = {
         "DEFAULT": "https://i.imgur.com/owW4EZk.png",
         "INFO": "https://i.imgur.com/8GRtR2G.png",
@@ -27,15 +28,15 @@ class Constants:
         "CASE": "https://i.imgur.com/c43cwnV.png",
         "NOTE": "https://i.imgur.com/VqPFbil.png",
         "POLL": "https://i.imgur.com/pkPeG5q.png",
-        "ACTIVE_CASE": "https://github.com/allthingslinux/tux/blob/main/assets/embeds/active_case.png?raw=true",
-        "INACTIVE_CASE": "https://github.com/allthingslinux/tux/blob/main/assets/embeds/inactive_case.png?raw=true",
-        "ADD": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/added.png?raw=true",
-        "REMOVE": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/removed.png?raw=true",
-        "BAN": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/ban.png?raw=true",
-        "JAIL": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/jail.png?raw=true",
-        "KICK": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/kick.png?raw=true",
-        "TIMEOUT": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/timeout.png?raw=true",
-        "WARN": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/warn.png?raw=true",
+        "ACTIVE_CASE": "https://github.com/allthingslinux/tux/blob/main/assets/embeds/active_case.avif?raw=true",
+        "INACTIVE_CASE": "https://github.com/allthingslinux/tux/blob/main/assets/embeds/inactive_case.avif?raw=true",
+        "ADD": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/added.avif?raw=true",
+        "REMOVE": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/removed.avif?raw=true",
+        "BAN": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/ban.avif?raw=true",
+        "JAIL": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/jail.avif?raw=true",
+        "KICK": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/kick.avif?raw=true",
+        "TIMEOUT": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/timeout.avif?raw=true",
+        "WARN": "https://github.com/allthingslinux/tux/blob/main/assets/emojis/warn.avif?raw=true",
     }
 
     # Embed limit constants
@@ -135,6 +136,7 @@ class Constants:
     FILE_EXT_JPEG = ".jpeg"
     FILE_EXT_GIF = ".gif"
     FILE_EXT_WEBP = ".webp"
+    FILE_EXT_AVIF = ".avif"
     FILE_EXT_MD = ".md"
     FILE_EXT_ENV = ".env"
     FILE_EXT_GIT = ".git"
