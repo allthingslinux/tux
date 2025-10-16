@@ -15,7 +15,7 @@ class MemberCount(BaseCog):
         description="Shows server member count",
     )
     @commands.guild_only()
-    async def membercount(self, ctx: commands.Context[Tux]) -> None:
+    async def member_count(self, ctx: commands.Context[Tux]) -> None:
         """
         Show the member count for the server.
 
