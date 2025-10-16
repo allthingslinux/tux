@@ -116,19 +116,20 @@ class DatabaseCLI(BaseCLI):
                 service = DatabaseService(echo=False)
                 await service.connect(CONFIG.database_url)
 
-                async def _get_table_count(session: Any) -> int:
+                # Query directly to avoid error logging for fresh database checks
+                async with service.session() as session:
                     result = await session.execute(
                         text(
                             "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE' AND table_name != 'alembic_version'",
                         ),
                     )
-                    return result.scalar()
+                    table_count = result.scalar()
 
-                table_count = await service.execute_query(_get_table_count, "check_tables")
                 await service.disconnect()
-                return table_count  # noqa: TRY300
             except Exception:
                 return 0
+            else:
+                return table_count
 
         table_count = asyncio.run(_check_tables())
 
@@ -138,13 +139,14 @@ class DatabaseCLI(BaseCLI):
                 service = DatabaseService(echo=False)
                 await service.connect(CONFIG.database_url)
 
-                async def _get_migration_count(session: Any) -> int:
+                # Query directly to avoid error logging for expected table-not-found errors
+                async with service.session() as session:
                     result = await session.execute(text("SELECT COUNT(*) FROM alembic_version"))
-                    return result.scalar()
+                    migration_count = result.scalar()
 
-                migration_count = await service.execute_query(_get_migration_count, "check_migrations")
                 await service.disconnect()
             except Exception:
+                # Expected on fresh database - alembic_version table doesn't exist yet
                 return 0
             else:
                 return migration_count
