@@ -7,9 +7,9 @@ from __future__ import annotations
 
 from typing import Sequence, Union
 
-from alembic import op # pyright: ignore[reportUnusedImport]
-import sqlalchemy as sa # pyright: ignore[reportUnusedImport]
-import sqlmodel # pyright: ignore[reportUnusedImport]
+from alembic import op
+import sqlalchemy as sa
+import sqlmodel
 ${imports if imports else ""}
 
 # revision identifiers, used by Alembic.
