@@ -17,7 +17,6 @@ class Avatar(BaseCog):
     @commands.hybrid_command(
         name="avatar",
         aliases=["av", "pfp"],
-        description="Get the global/server avatar for a member.",
     )
     @commands.guild_only()
     async def avatar(
