@@ -23,7 +23,7 @@ import aiofiles.os
 from discord.ext import commands
 from loguru import logger
 
-from tux.services.tracing import (
+from tux.services.sentry.tracing import (
     capture_span_exception,
     enhanced_span,
     safe_set_name,

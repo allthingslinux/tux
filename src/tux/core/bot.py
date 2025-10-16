@@ -24,7 +24,7 @@ from tux.database.service import DatabaseService
 from tux.services.emoji_manager import EmojiManager
 from tux.services.http_client import http_client
 from tux.services.sentry import SentryManager, capture_database_error, capture_exception_safe
-from tux.services.tracing import (
+from tux.services.sentry.tracing import (
     instrument_bot_commands,
     start_span,
     start_transaction,

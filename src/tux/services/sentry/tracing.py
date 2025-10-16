@@ -377,40 +377,39 @@ def start_transaction(op: str, name: str, description: str = "") -> Generator[Du
 # --- Enhanced Helper Functions ---
 
 
-def add_tag_to_current_span(key: str, value: Any) -> None:
-    """
-    Add a tag to the current active Sentry span, if it exists.
-
-    This is a convenience function to avoid checking for an active span
-    everywhere in the code.
-
-    Parameters
-    ----------
-    key : str
-        The key of the tag.
-    value : Any
-        The value of the tag.
-    """
-    if sentry_sdk.is_initialized() and (span := sentry_sdk.get_current_span()):
-        span.set_tag(key, value)
+def get_current_span() -> Any | None:
+    """Get the current active Sentry span."""
+    if not sentry_sdk.is_initialized():
+        return None
+    return sentry_sdk.Hub.current.scope.span
 
 
-def add_data_to_current_span(key: str, value: Any) -> None:
-    """
-    Add data to the current active Sentry span, if it exists.
+def add_breadcrumb(
+    message: str,
+    category: str = "default",
+    level: str = "info",
+    data: dict[str, Any] | None = None,
+) -> None:
+    """Add a breadcrumb to the current Sentry scope."""
+    if not sentry_sdk.is_initialized():
+        return
 
-    This is a convenience function to attach arbitrary, non-indexed data
-    to a span for additional context during debugging.
+    sentry_sdk.add_breadcrumb(
+        message=message,
+        category=category,
+        level=level,
+        data=data,
+    )
 
-    Parameters
-    ----------
-    key : str
-        The key of the data.
-    value : Any
-        The value of the data.
-    """
-    if sentry_sdk.is_initialized() and (span := sentry_sdk.get_current_span()):
-        span.set_data(key, value)
+
+def finish_transaction_on_error() -> None:
+    """Finish the current transaction with error status."""
+    if not sentry_sdk.is_initialized():
+        return
+
+    if current_span := get_current_span():
+        current_span.set_status("internal_error")
+        logger.debug("Transaction finished with error status")
 
 
 def set_span_attributes(attributes: dict[str, Any]) -> None:
@@ -431,38 +430,6 @@ def set_span_attributes(attributes: dict[str, Any]) -> None:
             span.set_tag(key, value)
 
 
-def set_span_status(status: str, status_map: dict[str, str] | None = None) -> None:
-    """
-    Set status on the current span.
-
-    Parameters
-    ----------
-    status : str
-        The status to set (e.g., "OK", "ERROR", "NOT_FOUND")
-    status_map : dict[str, str] | None, optional
-        A mapping of status keys to Sentry status values. If None, uses default mapping.
-    """
-    if not sentry_sdk.is_initialized():
-        return
-
-    if span := sentry_sdk.get_current_span():
-        # Default status mapping if none provided
-        if status_map is None:
-            status_map = {
-                "OK": "ok",
-                "UNKNOWN": "unknown",
-                "ERROR": "internal_error",
-                "NOT_FOUND": "not_found",
-                "PERMISSION_DENIED": "permission_denied",
-                "INVALID_ARGUMENT": "invalid_argument",
-                "RESOURCE_EXHAUSTED": "resource_exhausted",
-                "UNAUTHENTICATED": "unauthenticated",
-                "CANCELLED": "cancelled",
-            }
-
-        span.set_status(status_map.get(status, status))
-
-
 def set_setup_phase_tag(span: Any, phase: str, status: str = "starting") -> None:
     """
     Set a setup phase tag on the span.
@@ -477,23 +444,6 @@ def set_setup_phase_tag(span: Any, phase: str, status: str = "starting") -> None
         The status ("starting" or "finished")
     """
     span.set_tag("setup_phase", f"{phase}_{status}")
-
-
-def set_span_error(span: Any, error: Exception, error_type: str = "error") -> None:
-    """
-    Set error information on a span with consistent patterns.
-
-    Parameters
-    ----------
-    span : Any
-        The Sentry span to set error data on
-    error : Exception
-        The exception that occurred
-    error_type : str
-        The type of error (e.g., "error", "discord_error", "db_error")
-    """
-    span.set_status("internal_error")
-    span.set_data(error_type, str(error))
 
 
 def capture_span_exception(exception: Exception, **extra_data: Any) -> None:
@@ -516,36 +466,6 @@ def capture_span_exception(exception: Exception, **extra_data: Any) -> None:
         # Add any additional data
         for key, value in extra_data.items():
             span.set_data(f"extra.{key}", value)
-
-
-def capture_exception_safe(exception: Exception) -> None:
-    """
-    Safely capture an exception to Sentry if initialized.
-
-    This helper avoids repeating initialization checks at call sites.
-
-    Parameters
-    ----------
-    exception : Exception
-        The exception to report.
-    """
-    if sentry_sdk.is_initialized():
-        sentry_sdk.capture_exception(exception)
-
-
-def capture_message_safe(message: str, level: str = "info") -> None:
-    """
-    Safely capture a message to Sentry if initialized.
-
-    Parameters
-    ----------
-    message : str
-        The message to report.
-    level : str
-        The severity level (e.g., 'info', 'warning', 'error').
-    """
-    if sentry_sdk.is_initialized():
-        sentry_sdk.capture_message(message)
 
 
 @contextmanager

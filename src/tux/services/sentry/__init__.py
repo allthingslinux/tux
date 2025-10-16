@@ -26,12 +26,22 @@ from loguru import logger
 
 from .config import flush, flush_async, is_initialized, report_signal, setup
 from .context import set_command_context, set_context, set_tag, set_user_context, track_command_end, track_command_start
-from .monitoring import (
+from .tracing import (
+    DummySpan,
+    DummyTransaction,
     add_breadcrumb,
+    capture_span_exception,
+    enhanced_span,
     finish_transaction_on_error,
     get_current_span,
+    instrument_bot_commands,
+    safe_set_name,
+    set_setup_phase_tag,
+    set_span_attributes,
+    span,
     start_span,
     start_transaction,
+    transaction,
 )
 
 # Type alias for Sentry's log level strings.
@@ -52,12 +62,33 @@ from .utils import (
 )
 
 __all__ = [
+    "DummySpan",
+    "DummyTransaction",
     "SentryManager",
+    "add_breadcrumb",
     "capture_api_error",
     "capture_cog_error",
     "capture_database_error",
     "capture_exception_safe",
+    "capture_span_exception",
     "capture_tux_exception",
+    "enhanced_span",
+    "finish_transaction_on_error",
+    "get_current_span",
+    "instrument_bot_commands",
+    "safe_set_name",
+    "set_command_context",
+    "set_context",
+    "set_setup_phase_tag",
+    "set_span_attributes",
+    "set_tag",
+    "set_user_context",
+    "span",
+    "start_span",
+    "start_transaction",
+    "track_command_end",
+    "track_command_start",
+    "transaction",
 ]
 
 

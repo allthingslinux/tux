@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from loguru import logger
 
 from tux.core.prefix_manager import PrefixManager
-from tux.services.tracing import DummySpan, set_setup_phase_tag, start_span
+from tux.services.sentry.tracing import DummySpan, set_setup_phase_tag, start_span
 from tux.shared.exceptions import TuxDatabaseConnectionError
 
 if TYPE_CHECKING:

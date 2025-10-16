@@ -13,7 +13,7 @@ from discord.ext import tasks
 from loguru import logger
 
 from tux.services.sentry import capture_exception_safe
-from tux.services.tracing import start_span
+from tux.services.sentry.tracing import start_span
 
 
 class TaskMonitor:

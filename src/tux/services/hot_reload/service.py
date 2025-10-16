@@ -10,7 +10,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.services.sentry import capture_exception_safe
-from tux.services.tracing import span
+from tux.services.sentry.tracing import span
 
 from .config import HotReloadConfig, ModuleReloadError, validate_config
 from .dependencies import ClassDefinitionTracker, DependencyGraph
