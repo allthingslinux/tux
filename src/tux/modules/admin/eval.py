@@ -130,7 +130,7 @@ class Eval(BaseCog):
                 user_display_avatar=ctx.author.display_avatar.url,
                 description=f"```py\n{evaluated}```",
             )
-            await ctx.reply(embed=embed, ephemeral=True, delete_after=30)
+            await ctx.reply(embed=embed, ephemeral=True)
             logger.info(f"{ctx.author} ran an expression: {cmd}")
 
         except Exception as error:
