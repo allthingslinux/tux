@@ -114,11 +114,19 @@ def convert_to_seconds(time_str: str) -> int:
     # Time conversion factors from units to seconds
     time_units = {
         "M": 2592000,  # Months to seconds
+        "mo": 2592000,  # Months to seconds
+        "month": 2592000,  # Months to seconds
         "w": 604800,  # Weeks to seconds
+        "wk": 604800,  # Weeks to seconds
+        "week": 604800,  # Weeks to seconds
         "d": 86400,  # Days to seconds
+        "day": 86400,  # Days to seconds
         "h": 3600,  # Hours to seconds
+        "hr": 3600,  # Hours to seconds
         "m": 60,  # Minutes to seconds
+        "min": 60,  # Minutes to seconds
         "s": 1,  # Seconds to seconds
+        "sec": 1,  # Seconds to seconds
     }
 
     total_seconds = 0
