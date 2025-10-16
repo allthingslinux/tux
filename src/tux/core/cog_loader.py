@@ -319,7 +319,6 @@ class CogLoader(commands.Cog):
                 return  # Skip silently (warning already logged)
 
             # Load the extension using discord.py's extension system
-            logger.info(f"🔧 Loading cog: {module}")
             await self.bot.load_extension(name=module)
 
             # Record load time for performance monitoring
@@ -335,7 +334,7 @@ class CogLoader(commands.Cog):
                 },
             )
 
-            logger.info(f"✅ Loaded {module} in {load_time * 1000:.1f}ms")
+            logger.debug(f"✅ Loaded {module} in {load_time * 1000:.1f}ms")
 
         except TuxConfigurationError as config_error:
             # Direct configuration error: Skip cog gracefully
@@ -437,6 +436,8 @@ class CogLoader(commands.Cog):
                 "failure_count": failure_count,
             },
         )
+
+        logger.info(f"Loaded {success_count} cogs from {cogs[0].parent.name} cog group in {end_time - start_time:.2f}s")
 
         # Log any failures that occurred (excluding config errors)
         for result, cog in zip(results, cogs, strict=False):
