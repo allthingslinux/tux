@@ -261,7 +261,7 @@ class TestDatabaseStateValidation(TestDatabaseCLICommands):
             expected_tables = {
                 'afk', 'cases', 'guild', 'guild_command_permissions',
                 'guild_config', 'guild_permission_assignments',
-                'guild_permission_ranks', 'levels', 'note', 'reminder',
+                'guild_permission_ranks', 'levels', 'reminder',
                 'snippet', 'starboard', 'starboard_message',
             }
 
