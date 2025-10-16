@@ -20,9 +20,9 @@ from __future__ import annotations
 import asyncio
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator, Awaitable, Callable
-from contextlib import asynccontextmanager
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from enum import Enum
-from typing import Any, Protocol, TypeVar
+from typing import Any, TypeVar
 
 import sentry_sdk
 import sqlalchemy.exc
@@ -41,12 +41,6 @@ class DatabaseMode(Enum):
     ASYNC = "async"
 
 
-class SessionFactory(Protocol):
-    """Protocol for session factories."""
-
-    def __call__(self) -> AsyncSession: ...
-
-
 class DatabaseServiceABC(ABC):
     """Abstract base class for all database services."""
 
@@ -63,7 +57,7 @@ class DatabaseServiceABC(ABC):
         """Check if database is connected."""
 
     @abstractmethod
-    async def session(self) -> Any:
+    def session(self) -> AbstractAsyncContextManager[Any]:
         """Get database session context manager."""
 
     @abstractmethod
@@ -125,7 +119,7 @@ class AsyncDatabaseService(DatabaseServiceABC):
         return self._engine
 
     @asynccontextmanager
-    async def session(self) -> AsyncGenerator[AsyncSession]:  # type: ignore
+    async def session(self) -> AsyncGenerator[AsyncSession]:
         """Get async database session."""
         if not self.is_connected() or not self._session_factory:
             await self.connect(CONFIG.database_url)
@@ -229,29 +223,6 @@ class DatabaseServiceFactory:
         msg = f"Unsupported database mode: {mode}"
         raise ValueError(msg)
 
-    @staticmethod
-    def create_from_url(database_url: str, echo: bool = False) -> DatabaseServiceABC:
-        """Create database service based on URL."""
-        # Always use async service for all database types
-        return AsyncDatabaseService(echo=echo)
-
 
 # Legacy alias for backward compatibility during transition
 DatabaseService = AsyncDatabaseService
-
-
-# Clean test utilities
-def create_test_database_service(echo: bool = False) -> DatabaseServiceABC:
-    """Create database service for testing."""
-    return DatabaseServiceFactory.create(DatabaseMode.ASYNC, echo=echo)
-
-
-async def setup_test_database(service: DatabaseServiceABC, database_url: str) -> None:
-    await service.connect(database_url)
-    logger.info("Test database setup complete")
-
-
-async def teardown_test_database(service: DatabaseServiceABC) -> None:
-    """Teardown test database."""
-    await service.disconnect()
-    logger.info("Test database torn down")
