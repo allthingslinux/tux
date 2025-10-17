@@ -23,42 +23,56 @@ def path_from_extension(extension: str, *, base_dir: Path | None = None) -> Path
 
 
 def get_extension_from_path(file_path: Path, base_dir: Path) -> str | None:
-    """Convert file path to extension name."""
+    """
+    Convert file path to extension name.
+
+    Handles both flat and nested plugin structures:
+    - src/tux/modules/admin/ban.py → tux.modules.admin.ban
+    - src/tux/plugins/atl/deepfry.py → tux.plugins.atl.deepfry
+    """
     try:
         relative_path = file_path.relative_to(base_dir)
-        if relative_path.suffix != ".py":
-            return None
-
-        # Convert path to dot notation
-        *path_parts, filename = relative_path.parts
-        stem = Path(filename).stem
-        parts = [*path_parts, stem]
-
-        # For files in cog directories, return the cog extension, not the individual module
-        # Check if this is a cog by looking for setup function in the module
-        module_name = "tux." + ".".join(parts)
-        with suppress(ImportError):
-            module = importlib.import_module(module_name)
-            if hasattr(module, "setup") and callable(module.setup):
-                # This is a cog, return its full path
-                return module_name
-
-        # Not a cog, check if parent directory contains a cog
-        # Remove the last part (filename) and check the parent module
-        if len(parts) > 1:
-            parent_module_name = "tux." + ".".join(parts[:-1])
-            # Check if there's a cog.py file in the parent directory
-            cog_module_name = f"{parent_module_name}.cog"
-            with suppress(ImportError):
-                cog_module = importlib.import_module(cog_module_name)
-                if hasattr(cog_module, "setup") and callable(cog_module.setup):
-                    # Found cog.py with setup, return the cog module name
-                    return cog_module_name
-
-        # This is not a cog or cog-related module, don't treat as extension
-        return None  # noqa: TRY300
     except ValueError:
         return None
+
+    if relative_path.suffix != ".py":
+        return None
+
+    # Convert path to dot notation
+    *path_parts, filename = relative_path.parts
+    stem = Path(filename).stem
+    parts = [*path_parts, stem]
+    module_name = "tux." + ".".join(parts)
+
+    logger.debug(f"Checking if {module_name} is a loadable extension")
+
+    # Check if this module has a setup function (it's a cog)
+    with suppress(ImportError, AttributeError):
+        module = importlib.import_module(module_name)
+        if hasattr(module, "setup") and callable(module.setup):
+            logger.debug(f"✅ Found cog with setup: {module_name}")
+            return module_name
+
+    # Check parent directory for cog (for supporting files in subdirs)
+    if len(parts) > 1:
+        parent_module_name = "tux." + ".".join(parts[:-1])
+
+        # Try parent's __init__.py for setup
+        with suppress(ImportError, AttributeError):
+            parent_module = importlib.import_module(parent_module_name)
+            if hasattr(parent_module, "setup") and callable(parent_module.setup):
+                logger.debug(f"✅ Found parent cog: {parent_module_name}")
+                return parent_module_name
+
+        # Try cog.py in parent directory
+        with suppress(ImportError, AttributeError):
+            cog_module = importlib.import_module(f"{parent_module_name}.cog")
+            if hasattr(cog_module, "setup") and callable(cog_module.setup):
+                logger.debug(f"✅ Found cog.py: {parent_module_name}.cog")
+                return f"{parent_module_name}.cog"
+
+    logger.debug(f"❌ Not a loadable extension: {module_name}")
+    return None
 
 
 def validate_python_syntax(file_path: Path) -> bool:
