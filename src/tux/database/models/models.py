@@ -3,7 +3,19 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import ARRAY, JSON, BigInteger, CheckConstraint, Column, Float, Index, Integer, String, UniqueConstraint
+from sqlalchemy import (
+    ARRAY,
+    JSON,
+    BigInteger,
+    CheckConstraint,
+    Column,
+    DateTime,
+    Float,
+    Index,
+    Integer,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.orm import Mapped, relationship
 from sqlmodel import Field, Relationship, SQLModel
@@ -14,7 +26,7 @@ from .enums import CaseType, OnboardingStage
 
 class Guild(BaseModel, table=True):
     guild_id: int = Field(primary_key=True, sa_type=BigInteger)
-    guild_joined_at: datetime | None = Field(default_factory=datetime.now)
+    guild_joined_at: datetime | None = Field(default_factory=lambda: datetime.now(UTC), sa_type=DateTime(timezone=True))
     case_count: int = Field(default=0)
 
     # PostgreSQL-specific features based on py-pglite examples
@@ -155,7 +167,7 @@ class Snippet(SQLModel, table=True):
 class Reminder(SQLModel, table=True):
     reminder_id: int | None = Field(default=None, primary_key=True, sa_type=Integer)
     reminder_content: str = Field(max_length=2000)
-    reminder_expires_at: datetime
+    reminder_expires_at: datetime = Field(sa_type=DateTime(timezone=True))
     reminder_channel_id: int = Field(sa_type=BigInteger)
     reminder_user_id: int = Field(sa_type=BigInteger)
     reminder_sent: bool = Field(default=False)
@@ -223,7 +235,7 @@ class Case(BaseModel, table=True):
     case_user_id: int = Field(sa_type=BigInteger)
     case_user_roles: list[int] = Field(default_factory=list, sa_type=JSON)
     case_number: int | None = Field(default=None)
-    case_expires_at: datetime | None = Field(default=None)
+    case_expires_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
     case_metadata: dict[str, str] | None = Field(default=None, sa_type=JSON)
 
     # Discord message ID for audit log message - allows editing the message if case is updated
@@ -248,8 +260,8 @@ class AFK(SQLModel, table=True):
     member_id: int = Field(primary_key=True, sa_type=BigInteger)
     nickname: str = Field(max_length=100)
     reason: str = Field(max_length=500)
-    since: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    until: datetime | None = Field(default=None)
+    since: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_type=DateTime(timezone=True))
+    until: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
     guild_id: int = Field(foreign_key="guild.guild_id", ondelete="CASCADE", sa_type=BigInteger)
     enforced: bool = Field(default=False)
     perm_afk: bool = Field(default=False)
@@ -271,7 +283,7 @@ class Levels(SQLModel, table=True):
     xp: float = Field(default=0.0, sa_type=Float)
     level: int = Field(default=0)
     blacklisted: bool = Field(default=False)
-    last_message: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    last_message: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_type=DateTime(timezone=True))
 
     guild: Mapped[Guild] = Relationship(sa_relationship=relationship(back_populates="levels_entries"))
 
@@ -303,7 +315,7 @@ class StarboardMessage(SQLModel, table=True):
 
     message_id: int = Field(primary_key=True, sa_type=BigInteger)
     message_content: str = Field(max_length=4000)
-    message_expires_at: datetime = Field()
+    message_expires_at: datetime = Field(sa_type=DateTime(timezone=True))
     message_channel_id: int = Field(sa_type=BigInteger)
     message_user_id: int = Field(sa_type=BigInteger)
     message_guild_id: int = Field(foreign_key="guild.guild_id", ondelete="CASCADE", sa_type=BigInteger)
@@ -383,7 +395,7 @@ class GuildPermissionAssignment(BaseModel, table=True):
     )
     role_id: int = Field(sa_type=BigInteger, index=True)
     assigned_by: int = Field(sa_type=BigInteger)  # User who assigned it
-    assigned_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    assigned_at: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_type=DateTime(timezone=True))
 
     # Relationships
     permission_rank = Relationship(

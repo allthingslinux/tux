@@ -6,7 +6,7 @@ from typing import Any, cast
 from uuid import UUID, uuid4
 
 from pydantic import field_serializer
-from sqlalchemy import text
+from sqlalchemy import DateTime, text
 from sqlmodel import Field, SQLModel
 
 
@@ -26,16 +26,18 @@ class BaseModel(SQLModel):
     # Timestamp fields
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
-        nullable=False,
-        description="Timestamp for record creation",
-        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
+        sa_type=DateTime(timezone=True),
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP"), "nullable": False},
     )
 
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
-        nullable=False,
-        description="Timestamp for last record update",
-        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP"), "onupdate": text("CURRENT_TIMESTAMP")},
+        sa_type=DateTime(timezone=True),
+        sa_column_kwargs={
+            "server_default": text("CURRENT_TIMESTAMP"),
+            "onupdate": text("CURRENT_TIMESTAMP"),
+            "nullable": False,
+        },
     )
 
     @field_serializer("created_at", "updated_at")
@@ -133,10 +135,7 @@ class SoftDeleteMixin(SQLModel):
     - is_deleted: Boolean flag for soft delete status
     """
 
-    deleted_at: datetime | None = Field(
-        default=None,
-        description="Timestamp for soft deletion",
-    )
+    deleted_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
 
     is_deleted: bool = Field(
         default=False,
