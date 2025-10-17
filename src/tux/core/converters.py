@@ -1,3 +1,11 @@
+"""
+Discord.py command converters for Tux bot.
+
+This module provides custom converters for parsing command arguments,
+including time durations, case types, and utility functions for
+channel resolution and boolean conversion.
+"""
+
 from __future__ import annotations
 
 import re
@@ -17,6 +25,12 @@ time_dict = {"h": 3600, "s": 1, "m": 60, "d": 86400}
 
 
 class TimeConverter(commands.Converter[float]):
+    """Convert string representations of time durations to seconds.
+
+    Supports time units: s (seconds), m (minutes), h (hours), d (days).
+    Examples: "1h30m", "2d", "45s", "1.5h".
+    """
+
     async def convert(self, ctx: commands.Context[Any], argument: str) -> float:
         """
         Convert a string representation of time (e.g., "1h30m", "2d") into seconds.
@@ -59,6 +73,12 @@ class TimeConverter(commands.Converter[float]):
 
 
 class CaseTypeConverter(commands.Converter[CaseType]):
+    """Convert string representations to CaseType enum values.
+
+    Accepts case type names (case-insensitive) and converts them to
+    the corresponding CaseType enum value for moderation commands.
+    """
+
     async def convert(self, ctx: commands.Context[Any], argument: str) -> CaseType:
         """
         Convert a string to a CaseType enum.

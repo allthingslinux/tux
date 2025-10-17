@@ -1,3 +1,11 @@
+"""
+Mock Plugin for Tux Bot.
+
+This plugin provides error testing and debugging functionality,
+allowing developers to trigger various error conditions and test
+error handling mechanisms in the bot.
+"""
+
 import asyncio
 from typing import Any
 
@@ -15,18 +23,50 @@ from tux.ui.embeds import EmbedCreator
 
 # Minimal Mock Objects for Required Arguments
 class MockParameter:
+    """Mock parameter object for testing purposes."""
+
     def __init__(self, name: str):
+        """Initialize a mock parameter.
+
+        Parameters
+        ----------
+        name : str
+            The name of the parameter.
+        """
         self.name = name
 
     def __repr__(self) -> str:
+        """Return string representation of the mock parameter.
+
+        Returns
+        -------
+        str
+            String representation.
+        """
         return f"<MockParameter name='{self.name}'>"
 
 
 class MockFlag:
+    """Mock flag object for testing purposes."""
+
     def __init__(self, name: str):
+        """Initialize a mock flag.
+
+        Parameters
+        ----------
+        name : str
+            The name of the flag.
+        """
         self.name = name
 
     def __repr__(self) -> str:
+        """Return string representation of the mock flag.
+
+        Returns
+        -------
+        str
+            String representation.
+        """
         return f"<MockFlag name='{self.name}'>"
 
 

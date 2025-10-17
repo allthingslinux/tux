@@ -1,3 +1,11 @@
+"""
+Database Utilities for Tux Bot.
+
+This module provides utility functions for accessing database services,
+controllers, and coordinators from various Discord context sources like
+commands.Context, discord.Interaction, or Tux bot instances.
+"""
+
 from __future__ import annotations
 
 from typing import TypeVar

@@ -1,3 +1,11 @@
+"""
+Shared Utility Functions for Tux Bot.
+
+This module contains common utility functions used throughout the Tux Discord bot,
+including text processing, time conversion, parameter validation, and documentation
+formatting utilities.
+"""
+
 import inspect
 import re
 from datetime import timedelta
@@ -306,7 +314,32 @@ def generate_usage(
 
 
 def docstring_parameter(*sub: Any) -> Any:
+    """Parameterize docstrings with format-style substitution.
+
+    Parameters
+    ----------
+    *sub : Any
+        Substitution values to use in the docstring formatting.
+
+    Returns
+    -------
+    Any
+        The decorator function.
+    """
+
     def dec(obj: Any) -> Any:
+        """Apply parameter substitution to the object's docstring.
+
+        Parameters
+        ----------
+        obj : Any
+            The object whose docstring should be parameterized.
+
+        Returns
+        -------
+        Any
+            The object with modified docstring.
+        """
         if obj.__doc__ is not None:
             obj.__doc__ = obj.__doc__.format(*sub)
         else:

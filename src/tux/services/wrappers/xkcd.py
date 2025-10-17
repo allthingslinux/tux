@@ -1,3 +1,11 @@
+"""
+xkcd Comics API Wrapper for Tux Bot.
+
+This module provides integration with the xkcd webcomic API,
+allowing the bot to fetch and display xkcd comics with full metadata
+and image processing capabilities.
+"""
+
 import datetime
 import json
 import random
@@ -41,6 +49,19 @@ class Comic:
         comic_url: str | None = None,
         explanation_url: str | None = None,
     ) -> None:
+        """Initialize a Comic instance from xkcd API data.
+
+        Parameters
+        ----------
+        xkcd_dict : dict[str, Any]
+            Dictionary containing xkcd comic metadata from the API.
+        raw_image : bytes, optional
+            Raw image data for the comic.
+        comic_url : str, optional
+            Direct URL to the comic page.
+        explanation_url : str, optional
+            URL to the comic explanation.
+        """
         self.id: int | None = xkcd_dict.get("num")
         self.date: datetime.date | None = self._determine_date(xkcd_dict)
         self.title: str | None = xkcd_dict.get("safe_title")
@@ -119,6 +140,8 @@ class Comic:
 
 
 class Client:
+    """xkcd API client for fetching and managing comics."""
+
     def __init__(
         self,
         api_url: str = "https://xkcd.com",

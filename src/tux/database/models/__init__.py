@@ -1,3 +1,11 @@
+"""
+Database Models for Tux Bot.
+
+This module contains all SQLModel-based database models used by the Tux Discord bot,
+including base classes, mixins, enums, and specific model classes for various
+features like moderation, levels, snippets, and guild configuration.
+"""
+
 from __future__ import annotations
 
 # Import base classes and enums

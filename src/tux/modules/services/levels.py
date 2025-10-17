@@ -20,7 +20,6 @@ class LevelsService(BaseCog):
         if self.unload_if_missing_config(
             not CONFIG.XP_CONFIG.XP_ROLES,
             "XP_ROLES configuration",
-            "tux.modules.services.levels",
         ):
             return
 

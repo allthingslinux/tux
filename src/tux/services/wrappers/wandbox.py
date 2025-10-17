@@ -1,3 +1,11 @@
+"""
+Wandbox API Wrapper for Tux Bot.
+
+This module provides integration with the Wandbox online compiler API,
+allowing code execution and compilation for various programming languages
+within the Tux Discord bot.
+"""
+
 from typing import Any
 
 import httpx

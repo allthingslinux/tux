@@ -205,9 +205,11 @@ class TuxApp:
 
         # Define signal handlers as closures to capture loop context
         def _sigterm() -> None:
+            """Handle SIGTERM signal by initiating graceful shutdown."""
             self._handle_signal_shutdown(loop, signal.SIGTERM)
 
         def _sigint() -> None:
+            """Handle SIGINT signal by initiating graceful shutdown."""
             self._handle_signal_shutdown(loop, signal.SIGINT)
 
         try:
@@ -220,6 +222,15 @@ class TuxApp:
             # Fallback for Windows: Use traditional signal module
             # This doesn't integrate as well with asyncio but is the only option
             def _signal_handler(signum: int, frame: FrameType | None) -> None:
+                """Handle signals on Windows by reporting to Sentry and raising KeyboardInterrupt.
+
+                Parameters
+                ----------
+                signum : int
+                    The signal number received.
+                frame : FrameType, optional
+                    The current stack frame when the signal was received.
+                """
                 SentryManager.report_signal(signum, frame)
                 logger.info(f"Signal {signum} received, shutting down...")
                 # Raise KeyboardInterrupt to break out of run_until_complete

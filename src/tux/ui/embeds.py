@@ -1,3 +1,10 @@
+"""
+Discord Embed Creation Utilities for Tux Bot.
+
+This module provides utilities for creating standardized Discord embeds
+with consistent styling, colors, and formatting across the bot.
+"""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -14,6 +21,8 @@ from tux.shared.constants import CONST
 
 
 class EmbedType(Enum):
+    """Enumeration of available embed types with predefined styles."""
+
     DEFAULT = 1
     INFO = 2
     ERROR = 3
@@ -25,6 +34,8 @@ class EmbedType(Enum):
 
 
 class EmbedCreator:
+    """Utility class for creating standardized Discord embeds."""
+
     DEFAULT: EmbedType = EmbedType.DEFAULT
     INFO: EmbedType = EmbedType.INFO
     ERROR: EmbedType = EmbedType.ERROR
@@ -148,6 +159,22 @@ class EmbedCreator:
         user_name: str | None = None,
         user_display_avatar: str | None = None,
     ) -> tuple[str, str | None]:
+        """Generate footer text and icon for embeds.
+
+        Parameters
+        ----------
+        bot : Tux, optional
+            The bot instance to get latency from.
+        user_name : str, optional
+            Username to include in footer.
+        user_display_avatar : str, optional
+            User avatar URL for footer icon.
+
+        Returns
+        -------
+        tuple[str, str | None]
+            Tuple of (footer_text, avatar_url).
+        """
         try:
             text: str = (
                 f"{user_name}@discord $" if user_name else f"{CONFIG.BOT_INFO.BOT_NAME.lower()}@discord $"

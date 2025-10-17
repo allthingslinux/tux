@@ -1,3 +1,10 @@
+"""
+TTY Roles Plugin for Tux Bot.
+
+This plugin automatically assigns roles to users based on the guild member count,
+using a naming scheme based on TTY device names (/dev/ttyN).
+"""
+
 import datetime
 import math
 
@@ -10,7 +17,16 @@ from tux.core.bot import Tux
 
 
 class TtyRoles(BaseCog):
+    """Plugin for automatically assigning TTY-based roles based on member count."""
+
     def __init__(self, bot: Tux):
+        """Initialize the TtyRoles plugin.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to initialize the plugin with.
+        """
         self.bot = bot
         self.base_role_name = "/dev/tty"
 
@@ -109,4 +125,11 @@ class TtyRoles(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the tty_roles plugin.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(TtyRoles(bot))

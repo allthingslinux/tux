@@ -23,9 +23,18 @@ from scripts.registry import Command
 
 
 class DocsCLI(BaseCLI):
-    """Documentation CLI with unified interface for all documentation operations."""
+    """Documentation CLI with unified interface for all documentation operations.
+
+    Provides a comprehensive set of commands for managing MkDocs documentation,
+    including serving, building, deploying, and maintenance operations.
+    """
 
     def __init__(self):
+        """Initialize the DocsCLI application.
+
+        Sets up the CLI with documentation-specific commands and configures
+        the command registry for MkDocs operations.
+        """
         super().__init__(
             name="docs",
             description="Documentation CLI - A unified interface for all documentation operations",

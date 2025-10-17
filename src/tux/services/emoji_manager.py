@@ -1,3 +1,11 @@
+"""
+Emoji Manager Service for Tux Bot.
+
+This module provides comprehensive emoji management functionality for the Tux Discord bot,
+including creating, updating, and managing custom emojis across guilds. It supports
+bulk operations, file-based emoji storage, and automatic cleanup.
+"""
+
 import asyncio
 import contextlib
 from pathlib import Path

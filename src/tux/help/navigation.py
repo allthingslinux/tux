@@ -37,6 +37,17 @@ class HelpNavigation:
     """Manages help system navigation and UI interactions."""
 
     def __init__(self, ctx: commands.Context[Any], data: HelpData, renderer: HelpRenderer) -> None:
+        """Initialize the help navigation manager.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Any]
+            The Discord context for the help command.
+        data : HelpData
+            The help data manager instance.
+        renderer : HelpRenderer
+            The help renderer instance.
+        """
         self.ctx = ctx
         self.data = data
         self.renderer = renderer

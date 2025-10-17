@@ -36,9 +36,71 @@ F = TypeVar("F", bound=Callable[..., Awaitable[Any]])
 
 
 def requires_command_permission(*, allow_unconfigured: bool = False) -> Callable[[F], F]:
+    """Provide dynamic, database-driven command permissions.
+
+    This decorator provides fully dynamic permission checking that reads
+    required permission ranks from the database per guild. Commands are
+    denied by default if not configured (safe mode).
+
+    Parameters
+    ----------
+    allow_unconfigured : bool, optional
+        If True, allow commands without database configuration.
+        If False (default), deny unconfigured commands.
+
+    Returns
+    -------
+    Callable[[F], F]
+        The decorated function with permission checking.
+
+    Raises
+    ------
+    TuxPermissionDeniedError
+        When user lacks required permissions.
+    ValueError
+        When context or interaction cannot be extracted from arguments.
+    """
+
     def decorator(func: F) -> F:
+        """Apply permission checking wrapper to the decorated function.
+
+        Parameters
+        ----------
+        func : F
+            The function to be decorated with permission checking.
+
+        Returns
+        -------
+        F
+            The wrapped function with permission checking.
+        """
+
         @functools.wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:  # noqa: PLR0912
+            """Check permissions and execute the decorated function if allowed.
+
+            This wrapper performs comprehensive permission checking including
+            bot owner bypass, guild owner bypass, and database-driven rank checking.
+
+            Parameters
+            ----------
+            *args : Any
+                Positional arguments passed to the decorated function.
+            **kwargs : Any
+                Keyword arguments passed to the decorated function.
+
+            Returns
+            -------
+            Any
+                The result of the decorated function execution.
+
+            Raises
+            ------
+            TuxPermissionDeniedError
+                When user lacks required permissions for the command.
+            ValueError
+                When context or interaction cannot be found in arguments.
+            """
             # Extract context or interaction from args
             ctx, interaction = _extract_context_or_interaction(args)
 
@@ -131,6 +193,18 @@ async def _get_user_rank_from_interaction(
     Get user permission rank from an interaction (for app commands).
 
     Uses Discord.py's built-in Context.from_interaction() to create a proper context.
+
+    Parameters
+    ----------
+    permission_system : Any
+        The permission system to use.
+    interaction : discord.Interaction[Any]
+        The interaction to get the user permission rank from.
+
+    Returns
+    -------
+    int
+        The user permission rank.
     """
     ctx: commands.Context[Any] = await commands.Context.from_interaction(interaction)  # type: ignore[reportUnknownMemberType]
 

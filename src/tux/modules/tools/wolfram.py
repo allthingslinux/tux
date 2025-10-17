@@ -22,7 +22,6 @@ class Wolfram(BaseCog):
         if self.unload_if_missing_config(
             not CONFIG.EXTERNAL_SERVICES.WOLFRAM_APP_ID,
             "Wolfram Alpha API ID",
-            "tux.modules.tools.wolfram",
         ):
             return
 

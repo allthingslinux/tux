@@ -25,9 +25,18 @@ from scripts.registry import Command
 
 
 class TestCLI(BaseCLI):
-    """Test CLI with unified interface for all testing operations."""
+    """Test CLI with unified interface for all testing operations.
+
+    Provides comprehensive testing commands including coverage reports,
+    parallel execution, HTML reports, and benchmarking capabilities.
+    """
 
     def __init__(self):
+        """Initialize the TestCLI application.
+
+        Sets up the CLI with test-specific commands and configures
+        the command registry for pytest operations.
+        """
         super().__init__(name="test", description="Test CLI - A unified interface for all testing operations")
         self._setup_command_registry()
         self._setup_commands()

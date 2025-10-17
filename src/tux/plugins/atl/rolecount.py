@@ -166,7 +166,16 @@ vanity_ids = [
 
 
 class RoleCount(BaseCog):
+    """Role count plugin for ATL Discord server."""
+
     def __init__(self, bot: Tux):
+        """Initialize the RoleCount plugin.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to initialize the plugin with.
+        """
         self.bot = bot
         self.roles_emoji_mapping = {
             "ds": distro_ids,
@@ -371,4 +380,11 @@ class RoleCount(BaseCog):
 
 
 async def setup(bot: Tux):
+    """Set up the rolecount plugin.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(RoleCount(bot))

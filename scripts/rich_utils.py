@@ -10,9 +10,23 @@ from rich.table import Table
 
 
 class RichCLI:
-    """Rich utilities for CLI applications."""
+    """Rich utilities for CLI applications.
+
+    Provides a set of methods for consistent, colorized CLI output using Rich.
+    Includes methods for success, error, info, and warning messages, as well
+    as table printing and progress bars.
+
+    Attributes
+    ----------
+    console : Console
+        Rich console instance for output formatting.
+    """
 
     def __init__(self):
+        """Initialize a RichCLI instance.
+
+        Creates a Rich Console instance for formatted output.
+        """
         self.console = Console()
 
     def print_success(self, message: str) -> None:

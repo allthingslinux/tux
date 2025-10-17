@@ -8,18 +8,86 @@ from collections.abc import Callable
 
 
 class Command:
-    """Represents a single CLI command."""
+    """Represents a single CLI command.
+
+    A simple data structure that encapsulates a CLI command with its
+    name, function, and help text.
+
+    Parameters
+    ----------
+    name : str
+        The name of the command.
+    func : Callable[..., None]
+        The function that implements the command.
+    help_text : str
+        Help text describing what the command does.
+
+    Attributes
+    ----------
+    name : str
+        The command name.
+    func : Callable[..., None]
+        The command function.
+    help_text : str
+        Description of the command.
+    """
 
     def __init__(self, name: str, func: Callable[..., None], help_text: str):
+        """Initialize a Command instance.
+
+        Parameters
+        ----------
+        name : str
+            The name of the command.
+        func : Callable[..., None]
+            The function that implements the command.
+        help_text : str
+            Help text describing what the command does.
+        """
         self.name = name
         self.func = func
         self.help_text = help_text
 
 
 class CommandGroup:
-    """Represents a group of related CLI commands."""
+    """Represents a group of related CLI commands.
+
+    A collection of commands organized under a common name and help panel.
+    Useful for grouping related functionality in CLI help output.
+
+    Parameters
+    ----------
+    name : str
+        The name of the command group.
+    help_text : str
+        Help text describing the group.
+    rich_help_panel : str
+        Rich help panel name for organizing commands in help output.
+
+    Attributes
+    ----------
+    name : str
+        The group name.
+    help_text : str
+        Description of the group.
+    rich_help_panel : str
+        Rich help panel identifier.
+    _commands : dict[str, Command]
+        Internal dictionary of commands in this group.
+    """
 
     def __init__(self, name: str, help_text: str, rich_help_panel: str):
+        """Initialize a CommandGroup instance.
+
+        Parameters
+        ----------
+        name : str
+            The name of the command group.
+        help_text : str
+            Help text describing the group.
+        rich_help_panel : str
+            Rich help panel name for organizing commands in help output.
+        """
         self.name = name
         self.help_text = help_text
         self.rich_help_panel = rich_help_panel
@@ -39,9 +107,24 @@ class CommandGroup:
 
 
 class CommandRegistry:
-    """Registry for managing CLI commands in an OOP way."""
+    """Registry for managing CLI commands in an OOP way.
+
+    A central registry that manages both individual commands and command groups.
+    Provides methods for registering and retrieving commands and groups.
+
+    Attributes
+    ----------
+    _groups : dict[str, CommandGroup]
+        Internal dictionary of registered command groups.
+    _commands : dict[str, Command]
+        Internal dictionary of registered individual commands.
+    """
 
     def __init__(self):
+        """Initialize a CommandRegistry instance.
+
+        Creates empty dictionaries for storing command groups and individual commands.
+        """
         self._groups: dict[str, CommandGroup] = {}
         self._commands: dict[str, Command] = {}
 

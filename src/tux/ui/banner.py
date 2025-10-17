@@ -38,6 +38,13 @@ class BannerBuilder:
     """Builder class for creating rich text banners."""
 
     def __init__(self, config: BannerConfig) -> None:
+        """Initialize the banner builder.
+
+        Parameters
+        ----------
+        config : BannerConfig
+            Configuration object containing banner settings and content.
+        """
         self.config = config
         self._console = Console()
 

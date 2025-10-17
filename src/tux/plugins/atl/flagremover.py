@@ -1,3 +1,10 @@
+"""
+Flag Remover Plugin for Tux Bot.
+
+This plugin automatically removes flag reactions from messages in a specific channel,
+preventing the posting of country flags and other banned emoji reactions.
+"""
+
 import discord
 from discord.ext import commands
 
@@ -13,11 +20,27 @@ EXTRA_BANNED_EMOJIS = []  # should be unicode emoji list, e.g. ["☹️", "😀"
 
 
 class FlagRemover(BaseCog):
+    """Plugin for automatically removing flag reactions from monitored channels."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the FlagRemover plugin.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to initialize the plugin with.
+        """
         self.bot = bot
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
+        """Handle reaction add events to remove banned flag emojis.
+
+        Parameters
+        ----------
+        payload : discord.RawReactionActionEvent
+            The raw reaction action event payload.
+        """
         user = self.bot.get_user(payload.user_id)
         if user is None or user.bot:
             return
@@ -49,4 +72,11 @@ class FlagRemover(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the flagremover plugin.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(FlagRemover(bot))

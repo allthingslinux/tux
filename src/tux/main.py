@@ -1,3 +1,11 @@
+"""
+Tux Discord Bot Main Entry Point.
+
+This module serves as the main entry point for the Tux Discord bot application.
+It handles application initialization, error handling, and provides the run()
+function that starts the bot with proper lifecycle management.
+"""
+
 import sys
 
 from loguru import logger

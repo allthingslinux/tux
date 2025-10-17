@@ -26,6 +26,10 @@ class TuxHelp(commands.HelpCommand):
     """Simplified help command using separated components."""
 
     def __init__(self) -> None:
+        """Initialize the Tux help command.
+
+        Sets up the help command with standard attributes and aliases.
+        """
         super().__init__(
             command_attrs={
                 "help": "Lists all commands and sub-commands.",

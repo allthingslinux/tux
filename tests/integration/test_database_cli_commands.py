@@ -52,14 +52,16 @@ class TestDatabaseCLICommands:
 
     def run_cli_command(self, command: str, cwd: Path | None = None) -> tuple[int, str, str]:
         """Run a CLI command and return (exit_code, stdout, stderr)."""
-        full_command = f"cd /home/kaizen/dev/allthingslinux/tux && uv run db {command}"
+        # Get project root relative to this test file
+        project_root = Path(__file__).parent.parent.parent
+        full_command = f"cd {project_root} && uv run db {command}"
 
         process = subprocess.run(
             full_command,
             shell=True,
             capture_output=True,
             text=True,
-            cwd=cwd or Path("/home/kaizen/dev/allthingslinux/tux"),
+            cwd=cwd or project_root,
         )
 
         return process.returncode, process.stdout, process.stderr
@@ -206,7 +208,7 @@ class TestMigrationLifecycle(TestDatabaseCLICommands):
     @pytest.mark.integration
     def test_check_validates_migrations(self):
         """Test that check command validates migration files."""
-        exit_code, stdout, _stderr = self.run_cli_command("check")
+        _exit_code, stdout, _stderr = self.run_cli_command("check")
         # Check command may fail if there are migration issues (which is expected in test env)
         # Just verify it runs and provides feedback
         assert "validate migrations" in stdout.lower()

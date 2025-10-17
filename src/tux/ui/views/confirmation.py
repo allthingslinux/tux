@@ -1,24 +1,43 @@
-import discord
+"""
+Discord Confirmation Views for Tux Bot.
 
-# Confirmation dialog view:
-# This view is to be used for a confirmation dialog.
-# ideally it should be sent as a DM to ensure the user requesting it is the only one able to interact.
-# The base class implements the buttons themselves,
-# and the subclasses, which are intended to be imported and used in cogs,
-# change the style and labels depending on severity of the action being confirmed.
+This module provides confirmation dialog views for Discord interactions,
+allowing users to confirm or cancel potentially destructive actions.
+Views should ideally be sent as DMs to ensure only the requesting user can interact.
+"""
+
+import discord
 
 
 class BaseConfirmationView(discord.ui.View):
+    """Base confirmation view with confirm and cancel buttons."""
+
     confirm_label: str
     confirm_style: discord.ButtonStyle
 
     def __init__(self, user: int) -> None:
+        """Initialize the base confirmation view.
+
+        Parameters
+        ----------
+        user : int
+            The user ID that can interact with this view.
+        """
         super().__init__()
         self.value: bool | None = None
         self.user = user
 
     @discord.ui.button(label="PLACEHOLDER", style=discord.ButtonStyle.secondary, custom_id="confirm")
     async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]) -> None:
+        """Handle the confirm button press.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered this action.
+        button : discord.ui.Button[discord.ui.View]
+            The button that was pressed.
+        """
         if interaction.user.id is not self.user:
             await interaction.response.send_message("This interaction is locked to the command author.", ephemeral=True)
             return
@@ -28,6 +47,15 @@ class BaseConfirmationView(discord.ui.View):
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.grey)
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button[discord.ui.View]) -> None:
+        """Handle the cancel button press.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered this action.
+        button : discord.ui.Button[discord.ui.View]
+            The button that was pressed.
+        """
         if interaction.user.id is not self.user:
             await interaction.response.send_message("This interaction is locked to the command author.", ephemeral=True)
             return

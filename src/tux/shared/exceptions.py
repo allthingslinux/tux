@@ -1,3 +1,10 @@
+"""
+Custom Exceptions for Tux Bot.
+
+This module defines all custom exception classes used throughout the Tux Discord bot,
+including database errors, permission errors, API errors, and validation errors.
+"""
+
 from typing import TypeVar
 
 from tux.database.models import Case
@@ -28,6 +35,15 @@ class TuxDatabaseConnectionError(TuxDatabaseError):
     """Raised when database connection fails."""
 
     def __init__(self, message: str = "Database connection failed", original_error: Exception | None = None):
+        """Initialize the database connection error.
+
+        Parameters
+        ----------
+        message : str, optional
+            Error message, by default "Database connection failed".
+        original_error : Exception, optional
+            The original exception that caused this error, by default None.
+        """
         self.original_error = original_error
         super().__init__(message)
 
@@ -51,6 +67,13 @@ class TuxPermissionLevelError(TuxPermissionError):
     """Raised when a user doesn't have the required permission rank."""
 
     def __init__(self, permission: str) -> None:
+        """Initialize the permission level error.
+
+        Parameters
+        ----------
+        permission : str
+            The name of the required permission that was missing.
+        """
         self.permission = permission
         super().__init__(f"Missing required permission: {permission}")
 
@@ -59,6 +82,13 @@ class TuxAppCommandPermissionLevelError(TuxPermissionError):
     """Raised when a user doesn't have the required permission rank for an app command."""
 
     def __init__(self, permission: str) -> None:
+        """Initialize the app command permission level error.
+
+        Parameters
+        ----------
+        permission : str
+            The name of the required permission that was missing for the app command.
+        """
         self.permission = permission
         super().__init__(f"Missing required permission: {permission}")
 
@@ -67,6 +97,17 @@ class TuxPermissionDeniedError(TuxPermissionError):
     """Raised when a user doesn't have permission to run a command (dynamic system)."""
 
     def __init__(self, required_rank: int, user_rank: int, command_name: str | None = None):
+        """Initialize the permission denied error.
+
+        Parameters
+        ----------
+        required_rank : int
+            The minimum permission rank required to run the command.
+        user_rank : int
+            The actual permission rank of the user.
+        command_name : str, optional
+            The name of the command that was attempted, by default None.
+        """
         self.required_rank = required_rank
         self.user_rank = user_rank
         self.command_name = command_name

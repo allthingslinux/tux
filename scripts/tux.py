@@ -21,9 +21,19 @@ from scripts.registry import Command
 
 
 class TuxCLI(BaseCLI):
-    """Tux Bot CLI with unified interface for all bot operations."""
+    """Tux Bot CLI with unified interface for all bot operations.
+
+    A command-line interface for the Tux Discord bot that provides
+    commands for starting the bot, showing version information, and
+    other bot-related operations.
+    """
 
     def __init__(self):
+        """Initialize the Tux CLI application.
+
+        Sets up the CLI with the Tux bot name and description,
+        configures the command registry, and registers all available commands.
+        """
         super().__init__(name="tux", description="Tux Bot CLI - A unified interface for all bot operations")
         self._setup_command_registry()
         self._setup_commands()

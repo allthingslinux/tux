@@ -1,3 +1,10 @@
+"""
+Kick moderation command for Tux Bot.
+
+This module provides the kick command functionality, allowing server
+moderators to kick users from the server.
+"""
+
 import discord
 from discord.ext import commands
 
@@ -10,7 +17,16 @@ from . import ModerationCogBase
 
 
 class Kick(ModerationCogBase):
+    """Kick command cog for moderating server members."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Kick cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to initialize the cog with.
+        """
         super().__init__(bot)
 
     @commands.hybrid_command(

@@ -1,3 +1,10 @@
+"""
+Ban moderation command for Tux Bot.
+
+This module provides the ban command functionality, allowing server
+moderators to ban users from the server with various options.
+"""
+
 import discord
 from discord.ext import commands
 
@@ -10,7 +17,16 @@ from . import ModerationCogBase
 
 
 class Ban(ModerationCogBase):
+    """Ban command cog for moderating server members."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Ban cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to initialize the cog with.
+        """
         super().__init__(bot)
 
     @commands.hybrid_command(name="ban", aliases=["b"])

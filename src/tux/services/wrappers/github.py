@@ -1,3 +1,10 @@
+"""
+GitHub API Service Wrapper for Tux Bot.
+
+This module provides integration with the GitHub API using GitHub Apps authentication,
+enabling the bot to interact with GitHub repositories, issues, pull requests, and more.
+"""
+
 import httpx
 from githubkit import AppInstallationAuthStrategy, GitHub, Response
 from githubkit.versions.latest.models import (
@@ -19,6 +26,8 @@ from tux.shared.exceptions import (
 
 
 class GithubService:
+    """GitHub API service wrapper for repository and issue management."""
+
     def __init__(self) -> None:
         # Check if GitHub configuration is available
         if not CONFIG.EXTERNAL_SERVICES.GITHUB_APP_ID:

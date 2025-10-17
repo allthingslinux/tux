@@ -1,3 +1,11 @@
+"""
+Fact Plugin for Tux Bot.
+
+This plugin provides random fact generation with configurable fact types,
+placeholder substitution, and automated fact posting functionality.
+Facts are loaded from TOML files and support various categories.
+"""
+
 import contextlib
 import random
 import tomllib
@@ -59,7 +67,16 @@ def _substitute_placeholders(bot: Tux, text: str) -> str:
 
 
 class Fact(BaseCog):
+    """Fact plugin for generating and posting random facts."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Fact plugin.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to initialize the plugin with.
+        """
         super().__init__(bot)
         self.facts_data: dict[str, dict[str, Any]] = {}
         self._load_facts()
@@ -80,6 +97,18 @@ class Fact(BaseCog):
             self.facts_data = {}
 
     async def _fetch_fact(self, fact_type: str) -> tuple[str, str] | None:
+        """Fetch a fact of the specified type.
+
+        Parameters
+        ----------
+        fact_type : str
+            The type of fact to fetch.
+
+        Returns
+        -------
+        tuple[str, str] | None
+            A tuple of (fact_text, fact_type) if found, None otherwise.
+        """
         ft = fact_type.lower()
         # Determine category key
         if ft == "random":
@@ -118,6 +147,20 @@ class Fact(BaseCog):
         interaction: discord.Interaction,
         current: str,
     ) -> list[app_commands.Choice[str]]:
+        """Provide autocomplete suggestions for fact types.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction object.
+        current : str
+            The current user input for filtering.
+
+        Returns
+        -------
+        list[app_commands.Choice[str]]
+            List of autocomplete choices.
+        """
         choices = [app_commands.Choice(name="Random", value="random")] + [
             app_commands.Choice(name=_substitute_placeholders(self.bot, data.get("name", key.title())), value=key)
             for key, data in self.facts_data.items()

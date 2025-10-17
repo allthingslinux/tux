@@ -73,6 +73,13 @@ class AsyncDatabaseService(DatabaseServiceABC):
     """Async database service implementation."""
 
     def __init__(self, echo: bool = False):
+        """Initialize the async database service.
+
+        Parameters
+        ----------
+        echo : bool, optional
+            Whether to enable SQL query logging (default is False).
+        """
         self._engine: AsyncEngine | None = None
         self._session_factory: async_sessionmaker[AsyncSession] | None = None
         self._echo = echo

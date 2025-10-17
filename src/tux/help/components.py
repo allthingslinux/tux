@@ -32,22 +32,50 @@ class HelpCommandProtocol(Protocol):
     subcommand_pages: list[list[commands.Command[Any, Any, Any]]]
 
     # Navigation handlers
-    async def on_category_select(self, interaction: discord.Interaction, category: str) -> None: ...
-    async def on_command_select(self, interaction: discord.Interaction, command_name: str) -> None: ...
-    async def on_subcommand_select(self, interaction: discord.Interaction, subcommand_name: str) -> None: ...
-    async def on_back_button(self, interaction: discord.Interaction) -> None: ...
-    async def on_next_button(self, interaction: discord.Interaction) -> None: ...
-    async def on_prev_button(self, interaction: discord.Interaction) -> None: ...
+    async def on_category_select(self, interaction: discord.Interaction, category: str) -> None:
+        """Handle category selection from dropdown menu."""
+        ...
+
+    async def on_command_select(self, interaction: discord.Interaction, command_name: str) -> None:
+        """Handle command selection from dropdown menu."""
+        ...
+
+    async def on_subcommand_select(self, interaction: discord.Interaction, subcommand_name: str) -> None:
+        """Handle subcommand selection from dropdown menu."""
+        ...
+
+    async def on_back_button(self, interaction: discord.Interaction) -> None:
+        """Handle back navigation button press."""
+        ...
+
+    async def on_next_button(self, interaction: discord.Interaction) -> None:
+        """Handle next page navigation button press."""
+        ...
+
+    async def on_prev_button(self, interaction: discord.Interaction) -> None:
+        """Handle previous page navigation button press."""
+        ...
 
     # Context
     @property
-    def context(self) -> commands.Context[Any]: ...
+    def context(self) -> commands.Context[Any]:
+        """Get the Discord context for this help command."""
+        ...
 
 
 class BaseHelpView(discord.ui.View):
     """Base view for all help command navigation."""
 
     def __init__(self, help_command: HelpCommandProtocol, timeout: int = 180):
+        """Initialize the base help view.
+
+        Parameters
+        ----------
+        help_command : HelpCommandProtocol
+            The help command instance this view belongs to.
+        timeout : int, optional
+            View timeout in seconds (default 180).
+        """
         super().__init__(timeout=timeout)
         self.help_command = help_command
         self.author = help_command.context.author
@@ -64,6 +92,17 @@ class BaseSelectMenu(discord.ui.Select[BaseHelpView]):
     """Base class for help selection menus."""
 
     def __init__(self, help_command: HelpCommandProtocol, options: list[discord.SelectOption], placeholder: str):
+        """Initialize the base select menu.
+
+        Parameters
+        ----------
+        help_command : HelpCommandProtocol
+            The help command instance this menu belongs to.
+        options : list[discord.SelectOption]
+            List of options for the select menu.
+        placeholder : str
+            Placeholder text for the select menu.
+        """
         super().__init__(
             placeholder=placeholder,
             min_values=1,
@@ -95,6 +134,23 @@ class BaseButton(discord.ui.Button[BaseHelpView]):
         custom_id: str,
         disabled: bool = False,
     ):
+        """Initialize the base button.
+
+        Parameters
+        ----------
+        help_command : HelpCommandProtocol
+            The help command instance this button belongs to.
+        style : discord.ButtonStyle
+            The button style (primary, secondary, success, danger, link).
+        label : str
+            The button label text.
+        emoji : str
+            The button emoji.
+        custom_id : str
+            Unique identifier for the button.
+        disabled : bool, optional
+            Whether the button is disabled (default False).
+        """
         super().__init__(
             style=style,
             label=label,
@@ -145,6 +201,13 @@ class BackButton(BaseButton):
     """Button for navigating back to the previous page."""
 
     def __init__(self, help_command: HelpCommandProtocol):
+        """Initialize the back navigation button.
+
+        Parameters
+        ----------
+        help_command : HelpCommandProtocol
+            The help command instance this button belongs to.
+        """
         super().__init__(
             help_command=help_command,
             style=discord.ButtonStyle.secondary,
@@ -162,6 +225,7 @@ class CloseButton(discord.ui.Button[BaseHelpView]):
     """Button for closing the help menu."""
 
     def __init__(self):
+        """Initialize the close button for dismissing the help menu."""
         super().__init__(
             style=discord.ButtonStyle.danger,
             label="Close",
@@ -186,6 +250,21 @@ class PaginationButton(BaseButton):
         custom_id: str,
         is_next: bool,
     ):
+        """Initialize the pagination button.
+
+        Parameters
+        ----------
+        help_command : HelpCommandProtocol
+            The help command instance this button belongs to.
+        label : str
+            The button label text.
+        emoji : str
+            The button emoji.
+        custom_id : str
+            Unique identifier for the button.
+        is_next : bool
+            Whether this is a "next" button (True) or "previous" button (False).
+        """
         # Determine if button should be disabled based on current page
         current_page = help_command.current_subcommand_page
         disabled = False
@@ -210,6 +289,13 @@ class NextButton(PaginationButton):
     """Button for navigating to the next page of subcommands."""
 
     def __init__(self, help_command: HelpCommandProtocol):
+        """Initialize the next page navigation button.
+
+        Parameters
+        ----------
+        help_command : HelpCommandProtocol
+            The help command instance this button belongs to.
+        """
         super().__init__(
             help_command=help_command,
             label="Next",
@@ -227,6 +313,13 @@ class PrevButton(PaginationButton):
     """Button for navigating to the previous page of subcommands."""
 
     def __init__(self, help_command: HelpCommandProtocol):
+        """Initialize the previous page navigation button.
+
+        Parameters
+        ----------
+        help_command : HelpCommandProtocol
+            The help command instance this button belongs to.
+        """
         super().__init__(
             help_command=help_command,
             label="Previous",
@@ -253,6 +346,17 @@ class DirectHelpView(BaseHelpView):
         group: commands.Group[Any, Any, Any],
         pages: list[list[commands.Command[Any, Any, Any]]],
     ):
+        """Initialize the direct help view with pagination.
+
+        Parameters
+        ----------
+        help_command : HelpCommandProtocol
+            The help command instance this view belongs to.
+        group : commands.Group[Any, Any, Any]
+            The command group to display help for.
+        pages : list[list[commands.Command[Any, Any, Any]]]
+            Pre-paginated list of commands for navigation.
+        """
         super().__init__(help_command)
         self.group = group
         self.current_page = 0

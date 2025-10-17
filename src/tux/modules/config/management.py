@@ -19,6 +19,13 @@ class ConfigManagement:
     """Management commands for config system."""
 
     def __init__(self, bot: Tux) -> None:
+        """Initialize the ConfigManagement with a bot instance.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to use for database operations.
+        """
         self.bot = bot
 
     async def rank_list_command(self, ctx: commands.Context[Tux]) -> None:

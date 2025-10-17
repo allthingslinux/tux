@@ -1,3 +1,10 @@
+"""
+Shared Regular Expressions for Tux Bot.
+
+This module contains compiled regular expression patterns used throughout the Tux Discord bot
+for parsing Discord entities, URLs, code blocks, and other common patterns.
+"""
+
 import re
 
 DISCORD_ID = re.compile(r"(\d{15,20})$")

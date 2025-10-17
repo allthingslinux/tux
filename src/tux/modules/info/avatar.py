@@ -1,3 +1,10 @@
+"""
+Avatar command for Tux Bot.
+
+This module provides the avatar command, allowing users to view
+their own avatar or other members' avatars in the server.
+"""
+
 import mimetypes
 from io import BytesIO
 
@@ -11,7 +18,16 @@ from tux.shared.constants import CONST
 
 
 class Avatar(BaseCog):
+    """Avatar command cog for displaying user avatars."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Avatar cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to initialize the cog with.
+        """
         super().__init__(bot)
 
     @commands.hybrid_command(

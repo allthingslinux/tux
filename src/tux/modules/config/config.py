@@ -19,6 +19,13 @@ class Config(commands.Cog):
     """Comprehensive guild configuration and setup system."""
 
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Config cog with all sub-modules.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to initialize the config cog with.
+        """
         self.bot = bot
 
         # Initialize sub-modules

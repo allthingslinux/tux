@@ -1,3 +1,10 @@
+"""
+Discord Report Modal for Tux Bot.
+
+This module provides a modal dialog for users to submit anonymous reports
+to the server moderation team with proper logging and thread creation.
+"""
+
 import discord
 from loguru import logger
 
@@ -7,7 +14,18 @@ from tux.ui.embeds import EmbedCreator
 
 
 class ReportModal(discord.ui.Modal):
+    """Modal for submitting anonymous user reports."""
+
     def __init__(self, *, title: str = "Submit an anonymous report", bot: Tux) -> None:
+        """Initialize the report modal.
+
+        Parameters
+        ----------
+        title : str, optional
+            The modal title, by default "Submit an anonymous report".
+        bot : Tux
+            The bot instance to use for database access and operations.
+        """
         super().__init__(title=title)
         self.bot = bot
         # Resolve config via shared DB utility (strict DI required)

@@ -23,9 +23,18 @@ from scripts.registry import Command
 
 
 class DevCLI(BaseCLI):
-    """Development tools CLI with unified interface for all development operations."""
+    """Development tools CLI with unified interface for all development operations.
+
+    Provides comprehensive development tools including code quality checks,
+    formatting, type checking, documentation linting, and workflow automation.
+    """
 
     def __init__(self):
+        """Initialize the DevCLI application.
+
+        Sets up the CLI with development-specific commands and configures
+        the command registry for development operations.
+        """
         super().__init__(
             name="dev",
             description="Tux Development Tools CLI - A unified interface for all development operations",
@@ -104,69 +113,74 @@ class DevCLI(BaseCLI):
     # DEVELOPMENT COMMANDS
     # ============================================================================
 
-    def lint(self) -> None:  # sourcery skip: class-extract-method
+    def lint(self) -> None:
+        """Run linting checks with Ruff to ensure code quality."""
         self.rich.print_section("🔍 Running Linting", "blue")
         self.rich.print_info("Checking code quality with Ruff...")
         success = self._run_tool_command(["uv", "run", "ruff", "check", "."], "Linting completed successfully")
         if not success:
-            self.rich.print_error("Linting failed - check output above for details")
-            msg = "Linting failed"
-            raise RuntimeError(msg)
+            self.rich.print_error("Linting did not pass - see issues above")
+            sys.exit(1)
 
     def lint_fix(self) -> None:
+        """Run linting checks with Ruff and automatically apply fixes."""
         self.rich.print_section("🔧 Running Linting with Fixes", "blue")
         success = self._run_tool_command(
             ["uv", "run", "ruff", "check", "--fix", "."],
             "Linting with fixes completed successfully",
         )
         if not success:
-            self.rich.print_error("Linting with fixes failed - check output above for details")
+            self.rich.print_error("Linting with fixes did not complete - see issues above")
+            sys.exit(1)
 
     def format_code(self) -> None:
+        """Format code using Ruff's formatter for consistent styling."""
         self.rich.print_section("✨ Formatting Code", "blue")
         success = self._run_tool_command(["uv", "run", "ruff", "format", "."], "Code formatting completed successfully")
         if not success:
-            self.rich.print_error("Code formatting failed - check output above for details")
+            self.rich.print_error("Code formatting did not pass - see issues above")
+            sys.exit(1)
 
     def type_check(self) -> None:
+        """Perform static type checking using basedpyright."""
         self.rich.print_section("🔍 Type Checking", "blue")
         success = self._run_tool_command(["uv", "run", "basedpyright"], "Type checking completed successfully")
         if not success:
-            self.rich.print_error("Type checking failed - check output above for details")
-            msg = "Type checking failed"
-            raise RuntimeError(msg)
+            self.rich.print_error("Type checking did not pass - see issues above")
+            sys.exit(1)
 
     def lint_docstring(self) -> None:
+        """Lint docstrings for proper formatting and completeness."""
         self.rich.print_section("🔍 Linting Docstrings", "blue")
         success = self._run_tool_command(["uv", "run", "pydoclint", "."], "Docstring linting completed successfully")
         if not success:
-            self.rich.print_error("Docstring linting failed - check output above for details")
-            msg = "Docstring linting failed"
-            raise RuntimeError(msg)
+            self.rich.print_error("Docstring linting did not pass - see issues above")
+            sys.exit(1)
 
     def docstring_coverage(self) -> None:
+        """Check docstring coverage across the codebase."""
         self.rich.print_section("🔍 Docstring Coverage", "blue")
         success = self._run_tool_command(
             ["uv", "run", "docstr-coverage", "."],
             "Docstring coverage completed successfully",
         )
         if not success:
-            self.rich.print_error("Docstring coverage failed - check output above for details")
-            msg = "Docstring coverage failed"
-            raise RuntimeError(msg)
+            self.rich.print_error("Docstring coverage below threshold - see report above")
+            sys.exit(1)
 
     def pre_commit(self) -> None:
+        """Run pre-commit hooks to ensure code quality before commits."""
         self.rich.print_section("✅ Running Pre-commit Checks", "blue")
         success = self._run_tool_command(
             ["uv", "run", "pre-commit", "run", "--all-files"],
             "Pre-commit checks completed successfully",
         )
         if not success:
-            self.rich.print_error("Pre-commit checks failed - check output above for details")
-            msg = "Pre-commit checks failed"
-            raise RuntimeError(msg)
+            self.rich.print_error("Pre-commit checks did not pass - see issues above")
+            sys.exit(1)
 
     def run_all_checks(self) -> None:
+        """Run all development checks including linting, type checking, and documentation."""
         self.rich.print_section("🚀 Running All Development Checks", "blue")
         checks: list[tuple[str, Callable[[], None]]] = [
             ("Linting", self.lint),

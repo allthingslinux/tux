@@ -13,6 +13,13 @@ class HelpData:
     """Manages help command data retrieval and caching."""
 
     def __init__(self, bot: commands.Bot | commands.AutoShardedBot) -> None:
+        """Initialize the help data manager.
+
+        Parameters
+        ----------
+        bot : commands.Bot | commands.AutoShardedBot
+            The Discord bot instance to manage help data for.
+        """
         self.bot = bot
         self._prefix_cache: dict[int | None, str] = {}
         self._category_cache: dict[str, dict[str, str]] = {}

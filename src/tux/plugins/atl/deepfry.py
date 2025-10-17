@@ -1,3 +1,11 @@
+"""
+Deepfry Plugin for Tux Bot.
+
+This plugin provides image deepfrying effects using PIL to apply various
+image processing transformations that create a "deepfried" visual effect,
+including saturation, contrast, and color adjustments.
+"""
+
 import io
 from typing import Any
 
@@ -16,6 +24,13 @@ class Deepfry(BaseCog):
     """Image deepfrying effects for Discord."""
 
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Deepfry plugin.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to initialize the plugin with.
+        """
         super().__init__(bot)
 
     @commands.hybrid_command(
@@ -157,4 +172,11 @@ class Deepfry(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the deepfry plugin.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Deepfry(bot))

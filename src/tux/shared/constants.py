@@ -1,3 +1,11 @@
+"""
+Shared Constants for Tux Bot.
+
+This module contains all application-wide constants and configuration values
+used throughout the Tux Discord bot, including embed colors, icons, limits,
+and API endpoints.
+"""
+
 from typing import Final
 
 import discord
@@ -6,6 +14,8 @@ import discord
 
 
 class Constants:
+    """Centralized constants and configuration values for the Tux bot."""
+
     # Color constants
     EMBED_COLORS: Final[dict[str, int]] = {
         "DEFAULT": 16044058,

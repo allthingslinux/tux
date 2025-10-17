@@ -400,6 +400,18 @@ class TldrClient:
         line = line.replace(r"\}\}", "__TEMP_ESCAPED_CLOSE__")
 
         def repl(match: re.Match[str]) -> str:
+            """Process individual placeholder matches for replacement.
+
+            Parameters
+            ----------
+            match : re.Match[str]
+                Regex match object containing the placeholder content.
+
+            Returns
+            -------
+            str
+                The processed placeholder replacement.
+            """
             content = match.group(1)
             if content.startswith("[") and content.endswith("]") and "|" in content:
                 short, long = content[1:-1].split("|", 1)

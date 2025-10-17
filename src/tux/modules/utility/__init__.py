@@ -1,3 +1,10 @@
+"""
+Utility Module for Tux Bot.
+
+This module provides common utility functions and helpers used throughout
+the Tux bot, including AFK management and shared functionality.
+"""
+
 import contextlib
 from datetime import datetime
 from types import NoneType

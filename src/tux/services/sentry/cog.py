@@ -12,6 +12,13 @@ class SentryHandler(commands.Cog):
     """Handles Sentry context enrichment and command performance tracking."""
 
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Sentry handler cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach the handler to.
+        """
         self.bot = bot
 
     @commands.Cog.listener("on_command")

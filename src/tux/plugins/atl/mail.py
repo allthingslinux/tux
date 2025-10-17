@@ -1,3 +1,10 @@
+"""
+Mail Plugin for Tux Bot.
+
+This plugin provides email account management functionality for the ATL Discord server,
+allowing administrators to create and manage email accounts through the Mailcow API.
+"""
+
 import random
 
 import discord
@@ -16,7 +23,16 @@ MailboxData = dict[str, str | list[str]]
 
 
 class Mail(BaseCog):
+    """Mail plugin for managing email accounts via Mailcow API."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Mail plugin.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to initialize the plugin with.
+        """
         super().__init__(bot)
         self.api_url = CONFIG.EXTERNAL_SERVICES.MAILCOW_API_URL
         self.headers = {
@@ -269,4 +285,11 @@ If you have any questions or need assistance, please feel free to reach out to t
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the mail plugin.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Mail(bot))

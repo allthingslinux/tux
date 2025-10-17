@@ -19,6 +19,13 @@ class HelpRenderer:
     """Handles help embed creation and formatting."""
 
     def __init__(self, prefix: str) -> None:
+        """Initialize the help renderer.
+
+        Parameters
+        ----------
+        prefix : str
+            The command prefix to use in help text formatting.
+        """
         self.prefix = prefix
 
     def create_base_embed(self, title: str, description: str | None = None) -> discord.Embed:

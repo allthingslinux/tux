@@ -1,3 +1,11 @@
+"""
+Base Database Models for Tux Bot.
+
+This module provides the foundational database models and utilities used
+throughout the Tux bot's database layer, including base classes with
+automatic timestamp management and serialization utilities.
+"""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -7,23 +15,27 @@ from uuid import UUID, uuid4
 
 from pydantic import field_serializer
 from sqlalchemy import DateTime, func
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel  # type: ignore[import]
 
 
 class BaseModel(SQLModel):
-    """
-    Base model with serialization capabilities and automatic timestamp management.
+    """Base SQLModel class with automatic timestamp management.
 
-    Provides to_dict() method for converting model instances to dictionaries,
-    with support for relationship inclusion and enum handling.
+    This class provides automatic created_at and updated_at timestamp fields
+    that are managed by the database, along with serialization utilities for
+    JSON responses.
 
-    Automatically includes created_at and updated_at timestamps for all models.
+    Attributes
+    ----------
+    created_at : datetime, optional
+        Timestamp when the record was created (database-managed).
+    updated_at : datetime, optional
+        Timestamp when the record was last updated (database-managed).
     """
 
     # Allow SQLModel annotations without Mapped[] for SQLAlchemy 2.0 compatibility
     __allow_unmapped__ = True
 
-    # Timestamp fields
     created_at: datetime | None = Field(
         default=None,
         sa_type=DateTime(timezone=True),
@@ -40,7 +52,18 @@ class BaseModel(SQLModel):
 
     @field_serializer("created_at", "updated_at")
     def serialize_datetimes(self, value: datetime | None) -> str | None:
-        """Serialize datetime fields to ISO format strings."""
+        """Serialize datetime objects to ISO format strings.
+
+        Parameters
+        ----------
+        value : datetime, optional
+            The datetime value to serialize.
+
+        Returns
+        -------
+        str, optional
+            ISO format string representation of the datetime, or None if value is None.
+        """
         return value.isoformat() if value else None
 
     def to_dict(self, include_relationships: bool = False, relationships: list[str] | None = None) -> dict[str, Any]:

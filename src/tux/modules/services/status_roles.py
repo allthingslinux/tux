@@ -19,7 +19,6 @@ class StatusRoles(BaseCog):
         if self.unload_if_missing_config(
             not CONFIG.STATUS_ROLES.MAPPINGS,
             "Status role mappings",
-            "tux.modules.services.status_roles",
         ):
             return
 

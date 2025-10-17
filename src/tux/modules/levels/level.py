@@ -16,7 +16,6 @@ class Level(BaseCog):
         if self.unload_if_missing_config(
             not CONFIG.XP_CONFIG.XP_ROLES,
             "XP_ROLES configuration",
-            "tux.modules.levels.level",
         ):
             return
 

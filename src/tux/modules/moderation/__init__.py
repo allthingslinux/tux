@@ -1,3 +1,11 @@
+"""
+Moderation Module for Tux Bot.
+
+This module provides the foundation for all moderation-related functionality
+in the Tux Discord bot, including base classes for moderation cogs and
+common moderation utilities.
+"""
+
 from collections.abc import Sequence
 from typing import Any, ClassVar
 

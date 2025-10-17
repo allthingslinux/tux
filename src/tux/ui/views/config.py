@@ -1,3 +1,10 @@
+"""
+Discord Configuration Views for Tux Bot.
+
+This module provides Discord UI views for configuring bot settings,
+including private log channels and report log channels.
+"""
+
 from typing import Any
 
 import discord
@@ -8,7 +15,20 @@ from tux.database.utils import get_db_controller_from
 
 
 class ConfigSetPrivateLogs(discord.ui.View):
+    """View for configuring private log channels."""
+
     def __init__(self, *, timeout: float = 180, bot: Any | None = None, db_service: DatabaseService | None = None):
+        """Initialize the config view for private logs.
+
+        Parameters
+        ----------
+        timeout : float, optional
+            View timeout in seconds, by default 180.
+        bot : Any, optional
+            Bot instance for database access, by default None.
+        db_service : DatabaseService, optional
+            Direct database service instance, by default None.
+        """
         if db_service is not None:
             # If we have a DatabaseService, create a coordinator from it
 
@@ -35,6 +55,15 @@ class ConfigSetPrivateLogs(discord.ui.View):
         interaction: discord.Interaction,
         select: discord.ui.ChannelSelect[Any],
     ) -> None:
+        """Set the private log channel for the guild.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered this action.
+        select : discord.ui.ChannelSelect[Any]
+            The channel select component.
+        """
         if interaction.guild is None:
             return
 
@@ -55,6 +84,15 @@ class ConfigSetPrivateLogs(discord.ui.View):
         interaction: discord.Interaction,
         select: discord.ui.ChannelSelect[Any],
     ) -> None:
+        """Set the report log channel for the guild.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered this action.
+        select : discord.ui.ChannelSelect[Any]
+            The channel select component.
+        """
         if interaction.guild is None:
             return
 

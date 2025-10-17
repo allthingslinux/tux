@@ -1,3 +1,10 @@
+"""
+Git Plugin for Tux Bot.
+
+This plugin provides GitHub integration commands for repository management,
+issue creation, and issue retrieval through the Tux Discord bot.
+"""
+
 from discord.ext import commands
 from loguru import logger
 
@@ -11,7 +18,16 @@ from tux.ui.embeds import EmbedCreator
 
 
 class Git(BaseCog):
+    """GitHub integration plugin for repository and issue management."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Git plugin.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to initialize the plugin with.
+        """
         super().__init__(bot)
 
         # Check if GitHub configuration is available
@@ -168,4 +184,11 @@ class Git(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the git plugin.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Git(bot))
