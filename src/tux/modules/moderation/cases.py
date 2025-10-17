@@ -443,6 +443,9 @@ class Cases(ModerationCogBase):
             await ctx.send(embed=embed, ephemeral=True)
             return
 
+        # Sort cases (highest case id first)
+        cases.sort(key=lambda x: x.case_number if x.case_number is not None else 0, reverse=True)
+
         menu = ViewMenu(
             ctx,
             menu_type=ViewMenu.TypeEmbed,
