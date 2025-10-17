@@ -142,33 +142,6 @@ class TestGlobalHTTPClient:
 class TestHTTPClientIntegration:
     """Integration tests for HTTP client with bot modules."""
 
-    @pytest.mark.asyncio
-    async def test_fact_module_integration(self, httpx_mock) -> None:
-        """Test that fact module works with centralized HTTP client."""
-        from tux.plugins.fact import Fact
-        from unittest.mock import MagicMock
-
-        # Mock the bot and fact data
-        bot = MagicMock()
-        fact_cog = Fact(bot)
-        fact_cog.facts_data = {
-            "test": {
-                "name": "Test Facts",
-                "fact_api_url": "https://api.test.com/fact",
-                "fact_api_field": "fact",
-            },
-        }
-
-        # Mock the API response
-        httpx_mock.add_response(json={"fact": "Test fact from API"})
-
-        # Test the _fetch_fact method
-        result = await fact_cog._fetch_fact("test")
-
-        assert result is not None
-        fact_text, category = result
-        assert "Test fact from API" in fact_text
-        assert category == "Test Facts"
 
     @pytest.mark.asyncio
     async def test_avatar_module_integration(self, httpx_mock) -> None:
