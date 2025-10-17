@@ -54,6 +54,38 @@ class EventHandler(BaseCog):
             ctx = await self.bot.get_context(message)
             await self.bot.invoke(ctx)
 
+    @commands.Cog.listener()
+    async def on_guild_channel_create(self, channel: discord.abc.GuildChannel) -> None:
+        """Automatically deny view permissions for jail role on new channels."""
+        if not channel.guild:
+            return
+
+        # Get jail role for this guild
+        jail_role_id = await self.db.guild_config.get_jail_role_id(channel.guild.id)
+        if not jail_role_id:
+            logger.debug(f"No jail role configured for guild {channel.guild.id}, skipping channel setup")
+            return
+
+        jail_role = channel.guild.get_role(jail_role_id)
+        if not jail_role:
+            logger.warning(f"Jail role {jail_role_id} not found in guild {channel.guild.id}")
+            return
+
+        # Set permissions to deny view for jail role
+        try:
+            await channel.set_permissions(
+                jail_role,
+                view_channel=False,
+                read_messages=False,
+                send_messages=False,
+                reason="Auto-deny jail role on new channel",
+            )
+            logger.info(f"✅ Blocked jail role from new channel: {channel.name} in {channel.guild.name}")
+        except discord.Forbidden:
+            logger.warning(f"Missing permissions to set jail role permissions in {channel.name}")
+        except Exception as e:
+            logger.error(f"Failed to set jail role permissions on {channel.name}: {e}")
+
 
 async def setup(bot: Tux) -> None:
     await bot.add_cog(EventHandler(bot))
