@@ -315,8 +315,6 @@ class BaseCog(commands.Cog):
             True if config is missing (triggers unload), False otherwise.
         config_name : str
             Name of the missing configuration for logging purposes.
-        extension_name : str
-            Full extension name for unloading (e.g., ``"tux.cogs.mycog"``).
 
         Returns
         -------
@@ -333,7 +331,8 @@ class BaseCog(commands.Cog):
         blocking cog initialization.
         """
         if condition:
-            cog_module = next(
+            # Get our "cog_name" and default to "UnknownModule" if its not found
+            cog_name = next(
                 (
                     f.frame.f_locals["self"].__class__.__module__
                     for f in inspect.stack()
@@ -341,7 +340,7 @@ class BaseCog(commands.Cog):
                 ),
                 "UnknownModule",
             )
-            logger.warning(f"{config_name} is not configured. {cog_module} will be unloaded.")
+            logger.warning(f"{config_name} is not configured. {cog_name} will be unloaded.")
         return False
 
     async def _unload_self(self, extension_name: str) -> None:
