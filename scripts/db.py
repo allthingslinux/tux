@@ -25,9 +25,18 @@ from tux.shared.config import CONFIG
 
 
 class DatabaseCLI(BaseCLI):
-    """Database CLI with clean, workflow-focused commands for SQLModel + Alembic."""
+    """Database CLI with clean, workflow-focused commands for SQLModel + Alembic.
+
+    Provides essential database management commands for development and deployment,
+    including migration management, database inspection, and administrative operations.
+    """
 
     def __init__(self):
+        """Initialize the DatabaseCLI application.
+
+        Sets up the CLI with database-specific commands and configures
+        the command registry for database operations.
+        """
         super().__init__(name="db", description="Database CLI - Clean commands for SQLModel + Alembic")
         self._setup_command_registry()
         self._setup_commands()
@@ -112,6 +121,13 @@ class DatabaseCLI(BaseCLI):
 
         # Check if tables exist
         async def _check_tables():
+            """Check if any tables exist in the database.
+
+            Returns
+            -------
+            int
+                Number of tables found, or 0 if database is empty or inaccessible.
+            """
             try:
                 service = DatabaseService(echo=False)
                 await service.connect(CONFIG.database_url)
@@ -123,7 +139,7 @@ class DatabaseCLI(BaseCLI):
                             "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE' AND table_name != 'alembic_version'",
                         ),
                     )
-                    table_count = result.scalar()
+                    table_count = result.scalar() or 0
 
                 await service.disconnect()
             except Exception:
@@ -135,6 +151,13 @@ class DatabaseCLI(BaseCLI):
 
         # Check if alembic_version table exists (indicating migrations are already set up)
         async def _check_migrations():
+            """Check if migrations have been initialized in the database.
+
+            Returns
+            -------
+            int
+                Number of migration records found, or 0 if migrations are not initialized.
+            """
             try:
                 service = DatabaseService(echo=False)
                 await service.connect(CONFIG.database_url)
@@ -142,7 +165,7 @@ class DatabaseCLI(BaseCLI):
                 # Query directly to avoid error logging for expected table-not-found errors
                 async with service.session() as session:
                     result = await session.execute(text("SELECT COUNT(*) FROM alembic_version"))
-                    migration_count = result.scalar()
+                    migration_count = result.scalar() or 0
 
                 await service.disconnect()
             except Exception:
@@ -365,11 +388,24 @@ class DatabaseCLI(BaseCLI):
         self._print_section_header("Database Tables", "📋")
 
         async def _list_tables():
+            """List all database tables with their metadata."""
             try:
                 service = DatabaseService(echo=False)
                 await service.connect(CONFIG.database_url)
 
                 async def _get_tables(session: Any) -> list[tuple[str, int]]:
+                    """Get list of tables with their column counts.
+
+                    Parameters
+                    ----------
+                    session : Any
+                        Database session object.
+
+                    Returns
+                    -------
+                    list[tuple[str, int]]
+                        List of (table_name, column_count) tuples.
+                    """
                     result = await session.execute(
                         text("""
                         SELECT
@@ -412,6 +448,7 @@ class DatabaseCLI(BaseCLI):
         self.rich.rich_print("[bold blue]Checking database health...[/bold blue]")
 
         async def _health_check():
+            """Check the health status of the database connection."""
             try:
                 service = DatabaseService(echo=False)
                 await service.connect(CONFIG.database_url)
@@ -444,11 +481,24 @@ class DatabaseCLI(BaseCLI):
         self.rich.rich_print("[bold blue]Checking for long-running queries...[/bold blue]")
 
         async def _check_queries():
+            """Check for long-running queries in the database."""
             try:
                 service = DatabaseService(echo=False)
                 await service.connect(CONFIG.database_url)
 
                 async def _get_long_queries(session: Any) -> list[tuple[Any, Any, str, str]]:
+                    """Get list of queries running longer than 5 minutes.
+
+                    Parameters
+                    ----------
+                    session : Any
+                        Database session object.
+
+                    Returns
+                    -------
+                    list[tuple[Any, Any, str, str]]
+                        List of (pid, duration, query, state) tuples for long-running queries.
+                    """
                     result = await session.execute(
                         text("""
                         SELECT
@@ -553,12 +603,20 @@ class DatabaseCLI(BaseCLI):
                 return
 
         async def _nuclear_reset():
+            """Perform a complete database reset by dropping all tables and schemas."""
             try:
                 service = DatabaseService(echo=False)
                 await service.connect(CONFIG.database_url)
 
                 # Drop all tables including alembic_version
                 async def _drop_all_tables(session: Any) -> None:
+                    """Drop all tables and recreate the public schema.
+
+                    Parameters
+                    ----------
+                    session : Any
+                        Database session object.
+                    """
                     # Explicitly drop alembic_version first (it may not be in public schema)
                     await session.execute(text("DROP TABLE IF EXISTS alembic_version"))
                     # Drop the entire public schema
