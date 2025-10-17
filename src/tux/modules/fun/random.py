@@ -6,6 +6,7 @@ from discord.ext import commands
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.shared.constants import CONST
+from tux.shared.functions import truncate
 from tux.ui.embeds import EmbedCreator
 
 
@@ -165,7 +166,7 @@ class Random(BaseCog):
             embed_type=EmbedCreator.INFO,
             user_name=ctx.author.name,
             user_display_avatar=ctx.author.display_avatar.url,
-            title=f"Dice Roll (D{sides})",
+            title=f"Dice Roll (D{truncate(str(sides), 50)})",
             description=f"You rolled a {random.randint(1, sides)}!",
         )
 
