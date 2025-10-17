@@ -450,7 +450,6 @@ class Cases(ModerationCogBase):
             ctx,
             menu_type=ViewMenu.TypeEmbed,
             all_can_click=True,
-            delete_on_timeout=True,
         )
 
         # Paginate cases
