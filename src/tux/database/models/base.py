@@ -6,7 +6,7 @@ from typing import Any, cast
 from uuid import UUID, uuid4
 
 from pydantic import field_serializer
-from sqlalchemy import DateTime, text
+from sqlalchemy import DateTime, func
 from sqlmodel import Field, SQLModel
 
 
@@ -24,20 +24,18 @@ class BaseModel(SQLModel):
     __allow_unmapped__ = True
 
     # Timestamp fields
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC),
+    created_at: datetime | None = Field(
+        default=None,
         sa_type=DateTime(timezone=True),
-        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP"), "nullable": False},
+        sa_column_kwargs={"server_default": func.now()},
+        nullable=True,
     )
 
-    updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC),
+    updated_at: datetime | None = Field(
+        default=None,
         sa_type=DateTime(timezone=True),
-        sa_column_kwargs={
-            "server_default": text("CURRENT_TIMESTAMP"),
-            "onupdate": text("CURRENT_TIMESTAMP"),
-            "nullable": False,
-        },
+        sa_column_kwargs={"onupdate": func.now()},
+        nullable=True,
     )
 
     @field_serializer("created_at", "updated_at")
