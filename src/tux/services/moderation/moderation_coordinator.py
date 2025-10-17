@@ -245,7 +245,7 @@ class ModerationCoordinator:
         """
         try:
             dm_task = asyncio.create_task(self._communication.send_dm(ctx, False, user, reason, action_desc))
-            result = await asyncio.wait_for(dm_task, timeout=3.0)
+            result = await asyncio.wait_for(dm_task, timeout=15.0)
         except TimeoutError:
             logger.warning(f"Post-action DM to user {user.id} timed out after 3 seconds")
             return False
