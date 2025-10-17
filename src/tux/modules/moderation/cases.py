@@ -93,7 +93,7 @@ class Cases(ModerationCogBase):
 
     @cases.command(
         name="view",
-        aliases=["v", "show", "get"],
+        aliases=["v", "show", "get", "list"],
     )
     @commands.guild_only()
     @requires_command_permission()
@@ -140,7 +140,7 @@ class Cases(ModerationCogBase):
 
     @cases.command(
         name="modify",
-        aliases=["edit", "update"],
+        aliases=["m", "edit", "update"],
     )
     @commands.guild_only()
     @requires_command_permission()
