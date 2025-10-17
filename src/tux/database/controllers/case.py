@@ -114,13 +114,18 @@ class CaseController(BaseController[Case]):
                 case_data["case_reason"] = case_reason
 
             # Add any extra kwargs (like case_expires_at)
+            logger.debug(f"Additional kwargs for case creation: {kwargs}")
             case_data.update(kwargs)
 
             # Create the case
+            logger.debug(f"Creating Case object with data: {case_data}")
             case = Case(**case_data)
             session.add(case)
             await session.flush()
             await session.refresh(case)
+            logger.info(
+                f"Case created successfully: ID={case.case_id}, number={case.case_number}, expires_at={case.case_expires_at}",
+            )
             return case
 
         return await self.with_session(_create_with_lock)
@@ -233,26 +238,65 @@ class CaseController(BaseController[Case]):
         return None
 
     async def set_tempban_expired(self, case_id: int, guild_id: int | None = None) -> bool:
-        """Set a tempban case as expired."""
-        # For backward compatibility, accept guild_id parameter but ignore it
-        result = await self.update_by_id(case_id, case_status=False)
-        return result is not None
+        """
+        Mark a tempban case as processed after the user has been unbanned.
+
+        This sets case_processed=True to indicate the expiration has been handled.
+        The case_status remains True (the case is still valid, just completed).
+        The case_expires_at field remains unchanged as a historical record.
+
+        Parameters
+        ----------
+        case_id : int
+            The ID of the case to mark as processed
+        guild_id : int | None
+            Deprecated parameter kept for backward compatibility (unused)
+
+        Returns
+        -------
+        bool
+            True if the case was updated, False if not found
+        """
+        logger.debug(f"Marking tempban case {case_id} as processed (setting case_processed=True)")
+        result = await self.update_by_id(case_id, case_processed=True)
+        success = result is not None
+        if success:
+            logger.debug(f"Case {case_id} marked as processed (case_processed=True, case_status unchanged)")
+        return success
 
     async def get_expired_tempbans(self, guild_id: int) -> list[Case]:
-        """Get all expired tempban cases that are still active."""
-        now = datetime.now(UTC)
+        """
+        Get tempban cases that have expired but haven't been processed yet.
 
-        # Find active tempban cases where case_expires_at is in the past
+        Returns cases where:
+        - case_expires_at is in the past
+        - case_processed=False (not yet handled)
+        - case_status=True (valid cases only)
+        """
+        now = datetime.now(UTC)
+        logger.debug(f"Checking for unprocessed expired tempbans in guild {guild_id}, current time: {now}")
+
+        # Find valid, unprocessed tempban cases where case_expires_at is in the past
         # Type ignore for SQLAlchemy comparison operators on nullable fields
-        return await self.find_all(
+        expired_cases = await self.find_all(
             filters=(
                 (Case.guild_id == guild_id)
                 & (Case.case_type == DBCaseType.TEMPBAN.value)
-                & (Case.case_status == True)  # noqa: E712
+                & (Case.case_status == True)  # noqa: E712 - Valid cases only
+                & (Case.case_processed == False)  # noqa: E712 - Not yet processed
                 & (Case.case_expires_at.is_not(None))  # type: ignore[attr-defined]
                 & (Case.case_expires_at < now)  # type: ignore[arg-type]
             ),
         )
+
+        logger.info(f"Found {len(expired_cases)} unprocessed expired tempbans in guild {guild_id}")
+        for case in expired_cases:
+            logger.debug(
+                f"Unprocessed expired tempban: case_id={case.case_id}, user={case.case_user_id}, "
+                f"expires_at={case.case_expires_at}, processed={case.case_processed}",
+            )
+
+        return expired_cases
 
     async def get_case_count_by_user(self, user_id: int, guild_id: int) -> int:
         """Get the total number of cases for a specific user in a guild."""
@@ -263,15 +307,23 @@ class CaseController(BaseController[Case]):
         return await self.find_all(filters=(Case.case_moderator_id == moderator_id) & (Case.guild_id == guild_id))
 
     async def get_expired_cases(self, guild_id: int) -> list[Case]:
-        """Get all expired cases (any type with case_expires_at in the past)."""
+        """
+        Get all expired cases (any type) that haven't been processed yet.
+
+        Returns cases where:
+        - case_expires_at is in the past
+        - case_processed=False (not yet handled)
+        - case_status=True (valid cases only)
+        """
         now = datetime.now(UTC)
 
-        # Find active cases where case_expires_at is in the past
+        # Find valid, unprocessed cases where case_expires_at is in the past
         # Type ignore for SQLAlchemy comparison operators on nullable fields
         return await self.find_all(
             filters=(
                 (Case.guild_id == guild_id)
-                & (Case.case_status == True)  # noqa: E712
+                & (Case.case_status == True)  # noqa: E712 - Valid cases only
+                & (Case.case_processed == False)  # noqa: E712 - Not yet processed
                 & (Case.case_expires_at.is_not(None))  # type: ignore[attr-defined]
                 & (Case.case_expires_at < now)  # type: ignore[arg-type]
             ),

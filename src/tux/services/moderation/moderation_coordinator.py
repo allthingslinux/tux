@@ -128,9 +128,16 @@ class ModerationCoordinator:
         try:
             # Calculate case_expires_at from duration if needed
             # Duration is in seconds, convert to datetime
+            logger.debug(f"Duration/expires_at conversion: duration={duration}, expires_at={expires_at}")
+
             case_expires_at = expires_at
             if duration is not None and expires_at is None:
                 case_expires_at = datetime.now(UTC) + timedelta(seconds=duration)
+                logger.info(f"Converted duration {duration}s → expires_at {case_expires_at}")
+            elif expires_at is not None:
+                logger.info(f"Using provided expires_at: {expires_at}")
+            else:
+                logger.debug("No expiration set (permanent action)")
 
             logger.debug(
                 f"Creating case: type={case_type.value}, user={user.id}, moderator={ctx.author.id}, guild={ctx.guild.id}, expires_at={case_expires_at}",

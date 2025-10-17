@@ -203,7 +203,15 @@ class Case(BaseModel, table=True):
     __tablename__ = "cases"  # pyright: ignore[reportAssignmentType]
 
     case_id: int | None = Field(default=None, primary_key=True, sa_type=Integer)
-    case_status: bool = Field(default=True)
+    case_status: bool = Field(
+        default=True,
+        description="Whether the case is valid (True) or invalid/voided (False). Not related to completion.",
+    )
+    case_processed: bool = Field(
+        default=False,
+        index=True,
+        description="Whether expiration/completion has been processed for temporary actions (e.g., tempban unbanned)",
+    )
 
     case_type: CaseType | None = Field(
         default=None,

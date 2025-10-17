@@ -7,6 +7,8 @@ the existing database controllers and proper dependency injection.
 
 from typing import Any
 
+from loguru import logger
+
 from tux.database.controllers.case import CaseController
 from tux.database.models import Case
 from tux.database.models import CaseType as DBCaseType
@@ -53,6 +55,8 @@ class CaseService:
         -------
             The created case
         """
+        logger.debug(f"CaseService.create_case called with kwargs: {kwargs}")
+
         return await self._case_controller.create_case(
             case_type=case_type.value,
             case_user_id=user_id,

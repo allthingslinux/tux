@@ -86,7 +86,8 @@ class TempBan(ModerationCogBase):
             await guild.fetch_ban(discord.Object(id=case.case_user_id))
             # If fetch_ban succeeds without error, the user IS banned.
         except discord.NotFound:
-            # User is not banned. Mark expired and consider processed.
+            # User is not banned. Mark as processed and consider completed.
+            logger.info(f"User {case.case_user_id} is not banned, marking case {case.case_id} as processed")
             await self.db.case.set_tempban_expired(case.case_id, case.guild_id)
             return 1, 0
         except Exception as e:
@@ -119,17 +120,17 @@ class TempBan(ModerationCogBase):
 
                 if update_result == 1:
                     logger.info(
-                        f"Successfully unbanned user {case.case_user_id} and marked case {case.case_id} as expired in guild {guild.id}.",
+                        f"Successfully unbanned user {case.case_user_id} and marked case {case.case_id} as processed in guild {guild.id}",
                     )
                     processed_count = 1
                 elif not update_result:
                     logger.info(
-                        f"Successfully unbanned user {case.case_user_id} in guild {guild.id} (case {case.case_id} was already marked expired).",
+                        f"Successfully unbanned user {case.case_user_id} in guild {guild.id} (case {case.case_id} was already processed)",
                     )
                     processed_count = 1  # Still count as success
                 else:
                     logger.error(
-                        f"Unexpected update result ({update_result}) when marking case {case.case_id} as expired for user {case.case_user_id} in guild {guild.id}.",
+                        f"Unexpected update result ({update_result}) when marking case {case.case_id} as processed for user {case.case_user_id} in guild {guild.id}",
                     )
                     failed_count = 1
             except Exception as e:
@@ -156,28 +157,42 @@ class TempBan(ModerationCogBase):
         """
         # Skip if already processing
         if self._processing_tempbans:
+            logger.debug("Tempban check already in progress, skipping")
             return
 
         try:
             self._processing_tempbans = True
+            logger.debug("Starting tempban check task")
 
-            # Get expired tempbans - need to get from all guilds since this is a task loop
-            # For now, get from a default guild or implement guild-specific logic
-            expired_cases = await self.db.case.get_expired_tempbans(0)  # TODO: Implement proper guild handling
+            # Get expired tempbans from all guilds the bot is in
+            all_expired_cases = []
+            for guild in self.bot.guilds:
+                logger.debug(f"Checking guild {guild.id} ({guild.name}) for expired tempbans")
+                expired_cases = await self.db.case.get_expired_tempbans(guild.id)
+                if expired_cases:
+                    logger.info(f"Found {len(expired_cases)} expired tempbans in guild {guild.id}")
+                    all_expired_cases.extend(expired_cases)
+
+            if not all_expired_cases:
+                logger.debug("No expired tempbans found across all guilds")
+                return
+
             processed_cases = 0
             failed_cases = 0
 
-            for case in expired_cases:
+            logger.info(f"Processing {len(all_expired_cases)} total expired tempbans")
+
+            for case in all_expired_cases:
+                logger.debug(f"Processing expired tempban case {case.case_id} for user {case.case_user_id}")
                 # Process each case using the helper method
                 processed, failed = await self._process_tempban_case(case)
                 processed_cases += processed
                 failed_cases += failed
 
-            if processed_cases > 0 or failed_cases > 0:
-                logger.info(f"Tempban check: processed {processed_cases} cases, {failed_cases} failures")
+            logger.info(f"Tempban check complete: processed {processed_cases} cases, {failed_cases} failures")
 
         except Exception as e:
-            logger.error(f"Failed to check tempbans: {e}")
+            logger.error(f"Failed to check tempbans: {e}", exc_info=True)
         finally:
             self._processing_tempbans = False
 
