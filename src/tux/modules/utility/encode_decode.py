@@ -1,11 +1,12 @@
 import base64
 import binascii
 
-from discord import AllowedMentions
+from discord import AllowedMentions, app_commands
 from discord.ext import commands
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
+from tux.shared.functions import generate_usage
 
 
 def wrap_strings(wrapper: str, contents: list[str]) -> list[str]:
@@ -18,7 +19,13 @@ allowed_mentions: AllowedMentions = AllowedMentions(
     roles=False,
 )
 
-CODING_SYSTEMS = [
+SUPPORTED_FORMATS = [
+    app_commands.Choice(name="base16", value="base16"),
+    app_commands.Choice(name="base32", value="base32"),
+    app_commands.Choice(name="base64", value="base64"),
+    app_commands.Choice(name="base85", value="base85"),
+]
+SUPPORTED_FORMATS_MESSAGE = [
     "base16",
     "base32",
     "base64",
@@ -28,7 +35,9 @@ CODING_SYSTEMS = [
 
 class EncodeDecode(BaseCog):
     def __init__(self, bot: Tux) -> None:
-        super().__init__(bot)
+        self.bot = bot
+        self.encode.usage = generate_usage(self.encode)
+        self.decode.usage = generate_usage(self.decode)
 
     async def send_message(self, ctx: commands.Context[Tux], data: str):
         if len(data) > 2000:
@@ -42,16 +51,18 @@ class EncodeDecode(BaseCog):
         await ctx.reply(
             content=data,
             allowed_mentions=allowed_mentions,
-            ephemeral=False,
+            ephemeral=True,
+            suppress_embeds=True,
         )
 
-    @commands.hybrid_command(
-        name="encode",
-    )
+    @commands.hybrid_command(name="encode", aliases=["ec"], description="Encode a message")
+    @app_commands.describe(encoding="Which format to use")
+    @app_commands.describe(text="Text to encode")
+    @app_commands.choices(encoding=SUPPORTED_FORMATS)
     async def encode(
         self,
         ctx: commands.Context[Tux],
-        cs: str,
+        encoding: str,
         *,
         text: str,
     ) -> None:
@@ -62,58 +73,47 @@ class EncodeDecode(BaseCog):
         ----------
         ctx : commands.Context[Tux]
             The context of the command.
-        cs : str
-            The coding system.
+        encoding: str
+            The encoding method (can be base16, base32, base64, or base85).
         text : str
             The text you want to encode.
         """
-        cs = cs.lower()
+        encoding = encoding.lower()
         btext = text.encode(encoding="utf-8")
 
         try:
-            if cs == "base16":
+            if encoding == "base16":
                 data = base64.b16encode(btext)
-            elif cs == "base32":
+            elif encoding == "base32":
                 data = base64.b32encode(btext)
-            elif cs == "base64":
+            elif encoding == "base64":
                 data = base64.b64encode(btext)
-            elif cs == "base85":
+            elif encoding == "base85":
                 data = base64.b85encode(btext)
             else:
                 await ctx.reply(
-                    content=f"Invalid coding system. Please use: {', '.join(wrap_strings('`', CODING_SYSTEMS))}",
+                    content=f"Invalid encoding {', '.join(wrap_strings('`', SUPPORTED_FORMATS_MESSAGE))} are supported.",
                     allowed_mentions=allowed_mentions,
                     ephemeral=True,
                 )
                 return
 
             await self.send_message(ctx, data.decode(encoding="utf-8"))
-        except binascii.Error as e:
-            await ctx.reply(
-                content=f"Invalid base64 encoding: {e}",
-                allowed_mentions=allowed_mentions,
-                ephemeral=True,
-            )
-        except UnicodeDecodeError as e:
-            await ctx.reply(
-                content=f"Cannot decode as UTF-8: {e}",
-                allowed_mentions=allowed_mentions,
-                ephemeral=True,
-            )
         except Exception as e:
             await ctx.reply(
-                content=f"Unknown exception: {type(e).__name__}: {e}",
+                content=f"Unknown excpetion: {type(e)}: {e}",
                 allowed_mentions=allowed_mentions,
                 ephemeral=True,
             )
 
-    @commands.hybrid_command(
-        name="decode",
-    )
+    @commands.hybrid_command(name="decode", aliases=["dc"], description="Decode a message")
+    @app_commands.describe(encoding="Which format to use")
+    @app_commands.describe(text="Text to decode")
+    @app_commands.choices(encoding=SUPPORTED_FORMATS)
     async def decode(
         self,
         ctx: commands.Context[Tux],
-        cs: str,
+        encoding: str,
         *,
         text: str,
     ) -> None:
@@ -124,26 +124,26 @@ class EncodeDecode(BaseCog):
         ----------
         ctx : commands.Context[Tux]
             The context of the command.
-        cs : str
-            The coding system.
+        encoding : str
+            The encoding method (can be base16, base32, base64, or base85).
         text : str
             The text you want to decode.
         """
-        cs = cs.lower()
+        encoding = encoding.lower()
         btext = text.encode(encoding="utf-8")
 
         try:
-            if cs == "base16":
+            if encoding == "base16":
                 data = base64.b16decode(btext)
-            elif cs == "base32":
+            elif encoding == "base32":
                 data = base64.b32decode(btext)
-            elif cs == "base64":
+            elif encoding == "base64":
                 data = base64.b64decode(btext)
-            elif cs == "base85":
+            elif encoding == "base85":
                 data = base64.b85decode(btext)
             else:
                 await ctx.reply(
-                    content=f"Invalid coding system. Please use: {', '.join(wrap_strings('`', CODING_SYSTEMS))}",
+                    content=f"Invalid encoding {', '.join(wrap_strings('`', SUPPORTED_FORMATS_MESSAGE))} are supported.",
                     allowed_mentions=allowed_mentions,
                     ephemeral=True,
                 )
@@ -153,6 +153,7 @@ class EncodeDecode(BaseCog):
         except binascii.Error as e:
             await ctx.reply(
                 content=f"Decoding error: {e}",
+                ephemeral=True,
             )
             return
         except UnicodeDecodeError:
@@ -163,7 +164,7 @@ class EncodeDecode(BaseCog):
             )
         except Exception as e:
             await ctx.reply(
-                content=f"Unknown exception: {type(e).__name__}: {e}",
+                content=f"Unknown excpetion: {type(e)}: {e}",
                 allowed_mentions=allowed_mentions,
                 ephemeral=True,
             )
