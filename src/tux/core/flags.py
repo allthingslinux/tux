@@ -6,7 +6,6 @@ from tux.database.models import CaseType
 from tux.shared.constants import CONST
 
 
-# Based on https://github.com/DuckBot-Discord/DuckBot/blob/acf762485815e2298479ad3cb1ab8f290b35e2a2/utils/converters.py#L419
 class TuxFlagConverter(commands.FlagConverter):
     """A commands.FlagConverter but that supports Boolean flags with empty body.
 
@@ -26,6 +25,10 @@ class TuxFlagConverter(commands.FlagConverter):
         If a flag is missing.
     commands.TooManyArguments
         If too many arguments are passed.
+
+    Notes
+    -----
+    Based on https://github.com/DuckBot-Discord/DuckBot/blob/acf762485815e2298479ad3cb1ab8f290b35e2a2/utils/converters.py#L419
     """
 
     @classmethod
