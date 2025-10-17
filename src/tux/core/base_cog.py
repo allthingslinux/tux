@@ -302,7 +302,7 @@ class BaseCog(commands.Cog):
         bot_user = getattr(self.bot, "user", "Unknown")
         return f"<{self.__class__.__name__} bot={bot_user}>"
 
-    def unload_if_missing_config(self, condition: bool, config_name: str, extension_name: str) -> bool:
+    def unload_if_missing_config(self, condition: bool, config_name: str) -> bool:
         """
         Gracefully unload this cog if required configuration is missing.
 
@@ -333,10 +333,15 @@ class BaseCog(commands.Cog):
         blocking cog initialization.
         """
         if condition:
-            logger.warning(f"{config_name} is not configured. {self.__class__.__name__} will be unloaded.")
-            # Schedule async unload in background to avoid blocking
-            self._unload_task = asyncio.create_task(self._unload_self(extension_name))
-            return True
+            cog_module = next(
+                (
+                    f.frame.f_locals["self"].__class__.__module__
+                    for f in inspect.stack()
+                    if "self" in f.frame.f_locals and isinstance(f.frame.f_locals["self"], commands.Cog)
+                ),
+                "UnknownModule",
+            )
+            logger.warning(f"{config_name} is not configured. {cog_module} will be unloaded.")
         return False
 
     async def _unload_self(self, extension_name: str) -> None:
