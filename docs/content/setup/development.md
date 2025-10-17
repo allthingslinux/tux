@@ -275,26 +275,26 @@ uv run dev pre-commit
 
 ```bash
 # Run all tests with coverage
-uv run test run
+uv run tests run
 
 # Quick tests (no coverage)
-uv run test quick
+uv run tests quick
 
 # Run specific test file
-uv run test run tests/test_specific.py
+uv run tests run tests/test_specific.py
 
 # Run tests with specific marker
-uv run test run -m "not slow"
+uv run tests run -m "not slow"
 ```
 
 **Coverage Reports:**
 
 ```bash
 # Generate HTML coverage report
-uv run test html
+uv run tests html
 
 # View coverage in terminal
-uv run test coverage
+uv run tests coverage
 
 # Coverage reports available in htmlcov/
 ```
@@ -404,7 +404,7 @@ uv run tux start --debug
 ```bash
 # Before committing
 uv run dev all          # Run all quality checks
-uv run test run         # Run tests
+uv run tests run         # Run tests
 git add .               # Stage changes
 git commit -m "feat: add new feature"  # Commit with conventional format
 ```
@@ -418,16 +418,16 @@ git commit -m "feat: add new feature"  # Commit with conventional format
 # tests/test_new_feature.py
 
 # Run specific test
-uv run test run tests/test_new_feature.py
+uv run tests run tests/test_new_feature.py
 
 # Implement feature
 # src/tux/modules/new_feature.py
 
 # Run test again to verify
-uv run test run tests/test_new_feature.py
+uv run tests run tests/test_new_feature.py
 
 # Run all tests
-uv run test run
+uv run tests run
 ```
 
 **Integration Testing:**

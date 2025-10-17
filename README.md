@@ -140,10 +140,10 @@ uv run dev pre-commit           # Run pre-commit checks
 uv run dev all                  # Run all development checks
 
 # Testing
-uv run test run                 # Run tests with coverage
-uv run test quick               # Run tests without coverage (faster)
-uv run test html                # Run tests and generate HTML report
-uv run test coverage            # Generate coverage reports
+uv run tests run                 # Run tests with coverage
+uv run tests quick               # Run tests without coverage (faster)
+uv run tests html                # Run tests and generate HTML report
+uv run tests coverage            # Generate coverage reports
 
 # Database
 uv run db migrate-dev           # Create and apply migrations for development

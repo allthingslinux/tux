@@ -19,7 +19,7 @@ from scripts.db import DatabaseCLI
 from scripts.dev import DevCLI
 from scripts.docker_cli import DockerCLI
 from scripts.docs import DocsCLI
-from scripts.test import TestCLI
+from scripts.tests import TestCLI
 from scripts.tux import TuxCLI
 
 

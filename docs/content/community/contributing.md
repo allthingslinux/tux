@@ -118,7 +118,7 @@ test(moderation): add ban command tests
 uv run dev all
 
 # Run tests
-uv run test run
+uv run tests run
 
 # Test manually with your bot
 uv run tux start --debug

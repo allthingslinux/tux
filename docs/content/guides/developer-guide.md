@@ -156,16 +156,16 @@ uv run dev type-check # Type checking
 
 ```bash
 # Run tests with coverage
-uv run test run
+uv run tests run
 
 # Quick tests (no coverage)
-uv run test quick
+uv run tests quick
 
 # Generate HTML coverage report
-uv run test html
+uv run tests html
 
 # Run benchmark tests
-uv run test benchmark
+uv run tests benchmark
 ```
 
 ### Git Workflow
@@ -415,16 +415,16 @@ async def test_create_case(db_service):
 
 ```bash
 # Run all tests
-uv run test run
+uv run tests run
 
 # Run specific test file
-uv run test run tests/unit/test_cases.py
+uv run tests run tests/unit/test_cases.py
 
 # Run with specific markers
-uv run test run -m "not slow"
+uv run tests run -m "not slow"
 
 # Generate coverage report
-uv run test html
+uv run tests html
 ```
 
 ### Mocking

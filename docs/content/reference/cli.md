@@ -10,7 +10,7 @@ All CLI tools are accessible through `uv run` commands defined in `pyproject.tom
 uv run tux      # Bot operations
 uv run dev      # Development tools  
 uv run db       # Database management
-uv run test     # Testing operations
+uv run tests     # Testing operations
 uv run docker   # Docker operations
 uv run docs     # Documentation tools
 ```
@@ -24,7 +24,7 @@ uv run docs     # Documentation tools
 uv run tux start
 
 # Run tests
-uv run test
+uv run tests
 
 # Check code quality
 uv run dev all

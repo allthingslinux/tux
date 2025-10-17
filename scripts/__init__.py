@@ -12,7 +12,7 @@ from scripts.docker_cli import DockerCLI
 from scripts.docs import DocsCLI
 from scripts.registry import Command, CommandGroup, CommandRegistry
 from scripts.rich_utils import RichCLI
-from scripts.test import TestCLI
+from scripts.tests import TestCLI
 from scripts.tux import TuxCLI
 
 __all__ = [
