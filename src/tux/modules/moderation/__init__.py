@@ -84,6 +84,7 @@ class ModerationCogBase(BaseCog):
         dm_action: str | None = None,
         actions: Sequence[tuple[Any, type[Any]]] | None = None,
         duration: int | None = None,
+        **kwargs: Any,
     ) -> None:
         """Execute moderation action using the service architecture."""
         if self.moderation is None:
@@ -99,6 +100,7 @@ class ModerationCogBase(BaseCog):
             dm_action=dm_action,
             actions=actions,
             duration=duration,
+            **kwargs,
         )
 
     async def is_jailed(self, guild_id: int, user_id: int) -> bool:

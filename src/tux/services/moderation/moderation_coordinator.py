@@ -52,7 +52,7 @@ class ModerationCoordinator:
         self._communication = communication_service
         self._execution = execution_service
 
-    async def execute_moderation_action(
+    async def execute_moderation_action(  # noqa: PLR0915
         self,
         ctx: commands.Context[Tux],
         case_type: DBCaseType,
@@ -63,6 +63,7 @@ class ModerationCoordinator:
         actions: Sequence[tuple[Callable[..., Coroutine[Any, Any, Any]], type[Any]]] | None = None,
         duration: int | None = None,
         expires_at: datetime | None = None,
+        **extra_case_data: Any,
     ) -> Case | None:
         """
         Execute a complete moderation action.
@@ -125,6 +126,7 @@ class ModerationCoordinator:
 
         # Create database case
         case = None
+
         try:
             # Calculate case_expires_at from duration if needed
             # Duration is in seconds, convert to datetime
@@ -139,8 +141,14 @@ class ModerationCoordinator:
             else:
                 logger.debug("No expiration set (permanent action)")
 
+            # Build kwargs for optional case fields
+            case_kwargs = {**extra_case_data}
+            if case_expires_at is not None:
+                case_kwargs["case_expires_at"] = case_expires_at
+
             logger.debug(
-                f"Creating case: type={case_type.value}, user={user.id}, moderator={ctx.author.id}, guild={ctx.guild.id}, expires_at={case_expires_at}",
+                f"Creating case: type={case_type.value}, user={user.id}, moderator={ctx.author.id}, "
+                f"guild={ctx.guild.id}, case_kwargs={case_kwargs}",
             )
             case = await self._case_service.create_case(
                 guild_id=ctx.guild.id,
@@ -148,9 +156,10 @@ class ModerationCoordinator:
                 moderator_id=ctx.author.id,
                 case_type=case_type,
                 reason=reason,
-                case_expires_at=case_expires_at,
+                **case_kwargs,  # All optional Case fields (expires_at, user_roles, metadata, etc.)
             )
             logger.info(f"Successfully created case #{case.case_number} (ID: {case.case_id}) for {case_type.value}")
+
         except Exception as e:
             # Database failed, but continue with response
             logger.error(

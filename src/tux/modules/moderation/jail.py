@@ -94,8 +94,7 @@ class Jail(ModerationCogBase):
         try:
             # Get roles that can be managed by the bot
             user_roles = self._get_manageable_roles(member, jail_role)
-
-            # Convert roles to IDs (not used presently)
+            user_role_ids = [role.id for role in user_roles]
 
             # Add jail role immediately - this is the most important part
             await member.add_roles(jail_role, reason=flags.reason)
@@ -111,6 +110,7 @@ class Jail(ModerationCogBase):
                 dm_action="jailed",
                 actions=[],  # No additional Discord actions needed for jail
                 duration=None,
+                case_user_roles=user_role_ids,  # Store roles for unjail
             )
 
             # Remove old roles in the background after sending the response
