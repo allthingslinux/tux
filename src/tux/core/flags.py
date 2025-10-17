@@ -5,10 +5,118 @@ from tux.core.converters import CaseTypeConverter, TimeConverter, convert_bool
 from tux.database.models import CaseType
 from tux.shared.constants import CONST
 
-# TODO: Figure out how to use boolean flags with empty values
+
+# Based on https://github.com/DuckBot-Discord/DuckBot/blob/acf762485815e2298479ad3cb1ab8f290b35e2a2/utils/converters.py#L419
+class TuxFlagConverter(commands.FlagConverter):
+    """A commands.FlagConverter but that supports Boolean flags with empty body.
+
+    Parameters
+    ----------
+    commands : commands.FlagConverter
+        The base flag converter.
+
+    Returns
+    -------
+    TuxFlagConverter
+        The Tux flag converter.
+
+    Raises
+    ------
+    commands.MissingFlagArgument
+        If a flag is missing.
+    commands.TooManyArguments
+        If too many arguments are passed.
+    """
+
+    @classmethod
+    def parse_flags(cls, argument: str, *, ignore_extra: bool = True) -> dict[str, list[str]]:  # noqa: PLR0912, PLR0915
+        result: dict[str, list[str]] = {}
+        flags = cls.__commands_flags__
+        aliases = cls.__commands_flag_aliases__
+        positional_flag = getattr(cls, "__commands_flag_positional__", None)
+        last_position = 0
+        last_flag: commands.Flag | None = None
+
+        # Normalise: allow trailing boolean flags without a space (e.g. "-silent")
+        working_argument = argument if argument.endswith(" ") else argument + " "
+
+        case_insensitive = cls.__commands_flag_case_insensitive__
+
+        # Handle positional flag (content before first flag token)
+        if positional_flag is not None:
+            match = cls.__commands_flag_regex__.search(working_argument)
+            if match is not None:
+                begin, end = match.span(0)
+                value = argument[:begin].strip()
+            else:
+                value = argument.strip()
+                last_position = len(working_argument)
+
+            if value:
+                name = positional_flag.name.casefold() if case_insensitive else positional_flag.name
+                result[name] = [value]
+
+        for match in cls.__commands_flag_regex__.finditer(working_argument):
+            begin, end = match.span(0)
+            key = match.group("flag")
+            if case_insensitive:
+                key = key.casefold()
+
+            if key in aliases:
+                key = aliases[key]
+
+            flag = flags.get(key)
+            if last_position and last_flag is not None:
+                value = working_argument[last_position : begin - 1].lstrip()
+                if not value:
+                    # If previous flag is boolean and has no explicit value, treat as True
+                    if last_flag and last_flag.annotation is bool:
+                        value = "True"
+                    else:
+                        raise commands.MissingFlagArgument(last_flag)
+
+                name = last_flag.name.casefold() if case_insensitive else last_flag.name
+
+                try:
+                    values = result[name]
+                except KeyError:
+                    result[name] = [value]
+                else:
+                    values.append(value)
+
+            last_position = end
+            last_flag = flag
+
+        # Get the remaining string, if applicable
+        value = working_argument[last_position:].strip()
+
+        # Add the remaining string to the last available flag
+        if last_flag is not None:
+            if not value:
+                # Trailing boolean flag without value -> True
+                if last_flag and last_flag.annotation is bool:
+                    value = "True"
+                else:
+                    raise commands.MissingFlagArgument(last_flag)
+
+            name = last_flag.name.casefold() if case_insensitive else last_flag.name
+
+            try:
+                values = result[name]
+            except KeyError:
+                result[name] = [value]
+            else:
+                values.append(value)
+        elif value and not ignore_extra:
+            # If we're here then we passed extra arguments that aren't flags
+            msg = f"Too many arguments passed to {cls.__name__}"
+            raise commands.TooManyArguments(msg)
+
+        # Verification of values will come at a later stage
+        return result
 
 
-class BanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class BanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
         description="The reason for the ban.",
@@ -26,11 +134,10 @@ class BanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", pre
         description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
-        converter=convert_bool,
     )
 
 
-class TempBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class TempBanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
         description="The reason for the ban.",
@@ -54,15 +161,14 @@ class TempBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ",
         description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
-        converter=convert_bool,
     )
 
 
-class UnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class UnbanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     pass
 
 
-class KickFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class KickFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
         description="The reason for the kick.",
@@ -74,11 +180,10 @@ class KickFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", pr
         description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
-        converter=convert_bool,
     )
 
 
-class WarnFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class WarnFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
         description="The reason for the warning.",
@@ -90,11 +195,10 @@ class WarnFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", pr
         description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
-        converter=convert_bool,
     )
 
 
-class TimeoutFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class TimeoutFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
         description="The reason for the timeout.",
@@ -111,11 +215,10 @@ class TimeoutFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ",
         description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
-        converter=convert_bool,
     )
 
 
-class UntimeoutFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class UntimeoutFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
         description="The reason for the timeout.",
@@ -127,11 +230,10 @@ class UntimeoutFlags(commands.FlagConverter, case_insensitive=True, delimiter=" 
         description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
-        converter=convert_bool,
     )
 
 
-class JailFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class JailFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
         description="The reason for the jail.",
@@ -143,11 +245,10 @@ class JailFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", pr
         description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
-        converter=convert_bool,
     )
 
 
-class UnjailFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class UnjailFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
         description="The reason for the jail.",
@@ -159,11 +260,10 @@ class UnjailFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", 
         description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
-        converter=convert_bool,
     )
 
 
-class CasesViewFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class CasesViewFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     type: CaseType | None = commands.flag(
         name="type",
         description="Type of case to view.",
@@ -194,13 +294,12 @@ class CasesViewFlags(commands.FlagConverter, case_insensitive=True, delimiter=" 
             self.moderator = None
 
 
-class CaseModifyFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class CaseModifyFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     status: bool | None = commands.flag(
         name="status",
         description="Status of the case.",
         aliases=["s"],
         default=None,
-        converter=convert_bool,
     )
     reason: str | None = commands.flag(
         name="reason",
@@ -215,7 +314,7 @@ class CaseModifyFlags(commands.FlagConverter, case_insensitive=True, delimiter="
             raise commands.FlagError(msg)
 
 
-class SnippetBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class SnippetBanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
         description="The reason for the snippet ban.",
@@ -227,11 +326,10 @@ class SnippetBanFlags(commands.FlagConverter, case_insensitive=True, delimiter="
         description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
-        converter=convert_bool,
     )
 
 
-class SnippetUnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class SnippetUnbanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
         description="The reason for the snippet unban.",
@@ -247,7 +345,7 @@ class SnippetUnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter
     )
 
 
-class PollBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class PollBanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
         description="The reason for the poll ban.",
@@ -259,11 +357,10 @@ class PollBanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ",
         description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
-        converter=convert_bool,
     )
 
 
-class PollUnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class PollUnbanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     reason: str = commands.flag(
         name="reason",
         description="The reason for the poll unban.",
@@ -275,11 +372,10 @@ class PollUnbanFlags(commands.FlagConverter, case_insensitive=True, delimiter=" 
         description="Don't send a DM to the target.",
         aliases=["s", "quiet"],
         default=False,
-        converter=convert_bool,
     )
 
 
-class TldrFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+class TldrFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
     platform: str | None = commands.flag(
         name="platform",
         description="Platform (e.g. linux, osx, common)",
