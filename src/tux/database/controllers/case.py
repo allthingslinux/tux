@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
 
 from loguru import logger
@@ -9,6 +10,7 @@ from sqlalchemy.orm import noload
 
 from tux.database.controllers.base import BaseController
 from tux.database.models import Case, Guild
+from tux.database.models.enums import CaseType as DBCaseType
 from tux.database.service import DatabaseService
 
 
@@ -47,7 +49,28 @@ class CaseController(BaseController[Case]):
 
         Uses SELECT FOR UPDATE to prevent race conditions when generating case numbers.
 
-        Note: Use case_expires_at in kwargs for expiration datetime, not case_duration.
+        Parameters
+        ----------
+        case_type : str
+            The type of case (from CaseType enum value)
+        case_user_id : int
+            Discord ID of the user being moderated
+        case_moderator_id : int
+            Discord ID of the moderator
+        guild_id : int
+            Discord guild ID
+        case_reason : str | None
+            Reason for the moderation action
+        case_status : bool
+            Whether the case is active (default True)
+        **kwargs : Any
+            Additional case fields (e.g., case_expires_at, case_metadata, audit_log_message_id)
+
+        Notes
+        -----
+        - For expiring cases, use `case_expires_at` (datetime) in kwargs
+        - Do NOT pass `duration` - convert to `case_expires_at` before calling this method
+        - Case numbers are auto-generated per guild using SELECT FOR UPDATE locking
         """
 
         async def _create_with_lock(session: AsyncSession) -> Case:
@@ -216,10 +239,20 @@ class CaseController(BaseController[Case]):
         return result is not None
 
     async def get_expired_tempbans(self, guild_id: int) -> list[Case]:
-        """Get all expired tempban cases in a guild."""
-        # For now, return empty list to avoid complex datetime filtering issues
-        # In the future, implement proper expired case filtering
-        return []
+        """Get all expired tempban cases that are still active."""
+        now = datetime.now(UTC)
+
+        # Find active tempban cases where case_expires_at is in the past
+        # Type ignore for SQLAlchemy comparison operators on nullable fields
+        return await self.find_all(
+            filters=(
+                (Case.guild_id == guild_id)
+                & (Case.case_type == DBCaseType.TEMPBAN.value)
+                & (Case.case_status == True)  # noqa: E712
+                & (Case.case_expires_at.is_not(None))  # type: ignore[attr-defined]
+                & (Case.case_expires_at < now)  # type: ignore[arg-type]
+            ),
+        )
 
     async def get_case_count_by_user(self, user_id: int, guild_id: int) -> int:
         """Get the total number of cases for a specific user in a guild."""
@@ -230,7 +263,16 @@ class CaseController(BaseController[Case]):
         return await self.find_all(filters=(Case.case_moderator_id == moderator_id) & (Case.guild_id == guild_id))
 
     async def get_expired_cases(self, guild_id: int) -> list[Case]:
-        """Get cases that have expired."""
-        # For now, return empty list since complex filtering is causing type issues
-        # This can be enhanced later with proper SQLAlchemy syntax
-        return []
+        """Get all expired cases (any type with case_expires_at in the past)."""
+        now = datetime.now(UTC)
+
+        # Find active cases where case_expires_at is in the past
+        # Type ignore for SQLAlchemy comparison operators on nullable fields
+        return await self.find_all(
+            filters=(
+                (Case.guild_id == guild_id)
+                & (Case.case_status == True)  # noqa: E712
+                & (Case.case_expires_at.is_not(None))  # type: ignore[attr-defined]
+                & (Case.case_expires_at < now)  # type: ignore[arg-type]
+            ),
+        )

@@ -7,7 +7,7 @@ for moderation operations, replacing the mixin-based approach.
 
 import asyncio
 from collections.abc import Callable, Coroutine, Sequence
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any, ClassVar
 
 import discord
@@ -126,8 +126,14 @@ class ModerationCoordinator:
         # Create database case
         case = None
         try:
+            # Calculate case_expires_at from duration if needed
+            # Duration is in seconds, convert to datetime
+            case_expires_at = expires_at
+            if duration is not None and expires_at is None:
+                case_expires_at = datetime.now(UTC) + timedelta(seconds=duration)
+
             logger.debug(
-                f"Creating case: type={case_type.value}, user={user.id}, moderator={ctx.author.id}, guild={ctx.guild.id}, duration={duration}, expires_at={expires_at}",
+                f"Creating case: type={case_type.value}, user={user.id}, moderator={ctx.author.id}, guild={ctx.guild.id}, expires_at={case_expires_at}",
             )
             case = await self._case_service.create_case(
                 guild_id=ctx.guild.id,
@@ -135,8 +141,7 @@ class ModerationCoordinator:
                 moderator_id=ctx.author.id,
                 case_type=case_type,
                 reason=reason,
-                duration=duration,
-                case_expires_at=expires_at,
+                case_expires_at=case_expires_at,
             )
             logger.info(f"Successfully created case #{case.case_number} (ID: {case.case_id}) for {case_type.value}")
         except Exception as e:
