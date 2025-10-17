@@ -1,3 +1,12 @@
+"""
+Level and XP management commands for administrators.
+
+This module provides administrative commands to manage user levels and XP points,
+including setting levels/XP, resetting progress, and blacklisting users from
+leveling. These commands require appropriate permissions and are intended for
+server moderation and management purposes.
+"""
+
 import datetime
 
 import discord
@@ -12,7 +21,22 @@ from tux.ui.embeds import EmbedCreator, EmbedType
 
 
 class Levels(BaseCog):
+    """Discord cog for administrative level and XP management commands.
+
+    Provides commands for server administrators to manage user levels and XP,
+    including setting levels/XP values, resetting progress, and toggling XP
+    blacklists. All commands require appropriate permissions and automatically
+    update user roles based on level changes.
+    """
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Levels cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
         # Check if XP roles are configured
@@ -186,4 +210,11 @@ class Levels(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Levels cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Levels(bot))

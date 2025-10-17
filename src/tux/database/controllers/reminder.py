@@ -1,3 +1,10 @@
+"""
+User reminder scheduling controller.
+
+This controller manages scheduled reminders for Discord users, allowing them
+to set timed notifications and messages to be delivered at specified times.
+"""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -11,7 +18,14 @@ from tux.database.service import DatabaseService
 class ReminderController(BaseController[Reminder]):
     """Clean Reminder controller using the new BaseController pattern."""
 
-    def __init__(self, db: DatabaseService | None = None):
+    def __init__(self, db: DatabaseService | None = None) -> None:
+        """Initialize the reminder controller.
+
+        Parameters
+        ----------
+        db : DatabaseService | None, optional
+            The database service instance. If None, uses the default service.
+        """
         super().__init__(Reminder, db)
 
     # Simple, clean methods that use BaseController's CRUD operations

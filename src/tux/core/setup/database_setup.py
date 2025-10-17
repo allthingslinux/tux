@@ -20,6 +20,13 @@ class DatabaseSetupService(BaseSetupService):
     """Handles complete database initialization during bot setup."""
 
     def __init__(self, db_service: DatabaseService) -> None:
+        """Initialize the database setup service.
+
+        Parameters
+        ----------
+        db_service : DatabaseService
+            The database service instance to use for connections.
+        """
         super().__init__("database")
         self.db_service = db_service
 

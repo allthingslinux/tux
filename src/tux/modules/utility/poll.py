@@ -1,3 +1,10 @@
+"""
+Interactive polling system for Discord.
+
+This module provides functionality for creating and managing polls with
+reaction-based voting, poll banning checks, and result tracking.
+"""
+
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -12,10 +19,19 @@ from tux.ui.embeds import EmbedCreator
 
 
 class Poll(ModerationCogBase):
+    """Discord cog for interactive polling functionality."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Poll cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
-    # Uses ModerationCogBase.is_pollbanned
+        # Uses ModerationCogBase.is_pollbanned
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:

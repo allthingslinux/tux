@@ -1,3 +1,10 @@
+"""Bookmark service for saving and managing Discord messages.
+
+This module provides functionality to bookmark Discord messages through reactions,
+allowing users to save important messages for later reference. Messages can be
+bookmarked by reacting with specific emojis, and bookmarks are stored in user DMs.
+"""
+
 from __future__ import annotations
 
 import io
@@ -15,7 +22,20 @@ from tux.ui.embeds import EmbedCreator
 
 
 class Bookmarks(BaseCog):
+    """Discord cog for bookmarking messages.
+
+    This cog allows users to bookmark messages by reacting with specific emojis,
+    and manages the storage and retrieval of bookmarked messages.
+    """
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Bookmarks cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
         self.add_bookmark_emojis = CONST.ADD_BOOKMARK
         self.remove_bookmark_emojis = CONST.REMOVE_BOOKMARK
@@ -128,6 +148,15 @@ class Bookmarks(BaseCog):
             logger.error(f"Failed to delete bookmark message {message.id}: {e}")
 
     async def _get_files_from_attachments(self, message: discord.Message, files: list[discord.File]) -> None:
+        """Extract image files from message attachments.
+
+        Parameters
+        ----------
+        message : discord.Message
+            The message to extract attachments from.
+        files : list[discord.File]
+            The list to append extracted files to.
+        """
         for attachment in message.attachments:
             if len(files) >= 10:
                 break
@@ -139,6 +168,15 @@ class Bookmarks(BaseCog):
                     logger.error(f"Failed to get attachment {attachment.filename}: {e}")
 
     async def _get_files_from_stickers(self, message: discord.Message, files: list[discord.File]) -> None:
+        """Extract image files from message stickers.
+
+        Parameters
+        ----------
+        message : discord.Message
+            The message to extract stickers from.
+        files : list[discord.File]
+            The list to append extracted files to.
+        """
         if len(files) >= 10:
             return
 
@@ -154,6 +192,15 @@ class Bookmarks(BaseCog):
                     logger.error(f"Failed to read sticker {sticker.name}: {e}")
 
     async def _get_files_from_embeds(self, message: discord.Message, files: list[discord.File]) -> None:
+        """Extract image files from message embeds.
+
+        Parameters
+        ----------
+        message : discord.Message
+            The message to extract embeds from.
+        files : list[discord.File]
+            The list to append extracted files to.
+        """
         if len(files) >= 10:
             return
 
@@ -277,4 +324,16 @@ class Bookmarks(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Bookmarks cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+
+    Returns
+    -------
+    None
+        The cog is added to the bot.
+    """
     await bot.add_cog(Bookmarks(bot))

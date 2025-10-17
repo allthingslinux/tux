@@ -71,10 +71,20 @@ class MockFlag:
 
 
 class MockObject:
-    def __init__(self, **kwargs: Any):
+    """A simple mock object that accepts arbitrary attributes."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the mock object with arbitrary attributes.
+
+        Parameters
+        ----------
+        **kwargs : Any
+            Arbitrary keyword arguments to set as attributes.
+        """
         self.__dict__.update(kwargs)
 
     def __repr__(self) -> str:
+        """Return a string representation of the mock object."""
         attrs = ", ".join(f"{k}={v!r}" for k, v in self.__dict__.items())
         return f"<MockObject {attrs}>"
 
@@ -89,7 +99,22 @@ class ErrorTestDefinition:
         kwargs: dict[str, Any] | None = None,
         description: str = "",
         category: str = "General",
-    ):
+    ) -> None:
+        """Initialize an error test definition.
+
+        Parameters
+        ----------
+        error_class : type[Exception]
+            The exception class to test.
+        args : tuple[Any, ...], optional
+            Positional arguments for error construction.
+        kwargs : dict[str, Any] | None, optional
+            Keyword arguments for error construction.
+        description : str, optional
+            Description of the error test.
+        category : str, optional
+            Category for organizing error tests.
+        """
         self.error_class = error_class
         self.args = args
         self.kwargs = kwargs or {}
@@ -117,7 +142,8 @@ class ErrorTestDefinition:
 class ErrorTestRegistry:
     """Dynamic registry of errors that can be tested, based on the actual error handler."""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the error test registry."""
         self.tests: dict[str, ErrorTestDefinition] = {}
         self._build_test_registry()
 

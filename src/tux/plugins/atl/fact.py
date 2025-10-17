@@ -204,4 +204,11 @@ class Fact(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Fact cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Fact(bot))

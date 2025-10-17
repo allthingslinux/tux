@@ -1,3 +1,10 @@
+"""
+Away From Keyboard (AFK) status management.
+
+This module provides comprehensive AFK functionality including automatic
+status setting, message notifications, and nickname management for Discord users.
+"""
+
 import contextlib
 import textwrap
 from datetime import datetime, timedelta
@@ -15,7 +22,16 @@ from tux.shared.constants import CONST
 
 
 class Afk(BaseCog):
+    """Discord cog for managing AFK status functionality."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the AFK cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
         self.handle_afk_expiration.start()
 
@@ -210,4 +226,11 @@ class Afk(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Afk cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Afk(bot))

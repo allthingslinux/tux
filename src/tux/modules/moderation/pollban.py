@@ -1,3 +1,9 @@
+"""Poll ban moderation command.
+
+This module provides functionality to ban Discord members from creating
+polls. It integrates with the moderation case tracking system.
+"""
+
 import discord
 from discord.ext import commands
 
@@ -10,7 +16,20 @@ from . import ModerationCogBase
 
 
 class PollBan(ModerationCogBase):
+    """Discord cog for poll ban moderation commands.
+
+    This cog provides the pollban command which prevents members from
+    creating polls in the server.
+    """
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the PollBan cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
     @commands.hybrid_command(
@@ -61,4 +80,16 @@ class PollBan(ModerationCogBase):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the PollBan cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+
+    Returns
+    -------
+    None
+        The cog is added to the bot.
+    """
     await bot.add_cog(PollBan(bot))

@@ -1,3 +1,11 @@
+"""
+Random generation commands for entertainment and utility.
+
+This module provides various random generation commands including coin flips,
+dice rolls, magic 8-ball responses, and random number generation. All commands
+are designed for fun and entertainment in Discord servers.
+"""
+
 import random
 from textwrap import shorten, wrap
 
@@ -11,7 +19,21 @@ from tux.ui.embeds import EmbedCreator
 
 
 class Random(BaseCog):
+    """Discord cog for random generation commands.
+
+    Provides various random generation commands including coin flips, dice rolls,
+    magic 8-ball responses, and random number generation. All commands are
+    designed to be fun and entertaining for Discord server members.
+    """
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Random cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
     @commands.hybrid_group(
@@ -219,4 +241,11 @@ class Random(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Random cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Random(bot))

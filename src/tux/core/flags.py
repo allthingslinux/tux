@@ -1,3 +1,47 @@
+"""Flag converters for Discord bot commands.
+
+This module provides specialized flag converters for various moderation and utility
+commands, extending Discord.py's flag system with enhanced boolean handling and
+case-insensitive parsing.
+
+Classes
+-------
+TuxFlagConverter
+    Enhanced flag converter with improved boolean flag handling.
+BanFlags
+    Flags for ban commands.
+TempBanFlags
+    Flags for temporary ban commands.
+UnbanFlags
+    Flags for unban commands.
+KickFlags
+    Flags for kick commands.
+WarnFlags
+    Flags for warn commands.
+TimeoutFlags
+    Flags for timeout commands.
+UntimeoutFlags
+    Flags for untimeout commands.
+JailFlags
+    Flags for jail commands.
+UnjailFlags
+    Flags for unjail commands.
+CasesViewFlags
+    Flags for viewing cases.
+CaseModifyFlags
+    Flags for modifying cases.
+SnippetBanFlags
+    Flags for snippet ban commands.
+SnippetUnbanFlags
+    Flags for snippet unban commands.
+PollBanFlags
+    Flags for poll ban commands.
+PollUnbanFlags
+    Flags for poll unban commands.
+TldrFlags
+    Flags for tldr commands.
+"""
+
 import discord
 from discord.ext import commands
 
@@ -33,6 +77,30 @@ class TuxFlagConverter(commands.FlagConverter):
 
     @classmethod
     def parse_flags(cls, argument: str, *, ignore_extra: bool = True) -> dict[str, list[str]]:  # noqa: PLR0912, PLR0915
+        """Parse command arguments into flags with enhanced boolean handling.
+
+        This method extends Discord.py's flag parsing to handle trailing boolean
+        flags without explicit values (e.g., "-silent" becomes "-silent True").
+
+        Parameters
+        ----------
+        argument : str
+            The raw argument string to parse.
+        ignore_extra : bool, optional
+            Whether to ignore extra arguments that aren't flags. Default is True.
+
+        Returns
+        -------
+        dict[str, list[str]]
+            Dictionary mapping flag names to lists of their values.
+
+        Raises
+        ------
+        commands.MissingFlagArgument
+            If a required flag argument is missing.
+        commands.TooManyArguments
+            If too many arguments are provided when ignore_extra is False.
+        """
         result: dict[str, list[str]] = {}
         flags = cls.__commands_flags__
         aliases = cls.__commands_flag_aliases__
@@ -120,6 +188,18 @@ class TuxFlagConverter(commands.FlagConverter):
 
 
 class BanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    """Flags for ban commands.
+
+    Attributes
+    ----------
+    reason : str
+        The reason for the ban (positional argument).
+    purge : int
+        Days of messages to delete (0-7).
+    silent : bool
+        Don't send a DM to the target.
+    """
+
     reason: str = commands.flag(
         name="reason",
         description="The reason for the ban.",
@@ -141,6 +221,20 @@ class BanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-
 
 
 class TempBanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    """Flags for temporary ban commands.
+
+    Attributes
+    ----------
+    reason : str
+        The reason for the ban (positional argument).
+    duration : float
+        Length of the ban in seconds.
+    purge : int
+        Days of messages to delete (0-7).
+    silent : bool
+        Don't send a DM to the target.
+    """
+
     reason: str = commands.flag(
         name="reason",
         description="The reason for the ban.",
@@ -168,10 +262,20 @@ class TempBanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefi
 
 
 class UnbanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
-    pass
+    """Flags for unban commands."""
 
 
 class KickFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    """Flags for kick commands.
+
+    Attributes
+    ----------
+    reason : str
+        The reason for the kick (positional argument).
+    silent : bool
+        Don't send a DM to the target.
+    """
+
     reason: str = commands.flag(
         name="reason",
         description="The reason for the kick.",
@@ -187,6 +291,16 @@ class KickFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="
 
 
 class WarnFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    """Flags for warn commands.
+
+    Attributes
+    ----------
+    reason : str
+        The reason for the warning (positional argument).
+    silent : bool
+        Don't send a DM to the target.
+    """
+
     reason: str = commands.flag(
         name="reason",
         description="The reason for the warning.",
@@ -202,6 +316,18 @@ class WarnFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="
 
 
 class TimeoutFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    """Flags for timeout commands.
+
+    Attributes
+    ----------
+    reason : str
+        The reason for the timeout (positional argument).
+    duration : str
+        Length of the timeout (e.g. 1d, 1h).
+    silent : bool
+        Don't send a DM to the target.
+    """
+
     reason: str = commands.flag(
         name="reason",
         description="The reason for the timeout.",
@@ -222,6 +348,16 @@ class TimeoutFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefi
 
 
 class UntimeoutFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    """Flags for untimeout commands.
+
+    Attributes
+    ----------
+    reason : str
+        The reason for the timeout removal (positional argument).
+    silent : bool
+        Don't send a DM to the target.
+    """
+
     reason: str = commands.flag(
         name="reason",
         description="The reason for the timeout.",
@@ -237,6 +373,16 @@ class UntimeoutFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", pre
 
 
 class JailFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    """Flags for jail commands.
+
+    Attributes
+    ----------
+    reason : str
+        The reason for the jail (positional argument).
+    silent : bool
+        Don't send a DM to the target.
+    """
+
     reason: str = commands.flag(
         name="reason",
         description="The reason for the jail.",
@@ -252,6 +398,16 @@ class JailFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="
 
 
 class UnjailFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    """Flags for unjail commands.
+
+    Attributes
+    ----------
+    reason : str
+        The reason for the jail removal (positional argument).
+    silent : bool
+        Don't send a DM to the target.
+    """
+
     reason: str = commands.flag(
         name="reason",
         description="The reason for the jail.",
@@ -267,6 +423,18 @@ class UnjailFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix
 
 
 class CasesViewFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    """Flags for viewing cases.
+
+    Attributes
+    ----------
+    type : CaseType | None
+        Type of case to view.
+    user : discord.User | None
+        User to view cases for.
+    moderator : discord.User | None
+        Moderator to view cases for.
+    """
+
     type: CaseType | None = commands.flag(
         name="type",
         description="Type of case to view.",
@@ -288,6 +456,7 @@ class CasesViewFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", pre
     )
 
     def __init__(self, *args: object, **kwargs: object) -> None:
+        """Initialize CasesViewFlags with default values for None attributes."""
         super().__init__(*args, **kwargs)
         if not hasattr(self, "type"):
             self.type = None
@@ -298,6 +467,16 @@ class CasesViewFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", pre
 
 
 class CaseModifyFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    """Flags for modifying cases.
+
+    Attributes
+    ----------
+    status : bool | None
+        Status of the case.
+    reason : str | None
+        Modified reason.
+    """
+
     status: bool | None = commands.flag(
         name="status",
         description="Status of the case.",
@@ -312,12 +491,29 @@ class CaseModifyFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", pr
     )
 
     def __init__(self):
+        """Initialize CaseModifyFlags and validate that at least one field is provided.
+
+        Raises
+        ------
+        commands.FlagError
+            If neither status nor reason is provided.
+        """
         if all(value is None for value in (self.status, self.reason)):
             msg = "Status or reason must be provided."
             raise commands.FlagError(msg)
 
 
 class SnippetBanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    """Flags for snippet ban commands.
+
+    Attributes
+    ----------
+    reason : str
+        The reason for the snippet ban (positional argument).
+    silent : bool
+        Don't send a DM to the target.
+    """
+
     reason: str = commands.flag(
         name="reason",
         description="The reason for the snippet ban.",
@@ -333,6 +529,16 @@ class SnippetBanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", pr
 
 
 class SnippetUnbanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    """Flags for snippet unban commands.
+
+    Attributes
+    ----------
+    reason : str
+        The reason for the snippet unban (positional argument).
+    silent : bool
+        Don't send a DM to the target.
+    """
+
     reason: str = commands.flag(
         name="reason",
         description="The reason for the snippet unban.",
@@ -349,6 +555,16 @@ class SnippetUnbanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", 
 
 
 class PollBanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    """Flags for poll ban commands.
+
+    Attributes
+    ----------
+    reason : str
+        The reason for the poll ban (positional argument).
+    silent : bool
+        Don't send a DM to the target.
+    """
+
     reason: str = commands.flag(
         name="reason",
         description="The reason for the poll ban.",
@@ -364,6 +580,16 @@ class PollBanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefi
 
 
 class PollUnbanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    """Flags for poll unban commands.
+
+    Attributes
+    ----------
+    reason : str
+        The reason for the poll unban (positional argument).
+    silent : bool
+        Don't send a DM to the target.
+    """
+
     reason: str = commands.flag(
         name="reason",
         description="The reason for the poll unban.",
@@ -379,6 +605,22 @@ class PollUnbanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", pre
 
 
 class TldrFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-"):
+    """Flags for tldr commands.
+
+    Attributes
+    ----------
+    platform : str | None
+        Platform (e.g. linux, osx, common).
+    language : str | None
+        Language code (e.g. en, es, fr).
+    show_short : bool
+        Display shortform options over longform.
+    show_long : bool
+        Display longform options over shortform.
+    show_both : bool
+        Display both short and long options.
+    """
+
     platform: str | None = commands.flag(
         name="platform",
         description="Platform (e.g. linux, osx, common)",

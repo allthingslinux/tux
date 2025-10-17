@@ -17,6 +17,13 @@ class ConfigOverview:
     """Overview and status commands for config system."""
 
     def __init__(self, bot: Tux) -> None:
+        """Initialize the config overview handler.
+
+        Parameters
+        ----------
+        bot : Tux
+            The Discord bot instance.
+        """
         self.bot = bot
 
     async def overview_command(self, ctx: commands.Context[Tux]) -> None:  # noqa: PLR0912, PLR0915

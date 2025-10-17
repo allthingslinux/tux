@@ -1,3 +1,11 @@
+"""
+Information display commands for Discord objects.
+
+This module provides comprehensive information display commands for various Discord
+entities including users, members, channels, guilds, roles, emojis, and stickers.
+Each command shows detailed information in an organized embed format.
+"""
+
 import contextlib
 from collections.abc import Awaitable, Callable, Generator, Iterable, Iterator
 from datetime import datetime
@@ -18,6 +26,13 @@ class Info(BaseCog):
     """Information commands for Discord objects."""
 
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Info cog with type handlers.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
         self._type_handlers: dict[type, Callable[[commands.Context[Tux], Any], Awaitable[None]]] = {
             discord.Member: self._show_member_info,
@@ -697,4 +712,11 @@ class Info(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Info cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Info(bot))

@@ -92,7 +92,14 @@ class TldrPaginatorView(View):
         else:
             await interaction.response.defer()
 
-    async def update_message(self, interaction: discord.Interaction):
+    async def update_message(self, interaction: discord.Interaction) -> None:
+        """Update the message with the current page content.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction to update the message for.
+        """
         embed = EmbedCreator.create_embed(
             bot=self.bot,
             embed_type=EmbedCreator.INFO,

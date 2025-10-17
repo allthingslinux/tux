@@ -17,6 +17,13 @@ class CogSetupService(BotSetupService):
     """Handles cog loading and plugin setup during bot initialization."""
 
     def __init__(self, bot: Tux) -> None:
+        """Initialize the cog setup service.
+
+        Parameters
+        ----------
+        bot : Tux
+            The Discord bot instance to load cogs for.
+        """
         super().__init__(bot, "cogs")
 
     async def setup(self) -> None:

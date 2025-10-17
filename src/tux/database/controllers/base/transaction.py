@@ -15,7 +15,16 @@ R = TypeVar("R")
 class TransactionController[ModelT]:
     """Handles transaction and session management."""
 
-    def __init__(self, model: type[ModelT], db: DatabaseService):
+    def __init__(self, model: type[ModelT], db: DatabaseService) -> None:
+        """Initialize the transaction controller.
+
+        Parameters
+        ----------
+        model : type[ModelT]
+            The SQLModel to manage transactions for.
+        db : DatabaseService
+            The database service instance.
+        """
         self.model = model
         self.db = db
 

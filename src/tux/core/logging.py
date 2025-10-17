@@ -83,7 +83,16 @@ def _configure_third_party_logging() -> None:
 
     # Intercept standard logging and redirect to loguru
     class InterceptHandler(logging.Handler):
+        """Handler that redirects standard logging calls to loguru."""
+
         def emit(self, record: logging.LogRecord) -> None:
+            """Emit a log record to loguru.
+
+            Parameters
+            ----------
+            record : logging.LogRecord
+                The log record to emit.
+            """
             # Get corresponding Loguru level if it exists
             try:
                 level = logger.level(record.levelname).name

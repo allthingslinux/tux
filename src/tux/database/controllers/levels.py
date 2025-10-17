@@ -1,3 +1,10 @@
+"""
+User level and XP tracking controller.
+
+This controller manages Discord user experience points, levels, and ranking
+information for guilds, supporting features like leveling systems and leaderboards.
+"""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -11,7 +18,14 @@ from tux.database.service import DatabaseService
 class LevelsController(BaseController[Levels]):
     """Clean Levels controller using the new BaseController pattern."""
 
-    def __init__(self, db: DatabaseService | None = None):
+    def __init__(self, db: DatabaseService | None = None) -> None:
+        """Initialize the levels controller.
+
+        Parameters
+        ----------
+        db : DatabaseService | None, optional
+            The database service instance. If None, uses the default service.
+        """
         super().__init__(Levels, db)
 
     # Simple, clean methods that use BaseController's CRUD operations

@@ -14,7 +14,16 @@ ModelT = TypeVar("ModelT", bound=SQLModel)
 class BulkOperationsController[ModelT]:
     """Handles bulk create, update, and delete operations."""
 
-    def __init__(self, model: type[ModelT], db: DatabaseService):
+    def __init__(self, model: type[ModelT], db: DatabaseService) -> None:
+        """Initialize the bulk operations controller.
+
+        Parameters
+        ----------
+        model : type[ModelT]
+            The SQLModel to perform bulk operations on.
+        db : DatabaseService
+            The database service instance.
+        """
         self.model = model
         self.db = db
 

@@ -1,3 +1,9 @@
+"""Poll unban moderation command.
+
+This module provides functionality to remove poll bans from Discord members.
+It integrates with the moderation case tracking system.
+"""
+
 import discord
 from discord.ext import commands
 
@@ -10,7 +16,20 @@ from . import ModerationCogBase
 
 
 class PollUnban(ModerationCogBase):
+    """Discord cog for poll unban moderation commands.
+
+    This cog provides the pollunban command which restores a member's
+    ability to create polls in the server.
+    """
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the PollUnban cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
     @commands.hybrid_command(
@@ -61,4 +80,16 @@ class PollUnban(ModerationCogBase):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the PollUnban cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+
+    Returns
+    -------
+    None
+        The cog is added to the bot.
+    """
     await bot.add_cog(PollUnban(bot))

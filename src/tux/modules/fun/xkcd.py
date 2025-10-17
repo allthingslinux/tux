@@ -1,3 +1,11 @@
+"""
+Xkcd comic viewing commands.
+
+This module provides commands to fetch and display xkcd comics, including the
+latest comic, random comics, and specific comics by ID. Comics are displayed
+with interactive buttons for navigation to the comic's explanation and original page.
+"""
+
 import discord
 from discord.ext import commands
 from loguru import logger
@@ -10,7 +18,21 @@ from tux.ui.embeds import EmbedCreator
 
 
 class Xkcd(BaseCog):
+    """Discord cog for xkcd comic viewing commands.
+
+    Provides commands to fetch and display xkcd comics from the xkcd webcomic.
+    Supports viewing the latest comic, random comics, and specific comics by ID.
+    Comics are displayed with navigation buttons to the explanation and original pages.
+    """
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Xkcd cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
         self.client = xkcd.Client()
 
@@ -154,4 +176,11 @@ class Xkcd(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Xkcd cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Xkcd(bot))

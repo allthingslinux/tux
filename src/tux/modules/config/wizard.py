@@ -18,6 +18,13 @@ class ConfigWizard:
     """Wizard-related config commands."""
 
     def __init__(self, bot: Tux) -> None:
+        """Initialize the config wizard handler.
+
+        Parameters
+        ----------
+        bot : Tux
+            The Discord bot instance.
+        """
         self.bot = bot
 
     async def wizard_command(self, ctx: commands.Context[Tux]) -> None:
@@ -81,6 +88,7 @@ class ResetConfirmationView(discord.ui.View):
     """Confirmation view for setup reset."""
 
     def __init__(self) -> None:
+        """Initialize the reset confirmation view with 5-minute timeout."""
         super().__init__(timeout=300.0)  # 5 minutes
         self.ctx: commands.Context[Tux] | None = None
         self.bot: Tux | None = None

@@ -132,7 +132,16 @@ class TuxAPIError(TuxError):
 class TuxAPIConnectionError(TuxAPIError):
     """Raised when there's an issue connecting to an external API."""
 
-    def __init__(self, service_name: str, original_error: Exception):
+    def __init__(self, service_name: str, original_error: Exception) -> None:
+        """Initialize the API connection error.
+
+        Parameters
+        ----------
+        service_name : str
+            Name of the service that failed to connect.
+        original_error : Exception
+            The original exception that caused the connection failure.
+        """
         self.service_name = service_name
         self.original_error = original_error
         super().__init__(f"Connection error with {service_name}: {original_error}")
@@ -141,7 +150,18 @@ class TuxAPIConnectionError(TuxAPIError):
 class TuxAPIRequestError(TuxAPIError):
     """Raised when an API request fails with a specific status code."""
 
-    def __init__(self, service_name: str, status_code: int, reason: str):
+    def __init__(self, service_name: str, status_code: int, reason: str) -> None:
+        """Initialize the API request error.
+
+        Parameters
+        ----------
+        service_name : str
+            Name of the service that the request failed for.
+        status_code : int
+            HTTP status code of the failed request.
+        reason : str
+            Reason for the request failure.
+        """
         self.service_name = service_name
         self.status_code = status_code
         self.reason = reason
@@ -151,7 +171,18 @@ class TuxAPIRequestError(TuxAPIError):
 class TuxAPIResourceNotFoundError(TuxAPIRequestError):
     """Raised when an API request results in a 404 or similar resource not found error."""
 
-    def __init__(self, service_name: str, resource_identifier: str, status_code: int = 404):
+    def __init__(self, service_name: str, resource_identifier: str, status_code: int = 404) -> None:
+        """Initialize the API resource not found error.
+
+        Parameters
+        ----------
+        service_name : str
+            Name of the service that was queried.
+        resource_identifier : str
+            Identifier of the resource that was not found.
+        status_code : int, optional
+            HTTP status code, by default 404.
+        """
         self.resource_identifier = resource_identifier
         super().__init__(
             service_name,
@@ -163,7 +194,16 @@ class TuxAPIResourceNotFoundError(TuxAPIRequestError):
 class TuxAPIPermissionError(TuxAPIRequestError):
     """Raised when an API request fails due to permissions (e.g., 403 Forbidden)."""
 
-    def __init__(self, service_name: str, status_code: int = 403):
+    def __init__(self, service_name: str, status_code: int = 403) -> None:
+        """Initialize the API permission error.
+
+        Parameters
+        ----------
+        service_name : str
+            Name of the service that rejected the request.
+        status_code : int, optional
+            HTTP status code, by default 403.
+        """
         super().__init__(
             service_name,
             status_code,
@@ -182,6 +222,7 @@ class TuxMissingCodeError(TuxCodeExecutionError):
     """Raised when no code is provided for execution."""
 
     def __init__(self) -> None:
+        """Initialize the missing code error with usage instructions."""
         super().__init__(
             "Please provide code with syntax highlighting in this format:\n"
             '```\n`\u200b``python\nprint("Hello, World!")\n`\u200b``\n```',

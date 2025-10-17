@@ -1,3 +1,10 @@
+"""
+Text encoding and decoding utilities.
+
+This module provides commands for encoding and decoding text using various
+algorithms including Base16, Base32, Base64, and Base85 with Discord integration.
+"""
+
 import base64
 import binascii
 
@@ -10,6 +17,20 @@ from tux.shared.functions import generate_usage
 
 
 def wrap_strings(wrapper: str, contents: list[str]) -> list[str]:
+    """Wrap each string in the list with the specified wrapper string.
+
+    Parameters
+    ----------
+    wrapper : str
+        The string to wrap around each content item.
+    contents : list[str]
+        List of strings to wrap.
+
+    Returns
+    -------
+    list[str]
+        List of wrapped strings.
+    """
     return [f"{wrapper}{content}{wrapper}" for content in contents]
 
 
@@ -34,6 +55,8 @@ SUPPORTED_FORMATS_MESSAGE = [
 
 
 class EncodeDecode(BaseCog):
+    """Discord cog for text encoding and decoding operations."""
+
     def __init__(self, bot: Tux) -> None:
         self.bot = bot
         self.encode.usage = generate_usage(self.encode)
@@ -170,5 +193,12 @@ class EncodeDecode(BaseCog):
             )
 
 
-async def setup(bot: Tux):
+async def setup(bot: Tux) -> None:
+    """Set up the EncodeDecode cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(EncodeDecode(bot))

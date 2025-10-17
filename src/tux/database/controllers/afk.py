@@ -1,3 +1,10 @@
+"""
+AFK (Away From Keyboard) status management controller.
+
+This controller manages AFK status for Discord guild members, including
+temporary and permanent AFK states with customizable messages and time limits.
+"""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -11,7 +18,14 @@ from tux.database.service import DatabaseService
 class AfkController(BaseController[AFK]):
     """Clean AFK controller using the new BaseController pattern."""
 
-    def __init__(self, db: DatabaseService | None = None):
+    def __init__(self, db: DatabaseService | None = None) -> None:
+        """Initialize the AFK controller.
+
+        Parameters
+        ----------
+        db : DatabaseService | None, optional
+            The database service instance. If None, uses the default service.
+        """
         super().__init__(AFK, db)
 
     # Simple, clean methods that use BaseController's CRUD operations

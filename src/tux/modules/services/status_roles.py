@@ -1,3 +1,10 @@
+"""
+Automatic role assignment based on user status.
+
+This module automatically assigns roles to users based on their Discord
+custom status messages, supporting regex pattern matching and role management.
+"""
+
 import re
 
 import discord
@@ -13,6 +20,13 @@ class StatusRoles(BaseCog):
     """Assign roles to users based on their status."""
 
     def __init__(self, bot: Tux) -> None:
+        """Initialize the status roles service.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this service to.
+        """
         super().__init__(bot)
 
         # Check if mappings exist and are valid
@@ -118,4 +132,11 @@ class StatusRoles(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the StatusRoles cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(StatusRoles(bot))

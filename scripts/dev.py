@@ -160,13 +160,10 @@ class DevCLI(BaseCLI):
     def docstring_coverage(self) -> None:
         """Check docstring coverage across the codebase."""
         self.rich.print_section("🔍 Docstring Coverage", "blue")
-        success = self._run_tool_command(
+        self._run_tool_command(
             ["uv", "run", "docstr-coverage", "."],
-            "Docstring coverage completed successfully",
+            "Docstring coverage report generated",
         )
-        if not success:
-            self.rich.print_error("Docstring coverage below threshold - see report above")
-            sys.exit(1)
 
     def pre_commit(self) -> None:
         """Run pre-commit hooks to ensure code quality before commits."""

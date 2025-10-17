@@ -35,7 +35,18 @@ if TYPE_CHECKING:
 class SetupWizardView(discord.ui.LayoutView):
     """Clean setup wizard using Components V2."""
 
-    def __init__(self, bot: Tux, guild: discord.Guild, author: discord.User):
+    def __init__(self, bot: Tux, guild: discord.Guild, author: discord.User) -> None:
+        """Initialize the setup wizard view.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance.
+        guild : discord.Guild
+            The guild being set up.
+        author : discord.User
+            The user initiating the setup.
+        """
         super().__init__(timeout=900.0)  # 15 minute timeout
         self.bot = bot
         self.guild = guild

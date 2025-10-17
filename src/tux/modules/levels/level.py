@@ -1,3 +1,10 @@
+"""
+Level and XP display commands.
+
+This module provides commands to view user levels and XP points earned through
+message activity. Users can check their own level or view other members' levels.
+"""
+
 import discord
 from discord.ext import commands
 
@@ -9,7 +16,21 @@ from tux.ui.embeds import EmbedCreator, EmbedType
 
 
 class Level(BaseCog):
+    """Discord cog for level and XP display commands.
+
+    Provides functionality to display user levels and XP points earned through
+    message activity. Supports viewing both personal and other members' levels
+    with optional progress bars and XP caps.
+    """
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Level cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
         # Check if XP roles are configured
@@ -90,4 +111,11 @@ class Level(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Level cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Level(bot))

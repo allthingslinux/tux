@@ -1,3 +1,11 @@
+"""
+Detection and warning system for potentially harmful commands.
+
+This plugin monitors Discord messages for dangerous shell commands like
+recursive file deletion, fork bombs, and destructive disk operations,
+providing warnings to prevent accidental system damage.
+"""
+
 import re
 
 import discord
@@ -35,7 +43,16 @@ FORMAT_COMMANDS = r"mkfs\..*\s+/dev/([hs]d[a-z]|nvme\d+n\d+)"
 
 
 class HarmfulCommands(BaseCog):
+    """Discord cog for detecting and warning about harmful shell commands."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the harmful commands detector.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         self.bot = bot
 
     def is_harmful(self, command: str) -> str | None:
@@ -112,11 +129,13 @@ class HarmfulCommands(BaseCog):
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
+        """Handle message edits to check for newly harmful content."""
         if not self.is_harmful(before.content) and self.is_harmful(after.content):
             await self.handle_harmful_message(after)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
+        """Handle new messages to check for harmful content."""
         await self.handle_harmful_message(message)
 
 

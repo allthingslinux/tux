@@ -84,4 +84,11 @@ class Ban(ModerationCogBase):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Ban cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Ban(bot))

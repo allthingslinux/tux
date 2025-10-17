@@ -15,7 +15,16 @@ ModelT = TypeVar("ModelT", bound=SQLModel)
 class UpsertController[ModelT]:
     """Handles upsert and get-or-create operations."""
 
-    def __init__(self, model: type[ModelT], db: DatabaseService):
+    def __init__(self, model: type[ModelT], db: DatabaseService) -> None:
+        """Initialize the upsert controller.
+
+        Parameters
+        ----------
+        model : type[ModelT]
+            The SQLModel to perform upsert operations on.
+        db : DatabaseService
+            The database service instance.
+        """
         self.model = model
         self.db = db
 

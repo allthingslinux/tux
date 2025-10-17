@@ -18,6 +18,13 @@ class BaseSetupService(ABC):
     """Base class for all setup services with standardized patterns."""
 
     def __init__(self, name: str) -> None:
+        """Initialize the base setup service.
+
+        Parameters
+        ----------
+        name : str
+            The name of the setup service for logging and tracing.
+        """
         self.name = name
         self.logger = logger.bind(service=name)
 
@@ -57,5 +64,14 @@ class BotSetupService(BaseSetupService):
     """Base class for setup services that need bot access."""
 
     def __init__(self, bot: Tux, name: str) -> None:
+        """Initialize the bot setup service.
+
+        Parameters
+        ----------
+        bot : Tux
+            The Discord bot instance to set up.
+        name : str
+            The name of the setup service for logging and tracing.
+        """
         super().__init__(name)
         self.bot = bot

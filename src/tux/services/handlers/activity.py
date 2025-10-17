@@ -1,3 +1,10 @@
+"""
+Bot activity status management and rotation.
+
+This module handles automatic cycling through different bot activities
+to display various status messages, version information, and statistics.
+"""
+
 import asyncio
 import contextlib
 import json
@@ -20,7 +27,18 @@ ACTIVITY_TYPE_MAP = {
 
 
 class ActivityHandler(commands.Cog):
+    """Discord cog for managing bot activity status rotation."""
+
     def __init__(self, bot: Tux, delay: int = 30) -> None:
+        """Initialize the activity handler.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        delay : int, optional
+            Seconds between activity changes, by default 30.
+        """
         self.bot = bot
         self.delay = delay
         self.activities = self.build_activity_list()

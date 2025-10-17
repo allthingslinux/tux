@@ -1,3 +1,10 @@
+"""
+GIF rate limiting service for Discord channels.
+
+This module provides automatic rate limiting for GIF attachments and links
+in Discord channels to prevent spam and maintain conversation quality.
+"""
+
 import asyncio
 from collections import defaultdict
 from time import time
@@ -19,6 +26,13 @@ class GifLimiter(BaseCog):
     """
 
     def __init__(self, bot: Tux) -> None:
+        """Initialize the GIF limiter service.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this service to.
+        """
         super().__init__(bot)
 
         # Max age for a GIF to be considered a recent post
@@ -149,4 +163,11 @@ class GifLimiter(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the GifLimiter cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(GifLimiter(bot))

@@ -1,3 +1,10 @@
+"""
+Bot status and ping checking commands.
+
+This module provides commands to check the bot's latency, uptime, and system
+resource usage information for monitoring bot health and performance.
+"""
+
 from datetime import UTC, datetime
 
 import psutil
@@ -10,7 +17,16 @@ from tux.ui.embeds import EmbedCreator
 
 
 class Ping(BaseCog):
+    """Discord cog for checking bot status and ping."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Ping cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
     @commands.hybrid_command(
@@ -87,4 +103,11 @@ class Ping(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Ping cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Ping(bot))

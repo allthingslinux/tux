@@ -1,3 +1,10 @@
+"""
+AFK status clearing commands.
+
+This module provides commands to manually clear AFK status from users
+and reset their nicknames back to their original state.
+"""
+
 import contextlib
 
 import discord
@@ -9,7 +16,16 @@ from tux.core.checks import requires_command_permission
 
 
 class ClearAFK(BaseCog):
+    """Discord cog for clearing AFK status from users."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the ClearAFK cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
         self.clear_afk.usage = "clearafk <member>"
 
@@ -56,4 +72,11 @@ class ClearAFK(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the ClearAFK cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(ClearAFK(bot))

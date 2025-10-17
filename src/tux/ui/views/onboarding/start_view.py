@@ -14,7 +14,16 @@ if TYPE_CHECKING:
 class OnboardingStartView(discord.ui.View):
     """View for starting the onboarding process."""
 
-    def __init__(self, bot: Tux, guild: discord.Guild):
+    def __init__(self, bot: Tux, guild: discord.Guild) -> None:
+        """Initialize the onboarding start view.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance.
+        guild : discord.Guild
+            The guild to set up.
+        """
         super().__init__(timeout=None)
         self.bot = bot
         self.guild = guild

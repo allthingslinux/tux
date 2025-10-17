@@ -1,4 +1,10 @@
 # type: ignore
+"""MkDocs plugin for generating Tux bot command documentation.
+
+This plugin automatically generates documentation for Tux Discord bot commands
+by parsing Python source files using AST analysis. It extracts command metadata
+including names, descriptions, parameters, and permission levels.
+"""
 
 import ast
 import re
@@ -17,6 +23,28 @@ from mkdocs.structure.pages import Page
 
 @dataclass
 class CommandInfo:
+    """Information about a bot command extracted from source code.
+
+    Attributes
+    ----------
+    name : str
+        The primary command name.
+    aliases : list[str]
+        Alternative names for the command.
+    description : str
+        Short description of the command's functionality.
+    parameters : list[dict[str, Any]]
+        Command parameters with type information.
+    permission_level : str
+        Required permission level to use the command.
+    command_type : str
+        Type of command (hybrid_command, slash_command, etc.).
+    category : str
+        Command category/module grouping.
+    usage : str
+        Example usage string for the command.
+    """
+
     name: str
     aliases: list[str]
     description: str
@@ -28,6 +56,18 @@ class CommandInfo:
 
 
 class TuxPluginConfig(config_options.Config):
+    """Configuration options for the Tux MkDocs plugin.
+
+    Attributes
+    ----------
+    modules_path : str
+        Path to the bot modules directory relative to project root.
+        Default is "src/tux/modules".
+    enable_commands : bool
+        Whether to enable command documentation generation.
+        Default is True.
+    """
+
     modules_path = config_options.Type(str, default="src/tux/modules")
     enable_commands = config_options.Type(bool, default=True)
 
@@ -36,24 +76,81 @@ class TuxPlugin(BasePlugin[TuxPluginConfig]):
     """MkDocs plugin for Tux bot documentation using AST parsing."""
 
     def __init__(self):
+        """Initialize the Tux plugin with command caching."""
         super().__init__()
         self.commands_cache: dict[str, list[CommandInfo]] = {}
 
     def on_config(self, config: MkDocsConfig) -> MkDocsConfig:
+        """Configure the plugin by adding source path to sys.path.
+
+        Parameters
+        ----------
+        config : MkDocsConfig
+            The MkDocs configuration object.
+
+        Returns
+        -------
+        MkDocsConfig
+            The modified configuration object.
+        """
         src_path = Path(config["docs_dir"]).parent.parent / "src"  # type: ignore[index]
         if str(src_path) not in sys.path:
             sys.path.insert(0, str(src_path))
         return config
 
     def on_page_markdown(self, markdown: str, page: Page, config: MkDocsConfig, files: Files) -> str:
+        """Process markdown content to replace command blocks with documentation.
+
+        Parameters
+        ----------
+        markdown : str
+            The raw markdown content.
+        page : Page
+            The MkDocs page object.
+        config : MkDocsConfig
+            The MkDocs configuration.
+        files : Files
+            The MkDocs files collection.
+
+        Returns
+        -------
+        str
+            The processed markdown with command documentation.
+        """
         if self.config["enable_commands"]:
             markdown = self._process_commands_blocks(markdown, config)
         return markdown
 
     def _process_commands_blocks(self, markdown: str, config: MkDocsConfig) -> str:
+        """Replace ::: tux-commands blocks with generated command documentation.
+
+        Parameters
+        ----------
+        markdown : str
+            The markdown content to process.
+        config : MkDocsConfig
+            The MkDocs configuration.
+
+        Returns
+        -------
+        str
+            The markdown with command blocks replaced.
+        """
         pattern = r"::: tux-commands\s*\n((?:\s*:[\w-]+:\s*.+\s*\n)*)"
 
         def replace_block(match: Match[str]) -> str:
+            """Replace a single tux-commands block with documentation.
+
+            Parameters
+            ----------
+            match : Match[str]
+                The regex match object for the command block.
+
+            Returns
+            -------
+            str
+                The generated command documentation.
+            """
             params: dict[str, str] = {}
             param_lines = match.group(1).strip().split("\n")
             for line in param_lines:
@@ -65,6 +162,20 @@ class TuxPlugin(BasePlugin[TuxPluginConfig]):
         return re.sub(pattern, replace_block, markdown, flags=re.MULTILINE)
 
     def _generate_command_docs(self, params: dict[str, str], config: MkDocsConfig) -> str:
+        """Generate markdown documentation for commands in a category.
+
+        Parameters
+        ----------
+        params : dict[str, str]
+            Parameters from the command block (e.g., category).
+        config : MkDocsConfig
+            The MkDocs configuration.
+
+        Returns
+        -------
+        str
+            Generated markdown documentation for commands.
+        """
         project_root = Path(config["docs_dir"]).parent.parent  # type: ignore[index].parent
         modules_path = project_root / self.config["modules_path"]
         category = params.get("category", "all")
@@ -81,6 +192,20 @@ class TuxPlugin(BasePlugin[TuxPluginConfig]):
         return "\n\n".join(md)
 
     def _scan_category(self, category: str, modules_path: Path) -> list[CommandInfo]:
+        """Scan a category directory for command definitions.
+
+        Parameters
+        ----------
+        category : str
+            The command category to scan.
+        modules_path : Path
+            Path to the modules directory.
+
+        Returns
+        -------
+        list[CommandInfo]
+            List of command information objects.
+        """
         category_path = modules_path / category
         if not category_path.exists():
             return []
@@ -93,6 +218,20 @@ class TuxPlugin(BasePlugin[TuxPluginConfig]):
         return commands
 
     def _extract_commands_from_file(self, file_path: Path, category: str) -> list[CommandInfo]:
+        """Extract command information from a Python file using AST parsing.
+
+        Parameters
+        ----------
+        file_path : Path
+            Path to the Python file to analyze.
+        category : str
+            The command category this file belongs to.
+
+        Returns
+        -------
+        list[CommandInfo]
+            List of command information extracted from the file.
+        """
         try:
             with file_path.open(encoding="utf-8") as f:
                 content = f.read()
@@ -114,6 +253,20 @@ class TuxPlugin(BasePlugin[TuxPluginConfig]):
         func_node: ast.FunctionDef | ast.AsyncFunctionDef,
         category: str,
     ) -> CommandInfo | None:  # sourcery skip: low-code-quality
+        """Parse a command function AST node into CommandInfo.
+
+        Parameters
+        ----------
+        func_node : ast.FunctionDef | ast.AsyncFunctionDef
+            The AST node representing the command function.
+        category : str
+            The command category.
+
+        Returns
+        -------
+        CommandInfo | None
+            Command information if this is a valid command function, None otherwise.
+        """
         command_type = None
         name = str(func_node.name)
         aliases = []
@@ -177,6 +330,18 @@ class TuxPlugin(BasePlugin[TuxPluginConfig]):
         )
 
     def _extract_permission_level(self, func_node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
+        """Extract permission level requirement from function decorators.
+
+        Parameters
+        ----------
+        func_node : ast.FunctionDef | ast.AsyncFunctionDef
+            The AST node representing the command function.
+
+        Returns
+        -------
+        str
+            The permission level required for the command.
+        """
         for decorator in func_node.decorator_list:
             if isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Name):
                 func_name = decorator.func.id
@@ -185,6 +350,18 @@ class TuxPlugin(BasePlugin[TuxPluginConfig]):
         return "Everyone"
 
     def _format_command(self, cmd: CommandInfo) -> str:
+        """Format a CommandInfo object into MkDocs markdown.
+
+        Parameters
+        ----------
+        cmd : CommandInfo
+            The command information to format.
+
+        Returns
+        -------
+        str
+            Formatted markdown documentation for the command.
+        """
         md: list[str] = []
 
         # Command header with admonition

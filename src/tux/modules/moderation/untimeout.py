@@ -1,3 +1,9 @@
+"""Untimeout moderation command.
+
+This module provides functionality to remove timeouts from Discord members.
+It integrates with the moderation case tracking system.
+"""
+
 import discord
 from discord.ext import commands
 
@@ -11,7 +17,20 @@ from . import ModerationCogBase
 
 
 class Untimeout(ModerationCogBase):
+    """Discord cog for untimeout moderation commands.
+
+    This cog provides the untimeout command which removes timeout restrictions
+    from members, restoring their ability to send messages and use voice channels.
+    """
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Untimeout cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
         self.untimeout.usage = generate_usage(self.untimeout, UntimeoutFlags)
 
@@ -65,4 +84,16 @@ class Untimeout(ModerationCogBase):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Untimeout cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+
+    Returns
+    -------
+    None
+        The cog is added to the bot.
+    """
     await bot.add_cog(Untimeout(bot))

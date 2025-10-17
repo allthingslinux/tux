@@ -1,3 +1,11 @@
+"""
+Starboard message highlighting controller.
+
+This controller manages starboard functionality for Discord guilds, allowing
+popular messages to be automatically posted to designated starboard channels
+based on reaction thresholds and user preferences.
+"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -10,7 +18,14 @@ from tux.database.service import DatabaseService
 class StarboardController(BaseController[Starboard]):
     """Clean Starboard controller using the new BaseController pattern."""
 
-    def __init__(self, db: DatabaseService | None = None):
+    def __init__(self, db: DatabaseService | None = None) -> None:
+        """Initialize the starboard controller.
+
+        Parameters
+        ----------
+        db : DatabaseService | None, optional
+            The database service instance. If None, uses the default service.
+        """
         super().__init__(Starboard, db)
 
     # Simple, clean methods that use BaseController's CRUD operations
@@ -70,7 +85,14 @@ class StarboardController(BaseController[Starboard]):
 class StarboardMessageController(BaseController[StarboardMessage]):
     """Clean StarboardMessage controller using the new BaseController pattern."""
 
-    def __init__(self, db: DatabaseService | None = None):
+    def __init__(self, db: DatabaseService | None = None) -> None:
+        """Initialize the starboard message controller.
+
+        Parameters
+        ----------
+        db : DatabaseService | None, optional
+            The database service instance. If None, uses the default service.
+        """
         super().__init__(StarboardMessage, db)
 
     # Simple, clean methods that use BaseController's CRUD operations

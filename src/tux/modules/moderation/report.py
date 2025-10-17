@@ -1,3 +1,10 @@
+"""
+User reporting system for Discord servers.
+
+This module provides an anonymous reporting system that allows users to report
+issues, users, or content to server moderators through a modal interface.
+"""
+
 import discord
 from discord import app_commands
 
@@ -7,7 +14,16 @@ from tux.ui.modals.report import ReportModal
 
 
 class Report(BaseCog):
+    """Discord cog for user reporting functionality."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Report cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
     @app_commands.command(name="report")
@@ -27,4 +43,11 @@ class Report(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Report cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Report(bot))

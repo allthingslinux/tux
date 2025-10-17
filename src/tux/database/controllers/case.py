@@ -1,3 +1,10 @@
+"""
+Moderation case management controller.
+
+This controller manages moderation cases (bans, kicks, timeouts, etc.) with
+automatic case numbering, status tracking, and audit logging for Discord guilds.
+"""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -17,7 +24,14 @@ from tux.database.service import DatabaseService
 class CaseController(BaseController[Case]):
     """Clean Case controller using the new BaseController pattern."""
 
-    def __init__(self, db: DatabaseService | None = None):
+    def __init__(self, db: DatabaseService | None = None) -> None:
+        """Initialize the case controller.
+
+        Parameters
+        ----------
+        db : DatabaseService | None, optional
+            The database service instance. If None, uses the default service.
+        """
         super().__init__(Case, db)
 
     # Simple, clean methods that use BaseController's CRUD operations
@@ -74,6 +88,18 @@ class CaseController(BaseController[Case]):
         """
 
         async def _create_with_lock(session: AsyncSession) -> Case:
+            """Create a case with guild locking to prevent concurrent case numbering.
+
+            Parameters
+            ----------
+            session : AsyncSession
+                The database session to use for the operation.
+
+            Returns
+            -------
+            Case
+                The created case with auto-generated case number.
+            """
             # Lock the guild row to prevent concurrent case number generation
             # Explicitly avoid loading relationships to prevent outer join issues with FOR UPDATE
             stmt = (

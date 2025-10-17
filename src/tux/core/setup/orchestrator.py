@@ -20,6 +20,13 @@ class BotSetupOrchestrator:
     """Orchestrates the bot setup process using specialized setup services."""
 
     def __init__(self, bot: Tux) -> None:
+        """Initialize the bot setup orchestrator.
+
+        Parameters
+        ----------
+        bot : Tux
+            The Discord bot instance to set up.
+        """
         self.bot = bot
         # Lazy import to avoid circular imports
         from .cog_setup import CogSetupService  # noqa: PLC0415

@@ -29,6 +29,7 @@ class GithubService:
     """GitHub API service wrapper for repository and issue management."""
 
     def __init__(self) -> None:
+        """Initialize the GitHub service with app credentials."""
         # Check if GitHub configuration is available
         if not CONFIG.EXTERNAL_SERVICES.GITHUB_APP_ID:
             msg = "GitHub App ID is not configured. Please set EXTERNAL_SERVICES__GITHUB_APP_ID in your .env file."

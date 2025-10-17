@@ -22,6 +22,13 @@ class ErrorHandler(commands.Cog):
     """Centralized error handling for both prefix and slash commands."""
 
     def __init__(self, bot: Tux) -> None:
+        """Initialize the error handler cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         self.bot = bot
         self.formatter = ErrorFormatter()
         self.suggester = CommandSuggester()

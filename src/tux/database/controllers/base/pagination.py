@@ -25,13 +25,24 @@ class PaginationResult[ModelT](BaseModel):
     has_next: bool
 
     class Config:
+        """Pydantic configuration for PaginationResult."""
+
         arbitrary_types_allowed = True
 
 
 class PaginationController[ModelT]:
     """Handles pagination logic and utilities."""
 
-    def __init__(self, model: type[ModelT], db: DatabaseService):
+    def __init__(self, model: type[ModelT], db: DatabaseService) -> None:
+        """Initialize the pagination controller.
+
+        Parameters
+        ----------
+        model : type[ModelT]
+            The SQLModel to paginate.
+        db : DatabaseService
+            The database service instance.
+        """
         self.model = model
         self.db = db
 

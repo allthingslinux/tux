@@ -1,3 +1,10 @@
+"""
+Code snippet storage and management controller.
+
+This controller manages reusable code snippets for Discord guilds, allowing
+users to save and retrieve frequently used code blocks and text templates.
+"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -10,7 +17,14 @@ from tux.database.service import DatabaseService
 class SnippetController(BaseController[Snippet]):
     """Clean Snippet controller using the new BaseController pattern."""
 
-    def __init__(self, db: DatabaseService | None = None):
+    def __init__(self, db: DatabaseService | None = None) -> None:
+        """Initialize the snippet controller.
+
+        Parameters
+        ----------
+        db : DatabaseService | None, optional
+            The database service instance. If None, uses the default service.
+        """
         super().__init__(Snippet, db)
 
     # Simple, clean methods that use BaseController's CRUD operations

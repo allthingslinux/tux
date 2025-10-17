@@ -1,3 +1,11 @@
+"""
+Base utilities and classes for snippet management.
+
+This module provides the foundational classes and utilities for managing
+code snippets in Discord guilds, including base functionality for snippet
+commands and permission checking.
+"""
+
 import discord
 from discord.ext import commands
 from loguru import logger
@@ -16,6 +24,13 @@ class SnippetsBaseCog(BaseCog):
     """Base class for Snippet Cogs, providing shared utilities."""
 
     def __init__(self, bot: Tux) -> None:
+        """Initialize the snippets base cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
     async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:

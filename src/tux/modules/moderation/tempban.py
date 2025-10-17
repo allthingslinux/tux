@@ -19,6 +19,13 @@ class TempBan(ModerationCogBase):
     """Handles temporary bans with automatic expiration."""
 
     def __init__(self, bot: Tux) -> None:
+        """Initialize the TempBan cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
         self._processing_tempbans = False
         self.tempban_check.start()
@@ -168,4 +175,11 @@ class TempBan(ModerationCogBase):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the TempBan cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(TempBan(bot))

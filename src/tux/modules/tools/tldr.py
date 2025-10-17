@@ -1,3 +1,11 @@
+"""
+TLDR command integration for Discord.
+
+This module provides TLDR (Too Long; Didn't Read) command documentation
+lookup functionality, allowing users to search and view command summaries
+from various platforms with interactive pagination.
+"""
+
 import asyncio
 import contextlib
 
@@ -19,6 +27,13 @@ class Tldr(BaseCog):
     """Discord cog for TLDR command integration."""
 
     def __init__(self, bot: Tux) -> None:
+        """Initialize the TLDR cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
         self.default_language: str = self.detect_bot_language()
         self.prefix_tldr.usage = generate_usage(self.prefix_tldr, TldrFlags)
@@ -310,4 +325,11 @@ class Tldr(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Tldr cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Tldr(bot))

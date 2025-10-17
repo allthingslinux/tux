@@ -79,4 +79,11 @@ class Kick(ModerationCogBase):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Kick cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Kick(bot))

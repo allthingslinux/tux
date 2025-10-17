@@ -1,3 +1,10 @@
+"""Timeout moderation command.
+
+This module provides functionality to timeout Discord members for specified
+durations. It supports custom timeout periods and integrates with the
+moderation case tracking system.
+"""
+
 import datetime
 
 import discord
@@ -14,7 +21,20 @@ from . import ModerationCogBase
 
 
 class Timeout(ModerationCogBase):
+    """Discord cog for timeout moderation commands.
+
+    This cog provides the timeout command which temporarily restricts
+    a member's ability to send messages and interact in voice channels.
+    """
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Timeout cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
     @commands.hybrid_command(
@@ -107,4 +127,16 @@ class Timeout(ModerationCogBase):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Timeout cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+
+    Returns
+    -------
+    None
+        The cog is added to the bot.
+    """
     await bot.add_cog(Timeout(bot))

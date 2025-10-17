@@ -1,3 +1,10 @@
+"""
+Guild member count display commands.
+
+This module provides commands to display member statistics for Discord servers,
+including total member count, human users, and bot counts.
+"""
+
 from discord.ext import commands
 
 from tux.core.base_cog import BaseCog
@@ -6,7 +13,16 @@ from tux.ui.embeds import EmbedCreator
 
 
 class MemberCount(BaseCog):
+    """Discord cog for displaying guild member statistics."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the member count cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
     @commands.hybrid_command(
@@ -49,4 +65,11 @@ class MemberCount(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the MemberCount cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(MemberCount(bot))

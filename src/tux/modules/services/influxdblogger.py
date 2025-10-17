@@ -1,3 +1,10 @@
+"""
+InfluxDB metrics logging service.
+
+This module provides time-series metrics collection and logging to InfluxDB
+for monitoring bot performance, usage statistics, and system metrics.
+"""
+
 from typing import Any
 
 from discord.ext import tasks
@@ -12,7 +19,16 @@ from tux.shared.config import CONFIG
 
 
 class InfluxLogger(BaseCog):
-    def __init__(self, bot: Tux):
+    """Discord cog for logging metrics to InfluxDB."""
+
+    def __init__(self, bot: Tux) -> None:
+        """Initialize the InfluxDB logger service.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this service to.
+        """
         super().__init__(bot)
         self.influx_write_api: Any | None = None
         # avoid name collision with method names
@@ -103,4 +119,11 @@ class InfluxLogger(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the InfluxLogger cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(InfluxLogger(bot))

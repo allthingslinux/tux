@@ -1,3 +1,11 @@
+"""
+Leveling and XP tracking service for Discord guilds.
+
+This module provides comprehensive XP and leveling functionality, including
+automatic XP gain from messages, role assignments based on levels, and
+various utility functions for level calculations and progress tracking.
+"""
+
 import datetime
 import time
 
@@ -13,7 +21,16 @@ from tux.ui.embeds import EmbedCreator
 
 
 class LevelsService(BaseCog):
+    """Service for managing user levels and XP in Discord guilds."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the levels service.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this service to.
+        """
         super().__init__(bot)
 
         # Check if XP roles are configured
@@ -307,4 +324,11 @@ class LevelsService(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the LevelsService cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(LevelsService(bot))

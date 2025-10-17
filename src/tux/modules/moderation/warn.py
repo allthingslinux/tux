@@ -1,3 +1,10 @@
+"""
+User warning commands for Discord moderation.
+
+This module provides functionality to issue warnings to Discord server members,
+with automatic case tracking and notification systems.
+"""
+
 import discord
 from discord.ext import commands
 
@@ -10,7 +17,16 @@ from . import ModerationCogBase
 
 
 class Warn(ModerationCogBase):
+    """Discord cog for issuing warnings to server members."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Warn cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
     @commands.hybrid_command(
@@ -53,4 +69,11 @@ class Warn(ModerationCogBase):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Warn cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Warn(bot))

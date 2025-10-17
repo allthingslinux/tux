@@ -1,3 +1,9 @@
+"""Snippet ban moderation command.
+
+This module provides functionality to ban Discord members from creating
+snippets. It integrates with the moderation case tracking system.
+"""
+
 import discord
 from discord.ext import commands
 
@@ -10,7 +16,20 @@ from . import ModerationCogBase
 
 
 class SnippetBan(ModerationCogBase):
+    """Discord cog for snippet ban moderation commands.
+
+    This cog provides the snippetban command which prevents members from
+    creating snippets in the server.
+    """
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the SnippetBan cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
     @commands.hybrid_command(
@@ -61,4 +80,16 @@ class SnippetBan(ModerationCogBase):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the SnippetBan cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+
+    Returns
+    -------
+    None
+        The cog is added to the bot.
+    """
     await bot.add_cog(SnippetBan(bot))

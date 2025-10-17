@@ -1,3 +1,10 @@
+"""
+Wikipedia and wiki search functionality.
+
+This module provides commands to search and retrieve information from
+Arch Linux Wiki and ATL Wiki, with formatted Discord embeds for results.
+"""
+
 import discord
 from discord.ext import commands
 from loguru import logger
@@ -9,7 +16,16 @@ from tux.ui.embeds import EmbedCreator
 
 
 class Wiki(BaseCog):
+    """Discord cog for wiki search functionality."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Wiki cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
         self.arch_wiki_api_url = "https://wiki.archlinux.org/api.php"
         self.atl_wiki_api_url = "https://atl.wiki/api.php"
@@ -153,4 +169,11 @@ class Wiki(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Wiki cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Wiki(bot))

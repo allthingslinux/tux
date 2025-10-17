@@ -128,4 +128,11 @@ class Avatar(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Avatar cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Avatar(bot))

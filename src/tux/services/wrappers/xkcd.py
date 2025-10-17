@@ -23,6 +23,8 @@ from tux.shared.exceptions import (
 
 
 class HttpError(Exception):
+    """Exception raised for HTTP-related errors in xkcd API calls."""
+
     def __init__(self, status_code: int, reason: str) -> None:
         """
         Initialize the HttpError.

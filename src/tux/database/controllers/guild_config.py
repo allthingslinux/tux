@@ -1,3 +1,10 @@
+"""
+Guild configuration management controller.
+
+This controller manages Discord guild configuration settings, including bot
+preferences, moderation settings, and feature toggles for each guild.
+"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -10,7 +17,14 @@ from tux.database.service import DatabaseService
 class GuildConfigController(BaseController[GuildConfig]):
     """Clean GuildConfig controller using the new BaseController pattern."""
 
-    def __init__(self, db: DatabaseService | None = None):
+    def __init__(self, db: DatabaseService | None = None) -> None:
+        """Initialize the guild config controller.
+
+        Parameters
+        ----------
+        db : DatabaseService | None, optional
+            The database service instance. If None, uses the default service.
+        """
         super().__init__(GuildConfig, db)
 
     # Simple, clean methods that use BaseController's CRUD operations

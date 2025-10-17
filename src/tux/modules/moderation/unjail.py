@@ -1,3 +1,10 @@
+"""
+User unjailing commands for Discord moderation.
+
+This module provides functionality to remove jail status from users,
+restoring their roles and permissions in Discord servers.
+"""
+
 import asyncio
 
 import discord
@@ -14,7 +21,16 @@ from . import ModerationCogBase
 
 
 class Unjail(ModerationCogBase):
+    """Discord cog for removing jail status from users."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Unjail cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
     async def get_jail_role(self, guild: discord.Guild) -> discord.Role | None:
@@ -180,6 +196,7 @@ class Unjail(ModerationCogBase):
 
         # Use lock to prevent race conditions
         async def perform_unjail() -> None:
+            """Perform the unjail operation with proper error handling."""
             nonlocal ctx, member, jail_role, flags
 
             # Re-assert guild is not None inside the nested function for type safety
@@ -248,4 +265,11 @@ class Unjail(ModerationCogBase):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Unjail cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Unjail(bot))

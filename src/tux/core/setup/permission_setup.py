@@ -17,6 +17,15 @@ class PermissionSetupService(BotSetupService):
     """Handles permission system initialization during bot setup."""
 
     def __init__(self, bot: Tux, db_service: DatabaseService) -> None:
+        """Initialize the permission setup service.
+
+        Parameters
+        ----------
+        bot : Tux
+            The Discord bot instance to set up permissions for.
+        db_service : DatabaseService
+            The database service instance for storing permissions.
+        """
         super().__init__(bot, "permissions")
         self.db_service = db_service
 

@@ -1,3 +1,11 @@
+"""
+Temporary voice channel management service.
+
+This module provides automatic creation and management of temporary voice channels
+for Discord servers, allowing users to have their own private voice channels that
+are automatically created when joining a designated channel and deleted when empty.
+"""
+
 import discord
 from discord.ext import commands
 
@@ -7,7 +15,16 @@ from tux.shared.config import CONFIG
 
 
 class TempVc(BaseCog):
+    """Discord cog for managing temporary voice channels."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the temporary voice channel service.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this service to.
+        """
         super().__init__(bot)
         self.base_vc_name: str = "/tmp/"
 
@@ -123,4 +140,11 @@ class TempVc(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the TempVc cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(TempVc(bot))

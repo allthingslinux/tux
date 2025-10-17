@@ -1,3 +1,9 @@
+"""Snippet unban moderation command.
+
+This module provides functionality to remove snippet bans from Discord members.
+It integrates with the moderation case tracking system.
+"""
+
 import discord
 from discord.ext import commands
 
@@ -10,7 +16,20 @@ from . import ModerationCogBase
 
 
 class SnippetUnban(ModerationCogBase):
+    """Discord cog for snippet unban moderation commands.
+
+    This cog provides the snippetunban command which restores a member's
+    ability to create snippets in the server.
+    """
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the SnippetUnban cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
     @commands.hybrid_command(
@@ -58,4 +77,16 @@ class SnippetUnban(ModerationCogBase):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the SnippetUnban cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+
+    Returns
+    -------
+    None
+        The cog is added to the bot.
+    """
     await bot.add_cog(SnippetUnban(bot))

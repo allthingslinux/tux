@@ -1,3 +1,10 @@
+"""
+Message purging commands for bulk message deletion.
+
+This module provides commands to delete multiple messages from Discord channels
+in bulk, supporting various filtering options and safety measures.
+"""
+
 import datetime
 
 import discord
@@ -11,7 +18,16 @@ from tux.core.checks import requires_command_permission
 
 
 class Purge(BaseCog):
+    """Discord cog for bulk message deletion commands."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Purge cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
     @app_commands.command(name="purge")
@@ -207,4 +223,11 @@ class Purge(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Purge cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Purge(bot))

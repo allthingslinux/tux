@@ -1,3 +1,9 @@
+"""Development and administrative commands for the Tux bot.
+
+This module provides various administrative commands for bot management,
+including command synchronization, emoji management, and system information.
+"""
+
 import discord
 from discord.ext import commands
 from loguru import logger
@@ -9,7 +15,20 @@ from tux.core.checks import requires_command_permission
 
 
 class Dev(BaseCog):
+    """Discord cog for development and administrative commands.
+
+    This cog provides various administrative commands for bot management
+    and development tasks, including command synchronization and emoji management.
+    """
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Dev cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
     @commands.hybrid_group(
@@ -243,6 +262,18 @@ class Dev(BaseCog):
         )
 
         def check(m: discord.Message) -> bool:
+            """Check if a message is a valid confirmation response.
+
+            Parameters
+            ----------
+            m : discord.Message
+                The message to check.
+
+            Returns
+            -------
+            bool
+                True if the message is a valid 'yes' or 'no' response from the command author.
+            """
             return m.author == ctx.author and m.channel == ctx.channel and m.content.lower() in ["yes", "no"]
 
         try:
@@ -496,4 +527,16 @@ class Dev(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Dev cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+
+    Returns
+    -------
+    None
+        The cog is added to the bot.
+    """
     await bot.add_cog(Dev(bot))

@@ -20,6 +20,13 @@ class TaskMonitor:
     """Manage monitoring and cleanup of asyncio tasks for a bot instance."""
 
     def __init__(self, bot: Any) -> None:
+        """Initialize the task monitor.
+
+        Parameters
+        ----------
+        bot : Any
+            The bot instance to monitor tasks for.
+        """
         self.bot = bot
         # Create the background monitor loop bound to this instance
         self._monitor_loop = tasks.loop(seconds=60)(self._monitor_tasks_loop_impl)
@@ -143,6 +150,20 @@ class TaskMonitor:
                     seen[n] += 1
 
                 def _shorten(s: str, max_len: int = 60) -> str:
+                    """Shorten a string to a maximum length with ellipsis.
+
+                    Parameters
+                    ----------
+                    s : str
+                        The string to shorten.
+                    max_len : int, optional
+                        Maximum length, by default 60.
+
+                    Returns
+                    -------
+                    str
+                        The shortened string with ellipsis if truncated.
+                    """
                     return s if len(s) <= max_len else f"{s[: max_len - 1]}…"
 
                 display_entries: list[str] = []

@@ -91,7 +91,14 @@ class GuildPermissionRankController(BaseController[GuildPermissionRank]):
 class GuildPermissionAssignmentController(BaseController[GuildPermissionAssignment]):
     """Controller for managing guild permission assignments."""
 
-    def __init__(self, db: DatabaseService | None = None):
+    def __init__(self, db: DatabaseService | None = None) -> None:
+        """Initialize the guild permission assignment controller.
+
+        Parameters
+        ----------
+        db : DatabaseService | None, optional
+            The database service instance. If None, uses the default service.
+        """
         super().__init__(GuildPermissionAssignment, db)
 
     async def assign_permission_rank(
@@ -163,7 +170,14 @@ class GuildPermissionAssignmentController(BaseController[GuildPermissionAssignme
 class GuildCommandPermissionController(BaseController[GuildCommandPermission]):
     """Controller for managing command permission requirements."""
 
-    def __init__(self, db: DatabaseService | None = None):
+    def __init__(self, db: DatabaseService | None = None) -> None:
+        """Initialize the guild command permission controller.
+
+        Parameters
+        ----------
+        db : DatabaseService | None, optional
+            The database service instance. If None, uses the default service.
+        """
         super().__init__(GuildCommandPermission, db)
 
     async def set_command_permission(

@@ -1,3 +1,10 @@
+"""
+User unbanning commands for Discord moderation.
+
+This module provides functionality to unban users from Discord servers,
+with support for resolving users from ban lists using various identifiers.
+"""
+
 from contextlib import suppress
 
 import discord
@@ -13,7 +20,16 @@ from . import ModerationCogBase
 
 
 class Unban(ModerationCogBase):
+    """Discord cog for unbanning users from servers."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Unban cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
     async def resolve_user_from_ban_list(self, ctx: commands.Context[Tux], identifier: str) -> discord.User | None:
@@ -145,4 +161,11 @@ class Unban(ModerationCogBase):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Unban cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Unban(bot))

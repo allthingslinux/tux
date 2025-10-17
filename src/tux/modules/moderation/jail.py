@@ -1,3 +1,11 @@
+"""
+Jail moderation commands.
+
+This module provides functionality to jail Discord members by assigning them
+a jail role and removing their other roles. Jailed members are typically restricted
+to a designated jail channel and lose access to other server channels.
+"""
+
 import discord
 from discord.ext import commands
 from loguru import logger
@@ -11,7 +19,21 @@ from . import ModerationCogBase
 
 
 class Jail(ModerationCogBase):
+    """Discord cog for jail moderation commands.
+
+    Provides functionality to jail Discord members by assigning them a jail role
+    and removing their other manageable roles. Jailed members are restricted to
+    a designated jail channel and lose access to other server channels.
+    """
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Jail cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
     async def get_jail_role(self, guild: discord.Guild) -> discord.Role | None:
@@ -170,4 +192,11 @@ class Jail(ModerationCogBase):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Jail cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Jail(bot))

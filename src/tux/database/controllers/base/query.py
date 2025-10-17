@@ -19,7 +19,16 @@ OrderByType = UnaryExpression[Any] | tuple[UnaryExpression[Any], ...] | list[Una
 class QueryController[ModelT]:
     """Handles query building, filtering, and advanced searches."""
 
-    def __init__(self, model: type[ModelT], db: DatabaseService):
+    def __init__(self, model: type[ModelT], db: DatabaseService) -> None:
+        """Initialize the query controller.
+
+        Parameters
+        ----------
+        model : type[ModelT]
+            The SQLModel to query.
+        db : DatabaseService
+            The database service instance.
+        """
         self.model = model
         self.db = db
 

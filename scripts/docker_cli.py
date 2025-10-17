@@ -35,6 +35,7 @@ class Timer:
     """Simple timer for measuring durations."""
 
     def __init__(self) -> None:
+        """Initialize timer with no start time."""
         self.start_time: float | None = None
 
     def start(self) -> None:
@@ -51,7 +52,8 @@ class Timer:
 class DockerCLI(BaseCLI):
     """Docker CLI with unified interface for all Docker operations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize Docker CLI with command registry and setup."""
         super().__init__(name="docker", description="Docker CLI - A unified interface for all Docker operations")
         self._docker_client = None
         self._setup_command_registry()
@@ -733,6 +735,15 @@ class DockerCLI(BaseCLI):
 
         # Display what will be cleaned
         def log_resource_list(resource_type: str, resources: list[str]) -> None:
+            """Log list of resources that will be cleaned up.
+
+            Parameters
+            ----------
+            resource_type : str
+                Type of resource being logged (e.g., "Containers", "Images").
+            resources : list[str]
+                List of resource names to display.
+            """
             if resources:
                 self.rich.print_info(f"{resource_type} ({len(resources)}):")
                 for resource in resources:
@@ -872,6 +883,15 @@ class DockerCLI(BaseCLI):
         failed = 0
 
         def test_result(success: bool, description: str) -> None:
+            """Handle test result and update counters.
+
+            Parameters
+            ----------
+            success : bool
+                Whether the test passed or failed.
+            description : str
+                Description of the test result.
+            """
             nonlocal passed, failed
             if success:
                 self.rich.print_success(f"✅ {description}")
@@ -1013,6 +1033,15 @@ class DockerCLI(BaseCLI):
         failed = 0
 
         def test_result(success: bool, description: str) -> None:
+            """Handle test result and update counters.
+
+            Parameters
+            ----------
+            success : bool
+                Whether the test passed or failed.
+            description : str
+                Description of the test result.
+            """
             nonlocal passed, failed
             if success:
                 self.rich.print_success(f"✅ {description}")

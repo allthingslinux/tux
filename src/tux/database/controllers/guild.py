@@ -1,3 +1,10 @@
+"""
+Guild and guild configuration management controller.
+
+This controller manages Discord guild records and their associated configuration
+settings, providing methods for guild lifecycle management and configuration updates.
+"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,7 +19,14 @@ from tux.database.service import DatabaseService
 class GuildController(BaseController[Guild]):
     """Clean Guild controller using the new BaseController pattern."""
 
-    def __init__(self, db: DatabaseService | None = None):
+    def __init__(self, db: DatabaseService | None = None) -> None:
+        """Initialize the guild controller.
+
+        Parameters
+        ----------
+        db : DatabaseService | None, optional
+            The database service instance. If None, uses the default service.
+        """
         super().__init__(Guild, db)
 
     # Simple, clean methods that use BaseController's CRUD operations
@@ -38,6 +52,18 @@ class GuildController(BaseController[Guild]):
         """Get guild configuration."""
 
         async def _op(session: AsyncSession) -> GuildConfig | None:
+            """Get guild config by guild ID.
+
+            Parameters
+            ----------
+            session : AsyncSession
+                The database session to use.
+
+            Returns
+            -------
+            GuildConfig | None
+                The guild configuration or None if not found.
+            """
             return await session.get(GuildConfig, guild_id)
 
         return await self.with_session(_op)
@@ -46,6 +72,18 @@ class GuildController(BaseController[Guild]):
         """Update guild configuration."""
 
         async def _op(session: AsyncSession) -> GuildConfig:
+            """Update or create guild configuration.
+
+            Parameters
+            ----------
+            session : AsyncSession
+                The database session to use.
+
+            Returns
+            -------
+            GuildConfig
+                The updated or created guild configuration.
+            """
             config = await session.get(GuildConfig, guild_id)
             if config is None:
                 config = GuildConfig(guild_id=guild_id, **data)

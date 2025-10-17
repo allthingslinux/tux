@@ -1,3 +1,10 @@
+"""
+Channel slowmode management commands.
+
+This module provides functionality to set, modify, and remove slowmode
+from Discord text channels, threads, and voice channels to control message rates.
+"""
+
 from contextlib import suppress
 
 import discord
@@ -15,7 +22,16 @@ SlowmodeChannel = (
 
 
 class Slowmode(BaseCog):
+    """Discord cog for managing channel slowmode settings."""
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the slowmode cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
     @commands.hybrid_command(
@@ -252,4 +268,11 @@ class Slowmode(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Slowmode cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+    """
     await bot.add_cog(Slowmode(bot))

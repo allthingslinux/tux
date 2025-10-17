@@ -27,7 +27,21 @@ class BaseController[ModelT]:
     maintaining backward compatibility with the original BaseController API.
     """
 
-    def __init__(self, model: type[ModelT], db: DatabaseService | None = None):
+    def __init__(self, model: type[ModelT], db: DatabaseService | None = None) -> None:
+        """Initialize the base controller with all specialized controllers.
+
+        Parameters
+        ----------
+        model : type[ModelT]
+            The SQLModel class to perform operations on.
+        db : DatabaseService | None
+            The database service instance. Must be provided.
+
+        Raises
+        ------
+        RuntimeError
+            If db is None, as database service is required.
+        """
         if db is None:
             error_msg = "DatabaseService must be provided. Use DI container to get the service."
             raise RuntimeError(error_msg)

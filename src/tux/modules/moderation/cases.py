@@ -1,3 +1,10 @@
+"""Moderation case management and viewing commands.
+
+This module provides comprehensive case management functionality for Discord
+moderation, including viewing, modifying, and managing moderation cases with
+interactive menus and detailed information display.
+"""
+
 from typing import Any, Protocol
 
 import discord
@@ -52,11 +59,31 @@ CASE_ACTION_MAP: dict[DBCaseType | None, str] = {
 
 # Define a protocol for user-like objects
 class UserLike(Protocol):
+    """Protocol for objects that behave like Discord users.
+
+    Attributes
+    ----------
+    id : int
+        The user's unique identifier.
+    name : str
+        The user's display name.
+    avatar : Any
+        The user's avatar.
+    """
+
     id: int
     name: str
     avatar: Any
 
-    def __str__(self) -> str: ...
+    def __str__(self) -> str:
+        """Return a string representation of the user.
+
+        Returns
+        -------
+        str
+            String representation of the user.
+        """
+        ...
 
 
 # Mock user object for when a user cannot be found
@@ -64,17 +91,44 @@ class MockUser:
     """A mock user object for cases where we can't find the real user."""
 
     def __init__(self, user_id: int) -> None:
+        """Initialize a mock user object.
+
+        Parameters
+        ----------
+        user_id : int
+            The ID of the user this mock represents.
+        """
         self.id = user_id
         self.name = "Unknown User"
         self.discriminator = "0000"
         self.avatar = None
 
     def __str__(self) -> str:
+        """Return a string representation of the mock user.
+
+        Returns
+        -------
+        str
+            String representation in the format 'Unknown User#0000'.
+        """
         return f"{self.name}#{self.discriminator}"
 
 
 class Cases(ModerationCogBase):
+    """Discord cog for moderation case management and viewing.
+
+    This cog provides comprehensive case management functionality including
+    viewing, modifying, and managing moderation cases with interactive menus.
+    """
+
     def __init__(self, bot: Tux) -> None:
+        """Initialize the Cases cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance to attach this cog to.
+        """
         super().__init__(bot)
 
     @commands.hybrid_group(
@@ -600,4 +654,16 @@ class Cases(ModerationCogBase):
 
 
 async def setup(bot: Tux) -> None:
+    """Set up the Cases cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance to add the cog to.
+
+    Returns
+    -------
+    None
+        The cog is added to the bot.
+    """
     await bot.add_cog(Cases(bot))

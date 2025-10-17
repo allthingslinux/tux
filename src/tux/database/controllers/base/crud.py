@@ -14,7 +14,16 @@ ModelT = TypeVar("ModelT", bound=SQLModel)
 class CrudController[ModelT]:
     """Handles basic Create, Read, Update, Delete operations."""
 
-    def __init__(self, model: type[ModelT], db: DatabaseService):
+    def __init__(self, model: type[ModelT], db: DatabaseService) -> None:
+        """Initialize the CRUD controller.
+
+        Parameters
+        ----------
+        model : type[ModelT]
+            The SQLModel to perform CRUD operations on.
+        db : DatabaseService
+            The database service instance.
+        """
         self.model = model
         self.db = db
 

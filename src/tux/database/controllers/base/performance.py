@@ -14,7 +14,16 @@ ModelT = TypeVar("ModelT", bound=SQLModel)
 class PerformanceController[ModelT]:
     """Handles query analysis and performance statistics."""
 
-    def __init__(self, model: type[ModelT], db: DatabaseService):
+    def __init__(self, model: type[ModelT], db: DatabaseService) -> None:
+        """Initialize the performance controller.
+
+        Parameters
+        ----------
+        model : type[ModelT]
+            The SQLModel to analyze performance for.
+        db : DatabaseService
+            The database service instance.
+        """
         self.model = model
         self.db = db
 
