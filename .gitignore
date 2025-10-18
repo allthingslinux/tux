@@ -197,5 +197,6 @@ data/
 examples/
 .amazonq/cli-todo-lists/
 
-# solution for developers who switch between branches a lot
-config/settings.yml
+# config files
+config/*
+!config/*.example
