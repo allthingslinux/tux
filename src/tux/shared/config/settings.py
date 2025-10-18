@@ -2,18 +2,27 @@
 
 This module provides the main configuration class and global instance,
 using the extracted models and proper pydantic-settings for environment variable binding.
+
+Configuration loading priority (highest to lowest):
+1. Environment variables
+2. .env file
+3. config.toml file
+4. config.yaml file
+5. config.json file
+6. Default values
 """
 
 import base64
 import os
 import warnings
+from pathlib import Path
 
-from dotenv import load_dotenv
 from pydantic import Field, computed_field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
 from tux.shared.constants import CONST
 
+from .loaders import JsonConfigSource, TomlConfigSource, YamlConfigSource
 from .models import (
     IRC,
     XP,
@@ -25,15 +34,6 @@ from .models import (
     TempVC,
     UserIds,
 )
-
-
-def load_environment() -> None:
-    """Load environment variables from .env file once at application startup.
-
-    This is called automatically when the config module is imported.
-    Priority: Existing env vars > .env file > defaults
-    """
-    load_dotenv(dotenv_path=".env", override=False)
 
 
 def validate_environment() -> None:
@@ -68,15 +68,24 @@ def validate_environment() -> None:
         raise ValueError(error_msg)
 
 
-# Load environment when module is imported
-load_environment()
+# Validate environment when module is imported
 validate_environment()
 
 
 class Config(BaseSettings):
-    """Main Tux configuration using Pydantic Settings."""
+    """Main Tux configuration using Pydantic Settings with multi-format support.
+
+    Configuration is loaded from multiple sources in priority order:
+    1. Environment variables (highest priority)
+    2. .env file
+    3. config.toml file
+    4. config.yaml file
+    5. config.json file
+    6. Default values (lowest priority)
+    """
 
     model_config = SettingsConfigDict(
+        env_file=".env",
         env_file_encoding=CONST.ENCODING_UTF8,
         env_nested_delimiter="__",
         case_sensitive=False,
@@ -116,6 +125,55 @@ class Config(BaseSettings):
 
     # External services
     EXTERNAL_SERVICES: ExternalServices = Field(default_factory=ExternalServices)
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        """Customize settings sources to load from multiple file formats.
+
+        Priority order (highest to lowest):
+        1. Init settings (programmatic overrides)
+        2. Environment variables
+        3. .env file
+        4. config.toml file
+        5. config.yaml file
+        6. config.json file
+        7. File secret settings (Docker secrets, etc.)
+
+        Parameters
+        ----------
+        settings_cls : type[BaseSettings]
+            The settings class
+        init_settings : PydanticBaseSettingsSource
+            Init settings source
+        env_settings : PydanticBaseSettingsSource
+            Environment settings source
+        dotenv_settings : PydanticBaseSettingsSource
+            .env file settings source
+        file_secret_settings : PydanticBaseSettingsSource
+            File secret settings source
+
+        Returns
+        -------
+        tuple[PydanticBaseSettingsSource, ...]
+            Tuple of settings sources in priority order
+
+        """
+        return (
+            init_settings,
+            env_settings,
+            dotenv_settings,
+            TomlConfigSource(settings_cls, Path("config.toml")),
+            YamlConfigSource(settings_cls, Path("config.yaml")),
+            JsonConfigSource(settings_cls, Path("config.json")),
+            file_secret_settings,
+        )
 
     @computed_field
     @property

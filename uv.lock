@@ -1904,6 +1904,19 @@ wheels = [
 ]
 
 [[package]]
+name = "pydantic-settings-export"
+version = "1.0.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/96/33/0ad930d57956ab8dae646e02544793aabb80d9d66dbad319f4cc20833225/pydantic_settings_export-1.0.3.tar.gz", hash = "sha256:8b4f0b5daab0113fdfe9018b5684b7fb6be6157275604f2f22cd8cdd7d7b8f7b", size = 87452, upload-time = "2025-08-19T16:33:13.3Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/65/e3/fb2d94d5bfaee29b6514dcbc4b6c7aef70e3b4c8ae9eb768ababdc68355c/pydantic_settings_export-1.0.3-py3-none-any.whl", hash = "sha256:86c804d837c26ca2d786080b27036818c816b0963e01ea8f473727aa98b84c07", size = 29330, upload-time = "2025-08-19T16:33:11.954Z" },
+]
+
+[[package]]
 name = "pydoclint"
 version = "0.7.3"
 source = { registry = "https://pypi.org/simple" }
@@ -2462,21 +2475,6 @@ loguru = [
 ]
 
 [[package]]
-name = "settings-doc"
-version = "4.3.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "click" },
-    { name = "jinja2" },
-    { name = "pydantic" },
-    { name = "pydantic-settings" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/cc/c8/ac0ebe94fc41e7c03a5be9f6aab1612e79a46bfad286a76fb7cd41a8cd50/settings_doc-4.3.2.tar.gz", hash = "sha256:cb06aee969f0639abc88e77554a333803191de95e95259a11929cf878d312fab", size = 16274, upload-time = "2025-01-02T19:37:27.573Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/1d/48/86c853f6f98a0340594c751930ab876b09b28d4c29a0b218923eb95046c8/settings_doc-4.3.2-py3-none-any.whl", hash = "sha256:04b561093905cab8f5ebaa30c9dacca1d57cd1dc3dd404b7c929b90e2d2d7c0b", size = 14461, upload-time = "2025-01-02T19:37:23.641Z" },
-]
-
-[[package]]
 name = "setuptools"
 version = "80.9.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2616,6 +2614,15 @@ wheels = [
 ]
 
 [[package]]
+name = "tomli-w"
+version = "1.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/19/75/241269d1da26b624c0d5e110e8149093c759b7a286138f4efd61a60e75fe/tomli_w-1.2.0.tar.gz", hash = "sha256:2dd14fac5a47c27be9cd4c976af5a12d87fb1f0b4512f81d69cce3b35ae25021", size = 7184, upload-time = "2025-01-15T12:07:24.262Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c7/18/c86eb8e0202e32dd3df50d43d7ff9854f8e0603945ff398974c1d91ac1ef/tomli_w-1.2.0-py3-none-any.whl", hash = "sha256:188306098d013b691fcadc011abd66727d3c414c571bb01b1a174ba8c983cf90", size = 6675, upload-time = "2025-01-15T12:07:22.074Z" },
+]
+
+[[package]]
 name = "tqdm"
 version = "4.67.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2675,6 +2682,7 @@ dependencies = [
     { name = "sentry-sdk", extra = ["httpx", "loguru"] },
     { name = "sqlalchemy" },
     { name = "sqlmodel" },
+    { name = "tomli-w" },
     { name = "typer" },
     { name = "watchdog" },
 ]
@@ -2684,9 +2692,9 @@ dev = [
     { name = "basedpyright" },
     { name = "docstr-coverage" },
     { name = "pre-commit" },
+    { name = "pydantic-settings-export" },
     { name = "pydoclint" },
     { name = "ruff" },
-    { name = "settings-doc" },
     { name = "yamlfix" },
     { name = "yamllint" },
 ]
@@ -2785,6 +2793,7 @@ requires-dist = [
     { name = "sentry-sdk", extras = ["httpx", "loguru"], specifier = ">=2.7.0" },
     { name = "sqlalchemy", specifier = ">=2.0.14" },
     { name = "sqlmodel", specifier = ">=0.0.24" },
+    { name = "tomli-w", specifier = ">=1.0.0" },
     { name = "typer", specifier = ">=0.17.3" },
     { name = "watchdog", specifier = ">=6.0.0" },
 ]
@@ -2794,9 +2803,9 @@ dev = [
     { name = "basedpyright", specifier = "==1.29.5" },
     { name = "docstr-coverage", specifier = ">=2.3.2" },
     { name = "pre-commit", specifier = ">=4.3.0" },
+    { name = "pydantic-settings-export", specifier = ">=1.0.3" },
     { name = "pydoclint", specifier = ">=0.7.3" },
     { name = "ruff", specifier = ">=0.12.4" },
-    { name = "settings-doc", specifier = ">=4.3.2" },
     { name = "yamlfix", specifier = ">=1.18.0" },
     { name = "yamllint", specifier = ">=1.37.1" },
 ]

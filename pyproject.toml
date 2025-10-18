@@ -53,20 +53,21 @@ dependencies = [
     "pydantic-settings>=2.10.1",
     "typer>=0.17.3",
     "semver>=3.0.4",
+    "tomli-w>=1.0.0",
 ]
 
 [project.urls]
 repository = "https://github.com/allthingslinux/tux"
 
 [project.scripts]
-settings-doc = "settings_doc.main:app"
 cli = "scripts.cli:main"
 tux = "scripts.tux:main"
 db = "scripts.db:main"
 dev = "scripts.dev:main"
-test = "scripts.test:main"
+tests = "scripts.tests:main"
 docker = "scripts.docker_cli:main"
 docs = "scripts.docs:main"
+config = "scripts.config:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -79,7 +80,7 @@ dev = [
     "ruff>=0.12.4",
     "yamllint>=1.37.1",
     "yamlfix>=1.18.0",
-    "settings-doc>=4.3.2",
+    "pydantic-settings-export>=1.0.3",
     "pydoclint>=0.7.3",
     "docstr-coverage>=2.3.2",
 ]
@@ -434,3 +435,32 @@ version_locations = ["src/tux/database/migrations/versions"]
 # MkDocs plugin entry point
 [project.entry-points."mkdocs.plugins"]
 tux = "docs.plugins.mkdocs_tux_plugin:TuxPlugin"
+
+# pydantic-settings-export configuration
+[tool.pydantic_settings_export]
+project_dir = "."
+default_settings = ["tux.shared.config.settings:Config"]
+
+[[tool.pydantic_settings_export.generators.dotenv]]
+paths = [".env.example"]
+enabled = true
+
+[[tool.pydantic_settings_export.generators.markdown]]
+paths = ["docs/content/reference/configuration.md"]
+enabled = true
+
+# Custom generators for TOML, YAML, and JSON (stored in config/ directory)
+[[tool.pydantic_settings_export.generators."tux.shared.config.generators:TomlGenerator"]]
+paths = ["config/config.toml.example"]
+include_comments = true
+enabled = true
+
+[[tool.pydantic_settings_export.generators."tux.shared.config.generators:YamlGenerator"]]
+paths = ["config/config.yaml.example"]
+include_comments = true
+enabled = true
+
+[[tool.pydantic_settings_export.generators."tux.shared.config.generators:JsonGenerator"]]
+paths = ["config/config.json.example"]
+indent = 2
+enabled = true

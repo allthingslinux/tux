@@ -3,18 +3,121 @@
 Complete configuration guide for Tux including environment variables, Discord setup, and database
 configuration.
 
-## Environment Variables
+## Configuration Overview
 
-### Required Variables
+Tux supports loading configuration from multiple formats with a defined priority order:
 
-**Discord Configuration:**
+1. **Environment variables** (highest priority)
+2. **.env file**
+3. **config.toml file**
+4. **config.yaml file**
+5. **config.json file**
+6. **Default values** (lowest priority)
+
+This allows you to mix and match configuration sources based on your deployment needs. For example, use
+`config.toml` for base configuration and override sensitive values with environment variables.
+
+## Configuration Formats
+
+### Environment Variables (.env)
+
+The traditional way to configure Tux. Best for containerized deployments and sensitive values.
 
 ```bash
-# Your Discord bot token
-DISCORD_TOKEN=<your_discord_token>
+# Discord bot token
+BOT_TOKEN=your_discord_token_here
+
+# Database configuration
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=tuxdb
+POSTGRES_USER=tuxuser
+POSTGRES_PASSWORD=your_secure_password
+
+# Enable debug mode
+DEBUG=false
 ```
 
-**Database Configuration:**
+### TOML Configuration (config.toml)
+
+Structured configuration format, great for human-readable config files.
+
+```toml
+# Enable debug mode
+debug = false
+
+# Discord bot token
+bot_token = "your_discord_token_here"
+
+# PostgreSQL configuration
+postgres_host = "localhost"
+postgres_port = 5432
+postgres_db = "tuxdb"
+postgres_user = "tuxuser"
+postgres_password = "your_secure_password"
+
+# Bot configuration
+[bot_info]
+bot_name = "Tux"
+prefix = "$"
+hide_bot_owner = false
+```
+
+### YAML Configuration (config.yaml)
+
+Popular format for modern applications, easy to read and edit.
+
+```yaml
+# Enable debug mode
+debug: false
+
+# Discord bot token
+bot_token: "your_discord_token_here"
+
+# PostgreSQL configuration
+postgres_host: "localhost"
+postgres_port: 5432
+postgres_db: "tuxdb"
+postgres_user: "tuxuser"
+postgres_password: "your_secure_password"
+
+# Bot configuration
+bot_info:
+  bot_name: "Tux"
+  prefix: "$"
+  hide_bot_owner: false
+```
+
+### JSON Configuration (config.json)
+
+Machine-friendly format, useful for automated configuration management.
+
+```json
+{
+  "debug": false,
+  "bot_token": "your_discord_token_here",
+  "postgres_host": "localhost",
+  "postgres_port": 5432,
+  "postgres_db": "tuxdb",
+  "postgres_user": "tuxuser",
+  "postgres_password": "your_secure_password",
+  "bot_info": {
+    "bot_name": "Tux",
+    "prefix": "$",
+    "hide_bot_owner": false
+  }
+}
+```
+
+## Required Configuration
+
+### Discord Bot Token
+
+```bash
+BOT_TOKEN=your_discord_token_here
+```
+
+### Database Configuration
 
 ```bash
 # PostgreSQL connection details
@@ -27,6 +130,117 @@ POSTGRES_PASSWORD=your_secure_password
 # OR use complete database URL override
 DATABASE_URL=postgresql+psycopg://user:password@host:port/database
 ```
+
+## Configuration Management CLI
+
+Tux includes a powerful CLI tool for managing configuration files.
+
+### Generate Example Files
+
+Generate configuration examples in all supported formats:
+
+```bash
+# Generate all formats
+uv run config generate --format all
+
+# Generate specific format
+uv run config generate --format toml
+uv run config generate --format yaml
+uv run config generate --format json
+uv run config generate --format env
+uv run config generate --format markdown
+
+# Generate to custom path (single format only)
+uv run config generate --format toml --output my-config.toml
+```
+
+This creates example files:
+
+- `.env.example` - Environment variables (in project root)
+- `config/config.toml.example` - TOML configuration
+- `config/config.yaml.example` - YAML configuration
+- `config/config.json.example` - JSON configuration
+- `docs/content/reference/configuration.md` - Markdown documentation
+
+### Validate Configuration
+
+Check if your current configuration is valid:
+
+```bash
+uv run config validate
+```
+
+This will:
+
+- Load configuration from all sources
+- Validate required fields
+- Check for type errors
+- Display configuration summary
+
+### Show Current Configuration
+
+View your current configuration values:
+
+```bash
+uv run config show
+```
+
+Displays all loaded configuration with sources indicated.
+
+## Priority System Examples
+
+### Example 1: Override Database Password
+
+Base configuration in `config.toml`:
+
+```toml
+postgres_host = "localhost"
+postgres_port = 5432
+postgres_db = "tuxdb"
+postgres_user = "tuxuser"
+postgres_password = "default_password"
+```
+
+Override with environment variable:
+
+```bash
+export POSTGRES_PASSWORD="secure_production_password"
+```
+
+Result: Tux uses `"secure_production_password"` (env var takes priority)
+
+### Example 2: Mixed Configuration Sources
+
+`config.toml` for base settings:
+
+```toml
+debug = false
+postgres_host = "localhost"
+postgres_port = 5432
+```
+
+`config.yaml` for environment-specific overrides:
+
+```yaml
+postgres_host: "db.production.local"
+postgres_db: "tuxdb_prod"
+```
+
+Environment variable for sensitive data:
+
+```bash
+export BOT_TOKEN="your_secret_token"
+export POSTGRES_PASSWORD="secure_password"
+```
+
+Result:
+
+- `BOT_TOKEN`: From environment variable
+- `POSTGRES_PASSWORD`: From environment variable
+- `postgres_host`: From config.yaml (overrides config.toml)
+- `postgres_db`: From config.yaml
+- `postgres_port`: From config.toml
+- `debug`: From config.toml
 
 ### Optional Variables
 
@@ -66,14 +280,28 @@ ENABLE_SNIPPETS=true
 
 ### Environment File Setup
 
-**Create .env file:**
+**Using .env file (recommended for quick start):**
 
 ```bash
-# Copy template
+# Copy template from project root
 cp .env.example .env
 
 # Edit with your settings
 nano .env
+```
+
+**Using config files (recommended for structured configuration):**
+
+```bash
+# Choose your preferred format and copy from config/ directory to project root
+cp config/config.toml.example config.toml  # TOML (recommended)
+# OR
+cp config/config.yaml.example config.yaml  # YAML
+# OR
+cp config/config.json.example config.json  # JSON
+
+# Edit with your settings
+nano config.toml  # or config.yaml / config.json
 ```
 
 **Example .env file:**
@@ -171,7 +399,7 @@ intents.members = True          # For member events
 intents.guilds = True          # For guild events
 ```
 
-## Database Configuration
+## Database Configuration Guide
 
 ### PostgreSQL Setup
 
