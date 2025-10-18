@@ -1,5 +1,4 @@
 {
-  "$schema_description": "Main Tux configuration using Pydantic Settings with multi-format support.\n\nConfiguration is loaded from multiple sources in priority order:\n1. Environment variables (highest priority)\n2. .env file\n3. config.toml file\n4. config.yaml file\n5. config.json file\n6. Default values (lowest priority)",
   "debug": false,
   "bot_token": "",
   "postgres_host": "localhost",

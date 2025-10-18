@@ -24,11 +24,11 @@ class PriorityTestConfig(BaseSettings):
         extra="ignore",
     )
 
-    value_from_env: str = Field(default="default_env")
-    value_from_toml: str = Field(default="default_toml")
-    value_from_yaml: str = Field(default="default_yaml")
-    value_from_json: str = Field(default="default_json")
-    shared_value: str = Field(default="default_shared")
+    VALUE_FROM_ENV: str = Field(default="default_env")
+    VALUE_FROM_TOML: str = Field(default="default_toml")
+    VALUE_FROM_YAML: str = Field(default="default_yaml")
+    VALUE_FROM_JSON: str = Field(default="default_json")
+    SHARED_VALUE: str = Field(default="default_shared")
 
     @classmethod
     def settings_customise_sources(
@@ -129,15 +129,15 @@ def test_priority_order_no_env(setup_config_files: Path) -> None:
     settings = PriorityTestConfig()
 
     # Each value should come from its respective file
-    assert settings.value_from_toml == "from_toml_file"
-    assert settings.value_from_yaml == "from_yaml_file"
-    assert settings.value_from_json == "from_json_file"
+    assert settings.VALUE_FROM_TOML == "from_toml_file"
+    assert settings.VALUE_FROM_YAML == "from_yaml_file"
+    assert settings.VALUE_FROM_JSON == "from_json_file"
 
     # Shared value should come from TOML (highest priority config file)
-    assert settings.shared_value == "toml_wins_over_yaml_and_json"
+    assert settings.SHARED_VALUE == "toml_wins_over_yaml_and_json"
 
     # No env var set, so should use default
-    assert settings.value_from_env == "default_env"
+    assert settings.VALUE_FROM_ENV == "default_env"
 
 
 def test_priority_env_overrides_all(setup_config_files: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -158,13 +158,13 @@ def test_priority_env_overrides_all(setup_config_files: Path, monkeypatch: pytes
     settings = PriorityTestConfig()
 
     # Environment variable should override everything
-    assert settings.shared_value == "env_var_wins"
-    assert settings.value_from_env == "from_environment"
+    assert settings.SHARED_VALUE == "env_var_wins"
+    assert settings.VALUE_FROM_ENV == "from_environment"
 
     # Other values still from their files
-    assert settings.value_from_toml == "from_toml_file"
-    assert settings.value_from_yaml == "from_yaml_file"
-    assert settings.value_from_json == "from_json_file"
+    assert settings.VALUE_FROM_TOML == "from_toml_file"
+    assert settings.VALUE_FROM_YAML == "from_yaml_file"
+    assert settings.VALUE_FROM_JSON == "from_json_file"
 
 
 def test_priority_toml_over_yaml(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -190,7 +190,7 @@ def test_priority_toml_over_yaml(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     settings = PriorityTestConfig()
 
     # TOML should win
-    assert settings.shared_value == "toml_value"
+    assert settings.SHARED_VALUE == "toml_value"
 
 
 def test_priority_yaml_over_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -216,7 +216,7 @@ def test_priority_yaml_over_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     settings = PriorityTestConfig()
 
     # YAML should win
-    assert settings.shared_value == "yaml_value"
+    assert settings.SHARED_VALUE == "yaml_value"
 
 
 def test_missing_files_use_defaults(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -236,11 +236,11 @@ def test_missing_files_use_defaults(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     settings = PriorityTestConfig()
 
     # All values should be defaults
-    assert settings.value_from_env == "default_env"
-    assert settings.value_from_toml == "default_toml"
-    assert settings.value_from_yaml == "default_yaml"
-    assert settings.value_from_json == "default_json"
-    assert settings.shared_value == "default_shared"
+    assert settings.VALUE_FROM_ENV == "default_env"
+    assert settings.VALUE_FROM_TOML == "default_toml"
+    assert settings.VALUE_FROM_YAML == "default_yaml"
+    assert settings.VALUE_FROM_JSON == "default_json"
+    assert settings.SHARED_VALUE == "default_shared"
 
 
 def test_partial_config_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -266,10 +266,10 @@ shared_value: "yaml_value"
     settings = PriorityTestConfig()
 
     # Value from YAML file
-    assert settings.value_from_yaml == "from_yaml_file"
-    assert settings.shared_value == "yaml_value"
+    assert settings.VALUE_FROM_YAML == "from_yaml_file"
+    assert settings.SHARED_VALUE == "yaml_value"
 
     # Others use defaults
-    assert settings.value_from_env == "default_env"
-    assert settings.value_from_toml == "default_toml"
-    assert settings.value_from_json == "default_json"
+    assert settings.VALUE_FROM_ENV == "default_env"
+    assert settings.VALUE_FROM_TOML == "default_toml"
+    assert settings.VALUE_FROM_JSON == "default_json"

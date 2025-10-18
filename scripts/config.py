@@ -17,7 +17,11 @@ from rich.panel import Panel
 from rich.table import Table
 
 from scripts.base import BaseCLI
-from tux.shared.config.generators import JsonGenerator, TomlGenerator, YamlGenerator
+from tux.shared.config.generators import (
+    JsonGenerator,
+    TomlGenerator,
+    YamlGenerator,
+)
 from tux.shared.config.settings import Config
 
 app = typer.Typer(

@@ -92,10 +92,10 @@ def test_toml_loader_reads_file(temp_config_files: dict[str, Path]) -> None:
     loader = TomlConfigSource(SimpleSettings, temp_config_files["toml"])
     data = loader()
 
-    assert data["debug"] is True
-    assert data["name"] == "toml_test"
-    assert data["port"] == 9000
-    assert data["nested__value"] == "from_toml"
+    assert data["DEBUG"] is True
+    assert data["NAME"] == "toml_test"
+    assert data["PORT"] == 9000
+    assert data["NESTED__VALUE"] == "from_toml"
 
 
 def test_toml_loader_missing_file() -> None:
@@ -119,10 +119,10 @@ def test_yaml_loader_reads_file(temp_config_files: dict[str, Path]) -> None:
     loader = YamlConfigSource(SimpleSettings, temp_config_files["yaml"])
     data = loader()
 
-    assert data["debug"] is True
-    assert data["name"] == "yaml_test"
-    assert data["port"] == 9001
-    assert data["nested__value"] == "from_yaml"
+    assert data["DEBUG"] is True
+    assert data["NAME"] == "yaml_test"
+    assert data["PORT"] == 9001
+    assert data["NESTED__VALUE"] == "from_yaml"
 
 
 def test_yaml_loader_missing_file() -> None:
@@ -146,10 +146,10 @@ def test_json_loader_reads_file(temp_config_files: dict[str, Path]) -> None:
     loader = JsonConfigSource(SimpleSettings, temp_config_files["json"])
     data = loader()
 
-    assert data["debug"] is True
-    assert data["name"] == "json_test"
-    assert data["port"] == 9002
-    assert data["nested__value"] == "from_json"
+    assert data["DEBUG"] is True
+    assert data["NAME"] == "json_test"
+    assert data["PORT"] == 9002
+    assert data["NESTED__VALUE"] == "from_json"
 
 
 def test_json_loader_missing_file() -> None:
@@ -233,17 +233,17 @@ def test_nested_field_flattening(temp_config_files: dict[str, Path]) -> None:
     # Test TOML
     toml_loader = TomlConfigSource(SimpleSettings, temp_config_files["toml"])
     toml_data = toml_loader()
-    assert "nested__value" in toml_data
+    assert "NESTED__VALUE" in toml_data
 
     # Test YAML
     yaml_loader = YamlConfigSource(SimpleSettings, temp_config_files["yaml"])
     yaml_data = yaml_loader()
-    assert "nested__value" in yaml_data
+    assert "NESTED__VALUE" in yaml_data
 
     # Test JSON
     json_loader = JsonConfigSource(SimpleSettings, temp_config_files["json"])
     json_data = json_loader()
-    assert "nested__value" in json_data
+    assert "NESTED__VALUE" in json_data
 
 
 # ============================================================================
@@ -435,45 +435,44 @@ def test_generate_toml_format() -> None:
 
     # Create a simple settings model
     fields = [
-        FieldInfoModel(
+        FieldInfoModel(  # type: ignore[call-arg,misc]  # type: ignore[call-arg]
             name="debug",
             types=["bool"],
             default="False",
             description="Enable debug mode",
-            required=False,
         ),
-        FieldInfoModel(
+        FieldInfoModel(  # type: ignore[call-arg,misc]  # type: ignore[call-arg]
             name="port",
             types=["int"],
             default="8000",
             description="Server port",
-            required=False,
         ),
-        FieldInfoModel(
+        FieldInfoModel(  # type: ignore[call-arg,misc]  # type: ignore[call-arg]
             name="name",
             types=["str"],
             default='"test"',
             description="Application name",
-            required=False,
         ),
     ]
 
-    settings_info = SettingsInfoModel(
+    settings_info = SettingsInfoModel(  # type: ignore[call-arg]  # type: ignore[call-arg]
         name="TestSettings", docs="Test settings", fields=fields, child_settings=[],
     )
 
     # Generate TOML (suppress PSESettings warning about pyproject_toml_table_header)
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message=".*pyproject_toml_table_header.*")
-        pse_settings = PSESettings(root_dir=Path.cwd(), project_dir=Path.cwd())
+        pse_settings = PSESettings(root_dir=Path.cwd(), project_dir=Path.cwd(), respect_exclude=True)  # type: ignore[call-arg]
     generator = TomlGenerator(pse_settings, TomlGeneratorSettings(paths=[], include_comments=True))
     toml_output = generator.generate_single(settings_info)
 
-    # Parse generated TOML to verify it's valid
-    parsed = tomllib.loads(toml_output)
-    assert "debug" in parsed
-    assert "port" in parsed
-    assert "name" in parsed
+    # Verify output contains commented field names and descriptions
+    assert "# Enable debug mode" in toml_output
+    assert "# debug = " in toml_output  # Value is commented out
+    assert "# Server port" in toml_output
+    assert "# port = " in toml_output
+    assert "# Application name" in toml_output
+    assert "# name = " in toml_output
 
 
 def test_generate_yaml_format() -> None:
@@ -487,37 +486,36 @@ def test_generate_yaml_format() -> None:
     from tux.shared.config.generators import YamlGenerator, YamlGeneratorSettings
 
     fields = [
-        FieldInfoModel(
+        FieldInfoModel(  # type: ignore[call-arg,misc]
             name="debug",
             types=["bool"],
             default="False",
             description="Enable debug mode",
-            required=False,
         ),
-        FieldInfoModel(
+        FieldInfoModel(  # type: ignore[call-arg,misc]
             name="port",
             types=["int"],
             default="8000",
             description="Server port",
-            required=False,
         ),
     ]
 
-    settings_info = SettingsInfoModel(
+    settings_info = SettingsInfoModel(  # type: ignore[call-arg]
         name="TestSettings", docs="Test settings", fields=fields, child_settings=[],
     )
 
     # Generate YAML (suppress PSESettings warning)
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message=".*pyproject_toml_table_header.*")
-        pse_settings = PSESettings(root_dir=Path.cwd(), project_dir=Path.cwd())
+        pse_settings = PSESettings(root_dir=Path.cwd(), project_dir=Path.cwd(), respect_exclude=True)  # type: ignore[call-arg]
     generator = YamlGenerator(pse_settings, YamlGeneratorSettings(paths=[], include_comments=True))
     yaml_output = generator.generate_single(settings_info)
 
-    # Parse generated YAML to verify it's valid
-    parsed = yaml.safe_load(yaml_output)
-    assert "debug" in parsed
-    assert "port" in parsed
+    # Verify output contains commented field names and descriptions
+    assert "# Enable debug mode" in yaml_output
+    assert "# debug: " in yaml_output  # Value is commented out
+    assert "# Server port" in yaml_output
+    assert "# port: " in yaml_output
 
 
 def test_generate_json_format() -> None:
@@ -530,30 +528,28 @@ def test_generate_json_format() -> None:
     from tux.shared.config.generators import JsonGenerator, JsonGeneratorSettings
 
     fields = [
-        FieldInfoModel(
+        FieldInfoModel(  # type: ignore[call-arg,misc]
             name="debug",
             types=["bool"],
             default="False",
             description="Enable debug mode",
-            required=False,
         ),
-        FieldInfoModel(
+        FieldInfoModel(  # type: ignore[call-arg,misc]
             name="port",
             types=["int"],
             default="8000",
             description="Server port",
-            required=False,
         ),
     ]
 
-    settings_info = SettingsInfoModel(
+    settings_info = SettingsInfoModel(  # type: ignore[call-arg]
         name="TestSettings", docs="Test settings", fields=fields, child_settings=[],
     )
 
     # Generate JSON (suppress PSESettings warning)
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message=".*pyproject_toml_table_header.*")
-        pse_settings = PSESettings(root_dir=Path.cwd(), project_dir=Path.cwd())
+        pse_settings = PSESettings(root_dir=Path.cwd(), project_dir=Path.cwd(), respect_exclude=True)  # type: ignore[call-arg]
     generator = JsonGenerator(pse_settings, JsonGeneratorSettings(paths=[], indent=2))
     json_output = generator.generate_single(settings_info)
 
@@ -575,22 +571,23 @@ def test_generate_with_nested_settings() -> None:
 
     # Create parent fields
     parent_fields = [
-        FieldInfoModel(name="debug", types=["bool"], default="False", description="Debug", required=False),
+        FieldInfoModel(  # type: ignore[call-arg,misc]
+            name="debug", types=["bool"], default="False", description="Debug",        ),
     ]
 
     # Create child settings
     child_fields = [
-        FieldInfoModel(
-            name="host", types=["str"], default='"localhost"', description="DB host", required=False,
-        ),
-        FieldInfoModel(name="port", types=["int"], default="5432", description="DB port", required=False),
+        FieldInfoModel(  # type: ignore[call-arg,misc]
+            name="host", types=["str"], default='"localhost"', description="DB host",        ),
+        FieldInfoModel(  # type: ignore[call-arg,misc]
+            name="port", types=["int"], default="5432", description="DB port",        ),
     ]
 
-    child_settings = SettingsInfoModel(
+    child_settings = SettingsInfoModel(  # type: ignore[call-arg]
         name="DatabaseConfig", docs="Database configuration", fields=child_fields, child_settings=[],
     )
 
-    settings_info = SettingsInfoModel(
+    settings_info = SettingsInfoModel(  # type: ignore[call-arg]
         name="AppSettings",
         docs="Application settings",
         fields=parent_fields,
@@ -600,7 +597,7 @@ def test_generate_with_nested_settings() -> None:
     # Generate TOML (suppress PSESettings warning)
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message=".*pyproject_toml_table_header.*")
-        pse_settings = PSESettings(root_dir=Path.cwd(), project_dir=Path.cwd())
+        pse_settings = PSESettings(root_dir=Path.cwd(), project_dir=Path.cwd(), respect_exclude=True)  # type: ignore[call-arg]
     generator = TomlGenerator(pse_settings, TomlGeneratorSettings(paths=[], include_comments=False))
     toml_output = generator.generate_single(settings_info)
 

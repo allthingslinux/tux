@@ -6,10 +6,10 @@ configuration from TOML, YAML, and JSON files with proper priority handling.
 Note: Import warnings (PLC0415) for `warnings` module are intentional - lazy imports
 in error handlers avoid import overhead when errors don't occur.
 """
-# ruff: noqa: PLC0415
 
 import json
 import tomllib
+import warnings
 from pathlib import Path
 from typing import Any
 
@@ -42,7 +42,6 @@ class TomlConfigSource(PydanticBaseSettingsSource):
                     self._data = tomllib.load(f)
             except (OSError, tomllib.TOMLDecodeError) as e:
                 # Log error but don't fail - graceful degradation
-                import warnings
 
                 warnings.warn(f"Failed to load TOML config from {self.config_file}: {e}", stacklevel=2)
 
@@ -102,7 +101,7 @@ class TomlConfigSource(PydanticBaseSettingsSource):
         """
         items: list[tuple[str, Any]] = []
         for k, v in d.items():
-            new_key = f"{parent_key}__{k}" if parent_key else k
+            new_key = f"{parent_key}__{k}".upper() if parent_key else k.upper()
             if isinstance(v, dict):
                 items.extend(TomlConfigSource._flatten_nested_dict(v, new_key).items())  # type: ignore[arg-type]
             else:
@@ -134,7 +133,6 @@ class YamlConfigSource(PydanticBaseSettingsSource):
                     self._data = yaml.safe_load(f) or {}
             except (OSError, yaml.YAMLError) as e:
                 # Log error but don't fail - graceful degradation
-                import warnings
 
                 warnings.warn(f"Failed to load YAML config from {self.config_file}: {e}", stacklevel=2)
 
@@ -194,7 +192,7 @@ class YamlConfigSource(PydanticBaseSettingsSource):
         """
         items: list[tuple[str, Any]] = []
         for k, v in d.items():
-            new_key = f"{parent_key}__{k}" if parent_key else k
+            new_key = f"{parent_key}__{k}".upper() if parent_key else k.upper()
             if isinstance(v, dict):
                 items.extend(YamlConfigSource._flatten_nested_dict(v, new_key).items())  # type: ignore[arg-type]
             else:
@@ -226,7 +224,6 @@ class JsonConfigSource(PydanticBaseSettingsSource):
                     self._data = json.load(f)
             except (OSError, json.JSONDecodeError) as e:
                 # Log error but don't fail - graceful degradation
-                import warnings
 
                 warnings.warn(f"Failed to load JSON config from {self.config_file}: {e}", stacklevel=2)
 
@@ -286,7 +283,7 @@ class JsonConfigSource(PydanticBaseSettingsSource):
         """
         items: list[tuple[str, Any]] = []
         for k, v in d.items():
-            new_key = f"{parent_key}__{k}" if parent_key else k
+            new_key = f"{parent_key}__{k}".upper() if parent_key else k.upper()
             if isinstance(v, dict):
                 items.extend(JsonConfigSource._flatten_nested_dict(v, new_key).items())  # type: ignore[arg-type]
             else:
