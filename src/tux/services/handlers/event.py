@@ -1,3 +1,5 @@
+"""Event handlers for Tux Bot such as on ready, on guild join, on guild remove, on message and on guild channel create."""
+
 import discord
 from discord.ext import commands
 from loguru import logger
@@ -8,6 +10,8 @@ from tux.shared.config import CONFIG
 
 
 class EventHandler(BaseCog):
+    """Event handlers for Tux Bot such as on ready, on guild join, on guild remove, on message and on guild channel create."""
+
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
         self._guilds_registered = False
@@ -34,6 +38,7 @@ class EventHandler(BaseCog):
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild) -> None:
+        """On guild join event handler."""
         await self.db.guild.insert_guild_by_id(guild.id)
 
         # Initialize basic guild data (permissions only)
@@ -42,10 +47,12 @@ class EventHandler(BaseCog):
     # TODO: Define data expiration policy for guilds
     @commands.Cog.listener()
     async def on_guild_remove(self, guild: discord.Guild) -> None:
+        """On guild remove event handler."""
         await self.db.guild.delete_guild_by_id(guild.id)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
+        """On message event handler."""
         # Allow the IRC bridge to use the snippet command only
         if message.webhook_id in CONFIG.IRC_CONFIG.BRIDGE_WEBHOOK_IDS and (
             message.content.startswith(f"{CONFIG.get_prefix()}s ")
@@ -88,4 +95,11 @@ class EventHandler(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Cog setup for event handler.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance.
+    """
     await bot.add_cog(EventHandler(bot))

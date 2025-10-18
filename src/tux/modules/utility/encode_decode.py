@@ -63,6 +63,15 @@ class EncodeDecode(BaseCog):
         self.decode.usage = generate_usage(self.decode)
 
     async def send_message(self, ctx: commands.Context[Tux], data: str):
+        """Reply to the context with the encoded or decoded data.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context of the command.
+        data : str
+            The data to send.
+        """
         if len(data) > 2000:
             await ctx.reply(
                 content="The string ended up being too long. Please use this [site](https://www.base64encode.org/) instead.",

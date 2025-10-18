@@ -35,6 +35,7 @@ class Poll(ModerationCogBase):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
+        """On raw reaction add event handler."""
         # get reaction from payload.message_id, payload.channel_id, payload.guild_id, payload.emoji
         channel = await get_channel_safe(self.bot, payload.channel_id)
         if channel is None:
@@ -148,4 +149,11 @@ class Poll(ModerationCogBase):
 
 
 async def setup(bot: Tux) -> None:
+    """Cog setup for poll cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance.
+    """
     await bot.add_cog(Poll(bot))

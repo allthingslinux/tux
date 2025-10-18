@@ -1,1 +1,1 @@
-# MkDocs plugins for Tux documentation
+"""MkDocs plugins for Tux documentation."""

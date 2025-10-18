@@ -1,3 +1,9 @@
+"""
+Godbolt API Wrapper for Tux Bot.
+
+This module provides integration with the Godbolt API allowing code execution and compilation for various programming languages.
+"""
+
 from typing import TypedDict
 
 import httpx
@@ -12,6 +18,15 @@ from tux.shared.exceptions import (
 
 
 class CompilerFilters(TypedDict):
+    """
+    Compiler filters.
+
+    Parameters
+    ----------
+    TypedDict : Compiler filters.
+        Dictionary of compiler filters.
+    """
+
     binary: bool
     binaryObject: bool
     commentOnly: bool
@@ -26,11 +41,29 @@ class CompilerFilters(TypedDict):
 
 
 class CompilerOptions(TypedDict):
+    """
+    Compiler options.
+
+    Parameters
+    ----------
+    TypedDict : Compiler options.
+        Dictionary of compiler options.
+    """
+
     skipAsm: bool
     executorRequest: bool
 
 
 class Options(TypedDict):
+    """
+    Godbolt API options.
+
+    Parameters
+    ----------
+    TypedDict : Options.
+        Dictionary of options.
+    """
+
     userArguments: str
     compilerOptions: CompilerOptions
     filters: CompilerFilters
@@ -39,6 +72,15 @@ class Options(TypedDict):
 
 
 class Payload(TypedDict):
+    """
+    Payload for the Godbolt API.
+
+    Parameters
+    ----------
+    TypedDict : Payload.
+        Dictionary of payload.
+    """
+
     source: str
     options: Options
     lang: str

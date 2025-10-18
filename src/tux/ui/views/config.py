@@ -125,6 +125,8 @@ class ConfigSetPrivateLogs(discord.ui.View):
 
 
 class ConfigSetPublicLogs(discord.ui.View):
+    """View for configuring public log channels."""
+
     def __init__(self, *, timeout: float = 180, bot: Any | None = None, db_service: DatabaseService | None = None):
         if db_service is not None:
             # If we have a DatabaseService, create a coordinator from it
@@ -204,6 +206,8 @@ class ConfigSetPublicLogs(discord.ui.View):
 
 
 class ConfigSetChannels(discord.ui.View):
+    """View for configuring channels."""
+
     def __init__(self, *, timeout: float = 180, bot: Any | None = None, db_service: DatabaseService | None = None):
         if db_service is not None:
             # If we have a DatabaseService, create a coordinator from it

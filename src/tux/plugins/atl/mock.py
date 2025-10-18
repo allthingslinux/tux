@@ -517,6 +517,8 @@ class ErrorTestRegistry:
 
 
 class Mock(BaseCog):
+    """Mock plugin for Tux Bot."""
+
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
         self.error_registry = ErrorTestRegistry()
@@ -956,4 +958,11 @@ class Mock(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Cog setup for event handler.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance.
+    """
     await bot.add_cog(Mock(bot))

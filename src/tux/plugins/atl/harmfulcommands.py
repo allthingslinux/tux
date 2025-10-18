@@ -140,4 +140,11 @@ class HarmfulCommands(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Cog setup for harmful command plugin.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance.
+    """
     await bot.add_cog(HarmfulCommands(bot))

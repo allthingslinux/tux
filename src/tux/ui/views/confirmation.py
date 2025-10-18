@@ -64,6 +64,7 @@ class BaseConfirmationView(discord.ui.View):
         self.stop()
 
     def update_button_styles(self) -> None:
+        """Update button styles for the confirmation view."""
         for item in self.children:
             if isinstance(item, discord.ui.Button) and item.custom_id == "confirm":
                 item.label = self.confirm_label
@@ -71,6 +72,8 @@ class BaseConfirmationView(discord.ui.View):
 
 
 class ConfirmationDanger(BaseConfirmationView):
+    """Confirmation view with a danger button."""
+
     def __init__(self, user: int) -> None:
         super().__init__(user)
         self.confirm_label = "I understand and wish to proceed anyway"
@@ -79,6 +82,8 @@ class ConfirmationDanger(BaseConfirmationView):
 
 
 class ConfirmationNormal(BaseConfirmationView):
+    """Confirmation view with a normal button."""
+
     def __init__(self, user: int) -> None:
         super().__init__(user)
         self.confirm_label = "Confirm"

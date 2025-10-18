@@ -1,3 +1,5 @@
+"""Reminder cog for Tux Bot."""
+
 import asyncio
 import contextlib
 import datetime
@@ -14,11 +16,20 @@ from tux.ui.embeds import EmbedCreator
 
 
 class RemindMe(BaseCog):
+    """Reminder cog for Tux Bot."""
+
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
         self._initialized = False
 
     async def send_reminder(self, reminder: Reminder) -> None:
+        """Send a reminder to a user.
+
+        Parameters
+        ----------
+        reminder : Reminder
+            The reminder to send.
+        """
         user = self.bot.get_user(reminder.reminder_user_id)
         if user is not None:
             embed = EmbedCreator.create_embed(
@@ -61,6 +72,7 @@ class RemindMe(BaseCog):
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
+        """On ready event handler."""
         if self._initialized:
             return
 
@@ -174,4 +186,11 @@ class RemindMe(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Cog setup for remindme cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance.
+    """
     await bot.add_cog(RemindMe(bot))

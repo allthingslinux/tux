@@ -1,3 +1,5 @@
+"""Wolfram cog for Tux Bot."""
+
 import io
 from urllib.parse import quote_plus
 
@@ -15,6 +17,8 @@ from tux.ui.embeds import EmbedCreator
 
 
 class Wolfram(BaseCog):
+    """Wolfram cog for Tux Bot."""
+
     def __init__(self, bot: Tux) -> None:
         super().__init__(bot)
 
@@ -88,4 +92,11 @@ class Wolfram(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
+    """Cog setup for wolfram cog.
+
+    Parameters
+    ----------
+    bot : Tux
+        The bot instance.
+    """
     await bot.add_cog(Wolfram(bot))

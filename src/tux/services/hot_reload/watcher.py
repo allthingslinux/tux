@@ -17,8 +17,8 @@ from .file_utils import FileHashTracker, get_extension_from_path, validate_pytho
 class FileSystemWatcherProtocol(Protocol):
     """Protocol for file system watchers."""
 
-    def start(self) -> None: ...
-    def stop(self) -> None: ...
+    def start(self) -> None: ...  # noqa: D102
+    def stop(self) -> None: ...  # noqa: D102
 
 
 class CogWatcher(watchdog.events.FileSystemEventHandler):
