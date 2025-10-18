@@ -341,7 +341,7 @@ class BaseCog(commands.Cog):
                 "UnknownModule",
             )
             logger.warning(f"{config_name} is not configured. {cog_name} will be unloaded.")
-        return False
+        return condition
 
     async def _unload_self(self, extension_name: str) -> None:
         """
