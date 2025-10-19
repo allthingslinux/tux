@@ -13,7 +13,7 @@ import discord
 from discord.ext import commands
 
 from tux.core.bot import Tux
-from tux.shared.constants import CONST
+from tux.shared.constants import EMBED_COLORS
 
 
 class CommunicationService:
@@ -200,7 +200,7 @@ class CommunicationService:
         """
         embed = discord.Embed(
             title=f"You have been {action}",
-            color=CONST.EMBED_COLORS["CASE"],
+            color=EMBED_COLORS["CASE"],
             timestamp=discord.utils.utcnow(),
         )
 
