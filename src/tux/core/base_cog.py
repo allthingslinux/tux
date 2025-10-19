@@ -304,35 +304,43 @@ class BaseCog(commands.Cog):
 
     def unload_if_missing_config(self, condition: bool, config_name: str) -> bool:
         """
-        Gracefully unload this cog if required configuration is missing.
+        Check if required configuration is missing and log warning.
 
-        This allows cogs to self-unload when they detect missing configuration
-        at load time, preventing errors during command execution.
+        This allows cogs to detect missing configuration at load time and
+        return early from __init__ to prevent partial initialization.
 
         Parameters
         ----------
         condition : bool
-            True if config is missing (triggers unload), False otherwise.
+            True if config is missing (should unload), False otherwise.
         config_name : str
             Name of the missing configuration for logging purposes.
 
         Returns
         -------
         bool
-            True if unload was triggered, False if config is present.
+            True if config is missing (caller should return early), False if config is present.
 
         Examples
         --------
-        >>> self.unload_if_missing_config(not CONFIG.GITHUB_TOKEN, "GITHUB_TOKEN", "tux.cogs.github")
+        >>> def __init__(self, bot: Tux):
+        ...     super().__init__(bot)
+        ...     if self.unload_if_missing_config(not CONFIG.GITHUB_TOKEN, "GITHUB_TOKEN"):
+        ...         return  # Exit early, cog will be partially loaded but won't register commands
+        ...     self.github_client = GitHubClient()
 
         Notes
         -----
-        Unloading happens asynchronously in a background task to avoid
-        blocking cog initialization.
+        When this returns True, the cog's __init__ should return early to avoid
+        initializing services that depend on the missing config. The cog will be
+        loaded but commands won't be registered properly, preventing runtime errors.
+
+        For complete cog unloading, the bot owner should remove the cog from the
+        modules directory or use the reload system to unload it programmatically.
         """
         if condition:
-            # Get our "cog_name" and default to "UnknownModule" if its not found
-            cog_name = next(
+            # Get the module name from the stack
+            cog_module = next(
                 (
                     f.frame.f_locals["self"].__class__.__module__
                     for f in inspect.stack()
@@ -340,7 +348,11 @@ class BaseCog(commands.Cog):
                 ),
                 "UnknownModule",
             )
-            logger.warning(f"{config_name} is not configured. {cog_name} will be unloaded.")
+            logger.warning(f"⚠️  {config_name} is not configured. {cog_module} will be unloaded.")
+
+            # Schedule async unload in background to avoid blocking initialization
+            self._unload_task = asyncio.create_task(self._unload_self(cog_module))
+
         return condition
 
     async def _unload_self(self, extension_name: str) -> None:
@@ -359,6 +371,6 @@ class BaseCog(commands.Cog):
         """
         try:
             await self.bot.unload_extension(extension_name)
-            logger.info(f"{self.__class__.__name__} has been unloaded due to missing configuration")
+            logger.info(f"✅ {self.__class__.__name__} unloaded due to missing configuration")
         except Exception as e:
-            logger.error(f"Failed to unload {self.__class__.__name__}: {e}")
+            logger.error(f"❌ Failed to unload {self.__class__.__name__}: {e}")

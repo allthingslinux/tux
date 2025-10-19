@@ -33,7 +33,7 @@ from tux.services.sentry.tracing import (
     transaction,
 )
 from tux.shared.config import CONFIG
-from tux.shared.constants import CONST
+from tux.shared.constants import COG_PRIORITIES, MILLISECONDS_PER_SECOND
 from tux.shared.exceptions import TuxCogLoadError, TuxConfigurationError
 
 
@@ -84,7 +84,7 @@ class CogLoader(commands.Cog):
         self.load_times: defaultdict[str, float] = defaultdict(float)
 
         # Priority mapping determines load order (higher = loads first)
-        self.load_priorities = CONST.COG_PRIORITIES
+        self.load_priorities = COG_PRIORITIES
 
     async def is_cog_eligible(self, filepath: Path) -> bool:
         """
@@ -329,7 +329,7 @@ class CogLoader(commands.Cog):
             set_span_attributes(
                 {
                     "cog.status": "loaded",
-                    "load_time_ms": load_time * CONST.MILLISECONDS_PER_SECOND,
+                    "load_time_ms": load_time * MILLISECONDS_PER_SECOND,
                     "load_time_s": load_time,
                 },
             )
@@ -383,7 +383,7 @@ class CogLoader(commands.Cog):
         Notes
         -----
         Priority is determined by the parent directory name, not the cog name.
-        Priorities are configured in CONST.COG_PRIORITIES.
+        Priorities are configured in COG_PRIORITIES constant.
         """
         return self.load_priorities.get(path.parent.name, 0)
 

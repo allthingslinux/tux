@@ -47,7 +47,7 @@ from discord.ext import commands
 
 from tux.core.converters import CaseTypeConverter, TimeConverter, convert_bool
 from tux.database.models import CaseType
-from tux.shared.constants import CONST
+from tux.shared.constants import DEFAULT_REASON
 
 
 class TuxFlagConverter(commands.FlagConverter):
@@ -203,7 +203,7 @@ class BanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="-
     reason: str = commands.flag(
         name="reason",
         description="The reason for the ban.",
-        default=CONST.DEFAULT_REASON,
+        default=DEFAULT_REASON,
         positional=True,
     )
     purge: commands.Range[int, 0, 7] = commands.flag(
@@ -238,7 +238,7 @@ class TempBanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefi
     reason: str = commands.flag(
         name="reason",
         description="The reason for the ban.",
-        default=CONST.DEFAULT_REASON,
+        default=DEFAULT_REASON,
         positional=True,
     )
     duration: float = commands.flag(
@@ -279,7 +279,7 @@ class KickFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="
     reason: str = commands.flag(
         name="reason",
         description="The reason for the kick.",
-        default=CONST.DEFAULT_REASON,
+        default=DEFAULT_REASON,
         positional=True,
     )
     silent: bool = commands.flag(
@@ -304,7 +304,7 @@ class WarnFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="
     reason: str = commands.flag(
         name="reason",
         description="The reason for the warning.",
-        default=CONST.DEFAULT_REASON,
+        default=DEFAULT_REASON,
         positional=True,
     )
     silent: bool = commands.flag(
@@ -331,7 +331,7 @@ class TimeoutFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefi
     reason: str = commands.flag(
         name="reason",
         description="The reason for the timeout.",
-        default=CONST.DEFAULT_REASON,
+        default=DEFAULT_REASON,
         positional=True,
     )
     duration: str = commands.flag(
@@ -361,7 +361,7 @@ class UntimeoutFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", pre
     reason: str = commands.flag(
         name="reason",
         description="The reason for the timeout.",
-        default=CONST.DEFAULT_REASON,
+        default=DEFAULT_REASON,
         positional=True,
     )
     silent: bool = commands.flag(
@@ -386,7 +386,7 @@ class JailFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="
     reason: str = commands.flag(
         name="reason",
         description="The reason for the jail.",
-        default=CONST.DEFAULT_REASON,
+        default=DEFAULT_REASON,
         positional=True,
     )
     silent: bool = commands.flag(
@@ -411,7 +411,7 @@ class UnjailFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix
     reason: str = commands.flag(
         name="reason",
         description="The reason for the jail.",
-        default=CONST.DEFAULT_REASON,
+        default=DEFAULT_REASON,
         positional=True,
     )
     silent: bool = commands.flag(
@@ -517,7 +517,7 @@ class SnippetBanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", pr
     reason: str = commands.flag(
         name="reason",
         description="The reason for the snippet ban.",
-        default=CONST.DEFAULT_REASON,
+        default=DEFAULT_REASON,
         positional=True,
     )
     silent: bool = commands.flag(
@@ -542,7 +542,7 @@ class SnippetUnbanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", 
     reason: str = commands.flag(
         name="reason",
         description="The reason for the snippet unban.",
-        default=CONST.DEFAULT_REASON,
+        default=DEFAULT_REASON,
         positional=True,
     )
     silent: bool = commands.flag(
@@ -568,7 +568,7 @@ class PollBanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefi
     reason: str = commands.flag(
         name="reason",
         description="The reason for the poll ban.",
-        default=CONST.DEFAULT_REASON,
+        default=DEFAULT_REASON,
         positional=True,
     )
     silent: bool = commands.flag(
@@ -593,7 +593,7 @@ class PollUnbanFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", pre
     reason: str = commands.flag(
         name="reason",
         description="The reason for the poll unban.",
-        default=CONST.DEFAULT_REASON,
+        default=DEFAULT_REASON,
         positional=True,
     )
     silent: bool = commands.flag(

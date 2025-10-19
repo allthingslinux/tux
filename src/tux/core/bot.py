@@ -107,6 +107,7 @@ class Tux(commands.Bot):
 
         # Service integrations
         self.db_service = DatabaseService()
+        self._db_coordinator: DatabaseCoordinator | None = None  # Cached coordinator
         self.sentry_manager = SentryManager()
         self.prefix_manager: Any | None = None  # Initialized during setup
 
@@ -184,8 +185,12 @@ class Tux(commands.Bot):
         -----
         This property provides convenient access to database operations via
         controllers like ``bot.db.guild_config.get_guild_config()``.
+
+        The coordinator is cached to avoid creating new instances on every access.
         """
-        return DatabaseCoordinator(self.db_service)
+        if self._db_coordinator is None:
+            self._db_coordinator = DatabaseCoordinator(self.db_service)
+        return self._db_coordinator
 
     async def setup_hook(self) -> None:
         """
