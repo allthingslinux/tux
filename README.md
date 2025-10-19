@@ -48,8 +48,6 @@
   - [Setup \& Workflow](#setup--workflow)
   - [Quick Commands](#quick-commands)
 - [License](#license)
-- [Metrics](#metrics)
-- [Contributors](#contributors)
 
 ## About
 
@@ -59,17 +57,20 @@ It is designed to provide a variety of features to the server, including moderat
 
 ## Tech Stack
 
-- Python 3.13+ alongside the `discord.py` library
-- Uv for dependency management
-- Docker and Docker Compose for optional containerized environments
-- Strict typing with `basedpyright` and type hints
-- Type safe ORM using `SQLModel` with `SQLAlchemy`
-- Linting and formatting via `ruff`
-- Custom CLI via `typer` and `uv` scripts
-- Rich logging with `loguru`
-- Exception handling with `sentry-sdk`
-- Request handling with `httpx`
-- Custom dynamic environment management with `python-dotenv`
+| Component | Technology |
+|-----------|------------|
+| **Runtime** | Python 3.13+ with `discord.py` |
+| **Dependencies** | `uv` for fast, reliable package management |
+| **Database** | Type-safe ORM using `SQLModel` with `SQLAlchemy` |
+| **Containers** | Docker & Docker Compose for development environments |
+| **Type Safety** | Strict typing with `basedpyright` and comprehensive type hints |
+| **Code Quality** | Linting and formatting via `ruff` |
+| **Pre-commit** | Automated code quality checks before commits |
+| **CLI** | Custom command-line interface built with `typer` and `uv` scripts |
+| **Logging** | Structured logging with `loguru` |
+| **Error Tracking** | Exception handling and monitoring with `sentry-sdk` |
+| **HTTP Client** | Modern async requests with `httpx` |
+| **Configuration** | Dynamic environment management with `pydantic-settings` & `python-dotenv` |
 
 ## Bot Features
 
@@ -81,7 +82,7 @@ It is designed to provide a variety of features to the server, including moderat
 - Robust error handling
 - Activity rotation
 - Custom help command
-- Configuration system (environment variables + `.env` file)
+- Configuration system (config files, environment variables + `.env` file)
 - Dynamic role-based (access level) permission system
 - Plugin system (see [plugins](src/tux/plugins/README.md))
 
@@ -90,7 +91,7 @@ It is designed to provide a variety of features to the server, including moderat
 ### Prerequisites
 
 - Python 3.13+
-- [Uv](https://docs.astral.sh/uv/)
+- [uv](https://docs.astral.sh/uv/)
 - A PostgreSQL database (e.g. via [Supabase](https://supabase.io/) or local installation)
 - Optional: [Docker](https://docs.docker.com/get-docker/) & [Docker Compose](https://docs.docker.com/compose/install/)
 
@@ -112,14 +113,18 @@ It is designed to provide a variety of features to the server, including moderat
 3. **Configure your environment:**
 
    ```bash
-   cp env.example .env
-   # Edit .env with your bot tokens and database URLs
+   # Generate example config files
+   uv run config generate
+
+   # Copy and edit to your needs
+   cp .env.example .env
+   cp config/config.toml.example config/config.toml
    ```
 
 4. **Start the bot:**
 
    ```bash
-   # Start the bot (auto-detects environment, defaults to development)
+   # Start the bot (or use docker per the docs)
    uv run tux start
 
    # Start with debug mode
@@ -130,14 +135,14 @@ It is designed to provide a variety of features to the server, including moderat
 
 ```bash
 # Development
-uv run tux start                # Start bot in development mode
-uv run tux start --debug        # Start bot with debug mode
-uv run dev lint                 # Check code quality with Ruff
-uv run dev format               # Format code with Ruff
-uv run dev type-check           # Check types with basedpyright
-uv run dev lint-docstring       # Lint docstrings with pydoclint
-uv run dev pre-commit           # Run pre-commit checks
-uv run dev all                  # Run all development checks
+uv run tux start                 # Start bot in development mode
+uv run tux start --debug         # Start bot with debug mode
+uv run dev lint                  # Check code quality with Ruff
+uv run dev format                # Format code with Ruff
+uv run dev type-check            # Check types with basedpyright
+uv run dev lint-docstring        # Lint docstrings with pydoclint
+uv run dev pre-commit            # Run pre-commit checks
+uv run dev all                   # Run all development checks
 
 # Testing
 uv run tests run                 # Run tests with coverage
@@ -146,18 +151,18 @@ uv run tests html                # Run tests and generate HTML report
 uv run tests coverage            # Generate coverage reports
 
 # Database
-uv run db migrate-dev           # Create and apply migrations for development
-uv run db migrate-push          # Push pending migrations to database
+uv run db migrate-dev            # Create and apply migrations for development
+uv run db migrate-push           # Push pending migrations to database
 uv run db migrate-generate "message"  # Generate a new migration
-uv run db health                # Check database health
+uv run db health                 # Check database health
 
 # Docker
-uv run docker up                # Start Docker services
-uv run docker down              # Stop Docker services
-uv run docker build             # Build Docker images
-uv run docker logs              # Show Docker service logs
-uv run docker ps                # List running containers
-uv run docker shell             # Open shell in container
+uv run docker up                 # Start Docker services
+uv run docker down               # Stop Docker services
+uv run docker build              # Build Docker images
+uv run docker logs               # Show Docker service logs
+uv run docker ps                 # List running containers
+uv run docker shell              # Open shell in container
 ```
 
 **For detailed setup instructions, see [SETUP.md](SETUP.md)**
@@ -172,14 +177,22 @@ This project is licensed under the GNU General Public License v3.0.
 
 See [LICENSE](LICENSE) for details.
 
-## Metrics
+<table>
+<tr>
+<td align="left"><h2>Metrics</h2></td>
+<td align="right"><h4><em>Made with <a href="https://repobeats.axiom.co">Repobeats</a></em></h4></td>
+</tr>
+<tr>
+<td colspan="2"><img src="https://repobeats.axiom.co/api/embed/b988ba04401b7c68edf9def00f5132cd2a7f3735.svg" alt="Metrics"></td>
+</tr>
+</table>
 
-<sub>Made with [Repobeats](https://repobeats.axiom.co).</sub>
-
-![Metrics](https://repobeats.axiom.co/api/embed/b988ba04401b7c68edf9def00f5132cd2a7f3735.svg)
-
-## Contributors
-
-<sub>Made with [contrib.rocks](https://contrib.rocks).</sub>
-
-[![Contributors](https://contrib.rocks/image?repo=allthingslinux/tux)](https://github.com/allthingslinux/tux/graphs/contributors)
+<table>
+<tr>
+<td align="left"><h2>Contributors</h2></td>
+<td align="right"><h4><em>Made with <a href="https://contrib.rocks">contrib.rocks</a></em></h4></td>
+</tr>
+<tr>
+<td colspan="2"><img src="https://contrib.rocks/image?repo=allthingslinux/tux" alt="Contributors"></td>
+</tr>
+</table>
