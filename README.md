@@ -179,20 +179,24 @@ See [LICENSE](LICENSE) for details.
 
 <table>
 <tr>
-<td align="left"><h2>Metrics</h2></td>
-<td align="right"><h4><em>Made with <a href="https://repobeats.axiom.co">Repobeats</a></em></h4></td>
+<td align="center"><h2>Metrics</h2></td>
 </tr>
 <tr>
-<td colspan="2"><img src="https://repobeats.axiom.co/api/embed/b988ba04401b7c68edf9def00f5132cd2a7f3735.svg" alt="Metrics"></td>
+<td><img src="https://repobeats.axiom.co/api/embed/b988ba04401b7c68edf9def00f5132cd2a7f3735.svg" alt="Metrics" width="100%"></td>
+</tr>
+<tr>
+<td align="center"><small><em>Made with <a href="https://repobeats.axiom.co">Repobeats</a></em></small></td>
 </tr>
 </table>
 
 <table>
 <tr>
-<td align="left"><h2>Contributors</h2></td>
-<td align="right"><h4><em>Made with <a href="https://contrib.rocks">contrib.rocks</a></em></h4></td>
+<td align="center"><h2>Contributors</h2></td>
 </tr>
 <tr>
-<td colspan="2"><img src="https://contrib.rocks/image?repo=allthingslinux/tux" alt="Contributors"></td>
+<td><img src="https://contrib.rocks/image?repo=allthingslinux/tux" alt="Contributors" width="100%"></td>
+</tr>
+<tr>
+<td align="center"><small><em>Made with <a href="https://contrib.rocks">contrib.rocks</a></em></small></td>
 </tr>
 </table>
