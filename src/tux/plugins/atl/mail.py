@@ -17,7 +17,7 @@ from tux.core.bot import Tux
 from tux.core.checks import requires_command_permission
 from tux.services.http_client import http_client
 from tux.shared.config import CONFIG
-from tux.shared.constants import CONST
+from tux.shared.constants import HTTP_OK
 
 MailboxData = dict[str, str | list[str]]
 
@@ -185,7 +185,7 @@ class Mail(BaseCog):
         password : str
             The password to register for mail.
         """
-        if response.status_code == CONST.HTTP_OK:
+        if response.status_code == HTTP_OK:
             result: list[dict[str, str | None]] = response.json()
             logger.info(f"Response JSON: {result}")
 
