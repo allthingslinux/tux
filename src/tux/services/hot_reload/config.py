@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from tux.shared.constants import CONST
+from tux.shared.constants import DEPENDENCY_CACHE_SIZE, MAX_DEPENDENCY_DEPTH, RELOAD_TIMEOUT
 
 
 @dataclass(frozen=True)
@@ -19,12 +19,12 @@ class HotReloadConfig:
     # Performance settings
     debounce_delay: float = 0.5
     max_reload_attempts: int = 3
-    reload_timeout: float = CONST.RELOAD_TIMEOUT
+    reload_timeout: float = RELOAD_TIMEOUT
 
     # Dependency tracking
     track_dependencies: bool = True
-    max_dependency_depth: int = CONST.MAX_DEPENDENCY_DEPTH
-    dependency_cache_size: int = CONST.DEPENDENCY_CACHE_SIZE
+    max_dependency_depth: int = MAX_DEPENDENCY_DEPTH
+    dependency_cache_size: int = DEPENDENCY_CACHE_SIZE
 
     # Error handling
     continue_on_error: bool = True
