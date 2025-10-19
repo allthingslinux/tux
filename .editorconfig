@@ -33,10 +33,10 @@ indent_size = 4
 indent_size = 2
 
 # Docker files
-[{Dockerfile,*.dockerfile}]
+[Containerfile]
 indent_size = 8
 
-[docker-compose*.yml]
+[compose.yaml]
 indent_size = 2
 
 # Shell scripts

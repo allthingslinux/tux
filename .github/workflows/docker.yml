@@ -33,8 +33,8 @@ jobs:
         id: docker_changes
         with:
           files: |
-            Dockerfile
-            docker-compose*.yml
+            Containerfile
+            compose.yaml
             .dockerignore
             docker/**
   validate:
@@ -93,13 +93,13 @@ jobs:
           echo "🔍 Build cache updated for faster future builds"
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Scan Dockerfile
+      - name: Scan Containerfile
         uses: reviewdog/action-trivy@v1
         continue-on-error: true
         with:
           github_token: ${{ github.token }}
           trivy_command: config
-          trivy_target: ./Dockerfile
+          trivy_target: ./Containerfile
           trivy_version: v0.63.0
           level: warning
           reporter: github-pr-review

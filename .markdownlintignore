@@ -4,7 +4,7 @@
 # Exclude other configuration files that might have markdown-like syntax
 .codecov.yml
 .pre-commit-config.yaml
-docker-compose*.yml
+compose.yaml
 *.lock
 
 # Exclude auto-generated files

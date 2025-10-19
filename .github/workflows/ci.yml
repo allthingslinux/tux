@@ -69,8 +69,8 @@ jobs:
         id: docker_changes
         with:
           files: |
-            Dockerfile
-            docker-compose*.yml
+            Containerfile
+            compose.yaml
             .dockerignore
       - name: Check YAML
         uses: tj-actions/changed-files@v46

@@ -14,7 +14,7 @@
 # - shellcheck: Shell script analysis
 # - shfmt: Shell script formatting
 # - actionlint: GitHub Actions validation
-# - hadolint: Dockerfile linting
+# - hadolint: Containerfile linting
 # - yamllint: YAML validation
 # - gitleaks: Secret scanning
 # - trivy: Container security scanning
@@ -75,9 +75,9 @@ runner:
     name: ActionLint
     level: warning
 
-  # Dockerfile Linting
+  # Containerfile Linting
   hadolint:
-    cmd: hadolint --format json Dockerfile
+    cmd: hadolint --format json Containerfile
     format: rdjson
     name: Hadolint
     level: warning

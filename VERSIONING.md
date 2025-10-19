@@ -123,7 +123,7 @@ Our Docker build process is designed to bake the version directly into the image
 
 ### Build Process
 
-The `Dockerfile` uses build arguments to create a `VERSION` file inside the image:
+The `Containerfile` uses build arguments to create a `VERSION` file inside the image:
 
 ```dockerfile
 ARG VERSION=""
@@ -207,7 +207,7 @@ uv run pytest tests/unit/test_version_system.py -v
 3. **Docker version mismatch**:
    - Ensure VERSION build arg is passed correctly
    - Check that the VERSION file is created in the container
-   - Verify the Dockerfile version generation logic
+   - Verify the Containerfile version generation logic
 
 ### Debugging
 

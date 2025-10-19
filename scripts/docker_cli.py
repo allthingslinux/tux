@@ -139,7 +139,7 @@ class DockerCLI(BaseCLI):
     def _get_compose_base_cmd(self) -> list[str]:
         """Get the base docker compose command."""
         # Use the system docker command to avoid conflicts with the virtual env docker script
-        return [self._get_docker_cmd(), "compose", "-f", "docker-compose.yml"]
+        return [self._get_docker_cmd(), "compose", "-f", "compose.yaml"]
 
     def _run_command(self, command: list[str]) -> None:
         """Run a command and return success status."""

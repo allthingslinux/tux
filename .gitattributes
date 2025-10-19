@@ -30,9 +30,8 @@
 #
 # Docker Files
 #
-Dockerfile text eol=lf
-*.dockerfile text eol=lf
-docker-compose*.yml text eol=lf
+Containerfile text eol=lf
+compose.yaml text eol=lf
 .dockerignore text eol=lf
 
 #

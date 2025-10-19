@@ -1,18 +1,16 @@
 ---
-
 services:
   tux-postgres:
     container_name: tux-postgres
     hostname: tux-postgres
     image: postgres:17-alpine
-    restart: "no"
+    restart: 'no'
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-tuxdb}
       POSTGRES_USER: ${POSTGRES_USER:-tuxuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeThisToAStrongPassword123!}
       POSTGRES_INITDB_ARGS: --encoding=UTF-8 --lc-collate=C --lc-ctype=C
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+    ports: ['${POSTGRES_PORT:-5432}:5432']
     volumes:
       - tux_postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
@@ -22,10 +20,9 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "10m"
-        max-file: "3"
-        compress: "true"
-
+        max-size: 10m
+        max-file: '3'
+        compress: 'true'
     healthcheck:
       test:
         - CMD-SHELL
@@ -34,14 +31,13 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
-
   tux:
     container_name: tux
     hostname: tux
     image: ${TUX_IMAGE:-ghcr.io/allthingslinux/tux}:${TUX_IMAGE_TAG:-latest}
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
       target: production
       args:
         VERSION: ${VERSION:-dev}
@@ -57,8 +53,7 @@ services:
       - tux_cache:/app/.cache
       - tux_temp:/app/temp
       - tux_user_home:/home/nonroot
-    env_file:
-      - .env
+    env_file: [.env]
     environment:
       TUX_VERSION: ${VERSION:-dev}
       # Development-specific overrides
@@ -99,14 +94,10 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    # Production: Stop dependent services when this service fails
     stop_grace_period: 30s
-    security_opt:
-      - no-new-privileges:true
+    security_opt: [no-new-privileges:true]
     read_only: true
-    tmpfs:
-      - /tmp:size=100m
-      - /var/tmp:size=50m
+    tmpfs: [/tmp:size=100m, /var/tmp:size=50m]
     logging:
       driver: json-file
       options:
@@ -122,9 +113,9 @@ services:
           target: /app/src
           ignore:
             - __pycache__/
-            - "*.pyc"
-            - "*.pyo"
-            - "*.pyd"
+            - '*.pyc'
+            - '*.pyo'
+            - '*.pyd'
             - .pytest_cache/
             - .mypy_cache/
             - .coverage
@@ -150,50 +141,31 @@ services:
           path: .env
           target: /app/.env
         - action: sync+restart
-          path: docker-compose.yml
-          target: /app/docker-compose.yml
-
+          path: compose.yaml
+          target: /app/compose.yaml
   tux-adminer:
     image: adminer:latest
     container_name: tux-adminer
     hostname: tux-adminer
-    restart: "no"
+    restart: 'no'
     depends_on:
       tux-postgres:
         condition: service_healthy
-
-    # Port mapping
-    ports:
-      - '${ADMINER_PORT:-8081}:8080'
-
-    # Adminer configuration
+    ports: ['${ADMINER_PORT:-8080}:8080']
     environment:
-      ADMINER_DEFAULT_DRIVER: "pgsql"
-      ADMINER_DEFAULT_SERVER: "tux-postgres"
+      ADMINER_DEFAULT_DRIVER: pgsql
+      ADMINER_DEFAULT_SERVER: tux-postgres
       ADMINER_DEFAULT_DB: ${POSTGRES_DB:-tuxdb}
       ADMINER_DEFAULT_USERNAME: ${POSTGRES_USER:-tuxuser}
       ADMINER_DEFAULT_PASSWORD: ${POSTGRES_PASSWORD:-ChangeThisToAStrongPassword123!}
-      ADMINER_AUTO_LOGIN: "${ADMINER_AUTO_LOGIN:-true}"
-      ADMINER_PLUGINS: "backward-keys tables-filter dump-date dump-json dump-xml dump-zip edit-calendar enum-option foreign-system json-column pretty-json-column table-indexes-structure table-structure"
-
+      ADMINER_AUTO_LOGIN: ${ADMINER_AUTO_LOGIN:-true}
+      ADMINER_PLUGINS: backward-keys tables-filter dump-date dump-json dump-xml dump-zip
+        edit-calendar edit-foreign enum-option foreign-system json-column pretty-json-column
+        table-indexes-structure table-structure row-numbers config
+      ADMINER_THEME: dracula
     configs:
       - source: adminer-index.php
         target: /var/www/html/index.php
-      - source: adminer-theme.css
-        target: /var/www/html/adminer.css
-
-    # Enhanced logging configuration
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-        compress: "true"
-
-    # Security configuration
-    security_opt:
-      - no-new-privileges:true
-
 volumes:
   # Persistent data volumes
   tux_cache:
@@ -204,9 +176,8 @@ volumes:
     driver: local
   tux_postgres_data:
     driver: local
-
 configs:
   adminer-index.php:
     file: ./docker/adminer/index.php
-  adminer-theme.css:
-    file: ./docker/adminer/adminer-theme.css
+  # adminer-theme.css:
+  #   file: ./docker/adminer/adminer-theme.css
