@@ -62,8 +62,8 @@ async def db_service(pglite_engine):
     """DatabaseService with fresh database per test."""
     logger.info("🔧 Creating DatabaseService")
 
-    from tux.database.service import AsyncDatabaseService
-    service = AsyncDatabaseService(echo=False)
+    from tux.database.service import DatabaseService
+    service = DatabaseService(echo=False)
 
     # Manually set the engine and session factory to use our PGlite engine
     service._engine = pglite_engine
@@ -104,8 +104,8 @@ async def db_session(db_service: DatabaseService):
 async def disconnected_async_db_service():
     """Database service that's not connected for testing error scenarios."""
     logger.info("🔧 Creating disconnected database service")
-    from tux.database.service import AsyncDatabaseService
-    service = AsyncDatabaseService(echo=False)
+    from tux.database.service import DatabaseService
+    service = DatabaseService(echo=False)
     # Don't connect - leave it disconnected for error testing
     yield service
     logger.info("🧹 Disconnected database service cleanup complete")

@@ -21,7 +21,7 @@ import pytest
 from sqlalchemy.engine import Engine
 from sqlalchemy import text
 
-from tux.database.service import DatabaseService, DatabaseServiceABC
+from tux.database.service import DatabaseService
 from tux.database.controllers import (
     GuildController, GuildConfigController,
 )
@@ -44,7 +44,7 @@ class TestDatabaseSchemaThroughService:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_table_creation_through_service(self, db_service: DatabaseServiceABC) -> None:
+    async def test_table_creation_through_service(self, db_service: DatabaseService) -> None:
         """Test that tables are created correctly through DatabaseService."""
         # Database is already connected and fresh via fixture
         # Verify we can create sessions and perform operations
@@ -64,7 +64,7 @@ class TestDatabaseSchemaThroughService:
 
     @pytest.mark.integration
     @pytest.mark.asyncio
-    async def test_schema_persistence_across_restarts(self, db_service: DatabaseServiceABC, guild_controller: GuildController) -> None:
+    async def test_schema_persistence_across_restarts(self, db_service: DatabaseService, guild_controller: GuildController) -> None:
         """Test that schema persists across database restarts."""
         # Database is already connected and fresh via fixture
         # Create a guild

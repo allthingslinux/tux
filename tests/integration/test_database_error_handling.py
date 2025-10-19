@@ -96,8 +96,8 @@ class TestDatabaseServiceErrorIntegration:
     async def test_connection_error_with_context(self):
         """Test connection error is handled properly."""
         # Create a service with invalid connection string
-        from tux.database.service import AsyncDatabaseService
-        service = AsyncDatabaseService()
+        from tux.database.service import DatabaseService
+        service = DatabaseService()
 
         with pytest.raises(Exception):
             await service.connect("invalid://connection/string")
@@ -120,10 +120,11 @@ class TestDatabaseServiceErrorIntegration:
             mock_sentry_sdk.start_span.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_database_service_factory_error_handling(self):
-        """Test DatabaseServiceFactory error handling."""
-        from tux.database.service import DatabaseServiceFactory
+    async def test_database_service_creation(self):
+        """Test DatabaseService can be created with default settings."""
+        from tux.database.service import DatabaseService
 
-        # Test with invalid mode (not a DatabaseMode enum)
-        with pytest.raises(ValueError):
-            DatabaseServiceFactory.create("invalid_mode")  # type: ignore[arg-type]
+        # Test service creation
+        service = DatabaseService()
+        assert not service.is_connected()
+        assert service.engine is None
