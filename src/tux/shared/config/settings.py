@@ -20,7 +20,7 @@ from pathlib import Path
 from pydantic import Field, computed_field
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
-from tux.shared.constants import CONST
+from tux.shared.constants import ENCODING_UTF8
 
 from .loaders import JsonConfigSource, TomlConfigSource, YamlConfigSource
 from .models import (
@@ -86,7 +86,7 @@ class Config(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_file=".env",
-        env_file_encoding=CONST.ENCODING_UTF8,
+        env_file_encoding=ENCODING_UTF8,
         env_nested_delimiter="__",
         case_sensitive=False,
         extra="ignore",
@@ -235,7 +235,7 @@ class Config(BaseSettings):
         if key and key.startswith("-----BEGIN"):
             return key
         try:
-            return base64.b64decode(key).decode(CONST.ENCODING_UTF8) if key else ""
+            return base64.b64decode(key).decode(ENCODING_UTF8) if key else ""
         except Exception:
             return key
 
