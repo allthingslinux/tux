@@ -47,6 +47,8 @@ jobs:
       contents: read
       pull-requests: write
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
       - name: Extract metadata

@@ -16,7 +16,6 @@
   "python.terminal.executeInFileDir": false,
   "python.testing.pytestEnabled": true,
   "python.testing.autoTestDiscoverOnSaveEnabled": false,
-  "autoDocstring.docstringFormat": "numpy",
   "coverage-gutters.coverageFileNames": [
     "coverage.xml",
     "coverage.lcov",
