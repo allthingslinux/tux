@@ -9,7 +9,7 @@ from discord import SelectOption
 from discord.ext import commands
 
 from tux.shared.config import CONFIG
-from tux.shared.constants import CONST
+from tux.shared.constants import EMBED_COLORS
 from tux.shared.version import get_version
 
 from .utils import format_multiline_description, truncate_description
@@ -33,7 +33,7 @@ class HelpRenderer:
         return discord.Embed(
             title=title,
             description=description,
-            color=CONST.EMBED_COLORS["DEFAULT"],
+            color=EMBED_COLORS["DEFAULT"],
         )
 
     def format_flag_details(self, command: commands.Command[Any, Any, Any]) -> str:

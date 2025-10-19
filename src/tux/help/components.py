@@ -15,7 +15,7 @@ from typing import Any, Protocol, TypeVar
 import discord
 from discord.ext import commands
 
-from tux.shared.constants import CONST
+from tux.shared.constants import EMBED_COLORS
 
 # Type aliases
 CommandT = TypeVar("CommandT", bound=commands.Command[Any, Any, Any])
@@ -405,7 +405,7 @@ class DirectHelpView(BaseHelpView):
         embed = discord.Embed(
             title=f"{prefix}{self.group.qualified_name}",
             description=formatted_help,
-            color=CONST.EMBED_COLORS["DEFAULT"],
+            color=EMBED_COLORS["DEFAULT"],
         )
 
         # Add basic command info
