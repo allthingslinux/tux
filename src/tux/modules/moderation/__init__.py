@@ -7,26 +7,30 @@ common moderation utilities.
 """
 
 from collections.abc import Sequence
-from typing import Any, ClassVar
+
+# Type annotation import
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import discord
 from discord.ext import commands
-from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.database.models import CaseType as DBCaseType
-from tux.services.moderation import ModerationCoordinator
+from tux.services.moderation import ModerationServiceFactory
+
+if TYPE_CHECKING:
+    from tux.services.moderation import ModerationCoordinator
 
 __all__ = ["ModerationCogBase"]
 
 
 class ModerationCogBase(BaseCog):
-    """Base class for moderation cogs with organized service management.
+    """Base class for moderation cogs with centralized service management.
 
     This class provides a foundation for moderation cogs with clean service
-    initialization and proper error handling. Services are created once per
-    cog instance and reused for all operations.
+    initialization using a factory pattern. Services are created once during
+    initialization and reused for all operations.
 
     Attributes
     ----------
@@ -38,49 +42,18 @@ class ModerationCogBase(BaseCog):
     REMOVAL_ACTIONS: ClassVar[set[DBCaseType]] = {DBCaseType.BAN, DBCaseType.KICK, DBCaseType.TEMPBAN}
 
     def __init__(self, bot: Tux) -> None:
-        """Initialize the moderation cog base."""
+        """Initialize the moderation cog base with services.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance
+        """
         super().__init__(bot)
-        self.moderation: ModerationCoordinator | None = None
 
-    async def cog_load(self) -> None:
-        """Initialize moderation services when the cog is loaded."""
-        await super().cog_load()
-
-        try:
-            await self._initialize_moderation_services()
-        except Exception as e:
-            logger.error(f"Failed to initialize moderation services for {self.__class__.__name__}: {e}")
-            raise
-
-    async def _initialize_moderation_services(self) -> None:
-        """Initialize moderation services with proper error handling."""
-        # Services are already initialized for this cog instance
-        if self.moderation is not None:
-            logger.debug(f"Moderation services already initialized for {self.__class__.__name__}")
-            return
-
-        logger.debug(f"Initializing moderation services for {self.__class__.__name__}")
-
-        # Create services with proper dependency injection
-        case_service, communication_service, execution_service = self._create_moderation_services()
-
-        self.moderation = ModerationCoordinator(
-            case_service=case_service,
-            communication_service=communication_service,
-            execution_service=execution_service,
-        )
-
-        logger.debug(f"Moderation services initialized successfully for {self.__class__.__name__}")
-
-    def _create_moderation_services(self) -> tuple[Any, Any, Any]:
-        """Create moderation service instances with their dependencies."""
-        from tux.services.moderation import CaseService, CommunicationService, ExecutionService  # noqa: PLC0415
-
-        case_service = CaseService(self.db.case)
-        communication_service = CommunicationService(self.bot)
-        execution_service = ExecutionService()
-
-        return case_service, communication_service, execution_service
+        # Initialize moderation services using factory pattern
+        # This avoids async initialization and duplicate service creation
+        self.moderation: ModerationCoordinator = ModerationServiceFactory.create_coordinator(bot, self.db.case)
 
     async def moderate_user(
         self,
@@ -94,11 +67,29 @@ class ModerationCogBase(BaseCog):
         duration: int | None = None,
         **kwargs: Any,
     ) -> None:
-        """Execute moderation action using the service architecture."""
-        if self.moderation is None:
-            msg = "Moderation service not initialized"
-            raise RuntimeError(msg)
+        """Execute moderation action using the service architecture.
 
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            Command context
+        case_type : DBCaseType
+            Type of moderation action
+        user : discord.Member | discord.User
+            Target user
+        reason : str
+            Reason for the action
+        silent : bool, optional
+            Whether to suppress DM to user, by default False
+        dm_action : str | None, optional
+            Custom DM action description, by default None
+        actions : Sequence[tuple[Any, type[Any]]] | None, optional
+            Discord API actions to execute, by default None
+        duration : int | None, optional
+            Duration in seconds for temporary actions, by default None
+        **kwargs : Any
+            Additional case data
+        """
         await self.moderation.execute_moderation_action(
             ctx=ctx,
             case_type=case_type,
@@ -112,7 +103,20 @@ class ModerationCogBase(BaseCog):
         )
 
     async def is_jailed(self, guild_id: int, user_id: int) -> bool:
-        """Check if a user is jailed."""
+        """Check if a user is jailed.
+
+        Parameters
+        ----------
+        guild_id : int
+            Guild ID to check
+        user_id : int
+            User ID to check
+
+        Returns
+        -------
+        bool
+            True if user is jailed, False otherwise
+        """
         latest_case = await self.db.case.get_latest_case_by_user(
             guild_id=guild_id,
             user_id=user_id,
@@ -120,7 +124,20 @@ class ModerationCogBase(BaseCog):
         return bool(latest_case and latest_case.case_type == DBCaseType.JAIL)
 
     async def is_pollbanned(self, guild_id: int, user_id: int) -> bool:
-        """Check if a user is poll banned."""
+        """Check if a user is poll banned.
+
+        Parameters
+        ----------
+        guild_id : int
+            Guild ID to check
+        user_id : int
+            User ID to check
+
+        Returns
+        -------
+        bool
+            True if user is poll banned, False otherwise
+        """
         latest_case = await self.db.case.get_latest_case_by_user(
             guild_id=guild_id,
             user_id=user_id,
@@ -128,7 +145,20 @@ class ModerationCogBase(BaseCog):
         return bool(latest_case and latest_case.case_type == DBCaseType.POLLBAN)
 
     async def is_snippetbanned(self, guild_id: int, user_id: int) -> bool:
-        """Check if a user is snippet banned."""
+        """Check if a user is snippet banned.
+
+        Parameters
+        ----------
+        guild_id : int
+            Guild ID to check
+        user_id : int
+            User ID to check
+
+        Returns
+        -------
+        bool
+            True if user is snippet banned, False otherwise
+        """
         latest_case = await self.db.case.get_latest_case_by_user(
             guild_id=guild_id,
             user_id=user_id,
