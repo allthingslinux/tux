@@ -6,7 +6,6 @@
     "detachhead.basedpyright",
     "ms-azuretools.vscode-docker",
     "charliermarsh.ruff",
-    "prisma.prisma",
     "kevinrose.vsc-python-indent",
     "mikestead.dotenv",
     "njpwerner.autodocstring",

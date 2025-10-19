@@ -27,7 +27,6 @@
         "ms-python.python",
         "detachhead.basedpyright",
         "charliermarsh.ruff",
-        "prisma.prisma",
         "kevinrose.vsc-python-indent",
         "mikestead.dotenv",
         "njpwerner.autodocstring",
