@@ -231,6 +231,7 @@ jobs:
           filter_mode: ${{ env.REVIEWDOG_FILTER_MODE }}
           fail_level: ${{ env.REVIEWDOG_FAIL_LEVEL }}
           hadolint_ignore: DL3008 DL3009
+          include: Containerfile
   yaml:
     name: YAML
     runs-on: ubuntu-latest
