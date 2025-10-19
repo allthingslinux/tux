@@ -14,7 +14,7 @@ from tux.core.bot import Tux
 from tux.core.checks import requires_command_permission
 from tux.core.flags import UnbanFlags
 from tux.database.models import CaseType as DBCaseType
-from tux.shared.constants import CONST
+from tux.shared.constants import DEFAULT_REASON
 
 from . import ModerationCogBase
 
@@ -154,7 +154,7 @@ class Unban(ModerationCogBase):
             await ctx.reply(f"{user} is not banned.", mention_author=False)
             return
 
-        final_reason = reason or CONST.DEFAULT_REASON
+        final_reason = reason or DEFAULT_REASON
         guild = ctx.guild
 
         await self._perform_unban(ctx, user, final_reason, guild)

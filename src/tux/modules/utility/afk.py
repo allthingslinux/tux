@@ -18,7 +18,7 @@ from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.database.models import AFK as AFKMODEL
 from tux.modules.utility import add_afk, del_afk
-from tux.shared.constants import CONST
+from tux.shared.constants import AFK_ALLOWED_MENTIONS, AFK_REASON_MAX_LENGTH, AFK_SLEEPING_EMOJI, TRUNCATION_SUFFIX
 
 
 class Afk(BaseCog):
@@ -64,21 +64,21 @@ class Afk(BaseCog):
         if entry is not None:
             await self._send_afk_response(
                 ctx,
-                f"{CONST.AFK_SLEEPING_EMOJI} || You are already AFK! Reason: `{entry.reason}`",
+                f"{AFK_SLEEPING_EMOJI} || You are already AFK! Reason: `{entry.reason}`",
             )
             return
 
         shortened_reason = textwrap.shorten(
             reason,
-            width=CONST.AFK_REASON_MAX_LENGTH,
-            placeholder=CONST.TRUNCATION_SUFFIX,
+            width=AFK_REASON_MAX_LENGTH,
+            placeholder=TRUNCATION_SUFFIX,
         )
 
         await add_afk(self.db, shortened_reason, target, ctx.guild.id, False)
 
         await self._send_afk_response(
             ctx,
-            f"{CONST.AFK_SLEEPING_EMOJI} || You are now afk! Reason: `{shortened_reason}`",
+            f"{AFK_SLEEPING_EMOJI} || You are now afk! Reason: `{shortened_reason}`",
         )
 
     @commands.hybrid_command(name="permafk")
@@ -106,19 +106,19 @@ class Afk(BaseCog):
 
         shortened_reason = textwrap.shorten(
             reason,
-            width=CONST.AFK_REASON_MAX_LENGTH,
-            placeholder=CONST.TRUNCATION_SUFFIX,
+            width=AFK_REASON_MAX_LENGTH,
+            placeholder=TRUNCATION_SUFFIX,
         )
         await add_afk(self.db, shortened_reason, target, ctx.guild.id, True)
 
         await self._send_afk_response(
             ctx,
-            f"{CONST.AFK_SLEEPING_EMOJI} || You are now permanently afk! To remove afk run this command again. Reason: `{shortened_reason}`",
+            f"{AFK_SLEEPING_EMOJI} || You are now permanently afk! To remove afk run this command again. Reason: `{shortened_reason}`",
         )
 
     async def _send_afk_response(self, ctx: commands.Context[Tux], content: str) -> None:
         """Send a response for AFK commands with consistent formatting."""
-        await ctx.reply(content=content, allowed_mentions=CONST.AFK_ALLOWED_MENTIONS, ephemeral=True)
+        await ctx.reply(content=content, allowed_mentions=AFK_ALLOWED_MENTIONS, ephemeral=True)
 
     async def _get_afk_entry(self, member_id: int, guild_id: int) -> AFKMODEL | None:
         """Get an AFK entry for a member in a guild."""
@@ -191,7 +191,7 @@ class Afk(BaseCog):
             for mentioned, afk in afks_mentioned
         ]
 
-        await message.reply(content="\n".join(msgs), allowed_mentions=CONST.AFK_ALLOWED_MENTIONS)
+        await message.reply(content="\n".join(msgs), allowed_mentions=AFK_ALLOWED_MENTIONS)
 
     @tasks.loop(seconds=120)
     async def handle_afk_expiration(self):

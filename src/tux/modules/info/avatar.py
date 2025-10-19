@@ -14,7 +14,7 @@ from discord.ext import commands
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.services.http_client import http_client
-from tux.shared.constants import CONST
+from tux.shared.constants import DEFAULT_DELETE_AFTER, FILE_EXT_PNG, HTTP_TIMEOUT
 
 
 class Avatar(BaseCog):
@@ -87,7 +87,7 @@ class Avatar(BaseCog):
         else:
             message = f"{member.display_name} has no avatar." if member != ctx.author else "You have no avatar."
 
-            await ctx.send(content=message, ephemeral=True, delete_after=CONST.DEFAULT_DELETE_AFTER)
+            await ctx.send(content=message, ephemeral=True, delete_after=DEFAULT_DELETE_AFTER)
 
     @staticmethod
     async def create_avatar_file(url: str) -> discord.File:
@@ -110,11 +110,11 @@ class Avatar(BaseCog):
             If the avatar cannot be fetched or processed.
         """
         try:
-            response = await http_client.get(url, timeout=CONST.HTTP_TIMEOUT)
+            response = await http_client.get(url, timeout=HTTP_TIMEOUT)
             response.raise_for_status()
 
             content_type = response.headers.get("Content-Type")
-            extension = mimetypes.guess_extension(content_type) or CONST.FILE_EXT_PNG
+            extension = mimetypes.guess_extension(content_type) or FILE_EXT_PNG
 
             image_data = response.content
             image_file = BytesIO(image_data)

@@ -10,7 +10,7 @@ from reactionmenu import ViewButton, ViewMenu
 
 from tux.core.bot import Tux
 from tux.database.models import Snippet
-from tux.shared.constants import CONST
+from tux.shared.constants import SNIPPET_PAGINATION_LIMIT
 
 from . import SnippetsBaseCog
 
@@ -82,8 +82,8 @@ class ListSnippets(SnippetsBaseCog):
         # Add pages based on filtered snippets
         total_snippets = len(filtered_snippets)
 
-        for i in range(0, total_snippets, CONST.SNIPPET_PAGINATION_LIMIT):
-            page_snippets = filtered_snippets[i : i + CONST.SNIPPET_PAGINATION_LIMIT]
+        for i in range(0, total_snippets, SNIPPET_PAGINATION_LIMIT):
+            page_snippets = filtered_snippets[i : i + SNIPPET_PAGINATION_LIMIT]
 
             embed = self._create_snippets_list_embed(
                 ctx,

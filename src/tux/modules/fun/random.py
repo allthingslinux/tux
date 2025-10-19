@@ -13,7 +13,7 @@ from discord.ext import commands
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
-from tux.shared.constants import CONST
+from tux.shared.constants import EIGHT_BALL_QUESTION_LENGTH_LIMIT, EIGHT_BALL_RESPONSE_WRAP_WIDTH
 from tux.shared.functions import truncate
 from tux.ui.embeds import EmbedCreator
 
@@ -129,7 +129,7 @@ class Random(BaseCog):
             [random.choice(yes_responses), random.choice(no_responses), random.choice(unsure_responses)],
         )
 
-        width = min(CONST.EIGHT_BALL_RESPONSE_WRAP_WIDTH, len(choice))
+        width = min(EIGHT_BALL_RESPONSE_WRAP_WIDTH, len(choice))
         chunks = wrap(choice, width)
 
         if len(chunks) > 1:
@@ -137,7 +137,7 @@ class Random(BaseCog):
 
         formatted_choice = f"  {'_' * width}\n< {' >\n< '.join(chunks)} >\n  {'-' * width}"
 
-        shortened_question = shorten(question, width=CONST.EIGHT_BALL_QUESTION_LENGTH_LIMIT, placeholder="...")
+        shortened_question = shorten(question, width=EIGHT_BALL_QUESTION_LENGTH_LIMIT, placeholder="...")
 
         response = f'Response to "{shortened_question}":\n{formatted_choice}'
 

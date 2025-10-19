@@ -11,7 +11,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.bot import Tux
-from tux.shared.constants import CONST
+from tux.shared.constants import DEFAULT_DELETE_AFTER, SNIPPET_ALLOWED_CHARS_REGEX, SNIPPET_MAX_NAME_LENGTH
 
 from . import SnippetsBaseCog
 
@@ -76,10 +76,10 @@ class CreateSnippet(SnippetsBaseCog):
             return
 
         # Validate snippet name format and length
-        if len(name) > CONST.SNIPPET_MAX_NAME_LENGTH or not re.match(CONST.SNIPPET_ALLOWED_CHARS_REGEX, name):
+        if len(name) > SNIPPET_MAX_NAME_LENGTH or not re.match(SNIPPET_ALLOWED_CHARS_REGEX, name):
             await self.send_snippet_error(
                 ctx,
-                description=f"Snippet name must be alphanumeric (allows dashes only) and less than {CONST.SNIPPET_MAX_NAME_LENGTH} characters.",
+                description=f"Snippet name must be alphanumeric (allows dashes only) and less than {SNIPPET_MAX_NAME_LENGTH} characters.",
             )
             return
 
@@ -99,7 +99,7 @@ class CreateSnippet(SnippetsBaseCog):
 
                 await ctx.send(
                     f"Snippet `{name}` created as an alias pointing to `{content}`.",
-                    delete_after=CONST.DEFAULT_DELETE_AFTER,
+                    delete_after=DEFAULT_DELETE_AFTER,
                     ephemeral=True,
                 )
 
@@ -114,7 +114,7 @@ class CreateSnippet(SnippetsBaseCog):
                 guild_id=guild_id,
             )
 
-            await ctx.send("Snippet created.", delete_after=CONST.DEFAULT_DELETE_AFTER, ephemeral=True)
+            await ctx.send("Snippet created.", delete_after=DEFAULT_DELETE_AFTER, ephemeral=True)
             logger.info(f"{ctx.author} created snippet '{name}'.")
 
         except Exception as e:

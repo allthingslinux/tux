@@ -17,7 +17,7 @@ from tux.core.checks import requires_command_permission
 from tux.core.flags import CaseModifyFlags, CasesViewFlags
 from tux.database.models import Case
 from tux.database.models import CaseType as DBCaseType
-from tux.shared.constants import CONST
+from tux.shared.constants import EMBED_COLORS
 from tux.ui.embeds import EmbedCreator, EmbedType
 
 from . import ModerationCogBase
@@ -446,7 +446,7 @@ class Cases(ModerationCogBase):
             embed = discord.Embed(
                 title=f"Case {action}",
                 description="Failed to find case.",
-                color=CONST.EMBED_COLORS["ERROR"],
+                color=EMBED_COLORS["ERROR"],
             )
             await ctx.send(embed=embed, ephemeral=True)
             return
@@ -456,7 +456,7 @@ class Cases(ModerationCogBase):
 
         embed = discord.Embed(
             title=f"Case #{case.case_number} ({case.case_type.value if case.case_type else 'UNKNOWN'}) {action}",
-            color=CONST.EMBED_COLORS["CASE"],
+            color=EMBED_COLORS["CASE"],
         )
 
         # Add fields to embed

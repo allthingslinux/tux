@@ -10,7 +10,7 @@ from discord.ext import commands
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
-from tux.modules.services.levels import LevelsService
+from tux.modules.features.levels import LevelsService
 from tux.shared.config import CONFIG
 from tux.ui.embeds import EmbedCreator, EmbedType
 

@@ -18,7 +18,7 @@ from reactionmenu import ViewButton, ViewMenu
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
-from tux.shared.constants import CONST
+from tux.shared.constants import BANS_LIMIT
 from tux.ui.embeds import EmbedCreator, EmbedType
 
 
@@ -207,7 +207,7 @@ class Info(BaseCog):
     #         .add_field(name="Roles", value=len(guild.roles))
     #         .add_field(name="Humans", value=sum(not member.bot for member in guild.members))
     #         .add_field(name="Bots", value=sum(member.bot for member in guild.members))
-    #         .add_field(name="Bans", value=len([entry async for entry in guild.bans(limit=CONST.BANS_LIMIT)]))
+    #         .add_field(name="Bans", value=len([entry async for entry in guild.bans(limit=BANS_LIMIT)]))
     #     )
 
     #     await ctx.send(embed=embed)
@@ -232,7 +232,7 @@ class Info(BaseCog):
             .add_field(name="Roles", value=len(guild.roles))
             .add_field(name="Humans", value=sum(not member.bot for member in guild.members))
             .add_field(name="Bots", value=sum(member.bot for member in guild.members))
-            .add_field(name="Bans", value=len([entry async for entry in guild.bans(limit=CONST.BANS_LIMIT)]))
+            .add_field(name="Bans", value=len([entry async for entry in guild.bans(limit=BANS_LIMIT)]))
         )
 
         await ctx.send(embed=embed)
@@ -603,7 +603,7 @@ class Info(BaseCog):
 
     #     roles: list[str] = [role.mention for role in guild.roles]
 
-    #     await self.paginated_embed(ctx, "Server Roles", "roles", guild.name, roles, CONST.ROLES_PER_PAGE)
+    #     await self.paginated_embed(ctx, "Server Roles", "roles", guild.name, roles, ROLES_PER_PAGE)
 
     # @info.command(
     #     name="emotes",
@@ -622,7 +622,7 @@ class Info(BaseCog):
     #     assert guild
 
     #     emotes: list[str] = [str(emote) for emote in guild.emojis]
-    #     await self.paginated_embed(ctx, "Server Emotes", "emotes", guild.name, emotes, CONST.EMOTES_PER_PAGE)
+    #     await self.paginated_embed(ctx, "Server Emotes", "emotes", guild.name, emotes, EMOTES_PER_PAGE)
 
     async def paginated_embed(
         self,
