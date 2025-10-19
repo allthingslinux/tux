@@ -179,24 +179,24 @@ See [LICENSE](LICENSE) for details.
 
 <table>
 <tr>
-<td align="left"><h3>Metrics</h3></td>
+<td align="left"><h2>Metrics</h2></td>
 </tr>
 <tr>
 <td><img src="https://repobeats.axiom.co/api/embed/b988ba04401b7c68edf9def00f5132cd2a7f3735.svg" alt="Metrics" width="100%"></td>
 </tr>
 <tr>
-<td align="right"><small><code>Made with <a href="https://repobeats.axiom.co">Repobeats</a></code></small></td>
+<td align="right"><small><code>via <a href="https://repobeats.axiom.co">Repobeats</a></code></small></td>
 </tr>
 </table>
 
 <table>
 <tr>
-<td align="left"><h3>Contributors</h3></td>
+<td align="left"><h2>Contributors</h2></td>
 </tr>
 <tr>
 <td><img src="https://contrib.rocks/image?repo=allthingslinux/tux" alt="Contributors" width="100%"></td>
 </tr>
 <tr>
-<td align="right"><small><code>Made with <a href="https://contrib.rocks">contrib.rocks</a></code></small></td>
+<td align="right"><small><code>via <a href="https://contrib.rocks">contrib.rocks</a></code></small></td>
 </tr>
 </table>
