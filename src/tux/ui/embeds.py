@@ -17,7 +17,7 @@ from loguru import logger
 if TYPE_CHECKING:  # Avoid runtime import cycle
     from tux.core.bot import Tux
 from tux.shared.config import CONFIG
-from tux.shared.constants import CONST
+from tux.shared.constants import EMBED_COLORS, EMBED_ICONS
 
 
 class EmbedType(Enum):
@@ -107,14 +107,14 @@ class EmbedCreator:
             embed: discord.Embed = discord.Embed(title=title, description=description)
 
             type_settings: dict[EmbedType, tuple[int, str, str]] = {
-                EmbedType.DEFAULT: (CONST.EMBED_COLORS["DEFAULT"], CONST.EMBED_ICONS["DEFAULT"], "Default"),
-                EmbedType.INFO: (CONST.EMBED_COLORS["INFO"], CONST.EMBED_ICONS["INFO"], "Info"),
-                EmbedType.ERROR: (CONST.EMBED_COLORS["ERROR"], CONST.EMBED_ICONS["ERROR"], "Error"),
-                EmbedType.WARNING: (CONST.EMBED_COLORS["WARNING"], CONST.EMBED_ICONS["DEFAULT"], "Warning"),
-                EmbedType.SUCCESS: (CONST.EMBED_COLORS["SUCCESS"], CONST.EMBED_ICONS["SUCCESS"], "Success"),
-                EmbedType.POLL: (CONST.EMBED_COLORS["POLL"], CONST.EMBED_ICONS["POLL"], "Poll"),
-                EmbedType.CASE: (CONST.EMBED_COLORS["CASE"], CONST.EMBED_ICONS["CASE"], "Case"),
-                EmbedType.NOTE: (CONST.EMBED_COLORS["NOTE"], CONST.EMBED_ICONS["NOTE"], "Note"),
+                EmbedType.DEFAULT: (EMBED_COLORS["DEFAULT"], EMBED_ICONS["DEFAULT"], "Default"),
+                EmbedType.INFO: (EMBED_COLORS["INFO"], EMBED_ICONS["INFO"], "Info"),
+                EmbedType.ERROR: (EMBED_COLORS["ERROR"], EMBED_ICONS["ERROR"], "Error"),
+                EmbedType.WARNING: (EMBED_COLORS["WARNING"], EMBED_ICONS["DEFAULT"], "Warning"),
+                EmbedType.SUCCESS: (EMBED_COLORS["SUCCESS"], EMBED_ICONS["SUCCESS"], "Success"),
+                EmbedType.POLL: (EMBED_COLORS["POLL"], EMBED_ICONS["POLL"], "Poll"),
+                EmbedType.CASE: (EMBED_COLORS["CASE"], EMBED_ICONS["CASE"], "Case"),
+                EmbedType.NOTE: (EMBED_COLORS["NOTE"], EMBED_ICONS["NOTE"], "Note"),
             }
 
             embed.color = type_settings[embed_type][0] if custom_color is None else custom_color
