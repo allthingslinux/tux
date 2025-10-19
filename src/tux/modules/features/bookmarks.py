@@ -17,7 +17,7 @@ from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
-from tux.shared.constants import CONST
+from tux.shared.constants import ADD_BOOKMARK, EMBED_MAX_DESC_LENGTH, REMOVE_BOOKMARK
 from tux.ui.embeds import EmbedCreator
 
 
@@ -37,8 +37,8 @@ class Bookmarks(BaseCog):
             The bot instance to attach this cog to.
         """
         super().__init__(bot)
-        self.add_bookmark_emojis = CONST.ADD_BOOKMARK
-        self.remove_bookmark_emojis = CONST.REMOVE_BOOKMARK
+        self.add_bookmark_emojis = ADD_BOOKMARK
+        self.remove_bookmark_emojis = REMOVE_BOOKMARK
         self.valid_emojis = self.add_bookmark_emojis + self.remove_bookmark_emojis
         self.session = aiohttp.ClientSession()
 
@@ -264,8 +264,8 @@ class Bookmarks(BaseCog):
         content = message.content or ""
 
         # Truncate the content if it's too long
-        if len(content) > CONST.EMBED_MAX_DESC_LENGTH:
-            content = f"{content[: CONST.EMBED_MAX_DESC_LENGTH - 4]}..."
+        if len(content) > EMBED_MAX_DESC_LENGTH:
+            content = f"{content[: EMBED_MAX_DESC_LENGTH - 4]}..."
 
         embed = EmbedCreator.create_embed(
             bot=self.bot,
