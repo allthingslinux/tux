@@ -9,7 +9,7 @@ from typing import TypedDict
 import httpx
 
 from tux.services.http_client import http_client
-from tux.shared.constants import CONST
+from tux.shared.constants import HTTP_NOT_FOUND, HTTP_OK
 from tux.shared.exceptions import (
     TuxAPIConnectionError,
     TuxAPIRequestError,
@@ -105,13 +105,13 @@ async def checkresponse(res: httpx.Response) -> str | None:
         The response from the Godbolt API if successful, otherwise None.
     """
     try:
-        return res.text if res.status_code == CONST.HTTP_OK else None
+        return res.text if res.status_code == HTTP_OK else None
     except httpx.ReadTimeout:
         return None
     except httpx.RequestError as e:
         raise TuxAPIConnectionError(service_name="Godbolt", original_error=e) from e
     except httpx.HTTPStatusError as e:
-        if e.response.status_code == CONST.HTTP_NOT_FOUND:
+        if e.response.status_code == HTTP_NOT_FOUND:
             raise TuxAPIResourceNotFoundError(service_name="Godbolt", resource_identifier=str(e.request.url)) from e
         raise TuxAPIRequestError(
             service_name="Godbolt",
@@ -142,7 +142,7 @@ async def sendresponse(url: str) -> str | None:
     except httpx.RequestError as e:
         raise TuxAPIConnectionError(service_name="Godbolt", original_error=e) from e
     except httpx.HTTPStatusError as e:
-        if e.response.status_code == CONST.HTTP_NOT_FOUND:
+        if e.response.status_code == HTTP_NOT_FOUND:
             raise TuxAPIResourceNotFoundError(service_name="Godbolt", resource_identifier=url) from e
         raise TuxAPIRequestError(
             service_name="Godbolt",
@@ -150,7 +150,7 @@ async def sendresponse(url: str) -> str | None:
             reason=e.response.text,
         ) from e
     else:
-        return response.text if response.status_code == CONST.HTTP_OK else None
+        return response.text if response.status_code == HTTP_OK else None
 
 
 async def getlanguages() -> str | None:
@@ -257,7 +257,7 @@ async def getoutput(code: str, lang: str, compileroptions: str | None = None) ->
     except httpx.RequestError as e:
         raise TuxAPIConnectionError(service_name="Godbolt", original_error=e) from e
     except httpx.HTTPStatusError as e:
-        if e.response.status_code == CONST.HTTP_NOT_FOUND:
+        if e.response.status_code == HTTP_NOT_FOUND:
             raise TuxAPIResourceNotFoundError(service_name="Godbolt", resource_identifier=lang) from e
         raise TuxAPIRequestError(
             service_name="Godbolt",
@@ -328,7 +328,7 @@ async def generateasm(code: str, lang: str, compileroptions: str | None = None) 
     except httpx.RequestError as e:
         raise TuxAPIConnectionError(service_name="Godbolt", original_error=e) from e
     except httpx.HTTPStatusError as e:
-        if e.response.status_code == CONST.HTTP_NOT_FOUND:
+        if e.response.status_code == HTTP_NOT_FOUND:
             raise TuxAPIResourceNotFoundError(service_name="Godbolt", resource_identifier=lang) from e
         raise TuxAPIRequestError(
             service_name="Godbolt",
