@@ -112,50 +112,45 @@ class Jail(ModerationCogBase):
             await ctx.send("User is already jailed.", ephemeral=True)
             return
 
-        # Use a transaction-like pattern to ensure consistency
-        try:
-            # Get roles that can be managed by the bot
-            user_roles = self._get_manageable_roles(member, jail_role)
-            user_role_ids = [role.id for role in user_roles]
+        # Get roles that can be managed by the bot
+        user_roles = self._get_manageable_roles(member, jail_role)
+        user_role_ids = [role.id for role in user_roles]
 
-            # Add jail role immediately - this is the most important part
-            await member.add_roles(jail_role, reason=flags.reason)
+        # Add jail role immediately - this is the most important part
+        # Exceptions will bubble to global error handler for proper user feedback
+        await member.add_roles(jail_role, reason=flags.reason)
 
-            # Send DM to member and handle case response using the moderation service
-            # The moderation service will handle case creation, DM sending, and response
-            await self.moderate_user(
-                ctx=ctx,
-                case_type=CaseType.JAIL,
-                user=member,
-                reason=flags.reason,
-                silent=flags.silent,
-                dm_action="jailed",
-                actions=[],  # No additional Discord actions needed for jail
-                duration=None,
-                case_user_roles=user_role_ids,  # Store roles for unjail
-            )
+        # Send DM to member and handle case response using the moderation service
+        # The moderation service will handle case creation, DM sending, and response
+        await self.moderate_user(
+            ctx=ctx,
+            case_type=CaseType.JAIL,
+            user=member,
+            reason=flags.reason,
+            silent=flags.silent,
+            dm_action="jailed",
+            actions=[],  # No additional Discord actions needed for jail
+            duration=None,
+            case_user_roles=user_role_ids,  # Store roles for unjail
+        )
 
-            # Remove old roles in the background after sending the response
-            if user_roles:
-                try:
-                    # Try to remove all at once for efficiency
-                    await member.remove_roles(*user_roles, reason=flags.reason)
-                except Exception as e:
-                    logger.warning(
-                        f"Failed to remove all roles at once from {member}, falling back to individual removal: {e}",
-                    )
-                    # Fall back to removing one by one
-                    for role in user_roles:
-                        try:
-                            await member.remove_roles(role, reason=flags.reason)
-                        except Exception as role_e:
-                            logger.error(f"Failed to remove role {role} from {member}: {role_e}")
-                            # Continue with other roles even if one fails
-
-        except Exception as e:
-            logger.error(f"Failed to jail {member}: {e}")
-            await ctx.send(f"Failed to jail {member}: {e}", ephemeral=True)
-            return
+        # Remove old roles in the background after sending the response
+        # Use graceful degradation - if some roles fail, continue with others
+        if user_roles:
+            try:
+                # Try to remove all at once for efficiency
+                await member.remove_roles(*user_roles, reason=flags.reason)
+            except Exception as e:
+                logger.warning(
+                    f"Failed to remove all roles at once from {member}, falling back to individual removal: {e}",
+                )
+                # Fall back to removing one by one
+                for role in user_roles:
+                    try:
+                        await member.remove_roles(role, reason=flags.reason)
+                    except Exception as role_e:
+                        logger.error(f"Failed to remove role {role} from {member}: {role_e}")
+                        # Continue with other roles even if one fails
 
     @staticmethod
     def _get_manageable_roles(
