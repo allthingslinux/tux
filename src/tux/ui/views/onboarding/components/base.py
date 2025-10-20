@@ -18,31 +18,76 @@ class WizardViewProtocol(Protocol):
     current_step: int
 
     # Required methods for wizard functionality
-    def build_permissions_step(self) -> None: ...  # noqa: D102
-    def build_channels_step(self) -> None: ...  # noqa: D102
-    def build_roles_step(self) -> None: ...  # noqa: D102
-    def build_welcome_step(self) -> None: ...  # noqa: D102
-    async def initialize_permissions(self, interaction: discord.Interaction) -> Any: ...  # noqa: D102
-    async def complete_setup(self, interaction: discord.Interaction) -> Any: ...  # noqa: D102
+    def build_permissions_step(self) -> None:
+        """Build the permissions configuration step."""
+        ...
+
+    def build_channels_step(self) -> None:
+        """Build the channels configuration step."""
+        ...
+
+    def build_roles_step(self) -> None:
+        """Build the roles configuration step."""
+        ...
+
+    def build_welcome_step(self) -> None:
+        """Build the welcome step."""
+        ...
+
+    async def initialize_permissions(self, interaction: discord.Interaction) -> Any:
+        """Initialize permission ranks for the guild."""
+        ...
+
+    async def complete_setup(self, interaction: discord.Interaction) -> Any:
+        """Complete the setup wizard."""
+        ...
 
     # Channel selection callbacks
-    async def on_mod_log_channel_select(self, interaction: discord.Interaction) -> None: ...  # noqa: D102
-    async def on_audit_log_channel_select(self, interaction: discord.Interaction) -> None: ...  # noqa: D102
-    async def on_join_log_channel_select(self, interaction: discord.Interaction) -> None: ...  # noqa: D102
-    async def on_private_log_channel_select(self, interaction: discord.Interaction) -> None: ...  # noqa: D102
-    async def on_report_log_channel_select(self, interaction: discord.Interaction) -> None: ...  # noqa: D102
-    async def on_dev_log_channel_select(self, interaction: discord.Interaction) -> None: ...  # noqa: D102
-    async def on_jail_channel_select(self, interaction: discord.Interaction) -> None: ...  # noqa: D102
-    async def on_jail_role_select(self, interaction: discord.Interaction) -> None: ...  # noqa: D102
-    async def on_permission_rank_role_select(  # noqa: D102
+    async def on_mod_log_channel_select(self, interaction: discord.Interaction) -> None:
+        """Handle moderation log channel selection."""
+        ...
+
+    async def on_audit_log_channel_select(self, interaction: discord.Interaction) -> None:
+        """Handle audit log channel selection."""
+        ...
+
+    async def on_join_log_channel_select(self, interaction: discord.Interaction) -> None:
+        """Handle join log channel selection."""
+        ...
+
+    async def on_private_log_channel_select(self, interaction: discord.Interaction) -> None:
+        """Handle private log channel selection."""
+        ...
+
+    async def on_report_log_channel_select(self, interaction: discord.Interaction) -> None:
+        """Handle report log channel selection."""
+        ...
+
+    async def on_dev_log_channel_select(self, interaction: discord.Interaction) -> None:
+        """Handle dev log channel selection."""
+        ...
+
+    async def on_jail_channel_select(self, interaction: discord.Interaction) -> None:
+        """Handle jail channel selection."""
+        ...
+
+    async def on_jail_role_select(self, interaction: discord.Interaction) -> None:
+        """Handle jail role selection."""
+        ...
+
+    async def on_permission_rank_role_select(
         self,
         interaction: discord.Interaction,
         rank: int,
         values: list[discord.Role],
-    ) -> None: ...
+    ) -> None:
+        """Handle permission rank role selection."""
+        ...
 
     # LayoutView methods
-    def stop(self) -> None: ...  # noqa: D102
+    def stop(self) -> None:
+        """Stop the wizard view."""
+        ...
 
 
 class WizardComponent:

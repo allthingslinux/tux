@@ -158,6 +158,24 @@ def create_instrumentation_wrapper[**P, R](
 
         @functools.wraps(func)
         async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            """
+            Async wrapper for instrumented functions.
+
+            This wrapper handles execution of async functions within a Sentry
+            context (span or transaction), capturing timing and error information.
+
+            Parameters
+            ----------
+            *args : P.args
+                Positional arguments passed to the wrapped function.
+            **kwargs : P.kwargs
+                Keyword arguments passed to the wrapped function.
+
+            Returns
+            -------
+            R
+                The return value from the wrapped function.
+            """
             start_time = time.perf_counter()
 
             if not sentry_sdk.is_initialized():
@@ -183,6 +201,24 @@ def create_instrumentation_wrapper[**P, R](
 
     @functools.wraps(func)
     def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        """
+        Sync wrapper for instrumented functions.
+
+        This wrapper handles execution of sync functions within a Sentry
+        context (span or transaction), capturing timing and error information.
+
+        Parameters
+        ----------
+        *args : P.args
+            Positional arguments passed to the wrapped function.
+        **kwargs : P.kwargs
+            Keyword arguments passed to the wrapped function.
+
+        Returns
+        -------
+        R
+            The return value from the wrapped function.
+        """
         start_time = time.perf_counter()
 
         if not sentry_sdk.is_initialized():
@@ -238,6 +274,19 @@ def transaction(
     """
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
+        """
+        Wrap a function with Sentry transaction instrumentation.
+
+        Parameters
+        ----------
+        func : Callable[P, R]
+            The function to wrap.
+
+        Returns
+        -------
+        Callable[P, R]
+            The wrapped function.
+        """
         # Early return if Sentry is not initialized to avoid wrapper overhead
         if not sentry_sdk.is_initialized():
             return func
@@ -246,6 +295,14 @@ def transaction(
         transaction_description = description or f"Executing {func.__qualname__}"
 
         def context_factory() -> Any:
+            """
+            Create Sentry transaction context.
+
+            Returns
+            -------
+            Any
+                Sentry transaction context manager.
+            """
             return sentry_sdk.start_transaction(
                 op=op,
                 name=transaction_name,
@@ -279,6 +336,19 @@ def span(op: str, description: str | None = None) -> Callable[[Callable[P, R]], 
     """
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
+        """
+        Wrap a function with Sentry span instrumentation.
+
+        Parameters
+        ----------
+        func : Callable[P, R]
+            The function to wrap.
+
+        Returns
+        -------
+        Callable[P, R]
+            The wrapped function.
+        """
         # Early return if Sentry is not initialized to avoid wrapper overhead
         if not sentry_sdk.is_initialized():
             return func
@@ -286,6 +356,14 @@ def span(op: str, description: str | None = None) -> Callable[[Callable[P, R]], 
         span_description = description or f"Executing {func.__qualname__}"
 
         def context_factory() -> Any:
+            """
+            Create Sentry span context.
+
+            Returns
+            -------
+            Any
+                Sentry span context manager.
+            """
             return sentry_sdk.start_span(op=op, description=span_description)
 
         return create_instrumentation_wrapper(func, context_factory, is_transaction=False)
@@ -541,6 +619,20 @@ def instrument_bot_commands(bot: commands.Bot) -> None:
             __txn_name: str = txn_name,
             **kwargs: Any,
         ) -> None:
+            """
+            Execute command callback with Sentry transaction instrumentation.
+
+            Parameters
+            ----------
+            *args : Any
+                Positional arguments passed to the command.
+            __orig_cb : Callable[..., Coroutine[Any, Any, None]]
+                Original command callback.
+            __txn_name : str
+                Transaction name for Sentry.
+            **kwargs : Any
+                Keyword arguments passed to the command.
+            """
             if not sentry_sdk.is_initialized():
                 return await __orig_cb(*args, **kwargs)
             with sentry_sdk.start_transaction(op=op, name=__txn_name):

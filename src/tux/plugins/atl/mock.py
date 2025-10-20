@@ -520,6 +520,14 @@ class Mock(BaseCog):
     """Mock plugin for Tux Bot."""
 
     def __init__(self, bot: Tux) -> None:
+        """
+        Initialize the Mock cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance.
+        """
         super().__init__(bot)
         self.error_registry = ErrorTestRegistry()
 

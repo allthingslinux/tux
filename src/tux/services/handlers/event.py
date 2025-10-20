@@ -13,6 +13,14 @@ class EventHandler(BaseCog):
     """Event handlers for Tux Bot such as on ready, on guild join, on guild remove, on message and on guild channel create."""
 
     def __init__(self, bot: Tux) -> None:
+        """
+        Initialize the EventHandler cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance.
+        """
         super().__init__(bot)
         self._guilds_registered = False
 

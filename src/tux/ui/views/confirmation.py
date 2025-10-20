@@ -75,6 +75,14 @@ class ConfirmationDanger(BaseConfirmationView):
     """Confirmation view with a danger button."""
 
     def __init__(self, user: int) -> None:
+        """
+        Initialize the danger confirmation view.
+
+        Parameters
+        ----------
+        user : int
+            The user ID that can interact with this view.
+        """
         super().__init__(user)
         self.confirm_label = "I understand and wish to proceed anyway"
         self.confirm_style = discord.ButtonStyle.danger
@@ -85,6 +93,14 @@ class ConfirmationNormal(BaseConfirmationView):
     """Confirmation view with a normal button."""
 
     def __init__(self, user: int) -> None:
+        """
+        Initialize the normal confirmation view.
+
+        Parameters
+        ----------
+        user : int
+            The user ID that can interact with this view.
+        """
         super().__init__(user)
         self.confirm_label = "Confirm"
         self.confirm_style = discord.ButtonStyle.green

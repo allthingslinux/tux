@@ -16,6 +16,7 @@ class ModLogChannelSelect(WizardComponent, discord.ui.ChannelSelect["SetupWizard
     """Moderation log channel select."""
 
     def __init__(self) -> None:
+        """Initialize the moderation log channel select."""
         super().__init__(
             placeholder="Choose moderation log channel...",
             channel_types=[discord.ChannelType.text],
@@ -41,6 +42,7 @@ class AuditLogChannelSelect(WizardComponent, discord.ui.ChannelSelect["SetupWiza
     """Audit log channel select."""
 
     def __init__(self) -> None:
+        """Initialize the audit log channel select."""
         super().__init__(
             placeholder="Choose audit log channel...",
             channel_types=[discord.ChannelType.text],
@@ -66,6 +68,7 @@ class JoinLogChannelSelect(WizardComponent, discord.ui.ChannelSelect["SetupWizar
     """Join log channel select."""
 
     def __init__(self) -> None:
+        """Initialize the join log channel select."""
         super().__init__(
             placeholder="Choose join/leave log channel...",
             channel_types=[discord.ChannelType.text],
@@ -91,6 +94,7 @@ class PrivateLogChannelSelect(WizardComponent, discord.ui.ChannelSelect["SetupWi
     """Private log channel select."""
 
     def __init__(self) -> None:
+        """Initialize the private log channel select."""
         super().__init__(
             placeholder="Choose private log channel...",
             channel_types=[discord.ChannelType.text],
@@ -116,6 +120,7 @@ class ReportLogChannelSelect(WizardComponent, discord.ui.ChannelSelect["SetupWiz
     """Report log channel select."""
 
     def __init__(self) -> None:
+        """Initialize the report log channel select."""
         super().__init__(
             placeholder="Choose report log channel...",
             channel_types=[discord.ChannelType.text],
@@ -141,6 +146,7 @@ class DevLogChannelSelect(WizardComponent, discord.ui.ChannelSelect["SetupWizard
     """Dev log channel select."""
 
     def __init__(self) -> None:
+        """Initialize the dev log channel select."""
         super().__init__(
             placeholder="Choose dev log channel...",
             channel_types=[discord.ChannelType.text],
@@ -166,6 +172,7 @@ class JailChannelSelect(WizardComponent, discord.ui.ChannelSelect["SetupWizardVi
     """Jail channel select."""
 
     def __init__(self) -> None:
+        """Initialize the jail channel select."""
         super().__init__(
             placeholder="Choose jail channel...",
             channel_types=[discord.ChannelType.text],
@@ -191,6 +198,18 @@ class PermissionRankRoleSelect(WizardComponent, discord.ui.RoleSelect["SetupWiza
     """Permission rank role select."""
 
     def __init__(self, rank: int, rank_name: str, placeholder: str | None = None) -> None:
+        """
+        Initialize the permission rank role select.
+
+        Parameters
+        ----------
+        rank : int
+            The permission rank level.
+        rank_name : str
+            The name of the permission rank.
+        placeholder : str | None, optional
+            Custom placeholder text, by default None.
+        """
         self.rank = rank
         self.rank_name = rank_name
         super().__init__(
@@ -218,6 +237,7 @@ class JailRoleSelect(WizardComponent, discord.ui.RoleSelect["SetupWizardView"]):
     """Jail role select."""
 
     def __init__(self) -> None:
+        """Initialize the jail role select."""
         super().__init__(
             placeholder="Choose jail role...",
             min_values=0,

@@ -25,6 +25,16 @@ class HotReload(commands.Cog):
     """Enhanced hot reload system with dependency tracking and performance monitoring."""
 
     def __init__(self, bot: "Tux", config: HotReloadConfig | None = None) -> None:
+        """
+        Initialize the hot reload service.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance.
+        config : HotReloadConfig | None, optional
+            Hot reload configuration, by default None.
+        """
         self.bot = bot
         self.config = config or HotReloadConfig()
 
@@ -106,6 +116,12 @@ class HotReload(commands.Cog):
 
             # Create debounced reload
             async def debounced_reload():
+                """
+                Execute debounced reload after delay.
+
+                This coroutine waits for the debounce period before executing the
+                reload to avoid multiple rapid reloads of the same extension.
+                """
                 await asyncio.sleep(self.config.debounce_delay)
                 if extension in self._pending_reloads:
                     del self._pending_reloads[extension]

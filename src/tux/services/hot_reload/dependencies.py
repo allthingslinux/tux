@@ -24,6 +24,7 @@ class ClassDefinitionTracker:
     """Tracks class definitions and their changes."""
 
     def __init__(self) -> None:
+        """Initialize the class definition tracker."""
         self._class_signatures: dict[str, dict[str, str]] = {}
 
     def extract_class_signatures(self, file_path: Path) -> dict[str, str]:
@@ -80,6 +81,14 @@ class DependencyGraph(DependencyTracker):
     """Tracks module dependencies using AST analysis."""
 
     def __init__(self, max_depth: int = 10) -> None:
+        """
+        Initialize the dependency graph.
+
+        Parameters
+        ----------
+        max_depth : int, optional
+            Maximum dependency depth to traverse, by default 10.
+        """
         self.max_depth = max_depth
         self._dependencies: dict[str, set[str]] = defaultdict(set)
         self._dependents: dict[str, set[str]] = defaultdict(set)
@@ -154,6 +163,16 @@ class DependencyGraph(DependencyTracker):
         visited: set[str] = set()
 
         def visit(module: str, depth: int = 0) -> None:
+            """
+            Visit a module and its dependencies to determine reload order.
+
+            Parameters
+            ----------
+            module : str
+                The module to visit.
+            depth : int, optional
+                Current depth in the dependency tree, by default 0.
+            """
             if depth > self.max_depth:
                 logger.warning(f"Max dependency depth reached for {module}")
                 return

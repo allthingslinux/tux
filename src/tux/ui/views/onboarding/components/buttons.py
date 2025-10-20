@@ -18,6 +18,7 @@ class StartButton(WizardComponent, discord.ui.Button["SetupWizardView"]):
     """Start setup button."""
 
     def __init__(self) -> None:
+        """Initialize the start button."""
         super().__init__(
             label="Start Setup",
             style=discord.ButtonStyle.primary,
@@ -52,6 +53,7 @@ class CancelButton(WizardComponent, discord.ui.Button["SetupWizardView"]):
     """Cancel setup button."""
 
     def __init__(self) -> None:
+        """Initialize the cancel button."""
         super().__init__(
             label="Cancel",
             style=discord.ButtonStyle.secondary,
@@ -77,6 +79,7 @@ class ContinueButton(WizardComponent, discord.ui.Button["SetupWizardView"]):
     """Continue button for the permissions step."""
 
     def __init__(self) -> None:
+        """Initialize the continue button."""
         super().__init__(
             label="Continue",
             style=discord.ButtonStyle.primary,
@@ -111,6 +114,7 @@ class BackButtonPermissions(WizardComponent, discord.ui.Button["SetupWizardView"
     """Back button for the permissions step."""
 
     def __init__(self) -> None:
+        """Initialize the back button for permissions step."""
         super().__init__(
             label="Back",
             style=discord.ButtonStyle.secondary,
@@ -141,6 +145,7 @@ class ContinueButtonChannels(WizardComponent, discord.ui.Button["SetupWizardView
     """Continue button for the channels step."""
 
     def __init__(self) -> None:
+        """Initialize the continue button for channels step."""
         super().__init__(
             label="Continue",
             style=discord.ButtonStyle.primary,
@@ -172,6 +177,7 @@ class BackButtonChannels(WizardComponent, discord.ui.Button["SetupWizardView"]):
     """Back button for the channels step."""
 
     def __init__(self) -> None:
+        """Initialize the back button for channels step."""
         super().__init__(
             label="Back",
             style=discord.ButtonStyle.secondary,
@@ -203,6 +209,7 @@ class ContinueButtonRoles(WizardComponent, discord.ui.Button["SetupWizardView"])
     """Continue button for the roles step."""
 
     def __init__(self) -> None:
+        """Initialize the continue button for roles step."""
         super().__init__(
             label="Continue",
             style=discord.ButtonStyle.primary,
@@ -232,6 +239,7 @@ class BackButtonRoles(WizardComponent, discord.ui.Button["SetupWizardView"]):
     """Back button for the roles step."""
 
     def __init__(self) -> None:
+        """Initialize the back button for roles step."""
         super().__init__(
             label="Back",
             style=discord.ButtonStyle.secondary,
@@ -263,6 +271,7 @@ class FinishButton(WizardComponent, discord.ui.Button["SetupWizardView"]):
     """Finish button for the completion step."""
 
     def __init__(self) -> None:
+        """Initialize the finish button."""
         super().__init__(
             label="Finish",
             style=discord.ButtonStyle.success,
@@ -316,6 +325,12 @@ class FinishButton(WizardComponent, discord.ui.Button["SetupWizardView"]):
 
             # Schedule deletion after 30 seconds
             async def delete_after_delay():
+                """
+                Delete the finished wizard message after a delay.
+
+                This coroutine waits 30 seconds after completion and then
+                deletes the wizard message to keep the channel clean.
+                """
                 await asyncio.sleep(30)
                 try:
                     if interaction.message:

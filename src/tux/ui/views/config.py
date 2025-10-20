@@ -113,6 +113,16 @@ class ConfigSetPrivateLogs(discord.ui.View):
         interaction: discord.Interaction,
         select: discord.ui.ChannelSelect[Any],
     ) -> None:
+        """
+        Set the dev log channel for the guild.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered this action.
+        select : discord.ui.ChannelSelect[Any]
+            The channel select component.
+        """
         if interaction.guild is None:
             return
 
@@ -128,6 +138,18 @@ class ConfigSetPublicLogs(discord.ui.View):
     """View for configuring public log channels."""
 
     def __init__(self, *, timeout: float = 180, bot: Any | None = None, db_service: DatabaseService | None = None):
+        """
+        Initialize the config view for public logs.
+
+        Parameters
+        ----------
+        timeout : float, optional
+            View timeout in seconds, by default 180.
+        bot : Any, optional
+            Bot instance for database access, by default None.
+        db_service : DatabaseService, optional
+            Direct database service instance, by default None.
+        """
         if db_service is not None:
             # If we have a DatabaseService, create a coordinator from it
 
@@ -154,6 +176,16 @@ class ConfigSetPublicLogs(discord.ui.View):
         interaction: discord.Interaction,
         select: discord.ui.ChannelSelect[Any],
     ) -> None:
+        """
+        Set the mod log channel for the guild.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered this action.
+        select : discord.ui.ChannelSelect[Any]
+            The channel select component.
+        """
         if interaction.guild is None:
             return
 
@@ -174,6 +206,16 @@ class ConfigSetPublicLogs(discord.ui.View):
         interaction: discord.Interaction,
         select: discord.ui.ChannelSelect[Any],
     ) -> None:
+        """
+        Set the audit log channel for the guild.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered this action.
+        select : discord.ui.ChannelSelect[Any]
+            The channel select component.
+        """
         if interaction.guild is None:
             return
 
@@ -194,6 +236,16 @@ class ConfigSetPublicLogs(discord.ui.View):
         interaction: discord.Interaction,
         select: discord.ui.ChannelSelect[Any],
     ) -> None:
+        """
+        Set the join log channel for the guild.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered this action.
+        select : discord.ui.ChannelSelect[Any]
+            The channel select component.
+        """
         if interaction.guild is None:
             return
 
@@ -209,6 +261,18 @@ class ConfigSetChannels(discord.ui.View):
     """View for configuring channels."""
 
     def __init__(self, *, timeout: float = 180, bot: Any | None = None, db_service: DatabaseService | None = None):
+        """
+        Initialize the config view for channels.
+
+        Parameters
+        ----------
+        timeout : float, optional
+            View timeout in seconds, by default 180.
+        bot : Any, optional
+            Bot instance for database access, by default None.
+        db_service : DatabaseService, optional
+            Direct database service instance, by default None.
+        """
         if db_service is not None:
             # If we have a DatabaseService, create a coordinator from it
 
@@ -235,6 +299,16 @@ class ConfigSetChannels(discord.ui.View):
         interaction: discord.Interaction,
         select: discord.ui.ChannelSelect[Any],
     ) -> None:
+        """
+        Set the jail channel for the guild.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered this action.
+        select : discord.ui.ChannelSelect[Any]
+            The channel select component.
+        """
         if interaction.guild is None:
             return
 
@@ -255,6 +329,16 @@ class ConfigSetChannels(discord.ui.View):
         interaction: discord.Interaction,
         select: discord.ui.ChannelSelect[Any],
     ) -> None:
+        """
+        Set the starboard channel for the guild.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered this action.
+        select : discord.ui.ChannelSelect[Any]
+            The channel select component.
+        """
         if interaction.guild is None:
             return
 
@@ -275,6 +359,16 @@ class ConfigSetChannels(discord.ui.View):
         interaction: discord.Interaction,
         select: discord.ui.ChannelSelect[Any],
     ) -> None:
+        """
+        Set the general channel for the guild.
+
+        Parameters
+        ----------
+        interaction : discord.Interaction
+            The interaction that triggered this action.
+        select : discord.ui.ChannelSelect[Any]
+            The channel select component.
+        """
         if interaction.guild is None:
             return
 

@@ -20,6 +20,14 @@ class Wolfram(BaseCog):
     """Wolfram cog for Tux Bot."""
 
     def __init__(self, bot: Tux) -> None:
+        """
+        Initialize the Wolfram cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance.
+        """
         super().__init__(bot)
 
         # Verify AppID configuration; unload cog if missing

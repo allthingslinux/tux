@@ -126,6 +126,7 @@ class FileHashTracker:
     """Tracks file hashes to detect changes."""
 
     def __init__(self) -> None:
+        """Initialize the file hash tracker."""
         self._hashes: dict[Path, str] = {}
 
     def get_file_hash(self, file_path: Path) -> str:

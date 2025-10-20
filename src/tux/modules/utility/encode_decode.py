@@ -59,6 +59,14 @@ class EncodeDecode(BaseCog):
     """Discord cog for text encoding and decoding operations."""
 
     def __init__(self, bot: Tux) -> None:
+        """
+        Initialize the EncodeDecode cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance.
+        """
         self.bot = bot
         self.encode.usage = generate_usage(self.encode)
         self.decode.usage = generate_usage(self.decode)

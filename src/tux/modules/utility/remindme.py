@@ -19,6 +19,14 @@ class RemindMe(BaseCog):
     """Reminder cog for Tux Bot."""
 
     def __init__(self, bot: Tux) -> None:
+        """
+        Initialize the RemindMe cog.
+
+        Parameters
+        ----------
+        bot : Tux
+            The bot instance.
+        """
         super().__init__(bot)
         self._initialized = False
 

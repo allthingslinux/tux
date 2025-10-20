@@ -25,6 +25,14 @@ class GuildPermissionRankController(BaseController[GuildPermissionRank]):
     """Controller for managing guild permission ranks."""
 
     def __init__(self, db: DatabaseService | None = None):
+        """
+        Initialize the guild permission rank controller.
+
+        Parameters
+        ----------
+        db : DatabaseService | None, optional
+            The database service instance. If None, uses the default service.
+        """
         super().__init__(GuildPermissionRank, db)
 
     async def create_permission_rank(

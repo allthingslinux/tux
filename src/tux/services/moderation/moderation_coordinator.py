@@ -284,6 +284,19 @@ class ModerationCoordinator:
 
         # Helper function to get mention safely (handles both real and mock objects)
         def get_mention(obj: Any) -> str:
+            """
+            Get mention string for a user object safely.
+
+            Parameters
+            ----------
+            obj : Any
+                The user or member object.
+
+            Returns
+            -------
+            str
+                The mention string or fallback name#discriminator format.
+            """
             if hasattr(obj, "mention"):
                 return obj.mention
             return f"{getattr(obj, 'name', 'Unknown')}#{getattr(obj, 'discriminator', '0000')}"

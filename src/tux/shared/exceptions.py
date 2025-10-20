@@ -266,6 +266,7 @@ class TuxInvalidCodeFormatError(TuxCodeExecutionError):
     """Raised when code format is invalid."""
 
     def __init__(self) -> None:
+        """Initialize the invalid code format error with usage instructions."""
         super().__init__(
             "Please provide code with syntax highlighting in this format:\n"
             '```\n`\u200b``python\nprint("Hello, World!")\n`\u200b``\n```',
@@ -299,6 +300,7 @@ class TuxCompilationError(TuxCodeExecutionError):
     """Raised when code compilation fails."""
 
     def __init__(self) -> None:
+        """Initialize the compilation error with default message."""
         super().__init__("Failed to get output from the compiler. The code may have compilation errors.")
 
 

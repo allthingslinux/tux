@@ -17,8 +17,13 @@ from .file_utils import FileHashTracker, get_extension_from_path, validate_pytho
 class FileSystemWatcherProtocol(Protocol):
     """Protocol for file system watchers."""
 
-    def start(self) -> None: ...  # noqa: D102
-    def stop(self) -> None: ...  # noqa: D102
+    def start(self) -> None:
+        """Start the file system watcher."""
+        ...
+
+    def stop(self) -> None:
+        """Stop the file system watcher."""
+        ...
 
 
 class CogWatcher(watchdog.events.FileSystemEventHandler):
@@ -31,6 +36,20 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         base_dir: Path,
         event_loop: asyncio.AbstractEventLoop | None = None,
     ) -> None:
+        """
+        Initialize the cog watcher.
+
+        Parameters
+        ----------
+        config : HotReloadConfig
+            Hot reload configuration.
+        reload_callback : Callable[[str], None]
+            Callback function to invoke when a reload is needed.
+        base_dir : Path
+            Base directory to watch.
+        event_loop : asyncio.AbstractEventLoop | None, optional
+            Event loop for async operations, by default None.
+        """
         super().__init__()
         self.config = config
         self.reload_callback = reload_callback
@@ -86,6 +105,12 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
                 try:
                     # Make the callback async by wrapping it
                     async def async_callback():
+                        """
+                        Async wrapper for reload callback.
+
+                        This coroutine wraps the reload callback to handle exceptions
+                        and ensure proper execution in the event loop.
+                        """
                         try:
                             self.reload_callback(extension)
                         except Exception as e:
@@ -123,6 +148,16 @@ class FileWatcher:
     """Manages file system watching for hot reload."""
 
     def __init__(self, config: HotReloadConfig, reload_callback: Callable[[str], None]) -> None:
+        """
+        Initialize the file watcher.
+
+        Parameters
+        ----------
+        config : HotReloadConfig
+            Hot reload configuration.
+        reload_callback : Callable[[str], None]
+            Callback function to invoke when a reload is needed.
+        """
         self.config = config
         self.reload_callback = reload_callback
         self.observer: Any = None  # Use Any to avoid watchdog typing issues

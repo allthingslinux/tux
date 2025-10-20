@@ -90,12 +90,19 @@ class DevCLI(BaseCLI):
             else:
                 self.console.print(cleaned_output)
 
-    def _run_tool_command(self, command: list[str], success_message: str) -> bool:
+    def _run_tool_command(
+        self,
+        command: list[str],
+        success_message: str,
+        print_stderr_on_success: bool = False,
+    ) -> bool:
         """Run a tool command and return success status."""
         try:
             result = subprocess.run(command, check=True, capture_output=True, text=True)
             if result.stdout:
                 self._print_output(result.stdout)
+            if print_stderr_on_success and result.stderr:
+                self._print_output(result.stderr)
         except subprocess.CalledProcessError as e:
             if e.stdout:
                 self._print_output(e.stdout)
@@ -161,8 +168,9 @@ class DevCLI(BaseCLI):
         """Check docstring coverage across the codebase."""
         self.rich.print_section("🔍 Docstring Coverage", "blue")
         self._run_tool_command(
-            ["uv", "run", "docstr-coverage", "."],
+            ["uv", "run", "docstr-coverage", "--verbose", "2", "."],
             "Docstring coverage report generated",
+            print_stderr_on_success=True,
         )
 
     def pre_commit(self) -> None:
