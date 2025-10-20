@@ -195,10 +195,6 @@ def configure_logging(
     # Log configuration summary
     logger.info(f"Logging configured at {log_level} level")
 
-    # Show verification details in debug mode
-    if log_level == "DEBUG":
-        verify_logging_interception()
-
 
 # =============================================================================
 # CONFIGURATION HELPERS
@@ -470,23 +466,14 @@ def _configure_third_party_logging() -> None:
     logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
 
     # Configure specific third-party library loggers
-    intercepted_count = 0
     for logger_name in INTERCEPTED_LIBRARIES:
         lib_logger = logging.getLogger(logger_name)
         lib_logger.handlers = [InterceptHandler()]
         lib_logger.propagate = False
-        intercepted_count += 1
 
     # Set minimum levels for third-party libraries
-    configured_count = 0
     for logger_name, level in THIRD_PARTY_LOG_LEVELS.items():
         logging.getLogger(logger_name).setLevel(level)
-        configured_count += 1
-
-    logger.debug(
-        f"Configured logging interception: {intercepted_count} libraries intercepted, "
-        f"{configured_count} libraries level-configured",
-    )
 
 
 def verify_logging_interception() -> None:
