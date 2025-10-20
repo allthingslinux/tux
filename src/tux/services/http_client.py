@@ -179,13 +179,6 @@ class HTTPClient:
         httpx.Response
             The HTTP response.
 
-        Raises
-        ------
-        httpx.HTTPStatusError
-            If the response status code indicates an error (4xx or 5xx).
-        httpx.RequestError
-            If the request fails due to connection issues.
-
         Examples
         --------
         >>> response = await http_client.get("https://api.github.com/repos/allthingslinux/tux")
@@ -212,13 +205,6 @@ class HTTPClient:
         httpx.Response
             The HTTP response.
 
-        Raises
-        ------
-        httpx.HTTPStatusError
-            If the response status code indicates an error.
-        httpx.RequestError
-            If the request fails due to connection issues.
-
         Examples
         --------
         >>> response = await http_client.post("https://api.example.com/submit", json={"message": "hello"})
@@ -242,13 +228,6 @@ class HTTPClient:
         -------
         httpx.Response
             The HTTP response.
-
-        Raises
-        ------
-        httpx.HTTPStatusError
-            If the response status code indicates an error.
-        httpx.RequestError
-            If the request fails due to connection issues.
         """
         client = await self.get_client()
         response = await client.put(url, **kwargs)
@@ -269,13 +248,6 @@ class HTTPClient:
         -------
         httpx.Response
             The HTTP response.
-
-        Raises
-        ------
-        httpx.HTTPStatusError
-            If the response status code indicates an error.
-        httpx.RequestError
-            If the request fails due to connection issues.
         """
         client = await self.get_client()
         response = await client.delete(url, **kwargs)
@@ -298,13 +270,6 @@ class HTTPClient:
         -------
         httpx.Response
             The HTTP response.
-
-        Raises
-        ------
-        httpx.HTTPStatusError
-            If the response status code indicates an error.
-        httpx.RequestError
-            If the request fails due to connection issues.
 
         Examples
         --------

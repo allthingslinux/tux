@@ -21,7 +21,13 @@ class ErrorFormatter:
         source: commands.Context[Tux] | discord.Interaction,
         config: ErrorHandlerConfig,
     ) -> discord.Embed:
-        """Create user-friendly error embed."""
+        """Create user-friendly error embed.
+
+        Returns
+        -------
+        discord.Embed
+            Formatted error embed for display.
+        """
         # Format the error message
         message = self._format_error_message(error, source, config)
 
@@ -44,7 +50,13 @@ class ErrorFormatter:
         source: commands.Context[Tux] | discord.Interaction,
         config: ErrorHandlerConfig,
     ) -> str:
-        """Format error message using configuration."""
+        """Format error message using configuration.
+
+        Returns
+        -------
+        str
+            Formatted error message.
+        """
         message_format = config.message_format
         kwargs: dict[str, Any] = {"error": error}
 
@@ -67,7 +79,13 @@ class ErrorFormatter:
             return fallback_format_message(message_format, error)
 
     def _get_command_usage(self, ctx: commands.Context[Tux]) -> str | None:
-        """Get command usage string."""
+        """Get command usage string.
+
+        Returns
+        -------
+        str | None
+            Command usage string if available, None otherwise.
+        """
         if not ctx.command:
             return None
 
@@ -84,7 +102,13 @@ class ErrorFormatter:
         return f"{prefix}{qualified_name}{f' {signature}' if signature else ''}"
 
     def get_error_config(self, error: Exception) -> ErrorHandlerConfig:
-        """Get configuration for error type."""
+        """Get configuration for error type.
+
+        Returns
+        -------
+        ErrorHandlerConfig
+            Configuration for the error type.
+        """
         error_type = type(error)
 
         # Check exact match

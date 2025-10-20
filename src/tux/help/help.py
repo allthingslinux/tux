@@ -39,7 +39,14 @@ class TuxHelp(commands.HelpCommand):
         )
 
     async def _setup_components(self) -> tuple[HelpData, HelpRenderer, HelpNavigation]:
-        """Initialize help components and return them."""
+        """
+        Initialize help components and return them.
+
+        Returns
+        -------
+        tuple[HelpData, HelpRenderer, HelpNavigation]
+            Tuple of (data, renderer, navigation) components.
+        """
         data = HelpData(self.context.bot)
         prefix = await data.get_prefix(self.context)
         renderer = HelpRenderer(prefix)

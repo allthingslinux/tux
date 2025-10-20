@@ -61,11 +61,6 @@ class Timeout(ModerationCogBase):
             The member to timeout.
         flags : TimeoutFlags
             The flags for the command (duration: str, silent: bool).
-
-        Raises
-        ------
-        discord.DiscordException
-            If an error occurs while timing out the user.
         """
         assert ctx.guild
 
@@ -133,10 +128,5 @@ async def setup(bot: Tux) -> None:
     ----------
     bot : Tux
         The bot instance to add the cog to.
-
-    Returns
-    -------
-    None
-        The cog is added to the bot.
     """
     await bot.add_cog(Timeout(bot))

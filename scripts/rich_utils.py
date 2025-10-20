@@ -65,7 +65,13 @@ class RichCLI:
         self.console.print(table)
 
     def create_progress_bar(self, description: str = "Processing...", total: int | None = None) -> Progress:
-        """Create a Rich progress bar with spinner and text."""
+        """Create a Rich progress bar with spinner and text.
+
+        Returns
+        -------
+        Progress
+            Configured Progress instance.
+        """
         # Build columns list conditionally based on whether total is provided
         columns: list[ProgressColumn] = [
             SpinnerColumn(),

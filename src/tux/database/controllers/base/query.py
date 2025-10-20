@@ -34,7 +34,14 @@ class QueryController[ModelT]:
         self.db = db
 
     def build_filters(self, filters: Any) -> Any:
-        """Build filter expressions from various input types."""
+        """
+        Build filter expressions from various input types.
+
+        Returns
+        -------
+        Any
+            Combined filter expression, or None if no filters.
+        """
         return build_filters_for_model(filters, self.model)
 
     async def find_one(
@@ -42,7 +49,14 @@ class QueryController[ModelT]:
         filters: Any | None = None,
         order_by: OrderByType | None = None,
     ) -> ModelT | None:
-        """Find one record."""
+        """
+        Find one record.
+
+        Returns
+        -------
+        ModelT | None
+            The found record, or None if not found.
+        """
         async with self.db.session() as session:
             stmt = select(self.model)
             filter_expr = self.build_filters(filters)
@@ -65,7 +79,14 @@ class QueryController[ModelT]:
         limit: int | None = None,
         offset: int | None = None,
     ) -> list[ModelT]:
-        """Find all records with performance optimizations."""
+        """
+        Find all records with performance optimizations.
+
+        Returns
+        -------
+        list[ModelT]
+            List of found records.
+        """
         async with self.db.session() as session:
             stmt = select(self.model)
             filter_expr = self.build_filters(filters)
@@ -97,7 +118,14 @@ class QueryController[ModelT]:
         offset: int | None = None,
         load_relationships: list[str] | None = None,
     ) -> list[ModelT]:
-        """Find all records with relationship loading options."""
+        """
+        Find all records with relationship loading options.
+
+        Returns
+        -------
+        list[ModelT]
+            List of found records with loaded relationships.
+        """
         async with self.db.session() as session:
             stmt = select(self.model)
             filter_expr = self.build_filters(filters)
@@ -121,7 +149,14 @@ class QueryController[ModelT]:
             return instances
 
     async def count(self, filters: Any | None = None) -> int:
-        """Count records."""
+        """
+        Count records.
+
+        Returns
+        -------
+        int
+            The count of matching records.
+        """
         async with self.db.session() as session:
             stmt = select(func.count()).select_from(self.model)
             filter_expr = self.build_filters(filters)
@@ -133,11 +168,25 @@ class QueryController[ModelT]:
             return count
 
     async def get_all(self, filters: Any | None = None, order_by: Any | None = None) -> list[ModelT]:
-        """Get all records (alias for find_all without pagination)."""
+        """
+        Get all records (alias for find_all without pagination).
+
+        Returns
+        -------
+        list[ModelT]
+            List of all matching records.
+        """
         return await self.find_all(filters=filters, order_by=order_by)
 
     async def execute_query(self, query: Any) -> Any:
-        """Execute a custom query."""
+        """
+        Execute a custom query.
+
+        Returns
+        -------
+        Any
+            The query result.
+        """
         async with self.db.session() as session:
             return await session.execute(query)
 
@@ -148,7 +197,14 @@ class QueryController[ModelT]:
         value: Any,
         filters: Any | None = None,
     ) -> list[ModelT]:
-        """Find records using JSON column queries."""
+        """
+        Find records using JSON column queries.
+
+        Returns
+        -------
+        list[ModelT]
+            List of records matching the JSON query.
+        """
         async with self.db.session() as session:
             json_col = getattr(self.model, json_column)
             stmt = select(self.model).where(json_col[json_path].as_string() == str(value))
@@ -166,7 +222,14 @@ class QueryController[ModelT]:
         value: Any,
         filters: Any | None = None,
     ) -> list[ModelT]:
-        """Find records where array column contains value."""
+        """
+        Find records where array column contains value.
+
+        Returns
+        -------
+        list[ModelT]
+            List of records with matching array values.
+        """
         async with self.db.session() as session:
             array_col = getattr(self.model, array_column)
             stmt = select(self.model).where(array_col.contains([value]))
@@ -184,7 +247,14 @@ class QueryController[ModelT]:
         search_term: str,
         filters: Any | None = None,
     ) -> list[ModelT]:
-        """Find records using full-text search."""
+        """
+        Find records using full-text search.
+
+        Returns
+        -------
+        list[ModelT]
+            List of records matching the search term.
+        """
         async with self.db.session() as session:
             search_vector = func.to_tsvector(
                 "english",

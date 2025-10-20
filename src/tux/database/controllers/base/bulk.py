@@ -29,7 +29,14 @@ class BulkOperationsController[ModelT]:
         self.db = db
 
     async def bulk_create(self, items: list[dict[str, Any]]) -> list[ModelT]:
-        """Create multiple records in bulk."""
+        """
+        Create multiple records in bulk.
+
+        Returns
+        -------
+        list[ModelT]
+            List of created records.
+        """
         logger.debug(f"Bulk creating {len(items)} {self.model.__name__} records")
         async with self.db.session() as session:
             instances = [self.model(**item) for item in items]
@@ -44,7 +51,14 @@ class BulkOperationsController[ModelT]:
             return instances
 
     async def bulk_update(self, updates: list[tuple[Any, dict[str, Any]]]) -> int:
-        """Update multiple records in bulk."""
+        """
+        Update multiple records in bulk.
+
+        Returns
+        -------
+        int
+            Number of records updated.
+        """
         logger.debug(f"Bulk updating {len(updates)} {self.model.__name__} records")
         async with self.db.session() as session:
             updated_count = 0
@@ -60,7 +74,14 @@ class BulkOperationsController[ModelT]:
             return updated_count
 
     async def bulk_delete(self, record_ids: list[Any]) -> int:
-        """Delete multiple records in bulk."""
+        """
+        Delete multiple records in bulk.
+
+        Returns
+        -------
+        int
+            Number of records deleted.
+        """
         logger.debug(f"Bulk deleting {len(record_ids)} {self.model.__name__} records")
         async with self.db.session() as session:
             stmt = delete(self.model).where(self.model.id.in_(record_ids))  # type: ignore[attr-defined]
@@ -71,7 +92,14 @@ class BulkOperationsController[ModelT]:
             return len(record_ids)
 
     async def update_where(self, filters: Any, values: dict[str, Any]) -> int:
-        """Update records matching filters."""
+        """
+        Update records matching filters.
+
+        Returns
+        -------
+        int
+            Number of records updated.
+        """
         async with self.db.session() as session:
             filter_expr = build_filters_for_model(filters, self.model)
 
@@ -85,7 +113,14 @@ class BulkOperationsController[ModelT]:
             return 0
 
     async def delete_where(self, filters: Any) -> int:
-        """Delete records matching filters."""
+        """
+        Delete records matching filters.
+
+        Returns
+        -------
+        int
+            Number of records deleted.
+        """
         async with self.db.session() as session:
             filter_expr = build_filters_for_model(filters, self.model)
 
@@ -104,7 +139,14 @@ class BulkOperationsController[ModelT]:
         conflict_columns: list[str],
         update_columns: list[str] | None = None,
     ) -> list[ModelT]:
-        """Bulk upsert with conflict resolution."""
+        """
+        Bulk upsert with conflict resolution.
+
+        Returns
+        -------
+        list[ModelT]
+            List of upserted records.
+        """
         async with self.db.session() as session:
             instances: list[ModelT] = []
 

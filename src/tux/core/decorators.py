@@ -36,7 +36,8 @@ F = TypeVar("F", bound=Callable[..., Awaitable[Any]])
 
 
 def requires_command_permission(*, allow_unconfigured: bool = False) -> Callable[[F], F]:
-    """Provide dynamic, database-driven command permissions.
+    """
+    Provide dynamic, database-driven command permissions.
 
     This decorator provides fully dynamic permission checking that reads
     required permission ranks from the database per guild. Commands are
@@ -52,13 +53,6 @@ def requires_command_permission(*, allow_unconfigured: bool = False) -> Callable
     -------
     Callable[[F], F]
         The decorated function with permission checking.
-
-    Raises
-    ------
-    TuxPermissionDeniedError
-        When user lacks required permissions.
-    ValueError
-        When context or interaction cannot be extracted from arguments.
     """
 
     def decorator(func: F) -> F:

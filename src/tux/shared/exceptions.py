@@ -357,8 +357,6 @@ def handle_gather_result(result: T | BaseException, expected_type: type[T]) -> T
 
     Raises
     ------
-    BaseException
-        If the result is an exception
     TypeError
         If the result is not of the expected type
     """
@@ -382,12 +380,5 @@ def handle_case_result(case_result: Case | BaseException) -> Case:
     -------
     Case
         The case if valid
-
-    Raises
-    ------
-    BaseException
-        If the result is an exception
-    TypeError
-        If the result is not a Case
     """
     return handle_gather_result(case_result, Case)

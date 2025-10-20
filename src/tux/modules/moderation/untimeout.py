@@ -58,11 +58,6 @@ class Untimeout(ModerationCogBase):
             The member to remove timeout from.
         flags : UntimeoutFlags
             The flags for the command. (reason: str, silent: bool)
-
-        Raises
-        ------
-        discord.DiscordException
-            If an error occurs while removing the timeout.
         """
         assert ctx.guild
 
@@ -90,10 +85,5 @@ async def setup(bot: Tux) -> None:
     ----------
     bot : Tux
         The bot instance to add the cog to.
-
-    Returns
-    -------
-    None
-        The cog is added to the bot.
     """
     await bot.add_cog(Untimeout(bot))

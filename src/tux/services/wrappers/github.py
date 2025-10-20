@@ -29,7 +29,14 @@ class GithubService:
     """GitHub API service wrapper for repository and issue management."""
 
     def __init__(self) -> None:
-        """Initialize the GitHub service with app credentials."""
+        """
+        Initialize the GitHub service with app credentials.
+
+        Raises
+        ------
+        ValueError
+            If any required GitHub configuration is missing or invalid.
+        """
         # Check if GitHub configuration is available
         if not CONFIG.EXTERNAL_SERVICES.GITHUB_APP_ID:
             msg = "GitHub App ID is not configured. Please set EXTERNAL_SERVICES__GITHUB_APP_ID in your .env file."
@@ -76,6 +83,17 @@ class GithubService:
         -------
         FullRepository
             The repository.
+
+        Raises
+        ------
+        TuxAPIConnectionError
+            If connection to GitHub API fails.
+        TuxAPIPermissionError
+            If insufficient permissions to access the repository.
+        TuxAPIRequestError
+            If the API request fails for other reasons.
+        TuxAPIResourceNotFoundError
+            If the repository is not found.
         """
         try:
             response: Response[FullRepository] = await self.github.rest.repos.async_get(
@@ -122,6 +140,15 @@ class GithubService:
         -------
         Issue
             The created issue.
+
+        Raises
+        ------
+        TuxAPIConnectionError
+            If connection to GitHub API fails.
+        TuxAPIPermissionError
+            If insufficient permissions.
+        TuxAPIRequestError
+            If the API request fails.
         """
         try:
             response: Response[Issue] = await self.github.rest.issues.async_create(
@@ -166,6 +193,17 @@ class GithubService:
         -------
         IssueComment
             The created issue comment.
+
+        Raises
+        ------
+        TuxAPIConnectionError
+            If connection to GitHub API fails.
+        TuxAPIPermissionError
+            If insufficient permissions.
+        TuxAPIRequestError
+            If the API request fails.
+        TuxAPIResourceNotFoundError
+            If the issue is not found.
         """
         try:
             response: Response[IssueComment] = await self.github.rest.issues.async_create_comment(
@@ -212,6 +250,17 @@ class GithubService:
         -------
         Issue
             The closed issue.
+
+        Raises
+        ------
+        TuxAPIConnectionError
+            If connection to GitHub API fails.
+        TuxAPIPermissionError
+            If insufficient permissions.
+        TuxAPIRequestError
+            If the API request fails.
+        TuxAPIResourceNotFoundError
+            If the issue is not found.
         """
         try:
             response: Response[Issue] = await self.github.rest.issues.async_update(
@@ -258,6 +307,15 @@ class GithubService:
         -------
         Issue
             The issue.
+
+        Raises
+        ------
+        TuxAPIConnectionError
+            If connection to GitHub API fails.
+        TuxAPIRequestError
+            If the API request fails.
+        TuxAPIResourceNotFoundError
+            If the issue is not found.
         """
         try:
             response: Response[Issue] = await self.github.rest.issues.async_get(
@@ -296,6 +354,13 @@ class GithubService:
         -------
         list[Issue]
             The list of open issues.
+
+        Raises
+        ------
+        TuxAPIConnectionError
+            If connection to GitHub API fails.
+        TuxAPIRequestError
+            If the API request fails.
         """
         try:
             response: Response[list[Issue]] = await self.github.rest.issues.async_list_for_repo(
@@ -329,6 +394,13 @@ class GithubService:
         -------
         list[Issue]
             The list of closed issues.
+
+        Raises
+        ------
+        TuxAPIConnectionError
+            If connection to GitHub API fails.
+        TuxAPIRequestError
+            If the API request fails.
         """
         try:
             response: Response[list[Issue]] = await self.github.rest.issues.async_list_for_repo(
@@ -362,6 +434,13 @@ class GithubService:
         -------
         list[PullRequestSimple]
             The list of open pulls.
+
+        Raises
+        ------
+        TuxAPIConnectionError
+            If connection to GitHub API fails.
+        TuxAPIRequestError
+            If the API request fails.
         """
         try:
             response: Response[list[PullRequestSimple]] = await self.github.rest.pulls.async_list(
@@ -395,6 +474,13 @@ class GithubService:
         -------
         list[PullRequestSimple]
             The list of closed pulls.
+
+        Raises
+        ------
+        TuxAPIConnectionError
+            If connection to GitHub API fails.
+        TuxAPIRequestError
+            If the API request fails.
         """
         try:
             response: Response[list[PullRequestSimple]] = await self.github.rest.pulls.async_list(
@@ -433,6 +519,15 @@ class GithubService:
         -------
         PullRequest
             The pull request.
+
+        Raises
+        ------
+        TuxAPIConnectionError
+            If connection to GitHub API fails.
+        TuxAPIRequestError
+            If the API request fails.
+        TuxAPIResourceNotFoundError
+            If the pull request is not found.
         """
         try:
             response: Response[PullRequest] = await self.github.rest.pulls.async_get(

@@ -179,7 +179,19 @@ class HotReload(commands.Cog):
             ) / total_reloads
 
     async def _perform_reload(self, extension: str) -> bool:
-        """Perform the actual extension reload."""
+        """
+        Perform the actual extension reload.
+
+        Returns
+        -------
+        bool
+            True if reload was successful, False otherwise.
+
+        Raises
+        ------
+        ModuleReloadError
+            If reload fails and continue_on_error is False.
+        """
         try:
             # Check if extension is loaded
             if extension not in self.bot.extensions:

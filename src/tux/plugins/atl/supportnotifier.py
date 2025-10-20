@@ -40,7 +40,8 @@ class SupportNotifier(BaseCog):
 
     @commands.Cog.listener()
     async def on_thread_create(self, thread: discord.Thread) -> None:
-        """Handle new thread creation events.
+        """
+        Handle new thread creation events.
 
         Monitors for new threads in the support forum and sends notifications
         to designated roles with thread information and tags.
@@ -49,11 +50,6 @@ class SupportNotifier(BaseCog):
         ----------
         thread : discord.Thread
             The newly created thread.
-
-        Returns
-        -------
-        None
-            Sends notification embed to the configured channel if it's a support thread.
         """
         if thread.parent_id == SUPPORT_FORUM_ID:
             owner_mention = thread.owner.mention if thread.owner else {thread.owner_id}
@@ -79,16 +75,12 @@ class SupportNotifier(BaseCog):
 
 
 async def setup(bot: Tux) -> None:
-    """Set up the SupportNotifier cog.
+    """
+    Set up the SupportNotifier cog.
 
     Parameters
     ----------
     bot : Tux
         The bot instance to add the cog to.
-
-    Returns
-    -------
-    None
-        The cog is added to the bot.
     """
     await bot.add_cog(SupportNotifier(bot))

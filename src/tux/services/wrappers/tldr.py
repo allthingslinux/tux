@@ -440,7 +440,13 @@ class TldrClient:
         show_long: bool,
         show_both: bool,
     ) -> tuple[list[str], int]:
-        """Process consecutive description lines starting with '>'."""
+        """Process consecutive description lines starting with '>'.
+
+        Returns
+        -------
+        tuple[list[str], int]
+            Tuple of (parsed description lines, updated line index).
+        """
         description_lines: list[str] = []
         while i < len(lines):
             line = lines[i].rstrip()
@@ -465,7 +471,13 @@ class TldrClient:
         show_long: bool,
         show_both: bool,
     ) -> tuple[list[str], int]:
-        """Process command examples and descriptions."""
+        """Process command examples and descriptions.
+
+        Returns
+        -------
+        tuple[list[str], int]
+            Tuple of (formatted command lines, updated line index).
+        """
         formatted: list[str] = []
         last_was_command = False
         first_description_found = False

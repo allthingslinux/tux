@@ -30,10 +30,6 @@ def insert_returns(body: list[ast.stmt]) -> None:
     ----------
     body : list[ast.stmt]
         The body of the function definition.
-
-    Returns
-    -------
-    None
     """
     # Insert return statement if the last expression is a expression statement
     if isinstance(body[-1], ast.Expr):

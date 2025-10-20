@@ -25,6 +25,11 @@ class ReportModal(discord.ui.Modal):
             The modal title, by default "Submit an anonymous report".
         bot : Tux
             The bot instance to use for database access and operations.
+
+        Raises
+        ------
+        RuntimeError
+            If DatabaseService is not available via DI.
         """
         super().__init__(title=title)
         self.bot = bot

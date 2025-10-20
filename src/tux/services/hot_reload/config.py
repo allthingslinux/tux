@@ -36,7 +36,14 @@ class HotReloadConfig:
     enable_class_tracking: bool = True
 
     def __post_init__(self) -> None:
-        """Validate configuration after initialization."""
+        """
+        Validate configuration after initialization.
+
+        Raises
+        ------
+        ValueError
+            If any configuration value is invalid.
+        """
         if self.debounce_delay < 0:
             msg = "debounce_delay must be non-negative"
             raise ValueError(msg)
@@ -69,7 +76,14 @@ class ConfigurationError(HotReloadError):
 
 
 def validate_config(config: HotReloadConfig) -> None:
-    """Validate hot reload configuration."""
+    """
+    Validate hot reload configuration.
+
+    Raises
+    ------
+    ConfigurationError
+        If the configuration is invalid.
+    """
     if not config.watch_directories:
         msg = "At least one watch directory must be specified"
         raise ConfigurationError(msg)

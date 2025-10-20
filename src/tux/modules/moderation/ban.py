@@ -50,13 +50,6 @@ class Ban(ModerationCogBase):
             The member to ban.
         flags : BanFlags
             The flags for the command. (reason: str, purge: int (< 7), silent: bool)
-
-        Raises
-        ------
-        discord.Forbidden
-            If the bot is unable to ban the user.
-        discord.HTTPException
-            If an error occurs while banning the user.
         """
         assert ctx.guild
 

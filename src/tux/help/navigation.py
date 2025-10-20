@@ -108,7 +108,14 @@ class HelpNavigation:
             self.current_subcommand_page = 0
 
     async def _create_paginated_embed(self) -> discord.Embed:
-        """Create an embed showing the current page of subcommands."""
+        """
+        Create an embed showing the current page of subcommands.
+
+        Returns
+        -------
+        discord.Embed
+            The embed for the current subcommand page.
+        """
         if not self.current_command_obj:
             # Create a basic embed if no command object
             return self.renderer.create_base_embed("Help", "No command information available.")
@@ -151,7 +158,14 @@ class HelpNavigation:
         return embed
 
     async def _find_parent_command(self, subcommand_name: str) -> tuple[str, commands.Command[Any, Any, Any]] | None:
-        """Find the parent command for a given subcommand."""
+        """
+        Find the parent command for a given subcommand.
+
+        Returns
+        -------
+        tuple[str, commands.Command[Any, Any, Any]] | None
+            Tuple of (parent_name, parent_command) if found, None otherwise.
+        """
         if not self.data.command_mapping:
             return None
 
@@ -162,7 +176,14 @@ class HelpNavigation:
         return None
 
     async def create_main_view(self) -> HelpView:
-        """Create main help view."""
+        """
+        Create main help view.
+
+        Returns
+        -------
+        HelpView
+            The main help view with category selection.
+        """
         categories = await self.data.get_command_categories()
         options = self.renderer.create_category_options(categories)
 
@@ -172,7 +193,14 @@ class HelpNavigation:
         return view
 
     async def create_category_view(self, category: str) -> HelpView:
-        """Create category view."""
+        """
+        Create category view.
+
+        Returns
+        -------
+        HelpView
+            The category view with command selection.
+        """
         categories = await self.data.get_command_categories()
         commands_dict = categories.get(category, {})
         command_mapping = self.data.command_mapping.get(category, {}) if self.data.command_mapping else {}
@@ -185,7 +213,14 @@ class HelpNavigation:
         return view
 
     async def create_command_view(self) -> HelpView:
-        """Create command view."""
+        """
+        Create command view.
+
+        Returns
+        -------
+        HelpView
+            The command view with command details and navigation.
+        """
         view = HelpView(self)
 
         # Add back button first
@@ -240,7 +275,14 @@ class HelpNavigation:
         return view
 
     async def create_subcommand_view(self) -> HelpView:
-        """Create subcommand view."""
+        """
+        Create subcommand view.
+
+        Returns
+        -------
+        HelpView
+            The subcommand view with subcommand details.
+        """
         view = HelpView(self)
 
         if len(self.subcommand_pages) > 1:

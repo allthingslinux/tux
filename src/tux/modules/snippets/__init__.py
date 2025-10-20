@@ -120,7 +120,14 @@ class SnippetsBaseCog(BaseCog):
         )
 
     async def check_if_user_has_mod_override(self, ctx: commands.Context[Tux]) -> bool:
-        """Check if the user invoking the command has moderator permissions (rank >= 2)."""
+        """
+        Check if the user invoking the command has moderator permissions (rank >= 2).
+
+        Returns
+        -------
+        bool
+            True if user has moderator permissions, False otherwise.
+        """
         try:
             if not ctx.guild:
                 return False

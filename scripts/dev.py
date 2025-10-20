@@ -96,7 +96,13 @@ class DevCLI(BaseCLI):
         success_message: str,
         print_stderr_on_success: bool = False,
     ) -> bool:
-        """Run a tool command and return success status."""
+        """Run a tool command and return success status.
+
+        Returns
+        -------
+        bool
+            True if command succeeded, False otherwise.
+        """
         try:
             result = subprocess.run(command, check=True, capture_output=True, text=True)
             if result.stdout:

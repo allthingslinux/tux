@@ -29,23 +29,51 @@ class TransactionController[ModelT]:
         self.db = db
 
     async def with_session[R](self, operation: Callable[[AsyncSession], Awaitable[R]]) -> R:
-        """Execute operation within a session context."""
+        """
+        Execute operation within a session context.
+
+        Returns
+        -------
+        R
+            The result of the operation.
+        """
         async with self.db.session() as session:
             return await operation(session)
 
     async def with_transaction[R](self, operation: Callable[[AsyncSession], Awaitable[R]]) -> R:
-        """Execute operation within a transaction context."""
+        """
+        Execute operation within a transaction context.
+
+        Returns
+        -------
+        R
+            The result of the operation.
+        """
         async with self.db.session() as session, session.begin():
             return await operation(session)
 
     async def execute_transaction(self, callback: Callable[[], Any]) -> Any:
-        """Execute a callback within a transaction."""
+        """
+        Execute a callback within a transaction.
+
+        Returns
+        -------
+        Any
+            The result of the callback.
+        """
         async with self.db.session() as session, session.begin():
             return await callback()
 
     @staticmethod
     def safe_get_attr(obj: Any, attr: str, default: Any = None) -> Any:
-        """Safely get attribute from object."""
+        """
+        Safely get attribute from object.
+
+        Returns
+        -------
+        Any
+            The attribute value, or default if not found.
+        """
         try:
             return getattr(obj, attr, default)
         except (AttributeError, TypeError):

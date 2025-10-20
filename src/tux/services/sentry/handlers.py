@@ -8,7 +8,14 @@ from sentry_sdk.types import Event, Hint
 
 
 def before_send(event: Event, hint: Hint) -> Event | None:
-    """Filter and modify events before sending to Sentry."""
+    """
+    Filter and modify events before sending to Sentry.
+
+    Returns
+    -------
+    Event | None
+        The event if it should be sent, None if it should be filtered out.
+    """
     excluded_loggers = {
         "discord.gateway",
         "discord.client",
@@ -23,7 +30,14 @@ def before_send(event: Event, hint: Hint) -> Event | None:
 
 
 def before_send_transaction(event: Event, hint: Hint) -> Event | None:
-    """Filter and group spans before sending transaction events."""
+    """
+    Filter and group spans before sending transaction events.
+
+    Returns
+    -------
+    Event | None
+        The modified transaction event.
+    """
     if "spans" in event:
         spans = event["spans"]
         if isinstance(spans, list):
@@ -32,7 +46,14 @@ def before_send_transaction(event: Event, hint: Hint) -> Event | None:
 
 
 def traces_sampler(sampling_context: dict[str, Any]) -> float:
-    """Determine sampling rate for traces based on context."""
+    """
+    Determine sampling rate for traces based on context.
+
+    Returns
+    -------
+    float
+        Sampling rate between 0.0 and 1.0.
+    """
     transaction_context = sampling_context.get("transaction_context", {})
     op = transaction_context.get("op", "")
     if op in ["discord.command", "discord.interaction"]:
@@ -43,7 +64,14 @@ def traces_sampler(sampling_context: dict[str, Any]) -> float:
 
 
 def get_span_operation_mapping(op: str) -> str:
-    """Map span operations to standardized names."""
+    """
+    Map span operations to standardized names.
+
+    Returns
+    -------
+    str
+        Standardized operation name.
+    """
     mapping = {
         "db": "database.query",
         "database": "database.query",
@@ -67,7 +95,14 @@ def get_span_operation_mapping(op: str) -> str:
 
 
 def get_transaction_operation_mapping(transaction_name: str) -> str:
-    """Map transaction names to standardized operations."""
+    """
+    Map transaction names to standardized operations.
+
+    Returns
+    -------
+    str
+        Standardized operation name.
+    """
     name_lower = transaction_name.lower()
 
     # Define keyword mappings
@@ -87,7 +122,14 @@ def get_transaction_operation_mapping(transaction_name: str) -> str:
 
 
 def _filter_and_group_spans(spans: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Filter and group spans to reduce noise."""
+    """
+    Filter and group spans to reduce noise.
+
+    Returns
+    -------
+    list[dict[str, Any]]
+        Filtered and grouped spans.
+    """
     filtered_spans: list[dict[str, Any]] = []
     span_groups: dict[str, list[dict[str, Any]]] = {}
 

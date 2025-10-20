@@ -53,13 +53,6 @@ class Kick(ModerationCogBase):
             The member to kick.
         flags : KickFlags
             The flags for the command. (reason: str, silent: bool)
-
-        Raises
-        ------
-        discord.Forbidden
-            If the bot is unable to kick the user.
-        discord.HTTPException
-            If an error occurs while kicking the user.
         """
         assert ctx.guild
 

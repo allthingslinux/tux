@@ -28,6 +28,11 @@ class ConfigSetPrivateLogs(discord.ui.View):
             Bot instance for database access, by default None.
         db_service : DatabaseService, optional
             Direct database service instance, by default None.
+
+        Raises
+        ------
+        RuntimeError
+            If DatabaseCoordinator is not available via DI.
         """
         if db_service is not None:
             # If we have a DatabaseService, create a coordinator from it
@@ -149,6 +154,11 @@ class ConfigSetPublicLogs(discord.ui.View):
             Bot instance for database access, by default None.
         db_service : DatabaseService, optional
             Direct database service instance, by default None.
+
+        Raises
+        ------
+        RuntimeError
+            If DatabaseCoordinator is not available via DI.
         """
         if db_service is not None:
             # If we have a DatabaseService, create a coordinator from it
@@ -272,6 +282,11 @@ class ConfigSetChannels(discord.ui.View):
             Bot instance for database access, by default None.
         db_service : DatabaseService, optional
             Direct database service instance, by default None.
+
+        Raises
+        ------
+        RuntimeError
+            If DatabaseCoordinator is not available via DI.
         """
         if db_service is not None:
             # If we have a DatabaseService, create a coordinator from it

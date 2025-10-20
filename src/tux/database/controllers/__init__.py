@@ -65,12 +65,18 @@ class DatabaseCoordinator:
     """
 
     def __init__(self, db: DatabaseService | None = None):
-        """Initialize the database coordinator.
+        """
+        Initialize the database coordinator.
 
         Parameters
         ----------
         db : DatabaseService, optional
             The database service instance. If None, raises RuntimeError.
+
+        Raises
+        ------
+        RuntimeError
+            If no database service is provided.
         """
         if db is None:
             error_msg = "DatabaseService must be provided. Use DI container to get the service."

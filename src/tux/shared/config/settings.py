@@ -37,7 +37,14 @@ from .models import (
 
 
 def validate_environment() -> None:
-    """Validate critical environment variables for security and correctness."""
+    """
+    Validate critical environment variables for security and correctness.
+
+    Raises
+    ------
+    ValueError
+        If an insecure default password is used.
+    """
     # Check database password strength - exclude known Docker passwords
     db_password = os.getenv("POSTGRES_PASSWORD", "")
     weak_passwords = ["password", "admin", "postgres", "123456", "qwerty"]
@@ -210,31 +217,72 @@ class Config(BaseSettings):
         return f"postgresql+psycopg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{host}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     def get_prefix(self) -> str:
-        """Get command prefix for current environment."""
+        """
+        Get command prefix for current environment.
+
+        Returns
+        -------
+        str
+            The configured command prefix.
+        """
         return self.BOT_INFO.PREFIX
 
     def is_prefix_override_enabled(self) -> bool:
-        """Check if prefix override is enabled by environment variable.
+        """
+        Check if prefix override is enabled by environment variable.
 
         Returns True if BOT_INFO__PREFIX was explicitly set in environment variables,
         indicating the user wants to override all database prefix settings.
+
+        Returns
+        -------
+        bool
+            True if prefix override is enabled, False otherwise.
         """
         return "BOT_INFO__PREFIX" in os.environ
 
     def is_debug_enabled(self) -> bool:
-        """Check if debug mode is enabled."""
+        """
+        Check if debug mode is enabled.
+
+        Returns
+        -------
+        bool
+            True if debug mode is enabled, False otherwise.
+        """
         return self.DEBUG
 
     def get_cog_ignore_list(self) -> set[str]:
-        """Get cog ignore list for current environment."""
+        """
+        Get cog ignore list for current environment.
+
+        Returns
+        -------
+        set[str]
+            Set of cog names to ignore.
+        """
         return {"test", "example"}
 
     def get_database_url(self) -> str:
-        """Legacy method - use database_url property instead."""
+        """
+        Legacy method - use database_url property instead.
+
+        Returns
+        -------
+        str
+            The database connection URL.
+        """
         return self.database_url
 
     def get_github_private_key(self) -> str:
-        """Get the GitHub private key, handling base64 encoding if needed."""
+        """
+        Get the GitHub private key, handling base64 encoding if needed.
+
+        Returns
+        -------
+        str
+            The decoded GitHub private key.
+        """
         key = self.EXTERNAL_SERVICES.GITHUB_PRIVATE_KEY
         if key and key.startswith("-----BEGIN"):
             return key

@@ -231,6 +231,11 @@ class DatabaseCLI(BaseCLI):
         uv run db dev                           # Create + apply with auto-generated name
         uv run db dev --name "add user model"   # Create + apply with custom name
         uv run db dev --create-only             # Create only, don't apply
+
+        Raises
+        ------
+        Exit
+            If migration creation fails.
         """
         self.rich.print_section("🚀 Development Workflow", "blue")
 
@@ -306,6 +311,11 @@ class DatabaseCLI(BaseCLI):
         --------
         uv run db new "add user email field"        # Auto-generate from model changes
         uv run db new "custom migration" --no-auto  # Empty migration for manual edits
+
+        Raises
+        ------
+        Exit
+            If migration generation fails.
         """
         self.rich.print_section("📝 New Migration", "blue")
         self.rich.rich_print(f"[bold blue]Generating migration: {message}[/bold blue]")

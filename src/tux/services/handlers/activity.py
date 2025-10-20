@@ -47,7 +47,13 @@ class ActivityHandler(commands.Cog):
 
     @staticmethod
     def build_activity_list() -> list[discord.Activity | discord.Streaming | discord.Game]:
-        """Build activity list from config or return default."""
+        """Build activity list from config or return default.
+
+        Returns
+        -------
+        list[discord.Activity | discord.Streaming | discord.Game]
+            List of activities for bot status rotation.
+        """
         activities_config = getattr(CONFIG, "ACTIVITIES", None)
 
         if not activities_config or not str(activities_config).strip():
@@ -112,7 +118,13 @@ class ActivityHandler(commands.Cog):
         self,
         activity: discord.Activity | discord.Streaming | discord.Game,
     ) -> discord.Activity | discord.Streaming | discord.Game:
-        """Create new activity with substituted name."""
+        """Create new activity with substituted name.
+
+        Returns
+        -------
+        discord.Activity | discord.Streaming | discord.Game
+            Activity with placeholders replaced.
+        """
         if not hasattr(activity, "name") or not activity.name:
             return activity
 
@@ -130,7 +142,13 @@ class ActivityHandler(commands.Cog):
             self._activity_task = asyncio.create_task(self._activity_loop())
 
     async def _activity_loop(self) -> None:
-        """Rotate activities."""
+        """Rotate activities.
+
+        Raises
+        ------
+        CancelledError
+            If task is cancelled during execution.
+        """
         try:
             await asyncio.sleep(5)  # Wait for bot to be ready
 

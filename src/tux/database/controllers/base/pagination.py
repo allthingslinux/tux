@@ -53,7 +53,14 @@ class PaginationController[ModelT]:
         filters: Any | None = None,
         order_by: Any | None = None,
     ) -> PaginationResult[ModelT]:
-        """Paginate records with metadata."""
+        """
+        Paginate records with metadata.
+
+        Returns
+        -------
+        PaginationResult[ModelT]
+            Pagination result with items, total, and page info.
+        """
         query_controller = QueryController(self.model, self.db)
 
         # Get total count
@@ -91,7 +98,14 @@ class PaginationController[ModelT]:
         order_by: Any | None = None,
         load_relationships: list[str] | None = None,
     ) -> PaginationResult[ModelT]:
-        """Find paginated records with relationship loading."""
+        """
+        Find paginated records with relationship loading.
+
+        Returns
+        -------
+        PaginationResult[ModelT]
+            Pagination result with items and relationships loaded.
+        """
         query_controller = QueryController(self.model, self.db)
 
         # Get total count

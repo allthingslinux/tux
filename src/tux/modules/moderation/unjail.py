@@ -168,13 +168,6 @@ class Unjail(ModerationCogBase):
             The member to unjail.
         flags : UnjailFlags
             The flags for the command. (reason: str, silent: bool)
-
-        Raises
-        ------
-        discord.Forbidden
-            If the bot is unable to unjail the user.
-        discord.HTTPException
-            If an error occurs while unjailing the user.
         """
         assert ctx.guild
 

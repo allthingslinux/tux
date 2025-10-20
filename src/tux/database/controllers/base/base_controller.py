@@ -66,41 +66,90 @@ class BaseController[ModelT]:
     # Properties for test compatibility
     @property
     def db_service(self) -> DatabaseService:
-        """Database service property for test compatibility."""
+        """
+        Database service property for test compatibility.
+
+        Returns
+        -------
+        DatabaseService
+            The database service instance.
+        """
         return self.db
 
     @property
     def model_class(self) -> type[ModelT]:
-        """Model class property for test compatibility."""
+        """
+        Model class property for test compatibility.
+
+        Returns
+        -------
+        type[ModelT]
+            The SQLModel class.
+        """
         return self.model
 
     # Lazy initialization helpers
     def _get_pagination(self) -> PaginationController[ModelT]:
-        """Get or create pagination controller."""
+        """
+        Get or create pagination controller.
+
+        Returns
+        -------
+        PaginationController[ModelT]
+            The pagination controller instance.
+        """
         if self._pagination is None:
             self._pagination = PaginationController(self.model, self.db)
         return self._pagination
 
     def _get_bulk(self) -> BulkOperationsController[ModelT]:
-        """Get or create bulk operations controller."""
+        """
+        Get or create bulk operations controller.
+
+        Returns
+        -------
+        BulkOperationsController[ModelT]
+            The bulk operations controller instance.
+        """
         if self._bulk is None:
             self._bulk = BulkOperationsController(self.model, self.db)
         return self._bulk
 
     def _get_transaction(self) -> TransactionController[ModelT]:
-        """Get or create transaction controller."""
+        """
+        Get or create transaction controller.
+
+        Returns
+        -------
+        TransactionController[ModelT]
+            The transaction controller instance.
+        """
         if self._transaction is None:
             self._transaction = TransactionController(self.model, self.db)
         return self._transaction
 
     def _get_performance(self) -> PerformanceController[ModelT]:
-        """Get or create performance controller."""
+        """
+        Get or create performance controller.
+
+        Returns
+        -------
+        PerformanceController[ModelT]
+            The performance controller instance.
+        """
         if self._performance is None:
             self._performance = PerformanceController(self.model, self.db)
         return self._performance
 
     def _get_upsert(self) -> UpsertController[ModelT]:
-        """Get or create upsert controller."""
+        """
+        Get or create upsert controller.
+
+        Returns
+        -------
+        UpsertController[ModelT]
+            The upsert controller instance.
+        """
         if self._upsert is None:
             self._upsert = UpsertController(self.model, self.db)
         return self._upsert
@@ -110,23 +159,58 @@ class BaseController[ModelT]:
     # ------------------------------------------------------------------
 
     async def create(self, **kwargs: Any) -> ModelT:
-        """Create a new record."""
+        """
+        Create a new record.
+
+        Returns
+        -------
+        ModelT
+            The newly created record.
+        """
         return await self._crud.create(**kwargs)
 
     async def get_by_id(self, record_id: Any) -> ModelT | None:
-        """Get a record by ID."""
+        """
+        Get a record by ID.
+
+        Returns
+        -------
+        ModelT | None
+            The record if found, None otherwise.
+        """
         return await self._crud.get_by_id(record_id)
 
     async def update_by_id(self, record_id: Any, **values: Any) -> ModelT | None:
-        """Update a record by ID."""
+        """
+        Update a record by ID.
+
+        Returns
+        -------
+        ModelT | None
+            The updated record, or None if not found.
+        """
         return await self._crud.update_by_id(record_id, **values)
 
     async def delete_by_id(self, record_id: Any) -> bool:
-        """Delete a record by ID."""
+        """
+        Delete a record by ID.
+
+        Returns
+        -------
+        bool
+            True if deleted successfully, False otherwise.
+        """
         return await self._crud.delete_by_id(record_id)
 
     async def exists(self, filters: Any) -> bool:
-        """Check if a record exists."""
+        """
+        Check if a record exists.
+
+        Returns
+        -------
+        bool
+            True if record exists, False otherwise.
+        """
         return await self._crud.exists(filters)
 
     # ------------------------------------------------------------------
@@ -134,7 +218,14 @@ class BaseController[ModelT]:
     # ------------------------------------------------------------------
 
     async def find_one(self, filters: Any | None = None, order_by: Any | None = None) -> ModelT | None:
-        """Find one record."""
+        """
+        Find one record.
+
+        Returns
+        -------
+        ModelT | None
+            The found record, or None if not found.
+        """
         return await self._query.find_one(filters, order_by)
 
     async def find_all(
@@ -144,7 +235,14 @@ class BaseController[ModelT]:
         limit: int | None = None,
         offset: int | None = None,
     ) -> list[ModelT]:
-        """Find all records with performance optimizations."""
+        """
+        Find all records with performance optimizations.
+
+        Returns
+        -------
+        list[ModelT]
+            List of found records.
+        """
         return await self._query.find_all(filters, order_by, limit, offset)
 
     async def find_all_with_options(
@@ -155,19 +253,47 @@ class BaseController[ModelT]:
         offset: int | None = None,
         load_relationships: list[str] | None = None,
     ) -> list[ModelT]:
-        """Find all records with relationship loading options."""
+        """
+        Find all records with relationship loading options.
+
+        Returns
+        -------
+        list[ModelT]
+            List of found records with loaded relationships.
+        """
         return await self._query.find_all_with_options(filters, order_by, limit, offset, load_relationships)
 
     async def count(self, filters: Any | None = None) -> int:
-        """Count records."""
+        """
+        Count records.
+
+        Returns
+        -------
+        int
+            The count of matching records.
+        """
         return await self._query.count(filters)
 
     async def get_all(self, filters: Any | None = None, order_by: Any | None = None) -> list[ModelT]:
-        """Get all records (alias for find_all without pagination)."""
+        """
+        Get all records (alias for find_all without pagination).
+
+        Returns
+        -------
+        list[ModelT]
+            List of all matching records.
+        """
         return await self._query.get_all(filters, order_by)
 
     async def execute_query(self, query: Any) -> Any:
-        """Execute a custom query."""
+        """
+        Execute a custom query.
+
+        Returns
+        -------
+        Any
+            The query result.
+        """
         return await self._query.execute_query(query)
 
     async def find_with_json_query(
@@ -177,7 +303,14 @@ class BaseController[ModelT]:
         value: Any,
         filters: Any | None = None,
     ) -> list[ModelT]:
-        """Find records using JSON column queries."""
+        """
+        Find records using JSON column queries.
+
+        Returns
+        -------
+        list[ModelT]
+            List of records matching the JSON query.
+        """
         return await self._query.find_with_json_query(json_column, json_path, value, filters)
 
     async def find_with_array_contains(
@@ -186,7 +319,14 @@ class BaseController[ModelT]:
         value: Any,
         filters: Any | None = None,
     ) -> list[ModelT]:
-        """Find records where array column contains value."""
+        """
+        Find records where array column contains value.
+
+        Returns
+        -------
+        list[ModelT]
+            List of records with matching array values.
+        """
         return await self._query.find_with_array_contains(array_column, value, filters)
 
     async def find_with_full_text_search(
@@ -195,7 +335,14 @@ class BaseController[ModelT]:
         search_term: str,
         filters: Any | None = None,
     ) -> list[ModelT]:
-        """Find records using full-text search."""
+        """
+        Find records using full-text search.
+
+        Returns
+        -------
+        list[ModelT]
+            List of records matching the search term.
+        """
         return await self._query.find_with_full_text_search(search_columns, search_term, filters)
 
     # ------------------------------------------------------------------
@@ -209,7 +356,14 @@ class BaseController[ModelT]:
         filters: Any | None = None,
         order_by: Any | None = None,
     ) -> PaginationResult[ModelT]:
-        """Paginate records with metadata."""
+        """
+        Paginate records with metadata.
+
+        Returns
+        -------
+        PaginationResult[ModelT]
+            Pagination result with items, total, and page info.
+        """
         return await self._get_pagination().paginate(page, per_page, filters, order_by)
 
     async def find_paginated(
@@ -220,7 +374,14 @@ class BaseController[ModelT]:
         order_by: Any | None = None,
         load_relationships: list[str] | None = None,
     ) -> PaginationResult[ModelT]:
-        """Find paginated records with relationship loading."""
+        """
+        Find paginated records with relationship loading.
+
+        Returns
+        -------
+        PaginationResult[ModelT]
+            Pagination result with items and relationships loaded.
+        """
         return await self._get_pagination().find_paginated(page, per_page, filters, order_by, load_relationships)
 
     # ------------------------------------------------------------------
@@ -228,23 +389,58 @@ class BaseController[ModelT]:
     # ------------------------------------------------------------------
 
     async def bulk_create(self, items: list[dict[str, Any]]) -> list[ModelT]:
-        """Create multiple records in bulk."""
+        """
+        Create multiple records in bulk.
+
+        Returns
+        -------
+        list[ModelT]
+            List of created records.
+        """
         return await self._get_bulk().bulk_create(items)
 
     async def bulk_update(self, updates: list[tuple[Any, dict[str, Any]]]) -> int:
-        """Update multiple records in bulk."""
+        """
+        Update multiple records in bulk.
+
+        Returns
+        -------
+        int
+            Number of records updated.
+        """
         return await self._get_bulk().bulk_update(updates)
 
     async def bulk_delete(self, record_ids: list[Any]) -> int:
-        """Delete multiple records in bulk."""
+        """
+        Delete multiple records in bulk.
+
+        Returns
+        -------
+        int
+            Number of records deleted.
+        """
         return await self._get_bulk().bulk_delete(record_ids)
 
     async def update_where(self, filters: Any, values: dict[str, Any]) -> int:
-        """Update records matching filters."""
+        """
+        Update records matching filters.
+
+        Returns
+        -------
+        int
+            Number of records updated.
+        """
         return await self._get_bulk().update_where(filters, values)
 
     async def delete_where(self, filters: Any) -> int:
-        """Delete records matching filters."""
+        """
+        Delete records matching filters.
+
+        Returns
+        -------
+        int
+            Number of records deleted.
+        """
         return await self._get_bulk().delete_where(filters)
 
     async def bulk_upsert_with_conflict_resolution(
@@ -253,7 +449,14 @@ class BaseController[ModelT]:
         conflict_columns: list[str],
         update_columns: list[str] | None = None,
     ) -> list[ModelT]:
-        """Bulk upsert with conflict resolution."""
+        """
+        Bulk upsert with conflict resolution.
+
+        Returns
+        -------
+        list[ModelT]
+            List of upserted records.
+        """
         return await self._get_bulk().bulk_upsert_with_conflict_resolution(items, conflict_columns, update_columns)
 
     # ------------------------------------------------------------------
@@ -261,15 +464,36 @@ class BaseController[ModelT]:
     # ------------------------------------------------------------------
 
     async def with_session[R](self, operation: Callable[[Any], Awaitable[R]]) -> R:
-        """Execute operation within a session context."""
+        """
+        Execute operation within a session context.
+
+        Returns
+        -------
+        R
+            The result of the operation.
+        """
         return await self._get_transaction().with_session(operation)
 
     async def with_transaction[R](self, operation: Callable[[Any], Awaitable[R]]) -> R:
-        """Execute operation within a transaction context."""
+        """
+        Execute operation within a transaction context.
+
+        Returns
+        -------
+        R
+            The result of the operation.
+        """
         return await self._get_transaction().with_transaction(operation)
 
     async def execute_transaction(self, callback: Callable[[], Any]) -> Any:
-        """Execute a callback within a transaction."""
+        """
+        Execute a callback within a transaction.
+
+        Returns
+        -------
+        Any
+            The result of the callback.
+        """
         return await self._get_transaction().execute_transaction(callback)
 
     # ------------------------------------------------------------------
@@ -277,7 +501,14 @@ class BaseController[ModelT]:
     # ------------------------------------------------------------------
 
     async def get_table_statistics(self) -> dict[str, Any]:
-        """Get comprehensive table statistics."""
+        """
+        Get comprehensive table statistics.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary containing table statistics.
+        """
         return await self._get_performance().get_table_statistics()
 
     async def explain_query_performance(
@@ -286,7 +517,14 @@ class BaseController[ModelT]:
         analyze: bool = False,
         buffers: bool = False,
     ) -> dict[str, Any]:
-        """Explain query performance with optional analysis."""
+        """
+        Explain query performance with optional analysis.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary containing query execution plan and statistics.
+        """
         return await self._get_performance().explain_query_performance(query, analyze, buffers)
 
     # ------------------------------------------------------------------
@@ -300,7 +538,14 @@ class BaseController[ModelT]:
         defaults: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> tuple[ModelT, bool]:
-        """Upsert a record by a specific field."""
+        """
+        Upsert a record by a specific field.
+
+        Returns
+        -------
+        tuple[ModelT, bool]
+            Tuple of (record, created) where created is True if new record was created.
+        """
         return await self._get_upsert().upsert_by_field(field_name, field_value, defaults, **kwargs)
 
     async def upsert_by_id(
@@ -309,7 +554,14 @@ class BaseController[ModelT]:
         defaults: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> tuple[ModelT, bool]:
-        """Upsert a record by ID."""
+        """
+        Upsert a record by ID.
+
+        Returns
+        -------
+        tuple[ModelT, bool]
+            Tuple of (record, created) where created is True if new record was created.
+        """
         return await self._get_upsert().upsert_by_id(record_id, defaults, **kwargs)
 
     async def get_or_create_by_field(
@@ -319,11 +571,25 @@ class BaseController[ModelT]:
         defaults: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> tuple[ModelT, bool]:
-        """Get existing record or create new one by field."""
+        """
+        Get existing record or create new one by field.
+
+        Returns
+        -------
+        tuple[ModelT, bool]
+            Tuple of (record, created) where created is True if new record was created.
+        """
         return await self._get_upsert().get_or_create_by_field(field_name, field_value, defaults, **kwargs)
 
     async def get_or_create(self, defaults: dict[str, Any] | None = None, **filters: Any) -> tuple[ModelT, bool]:
-        """Get existing record or create new one."""
+        """
+        Get existing record or create new one.
+
+        Returns
+        -------
+        tuple[ModelT, bool]
+            Tuple of (record, created) where created is True if new record was created.
+        """
         return await self._get_upsert().get_or_create(defaults, **filters)
 
     async def upsert(
@@ -332,5 +598,12 @@ class BaseController[ModelT]:
         defaults: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> tuple[ModelT, bool]:
-        """Upsert a record."""
+        """
+        Upsert a record.
+
+        Returns
+        -------
+        tuple[ModelT, bool]
+            Tuple of (record, created) where created is True if new record was created.
+        """
         return await self._get_upsert().upsert(filters, defaults, **kwargs)

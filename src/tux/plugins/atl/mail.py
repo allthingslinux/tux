@@ -74,11 +74,6 @@ class Mail(BaseCog):
             The member to register for mail.
         username : str
             The username to register for mail.
-
-        Raises
-        ------
-        discord.Forbidden
-            If the bot is unable to send a DM to the member.
         """
         if not username.isalnum():
             await interaction.response.send_message(
@@ -147,6 +142,11 @@ class Mail(BaseCog):
             The password to register for mail.
         member_id : int
             The ID of the member to register for mail.
+
+        Returns
+        -------
+        MailboxData
+            The prepared mailbox data dictionary.
         """
         mailbox_data = self.default_options.copy()
 

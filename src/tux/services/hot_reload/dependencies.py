@@ -28,7 +28,14 @@ class ClassDefinitionTracker:
         self._class_signatures: dict[str, dict[str, str]] = {}
 
     def extract_class_signatures(self, file_path: Path) -> dict[str, str]:
-        """Extract class method signatures from a Python file."""
+        """
+        Extract class method signatures from a Python file.
+
+        Returns
+        -------
+        dict[str, str]
+            Dictionary mapping class names to their method signatures.
+        """
         try:
             with file_path.open(encoding="utf-8") as f:
                 source = f.read()
@@ -55,7 +62,14 @@ class ClassDefinitionTracker:
             return signatures
 
     def has_class_changed(self, file_path: Path, class_name: str) -> bool:
-        """Check if a class definition has changed."""
+        """
+        Check if a class definition has changed.
+
+        Returns
+        -------
+        bool
+            True if the class has changed, False otherwise.
+        """
         current_signatures = self.extract_class_signatures(file_path)
         file_key = str(file_path)
 
@@ -95,7 +109,14 @@ class DependencyGraph(DependencyTracker):
         self._module_cache: dict[Path, set[str]] = {}
 
     def get_dependencies(self, module_path: Path) -> set[str]:
-        """Get dependencies for a module using AST analysis."""
+        """
+        Get dependencies for a module using AST analysis.
+
+        Returns
+        -------
+        set[str]
+            Set of module dependencies.
+        """
         if module_path in self._module_cache:
             return self._module_cache[module_path]
 
@@ -109,7 +130,14 @@ class DependencyGraph(DependencyTracker):
             return dependencies
 
     def _extract_imports(self, file_path: Path) -> set[str]:
-        """Extract import statements from a Python file."""
+        """
+        Extract import statements from a Python file.
+
+        Returns
+        -------
+        set[str]
+            Set of imported module names.
+        """
         try:
             with file_path.open(encoding="utf-8") as f:
                 source = f.read()
@@ -135,7 +163,14 @@ class DependencyGraph(DependencyTracker):
             return imports
 
     def get_dependents(self, module_name: str) -> set[str]:
-        """Get modules that depend on the given module."""
+        """
+        Get modules that depend on the given module.
+
+        Returns
+        -------
+        set[str]
+            Set of dependent module names.
+        """
         return self._dependents.get(module_name, set())
 
     def add_dependency(self, dependent: str, dependency: str) -> None:
@@ -158,7 +193,14 @@ class DependencyGraph(DependencyTracker):
         self._dependents.pop(module_name, None)
 
     def get_reload_order(self, changed_modules: set[str]) -> list[str]:
-        """Get optimal reload order for changed modules."""
+        """
+        Get optimal reload order for changed modules.
+
+        Returns
+        -------
+        list[str]
+            List of modules in optimal reload order.
+        """
         reload_order: list[str] = []
         visited: set[str] = set()
 

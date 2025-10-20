@@ -346,11 +346,10 @@ class Tux(commands.Bot):
         If setup fails, triggers bot shutdown to prevent running in a
         partially initialized state.
 
-        Raises
-        ------
-        Exception
-            Any exceptions from the setup task are logged and captured,
-            then the bot shuts down.
+        Notes
+        -----
+        Any exceptions from the setup task are logged and captured,
+        then the bot shuts down.
         """
         if self.setup_task and not self.setup_task.done():
             with start_span("bot.wait_setup", "Waiting for setup to complete"):

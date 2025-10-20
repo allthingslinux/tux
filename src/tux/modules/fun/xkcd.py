@@ -127,7 +127,14 @@ class Xkcd(BaseCog):
         latest: bool = False,
         number: int | None = None,
     ) -> tuple[discord.Embed, discord.ui.View | None, bool]:
-        """Get the xkcd comic and create an embed."""
+        """
+        Get the xkcd comic and create an embed.
+
+        Returns
+        -------
+        tuple[discord.Embed, discord.ui.View | None, bool]
+            Tuple of (embed, view, success_flag).
+        """
         try:
             if latest:
                 comic = self.client.get_latest_comic(raw_comic_image=True)

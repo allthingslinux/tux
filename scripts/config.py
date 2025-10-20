@@ -68,6 +68,10 @@ def generate(
     output : Path | None
         Optional output file path (only used with single format)
 
+    Raises
+    ------
+    Exit
+        If configuration generation fails.
     """
     console.print(Panel.fit("🔧 Configuration Generator", style="bold blue"))
 
@@ -127,6 +131,11 @@ def validate() -> None:
 
     This command loads the configuration from all sources and reports any issues,
     including missing required fields, invalid values, or file loading errors.
+
+    Raises
+    ------
+    Exit
+        If configuration validation fails.
     """
     console.print(Panel.fit("🔍 Configuration Validator", style="bold blue"))
 
@@ -182,6 +191,11 @@ def show() -> None:
 
     Displays the current configuration values and indicates which source
     each value came from (env var, file, or default).
+
+    Raises
+    ------
+    Exit
+        If configuration cannot be loaded.
     """
     console.print(Panel.fit("📋 Current Configuration", style="bold blue"))
 

@@ -132,7 +132,14 @@ class Slowmode(BaseCog):
 
     @staticmethod
     def _format_slowmode_message(delay: int, channel_mention: str) -> str:
-        """Format slowmode delay into a readable message."""
+        """
+        Format slowmode delay into a readable message.
+
+        Returns
+        -------
+        str
+            Formatted slowmode status message.
+        """
         if delay == 0:
             return f"Slowmode is disabled in {channel_mention}."
         if delay == 1:

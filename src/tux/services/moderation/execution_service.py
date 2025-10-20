@@ -84,8 +84,14 @@ class ExecutionService:
 
         Raises
         ------
-        Exception
-            The last exception if all retries fail.
+        RuntimeError
+            If the circuit breaker is open for this operation type.
+        discord.Forbidden
+            If the bot lacks permissions.
+        discord.HTTPException
+            If a Discord API error occurs.
+        discord.NotFound
+            If the resource is not found.
         """
         if self._is_circuit_open(operation_type):
             msg = f"Circuit breaker open for {operation_type}"

@@ -28,7 +28,14 @@ class PerformanceController[ModelT]:
         self.db = db
 
     async def get_table_statistics(self) -> dict[str, Any]:
-        """Get comprehensive table statistics."""
+        """
+        Get comprehensive table statistics.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary containing table statistics, column stats, and size info.
+        """
         async with self.db.session() as session:
             table_name = getattr(self.model, "__tablename__", "unknown")
 
@@ -70,7 +77,14 @@ class PerformanceController[ModelT]:
         analyze: bool = False,
         buffers: bool = False,
     ) -> dict[str, Any]:
-        """Explain query performance with optional analysis."""
+        """
+        Explain query performance with optional analysis.
+
+        Returns
+        -------
+        dict[str, Any]
+            Dictionary containing query execution plan and statistics.
+        """
         async with self.db.session() as session:
             try:
                 # Build EXPLAIN options

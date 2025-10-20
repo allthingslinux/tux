@@ -50,6 +50,11 @@ class ClearAFK(BaseCog):
             The context in which the command is being invoked.
         member : discord.Member
             The member whose AFK status is to be cleared.
+
+        Returns
+        -------
+        discord.Message
+            The confirmation message sent.
         """
         assert ctx.guild
 

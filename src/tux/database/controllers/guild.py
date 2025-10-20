@@ -31,25 +31,60 @@ class GuildController(BaseController[Guild]):
 
     # Simple, clean methods that use BaseController's CRUD operations
     async def get_guild_by_id(self, guild_id: int) -> Guild | None:
-        """Get a guild by its ID."""
+        """
+        Get a guild by its ID.
+
+        Returns
+        -------
+        Guild | None
+            The guild if found, None otherwise.
+        """
         return await self.get_by_id(guild_id)
 
     async def get_or_create_guild(self, guild_id: int) -> Guild:
-        """Get a guild by ID, or create it if it doesn't exist."""
+        """
+        Get a guild by ID, or create it if it doesn't exist.
+
+        Returns
+        -------
+        Guild
+            The guild (existing or newly created).
+        """
         guild, _ = await self.get_or_create(guild_id=guild_id)
         return guild
 
     async def create_guild(self, guild_id: int) -> Guild:
-        """Create a new guild."""
+        """
+        Create a new guild.
+
+        Returns
+        -------
+        Guild
+            The newly created guild.
+        """
         return await self.create(guild_id=guild_id)
 
     async def delete_guild(self, guild_id: int) -> bool:
-        """Delete a guild by ID."""
+        """
+        Delete a guild by ID.
+
+        Returns
+        -------
+        bool
+            True if deleted successfully, False otherwise.
+        """
         return await self.delete_by_id(guild_id)
 
     # GuildConfig methods using with_session for cross-model operations
     async def get_guild_config(self, guild_id: int) -> GuildConfig | None:
-        """Get guild configuration."""
+        """
+        Get guild configuration.
+
+        Returns
+        -------
+        GuildConfig | None
+            The guild configuration if found, None otherwise.
+        """
 
         async def _op(session: AsyncSession) -> GuildConfig | None:
             """Get guild config by guild ID.
@@ -69,7 +104,14 @@ class GuildController(BaseController[Guild]):
         return await self.with_session(_op)
 
     async def update_guild_config(self, guild_id: int, data: dict[str, Any]) -> GuildConfig:
-        """Update guild configuration."""
+        """
+        Update guild configuration.
+
+        Returns
+        -------
+        GuildConfig
+            The updated guild configuration.
+        """
 
         async def _op(session: AsyncSession) -> GuildConfig:
             """Update or create guild configuration.
@@ -98,22 +140,57 @@ class GuildController(BaseController[Guild]):
         return await self.with_session(_op)
 
     async def get_all_guilds(self) -> list[Guild]:
-        """Get all guilds."""
+        """
+        Get all guilds.
+
+        Returns
+        -------
+        list[Guild]
+            List of all guilds.
+        """
         return await self.find_all()
 
     async def get_guild_count(self) -> int:
-        """Get the total number of guilds."""
+        """
+        Get the total number of guilds.
+
+        Returns
+        -------
+        int
+            The total count of guilds.
+        """
         return await self.count()
 
     # Additional methods that module files expect
     async def find_many(self, **filters: Any) -> list[Guild]:
-        """Find many guilds with optional filters - alias for find_all."""
+        """
+        Find many guilds with optional filters - alias for find_all.
+
+        Returns
+        -------
+        list[Guild]
+            List of guilds matching the filters.
+        """
         return await self.find_all()
 
     async def insert_guild_by_id(self, guild_id: int, **kwargs: Any) -> Guild:
-        """Insert a new guild by ID."""
+        """
+        Insert a new guild by ID.
+
+        Returns
+        -------
+        Guild
+            The newly created guild.
+        """
         return await self.create(guild_id=guild_id, **kwargs)
 
     async def delete_guild_by_id(self, guild_id: int) -> bool:
-        """Delete a guild by ID."""
+        """
+        Delete a guild by ID.
+
+        Returns
+        -------
+        bool
+            True if deleted successfully, False otherwise.
+        """
         return await self.delete_by_id(guild_id)

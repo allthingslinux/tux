@@ -5,7 +5,14 @@ from typing import Any
 
 
 def unwrap_error(error: Any) -> Exception:
-    """Unwrap nested exceptions to find root cause."""
+    """
+    Unwrap nested exceptions to find root cause.
+
+    Returns
+    -------
+    Exception
+        The unwrapped root exception.
+    """
     current = error
     loops = 0
     max_loops = 10
@@ -24,7 +31,14 @@ def unwrap_error(error: Any) -> Exception:
 
 
 def fallback_format_message(message_format: str, error: Exception) -> str:
-    """Safely format error message with fallbacks."""
+    """
+    Safely format error message with fallbacks.
+
+    Returns
+    -------
+    str
+        The formatted error message.
+    """
     # Try simple {error} formatting
     with contextlib.suppress(Exception):
         if "{error" in message_format:
@@ -35,12 +49,26 @@ def fallback_format_message(message_format: str, error: Exception) -> str:
 
 
 def format_list(items: list[str]) -> str:
-    """Format list as comma-separated code blocks."""
+    """
+    Format list as comma-separated code blocks.
+
+    Returns
+    -------
+    str
+        Comma-separated list in code blocks.
+    """
     return ", ".join(f"`{item}`" for item in items)
 
 
 def extract_missing_role_details(error: Exception) -> dict[str, Any]:
-    """Extract missing role details."""
+    """
+    Extract missing role details.
+
+    Returns
+    -------
+    dict[str, Any]
+        Dictionary containing role information.
+    """
     role_id = getattr(error, "missing_role", None)
     if isinstance(role_id, int):
         return {"roles": f"<@&{role_id}>"}
@@ -48,7 +76,14 @@ def extract_missing_role_details(error: Exception) -> dict[str, Any]:
 
 
 def extract_missing_any_role_details(error: Exception) -> dict[str, Any]:
-    """Extract missing roles list."""
+    """
+    Extract missing roles list.
+
+    Returns
+    -------
+    dict[str, Any]
+        Dictionary containing roles information.
+    """
     roles_list = getattr(error, "missing_roles", [])
     formatted_roles: list[str] = []
 
@@ -62,26 +97,54 @@ def extract_missing_any_role_details(error: Exception) -> dict[str, Any]:
 
 
 def extract_permissions_details(error: Exception) -> dict[str, Any]:
-    """Extract missing permissions."""
+    """
+    Extract missing permissions.
+
+    Returns
+    -------
+    dict[str, Any]
+        Dictionary containing permissions information.
+    """
     perms = getattr(error, "missing_perms", [])
     return {"permissions": format_list(perms)}
 
 
 def extract_bad_flag_argument_details(error: Exception) -> dict[str, Any]:
-    """Extract flag argument details."""
+    """
+    Extract flag argument details.
+
+    Returns
+    -------
+    dict[str, Any]
+        Dictionary containing flag details and original cause.
+    """
     flag_name = getattr(getattr(error, "flag", None), "name", "unknown_flag")
     original_cause = getattr(error, "original", error)
     return {"flag_name": flag_name, "original_cause": original_cause}
 
 
 def extract_missing_flag_details(error: Exception) -> dict[str, Any]:
-    """Extract missing flag details."""
+    """
+    Extract missing flag details.
+
+    Returns
+    -------
+    dict[str, Any]
+        Dictionary containing flag name.
+    """
     flag_name = getattr(getattr(error, "flag", None), "name", "unknown_flag")
     return {"flag_name": flag_name}
 
 
 def extract_httpx_status_details(error: Exception) -> dict[str, Any]:
-    """Extract HTTPX status error details."""
+    """
+    Extract HTTPX status error details.
+
+    Returns
+    -------
+    dict[str, Any]
+        Dictionary containing status code, URL, and response text.
+    """
     try:
         if not hasattr(error, "response"):
             return {}
@@ -104,13 +167,27 @@ def extract_httpx_status_details(error: Exception) -> dict[str, Any]:
 
 
 def extract_missing_argument_details(error: Exception) -> dict[str, Any]:
-    """Extract missing argument details."""
+    """
+    Extract missing argument details.
+
+    Returns
+    -------
+    dict[str, Any]
+        Dictionary containing parameter name.
+    """
     param_name = getattr(getattr(error, "param", None), "name", "unknown_argument")
     return {"param_name": param_name}
 
 
 def extract_bad_union_argument_details(error: Exception) -> dict[str, Any]:
-    """Extract bad union argument details."""
+    """
+    Extract bad union argument details.
+
+    Returns
+    -------
+    dict[str, Any]
+        Dictionary containing argument and expected types.
+    """
     # Try to extract the actual argument value
     argument_raw = getattr(error, "argument", getattr(error, "param", "unknown"))
 
@@ -143,7 +220,14 @@ def extract_bad_union_argument_details(error: Exception) -> dict[str, Any]:
 
 
 def extract_permission_denied_details(error: Exception) -> dict[str, Any]:
-    """Extract permission denied error details."""
+    """
+    Extract permission denied error details.
+
+    Returns
+    -------
+    dict[str, Any]
+        Dictionary containing formatted permission message.
+    """
     required_rank = getattr(error, "required_rank", 0)
     user_rank = getattr(error, "user_rank", 0)
     command_name = getattr(error, "command_name", "this command")

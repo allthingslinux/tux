@@ -24,7 +24,13 @@ from scripts.tux import TuxCLI
 
 
 def create_unified_cli() -> Typer:
-    """Create a unified CLI application that combines all CLI modules."""
+    """Create a unified CLI application that combines all CLI modules.
+
+    Returns
+    -------
+    Typer
+        The unified CLI application with all subcommands registered.
+    """
     # Create the main app
     cli = Typer(
         name="uv run",

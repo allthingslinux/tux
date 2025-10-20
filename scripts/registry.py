@@ -98,11 +98,23 @@ class CommandGroup:
         self._commands[command.name] = command
 
     def get_commands(self) -> dict[str, Command]:
-        """Get all commands in this group."""
+        """Get all commands in this group.
+
+        Returns
+        -------
+        dict[str, Command]
+            Copy of commands dictionary.
+        """
         return self._commands.copy()
 
     def get_command(self, name: str) -> Command | None:
-        """Get a specific command by name."""
+        """Get a specific command by name.
+
+        Returns
+        -------
+        Command | None
+            The command if found, None otherwise.
+        """
         return self._commands.get(name)
 
 
@@ -137,17 +149,41 @@ class CommandRegistry:
         self._commands[command.name] = command
 
     def get_groups(self) -> dict[str, CommandGroup]:
-        """Get all registered command groups."""
+        """Get all registered command groups.
+
+        Returns
+        -------
+        dict[str, CommandGroup]
+            Copy of command groups dictionary.
+        """
         return self._groups.copy()
 
     def get_commands(self) -> dict[str, Command]:
-        """Get all registered individual commands."""
+        """Get all registered individual commands.
+
+        Returns
+        -------
+        dict[str, Command]
+            Copy of commands dictionary.
+        """
         return self._commands.copy()
 
     def get_group(self, name: str) -> CommandGroup | None:
-        """Get a specific command group by name."""
+        """Get a specific command group by name.
+
+        Returns
+        -------
+        CommandGroup | None
+            The command group if found, None otherwise.
+        """
         return self._groups.get(name)
 
     def get_command(self, name: str) -> Command | None:
-        """Get a specific individual command by name."""
+        """Get a specific individual command by name.
+
+        Returns
+        -------
+        Command | None
+            The command if found, None otherwise.
+        """
         return self._commands.get(name)

@@ -28,7 +28,14 @@ class CrudController[ModelT]:
         self.db = db
 
     async def create(self, **kwargs: Any) -> ModelT:
-        """Create a new record."""
+        """
+        Create a new record.
+
+        Returns
+        -------
+        ModelT
+            The newly created record.
+        """
         async with self.db.session() as session:
             instance = self.model(**kwargs)
             session.add(instance)
@@ -39,7 +46,14 @@ class CrudController[ModelT]:
             return instance
 
     async def get_by_id(self, record_id: Any) -> ModelT | None:
-        """Get a record by ID."""
+        """
+        Get a record by ID.
+
+        Returns
+        -------
+        ModelT | None
+            The record if found, None otherwise.
+        """
         async with self.db.session() as session:
             instance = await session.get(self.model, record_id)
             if instance:
@@ -48,7 +62,14 @@ class CrudController[ModelT]:
             return instance
 
     async def update_by_id(self, record_id: Any, **values: Any) -> ModelT | None:
-        """Update a record by ID."""
+        """
+        Update a record by ID.
+
+        Returns
+        -------
+        ModelT | None
+            The updated record, or None if not found.
+        """
         async with self.db.session() as session:
             instance = await session.get(self.model, record_id)
             if instance:
@@ -61,7 +82,14 @@ class CrudController[ModelT]:
             return instance
 
     async def delete_by_id(self, record_id: Any) -> bool:
-        """Delete a record by ID."""
+        """
+        Delete a record by ID.
+
+        Returns
+        -------
+        bool
+            True if deleted successfully, False otherwise.
+        """
         async with self.db.session() as session:
             instance = await session.get(self.model, record_id)
             if instance:
@@ -71,7 +99,14 @@ class CrudController[ModelT]:
             return False
 
     async def exists(self, filters: Any) -> bool:
-        """Check if a record exists."""
+        """
+        Check if a record exists.
+
+        Returns
+        -------
+        bool
+            True if record exists, False otherwise.
+        """
         async with self.db.session() as session:
             stmt = select(self.model)
             filter_expr = build_filters_for_model(filters, self.model)

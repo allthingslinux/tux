@@ -103,6 +103,15 @@ async def checkresponse(res: httpx.Response) -> str | None:
     -------
     str | None
         The response from the Godbolt API if successful, otherwise None.
+
+    Raises
+    ------
+    TuxAPIConnectionError
+        If connection to Godbolt API fails.
+    TuxAPIRequestError
+        If the API request fails.
+    TuxAPIResourceNotFoundError
+        If the resource is not found.
     """
     try:
         return res.text if res.status_code == HTTP_OK else None
@@ -133,6 +142,15 @@ async def sendresponse(url: str) -> str | None:
     -------
     str | None
         The response from the Godbolt API if successful, otherwise None.
+
+    Raises
+    ------
+    TuxAPIConnectionError
+        If connection to Godbolt API fails.
+    TuxAPIRequestError
+        If the API request fails.
+    TuxAPIResourceNotFoundError
+        If the resource is not found.
     """
     try:
         response = await http_client.get(url, timeout=15.0)
@@ -217,8 +235,12 @@ async def getoutput(code: str, lang: str, compileroptions: str | None = None) ->
 
     Raises
     ------
-    httpx.ReadTimeout
-        If the request times out.
+    TuxAPIConnectionError
+        If connection to Godbolt API fails.
+    TuxAPIRequestError
+        If the API request fails.
+    TuxAPIResourceNotFoundError
+        If the resource is not found.
     """
     url_comp = f"{url}/api/compiler/{lang}/compile"
 
@@ -288,8 +310,12 @@ async def generateasm(code: str, lang: str, compileroptions: str | None = None) 
 
     Raises
     ------
-    httpx.ReadTimeout
-        If the request times out.
+    TuxAPIConnectionError
+        If connection to Godbolt API fails.
+    TuxAPIRequestError
+        If the API request fails.
+    TuxAPIResourceNotFoundError
+        If the resource is not found.
     """
     url_comp = f"{url}/api/compiler/{lang}/compile"
 

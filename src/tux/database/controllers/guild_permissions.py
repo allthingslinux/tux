@@ -42,7 +42,14 @@ class GuildPermissionRankController(BaseController[GuildPermissionRank]):
         name: str,
         description: str | None = None,
     ) -> GuildPermissionRank:
-        """Create a new permission rank for a guild."""
+        """
+        Create a new permission rank for a guild.
+
+        Returns
+        -------
+        GuildPermissionRank
+            The newly created permission rank.
+        """
         return await self.create(
             guild_id=guild_id,
             rank=rank,
@@ -51,14 +58,28 @@ class GuildPermissionRankController(BaseController[GuildPermissionRank]):
         )
 
     async def get_permission_ranks_by_guild(self, guild_id: int) -> list[GuildPermissionRank]:
-        """Get all permission ranks for a guild."""
+        """
+        Get all permission ranks for a guild.
+
+        Returns
+        -------
+        list[GuildPermissionRank]
+            List of permission ranks ordered by rank value.
+        """
         return await self.find_all(
             filters=GuildPermissionRank.guild_id == guild_id,
             order_by=GuildPermissionRank.rank,
         )
 
     async def get_permission_rank(self, guild_id: int, rank: int) -> GuildPermissionRank | None:
-        """Get a specific permission rank."""
+        """
+        Get a specific permission rank.
+
+        Returns
+        -------
+        GuildPermissionRank | None
+            The permission rank if found, None otherwise.
+        """
         return await self.find_one(
             filters=(GuildPermissionRank.guild_id == guild_id) & (GuildPermissionRank.rank == rank),
         )
@@ -70,7 +91,14 @@ class GuildPermissionRankController(BaseController[GuildPermissionRank]):
         name: str | None = None,
         description: str | None = None,
     ) -> GuildPermissionRank | None:
-        """Update a permission rank."""
+        """
+        Update a permission rank.
+
+        Returns
+        -------
+        GuildPermissionRank | None
+            The updated permission rank, or None if not found.
+        """
         # Find the record first
         record = await self.find_one(
             filters=(GuildPermissionRank.guild_id == guild_id) & (GuildPermissionRank.rank == rank),
@@ -89,7 +117,14 @@ class GuildPermissionRankController(BaseController[GuildPermissionRank]):
         return await self.update_by_id(record.id, **update_data)
 
     async def delete_permission_rank(self, guild_id: int, rank: int) -> bool:
-        """Delete a permission rank."""
+        """
+        Delete a permission rank.
+
+        Returns
+        -------
+        bool
+            True if deleted successfully, False otherwise.
+        """
         deleted_count = await self.delete_where(
             filters=(GuildPermissionRank.guild_id == guild_id) & (GuildPermissionRank.rank == rank),
         )
@@ -116,7 +151,14 @@ class GuildPermissionAssignmentController(BaseController[GuildPermissionAssignme
         role_id: int,
         assigned_by: int,
     ) -> GuildPermissionAssignment:
-        """Assign a permission level to a role."""
+        """
+        Assign a permission level to a role.
+
+        Returns
+        -------
+        GuildPermissionAssignment
+            The newly created permission assignment.
+        """
         return await self.create(
             guild_id=guild_id,
             permission_rank_id=permission_rank_id,
@@ -125,18 +167,39 @@ class GuildPermissionAssignmentController(BaseController[GuildPermissionAssignme
         )
 
     async def get_assignments_by_guild(self, guild_id: int) -> list[GuildPermissionAssignment]:
-        """Get all permission assignments for a guild."""
+        """
+        Get all permission assignments for a guild.
+
+        Returns
+        -------
+        list[GuildPermissionAssignment]
+            List of all permission assignments for the guild.
+        """
         return await self.find_all(filters=GuildPermissionAssignment.guild_id == guild_id)
 
     async def remove_role_assignment(self, guild_id: int, role_id: int) -> bool:
-        """Remove a permission level assignment from a role."""
+        """
+        Remove a permission level assignment from a role.
+
+        Returns
+        -------
+        bool
+            True if removed successfully, False otherwise.
+        """
         deleted_count = await self.delete_where(
             filters=(GuildPermissionAssignment.guild_id == guild_id) & (GuildPermissionAssignment.role_id == role_id),
         )
         return deleted_count > 0
 
     async def get_user_permission_rank(self, guild_id: int, user_id: int, user_roles: list[int]) -> int:
-        """Get the highest permission rank a user has based on their roles."""
+        """
+        Get the highest permission rank a user has based on their roles.
+
+        Returns
+        -------
+        int
+            The highest permission rank (0 if user has no assigned roles).
+        """
         if not user_roles:
             return 0
 
@@ -196,7 +259,14 @@ class GuildCommandPermissionController(BaseController[GuildCommandPermission]):
         category: str | None = None,
         description: str | None = None,
     ) -> GuildCommandPermission:  # sourcery skip: hoist-similar-statement-from-if, hoist-statement-from-if
-        """Set the permission rank required for a command."""
+        """
+        Set the permission rank required for a command.
+
+        Returns
+        -------
+        GuildCommandPermission
+            The command permission record (created or updated).
+        """
         result = await self.upsert(
             filters={"guild_id": guild_id, "command_name": command_name},
             guild_id=guild_id,
@@ -208,20 +278,41 @@ class GuildCommandPermissionController(BaseController[GuildCommandPermission]):
         return result[0]  # upsert returns (record, created)
 
     async def get_command_permission(self, guild_id: int, command_name: str) -> GuildCommandPermission | None:
-        """Get the permission requirement for a specific command."""
+        """
+        Get the permission requirement for a specific command.
+
+        Returns
+        -------
+        GuildCommandPermission | None
+            The command permission record if found, None otherwise.
+        """
         return await self.find_one(
             filters=(GuildCommandPermission.guild_id == guild_id)
             & (GuildCommandPermission.command_name == command_name),
         )
 
     async def get_commands_by_category(self, guild_id: int, category: str) -> list[GuildCommandPermission]:
-        """Get all commands in a specific category."""
+        """
+        Get all commands in a specific category.
+
+        Returns
+        -------
+        list[GuildCommandPermission]
+            List of command permissions for the specified category.
+        """
         return await self.find_all(
             filters=(GuildCommandPermission.guild_id == guild_id) & (GuildCommandPermission.category == category),
         )
 
     async def get_all_command_permissions(self, guild_id: int) -> list[GuildCommandPermission]:
-        """Get all command permissions for a guild."""
+        """
+        Get all command permissions for a guild.
+
+        Returns
+        -------
+        list[GuildCommandPermission]
+            List of all command permissions ordered by category and name.
+        """
         return await self.find_all(
             filters=GuildCommandPermission.guild_id == guild_id,
             order_by=(GuildCommandPermission.category, GuildCommandPermission.command_name),

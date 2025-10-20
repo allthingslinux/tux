@@ -170,7 +170,14 @@ class SoftDeleteMixin(SQLModel):
 
     @field_serializer("deleted_at")
     def serialize_deleted_at(self, value: datetime | None) -> str | None:
-        """Serialize deleted_at field to ISO format string."""
+        """
+        Serialize deleted_at field to ISO format string.
+
+        Returns
+        -------
+        str | None
+            ISO format datetime string, or None if value is None.
+        """
         return value.isoformat() if value else None
 
     def soft_delete(self) -> None:

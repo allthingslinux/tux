@@ -85,16 +85,37 @@ class Deepfry(BaseCog):
                 await self._send_error_embed(ctx, "Error", "An error occurred while processing the image.")
 
     def _extract_image_url(self, ctx: commands.Context[Any], image: discord.Attachment) -> str:
-        """Extract image URL from the attachment."""
+        """
+        Extract image URL from the attachment.
+
+        Returns
+        -------
+        str
+            The URL of the image attachment.
+        """
         return image.url
 
     async def _fetch_image(self, url: str) -> Image.Image:
-        """Fetch and load an image from URL."""
+        """
+        Fetch and load an image from URL.
+
+        Returns
+        -------
+        Image.Image
+            The loaded PIL Image object.
+        """
         response = await http_client.get(url)
         return Image.open(io.BytesIO(response.content))
 
     def _deepfry_image(self, image: Image.Image) -> Image.Image:
-        """Apply deepfry effects to an image."""
+        """
+        Apply deepfry effects to an image.
+
+        Returns
+        -------
+        Image.Image
+            The deepfried image.
+        """
         image = image.convert("RGB")
         # Downscale for processing
         image = image.resize((int(image.width * 0.25), int(image.height * 0.25)))

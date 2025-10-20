@@ -18,7 +18,14 @@ __all__ = ("add_afk", "del_afk")
 
 
 def _generate_afk_nickname(display_name: str) -> str:
-    """Generate the AFK nickname, handling truncation if necessary."""
+    """
+    Generate the AFK nickname, handling truncation if necessary.
+
+    Returns
+    -------
+    str
+        The AFK nickname with [AFK] prefix.
+    """
     prefix_len = len(AFK_PREFIX)
 
     if len(display_name) >= NICKNAME_MAX_LENGTH - prefix_len:

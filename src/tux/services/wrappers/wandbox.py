@@ -38,6 +38,15 @@ async def getoutput(code: str, compiler: str, options: str | None) -> dict[str, 
     dict[str, Any] or None
         A dictionary containing the compiler output if the request is successful,
         otherwise `None`. Returns `None` on HTTP errors or read timeout.
+
+    Raises
+    ------
+    TuxAPIConnectionError
+        If connection/request fails or times out.
+    TuxAPIRequestError
+        If HTTP request fails with non-404 status code.
+    TuxAPIResourceNotFoundError
+        If compiler is not found (404).
     """
     copt = options if options is not None else ""
     headers = {

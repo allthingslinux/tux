@@ -88,6 +88,11 @@ def parse_time_string(time_str: str) -> timedelta:
     -------
     timedelta
         The timedelta object representing the time string.
+
+    Raises
+    ------
+    ValueError
+        If the time format is invalid.
     """
     # Define regex pattern to parse time strings
     time_pattern = re.compile(r"^(?P<value>\d+)(?P<unit>[smhdw])$")

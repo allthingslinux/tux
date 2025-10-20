@@ -6,7 +6,14 @@ from sqlalchemy import BinaryExpression, and_
 
 
 def build_filters_for_model(filters: dict[str, Any] | Any, model: type[Any]) -> BinaryExpression[bool] | Any | None:
-    """Build filter expressions from various input types for a specific model."""
+    """
+    Build filter expressions from various input types for a specific model.
+
+    Returns
+    -------
+    BinaryExpression[bool] | Any | None
+        Combined filter expression, or None if no filters.
+    """
     if filters is None:
         return None
 
@@ -26,7 +33,14 @@ def build_filters_for_model(filters: dict[str, Any] | Any, model: type[Any]) -> 
 
 
 def build_filters(filters: Any) -> Any:
-    """Build filter expressions from various input types (legacy function)."""
+    """
+    Build filter expressions from various input types (legacy function).
+
+    Returns
+    -------
+    Any
+        Combined filter expression, or None if no filters.
+    """
     if filters is None:
         return None
 

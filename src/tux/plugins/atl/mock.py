@@ -84,7 +84,14 @@ class MockObject:
         self.__dict__.update(kwargs)
 
     def __repr__(self) -> str:
-        """Return a string representation of the mock object."""
+        """
+        Return a string representation of the mock object.
+
+        Returns
+        -------
+        str
+            String representation showing all attributes.
+        """
         attrs = ", ".join(f"{k}={v!r}" for k, v in self.__dict__.items())
         return f"<MockObject {attrs}>"
 
@@ -123,11 +130,25 @@ class ErrorTestDefinition:
         self.name = error_class.__name__
 
     def create_error(self) -> Exception:
-        """Create an instance of this error for testing."""
+        """
+        Create an instance of this error for testing.
+
+        Returns
+        -------
+        Exception
+            An instance of the configured error class.
+        """
         return self.error_class(*self.args, **self.kwargs)
 
     def get_config(self) -> dict[str, Any] | None:
-        """Get the error handler configuration for this error type."""
+        """
+        Get the error handler configuration for this error type.
+
+        Returns
+        -------
+        dict[str, Any] | None
+            Error handler configuration dict, or None if not configured.
+        """
         if not (config := ERROR_CONFIG_MAP.get(self.error_class)):
             return None
 
@@ -229,7 +250,14 @@ class ErrorTestRegistry:
             )
 
     def _get_realistic_app_command_args(self, error_name: str) -> tuple[Any, ...]:
-        """Get realistic arguments for app command errors."""
+        """
+        Get realistic arguments for app command errors.
+
+        Returns
+        -------
+        tuple[Any, ...]
+            Arguments appropriate for the error type.
+        """
         error_name_lower = error_name.lower()
 
         # Use mapping instead of multiple if statements
@@ -320,7 +348,14 @@ class ErrorTestRegistry:
             )
 
     def _get_realistic_traditional_command_args(self, error_name: str) -> tuple[Any, ...]:
-        """Get realistic arguments for traditional command errors."""
+        """
+        Get realistic arguments for traditional command errors.
+
+        Returns
+        -------
+        tuple[Any, ...]
+            Arguments appropriate for the error type.
+        """
         error_name_lower = error_name.lower()
 
         # Use mapping for cleaner logic
@@ -410,7 +445,14 @@ class ErrorTestRegistry:
             )
 
     def _get_realistic_discord_args(self, error_name: str) -> tuple[Any, ...]:
-        """Get realistic arguments for Discord API errors."""
+        """
+        Get realistic arguments for Discord API errors.
+
+        Returns
+        -------
+        tuple[Any, ...]
+            Arguments appropriate for the error type.
+        """
         error_name_lower = error_name.lower()
 
         # Use mapping for cleaner logic
@@ -448,7 +490,14 @@ class ErrorTestRegistry:
         )
 
     def _get_realistic_builtin_args(self, error_name: str) -> tuple[Any, ...]:
-        """Get realistic arguments for Python built-in errors."""
+        """
+        Get realistic arguments for Python built-in errors.
+
+        Returns
+        -------
+        tuple[Any, ...]
+            Arguments appropriate for the error type.
+        """
         error_name_lower = error_name.lower()
 
         # Use mapping for cleaner logic
@@ -479,7 +528,14 @@ class ErrorTestRegistry:
         )
 
     def _get_realistic_custom_args(self, error_name: str) -> tuple[Any, ...]:
-        """Get realistic arguments for custom tux errors."""
+        """
+        Get realistic arguments for custom tux errors.
+
+        Returns
+        -------
+        tuple[Any, ...]
+            Arguments appropriate for the error type.
+        """
         error_name_lower = error_name.lower()
 
         # Use mapping for cleaner logic
@@ -500,11 +556,25 @@ class ErrorTestRegistry:
         )
 
     def get_test_names(self) -> list[str]:
-        """Get all test names."""
+        """
+        Get all test names.
+
+        Returns
+        -------
+        list[str]
+            List of all registered test names.
+        """
         return list(self.tests.keys())
 
     def get_test_names_by_category(self) -> dict[str, list[str]]:
-        """Get test names grouped by category."""
+        """
+        Get test names grouped by category.
+
+        Returns
+        -------
+        dict[str, list[str]]
+            Dictionary mapping category names to lists of test names.
+        """
         categories: dict[str, list[str]] = {}
         for name, test_def in self.tests.items():
             category = test_def.category
@@ -512,7 +582,14 @@ class ErrorTestRegistry:
         return categories
 
     def get_test(self, name: str) -> ErrorTestDefinition | None:
-        """Get a specific test by name."""
+        """
+        Get a specific test by name.
+
+        Returns
+        -------
+        ErrorTestDefinition | None
+            The test definition if found, None otherwise.
+        """
         return self.tests.get(name)
 
 
@@ -537,7 +614,14 @@ class Mock(BaseCog):
         test_def: ErrorTestDefinition,
         ctx: commands.Context[Tux],
     ) -> discord.Embed:
-        """Create an informative embed showing error details and expected handler behavior."""
+        """
+        Create an informative embed showing error details and expected handler behavior.
+
+        Returns
+        -------
+        discord.Embed
+            The informational embed.
+        """
         config = test_def.get_config()
 
         # Create main embed with cleaner title and description
@@ -679,7 +763,14 @@ class Mock(BaseCog):
         interaction: discord.Interaction,
         current: str,
     ) -> list[app_commands.Choice[str]]:
-        """Autocomplete function for error names based on the selected category."""
+        """
+        Autocomplete function for error names based on the selected category.
+
+        Returns
+        -------
+        list[app_commands.Choice[str]]
+            List of autocomplete choices (max 25).
+        """
         # Get the category from the current interaction
         category = None
         if interaction.namespace:
@@ -924,7 +1015,14 @@ class Mock(BaseCog):
         interaction: discord.Interaction,
         current: str,
     ) -> list[app_commands.Choice[str]]:
-        """Autocomplete function for error types with category information."""
+        """
+        Autocomplete function for error types with category information.
+
+        Returns
+        -------
+        list[app_commands.Choice[str]]
+            List of autocomplete choices with category prefix (max 25).
+        """
         choices = [
             app_commands.Choice(name=f"[{test_def.category}] {name}", value=name)
             for name, test_def in self.error_registry.tests.items()

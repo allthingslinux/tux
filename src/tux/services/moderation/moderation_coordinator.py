@@ -350,7 +350,13 @@ class ModerationCoordinator:
         logger.debug("Response embed sent successfully")
 
     def _get_default_dm_action(self, case_type: DBCaseType) -> str:
-        """Get the default DM action description for a case type."""
+        """Get the default DM action description for a case type.
+
+        Returns
+        -------
+        str
+            Default action description for the case type.
+        """
         action_mapping = {
             DBCaseType.BAN: "banned",
             DBCaseType.KICK: "kicked",

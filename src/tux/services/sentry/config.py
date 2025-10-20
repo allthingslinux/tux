@@ -128,5 +128,11 @@ async def flush_async(flush_timeout: float = 10.0) -> None:
 
 
 def is_initialized() -> bool:
-    """Check if Sentry is initialized."""
+    """Check if Sentry is initialized.
+
+    Returns
+    -------
+    bool
+        True if Sentry is initialized, False otherwise.
+    """
     return sentry_sdk.Hub.current.client is not None

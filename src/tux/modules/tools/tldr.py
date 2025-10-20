@@ -84,7 +84,14 @@ class Tldr(BaseCog):
             logger.error(f"TLDR Cog: Critical error during cache initialization: {e}", exc_info=True)
 
     def detect_bot_language(self) -> str:
-        """Detect the bot's default language. For Discord bots, default to English."""
+        """
+        Detect the bot's default language. For Discord bots, default to English.
+
+        Returns
+        -------
+        str
+            The language code (always "en" for this bot).
+        """
         return "en"
 
     async def command_autocomplete(
@@ -92,7 +99,14 @@ class Tldr(BaseCog):
         interaction: discord.Interaction,
         current: str,
     ) -> list[app_commands.Choice[str]]:
-        """Autocomplete for the command parameter."""
+        """
+        Autocomplete for the command parameter.
+
+        Returns
+        -------
+        list[app_commands.Choice[str]]
+            List of command choices for autocomplete.
+        """
         language_value: str | None = None
         platform_value: str | None = None
 
@@ -123,7 +137,14 @@ class Tldr(BaseCog):
         interaction: discord.Interaction,
         current: str,
     ) -> list[app_commands.Choice[str]]:
-        """Autocomplete for the platform parameter."""
+        """
+        Autocomplete for the platform parameter.
+
+        Returns
+        -------
+        list[app_commands.Choice[str]]
+            List of platform choices for autocomplete.
+        """
         choices = [
             app_commands.Choice(name=plat, value=plat)
             for plat in SUPPORTED_PLATFORMS
@@ -136,7 +157,14 @@ class Tldr(BaseCog):
         interaction: discord.Interaction,
         current: str,
     ) -> list[app_commands.Choice[str]]:
-        """Autocomplete for the language parameter."""
+        """
+        Autocomplete for the language parameter.
+
+        Returns
+        -------
+        list[app_commands.Choice[str]]
+            List of language choices for autocomplete.
+        """
         common_languages = ["en", "es", "fr", "de", "pt", "zh", "ja", "ko", "ru", "it", "nl", "pl", "tr"]
         choices = [
             app_commands.Choice(name=lang, value=lang) for lang in common_languages if current.lower() in lang.lower()

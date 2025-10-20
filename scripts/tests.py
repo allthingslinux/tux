@@ -71,7 +71,13 @@ class TestCLI(BaseCLI):
             )
 
     def _run_test_command(self, command: list[str], description: str) -> bool:
-        """Run a test command and return success status."""
+        """Run a test command and return success status.
+
+        Returns
+        -------
+        bool
+            True if command succeeded, False otherwise.
+        """
         try:
             self.rich.print_info(f"Running: {' '.join(command)}")
             # Use exec to replace the current process so signals are properly forwarded
@@ -91,7 +97,13 @@ class TestCLI(BaseCLI):
         quick: bool = False,
         fail_under: str | None = None,
     ) -> list[str]:
-        """Build coverage command with various options."""
+        """Build coverage command with various options.
+
+        Returns
+        -------
+        list[str]
+            Complete pytest command with coverage options.
+        """
         # Start with base pytest command (coverage options come from pyproject.toml)
         cmd = ["uv", "run", "pytest"]
 

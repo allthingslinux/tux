@@ -54,7 +54,14 @@ class Jail(ModerationCogBase):
         return None if jail_role_id is None else guild.get_role(jail_role_id)
 
     async def get_jail_channel(self, guild: discord.Guild) -> discord.TextChannel | None:
-        """Get the jail channel for the guild."""
+        """
+        Get the jail channel for the guild.
+
+        Returns
+        -------
+        discord.TextChannel | None
+            The jail channel if found, None otherwise.
+        """
         jail_channel_id = await self.db.guild_config.get_jail_channel_id(guild.id)
         channel = guild.get_channel(jail_channel_id) if jail_channel_id is not None else None
         return channel if isinstance(channel, discord.TextChannel) else None
@@ -83,13 +90,6 @@ class Jail(ModerationCogBase):
             The member to jail.
         flags : JailFlags
             The flags for the command. (reason: str, silent: bool)
-
-        Raises
-        ------
-        discord.Forbidden
-            If the bot is unable to jail the user.
-        discord.HTTPException
-            If an error occurs while jailing the user.
         """
         assert ctx.guild
 

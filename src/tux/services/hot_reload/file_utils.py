@@ -13,7 +13,14 @@ from .config import ModuleReloadError
 
 
 def path_from_extension(extension: str, *, base_dir: Path | None = None) -> Path:
-    """Convert extension name to file path."""
+    """
+    Convert extension name to file path.
+
+    Returns
+    -------
+    Path
+        The file path for the extension.
+    """
     if base_dir is None:
         base_dir = Path("src")
 
@@ -29,6 +36,11 @@ def get_extension_from_path(file_path: Path, base_dir: Path) -> str | None:
     Handles both flat and nested plugin structures:
     - src/tux/modules/admin/ban.py → tux.modules.admin.ban
     - src/tux/plugins/atl/deepfry.py → tux.plugins.atl.deepfry
+
+    Returns
+    -------
+    str | None
+        The extension name if found, None otherwise.
     """
     try:
         relative_path = file_path.relative_to(base_dir)
@@ -76,7 +88,14 @@ def get_extension_from_path(file_path: Path, base_dir: Path) -> str | None:
 
 
 def validate_python_syntax(file_path: Path) -> bool:
-    """Validate Python syntax of a file."""
+    """
+    Validate Python syntax of a file.
+
+    Returns
+    -------
+    bool
+        True if syntax is valid, False otherwise.
+    """
     try:
         with file_path.open(encoding="utf-8") as f:
             source = f.read()
@@ -107,7 +126,19 @@ def module_reload_context(module_name: str):
 
 
 def reload_module_by_name(module_name: str) -> bool:
-    """Reload a module by name."""
+    """
+    Reload a module by name.
+
+    Returns
+    -------
+    bool
+        True if reload was successful.
+
+    Raises
+    ------
+    ModuleReloadError
+        If the module fails to reload.
+    """
     try:
         with module_reload_context(module_name):
             if module_name in sys.modules:
@@ -130,7 +161,14 @@ class FileHashTracker:
         self._hashes: dict[Path, str] = {}
 
     def get_file_hash(self, file_path: Path) -> str:
-        """Get SHA-256 hash of file contents."""
+        """
+        Get SHA-256 hash of file contents.
+
+        Returns
+        -------
+        str
+            The SHA-256 hash of the file, or empty string if error.
+        """
         try:
             with file_path.open("rb") as f:
                 return hashlib.sha256(f.read()).hexdigest()
@@ -139,7 +177,14 @@ class FileHashTracker:
             return ""
 
     def has_changed(self, file_path: Path) -> bool:
-        """Check if file has changed since last check."""
+        """
+        Check if file has changed since last check.
+
+        Returns
+        -------
+        bool
+            True if file has changed, False otherwise.
+        """
         current_hash = self.get_file_hash(file_path)
         previous_hash = self._hashes.get(file_path)
 

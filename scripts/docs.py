@@ -80,7 +80,13 @@ class DocsCLI(BaseCLI):
             )
 
     def _find_mkdocs_config(self) -> str | None:
-        """Find the mkdocs.yml configuration file."""
+        """Find the mkdocs.yml configuration file.
+
+        Returns
+        -------
+        str | None
+            Path to mkdocs.yml if found, None otherwise.
+        """
         current_dir = Path.cwd()
 
         # Check if we're in the docs directory
@@ -95,7 +101,15 @@ class DocsCLI(BaseCLI):
         return None
 
     def _run_command(self, command: list[str]) -> None:
-        """Run a command and return success status."""
+        """Run a command and return success status.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the command is not found.
+        CalledProcessError
+            If the command fails.
+        """
         try:
             self.rich.print_info(f"Running: {' '.join(command)}")
             subprocess.run(command, check=True)

@@ -59,7 +59,14 @@ class StatusRoles(BaseCog):
             await self.check_and_update_roles(after)
 
     def has_activity_changed(self, before: discord.Member, after: discord.Member) -> bool:
-        """Check if there was a relevant change in activities."""
+        """
+        Check if there was a relevant change in activities.
+
+        Returns
+        -------
+        bool
+            True if custom activity status changed, False otherwise.
+        """
         before_has_custom = (
             any(isinstance(a, discord.CustomActivity) for a in before.activities) if before.activities else False
         )
@@ -69,7 +76,14 @@ class StatusRoles(BaseCog):
         return before_has_custom != after_has_custom
 
     def get_custom_status(self, member: discord.Member) -> str | None:
-        """Extract the custom status text from a member's activities."""
+        """
+        Extract the custom status text from a member's activities.
+
+        Returns
+        -------
+        str | None
+            The custom status text, or None if not found.
+        """
         if not member.activities:
             return None
 

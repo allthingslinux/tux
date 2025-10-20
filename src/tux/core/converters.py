@@ -94,6 +94,11 @@ class CaseTypeConverter(commands.Converter[CaseType]):
         -------
         CaseType
             The CaseType enum.
+
+        Raises
+        ------
+        commands.BadArgument
+            If the argument is not a valid CaseType.
         """
         try:
             return CaseType[argument.upper()]
@@ -107,6 +112,11 @@ async def get_channel_safe(bot: Tux, channel_id: int) -> discord.TextChannel | d
     Get a TextChannel or Thread by ID, returning None if not found.
 
     This narrows the return type so callers can safely use fetch_message and message.reactions.
+
+    Returns
+    -------
+    discord.TextChannel | discord.Thread | None
+        The channel if found and is a text channel or thread, None otherwise.
     """
     try:
         channel = bot.get_channel(channel_id)

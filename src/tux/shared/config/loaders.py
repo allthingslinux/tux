@@ -192,13 +192,6 @@ class TomlConfigSource(FileConfigSource):
         -------
         dict[str, Any]
             Parsed TOML data
-
-        Raises
-        ------
-        OSError
-            If file cannot be read
-        tomllib.TOMLDecodeError
-            If TOML parsing fails
         """
         with file_path.open("rb") as f:
             return tomllib.load(f)
@@ -231,13 +224,6 @@ class YamlConfigSource(FileConfigSource):
         -------
         dict[str, Any]
             Parsed YAML data
-
-        Raises
-        ------
-        OSError
-            If file cannot be read
-        yaml.YAMLError
-            If YAML parsing fails
         """
         with file_path.open() as f:
             return yaml.safe_load(f) or {}
@@ -270,13 +256,6 @@ class JsonConfigSource(FileConfigSource):
         -------
         dict[str, Any]
             Parsed JSON data
-
-        Raises
-        ------
-        OSError
-            If file cannot be read
-        json.JSONDecodeError
-            If JSON parsing fails
         """
         with file_path.open() as f:
             return json.load(f)

@@ -60,7 +60,8 @@ class DatabaseService:
         self._echo = echo
 
     async def connect(self, database_url: str, **kwargs: Any) -> None:
-        """Connect to the PostgreSQL database.
+        """
+        Connect to the PostgreSQL database.
 
         Parameters
         ----------
@@ -69,11 +70,6 @@ class DatabaseService:
             postgresql+psycopg://user:password@host:port/database
         **kwargs : Any
             Additional arguments passed to create_async_engine.
-
-        Raises
-        ------
-        Exception
-            If database connection fails.
         """
         try:
             self._engine = create_async_engine(
@@ -161,7 +157,8 @@ class DatabaseService:
                 raise
 
     async def execute_transaction(self, callback: Callable[[], Any]) -> Any:
-        """Execute a callback inside a database transaction.
+        """
+        Execute a callback inside a database transaction.
 
         Parameters
         ----------
@@ -173,10 +170,9 @@ class DatabaseService:
         Any
             The return value of the callback function.
 
-        Raises
-        ------
-        Exception
-            If the transaction fails, it will be rolled back.
+        Notes
+        -----
+        If the transaction fails, it will be rolled back automatically.
         """
         if not self.is_connected() or not self._session_factory:
             await self.connect(CONFIG.database_url)
@@ -191,7 +187,8 @@ class DatabaseService:
                 raise
 
     async def execute_query(self, operation: Callable[[AsyncSession], Awaitable[T]], span_desc: str) -> T:
-        """Execute database operation with automatic retry logic.
+        """
+        Execute database operation with automatic retry logic.
 
         Parameters
         ----------
@@ -205,10 +202,9 @@ class DatabaseService:
         T
             Result of the operation.
 
-        Raises
-        ------
-        Exception
-            If operation fails after all retries.
+        Notes
+        -----
+        Retries the operation automatically on transient failures.
         """
         return await self._execute_with_retry(operation, span_desc)
 
@@ -219,7 +215,8 @@ class DatabaseService:
         max_retries: int = 3,
         backoff_factor: float = 0.5,
     ) -> T:
-        """Execute database operation with exponential backoff retry logic.
+        """
+        Execute database operation with exponential backoff retry logic.
 
         Parameters
         ----------
@@ -239,8 +236,14 @@ class DatabaseService:
 
         Raises
         ------
-        Exception
-            If operation fails after all retries.
+        TimeoutError
+            If the operation times out after all retries.
+        sqlalchemy.exc.DisconnectionError
+            If database disconnection occurs after all retries.
+        sqlalchemy.exc.OperationalError
+            If database operational error occurs after all retries.
+        RuntimeError
+            If the retry loop completes unexpectedly without return or exception.
         """
         for attempt in range(max_retries):
             try:

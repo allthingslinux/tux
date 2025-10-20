@@ -50,12 +50,26 @@ class Info(BaseCog):
 
     @staticmethod
     def _format_bool(value: bool) -> str:
-        """Convert boolean to checkmark/cross emoji."""
+        """
+        Convert boolean to checkmark/cross emoji.
+
+        Returns
+        -------
+        str
+            ✅ for True, ❌ for False.
+        """
         return "✅" if value else "❌"
 
     @staticmethod
     def _format_datetime(dt: datetime | None, style: TimestampStyle = "R") -> str:
-        """Format datetime to Discord relative format or fallback."""
+        """
+        Format datetime to Discord relative format or fallback.
+
+        Returns
+        -------
+        str
+            Formatted Discord timestamp or "Unknown" if None.
+        """
         if dt is None:
             return "Unknown"
         try:
@@ -76,7 +90,14 @@ class Info(BaseCog):
         author_icon_url: str | None = None,
         custom_color: discord.Color | None = None,
     ) -> discord.Embed:
-        """Create a standardized info embed."""
+        """
+        Create a standardized info embed.
+
+        Returns
+        -------
+        discord.Embed
+            The created embed.
+        """
         return EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
             title=title,

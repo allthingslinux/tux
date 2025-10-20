@@ -29,7 +29,14 @@ class HelpRenderer:
         self.prefix = prefix
 
     def create_base_embed(self, title: str, description: str | None = None) -> discord.Embed:
-        """Create base embed with consistent styling."""
+        """
+        Create base embed with consistent styling.
+
+        Returns
+        -------
+        discord.Embed
+            The base embed with title, description, and default color.
+        """
         return discord.Embed(
             title=title,
             description=description,
@@ -37,7 +44,14 @@ class HelpRenderer:
         )
 
     def format_flag_details(self, command: commands.Command[Any, Any, Any]) -> str:
-        """Format flag details for a command."""
+        """
+        Format flag details for a command.
+
+        Returns
+        -------
+        str
+            Formatted flag details, or empty string if no flags.
+        """
         flag_details: list[str] = []
 
         try:
@@ -62,13 +76,27 @@ class HelpRenderer:
 
     @staticmethod
     def _format_flag_name(flag: commands.Flag) -> str:
-        """Format a flag name based on its properties."""
+        """
+        Format a flag name based on its properties.
+
+        Returns
+        -------
+        str
+            The formatted flag name with appropriate brackets.
+        """
         if getattr(flag, "positional", False):
             return f"<{flag.name}>" if flag.required else f"[{flag.name}]"
         return f"-{flag.name}" if flag.required else f"[-{flag.name}]"
 
     def generate_default_usage(self, command: commands.Command[Any, Any, Any]) -> str:
-        """Generate default usage string for a command."""
+        """
+        Generate default usage string for a command.
+
+        Returns
+        -------
+        str
+            The usage string for the command.
+        """
         signature = command.signature.strip()
         if not signature:
             return command.qualified_name
@@ -97,7 +125,14 @@ class HelpRenderer:
         )
 
     async def create_main_embed(self, categories: dict[str, dict[str, str]]) -> discord.Embed:
-        """Create main help embed."""
+        """
+        Create main help embed.
+
+        Returns
+        -------
+        discord.Embed
+            The main help embed with bot information and usage instructions.
+        """
         if CONFIG.BOT_INFO.BOT_NAME != "Tux":
             embed = self.create_base_embed(
                 "Hello! Welcome to the help command.",
@@ -154,7 +189,14 @@ class HelpRenderer:
         )
 
     async def create_category_embed(self, category: str, commands_dict: dict[str, str]) -> discord.Embed:
-        """Create category-specific embed."""
+        """
+        Create category-specific embed.
+
+        Returns
+        -------
+        discord.Embed
+            The category embed with command list.
+        """
         embed = self.create_base_embed(f"{category.capitalize()} Commands")
 
         embed.set_footer(text="Select a command from the dropdown to see details.")
@@ -166,7 +208,14 @@ class HelpRenderer:
         return embed
 
     async def create_command_embed(self, command: commands.Command[Any, Any, Any]) -> discord.Embed:
-        """Create command-specific embed."""
+        """
+        Create command-specific embed.
+
+        Returns
+        -------
+        discord.Embed
+            The command embed with details and usage.
+        """
         help_text = format_multiline_description(command.help)
         embed = self.create_base_embed(
             title=f"{self.prefix}{command.qualified_name}",
@@ -225,7 +274,14 @@ class HelpRenderer:
         parent_name: str,
         subcommand: commands.Command[Any, Any, Any],
     ) -> discord.Embed:
-        """Create subcommand-specific embed."""
+        """
+        Create subcommand-specific embed.
+
+        Returns
+        -------
+        discord.Embed
+            The subcommand embed with details and usage.
+        """
         help_text = format_multiline_description(subcommand.help)
 
         embed = self.create_base_embed(
@@ -241,7 +297,14 @@ class HelpRenderer:
         return embed
 
     def create_category_options(self, categories: dict[str, dict[str, str]]) -> list[discord.SelectOption]:
-        """Create select options for categories."""
+        """
+        Create select options for categories.
+
+        Returns
+        -------
+        list[discord.SelectOption]
+            List of select options for each category.
+        """
         category_emoji_map = {
             "info": "🔍",
             "moderation": "🛡",
@@ -275,7 +338,14 @@ class HelpRenderer:
         commands_dict: dict[str, str],
         command_mapping: dict[str, commands.Command[Any, Any, Any]],
     ) -> list[discord.SelectOption]:
-        """Create select options for commands."""
+        """
+        Create select options for commands.
+
+        Returns
+        -------
+        list[discord.SelectOption]
+            List of select options for each command, sorted by label.
+        """
         options: list[discord.SelectOption] = []
 
         for cmd_name in commands_dict:
@@ -287,7 +357,14 @@ class HelpRenderer:
         return sorted(options, key=lambda o: o.label)
 
     def create_subcommand_options(self, subcommands: list[commands.Command[Any, Any, Any]]) -> list[SelectOption]:
-        """Create select options for subcommands."""
+        """
+        Create select options for subcommands.
+
+        Returns
+        -------
+        list[SelectOption]
+            List of select options for each subcommand.
+        """
         # Special handling for jishaku to prevent loading all subcommands
         if (
             not subcommands

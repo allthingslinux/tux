@@ -81,7 +81,14 @@ class BaseHelpView(discord.ui.View):
         self.author = help_command.context.author
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        """Ensure only the invoker can interact with this view."""
+        """
+        Ensure only the invoker can interact with this view.
+
+        Returns
+        -------
+        bool
+            True if the interaction user is the author, False otherwise.
+        """
         if interaction.user != self.author:
             await interaction.response.send_message("You can't interact with others help menus!", ephemeral=True)
             return False
@@ -394,7 +401,14 @@ class DirectHelpView(BaseHelpView):
         self.add_item(close_button)
 
     async def get_embed(self) -> discord.Embed:
-        """Get the embed for the current page."""
+        """
+        Get the embed for the current page.
+
+        Returns
+        -------
+        discord.Embed
+            The embed for the current subcommand page.
+        """
         # Get prefix from the context
         prefix = self.help_command.context.clean_prefix
 

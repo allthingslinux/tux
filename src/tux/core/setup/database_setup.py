@@ -32,7 +32,14 @@ class DatabaseSetupService(BaseSetupService):
         self.db_service = db_service
 
     def _find_project_root(self) -> Path:
-        """Find the project root by looking for alembic.ini."""
+        """
+        Find the project root by looking for alembic.ini.
+
+        Returns
+        -------
+        Path
+            The project root directory containing alembic.ini.
+        """
         path = Path(__file__).resolve()
         for parent in [path, *list(path.parents)]:
             if (parent / "alembic.ini").exists():
@@ -41,7 +48,13 @@ class DatabaseSetupService(BaseSetupService):
         return Path.cwd()
 
     def _build_alembic_config(self) -> Config:
-        """Build Alembic configuration with suppressed stdout output.
+        """
+        Build Alembic configuration with suppressed stdout output.
+
+        Returns
+        -------
+        Config
+            The configured Alembic Config object.
 
         Notes
         -----
@@ -59,9 +72,17 @@ class DatabaseSetupService(BaseSetupService):
         return cfg
 
     async def _upgrade_head_if_needed(self) -> None:
-        """Run Alembic upgrade to head on startup.
+        """
+        Run Alembic upgrade to head on startup.
 
         This call is idempotent and safe to run on startup.
+
+        Raises
+        ------
+        ConnectionError
+            If database connection fails during migrations.
+        RuntimeError
+            If migration execution fails.
         """
         cfg = self._build_alembic_config()
         logger.info("🔄 Checking database migrations...")
@@ -96,7 +117,14 @@ class DatabaseSetupService(BaseSetupService):
             raise RuntimeError(migration_error_msg) from e
 
     async def setup(self) -> None:
-        """Set up and validate the database connection and run migrations."""
+        """
+        Set up and validate the database connection and run migrations.
+
+        Raises
+        ------
+        TuxDatabaseConnectionError
+            If database connection or validation fails.
+        """
         self._log_step("Connecting to database...")
 
         await self.db_service.connect(CONFIG.database_url)

@@ -45,13 +45,6 @@ class Dev(BaseCog):
         ----------
         ctx : commands.Context[Tux]
             The context object for the command.
-
-        Raises
-        ------
-        commands.MissingPermissions
-            If the user does not have the required permissions
-        commands.CommandInvokeError
-            If the subcommand is not found.
         """
         if ctx.invoked_subcommand is None:
             await ctx.send_help("dev")
@@ -72,11 +65,6 @@ class Dev(BaseCog):
             The context in which the command is being invoked.
         guild : discord.Guild
             The guild to sync application commands to.
-
-        Raises
-        ------
-        commands.MissingRequiredArgument
-            If a guild is not specified.
         """
         assert ctx.guild
 
@@ -100,11 +88,6 @@ class Dev(BaseCog):
         ----------
         ctx : commands.Context
             The context in which the command is being invoked.
-
-        Raises
-        ------
-        commands.MissingPermissions
-            If the user does not have the required permissions.
         """
         assert ctx.guild
 
@@ -533,10 +516,5 @@ async def setup(bot: Tux) -> None:
     ----------
     bot : Tux
         The bot instance to add the cog to.
-
-    Returns
-    -------
-    None
-        The cog is added to the bot.
     """
     await bot.add_cog(Dev(bot))

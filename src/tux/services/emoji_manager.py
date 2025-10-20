@@ -27,12 +27,26 @@ MIN_EMOJI_NAME_LENGTH = 2
 
 
 def _is_valid_emoji_name(name: str) -> bool:
-    """Check if an emoji name meets basic validity criteria."""
+    """
+    Check if an emoji name meets basic validity criteria.
+
+    Returns
+    -------
+    bool
+        True if the name is valid, False otherwise.
+    """
     return bool(name and len(name) >= MIN_EMOJI_NAME_LENGTH)
 
 
 def _find_emoji_file(base_path: Path, name: str) -> Path | None:
-    """Find the local file corresponding to an emoji name within a base path."""
+    """
+    Find the local file corresponding to an emoji name within a base path.
+
+    Returns
+    -------
+    Path | None
+        The path to the emoji file if found, None otherwise.
+    """
     if not _is_valid_emoji_name(name):
         logger.warning(f"Attempted to find file for invalid emoji name: '{name}'")
         return None
@@ -50,7 +64,14 @@ def _find_emoji_file(base_path: Path, name: str) -> Path | None:
 
 
 def _read_emoji_file(file_path: Path) -> bytes | None:
-    """Read image bytes from a file path, handling errors."""
+    """
+    Read image bytes from a file path, handling errors.
+
+    Returns
+    -------
+    bytes | None
+        The file contents as bytes if successful, None otherwise.
+    """
     try:
         with file_path.open("rb") as f:
             img_bytes = f.read()
@@ -308,7 +329,14 @@ class EmojiManager:
         return created_emojis, duplicates_or_failed
 
     async def _ensure_initialized(self) -> bool:
-        """Check if cache is initialized, logs warning if not."""
+        """
+        Check if cache is initialized, logs warning if not.
+
+        Returns
+        -------
+        bool
+            True if initialized, False otherwise.
+        """
         if self._initialized:
             return True
         logger.warning("Operation called before cache was initialized. Call await manager.init() first.")

@@ -49,7 +49,13 @@ class BannerBuilder:
         self._console = Console()
 
     def _create_ascii_art(self) -> Text:
-        """Create styled ASCII art text."""
+        """Create styled ASCII art text.
+
+        Returns
+        -------
+        Text
+            Styled ASCII art as Rich Text object.
+        """
         ascii_art = Text()
         style = Style(color=self.config.colors.primary, bold=True)
 
@@ -60,7 +66,13 @@ class BannerBuilder:
         return Text(ascii_art.plain.rstrip(), style=style)
 
     def _create_banner_table(self) -> Table:
-        """Create the complete banner table."""
+        """Create the complete banner table.
+
+        Returns
+        -------
+        Table
+            Rich Table with ASCII art and bot information.
+        """
         # Create a grid-style table with minimal padding
         table = Table.grid(padding=(0, 2))
 
@@ -92,7 +104,13 @@ class BannerBuilder:
         return table
 
     def build(self) -> Panel:
-        """Build the complete banner panel."""
+        """Build the complete banner panel.
+
+        Returns
+        -------
+        Panel
+            Rich Panel containing the complete banner.
+        """
         content = self._create_banner_table()
 
         return Panel(
@@ -111,7 +129,13 @@ def create_banner(
     user_count: int = 0,
     prefix: str = "~",
 ) -> Panel:
-    """Create a banner panel with bot information."""
+    """Create a banner panel with bot information.
+
+    Returns
+    -------
+    Panel
+        Rich Panel with the bot banner.
+    """
     config = BannerConfig(
         bot_name=bot_name,
         version=version,

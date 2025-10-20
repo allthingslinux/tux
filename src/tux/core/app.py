@@ -113,8 +113,6 @@ class TuxApp:
         ------
         RuntimeError
             If a critical application error occurs during startup.
-        Exception
-            Any unexpected errors are logged to Sentry and re-raised.
 
         Notes
         -----
@@ -222,7 +220,8 @@ class TuxApp:
             # Fallback for Windows: Use traditional signal module
             # This doesn't integrate as well with asyncio but is the only option
             def _signal_handler(signum: int, frame: FrameType | None) -> None:
-                """Handle signals on Windows by reporting to Sentry and raising KeyboardInterrupt.
+                """
+                Handle signals on Windows by reporting to Sentry and raising KeyboardInterrupt.
 
                 Parameters
                 ----------
@@ -230,6 +229,11 @@ class TuxApp:
                     The signal number received.
                 frame : FrameType, optional
                     The current stack frame when the signal was received.
+
+                Raises
+                ------
+                KeyboardInterrupt
+                    Always raised to trigger shutdown.
                 """
                 SentryManager.report_signal(signum, frame)
                 logger.info(f"Signal {signum} received, shutting down...")
@@ -255,13 +259,6 @@ class TuxApp:
         - Configuration validation and owner ID resolution
         - Bot instance creation and Discord connection
         - Background task monitoring for shutdown events
-
-        Raises
-        ------
-        SystemExit
-            If BOT_TOKEN is not configured in the environment.
-        Exception
-            Any errors during bot setup or connection are logged to Sentry.
 
         Notes
         -----
@@ -364,11 +361,6 @@ class TuxApp:
     async def _await_bot_setup(self) -> None:
         """
         Wait for bot internal setup to complete before connecting.
-
-        Raises
-        ------
-        Exception
-            If bot setup fails, the exception is logged to Sentry and re-raised.
 
         Notes
         -----

@@ -128,7 +128,14 @@ class Afk(BaseCog):
         await ctx.reply(content=content, allowed_mentions=AFK_ALLOWED_MENTIONS, ephemeral=True)
 
     async def _get_afk_entry(self, member_id: int, guild_id: int) -> AFKMODEL | None:
-        """Get an AFK entry for a member in a guild."""
+        """
+        Get an AFK entry for a member in a guild.
+
+        Returns
+        -------
+        AFKMODEL | None
+            The AFK entry if found, None otherwise.
+        """
         return await self.db.afk.get_afk_member(member_id, guild_id)
 
     @commands.Cog.listener("on_message")

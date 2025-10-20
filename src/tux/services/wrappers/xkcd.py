@@ -302,8 +302,12 @@ class Client:
 
         Raises
         ------
-        HttpError
-            If the request fails.
+        TuxAPIConnectionError
+            If connection to xkcd API fails.
+        TuxAPIRequestError
+            If the API request fails.
+        TuxAPIResourceNotFoundError
+            If the comic is not found.
         """
         comic_url = self.latest_comic_url() if comic_id <= 0 else self.comic_id_url(comic_id)
 
@@ -341,8 +345,12 @@ class Client:
 
         Raises
         ------
-        HttpError
-            If the request fails.
+        TuxAPIConnectionError
+            If connection to xkcd API fails.
+        TuxAPIRequestError
+            If the API request fails.
+        TuxAPIResourceNotFoundError
+            If the image is not found or URL is not provided.
         """
         if not raw_image_url:
             raise TuxAPIResourceNotFoundError(service_name="xkcd", resource_identifier="image_url_not_provided")

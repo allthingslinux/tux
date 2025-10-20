@@ -26,7 +26,14 @@ class HelpData:
         self.command_mapping: dict[str, dict[str, commands.Command[Any, Any, Any]]] | None = None
 
     async def get_prefix(self, ctx: commands.Context[Any]) -> str:
-        """Get command prefix for the current context."""
+        """
+        Get command prefix for the current context.
+
+        Returns
+        -------
+        str
+            The command prefix for the context.
+        """
         guild_id = ctx.guild.id if ctx.guild else None
 
         if guild_id in self._prefix_cache:
@@ -37,7 +44,14 @@ class HelpData:
         return prefix
 
     async def get_command_categories(self) -> dict[str, dict[str, str]]:
-        """Get categorized commands mapping."""
+        """
+        Get categorized commands mapping.
+
+        Returns
+        -------
+        dict[str, dict[str, str]]
+            Dictionary mapping categories to their commands.
+        """
         if self._category_cache:
             return self._category_cache
 
@@ -59,14 +73,28 @@ class HelpData:
         return self._category_cache
 
     async def _can_run_command(self, command: commands.Command[Any, Any, Any]) -> bool:
-        """Check if command can be run by checking basic requirements."""
+        """
+        Check if command can be run by checking basic requirements.
+
+        Returns
+        -------
+        bool
+            True if the command is not hidden and is enabled, False otherwise.
+        """
         try:
             return not command.hidden and command.enabled
         except Exception:
             return False
 
     def find_command(self, command_name: str) -> commands.Command[Any, Any, Any] | None:
-        """Find a command by name."""
+        """
+        Find a command by name.
+
+        Returns
+        -------
+        commands.Command[Any, Any, Any] | None
+            The command if found, None otherwise.
+        """
         # First try direct lookup
         if found := self.bot.get_command(command_name):
             return found
@@ -80,7 +108,14 @@ class HelpData:
         return None
 
     def find_parent_command(self, subcommand_name: str) -> tuple[str, commands.Command[Any, Any, Any]] | None:
-        """Find parent command for a subcommand."""
+        """
+        Find parent command for a subcommand.
+
+        Returns
+        -------
+        tuple[str, commands.Command[Any, Any, Any]] | None
+            Tuple of (parent_name, subcommand) if found, None otherwise.
+        """
         for command in self.bot.walk_commands():
             if isinstance(command, commands.Group):
                 for subcommand in command.commands:
@@ -93,6 +128,13 @@ class HelpData:
         command: commands.Group[Any, Any, Any],
         page_size: int = 10,
     ) -> list[list[commands.Command[Any, Any, Any]]]:
-        """Paginate subcommands into pages."""
+        """
+        Paginate subcommands into pages.
+
+        Returns
+        -------
+        list[list[commands.Command[Any, Any, Any]]]
+            List of pages, each containing up to page_size subcommands.
+        """
         subcommands = list(command.commands)
         return [subcommands[i : i + page_size] for i in range(0, len(subcommands), page_size)]

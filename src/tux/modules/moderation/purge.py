@@ -50,13 +50,6 @@ class Purge(BaseCog):
             The number of messages to delete.
         channel : discord.TextChannel | discord.Thread | discord.VoiceChannel | None
             The channel to delete messages from.
-
-        Raises
-        ------
-        discord.Forbidden
-            If the bot is unable to delete messages.
-        discord.HTTPException
-            If an error occurs while deleting messages.
         """
         assert interaction.guild
 
@@ -146,13 +139,6 @@ class Purge(BaseCog):
             The number of messages to delete.
         channel : discord.TextChannel | discord.Thread | discord.VoiceChannel | None
             The channel to delete messages from.
-
-        Raises
-        ------
-        discord.Forbidden
-            If the bot is unable to delete messages.
-        discord.HTTPException
-            If an error occurs while deleting messages.
         """
         assert ctx.guild
 

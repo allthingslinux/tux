@@ -121,13 +121,6 @@ class Unban(ModerationCogBase):
             The reason for the unban.
         flags : UnbanFlags
             The flags for the command.
-
-        Raises
-        ------
-        discord.Forbidden
-            If the bot does not have the necessary permissions.
-        discord.HTTPException
-            If an error occurs while unbanning the user.
         """
         assert ctx.guild
 

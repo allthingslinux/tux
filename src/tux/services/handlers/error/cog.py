@@ -109,7 +109,13 @@ class ErrorHandler(commands.Cog):
             track_command_end(command_name, success=False, error=error)
 
     def _get_error_config(self, error: Exception) -> ErrorHandlerConfig:
-        """Get configuration for error type."""
+        """Get configuration for error type.
+
+        Returns
+        -------
+        ErrorHandlerConfig
+            Configuration for the error type.
+        """
         error_type = type(error)
 
         # Check exact match

@@ -43,7 +43,13 @@ class Timer:
         self.start_time = time.time()
 
     def elapsed_ms(self) -> int:
-        """Get elapsed time in milliseconds."""
+        """Get elapsed time in milliseconds.
+
+        Returns
+        -------
+        int
+            Elapsed time in milliseconds since start.
+        """
         if self.start_time is None:
             return 0
         return int((time.time() - self.start_time) * 1000)
@@ -60,7 +66,18 @@ class DockerCLI(BaseCLI):
         self._setup_commands()
 
     def _get_docker_client(self):
-        """Get or create Docker client."""
+        """Get or create Docker client.
+
+        Returns
+        -------
+        docker.DockerClient
+            The Docker client instance.
+
+        Raises
+        ------
+        ImportError
+            If Docker SDK is not installed.
+        """
         if self._docker_client is None:
             if docker is None:
                 msg = "Docker SDK not available. Install with: pip install docker"
@@ -109,15 +126,33 @@ class DockerCLI(BaseCLI):
             )
 
     def _get_docker_cmd(self) -> str:
-        """Get the system Docker command path."""
+        """Get the system Docker command path.
+
+        Returns
+        -------
+        str
+            Path to the Docker command.
+        """
         return "/usr/bin/docker"
 
     def _get_docker_host(self) -> str | None:
-        """Get the Docker host from environment variables."""
+        """Get the Docker host from environment variables.
+
+        Returns
+        -------
+        str | None
+            The Docker host URL if set, None otherwise.
+        """
         return os.environ.get("DOCKER_HOST")
 
     def _setup_docker_host(self) -> bool:
-        """Auto-detect and setup Docker host."""
+        """Auto-detect and setup Docker host.
+
+        Returns
+        -------
+        bool
+            True if Docker host was configured successfully, False otherwise.
+        """
         # Check if we're already configured
         if self._get_docker_host():
             return True
@@ -137,12 +172,26 @@ class DockerCLI(BaseCLI):
         return False
 
     def _get_compose_base_cmd(self) -> list[str]:
-        """Get the base docker compose command."""
+        """Get the base docker compose command.
+
+        Returns
+        -------
+        list[str]
+            The base docker compose command as a list of strings.
+        """
         # Use the system docker command to avoid conflicts with the virtual env docker script
         return [self._get_docker_cmd(), "compose", "-f", "compose.yaml"]
 
     def _run_command(self, command: list[str]) -> None:
-        """Run a command and return success status."""
+        """Run a command and return success status.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the command is not found.
+        CalledProcessError
+            If the command fails.
+        """
         try:
             # Ensure DOCKER_HOST is set
             env = os.environ.copy()
@@ -160,7 +209,18 @@ class DockerCLI(BaseCLI):
             raise
 
     def _safe_run(self, cmd: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
-        """Safely run a command with error handling."""
+        """Safely run a command with error handling.
+
+        Returns
+        -------
+        subprocess.CompletedProcess[str]
+            The completed process result.
+
+        Raises
+        ------
+        CalledProcessError
+            If the command fails.
+        """
         try:
             return subprocess.run(cmd, **kwargs, check=True)  # type: ignore[return-value]
         except subprocess.CalledProcessError:
@@ -168,7 +228,13 @@ class DockerCLI(BaseCLI):
             raise
 
     def _check_docker(self) -> bool:  # sourcery skip: class-extract-method, extract-duplicate-method
-        """Check if Docker is available and running."""
+        """Check if Docker is available and running.
+
+        Returns
+        -------
+        bool
+            True if Docker is available and running, False otherwise.
+        """
         # Auto-detect Docker host
         self._setup_docker_host()
 
@@ -197,7 +263,13 @@ class DockerCLI(BaseCLI):
             return True
 
     def _get_tux_resources(self, resource_type: str) -> list[str]:
-        """Get Tux-related Docker resources safely."""
+        """Get Tux-related Docker resources safely.
+
+        Returns
+        -------
+        list[str]
+            List of Tux-related Docker resource names.
+        """
         safe_patterns: dict[str, list[str]] = {
             "images": [
                 r"^tux:.*",
@@ -637,7 +709,13 @@ class DockerCLI(BaseCLI):
 
     def _check_container_health(self, container_name: str) -> bool:
         # sourcery skip: assign-if-exp, boolean-if-exp-identity, hoist-statement-from-if, reintroduce-else
-        """Check if a container is running and healthy."""
+        """Check if a container is running and healthy.
+
+        Returns
+        -------
+        bool
+            True if container is running and healthy, False otherwise.
+        """
         try:
             client = self._get_docker_client()
             container = client.containers.get(container_name)
@@ -661,7 +739,13 @@ class DockerCLI(BaseCLI):
             return True
 
     def _has_configuration_error(self, container_name: str) -> bool:
-        """Check if container logs indicate configuration errors."""
+        """Check if container logs indicate configuration errors.
+
+        Returns
+        -------
+        bool
+            True if configuration errors detected, False otherwise.
+        """
         try:
             client = self._get_docker_client()
             container = client.containers.get(container_name)
@@ -697,7 +781,13 @@ class DockerCLI(BaseCLI):
             self.rich.print_warning(f"Failed to get logs: {e}")
 
     def _strip_ansi_codes(self, text: str) -> str:
-        """Strip ANSI color codes from text."""
+        """Strip ANSI color codes from text.
+
+        Returns
+        -------
+        str
+            Text with ANSI codes removed.
+        """
         # Remove ANSI escape sequences
         ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
         return ansi_escape.sub("", text)

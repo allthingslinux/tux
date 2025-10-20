@@ -31,7 +31,13 @@ class CommandSuggester:
         self.delete_after = delete_after
 
     async def suggest_command(self, ctx: commands.Context[Tux]) -> list[str] | None:
-        """Find similar command names using Levenshtein distance."""
+        """Find similar command names using Levenshtein distance.
+
+        Returns
+        -------
+        list[str] | None
+            List of suggested command names, or None if no suggestions found.
+        """
         if not ctx.guild or not ctx.invoked_with:
             return None
 

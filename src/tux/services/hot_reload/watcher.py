@@ -59,7 +59,14 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
         logger.info(f"Created CogWatcher for base_dir: {base_dir} (exists: {base_dir.exists()})")
 
     def should_process_file(self, file_path: Path) -> bool:
-        """Check if file should be processed based on patterns."""
+        """
+        Check if file should be processed based on patterns.
+
+        Returns
+        -------
+        bool
+            True if file should be processed, False otherwise.
+        """
         # Check file patterns
         if not any(fnmatch.fnmatch(file_path.name, pattern) for pattern in self.config.file_patterns):
             return False
@@ -164,7 +171,14 @@ class FileWatcher:
         self.watchers: list[CogWatcher] = []
 
     def start(self) -> None:
-        """Start file system watching."""
+        """
+        Start file system watching.
+
+        Raises
+        ------
+        FileWatchError
+            If starting the file watcher fails.
+        """
         if self.observer is not None:
             logger.warning("File watcher already started")
             return
@@ -206,7 +220,14 @@ class FileWatcher:
             raise FileWatchError(error_msg) from e
 
     def stop(self) -> None:
-        """Stop file system watching."""
+        """
+        Stop file system watching.
+
+        Raises
+        ------
+        FileWatchError
+            If stopping the file watcher fails.
+        """
         if self.observer is None:
             return
 
@@ -223,5 +244,12 @@ class FileWatcher:
             raise FileWatchError(error_msg) from e
 
     def is_running(self) -> bool:
-        """Check if file watcher is running."""
+        """
+        Check if file watcher is running.
+
+        Returns
+        -------
+        bool
+            True if watcher is running, False otherwise.
+        """
         return self.observer is not None and self.observer.is_alive()

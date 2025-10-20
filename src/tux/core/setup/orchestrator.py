@@ -38,7 +38,16 @@ class BotSetupOrchestrator:
         self.cog_setup = CogSetupService(bot)
 
     async def setup(self, span: DummySpan | Any) -> None:
-        """Execute all setup steps with standardized error handling."""
+        """
+        Execute all setup steps with standardized error handling.
+
+        Raises
+        ------
+        TuxDatabaseConnectionError
+            If database setup fails.
+        RuntimeError
+            If permission system or cog setup fails.
+        """
         set_setup_phase_tag(span, "starting")
 
         # Database setup (includes migrations)

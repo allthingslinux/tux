@@ -86,10 +86,5 @@ async def setup(bot: Tux) -> None:
     ----------
     bot : Tux
         The bot instance to add the cog to.
-
-    Returns
-    -------
-    None
-        The cog is added to the bot.
     """
     await bot.add_cog(PollBan(bot))

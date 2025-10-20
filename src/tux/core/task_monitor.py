@@ -42,7 +42,14 @@ class TaskMonitor:
             self._monitor_loop.stop()
 
     async def _monitor_tasks_loop_impl(self) -> None:
-        """Monitor and clean up running tasks periodically."""
+        """
+        Monitor and clean up running tasks periodically.
+
+        Raises
+        ------
+        RuntimeError
+            If task monitoring encounters a critical failure.
+        """
         with start_span("bot.monitor_tasks", "Monitoring async tasks"):
             try:
                 all_tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
@@ -55,7 +62,14 @@ class TaskMonitor:
                 raise RuntimeError(msg) from e
 
     def _categorize_tasks(self, tasks_list: list[asyncio.Task[Any]]) -> dict[str, list[asyncio.Task[Any]]]:
-        """Categorize tasks by type for monitoring and cleanup."""
+        """
+        Categorize tasks by type for monitoring and cleanup.
+
+        Returns
+        -------
+        dict[str, list[asyncio.Task[Any]]]
+            Dictionary mapping task types to their task lists.
+        """
         tasks_by_type: dict[str, list[asyncio.Task[Any]]] = {
             "SCHEDULED": [],
             "GATEWAY": [],

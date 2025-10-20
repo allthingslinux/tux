@@ -106,7 +106,13 @@ class DatabaseConfig(BaseModel):
     DATABASE_URL: str = Field(default="", description="Custom database URL override")
 
     def get_database_url(self) -> str:
-        """Get database URL, either custom or constructed from individual parts."""
+        """Get database URL, either custom or constructed from individual parts.
+
+        Returns
+        -------
+        str
+            Complete PostgreSQL database URL.
+        """
         if self.DATABASE_URL:
             return self.DATABASE_URL
 

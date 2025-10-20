@@ -102,6 +102,11 @@ class EmbedCreator:
             If True, removes the author from the embed.
         custom_color : int or Colour, optional
             Overrides default color for the embed type if provided.
+
+        Returns
+        -------
+        discord.Embed
+            The customized Discord embed.
         """
         try:
             embed: discord.Embed = discord.Embed(title=title, description=description)

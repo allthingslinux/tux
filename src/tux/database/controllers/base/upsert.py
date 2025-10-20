@@ -35,7 +35,14 @@ class UpsertController[ModelT]:
         defaults: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> tuple[ModelT, bool]:
-        """Upsert a record by a specific field."""
+        """
+        Upsert a record by a specific field.
+
+        Returns
+        -------
+        tuple[ModelT, bool]
+            Tuple of (record, created) where created is True if new record was created.
+        """
         query_controller = QueryController(self.model, self.db)
 
         # Try to find existing record
@@ -70,7 +77,19 @@ class UpsertController[ModelT]:
         defaults: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> tuple[ModelT, bool]:
-        """Upsert a record by ID."""
+        """
+        Upsert a record by ID.
+
+        Returns
+        -------
+        tuple[ModelT, bool]
+            Tuple of (record, created) where created is True if new record was created.
+
+        Raises
+        ------
+        RuntimeError
+            If updating an existing record fails.
+        """
         crud_controller = CrudController(self.model, self.db)
 
         # Try to get existing record
@@ -103,7 +122,14 @@ class UpsertController[ModelT]:
         defaults: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> tuple[ModelT, bool]:
-        """Get existing record or create new one by field."""
+        """
+        Get existing record or create new one by field.
+
+        Returns
+        -------
+        tuple[ModelT, bool]
+            Tuple of (record, created) where created is True if new record was created.
+        """
         query_controller = QueryController(self.model, self.db)
 
         # Try to find existing record
@@ -123,7 +149,14 @@ class UpsertController[ModelT]:
         return new_instance, True
 
     async def get_or_create(self, defaults: dict[str, Any] | None = None, **filters: Any) -> tuple[ModelT, bool]:
-        """Get existing record or create new one."""
+        """
+        Get existing record or create new one.
+
+        Returns
+        -------
+        tuple[ModelT, bool]
+            Tuple of (record, created) where created is True if new record was created.
+        """
         query_controller = QueryController(self.model, self.db)
 
         # Try to find existing record
@@ -147,7 +180,14 @@ class UpsertController[ModelT]:
         defaults: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> tuple[ModelT, bool]:
-        """Upsert a record."""
+        """
+        Upsert a record.
+
+        Returns
+        -------
+        tuple[ModelT, bool]
+            Tuple of (record, created) where created is True if new record was created.
+        """
         query_controller = QueryController(self.model, self.db)
 
         # Try to find existing record

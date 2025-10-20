@@ -130,11 +130,6 @@ class Timezones(BaseCog):
         ----------
         ctx : commands.Context[Tux]
             The command context.
-
-        Returns
-        -------
-        None
-            Sends an interactive timezone menu to the user.
         """
         utc_now = datetime.now(UTC)
 
@@ -189,10 +184,5 @@ async def setup(bot: Tux) -> None:
     ----------
     bot : Tux
         The bot instance to add the cog to.
-
-    Returns
-    -------
-    None
-        The cog is added to the bot.
     """
     await bot.add_cog(Timezones(bot))

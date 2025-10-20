@@ -51,19 +51,47 @@ class DummySpan:
         self.start_time = time.perf_counter()
 
     def set_tag(self, *args: Any, **kwargs: Any) -> "DummySpan":
-        """No-op tag setter."""
+        """
+        No-op tag setter.
+
+        Returns
+        -------
+        DummySpan
+            Returns self for method chaining.
+        """
         return self
 
     def set_data(self, *args: Any, **kwargs: Any) -> "DummySpan":
-        """No-op data setter."""
+        """
+        No-op data setter.
+
+        Returns
+        -------
+        DummySpan
+            Returns self for method chaining.
+        """
         return self
 
     def set_status(self, *args: Any, **kwargs: Any) -> "DummySpan":
-        """No-op status setter."""
+        """
+        No-op status setter.
+
+        Returns
+        -------
+        DummySpan
+            Returns self for method chaining.
+        """
         return self
 
     def set_name(self, name: str) -> "DummySpan":
-        """No-op name setter."""
+        """
+        No-op name setter.
+
+        Returns
+        -------
+        DummySpan
+            Returns self for method chaining.
+        """
         return self
 
 
@@ -456,7 +484,14 @@ def start_transaction(op: str, name: str, description: str = "") -> Generator[Du
 
 
 def get_current_span() -> Any | None:
-    """Get the current active Sentry span."""
+    """
+    Get the current active Sentry span.
+
+    Returns
+    -------
+    Any | None
+        The current span if Sentry is initialized, None otherwise.
+    """
     if not sentry_sdk.is_initialized():
         return None
     return sentry_sdk.Hub.current.scope.span
