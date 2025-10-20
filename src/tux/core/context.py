@@ -85,11 +85,14 @@ def get_interaction_context(source: ContextOrInteraction) -> dict[str, Any]:
     with a consistent set of keys, abstracting away the differences between
     the two source types.
 
-    Args:
-        source: The command `Context` or `Interaction` object.
+    Parameters
+    ----------
+    source : Context[Tux] | Interaction
+        The command `Context` or `Interaction` object.
 
     Returns
     -------
+    dict[str, Any]
         A dictionary with standardized context keys like `user_id`,
         `command_name`, `guild_id`, `command_type`, etc.
     """

@@ -159,7 +159,11 @@ class DevCLI(BaseCLI):
     def lint_docstring(self) -> None:
         """Lint docstrings for proper formatting and completeness."""
         self.rich.print_section("🔍 Linting Docstrings", "blue")
-        success = self._run_tool_command(["uv", "run", "pydoclint", "."], "Docstring linting completed successfully")
+        success = self._run_tool_command(
+            ["uv", "run", "pydoclint", "--config=pyproject.toml", "."],
+            "Docstring linting completed successfully",
+            print_stderr_on_success=True,
+        )
         if not success:
             self.rich.print_error("Docstring linting did not pass - see issues above")
             sys.exit(1)

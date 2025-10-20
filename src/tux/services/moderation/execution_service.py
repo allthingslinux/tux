@@ -31,13 +31,19 @@ class ExecutionService:
         max_retries: int = 3,
         base_delay: float = 1.0,
     ):
-        """Initialize the execution service.
+        """
+        Initialize the execution service.
 
-        Args:
-            failure_threshold: Number of failures before opening circuit breaker
-            recovery_timeout: Seconds to wait before retrying after circuit opens
-            max_retries: Maximum number of retry attempts for operations
-            base_delay: Base delay in seconds for exponential backoff
+        Parameters
+        ----------
+        failure_threshold : int, optional
+            Number of failures before opening circuit breaker, by default 5.
+        recovery_timeout : float, optional
+            Seconds to wait before retrying after circuit opens, by default 60.0.
+        max_retries : int, optional
+            Maximum number of retry attempts for operations, by default 3.
+        base_delay : float, optional
+            Base delay in seconds for exponential backoff, by default 1.0.
         """
         # Circuit breaker state
         self._circuit_open: dict[str, bool] = {}
@@ -60,19 +66,26 @@ class ExecutionService:
         """
         Execute an action with retry logic and circuit breaker.
 
-        Args:
-            operation_type: Type of operation for circuit breaker
-            action: The async callable to execute (must be a callable, not a coroutine)
-            *args: Positional arguments for the action
-            **kwargs: Keyword arguments for the action
+        Parameters
+        ----------
+        operation_type : str
+            Type of operation for circuit breaker.
+        action : Callable[..., Coroutine[Any, Any, Any]]
+            The async callable to execute (must be a callable, not a coroutine).
+        *args : Any
+            Positional arguments for the action.
+        **kwargs : Any
+            Keyword arguments for the action.
 
         Returns
         -------
-            The result of the action
+        Any
+            The result of the action.
 
         Raises
         ------
-            The last exception if all retries fail
+        Exception
+            The last exception if all retries fail.
         """
         if self._is_circuit_open(operation_type):
             msg = f"Circuit breaker open for {operation_type}"
@@ -132,12 +145,15 @@ class ExecutionService:
         """
         Check if the circuit breaker is open for an operation type.
 
-        Args:
-            operation_type: The operation type to check
+        Parameters
+        ----------
+        operation_type : str
+            The operation type to check.
 
         Returns
         -------
-            True if circuit is open, False otherwise
+        bool
+            True if circuit is open, False otherwise.
         """
         if not self._circuit_open.get(operation_type, False):
             return False
@@ -156,8 +172,10 @@ class ExecutionService:
         """
         Record a successful operation.
 
-        Args:
-            operation_type: The operation type
+        Parameters
+        ----------
+        operation_type : str
+            The operation type.
         """
         self._failure_count[operation_type] = 0
         self._circuit_open[operation_type] = False
@@ -166,8 +184,10 @@ class ExecutionService:
         """
         Record a failed operation.
 
-        Args:
-            operation_type: The operation type
+        Parameters
+        ----------
+        operation_type : str
+            The operation type.
         """
         self._failure_count[operation_type] = self._failure_count.get(operation_type, 0) + 1
 
@@ -179,13 +199,17 @@ class ExecutionService:
         """
         Calculate delay for retry with exponential backoff.
 
-        Args:
-            attempt: The current attempt number (0-based)
-            base_delay: Base delay in seconds
+        Parameters
+        ----------
+        attempt : int
+            The current attempt number (0-based).
+        base_delay : float
+            Base delay in seconds.
 
         Returns
         -------
-            Delay in seconds
+        float
+            Delay in seconds.
         """
         # Exponential backoff with jitter
         delay = base_delay * (2**attempt)
@@ -199,11 +223,14 @@ class ExecutionService:
         Uses the case type name directly as the operation type for simplicity
         and clear correlation between operations and their failure patterns.
 
-        Args:
-            case_type: The case type
+        Parameters
+        ----------
+        case_type : DBCaseType
+            The case type.
 
         Returns
         -------
-            Operation type string for circuit breaker configuration
+        str
+            Operation type string for circuit breaker configuration.
         """
         return case_type.value

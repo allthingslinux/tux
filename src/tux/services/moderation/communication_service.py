@@ -29,8 +29,10 @@ class CommunicationService:
         """
         Initialize the communication service.
 
-        Args:
-            bot: The Discord bot instance
+        Parameters
+        ----------
+        bot : Tux
+            The Discord bot instance.
         """
         self.bot = bot
 
@@ -45,16 +47,23 @@ class CommunicationService:
         """
         Send a DM to a user about a moderation action.
 
-        Args:
-            ctx: Command context
-            silent: Whether to send DM (if False, returns False immediately)
-            user: Target user
-            reason: Reason for the action
-            dm_action: Action description for DM
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            Command context.
+        silent : bool
+            Whether to send DM (if False, returns False immediately).
+        user : discord.Member | discord.User
+            Target user.
+        reason : str
+            Reason for the action.
+        dm_action : str
+            Action description for DM.
 
         Returns
         -------
-            True if DM was sent successfully, False otherwise
+        bool
+            True if DM was sent successfully, False otherwise.
         """
         if silent:
             logger.debug(f"Skipping DM to {user.id} (silent mode enabled)")
@@ -82,10 +91,14 @@ class CommunicationService:
         """
         Send an error response to the user.
 
-        Args:
-            ctx: Command context
-            message: Error message to send
-            ephemeral: Whether the response should be ephemeral
+        Parameters
+        ----------
+        ctx : commands.Context[Tux] | discord.Interaction
+            Command context.
+        message : str
+            Error message to send.
+        ephemeral : bool, optional
+            Whether the response should be ephemeral, by default True.
         """
         try:
             if isinstance(ctx, discord.Interaction):
@@ -122,18 +135,27 @@ class CommunicationService:
         """
         Create a moderation embed.
 
-        Args:
-            ctx: Command context
-            title: Embed title
-            fields: List of (name, value, inline) tuples
-            color: Embed color
-            icon_url: Icon URL for the embed
-            timestamp: Optional timestamp
-            thumbnail_url: Optional thumbnail URL
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            Command context.
+        title : str
+            Embed title.
+        fields : list[tuple[str, str, bool]]
+            List of (name, value, inline) tuples.
+        color : int
+            Embed color.
+        icon_url : str
+            Icon URL for the embed.
+        timestamp : datetime | None, optional
+            Optional timestamp, by default None.
+        thumbnail_url : str | None, optional
+            Optional thumbnail URL, by default None.
 
         Returns
         -------
-            The created embed
+        discord.Embed
+            The created embed.
         """
         embed = discord.Embed(
             title=title,
@@ -165,14 +187,19 @@ class CommunicationService:
         """
         Send an embed and optionally log it.
 
-        Args:
-            ctx: Command context
-            embed: The embed to send
-            log_type: Type of log entry
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            Command context.
+        embed : discord.Embed
+            The embed to send.
+        log_type : str, optional
+            Type of log entry, by default "mod".
 
         Returns
         -------
-            The sent message if successful
+        discord.Message | None
+            The sent message if successful.
         """
         try:
             # Send the embed as a regular message
@@ -202,14 +229,19 @@ class CommunicationService:
         """
         Create a DM embed for moderation actions.
 
-        Args:
-            action: The action that was taken
-            reason: Reason for the action
-            moderator: The moderator who performed the action
+        Parameters
+        ----------
+        action : str
+            The action that was taken.
+        reason : str
+            Reason for the action.
+        moderator : discord.User
+            The moderator who performed the action.
 
         Returns
         -------
-            The DM embed
+        discord.Embed
+            The DM embed.
         """
         embed = discord.Embed(
             title=f"You have been {action}",

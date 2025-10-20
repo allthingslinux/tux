@@ -160,6 +160,14 @@ exclude = [
     "src/tux/database/migrations/versions/**",
     "**/migrations/**",
 ]
+arg-type-hints-in-docstring = true
+arg-type-hints-in-signature = true
+check-return-types = true
+check-yield-types = true
+allow-init-docstring = true
+skip-checking-short-docstrings = true
+require-return-section-when-returning-nothing = false
+check-style-mismatch = true
 
 [tool.ruff]
 exclude = [
@@ -213,7 +221,7 @@ select = [
     "INP",   # flake8-no-pep420
     "RSE",   # flake8-raise
     "ICN",   # flake8-import-conventions
-    #"DOC",  # pydoclint (not implemented yet, see https://github.com/astral-sh/ruff/issues/12434 for progress)
+    # "DOC",  # pydoclint (not implemented yet, see https://github.com/astral-sh/ruff/issues/12434 for progress)
     "D",     # pydocstyle
     #"ERA",  # eradicate
     "RUF",   # ruff

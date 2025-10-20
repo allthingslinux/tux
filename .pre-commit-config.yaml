@@ -57,6 +57,7 @@ repos:
     rev: 0.7.3
     hooks:
       - id: pydoclint
+        args: [--config=pyproject.toml]
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.28.0
     hooks:

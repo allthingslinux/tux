@@ -70,13 +70,17 @@ class BaseModel(SQLModel):
         """
         Convert model instance to dictionary with relationship support.
 
-        Args:
-            include_relationships: Whether to include relationship fields
-            relationships: Specific relationships to include (if None, includes all)
+        Parameters
+        ----------
+        include_relationships : bool, optional
+            Whether to include relationship fields, by default False.
+        relationships : list[str] | None, optional
+            Specific relationships to include (if None, includes all), by default None.
 
         Returns
         -------
-            Dictionary representation of the model
+        dict[str, Any]
+            Dictionary representation of the model.
         """
         data: dict[str, Any] = {}
         should_include_relationship = relationships is None

@@ -26,8 +26,10 @@ class CaseService:
         """
         Initialize the case service.
 
-        Args:
-            case_controller: Database controller for case operations
+        Parameters
+        ----------
+        case_controller : CaseController
+            Database controller for case operations.
         """
         self._case_controller = case_controller
 
@@ -43,17 +45,25 @@ class CaseService:
         """
         Create a new moderation case.
 
-        Args:
-            guild_id: ID of the guild
-            user_id: ID of the target user
-            moderator_id: ID of the moderator
-            case_type: Type of moderation action
-            reason: Reason for the action
-            **kwargs: Additional case data (use case_expires_at for expiration datetime)
+        Parameters
+        ----------
+        guild_id : int
+            ID of the guild.
+        user_id : int
+            ID of the target user.
+        moderator_id : int
+            ID of the moderator.
+        case_type : DBCaseType
+            Type of moderation action.
+        reason : str
+            Reason for the action.
+        **kwargs : Any
+            Additional case data (use case_expires_at for expiration datetime).
 
         Returns
         -------
-            The created case
+        Case
+            The created case.
         """
         logger.debug(f"CaseService.create_case called with kwargs: {kwargs}")
 
@@ -70,12 +80,15 @@ class CaseService:
         """
         Get a case by ID.
 
-        Args:
-            case_id: The case ID to retrieve
+        Parameters
+        ----------
+        case_id : int
+            The case ID to retrieve.
 
         Returns
         -------
-            The case if found, None otherwise
+        Case | None
+            The case if found, None otherwise.
         """
         return await self._case_controller.get_case_by_id(case_id)
 
@@ -83,13 +96,17 @@ class CaseService:
         """
         Get all cases for a user in a guild.
 
-        Args:
-            user_id: The user ID
-            guild_id: The guild ID
+        Parameters
+        ----------
+        user_id : int
+            The user ID.
+        guild_id : int
+            The guild ID.
 
         Returns
         -------
-            List of cases for the user
+        list[Case]
+            List of cases for the user.
         """
         return await self._case_controller.get_cases_by_user(user_id, guild_id)
 
@@ -97,12 +114,16 @@ class CaseService:
         """
         Get active cases for a user in a guild.
 
-        Args:
-            user_id: The user ID
-            guild_id: The guild ID
+        Parameters
+        ----------
+        user_id : int
+            The user ID.
+        guild_id : int
+            The guild ID.
 
         Returns
         -------
-            List of active cases for the user
+        list[Case]
+            List of active cases for the user.
         """
         return await self._case_controller.get_active_cases_by_user(user_id, guild_id)

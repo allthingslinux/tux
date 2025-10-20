@@ -43,10 +43,14 @@ class ModerationCoordinator:
         """
         Initialize the moderation coordinator.
 
-        Args:
-            case_service: Service for case management
-            communication_service: Service for communication
-            execution_service: Service for execution management
+        Parameters
+        ----------
+        case_service : CaseService
+            Service for case management.
+        communication_service : CommunicationService
+            Service for communication.
+        execution_service : ExecutionService
+            Service for execution management.
         """
         self._case_service = case_service
         self._communication = communication_service
@@ -76,20 +80,33 @@ class ModerationCoordinator:
         5. Send DM if required (after action for non-removal actions)
         6. Send response embed
 
-        Args:
-            ctx: Command context
-            case_type: Type of moderation action
-            user: Target user
-            reason: Reason for the action
-            silent: Whether to send DM to user
-            dm_action: Custom DM action description
-            actions: Discord API actions to execute
-            duration: Duration for temp actions
-            expires_at: Expiration timestamp for temp actions
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            Command context.
+        case_type : DBCaseType
+            Type of moderation action.
+        user : discord.Member | discord.User
+            Target user.
+        reason : str
+            Reason for the action.
+        silent : bool, optional
+            Whether to send DM to user, by default False.
+        dm_action : str | None, optional
+            Custom DM action description, by default None.
+        actions : Sequence[tuple[Callable[..., Coroutine[Any, Any, Any]], type[Any]]] | None, optional
+            Discord API actions to execute, by default None.
+        duration : int | None, optional
+            Duration for temp actions, by default None.
+        expires_at : datetime | None, optional
+            Expiration timestamp for temp actions, by default None.
+        **extra_case_data : Any
+            Additional case data fields.
 
         Returns
         -------
-            The created case, or None if case creation failed
+        Case | None
+            The created case, or None if case creation failed.
         """
         logger.info(
             f"Executing moderation action: {case_type.value} on user {user.id} by {ctx.author.id} in guild {ctx.guild.id if ctx.guild else 'None'}",

@@ -15,14 +15,18 @@ from discord.ext import commands
 
 
 def format_multiline_description(text: str | None) -> str:
-    """Format a multiline description with quote formatting for each line.
+    """
+    Format a multiline description with quote formatting for each line.
 
-    Args:
-        text: The text to format
+    Parameters
+    ----------
+    text : str | None
+        The text to format.
 
     Returns
     -------
-        The formatted text with > prepended to each line
+    str
+        The formatted text with > prepended to each line.
     """
     if not text:
         text = "No documentation available."
@@ -30,15 +34,20 @@ def format_multiline_description(text: str | None) -> str:
 
 
 def truncate_description(text: str, max_length: int = 100) -> str:
-    """Truncate a description to a maximum length.
+    """
+    Truncate a description to a maximum length.
 
-    Args:
-        text: The text to truncate
-        max_length: Maximum length before truncation (default: 100)
+    Parameters
+    ----------
+    text : str
+        The text to truncate.
+    max_length : int, optional
+        Maximum length before truncation, by default 100.
 
     Returns
     -------
-        The truncated text with ellipsis if needed
+    str
+        The truncated text with ellipsis if needed.
     """
     if not text:
         return "No description"
@@ -47,15 +56,20 @@ def truncate_description(text: str, max_length: int = 100) -> str:
 
 
 def paginate_items(items: list[Any], page_size: int) -> list[list[Any]]:
-    """Split items into pages of specified size.
+    """
+    Split items into pages of specified size.
 
-    Args:
-        items: The items to paginate
-        page_size: Maximum number of items per page
+    Parameters
+    ----------
+    items : list[Any]
+        The items to paginate.
+    page_size : int
+        Maximum number of items per page.
 
     Returns
     -------
-        A list of pages, each containing up to page_size items
+    list[list[Any]]
+        A list of pages, each containing up to page_size items.
     """
     pages: list[list[Any]] = []
 
@@ -70,14 +84,18 @@ def paginate_items(items: list[Any], page_size: int) -> list[list[Any]]:
 def create_cog_category_mapping(
     mapping: Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]],
 ) -> tuple[dict[str, dict[str, str]], dict[str, dict[str, commands.Command[Any, Any, Any]]]]:
-    """Create a mapping of command categories and commands.
+    """
+    Create a mapping of command categories and commands.
 
-    Args:
-        mapping: Mapping of cogs to their commands
+    Parameters
+    ----------
+    mapping : Mapping[commands.Cog | None, list[commands.Command[Any, Any, Any]]]
+        Mapping of cogs to their commands.
 
     Returns
     -------
-        A tuple of (category_cache, command_mapping)
+    tuple[dict[str, dict[str, str]], dict[str, dict[str, commands.Command[Any, Any, Any]]]]
+        A tuple of (category_cache, command_mapping).
     """
     command_categories: dict[str, dict[str, str]] = {}
     command_mapping: dict[str, dict[str, commands.Command[Any, Any, Any]]] = {}
@@ -101,14 +119,18 @@ def create_cog_category_mapping(
 
 
 def extract_cog_group(cog: commands.Cog) -> str | None:
-    """Extract the cog group from a cog's module path.
+    """
+    Extract the cog group from a cog's module path.
 
-    Args:
-        cog: The cog to extract the group from
+    Parameters
+    ----------
+    cog : commands.Cog
+        The cog to extract the group from.
 
     Returns
     -------
-        The group name or None if no group found
+    str | None
+        The group name or None if no group found.
     """
     module = getattr(cog, "__module__", "")
     parts = module.split(".")
@@ -131,13 +153,17 @@ def get_cog_groups() -> list[str]:
 
 
 def is_large_command_group(command: commands.Group[Any, Any, Any]) -> bool:
-    """Check if a command group is large and needs special handling.
+    """
+    Check if a command group is large and needs special handling.
 
-    Args:
-        command: The command group to check
+    Parameters
+    ----------
+    command : commands.Group[Any, Any, Any]
+        The command group to check.
 
     Returns
     -------
-        True if the command group is large, False otherwise
+    bool
+        True if the command group is large, False otherwise.
     """
     return command.name in {"jsk", "jishaku"} or len(command.commands) > 15
