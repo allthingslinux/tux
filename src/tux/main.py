@@ -11,7 +11,6 @@ import sys
 from loguru import logger
 
 from tux.core.app import TuxApp
-from tux.core.logging import configure_logging
 from tux.shared.exceptions import TuxDatabaseError, TuxError
 
 
@@ -26,10 +25,11 @@ def run() -> int:
     -------
     int
         Exit code: 0 for success, non-zero for failure
-    """
-    # Configure logging first (loguru best practice)
-    configure_logging()
 
+    Notes
+    -----
+    Logging is configured by the CLI script (scripts/base.py) before this is called.
+    """
     try:
         logger.info("🚀 Starting Tux...")
         app = TuxApp()

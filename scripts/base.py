@@ -176,5 +176,8 @@ class BaseCLI:
         Configures logging and starts the Typer application. This is the main
         entry point for running the CLI.
         """
-        configure_logging()
+        # Load CONFIG to respect DEBUG setting from .env
+        from tux.shared.config import CONFIG  # noqa: PLC0415
+
+        configure_logging(config=CONFIG)
         self.app()

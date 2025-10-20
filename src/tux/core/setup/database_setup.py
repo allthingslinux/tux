@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 from pathlib import Path
 
 import sqlalchemy.exc
@@ -40,20 +41,20 @@ class DatabaseSetupService(BaseSetupService):
         return Path.cwd()
 
     def _build_alembic_config(self) -> Config:
-        """Build Alembic configuration."""
-        root = self._find_project_root()
-        cfg = Config(str(root / "alembic.ini"))
+        """Build Alembic configuration with suppressed stdout output.
 
-        # Set all required Alembic configuration options
+        Notes
+        -----
+        Most configuration is read from alembic.ini. Only the database URL
+        is set programmatically as it comes from environment variables.
+        """
+        root = self._find_project_root()
+
+        # Suppress Alembic's stdout output by redirecting to StringIO
+        cfg = Config(str(root / "alembic.ini"), stdout=io.StringIO())
+
+        # Override database URL with runtime configuration from environment
         cfg.set_main_option("sqlalchemy.url", CONFIG.database_url)
-        cfg.set_main_option("script_location", "src/tux/database/migrations")
-        cfg.set_main_option("version_locations", "src/tux/database/migrations/versions")
-        cfg.set_main_option("prepend_sys_path", "src")
-        cfg.set_main_option(
-            "file_template",
-            "%%(year)d_%%(month).2d_%%(day).2d_%%(hour).2d%%(minute).2d-%%(rev)s_%%(slug)s",
-        )
-        cfg.set_main_option("timezone", "UTC")
 
         return cfg
 
@@ -66,7 +67,7 @@ class DatabaseSetupService(BaseSetupService):
         logger.info("🔄 Checking database migrations...")
 
         try:
-            # Check current revision first
+            # Check current revision first (stdout already suppressed via Config)
             current_rev = command.current(cfg)
             logger.debug(f"Current database revision: {current_rev}")
 
@@ -81,11 +82,13 @@ class DatabaseSetupService(BaseSetupService):
                 logger.info("✅ Database migrations completed")
             else:
                 logger.info("✅ Database is already up to date")
+
         except sqlalchemy.exc.OperationalError as e:
             logger.error("❌ Database migration failed: Cannot connect to database")
             logger.info("💡 Ensure PostgreSQL is running: make docker-up")
             msg = "Database connection failed during migrations"
             raise ConnectionError(msg) from e
+
         except Exception as e:
             logger.error(f"❌ Database migration failed: {type(e).__name__}")
             logger.info("💡 Check database connection settings")

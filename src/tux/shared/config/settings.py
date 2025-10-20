@@ -94,6 +94,10 @@ class Config(BaseSettings):
 
     # Core configuration
     DEBUG: bool = Field(default=False, description="Enable debug mode")
+    LOG_LEVEL: str = Field(
+        default="INFO",
+        description="Logging level (TRACE, DEBUG, INFO, SUCCESS, WARNING, ERROR, CRITICAL)",
+    )
 
     # Bot tokens
     BOT_TOKEN: str = Field(default="", description="Discord bot token")

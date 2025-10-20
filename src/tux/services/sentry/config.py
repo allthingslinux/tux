@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import signal
 from types import FrameType
 from typing import Any
@@ -32,14 +33,17 @@ def setup() -> None:
         environment="development" if CONFIG.DEBUG else "production",
         integrations=[
             AsyncioIntegration(),
-            LoguruIntegration(level=None, event_level=None),
+            LoguruIntegration(
+                level=logging.DEBUG,  # Capture all logs as breadcrumbs for context
+                event_level=logging.ERROR,  # Only send ERROR+ as full Sentry events
+            ),
         ],
         before_send=before_send,
         before_send_transaction=before_send_transaction,
         traces_sampler=traces_sampler,
         profiles_sample_rate=0.0,
         enable_tracing=True,
-        debug=CONFIG.DEBUG,
+        debug=False,  # Disabled to prevent Sentry's internal debug logs from bypassing Loguru
         attach_stacktrace=True,
         send_default_pii=False,
         max_breadcrumbs=50,
