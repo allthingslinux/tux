@@ -12,6 +12,7 @@ from contextlib import suppress
 
 import discord
 from discord.ext import commands
+from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
@@ -229,11 +230,14 @@ class GodboltService(CodeDispatch):
         """
         output = await godbolt.getoutput(code, compiler, options)
         if not output:
+            logger.debug(f"Godbolt returned no output for compiler {compiler}")
             return None
 
         # Remove header lines (first 5 lines)
         lines = output.split("\n")
-        return "\n".join(lines[5:])
+        result = "\n".join(lines[5:])
+        logger.debug(f"Godbolt execution completed (output length: {len(result)} chars)")
+        return result
 
 
 class WandboxService(CodeDispatch):
@@ -263,8 +267,10 @@ class WandboxService(CodeDispatch):
         """
         result = await wandbox.getoutput(code, compiler, options)
         if not result:
+            logger.debug(f"Wandbox returned no output for compiler {compiler}")
             return None
 
+        logger.debug(f"Wandbox execution received result for compiler {compiler}")
         output_parts: list[str] = []
 
         # Handle compiler errors (skip for Nim due to verbose debug messages)
@@ -469,27 +475,34 @@ class Run(BaseCog):
         extracted_code = await self._extract_code_from_message(ctx, code)
 
         if not extracted_code:
+            logger.debug(f"No code provided by {ctx.author.id} for run command")
             raise TuxMissingCodeError
 
         # Parse the code block
         language, source_code = self._parse_code_block(extracted_code)
 
         if not language or not source_code.strip():
+            logger.debug(f"Invalid code format from {ctx.author.id}")
             raise TuxInvalidCodeFormatError
 
         # Determine service to use
         service = self._determine_service(language)
         if not service:
+            logger.warning(f"Unsupported language '{language}' requested by {ctx.author.name} ({ctx.author.id})")
             raise TuxUnsupportedLanguageError(language, SUPPORTED_LANGUAGES)
+
+        logger.info(f"🔨 Code execution request: {language} via {service} from {ctx.author.name} ({ctx.author.id})")
 
         # Add loading reaction
         await ctx.message.add_reaction(LOADING_REACTION)
 
         try:
             # Execute the code
+            logger.debug(f"Executing {language} code (length: {len(source_code)} chars) via {service}")
             output = await self.services[service].run(language, source_code)
 
             if output is None:
+                logger.warning(f"Code execution failed (no output) for {language} from {ctx.author.id}")
                 raise TuxCompilationError
 
             # Create and send result embed
@@ -498,6 +511,7 @@ class Run(BaseCog):
             view = self._create_close_button_view()
 
             await ctx.send(embed=result_embed, view=view)
+            logger.info(f"✅ Code execution successful: {language} for {ctx.author.name} ({ctx.author.id})")
 
         finally:
             # Remove loading reaction

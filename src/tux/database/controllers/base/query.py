@@ -2,6 +2,7 @@
 
 from typing import Any, TypeVar
 
+from loguru import logger
 from sqlalchemy import UnaryExpression, func
 from sqlalchemy.orm import selectinload
 from sqlmodel import SQLModel, select
@@ -77,6 +78,10 @@ class QueryController[ModelT]:
                 stmt = stmt.limit(limit)
             if offset is not None:
                 stmt = stmt.offset(offset)
+
+            logger.debug(
+                f"Executing find_all query on {self.model.__name__} (limit={limit}, has_filters={filters is not None})",
+            )
             result = await session.execute(stmt)
             instances = list(result.scalars().all())
             # Expunge all instances so they can be used in other sessions
@@ -123,7 +128,9 @@ class QueryController[ModelT]:
             if filter_expr is not None:
                 stmt = stmt.where(filter_expr)
             result = await session.execute(stmt)
-            return result.scalar() or 0
+            count = result.scalar() or 0
+            logger.debug(f"Count query on {self.model.__name__}: {count} records (has_filters={filters is not None})")
+            return count
 
     async def get_all(self, filters: Any | None = None, order_by: Any | None = None) -> list[ModelT]:
         """Get all records (alias for find_all without pagination)."""

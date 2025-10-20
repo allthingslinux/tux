@@ -13,6 +13,7 @@ from zoneinfo import ZoneInfo
 
 import discord
 from discord.ext import commands, tasks
+from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
@@ -62,6 +63,7 @@ class Afk(BaseCog):
         entry = await self._get_afk_entry(target.id, ctx.guild.id)
 
         if entry is not None:
+            logger.debug(f"User {target.id} already AFK in guild {ctx.guild.id}")
             await self._send_afk_response(
                 ctx,
                 f"{AFK_SLEEPING_EMOJI} || You are already AFK! Reason: `{entry.reason}`",
@@ -75,6 +77,7 @@ class Afk(BaseCog):
         )
 
         await add_afk(self.db, shortened_reason, target, ctx.guild.id, False)
+        logger.info(f"💤 AFK status set: {target.name} ({target.id}) in {ctx.guild.name} - Reason: {shortened_reason}")
 
         await self._send_afk_response(
             ctx,
@@ -101,6 +104,7 @@ class Afk(BaseCog):
         entry = await self._get_afk_entry(target.id, ctx.guild.id)
         if entry is not None:
             await del_afk(self.db, target, entry.nickname)
+            logger.info(f"✅ Permanent AFK toggled off: {target.name} ({target.id}) in {ctx.guild.name}")
             await self._send_afk_response(ctx, "Welcome back!")
             return
 
@@ -110,6 +114,9 @@ class Afk(BaseCog):
             placeholder=TRUNCATION_SUFFIX,
         )
         await add_afk(self.db, shortened_reason, target, ctx.guild.id, True)
+        logger.info(
+            f"💤 Permanent AFK set: {target.name} ({target.id}) in {ctx.guild.name} - Reason: {shortened_reason}",
+        )
 
         await self._send_afk_response(
             ctx,
@@ -151,12 +158,16 @@ class Afk(BaseCog):
             return
 
         await self.db.afk.remove_afk(message.author.id, message.guild.id)
+        logger.info(
+            f"✅ AFK status removed: {message.author.name} ({message.author.id}) returned to {message.guild.name}",
+        )
 
         await message.reply("Welcome back!", delete_after=5)
 
         # Suppress Forbidden errors if the bot doesn't have permission to change the nickname
         with contextlib.suppress(discord.Forbidden):
             await message.author.edit(nick=entry.nickname)
+            logger.debug(f"Nickname restored for {message.author.id}: {entry.nickname}")
 
     @commands.Cog.listener("on_message")
     async def check_afk(self, message: discord.Message) -> None:
@@ -186,6 +197,8 @@ class Afk(BaseCog):
         if not afks_mentioned:
             return
 
+        logger.debug(f"AFK notification: {len(afks_mentioned)} AFK users mentioned in {message.guild.name}")
+
         msgs: list[str] = [
             f'{mentioned.mention} is currently AFK {f"until <t:{int(afk.until.timestamp())}:f>" if afk.until is not None else ""}: "{afk.reason}" [<t:{int(afk.since.timestamp())}:R>]'
             for mentioned, afk in afks_mentioned
@@ -199,13 +212,18 @@ class Afk(BaseCog):
         for guild in self.bot.guilds:
             expired_entries = await self._get_expired_afk_entries(guild.id)
 
+            if expired_entries:
+                logger.info(f"🧹 Processing {len(expired_entries)} expired AFK entries in {guild.name}")
+
             for entry in expired_entries:
                 member = guild.get_member(entry.member_id)
 
                 if member is None:
                     # Handles the edge case of a user leaving the guild while still temp-AFK
+                    logger.debug(f"Removing AFK for departed member {entry.member_id} from {guild.name}")
                     await self.db.afk.remove_afk(entry.member_id, guild.id)
                 else:
+                    logger.debug(f"Expiring AFK status for {member.name} ({member.id}) in {guild.name}")
                     await del_afk(self.db, member, entry.nickname)
 
     async def _get_expired_afk_entries(self, guild_id: int) -> list[AFKMODEL]:

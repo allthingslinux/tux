@@ -7,6 +7,7 @@ message activity. Users can check their own level or view other members' levels.
 
 import discord
 from discord.ext import commands
+from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
@@ -70,8 +71,12 @@ class Level(BaseCog):
         if member is None:
             member = ctx.author
 
+        logger.debug(f"Level check for {member.name} ({member.id}) in {ctx.guild.name}")
+
         xp: float = await self.db.levels.get_xp(member.id, ctx.guild.id)
         level: int = await self.db.levels.get_level(member.id, ctx.guild.id)
+
+        logger.debug(f"Retrieved stats for {member.id}: Level {level}, XP {xp}")
 
         level_display: int
         xp_display: str
@@ -79,6 +84,7 @@ class Level(BaseCog):
             max_xp: float = self.levels_service.calculate_xp_for_level(self.levels_service.max_level)
             level_display = self.levels_service.max_level
             xp_display = f"{round(max_xp)} (limit reached)"
+            logger.debug(f"XP cap reached for {member.id}")
         else:
             level_display = level
             xp_display = f"{round(xp)}"
@@ -108,6 +114,7 @@ class Level(BaseCog):
             )
 
         await ctx.send(embed=embed)
+        logger.info(f"📊 Level info sent for {member.name} ({member.id}): Level {level_display}, XP {xp_display}")
 
 
 async def setup(bot: Tux) -> None:

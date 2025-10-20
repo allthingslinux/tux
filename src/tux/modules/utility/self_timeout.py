@@ -9,6 +9,7 @@ from datetime import UTC, datetime, timedelta
 
 import discord
 from discord.ext import commands
+from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
@@ -55,20 +56,24 @@ class SelfTimeout(BaseCog):
 
         member = ctx.guild.get_member(ctx.author.id)
         if member is None:
+            logger.warning(f"Member {ctx.author.id} not found in guild {ctx.guild.id} for self-timeout")
             return
 
         duration_seconds: int = convert_to_seconds(duration)
         duration_readable = seconds_to_human_readable(duration_seconds)
 
         if duration_seconds == 0:
+            logger.debug(f"Invalid timeout duration format: {duration} (user: {ctx.author.id})")
             await ctx.reply("Error! Invalid time format", ephemeral=True)
             return
 
         if duration_seconds > 604800:
+            logger.debug(f"Timeout duration too long: {duration_seconds}s (user: {ctx.author.id})")
             await ctx.reply("Error! duration cannot be longer than 7 days!", ephemeral=True)
             return
 
         if duration_seconds < 300:
+            logger.debug(f"Timeout duration too short: {duration_seconds}s (user: {ctx.author.id})")
             await ctx.reply("Error! duration cannot be less than 5 minutes!", ephemeral=True)
             return
 
@@ -78,6 +83,11 @@ class SelfTimeout(BaseCog):
             # If the member is already afk and hasn't provided a reason with this command,
             # assume they want to upgrade their current AFK to a self-timeout and carry the old reason
             reason = entry.reason
+            logger.debug(f"User {member.id} upgrading AFK to self-timeout, carrying over reason: {reason}")
+
+        logger.info(
+            f"User {member.display_name} ({member.id}) requested self-timeout for {duration_readable} in guild {ctx.guild.name}",
+        )
 
         message_content = f'### WARNING\n### You are about to be timed out in the guild "{ctx.guild.name}" for {duration} with the reason "{reason}".\nas soon as you confirm this, **you cannot cancel it or remove it early**. There is *no* provision for it to be removed by server staff on request. please think very carefully and make sure you\'ve entered the correct values before you proceed with this command.'
         view = ConfirmationDanger(user=ctx.author.id)
@@ -87,19 +97,26 @@ class SelfTimeout(BaseCog):
         confirmed = view.value
 
         if confirmed:
+            logger.info(f"Self-timeout confirmed by {member.display_name} ({member.id}) for {duration_readable}")
             try:
                 await ctx.author.send(
                     f'You have timed yourself out in guild {ctx.guild.name} for {duration_readable} with the reason "{reason}".',
                 )
+                logger.debug(f"DM sent to {member.display_name} ({member.id}) for self-timeout confirmation")
             except discord.Forbidden:
+                logger.debug(f"Failed to DM {member.display_name} ({member.id}), DMs disabled or bot blocked")
                 await ctx.reply(
                     f'You have timed yourself out for {duration_readable} with the reason "{reason}".',
                 )
 
             if entry is not None:
+                logger.debug(f"Removing existing AFK status for {member.id} before self-timeout")
                 await del_afk(self.db, member, entry.nickname)
 
             await member.timeout(timedelta(seconds=float(duration_seconds)), reason="self time-out")
+            logger.info(
+                f"✅ Self-timeout applied: {member.display_name} ({member.id}) in {ctx.guild.name} for {duration_readable}",
+            )
 
             await add_afk(
                 self.db,
@@ -109,6 +126,9 @@ class SelfTimeout(BaseCog):
                 True,
                 datetime.now(UTC) + timedelta(seconds=duration_seconds),
                 True,
+            )
+            logger.debug(
+                f"AFK status set for {member.id} until {datetime.now(UTC) + timedelta(seconds=duration_seconds)}",
             )
 
 

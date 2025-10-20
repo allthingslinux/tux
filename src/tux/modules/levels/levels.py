@@ -11,6 +11,7 @@ import datetime
 
 import discord
 from discord.ext import commands
+from loguru import logger
 
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
@@ -82,6 +83,9 @@ class Levels(BaseCog):
         old_xp: float = await self.db.levels.get_xp(member.id, ctx.guild.id)
 
         if embed_result := self.levels_service.valid_xplevel_input(new_level):
+            logger.warning(
+                f"Validation failed: Level {new_level} rejected for {member.name} ({member.id}) - out of valid range",
+            )
             await ctx.send(embed=embed_result)
             return
 
@@ -96,6 +100,10 @@ class Levels(BaseCog):
 
         # Update roles based on the new level
         await self.levels_service.update_roles(member, ctx.guild, new_level)
+
+        logger.info(
+            f"⚙️ Level manually set for {member.name} ({member.id}) by {ctx.author.name}: {old_level} -> {new_level}",
+        )
 
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
@@ -124,6 +132,9 @@ class Levels(BaseCog):
         assert ctx.guild
 
         if embed_result := self.levels_service.valid_xplevel_input(xp_amount):
+            logger.warning(
+                f"Validation failed: XP amount {xp_amount} rejected for {member.name} ({member.id}) - out of valid range",
+            )
             await ctx.send(embed=embed_result)
             return
 
@@ -141,6 +152,10 @@ class Levels(BaseCog):
 
         # Update roles based on the new level
         await self.levels_service.update_roles(member, ctx.guild, new_level)
+
+        logger.info(
+            f"⚙️ XP manually set for {member.name} ({member.id}) by {ctx.author.name}: {round(old_xp)} -> {xp_amount} (Level: {old_level} -> {new_level})",
+        )
 
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
@@ -171,6 +186,8 @@ class Levels(BaseCog):
         old_xp: float = await self.db.levels.get_xp(member.id, ctx.guild.id)
         await self.db.levels.reset_xp(member.id, ctx.guild.id)
 
+        logger.info(f"🔄 XP reset for {member.name} ({member.id}) by {ctx.author.name}: {round(old_xp)} -> 0")
+
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
             title=f"XP Reset - {member}",
@@ -198,6 +215,10 @@ class Levels(BaseCog):
         assert ctx.guild
 
         state: bool = await self.db.levels.toggle_blacklist(member.id, ctx.guild.id)
+
+        logger.info(
+            f"🚫 XP blacklist toggled for {member.name} ({member.id}) by {ctx.author.name}: {'BLACKLISTED' if state else 'UNBLACKLISTED'}",
+        )
 
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,

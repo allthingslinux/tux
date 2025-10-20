@@ -11,6 +11,7 @@ from typing import cast
 
 import discord
 from discord.ext import commands
+from loguru import logger
 
 from tux.core.bot import Tux
 from tux.shared.constants import EMBED_COLORS
@@ -56,12 +57,18 @@ class CommunicationService:
             True if DM was sent successfully, False otherwise
         """
         if silent:
+            logger.debug(f"Skipping DM to {user.id} (silent mode enabled)")
             return False
 
         try:
             embed = self._create_dm_embed(dm_action, reason, cast(discord.User, user))
             await user.send(embed=embed)
+            logger.info(f"✉️ Moderation DM sent to {user} ({user.id}) - Action: {dm_action}")
         except discord.Forbidden:
+            logger.warning(f"Failed to DM {user} ({user.id}) - DMs disabled or bot blocked")
+            return False
+        except Exception as e:
+            logger.error(f"Unexpected error sending DM to {user} ({user.id}): {e}")
             return False
         else:
             return True
@@ -89,7 +96,9 @@ class CommunicationService:
             else:
                 # ctx is commands.Context[Tux] here
                 await ctx.reply(message, mention_author=False)
-        except discord.HTTPException:
+            logger.debug(f"Error response sent: {message[:50]}...")
+        except discord.HTTPException as e:
+            logger.warning(f"Failed to send error response, retrying without reply: {e}")
             # If sending fails, try to send without reply
             with contextlib.suppress(discord.HTTPException):
                 if isinstance(ctx, discord.Interaction):
@@ -98,6 +107,7 @@ class CommunicationService:
                 else:
                     # For command contexts, use send
                     await ctx.send(message)
+                logger.debug("Error response sent successfully on retry")
 
     def create_embed(
         self,
@@ -167,14 +177,17 @@ class CommunicationService:
         try:
             # Send the embed as a regular message
             message = await ctx.send(embed=embed, mention_author=False)
+            logger.debug(f"Embed sent successfully for {log_type} log")
 
             # Also send as ephemeral followup for slash commands
             if isinstance(ctx, discord.Interaction):
                 embed_ephemeral = embed.copy()
                 embed_ephemeral.set_footer(text="This is only visible to you")
                 await ctx.followup.send(embed=embed_ephemeral, ephemeral=True)
+                logger.debug("Ephemeral followup sent for slash command")
 
-        except discord.HTTPException:
+        except discord.HTTPException as e:
+            logger.error(f"Failed to send {log_type} embed: {e}")
             await self.send_error_response(ctx, "Failed to send embed")
             return None
         else:

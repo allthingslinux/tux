@@ -44,6 +44,7 @@ TldrFlags
 
 import discord
 from discord.ext import commands
+from loguru import logger
 
 from tux.core.converters import CaseTypeConverter, TimeConverter, convert_bool
 from tux.database.models import CaseType
@@ -144,6 +145,7 @@ class TuxFlagConverter(commands.FlagConverter):
                     if last_flag and last_flag.annotation is bool:
                         value = "True"
                     else:
+                        logger.debug(f"Missing argument for flag: {last_flag.name if last_flag else 'unknown'}")
                         raise commands.MissingFlagArgument(last_flag)
 
                 name = last_flag.name.casefold() if case_insensitive else last_flag.name
@@ -168,6 +170,7 @@ class TuxFlagConverter(commands.FlagConverter):
                 if last_flag and last_flag.annotation is bool:
                     value = "True"
                 else:
+                    logger.debug(f"Missing argument for trailing flag: {last_flag.name if last_flag else 'unknown'}")
                     raise commands.MissingFlagArgument(last_flag)
 
             name = last_flag.name.casefold() if case_insensitive else last_flag.name
@@ -180,6 +183,7 @@ class TuxFlagConverter(commands.FlagConverter):
                 values.append(value)
         elif value and not ignore_extra:
             # If we're here then we passed extra arguments that aren't flags
+            logger.warning(f"Too many arguments passed to {cls.__name__}: {value[:50]}...")
             msg = f"Too many arguments passed to {cls.__name__}"
             raise commands.TooManyArguments(msg)
 

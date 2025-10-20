@@ -263,7 +263,8 @@ class Slowmode(BaseCog):
                 # sourcery skip: assign-if-exp, reintroduce-else
                 return int(delay[:-1]) * 3600
             return int(delay)
-        except ValueError:
+        except ValueError as e:
+            logger.debug(f"Invalid delay format '{delay}': {e}")
             return None
 
 
