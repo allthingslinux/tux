@@ -1,0 +1,327 @@
+/**
+ * Navigation & Interactive Elements
+ * Styling for navigation, search, buttons, and interactive components
+ */
+
+/* ============================================================
+   Search Bar Enhancement
+   ============================================================ */
+
+.md-search__form {
+  border-radius: var(--radius-md);
+  background: var(--color-muted);
+  border: 1px solid var(--color-border);
+  transition: all 0.15s ease;
+}
+
+.md-search__form:hover {
+  border-color: var(--color-primary);
+}
+
+.md-search__form:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(122, 162, 247, 0.2);
+}
+
+.md-search__input {
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-foreground);
+}
+
+.md-search__input::placeholder {
+  color: var(--color-muted-foreground);
+}
+
+/* ============================================================
+   Navigation Enhancements
+   ============================================================ */
+
+.md-nav__link {
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+  color: var(--color-muted-foreground);
+}
+
+.md-nav__link:hover {
+  background-color: var(--color-muted);
+  color: var(--color-foreground);
+}
+
+.md-nav__link--active {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* ============================================================
+   Tabs Enhancement
+   ============================================================ */
+
+.md-tabs {
+  background: var(--color-card);
+  color: var(--color-foreground);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.md-tabs__link {
+  color: var(--color-muted-foreground);
+  transition: all 0.15s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.md-tabs__link:hover {
+  color: var(--color-foreground);
+}
+
+.md-tabs__link--active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+/* ============================================================
+   Footer Enhancements
+   ============================================================ */
+
+.md-footer {
+  background: var(--color-card);
+  border-top: 1px solid var(--color-border);
+}
+
+/* ============================================================
+   Modern Buttons
+   ============================================================ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.btn-primary {
+  background: var(--color-primary) !important;
+  color: var(--color-primary-foreground) !important;
+  border-color: var(--color-primary) !important;
+}
+
+.btn-primary:hover {
+  background: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+  color: var(--color-primary-foreground) !important;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-muted-foreground);
+  border-color: var(--color-border);
+}
+
+.btn-secondary:hover {
+  background: var(--color-muted);
+  color: var(--color-foreground);
+  transform: translateY(-1px);
+}
+
+.md-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 4);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.md-button--primary {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  border-color: var(--color-primary);
+}
+
+.md-button--primary:hover {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(122, 162, 247, 0.3);
+}
+
+/* ============================================================
+   Hero Section
+   ============================================================ */
+
+.hero {
+  background: linear-gradient(135deg, rgba(122, 162, 247, 0.05) 0%, rgba(187, 154, 247, 0.05) 100%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 3rem 2rem;
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.hero-title {
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-description {
+  font-size: 1.25rem;
+  color: var(--color-muted-foreground);
+  margin-bottom: 2rem;
+  max-width: 42rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ============================================================
+   Audience Grid (Choose Your Path)
+   ============================================================ */
+
+.audience-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.audience-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.audience-card:hover {
+  border-color: rgba(122, 162, 247, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.audience-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.audience-card h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--color-foreground);
+}
+
+.audience-card p {
+  color: var(--color-muted-foreground);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+/* ============================================================
+   Feature Grid
+   ============================================================ */
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.feature-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  transition: all 0.15s ease;
+}
+
+.feature-card:hover {
+  border-color: rgba(122, 162, 247, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.feature-card h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--color-foreground);
+}
+
+.feature-card p {
+  color: var(--color-muted-foreground);
+  line-height: 1.6;
+}
+
+/* ============================================================
+   Navigation Grid
+   ============================================================ */
+
+.nav-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.nav-section {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+}
+
+.nav-section h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--color-foreground);
+}
+
+.nav-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-section li {
+  margin-bottom: 0.75rem;
+}
+
+.nav-section a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.nav-section a:hover {
+  color: var(--color-accent);
+}

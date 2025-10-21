@@ -1,0 +1,269 @@
+/**
+ * Base Layout & Typography
+ * Core layout, typography, and base element styling
+ */
+
+/* ============================================================
+   Smooth Scrolling & Scrollbar Styling
+   ============================================================ */
+
+html {
+  scroll-behavior: smooth;
+}
+
+@supports (scrollbar-width: thin) {
+
+  html,
+  body {
+    scrollbar-width: thin;
+  }
+}
+
+@supports (scrollbar-color: red) {
+
+  html,
+  body {
+    scrollbar-color: var(--color-muted-foreground) transparent;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-muted-foreground);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ============================================================
+   Layout & Grid
+   ============================================================ */
+
+.md-main__inner.md-grid {
+  max-width: 80rem;
+}
+
+.md-main__inner {
+  margin-bottom: 2rem;
+}
+
+.md-content {
+  min-height: 100vh;
+}
+
+.md-content__inner {
+  margin-bottom: calc(var(--spacing) * 8);
+}
+
+.md-grid {
+  max-width: 72rem;
+}
+
+/* ============================================================
+   Header & Banner Styling
+   ============================================================ */
+
+.md-banner {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.md-header {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================================
+   Base Typography Enhancements
+   ============================================================ */
+
+.md-typeset {
+  --md-typeset-color: var(--color-foreground);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4,
+.md-typeset h5,
+.md-typeset h6 {
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  scroll-margin-top: calc(var(--spacing) * 20);
+  color: var(--color-foreground);
+}
+
+.md-typeset h1 {
+  font-size: 2.25rem;
+  line-height: 1.2;
+  margin-top: 0;
+  margin-bottom: calc(var(--spacing) * 4);
+}
+
+.md-typeset h2 {
+  font-size: 1.875rem;
+  line-height: 1.3;
+  margin-top: calc(var(--spacing) * 12);
+  margin-bottom: calc(var(--spacing) * 4);
+  padding-bottom: calc(var(--spacing) * 2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.md-typeset h2:first-child {
+  margin-top: 0;
+}
+
+.md-typeset h3 {
+  font-size: 1.5rem;
+  line-height: 1.4;
+  margin-top: calc(var(--spacing) * 8);
+  margin-bottom: calc(var(--spacing) * 3);
+}
+
+.md-typeset h4 {
+  font-size: 1.25rem;
+  line-height: 1.5;
+  margin-top: calc(var(--spacing) * 6);
+  margin-bottom: calc(var(--spacing) * 2);
+}
+
+.md-typeset p {
+  line-height: 1.7;
+  margin-bottom: calc(var(--spacing) * 4);
+  color: var(--color-foreground);
+}
+
+/* ============================================================
+   Enhanced Lists
+   ============================================================ */
+
+.md-typeset ul,
+.md-typeset ol {
+  margin: calc(var(--spacing) * 4) 0;
+  padding-left: calc(var(--spacing) * 6);
+}
+
+.md-typeset ul li,
+.md-typeset ol li {
+  margin: calc(var(--spacing) * 2) 0;
+  line-height: 1.7;
+}
+
+.md-typeset li p {
+  margin: 0.25rem 0;
+}
+
+.md-typeset ul ul,
+.md-typeset ol ol,
+.md-typeset ul ol,
+.md-typeset ol ul {
+  margin: 0.5rem 0;
+}
+
+.md-typeset ul li::marker {
+  color: var(--color-primary);
+}
+
+.md-typeset ol li::marker {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* ============================================================
+   Enhanced Links
+   ============================================================ */
+
+.md-typeset a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+  border-bottom: 1px solid transparent;
+}
+
+.md-typeset a:hover {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
+/* External link styling */
+a.external:hover::after,
+a.md-nav__link[href^="https:"]:hover::after {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="rgb(212, 212, 216)" d="M10.604 1h4.146a.25.25 0 01.25.25v4.146a.25.25 0 01-.427.177L13.03 4.03 9.28 7.78a.75.75 0 01-1.06-1.06l3.75-3.75-1.543-1.543A.25.25 0 0110.604 1zM3.75 2A1.75 1.75 0 002 3.75v8.5c0 .966.784 1.75 1.75 1.75h8.5A1.75 1.75 0 0014 12.25v-3.5a.75.75 0 00-1.5 0v3.5a.25.25 0 01-.25.25h-8.5a.25.25 0 01-.25-.25v-8.5a.25.25 0 01.25-.25h3.5a.75.75 0 000-1.5h-3.5z"></path></svg>');
+  height: 0.8em;
+  width: 0.8em;
+  margin-left: 0.2em;
+  content: ' ';
+  display: inline-block;
+}
+
+/* ============================================================
+   Blockquotes
+   ============================================================ */
+
+.md-typeset blockquote {
+  border-left: 4px solid var(--color-primary);
+  background: rgba(122, 162, 247, 0.05);
+  padding: calc(var(--spacing) * 4);
+  margin: calc(var(--spacing) * 6) 0;
+  border-radius: var(--radius-md);
+  font-style: italic;
+  color: var(--color-muted-foreground);
+}
+
+/* ============================================================
+   Horizontal Rules
+   ============================================================ */
+
+.md-typeset hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: calc(var(--spacing) * 8) 0;
+}
+
+/* ============================================================
+   Focus Visible (Accessibility)
+   ============================================================ */
+
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ============================================================
+   Selection
+   ============================================================ */
+
+::selection {
+  background: var(--color-selection);
+  color: var(--color-selection-foreground);
+}
+
+/* ============================================================
+   Main Content Spacing
+   ============================================================ */
+
+/* Additional space at the bottom of the page for better readability */
+.md-main__inner {
+  margin-bottom: 1.5rem;
+}

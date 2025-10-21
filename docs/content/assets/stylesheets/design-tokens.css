@@ -1,0 +1,192 @@
+/**
+ * Design Tokens & Variables
+ * Core design system variables for the Tux documentation
+ */
+
+/* ============================================================
+   Design Tokens
+   ============================================================ */
+
+:root {
+  /* Radius system (shadcn-inspired) */
+  --radius: 0.5rem;
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 1px);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-full: 9999px;
+
+  /* Spacing scale (shadcn-inspired) */
+  --spacing: 0.25rem;
+
+  /* Tokyo Night colors mapped to semantic tokens - official colors */
+  /* Primary backgrounds */
+  --color-background: #1a1b26;
+  --color-background-secondary: #16161e;
+  --color-background-tertiary: #0C0E14;
+  --color-foreground: #c0caf5;
+
+  /* Card and surface colors */
+  --color-card: #16161e;
+  --color-card-foreground: #c0caf5;
+
+  --color-popover: #16161e;
+  --color-popover-foreground: #c0caf5;
+
+  /* Primary brand color */
+  --color-primary: #7aa2f7;
+  --color-primary-foreground: #1a1b26;
+
+  /* Secondary and muted colors */
+  --color-secondary: #414868;
+  --color-secondary-foreground: #c0caf5;
+
+  --color-muted: #292e42;
+  --color-muted-foreground: #a9b1d6;
+
+  /* Accent colors */
+  --color-accent: #bb9af7;
+  --color-accent-foreground: #1a1b26;
+  --color-accent-cyan: #89ddff;
+  --color-accent-teal: #73daca;
+
+  /* Status colors - official Tokyo Night */
+  --color-destructive: #f7768e;
+  --color-destructive-foreground: #1a1b26;
+  --color-destructive-dark: #db4b4b;
+
+  --color-warning: #e0af68;
+  --color-warning-foreground: #1a1b26;
+
+  --color-success: #1abc9c;
+  --color-success-foreground: #1a1b26;
+  --color-success-alt: #9ece6a;
+
+  --color-info: #7dcfff;
+  --color-info-foreground: #1a1b26;
+  --color-info-alt: #0db9d7;
+
+  /* Borders and inputs */
+  --color-border: #292e42;
+  --color-input: #292e42;
+  --color-ring: rgba(122, 162, 247, 0.3);
+
+  /* Interactive states */
+  --color-hover: rgba(84, 92, 126, 0.15);
+  --color-selected: rgba(84, 92, 126, 0.20);
+  --color-active: rgba(84, 92, 126, 0.17);
+
+  /* Surface colors for code and elevated elements */
+  --color-surface: #16161e;
+  --color-surface-foreground: #a9b1d6;
+  --color-surface-raised: #16161e;
+
+  --color-code: #292e42;
+  --color-code-foreground: #c0caf5;
+  --color-code-highlight: rgba(122, 162, 247, 0.1);
+  --color-code-number: #ff9e64;
+
+  /* Text hierarchy */
+  --color-text-primary: #c0caf5;
+  --color-text-secondary: #a9b1d6;
+  --color-text-muted: #737aa2;
+  --color-text-link: #7aa2f7;
+
+  /* Selection */
+  --color-selection: rgba(122, 162, 247, 0.2);
+  --color-selection-foreground: #c0caf5;
+
+  /* Mention and highlight */
+  --color-mention: #414868;
+  --color-mention-hover: rgba(224, 175, 104, 0.08);
+
+  /* Tokyo Night color palette (for reference) */
+  --tn-red: #f7768e;
+  --tn-orange: #ff9e64;
+  --tn-yellow: #e0af68;
+  --tn-green: #9ece6a;
+  --tn-teal: #73daca;
+  --tn-cyan: #89ddff;
+  --tn-blue: #7aa2f7;
+  --tn-purple: #bb9af7;
+  --tn-magenta: #9d7cd8;
+
+  /* Helper colors with transparency */
+  --color-secondary-alpha-20: rgba(65, 72, 104, 0.2);
+  --color-secondary-alpha-30: rgba(65, 72, 104, 0.3);
+  --color-secondary-alpha-50: rgba(65, 72, 104, 0.5);
+}
+
+/* ============================================================
+   Tokyo Night Theme Variables (mkdocs-material)
+   ============================================================ */
+
+[data-md-color-scheme="custom"] {
+  color-scheme: dark;
+
+  /* Tokyo Night color system */
+  --md-primary-fg-color: #c0caf5;
+  --md-accent-fg-color: #7aa2f7;
+
+  /* Background - Tokyo Night */
+  --md-default-bg-color: #1a1b26;
+  --md-default-bg-color--light: #24283b;
+  --md-default-bg-color--lighter: #414868;
+  --md-default-bg-color--lightest: #565f89;
+
+  /* Foreground - Tokyo Night */
+  --md-default-fg-color: #c0caf5;
+  --md-default-fg-color--light: #a9b1d6;
+  --md-default-fg-color--lighter: #9aa5ce;
+  --md-default-fg-color--lightest: #565f89;
+
+  /* Code - Tokyo Night */
+  --md-code-fg-color: #c0caf5;
+  --md-code-bg-color: #24283b;
+  --md-code-hl-color: rgba(122, 162, 247, 0.15);
+  --md-code-hl-color--light: rgba(122, 162, 247, 0.1);
+
+  /* Syntax - Tokyo Night (official hljs colors) */
+  --md-code-hl-number-color: #ff9e64;
+  --md-code-hl-special-color: #f7768e;
+  --md-code-hl-function-color: #7aa2f7;
+  --md-code-hl-constant-color: #e0af68;
+  --md-code-hl-keyword-color: #bb9af7;
+  --md-code-hl-string-color: #9ece6a;
+  --md-code-hl-operator-color: #bb9af7;
+  --md-code-hl-punctuation-color: #a9b1d6;
+  --md-code-hl-comment-color: #565f89;
+  --md-code-hl-variable-color: #c0caf5;
+  --md-code-hl-name-color: #9ece6a;
+  --md-code-hl-generic-color: #c0caf5;
+  --md-code-hl-attribute-color: #0db9d7;
+  --md-code-hl-type-color: #bb9af7;
+  --md-code-hl-tag-color: #0db9d7;
+  --md-code-hl-tag-name-color: #bb9af7;
+  --md-code-hl-tag-attr-color: #73daca;
+  --md-code-hl-regexp-color: #b4f9f8;
+  --md-code-hl-literal-color: #ff9e64;
+  --md-code-hl-meta-color: #7dcfff;
+
+  /* Additional syntax highlighting */
+  --md-typeset-del-color: rgba(247, 118, 142, 0.2);
+  --md-typeset-ins-color: rgba(158, 206, 106, 0.2);
+
+  /* Typography */
+  --md-typeset-color: var(--md-default-fg-color);
+  --md-typeset-a-color: #7aa2f7;
+
+  /* Cards - Tokyo Night */
+  --md-admonition-bg-color: rgba(36, 40, 59, 0.8);
+  --md-typeset-table-color: var(--color-secondary-alpha-50);
+  --md-typeset-table-color--light: var(--color-secondary-alpha-30);
+
+  /* Footer */
+  --md-footer-bg-color: #24283b;
+  --md-footer-bg-color--dark: #1a1b26;
+  --md-footer-fg-color: var(--md-default-fg-color--light);
+
+  /* Tokyo Night shadows */
+  --md-shadow-z1: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --md-shadow-z2: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
+  --md-shadow-z3: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+}

@@ -1,0 +1,377 @@
+/**
+ * Components & UI Elements
+ * Styling for reusable components like cards, badges, alerts, etc.
+ */
+
+/* ============================================================
+   Modern Admonitions
+   ============================================================ */
+
+.md-typeset .admonition {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-card);
+  padding: calc(var(--spacing) * 4);
+  margin-top: calc(var(--spacing) * 6);
+  margin-bottom: calc(var(--spacing) * 6);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.md-typeset .admonition-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  margin-bottom: calc(var(--spacing) * 2);
+}
+
+.md-typeset .admonition.note {
+  border-left: 3px solid var(--color-info);
+  background: rgba(125, 207, 255, 0.05);
+}
+
+.md-typeset .admonition.tip,
+.md-typeset .admonition.success {
+  border-left: 3px solid var(--color-success);
+  background: rgba(158, 206, 106, 0.05);
+}
+
+.md-typeset .admonition.warning {
+  border-left: 3px solid var(--color-warning);
+  background: rgba(224, 175, 104, 0.05);
+}
+
+.md-typeset .admonition.danger,
+.md-typeset .admonition.error {
+  border-left: 3px solid var(--color-destructive);
+  background: rgba(247, 118, 142, 0.05);
+}
+
+.md-typeset .admonition.info {
+  border-left: 3px solid var(--color-primary);
+  background: rgba(122, 162, 247, 0.05);
+}
+
+/* ============================================================
+   Enhanced Tables
+   ============================================================ */
+
+.md-typeset table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.875rem;
+  margin-top: calc(var(--spacing) * 6);
+  margin-bottom: calc(var(--spacing) * 6);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.md-typeset table thead {
+  background: var(--color-muted);
+}
+
+.md-typeset table thead tr {
+  border-bottom: 2px solid var(--color-border);
+}
+
+.md-typeset table thead tr th {
+  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-foreground);
+  border: none;
+}
+
+.md-typeset table tbody tr {
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color 0.15s ease;
+}
+
+.md-typeset table tbody tr:hover {
+  background: var(--color-secondary-alpha-20);
+}
+
+.md-typeset table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.md-typeset table tbody tr td {
+  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
+  border: none;
+  color: var(--color-foreground);
+}
+
+/* ============================================================
+   Details/Summary (Collapsible)
+   ============================================================ */
+
+.md-typeset details {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-card);
+  margin: 1rem 0;
+}
+
+.md-typeset details:not(:first-child) {
+  margin-top: calc(var(--spacing) * 6);
+}
+
+.md-typeset details summary {
+  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--color-muted);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  transition: background-color 0.15s ease;
+  list-style: none;
+  position: relative;
+  padding-right: calc(var(--spacing) * 8);
+}
+
+.md-typeset details summary:hover {
+  background: var(--color-secondary-alpha-20);
+}
+
+.md-typeset details summary::marker {
+  content: "";
+}
+
+.md-typeset details summary::after {
+  content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>');
+  display: inline-block;
+  position: absolute;
+  right: calc(var(--spacing) * 1.5);
+  aspect-ratio: 1;
+  transition: transform 0.15s ease;
+}
+
+.md-typeset details[open] summary {
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.md-typeset details[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.md-typeset details[open]>p {
+  padding: calc(var(--spacing) * 2) 0;
+  margin-top: 0;
+  font-size: 0.875rem;
+  font-weight: 400;
+  text-decoration: none;
+}
+
+.md-typeset details[open]>p:first-of-type {
+  padding-top: calc(var(--spacing) * 4);
+}
+
+.md-typeset details[open]>p:last-child {
+  padding-bottom: calc(var(--spacing) * 4);
+}
+
+.md-typeset details .highlight {
+  margin: 0;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.md-typeset details .highlight pre {
+  margin: 0;
+}
+
+.md-typeset details .highlight pre code {
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+/* ============================================================
+   Tabbed Content - moved to pymdownx-extensions section (lines 368+)
+   ============================================================ */
+
+/* ============================================================
+   Badge/Label Components
+   ============================================================ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-md);
+  padding: 0.125rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.badge--primary {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.badge--secondary {
+  background: var(--color-secondary);
+  color: var(--color-secondary-foreground);
+}
+
+.badge--success {
+  background: var(--color-success);
+  color: var(--color-success-foreground);
+}
+
+.badge--warning {
+  background: var(--color-warning);
+  color: var(--color-warning-foreground);
+}
+
+.badge--destructive {
+  background: var(--color-destructive);
+  color: var(--color-destructive-foreground);
+}
+
+.badge--outline {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-foreground);
+}
+
+/* ============================================================
+   Card Component
+   ============================================================ */
+
+.card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: calc(var(--spacing) * 6);
+  transition: all 0.15s ease;
+}
+
+.card:hover {
+  border-color: rgba(122, 162, 247, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: calc(var(--spacing) * 2);
+  color: var(--color-foreground);
+}
+
+.card__description {
+  font-size: 0.875rem;
+  color: var(--color-muted-foreground);
+  line-height: 1.6;
+}
+
+/* ============================================================
+   Alert Component
+   ============================================================ */
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--spacing) * 3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: calc(var(--spacing) * 4);
+  margin: calc(var(--spacing) * 4) 0;
+}
+
+.alert--info {
+  border-left: 3px solid var(--color-info);
+  background: rgba(125, 207, 255, 0.05);
+}
+
+.alert--success {
+  border-left: 3px solid var(--color-success);
+  background: rgba(158, 206, 106, 0.05);
+}
+
+.alert--warning {
+  border-left: 3px solid var(--color-warning);
+  background: rgba(224, 175, 104, 0.05);
+}
+
+.alert--error {
+  border-left: 3px solid var(--color-destructive);
+  background: rgba(247, 118, 142, 0.05);
+}
+
+.alert__title {
+  font-weight: 600;
+  margin-bottom: calc(var(--spacing) * 1);
+}
+
+.alert__description {
+  font-size: 0.875rem;
+  color: var(--color-muted-foreground);
+}
+
+/* ============================================================
+   pymdownx-extensions - Moved to pymdownx.css
+   ============================================================ */
+
+/* ============================================================
+   Progress Bar Component
+   ============================================================ */
+
+.progress {
+  width: 100%;
+  height: calc(var(--spacing) * 2);
+  background: var(--color-muted);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: relative;
+}
+
+.progress__bar {
+  height: 100%;
+  background: var(--color-primary);
+  transition: width 0.3s ease;
+  border-radius: var(--radius-lg);
+}
+
+.progress__bar--success {
+  background: var(--color-success);
+}
+
+.progress__bar--warning {
+  background: var(--color-warning);
+}
+
+.progress__bar--error {
+  background: var(--color-destructive);
+}
+
+/* ============================================================
+   Keyboard Key Component
+   ============================================================ */
+
+kbd {
+  display: inline-block;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.75rem;
+  font-family: var(--md-code-font-family);
+  line-height: 1;
+  color: var(--color-foreground);
+  background: var(--color-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 1px 0 var(--color-border);
+}
+
+/* ============================================================
+   Separator Component
+   ============================================================ */
+
+.separator {
+  height: 1px;
+  background: var(--color-border);
+  margin: calc(var(--spacing) * 6) 0;
+}
+
+.separator--vertical {
+  width: 1px;
+  height: auto;
+  margin: 0 calc(var(--spacing) * 4);
+}
