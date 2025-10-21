@@ -139,7 +139,7 @@ class ErrorHandler(commands.Cog):
             tb = "".join(traceback.format_exception(type(error), error, error.__traceback__))
             log_func(f"Error: {error}\nTraceback:\n{tb}")
         else:
-            log_func(f"Expected error: {error}")
+            log_func(f"Error (not sent to Sentry): {error}")
 
     async def _send_error_response(
         self,

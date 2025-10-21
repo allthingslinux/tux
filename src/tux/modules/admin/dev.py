@@ -4,6 +4,8 @@ This module provides various administrative commands for bot management,
 including command synchronization, emoji management, and system information.
 """
 
+from pathlib import Path
+
 import discord
 from discord.ext import commands
 from loguru import logger
@@ -30,6 +32,62 @@ class Dev(BaseCog):
             The bot instance to attach this cog to.
         """
         super().__init__(bot)
+
+    def _resolve_cog_path(self, cog_name: str) -> str:
+        """
+        Resolve a short cog name to a full module path.
+
+        This method attempts to resolve short names like "ping" to full paths
+        like "tux.modules.utility.ping" or "tux.plugins.atl.mock" by recursively
+        searching through both the modules and plugins directories (including all
+        subdirectories). It also handles partial paths like "modules.utility.ping"
+        by prepending "tux." as needed.
+
+        Examples
+        --------
+        - "ping" → "tux.modules.utility.ping"
+        - "mock" → "tux.plugins.atl.mock"
+        - "modules.utility.ping" → "tux.modules.utility.ping"
+        - "plugins.atl.mock" → "tux.plugins.atl.mock"
+        - "tux.modules.utility.ping" → "tux.modules.utility.ping" (unchanged)
+        - "something" → "tux.plugins.xyz.something" (if in plugins/xyz/)
+
+        Parameters
+        ----------
+        cog_name : str
+            The cog name to resolve (can be short or full path).
+
+        Returns
+        -------
+        str
+            The resolved full module path, or the original name if already a full path
+            or if resolution fails.
+        """
+        # Handle different path formats
+        if "." in cog_name:
+            return cog_name if cog_name.startswith("tux.") else f"tux.{cog_name}"
+
+        # Try to find the cog in modules and plugins directories
+        tux_dir = Path(__file__).parent.parent.parent  # Go up to tux/
+
+        # Search directories in order of priority: modules first, then plugins
+        search_dirs = [
+            tux_dir / "modules",  # tux/modules/
+            tux_dir / "plugins",  # tux/plugins/
+        ]
+
+        for search_dir in search_dirs:
+            # Search for the cog file recursively (handles nested subdirectories)
+            for py_file in search_dir.rglob(f"{cog_name}.py"):
+                # Convert path to module path
+                try:
+                    relative_path = py_file.relative_to(tux_dir)  # From tux/
+                    return f"tux.{str(relative_path).replace('/', '.').replace('\\', '.')[:-3]}"
+                except ValueError:
+                    continue
+
+        # If not found, return the original name (might be a full path already)
+        return cog_name
 
     @commands.hybrid_group(
         name="dev",
@@ -434,16 +492,32 @@ class Dev(BaseCog):
         """
         Load a cog into the bot.
 
+        This command supports automatic path resolution. You can use short names
+        like "ping" which will be resolved to "tux.modules.utility.ping", or
+        provide the full module path directly.
+
         Parameters
         ----------
         ctx : commands.Context
             The context in which the command is being invoked.
         cog : str
-            The name of the cog to load.
+            The name of the cog to load (short name or full module path).
         """
-        await self.bot.load_extension(cog)
-        await ctx.send(f"Cog {cog} loaded.")
-        logger.info(f"Cog {cog} loaded.")
+        resolved_cog = self._resolve_cog_path(cog)
+        try:
+            await self.bot.load_extension(resolved_cog)
+            await ctx.send(f"✅ Cog `{resolved_cog}` loaded successfully.")
+            logger.info(f"Cog {resolved_cog} loaded by {ctx.author}")
+        except commands.ExtensionAlreadyLoaded:
+            await ctx.send(f"❌ Cog `{resolved_cog}` is already loaded.")
+        except commands.ExtensionNotFound:
+            await ctx.send(f"❌ Cog `{cog}` not found. (Resolved to: `{resolved_cog}`)")
+        except commands.ExtensionFailed as e:
+            await ctx.send(f"❌ Failed to load cog `{resolved_cog}`: {e.original}")
+            logger.error(f"Failed to load cog {resolved_cog}: {e.original}")
+        except Exception as e:
+            await ctx.send(f"❌ Unexpected error loading cog `{resolved_cog}`: {e}")
+            logger.error(f"Unexpected error loading cog {resolved_cog}: {e}")
 
     @dev.command(
         name="unload_cog",
@@ -455,16 +529,27 @@ class Dev(BaseCog):
         """
         Unload a cog from the bot.
 
+        This command supports automatic path resolution. You can use short names
+        like "ping" which will be resolved to "tux.modules.utility.ping", or
+        provide the full module path directly.
+
         Parameters
         ----------
         ctx : commands.Context
             The context in which the command is being invoked.
         cog : str
-            The name of the cog to unload.
+            The name of the cog to unload (short name or full module path).
         """
-        await self.bot.unload_extension(cog)
-        logger.info(f"Cog {cog} unloaded.")
-        await ctx.send(f"Cog {cog} unloaded.", ephemeral=True, delete_after=30)
+        resolved_cog = self._resolve_cog_path(cog)
+        try:
+            await self.bot.unload_extension(resolved_cog)
+            await ctx.send(f"✅ Cog `{resolved_cog}` unloaded successfully.", ephemeral=True, delete_after=30)
+            logger.info(f"Cog {resolved_cog} unloaded by {ctx.author}")
+        except commands.ExtensionNotLoaded:
+            await ctx.send(f"❌ Cog `{resolved_cog}` is not loaded.")
+        except Exception as e:
+            await ctx.send(f"❌ Unexpected error unloading cog `{resolved_cog}`: {e}")
+            logger.error(f"Unexpected error unloading cog {resolved_cog}: {e}")
 
     @dev.command(
         name="reload_cog",
@@ -476,16 +561,30 @@ class Dev(BaseCog):
         """
         Reload a cog in the bot.
 
+        This command supports automatic path resolution. You can use short names
+        like "ping" which will be resolved to "tux.modules.utility.ping", or
+        provide the full module path directly.
+
         Parameters
         ----------
         ctx : commands.Context
             The context in which the command is being invoked.
         cog : str
-            The name of the cog to reload.
+            The name of the cog to reload (short name or full module path).
         """
-        await self.bot.reload_extension(cog)
-        await ctx.send(f"Cog {cog} reloaded.", ephemeral=True, delete_after=30)
-        logger.info(f"Cog {cog} reloaded.")
+        resolved_cog = self._resolve_cog_path(cog)
+        try:
+            await self.bot.reload_extension(resolved_cog)
+            await ctx.send(f"✅ Cog `{resolved_cog}` reloaded successfully.", ephemeral=True, delete_after=30)
+            logger.info(f"Cog {resolved_cog} reloaded by {ctx.author}")
+        except commands.ExtensionNotLoaded:
+            await ctx.send(f"❌ Cog `{resolved_cog}` is not loaded.")
+        except commands.ExtensionFailed as e:
+            await ctx.send(f"❌ Failed to reload cog `{resolved_cog}`: {e.original}")
+            logger.error(f"Failed to reload cog {resolved_cog}: {e.original}")
+        except Exception as e:
+            await ctx.send(f"❌ Unexpected error reloading cog `{resolved_cog}`: {e}")
+            logger.error(f"Unexpected error reloading cog {resolved_cog}: {e}")
 
     @dev.command(
         name="stop",
