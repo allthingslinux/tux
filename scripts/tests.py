@@ -46,7 +46,7 @@ class TestCLI(BaseCLI):
         # All commands directly registered without groups
         all_commands = [
             # Basic test commands
-            Command("run", self.run_tests, "Run tests with coverage and enhanced output"),
+            Command("all", self.all_tests, "Run all tests with coverage and enhanced output"),
             Command("quick", self.quick_tests, "Run tests without coverage (faster)"),
             Command("plain", self.plain_tests, "Run tests with plain output"),
             Command("parallel", self.parallel_tests, "Run tests in parallel"),
@@ -144,8 +144,8 @@ class TestCLI(BaseCLI):
     # TEST COMMANDS
     # ============================================================================
 
-    def run_tests(self) -> None:
-        """Run tests with coverage and enhanced output."""
+    def all_tests(self) -> None:
+        """Run all tests with coverage and enhanced output."""
         self.rich.print_section("🧪 Running Tests", "blue")
         self._run_test_command(["uv", "run", "pytest"], "Test run")
 

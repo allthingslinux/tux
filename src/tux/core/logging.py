@@ -32,6 +32,7 @@ For debugging specific issues, override the level:
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import sys
 from pathlib import Path
@@ -125,11 +126,6 @@ LEVEL_COLORS = {
 MAX_MESSAGE_LENGTH = 500
 
 
-# =============================================================================
-# STATE MANAGEMENT
-# =============================================================================
-
-
 class _LoggingState:
     """Prevents duplicate logging configuration."""
 
@@ -142,6 +138,16 @@ _state = _LoggingState()
 # =============================================================================
 # MAIN CONFIGURATION FUNCTION
 # =============================================================================
+
+
+def configure_testing_logging() -> None:
+    """
+    Configure logging specifically for testing environment.
+
+    This sets up logging with DEBUG level and testing-appropriate configuration.
+    Call this once at test startup.
+    """
+    configure_logging(level="DEBUG")
 
 
 def configure_logging(
@@ -336,11 +342,9 @@ def _get_relative_file_path(record: Any) -> str:
 
     # Try to build relative path from src/ directory
     if "src" in parts:
-        try:
+        with contextlib.suppress(ValueError, IndexError):
             src_index = parts.index("src")
             return str(Path(*parts[src_index:]))
-        except (ValueError, IndexError):
-            pass
 
     # Fallback to just filename
     return file_path.name
