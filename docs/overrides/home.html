@@ -1,0 +1,275 @@
+{% extends "main.html" %}
+
+{% block tabs %}
+{{ super() }}
+<link rel="stylesheet" href="{{ 'assets/stylesheets/home.css' | url }}">
+<main class="homepage">
+  <!-- Hero Section -->
+  <section class="hero-section" aria-labelledby="hero-title">
+    <div class="hero-badge">
+      <span class="badge-icon" aria-hidden="true">🐧</span>
+      <span class="badge-text">Proudly 100% Open Source</span>
+    </div>
+    <h1 id="hero-title" class="hero-title">Tux</h1>
+    <p class="hero-subtitle">
+      The ultimate Discord bot for Linux communities. From advanced moderation
+      to engaging XP systems, Tux brings everything you need to manage and grow
+      your server.
+    </p>
+    <div class="cta-buttons">
+      <a href="getting-started/for-users/" class="btn-primary">
+        <span class="btn-icon" aria-hidden="true">🚀</span>
+        Get Started
+      </a>
+      <a href="https://github.com/allthingslinux/tux" class="btn-secondary">
+        <span class="btn-icon" aria-hidden="true">⭐</span>
+        Star on GitHub
+      </a>
+      <a href="https://discord.gg/gpmSjcjQxg" class="btn-secondary">
+        <span class="btn-icon" aria-hidden="true">💬</span>
+        Join Community
+      </a>
+    </div>
+  </section>
+
+  <!-- Quick Start Section -->
+  <section class="quick-start-section" aria-labelledby="quick-start-title">
+    <div class="section-header">
+      <h2 id="quick-start-title" class="section-title">Choose Your Path</h2>
+      <p class="section-subtitle">
+        Whether you're a user, admin, or developer, we've got you covered
+      </p>
+    </div>
+    <div class="cards-grid" role="list">
+      <div class="card featured" role="listitem">
+        <div class="card-badge">Most Popular</div>
+        <span class="card-icon" aria-hidden="true">👥</span>
+        <h3 class="card-title">For Users</h3>
+        <p class="card-description">
+          Master Tux commands, explore features, and become a power user in your
+          Discord server.
+        </p>
+        <ul class="card-features">
+          <li>50+ moderation commands</li>
+          <li>XP & leveling system</li>
+          <li>Custom role management</li>
+          <li>Server analytics</li>
+        </ul>
+        <a href="getting-started/for-users/" class="btn-primary">Start Learning</a>
+      </div>
+
+      <div class="card" role="listitem">
+        <span class="card-icon" aria-hidden="true">🚀</span>
+        <h3 class="card-title">For Self-Hosters</h3>
+        <p class="card-description">
+          Deploy your own Tux instance with Docker, configure settings, and manage
+          your bot.
+        </p>
+        <ul class="card-features">
+          <li>Docker Compose setup</li>
+          <li>Configuration wizard</li>
+          <li>Database management</li>
+          <li>Monitoring & logging</li>
+        </ul>
+        <a href="getting-started/for-self-hosters/" class="btn-primary">Deploy Now</a>
+      </div>
+
+      <div class="card" role="listitem">
+        <span class="card-icon" aria-hidden="true">💻</span>
+        <h3 class="card-title">For Developers</h3>
+        <p class="card-description">
+          Contribute to Tux, build plugins, and extend functionality with our developer
+          tools.
+        </p>
+        <ul class="card-features">
+          <li>Plugin architecture</li>
+          <li>API documentation</li>
+          <li>Development setup</li>
+          <li>Testing framework</li>
+        </ul>
+        <a href="getting-started/for-developers/" class="btn-primary">Start Coding</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Showcase -->
+  <section class="features-showcase" aria-labelledby="features-title">
+    <div class="section-header">
+      <h2 id="features-title" class="section-title">Why Choose Tux?</h2>
+      <p class="section-subtitle">
+        Built specifically for Linux communities with modern tools and best practices
+      </p>
+    </div>
+
+    <div class="features-grid" role="list">
+      <div class="feature-card" role="listitem">
+        <span class="feature-icon" aria-hidden="true">🛡️</span>
+        <h4 class="feature-title">Advanced Moderation</h4>
+        <p class="feature-description">
+          Comprehensive tools including ban, kick, timeout, jail system, and case
+          management.
+        </p>
+        <div class="feature-tags">
+          <span class="tag">Case Management</span>
+          <span class="tag">Jail System</span>
+          <span class="tag">Audit Logs</span>
+        </div>
+      </div>
+
+      <div class="feature-card" role="listitem">
+        <span class="feature-icon" aria-hidden="true">⚡</span>
+        <h4 class="feature-title">High Performance</h4>
+        <p class="feature-description">
+          Built with async Python, optimized for large servers with hot-reload for
+          development.
+        </p>
+        <div class="feature-tags">
+          <span class="tag">Async/Await</span>
+          <span class="tag">Hot Reload</span>
+          <span class="tag">Optimized</span>
+        </div>
+      </div>
+
+      <div class="feature-card" role="listitem">
+        <span class="feature-icon" aria-hidden="true">🎮</span>
+        <h4 class="feature-title">XP & Leveling</h4>
+        <p class="feature-description">
+          Engaging XP system with ranks, leaderboards, and customizable role rewards.
+        </p>
+        <div class="feature-tags">
+          <span class="tag">Leaderboards</span>
+          <span class="tag">Role Rewards</span>
+          <span class="tag">Customizable</span>
+        </div>
+      </div>
+
+      <div class="feature-card" role="listitem">
+        <span class="feature-icon" aria-hidden="true">🔧</span>
+        <h4 class="feature-title">Highly Configurable</h4>
+        <p class="feature-description">
+          Flexible configuration with env/TOML/YAML/JSON support and interactive setup
+          wizard.
+        </p>
+        <div class="feature-tags">
+          <span class="tag">TOML/YAML/JSON</span>
+          <span class="tag">Wizard</span>
+          <span class="tag">Live Reload</span>
+        </div>
+      </div>
+
+      <div class="feature-card" role="listitem">
+        <span class="feature-icon" aria-hidden="true">📊</span>
+        <h4 class="feature-title">Rich Analytics</h4>
+        <p class="feature-description">
+          Detailed logging with Sentry integration, InfluxDB metrics, and detailed
+          insights.
+        </p>
+        <div class="feature-tags">
+          <span class="tag">Sentry</span>
+          <span class="tag">InfluxDB</span>
+          <span class="tag">Loguru</span>
+        </div>
+      </div>
+
+      <div class="feature-card" role="listitem">
+        <span class="feature-icon" aria-hidden="true">🔌</span>
+        <h4 class="feature-title">Plugin System</h4>
+        <p class="feature-description">
+          Extensible architecture allowing custom plugins for server-specific features
+          and integrations.
+        </p>
+        <div class="feature-tags">
+          <span class="tag">Custom Plugins</span>
+          <span class="tag">API</span>
+          <span class="tag">Extensible</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tech Stack & Community -->
+  <section class="bottom-section" aria-labelledby="tech-title community-title">
+    <div class="tech-stack">
+      <h3 id="tech-title" class="tech-title">Built with Modern Technologies</h3>
+      <p class="tech-subtitle">
+        Leveraging the latest tools and frameworks for reliability and performance
+      </p>
+      <div class="tech-cloud" role="list">
+        <span class="tech-pill" role="listitem">Python 3.13+</span>
+        <span class="tech-pill" role="listitem">discord.py</span>
+        <span class="tech-pill" role="listitem">SQLModel</span>
+        <span class="tech-pill" role="listitem">SQLAlchemy</span>
+        <span class="tech-pill" role="listitem">PostgreSQL</span>
+        <span class="tech-pill" role="listitem">Alembic</span>
+        <span class="tech-pill" role="listitem">Docker Compose</span>
+        <span class="tech-pill" role="listitem">UV Package Manager</span>
+        <span class="tech-pill" role="listitem">Typer CLI</span>
+        <span class="tech-pill" role="listitem">Ruff + Basedpyright</span>
+      </div>
+    </div>
+
+    <div class="community-section">
+      <h3 id="community-title" class="community-title">Join the Community</h3>
+      <p class="community-subtitle">
+        Connect with other Linux enthusiasts and Tux users
+      </p>
+      <nav class="community-links" aria-label="Community links">
+        <div class="community-link-group">
+          <a href="https://discord.gg/gpmSjcjQxg" class="community-link">
+            <span class="link-icon" aria-hidden="true">💬</span>
+            <div class="link-content">
+              <div class="link-title">Discord Server</div>
+              <div class="link-description">Get support and discuss features</div>
+            </div>
+          </a>
+          <div class="community-widget">
+            <div class="widget-container compact">
+              <h4 class="widget-title">Contributors</h4>
+              <p class="widget-subtitle">Special thanks to everyone who helps make Tux better</p>
+              <div class="contributors-widget">
+                <a href="https://github.com/allthingslinux/tux/graphs/contributors" target="_blank">
+                  <img src="https://contrib.rocks/image?repo=allthingslinux/tux" alt="Contributors" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="community-link-group">
+          <a href="https://github.com/allthingslinux/tux" class="community-link">
+            <span class="link-icon" aria-hidden="true">⭐</span>
+            <div class="link-content">
+              <div class="link-title">GitHub Repository</div>
+              <div class="link-description">Source code and issues</div>
+            </div>
+          </a>
+          <div class="community-widget">
+            <div class="widget-container compact">
+              <h4 class="widget-title">Activity</h4>
+              <p class="widget-subtitle">Real-time activity and engagement stats</p>
+              <div class="metrics-widget">
+                <a href="https://github.com/allthingslinux/tux/pulse" target="_blank">
+                  <img src="https://repobeats.axiom.co/api/embed/b988ba04401b7c68edf9def00f5132cd2a7f3735.svg"
+                    alt="Repository Metrics" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <a href="community/contributing/" class="community-link standalone">
+          <span class="link-icon" aria-hidden="true">🤝</span>
+          <div class="link-content">
+            <div class="link-title">Contributing Guide</div>
+            <div class="link-description">How to contribute</div>
+          </div>
+        </a>
+      </nav>
+    </div>
+  </section>
+
+</main>
+{% endblock %}
+
+{% block content %}{% endblock %}
+{% block footer %}{% endblock %}

@@ -24,9 +24,22 @@ extra:
 #
 ### THEME
 #
+# Watch CSS files for changes during development
+watch:
+  - content
+  - content/assets/
+  - content/assets/stylesheets
+  - overrides
 extra_css:
-  - assets/stylesheets/extra.css
+  # Organized CSS modules (listed directly for --watch-theme to work)
+  - assets/stylesheets/design-tokens.css
+  - assets/stylesheets/base.css
+  - assets/stylesheets/code-blocks.css
+  - assets/stylesheets/components.css
+  - assets/stylesheets/pymdownx.css
+  - assets/stylesheets/navigation.css
   - assets/stylesheets/mkdocstrings.css
+  - assets/stylesheets/responsive.css
 theme:
   # https://squidfunk.github.io/mkdocs-material/setup/changing-the-language/
   language: en
@@ -117,16 +130,22 @@ plugins:
         background_color: '#11111B'
         color: '#ffffff'
   - minify:
-      minify_html: true
+      minify_html: false
       minify_js: false
-      minify_css: true
+      minify_css: false
       htmlmin_opts:
         remove_comments: true
       cache_safe: true
       css_files:
-        # https://mkdocstrings.github.io/python/usage/customization/#css-classes
-        - assets/stylesheets/extra.css
+        # All organized CSS modules
+        - assets/stylesheets/design-tokens.css
+        - assets/stylesheets/base.css
+        - assets/stylesheets/code-blocks.css
+        - assets/stylesheets/components.css
+        - assets/stylesheets/pymdownx.css
+        - assets/stylesheets/navigation.css
         - assets/stylesheets/mkdocstrings.css
+        - assets/stylesheets/responsive.css
 
   #  # https://pypi.org/project/mkdocs-typer2/
   # - mkdocs-typer2:
@@ -272,12 +291,12 @@ plugins:
             show_overloads: true
             # https://mkdocstrings.github.io/python/usage/configuration/signatures/#unwrap_annotated
             unwrap_annotated: false
-  - api-autonav:
-      modules: [../src/tux]
-      nav_section_title: Tux Reference
-      api_root_uri: reference
-      exclude_private: false
-      on_implicit_namespace_package: raise
+  # - api-autonav:
+  #     modules: [../src/tux]
+  #     nav_section_title: Tux Reference
+  #     api_root_uri: reference
+  #     exclude_private: false
+  #     on_implicit_namespace_package: raise
 # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#revisioning
 # - git-revision-date-localized:
 #     enable_creation_date: false
@@ -289,7 +308,14 @@ plugins:
 ### MARKDOWN EXTENSIONS
 #
 markdown_extensions:
+  - abbr
+  - admonition
   - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
   # https://mkdocstrings.github.io/usage/theming/#syntax-highlighting
   - pymdownx.highlight:
       use_pygments: true
@@ -299,17 +325,15 @@ markdown_extensions:
       linenums_style: pymdownx-inline
       line_spans: __span
       anchor_linenums: true
-  - toc:
-      permalink: true
   - mkdocs-typer:
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.inlinehilite
   # - pymdownx.snippets
-  - admonition
   - pymdownx.details
-  - footnotes
-  - md_in_html
-  - def_list
   - tables
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji

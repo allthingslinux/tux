@@ -136,6 +136,7 @@ class DocsCLI(BaseCLI):
         no_livereload: Annotated[bool, Option("--no-livereload", help="Disable live reloading")] = False,
         clean: Annotated[bool, Option("--clean", help="Build without effects of mkdocs serve")] = False,
         strict: Annotated[bool, Option("--strict", help="Enable strict mode")] = False,
+        watch_theme: Annotated[bool, Option("--watch-theme", help="Watch theme files for changes")] = False,
     ) -> None:
         """Serve documentation locally with live reload."""
         self.rich.print_section("📚 Serving Documentation", "blue")
@@ -153,6 +154,8 @@ class DocsCLI(BaseCLI):
             cmd.append("--clean")
         if strict:
             cmd.append("--strict")
+        if watch_theme:
+            cmd.append("--watch-theme")
 
         cmd.extend(["-f", mkdocs_path])
 
@@ -161,19 +164,6 @@ class DocsCLI(BaseCLI):
             self.rich.print_success(f"Documentation server started at http://{host}:{port}")
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to start documentation server")
-
-    def _run_mkdocs_command(self, command: str, *args: str, success_msg: str, error_msg: str) -> None:
-        """Run a mkdocs command with common setup."""
-        if not (mkdocs_path := self._find_mkdocs_config()):
-            return
-
-        cmd = ["uv", "run", "mkdocs", command, "-f", mkdocs_path, *args]
-
-        try:
-            self._run_command(cmd)
-            self.rich.print_success(success_msg)
-        except subprocess.CalledProcessError:
-            self.rich.print_error(error_msg)
 
     def build(
         self,
@@ -189,24 +179,27 @@ class DocsCLI(BaseCLI):
         """Build documentation site for production."""
         self.rich.print_section("🏗️ Building Documentation", "blue")
 
-        args: list[str] = []
-        if clean:
-            args.append("--clean")
-        if strict:
-            args.append("--strict")
-        if theme:
-            args.extend(["--theme", theme])
-        if site_dir:
-            args.extend(["--site-dir", site_dir])
-        if not use_directory_urls:
-            args.append("--no-directory-urls")
+        if not (mkdocs_path := self._find_mkdocs_config()):
+            return
 
-        self._run_mkdocs_command(
-            "build",
-            *args,
-            success_msg="Documentation built successfully",
-            error_msg="Failed to build documentation",
-        )
+        cmd = ["uv", "run", "mkdocs", "build", "-f", mkdocs_path]
+
+        if clean:
+            cmd.append("--clean")
+        if strict:
+            cmd.append("--strict")
+        if theme:
+            cmd.extend(["--theme", theme])
+        if site_dir:
+            cmd.extend(["--site-dir", site_dir])
+        if not use_directory_urls:
+            cmd.append("--no-directory-urls")
+
+        try:
+            self._run_command(cmd)
+            self.rich.print_success("Documentation built successfully")
+        except subprocess.CalledProcessError:
+            self.rich.print_error("Failed to build documentation")
 
     def deploy(
         self,
@@ -231,7 +224,16 @@ class DocsCLI(BaseCLI):
         """Deploy documentation to GitHub Pages."""
         self.rich.print_section("🚀 Deploying Documentation", "blue")
 
-        args = [
+        if not (mkdocs_path := self._find_mkdocs_config()):
+            return
+
+        cmd = [
+            "uv",
+            "run",
+            "mkdocs",
+            "gh-deploy",
+            "-f",
+            mkdocs_path,
             "-m",
             message,
             "--remote",
@@ -241,22 +243,21 @@ class DocsCLI(BaseCLI):
         ]
 
         if force:
-            args.append("--force")
+            cmd.append("--force")
         if no_history:
-            args.append("--no-history")
+            cmd.append("--no-history")
         if ignore_version:
-            args.append("--ignore-version")
+            cmd.append("--ignore-version")
         if clean:
-            args.append("--clean")
+            cmd.append("--clean")
         if strict:
-            args.append("--strict")
+            cmd.append("--strict")
 
-        self._run_mkdocs_command(
-            "gh-deploy",
-            *args,
-            success_msg="Documentation deployed successfully",
-            error_msg="Failed to deploy documentation",
-        )
+        try:
+            self._run_command(cmd)
+            self.rich.print_success("Documentation deployed successfully")
+        except subprocess.CalledProcessError:
+            self.rich.print_error("Failed to deploy documentation")
 
     def gh_deploy(
         self,
@@ -281,12 +282,16 @@ class DocsCLI(BaseCLI):
         """Validate documentation structure and links."""
         self.rich.print_section("✅ Validating Documentation", "blue")
 
-        self._run_mkdocs_command(
-            "build",
-            "--strict",
-            success_msg="Documentation validation passed",
-            error_msg="Documentation validation failed",
-        )
+        if not (mkdocs_path := self._find_mkdocs_config()):
+            return
+
+        cmd = ["uv", "run", "mkdocs", "build", "--strict", "-f", mkdocs_path]
+
+        try:
+            self._run_command(cmd)
+            self.rich.print_success("Documentation validation passed")
+        except subprocess.CalledProcessError:
+            self.rich.print_error("Documentation validation failed")
 
     def check(self) -> None:
         """Check documentation for issues."""
