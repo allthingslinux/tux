@@ -282,16 +282,23 @@ class TuxApp:
         owner_ids = self._resolve_owner_ids()
         self.bot = self._create_bot_instance(owner_ids)
 
+        startup_completed = False
         try:
             # Wait for bot internal setup (database, caches, etc.) before connecting
             await self._await_bot_setup()
+
+            # Mark startup as complete after setup succeeds
+            startup_completed = True
 
             # Connect to Discord and wait for disconnect or shutdown signal
             await self._login_and_connect()
 
         except asyncio.CancelledError:
-            # Task was cancelled (likely by signal handler) - normal shutdown path
-            logger.info("Bot startup was cancelled")
+            # Task was cancelled (likely by signal handler)
+            if startup_completed:
+                logger.info("Bot shutdown complete")
+            else:
+                logger.info("Bot startup was cancelled")
         except KeyboardInterrupt:
             # Ctrl+C or signal handler raised KeyboardInterrupt
             logger.info("Shutdown requested (KeyboardInterrupt)")
