@@ -321,25 +321,149 @@ markdown_extensions:
 #
 nav:
   - Home: index.md
-  - Setup:
-      - Installation: setup/installation.md
-      - Configuration: setup/configuration.md
-      - Development: setup/development.md
-  - Guides:
-      - User Guide: guides/user-guide.md
-      - Admin Guide: guides/admin-guide.md
-      - Developer Guide: guides/developer-guide.md
-  - Developer:
-      - Database Patterns: developer/database-patterns.md
-      - Error Handling: developer/error-handling.md
-      - Sentry Integration: developer/sentry-integration.md
-  - API Reference:
-      - Core: reference/api/core.md
-      - Database: reference/api/database.md
-      - Services: reference/api/services.md
-      - Modules: reference/api/modules.md
-  - CLI Reference: reference/cli.md
+  - Getting Started:
+      - getting-started/index.md
+      - For Users: getting-started/for-users.md
+      - For Self-Hosters: getting-started/for-self-hosters.md
+      - For Developers: getting-started/for-developers.md
+  - User Guide:
+      - user-guide/index.md
+      - Inviting Tux: user-guide/inviting-tux.md
+      - Permissions: user-guide/permissions.md
+      - Commands:
+          - Moderation: user-guide/commands/moderation.md
+          - Utility: user-guide/commands/utility.md
+          - Info: user-guide/commands/info.md
+          - Snippets: user-guide/commands/snippets.md
+          - Levels: user-guide/commands/levels.md
+          - Fun: user-guide/commands/fun.md
+          - Tools: user-guide/commands/tools.md
+          - Code Execution: user-guide/commands/code-execution.md
+          - Config: user-guide/commands/config.md
+          - Admin/Dev: user-guide/commands/admin.md
+      - Features:
+          - XP System: user-guide/features/xp-system.md
+          - Starboard: user-guide/features/starboard.md
+          - Bookmarks: user-guide/features/bookmarks.md
+          - Temp VC: user-guide/features/temp-vc.md
+          - Status Roles: user-guide/features/status-roles.md
+          - GIF Limiter: user-guide/features/gif-limiter.md
+  - Admin Guide:
+      - admin-guide/index.md
+      - Deployment:
+          - admin-guide/deployment/index.md
+          - Docker Compose: admin-guide/deployment/docker-compose.md
+          - VPS with Systemd: admin-guide/deployment/systemd-vps.md
+          - Cloud Platforms: admin-guide/deployment/cloud-platforms.md
+      - Setup:
+          - Discord Bot Token: admin-guide/setup/discord-bot-token.md
+          - Database: admin-guide/setup/database.md
+          - Environment Variables: admin-guide/setup/environment-variables.md
+          - Config Files: admin-guide/setup/config-files.md
+          - First Run: admin-guide/setup/first-run.md
+      - Configuration:
+          - admin-guide/configuration/index.md
+          - Bot Settings: admin-guide/configuration/bot-settings.md
+          - Guild Setup: admin-guide/configuration/guild-setup.md
+          - Permissions: admin-guide/configuration/permissions.md
+          - Features: admin-guide/configuration/features.md
+          - Advanced: admin-guide/configuration/advanced.md
+      - Database:
+          - PostgreSQL Setup: admin-guide/database/postgres-setup.md
+          - Migrations: admin-guide/database/migrations.md
+          - Backups: admin-guide/database/backups.md
+          - Adminer: admin-guide/database/adminer.md
+      - Operations:
+          - Logging: admin-guide/operations/logging.md
+          - Monitoring: admin-guide/operations/monitoring.md
+          - Updating: admin-guide/operations/updating.md
+          - Troubleshooting: admin-guide/operations/troubleshooting.md
+          - Performance: admin-guide/operations/performance.md
+      - Security:
+          - Best Practices: admin-guide/security/best-practices.md
+          - Token Security: admin-guide/security/token-security.md
+          - Firewall: admin-guide/security/firewall.md
+  - Developer Guide:
+      - developer-guide/index.md
+      - Getting Started:
+          - Development Setup: developer-guide/getting-started/development-setup.md
+          - Project Structure: developer-guide/getting-started/project-structure.md
+          - First Contribution: developer-guide/getting-started/first-contribution.md
+          - Code Standards: developer-guide/getting-started/code-standards.md
+      - Architecture:
+          - Overview: developer-guide/architecture/overview.md
+          - Bot Lifecycle: developer-guide/architecture/bot-lifecycle.md
+          - Cog System: developer-guide/architecture/cog-system.md
+          - Command System: developer-guide/architecture/command-system.md
+          - Permission System: developer-guide/architecture/permission-system.md
+          - Configuration System: developer-guide/architecture/configuration-system.md
+          - Database Architecture: developer-guide/architecture/database-architecture.md
+          - Service Layer: developer-guide/architecture/service-layer.md
+      - Core Systems:
+          - Hot Reload: developer-guide/core-systems/hot-reload.md
+          - Error Handling: developer-guide/core-systems/error-handling.md
+          - Sentry Integration: developer-guide/core-systems/sentry-integration.md
+          - Task Monitor: developer-guide/core-systems/task-monitor.md
+          - Logging: developer-guide/core-systems/logging.md
+          - Prefix Manager: developer-guide/core-systems/prefix-manager.md
+          - Emoji Manager: developer-guide/core-systems/emoji-manager.md
+          - Plugin System: developer-guide/core-systems/plugin-system.md
+      - Patterns:
+          - Database Patterns: developer-guide/patterns/database-patterns.md
+          - Error Patterns: developer-guide/patterns/error-patterns.md
+          - Async Patterns: developer-guide/patterns/async-patterns.md
+          - Caching: developer-guide/patterns/caching.md
+          - Service Wrappers: developer-guide/patterns/service-wrappers.md
+      - Guides:
+          - Creating a Cog: developer-guide/guides/creating-a-cog.md
+          - Creating Commands: developer-guide/guides/creating-commands.md
+          - Database Operations: developer-guide/guides/database-operations.md
+          - UI Components: developer-guide/guides/ui-components.md
+          - External APIs: developer-guide/guides/external-apis.md
+          - Adding Features: developer-guide/guides/adding-features.md
+          - Config Options: developer-guide/guides/config-options.md
+      - Modules:
+          - developer-guide/modules/index.md
+          - Moderation System: developer-guide/modules/moderation-system.md
+          - Levels System: developer-guide/modules/levels-system.md
+          - Snippets System: developer-guide/modules/snippets-system.md
+          - Code Execution: developer-guide/modules/code-execution.md
+          - Config Wizard: developer-guide/modules/config-wizard.md
+      - Database:
+          - Models: developer-guide/database/models.md
+          - Controllers: developer-guide/database/controllers.md
+          - Base Controllers: developer-guide/database/base-controllers.md
+          - Migrations: developer-guide/database/migrations.md
+          - Testing: developer-guide/database/testing.md
+      - Testing:
+          - Overview: developer-guide/testing/overview.md
+          - Unit Tests: developer-guide/testing/unit-tests.md
+          - Integration Tests: developer-guide/testing/integration-tests.md
+          - E2E Tests: developer-guide/testing/e2e-tests.md
+          - Fixtures: developer-guide/testing/fixtures.md
+          - CI Pipeline: developer-guide/testing/ci-pipeline.md
+      - CLI Tools:
+          - developer-guide/cli-tools/index.md
+          - Overview: developer-guide/cli-tools/overview.md
+          - Extending CLI: developer-guide/cli-tools/extending-cli.md
+      - UI System:
+          - Embeds: developer-guide/ui/embeds.md
+          - Views: developer-guide/ui/views.md
+          - Modals: developer-guide/ui/modals.md
+          - Buttons: developer-guide/ui/buttons.md
+          - Onboarding Wizard: developer-guide/ui/onboarding-wizard.md
+      - Contributing:
+          - Git Workflow: developer-guide/contributing/git-workflow.md
+          - Code Review: developer-guide/contributing/code-review.md
+          - Documentation: developer-guide/contributing/documentation.md
+          - Versioning: developer-guide/contributing/versioning.md
+          - Design Decisions: developer-guide/contributing/design-decisions.md
+  - Reference:
+      - reference/index.md
+      - CLI Reference: reference/cli.md
+      - Configuration: reference/configuration.md
   - Community:
+      - community/index.md
       - FAQ: community/faq.md
       - Support: community/support.md
       - Contributing: community/contributing.md

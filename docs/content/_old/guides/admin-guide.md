@@ -408,7 +408,7 @@ find /backups -name "tux_*.sql.gz" -mtime +30 -delete
 
 ```bash
 # Backup configuration files
-tar -czf config_backup_$(date +%Y%m%d).tar.gz .env docker-compose.yml
+tar -czf config_backup_$(date +%Y%m%d).tar.gz .env compose.yaml
 ```
 
 **Recovery Procedures:**

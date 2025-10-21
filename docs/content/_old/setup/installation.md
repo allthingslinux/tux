@@ -353,7 +353,7 @@ sudo systemctl status tux
 **Docker Issues:**
 
 1. Check Docker daemon is running
-2. Verify docker-compose.yml syntax
+2. Verify compose.yaml syntax
 3. Check port conflicts
 4. Review container logs
 

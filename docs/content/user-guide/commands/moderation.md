@@ -21,16 +21,20 @@ Ban a user from the server permanently.
 **Usage:**
 
 ```bash
-/ban @user reason:"Rule violation" purge:1 silent:false
-$ban @user -r "Rule violation" -p 1
-```bash
+# Slash command
+/ban @user reason:"Rule violation" purge:1 silent:true
+
+# Prefix command (reason is positional, comes after user)
+$ban @user Rule violation -purge 1 -silent
+$ban @user Spamming links -p 7 -s
+```
 
 **Parameters:**
 
 - `user` (required) - The user to ban
-- `reason` - Reason for the ban (default: "No reason provided")
-- `purge` - Days of messages to delete (0-7, default: 0)
-- `silent` - Skip sending DM to user (default: false)
+- `reason` (positional) - Reason for the ban (default: "No reason provided")
+- `-purge` or `-p` - Days of messages to delete (0-7, default: 0)
+- `-silent` or `-s` - Skip sending DM to user (default: false)
 
 **Aliases:** `b`
 
@@ -47,7 +51,8 @@ $ban @user -r "Rule violation" -p 1
 
 ```bash
 /ban @spammer reason:"Advertising" purge:7
-```bash
+$ban @spammer Advertising -p 7
+```
 
 ---
 
@@ -58,16 +63,21 @@ Temporarily ban a user for a specified duration.
 **Usage:**
 
 ```bash
-/tempban @user duration:7d reason:"Cooldown period"
-$tempban @user 7d -r "Cooldown period"
-```bash
+# Slash command
+/tempban @user reason:"Cooldown period" duration:7d purge:1
+
+# Prefix command (reason is positional, comes after user)
+$tempban @user Cooldown period -duration 7d -p 1
+$tempban @user Spamming -d 3d -silent
+```
 
 **Parameters:**
 
 - `user` (required) - The user to temporarily ban
-- `duration` (required) - Ban duration (e.g., 1h, 3d, 1w)
-- `reason` - Reason for the tempban (default: "No reason provided")
-- `silent` - Skip sending DM to user (default: false)
+- `reason` (positional) - Reason for the tempban (default: "No reason provided")
+- `-duration` or `-d` (required) - Ban duration (e.g., 1h, 3d, 1w)
+- `-purge` or `-p` - Days of messages to delete (0-7, default: 0)
+- `-silent` or `-s` - Skip sending DM to user (default: false)
 
 **Aliases:** `tb`
 
@@ -84,8 +94,9 @@ $tempban @user 7d -r "Cooldown period"
 **Example:**
 
 ```bash
-/tempban @user duration:3d reason:"Repeated warnings"
-```bash
+/tempban @user reason:"Repeated warnings" duration:3d
+$tempban @user Repeated warnings -d 3d
+```
 
 ---
 
@@ -96,14 +107,19 @@ Unban a previously banned user.
 **Usage:**
 
 ```bash
+# Slash command
 /unban @user reason:"Appeal approved"
-$unban @user -r "Appeal approved"
-```bash
+/unban 123456789012345678 reason:"Ban appeal accepted"
+
+# Prefix command (reason is positional, comes after user)
+$unban @user Appeal approved
+$unban 123456789012345678 Ban appeal accepted
+```
 
 **Parameters:**
 
 - `user` (required) - The user to unban (mention, ID, or username)
-- `reason` - Reason for the unban (default: "No reason provided")
+- `reason` (positional) - Reason for the unban (default: "No reason provided")
 
 **Aliases:** `ub`
 
@@ -119,7 +135,8 @@ $unban @user -r "Appeal approved"
 
 ```bash
 /unban 123456789012345678 reason:"Ban appeal accepted"
-```bash
+$unban 123456789012345678 Ban appeal accepted
+```
 
 ---
 
@@ -130,15 +147,19 @@ Kick a user from the server.
 **Usage:**
 
 ```bash
-/kick @user reason:"Disruptive behavior"
-$kick @user -r "Disruptive behavior"
-```bash
+# Slash command
+/kick @user reason:"Disruptive behavior" silent:true
+
+# Prefix command (reason is positional, comes after user)
+$kick @user Disruptive behavior -silent
+$kick @user Spamming -s
+```
 
 **Parameters:**
 
 - `user` (required) - The user to kick
-- `reason` - Reason for the kick (default: "No reason provided")
-- `silent` - Skip sending DM to user (default: false)
+- `reason` (positional) - Reason for the kick (default: "No reason provided")
+- `-silent` or `-s` - Skip sending DM to user (default: false)
 
 **Aliases:** `k`
 
@@ -154,7 +175,8 @@ $kick @user -r "Disruptive behavior"
 
 ```bash
 /kick @troll reason:"Spamming"
-```bash
+$kick @troll Spamming
+```
 
 ---
 
@@ -165,16 +187,20 @@ Timeout a user for a specified duration (mute).
 **Usage:**
 
 ```bash
-/timeout @user duration:10m reason:"Spam"
-$timeout @user 10m -r "Spam"
-```bash
+# Slash command
+/timeout @user reason:"Spam" duration:10m silent:true
+
+# Prefix command (reason is positional, comes after user)
+$timeout @user Spam -duration 10m -silent
+$timeout @user Channel flooding -d 1h -s
+```
 
 **Parameters:**
 
 - `user` (required) - The user to timeout
-- `duration` (required) - Timeout duration (max 28 days)
-- `reason` - Reason for the timeout (default: "No reason provided")
-- `silent` - Skip sending DM to user (default: false)
+- `reason` (positional) - Reason for the timeout (default: "No reason provided")
+- `-duration` or `-d` (required) - Timeout duration (max 28 days)
+- `-silent` or `-s` - Skip sending DM to user (default: false)
 
 **Aliases:** `to`, `mute`
 
@@ -188,8 +214,9 @@ $timeout @user 10m -r "Spam"
 **Example:**
 
 ```bash
-/timeout @spammer duration:1h reason:"Channel flooding"
-```bash
+/timeout @spammer reason:"Channel flooding" duration:1h
+$timeout @spammer Channel flooding -d 1h
+```
 
 ---
 
@@ -200,14 +227,19 @@ Remove a timeout from a user.
 **Usage:**
 
 ```bash
-/untimeout @user reason:"Cooled down"
-$untimeout @user -r "Cooled down"
-```bash
+# Slash command
+/untimeout @user reason:"Cooled down" silent:true
+
+# Prefix command (reason is positional, comes after user)
+$untimeout @user Cooled down -silent
+$untimeout @user Served time -s
+```
 
 **Parameters:**
 
 - `user` (required) - The user to untimeout
-- `reason` - Reason for removing timeout (default: "No reason provided")
+- `reason` (positional) - Reason for removing timeout (default: "No reason provided")
+- `-silent` or `-s` - Skip sending DM to user (default: false)
 
 **Aliases:** `uto`, `unmute`
 
@@ -217,7 +249,8 @@ $untimeout @user -r "Cooled down"
 
 ```bash
 /untimeout @user reason:"Served time"
-```bash
+$untimeout @user Served time
+```
 
 ---
 
@@ -228,15 +261,19 @@ Jail a user by assigning jail role and removing other roles.
 **Usage:**
 
 ```bash
-/jail @user reason:"Severe warning"
-$jail @user -r "Severe warning"
-```bash
+# Slash command
+/jail @user reason:"Severe warning" silent:true
+
+# Prefix command (reason is positional, comes after user)
+$jail @user Severe warning -silent
+$jail @user Final warning before ban -s
+```
 
 **Parameters:**
 
 - `user` (required) - The user to jail
-- `reason` - Reason for jailing (default: "No reason provided")
-- `silent` - Skip sending DM to user (default: false)
+- `reason` (positional) - Reason for jailing (default: "No reason provided")
+- `-silent` or `-s` - Skip sending DM to user (default: false)
 
 **Aliases:** `j`
 
@@ -258,7 +295,8 @@ $jail @user -r "Severe warning"
 
 ```bash
 /jail @problematic reason:"Final warning before ban"
-```bash
+$jail @problematic Final warning before ban
+```
 
 ---
 
@@ -269,14 +307,19 @@ Unjail a user, restoring their previous roles.
 **Usage:**
 
 ```bash
-/unjail @user reason:"Behavior improved"
-$unjail @user -r "Behavior improved"
-```bash
+# Slash command
+/unjail @user reason:"Behavior improved" silent:true
+
+# Prefix command (reason is positional, comes after user)
+$unjail @user Behavior improved -silent
+$unjail @user Good conduct -s
+```
 
 **Parameters:**
 
 - `user` (required) - The user to unjail
-- `reason` - Reason for unjailing (default: "No reason provided")
+- `reason` (positional) - Reason for unjailing (default: "No reason provided")
+- `-silent` or `-s` - Skip sending DM to user (default: false)
 
 **Aliases:** `uj`
 
@@ -292,7 +335,8 @@ $unjail @user -r "Behavior improved"
 
 ```bash
 /unjail @user reason:"Completed jail time"
-```bash
+$unjail @user Completed jail time
+```
 
 ---
 
@@ -303,15 +347,19 @@ Issue a formal warning to a user.
 **Usage:**
 
 ```bash
-/warn @user reason:"Please follow the rules"
-$warn @user -r "Please follow the rules"
-```bash
+# Slash command
+/warn @user reason:"Please follow the rules" silent:true
+
+# Prefix command (reason is positional, comes after user)
+$warn @user Please follow the rules -silent
+$warn @user Don't ping everyone -s
+```
 
 **Parameters:**
 
 - `user` (required) - The user to warn
-- `reason` - Reason for the warning (default: "No reason provided")
-- `silent` - Skip sending DM to user (default: false)
+- `reason` (positional) - Reason for the warning (default: "No reason provided")
+- `-silent` or `-s` - Skip sending DM to user (default: false)
 
 **Aliases:** `w`
 
@@ -328,7 +376,8 @@ $warn @user -r "Please follow the rules"
 
 ```bash
 /warn @newbie reason:"Don't ping @everyone"
-```bash
+$warn @newbie Don't ping everyone
+```
 
 ---
 
@@ -449,15 +498,19 @@ Create a poll to vote on banning a user.
 **Usage:**
 
 ```bash
-/pollban @user reason:"Community vote"
-$pollban @user -r "Community vote"
-```bash
+# Slash command
+/pollban @user reason:"Community vote" silent:true
+
+# Prefix command (reason is positional, comes after user)
+$pollban @user Community vote -silent
+$pollban @user Let the community decide -s
+```
 
 **Parameters:**
 
 - `user` (required) - The user to vote on banning
-- `reason` - Reason for the poll ban (default: "No reason provided")
-- `silent` - Skip sending DM to user (default: false)
+- `reason` (positional) - Reason for the poll ban (default: "No reason provided")
+- `-silent` or `-s` - Skip sending DM to user (default: false)
 
 **Aliases:** `pb`
 
@@ -479,14 +532,19 @@ Create a poll to vote on unbanning a user.
 **Usage:**
 
 ```bash
-/pollunban @user reason:"Redemption vote"
-$pollunban @user -r "Redemption vote"
-```bash
+# Slash command
+/pollunban @user reason:"Redemption vote" silent:true
+
+# Prefix command (reason is positional, comes after user)
+$pollunban @user Redemption vote -silent
+$pollunban @user Second chance vote -s
+```
 
 **Parameters:**
 
 - `user` (required) - The banned user to vote on unbanning
-- `reason` - Reason for the poll unban (default: "No reason provided")
+- `reason` (positional) - Reason for the poll unban (default: "No reason provided")
+- `-silent` or `-s` - Skip sending DM to user (default: false)
 
 **Aliases:** `pub`
 
@@ -503,15 +561,19 @@ Prevent a user from using snippets.
 **Usage:**
 
 ```bash
-/snippetban @user reason:"Snippet abuse"
-$snippetban @user -r "Snippet abuse"
-```bash
+# Slash command
+/snippetban @user reason:"Snippet abuse" silent:true
+
+# Prefix command (reason is positional, comes after user)
+$snippetban @user Snippet abuse -silent
+$snippetban @user Spamming snippets -s
+```
 
 **Parameters:**
 
 - `user` (required) - The user to ban from snippets
-- `reason` - Reason for the restriction (default: "No reason provided")
-- `silent` - Skip sending DM to user (default: false)
+- `reason` (positional) - Reason for the restriction (default: "No reason provided")
+- `-silent` or `-s` - Skip sending DM to user (default: false)
 
 **Aliases:** `sb`
 
@@ -532,14 +594,19 @@ Restore a user's snippet access.
 **Usage:**
 
 ```bash
-/snippetunban @user reason:"Restriction lifted"
-$snippetunban @user -r "Restriction lifted"
-```bash
+# Slash command
+/snippetunban @user reason:"Restriction lifted" silent:true
+
+# Prefix command (reason is positional, comes after user)
+$snippetunban @user Restriction lifted -silent
+$snippetunban @user Good behavior -s
+```
 
 **Parameters:**
 
 - `user` (required) - The user to unban from snippets
-- `reason` - Reason for restoring access (default: "No reason provided")
+- `reason` (positional) - Reason for restoring access (default: "No reason provided")
+- `-silent` or `-s` - Skip sending DM to user (default: false)
 
 **Aliases:** `sub`
 
