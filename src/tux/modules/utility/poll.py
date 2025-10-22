@@ -93,23 +93,6 @@ class Poll(ModerationCogBase):
         # Remove any leading or trailing whitespaces from the options
         options_list = [option.strip() for option in options_list]
 
-        # TODO: Implement poll banning check
-        try:
-            # if await self.is_pollbanned(interaction.guild_id, interaction.user.id):
-            if False:  # Poll banning not yet implemented
-                embed = EmbedCreator.create_embed(
-                    bot=self.bot,
-                    embed_type=EmbedCreator.ERROR,
-                    user_name=interaction.user.name,
-                    user_display_avatar=interaction.user.display_avatar.url,
-                    title="Poll Banned",
-                    description="You are poll banned and cannot create a poll.",
-                )
-                await interaction.response.send_message(embed=embed, ephemeral=True)
-                return
-        except Exception as e:
-            logger.error(f"Failed to check poll ban status: {e}")
-            # Continue with poll creation if check fails
         # Check if the options count is between 2-9
         if len(options_list) < 2 or len(options_list) > 9:
             embed = EmbedCreator.create_embed(

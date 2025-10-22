@@ -275,8 +275,6 @@ class CaseController(BaseController[Case]):
         self,
         user_id: int | None = None,
         guild_id: int | None = None,
-        active_restriction_type: Any = None,
-        inactive_restriction_type: Any = None,
         **kwargs: Any,
     ) -> bool:
         """
