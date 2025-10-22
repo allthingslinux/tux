@@ -11,7 +11,7 @@ This guide is for:
 - **DevOps engineers** managing Tux in production
 - **Server administrators** configuring advanced settings
 
-If you're just using Tux in a server, see the **[User Guide](../user-guide/)** instead.
+If you're just using Tux in a server, see the **[User Guide](../user-guide/index.md)** instead.
 
 ## Quick Navigation
 
@@ -37,7 +37,7 @@ Initial setup guides:
 
 Configure your instance:
 
-- **[Configuration Overview](configuration/)** - Understanding the config system
+- **[Configuration Overview](configuration/index.md)** - Understanding the config system
 - **[Bot Settings](configuration/bot-settings.md)** - Prefix, activity, presence
 - **[Guild Setup](configuration/guild-setup.md)** - Per-server configuration
 - **[Permissions](configuration/permissions.md)** - Set up permission ranks
@@ -252,7 +252,7 @@ Tux consists of:
 - **Monitoring**: Optional Sentry for errors
 - **Metrics**: Optional InfluxDB for performance
 
-```
+```text
 ┌─────────────┐      ┌──────────────┐      ┌─────────────┐
 │   Discord   │◄────►│  Tux Bot     │◄────►│ PostgreSQL  │
 │     API     │      │  (Python)    │      │  Database   │
@@ -276,7 +276,7 @@ Tux consists of:
 | **Scalability**       | Good | Excellent | Excellent |
 | **Recommended For**   | Most users | Advanced users | Quick start |
 
-**[Detailed Comparison →](deployment/)**
+**[Detailed Comparison →](deployment/index.md)**
 
 ## Security Checklist
 
@@ -345,10 +345,10 @@ For critical issues:
 
 ### New Self-Hosters
 
-1. **[Choose Deployment Method](deployment/)** - Docker, VPS, or cloud
-2. **[Follow Setup Guide](setup/)** - Get Discord token and database
+1. **[Choose Deployment Method](deployment/index.md)** - Docker, VPS, or cloud
+2. **[Follow Setup Guide](setup/discord-bot-token.md)** - Get Discord token and database
 3. **[Deploy Tux](deployment/docker-compose.md)** - Start your instance
-4. **[Configure](configuration/)** - Set up your preferences
+4. **[Configure](configuration/index.md)** - Set up your preferences
 
 ### Existing Deployments
 
@@ -359,7 +359,7 @@ For critical issues:
 ### Advanced Topics
 
 - **[Database Optimization](database/postgres-setup.md)** - Tuning PostgreSQL
-- **[Scaling](deployment/docker-compose.md#scaling)** - Handle more load
-- **[Custom Plugins](configuration/advanced.md#plugins)** - Extend functionality
+- **[Scaling](operations/performance.md#scaling)** - Handle more load
+- **[Custom Plugins](configuration/advanced.md#plugin-system)** - Extend functionality
 
 Ready to deploy? Start with **[Docker Compose Deployment](deployment/docker-compose.md)**!

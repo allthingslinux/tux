@@ -43,7 +43,7 @@ uv run tux start
 
 1. **Configuration Loading**
 
-   ```
+   ```text
    Loading configuration...
    ✓ Environment variables loaded
    ✓ Config file loaded
@@ -51,7 +51,7 @@ uv run tux start
 
 2. **Database Connection**
 
-   ```
+   ```text
    Connecting to database...
    ✓ Database connected
    ✓ Running migrations...
@@ -59,7 +59,7 @@ uv run tux start
 
 3. **Bot Initialization**
 
-   ```
+   ```text
    Initializing bot...
    ✓ Loading cogs...
    ✓ Syncing commands...
@@ -67,7 +67,7 @@ uv run tux start
 
 4. **Discord Connection**
 
-   ```
+   ```text
    Connecting to Discord...
    ✓ Logged in as Tux#1234
    ✓ Ready!
@@ -92,7 +92,7 @@ In Discord, check:
 
 ### 2. Test Basic Command
 
-```
+```text
 /ping
 ```
 
@@ -100,7 +100,7 @@ Should respond with latency and uptime.
 
 ### 3. Run Setup Wizard
 
-```
+```text
 /config wizard
 ```
 
@@ -114,7 +114,7 @@ Interactive setup for:
 
 ### 4. Set Up Permissions
 
-```
+```text
 /config rank init
 /config role assign 3 @Moderators
 /config role assign 5 @Admins
@@ -122,7 +122,7 @@ Interactive setup for:
 
 ### 5. Test Moderation
 
-```
+```text
 /warn @TestUser Test warning
 /cases
 ```
@@ -150,7 +150,7 @@ sudo journalctl -u tux -f
 
 #### "Invalid Token" Error
 
-```
+```text
 discord.errors.LoginFailure: Improper token has been passed
 ```
 
@@ -163,7 +163,7 @@ discord.errors.LoginFailure: Improper token has been passed
 
 #### "Database Connection Failed"
 
-```
+```text
 asyncpg.exceptions.InvalidCatalogNameError: database "tuxdb" does not exist
 ```
 
@@ -176,7 +176,7 @@ asyncpg.exceptions.InvalidCatalogNameError: database "tuxdb" does not exist
 
 #### "Permission Denied" (Database)
 
-```
+```text
 asyncpg.exceptions.InsufficientPrivilegeError
 ```
 
@@ -192,7 +192,7 @@ EOF
 
 #### "Missing Intents"
 
-```
+```text
 Privileged intent ... is not enabled
 ```
 
@@ -222,7 +222,7 @@ Privileged intent ... is not enabled
 
 **Test slash commands:**
 
-```
+```text
 /ping
 /help
 ```
@@ -236,7 +236,7 @@ Privileged intent ... is not enabled
 
 **Test prefix commands:**
 
-```
+```text
 $ping
 $help
 ```
@@ -249,7 +249,7 @@ $help
 
 ### Migration Errors
 
-```
+```text
 alembic.util.exc.CommandError
 ```
 
@@ -317,7 +317,7 @@ df -h
 
 Bot logs show loaded configuration on startup:
 
-```
+```text
 Configuration loaded from:
   - .env file
   - config.toml
@@ -326,7 +326,7 @@ Configuration loaded from:
 
 ### Verify Settings
 
-```
+```text
 /config                             # View current config
 ```
 
@@ -343,7 +343,7 @@ After successful first run:
 
 ## Running in Background
 
-### Docker Compose
+### Background with Docker Compose
 
 Already runs in background with `-d` flag:
 
@@ -351,7 +351,7 @@ Already runs in background with `-d` flag:
 docker compose up -d
 ```
 
-### Systemd
+### Background with Systemd
 
 ```bash
 sudo systemctl enable tux           # Start on boot
@@ -409,4 +409,4 @@ Logs output to stdout/stderr and optionally to files in `logs/`.
 
 ---
 
-**Congratulations!** Tux is now running. Head to [Configuration](../configuration/) to customize your instance.
+**Congratulations!** Tux is now running. Head to [Configuration](../configuration/index.md) to customize your instance.

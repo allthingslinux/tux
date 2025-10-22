@@ -443,7 +443,7 @@ The config system manages:
 ## Related Documentation
 
 - **[Permission System](../permissions.md)** - Understanding permission ranks
-- **[Admin Guide](../../admin-guide/configuration/)** - Self-hoster config options
+- **[Admin Guide](../../admin-guide/configuration/index.md)** - Self-hoster config options
 
 ---
 

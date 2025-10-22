@@ -32,7 +32,7 @@ From advanced moderation to engaging XP systems, Tux brings everything you need 
 
 <p style="margin: 0 0 1rem 0; color: #9aa5ce; font-size: 0.9rem; line-height: 1.5;">Jump right into using Tux with our comprehensive user guide.</p>
 
-<a href="getting-started/for-users/"
+<a href="getting-started/for-users.md"
    style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #7aa2f7 0%, #bb9af7 100%);
           color: #11111b; padding: 0.75rem 1.5rem; border-radius: 0.75rem; text-decoration: none;
           font-weight: 600; font-size: 0.9rem; transition: all 0.3s ease;">
@@ -109,7 +109,7 @@ Master Tux commands, explore features, and become a power user in your Discord s
 - Custom role management
 - Server analytics
 
-[View User Guide →](getting-started/for-users/)
+[View User Guide →](getting-started/for-users.md)
 ///
 
 /// tab | 🚀 For Self-Hosters
@@ -124,7 +124,7 @@ Deploy your own Tux instance with Docker, configure settings, and manage your bo
 - Database management
 - Monitoring & logging
 
-[View Self-Hosting Guide →](getting-started/for-self-hosters/)
+[View Self-Hosting Guide →](getting-started/for-self-hosters.md)
 ///
 
 /// tab | 💻 For Developers
@@ -139,7 +139,7 @@ Contribute to Tux, build plugins, and extend functionality with our developer to
 - Development setup
 - Testing framework
 
-[View Developer Guide →](getting-started/for-developers/)
+[View Developer Guide →](getting-started/for-developers.md)
 ///
 
 ## Why Choose Tux?
@@ -309,13 +309,13 @@ Contribute to Tux, build plugins, and extend functionality with our developer to
 ## What's Next?
 
 !!! info "For Users"
-    **New to Tux?** Start with our [User Guide](user-guide/) to learn all the commands and features available.
+    **New to Tux?** Start with our [User Guide](user-guide/index.md) to learn all the commands and features available.
 
 !!! warning "For Self-Hosters"
-    **Want to deploy your own instance?** Check out our [Deployment Guide](admin-guide/deployment/) for step-by-step instructions.
+    **Want to deploy your own instance?** Check out our [Deployment Guide](admin-guide/deployment/index.md) for step-by-step instructions.
 
 !!! example "For Developers"
-    **Ready to contribute?** Read our [Developer Guide](developer-guide/) to set up your development environment.
+    **Ready to contribute?** Read our [Developer Guide](developer-guide/index.md) to set up your development environment.
 
 ## Join the Community
 
@@ -396,4 +396,4 @@ Special thanks to everyone who helps make Tux better!
 
 *Made with ❤️ by the [All Things Linux](https://allthingslinux.org) community*
 
-[Documentation](/) · [GitHub](https://github.com/allthingslinux/tux) · [Discord](https://discord.gg/gpmSjcjQxg) · [Community](https://allthingslinux.org)
+[Documentation](index.md) · [GitHub](https://github.com/allthingslinux/tux) · [Discord](https://discord.gg/gpmSjcjQxg) · [Community](https://allthingslinux.org)

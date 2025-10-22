@@ -268,9 +268,9 @@ uv run db push --help
 
 ### Documentation Resources
 
-- **[Developer Guide](../developer-guide/)** - Development documentation
-- **[Admin Guide](../admin-guide/)** - Administration guides
-- **[CLI Tools Guide](../developer-guide/cli-tools/)** - CLI architecture
+- **[Developer Guide](../developer-guide/index.md)** - Development documentation
+- **[Admin Guide](../admin-guide/index.md)** - Administration guides
+- **[CLI Tools Guide](../developer-guide/cli-tools/index.md)** - CLI architecture
 
 ### Community
 
@@ -279,4 +279,4 @@ uv run db push --help
 
 ---
 
-**Note**: This page includes auto-generated documentation from the CLI commands. For conceptual guides, see the **[Developer Guide](../developer-guide/cli-tools/)**.
+**Note**: This page includes auto-generated documentation from the CLI commands. For conceptual guides, see the **[Developer Guide](../developer-guide/cli-tools/index.md)**.

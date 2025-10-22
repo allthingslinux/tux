@@ -44,10 +44,10 @@ Contribute to Tux:
 
 ### 📚 Documentation
 
-- **[User Guide](../user-guide/)** - Using Tux commands and features
-- **[Admin Guide](../admin-guide/)** - Self-hosting and configuration
-- **[Developer Guide](../developer-guide/)** - Contributing to development
-- **[API Reference](../reference/api/)** - Code documentation
+- **[User Guide](../user-guide/index.md)** - Using Tux commands and features
+- **[Admin Guide](../admin-guide/index.md)** - Self-hosting and configuration
+- **[Developer Guide](../developer-guide/index.md)** - Contributing to development
+- **[Reference](../reference/index.md)** - API and configuration reference
 
 ### ❓ Help & Support
 
@@ -133,7 +133,7 @@ New to the community? Start here:
 - **[FAQ](faq.md)** - Common questions
 - **[Support](support.md)** - How to get help
 - **[Contributing](contributing.md)** - How to contribute
-- **[Getting Started](../getting-started/)** - Choose your path
+- **[Getting Started](../getting-started/index.md)** - Choose your path
 
 ## License
 

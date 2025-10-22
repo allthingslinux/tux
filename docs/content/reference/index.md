@@ -8,7 +8,7 @@ Welcome to the Tux API Reference! This section provides comprehensive auto-gener
 
 - **[CLI Reference](cli.md)** - Command-line interface documentation
 - **[Configuration Reference](configuration.md)** - Configuration schema and options
-- **[API Reference](api/)** - Auto-generated code documentation
+- **[Source Code](https://github.com/allthingslinux/tux)** - View source code on GitHub
 
 ## API Documentation
 
@@ -122,10 +122,10 @@ All code should include:
 
 ### Getting Support
 
-- **[Developer Guide](../developer-guide/)** - Development documentation
+- **[Developer Guide](../developer-guide/index.md)** - Development documentation
 - **[Discord Server](https://discord.gg/gpmSjcjQxg)** - Ask in #development
 - **[GitHub Discussions](https://github.com/allthingslinux/tux/discussions)** - Technical discussions
 
 ---
 
-**Note**: This reference is auto-generated from the source code. For conceptual documentation and guides, see the **[Developer Guide](../developer-guide/)**.
+**Note**: This reference is auto-generated from the source code. For conceptual documentation and guides, see the **[Developer Guide](../developer-guide/index.md)**.

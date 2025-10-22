@@ -11,7 +11,7 @@ This guide is for:
 - **Maintainers** working on core systems
 - **Anyone** interested in how Tux works internally
 
-If you're using or deploying Tux, see the **[User Guide](../user-guide/)** or **[Admin Guide](../admin-guide/)** instead.
+If you're using or deploying Tux, see the **[User Guide](../user-guide/index.md)** or **[Admin Guide](../admin-guide/index.md)** instead.
 
 ## Quick Navigation
 
@@ -227,7 +227,7 @@ git push origin feature/my-feature
 
 ### Codebase Structure
 
-```
+```text
 tux/
 ├── src/tux/              # Main source code
 │   ├── core/             # Core bot functionality
@@ -536,7 +536,7 @@ uv run docs build          # Build static docs
 - **[Architecture](architecture/overview.md)** - System design
 - **[Patterns](patterns/database-patterns.md)** - Best practices
 - **[Guides](guides/creating-a-cog.md)** - How-to tutorials
-- **[API Reference](../reference/api/)** - Code documentation
+- **[Reference](../reference/index.md)** - API and configuration reference
 
 ### Community
 

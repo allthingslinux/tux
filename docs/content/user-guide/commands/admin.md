@@ -13,7 +13,7 @@ Group command for development operations.
 
 **Usage:**
 
-```
+```text
 /dev
 $dev
 ```
@@ -35,7 +35,7 @@ Sync slash commands with Discord's command tree.
 
 **Usage:**
 
-```
+```text
 /dev sync_tree
 $dev sync_tree
 ```
@@ -65,7 +65,7 @@ Execute Python code (for bot owners).
 
 **Usage:**
 
-```
+```text
 $eval print("test")
 ```
 
@@ -120,7 +120,7 @@ Use after:
 - Without reason
 - During normal operation
 
-### Eval
+### When to Use Eval
 
 Use for:
 
@@ -170,8 +170,8 @@ If you're self-hosting:
 
 ## Related Documentation
 
-- **[Developer Guide](../../developer-guide/)** - Full development docs
-- **[Self-Hosting](../../admin-guide/)** - Admin documentation
+- **[Developer Guide](../../developer-guide/index.md)** - Full development docs
+- **[Self-Hosting](../../admin-guide/index.md)** - Admin documentation
 
 ---
 

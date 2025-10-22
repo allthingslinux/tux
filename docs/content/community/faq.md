@@ -14,7 +14,7 @@ Yes! Licensed under GPL-3.0. See [GitHub](https://github.com/allthingslinux/tux)
 
 ### Can I self-host Tux?
 
-Yes! See [Deployment Guide](../admin-guide/deployment/).
+Yes! See [Deployment Guide](../admin-guide/deployment/index.md).
 
 ### Which Python version?
 

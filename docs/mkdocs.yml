@@ -515,6 +515,7 @@ nav:
       - Configuration: reference/configuration.md
   - Community:
       - community/index.md
+      - Changelog: community/changelog.md
       - FAQ: community/faq.md
       - Support: community/support.md
       - Contributing: community/contributing.md

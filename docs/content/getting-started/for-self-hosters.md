@@ -97,7 +97,7 @@ Use the OAuth2 URL Generator in the Discord Developer Portal:
 
 In your Discord server, run:
 
-```
+```text
 /config wizard
 ```
 
@@ -236,9 +236,9 @@ tar -czf config_backup_$(date +%Y%m%d).tar.gz .env config/
 
 ### Documentation
 
-- **[Admin Guide](../admin-guide/)** - Complete administration docs
-- **[Deployment Guide](../admin-guide/deployment/)** - Detailed deployment options
-- **[Configuration Guide](../admin-guide/configuration/)** - All configuration options
+- **[Admin Guide](../admin-guide/index.md)** - Complete administration docs
+- **[Deployment Guide](../admin-guide/deployment/index.md)** - Detailed deployment options
+- **[Configuration Guide](../admin-guide/configuration/index.md)** - All configuration options
 
 ### Community Support
 
@@ -263,20 +263,20 @@ Before going to production:
 
 ### Essential Reading
 
-- **[Configuration Overview](../admin-guide/configuration/)** - Understand all options
-- **[Database Management](../admin-guide/database/)** - Migrations and backups
-- **[Operations](../admin-guide/operations/)** - Monitoring and maintenance
+- **[Configuration Overview](../admin-guide/configuration/index.md)** - Understand all options
+- **[Database Management](../admin-guide/database/migrations.md)** - Migrations and backups
+- **[Operations](../admin-guide/operations/logging.md)** - Monitoring and maintenance
 
 ### Optional Features
 
-- **[Sentry Integration](../admin-guide/configuration/advanced.md#sentry)** - Error tracking
-- **[InfluxDB Metrics](../admin-guide/configuration/advanced.md#influxdb)** - Performance metrics
-- **[Plugins](../admin-guide/configuration/advanced.md#plugins)** - Custom functionality
+- **[Sentry Integration](../admin-guide/configuration/advanced.md#sentry-integration)** - Error tracking
+- **[InfluxDB Metrics](../admin-guide/configuration/advanced.md#influxdb-metrics)** - Performance metrics
+- **[Plugins](../admin-guide/configuration/advanced.md#plugin-system)** - Custom functionality
 
 ### Advanced Topics
 
 - **[Performance Optimization](../admin-guide/operations/performance.md)** - Tuning for large servers
-- **[Scaling](../admin-guide/deployment/docker-compose.md#scaling)** - Handle more load
+- **[Scaling](../admin-guide/operations/performance.md#scaling)** - Handle more load
 - **[Monitoring](../admin-guide/operations/monitoring.md)** - Health checks and alerts
 
-Ready to configure? Head to the **[Admin Guide](../admin-guide/)** for detailed documentation!
+Ready to configure? Head to the **[Admin Guide](../admin-guide/index.md)** for detailed documentation!

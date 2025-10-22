@@ -149,7 +149,8 @@ $afk Going to lunch
 
 ### PermAFK
 
-Set yourself permanently AFK until manually cleared. **This is a toggle command** - run it again to clear your AFK status.
+Set yourself permanently AFK until manually cleared.
+**This is a toggle command** - run it again to clear your AFK status.
 
 **Usage:**
 
@@ -409,7 +410,7 @@ $timezones
 ## Related Commands
 
 - **[Info Commands](info.md)** - User and server information
-- **[Moderation](moderation.md#clearafk)** - Clear someone's AFK
+- **[AFK Commands](#afk)** - Clear someone's AFK status
 
 ## Need Help?
 

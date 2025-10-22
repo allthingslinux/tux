@@ -106,7 +106,7 @@ Invite Tux to your Discord server using your bot's OAuth2 URL.
 
 In your Discord server:
 
-```
+```text
 /config wizard
 ```
 
@@ -579,10 +579,12 @@ docker volume ls
 docker volume inspect tux_postgres_data
 
 # Backup volume
-docker run --rm -v tux_postgres_data:/data -v $(pwd):/backup alpine tar czf /backup/postgres_backup.tar.gz /data
+docker run --rm -v tux_postgres_data:/data -v $(pwd):/backup \
+  alpine tar czf /backup/postgres_backup.tar.gz /data
 
 # Restore volume
-docker run --rm -v tux_postgres_data:/data -v $(pwd):/backup alpine tar xzf /backup/postgres_backup.tar.gz -C /
+docker run --rm -v tux_postgres_data:/data -v $(pwd):/backup \
+  alpine tar xzf /backup/postgres_backup.tar.gz -C /
 ```
 
 ## Migration from Other Deployments
@@ -680,7 +682,7 @@ docker stats                        # Resource usage
 
 After deployment:
 
-1. **[Configure Bot](../configuration/)** - Set up features and settings
+1. **[Configure Bot](../configuration/index.md)** - Set up features and settings
 2. **[Run Migrations](../database/migrations.md)** - Ensure database is up to date
 3. **[Set Up Monitoring](../operations/monitoring.md)** - Watch for issues
 4. **[Configure Backups](../database/backups.md)** - Protect your data
@@ -693,4 +695,4 @@ After deployment:
 
 ---
 
-**Next:** [Configure Your Instance](../configuration/) or try [VPS Deployment](systemd-vps.md).
+**Next:** [Configure Your Instance](../configuration/index.md) or try [VPS Deployment](systemd-vps.md).

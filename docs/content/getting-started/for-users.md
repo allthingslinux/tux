@@ -60,7 +60,7 @@ Explore the complete command reference:
 
 Tux uses a rank-based permission system (0-7). To set up permissions for your moderators:
 
-```
+```text
 /config rank init
 /config role assign 3 @Moderators
 ```
@@ -71,7 +71,7 @@ Tux uses a rank-based permission system (0-7). To set up permissions for your mo
 
 Use the interactive setup wizard to configure Tux for your server:
 
-```
+```text
 /config wizard
 ```
 
@@ -86,7 +86,7 @@ This will guide you through:
 
 Try these essential moderation commands:
 
-```
+```text
 /timeout @user 10m Spam
 /warn @user Please follow the rules
 /cases view
@@ -98,7 +98,7 @@ Try these essential moderation commands:
 
 Use Tux's built-in help system:
 
-```
+```text
 /help
 /help moderation
 /help command_name
@@ -106,7 +106,7 @@ Use Tux's built-in help system:
 
 ### Documentation
 
-- **[User Guide](../user-guide/)** - Complete command reference
+- **[User Guide](../user-guide/index.md)** - Complete command reference
 - **[FAQ](../community/faq.md)** - Common questions
 
 ### Community Support
@@ -123,11 +123,13 @@ Use Tux's built-in help system:
 !!! tip "Check Permissions"
     Make sure Tux has the necessary Discord permissions in your server:
 
-    - Read/Send Messages
-    - Manage Messages
-    - Kick/Ban Members
-    - Timeout Members
-    - Manage Roles (for jail system)
+```text
+- Read/Send Messages
+- Manage Messages
+- Kick/Ban Members
+- Timeout Members
+- Manage Roles (for jail system)
+```
 
 !!! tip "Start with Config Wizard"
     The `/config wizard` is the easiest way to set up Tux properly. It only takes a few minutes!
@@ -138,4 +140,4 @@ Use Tux's built-in help system:
 - **[Learn About Permissions](../user-guide/permissions.md)** - Understand Tux's permission system
 - **[Discover Features](../user-guide/features/xp-system.md)** - Learn about XP, starboard, and more
 
-Ready to dive in? Head to the **[User Guide](../user-guide/)** to explore everything Tux can do!
+Ready to dive in? Head to the **[User Guide](../user-guide/index.md)** to explore everything Tux can do!

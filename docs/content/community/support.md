@@ -37,9 +37,9 @@ For bug reports and feature requests:
 
 Search the documentation first:
 
-- **[User Guide](../user-guide/)** - Using Tux
-- **[Admin Guide](../admin-guide/)** - Self-hosting
-- **[Developer Guide](../developer-guide/)** - Contributing
+- **[User Guide](../user-guide/index.md)** - Using Tux
+- **[Admin Guide](../admin-guide/index.md)** - Self-hosting
+- **[Developer Guide](../developer-guide/index.md)** - Contributing
 - **[FAQ](faq.md)** - Common questions
 
 ## Response Times

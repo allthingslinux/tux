@@ -66,7 +66,7 @@ DEBUG=true
 
 ### 3. Set Up Database
 
-**Option A: Using Docker (Recommended)**
+#### Option A: Using Docker (Recommended)
 
 ```bash
 # Start PostgreSQL with Docker Compose
@@ -76,7 +76,7 @@ uv run docker up
 # Access adminer at http://localhost:8080
 ```
 
-**Option B: Local PostgreSQL**
+#### Option B: Local PostgreSQL
 
 ```bash
 # Create database and user
@@ -174,7 +174,7 @@ uv run docs build
 
 Understanding the codebase layout:
 
-```
+```text
 tux/
 ├── src/tux/              # Main source code
 │   ├── core/             # Core bot functionality
@@ -394,9 +394,9 @@ logger.error("Error occurred")
 
 ### Documentation
 
-- **[Developer Guide](../developer-guide/)** - Complete dev docs
-- **[API Reference](../reference/api/)** - Auto-generated code docs
-- **[CLI Reference](../reference/cli/)** - CLI command docs
+- **[Developer Guide](../developer-guide/index.md)** - Complete dev docs
+- **[Reference](../reference/index.md)** - API and configuration reference
+- **[CLI Reference](../reference/cli.md)** - CLI command docs
 
 ### Community
 
@@ -430,8 +430,8 @@ Before submitting:
 
 ### Deep Dives
 
-- **[Core Systems](../developer-guide/core-systems/)** - Hot-reload, error handling, Sentry
-- **[Database Architecture](../developer-guide/database/)** - Models, controllers, migrations
-- **[Testing](../developer-guide/testing/)** - Unit, integration, E2E tests
+- **[Core Systems](../developer-guide/core-systems/hot-reload.md)** - Hot-reload, error handling, Sentry
+- **[Database Architecture](../developer-guide/database/models.md)** - Models, controllers, migrations
+- **[Testing](../developer-guide/testing/overview.md)** - Unit, integration, E2E tests
 
-Ready to contribute? Check out the **[Developer Guide](../developer-guide/)** for comprehensive documentation!
+Ready to contribute? Check out the **[Developer Guide](../developer-guide/index.md)** for comprehensive documentation!

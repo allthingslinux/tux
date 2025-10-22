@@ -129,16 +129,12 @@ From the Developer Portal, you need:
 
 Found in: **Bot** tab → **Token** section
 
-```
-Your token looks like:
-MTIzNDU2Nzg5MDEyMzQ1Njc4OQ.GHIJK.aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890
-```
+    Your token looks like:
+    MTIzNDU2Nzg5MDEyMzQ1Njc4OQ.GHIJK.aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890
 
 Save this in your `.env` file:
 
-```bash
-BOT_TOKEN=your_token_here
-```
+    BOT_TOKEN=your_token_here
 
 ### Client ID
 
@@ -210,9 +206,7 @@ For Tux, recommended permissions integer: `1099511627775`
 
 ## Invite URL Template
 
-```
-https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=1099511627775&scope=bot%20applications.commands
-```
+    https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=1099511627775&scope=bot%20applications.commands
 
 Replace `YOUR_CLIENT_ID` with your Application ID.
 
@@ -266,14 +260,14 @@ Once you have your bot token:
 
 1. **[Set Up Database](database.md)** - Configure PostgreSQL
 2. **[Configure Environment Variables](environment-variables.md)** - Create `.env` file
-3. **[Deploy Tux](../deployment/)** - Choose deployment method
+3. **[Deploy Tux](../deployment/index.md)** - Choose deployment method
 4. Invite bot to your server using the OAuth2 URL
 
 ## Related Documentation
 
 - **[Environment Variables](environment-variables.md)** - Using the bot token
 - **[Security Best Practices](../security/token-security.md)** - Protecting your token
-- **[Deployment Guide](../deployment/)** - Deploying Tux
+- **[Deployment Guide](../deployment/index.md)** - Deploying Tux
 
 ---
 

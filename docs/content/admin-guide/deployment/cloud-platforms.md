@@ -34,7 +34,7 @@ Cloud platforms offer:
 4. Add PostgreSQL database service
 5. Set environment variables:
 
-   ```
+   ```bash
    BOT_TOKEN=your_token
    POSTGRES_HOST=${{Postgres.POSTGRES_HOST}}
    POSTGRES_DB=${{Postgres.POSTGRES_DB}}
@@ -138,7 +138,7 @@ Most platforms offer managed PostgreSQL:
 
 Set environment variables in platform dashboard:
 
-```
+```bash
 BOT_TOKEN=your_discord_token
 POSTGRES_HOST=db_host
 POSTGRES_PORT=5432
@@ -165,7 +165,7 @@ uv run tux start
 
 Or create a `Procfile`:
 
-```
+```text
 worker: uv run tux start
 ```
 
@@ -187,7 +187,7 @@ uv run db push
 
 ## Platform-Specific Considerations
 
-### Railway
+### Railway Considerations
 
 - Uses Nixpacks for build detection
 - Automatic PORT assignment (not needed for Discord bot)
@@ -201,14 +201,14 @@ uv run db push
 - Easy scaling
 - Managed database recommended
 
-### Render
+### Render Considerations
 
 - Free tier available (limited)
 - Auto-deploy from GitHub
 - Good for small bots
 - May sleep on free tier
 
-### Heroku
+### Heroku Considerations
 
 - Mature platform
 - Extensive add-ons
@@ -330,7 +330,7 @@ Configure health check endpoint if supported.
 
 ## Next Steps
 
-1. **[Configure Tux](../configuration/)** - Set up your instance
+1. **[Configure Tux](../configuration/index.md)** - Set up your instance
 2. **[Set Up Monitoring](../operations/monitoring.md)** - Watch for issues
 3. **[Configure Backups](../database/backups.md)** - Protect data
 

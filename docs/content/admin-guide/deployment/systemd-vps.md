@@ -269,7 +269,7 @@ sudo nano /etc/logrotate.d/tux
 
 Content:
 
-```
+```text
 /home/tux/tux/logs/*.log {
     daily
     rotate 30
@@ -401,7 +401,7 @@ sudo nano /etc/postgresql/15/main/pg_hba.conf
 
 Edit `/etc/postgresql/15/main/postgresql.conf`:
 
-```
+```ini
 shared_buffers = 256MB              # 25% of RAM
 effective_cache_size = 1GB          # 50-75% of RAM
 work_mem = 16MB
@@ -445,7 +445,7 @@ df -h                               # Disk usage
 
 ## Next Steps
 
-1. **[Configure Tux](../configuration/)** - Set up features
+1. **[Configure Tux](../configuration/index.md)** - Set up features
 2. **[Set Up Backups](../database/backups.md)** - Protect your data
 3. **[Configure Monitoring](../operations/monitoring.md)** - Watch for issues
 4. **[Security Hardening](../security/best-practices.md)** - Lock it down

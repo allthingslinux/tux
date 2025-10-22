@@ -56,7 +56,7 @@ Configure temp VC system:
 
 2. **Configure in Tux**
 
-   ```
+   ```text
    # Configuration happens via config file or environment
    # See admin documentation for setup
    ```
@@ -148,7 +148,7 @@ Example: "/tmp/Alice"
 - **Set Limits** - Prevent abuse with appropriate permissions
 - **Monitor Usage** - Check for issues or abuse
 
-### For Users
+### User Guidelines
 
 - **Clean Up** - Leave when done so channel deletes
 - **Don't Hoard** - Create when needed, not "just in case"
@@ -209,7 +209,7 @@ Example: "/tmp/Alice"
 - Bot will clean up when back online
 - Admin can manually delete if needed
 
-## Configuration
+## Admin Configuration
 
 ### For Self-Hosters
 
@@ -222,7 +222,7 @@ base_vc_name = "/tmp/"
 # Creator channel is determined by special naming
 ```
 
-**See:** [Admin Configuration - Temp VC](../../admin-guide/configuration/features.md#temporary-voice-channels)
+**See:** [Admin Configuration - Temp VC](../../admin-guide/configuration/features.md#temp-vc)
 
 ## Related Features
 
