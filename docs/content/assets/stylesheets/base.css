@@ -99,7 +99,7 @@ html {
   --md-typeset-color: var(--color-foreground);
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
-scale
+
 .md-typeset h1,
 .md-typeset h2,
 .md-typeset h3,
