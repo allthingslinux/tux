@@ -2,9 +2,9 @@
 name: CI
 on:
   push:
-    branches: [main]
+    branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
   pull_request:
-    branches: [main]
+    branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -269,5 +269,5 @@ jobs:
           level: error
           reporter: ${{ env.REVIEWDOG_REPORTER }}
           filter_mode: ${{ env.REVIEWDOG_FILTER_MODE }}
-          fail_level: ${{ env.REVIEWDOG_FAIL_LEVEL }}
+          fail_level: error
           gitleaks_flags: --verbose

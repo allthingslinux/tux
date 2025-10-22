@@ -25,29 +25,29 @@ coverage:
   range: 70...100
   status:
     project:
-      # Overall project coverage - progressive improvement
+      # Overall project coverage - enforced at 80%
       default:
-        target: auto
+        target: 80%
         threshold: 1%
-        informational: true  # Don't block PRs while building up test suite
+        informational: false  # Enforce coverage requirements
 
       # Critical components with higher standards
       database:
         target: 85%
         threshold: 2%
-        informational: true
+        informational: false
         paths: [src/tux/database/]
       core:
         target: 80%
         threshold: 2%
-        informational: true
+        informational: false
         paths: [src/tux/core/, src/tux/main.py, src/tux/help.py]
     patch:
       # New code coverage requirements
       default:
         target: 80%
         threshold: 5%
-        informational: true
+        informational: false
         only_pulls: true
 # ==============================================================================
 # TEST FLAG DEFINITIONS

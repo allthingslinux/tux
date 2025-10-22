@@ -1,4 +1,19 @@
 ---
+# ==============================================================================
+# DEPLOYMENT WORKFLOW TEMPLATE
+# ==============================================================================
+# This workflow is a TEMPLATE and needs to be configured for your infrastructure
+# before it can be used. The current implementation is a placeholder.
+#
+# TO ENABLE DEPLOYMENT:
+# 1. Configure your deployment infrastructure (K8s, Docker Swarm, Cloud Platform, etc.)
+# 2. Add required secrets to GitHub repository settings:
+#    - Deployment credentials (SSH keys, API tokens, etc.)
+#    - Infrastructure configuration
+# 3. Update the "Deploy" step with your actual deployment commands
+# 4. Update environment URLs in the "Deploy" step
+# 5. Remove this warning comment block
+# ==============================================================================
 name: Deploy
 on:
   release:
@@ -41,36 +56,45 @@ jobs:
           IMAGE="ghcr.io/${{ github.repository }}:${IMAGE_TAG}"
           echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
           echo "Deploying image: $IMAGE"
-      - name: Deploy
+      - name: Deploy (TEMPLATE - NEEDS CONFIGURATION)
         id: deploy
         run: |
           ENV="${{ github.event.inputs.environment || 'production' }}"
           IMAGE="${{ steps.image.outputs.image }}"
-          echo "🚀 Deploying $IMAGE to $ENV environment"
+          echo "⚠️  WARNING: This is a deployment template and needs configuration"
+          echo "🚀 Would deploy $IMAGE to $ENV environment"
 
-          # This is where you'd integrate with your deployment system
-          # Examples:
-          # - Update Kubernetes manifests
-          # - Deploy to cloud platforms
-          # - Update docker-compose files
-          # - Trigger external deployment systems
+          # TODO: Replace this block with your actual deployment commands
+          # Examples based on different deployment strategies:
 
-          # For now, just simulate deployment
-          echo "✅ Deployment completed successfully"
+          # Option 1: Kubernetes
+          # kubectl set image deployment/tux tux=${IMAGE} -n ${ENV}
+          # kubectl rollout status deployment/tux -n ${ENV}
 
-          # Set deployment URL (customize for your infrastructure)
+          # Option 2: Docker Compose on remote host
+          # ssh user@host "cd /opt/tux && docker compose pull && docker compose up -d"
+
+          # Option 3: Cloud Platform (e.g., Railway, Render, Fly.io)
+          # Use platform-specific CLI to trigger deployment
+
+          # Option 4: Ansible
+          # ansible-playbook -i inventory/${ENV} deploy.yml -e "image_tag=${IMAGE}"
+          echo "✅ Deployment simulation completed"
+
+          # TODO: Update these URLs to match your actual infrastructure
           if [ "$ENV" = "production" ]; then
-            echo "url=https://your-app.com" >> "$GITHUB_OUTPUT"
+            echo "url=https://bot.allthingslinux.org" >> "$GITHUB_OUTPUT"
           else
-            echo "url=https://staging.your-app.com" >> "$GITHUB_OUTPUT"
+            echo "url=https://staging.allthingslinux.org" >> "$GITHUB_OUTPUT"
           fi
       - name: Notify
         if: always()
         run: |-
           ENV="${{ github.event.inputs.environment || 'production' }}"
           if [ "${{ steps.deploy.outcome }}" = "success" ]; then
-            echo "✅ Successfully deployed to $ENV"
+            echo "✅ Deployment workflow completed for $ENV"
             echo "🔗 URL: ${{ steps.deploy.outputs.url }}"
+            echo "⚠️  Note: This is a template - configure for actual deployment"
           else
-            echo "❌ Deployment to $ENV failed"
+            echo "❌ Deployment workflow failed for $ENV"
           fi

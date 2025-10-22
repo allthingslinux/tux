@@ -51,7 +51,7 @@ jobs:
         uses: lewagon/wait-on-check-action@v1.4.0
         with:
           ref: ${{ github.sha }}
-          check-name: Tests (Unit Tests)
+          check-name: Unit Tests
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 30
           allowed-conclusions: success

@@ -1,8 +1,20 @@
 ---
+# ==============================================================================
+# MAINTENANCE WORKFLOW
+# ==============================================================================
+# Automated repository maintenance tasks including:
+# - TODO tracking and issue creation
+# - Docker registry cleanup
+# - Repository health checks
+#
+# Schedules:
+# - Weekly: Sundays at 2 AM UTC (light maintenance)
+# - Monthly: 1st of month at 3 AM UTC (comprehensive checks)
+# ==============================================================================
 name: Maintenance
 on:
   push:
-    branches: [main]
+    branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
   workflow_dispatch:
     inputs:
       cleanup_images:
@@ -24,8 +36,8 @@ on:
         description: Optional earlier SHA for TODOs
         required: false
   schedule:
-    - cron: 0 3 1 * *  # Monthly cleanup on 1st at 3 AM
-    - cron: 0 2 * * 0  # Weekly cleanup on Sundays at 2 AM
+    - cron: 0 3 1 * *  # Monthly: Comprehensive health check (1st at 3 AM UTC)
+    - cron: 0 2 * * 0  # Weekly: Light maintenance (Sundays at 2 AM UTC)
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false

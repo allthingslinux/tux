@@ -291,12 +291,12 @@ plugins:
             show_overloads: true
             # https://mkdocstrings.github.io/python/usage/configuration/signatures/#unwrap_annotated
             unwrap_annotated: false
-  # - api-autonav:
-  #     modules: [../src/tux]
-  #     nav_section_title: Tux Reference
-  #     api_root_uri: reference
-  #     exclude_private: false
-  #     on_implicit_namespace_package: raise
+  - api-autonav:
+      modules: [../src/tux]
+      nav_section_title: Tux Reference
+      api_root_uri: reference
+      exclude_private: false
+      on_implicit_namespace_package: raise
 # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#revisioning
 # - git-revision-date-localized:
 #     enable_creation_date: false

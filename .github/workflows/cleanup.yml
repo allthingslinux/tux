@@ -1,4 +1,16 @@
 ---
+# ==============================================================================
+# REGISTRY CLEANUP WORKFLOW
+# ==============================================================================
+# Manual and scheduled cleanup of Docker registry images.
+# Provides granular control over what gets cleaned up.
+#
+# Schedule:
+# - Monthly: 1st of month at 1 AM UTC (aggressive cleanup)
+#
+# Note: maintenance.yml also performs light cleanup weekly.
+# This workflow is for more aggressive or manual cleanup operations.
+# ==============================================================================
 name: Registry Cleanup
 on:
   workflow_dispatch:
@@ -18,7 +30,7 @@ on:
         type: boolean
         default: false
   schedule:
-    - cron: 0 1 1 * *  # Monthly aggressive cleanup on 1st at 1 AM
+    - cron: 0 1 1 * *  # Monthly: Aggressive cleanup (1st at 1 AM UTC)
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false

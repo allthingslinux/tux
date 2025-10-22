@@ -1,13 +1,24 @@
 ---
+# ==============================================================================
+# DOCKER BUILD AND PUBLISH WORKFLOW
+# ==============================================================================
+# Handles Docker image building, scanning, and publishing to GHCR.
+#
+# Triggers:
+# - Tags: Builds and publishes release images
+# - Pull Requests: Validates Docker builds
+# - Manual: workflow_dispatch for testing
+# - Monthly: 15th at 2 AM UTC (test build to catch base image issues)
+# ==============================================================================
 name: Docker
 on:
   push:
     tags: [v*]
   pull_request:
-    branches: [main]
+    branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
   workflow_dispatch:
   schedule:
-    - cron: 0 2 15 * *
+    - cron: 0 2 15 * *  # Monthly: Test build (15th at 2 AM UTC)
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -97,13 +108,12 @@ jobs:
           echo "🔍 Build cache updated for faster future builds"
       - name: Scan Containerfile
         uses: reviewdog/action-trivy@v1
-        continue-on-error: true
         with:
           github_token: ${{ github.token }}
           trivy_command: config
           trivy_target: ./Containerfile
           trivy_version: v0.63.0
-          level: warning
+          level: error
           reporter: github-pr-review
           tool_name: trivy-dockerfile
           filter_mode: added
@@ -111,17 +121,16 @@ jobs:
       - name: Scan Image
         if: always()
         uses: reviewdog/action-trivy@v1
-        continue-on-error: true
         with:
           github_token: ${{ github.token }}
           trivy_command: image
           trivy_target: ${{ steps.meta.outputs.tags }}
           trivy_version: v0.63.0
-          level: warning
+          level: error
           reporter: github-pr-review
           tool_name: trivy-image
           filter_mode: added
-          trivy_flags: --severity HIGH,CRITICAL --exit-code 0
+          trivy_flags: --severity HIGH,CRITICAL
   build:
     name: Build & Push
     runs-on: ubuntu-latest
@@ -187,39 +196,13 @@ jobs:
       - name: Scan Final Image
         if: always()
         uses: reviewdog/action-trivy@v1
-        continue-on-error: true
         with:
           github_token: ${{ github.token }}
           trivy_command: image
           trivy_target: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           trivy_version: v0.63.0
-          level: warning
+          level: error
           reporter: github-pr-review
           tool_name: trivy-final
           filter_mode: nofilter
-          trivy_flags: --severity HIGH,CRITICAL --exit-code 0
-  cleanup:
-    name: Cleanup
-    runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
-    permissions:
-      packages: write
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Clean Old Images
-        uses: actions/delete-package-versions@v5
-        with:
-          package-name: tux
-          package-type: container
-          min-versions-to-keep: 15
-          delete-only-untagged-versions: true
-      - name: Cleanup Summary
-        run: |-
-          {
-            echo "## 🐳 Docker Registry Cleanup"
-            echo "- **Policy**: Keep 15 versions, remove untagged"
-            echo "- **Schedule**: Weekly cleanup"
-            echo "- **Status**: ✅ Cleanup completed"
-          } >> "$GITHUB_STEP_SUMMARY"
+          trivy_flags: --severity HIGH,CRITICAL
