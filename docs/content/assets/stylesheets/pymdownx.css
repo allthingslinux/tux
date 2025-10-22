@@ -249,7 +249,7 @@
   content: "";
   background-color: var(--color-muted);
   border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-thin) solid var(--color-border);
 }
 
 .md-typeset [type="checkbox"]:checked+.task-list-indicator::before {
@@ -400,10 +400,10 @@
    ============================================================ */
 
 .md-typeset .snippet {
-  border: 1px solid var(--color-border);
+  border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-card);
-  padding: calc(var(--spacing) * 3);
+  padding: var(--space-6);
   margin: 1rem 0;
 }
 
@@ -411,7 +411,7 @@
   font-weight: 600;
   font-size: 0.875rem;
   color: var(--color-muted-foreground);
-  margin-bottom: calc(var(--spacing) * 2);
+  margin-bottom: var(--space-4);
   text-transform: uppercase;
   letter-spacing: 0.025em;
 }

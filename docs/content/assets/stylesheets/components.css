@@ -8,48 +8,108 @@
    ============================================================ */
 
 .md-typeset .admonition {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border: none;
+  border-radius: var(--radius-xl);
   background: var(--color-card);
-  padding: calc(var(--spacing) * 4);
-  margin-top: calc(var(--spacing) * 6);
-  margin-bottom: calc(var(--spacing) * 6);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  padding: var(--space-10);
+  margin-top: var(--space-12);
+  margin-bottom: var(--space-12);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.md-typeset .admonition::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--color-primary);
 }
 
 .md-typeset .admonition-title {
-  font-weight: 600;
-  font-size: 0.875rem;
-  letter-spacing: 0.025em;
-  text-transform: uppercase;
-  margin-bottom: calc(var(--spacing) * 2);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--text-body-sm);
+  color: var(--color-foreground);
+  margin-bottom: var(--space-6);
+}
+
+/* Ensure proper icon display */
+.md-typeset .admonition-title .twemoji {
+  width: 1.2em;
+  height: 1.2em;
+  margin-right: var(--space-4);
 }
 
 .md-typeset .admonition.note {
-  border-left: 3px solid var(--color-info);
-  background: rgba(125, 207, 255, 0.05);
+  background: rgba(125, 207, 255, 0.03);
+}
+
+.md-typeset .admonition.note::before {
+  background: var(--color-info);
 }
 
 .md-typeset .admonition.tip,
 .md-typeset .admonition.success {
-  border-left: 3px solid var(--color-success);
-  background: rgba(158, 206, 106, 0.05);
+  background: rgba(158, 206, 106, 0.03);
+}
+
+.md-typeset .admonition.tip::before,
+.md-typeset .admonition.success::before {
+  background: var(--color-success);
 }
 
 .md-typeset .admonition.warning {
-  border-left: 3px solid var(--color-warning);
-  background: rgba(224, 175, 104, 0.05);
+  background: rgba(224, 175, 104, 0.03);
+}
+
+.md-typeset .admonition.warning::before {
+  background: var(--color-warning);
 }
 
 .md-typeset .admonition.danger,
 .md-typeset .admonition.error {
-  border-left: 3px solid var(--color-destructive);
-  background: rgba(247, 118, 142, 0.05);
+  background: rgba(247, 118, 142, 0.03);
+}
+
+.md-typeset .admonition.danger::before,
+.md-typeset .admonition.error::before {
+  background: var(--color-destructive);
 }
 
 .md-typeset .admonition.info {
-  border-left: 3px solid var(--color-primary);
-  background: rgba(122, 162, 247, 0.05);
+  background: rgba(122, 162, 247, 0.03);
+}
+
+.md-typeset .admonition.info::before {
+  background: var(--color-primary);
+}
+
+/* Ensure consistent text color and size in admonitions */
+.md-typeset .admonition {
+  color: var(--color-foreground);
+  font-size: var(--text-body-sm);
+}
+
+.md-typeset .admonition p,
+.md-typeset .admonition li,
+.md-typeset .admonition ul,
+.md-typeset .admonition ol {
+  color: var(--color-foreground);
+  font-size: inherit;
+}
+
+/* Inline code within admonitions */
+.md-typeset .admonition code {
+  background: var(--color-muted);
+  color: var(--color-foreground);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: 0.85em;
+  font-weight: var(--font-weight-medium);
+  border: var(--border-width-thin) solid var(--color-border);
 }
 
 /* ============================================================
@@ -59,12 +119,12 @@
 .md-typeset table {
   border-collapse: collapse;
   width: 100%;
-  font-size: 0.875rem;
-  margin-top: calc(var(--spacing) * 6);
-  margin-bottom: calc(var(--spacing) * 6);
+  font-size: var(--text-body-sm);
+  margin-top: var(--space-12);
+  margin-bottom: var(--space-12);
   border-radius: var(--radius-md);
   overflow: hidden;
-  border: 1px solid var(--color-border);
+  border: var(--border-width-thin) solid var(--color-border);
 }
 
 .md-typeset table thead {
@@ -72,24 +132,24 @@
 }
 
 .md-typeset table thead tr {
-  border-bottom: 2px solid var(--color-border);
+  border-bottom: var(--border-width-medium) solid var(--color-border);
 }
 
 .md-typeset table thead tr th {
-  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
+  padding: var(--space-6) var(--space-8);
   text-align: left;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-foreground);
   border: none;
 }
 
 .md-typeset table tbody tr {
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width-thin) solid var(--color-border);
   transition: background-color 0.15s ease;
 }
 
 .md-typeset table tbody tr:hover {
-  background: var(--color-secondary-alpha-20);
+  background: rgba(65, 72, 104, 0.2);
 }
 
 .md-typeset table tbody tr:last-child {
@@ -97,7 +157,7 @@
 }
 
 .md-typeset table tbody tr td {
-  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
+  padding: var(--space-6) var(--space-8);
   border: none;
   color: var(--color-foreground);
 }
@@ -107,30 +167,30 @@
    ============================================================ */
 
 .md-typeset details {
-  border: 1px solid var(--color-border);
+  border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-card);
-  margin: 1rem 0;
+  margin: var(--space-4) 0;
 }
 
 .md-typeset details:not(:first-child) {
-  margin-top: calc(var(--spacing) * 6);
+  margin-top: var(--space-12);
 }
 
 .md-typeset details summary {
-  padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
-  font-weight: 600;
+  padding: var(--space-6) var(--space-8);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   background: var(--color-muted);
   border-radius: var(--radius-md) var(--radius-md) 0 0;
   transition: background-color 0.15s ease;
   list-style: none;
   position: relative;
-  padding-right: calc(var(--spacing) * 8);
+  padding-right: var(--space-16);
 }
 
 .md-typeset details summary:hover {
-  background: var(--color-secondary-alpha-20);
+  background: rgba(65, 72, 104, 0.2);
 }
 
 .md-typeset details summary::marker {
@@ -141,7 +201,7 @@
   content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>');
   display: inline-block;
   position: absolute;
-  right: calc(var(--spacing) * 1.5);
+  right: var(--space-3);
   aspect-ratio: 1;
   transition: transform 0.15s ease;
 }
@@ -155,19 +215,19 @@
 }
 
 .md-typeset details[open]>p {
-  padding: calc(var(--spacing) * 2) 0;
+  padding: var(--space-4) 0;
   margin-top: 0;
-  font-size: 0.875rem;
-  font-weight: 400;
+  font-size: var(--text-body-sm);
+  font-weight: var(--font-weight-normal);
   text-decoration: none;
 }
 
 .md-typeset details[open]>p:first-of-type {
-  padding-top: calc(var(--spacing) * 4);
+  padding-top: var(--space-8);
 }
 
 .md-typeset details[open]>p:last-child {
-  padding-bottom: calc(var(--spacing) * 4);
+  padding-bottom: var(--space-8);
 }
 
 .md-typeset details .highlight {
@@ -195,9 +255,9 @@
   display: inline-flex;
   align-items: center;
   border-radius: var(--radius-md);
-  padding: 0.125rem 0.625rem;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-ui-xs);
+  font-weight: var(--font-weight-semibold);
   line-height: 1;
   transition: all 0.15s ease;
 }
@@ -229,7 +289,7 @@
 
 .badge--outline {
   background: transparent;
-  border: 1px solid var(--color-border);
+  border: var(--border-width-thin) solid var(--color-border);
   color: var(--color-foreground);
 }
 
@@ -239,28 +299,28 @@
 
 .card {
   background: var(--color-card);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: calc(var(--spacing) * 6);
+  padding: var(--space-12);
   transition: all 0.15s ease;
 }
 
 .card:hover {
   border-color: rgba(122, 162, 247, 0.3);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-sm);
 }
 
 .card__title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: calc(var(--spacing) * 2);
+  font-size: var(--text-heading-4);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-4);
   color: var(--color-foreground);
 }
 
 .card__description {
-  font-size: 0.875rem;
+  font-size: var(--text-body-sm);
   color: var(--color-muted-foreground);
-  line-height: 1.6;
+  line-height: var(--line-height-base);
 }
 
 /* ============================================================
@@ -270,40 +330,40 @@
 .alert {
   display: flex;
   align-items: flex-start;
-  gap: calc(var(--spacing) * 3);
-  border: 1px solid var(--color-border);
+  gap: var(--space-6);
+  border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: calc(var(--spacing) * 4);
-  margin: calc(var(--spacing) * 4) 0;
+  padding: var(--space-8);
+  margin: var(--space-8) 0;
 }
 
 .alert--info {
-  border-left: 3px solid var(--color-info);
+  border-left: var(--border-width-medium) solid var(--color-info);
   background: rgba(125, 207, 255, 0.05);
 }
 
 .alert--success {
-  border-left: 3px solid var(--color-success);
+  border-left: var(--border-width-medium) solid var(--color-success);
   background: rgba(158, 206, 106, 0.05);
 }
 
 .alert--warning {
-  border-left: 3px solid var(--color-warning);
+  border-left: var(--border-width-medium) solid var(--color-warning);
   background: rgba(224, 175, 104, 0.05);
 }
 
 .alert--error {
-  border-left: 3px solid var(--color-destructive);
+  border-left: var(--border-width-medium) solid var(--color-destructive);
   background: rgba(247, 118, 142, 0.05);
 }
 
 .alert__title {
-  font-weight: 600;
-  margin-bottom: calc(var(--spacing) * 1);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-2);
 }
 
 .alert__description {
-  font-size: 0.875rem;
+  font-size: var(--text-body-sm);
   color: var(--color-muted-foreground);
 }
 
@@ -317,7 +377,7 @@
 
 .progress {
   width: 100%;
-  height: calc(var(--spacing) * 2);
+  height: var(--space-4);
   background: var(--color-muted);
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -349,15 +409,15 @@
 
 kbd {
   display: inline-block;
-  padding: 0.125rem 0.375rem;
-  font-size: 0.75rem;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-ui-xs);
   font-family: var(--md-code-font-family);
   line-height: 1;
   color: var(--color-foreground);
   background: var(--color-muted);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-sm);
-  box-shadow: 0 1px 0 var(--color-border);
+  box-shadow: 0 var(--border-width-thin) 0 var(--color-border);
 }
 
 /* ============================================================
@@ -365,13 +425,13 @@ kbd {
    ============================================================ */
 
 .separator {
-  height: 1px;
+  height: var(--border-width-thin);
   background: var(--color-border);
-  margin: calc(var(--spacing) * 6) 0;
+  margin: var(--space-12) 0;
 }
 
 .separator--vertical {
-  width: 1px;
+  width: var(--border-width-thin);
   height: auto;
-  margin: 0 calc(var(--spacing) * 4);
+  margin: 0 var(--space-8);
 }

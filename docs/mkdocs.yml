@@ -1,6 +1,7 @@
 ---
 site_name: Tux
 site_url: https://tux.atl.dev
+dev_addr: 127.0.0.1:8080
 
 # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#repository
 repo_url: https://github.com/allthingslinux/tux
@@ -30,23 +31,28 @@ watch:
   - content/assets/
   - content/assets/stylesheets
   - overrides
-extra_css:
-  # Organized CSS modules (listed directly for --watch-theme to work)
-  - assets/stylesheets/design-tokens.css
-  - assets/stylesheets/base.css
-  - assets/stylesheets/code-blocks.css
-  - assets/stylesheets/components.css
-  - assets/stylesheets/pymdownx.css
-  - assets/stylesheets/navigation.css
-  - assets/stylesheets/mkdocstrings.css
-  - assets/stylesheets/responsive.css
+  - content/assets/stylesheets/extra.css
+extra_css: [assets/stylesheets/extra.css]
 theme:
   # https://squidfunk.github.io/mkdocs-material/setup/changing-the-language/
   language: en
 
   # https://squidfunk.github.io/mkdocs-material/customization/#extending-the-theme
-  name: material
-  custom_dir: overrides
+  name: shadcn
+  show_title: true  # show the title in the top bar
+  show_stargazers: true  # show the stargazers in the top bar
+  pygments_style:  # default styles
+    light: shadcn-light
+    dark: dracula
+  icon: heroicons:rocket-launch  # use the shadcn svg if not defined
+  topbar_sections: true  # NEW!
+  katex_options:  # optional
+    macros:  # example of macros
+      \RR: \mathbb{R}
+      \dx: \mathrm{d}x
+  show_datetime: false
+
+  # custom_dir: overrides
 
   # https://squidfunk.github.io/mkdocs-material/setup/changing-the-logo-and-icons/#logo
   logo: assets/images/logo.png
@@ -55,9 +61,10 @@ theme:
   favicon: assets/images/logo.png
 
   # https://squidfunk.github.io/mkdocs-material/setup/changing-the-logo-and-icons/#site-icons
-  icon:
-    # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#repository-icon
-    repo: fontawesome/brands/github
+  # Material-specific icon config (incompatible with shadcn)
+  # icon:
+  #  # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#repository-icon
+  #   repo: fontawesome/brands/github
 
   # https://squidfunk.github.io/mkdocs-material/setup/changing-the-colors/
   palette:
@@ -114,38 +121,39 @@ plugins:
       enabled: true
 
   # https://mkdocstrings.github.io/autorefs/
-  - autorefs:
+  # - autorefs:
       # https://mkdocstrings.github.io/autorefs/#non-unique-headings
-      resolve_closest: true
+      # resolve_closest: true
 
-  # Custom Tux Plugin
-  - tux:
-      modules_path: src/tux/modules
-      enable_commands: true
+  #  # Custom Tux Plugin
+  # - tux:
+  #     modules_path: src/tux/modules
+  #     enable_commands: true
 
   # https://squidfunk.github.io/mkdocs-material/plugins/social/
-  - social:
-      enabled: true
-      cards_layout_options:
-        background_color: '#11111B'
-        color: '#ffffff'
-  - minify:
-      minify_html: false
-      minify_js: false
-      minify_css: false
-      htmlmin_opts:
-        remove_comments: true
-      cache_safe: true
-      css_files:
+  # - social:
+  #     enabled: true
+  #     cards_layout_options:
+  #       background_color: '#11111B'
+  #       color: '#ffffff'
+
+  # - minify:
+  #     minify_html: false
+  #     minify_js: false
+  #     minify_css: false
+  #     htmlmin_opts:
+  #       remove_comments: true
+  #     cache_safe: true
+  #     css_files:
         # All organized CSS modules
-        - assets/stylesheets/design-tokens.css
-        - assets/stylesheets/base.css
-        - assets/stylesheets/code-blocks.css
-        - assets/stylesheets/components.css
-        - assets/stylesheets/pymdownx.css
-        - assets/stylesheets/navigation.css
-        - assets/stylesheets/mkdocstrings.css
-        - assets/stylesheets/responsive.css
+        # - assets/stylesheets/design-tokens.css
+        # - assets/stylesheets/base.css
+        # - assets/stylesheets/code-blocks.css
+        # - assets/stylesheets/components.css
+        # - assets/stylesheets/pymdownx.css
+        # - assets/stylesheets/navigation.css
+        # - assets/stylesheets/mkdocstrings.css
+        # - assets/stylesheets/responsive.css
 
   #  # https://pypi.org/project/mkdocs-typer2/
   # - mkdocs-typer2:
@@ -291,12 +299,12 @@ plugins:
             show_overloads: true
             # https://mkdocstrings.github.io/python/usage/configuration/signatures/#unwrap_annotated
             unwrap_annotated: false
-  - api-autonav:
-      modules: [../src/tux]
-      nav_section_title: Tux Reference
-      api_root_uri: reference
-      exclude_private: false
-      on_implicit_namespace_package: raise
+  # - api-autonav:
+  #     modules: [../src/tux]
+  #     nav_section_title: Tux Reference
+  #     api_root_uri: reference
+  #     exclude_private: false
+  #     on_implicit_namespace_package: raise
 # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#revisioning
 # - git-revision-date-localized:
 #     enable_creation_date: false
@@ -308,38 +316,57 @@ plugins:
 ### MARKDOWN EXTENSIONS
 #
 markdown_extensions:
-  - abbr
-  - admonition
-  - attr_list
-  - def_list
-  - footnotes
-  - md_in_html
-  - toc:
-      permalink: true
+  admonition:
+  codehilite:
+  fenced_code:
+  footnotes:
+  extra:
+  pymdownx.blocks.details:
+  pymdownx.tabbed:
+  pymdownx.blocks.tab:
+    combine_header_slug: true
+    separator: ___
+  pymdownx.progressbar:
+  pymdownx.snippets:
+  pymdownx.arithmatex:
+    generic: true
+  shadcn.extensions.echarts.alpha:
+  shadcn.extensions.codexec:
+  shadcn.extensions.iconify:
+  pymdownx.blocks.caption:
+# markdown_extensions:
+  # - abbr
+  # - admonition
+  # - attr_list
+  # - def_list
+  # - footnotes
+  # - md_in_html
+  # - toc:
+      # permalink: true
   # https://mkdocstrings.github.io/usage/theming/#syntax-highlighting
-  - pymdownx.highlight:
-      use_pygments: true
-      pygments_lang_class: true
-      auto_title: true
-      linenums: true
-      linenums_style: pymdownx-inline
-      line_spans: __span
-      anchor_linenums: true
-  - mkdocs-typer:
-  - pymdownx.superfences:
-      custom_fences:
-        - name: mermaid
-          class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_code_format
-  - pymdownx.inlinehilite
+  # - pymdownx.highlight:
+      # use_pygments: true
+      # pygments_lang_class: true
+      # auto_title: true
+      # linenums: true
+      # linenums_style: pymdownx-inline
+      # line_spans: __span
+      # anchor_linenums: true
+  # - mkdocs-typer:
+  # - pymdownx.superfences:
+      # custom_fences:
+      #   - name: mermaid
+      #     class: mermaid
+      #     format: !!python/name:pymdownx.superfences.fence_code_format
+  # - pymdownx.inlinehilite
   # - pymdownx.snippets
-  - pymdownx.details
-  - tables
-  - pymdownx.emoji:
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:material.extensions.emoji.to_svg
-  - pymdownx.tabbed:
-      alternate_style: true
+  # - pymdownx.details
+  # - tables
+  # - pymdownx.emoji:
+      # emoji_index: !!python/name:material.extensions.emoji.twemoji
+      # emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  # - pymdownx.tabbed:
+      # alternate_style: true
 #
 ### NAVIGATION
 #

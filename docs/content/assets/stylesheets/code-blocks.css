@@ -9,14 +9,14 @@
 
 .md-typeset pre {
     background: var(--color-code) !important;
-    border: 1px solid var(--color-border);
+    border: var(--border-width-thin) solid var(--color-border);
     border-radius: var(--radius-sm);
-    padding: calc(var(--spacing) * 3);
+    padding: var(--space-6);
     overflow-x: auto;
     position: relative;
-    margin-top: calc(var(--spacing) * 3);
-    margin-bottom: calc(var(--spacing) * 3);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-6);
+    box-shadow: var(--shadow-xs);
 }
 
 .md-typeset pre code {
@@ -24,39 +24,39 @@
     color: var(--color-code-foreground) !important;
     padding: 0;
     border: none;
-    font-size: 0.8rem;
-    line-height: 1.5;
+    font-size: var(--text-code-sm);
+    line-height: var(--line-height-tight);
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
 .md-typeset :not(pre)>code {
     background: var(--color-muted) !important;
     color: var(--color-primary) !important;
-    border: 1px solid var(--color-border);
+    border: var(--border-width-thin) solid var(--color-border);
     border-radius: var(--radius-sm);
-    padding: 0.125rem 0.375rem;
+    padding: var(--space-1) var(--space-2);
     font-size: 0.8em;
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
 }
 
 .md-typeset .highlight {
     border-radius: var(--radius-sm);
-    border: 1px solid var(--color-border);
+    border: var(--border-width-thin) solid var(--color-border);
     overflow: hidden;
     background: var(--color-code);
-    margin-top: calc(var(--spacing) * 3);
-    margin-bottom: calc(var(--spacing) * 3);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-6);
+    box-shadow: var(--shadow-xs);
 }
 
 .md-typeset .highlight .filename {
-    background: var(--color-secondary-alpha-20);
+    background: rgba(65, 72, 104, 0.2);
     color: var(--color-muted-foreground);
-    padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 3);
-    font-size: 0.7rem;
-    font-weight: 500;
-    border-bottom: 1px solid var(--color-border);
-    letter-spacing: 0.05em;
+    padding: var(--space-3) var(--space-6);
+    font-size: var(--text-ui-xs);
+    font-weight: var(--font-weight-medium);
+    border-bottom: var(--border-width-thin) solid var(--color-border);
+    letter-spacing: var(--letter-spacing-wider);
     text-transform: uppercase;
     display: flex;
     align-items: center;
@@ -86,7 +86,7 @@
     margin: 0;
     border: none;
     border-radius: 0;
-    padding: calc(var(--spacing) * 3);
+    padding: var(--space-6);
 }
 
 /* ============================================================
@@ -96,18 +96,18 @@
 .md-typeset .highlight .linenodiv,
 .md-typeset .codehilite .linenodiv {
     background: transparent !important;
-    border-right: 1px solid var(--color-border);
-    padding-right: calc(var(--spacing) * 2);
-    margin-right: calc(var(--spacing) * 2);
+    border-right: var(--border-width-thin) solid var(--color-border);
+    padding-right: var(--space-4);
+    margin-right: var(--space-4);
 }
 
 .md-typeset .highlight .linenodiv pre,
 .md-typeset .codehilite .linenodiv pre {
     background: transparent !important;
     color: var(--color-code-number);
-    font-size: 0.8rem;
-    line-height: 1.5;
-    padding: calc(var(--spacing) * 3) calc(var(--spacing) * 2) calc(var(--spacing) * 3) calc(var(--spacing) * 3);
+    font-size: var(--text-code-sm);
+    line-height: var(--line-height-tight);
+    padding: var(--space-6) var(--space-4) var(--space-6) var(--space-6);
     margin: 0;
     border: none;
 }
@@ -147,9 +147,9 @@
 .md-typeset .codehilite span.linenos[data-linenos] {
     display: inline-block;
     background: transparent !important;
-    border-right: 1px solid var(--color-border);
-    padding-right: calc(var(--spacing) * 2.5);
-    margin-right: calc(var(--spacing) * 2.5);
+    border-right: var(--border-width-thin) solid var(--color-border);
+    padding-right: var(--space-5);
+    margin-right: var(--space-5);
     color: var(--color-code-number);
     font-size: 0.8rem;
     text-align: right;
@@ -167,8 +167,8 @@
 .md-typeset .highlight .linenos,
 .md-typeset .codehilite .linenos {
     background: transparent !important;
-    border-right: 1px solid var(--color-border);
-    padding-right: calc(var(--spacing) * 2);
+    border-right: var(--border-width-thin) solid var(--color-border);
+    padding-right: var(--space-4);
 }
 
 .md-typeset .highlight .linenos pre,
@@ -177,7 +177,7 @@
     color: var(--color-code-number);
     font-size: 0.8rem;
     line-height: 1.5;
-    padding: calc(var(--spacing) * 3) calc(var(--spacing) * 2) calc(var(--spacing) * 3) calc(var(--spacing) * 3);
+    padding: var(--space-6) var(--space-4) var(--space-6) var(--space-6);
     margin: 0;
     border: none;
 }
@@ -185,7 +185,7 @@
 .md-typeset .highlight .code,
 .md-typeset .codehilite .code {
     background: var(--color-code) !important;
-    padding: calc(var(--spacing) * 3);
+    padding: var(--space-6);
 }
 
 .md-typeset .highlight .code pre,
@@ -215,19 +215,19 @@
 .md-typeset .highlight table td.linenos,
 .md-typeset .codehilite table td.linenos {
     background: transparent !important;
-    border-right: 1px solid var(--color-border);
-    padding-right: calc(var(--spacing) * 2);
+    border-right: var(--border-width-thin) solid var(--color-border);
+    padding-right: var(--space-4);
     text-align: right;
     color: var(--color-code-number);
     font-size: 0.8rem;
     line-height: 1.5;
-    padding: calc(var(--spacing) * 3) calc(var(--spacing) * 2) calc(var(--spacing) * 3) calc(var(--spacing) * 3);
+    padding: var(--space-6) var(--space-4) var(--space-6) var(--space-6);
 }
 
 .md-typeset .highlight table td.code,
 .md-typeset .codehilite table td.code {
     background: var(--color-code) !important;
-    padding: calc(var(--spacing) * 3);
+    padding: var(--space-6);
     width: 100%;
 }
 
@@ -237,16 +237,16 @@
 
 .md-typeset .superfences-tabs {
     border-radius: var(--radius-sm);
-    border: 1px solid var(--color-border);
+    border: var(--border-width-thin) solid var(--color-border);
     overflow: hidden;
-    margin-top: calc(var(--spacing) * 3);
-    margin-bottom: calc(var(--spacing) * 3);
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-6);
 }
 
 .md-typeset .superfences-tabs .superfences-tab {
     background: var(--color-secondary-alpha-20);
     color: var(--color-muted-foreground);
-    padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 3);
+    padding: var(--space-3) var(--space-6);
     font-size: 0.7rem;
     font-weight: 500;
     border-bottom: 1px solid var(--color-border);
@@ -276,7 +276,7 @@
     margin: 0;
     border: none;
     border-radius: 0;
-    padding: calc(var(--spacing) * 3);
+    padding: var(--space-6);
 }
 
 /* Hide superfences tabs for plain text only */
@@ -291,7 +291,7 @@
 .md-typeset .codehilite .code-header {
     background: var(--color-secondary-alpha-20);
     color: var(--color-muted-foreground);
-    padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 3);
+    padding: var(--space-3) var(--space-6);
     font-size: 0.7rem;
     font-weight: 500;
     border-bottom: 1px solid var(--color-border);

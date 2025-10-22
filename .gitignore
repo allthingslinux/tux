@@ -200,3 +200,4 @@ examples/
 # config files
 config/*
 !config/*.example
+docs/node_modules/.mf/cf.json

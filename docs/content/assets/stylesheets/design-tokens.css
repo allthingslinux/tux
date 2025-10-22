@@ -1,119 +1,409 @@
 /**
  * Design Tokens & Variables
- * Core design system variables for the Tux documentation
+ * Modern design system for the Tux documentation
+ *
+ * System Overview:
+ * - Typography: Modular scale (1.25 ratio) with fluid typography
+ * - Spacing: Systematic scale based on 0.25rem base unit
+ * - Colors: Semantic color system with Tokyo Night theme
+ * - Responsive: Mobile-first breakpoints with container queries
+ * - Components: Consistent component-specific tokens
  */
 
 /* ============================================================
-   Design Tokens
+   BASE SYSTEM CONFIGURATION
    ============================================================ */
 
 :root {
-  /* Radius system (shadcn-inspired) */
-  --radius: 0.5rem;
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 1px);
-  --radius-sm: calc(var(--radius) - 2px);
+  /* Base unit for the entire system */
+  --base-unit: 0.25rem; /* 4px */
+
+  /* Scale ratios */
+  --scale-ratio: 1.25; /* Major Third - good for typography */
+  --scale-ratio-minor: 1.067; /* Minor Second - good for spacing */
+
+  /* Base font size with fluid scaling */
+  --font-size-base: clamp(0.875rem, 0.8rem + 0.375vw, 1rem); /* 14px -> 16px */
+  --line-height-base: 1.6;
+  --line-height-tight: 1.4;
+  --line-height-loose: 1.8;
+
+  /* Base container max-width */
+  --container-max: 88rem; /* 1408px - more spacious for modern screens */
+  --container-narrow: 72rem; /* 1152px */
+  --container-wide: 100rem; /* 1600px */
+}
+
+/* ============================================================
+   TYPOGRAPHY SCALE
+   Modular scale using 1.25 ratio (Major Third)
+   Base: 1rem = 16px (at standard viewport)
+   ============================================================ */
+
+:root {
+  /* Display sizes - for hero sections, major headings */
+  --text-display-2xl: clamp(3rem, 5vw + 1rem, 4rem);     /* 48px -> 64px */
+  --text-display-xl: clamp(2.25rem, 4vw + 0.5rem, 3rem); /* 36px -> 48px */
+  --text-display-lg: clamp(1.875rem, 3vw + 0.375rem, 2.25rem); /* 30px -> 36px */
+
+  /* Heading scale */
+  --text-heading-1: clamp(1.75rem, 2.5vw + 0.25rem, 2rem); /* 28px -> 32px */
+  --text-heading-2: clamp(1.5rem, 2vw + 0.125rem, 1.75rem);  /* 24px -> 28px */
+  --text-heading-3: clamp(1.25rem, 1.5vw + 0.125rem, 1.5rem); /* 20px -> 24px */
+  --text-heading-4: clamp(1.125rem, 1vw + 0.125rem, 1.25rem);  /* 18px -> 20px */
+  --text-heading-5: clamp(1rem, 0.75vw + 0.25rem, 1.125rem);   /* 16px -> 18px */
+  --text-heading-6: clamp(0.875rem, 0.5vw + 0.25rem, 1rem);    /* 14px -> 16px */
+
+  /* Body text scale */
+  --text-body-lg: clamp(1.125rem, 1vw + 0.125rem, 1.25rem); /* 18px -> 20px */
+  --text-body-base: var(--font-size-base);                    /* 14px -> 16px */
+  --text-body-sm: clamp(0.8125rem, 0.5vw + 0.125rem, 0.875rem); /* 13px -> 14px */
+  --text-body-xs: clamp(0.75rem, 0.25vw + 0.25rem, 0.8125rem);  /* 12px -> 13px */
+
+  /* UI text scale */
+  --text-ui-lg: var(--text-body-base);   /* Same as body base */
+  --text-ui-base: var(--text-body-sm);   /* Smaller for UI elements */
+  --text-ui-sm: var(--text-body-xs);     /* Smallest for captions */
+  --text-ui-xs: 0.6875rem;               /* 11px - minimum readable */
+
+  /* Code text scale */
+  --text-code-base: 0.875rem;            /* 14px - monospaced */
+  --text-code-sm: 0.8125rem;             /* 13px - smaller code */
+
+  /* Font weights */
+  --font-weight-thin: 100;
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  --font-weight-black: 900;
+
+  /* Letter spacing */
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.025em;
+  --letter-spacing-wider: 0.05em;
+  --letter-spacing-widest: 0.1em;
+}
+
+/* ============================================================
+   SPACING SCALE
+   Systematic scale based on base unit (0.25rem = 4px)
+   ============================================================ */
+
+:root {
+  /* Base spacing units */
+  --space-0: 0;
+  --space-1: calc(var(--base-unit) * 1);    /* 0.25rem = 4px */
+  --space-2: calc(var(--base-unit) * 2);    /* 0.5rem = 8px */
+  --space-3: calc(var(--base-unit) * 3);    /* 0.75rem = 12px */
+  --space-4: calc(var(--base-unit) * 4);    /* 1rem = 16px */
+  --space-5: calc(var(--base-unit) * 5);    /* 1.25rem = 20px */
+  --space-6: calc(var(--base-unit) * 6);    /* 1.5rem = 24px */
+  --space-8: calc(var(--base-unit) * 8);    /* 2rem = 32px */
+  --space-10: calc(var(--base-unit) * 10);  /* 2.5rem = 40px */
+  --space-12: calc(var(--base-unit) * 12);  /* 3rem = 48px */
+  --space-16: calc(var(--base-unit) * 16);  /* 4rem = 64px */
+  --space-20: calc(var(--base-unit) * 20);  /* 5rem = 80px */
+  --space-24: calc(var(--base-unit) * 24);  /* 6rem = 96px */
+  --space-32: calc(var(--base-unit) * 32);  /* 8rem = 128px */
+
+  /* Semantic spacing aliases */
+  --space-gap-xs: var(--space-1);
+  --space-gap-sm: var(--space-2);
+  --space-gap-md: var(--space-3);
+  --space-gap-lg: var(--space-4);
+  --space-gap-xl: var(--space-6);
+  --space-gap-2xl: var(--space-8);
+
+  --space-padding-xs: var(--space-2);
+  --space-padding-sm: var(--space-3);
+  --space-padding-md: var(--space-4);
+  --space-padding-lg: var(--space-6);
+  --space-padding-xl: var(--space-8);
+  --space-padding-2xl: var(--space-12);
+
+  --space-margin-xs: var(--space-2);
+  --space-margin-sm: var(--space-3);
+  --space-margin-md: var(--space-4);
+  --space-margin-lg: var(--space-6);
+  --space-margin-xl: var(--space-8);
+  --space-margin-2xl: var(--space-12);
+}
+
+/* ============================================================
+   BORDER RADIUS SCALE
+   Consistent radius system with semantic names
+   ============================================================ */
+
+:root {
+  --radius-none: 0;
+  --radius-xs: calc(var(--base-unit) * 0.5);   /* 2px */
+  --radius-sm: calc(var(--base-unit) * 1);     /* 4px */
+  --radius-md: calc(var(--base-unit) * 1.5);   /* 6px */
+  --radius-lg: calc(var(--base-unit) * 2);     /* 8px */
+  --radius-xl: calc(var(--base-unit) * 3);     /* 12px */
+  --radius-2xl: calc(var(--base-unit) * 4);    /* 16px */
+  --radius-3xl: calc(var(--base-unit) * 6);    /* 24px */
   --radius-full: 9999px;
 
-  /* Spacing scale (shadcn-inspired) */
-  --spacing: 0.25rem;
+  /* Semantic aliases */
+  --radius-default: var(--radius-md);
+  --radius-button: var(--radius-md);
+  --radius-input: var(--radius-md);
+  --radius-card: var(--radius-lg);
+  --radius-modal: var(--radius-xl);
+}
 
-  /* Tokyo Night colors mapped to semantic tokens - official colors */
-  /* Primary backgrounds */
-  --color-background: #1a1b26;
-  --color-background-secondary: #16161e;
-  --color-background-tertiary: #0C0E14;
-  --color-foreground: #c0caf5;
+/* ============================================================
+   BORDER WIDTH SCALE
+   ============================================================ */
 
-  /* Card and surface colors */
-  --color-card: #16161e;
-  --color-card-foreground: #c0caf5;
+:root {
+  --border-width-none: 0;
+  --border-width-thin: 1px;
+  --border-width-medium: 2px;
+  --border-width-thick: 3px;
+  --border-width-heavy: 4px;
+}
 
-  --color-popover: #16161e;
-  --color-popover-foreground: #c0caf5;
+/* ============================================================
+   SHADOW SCALE
+   Tokyo Night themed shadows
+   ============================================================ */
 
-  /* Primary brand color */
-  --color-primary: #7aa2f7;
-  --color-primary-foreground: #1a1b26;
+:root {
+  --shadow-none: none;
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 
-  /* Secondary and muted colors */
-  --color-secondary: #414868;
-  --color-secondary-foreground: #c0caf5;
+  /* Colored shadows */
+  --shadow-primary: 0 4px 14px 0 rgba(122, 162, 247, 0.25);
+  --shadow-accent: 0 4px 14px 0 rgba(187, 154, 247, 0.25);
+  --shadow-destructive: 0 4px 14px 0 rgba(247, 118, 142, 0.25);
+}
 
-  --color-muted: #292e42;
-  --color-muted-foreground: #a9b1d6;
+/* ============================================================
+   RESPONSIVE BREAKPOINTS
+   Mobile-first approach
+   ============================================================ */
 
-  /* Accent colors */
-  --color-accent: #bb9af7;
-  --color-accent-foreground: #1a1b26;
-  --color-accent-cyan: #89ddff;
-  --color-accent-teal: #73daca;
+:root {
+  /* Breakpoint values in pixels */
+  --breakpoint-xs: 475px;   /* Extra small phones */
+  --breakpoint-sm: 640px;   /* Small phones */
+  --breakpoint-md: 768px;   /* Large phones / small tablets */
+  --breakpoint-lg: 1024px;  /* Tablets / small laptops */
+  --breakpoint-xl: 1280px;  /* Laptops */
+  --breakpoint-2xl: 1536px; /* Large laptops / desktops */
 
-  /* Status colors - official Tokyo Night */
-  --color-destructive: #f7768e;
-  --color-destructive-foreground: #1a1b26;
-  --color-destructive-dark: #db4b4b;
+  /* Container queries for component-level responsive design */
+  --container-xs: 20rem;     /* 320px */
+  --container-sm: 24rem;     /* 384px */
+  --container-md: 28rem;     /* 448px */
+  --container-lg: 32rem;     /* 512px */
+  --container-xl: 36rem;     /* 576px */
+  --container-2xl: 42rem;    /* 672px */
+  --container-3xl: 48rem;    /* 768px */
+  --container-4xl: 56rem;    /* 896px */
+  --container-5xl: 64rem;    /* 1024px */
+  --container-6xl: 72rem;    /* 1152px */
+  --container-7xl: 80rem;    /* 1280px */
+}
 
-  --color-warning: #e0af68;
-  --color-warning-foreground: #1a1b26;
+/* ============================================================
+   TOKYO NIGHT COLOR SYSTEM
+   Semantic color tokens with official Tokyo Night colors
+   ============================================================ */
 
-  --color-success: #1abc9c;
-  --color-success-foreground: #1a1b26;
-  --color-success-alt: #9ece6a;
+:root {
+  /* Base colors */
+  --color-black: #000000;
+  --color-white: #ffffff;
 
-  --color-info: #7dcfff;
-  --color-info-foreground: #1a1b26;
-  --color-info-alt: #0db9d7;
-
-  /* Borders and inputs */
-  --color-border: #292e42;
-  --color-input: #292e42;
-  --color-ring: rgba(122, 162, 247, 0.3);
-
-  /* Interactive states */
-  --color-hover: rgba(84, 92, 126, 0.15);
-  --color-selected: rgba(84, 92, 126, 0.20);
-  --color-active: rgba(84, 92, 126, 0.17);
-
-  /* Surface colors for code and elevated elements */
-  --color-surface: #16161e;
-  --color-surface-foreground: #a9b1d6;
-  --color-surface-raised: #16161e;
-
-  --color-code: #292e42;
-  --color-code-foreground: #c0caf5;
-  --color-code-highlight: rgba(122, 162, 247, 0.1);
-  --color-code-number: #ff9e64;
-
-  /* Text hierarchy */
-  --color-text-primary: #c0caf5;
-  --color-text-secondary: #a9b1d6;
-  --color-text-muted: #737aa2;
-  --color-text-link: #7aa2f7;
-
-  /* Selection */
-  --color-selection: rgba(122, 162, 247, 0.2);
-  --color-selection-foreground: #c0caf5;
-
-  /* Mention and highlight */
-  --color-mention: #414868;
-  --color-mention-hover: rgba(224, 175, 104, 0.08);
-
-  /* Tokyo Night color palette (for reference) */
+  /* Tokyo Night palette */
   --tn-red: #f7768e;
+  --tn-red-dark: #db4b4b;
   --tn-orange: #ff9e64;
   --tn-yellow: #e0af68;
   --tn-green: #9ece6a;
+  --tn-green-alt: #1abc9c;
   --tn-teal: #73daca;
   --tn-cyan: #89ddff;
+  --tn-cyan-alt: #0db9d7;
   --tn-blue: #7aa2f7;
   --tn-purple: #bb9af7;
-  --tn-magenta: #9d7cd8;
+  --tn-purple-alt: #9d7cd8;
+  --tn-magenta: #c678dd;
 
-  /* Helper colors with transparency */
-  --color-secondary-alpha-20: rgba(65, 72, 104, 0.2);
-  --color-secondary-alpha-30: rgba(65, 72, 104, 0.3);
-  --color-secondary-alpha-50: rgba(65, 72, 104, 0.5);
+  /* Gray scale */
+  --tn-gray-50: #c0caf5;
+  --tn-gray-100: #a9b1d6;
+  --tn-gray-200: #9aa5ce;
+  --tn-gray-300: #565f89;
+  --tn-gray-400: #414868;
+  --tn-gray-500: #292e42;
+  --tn-gray-600: #1a1b26;
+  --tn-gray-700: #16161e;
+  --tn-gray-800: #0c0e14;
+  --tn-gray-900: #000000;
+
+  /* Background colors */
+  --color-background: var(--tn-gray-600);
+  --color-background-secondary: var(--tn-gray-700);
+  --color-background-tertiary: var(--tn-gray-800);
+  --color-background-muted: var(--tn-gray-500);
+
+  /* Foreground colors */
+  --color-foreground: var(--tn-gray-50);
+  --color-foreground-secondary: var(--tn-gray-100);
+  --color-foreground-muted: var(--tn-gray-200);
+  --color-foreground-subtle: var(--tn-gray-300);
+
+  /* Semantic colors - Brand */
+  --color-primary: var(--tn-blue);
+  --color-primary-foreground: var(--color-background);
+  --color-primary-hover: rgba(122, 162, 247, 0.9);
+  --color-primary-active: rgba(122, 162, 247, 0.8);
+
+  --color-secondary: var(--tn-gray-400);
+  --color-secondary-foreground: var(--color-foreground);
+  --color-secondary-hover: var(--tn-gray-300);
+  --color-secondary-active: var(--tn-gray-200);
+
+  --color-accent: var(--tn-purple);
+  --color-accent-foreground: var(--color-background);
+  --color-accent-hover: rgba(187, 154, 247, 0.9);
+  --color-accent-active: rgba(187, 154, 247, 0.8);
+
+  /* Semantic colors - Status */
+  --color-success: var(--tn-green);
+  --color-success-foreground: var(--color-background);
+  --color-success-hover: rgba(158, 206, 106, 0.9);
+  --color-success-active: rgba(158, 206, 106, 0.8);
+
+  --color-warning: var(--tn-yellow);
+  --color-warning-foreground: var(--color-background);
+  --color-warning-hover: rgba(224, 175, 104, 0.9);
+  --color-warning-active: rgba(224, 175, 104, 0.8);
+
+  --color-destructive: var(--tn-red);
+  --color-destructive-foreground: var(--color-background);
+  --color-destructive-hover: rgba(247, 118, 142, 0.9);
+  --color-destructive-active: rgba(247, 118, 142, 0.8);
+
+  --color-info: var(--tn-cyan);
+  --color-info-foreground: var(--color-background);
+  --color-info-hover: rgba(125, 207, 255, 0.9);
+  --color-info-active: rgba(125, 207, 255, 0.8);
+
+  /* Neutral colors */
+  --color-muted: var(--tn-gray-500);
+  --color-muted-foreground: var(--tn-gray-100);
+  --color-muted-hover: var(--tn-gray-400);
+
+  /* Surface colors */
+  --color-card: var(--tn-gray-700);
+  --color-card-foreground: var(--color-foreground);
+  --color-card-hover: var(--tn-gray-600);
+
+  --color-popover: var(--tn-gray-700);
+  --color-popover-foreground: var(--color-foreground);
+
+  /* Border colors */
+  --color-border: var(--tn-gray-500);
+  --color-border-hover: var(--tn-gray-400);
+  --color-border-focus: var(--color-primary);
+
+  /* Input colors */
+  --color-input: var(--tn-gray-500);
+  --color-input-hover: var(--tn-gray-400);
+  --color-input-focus: var(--tn-gray-400);
+
+  /* Interactive states */
+  --color-hover: rgba(122, 162, 247, 0.1);
+  --color-selected: rgba(122, 162, 247, 0.15);
+  --color-active: rgba(122, 162, 247, 0.2);
+
+  /* Focus ring */
+  --color-ring: rgba(122, 162, 247, 0.5);
+  --color-ring-offset: var(--color-background);
+
+  /* Special colors */
+  --color-selection: rgba(122, 162, 247, 0.2);
+  --color-selection-foreground: var(--color-foreground);
+
+  /* Code colors */
+  --color-code: var(--tn-gray-500);
+  --color-code-foreground: var(--color-foreground);
+  --color-code-highlight: rgba(122, 162, 247, 0.1);
+  --color-code-number: var(--tn-orange);
+  --color-code-string: var(--tn-green);
+  --color-code-comment: var(--tn-gray-300);
+  --color-code-keyword: var(--tn-purple);
+  --color-code-function: var(--tn-blue);
+  --color-code-operator: var(--tn-purple);
+  --color-code-punctuation: var(--tn-gray-100);
+}
+
+/* ============================================================
+   COMPONENT-SPECIFIC TOKENS
+   ============================================================ */
+
+:root {
+  /* Button tokens */
+  --button-height-sm: calc(var(--space-8) + var(--space-1));    /* 36px */
+  --button-height-md: calc(var(--space-10) + var(--space-1));   /* 44px */
+  --button-height-lg: calc(var(--space-12) + var(--space-1));   /* 52px */
+
+  --button-padding-x-sm: var(--space-3);
+  --button-padding-x-md: var(--space-4);
+  --button-padding-x-lg: var(--space-6);
+
+  --button-font-size-sm: var(--text-ui-sm);
+  --button-font-size-md: var(--text-ui-base);
+  --button-font-size-lg: var(--text-body-base);
+
+  /* Input tokens */
+  --input-height-sm: var(--button-height-sm);
+  --input-height-md: var(--button-height-md);
+  --input-height-lg: var(--button-height-lg);
+
+  --input-padding-x: var(--space-3);
+  --input-font-size: var(--text-body-base);
+
+  /* Card tokens */
+  --card-padding-sm: var(--space-4);
+  --card-padding-md: var(--space-6);
+  --card-padding-lg: var(--space-8);
+
+  /* Navigation tokens */
+  --nav-height: calc(var(--space-12) + var(--space-2)); /* 56px */
+  --nav-padding-x: var(--space-4);
+  --nav-padding-y: var(--space-3);
+
+  /* Sidebar tokens */
+  --sidebar-width: 18rem; /* 288px */
+  --sidebar-padding: var(--space-4);
+
+  /* Header tokens */
+  --header-height: calc(var(--space-12) + var(--space-2)); /* 56px */
+
+  /* Z-index scale */
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  --z-index-popover: 1060;
+  --z-index-tooltip: 1070;
+  --z-index-toast: 1080;
 }
 
 /* ============================================================
@@ -123,70 +413,70 @@
 [data-md-color-scheme="custom"] {
   color-scheme: dark;
 
-  /* Tokyo Night color system */
-  --md-primary-fg-color: #c0caf5;
-  --md-accent-fg-color: #7aa2f7;
+  /* Use design tokens for MkDocs Material theme */
+  --md-primary-fg-color: var(--color-primary);
+  --md-accent-fg-color: var(--color-accent);
 
-  /* Background - Tokyo Night */
-  --md-default-bg-color: #1a1b26;
-  --md-default-bg-color--light: #24283b;
-  --md-default-bg-color--lighter: #414868;
-  --md-default-bg-color--lightest: #565f89;
+  /* Background - using design tokens */
+  --md-default-bg-color: var(--color-background);
+  --md-default-bg-color--light: var(--color-background-secondary);
+  --md-default-bg-color--lighter: var(--tn-gray-400);
+  --md-default-bg-color--lightest: var(--tn-gray-300);
 
-  /* Foreground - Tokyo Night */
-  --md-default-fg-color: #c0caf5;
-  --md-default-fg-color--light: #a9b1d6;
-  --md-default-fg-color--lighter: #9aa5ce;
-  --md-default-fg-color--lightest: #565f89;
+  /* Foreground - using design tokens */
+  --md-default-fg-color: var(--color-foreground);
+  --md-default-fg-color--light: var(--color-foreground-secondary);
+  --md-default-fg-color--lighter: var(--color-foreground-muted);
+  --md-default-fg-color--lightest: var(--color-foreground-subtle);
 
-  /* Code - Tokyo Night */
-  --md-code-fg-color: #c0caf5;
-  --md-code-bg-color: #24283b;
-  --md-code-hl-color: rgba(122, 162, 247, 0.15);
-  --md-code-hl-color--light: rgba(122, 162, 247, 0.1);
+  /* Code - using design tokens */
+  --md-code-fg-color: var(--color-code-foreground);
+  --md-code-bg-color: var(--color-code);
+  --md-code-hl-color: var(--color-code-highlight);
+  --md-code-hl-color--light: rgba(122, 162, 247, 0.08);
 
-  /* Syntax - Tokyo Night (official hljs colors) */
-  --md-code-hl-number-color: #ff9e64;
-  --md-code-hl-special-color: #f7768e;
-  --md-code-hl-function-color: #7aa2f7;
-  --md-code-hl-constant-color: #e0af68;
-  --md-code-hl-keyword-color: #bb9af7;
-  --md-code-hl-string-color: #9ece6a;
-  --md-code-hl-operator-color: #bb9af7;
-  --md-code-hl-punctuation-color: #a9b1d6;
-  --md-code-hl-comment-color: #565f89;
-  --md-code-hl-variable-color: #c0caf5;
-  --md-code-hl-name-color: #9ece6a;
-  --md-code-hl-generic-color: #c0caf5;
-  --md-code-hl-attribute-color: #0db9d7;
-  --md-code-hl-type-color: #bb9af7;
-  --md-code-hl-tag-color: #0db9d7;
-  --md-code-hl-tag-name-color: #bb9af7;
-  --md-code-hl-tag-attr-color: #73daca;
-  --md-code-hl-regexp-color: #b4f9f8;
-  --md-code-hl-literal-color: #ff9e64;
-  --md-code-hl-meta-color: #7dcfff;
+  /* Syntax highlighting - using design tokens */
+  --md-code-hl-number-color: var(--color-code-number);
+  --md-code-hl-special-color: var(--tn-red);
+  --md-code-hl-function-color: var(--color-code-function);
+  --md-code-hl-constant-color: var(--tn-yellow);
+  --md-code-hl-keyword-color: var(--color-code-keyword);
+  --md-code-hl-string-color: var(--color-code-string);
+  --md-code-hl-operator-color: var(--color-code-operator);
+  --md-code-hl-punctuation-color: var(--color-code-punctuation);
+  --md-code-hl-comment-color: var(--color-code-comment);
+  --md-code-hl-variable-color: var(--color-code-foreground);
+  --md-code-hl-name-color: var(--tn-green);
+  --md-code-hl-generic-color: var(--color-code-foreground);
+  --md-code-hl-attribute-color: var(--tn-cyan-alt);
+  --md-code-hl-type-color: var(--tn-purple);
+  --md-code-hl-tag-color: var(--tn-cyan-alt);
+  --md-code-hl-tag-name-color: var(--tn-purple);
+  --md-code-hl-tag-attr-color: var(--tn-teal);
+  --md-code-hl-regexp-color: var(--tn-cyan);
+  --md-code-hl-literal-color: var(--tn-orange);
+  --md-code-hl-meta-color: var(--tn-cyan);
 
   /* Additional syntax highlighting */
   --md-typeset-del-color: rgba(247, 118, 142, 0.2);
   --md-typeset-ins-color: rgba(158, 206, 106, 0.2);
 
-  /* Typography */
-  --md-typeset-color: var(--md-default-fg-color);
-  --md-typeset-a-color: #7aa2f7;
+  /* Typography - using design tokens */
+  --md-typeset-color: var(--color-foreground);
+  --md-typeset-a-color: var(--color-primary);
 
-  /* Cards - Tokyo Night */
-  --md-admonition-bg-color: rgba(36, 40, 59, 0.8);
-  --md-typeset-table-color: var(--color-secondary-alpha-50);
-  --md-typeset-table-color--light: var(--color-secondary-alpha-30);
+  /* Cards - using design tokens */
+  --md-admonition-bg-color: var(--color-card);
+  --md-typeset-table-color: rgba(65, 72, 104, 0.2);
+  --md-typeset-table-color--light: rgba(65, 72, 104, 0.15);
 
-  /* Footer */
-  --md-footer-bg-color: #24283b;
-  --md-footer-bg-color--dark: #1a1b26;
-  --md-footer-fg-color: var(--md-default-fg-color--light);
+  /* Footer - using design tokens */
+  --md-footer-bg-color: var(--color-background-secondary);
+  --md-footer-bg-color--dark: var(--color-background);
+  --md-footer-fg-color: var(--color-foreground-secondary);
 
-  /* Tokyo Night shadows */
-  --md-shadow-z1: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --md-shadow-z2: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
-  --md-shadow-z3: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  /* Shadows - using design tokens */
+  --md-shadow-z1: var(--shadow-xs);
+  --md-shadow-z2: var(--shadow-sm);
+  --md-shadow-z3: var(--shadow-md);
 }

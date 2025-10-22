@@ -4,34 +4,11 @@
  */
 
 /* ============================================================
-   Search Bar Enhancement
+   Header & Search - Using Default Material Styling
    ============================================================ */
 
-.md-search__form {
-  border-radius: var(--radius-md);
-  background: var(--color-muted);
-  border: 1px solid var(--color-border);
-  transition: all 0.15s ease;
-}
-
-.md-search__form:hover {
-  border-color: var(--color-primary);
-}
-
-.md-search__form:focus-within {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(122, 162, 247, 0.2);
-}
-
-.md-search__input {
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--color-foreground);
-}
-
-.md-search__input::placeholder {
-  color: var(--color-muted-foreground);
-}
+/* Let MkDocs Material handle all header and search styling */
+/* We'll add custom styling later if needed */
 
 /* ============================================================
    Navigation Enhancements
@@ -41,16 +18,90 @@
   border-radius: var(--radius-sm);
   transition: all 0.15s ease;
   color: var(--color-muted-foreground);
+  font-size: var(--text-body-base);
 }
 
 .md-nav__link:hover {
-  background-color: var(--color-muted);
+  background-color: var(--color-hover);
   color: var(--color-foreground);
+}
+
+/* Navigation font sizes */
+.md-nav__title {
+  font-size: var(--text-body-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.md-nav__item {
+  font-size: var(--text-body-base);
+}
+
+.md-nav__item--nested .md-nav__link {
+  font-size: var(--text-body-sm);
+}
+
+/* Sidebar styling */
+.md-sidebar {
+  font-size: var(--text-body-base);
+  padding: var(--sidebar-padding);
+}
+
+.md-sidebar__scrollwrap {
+  font-size: inherit;
+  padding: var(--space-2);
+}
+
+.md-sidebar__inner {
+  font-size: inherit;
+  padding: var(--space-2);
+}
+
+/* Table of contents font sizes */
+.md-nav--secondary .md-nav__link {
+  font-size: var(--text-body-sm);
+}
+
+.md-nav--secondary .md-nav__title {
+  font-size: var(--text-body-base);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Tab navigation styling */
+.md-tabs .md-tabs__link {
+  font-size: var(--text-body-base);
+}
+
+.md-tabs .md-tabs__item {
+  font-size: var(--text-body-base);
+}
+
+.md-tabs__item {
+  font-size: var(--text-body-base);
+}
+
+/* Scale up tab navigation */
+.md-tabs {
+  padding: var(--nav-padding-y) var(--nav-padding-x);
+}
+
+.md-tabs__link {
+  font-size: var(--text-body-base);
+  padding: var(--space-3) var(--space-4);
+  margin: 0 var(--space-1);
+}
+
+.md-tabs__item {
+  padding: var(--space-2) 0;
 }
 
 .md-nav__link--active {
   color: var(--color-primary);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
+}
+
+/* GitHub source - let Material handle the styling */
+.md-header__source {
+  /* Remove all custom styling to use Material defaults */
 }
 
 /* ============================================================
@@ -60,13 +111,13 @@
 .md-tabs {
   background: var(--color-card);
   color: var(--color-foreground);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width-thin) solid var(--color-border);
 }
 
 .md-tabs__link {
   color: var(--color-muted-foreground);
   transition: all 0.15s ease;
-  border-bottom: 2px solid transparent;
+  border-bottom: var(--border-width-medium) solid transparent;
 }
 
 .md-tabs__link:hover {
@@ -84,7 +135,7 @@
 
 .md-footer {
   background: var(--color-card);
-  border-top: 1px solid var(--color-border);
+  border-top: var(--border-width-thin) solid var(--color-border);
 }
 
 /* ============================================================
@@ -95,24 +146,26 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--radius-md);
-  font-weight: 500;
+  padding: var(--button-padding-x-md) var(--button-padding-x-lg);
+  border-radius: var(--radius-button);
+  font-weight: var(--font-weight-medium);
   text-decoration: none;
   transition: all 0.15s ease;
-  border: 1px solid transparent;
+  border: var(--border-width-thin) solid transparent;
+  font-size: var(--button-font-size-md);
+  min-height: var(--button-height-md);
 }
 
 .btn-primary {
-  background: var(--color-primary) !important;
-  color: var(--color-primary-foreground) !important;
-  border-color: var(--color-primary) !important;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  border-color: var(--color-primary);
 }
 
 .btn-primary:hover {
-  background: var(--color-accent) !important;
-  border-color: var(--color-accent) !important;
-  color: var(--color-primary-foreground) !important;
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-active);
+  color: var(--color-primary-foreground);
   transform: translateY(-1px);
 }
 
@@ -123,7 +176,7 @@
 }
 
 .btn-secondary:hover {
-  background: var(--color-muted);
+  background: var(--color-hover);
   color: var(--color-foreground);
   transform: translateY(-1px);
 }
@@ -132,13 +185,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 4);
-  border-radius: var(--radius-md);
-  font-weight: 500;
-  font-size: 0.875rem;
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-button);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--text-body-sm);
   text-decoration: none;
   transition: all 0.15s ease;
-  border: 1px solid transparent;
+  border: var(--border-width-thin) solid transparent;
 }
 
 .md-button--primary {
@@ -148,10 +201,10 @@
 }
 
 .md-button--primary:hover {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-active);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(122, 162, 247, 0.3);
+  box-shadow: var(--shadow-primary);
 }
 
 /* ============================================================
@@ -160,18 +213,18 @@
 
 .hero {
   background: linear-gradient(135deg, rgba(122, 162, 247, 0.05) 0%, rgba(187, 154, 247, 0.05) 100%);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 3rem 2rem;
-  margin: 2rem 0;
+  padding: var(--space-12) var(--space-8);
+  margin: var(--space-8) 0;
   text-align: center;
 }
 
 .hero-title {
-  font-size: 3rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  margin-bottom: 1rem;
+  font-size: var(--text-display-xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  margin-bottom: var(--space-4);
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -179,9 +232,9 @@
 }
 
 .hero-description {
-  font-size: 1.25rem;
+  font-size: var(--text-body-lg);
   color: var(--color-muted-foreground);
-  margin-bottom: 2rem;
+  margin-bottom: var(--space-8);
   max-width: 42rem;
   margin-left: auto;
   margin-right: auto;
@@ -189,7 +242,7 @@
 
 .hero-actions {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-4);
   justify-content: center;
   flex-wrap: wrap;
 }
@@ -201,15 +254,15 @@
 .audience-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-  margin: 2rem 0;
+  gap: var(--space-6);
+  margin: var(--space-8) 0;
 }
 
 .audience-card {
   background: var(--color-card);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 1.5rem;
+  padding: var(--space-6);
   text-align: center;
   transition: all 0.15s ease;
 }
@@ -217,25 +270,25 @@
 .audience-card:hover {
   border-color: rgba(122, 162, 247, 0.3);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .audience-icon {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+  font-size: var(--text-display-sm);
+  margin-bottom: var(--space-2);
 }
 
 .audience-card h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
+  font-size: var(--text-heading-4);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-2);
   color: var(--color-foreground);
 }
 
 .audience-card p {
   color: var(--color-muted-foreground);
-  line-height: 1.6;
-  margin-bottom: 1rem;
+  line-height: var(--line-height-base);
+  margin-bottom: var(--space-4);
 }
 
 /* ============================================================
@@ -245,39 +298,39 @@
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-  margin: 2rem 0;
+  gap: var(--space-6);
+  margin: var(--space-8) 0;
 }
 
 .feature-card {
   background: var(--color-card);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 1.5rem;
+  padding: var(--space-6);
   transition: all 0.15s ease;
 }
 
 .feature-card:hover {
   border-color: rgba(122, 162, 247, 0.3);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .feature-icon {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+  font-size: var(--text-display-sm);
+  margin-bottom: var(--space-2);
 }
 
 .feature-card h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
+  font-size: var(--text-heading-4);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-2);
   color: var(--color-foreground);
 }
 
 .feature-card p {
   color: var(--color-muted-foreground);
-  line-height: 1.6;
+  line-height: var(--line-height-base);
 }
 
 /* ============================================================
@@ -287,21 +340,21 @@
 .nav-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  margin: 2rem 0;
+  gap: var(--space-8);
+  margin: var(--space-8) 0;
 }
 
 .nav-section {
   background: var(--color-card);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-thin) solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 1.5rem;
+  padding: var(--space-6);
 }
 
 .nav-section h3 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
+  font-size: var(--text-heading-5);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-4);
   color: var(--color-foreground);
 }
 
@@ -312,13 +365,13 @@
 }
 
 .nav-section li {
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--space-3);
 }
 
 .nav-section a {
   color: var(--color-primary);
   text-decoration: none;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   transition: color 0.15s ease;
 }
 

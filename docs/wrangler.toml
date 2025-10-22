@@ -8,7 +8,7 @@
 # ==============================================================================
 
 name = "tux-docs"
-compatibility_date = "2025-10-22"
+compatibility_date = "2025-09-24"
 
 # Enable Preview URLs for all non-production deployments
 # Each version gets a unique URL: <version>-tux-docs.<subdomain>.workers.dev

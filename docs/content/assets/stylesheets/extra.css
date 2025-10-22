@@ -1,30 +1,494 @@
-/**
- * Tux Documentation Styles - Main Entry Point
- *
- * This file imports all organized CSS modules for the Tux documentation.
- * Files are loaded in a specific order to ensure proper cascade and variable availability.
- */
+/* Tokyo Night Theme for mkdocs-shadcn */
 
-/* 1. Design Tokens - Load first to make variables available */
-@import url('design-tokens.css');
+/* Container Width Override */
+:root {
+  --container-2xl: 60rem !important;
+}
 
-/* 2. Base Styles - Typography, layout, and fundamental styling */
-@import url('base.css');
+/* Tokyo Night Color Palette */
+:root {
+  /* Tokyo Night Base Colors */
+  --tokyo-bg: #11111b;
+  --tokyo-bg-dim: #16161e;
+  --tokyo-fg: #c0caf5;
+  --tokyo-fg-dim: #a9b1d6;
+  --tokyo-fg-muted: #9aa5ce;
 
-/* 3. Code Blocks - Syntax highlighting and code-specific styling */
-@import url('code-blocks.css');
+  /* Tokyo Night Semantic Colors */
+  --tokyo-red: #f7768e;
+  --tokyo-orange: #ff9e64;
+  --tokyo-yellow: #e0af68;
+  --tokyo-green: #9ece6a;
+  --tokyo-blue: #7aa2f7;
+  --tokyo-purple: #bb9af7;
+  --tokyo-cyan: #7dcfff;
+  --tokyo-teal: #73daca;
 
-/* 4. Components - Reusable UI components */
-@import url('components.css');
+  /* Tokyo Night Accent Colors */
+  --tokyo-accent: #7aa2f7;
+  --tokyo-accent-dim: #565f89;
+  --tokyo-accent-muted: #414868;
 
-/* 5. Navigation - Navigation elements and interactive components */
-@import url('navigation.css');
+  /* Tokyo Night Surface Colors */
+  --tokyo-surface: #24283b;
+  --tokyo-surface-dim: #1f2335;
+  --tokyo-surface-muted: #292e42;
 
-/* 6. mkdocstrings - API documentation styling */
-@import url('mkdocstrings.css');
+  /* Tokyo Night Border Colors */
+  --tokyo-border: #414868;
+  --tokyo-border-dim: #565f89;
+  --tokyo-border-muted: #2f3349;
+}
 
-/* 7. Homepage - Homepage-specific styles */
-@import url('home.css');
+/* Override shadcn variables with Tokyo Night colors */
+:root {
+  /* Light mode - keeping shadcn default for contrast */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+}
 
-/* 8. Responsive - Load last for responsive overrides */
-@import url('responsive.css');
+/* Dark mode - Tokyo Night theme */
+.dark {
+  /* Background colors */
+  --background: #11111b;
+  --foreground: #c0caf5;
+
+  /* Card colors */
+  --card: #24283b;
+  --card-foreground: #c0caf5;
+
+  /* Popover colors */
+  --popover: #24283b;
+  --popover-foreground: #c0caf5;
+
+  /* Primary colors */
+  --primary: #7aa2f7;
+  --primary-foreground: #1a1b26;
+
+  /* Secondary colors */
+  --secondary: #414868;
+  --secondary-foreground: #c0caf5;
+
+  /* Muted colors */
+  --muted: #414868;
+  --muted-foreground: #9aa5ce;
+
+  /* Accent colors */
+  --accent: #565f89;
+  --accent-foreground: #c0caf5;
+
+  /* Destructive colors */
+  --destructive: #f7768e;
+  --destructive-foreground: #1a1b26;
+
+  /* Border colors */
+  --border: #414868;
+  --input: #565f89;
+  --ring: #7aa2f7;
+
+  /* Sidebar colors */
+  --sidebar: #1f2335;
+  --sidebar-foreground: #c0caf5;
+  --sidebar-primary: #7aa2f7;
+  --sidebar-primary-foreground: #1a1b26;
+  --sidebar-accent: #414868;
+  --sidebar-accent-foreground: #c0caf5;
+  --sidebar-border: #414868;
+  --sidebar-ring: #7aa2f7;
+
+  /* Surface colors */
+  --surface: #24283b;
+  --surface-foreground: #c0caf5;
+
+  /* Code colors */
+  --code: #24283b;
+  --code-foreground: #c0caf5;
+  --code-highlight: #2f3349;
+  --code-number: #bb9af7;
+
+  /* Selection colors */
+  --selection: #7aa2f7;
+  --selection-foreground: #1a1b26;
+
+  /* Warning colors */
+  --warning: #e0af68;
+  --warning-foreground: #1a1b26;
+
+  /* Chart colors - Tokyo Night palette */
+  --chart-1: #9ece6a;
+  --chart-2: #7aa2f7;
+  --chart-3: #bb9af7;
+  --chart-4: #7dcfff;
+  --chart-5: #73daca;
+}
+
+/* Custom Tokyo Night enhancements */
+.dark {
+  /* Enhanced link colors */
+  --color-primary: #7aa2f7;
+  --color-primary-foreground: #1a1b26;
+
+  /* Enhanced accent colors */
+  --color-accent: #565f89;
+  --color-accent-foreground: #c0caf5;
+
+  /* Enhanced muted colors */
+  --color-muted: #414868;
+  --color-muted-foreground: #9aa5ce;
+
+  /* Enhanced destructive colors */
+  --color-destructive: #f7768e;
+  --color-destructive-foreground: #1a1b26;
+
+  /* Enhanced warning colors */
+  --color-warning: #e0af68;
+  --color-warning-foreground: #1a1b26;
+}
+
+/* Tokyo Night specific enhancements */
+.dark {
+  /* Syntax highlighting improvements */
+  --color-code-highlight: #2f3349;
+  --color-code-number: #bb9af7;
+
+  /* Enhanced table hover */
+  --color-accent: #565f89;
+}
+
+/* Custom scrollbar styling for Tokyo Night */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1f2335;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #565f89;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #7aa2f7;
+}
+
+/* Tokyo Night button enhancements */
+.dark .btn-primary {
+  background: #7aa2f7;
+  color: #1a1b26;
+  border-color: #7aa2f7;
+}
+
+.dark .btn-primary:hover {
+  background: #565f89;
+  border-color: #565f89;
+}
+
+.dark .btn-secondary {
+  background: #414868;
+  color: #c0caf5;
+  border-color: #414868;
+}
+
+.dark .btn-secondary:hover {
+  background: #565f89;
+  border-color: #565f89;
+}
+
+/* Tokyo Night admonition styling */
+.dark .admonition {
+  background: #24283b;
+  border-color: #414868;
+}
+
+.dark .admonition.info {
+  background: #1e3a5f;
+  border-color: #7aa2f7;
+}
+
+.dark .admonition.warning {
+  background: #4a3c1a;
+  border-color: #e0af68;
+}
+
+.dark .admonition.danger {
+  background: #4a1e1e;
+  border-color: #f7768e;
+}
+
+.dark .admonition.tip {
+  background: #1a3a1a;
+  border-color: #9ece6a;
+}
+
+/* Tokyo Night code block styling */
+.dark .codehilite {
+  background: #1f2335;
+  border: 1px solid #414868;
+}
+
+.dark .codehilite pre {
+  color: #c0caf5;
+}
+
+/* Tokyo Night table styling */
+.dark table {
+  border-color: #414868;
+}
+
+.dark table th {
+  background: #2f3349;
+  color: #c0caf5;
+}
+
+.dark table td {
+  border-color: #414868;
+}
+
+.dark table tr:hover {
+  background: #2f3349;
+}
+
+/* Tokyo Night tab styling */
+.dark .tabbed-set label {
+  color: #9aa5ce;
+  border-bottom-color: transparent;
+}
+
+.dark .tabbed-set label:hover {
+  color: #c0caf5;
+}
+
+.dark .tabbed-set input[type="radio"]:checked + label {
+  color: #c0caf5;
+  border-bottom-color: #7aa2f7;
+}
+
+/* Tokyo Night search styling */
+.dark #mkdocs-search-results article {
+  background: #24283b;
+  border: 1px solid #414868;
+}
+
+.dark #mkdocs-search-results article:hover {
+  background: #2f3349;
+}
+
+/* Tokyo Night progress bar styling */
+.dark .progress {
+  background: #414868;
+}
+
+.dark .progress-bar {
+  background: #7aa2f7;
+}
+
+/* Tokyo Night details/summary styling */
+.dark details {
+  background: #24283b;
+  border-color: #414868;
+}
+
+.dark details summary {
+  color: #c0caf5;
+}
+
+.dark details summary:hover {
+  color: #7aa2f7;
+}
+
+/* Tokyo Night external link styling */
+.dark .external_links a {
+  color: #7aa2f7;
+}
+
+.dark .external_links a:hover {
+  color: #bb9af7;
+}
+
+/* Tokyo Night blockquote styling */
+.dark blockquote {
+  border-left-color: #7aa2f7;
+  background: #24283b;
+  color: #c0caf5;
+}
+
+/* Tokyo Night figure caption styling */
+.dark figcaption {
+  color: #9aa5ce;
+}
+
+/* Tokyo Night footnote styling */
+.dark .footnote-ref {
+  color: #7aa2f7;
+}
+
+.dark .footnote-backref {
+  color: #bb9af7;
+}
+
+/* Simple grid layout adjustment for better 3-column display */
+[style*="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr))"] {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)) !important;
+  gap: 2rem !important;
+}
+
+/* Card hover effects for all colors */
+.dark [style*="background: linear-gradient(135deg, rgba(122, 162, 247, 0.1)"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(122, 162, 247, 0.08);
+  border-color: rgba(122, 162, 247, 0.25);
+}
+
+.dark [style*="background: linear-gradient(135deg, rgba(159, 206, 106, 0.1)"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(159, 206, 106, 0.08);
+  border-color: rgba(159, 206, 106, 0.25);
+}
+
+.dark [style*="background: linear-gradient(135deg, rgba(187, 154, 247, 0.1)"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(187, 154, 247, 0.08);
+  border-color: rgba(187, 154, 247, 0.25);
+}
+
+/* Red card hover (Advanced Moderation) */
+.dark [style*="background: linear-gradient(135deg, rgba(255, 85, 85, 0.1)"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(255, 85, 85, 0.08);
+  border-color: rgba(255, 85, 85, 0.25);
+}
+
+/* Orange card hover (XP & Leveling) */
+.dark [style*="background: linear-gradient(135deg, rgba(255, 193, 7, 0.1)"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(255, 193, 7, 0.08);
+  border-color: rgba(255, 193, 7, 0.25);
+}
+
+/* Light blue card hover (Rich Analytics) */
+.dark [style*="background: linear-gradient(135deg, rgba(33, 150, 243, 0.1)"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(33, 150, 243, 0.08);
+  border-color: rgba(33, 150, 243, 0.25);
+}
+
+/* Purple card hover (Plugin System) */
+.dark [style*="background: linear-gradient(135deg, rgba(156, 39, 176, 0.1)"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(156, 39, 176, 0.08);
+  border-color: rgba(156, 39, 176, 0.25);
+}
+
+/* Fancy button hover effects */
+.dark [style*="background: linear-gradient(135deg, #7aa2f7"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(122, 162, 247, 0.3);
+}
+
+.dark [style*="background: linear-gradient(135deg, #9ece6a"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(159, 206, 106, 0.3);
+}
+
+.dark [style*="background: linear-gradient(135deg, #bb9af7"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(187, 154, 247, 0.3);
+}
+
+/* Style "View Guide" links to look like buttons - more specific selectors */
+article a[href*="getting-started/for-users/"],
+article a[href*="getting-started/for-self-hosters/"],
+article a[href*="getting-started/for-developers/"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  background: linear-gradient(135deg, #7aa2f7 0%, #bb9af7 100%) !important;
+  color: #11111b !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 0.75rem !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  transition: all 0.3s ease !important;
+  text-underline-offset: 0 !important;
+}
+
+/* Hover effect for "View Guide" button-style links */
+article a[href*="getting-started/for-users/"]:hover,
+article a[href*="getting-started/for-self-hosters/"]:hover,
+article a[href*="getting-started/for-developers/"]:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 20px rgba(122, 162, 247, 0.3) !important;
+  text-decoration: none !important;
+}
+
+/* Fix underline spacing for other links */
+article a {
+  text-underline-offset: 0.5rem !important;
+  text-decoration-thickness: 2px !important;
+}
+
+/* Style headings within community cards */
+article div[style*="display: flex; align-items: center"] h3 {
+  color: #c0caf5 !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  margin: 0 0 0.25rem 0 !important;
+}
+
+/* Style links within community cards as buttons */
+article div[style*="display: flex; align-items: center"] a {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  background: linear-gradient(135deg, #7aa2f7 0%, #bb9af7 100%) !important;
+  color: #11111b !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 0.75rem !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  transition: all 0.3s ease !important;
+  text-underline-offset: 0 !important;
+  margin-top: 0.75rem !important;
+}
+
+/* Hover effect for community card buttons */
+article div[style*="display: flex; align-items: center"] a:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 20px rgba(122, 162, 247, 0.3) !important;
+  text-decoration: none !important;
+}
+
+/* Style bold text in community cards */
+article div[style*="display: flex; align-items: center"] strong {
+  color: #a9b1d6 !important;
+  font-weight: 600 !important;
+}
+
+/* Style description text in community cards */
+article div[style*="display: flex; align-items: center"] p {
+  color: #9aa5ce !important;
+  font-size: 0.85rem !important;
+  line-height: 1.4 !important;
+  margin: 0 0 0.75rem 0 !important;
+}

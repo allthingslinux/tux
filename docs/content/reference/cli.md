@@ -56,10 +56,6 @@ uv run docs serve                   # Serve docs locally
 
 Below is the complete CLI reference, automatically generated from the command definitions:
 
-::: mkdocs-typer
-    :module: scripts.cli
-    :command: cli
-
 ---
 
 ## Usage Examples
@@ -270,7 +266,7 @@ uv run db --help
 uv run db push --help
 ```
 
-### Documentation
+### Documentation Resources
 
 - **[Developer Guide](../developer-guide/)** - Development documentation
 - **[Admin Guide](../admin-guide/)** - Administration guides
