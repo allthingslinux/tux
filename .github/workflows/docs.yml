@@ -1,14 +1,17 @@
 ---
 # ==============================================================================
-# DOCUMENTATION WORKFLOW
+# DOCUMENTATION BUILD WORKFLOW
 # ==============================================================================
-# Builds and deploys MkDocs documentation to Cloudflare Pages.
+# Builds and validates MkDocs documentation.
 #
-# Required Secrets (configure in repository settings):
-# - CLOUDFLARE_API_TOKEN: API token for Cloudflare Pages deployment
-# - CLOUDFLARE_ACCOUNT_ID: Your Cloudflare account ID
+# Deployment is handled automatically by Cloudflare Workers Builds GitHub
+# integration. This workflow only validates the build succeeds.
 #
-# The 'documentation' environment will be auto-created on first run.
+# To set up Cloudflare Workers deployment:
+# 1. Connect your repository to Workers Builds in Cloudflare dashboard
+# 2. Configure build command: cd docs && mkdocs build
+# 3. Configure build output directory: data/build/docs
+# 4. Workers will automatically deploy on push to main/release branches
 # ==============================================================================
 name: Docs
 on:
@@ -16,7 +19,7 @@ on:
     branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
     paths: [docs/**, docs/mkdocs.yml, .github/workflows/docs.yml]
   pull_request:
-    branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
+    branches: [main, 'v[0-9]+.[0-9]+*']
     paths: [docs/**, docs/mkdocs.yml, .github/workflows/docs.yml]
   workflow_dispatch:
 concurrency:
@@ -50,12 +53,6 @@ jobs:
           cd docs
           uv run mkdocs build --strict --verbose
           echo "✅ Documentation built successfully"
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: docs-build
-          path: data/build/docs/
-          retention-days: 7
       - name: Check Links
         continue-on-error: true
         run: |
@@ -63,59 +60,13 @@ jobs:
           npm install -g markdown-link-check
           # Check all markdown files for broken links
           find docs -name "*.md" -exec markdown-link-check {} \; || echo "⚠️ Some links may be broken"
-  deploy:
-    name: Deploy to Cloudflare Pages
-    runs-on: ubuntu-latest
-    needs: [build]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref,
-      'refs/heads/v'))
-    permissions:
-      contents: read
-      deployments: write
-    environment:
-      name: documentation
-      url: ${{ steps.deploy.outputs.url }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Download Build Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: docs-build
-          path: build/
-      - name: Deploy to Cloudflare Pages
-        id: deploy
-        uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: tux-docs
-          directory: build
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref_name }}
-          wranglerVersion: '3'
-      - name: Comment PR with Preview
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const url = '${{ steps.deploy.outputs.url }}';
-            const comment = `## 📚 Documentation Preview
-            The documentation has been deployed to Cloudflare Pages:
-            🔗 **Preview URL**: ${url}
-            This preview will be available for the duration of this PR.`;
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
       - name: Summary
         run: |-
           {
-            echo "## 📚 Documentation Deployment"
-            echo "**Status**: ✅ Successfully deployed"
-            echo "**URL**: ${{ steps.deploy.outputs.url }}"
+            echo "## 📚 Documentation Build"
+            echo "**Status**: ✅ Build successful"
             echo "**Branch**: ${{ github.ref_name }}"
             echo "**Commit**: ${{ github.sha }}"
+            echo ""
+            echo "Deployment will be handled automatically by Cloudflare Workers Builds"
           } >> "$GITHUB_STEP_SUMMARY"
