@@ -17,6 +17,7 @@ from loguru import logger
 from tux.core.bot import Tux
 from tux.database.models import Case
 from tux.database.models import CaseType as DBCaseType
+from tux.ui.embeds import EmbedCreator, EmbedType
 
 from .case_service import CaseService
 from .communication_service import CommunicationService
@@ -300,7 +301,7 @@ class ModerationCoordinator:
         logger.debug(f"Preparing response embed, case={'present' if case else 'None'}, dm_sent={dm_sent}")
 
         # Helper function to get mention safely (handles both real and mock objects)
-        def get_mention(obj: Any) -> str:
+        def get_mention(obj: Any) -> str:  # type: ignore[reportUnusedFunction]
             """
             Get mention string for a user object safely.
 
@@ -323,28 +324,28 @@ class ModerationCoordinator:
             logger.warning("Sending response embed without case (case creation failed)")
             title = "Moderation Action Completed"
             fields = [
-                ("Moderator", f"{get_mention(ctx.author)} (`{ctx.author.id}`)", True),
-                ("Target", f"{get_mention(user)} (`{user.id}`)", True),
+                ("Moderator", f"{ctx.author.name}\n`{ctx.author.id}`", True),
+                ("Target", f"{user.name}\n`{user.id}`", True),
                 ("Status", "⚠️ Case creation failed - action may have been applied", False),
             ]
         else:
             logger.debug(f"Sending response embed for case #{case.case_number} (ID: {case.case_id})")
             title = f"Case #{case.case_number} ({case.case_type.value if case.case_type else 'Unknown'})"
             fields = [
-                ("Moderator", f"{get_mention(ctx.author)} (`{ctx.author.id}`)", True),
-                ("Target", f"{get_mention(user)} (`{user.id}`)", True),
+                ("Moderator", f"{ctx.author.name}\n`{ctx.author.id}`", True),
+                ("Target", f"{user.name}\n`{user.id}`", True),
                 ("Reason", f"> {case.case_reason}", False),
             ]
 
-        embed = self._communication.create_embed(
-            ctx=ctx,
-            title=title,
-            fields=fields,
-            color=0x2B2D31,  # Discord blurple equivalent
-            icon_url=ctx.author.display_avatar.url,
+        embed = EmbedCreator.create_embed(
+            embed_type=EmbedType.ACTIVE_CASE,
+            # title=title,
+            description="✅ DM sent" if dm_sent else "❌ DM not sent",
+            custom_author_text=title,
         )
 
-        embed.description = "✅ DM sent" if dm_sent else "❌ DM not sent"
+        for name, value, inline in fields:
+            embed.add_field(name=name, value=value, inline=inline)
 
         await self._communication.send_embed(ctx, embed)
         logger.debug("Response embed sent successfully")

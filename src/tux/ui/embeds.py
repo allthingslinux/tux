@@ -31,6 +31,8 @@ class EmbedType(Enum):
     POLL = 6
     CASE = 7
     NOTE = 8
+    ACTIVE_CASE = 9
+    INACTIVE_CASE = 10
 
 
 class EmbedCreator:
@@ -44,6 +46,8 @@ class EmbedCreator:
     POLL: EmbedType = EmbedType.POLL
     CASE: EmbedType = EmbedType.CASE
     NOTE: EmbedType = EmbedType.NOTE
+    ACTIVE_CASE: EmbedType = EmbedType.ACTIVE_CASE
+    INACTIVE_CASE: EmbedType = EmbedType.INACTIVE_CASE
 
     @staticmethod
     def create_embed(
@@ -119,6 +123,8 @@ class EmbedCreator:
                 EmbedType.SUCCESS: (EMBED_COLORS["SUCCESS"], EMBED_ICONS["SUCCESS"], "Success"),
                 EmbedType.POLL: (EMBED_COLORS["POLL"], EMBED_ICONS["POLL"], "Poll"),
                 EmbedType.CASE: (EMBED_COLORS["CASE"], EMBED_ICONS["CASE"], "Case"),
+                EmbedType.ACTIVE_CASE: (EMBED_COLORS["CASE"], EMBED_ICONS["ACTIVE_CASE"], "Active Case"),
+                EmbedType.INACTIVE_CASE: (EMBED_COLORS["CASE"], EMBED_ICONS["INACTIVE_CASE"], "Inactive Case"),
                 EmbedType.NOTE: (EMBED_COLORS["NOTE"], EMBED_ICONS["NOTE"], "Note"),
             }
 
