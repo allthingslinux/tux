@@ -1,0 +1,58 @@
+/**
+ * Responsive Design & Print Styles
+ * Media queries and print-specific styling
+ */
+
+/* ============================================================
+   Print Styles
+   ============================================================ */
+
+@media print {
+  .md-typeset {
+    color: #000;
+  }
+
+  .md-typeset code,
+  .md-typeset pre {
+    background: #ffffff !important;
+    border: 1px solid #ddd;
+  }
+
+  .badge,
+  .card,
+  .alert {
+    border: 1px solid #ddd;
+  }
+}
+
+/* ============================================================
+   Responsive Adjustments
+   ============================================================ */
+
+@media screen and (max-width: 76.1875em) {
+  .md-typeset h1 {
+    font-size: 1.875rem;
+  }
+
+  .md-typeset h2 {
+    font-size: 1.5rem;
+  }
+
+  .md-typeset h3 {
+    font-size: 1.25rem;
+  }
+}
+
+@media screen and (max-width: 44.9375em) {
+  .md-typeset h1 {
+    font-size: 1.5rem;
+  }
+
+  .md-typeset h2 {
+    font-size: 1.25rem;
+  }
+
+  .md-typeset h3 {
+    font-size: 1.125rem;
+  }
+}

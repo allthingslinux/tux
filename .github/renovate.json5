@@ -4,22 +4,47 @@
         "config:best-practices"
     ],
     "schedule": [
-        "* */12 * * *"
+        "before 4am on Monday"
     ],
     "ignoreDeps": [
         "basedpyright" // see pyproject.toml
     ],
+    "dependencyDashboard": true,
     "lockFileMaintenance": {
         "enabled": true,
-        "automerge": true
+        "automerge": true,
+        "schedule": [
+            "before 4am on Monday"
+        ]
     },
     "packageRules": [
         {
-            // these will fail tests if they are broken
-            // idk if this works with python, either way it doesnt matter
-            //"matchDepTypes": [
-            //    "devDependencies"
-            //],
+            // Group all patch updates together
+            "matchUpdateTypes": [
+                "patch"
+            ],
+            "groupName": "patch dependencies",
+            "automerge": true
+        },
+        {
+            // Group all minor updates together (non-breaking)
+            "matchUpdateTypes": [
+                "minor"
+            ],
+            "matchCurrentVersion": "!/^0/",
+            "groupName": "minor dependencies",
+            "automerge": true
+        },
+        {
+            // Major updates need review
+            "matchUpdateTypes": [
+                "major"
+            ],
+            "groupName": "major dependencies",
+            "automerge": false
+        },
+        {
+            // Dev tools auto-merge
             "matchPackageNames": [
                 "pre-commit",
                 "ruff",
@@ -29,12 +54,11 @@
             "automerge": true
         },
         {
-            // no breaking changes
-            "matchUpdateTypes": [
-                "minor",
-                "patch"
+            // GitHub Actions updates
+            "matchManagers": [
+                "github-actions"
             ],
-            "matchCurrentVersion": "!/^0/",
+            "groupName": "GitHub Actions",
             "automerge": true
         }
     ]
