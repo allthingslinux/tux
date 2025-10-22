@@ -374,7 +374,7 @@ nav:
           - GIF Limiter: user-guide/features/gif-limiter.md
   - Admin Guide:
       - admin-guide/index.md
-      - Deployment:
+      - Deployment:  # TODO: merge all of these into a single deployment guide
           - admin-guide/deployment/index.md
           - Docker Compose: admin-guide/deployment/docker-compose.md
           - VPS with Systemd: admin-guide/deployment/systemd-vps.md
