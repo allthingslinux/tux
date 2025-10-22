@@ -107,7 +107,7 @@ class DockerCLI(BaseCLI):
             Command("pull", self.pull, "Pull latest Docker images"),
             # Docker management commands
             Command("cleanup", self.cleanup, "Clean up Docker resources"),
-            Command("test", self.test, "Run Docker tests"),
+            # Command("test", self.test, "Run Docker tests"),  # TODO: Implement test command
             Command("test-quick", self.test_quick, "Run quick Docker validation tests"),
             Command("test-comprehensive", self.test_comprehensive, "Run comprehensive Docker tests"),
         ]
@@ -870,30 +870,30 @@ class DockerCLI(BaseCLI):
 
         self.rich.print_success("Tux Docker cleanup completed")
 
-    def test(
-        self,
-        test_type: Annotated[str, Argument(help="Test type: quick, comprehensive, perf, or security")],
-    ) -> None:
-        """Run Docker tests."""
-        self.rich.print_section("🧪 Docker Tests", "blue")
-
-        test_configs = {
-            "quick": ("⚡ Running quick Docker validation tests...", "Quick tests not fully implemented yet"),
-            "perf": ("📊 Running Docker performance tests...", "Performance tests not fully implemented yet"),
-            "security": ("🔒 Running Docker security tests...", "Security tests not fully implemented yet"),
-            "comprehensive": (
-                "🎯 Running full Docker comprehensive test suite...",
-                "Comprehensive tests not fully implemented yet",
-            ),
-        }
-
-        if test_type not in test_configs:
-            self.rich.print_error(f"Unknown test type: {test_type}")
-            return
-
-        log_message, warning_message = test_configs[test_type]
-        self.rich.print_info(log_message)
-        self.rich.print_warning(f"⚠️  {warning_message}")
+    # def test(
+    #     self,
+    #     test_type: Annotated[str, Argument(help="Test type: quick, comprehensive, perf, or security")],
+    # ) -> None:
+    #     """Run Docker tests."""
+    #     self.rich.print_section("🧪 Docker Tests", "blue")
+    #
+    #     test_configs = {
+    #         "quick": ("⚡ Running quick Docker validation tests...", "Quick tests not fully implemented yet"),
+    #         "perf": ("📊 Running Docker performance tests...", "Performance tests not fully implemented yet"),
+    #         "security": ("🔒 Running Docker security tests...", "Security tests not fully implemented yet"),
+    #         "comprehensive": (
+    #             "🎯 Running full Docker comprehensive test suite...",
+    #             "Comprehensive tests not fully implemented yet",
+    #         ),
+    #     }
+    #
+    #     if test_type not in test_configs:
+    #         self.rich.print_error(f"Unknown test type: {test_type}")
+    #         return
+    #
+    #     log_message, warning_message = test_configs[test_type]
+    #     self.rich.print_info(log_message)
+    #     self.rich.print_warning(f"⚠️  {warning_message}")
 
     def _test_build(self, test_result: Callable[[bool, str], None]) -> None:
         """Test Docker build functionality."""
