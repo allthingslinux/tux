@@ -35,7 +35,7 @@ class ConfigOverview:
 
         # Fetch all configuration data
         guild_config = await self.bot.db.guild_config.get_config_by_guild_id(ctx.guild.id)
-        permission_ranks = await self.bot.db.guild_permissions.get_permission_ranks_by_guild(ctx.guild.id)
+        permission_ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(ctx.guild.id)
         assignments = await self.bot.db.permission_assignments.get_assignments_by_guild(ctx.guild.id)
         command_perms = await self.bot.db.command_permissions.get_all_command_permissions(ctx.guild.id)
 

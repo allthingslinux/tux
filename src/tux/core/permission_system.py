@@ -11,9 +11,9 @@ their permission ranks and role assignments. Key features:
 - Configuration file support for self-hosters
 
 Architecture:
-    - GuildPermissionRank: Defines permission ranks (e.g., Moderator, Admin)
-    - GuildPermissionAssignment: Maps Discord roles to permission ranks
-    - GuildCommandPermission: Sets command-specific permission requirements
+    - PermissionRank: Defines permission ranks (e.g., Moderator, Admin)
+    - PermissionAssignment: Maps Discord roles to permission ranks
+    - PermissionCommand: Sets command-specific permission requirements
 
 Note:
     "Rank" refers to permission hierarchy (0-100), "Level" refers to XP/progression.
@@ -30,9 +30,9 @@ from loguru import logger
 
 from tux.database.controllers import DatabaseCoordinator
 from tux.database.models.models import (
-    GuildCommandPermission,
-    GuildPermissionAssignment,
-    GuildPermissionRank,
+    PermissionAssignment,
+    PermissionCommand,
+    PermissionRank,
 )
 
 if TYPE_CHECKING:
@@ -115,14 +115,14 @@ class PermissionSystem:
         the bot. The default ranks can be customized via commands or config files.
         """
         # Check if already initialized (idempotent check)
-        existing_ranks = await self.db.guild_permissions.get_permission_ranks_by_guild(guild_id)
+        existing_ranks = await self.db.permission_ranks.get_permission_ranks_by_guild(guild_id)
         if existing_ranks:
             logger.info(f"Guild {guild_id} already has permission ranks initialized")
             return
 
         # Create default permission ranks (0-7)
         for rank, data in self._default_ranks.items():
-            await self.db.guild_permissions.create_permission_rank(
+            await self.db.permission_ranks.create_permission_rank(
                 guild_id=guild_id,
                 rank=rank,
                 name=data["name"],
@@ -179,7 +179,7 @@ class PermissionSystem:
         rank: int,
         role_id: int,
         assigned_by: int,
-    ) -> GuildPermissionAssignment:
+    ) -> PermissionAssignment:
         """
         Assign a permission rank to a Discord role.
 
@@ -199,7 +199,7 @@ class PermissionSystem:
 
         Returns
         -------
-        GuildPermissionAssignment
+        PermissionAssignment
             The created assignment record.
 
         Raises
@@ -208,7 +208,7 @@ class PermissionSystem:
             If the specified rank doesn't exist for the guild.
         """
         # Verify rank exists before creating assignment
-        rank_info = await self.db.guild_permissions.get_permission_rank(guild_id, rank)
+        rank_info = await self.db.permission_ranks.get_permission_rank(guild_id, rank)
         if not rank_info or rank_info.id is None:
             error_msg = f"Permission rank {rank} does not exist for guild {guild_id}"
             raise ValueError(error_msg)
@@ -258,7 +258,7 @@ class PermissionSystem:
         rank: int,
         name: str,
         description: str | None = None,
-    ) -> GuildPermissionRank:
+    ) -> PermissionRank:
         """
         Create a custom permission rank for a guild.
 
@@ -278,7 +278,7 @@ class PermissionSystem:
 
         Returns
         -------
-        GuildPermissionRank
+        PermissionRank
             The created permission rank record.
 
         Raises
@@ -292,7 +292,7 @@ class PermissionSystem:
             raise ValueError(error_msg)
 
         # Create custom rank
-        permission_rank = await self.db.guild_permissions.create_permission_rank(
+        permission_rank = await self.db.permission_ranks.create_permission_rank(
             guild_id=guild_id,
             rank=rank,
             name=name,
@@ -310,7 +310,7 @@ class PermissionSystem:
         command_name: str,
         required_rank: int,
         category: str | None = None,
-    ) -> GuildCommandPermission:
+    ) -> PermissionCommand:
         """
         Set the permission rank required for a specific command.
 
@@ -330,7 +330,7 @@ class PermissionSystem:
 
         Returns
         -------
-        GuildCommandPermission
+        PermissionCommand
             The created or updated command permission record.
 
         Raises
@@ -356,7 +356,7 @@ class PermissionSystem:
 
     # ---------- Query Methods ----------
 
-    async def get_command_permission(self, guild_id: int, command_name: str) -> GuildCommandPermission | None:
+    async def get_command_permission(self, guild_id: int, command_name: str) -> PermissionCommand | None:
         """
         Get command-specific permission requirements for a guild.
 
@@ -369,12 +369,12 @@ class PermissionSystem:
 
         Returns
         -------
-        GuildCommandPermission | None
+        PermissionCommand | None
             The command permission record, or None if no override exists.
         """
         return await self.db.command_permissions.get_command_permission(guild_id, command_name)
 
-    async def get_guild_permission_ranks(self, guild_id: int) -> list[GuildPermissionRank]:
+    async def get_guild_permission_ranks(self, guild_id: int) -> list[PermissionRank]:
         """
         Get all permission ranks defined for a guild.
 
@@ -385,12 +385,12 @@ class PermissionSystem:
 
         Returns
         -------
-        list[GuildPermissionRank]
+        list[PermissionRank]
             List of all permission ranks for the guild.
         """
-        return await self.db.guild_permissions.get_permission_ranks_by_guild(guild_id)
+        return await self.db.permission_ranks.get_permission_ranks_by_guild(guild_id)
 
-    async def get_guild_assignments(self, guild_id: int) -> list[GuildPermissionAssignment]:
+    async def get_guild_assignments(self, guild_id: int) -> list[PermissionAssignment]:
         """
         Get all role-to-rank assignments for a guild.
 
@@ -401,12 +401,12 @@ class PermissionSystem:
 
         Returns
         -------
-        list[GuildPermissionAssignment]
+        list[PermissionAssignment]
             List of all role assignments for the guild.
         """
         return await self.db.permission_assignments.get_assignments_by_guild(guild_id)
 
-    async def get_guild_command_permissions(self, guild_id: int) -> list[GuildCommandPermission]:
+    async def get_guild_command_permissions(self, guild_id: int) -> list[PermissionCommand]:
         """
         Get all command permission overrides for a guild.
 
@@ -417,7 +417,7 @@ class PermissionSystem:
 
         Returns
         -------
-        list[GuildCommandPermission]
+        list[PermissionCommand]
             List of all command permission overrides for the guild.
         """
         return await self.db.command_permissions.get_all_command_permissions(guild_id)

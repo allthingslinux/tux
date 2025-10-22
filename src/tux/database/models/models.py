@@ -58,7 +58,6 @@ class Guild(BaseModel, table=True):
     guild_joined_at: datetime | None = Field(default_factory=lambda: datetime.now(UTC), sa_type=DateTime(timezone=True))
     case_count: int = Field(default=0)
 
-    # PostgreSQL-specific features based on py-pglite examples
     guild_metadata: dict[str, Any] | None = Field(
         default=None,
         sa_column=Column(JSON),
@@ -152,7 +151,7 @@ class Guild(BaseModel, table=True):
     )
     permission_ranks = Relationship(
         sa_relationship=relationship(
-            "GuildPermissionRank",
+            "PermissionRank",
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
@@ -161,7 +160,7 @@ class Guild(BaseModel, table=True):
     )
     command_permissions = Relationship(
         sa_relationship=relationship(
-            "GuildCommandPermission",
+            "PermissionCommand",
             back_populates="guild",
             cascade="all, delete",
             passive_deletes=True,
@@ -502,7 +501,7 @@ class StarboardMessage(SQLModel, table=True):
     )
 
 
-class GuildPermissionRank(BaseModel, table=True):
+class PermissionRank(BaseModel, table=True):
     """Permission ranks for guild role-based access control.
 
     Defines hierarchical permission ranks that can be assigned to roles
@@ -520,7 +519,7 @@ class GuildPermissionRank(BaseModel, table=True):
         Guild ID this permission rank belongs to.
     """
 
-    __tablename__ = "guild_permission_ranks"  # type: ignore[assignment]
+    __tablename__ = "permission_ranks"  # type: ignore[assignment]
 
     id: int | None = Field(default=None, primary_key=True)
     guild_id: int = Field(
@@ -545,7 +544,7 @@ class GuildPermissionRank(BaseModel, table=True):
     # Relationship to permission assignments
     assignments = Relationship(
         sa_relationship=relationship(
-            "GuildPermissionAssignment",
+            "PermissionAssignment",
             back_populates="permission_rank",
             cascade="all, delete-orphan",
             passive_deletes=True,
@@ -555,16 +554,16 @@ class GuildPermissionRank(BaseModel, table=True):
 
     __table_args__ = (
         CheckConstraint("rank >= 0 AND rank <= 100", name="check_rank_range"),
-        UniqueConstraint("guild_id", "rank", name="unique_guild_permission_rank"),
-        UniqueConstraint("guild_id", "name", name="unique_guild_permission_rank_name"),
-        Index("idx_guild_perm_ranks_guild", "guild_id"),
+        UniqueConstraint("guild_id", "rank", name="unique_permission_rank"),
+        UniqueConstraint("guild_id", "name", name="unique_permission_rank_name"),
+        Index("idx_permission_ranks_guild", "guild_id"),
     )
 
 
-class GuildPermissionAssignment(BaseModel, table=True):
+class PermissionAssignment(BaseModel, table=True):
     """Assigns permission ranks to Discord roles in each server."""
 
-    __tablename__ = "guild_permission_assignments"  # type: ignore[assignment]
+    __tablename__ = "permission_assignments"  # type: ignore[assignment]
 
     id: int | None = Field(default=None, primary_key=True)
     guild_id: int = Field(
@@ -574,7 +573,7 @@ class GuildPermissionAssignment(BaseModel, table=True):
         index=True,
     )
     permission_rank_id: int = Field(
-        foreign_key="guild_permission_ranks.id",
+        foreign_key="permission_ranks.id",
         ondelete="CASCADE",
         sa_type=Integer,
         index=True,
@@ -586,24 +585,24 @@ class GuildPermissionAssignment(BaseModel, table=True):
     # Relationships
     permission_rank = Relationship(
         sa_relationship=relationship(
-            "GuildPermissionRank",
+            "PermissionRank",
             back_populates="assignments",
             lazy="selectin",
         ),
     )
 
     __table_args__ = (
-        UniqueConstraint("guild_id", "role_id", name="unique_guild_role_assignment"),
-        Index("idx_guild_perm_assignments_guild", "guild_id"),
-        Index("idx_guild_perm_assignments_rank", "permission_rank_id"),
-        Index("idx_guild_perm_assignments_role", "role_id"),
+        UniqueConstraint("guild_id", "role_id", name="unique_permission_assignment"),
+        Index("idx_permission_assignments_guild", "guild_id"),
+        Index("idx_permission_assignments_rank", "permission_rank_id"),
+        Index("idx_permission_assignments_role", "role_id"),
     )
 
 
-class GuildCommandPermission(BaseModel, table=True):
+class PermissionCommand(BaseModel, table=True):
     """Assigns permission requirements to specific commands."""
 
-    __tablename__ = "guild_command_permissions"  # type: ignore[assignment]
+    __tablename__ = "permission_commands"  # type: ignore[assignment]
 
     id: int | None = Field(default=None, primary_key=True)
     guild_id: int = Field(
@@ -628,8 +627,8 @@ class GuildCommandPermission(BaseModel, table=True):
 
     __table_args__ = (
         CheckConstraint("required_rank >= 0 AND required_rank <= 100", name="check_required_rank_range"),
-        UniqueConstraint("guild_id", "command_name", name="unique_guild_command"),
-        Index("idx_guild_cmd_perms_guild", "guild_id"),
-        Index("idx_guild_cmd_perms_category", "guild_id", "category"),
-        Index("idx_guild_cmd_perms_rank", "required_rank"),
+        UniqueConstraint("guild_id", "command_name", name="unique_permission_command"),
+        Index("idx_permission_commands_guild", "guild_id"),
+        Index("idx_permission_commands_category", "guild_id", "category"),
+        Index("idx_permission_commands_rank", "required_rank"),
     )

@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 
 from tux.core.permission_system import get_permission_system
-from tux.database.models.models import GuildCommandPermission, GuildPermissionAssignment
+from tux.database.models.models import PermissionAssignment, PermissionCommand
 from tux.ui.embeds import EmbedCreator, EmbedType
 
 if TYPE_CHECKING:
@@ -34,7 +34,7 @@ class ConfigManagement:
 
         await ctx.defer()
 
-        ranks = await self.bot.db.guild_permissions.get_permission_ranks_by_guild(ctx.guild.id)
+        ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(ctx.guild.id)
 
         if not ranks:
             embed = EmbedCreator.create_embed(
@@ -53,8 +53,9 @@ class ConfigManagement:
             custom_color=discord.Color.blue(),
         )
 
+        status_icon = "✅"
+
         for rank in sorted(ranks, key=lambda x: x.rank):
-            status_icon = "✅"
             level_title = f"{status_icon} Rank {rank.rank}: {rank.name}"
 
             desc_parts = [rank.description or "*No description*"]
@@ -76,7 +77,7 @@ class ConfigManagement:
 
         try:
             # Check if ranks already exist
-            existing_ranks = await self.bot.db.guild_permissions.get_permission_ranks_by_guild(ctx.guild.id)
+            existing_ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(ctx.guild.id)
             if existing_ranks:
                 embed = EmbedCreator.create_embed(
                     title="⚠️ Permission Ranks Already Exist",
@@ -145,7 +146,7 @@ class ConfigManagement:
 
         try:
             # Check if rank already exists
-            existing = await self.bot.db.guild_permissions.get_permission_rank(ctx.guild.id, rank)
+            existing = await self.bot.db.permission_ranks.get_permission_rank(ctx.guild.id, rank)
             if existing:
                 embed = EmbedCreator.create_embed(
                     title="❌ Rank Already Exists",
@@ -156,7 +157,7 @@ class ConfigManagement:
                 return
 
             # Create the rank
-            await self.bot.db.guild_permissions.create_permission_rank(
+            await self.bot.db.permission_ranks.create_permission_rank(
                 guild_id=ctx.guild.id,
                 rank=rank,
                 name=name,
@@ -195,7 +196,7 @@ class ConfigManagement:
 
         try:
             # Check if rank exists
-            existing = await self.bot.db.guild_permissions.get_permission_rank(ctx.guild.id, rank)
+            existing = await self.bot.db.permission_ranks.get_permission_rank(ctx.guild.id, rank)
             if not existing:
                 embed = EmbedCreator.create_embed(
                     title="❌ Rank Not Found",
@@ -206,7 +207,7 @@ class ConfigManagement:
                 return
 
             # Delete the rank
-            await self.bot.db.guild_permissions.delete_permission_rank(ctx.guild.id, rank)
+            await self.bot.db.permission_ranks.delete_permission_rank(ctx.guild.id, rank)
 
             embed = EmbedCreator.create_embed(
                 title="✅ Permission Rank Deleted",
@@ -277,7 +278,7 @@ class ConfigManagement:
 
         try:
             # Check if rank exists
-            rank_obj = await self.bot.db.guild_permissions.get_permission_rank(ctx.guild.id, rank)
+            rank_obj = await self.bot.db.permission_ranks.get_permission_rank(ctx.guild.id, rank)
             if not rank_obj:
                 embed = EmbedCreator.create_embed(
                     title="❌ Rank Not Found",
@@ -289,8 +290,7 @@ class ConfigManagement:
 
             # Check if role is already assigned to this rank
             existing = await self.bot.db.permission_assignments.find_one(
-                filters=(GuildPermissionAssignment.guild_id == ctx.guild.id)
-                & (GuildPermissionAssignment.role_id == role.id),
+                filters=(PermissionAssignment.guild_id == ctx.guild.id) & (PermissionAssignment.role_id == role.id),
             )
             if existing and existing.permission_rank_id == rank:
                 embed = EmbedCreator.create_embed(
@@ -337,8 +337,7 @@ class ConfigManagement:
         try:
             # Check if role has an assignment
             assignment = await self.bot.db.permission_assignments.find_one(
-                filters=(GuildPermissionAssignment.guild_id == ctx.guild.id)
-                & (GuildPermissionAssignment.role_id == role.id),
+                filters=(PermissionAssignment.guild_id == ctx.guild.id) & (PermissionAssignment.role_id == role.id),
             )
             if not assignment:
                 embed = EmbedCreator.create_embed(
@@ -350,7 +349,7 @@ class ConfigManagement:
                 return
 
             # Get rank info for display
-            rank_obj = await self.bot.db.guild_permissions.get_permission_rank(
+            rank_obj = await self.bot.db.permission_ranks.get_permission_rank(
                 ctx.guild.id,
                 assignment.permission_rank_id,
             )
@@ -431,7 +430,7 @@ class ConfigManagement:
 
         try:
             # Check if rank exists
-            rank_obj = await self.bot.db.guild_permissions.get_permission_rank(ctx.guild.id, rank)
+            rank_obj = await self.bot.db.permission_ranks.get_permission_rank(ctx.guild.id, rank)
             if not rank_obj:
                 embed = EmbedCreator.create_embed(
                     title="❌ Rank Not Found",
@@ -495,8 +494,7 @@ class ConfigManagement:
 
             # Remove command permission
             await self.bot.db.command_permissions.delete_where(
-                filters=(GuildCommandPermission.guild_id == ctx.guild.id)
-                & (GuildCommandPermission.command_name == command_name),
+                filters=(PermissionCommand.guild_id == ctx.guild.id) & (PermissionCommand.command_name == command_name),
             )
 
             embed = EmbedCreator.create_embed(

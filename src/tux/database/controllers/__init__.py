@@ -13,12 +13,12 @@ __all__ = [
     "BaseController",
     "CaseController",
     "DatabaseCoordinator",
-    "GuildCommandPermissionController",
     "GuildConfigController",
     "GuildController",
-    "GuildPermissionAssignmentController",
-    "GuildPermissionRankController",
     "LevelsController",
+    "PermissionAssignmentController",
+    "PermissionCommandController",
+    "PermissionRankController",
     "ReminderController",
     "SnippetController",
     "StarboardController",
@@ -30,12 +30,12 @@ from tux.database.controllers.base import BaseController as BaseController  # Ex
 from tux.database.controllers.case import CaseController
 from tux.database.controllers.guild import GuildController
 from tux.database.controllers.guild_config import GuildConfigController
-from tux.database.controllers.guild_permissions import (
-    GuildCommandPermissionController,
-    GuildPermissionAssignmentController,
-    GuildPermissionRankController,
-)
 from tux.database.controllers.levels import LevelsController
+from tux.database.controllers.permissions import (
+    PermissionAssignmentController,
+    PermissionCommandController,
+    PermissionRankController,
+)
 from tux.database.controllers.reminder import ReminderController
 from tux.database.controllers.snippet import SnippetController
 from tux.database.controllers.starboard import StarboardController, StarboardMessageController
@@ -84,9 +84,9 @@ class DatabaseCoordinator:
         self.db = db
         self._guild: GuildController | None = None
         self._guild_config: GuildConfigController | None = None
-        self._guild_permissions: GuildPermissionRankController | None = None
-        self._guild_permission_assignments: GuildPermissionAssignmentController | None = None
-        self._guild_command_permissions: GuildCommandPermissionController | None = None
+        self._permission_ranks: PermissionRankController | None = None
+        self._permission_assignments: PermissionAssignmentController | None = None
+        self._permission_commands: PermissionCommandController | None = None
         self._afk: AfkController | None = None
         self._levels: LevelsController | None = None
         self._snippet: SnippetController | None = None
@@ -159,22 +159,22 @@ class DatabaseCoordinator:
         return self._reminder
 
     @property
-    def guild_permissions(self) -> GuildPermissionRankController:
-        """Get the guild permission ranks controller."""
-        if self._guild_permissions is None:
-            self._guild_permissions = GuildPermissionRankController(self.db)
-        return self._guild_permissions
+    def permission_ranks(self) -> PermissionRankController:
+        """Get the permission ranks controller."""
+        if self._permission_ranks is None:
+            self._permission_ranks = PermissionRankController(self.db)
+        return self._permission_ranks
 
     @property
-    def permission_assignments(self) -> GuildPermissionAssignmentController:
+    def permission_assignments(self) -> PermissionAssignmentController:
         """Get the permission assignments controller."""
-        if self._guild_permission_assignments is None:
-            self._guild_permission_assignments = GuildPermissionAssignmentController(self.db)
-        return self._guild_permission_assignments
+        if self._permission_assignments is None:
+            self._permission_assignments = PermissionAssignmentController(self.db)
+        return self._permission_assignments
 
     @property
-    def command_permissions(self) -> GuildCommandPermissionController:
+    def command_permissions(self) -> PermissionCommandController:
         """Get the command permissions controller."""
-        if self._guild_command_permissions is None:
-            self._guild_command_permissions = GuildCommandPermissionController(self.db)
-        return self._guild_command_permissions
+        if self._permission_commands is None:
+            self._permission_commands = PermissionCommandController(self.db)
+        return self._permission_commands
