@@ -10,7 +10,7 @@
 #
 # The 'documentation' environment will be auto-created on first run.
 # ==============================================================================
-name: Documentation
+name: Docs
 on:
   push:
     branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
@@ -26,7 +26,7 @@ env:
   PYTHON_VERSION: 3.13.8
 jobs:
   build:
-    name: Build Documentation
+    name: Build
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -43,12 +43,12 @@ jobs:
           enable-cache: true
       - name: Install Documentation Dependencies
         run: |
-          # Install mkdocs and required plugins
-          pip install mkdocs-material mkdocstrings[python] pymdown-extensions
+          # Install docs dependency group
+          uv sync --group docs --no-dev
       - name: Build Documentation
         run: |
           cd docs
-          mkdocs build --strict --verbose
+          uv run mkdocs build --strict --verbose
           echo "✅ Documentation built successfully"
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
