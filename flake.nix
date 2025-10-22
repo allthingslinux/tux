@@ -1,5 +1,5 @@
 {
-  description = "All Thing's Linux discord bot - Tux";
+  description = "Tux";
 
   inputs = {
     nixpkgs = {
