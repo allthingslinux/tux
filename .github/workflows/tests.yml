@@ -10,8 +10,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 env:
-  PYTHON_VERSION: '3.13'
-  COVERAGE_THRESHOLD: 70  # Set reasonable coverage threshold
+  PYTHON_VERSION: 3.13.8
+  COVERAGE_THRESHOLD: 80
   UNIT_MARKERS: unit and not slow
   INTEGRATION_MARKERS: integration and not slow
 jobs:
@@ -72,7 +72,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.13']
+        python-version: [3.13.8]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -120,7 +120,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.13']
+        python-version: [3.13.8]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
