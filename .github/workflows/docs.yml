@@ -4,14 +4,16 @@
 # ==============================================================================
 # Builds and validates MkDocs documentation.
 #
-# Deployment is handled automatically by Cloudflare Workers Builds GitHub
-# integration. This workflow only validates the build succeeds.
+# Deployment is handled automatically by Cloudflare Workers Builds using the
+# wrangler.toml configuration in docs/wrangler.toml
 #
 # To set up Cloudflare Workers deployment:
 # 1. Connect your repository to Workers Builds in Cloudflare dashboard
-# 2. Configure build command: cd docs && mkdocs build
-# 3. Configure build output directory: data/build/docs
-# 4. Workers will automatically deploy on push to main/release branches
+# 2. Point to docs/wrangler.toml as the configuration file
+# 3. Workers will automatically deploy on push to main/release branches
+# 4. Preview deployments created automatically for PRs
+#
+# Manual deployment: cd docs && wrangler deploy
 # ==============================================================================
 name: Docs
 on:

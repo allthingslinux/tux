@@ -1,0 +1,38 @@
+# ==============================================================================
+# TUX DOCUMENTATION - CLOUDFLARE WORKERS CONFIGURATION
+# ==============================================================================
+# Deploy command: wrangler deploy (from docs/ directory)
+# Or configure Workers Builds to use this config automatically
+# ==============================================================================
+
+name = "tux-docs"
+compatibility_date = "2025-10-22"
+
+# Static Assets Configuration
+[assets]
+directory = "../data/build/docs"
+not_found_handling = "404-page"
+
+# Production deployment
+[env.production]
+name = "tux-docs"
+routes = [
+  { pattern = "tux.atl.dev", custom_domain = true }
+]
+
+# Preview/staging environment
+[env.preview]
+name = "tux-docs-preview"
+
+# Observability
+[observability]
+enabled = true
+
+# Build configuration (for Workers Builds)
+[build]
+command = "mkdocs build --strict"
+cwd = "."
+
+[build.upload]
+format = "assets"
+dir = "../data/build/docs"
