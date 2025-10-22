@@ -9,9 +9,9 @@ from loguru import logger
 from tux.database.controllers import (
     GuildConfigController,
     GuildController,
-    GuildPermissionRankController,
-    GuildPermissionAssignmentController,
-    GuildCommandPermissionController,
+    PermissionAssignmentController,
+    PermissionCommandController,
+    PermissionRankController,
 )
 from tux.database.service import DatabaseService
 
@@ -112,21 +112,21 @@ async def disconnected_async_db_service():
 
 
 @pytest.fixture(scope="function")
-async def guild_permission_controller(db_service: DatabaseService) -> GuildPermissionRankController:
-    """GuildPermissionRankController with fresh database per test."""
-    logger.info("🔧 Creating GuildPermissionRankController")
-    return GuildPermissionRankController(db_service)
+async def permission_rank_controller(db_service: DatabaseService) -> PermissionRankController:
+    """PermissionRankController with fresh database per test."""
+    logger.info("🔧 Creating PermissionRankController")
+    return PermissionRankController(db_service)
 
 
 @pytest.fixture(scope="function")
-async def guild_permission_assignment_controller(db_service: DatabaseService) -> GuildPermissionAssignmentController:
-    """GuildPermissionAssignmentController with fresh database per test."""
-    logger.info("🔧 Creating GuildPermissionAssignmentController")
-    return GuildPermissionAssignmentController(db_service)
+async def permission_assignment_controller(db_service: DatabaseService) -> PermissionAssignmentController:
+    """PermissionAssignmentController with fresh database per test."""
+    logger.info("🔧 Creating PermissionAssignmentController")
+    return PermissionAssignmentController(db_service)
 
 
 @pytest.fixture(scope="function")
-async def guild_command_permission_controller(db_service: DatabaseService) -> GuildCommandPermissionController:
-    """GuildCommandPermissionController with fresh database per test."""
-    logger.info("🔧 Creating GuildCommandPermissionController")
-    return GuildCommandPermissionController(db_service)
+async def permission_command_controller(db_service: DatabaseService) -> PermissionCommandController:
+    """PermissionCommandController with fresh database per test."""
+    logger.info("🔧 Creating PermissionCommandController")
+    return PermissionCommandController(db_service)

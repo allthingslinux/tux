@@ -38,7 +38,7 @@ class TestPermissionSystem:
     def mock_db_coordinator(self) -> MagicMock:
         """Create a mock database coordinator."""
         db_coordinator = MagicMock(spec=DatabaseCoordinator)
-        db_coordinator.guild_permissions = MagicMock()
+        db_coordinator.permission_ranks = MagicMock()
         return db_coordinator
 
     @pytest.fixture

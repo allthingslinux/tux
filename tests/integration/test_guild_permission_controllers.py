@@ -2,9 +2,9 @@
 🛡️ Guild Permission Controllers Integration Tests
 
 Comprehensive tests for the permission rank system including:
-- GuildPermissionRankController (permission ranks CRUD)
-- GuildPermissionAssignmentController (role-to-rank assignments)
-- GuildCommandPermissionController (command permission requirements)
+- PermissionRankController (permission ranks CRUD)
+- PermissionAssignmentController (role-to-rank assignments)
+- PermissionCommandController (command permission requirements)
 
 Tests follow the established patterns from test_database_controllers.py
 """
@@ -12,9 +12,9 @@ Tests follow the established patterns from test_database_controllers.py
 import pytest
 from tux.database.controllers import (
     GuildController,
-    GuildPermissionRankController,
-    GuildPermissionAssignmentController,
-    GuildCommandPermissionController,
+    PermissionAssignmentController,
+    PermissionCommandController,
+    PermissionRankController,
 )
 
 
@@ -25,22 +25,22 @@ TEST_ROLE_ID_2 = 987654321098765433
 TEST_USER_ID = 876543210987654321
 
 
-class TestGuildPermissionRankController:
-    """🚀 Test GuildPermissionRankController for permission rank management."""
+class TestPermissionRankController:
+    """🚀 Test PermissionRankController for permission rank management."""
 
     @pytest.mark.integration
     @pytest.mark.asyncio
     async def test_create_permission_rank(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionRankController,
+        permission_rank_controller: PermissionRankController,
     ) -> None:
         """Test creating a permission rank."""
         # Create guild first (foreign key requirement)
         await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
 
         # Create permission rank
-        rank = await guild_permission_controller.create_permission_rank(
+        rank = await permission_rank_controller.create_permission_rank(
             guild_id=TEST_GUILD_ID,
             rank=3,
             name="Moderator",
@@ -57,31 +57,31 @@ class TestGuildPermissionRankController:
     async def test_get_permission_ranks_by_guild(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionRankController,
+        permission_rank_controller: PermissionRankController,
     ) -> None:
         """Test retrieving all permission ranks for a guild."""
         # Create guild first
         await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
 
         # Create multiple ranks
-        await guild_permission_controller.create_permission_rank(
+        await permission_rank_controller.create_permission_rank(
             guild_id=TEST_GUILD_ID,
             rank=1,
             name="Member",
         )
-        await guild_permission_controller.create_permission_rank(
+        await permission_rank_controller.create_permission_rank(
             guild_id=TEST_GUILD_ID,
             rank=3,
             name="Moderator",
         )
-        await guild_permission_controller.create_permission_rank(
+        await permission_rank_controller.create_permission_rank(
             guild_id=TEST_GUILD_ID,
             rank=5,
             name="Admin",
         )
 
         # Retrieve all ranks
-        ranks = await guild_permission_controller.get_permission_ranks_by_guild(TEST_GUILD_ID)
+        ranks = await permission_rank_controller.get_permission_ranks_by_guild(TEST_GUILD_ID)
 
         assert len(ranks) == 3
         # Should be ordered by guild_id, rank
@@ -94,19 +94,19 @@ class TestGuildPermissionRankController:
     async def test_get_permission_rank(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionRankController,
+        permission_rank_controller: PermissionRankController,
     ) -> None:
         """Test retrieving a specific permission rank."""
         # Create guild and rank
         await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
-        await guild_permission_controller.create_permission_rank(
+        await permission_rank_controller.create_permission_rank(
             guild_id=TEST_GUILD_ID,
             rank=3,
             name="Moderator",
         )
 
         # Retrieve specific rank
-        rank = await guild_permission_controller.get_permission_rank(TEST_GUILD_ID, 3)
+        rank = await permission_rank_controller.get_permission_rank(TEST_GUILD_ID, 3)
 
         assert rank is not None
         assert rank.rank == 3
@@ -117,14 +117,14 @@ class TestGuildPermissionRankController:
     async def test_get_permission_rank_not_found(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionRankController,
+        permission_rank_controller: PermissionRankController,
     ) -> None:
         """Test retrieving a non-existent permission rank returns None."""
         # Create guild only
         await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
 
         # Try to retrieve non-existent rank
-        rank = await guild_permission_controller.get_permission_rank(TEST_GUILD_ID, 99)
+        rank = await permission_rank_controller.get_permission_rank(TEST_GUILD_ID, 99)
 
         assert rank is None
 
@@ -133,12 +133,12 @@ class TestGuildPermissionRankController:
     async def test_update_permission_rank(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionRankController,
+        permission_rank_controller: PermissionRankController,
     ) -> None:
         """Test updating a permission rank."""
         # Create guild and rank
         await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
-        await guild_permission_controller.create_permission_rank(
+        await permission_rank_controller.create_permission_rank(
             guild_id=TEST_GUILD_ID,
             rank=3,
             name="Moderator",
@@ -146,7 +146,7 @@ class TestGuildPermissionRankController:
         )
 
         # Update rank
-        updated = await guild_permission_controller.update_permission_rank(
+        updated = await permission_rank_controller.update_permission_rank(
             guild_id=TEST_GUILD_ID,
             rank=3,
             name="Senior Moderator",
@@ -162,41 +162,41 @@ class TestGuildPermissionRankController:
     async def test_delete_permission_rank(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionRankController,
+        permission_rank_controller: PermissionRankController,
     ) -> None:
         """Test deleting a permission rank."""
         # Create guild and rank
         await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
-        await guild_permission_controller.create_permission_rank(
+        await permission_rank_controller.create_permission_rank(
             guild_id=TEST_GUILD_ID,
             rank=3,
             name="Moderator",
         )
 
         # Delete rank
-        result = await guild_permission_controller.delete_permission_rank(TEST_GUILD_ID, 3)
+        result = await permission_rank_controller.delete_permission_rank(TEST_GUILD_ID, 3)
         assert result is True
 
         # Verify deletion
-        rank = await guild_permission_controller.get_permission_rank(TEST_GUILD_ID, 3)
+        rank = await permission_rank_controller.get_permission_rank(TEST_GUILD_ID, 3)
         assert rank is None
 
 
-class TestGuildPermissionAssignmentController:
-    """🚀 Test GuildPermissionAssignmentController for role-to-rank assignments."""
+class TestPermissionAssignmentController:
+    """🚀 Test PermissionAssignmentController for role-to-rank assignments."""
 
     @pytest.mark.integration
     @pytest.mark.asyncio
     async def test_assign_permission_rank(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionRankController,
-        guild_permission_assignment_controller: GuildPermissionAssignmentController,
+        permission_rank_controller: PermissionRankController,
+        permission_assignment_controller: PermissionAssignmentController,
     ) -> None:
         """Test assigning a permission rank to a role."""
         # Setup: Create guild and rank
         await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
-        rank = await guild_permission_controller.create_permission_rank(
+        rank = await permission_rank_controller.create_permission_rank(
             guild_id=TEST_GUILD_ID,
             rank=3,
             name="Moderator",
@@ -204,7 +204,7 @@ class TestGuildPermissionAssignmentController:
         assert rank.id is not None
 
         # Assign rank to role
-        assignment = await guild_permission_assignment_controller.assign_permission_rank(
+        assignment = await permission_assignment_controller.assign_permission_rank(
             guild_id=TEST_GUILD_ID,
             role_id=TEST_ROLE_ID_1,
             permission_rank_id=rank.id,
@@ -220,19 +220,19 @@ class TestGuildPermissionAssignmentController:
     async def test_get_assignments_by_guild(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionRankController,
-        guild_permission_assignment_controller: GuildPermissionAssignmentController,
+        permission_rank_controller: PermissionRankController,
+        permission_assignment_controller: PermissionAssignmentController,
     ) -> None:
         """Test retrieving all role assignments for a guild."""
         # Setup: Create guild and ranks
         await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
-        rank1 = await guild_permission_controller.create_permission_rank(
+        rank1 = await permission_rank_controller.create_permission_rank(
             guild_id=TEST_GUILD_ID,
             rank=1,
             name="Member",
         )
         assert rank1.id is not None
-        rank2 = await guild_permission_controller.create_permission_rank(
+        rank2 = await permission_rank_controller.create_permission_rank(
             guild_id=TEST_GUILD_ID,
             rank=3,
             name="Moderator",
@@ -240,13 +240,13 @@ class TestGuildPermissionAssignmentController:
         assert rank2.id is not None
 
         # Create assignments
-        await guild_permission_assignment_controller.assign_permission_rank(
+        await permission_assignment_controller.assign_permission_rank(
             guild_id=TEST_GUILD_ID,
             role_id=TEST_ROLE_ID_1,
             permission_rank_id=rank1.id,
             assigned_by=TEST_USER_ID,
         )
-        await guild_permission_assignment_controller.assign_permission_rank(
+        await permission_assignment_controller.assign_permission_rank(
             guild_id=TEST_GUILD_ID,
             role_id=TEST_ROLE_ID_2,
             permission_rank_id=rank2.id,
@@ -254,7 +254,7 @@ class TestGuildPermissionAssignmentController:
         )
 
         # Retrieve all assignments
-        assignments = await guild_permission_assignment_controller.get_assignments_by_guild(TEST_GUILD_ID)
+        assignments = await permission_assignment_controller.get_assignments_by_guild(TEST_GUILD_ID)
 
         assert len(assignments) == 2
         assert assignments[0].role_id == TEST_ROLE_ID_1
@@ -268,19 +268,19 @@ class TestGuildPermissionAssignmentController:
     async def test_get_user_permission_rank(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionRankController,
-        guild_permission_assignment_controller: GuildPermissionAssignmentController,
+        permission_rank_controller: PermissionRankController,
+        permission_assignment_controller: PermissionAssignmentController,
     ) -> None:
         """Test retrieving the highest permission rank for a user's roles."""
         # Setup
         await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
-        rank1 = await guild_permission_controller.create_permission_rank(
+        rank1 = await permission_rank_controller.create_permission_rank(
             guild_id=TEST_GUILD_ID,
             rank=1,
             name="Member",
         )
         assert rank1.id is not None
-        rank2 = await guild_permission_controller.create_permission_rank(
+        rank2 = await permission_rank_controller.create_permission_rank(
             guild_id=TEST_GUILD_ID,
             rank=3,
             name="Moderator",
@@ -288,13 +288,13 @@ class TestGuildPermissionAssignmentController:
         assert rank2.id is not None
 
         # Assign ranks to roles
-        await guild_permission_assignment_controller.assign_permission_rank(
+        await permission_assignment_controller.assign_permission_rank(
             guild_id=TEST_GUILD_ID,
             role_id=TEST_ROLE_ID_1,
             permission_rank_id=rank1.id,
             assigned_by=TEST_USER_ID,
         )
-        await guild_permission_assignment_controller.assign_permission_rank(
+        await permission_assignment_controller.assign_permission_rank(
             guild_id=TEST_GUILD_ID,
             role_id=TEST_ROLE_ID_2,
             permission_rank_id=rank2.id,
@@ -302,7 +302,7 @@ class TestGuildPermissionAssignmentController:
         )
 
         # Get user's highest rank (user has both roles)
-        user_rank = await guild_permission_assignment_controller.get_user_permission_rank(
+        user_rank = await permission_assignment_controller.get_user_permission_rank(
             guild_id=TEST_GUILD_ID,
             user_id=TEST_USER_ID,
             user_roles=[TEST_ROLE_ID_1, TEST_ROLE_ID_2],
@@ -316,19 +316,19 @@ class TestGuildPermissionAssignmentController:
     async def test_remove_role_assignment(
         self,
         guild_controller: GuildController,
-        guild_permission_controller: GuildPermissionRankController,
-        guild_permission_assignment_controller: GuildPermissionAssignmentController,
+        permission_rank_controller: PermissionRankController,
+        permission_assignment_controller: PermissionAssignmentController,
     ) -> None:
         """Test removing a role's permission assignment."""
         # Setup
         await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
-        rank = await guild_permission_controller.create_permission_rank(
+        rank = await permission_rank_controller.create_permission_rank(
             guild_id=TEST_GUILD_ID,
             rank=3,
             name="Moderator",
         )
         assert rank.id is not None
-        await guild_permission_assignment_controller.assign_permission_rank(
+        await permission_assignment_controller.assign_permission_rank(
             guild_id=TEST_GUILD_ID,
             role_id=TEST_ROLE_ID_1,
             permission_rank_id=rank.id,
@@ -336,34 +336,34 @@ class TestGuildPermissionAssignmentController:
         )
 
         # Remove assignment
-        result = await guild_permission_assignment_controller.remove_role_assignment(
+        result = await permission_assignment_controller.remove_role_assignment(
             guild_id=TEST_GUILD_ID,
             role_id=TEST_ROLE_ID_1,
         )
         assert result is True
 
         # Verify removal - get all assignments and check role is not present
-        assignments = await guild_permission_assignment_controller.get_assignments_by_guild(TEST_GUILD_ID)
+        assignments = await permission_assignment_controller.get_assignments_by_guild(TEST_GUILD_ID)
         role_ids = [a.role_id for a in assignments]
         assert TEST_ROLE_ID_1 not in role_ids
 
 
-class TestGuildCommandPermissionController:
-    """🚀 Test GuildCommandPermissionController for command permission requirements."""
+class TestPermissionCommandController:
+    """🚀 Test PermissionCommandController for command permission requirements."""
 
     @pytest.mark.integration
     @pytest.mark.asyncio
     async def test_set_command_permission(
         self,
         guild_controller: GuildController,
-        guild_command_permission_controller: GuildCommandPermissionController,
+        permission_command_controller: PermissionCommandController,
     ) -> None:
         """Test setting a command permission requirement."""
         # Setup
         await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
 
         # Set command permission
-        cmd_perm = await guild_command_permission_controller.set_command_permission(
+        cmd_perm = await permission_command_controller.set_command_permission(
             guild_id=TEST_GUILD_ID,
             command_name="ban",
             required_rank=3,
@@ -380,19 +380,19 @@ class TestGuildCommandPermissionController:
     async def test_get_command_permission(
         self,
         guild_controller: GuildController,
-        guild_command_permission_controller: GuildCommandPermissionController,
+        permission_command_controller: PermissionCommandController,
     ) -> None:
         """Test retrieving a specific command permission."""
         # Setup
         await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
-        await guild_command_permission_controller.set_command_permission(
+        await permission_command_controller.set_command_permission(
             guild_id=TEST_GUILD_ID,
             command_name="ban",
             required_rank=3,
         )
 
         # Get command permission
-        cmd_perm = await guild_command_permission_controller.get_command_permission(
+        cmd_perm = await permission_command_controller.get_command_permission(
             guild_id=TEST_GUILD_ID,
             command_name="ban",
         )
@@ -406,18 +406,18 @@ class TestGuildCommandPermissionController:
     async def test_get_all_command_permissions(
         self,
         guild_controller: GuildController,
-        guild_command_permission_controller: GuildCommandPermissionController,
+        permission_command_controller: PermissionCommandController,
     ) -> None:
         """Test retrieving all command permissions for a guild."""
         # Setup
         await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
-        await guild_command_permission_controller.set_command_permission(
+        await permission_command_controller.set_command_permission(
             guild_id=TEST_GUILD_ID,
             command_name="ban",
             required_rank=3,
             category="moderation",
         )
-        await guild_command_permission_controller.set_command_permission(
+        await permission_command_controller.set_command_permission(
             guild_id=TEST_GUILD_ID,
             command_name="kick",
             required_rank=2,
@@ -425,7 +425,7 @@ class TestGuildCommandPermissionController:
         )
 
         # Get all permissions
-        permissions = await guild_command_permission_controller.get_all_command_permissions(TEST_GUILD_ID)
+        permissions = await permission_command_controller.get_all_command_permissions(TEST_GUILD_ID)
 
         assert len(permissions) == 2
         # Should be ordered by category, command_name

@@ -261,10 +261,10 @@ class TestDatabaseStateValidation(TestDatabaseCLICommands):
 
             # Should have our main model tables
             expected_tables = {
-                'afk', 'cases', 'guild', 'guild_command_permissions',
-                'guild_config', 'guild_permission_assignments',
-                'guild_permission_ranks', 'levels', 'reminder',
-                'snippet', 'starboard', 'starboard_message',
+                'afk', 'cases', 'guild', 'guild_config', 'levels',
+                'permission_assignments', 'permission_commands',
+                'permission_ranks', 'reminder', 'snippet',
+                'starboard', 'starboard_message',
             }
 
             assert len(tables) >= len(expected_tables), f"Missing tables. Found: {tables}"
