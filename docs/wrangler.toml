@@ -1,30 +1,48 @@
 # ==============================================================================
 # TUX DOCUMENTATION - CLOUDFLARE WORKERS CONFIGURATION
 # ==============================================================================
-# Deploy command: wrangler deploy (from docs/ directory)
+# Deploy: wrangler deploy (from docs/ directory)
 # Or configure Workers Builds to use this config automatically
+#
+# Based on: https://developers.cloudflare.com/workers/static-assets/
 # ==============================================================================
 
 name = "tux-docs"
 compatibility_date = "2025-10-22"
 
+# Enable Preview URLs for all non-production deployments
+# Each version gets a unique URL: <version>-tux-docs.<subdomain>.workers.dev
+# Branch deployments can use aliases: <branch>-tux-docs.<subdomain>.workers.dev
+preview_urls = true
+
 # Static Assets Configuration
+# Optimized for static documentation (MkDocs output)
 [assets]
 directory = "../data/build/docs"
-not_found_handling = "404-page"
+not_found_handling = "404-page"          # Serve 404.html for missing pages
+html_handling = "auto-trailing-slash"    # Auto-handle trailing slashes (recommended for docs)
 
-# Production deployment
+# Production deployment (main branch)
+# URL: https://tux.atl.dev (custom domain)
+# Configure in Cloudflare Dashboard: Workers Builds → Production Branch = "main"
 [env.production]
 name = "tux-docs"
 routes = [
   { pattern = "tux.atl.dev", custom_domain = true }
 ]
 
-# Preview/staging environment
+# Preview environment (all non-production branches)
+# How it works:
+# 1. Workers Builds creates a new version for each push to non-production branches
+# 2. Each version gets: <version-id>-tux-docs-preview.<subdomain>.workers.dev
+# 3. Branch aliases (optional): Use `wrangler versions upload --preview-alias v0.1.0`
+#    Creates: v0-1-0-tux-docs-preview.<subdomain>.workers.dev (persistent URL)
+# 4. PRs automatically get preview URLs in GitHub PR comments
 [env.preview]
 name = "tux-docs-preview"
+# No custom domain - uses auto-generated *.workers.dev URLs
 
-# Observability
+# Observability - provides logs and metrics
 [observability]
 enabled = true
 

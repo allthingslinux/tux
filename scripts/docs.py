@@ -5,6 +5,7 @@ Documentation CLI Script.
 A unified interface for all documentation operations using the clean CLI infrastructure.
 """
 
+import os
 import shutil
 import subprocess
 import sys
@@ -64,6 +65,13 @@ class DocsCLI(BaseCLI):
             # Information
             Command("info", self.info, "Show documentation configuration and status"),
             Command("list", self.list_pages, "List all documentation pages"),
+            # Cloudflare Workers deployment commands
+            Command("wrangler-dev", self.wrangler_dev, "Start local Wrangler development server"),
+            Command("wrangler-deploy", self.wrangler_deploy, "Deploy documentation to Cloudflare Workers"),
+            Command("wrangler-deployments", self.wrangler_deployments, "List deployment history"),
+            Command("wrangler-versions", self.wrangler_versions, "List and manage versions"),
+            Command("wrangler-tail", self.wrangler_tail, "View real-time logs from deployed docs"),
+            Command("wrangler-rollback", self.wrangler_rollback, "Rollback to a previous deployment"),
         ]
 
         for cmd in all_commands:
@@ -510,6 +518,231 @@ class DocsCLI(BaseCLI):
             self.rich.print_rich_table("Documentation Pages", [("Path", "cyan"), ("Title", "green")], table_data)
         else:
             self.rich.print_info("No pages found")
+
+    def wrangler_dev(
+        self,
+        port: Annotated[int, Option("--port", "-p", help="Port to serve on")] = 8787,
+        remote: Annotated[bool, Option("--remote", help="Run on remote cloudflare infrastructure")] = False,
+    ) -> None:  # sourcery skip: class-extract-method
+        """Start local Wrangler development server with static assets.
+
+        This runs the docs using Cloudflare Workers locally, useful for testing
+        the production environment before deployment.
+        """
+        self.rich.print_section("🔧 Starting Wrangler Dev Server", "blue")
+
+        docs_dir = Path("docs")
+        if not docs_dir.exists():
+            self.rich.print_error("docs directory not found")
+            return
+
+        # Build docs first
+        self.rich.print_info("Building documentation...")
+        self.build(strict=True)
+
+        # Start wrangler dev
+        cmd = ["wrangler", "dev", f"--port={port}"]
+        if remote:
+            cmd.append("--remote")
+
+        self.rich.print_info(f"Starting Wrangler dev server on port {port}...")
+
+        original_dir = Path.cwd()
+        try:
+            # Change to docs directory
+            docs_path = Path("docs")
+            if docs_path.exists():
+                os.chdir(docs_path)
+
+            self._run_command(cmd)
+            self.rich.print_success(f"Wrangler dev server started at http://localhost:{port}")
+        except subprocess.CalledProcessError:
+            self.rich.print_error("Failed to start Wrangler dev server")
+        except Exception as e:
+            self.rich.print_error(f"Error: {e}")
+        finally:
+            os.chdir(original_dir)
+
+    def wrangler_deploy(
+        self,
+        env: Annotated[str, Option("--env", "-e", help="Environment to deploy to")] = "production",
+        dry_run: Annotated[bool, Option("--dry-run", help="Show what would be deployed")] = False,
+    ) -> None:
+        """Deploy documentation to Cloudflare Workers.
+
+        Builds the docs and deploys to Cloudflare using the wrangler.toml configuration.
+        Use --env to deploy to preview or production environments.
+        """
+        self.rich.print_section("🚀 Deploying to Cloudflare Workers", "blue")
+
+        # Build docs first
+        self.rich.print_info("Building documentation...")
+        self.build(strict=True)
+
+        # Deploy with wrangler
+        cmd = ["wrangler", "deploy"]
+        if env and env != "production":
+            cmd.extend(["--env", env])
+        if dry_run:
+            cmd.append("--dry-run")
+
+        self.rich.print_info(f"Deploying to {env} environment...")
+
+        original_dir = Path.cwd()
+        try:
+            # Change to docs directory
+            docs_path = Path("docs")
+            if docs_path.exists():
+                os.chdir(docs_path)
+
+            self._run_command(cmd)
+            self.rich.print_success(f"Documentation deployed successfully to {env}")
+        except subprocess.CalledProcessError:
+            self.rich.print_error("Failed to deploy documentation")
+        except Exception as e:
+            self.rich.print_error(f"Error: {e}")
+        finally:
+            os.chdir(original_dir)
+
+    def wrangler_deployments(
+        self,
+        limit: Annotated[int, Option("--limit", "-l", help="Number of deployments to show")] = 10,
+    ) -> None:
+        """List deployment history for the documentation site.
+
+        Shows recent deployments with their status, version, and timestamp.
+        """
+        self.rich.print_section("📜 Deployment History", "blue")
+
+        cmd = ["wrangler", "deployments", "list"]
+        if limit:
+            cmd.extend(["--limit", str(limit)])
+
+        original_dir = Path.cwd()
+        try:
+            docs_path = Path("docs")
+            if docs_path.exists():
+                os.chdir(docs_path)
+
+            self._run_command(cmd)
+            self.rich.print_success("Deployment history retrieved")
+        except subprocess.CalledProcessError:
+            self.rich.print_error("Failed to get deployment history")
+        except Exception as e:
+            self.rich.print_error(f"Error: {e}")
+        finally:
+            os.chdir(original_dir)
+
+    def wrangler_versions(
+        self,
+        action: Annotated[
+            str,
+            Option("--action", "-a", help="Action: list, view, or upload"),
+        ] = "list",
+        version_id: Annotated[str, Option("--version-id", help="Version ID for view action")] = "",
+        alias: Annotated[str, Option("--alias", help="Preview alias name for upload")] = "",
+    ) -> None:
+        """List and manage versions of the documentation.
+
+        Actions:
+        - list: Show all versions
+        - view: Show details of a specific version
+        - upload: Create a new version with optional preview alias
+        """
+        self.rich.print_section("🫧 Managing Versions", "blue")
+
+        cmd = ["wrangler", "versions", action]
+
+        if action == "view" and version_id:
+            cmd.append(version_id)
+        elif action == "upload" and alias:
+            cmd.extend(["--preview-alias", alias])
+
+        original_dir = Path.cwd()
+        try:
+            docs_path = Path("docs")
+            if docs_path.exists():
+                os.chdir(docs_path)
+
+            self._run_command(cmd)
+            self.rich.print_success(f"Version {action} completed")
+        except subprocess.CalledProcessError:
+            self.rich.print_error(f"Failed to {action} versions")
+        except Exception as e:
+            self.rich.print_error(f"Error: {e}")
+        finally:
+            os.chdir(original_dir)
+
+    def wrangler_tail(
+        self,
+        format_output: Annotated[str, Option("--format", help="Output format: json or pretty")] = "pretty",
+        status: Annotated[str, Option("--status", help="Filter by status: ok, error, or canceled")] = "",
+    ) -> None:
+        """View real-time logs from deployed documentation.
+
+        Tails the logs of your deployed Workers documentation, showing requests and errors.
+        """
+        self.rich.print_section("🦚 Tailing Logs", "blue")
+
+        cmd = ["wrangler", "tail"]
+        if format_output:
+            cmd.extend(["--format", format_output])
+        if status:
+            cmd.extend(["--status", status])
+
+        self.rich.print_info("Starting log tail... (Ctrl+C to stop)")
+
+        original_dir = Path.cwd()
+        try:
+            docs_path = Path("docs")
+            if docs_path.exists():
+                os.chdir(docs_path)
+
+            self._run_command(cmd)
+        except subprocess.CalledProcessError:
+            self.rich.print_error("Failed to tail logs")
+        except KeyboardInterrupt:
+            self.rich.print_info("\nLog tail stopped")
+        except Exception as e:
+            self.rich.print_error(f"Error: {e}")
+        finally:
+            os.chdir(original_dir)
+
+    def wrangler_rollback(
+        self,
+        version_id: Annotated[str, Option("--version-id", help="Version ID to rollback to")] = "",
+        message: Annotated[str, Option("--message", "-m", help="Rollback message")] = "",
+    ) -> None:
+        """Rollback to a previous deployment.
+
+        Use wrangler-deployments to find the version ID you want to rollback to.
+        """
+        self.rich.print_section("🔙 Rolling Back Deployment", "blue")
+
+        if not version_id:
+            self.rich.print_error("Version ID is required. Use wrangler-deployments to find version IDs.")
+            return
+
+        cmd = ["wrangler", "rollback", version_id]
+        if message:
+            cmd.extend(["--message", message])
+
+        self.rich.print_warning(f"Rolling back to version: {version_id}")
+
+        original_dir = Path.cwd()
+        try:
+            docs_path = Path("docs")
+            if docs_path.exists():
+                os.chdir(docs_path)
+
+            self._run_command(cmd)
+            self.rich.print_success(f"Successfully rolled back to version {version_id}")
+        except subprocess.CalledProcessError:
+            self.rich.print_error("Failed to rollback")
+        except Exception as e:
+            self.rich.print_error(f"Error: {e}")
+        finally:
+            os.chdir(original_dir)
 
 
 # Create the CLI app instance for mkdocs-typer
