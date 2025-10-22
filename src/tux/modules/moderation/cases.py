@@ -137,13 +137,16 @@ class Cases(ModerationCogBase):
     )
     @commands.guild_only()
     @requires_command_permission()
-    async def cases(self, ctx: commands.Context[Tux]) -> None:
+    async def cases(self, ctx: commands.Context[Tux], case_number: int | None = None) -> None:
         """
         View all moderation cases in the server.
 
         Use subcommands to view specific cases or filter by criteria.
         """
-        await self._view_all_cases(ctx)
+        if case_number is not None:
+            await self._view_single_case(ctx, case_number)
+        else:
+            await self._view_all_cases(ctx)
 
     @cases.command(
         name="view",
