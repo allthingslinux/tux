@@ -38,32 +38,32 @@ class TestDatabaseModelsUnit:
         """Test Guild model creation and basic operations."""
         async with db_service.session() as session:
             # Create guild using SQLModel with py-pglite
-            guild = Guild(guild_id=123456789, case_count=0)
+            guild = Guild(id=123456789, case_count=0)
             session.add(guild)
             await session.commit()
             await session.refresh(guild)
 
             # Verify creation
-            assert guild.guild_id == 123456789
+            assert guild.id == 123456789
             assert guild.case_count == 0
             assert guild.guild_joined_at is not None
 
             # Test query
             result = await session.get(Guild, 123456789)
             assert result is not None
-            assert result.guild_id == 123456789
+            assert result.id == 123456789
 
     @pytest.mark.unit
     async def test_guild_config_model_creation(self, db_session) -> None:
         """Test GuildConfig model creation and relationships."""
         # Create guild first
-        guild = Guild(guild_id=123456789, case_count=0)
+        guild = Guild(id=123456789, case_count=0)
         db_session.add(guild)
         await db_session.commit()
 
         # Create config
         config = GuildConfig(
-            guild_id=123456789,
+            id=123456789,
             prefix="!",
             mod_log_id=555666777888999000,
             audit_log_id=555666777888999001,
@@ -73,19 +73,19 @@ class TestDatabaseModelsUnit:
         await db_session.refresh(config)
 
         # Verify creation
-        assert config.guild_id == 123456789
+        assert config.id == 123456789
         assert config.prefix == "!"
         assert config.mod_log_id == 555666777888999000
 
         # Test relationship
-        guild_from_config = await db_session.get(Guild, config.guild_id)
+        guild_from_config = await db_session.get(Guild, config.id)
         assert guild_from_config is not None
-        assert guild_from_config.guild_id == guild.guild_id
+        assert guild_from_config.id == guild.id
 
     @pytest.mark.unit
     async def test_model_serialization(self, db_session) -> None:
         """Test model to_dict serialization."""
-        guild = Guild(guild_id=123456789, case_count=5)
+        guild = Guild(id=123456789, case_count=5)
         db_session.add(guild)
         await db_session.commit()
         await db_session.refresh(guild)
@@ -93,7 +93,7 @@ class TestDatabaseModelsUnit:
         # Test serialization
         guild_dict = guild.to_dict()
         assert isinstance(guild_dict, dict)
-        assert guild_dict["guild_id"] == 123456789
+        assert guild_dict["id"] == 123456789
         assert guild_dict["case_count"] == 5
 
     @pytest.mark.unit
@@ -101,9 +101,9 @@ class TestDatabaseModelsUnit:
         """Test querying multiple guilds."""
         # Create multiple guilds
         guilds_data = [
-            Guild(guild_id=123456789, case_count=1),
-            Guild(guild_id=123456790, case_count=2),
-            Guild(guild_id=123456791, case_count=3),
+            Guild(id=123456789, case_count=1),
+            Guild(id=123456790, case_count=2),
+            Guild(id=123456791, case_count=3),
         ]
 
         for guild in guilds_data:
@@ -125,8 +125,8 @@ class TestDatabaseModelsUnit:
     async def test_database_constraints(self, db_session) -> None:
         """Test database constraints and validation."""
         # Test unique guild_id constraint
-        guild1 = Guild(guild_id=123456789, case_count=0)
-        guild2 = Guild(guild_id=123456789, case_count=1)  # Same ID
+        guild1 = Guild(id=123456789, case_count=0)
+        guild2 = Guild(id=123456789, case_count=1)  # Same ID
 
         db_session.add(guild1)
         await db_session.commit()
@@ -180,14 +180,14 @@ class TestDatabaseServiceIntegration:
         # Test session creation
         async with db_service.session() as session:
             # Create guild through async session
-            guild = Guild(guild_id=test_guild_id, case_count=0)
+            guild = Guild(id=test_guild_id, case_count=0)
             session.add(guild)
             await session.commit()
 
             # Query through async session
             result = await session.get(Guild, test_guild_id)
             assert result is not None
-            assert result.guild_id == test_guild_id
+            assert result.id == test_guild_id
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -198,7 +198,7 @@ class TestDatabaseServiceIntegration:
 
         # Test controller operation
         guild = await guild_controller.get_or_create_guild(guild_id=123456789)
-        assert guild.guild_id == 123456789
+        assert guild.id == 123456789
 
         # Test guild config controller
         assert guild_config_controller is not None
@@ -207,7 +207,7 @@ class TestDatabaseServiceIntegration:
             guild_id=123456789,
             prefix="!t",  # Use valid prefix length (max 3 chars)
         )
-        assert config.guild_id == 123456789
+        assert config.id == 123456789
         assert config.prefix == "!t"
 
     @pytest.mark.integration
@@ -215,14 +215,14 @@ class TestDatabaseServiceIntegration:
     async def test_async_execute_query_utility(self, db_service: DatabaseService) -> None:
         """Test execute_query utility with async operations."""
         async def create_test_guild(session):
-            guild = Guild(guild_id=999888777, case_count=42)
+            guild = Guild(id=999888777, case_count=42)
             session.add(guild)
             await session.commit()
             await session.refresh(guild)
             return guild
 
         result = await db_service.execute_query(create_test_guild, "create test guild")
-        assert result.guild_id == 999888777
+        assert result.id == 999888777
         assert result.case_count == 42
 
     @pytest.mark.integration
@@ -231,7 +231,7 @@ class TestDatabaseServiceIntegration:
         """Test execute_transaction utility."""
         async def transaction_operation():
             async with db_service.session() as session:
-                guild = Guild(guild_id=888777666, case_count=10)
+                guild = Guild(id=888777666, case_count=10)
                 session.add(guild)
                 await session.commit()
                 return "transaction_completed"
@@ -279,7 +279,7 @@ class TestPerformanceComparison:
         async def create_guild():
             # Use random guild ID to avoid duplicate key conflicts during benchmarking
             guild_id = random.randint(100000000000, 999999999999)
-            guild = Guild(guild_id=guild_id, case_count=0)
+            guild = Guild(id=guild_id, case_count=0)
             db_session.add(guild)
             await db_session.commit()
             await db_session.refresh(guild)
@@ -287,7 +287,7 @@ class TestPerformanceComparison:
 
         # Simple performance test - just run once
         result = await create_guild()
-        assert result.guild_id is not None
+        assert result.id is not None
         assert result.case_count == 0
 
     @pytest.mark.integration
@@ -296,7 +296,7 @@ class TestPerformanceComparison:
         """Benchmark integration test performance with PostgreSQL."""
         async def create_guild_async():
             async with db_service.session() as session:
-                guild = Guild(guild_id=123456789, case_count=0)
+                guild = Guild(id=123456789, case_count=0)
                 session.add(guild)
                 await session.commit()
                 await session.refresh(guild)
@@ -304,7 +304,7 @@ class TestPerformanceComparison:
 
         # Note: async benchmarking requires special handling
         result = await create_guild_async()
-        assert result.guild_id == 123456789
+        assert result.id == 123456789
 
 
 # =============================================================================
@@ -319,7 +319,7 @@ class TestMixedScenarios:
         """Complex query test using fast unit testing."""
         # Create test data quickly with py-pglite
         guilds = [
-            Guild(guild_id=100000 + i, case_count=i)
+            Guild(id=100000 + i, case_count=i)
             for i in range(10)
         ]
 
@@ -343,7 +343,7 @@ class TestMixedScenarios:
 
         # Create config through controller
         config = await guild_config_controller.get_or_create_config(
-            guild_id=guild.guild_id,
+            guild_id=guild.id,
             prefix="!i",  # Use valid prefix length (max 3 chars)
             mod_log_id=888999000111,
         )
@@ -352,10 +352,10 @@ class TestMixedScenarios:
         async with db_service.session() as session:
             # Test join operation
             from sqlalchemy.orm import selectinload
-            guild_with_config = await session.get(Guild, guild.guild_id)
+            guild_with_config = await session.get(Guild, guild.id)
 
             assert guild_with_config is not None
-            assert guild_with_config.guild_id == config.guild_id
+            assert guild_with_config.id == config.id
 
 
 if __name__ == "__main__":

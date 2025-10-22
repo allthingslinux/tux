@@ -50,7 +50,7 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         # Note: Guild existence should be ensured at a higher level (service/application)
         # This method assumes the guild exists to avoid circular dependencies
-        config, _ = await self.get_or_create(defaults=defaults, guild_id=guild_id)
+        config, _ = await self.get_or_create(defaults=defaults, id=guild_id)
         return config
 
     async def update_config(self, guild_id: int, **updates: Any) -> GuildConfig | None:
@@ -191,7 +191,7 @@ class GuildConfigController(BaseController[GuildConfig]):
         # and filter in Python. In production, you might want to use with_session
         # for more complex queries.
         all_configs = await self.find_all()
-        return [config for config in all_configs if str(config.guild_id).startswith(prefix)]
+        return [config for config in all_configs if str(config.id).startswith(prefix)]
 
     # Additional methods that module files expect
     async def update_perm_level_role(
@@ -249,6 +249,7 @@ class GuildConfigController(BaseController[GuildConfig]):
         """
         return await self.get_config_field(guild_id, "jail_role_id")
 
+    # TODO: Remove/rename after investigation of use
     async def get_perm_level_role(self, guild_id: int, perm_level: str) -> int | None:
         """
         Get role ID for a specific permission level.

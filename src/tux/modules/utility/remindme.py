@@ -64,17 +64,17 @@ class RemindMe(BaseCog):
 
                 else:
                     logger.error(
-                        f"Failed to send reminder {reminder.reminder_id}, DMs closed and channel not found.",
+                        f"Failed to send reminder {reminder.id}, DMs closed and channel not found.",
                     )
 
         else:
             logger.error(
-                f"Failed to send reminder {reminder.reminder_id}, user with ID {reminder.reminder_user_id} not found.",
+                f"Failed to send reminder {reminder.id}, user with ID {reminder.reminder_user_id} not found.",
             )
 
         try:
-            if reminder.reminder_id is not None:
-                await self.db.reminder.delete_reminder_by_id(reminder.reminder_id)
+            if reminder.id is not None:
+                await self.db.reminder.delete_reminder_by_id(reminder.id)
         except Exception as e:
             logger.error(f"Failed to delete reminder: {e}")
 
@@ -94,8 +94,8 @@ class RemindMe(BaseCog):
             # hotfix for an issue where old reminders from the old system would all send at once
             if reminder.reminder_sent:
                 try:
-                    if reminder.reminder_id is not None:
-                        await self.db.reminder.delete_reminder_by_id(reminder.reminder_id)
+                    if reminder.id is not None:
+                        await self.db.reminder.delete_reminder_by_id(reminder.id)
                 except Exception as e:
                     logger.error(f"Failed to delete reminder: {e}")
 

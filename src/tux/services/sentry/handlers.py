@@ -7,9 +7,16 @@ from typing import Any
 from sentry_sdk.types import Event
 
 
-def before_send(event: Event) -> Event | None:
+def before_send(event: Event, hint: dict[str, Any]) -> Event | None:
     """
     Filter and modify events before sending to Sentry.
+
+    Parameters
+    ----------
+    event : Event
+        The Sentry event to potentially filter or modify.
+    hint : dict[str, Any]
+        Additional context about the event.
 
     Returns
     -------
@@ -29,9 +36,16 @@ def before_send(event: Event) -> Event | None:
     return None if event.get("logger") in excluded_loggers else event
 
 
-def before_send_transaction(event: Event) -> Event | None:
+def before_send_transaction(event: Event, hint: dict[str, Any]) -> Event | None:
     """
     Filter and group spans before sending transaction events.
+
+    Parameters
+    ----------
+    event : Event
+        The transaction event to process.
+    hint : dict[str, Any]
+        Additional context about the transaction.
 
     Returns
     -------

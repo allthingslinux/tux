@@ -67,9 +67,9 @@ class EditSnippet(SnippetsBaseCog):
             return
 
         # Update the snippet content
-        if snippet.snippet_id is not None:
+        if snippet.id is not None:
             await self.db.snippet.update_snippet_by_id(
-                snippet_id=snippet.snippet_id,
+                snippet_id=snippet.id,
                 snippet_content=content,
             )
         else:

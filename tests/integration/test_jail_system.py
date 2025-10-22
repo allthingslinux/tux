@@ -128,7 +128,7 @@ class TestJailDatabaseOperations:
             case_user_roles=[1001, 1002, 1003, 1004],
         )
 
-        assert jail_case.case_id is not None
+        assert jail_case.id is not None
         assert jail_case.case_type == CaseType.JAIL
         assert jail_case.case_user_roles == [1001, 1002, 1003, 1004]
         assert jail_case.case_reason == "Testing role storage"
@@ -169,7 +169,7 @@ class TestJailDatabaseOperations:
         )
 
         assert latest_case is not None
-        assert latest_case.case_id == jail_case.case_id
+        assert latest_case.id == jail_case.id
         assert latest_case.case_type == CaseType.JAIL
         assert latest_case.case_user_roles == [5001, 5002, 5003]
 
@@ -192,8 +192,8 @@ class TestJailDatabaseOperations:
         assert jail_case.case_user_roles == []
 
         # Retrieve and verify
-        assert jail_case.case_id is not None
-        retrieved = await case_controller.get_case_by_id(jail_case.case_id)
+        assert jail_case.id is not None
+        retrieved = await case_controller.get_case_by_id(jail_case.id)
         assert retrieved is not None
         assert retrieved.case_user_roles == []
 
@@ -218,8 +218,8 @@ class TestJailDatabaseOperations:
         assert jail_case.case_user_roles == many_roles
 
         # Verify persistence
-        assert jail_case.case_id is not None
-        retrieved = await case_controller.get_case_by_id(jail_case.case_id)
+        assert jail_case.id is not None
+        retrieved = await case_controller.get_case_by_id(jail_case.id)
         assert retrieved is not None
         assert retrieved.case_user_roles == many_roles
 
@@ -279,7 +279,7 @@ class TestJailDatabaseOperations:
             user_id=user_id,
         )
         assert latest is not None
-        assert latest.case_id == jail2.case_id
+        assert latest.id == jail2.id
         assert latest.case_user_roles == [100, 101, 102, 103]
 
 
@@ -376,8 +376,8 @@ class TestJailSystemEdgeCases:
         )
 
         # Should handle gracefully
-        assert jail_case.case_id is not None
-        retrieved = await case_controller.get_case_by_id(jail_case.case_id)
+        assert jail_case.id is not None
+        retrieved = await case_controller.get_case_by_id(jail_case.id)
         assert retrieved is not None
         assert retrieved.case_user_roles is not None  # Should be empty list, not None
 

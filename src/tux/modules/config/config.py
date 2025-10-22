@@ -120,10 +120,9 @@ class Config(commands.Cog):
         ctx: commands.Context[Tux],
         command_name: str,
         rank: int,
-        category: str | None = None,
     ) -> None:
         """Set permission rank requirement for command."""
-        await self.management.command_assign_command(ctx, command_name, rank, category)
+        await self.management.command_assign_command(ctx, command_name, rank)
 
     @command.command(name="unassign")
     @commands.guild_only()

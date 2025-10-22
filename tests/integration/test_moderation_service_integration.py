@@ -116,7 +116,7 @@ class TestModerationCoordinatorIntegration:
 
             # Mock case creation
             mock_case = MagicMock()
-            mock_case.case_id = 42
+            mock_case.id = 42
             moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
             # Mock response handling
@@ -154,7 +154,7 @@ class TestModerationCoordinatorIntegration:
 
             mock_ban_action = AsyncMock(return_value=None)
             mock_case = MagicMock()
-            mock_case.case_id = 43
+            mock_case.id = 43
             moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
             with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_send_response:
@@ -207,7 +207,7 @@ class TestModerationCoordinatorIntegration:
             # Mock successful warn action (dummy)
             mock_warn_action = AsyncMock(return_value=None)
             mock_case = MagicMock()
-            mock_case.case_id = 44
+            mock_case.id = 44
             moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
             with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_send_response:
@@ -243,7 +243,7 @@ class TestModerationCoordinatorIntegration:
             mock_send_dm.return_value = False  # The method returns False in silent mode
             mock_ban_action = AsyncMock(return_value=None)
             mock_case = MagicMock()
-            mock_case.case_id = 45
+            mock_case.id = 45
             moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
             with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_send_response:
@@ -342,7 +342,7 @@ class TestModerationCoordinatorIntegration:
         action3 = AsyncMock(return_value="result3")
 
         mock_case = MagicMock()
-        mock_case.case_id = 46
+        mock_case.id = 46
         moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
         with patch.object(moderation_coordinator._communication, 'create_embed') as mock_embed:
@@ -387,7 +387,7 @@ class TestModerationCoordinatorIntegration:
 
         mock_action = AsyncMock(return_value=None)
         mock_case = MagicMock()
-        mock_case.case_id = 47
+        mock_case.id = 47
         moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
         with patch.object(moderation_coordinator._communication, 'create_embed') as mock_embed:

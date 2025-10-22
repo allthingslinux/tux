@@ -310,7 +310,6 @@ class ConfigManagement:
                 guild_id=ctx.guild.id,
                 permission_rank_id=rank,
                 role_id=role.id,
-                assigned_by=ctx.author.id,
             )
 
             embed = EmbedCreator.create_embed(
@@ -397,19 +396,18 @@ class ConfigManagement:
             custom_color=discord.Color.blue(),
         )
 
-        # Group by category
-        by_category: dict[str, list[str]] = {}
-        for perm in permissions:
-            category = perm.category or "General"
-            if category not in by_category:
-                by_category[category] = []
-            by_category[category].append(f"`{perm.command_name}` → Rank {perm.required_rank}")
+        # Create list of commands
+        commands = [f"`{perm.command_name}` → Rank {perm.required_rank}" for perm in permissions]
 
-        for category in sorted(by_category.keys()):
-            commands = by_category[category]
+        # Split into chunks to avoid Discord field limits
+        chunk_size = 20
+        for i in range(0, len(commands), chunk_size):
+            chunk = commands[i : i + chunk_size]
             embed.add_field(
-                name=f"📁 {category}",
-                value="\n".join(commands),
+                name=f"📋 Commands ({i + 1}-{min(i + chunk_size, len(commands))})"
+                if len(commands) > chunk_size
+                else "📋 Commands",
+                value="\n".join(chunk),
                 inline=False,
             )
 
@@ -421,7 +419,6 @@ class ConfigManagement:
         ctx: commands.Context[Tux],
         command_name: str,
         rank: int,
-        category: str | None = None,
     ) -> None:
         """Set permission rank requirement for command."""
         assert ctx.guild
@@ -456,7 +453,6 @@ class ConfigManagement:
                 guild_id=ctx.guild.id,
                 command_name=command_name,
                 required_rank=rank,
-                category=category,
             )
 
             embed = EmbedCreator.create_embed(

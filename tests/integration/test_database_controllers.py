@@ -20,13 +20,13 @@ class TestGuildController:
         # Create guild using real async controller (matches actual API)
         guild = await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
 
-        assert guild.guild_id == TEST_GUILD_ID
+        assert guild.id == TEST_GUILD_ID
         assert guild.case_count == 0  # Default value
 
         # Retrieve guild using real async controller
-        retrieved = await guild_controller.get_guild_by_id(guild.guild_id)
+        retrieved = await guild_controller.get_guild_by_id(guild.id)
         assert retrieved is not None
-        assert retrieved.guild_id == TEST_GUILD_ID
+        assert retrieved.id == TEST_GUILD_ID
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -34,13 +34,13 @@ class TestGuildController:
         """Test get_or_create guild functionality."""
         # First create
         guild1 = await guild_controller.get_or_create_guild(TEST_GUILD_ID)
-        assert guild1.guild_id == TEST_GUILD_ID
+        assert guild1.id == TEST_GUILD_ID
 
         # Then get existing (should return the same guild)
         guild2 = await guild_controller.get_or_create_guild(TEST_GUILD_ID)
-        assert guild2.guild_id == TEST_GUILD_ID
+        assert guild2.id == TEST_GUILD_ID
         # Should have the same ID
-        assert guild1.guild_id == guild2.guild_id
+        assert guild1.id == guild2.id
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -50,11 +50,11 @@ class TestGuildController:
         guild = await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
 
         # Delete guild using real async controller
-        result = await guild_controller.delete_guild(guild.guild_id)
+        result = await guild_controller.delete_guild(guild.id)
         assert result is True
 
         # Verify deletion
-        retrieved = await guild_controller.get_guild_by_id(guild.guild_id)
+        retrieved = await guild_controller.get_guild_by_id(guild.id)
         assert retrieved is None
 
 
@@ -78,11 +78,11 @@ class TestGuildConfigController:
             starboard_channel_id=TEST_CHANNEL_ID + 2,
         )
 
-        assert config.guild_id == TEST_GUILD_ID
+        assert config.id == TEST_GUILD_ID
         assert config.prefix == "?"
 
         # Retrieve config using real async controller
-        retrieved = await guild_config_controller.get_config_by_guild_id(config.guild_id)
+        retrieved = await guild_config_controller.get_config_by_guild_id(config.id)
         assert retrieved is not None
         assert retrieved.prefix == "?"
 
@@ -101,7 +101,7 @@ class TestGuildConfigController:
 
         # Update prefix using real async controller
         updated_config = await guild_config_controller.update_config(
-            guild_id=config.guild_id,
+            guild_id=config.id,
             prefix="?",
         )
 
@@ -109,7 +109,7 @@ class TestGuildConfigController:
         assert updated_config.prefix == "?"
 
         # Verify update
-        retrieved = await guild_config_controller.get_config_by_guild_id(config.guild_id)
+        retrieved = await guild_config_controller.get_config_by_guild_id(config.id)
         assert retrieved is not None
         assert retrieved.prefix == "?"
 

@@ -149,7 +149,6 @@ class PermissionAssignmentController(BaseController[PermissionAssignment]):
         guild_id: int,
         permission_rank_id: int,
         role_id: int,
-        assigned_by: int,
     ) -> PermissionAssignment:
         """
         Assign a permission level to a role.
@@ -163,7 +162,6 @@ class PermissionAssignmentController(BaseController[PermissionAssignment]):
             guild_id=guild_id,
             permission_rank_id=permission_rank_id,
             role_id=role_id,
-            assigned_by=assigned_by,
         )
 
     async def get_assignments_by_guild(self, guild_id: int) -> list[PermissionAssignment]:
@@ -256,7 +254,6 @@ class PermissionCommandController(BaseController[PermissionCommand]):
         guild_id: int,
         command_name: str,
         required_rank: int,
-        category: str | None = None,
         description: str | None = None,
     ) -> PermissionCommand:  # sourcery skip: hoist-similar-statement-from-if, hoist-statement-from-if
         """
@@ -272,7 +269,6 @@ class PermissionCommandController(BaseController[PermissionCommand]):
             guild_id=guild_id,
             command_name=command_name,
             required_rank=required_rank,
-            category=category,
             description=description,
         )
         return result[0]  # upsert returns (record, created)
@@ -290,19 +286,6 @@ class PermissionCommandController(BaseController[PermissionCommand]):
             filters=(PermissionCommand.guild_id == guild_id) & (PermissionCommand.command_name == command_name),
         )
 
-    async def get_commands_by_category(self, guild_id: int, category: str) -> list[PermissionCommand]:
-        """
-        Get all commands in a specific category.
-
-        Returns
-        -------
-        list[PermissionCommand]
-            List of command permissions for the specified category.
-        """
-        return await self.find_all(
-            filters=(PermissionCommand.guild_id == guild_id) & (PermissionCommand.category == category),
-        )
-
     async def get_all_command_permissions(self, guild_id: int) -> list[PermissionCommand]:
         """
         Get all command permissions for a guild.
@@ -310,9 +293,9 @@ class PermissionCommandController(BaseController[PermissionCommand]):
         Returns
         -------
         list[PermissionCommand]
-            List of all command permissions ordered by category and name.
+            List of all command permissions ordered by name.
         """
         return await self.find_all(
             filters=PermissionCommand.guild_id == guild_id,
-            order_by=(PermissionCommand.category, PermissionCommand.command_name),
+            order_by=PermissionCommand.command_name,
         )

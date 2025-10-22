@@ -50,7 +50,7 @@ class GuildController(BaseController[Guild]):
         Guild
             The guild (existing or newly created).
         """
-        guild, _ = await self.get_or_create(guild_id=guild_id)
+        guild, _ = await self.get_or_create(id=guild_id)
         return guild
 
     async def create_guild(self, guild_id: int) -> Guild:
@@ -62,7 +62,7 @@ class GuildController(BaseController[Guild]):
         Guild
             The newly created guild.
         """
-        return await self.create(guild_id=guild_id)
+        return await self.create(id=guild_id)
 
     async def delete_guild(self, guild_id: int) -> bool:
         """
@@ -128,7 +128,7 @@ class GuildController(BaseController[Guild]):
             """
             config = await session.get(GuildConfig, guild_id)
             if config is None:
-                config = GuildConfig(guild_id=guild_id, **data)
+                config = GuildConfig(id=guild_id, **data)
                 session.add(config)
             else:
                 for key, value in data.items():

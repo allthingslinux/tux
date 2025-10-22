@@ -60,14 +60,14 @@ class ToggleSnippetLock(SnippetsBaseCog):
             return
 
         # Toggle the lock status in the database
-        if snippet.snippet_id is None:
+        if snippet.id is None:
             await self.send_snippet_error(ctx, "Error: Snippet ID is invalid.")
             return
 
         try:
-            status = await self.db.snippet.toggle_snippet_lock_by_id(snippet.snippet_id)
+            status = await self.db.snippet.toggle_snippet_lock_by_id(snippet.id)
         except Exception as e:
-            logger.error(f"Failed to toggle lock for snippet '{name}' (ID: {snippet.snippet_id}): {e}")
+            logger.error(f"Failed to toggle lock for snippet '{name}' (ID: {snippet.id}): {e}")
             await self.send_snippet_error(
                 ctx,
                 "An error occurred while trying to toggle the snippet lock. Please try again later.",
@@ -76,7 +76,7 @@ class ToggleSnippetLock(SnippetsBaseCog):
         else:  # Proceed only if try block succeeded
             if status is None:  # Should not happen if try succeeded, but added for safety/linter
                 logger.error(
-                    f"Toggle lock for snippet '{name}' (ID: {snippet.snippet_id}) succeeded but returned None status.",
+                    f"Toggle lock for snippet '{name}' (ID: {snippet.id}) succeeded but returned None status.",
                 )
                 await self.send_snippet_error(
                     ctx,

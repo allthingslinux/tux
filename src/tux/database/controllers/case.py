@@ -130,7 +130,7 @@ class CaseController(BaseController[Case]):
             # Explicitly avoid loading relationships to prevent outer join issues with FOR UPDATE
             stmt = (
                 select(Guild)
-                .where(Guild.guild_id == guild_id)  # type: ignore[arg-type]
+                .where(Guild.id == guild_id)  # type: ignore[arg-type]
                 .options(noload("*"))  # Don't load any relationships
                 .with_for_update()
             )
@@ -139,7 +139,7 @@ class CaseController(BaseController[Case]):
 
             # Create guild if it doesn't exist
             if guild is None:
-                guild = Guild(guild_id=guild_id, case_count=0)
+                guild = Guild(id=guild_id, case_count=0)
                 session.add(guild)
                 await session.flush()
                 logger.debug(f"Created new guild {guild_id} with case_count=0")
@@ -176,7 +176,7 @@ class CaseController(BaseController[Case]):
             await session.flush()
             await session.refresh(case)
             logger.info(
-                f"Case created successfully: ID={case.case_id}, number={case.case_number}, expires_at={case.case_expires_at}",
+                f"Case created successfully: ID={case.id}, number={case.case_number}, expires_at={case.case_expires_at}",
             )
             return case
 
@@ -356,7 +356,7 @@ class CaseController(BaseController[Case]):
             return None
 
         # Update the case with the provided values
-        return await self.update_by_id(case.case_id, **kwargs)
+        return await self.update_by_id(case.id, **kwargs)
 
     async def get_all_cases(self, guild_id: int) -> list[Case]:
         """
@@ -379,9 +379,9 @@ class CaseController(BaseController[Case]):
             The most recent case if found, None otherwise.
         """
         cases = await self.find_all(filters=(Case.case_user_id == user_id) & (Case.guild_id == guild_id))
-        # Sort by case_id descending (assuming higher ID = newer case) and return the first one
+        # Sort by ID descending (assuming higher ID = newer case) and return the first one
         if cases:
-            sorted_cases = sorted(cases, key=lambda x: x.case_id or 0, reverse=True)
+            sorted_cases = sorted(cases, key=lambda x: x.id or 0, reverse=True)
             return sorted_cases[0]
         return None
 
@@ -441,7 +441,7 @@ class CaseController(BaseController[Case]):
         logger.info(f"Found {len(expired_cases)} unprocessed expired tempbans in guild {guild_id}")
         for case in expired_cases:
             logger.debug(
-                f"Unprocessed expired tempban: case_id={case.case_id}, user={case.case_user_id}, "
+                f"Unprocessed expired tempban: case_id={case.id}, user={case.case_user_id}, "
                 f"expires_at={case.case_expires_at}, processed={case.case_processed}",
             )
 

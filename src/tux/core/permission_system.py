@@ -178,7 +178,6 @@ class PermissionSystem:
         guild_id: int,
         rank: int,
         role_id: int,
-        assigned_by: int,
     ) -> PermissionAssignment:
         """
         Assign a permission rank to a Discord role.
@@ -194,8 +193,6 @@ class PermissionSystem:
             The permission rank to assign (0-100).
         role_id : int
             The Discord role ID to assign the rank to.
-        assigned_by : int
-            The user ID who made this assignment (for auditing).
 
         Returns
         -------
@@ -218,7 +215,6 @@ class PermissionSystem:
             guild_id=guild_id,
             permission_rank_id=rank_info.id,
             role_id=role_id,
-            assigned_by=assigned_by,
         )
 
         logger.info(f"Assigned rank {rank} to role {role_id} in guild {guild_id}")
@@ -309,7 +305,6 @@ class PermissionSystem:
         guild_id: int,
         command_name: str,
         required_rank: int,
-        category: str | None = None,
     ) -> PermissionCommand:
         """
         Set the permission rank required for a specific command.
@@ -325,8 +320,6 @@ class PermissionSystem:
             The command name (without prefix).
         required_rank : int
             The minimum permission rank required (0-100).
-        category : str | None, optional
-            Optional category for organizing command permissions.
 
         Returns
         -------
@@ -348,7 +341,6 @@ class PermissionSystem:
             guild_id=guild_id,
             command_name=command_name,
             required_rank=required_rank,
-            category=category,
         )
 
         logger.info(f"Set command {command_name} to require rank {required_rank} in guild {guild_id}")
@@ -447,13 +439,10 @@ class PermissionSystem:
         >>> config = {
         ...     "permission_ranks": [{"rank": 10, "name": "Elite Mod", "description": "Elite moderators"}],
         ...     "role_assignments": [{"rank": 10, "role_id": 123456789}],
-        ...     "command_permissions": [{"command": "ban", "rank": 3, "category": "moderation"}],
+        ...     "command_permissions": [{"command": "ban", "rank": 3}],
         ... }
         >>> await system.load_from_config(guild_id, config)
 
-        Notes
-        -----
-        Role assignments are marked as system-assigned (assigned_by = bot user ID).
         """
         # Load custom permission ranks
         if "permission_ranks" in config:
@@ -476,7 +465,6 @@ class PermissionSystem:
                         guild_id=guild_id,
                         rank=assignment["rank"],
                         role_id=assignment["role_id"],
-                        assigned_by=self.bot.user.id if self.bot.user else 0,  # System assignment
                     )
                 else:
                     logger.warning(
@@ -490,7 +478,6 @@ class PermissionSystem:
                     guild_id=guild_id,
                     command_name=cmd_perm["command"],
                     required_rank=cmd_perm["rank"],
-                    category=cmd_perm.get("category"),
                 )
 
         logger.info(f"Loaded permission configuration for guild {guild_id} from config file")

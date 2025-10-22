@@ -148,7 +148,6 @@ async def handle_permission_rank_role_select(
                 guild_id=interaction.guild.id,
                 rank=rank,
                 role_id=role.id,
-                assigned_by=interaction.user.id,
             )
             logger.debug(f"✅ Assigned role {role.name} ({role.id}) to rank {rank}")
 

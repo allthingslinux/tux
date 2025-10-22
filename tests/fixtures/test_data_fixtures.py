@@ -18,7 +18,7 @@ async def sample_guild(guild_controller: GuildController) -> Any:
     """Sample guild for testing."""
     logger.info("🔧 Creating sample guild")
     guild = await guild_controller.insert_guild_by_id(TEST_GUILD_ID)
-    logger.info(f"✅ Created sample guild with ID: {guild.guild_id}")
+    logger.info(f"✅ Created sample guild with ID: {guild.id}")
     return guild
 
 
@@ -40,17 +40,17 @@ async def sample_guild_with_config(
     )
 
     result = {"guild": guild, "config": config}
-    logger.info(f"✅ Created sample guild with config: {guild.guild_id}")
+    logger.info(f"✅ Created sample guild with config: {guild.id}")
     return result
 
 
 def validate_guild_structure(guild: Any) -> bool:
     """Validate guild model structure and required fields."""
     return (
-        hasattr(guild, "guild_id") and
+        hasattr(guild, "id") and
         hasattr(guild, "case_count") and
         hasattr(guild, "guild_joined_at") and
-        isinstance(guild.guild_id, int) and
+        isinstance(guild.id, int) and
         isinstance(guild.case_count, int)
     )
 
@@ -58,13 +58,13 @@ def validate_guild_structure(guild: Any) -> bool:
 def validate_guild_config_structure(config: Any) -> bool:
     """Validate guild config model structure and required fields."""
     return (
-        hasattr(config, "guild_id") and
+        hasattr(config, "id") and
         hasattr(config, "prefix") and
-        isinstance(config.guild_id, int) and
+        isinstance(config.id, int) and
         (config.prefix is None or isinstance(config.prefix, str))
     )
 
 
 def validate_relationship_integrity(guild: Any, config: Any) -> bool:
     """Validate relationship integrity between guild and config."""
-    return guild.guild_id == config.guild_id
+    return guild.id == config.id

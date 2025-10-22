@@ -82,13 +82,13 @@ class TempBan(ModerationCogBase):
         tuple[int, int]
             (processed_count, failed_count)
         """
-        if not (case.guild_id and case.case_user_id and case.case_id):
-            logger.error(f"Invalid case data for case {case.case_id}")
+        if not (case.guild_id and case.case_user_id and case.id):
+            logger.error(f"Invalid case data for case {case.id}")
             return 0, 1
 
         guild = self.bot.get_guild(case.guild_id)
         if not guild:
-            logger.warning(f"Guild {case.guild_id} not found for case {case.case_id}")
+            logger.warning(f"Guild {case.guild_id} not found for case {case.id}")
             return 0, 1
 
         # Check if user is still banned
@@ -97,8 +97,8 @@ class TempBan(ModerationCogBase):
 
         except discord.NotFound:
             # User already unbanned - just mark as processed
-            logger.info(f"User {case.case_user_id} already unbanned, marking case {case.case_id} as processed")
-            await self.db.case.set_tempban_expired(case.case_id, case.guild_id)
+            logger.info(f"User {case.case_user_id} already unbanned, marking case {case.id} as processed")
+            await self.db.case.set_tempban_expired(case.id, case.guild_id)
             return 1, 0
 
         except Exception as e:
@@ -112,11 +112,11 @@ class TempBan(ModerationCogBase):
             logger.error(f"Failed to unban user {case.case_user_id} in guild {guild.id}: {e}")
             return 0, 1
         except Exception as e:
-            logger.error(f"Unexpected error processing case {case.case_id}: {e}")
+            logger.error(f"Unexpected error processing case {case.id}: {e}")
             return 0, 1
         else:
-            await self.db.case.set_tempban_expired(case.case_id, case.guild_id)
-            logger.info(f"Unbanned user {case.case_user_id} and marked case {case.case_id} as processed")
+            await self.db.case.set_tempban_expired(case.id, case.guild_id)
+            logger.info(f"Unbanned user {case.case_user_id} and marked case {case.id} as processed")
             return 1, 0
 
     @tasks.loop(minutes=1)

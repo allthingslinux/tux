@@ -306,8 +306,8 @@ class PrefixManager:
 
                 # Populate cache with loaded configs
                 for config in all_configs:
-                    if hasattr(config, "guild_id") and hasattr(config, "prefix"):
-                        self._prefix_cache[config.guild_id] = config.prefix
+                    if hasattr(config, "id") and hasattr(config, "prefix"):
+                        self._prefix_cache[config.id] = config.prefix
 
                 self._cache_loaded = True
                 logger.info(f"Loaded {len(self._prefix_cache)} guild prefixes into cache")

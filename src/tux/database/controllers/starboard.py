@@ -38,7 +38,7 @@ class StarboardController(BaseController[Starboard]):
         Starboard | None
             The starboard configuration if found, None otherwise.
         """
-        return await self.find_one(filters=Starboard.guild_id == guild_id)
+        return await self.find_one(filters=Starboard.id == guild_id)
 
     async def get_or_create_starboard(self, guild_id: int, **defaults: Any) -> Starboard:
         """
@@ -180,8 +180,7 @@ class StarboardMessageController(BaseController[StarboardMessage]):
             The starboard message if found, None otherwise.
         """
         return await self.find_one(
-            filters=(StarboardMessage.message_id == original_message_id)
-            & (StarboardMessage.message_guild_id == guild_id),
+            filters=(StarboardMessage.id == original_message_id) & (StarboardMessage.message_guild_id == guild_id),
         )
 
     async def get_messages_by_guild(self, guild_id: int, limit: int | None = None) -> list[StarboardMessage]:
@@ -216,7 +215,7 @@ class StarboardMessageController(BaseController[StarboardMessage]):
             The newly created starboard message.
         """
         return await self.create(
-            message_id=original_message_id,
+            id=original_message_id,
             starboard_message_id=starboard_message_id,
             message_guild_id=guild_id,
             message_channel_id=channel_id,
@@ -304,14 +303,14 @@ class StarboardMessageController(BaseController[StarboardMessage]):
             The starboard message (created or updated).
         """
         # Check if message already exists
-        if "message_id" in kwargs and "message_guild_id" in kwargs:
-            existing = await self.get_message_by_original(kwargs["message_id"], kwargs["message_guild_id"])
+        if "id" in kwargs and "message_guild_id" in kwargs:
+            existing = await self.get_message_by_original(kwargs["id"], kwargs["message_guild_id"])
             if existing:
                 # Update existing
                 for key, value in kwargs.items():
                     if hasattr(existing, key):
                         setattr(existing, key, value)
-                updated = await self.update_by_id(existing.message_id, **kwargs)
+                updated = await self.update_by_id(existing.id, **kwargs)
                 return updated if updated is not None else existing
 
         # Create new

@@ -11,8 +11,6 @@ from __future__ import annotations
 # Import base classes and enums
 from .base import BaseModel, SoftDeleteMixin, UUIDMixin
 from .enums import CaseType, PermissionType
-
-# Import all model classes
 from .models import (
     AFK,
     Case,
@@ -29,9 +27,7 @@ from .models import (
 )
 
 __all__ = [
-    # Models
     "AFK",
-    # Base classes and mixins
     "BaseModel",
     "Case",
     "CaseType",
@@ -41,7 +37,6 @@ __all__ = [
     "PermissionAssignment",
     "PermissionCommand",
     "PermissionRank",
-    # Enums
     "PermissionType",
     "Reminder",
     "Snippet",

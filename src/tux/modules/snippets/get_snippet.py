@@ -55,8 +55,8 @@ class Snippet(SnippetsBaseCog):
             return
 
         # Increment uses before potentially resolving alias
-        if snippet.snippet_id is not None:
-            await self.db.snippet.increment_snippet_uses(snippet.snippet_id)
+        if snippet.id is not None:
+            await self.db.snippet.increment_snippet_uses(snippet.id)
 
         # Handle aliases
         if snippet.alias:
@@ -67,8 +67,8 @@ class Snippet(SnippetsBaseCog):
             )
 
             # If alias target doesn't exist, delete the broken alias
-            if aliased_snippet is None and snippet.snippet_id is not None:
-                await self.db.snippet.delete_snippet_by_id(snippet.snippet_id)
+            if aliased_snippet is None and snippet.id is not None:
+                await self.db.snippet.delete_snippet_by_id(snippet.id)
 
                 await self.send_snippet_error(
                     ctx,

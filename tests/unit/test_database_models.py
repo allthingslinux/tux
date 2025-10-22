@@ -40,7 +40,7 @@ class TestModelCreation:
         # Create guild using the async service pattern
         async with db_service.session() as session:
             guild = Guild(
-                guild_id=TEST_GUILD_ID,
+                id=TEST_GUILD_ID,
                 case_count=5,
             )
 
@@ -49,7 +49,7 @@ class TestModelCreation:
             await session.refresh(guild)
 
             # Verify all fields
-            assert guild.guild_id == TEST_GUILD_ID
+            assert guild.id == TEST_GUILD_ID
             assert guild.case_count == 5
             assert guild.guild_joined_at is not None
             assert isinstance(guild.guild_joined_at, datetime)
@@ -60,13 +60,13 @@ class TestModelCreation:
         """Test GuildConfig model creation with comprehensive config."""
         async with db_service.session() as session:
             # Create guild first (foreign key requirement)
-            guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
+            guild = Guild(id=TEST_GUILD_ID, case_count=0)
             session.add(guild)
             await session.commit()
 
             # Create comprehensive config
             config = GuildConfig(
-                guild_id=TEST_GUILD_ID,
+                id=TEST_GUILD_ID,
                 prefix="!t",  # Use valid prefix length (max 3 chars)
                 mod_log_id=TEST_CHANNEL_ID,
                 audit_log_id=TEST_CHANNEL_ID + 1,
@@ -81,7 +81,7 @@ class TestModelCreation:
             await session.refresh(config)
 
             # Verify all fields
-            assert config.guild_id == TEST_GUILD_ID
+            assert config.id == TEST_GUILD_ID
             assert config.prefix == "!t"
             assert config.mod_log_id == TEST_CHANNEL_ID
             assert config.audit_log_id == TEST_CHANNEL_ID + 1
@@ -96,7 +96,7 @@ class TestModelCreation:
         """Test Case model creation with enum types."""
         async with db_service.session() as session:
             # Create guild first
-            guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
+            guild = Guild(id=TEST_GUILD_ID, case_count=0)
             session.add(guild)
             await session.commit()
 
@@ -136,13 +136,13 @@ class TestModelRelationships:
         """Test relationship between Guild and GuildConfig."""
         async with db_service.session() as session:
             # Create guild
-            guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
+            guild = Guild(id=TEST_GUILD_ID, case_count=0)
             session.add(guild)
             await session.commit()
 
             # Create config
             config = GuildConfig(
-                guild_id=TEST_GUILD_ID,
+                id=TEST_GUILD_ID,
                 prefix="!r",  # Use valid prefix length (max 3 chars)
                 mod_log_id=TEST_CHANNEL_ID,
             )
@@ -158,7 +158,7 @@ class TestModelRelationships:
 
             assert guild_from_db is not None
             assert config_from_db is not None
-            assert guild_from_db.guild_id == config_from_db.guild_id
+            assert guild_from_db.id == config_from_db.id
 
     @pytest.mark.unit
     async def test_foreign_key_constraints(self, db_service: DatabaseService) -> None:
@@ -166,7 +166,7 @@ class TestModelRelationships:
         async with db_service.session() as session:
             # Try to create config without guild (should fail)
             config = GuildConfig(
-                guild_id=999999999999999999,  # Non-existent guild
+                id=999999999999999999,  # Non-existent guild
                 prefix="!f",  # Use valid prefix length (max 3 chars)
                 mod_log_id=TEST_CHANNEL_ID,
             )
@@ -188,14 +188,14 @@ class TestModelRelationships:
         """Test unique constraints are enforced."""
         async with db_service.session() as session:
             # Create first guild
-            guild1 = Guild(guild_id=TEST_GUILD_ID, case_count=0)
+            guild1 = Guild(id=TEST_GUILD_ID, case_count=0)
             session.add(guild1)
             await session.commit()
 
             # Try to create duplicate guild (should fail)
             # Note: This intentionally creates an identity key conflict to test constraint behavior
             # The SAWarning is expected and indicates the test is working correctly
-            guild2 = Guild(guild_id=TEST_GUILD_ID, case_count=1)  # Same ID
+            guild2 = Guild(id=TEST_GUILD_ID, case_count=1)  # Same ID
             session.add(guild2)
 
             try:
@@ -212,12 +212,12 @@ class TestModelRelationships:
         """Test cascade behavior with related models."""
         async with db_service.session() as session:
             # Create guild with config
-            guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
+            guild = Guild(id=TEST_GUILD_ID, case_count=0)
             session.add(guild)
             await session.commit()
 
             config = GuildConfig(
-                guild_id=TEST_GUILD_ID,
+                id=TEST_GUILD_ID,
                 prefix="!c",  # Use valid prefix length (max 3 chars)
             )
             session.add(config)
@@ -249,12 +249,12 @@ class TestModelSerialization:
 
         # Verify dict structure
         assert isinstance(guild_dict, dict)
-        assert 'guild_id' in guild_dict
+        assert 'id' in guild_dict
         assert 'case_count' in guild_dict
         assert 'guild_joined_at' in guild_dict
 
         # Verify data integrity
-        assert guild_dict['guild_id'] == sample_guild.guild_id
+        assert guild_dict['id'] == sample_guild.id
         assert guild_dict['case_count'] == sample_guild.case_count
 
     @pytest.mark.unit
@@ -262,13 +262,13 @@ class TestModelSerialization:
         """Test GuildConfig model serialization to dict."""
         async with db_service.session() as session:
             # Create guild first
-            guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
+            guild = Guild(id=TEST_GUILD_ID, case_count=0)
             session.add(guild)
             await session.commit()
 
             # Create config
             sample_guild_config = GuildConfig(
-                guild_id=TEST_GUILD_ID,
+                id=TEST_GUILD_ID,
                 prefix="!t",  # Use valid prefix length (max 3 chars)
                 mod_log_id=TEST_CHANNEL_ID,
             )
@@ -279,11 +279,11 @@ class TestModelSerialization:
 
             # Verify dict structure
             assert isinstance(config_dict, dict)
-            assert 'guild_id' in config_dict
+            assert 'id' in config_dict
             assert 'prefix' in config_dict
 
             # Verify data integrity
-            assert config_dict['guild_id'] == sample_guild_config.guild_id
+            assert config_dict['id'] == sample_guild_config.id
             assert config_dict['prefix'] == sample_guild_config.prefix
 
     @pytest.mark.unit
@@ -291,7 +291,7 @@ class TestModelSerialization:
         """Test enum field serialization in Case model."""
         async with db_service.session() as session:
             # Create guild first
-            guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
+            guild = Guild(id=TEST_GUILD_ID, case_count=0)
             session.add(guild)
             await session.commit()
 
@@ -326,7 +326,7 @@ class TestModelQueries:
         async with db_service.session() as session:
             # Create test guilds
             guilds = [
-                Guild(guild_id=TEST_GUILD_ID + i, case_count=i)
+                Guild(id=TEST_GUILD_ID + i, case_count=i)
                 for i in range(5)
             ]
 
@@ -336,7 +336,7 @@ class TestModelQueries:
 
             # Test individual access
             for i, guild in enumerate(guilds):
-                assert guild.guild_id == TEST_GUILD_ID + i
+                assert guild.id == TEST_GUILD_ID + i
                 assert guild.case_count == i
 
     @pytest.mark.unit
@@ -345,7 +345,7 @@ class TestModelQueries:
         async with db_service.session() as session:
             # Create test data
             guilds = [
-                Guild(guild_id=TEST_GUILD_ID + i, case_count=i * 2)
+                Guild(id=TEST_GUILD_ID + i, case_count=i * 2)
                 for i in range(10)
             ]
 
@@ -376,12 +376,12 @@ class TestModelQueries:
         """Test join queries between related models."""
         async with db_service.session() as session:
             # Create guild with config
-            guild = Guild(guild_id=TEST_GUILD_ID, case_count=5)
+            guild = Guild(id=TEST_GUILD_ID, case_count=5)
             session.add(guild)
             await session.commit()
 
             config = GuildConfig(
-                guild_id=TEST_GUILD_ID,
+                id=TEST_GUILD_ID,
                 prefix="!j",  # Use valid prefix length (max 3 chars)
                 mod_log_id=TEST_CHANNEL_ID,
             )
@@ -389,12 +389,12 @@ class TestModelQueries:
             await session.commit()
 
             # Test join query using raw SQL (use proper table names)
-            result = await session.execute(  # type: ignore
+            result = await session.execute(
                 text("""
-                SELECT g.guild_id, g.case_count, gc.prefix
+                SELECT g.id, g.case_count, gc.prefix
                 FROM guild g
-                JOIN guild_config gc ON g.guild_id = gc.guild_id
-                WHERE g.guild_id = :guild_id
+                JOIN guild_config gc ON g.id = gc.id
+                WHERE g.id = :guild_id
             """), {"guild_id": TEST_GUILD_ID},
             )
 
@@ -416,25 +416,25 @@ class TestDataIntegrity:
     async def test_required_fields(self, db_service: DatabaseService) -> None:
         """Test required field validation."""
         async with db_service.session() as session:
-            # Guild requires guild_id, test that it works when provided
-            guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
+            # Guild requires id, test that it works when provided
+            guild = Guild(id=TEST_GUILD_ID, case_count=0)
             session.add(guild)
             await session.commit()
 
             # Verify guild was created successfully
-            assert guild.guild_id == TEST_GUILD_ID
+            assert guild.id == TEST_GUILD_ID
 
     @pytest.mark.unit
     async def test_data_types(self, db_service: DatabaseService) -> None:
         """Test data type enforcement."""
         async with db_service.session() as session:
             # Test integer fields
-            guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
+            guild = Guild(id=TEST_GUILD_ID, case_count=0)
             session.add(guild)
             await session.commit()
 
             # Verify types are preserved
-            assert isinstance(guild.guild_id, int)
+            assert isinstance(guild.id, int)
             assert isinstance(guild.case_count, int)
 
     @pytest.mark.unit
@@ -442,18 +442,18 @@ class TestDataIntegrity:
         """Test NULL value handling for optional fields."""
         async with db_service.session() as session:
             # Create guild with minimal data
-            guild = Guild(guild_id=TEST_GUILD_ID, case_count=0)
+            guild = Guild(id=TEST_GUILD_ID, case_count=0)
             session.add(guild)
             await session.commit()
 
             # Create config with minimal data (most fields optional)
-            config = GuildConfig(guild_id=TEST_GUILD_ID)
+            config = GuildConfig(id=TEST_GUILD_ID)
             session.add(config)
             await session.commit()
             await session.refresh(config)
 
             # Verify NULL handling
-            assert config.guild_id == TEST_GUILD_ID
+            assert config.id == TEST_GUILD_ID
             assert config.prefix == "$"  # Default value, not None
             assert config.mod_log_id is None  # Optional field
 
@@ -462,7 +462,7 @@ class TestDataIntegrity:
         """Test transaction rollback behavior."""
         async with db_service.session() as session:
             # First commit a valid guild
-            guild1 = Guild(guild_id=TEST_GUILD_ID, case_count=0)
+            guild1 = Guild(id=TEST_GUILD_ID, case_count=0)
             session.add(guild1)
             await session.commit()  # Commit first guild
 
@@ -475,7 +475,7 @@ class TestDataIntegrity:
             # Note: This intentionally creates an identity key conflict to test constraint behavior
             # The SAWarning is expected and indicates the test is working correctly
             try:
-                guild2 = Guild(guild_id=TEST_GUILD_ID, case_count=1)  # Same ID - should fail
+                guild2 = Guild(id=TEST_GUILD_ID, case_count=1)  # Same ID - should fail
                 session.add(guild2)
                 await session.commit()  # This should fail due to unique constraint
             except Exception:
@@ -500,7 +500,7 @@ class TestModelPerformance:
         async with db_service.session() as session:
             # Create multiple guilds
             guilds = [
-                Guild(guild_id=TEST_GUILD_ID + i, case_count=i)
+                Guild(id=TEST_GUILD_ID + i, case_count=i)
                 for i in range(10)  # Smaller number for faster tests
             ]
 
@@ -519,7 +519,7 @@ class TestModelPerformance:
         async with db_service.session() as session:
             # Create test data
             guilds = [
-                Guild(guild_id=TEST_GUILD_ID + i, case_count=i)
+                Guild(id=TEST_GUILD_ID + i, case_count=i)
                 for i in range(20)
             ]
 
@@ -547,12 +547,12 @@ class TestModelPerformance:
             configs = []
 
             for i in range(5):  # Create 5 test guilds with configs
-                guild = Guild(guild_id=TEST_GUILD_ID + i, case_count=i)
+                guild = Guild(id=TEST_GUILD_ID + i, case_count=i)
                 session.add(guild)
                 guilds.append(guild)
 
                 config = GuildConfig(
-                    guild_id=TEST_GUILD_ID + i,
+                    id=TEST_GUILD_ID + i,
                     prefix=f"!{i}",  # Use valid prefix length (max 3 chars)
                 )
                 session.add(config)
@@ -573,8 +573,8 @@ class TestModelPerformance:
             for result in results:
                 assert 'guild' in result
                 assert 'config' in result
-                assert 'guild_id' in result['guild']
-                assert 'guild_id' in result['config']
+                assert 'id' in result['guild']
+                assert 'id' in result['config']
 
 
 if __name__ == "__main__":

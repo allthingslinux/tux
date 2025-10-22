@@ -213,6 +213,6 @@ class ReminderController(BaseController[Reminder]):
         expired = await self.get_expired_reminders()
         count = 0
         for reminder in expired:
-            if await self.delete_by_id(reminder.reminder_id):
+            if await self.delete_by_id(reminder.id):
                 count += 1
         return count

@@ -176,7 +176,7 @@ class ModerationCoordinator:
                 reason=reason,
                 **case_kwargs,  # All optional Case fields (expires_at, user_roles, metadata, etc.)
             )
-            logger.info(f"Successfully created case #{case.case_number} (ID: {case.case_id}) for {case_type.value}")
+            logger.info(f"Successfully created case #{case.case_number} (ID: {case.id}) for {case_type.value}")
 
         except Exception as e:
             # Database failed, but continue with response
@@ -198,7 +198,7 @@ class ModerationCoordinator:
                 dm_sent = False
 
         # Send response embed
-        logger.debug(f"Sending response embed, case={'None' if case is None else case.case_id}, dm_sent={dm_sent}")
+        logger.debug(f"Sending response embed, case={'None' if case is None else case.id}, dm_sent={dm_sent}")
         await self._send_response_embed(ctx, case, user, dm_sent)
 
         logger.info(f"Completed moderation action {case_type.value} on user {user.id}")
@@ -329,7 +329,7 @@ class ModerationCoordinator:
                 ("Status", "⚠️ Case creation failed - action may have been applied", False),
             ]
         else:
-            logger.debug(f"Sending response embed for case #{case.case_number} (ID: {case.case_id})")
+            logger.debug(f"Sending response embed for case #{case.case_number} (ID: {case.id})")
             title = f"Case #{case.case_number} ({case.case_type.value if case.case_type else 'Unknown'})"
             fields = [
                 ("Moderator", f"{ctx.author.name}\n`{ctx.author.id}`", True),

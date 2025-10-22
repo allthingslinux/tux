@@ -74,7 +74,7 @@ class TestDatabaseSchemaThroughService:
         retrieved = await guild_controller.get_guild_by_id(TEST_GUILD_ID)
 
         assert retrieved is not None
-        assert retrieved.guild_id == TEST_GUILD_ID
+        assert retrieved.id == TEST_GUILD_ID
 
 
 class TestSchemaConstraintsThroughControllers:
@@ -98,16 +98,16 @@ class TestSchemaConstraintsThroughControllers:
         # Test 2: Create config with valid guild
         guild = await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
         valid_config = await guild_config_controller.get_or_create_config(
-            guild_id=guild.guild_id,
+            guild_id=guild.id,
             prefix="?",
         )
 
-        assert valid_config.guild_id == guild.guild_id
+        assert valid_config.id == guild.id
 
         # Test 3: Verify relationship integrity
-        retrieved_config = await guild_config_controller.get_config_by_guild_id(guild.guild_id)
+        retrieved_config = await guild_config_controller.get_config_by_guild_id(guild.id)
         assert retrieved_config is not None
-        assert retrieved_config.guild_id == guild.guild_id
+        assert retrieved_config.id == guild.id
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -117,19 +117,19 @@ class TestSchemaConstraintsThroughControllers:
 
         # Create first guild
         guild1 = await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
-        assert guild1.guild_id == TEST_GUILD_ID
+        assert guild1.id == TEST_GUILD_ID
 
         # Try to create guild with same ID (should work due to get_or_create pattern)
         guild2 = await guild_controller.get_or_create_guild(TEST_GUILD_ID)
-        assert guild2.guild_id == TEST_GUILD_ID
+        assert guild2.id == TEST_GUILD_ID
 
         # Should be the same guild (uniqueness maintained)
-        assert guild1.guild_id == guild2.guild_id
+        assert guild1.id == guild2.id
 
         # Verify only one guild exists
         retrieved = await guild_controller.get_guild_by_id(TEST_GUILD_ID)
         assert retrieved is not None
-        assert retrieved.guild_id == TEST_GUILD_ID
+        assert retrieved.id == TEST_GUILD_ID
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -140,14 +140,14 @@ class TestSchemaConstraintsThroughControllers:
         # Create guild and config
         guild = await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
         config = await guild_config_controller.get_or_create_config(
-            guild_id=guild.guild_id,
+            guild_id=guild.id,
             prefix="!",
             mod_log_id=TEST_CHANNEL_ID,
         )
 
         # Update config multiple times
         updated_config = await guild_config_controller.update_config(
-            guild_id=config.guild_id,
+            guild_id=config.id,
             prefix="?",
             audit_log_id=TEST_CHANNEL_ID + 1,
         )
@@ -157,12 +157,12 @@ class TestSchemaConstraintsThroughControllers:
             assert updated_config.prefix == "?"
 
         # Verify all data is consistent across controllers
-        retrieved_guild = await guild_controller.get_guild_by_id(guild.guild_id)
-        retrieved_config = await guild_config_controller.get_config_by_guild_id(guild.guild_id)
+        retrieved_guild = await guild_controller.get_guild_by_id(guild.id)
+        retrieved_config = await guild_config_controller.get_config_by_guild_id(guild.id)
 
         assert retrieved_guild is not None
         assert retrieved_config is not None
-        assert retrieved_guild.guild_id == retrieved_config.guild_id
+        assert retrieved_guild.id == retrieved_config.id
 
 
 class TestSchemaMigrationsThroughService:
@@ -177,12 +177,12 @@ class TestSchemaMigrationsThroughService:
         # Create interrelated data
         guild = await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
         config = await guild_config_controller.get_or_create_config(
-            guild_id=guild.guild_id,
+            guild_id=guild.id,
             prefix="!",
         )
 
         # Verify relationships work across tables
-        assert config.guild_id == guild.guild_id
+        assert config.id == guild.id
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -204,7 +204,7 @@ class TestSchemaMigrationsThroughService:
             guild_id = TEST_GUILD_ID + i
             retrieved = await guild_controller.get_guild_by_id(guild_id)
             assert retrieved is not None
-            assert retrieved.guild_id == guild_id
+            assert retrieved.id == guild_id
 
         # Delete a guild
         result = await guild_controller.delete_guild(TEST_GUILD_ID + 1)

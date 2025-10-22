@@ -314,7 +314,7 @@ class Starboard(BaseCog):
                 starboard_message = await starboard_channel.send(embed=embed)
 
             await self.db.starboard_message.create_or_update_starboard_message(
-                message_id=original_message.id,
+                id=original_message.id,
                 message_content=original_message.content,
                 message_channel_id=original_message.channel.id,
                 message_user_id=original_message.author.id,

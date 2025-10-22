@@ -115,7 +115,7 @@ class TestCriticalIssuesIntegration:
         # Create the guild record first (required for case creation)
         async with db_service.session() as session:
             from tux.database.models import Guild
-            guild = Guild(guild_id=mock_ctx.guild.id, case_count=0)
+            guild = Guild(id=mock_ctx.guild.id, case_count=0)
             session.add(guild)
             await session.commit()
         mock_member = MockMember()
@@ -191,7 +191,7 @@ class TestCriticalIssuesIntegration:
             # Create the guild record first (required for case creation)
             async with db_service.session() as session:
                 from tux.database.models import Guild
-                guild = Guild(guild_id=mock_ctx.guild.id, case_count=0)
+                guild = Guild(id=mock_ctx.guild.id, case_count=0)
                 session.add(guild)
                 await session.commit()
 
@@ -291,7 +291,7 @@ class TestCriticalIssuesIntegration:
             # Create the guild record first (required for case creation)
             async with db_service.session() as session:
                 from tux.database.models import Guild
-                guild = Guild(guild_id=mock_ctx.guild.id, case_count=0)
+                guild = Guild(id=mock_ctx.guild.id, case_count=0)
                 session.add(guild)
                 await session.commit()
 
@@ -469,7 +469,7 @@ class TestCriticalIssuesIntegration:
         # Create the guild record first (required for case creation)
         async with db_service.session() as session:
             from tux.database.models import Guild
-            guild = Guild(guild_id=mock_ctx.guild.id, case_count=0)
+            guild = Guild(id=mock_ctx.guild.id, case_count=0)
             session.add(guild)
             await session.commit()
 
@@ -677,7 +677,7 @@ class TestCriticalIssuesIntegration:
             # Create the guild record first (required for case creation)
             async with db_service.session() as session:
                 from tux.database.models import Guild
-                guild = Guild(guild_id=mock_ctx.guild.id, case_count=0)
+                guild = Guild(id=mock_ctx.guild.id, case_count=0)
                 session.add(guild)
                 await session.commit()
 

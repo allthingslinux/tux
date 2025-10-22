@@ -208,7 +208,6 @@ class TestPermissionAssignmentController:
             guild_id=TEST_GUILD_ID,
             role_id=TEST_ROLE_ID_1,
             permission_rank_id=rank.id,
-            assigned_by=TEST_USER_ID,
         )
 
         assert assignment.guild_id == TEST_GUILD_ID
@@ -244,13 +243,11 @@ class TestPermissionAssignmentController:
             guild_id=TEST_GUILD_ID,
             role_id=TEST_ROLE_ID_1,
             permission_rank_id=rank1.id,
-            assigned_by=TEST_USER_ID,
         )
         await permission_assignment_controller.assign_permission_rank(
             guild_id=TEST_GUILD_ID,
             role_id=TEST_ROLE_ID_2,
             permission_rank_id=rank2.id,
-            assigned_by=TEST_USER_ID,
         )
 
         # Retrieve all assignments
@@ -292,13 +289,11 @@ class TestPermissionAssignmentController:
             guild_id=TEST_GUILD_ID,
             role_id=TEST_ROLE_ID_1,
             permission_rank_id=rank1.id,
-            assigned_by=TEST_USER_ID,
         )
         await permission_assignment_controller.assign_permission_rank(
             guild_id=TEST_GUILD_ID,
             role_id=TEST_ROLE_ID_2,
             permission_rank_id=rank2.id,
-            assigned_by=TEST_USER_ID,
         )
 
         # Get user's highest rank (user has both roles)
@@ -332,7 +327,6 @@ class TestPermissionAssignmentController:
             guild_id=TEST_GUILD_ID,
             role_id=TEST_ROLE_ID_1,
             permission_rank_id=rank.id,
-            assigned_by=TEST_USER_ID,
         )
 
         # Remove assignment
@@ -367,13 +361,11 @@ class TestPermissionCommandController:
             guild_id=TEST_GUILD_ID,
             command_name="ban",
             required_rank=3,
-            category="moderation",
         )
 
         assert cmd_perm.guild_id == TEST_GUILD_ID
         assert cmd_perm.command_name == "ban"
         assert cmd_perm.required_rank == 3
-        assert cmd_perm.category == "moderation"
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -415,13 +407,11 @@ class TestPermissionCommandController:
             guild_id=TEST_GUILD_ID,
             command_name="ban",
             required_rank=3,
-            category="moderation",
         )
         await permission_command_controller.set_command_permission(
             guild_id=TEST_GUILD_ID,
             command_name="kick",
             required_rank=2,
-            category="moderation",
         )
 
         # Get all permissions

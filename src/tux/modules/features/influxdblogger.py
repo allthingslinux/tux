@@ -76,10 +76,10 @@ class InfluxLogger(BaseCog):
 
             # Iterate through each guild and collect metrics
             for guild in guild_list:
-                if not guild.guild_id:
+                if not guild.id:
                     continue
 
-                guild_id = int(guild.guild_id)
+                guild_id = int(guild.id)
 
                 # Collect data by querying controllers
                 # Count starboard messages for this guild
