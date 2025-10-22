@@ -11,7 +11,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 env:
-  PYTHON_VERSION: '3.13'
+  PYTHON_VERSION: 3.13.8
   SAFETY_SEVERITY: HIGH,CRITICAL
 jobs:
   changes:

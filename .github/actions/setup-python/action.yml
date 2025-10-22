@@ -5,7 +5,7 @@ inputs:
   python-version:
     description: Python version to use
     required: false
-    default: '3.13'
+    default: 3.13.8
   uv-version:
     description: Uv version to install (e.g. 0.8.8)
     required: false

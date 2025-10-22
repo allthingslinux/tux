@@ -16,7 +16,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   DOCKER_BUILD_SUMMARY: true
   DOCKER_BUILD_CHECKS_ANNOTATIONS: true
-  PYTHON_VERSION: '3.13'
+  PYTHON_VERSION: 3.13.8
 jobs:
   changes:
     name: File Detection
