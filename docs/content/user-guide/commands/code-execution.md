@@ -10,15 +10,6 @@ Execute code in various programming languages.
 
 **Usage:**
 
-```
-$run ```language
-code here
-`` `
-
-# Or inline:
-$run language:python print("Hello World")
-```
-
 **Aliases:** `compile`, `exec`
 
 **Permission:** Rank 0 (Everyone)
@@ -63,25 +54,6 @@ Via **Wandbox** (execution output):
 
 **Example:**
 
-````
-$run ```python
-print("Hello from Discord!")
-for i in range(5):
-    print(f"Count: {i}")
-`` `
-````
-
-**Example Output:**
-
-```
-Hello from Discord!
-Count: 0
-Count: 1
-Count: 2
-Count: 3
-Count: 4
-```
-
 ---
 
 ### Languages
@@ -90,7 +62,7 @@ List all supported programming languages.
 
 **Usage:**
 
-```
+```text
 $languages
 ```
 
@@ -127,88 +99,6 @@ Wandbox is used for interpreted/script languages:
 - Good for scripting languages
 
 **Languages:** Bash, JavaScript, TypeScript, Ruby, Python, PHP, Perl, Lua, Elixir, etc.
-
-## Usage Examples
-
-### Simple Python Script
-
-````
-$run ```python
-def factorial(n):
-    return 1 if n <= 1 else n * factorial(n-1)
-
-print(factorial(5))
-`` `
-````
-
-Output: `120`
-
-### C++ Program
-
-````
-$run ```cpp
-#include <iostream>
-using namespace std;
-
-int main() {
-    cout << "Hello from C++!" << endl;
-    return 0;
-}
-`` `
-````
-
-### JavaScript
-
-````
-$run ```js
-const numbers = [1, 2, 3, 4, 5];
-const sum = numbers.reduce((a, b) => a + b, 0);
-console.log(`Sum: ${sum}`);
-`` `
-````
-
-### Rust
-
-````
-$run ```rust
-fn main() {
-    let numbers: Vec<i32> = (1..=10).collect();
-    let sum: i32 = numbers.iter().sum();
-    println!("Sum of 1-10: {}", sum);
-}
-`` `
-````
-
-### Shell Script
-
-````
-$run ```bash
-echo "Current date:"
-date
-echo "Files:"
-ls -la
-`` `
-````
-
-## Code Format
-
-### Code Block Format
-
-Use triple backticks with language:
-
-````
-$run ```python
-code here
-`` `
-````
-
-### Inline Format
-
-For short snippets:
-
-```
-$run python:print("Hello")
-```
 
 ### Language Detection
 
