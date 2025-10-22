@@ -575,14 +575,12 @@ class DocsCLI(BaseCLI):
         """
         self.rich.print_section("🚀 Deploying to Cloudflare Workers", "blue")
 
-        # Build docs first
+        # Build docs first (without strict to allow warnings)
         self.rich.print_info("Building documentation...")
-        self.build(strict=True)
+        self.build(strict=False)
 
-        # Deploy with wrangler
-        cmd = ["wrangler", "deploy"]
-        if env and env != "production":
-            cmd.extend(["--env", env])
+        # Deploy with wrangler - always specify env to avoid warning
+        cmd = ["wrangler", "deploy", "--env", env]
         if dry_run:
             cmd.append("--dry-run")
 

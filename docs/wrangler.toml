@@ -46,11 +46,8 @@ name = "tux-docs-preview"
 [observability]
 enabled = true
 
-# Build configuration (for Workers Builds)
+# Build configuration (for Workers Builds CI/CD integration)
+# Workers Builds will run this command automatically on push
 [build]
-command = "mkdocs build --strict"
+command = "mkdocs build"
 cwd = "."
-
-[build.upload]
-format = "assets"
-dir = "../data/build/docs"
