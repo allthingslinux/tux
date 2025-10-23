@@ -1,5 +1,6 @@
 {
   "debug": false,
+  "log_level": "INFO",
   "bot_token": "",
   "postgres_host": "localhost",
   "postgres_port": 5432,

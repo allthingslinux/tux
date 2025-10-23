@@ -1,5 +1,7 @@
 # Enable debug mode
 # debug = false
+# Logging level (TRACE, DEBUG, INFO, SUCCESS, WARNING, ERROR, CRITICAL)
+# log_level = "INFO"
 # Discord bot token
 # bot_token = ""
 # PostgreSQL host
