@@ -1,6 +1,7 @@
 <!-- Warning -->
+<!-- markdownlint-disable MD041 -->
 
-> [!WARNING] <!-- markdownlint-disable MD041 -->
+> [!WARNING]
 **This bot is still a work in progress and issues are expected. If you self-host our bot please join our support server [on Discord](https://discord.gg/gpmSjcjQxg) for announcements and support.**
 
 <!-- Banner -->
@@ -49,9 +50,7 @@
 
 <!-- Introduction -->
 
-# Tux
-
-## The all-in-one open source Discord bot
+# The all-in-one open source Discord bot
 
 ## About
 
