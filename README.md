@@ -4,7 +4,15 @@
 **This bot is still a work in progress and issues are expected. If you self-host our bot please join our support server [on Discord](https://discord.gg/gpmSjcjQxg) for announcements and support.**
 
 <div align="center">
-<a href="https://tux.atl.dev">Docs</a> | <a href="https://github.com/allthingslinux/tux/issues/525">Roadmap</a> | <a href="https://github.com/allthingslinux/tux/issues/157">Deps</a> | <a href="https://discord.gg/gpmSjcjQxg">Support</a> | Invite (Coming Soon)
+    <table align="center">
+        <tr>
+            <td><a href="https://tux.atl.dev">📚 Docs</a></td>
+            <td><a href="https://github.com/allthingslinux/tux/issues/525">🗺️ Roadmap</a></td>
+            <td><a href="https://github.com/allthingslinux/tux/issues/157">📦 Deps</a></td>
+            <td><a href="https://discord.gg/gpmSjcjQxg">💬 Support</a></td>
+            <td>🤖 Invite (Coming Soon)</td>
+        </tr>
+    </table>
 </div>
 
 <img align="center" src="assets/readme-banner.png" alt="Banner">
