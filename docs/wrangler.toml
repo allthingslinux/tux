@@ -49,5 +49,5 @@ enabled = true
 # Build configuration (for Workers Builds CI/CD integration)
 # Workers Builds will run this command automatically on push
 [build]
-command = "mkdocs build"
+command = "uv run mkdocs build"
 cwd = "."
