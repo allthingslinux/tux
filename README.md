@@ -4,53 +4,34 @@
 **This bot is still a work in progress and issues are expected. If you self-host our bot please join our support server [on Discord](https://discord.gg/gpmSjcjQxg) for announcements and support.**
 
 <div align="center">
-    <table align="center">
-        <tr>
-            <td><a href="https://tux.atl.dev">📚 Docs</a></td>
-            <td><a href="https://github.com/allthingslinux/tux/issues/525">🗺️ Roadmap</a></td>
-            <td><a href="https://github.com/allthingslinux/tux/issues/157">📦 Deps</a></td>
-            <td><a href="https://discord.gg/gpmSjcjQxg">💬 Support</a></td>
-            <td>🤖 Invite (Coming Soon)</td>
-        </tr>
-    </table>
+    <p align="center">
+        <!-- Latest Release & Tech Stack -->
+        <a href="https://github.com/allthingslinux/tux/releases">
+            <img alt="GitHub Release" src="https://img.shields.io/github/v/release/allthingslinux/tux?logo=github&logoColor=white"></a>
+        <a href="https://python.org">
+            <img alt="Python" src="https://img.shields.io/badge/python-3.13.2+-blue?logo=python&logoColor=white"></a>
+        <a href="https://docs.astral.sh/uv">
+            <img alt="Uv" src="https://img.shields.io/badge/uv-0.4.0+-purple?logo=uv&logoColor=white"></a>
+        <!-- CI/CD & Quality -->
+        <a href="https://results.pre-commit.ci/latest/github/allthingslinux/tux/main">
+            <img alt="pre-commit.ci status" src="https://results.pre-commit.ci/badge/github/allthingslinux/tux/main.svg"></a>
+        <a href="https://codecov.io/gh/allthingslinux/tux">
+            <img alt="Codecov" src="https://codecov.io/gh/allthingslinux/tux/graph/badge.svg?token=R0AUAS996W"></a>
+        <!-- Community & Legal -->
+        <a href="https://github.com/allthingslinux/tux/blob/main/LICENSE">
+            <img alt="License" src="https://img.shields.io/github/license/allthingslinux/tux?logo=gnu&logoColor=white"></a>
+    </p>
 </div>
 
 <img align="center" src="assets/readme-banner.png" alt="Banner">
 
-<div align="center">
-    <table align="center">
-        <tr>
-            <td>
-                <!-- Latest Release & Tech Stack -->
-                <a href="https://github.com/allthingslinux/tux/releases">
-                    <img alt="GitHub Release" src="https://img.shields.io/github/v/release/allthingslinux/tux?logo=github&logoColor=white"></a>
-            </td>
-            <td>
-                <a href="https://python.org">
-                    <img alt="Python" src="https://img.shields.io/badge/python-3.13.2+-blue?logo=python&logoColor=white"></a>
-            </td>
-            <td>
-                <a href="https://docs.astral.sh/uv">
-                    <img alt="Uv" src="https://img.shields.io/badge/uv-0.4.0+-purple?logo=uv&logoColor=white"></a>
-            </td>
-            <td>
-                <!-- CI/CD & Quality -->
-                <a href="https://results.pre-commit.ci/latest/github/allthingslinux/tux/main">
-                    <img alt="pre-commit.ci status" src="https://results.pre-commit.ci/badge/github/allthingslinux/tux/main.svg"></a>
-            </td>
-            <td>
-                <a href="https://codecov.io/gh/allthingslinux/tux">
-                    <img alt="Codecov" src="https://codecov.io/gh/allthingslinux/tux/graph/badge.svg?token=R0AUAS996W"></a>
-            </td>
-            <td>
-                <!-- Community & Legal -->
-                <a href="https://github.com/allthingslinux/tux/blob/main/LICENSE">
-                    <img alt="License" src="https://img.shields.io/github/license/allthingslinux/tux?logo=gnu&logoColor=white"></a>
-            </td>
-            <td>
-                <a href="https://discord.gg/linux">
-                    <img alt="Discord" src="https://img.shields.io/discord/1172245377395728464?logo=discord"></a>
-            </td>
+<div align="center" style="display: flex; justify-content: center; align-items: center;">
+    <table align="center" style="vertical-align: middle;">
+        <tr style="vertical-align: middle;">
+            <td style="vertical-align: middle;"><a href="https://tux.atl.dev">📚 Docs</a></td>
+            <td style="vertical-align: middle;"><a href="https://github.com/allthingslinux/tux/issues/525">🗺️ Roadmap</a></td>
+            <td style="vertical-align: middle;"><a href="https://github.com/allthingslinux/tux/issues/157">📦 Deps</a></td>
+            <td style="vertical-align: middle;"><a href="https://discord.gg/gpmSjcjQxg">💬 Support</a></td>
         </tr>
     </table>
 </div>
