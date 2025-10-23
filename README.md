@@ -1,46 +1,58 @@
-<h1 align="center">Tux</h1>
-<h3 align="center">A Discord bot for the All Things Linux Discord server</h3>
+![Banner](assets/readme-banner.png) <!-- markdownlint-disable MD041 -->
+
+# Tux
+
+## The all-in-one open source Discord bot
 
 <div align="center">
     <p align="center">
+        <!-- CI/CD & Quality -->
         <a href="https://github.com/allthingslinux/tux/actions">
             <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/allthingslinux/tux/ci.yml?branch=main&label=CI"></a>
         <a href="https://results.pre-commit.ci/latest/github/allthingslinux/tux/main">
             <img alt="pre-commit.ci status" src="https://results.pre-commit.ci/badge/github/allthingslinux/tux/main.svg"></a>
         <a href="https://codecov.io/gh/allthingslinux/tux">
             <img alt="Codecov" src="https://codecov.io/gh/allthingslinux/tux/graph/badge.svg?token=R0AUAS996W"></a>
-        <a href="https://github.com/allthingslinux/tux/commits/main">
-            <img alt="Commit Activity" src="https://img.shields.io/github/commit-activity/m/allthingslinux/tux"></a>
+        <!-- Technology Stack -->
+        <a href="https://python.org">
+            <img alt="Python" src="https://img.shields.io/badge/python-3.13+-blue.svg"></a>
+        <a href="https://docs.astral.sh/uv">
+            <img alt="Uv" src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json"></a>
+        <!-- Repository Activity & Releases -->
         <a href="https://github.com/allthingslinux/tux/releases">
             <img alt="GitHub Release" src="https://img.shields.io/github/v/release/allthingslinux/tux"></a>
+        <a href="https://github.com/allthingslinux/tux/commits/main">
+            <img alt="Commit Activity" src="https://img.shields.io/github/commit-activity/m/allthingslinux/tux"></a>
+        <a href="https://github.com/allthingslinux/tux/issues">
+            <img alt="Issues" src="https://img.shields.io/github/issues/allthingslinux/tux"></a>
+        <!-- Repository Popularity -->
         <a href="https://github.com/allthingslinux/tux/stargazers">
             <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/allthingslinux/tux"></a>
         <a href="https://github.com/allthingslinux/tux/network/members">
             <img alt="GitHub forks" src="https://img.shields.io/github/forks/allthingslinux/tux"></a>
         <a href="https://github.com/allthingslinux/tux/graphs/contributors">
             <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/allthingslinux/tux"></a>
-        <a href="https://github.com/allthingslinux/tux/issues">
-            <img alt="Issues" src="https://img.shields.io/github/issues/allthingslinux/tux"></a>
-        <a href="https://github.com/allthingslinux/tux">
-            <img alt="Repo size" src="https://img.shields.io/github/repo-size/allthingslinux/tux"></a>
-        <a href="https://python.org">
-            <img alt="Python" src="https://img.shields.io/badge/python-3.13+-blue.svg"></a>
-        <a href="https://docs.astral.sh/uv">
-            <img alt="Uv" src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json"></a>
-        <a href="https://github.com/allthingslinux/tux/blob/main/LICENSE">
-            <img alt="License" src="https://img.shields.io/github/license/allthingslinux/tux"></a>
+        <!-- Community & Legal -->
         <a href="https://discord.gg/linux">
             <img alt="Discord" src="https://img.shields.io/discord/1172245377395728464?logo=discord"></a>
+        <a href="https://github.com/allthingslinux/tux/blob/main/LICENSE">
+            <img alt="License" src="https://img.shields.io/github/license/allthingslinux/tux"></a>
     </p>
 </div>
 
 > [!WARNING]
 **This bot is still a work in progress and issues are expected. If you self-host our bot please join our support server [on Discord](https://discord.gg/gpmSjcjQxg) for announcements and support.**
 
+## About
+
+Tux is an all-in-one open source Discord bot, originally designed for the [All Things Linux](https://allthingslinux.org) community.
+
+It is designed to provide a variety of features to the server, including moderation, support, utility, and various fun commands.
+
 ## Table of Contents
 
-- [Table of Contents](#table-of-contents)
 - [About](#about)
+- [Table of Contents](#table-of-contents)
 - [Tech Stack](#tech-stack)
 - [Bot Features](#bot-features)
 - [Installation and Development](#installation-and-development)
@@ -48,12 +60,6 @@
   - [Setup \& Workflow](#setup--workflow)
   - [Quick Commands](#quick-commands)
 - [License](#license)
-
-## About
-
-Tux is an all-in-one Discord bot originally designed for the All Things Linux Discord server.
-
-It is designed to provide a variety of features to the server, including moderation, support, utility, and various fun commands.
 
 ## Tech Stack
 
@@ -173,30 +179,20 @@ uv run docker shell              # Open shell in container
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0.
+Tux is free and open source software licensed under the [GNU General Public License v3.0](LICENSE), created by [@kzndotsh](https://github.com/kzndotsh), created for the and maintained by the [All Things Linux](https://allthingslinux.org) community.
 
-See [LICENSE](LICENSE) for details.
+[(Back to top)](#table-of-contents)
 
-<table>
-<tr>
-<td align="left"><h2>Metrics</h2></td>
-</tr>
-<tr>
-<td><img src="https://repobeats.axiom.co/api/embed/b988ba04401b7c68edf9def00f5132cd2a7f3735.svg" alt="Metrics" width="100%"></td>
-</tr>
-<tr>
-<td align="right"><small><code>via <a href="https://repobeats.axiom.co">Repobeats</a></code></small></td>
-</tr>
-</table>
+## Metrics
 
-<table>
-<tr>
-<td align="left"><h2>Contributors</h2></td>
-</tr>
-<tr>
-<td><img src="https://contrib.rocks/image?repo=allthingslinux/tux" alt="Contributors" width="100%"></td>
-</tr>
-<tr>
-<td align="right"><small><code>via <a href="https://contrib.rocks">contrib.rocks</a></code></small></td>
-</tr>
-</table>
+![Metrics](https://repobeats.axiom.co/api/embed/b988ba04401b7c68edf9def00f5132cd2a7f3735.svg)
+
+## Contributors
+
+![Contributors](https://contrib.rocks/image?repo=allthingslinux/tux)
+
+([Made with repobeats](https://repobeats.axiom.co) and [contrib.rocks](https://contrib.rocks))
+
+---
+
+[(Back to top ↑)](#table-of-contents)
