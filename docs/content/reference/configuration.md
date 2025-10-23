@@ -14,17 +14,18 @@ Configuration is loaded from multiple sources in priority order:
 5. config.json file
 6. Default values (lowest priority)
 
-| Name                   | Type      | Default                             | Description                  | Example                             |
-|------------------------|-----------|-------------------------------------|------------------------------|-------------------------------------|
-| `DEBUG`                | `boolean` | `false`                             | Enable debug mode            | `false`                             |
-| `BOT_TOKEN`            | `string`  | `""`                                | Discord bot token            | `""`                                |
-| `POSTGRES_HOST`        | `string`  | `"localhost"`                       | PostgreSQL host              | `"localhost"`                       |
-| `POSTGRES_PORT`        | `integer` | `5432`                              | PostgreSQL port              | `5432`                              |
-| `POSTGRES_DB`          | `string`  | `"tuxdb"`                           | PostgreSQL database name     | `"tuxdb"`                           |
-| `POSTGRES_USER`        | `string`  | `"tuxuser"`                         | PostgreSQL username          | `"tuxuser"`                         |
-| `POSTGRES_PASSWORD`    | `string`  | `"ChangeThisToAStrongPassword123!"` | PostgreSQL password          | `"ChangeThisToAStrongPassword123!"` |
-| `DATABASE_URL`         | `string`  | `""`                                | Custom database URL override | `""`                                |
-| `ALLOW_SYSADMINS_EVAL` | `boolean` | `false`                             | Allow sysadmins to use eval  | `false`                             |
+| Name                   | Type      | Default                             | Description                                                           | Example                             |
+|------------------------|-----------|-------------------------------------|-----------------------------------------------------------------------|-------------------------------------|
+| `DEBUG`                | `boolean` | `false`                             | Enable debug mode                                                     | `false`                             |
+| `LOG_LEVEL`            | `string`  | `"INFO"`                            | Logging level (TRACE, DEBUG, INFO, SUCCESS, WARNING, ERROR, CRITICAL) | `"INFO"`                            |
+| `BOT_TOKEN`            | `string`  | `""`                                | Discord bot token                                                     | `""`                                |
+| `POSTGRES_HOST`        | `string`  | `"localhost"`                       | PostgreSQL host                                                       | `"localhost"`                       |
+| `POSTGRES_PORT`        | `integer` | `5432`                              | PostgreSQL port                                                       | `5432`                              |
+| `POSTGRES_DB`          | `string`  | `"tuxdb"`                           | PostgreSQL database name                                              | `"tuxdb"`                           |
+| `POSTGRES_USER`        | `string`  | `"tuxuser"`                         | PostgreSQL username                                                   | `"tuxuser"`                         |
+| `POSTGRES_PASSWORD`    | `string`  | `"ChangeThisToAStrongPassword123!"` | PostgreSQL password                                                   | `"ChangeThisToAStrongPassword123!"` |
+| `DATABASE_URL`         | `string`  | `""`                                | Custom database URL override                                          | `""`                                |
+| `ALLOW_SYSADMINS_EVAL` | `boolean` | `false`                             | Allow sysadmins to use eval                                           | `false`                             |
 
 ### BotInfo
 
