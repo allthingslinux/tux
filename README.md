@@ -1,3 +1,5 @@
+# NOTE: Tux is currently under going a MASSIVE rewrite for it's v0.1.0 release
+
 <h1 align="center">Tux</h1>
 <h3 align="center">A Discord bot for the All Things Linux Discord server</h3>
 
