@@ -1,8 +1,13 @@
-![Banner](assets/readme-banner.png) <!-- markdownlint-disable MD041 -->
+<!-- Warning -->
 
-# Tux
+> [!WARNING] <!-- markdownlint-disable MD041 -->
+**This bot is still a work in progress and issues are expected. If you self-host our bot please join our support server [on Discord](https://discord.gg/gpmSjcjQxg) for announcements and support.**
 
-## The all-in-one open source Discord bot
+<!-- Banner -->
+
+![Banner](assets/readme-banner.png)
+
+<!-- Badges -->
 
 <div align="center">
     <table align="center">
@@ -42,14 +47,19 @@
     </table>
 </div>
 
-> [!WARNING]
-**This bot is still a work in progress and issues are expected. If you self-host our bot please join our support server [on Discord](https://discord.gg/gpmSjcjQxg) for announcements and support.**
+<!-- Introduction -->
+
+# Tux
+
+## The all-in-one open source Discord bot
 
 ## About
 
 Tux is an all-in-one open source Discord bot, originally designed for the [All Things Linux](https://allthingslinux.org) community.
 
 It is designed to provide a variety of features to the server, including moderation, support, utility, and various fun commands.
+
+<!-- Table of Contents -->
 
 ## Table of Contents
 
