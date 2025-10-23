@@ -8,6 +8,12 @@
 
 ![Banner](assets/readme-banner.png)
 
+<!-- Quick Links -->
+
+<div align="center">
+<a href="https://tux.atl.dev">Docs</a> | <a href="https://github.com/allthingslinux/tux/issues/525">Roadmap</a> | <a href="https://github.com/allthingslinux/tux/issues/157">Deps</a> | <a href="https://discord.gg/gpmSjcjQxg">Support</a> | Invite (Coming Soon)
+</div>
+
 <!-- Badges -->
 
 <div align="center">
