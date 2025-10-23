@@ -5,39 +5,41 @@
 ## The all-in-one open source Discord bot
 
 <div align="center">
-    <p align="center">
-        <!-- CI/CD & Quality -->
-        <a href="https://github.com/allthingslinux/tux/actions">
-            <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/allthingslinux/tux/ci.yml?branch=main&label=CI"></a>
-        <a href="https://results.pre-commit.ci/latest/github/allthingslinux/tux/main">
-            <img alt="pre-commit.ci status" src="https://results.pre-commit.ci/badge/github/allthingslinux/tux/main.svg"></a>
-        <a href="https://codecov.io/gh/allthingslinux/tux">
-            <img alt="Codecov" src="https://codecov.io/gh/allthingslinux/tux/graph/badge.svg?token=R0AUAS996W"></a>
-        <!-- Technology Stack -->
-        <a href="https://python.org">
-            <img alt="Python" src="https://img.shields.io/badge/python-3.13+-blue.svg"></a>
-        <a href="https://docs.astral.sh/uv">
-            <img alt="Uv" src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json"></a>
-        <!-- Repository Activity & Releases -->
-        <a href="https://github.com/allthingslinux/tux/releases">
-            <img alt="GitHub Release" src="https://img.shields.io/github/v/release/allthingslinux/tux"></a>
-        <a href="https://github.com/allthingslinux/tux/commits/main">
-            <img alt="Commit Activity" src="https://img.shields.io/github/commit-activity/m/allthingslinux/tux"></a>
-        <a href="https://github.com/allthingslinux/tux/issues">
-            <img alt="Issues" src="https://img.shields.io/github/issues/allthingslinux/tux"></a>
-        <!-- Repository Popularity -->
-        <a href="https://github.com/allthingslinux/tux/stargazers">
-            <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/allthingslinux/tux"></a>
-        <a href="https://github.com/allthingslinux/tux/network/members">
-            <img alt="GitHub forks" src="https://img.shields.io/github/forks/allthingslinux/tux"></a>
-        <a href="https://github.com/allthingslinux/tux/graphs/contributors">
-            <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/allthingslinux/tux"></a>
-        <!-- Community & Legal -->
-        <a href="https://discord.gg/linux">
-            <img alt="Discord" src="https://img.shields.io/discord/1172245377395728464?logo=discord"></a>
-        <a href="https://github.com/allthingslinux/tux/blob/main/LICENSE">
-            <img alt="License" src="https://img.shields.io/github/license/allthingslinux/tux"></a>
-    </p>
+    <table align="center">
+        <tr>
+            <td>
+                <!-- Latest Release & Tech Stack -->
+                <a href="https://github.com/allthingslinux/tux/releases">
+                    <img alt="GitHub Release" src="https://img.shields.io/github/v/release/allthingslinux/tux?logo=github&logoColor=white"></a>
+            </td>
+            <td>
+                <a href="https://python.org">
+                    <img alt="Python" src="https://img.shields.io/badge/python-3.13.2+-blue?logo=python&logoColor=white"></a>
+            </td>
+            <td>
+                <a href="https://docs.astral.sh/uv">
+                    <img alt="Uv" src="https://img.shields.io/badge/uv-0.4.0+-purple?logo=uv&logoColor=white"></a>
+            </td>
+            <td>
+                <!-- CI/CD & Quality -->
+                <a href="https://results.pre-commit.ci/latest/github/allthingslinux/tux/main">
+                    <img alt="pre-commit.ci status" src="https://results.pre-commit.ci/badge/github/allthingslinux/tux/main.svg"></a>
+            </td>
+            <td>
+                <a href="https://codecov.io/gh/allthingslinux/tux">
+                    <img alt="Codecov" src="https://codecov.io/gh/allthingslinux/tux/graph/badge.svg?token=R0AUAS996W"></a>
+            </td>
+            <td>
+                <!-- Community & Legal -->
+                <a href="https://github.com/allthingslinux/tux/blob/main/LICENSE">
+                    <img alt="License" src="https://img.shields.io/github/license/allthingslinux/tux?logo=gnu&logoColor=white"></a>
+            </td>
+            <td>
+                <a href="https://discord.gg/linux">
+                    <img alt="Discord" src="https://img.shields.io/discord/1172245377395728464?logo=discord"></a>
+            </td>
+        </tr>
+    </table>
 </div>
 
 > [!WARNING]
@@ -190,8 +192,6 @@ Tux is free and open source software licensed under the [GNU General Public Lice
 ## Contributors
 
 ![Contributors](https://contrib.rocks/image?repo=allthingslinux/tux)
-
-([Made with repobeats](https://repobeats.axiom.co) and [contrib.rocks](https://contrib.rocks))
 
 ---
 
