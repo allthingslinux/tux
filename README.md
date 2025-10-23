@@ -1,20 +1,13 @@
-<!-- Warning -->
 <!-- markdownlint-disable MD041 -->
 
 > [!WARNING]
 **This bot is still a work in progress and issues are expected. If you self-host our bot please join our support server [on Discord](https://discord.gg/gpmSjcjQxg) for announcements and support.**
 
-<!-- Banner -->
-
-![Banner](assets/readme-banner.png)
-
-<!-- Quick Links -->
-
 <div align="center">
 <a href="https://tux.atl.dev">Docs</a> | <a href="https://github.com/allthingslinux/tux/issues/525">Roadmap</a> | <a href="https://github.com/allthingslinux/tux/issues/157">Deps</a> | <a href="https://discord.gg/gpmSjcjQxg">Support</a> | Invite (Coming Soon)
 </div>
 
-<!-- Badges -->
+<img align="center" src="assets/readme-banner.png" alt="Banner">
 
 <div align="center">
     <table align="center">
@@ -53,8 +46,6 @@
         </tr>
     </table>
 </div>
-
-<!-- Introduction -->
 
 # The all-in-one open source Discord bot
 
