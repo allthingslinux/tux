@@ -1,0 +1,1355 @@
+---
+globs: docs/**
+alwaysApply: false
+---
+
+# MkDocs-Material Documentation Rules
+
+REMINDER: Do not start the docs website/server unless explicitly told to do so.
+
+## Tux Project Context
+
+**Tux** is an all-in-one open source Discord bot built for the All Things Linux community, featuring a comprehensive suite of moderation, utility, and entertainment commands. This documentation guide is specifically tailored for documenting Tux's features, architecture, and usage patterns.
+
+### Project Architecture
+
+Tux follows a modern, modular Python architecture:
+
+- **Core System**: Bot lifecycle, cog loading, permission system, command handling
+- **Database Layer**: SQLModel-based ORM with PostgreSQL, comprehensive data models
+- **Modular Commands**: Organized into categories (moderation, utility, fun, info, etc.)
+- **Plugin System**: Extensible architecture for community features
+- **Service Layer**: Specialized services (moderation, Sentry, hot reload, HTTP client)
+- **UI Components**: Branded embeds, buttons, modals, and interactive views
+
+### Key Documentation Areas
+
+**For Users:**
+
+- Command usage and syntax
+- Feature explanations (XP system, starboard, temp VC, etc.)
+- Configuration options
+- Troubleshooting common issues
+
+**For Admins:**
+
+- Server setup and configuration
+- Permission management
+- Moderation workflows
+- Performance monitoring
+
+**For Self-Hosters:**
+
+- Installation procedures
+- Docker deployment
+- Database configuration
+- Security hardening
+
+**For Developers:**
+
+- Architecture deep-dives
+- API documentation (auto-generated)
+- Contribution guidelines
+- Plugin development
+- Testing strategies
+
+### Documentation Philosophy
+
+- **User-First**: Address real user needs and pain points
+- **Practical**: Include working code examples and configurations
+- **Comprehensive**: Cover all features and edge cases
+- **Maintainable**: Keep documentation current with code changes
+- **Accessible**: Use clear language, avoid jargon, provide context
+
+### Tux-Specific Patterns
+
+When documenting Tux:
+
+1. **Command Examples**: Always show both slash commands (`/command`) and prefix commands (`$command`)
+2. **Permission Levels**: Reference the role-based permission system (admin, moderator, user)
+3. **Configuration**: Link to relevant config options and environment variables
+4. **Error Handling**: Document common error scenarios and solutions
+5. **Database Impact**: Note when commands affect persistent data
+6. **Branded Elements**: Reference Tux's custom emojis, colors, and UI patterns
+
+## Documentation Principles & Frameworks
+
+This section covers the fundamental principles and methodologies that guide Tux documentation.
+
+## Principles
+
+- Avoid fluff, avoid passive voice, prefer imperative verbs.
+
+### Writing Style
+
+- **Simple & Direct**: Use short sentences and paragraphs, contractions (it's, don't, you're)
+- **Active Voice**: Always write in active voice, never passive
+- **Second Person**: Address users as "you" consistently
+- **Present Simple Tense**: Write in present simple, avoid present continuous
+- **Imperative Verbs**: Use action words (use, help, show) over formal alternatives (utilize, assist, demonstrate)
+
+### Structure & Organization
+
+- **Article Goals**: Start with clear introduction stating the article's purpose
+- **Prerequisites**: List requirements before technical content with "Before you begin"
+- **Next Steps**: End with suggested next steps and related resources
+- **Heading Flow**: Immediate copy after headings, introduce section content
+- **Index Pages**: Use `index.md` files for section overviews and navigation
+
+### Formatting Standards
+
+- **Titles & Headings**: Use sentence case (not title case)
+- **Inline Links**: `[Link text](https://example.com)` with descriptive text
+- **UI Elements**: Format as they appear: **Submit**, **User settings**
+- **Bold Keywords**: Use `**bold**` for emphasis, `_italics_` sparingly
+- **Lists**: Complete sentences, dashes for unordered, bold keywords with colons
+
+### Code Documentation
+
+- **Inline Code**: Single backticks for `variables`, `file.md`, `config-options`
+- **Code Blocks**: Triple backticks with language specifier
+- **Placeholders**: `<PLACEHOLDER_NAME>` format, explain each placeholder
+- **Code Introduction**: Brief description ending with colon before code blocks
+- **Configuration**: Follow code blocks with setup/config explanations
+
+### Technical Content
+
+- **API Endpoints**: Specify HTTP methods, use backticks for paths and parameters
+- **Path Parameters**: Use `{parameter}` format in URLs
+- **CLI Commands**: Introduce purpose, distinguish command from output
+- **Command Output**: Use appropriate language specifiers (`text`, `json`, etc.)
+
+### Images & Accessibility
+
+- **Alt Text**: Descriptive without "Image of..." prefixes for screen readers
+- **Semantic Structure**: Proper heading hierarchy (H1→H2→H3) for navigation
+- **Inclusive Language**: Gender-neutral, geographically neutral terms
+- **Link Descriptions**: Use meaningful link text, avoid "click here" or "see this page"
+
+## Quick Reference Guide
+
+### Common Documentation Patterns for Tux
+
+#### Documenting Commands
+
+**For slash commands and prefix commands:**
+
+```markdown
+### /ban Command
+
+Ban a user from the server.
+
+**Usage:**
+```bash
+/ban user:@username reason:Violation of rules
+$ban @username Violation of rules
+```
+
+**Parameters:**
+
+- `user`: The user to ban (required)
+- `reason`: Reason for the ban (optional)
+
+**Permissions:** Moderator or higher
+
+!!! warning "Database Impact"
+    This command permanently affects server membership and is logged to the moderation database.
+
+```
+
+#### Documenting Features
+
+**For complex features like XP system:**
+```markdown
+### XP (Experience) System
+
+Tux tracks user activity and awards experience points for engagement.
+
+#### How it Works
+
+Users earn XP through:
+- Sending messages (1-5 XP per message)
+- Using commands (2 XP per command)
+- Voice channel activity (1 XP per minute)
+
+#### Level Progression
+
+| Level | XP Required | Rewards |
+|-------|-------------|---------|
+| 1 | 0 | Access to basic commands |
+| 5 | 500 | Custom role color |
+| 10 | 2,500 | Priority support |
+
+!!! tip "Configuration"
+    Admins can adjust XP rates via environment variables or config files (see XP_CONFIG settings)
+```
+
+#### Documenting Configuration
+
+**For config options:**
+
+```markdown
+### Database Configuration
+
+Configure PostgreSQL connection settings.
+
+**Environment Variables:**
+```bash
+# Required for local PostgreSQL
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=tuxdb
+POSTGRES_USER=tuxuser
+POSTGRES_PASSWORD=your_secure_password
+
+# Or use a complete connection string
+DATABASE_URL=postgresql://tuxuser:password@localhost:5432/tuxdb
+```
+
+**Docker Environment (.env file):**
+
+```bash
+# For Docker Compose setup
+POSTGRES_PASSWORD=your_secure_password
+DATABASE_URL=postgresql://tuxuser:your_secure_password@tux-postgres:5432/tuxdb
+```
+
+!!! note "Security"
+    Never commit database credentials to version control. Use environment variables or .env files.
+
+!!! info "PostgreSQL Configuration"
+    For advanced PostgreSQL tuning, see `docker/postgres/postgresql.conf` in the Docker setup.
+
+```
+
+#### Documenting API Endpoints
+
+**For REST APIs:**
+```markdown
+### GET /api/v1/users/{user_id}
+
+Retrieve user information and statistics.
+
+**Path Parameters:**
+- `user_id` (integer): Discord user ID
+
+**Response:**
+```json
+{
+  "id": 123456789,
+  "username": "example_user",
+  "xp": 1500,
+  "level": 8,
+  "joined_at": "2023-01-15T10:30:00Z"
+}
+```
+
+**Error Responses:**
+
+- `404`: User not found
+- `403`: Insufficient permissions
+
+```
+
+#### Documenting Architecture
+
+**For system components:**
+```markdown
+### Cog System Architecture
+
+Tux uses Discord.py's cog system for modular command organization.
+
+```
+
+src/tux/modules/
+├── moderation/     # Ban, kick, timeout commands
+├── utility/        # Info, ping, reminder commands
+├── fun/           # Games and entertainment
+└── levels/        # XP and leveling system
+
+```
+
+**Key Benefits:**
+- **Hot Reloading**: Changes reload without restart
+- **Permission Isolation**: Each cog manages its own permissions
+- **Dependency Injection**: Services injected via constructor
+
+!!! info "Development"
+    See `developer/concepts/cog-system.md` for implementation details.
+```
+
+#### Troubleshooting Sections
+
+**For common issues:**
+
+```markdown
+### Bot Not Responding
+
+**Symptoms:**
+- Commands not working
+- Bot shows offline
+- Error messages in logs
+
+**Solutions:**
+
+1. **Check Database Connection**
+   ```bash
+   uv run db health
+   ```
+
+2. **Verify Permissions**
+   - Bot needs message/content intent permissions
+   - Check role hierarchy for moderation commands
+
+3. **Restart Services**
+
+   ```bash
+   uv run docker restart
+   uv run tux start
+   ```
+
+!!! bug "Common Issues"
+    - Database connection timeouts
+    - Missing Discord intents
+    - Rate limiting from Discord API
+
+```
+
+### When to Use Different Features
+
+| Scenario | Recommended Syntax | Example |
+|----------|-------------------|---------|
+| Important notices | `!!! warning` | Security alerts, breaking changes |
+| Step-by-step guides | Numbered lists | Installation instructions |
+| Alternative options | `=== "Tab Name"` | Different config formats |
+| Code with copy button | \`\`\`language | Configuration examples |
+| Optional details | `??? note` | Advanced configuration |
+| Keyboard shortcuts | `++key++` | `++ctrl+shift+r++` |
+| File paths | `backticks` | `config/bot/config.toml` |
+| UI elements | **Bold** | **Submit**, **Save Changes** |
+| Technical terms | _Italics_ | _Dependency injection_ |
+
+## LLM Agent Decision Guide
+
+### Content Type Selection
+
+**ASK YOURSELF: What is the user's goal?**
+
+- **❓ User wants to LEARN something new** → Tutorial (step-by-step learning)
+- **🔧 User wants to SOLVE a specific problem** → How-to guide (practical steps)
+- **📖 User needs to UNDERSTAND system behavior** → Explanation (concepts, why things work)
+- **🔍 User needs TECHNICAL details** → Reference (specs, API, commands)
+
+**Examples:**
+- "How do I set up Tux?" → Tutorial (`getting-started/`)
+- "How do I ban someone?" → How-to guide (`user/commands/moderation.md`)
+- "Why does Tux use cogs?" → Explanation (`developer/concepts/cog-system.md`)
+- "What parameters does /ban accept?" → Reference (`reference/commands.md`)
+
+### When to Use Admonitions
+
+**USE `!!! note`** for:
+- General information users should know
+- Tips that improve user experience
+- Background context
+- Related information
+
+**USE `!!! tip`** for:
+- Best practices and recommendations
+- Time-saving shortcuts
+- Pro tips for advanced users
+
+**USE `!!! warning`** for:
+- Security implications
+- Data loss risks
+- Breaking changes
+- Important limitations
+
+**USE `!!! danger`** for:
+- Critical security issues
+- Data corruption risks
+- System stability threats
+
+**USE `!!! info`** for:
+- Technical details
+- System requirements
+- Version information
+
+### When to Use Tabs vs. Sections
+
+**USE TABS** for:
+- Alternative implementations (Python vs JavaScript setup)
+- Different configuration formats (TOML vs YAML vs ENV)
+- Platform-specific instructions (Docker vs bare metal)
+- Multiple code examples in same context
+
+**USE SECTIONS** for:
+- Sequential steps in a process
+- Different aspects of same feature
+- Hierarchical information
+- Long-form content
+
+### When to Use Code Blocks
+
+**ALWAYS USE** code blocks for:
+- Command-line examples
+- Configuration files
+- API responses
+- Multi-line code
+
+**NEVER USE** code blocks for:
+- Single function names (use `backticks`)
+- File paths (use `backticks`)
+- Short variable names (use `backticks`)
+
+### When to Create New Pages vs. Sections
+
+**CREATE NEW PAGE** when:
+- Topic deserves its own navigation entry
+- Content is > 2000 words
+- Topic is referenced from multiple places
+- User needs to bookmark/link directly
+
+**USE SECTION** when:
+- Content fits within parent topic's context
+- < 1000 words
+- Part of a larger workflow
+- Internal navigation only
+
+### When to Use Expandable Content
+
+**USE `??? note`** for:
+- Advanced configuration options
+- Troubleshooting details
+- Implementation specifics
+- Optional features
+
+**DON'T USE** for:
+- Essential setup steps
+- Required configuration
+- Primary user workflows
+
+### Error Message Guidelines
+
+**WHEN DOCUMENTING ERRORS:**
+1. Start with user-visible symptom
+2. Explain what causes the error
+3. Provide step-by-step solution
+4. Include prevention tips
+
+**TEMPLATE:**
+```markdown
+### Error: "Database connection failed"
+
+**Symptoms:**
+- Bot shows offline
+- Commands return timeout errors
+- Logs show connection refused
+
+**Causes:**
+- PostgreSQL service not running
+- Incorrect DATABASE_URL
+- Network connectivity issues
+
+**Solutions:**
+
+1. **Check database status**
+   ```bash
+   uv run db health
+   ```
+
+2. **Verify connection string**
+
+   ```bash
+   # Check environment variable
+   echo $DATABASE_URL
+   ```
+
+3. **Restart database service**
+
+   ```bash
+   uv run docker up
+   ```
+
+```
+
+### Navigation Priority
+
+**PAGE ORDER MATTERS:**
+1. **Most common tasks first** (install, basic config, common commands)
+2. **Progressive disclosure** (simple → advanced)
+3. **User journey flow** (setup → usage → troubleshooting → advanced)
+
+**LINKING STRATEGY:**
+- Link forward to next steps
+- Link backward to prerequisites
+- Link sideways to related topics
+- Use "See also" for tangential information
+
+### When to Update Existing vs. Create New
+
+**UPDATE EXISTING** when:
+- Adding information to established topic
+- Clarifying existing content
+- Fixing errors or outdated info
+- Adding examples to existing guides
+
+**CREATE NEW** when:
+- New feature or major functionality
+- Different user audience (user vs admin vs developer)
+- Different documentation type (tutorial vs reference)
+- Significant content that changes user workflows
+
+## Active Extensions
+
+- **admonition**: Notes, infos, warnings, dangers (`!!! note`, `!!! warning`, etc.)
+- **attr_list**: Custom HTML attributes (`{: .class-name }`)
+- **def_list**: Definition lists
+- **footnotes**: Reference-style footnotes (`[^1]`)
+- **md_in_html**: Markdown inside HTML blocks
+- **toc**: Table of contents with permalinks
+- **pymdownx.arithmatex**: Mathematical notation (generic mode enabled)
+- **pymdownx.betterem**: Smart emphasis handling
+- **pymdownx.caret**: Caret notation (`^^superscript^^`)
+- **pymdownx.details**: Collapsible details blocks (`??? note`)
+- **pymdownx.emoji**: Emoji support with SVG rendering
+- **pymdownx.highlight**: Code highlighting with Pygments
+- **pymdownx.inlinehilite**: Inline code highlighting
+- **pymdownx.keys**: Keyboard key notation (`++ctrl+alt+del++`)
+- **pymdownx.magiclink**: Auto-linking to issues, commits, and repos
+- **pymdownx.mark**: Mark/highlight text (`==highlighted==`)
+- **pymdownx.smartsymbols**: Smart symbols (`(c)`, `(r)`, `(tm)`)
+- **pymdownx.snippets**: Code snippet inclusion
+- **pymdownx.superfences**: Enhanced code fences with syntax highlighting
+- **pymdownx.tabbed**: Tabbed content interface (`=== "Tab Name"`)
+- **pymdownx.tasklist**: Task lists with custom checkboxes
+- **pymdownx.tilde**: Strikethrough text (`~~strikethrough~~`)
+
+## Active Plugins
+
+- **search**: Built-in search functionality (enabled)
+- **mkdocstrings**: Auto-generated Python API documentation
+  - Numpy docstring style
+  - Cross-references to Python stdlib and Discord.py
+  - Extensive configuration for signatures, members, docstrings
+
+## Available Plugins (Installed but Not Active)
+
+- **mkdocs-git-revision-date-localized-plugin**: Adds revision dates to pages
+- **mkdocs-git-committers-plugin-2**: Shows contributors for each page
+- **mkdocs-minify-plugin**: Minifies HTML/CSS/JS for production builds
+- **mkdocs-typer2**: Documents Typer CLI applications
+- **mkdocs-typer**: Alternative Typer CLI documentation plugin
+- **tux**: Custom Tux plugin for enhanced documentation features
+
+## Theme Configuration
+
+- **Name**: `material`
+- **Custom Directory**: `overrides` for theme customizations
+- **Features**:
+  - Content actions (edit, view)
+  - Code annotations and copy buttons
+  - Content tooltips
+  - Navigation footer, indexes, sections, tabs, top, tracking
+  - Search highlight, share, suggest
+  - Table of contents following
+- **Palette**: Light/dark mode with automatic switching
+- **Fonts**: Roboto (text), Roboto Mono (code)
+- **Icons**: Material Design icons with FontAwesome support
+
+## Navigation Features
+
+- Instant loading and progress tracking
+- Section-based navigation with indexes
+- Sticky navigation tabs
+- Table of contents with anchor following
+- Search suggestions and highlighting
+- Code actions (edit, copy)
+
+## Diátaxis Documentation Framework
+
+Follow the [Diátaxis](https://diataxis.fr/) framework for organizing documentation by user needs:
+
+### Four Documentation Types
+
+- **Tutorials**: Learning-oriented guides that teach users step-by-step
+  - Purpose: Help users learn and gain competence
+  - Focus: Learning experience, not real work
+  - Example: "Getting started with Tux"
+
+- **How-to Guides**: Goal-oriented instructions for specific tasks
+  - Purpose: Guide users through problems/tasks they need to solve
+  - Focus: Practical solutions, actionable steps
+  - Example: "How to configure Tux permissions"
+
+- **Reference**: Information-oriented technical descriptions
+  - Purpose: Describe machinery and how to operate it
+  - Focus: Factual, authoritative descriptions
+  - Example: "Tux API reference", "Configuration schema"
+
+- **Explanation/Concepts**: Understanding-oriented discussions
+  - Purpose: Deepen understanding, provide context
+  - Focus: Why things work the way they do
+  - Example: "Why Tux uses this architecture"
+
+### Key Diátaxis Principles
+
+- **User-first**: Address user needs, not just machinery capabilities
+- **Clear separation**: Don't mix tutorial, how-to, reference, and explanation content
+- **Focus on goals**: How-to guides solve specific user problems
+- **Neutral description**: Reference material describes without instructing
+- **Flow and sequence**: Structure content for logical user progression
+- **Pay attention to naming**: Titles should clearly indicate what/how/why content covers
+
+## Write the Docs Principles
+
+### Content Quality Principles
+
+- **ARID**: Accept (some) repetition - documentation inevitably repeats code logic
+- **Skimmable**: Structure for quick scanning - descriptive headings, meaningful link text
+- **Exemplary**: Include practical examples for common use cases
+- **Consistent**: Use uniform language, formatting, and terminology
+- **Current**: Keep documentation updated - outdated docs are worse than missing docs
+- **Beautiful**: Intentional visual design and formatting
+
+### Writing Guidelines
+
+- **Participatory**: Include all stakeholders in documentation process
+- **Precursory**: Start documenting before development begins
+- **Nearby sources**: Store docs close to code they document
+- **Unique sources**: Avoid content overlap between different documentation sources
+- **Comprehensive**: Cover all likely user questions across all publications
+
+### Content Types
+
+#### FAQs
+
+- **Reflect audience needs**: Base on actual user questions from search/support data
+- **Regular updates**: Keep current with user behavior changes
+- **Drive to detailed content**: Link to comprehensive guides, not just answer briefly
+- **Maintenance plan**: Avoid FAQs becoming outdated parking lots
+
+#### Release Notes
+
+- **Specific changes**: Clearly state what changed
+- **Why important**: Explain impact on users (workflow, UI, security, etc.)
+- **User goals**: Describe benefits for users
+- **Complete information**: Ensure users have everything needed to proceed
+- **Visual aids**: Include images when helpful for understanding
+
+#### Error Messages
+
+- **Explicit indication**: Clearly show something went wrong
+- **Human voice**: Write conversationally, not robotically
+- **No blame**: Be humble, focus on solutions not faults
+- **Short & meaningful**: Concise but informative
+- **Precise descriptions**: Exactly what went wrong
+- **Constructive advice**: Clear steps to fix the problem
+
+### API Documentation
+
+- **Documentation-driven design**: Design APIs through documentation first
+- **Test-driven documentation**: Use API tests to generate accurate snippets
+- **Machine-readable formats**: Enable interactive docs, mock servers, testing
+- **Complete coverage**: Undocumented features don't exist
+- **Accurate examples**: Working code samples with expected outputs
+
+### Style Guide Resources
+
+- **Google Developer Style**: <https://developers.google.com/style>
+- **Microsoft Writing Guide**: <https://docs.microsoft.com/en-us/style-guide/>
+- **Apple Style Guide**: <https://help.apple.com/applestyleguide/>
+- **Red Hat Style Guide**: <https://redhat-documentation.github.io/supplementary-style-guide/>
+- **Write the Docs Guide**: <https://www.writethedocs.org/guide/>
+
+### Accessibility Guidelines
+
+- **Semantic HTML**: Use proper heading hierarchy (h1→h2→h3)
+- **Alt text**: Describe images meaningfully for screen readers
+- **Color contrast**: Ensure readable text contrast ratios
+- **Keyboard navigation**: All interactive elements keyboard accessible
+- **Plain language**: Avoid jargon, explain technical terms
+- **Consistent navigation**: Predictable page layouts and navigation
+
+### Bias Reduction
+
+- **Inclusive language**: Use gender-neutral terms, avoid stereotypes
+- **Geographic neutrality**: Don't assume US-centric perspectives
+- **Cultural sensitivity**: Respect diverse backgrounds and experiences
+- **Ability-inclusive**: Avoid assumptions about user capabilities
+
+## MkDocs-Material Syntax Guidelines
+
+This section provides comprehensive guidance on using MkDocs-Material features effectively for Tux documentation.
+
+### Basic Content Elements
+
+#### Admonitions
+
+Use admonitions for important information:
+
+```markdown
+!!! note "Title"
+    Content here
+
+!!! tip
+    Tip content without title
+
+!!! warning "Important"
+    Warning content
+```
+
+**Available types**: `note`, `abstract`, `info`, `tip`, `success`, `question`, `warning`, `failure`, `danger`, `bug`, `example`, `quote`
+
+#### Content Tabs
+
+Use tabs for alternative content:
+
+```markdown
+=== "Tab Name"
+    Content for first tab
+
+=== "Another Tab"
+    Content for second tab
+```
+
+**Advanced tab features**:
+
+- **Linked tabs**: All tabs with same label sync across site
+- **Anchor links**: Right-click tabs to copy direct links
+- **Slugified anchors**: Use `slugify` config for readable URLs
+
+#### Details/Expandable Sections
+
+Use details for collapsible content:
+
+```markdown
+??? note "Collapsible Title"
+    Content that can be expanded/collapsed
+
+???+ note "Open by Default"
+    Content that starts expanded
+```
+
+#### Code Blocks
+
+Enhanced code blocks with syntax highlighting:
+
+````markdown
+```python title="example.py"
+def hello():
+    print("Hello, world!")
+```
+````
+
+**Code block features**:
+
+- **Copy buttons**: Automatic copy-to-clipboard functionality
+- **Line highlighting**: `hl_lines="1,3-5"` for specific lines
+- **Line numbers**: `linenums="1"` to start numbering
+- **Selection**: Enable code selection for line ranges
+
+#### Data Tables
+
+Create responsive tables with alignment:
+
+```markdown
+| Method | Description |
+|:------:|:-----------:|
+| GET    | Fetch data   |
+| POST   | Create data  |
+```
+
+**Table features**:
+
+- **Column alignment**: `:---:` (center), `:---` (left), `---:` (right)
+- **Icons in tables**: Use `:material-check:` for visual elements
+- **Sortable tables**: Add JavaScript for interactive sorting
+
+#### Grids
+
+Use grids for card layouts and organized content:
+
+```html
+<div class="grid cards" markdown>
+
+- :material-rocket: **Quick Start**
+  Get up and running in minutes
+
+- :material-cog: **Configuration**
+  Customize your setup
+
+</div>
+```
+
+**Grid types**:
+
+- **Card grids**: `grid cards` for hover effects
+- **Generic grids**: `grid` for simple layouts
+- **List syntax**: Unordered lists in grid containers
+
+### Text Formatting
+
+#### Inline Code
+
+Use backticks for inline code: `variable_name`, `config-option`
+
+#### Keyboard Keys
+
+Use double plus signs: `++ctrl+alt+del++`
+
+#### Highlighting
+
+Use double equals: `==highlighted text==`
+
+#### Strikethrough
+
+Use double tildes: `~~strikethrough text~~`
+
+#### Superscript
+
+Use double carets: `^^superscript^^`
+
+#### Math
+
+Inline math: `$E = mc^2$`
+Block math: `$$E = mc^2$$`
+
+#### Footnotes
+
+Reference: `[^1]`
+Definition: `[^1]: Footnote content`
+
+#### Task Lists
+
+```markdown
+- [x] Completed task
+- [ ] Incomplete task
+```
+
+### Media & Assets
+
+#### Icons
+
+Use Material Design icons: `:material-heart:`
+Use FontAwesome icons: `:fontawesome-solid-heart:`
+
+#### Attributes
+
+Add CSS classes: `{: .class-name }`
+Add IDs: `{: #element-id }`
+
+### Navigation & Search
+
+#### Nav Features
+
+**Page-level controls**:
+
+```yaml
+---
+hide:
+  - navigation
+  - toc
+  - path
+---
+```
+
+**Keyboard shortcuts**:
+
+- `++f++`, `++s++`, `++slash++`: Open search
+- `++p++`, `++comma++`: Previous page
+- `++n++`, `++period++`: Next page
+- `++esc++`: Close search
+
+#### Search Features
+
+**Search highlighting**: Highlight search terms on result pages
+**Search suggestions**: Auto-complete search queries
+**Search sharing**: Share search queries via URL
+**Instant search**: Fast client-side search with offline support
+
+### Advanced Features
+
+#### Annotations
+
+Add interactive tooltips with arbitrary Markdown content:
+
+```markdown
+Lorem ipsum dolor sit amet, (1) consectetur adipiscing elit.
+{ .annotate }
+
+1.  :man_raising_hand: I'm an annotation! I can contain `code`, __formatted
+    text__, images, ... basically anything that can be expressed in Markdown.
+```
+
+**Annotation features**:
+
+- **Nested annotations**: Annotations inside annotations
+- **Admonition annotations**: Add annotations to admonition titles/bodies
+- **Tab annotations**: Annotations work inside content tabs
+- **Custom icons**: Change annotation marker icon globally
+- **HTML wrapper**: Use `<div class="annotate" markdown>` for unsupported elements
+
+#### Social Cards
+
+Automatically generate beautiful social media previews:
+
+```yaml
+plugins:
+  - social
+```
+
+**Social card features**:
+
+- **Auto-generation**: Custom preview images for each page
+- **Custom layouts**: YAML + Jinja template system
+- **Typography**: Dynamic text with Google Fonts integration
+- **Icons**: Full Material Design icon support
+- **Backgrounds**: Colors, images, and tinted overlays
+- **Meta tags**: Complete Open Graph and Twitter Card support
+
+#### Header Features
+
+**Announcement bar**: Display project news and important info
+**Auto-hide**: Header disappears on scroll for more content space
+**Dismissible announcements**: Users can mark announcements as read
+
+#### Footer Features
+
+**Navigation**: Previous/next page links in footer
+**Social links**: Connect to external platforms
+**Copyright**: Automatic copyright notices
+
+#### Instant Navigation
+
+**Single Page App behavior**: No full page reloads
+**Search persistence**: Search index survives navigation
+**Progress indicators**: Loading feedback for slow connections
+**Prefetching**: Preload pages on hover
+**Anchor tracking**: URL updates with active section
+
+#### Content Organization
+
+**Navigation tabs**: Top-level sections as horizontal tabs
+**Navigation sections**: Grouped sidebar navigation
+**Navigation expansion**: Auto-expand all subsections
+**Navigation pruning**: Reduce site size by 33%+ for large docs
+**Section indexes**: Direct page attachment to sections
+**Breadcrumbs**: Navigation path above page titles
+
+#### Performance Features
+
+**Code copy buttons**: One-click code copying
+**Code selection**: Interactive line range selection
+**Linked tabs**: Sync tabs with same labels across site
+**Anchor links**: Direct links to content tabs
+**Slugified anchors**: Human-readable URLs
+
+### Reference Features
+
+#### Admonitions (Call-out blocks)
+
+Enhanced call-out blocks with multiple types and features:
+
+```markdown
+!!! note "Custom Title"
+    Content with custom title
+
+!!! note ""
+    Content without title
+
+??? note "Collapsible"
+    Expandable content
+
+???+ note "Expanded by Default"
+    Starts open
+```
+
+**Admonition types**: `note`, `abstract`, `info`, `tip`, `success`, `question`, `warning`, `failure`, `danger`, `bug`, `example`, `quote`
+
+**Advanced features**:
+
+- **Custom titles**: Quoted strings after type
+- **No title**: Empty string `""` removes title
+- **Collapsible**: Use `???` instead of `!!!`
+- **Expanded by default**: Add `+` after `???`
+- **Nested admonitions**: Indent inner admonitions
+- **Inline blocks**: `inline` and `inline end` modifiers
+- **Custom icons**: Change icons per type globally
+- **Custom types**: Add new admonition types with CSS
+
+#### Buttons
+
+Create styled buttons from links:
+
+```markdown
+[Subscribe to newsletter](#){ .md-button }
+[Primary Button](#){ .md-button .md-button--primary }
+[Send :fontawesome-solid-paper-plane:](#){ .md-button }
+```
+
+**Button types**:
+
+- **Secondary**: `.md-button` (outlined)
+- **Primary**: `.md-button .md-button--primary` (filled)
+- **With icons**: Combine with icon shortcodes
+
+#### Diagrams
+
+Native Mermaid.js integration with automatic theming:
+
+````markdown
+``` mermaid
+graph LR
+  A[Start] --> B{Error?}
+  B -->|Yes| C[Debug]
+  B -->|No| E[Success]
+```
+````
+
+**Supported diagram types**:
+
+- **Flowcharts**: Process workflows
+- **Sequence diagrams**: Object interactions
+- **State diagrams**: System behavior
+- **Class diagrams**: Object-oriented structure
+- **Entity-relationship**: Database relationships
+
+**Features**:
+
+- **Auto-theming**: Uses site colors and fonts
+- **Dark mode**: Automatic theme switching
+- **Instant loading**: Works with SPA navigation
+- **Custom layouts**: ELK layouts and more
+
+#### Formatting
+
+Advanced text formatting and change tracking:
+
+```markdown
+==highlighted text==
+^^inserted text^^
+~~deleted text~~
+H~2~O (subscript)
+A^T^A (superscript)
+++ctrl+alt+del++ (keyboard keys)
+```
+
+**Critic Markup** (change tracking):
+
+```markdown
+{--deleted text--}
+{++added text++}
+{~~old~>new~~}
+{==highlighted==}
+{>>comment<<}
+```
+
+#### Icons & Emojis
+
+Massive icon and emoji support:
+
+```markdown
+:smile: (emoji)
+:material-heart: (Material Design)
+:fontawesome-brands-github: (FontAwesome)
+:octicons-heart-16: (Octicons)
+:simple-icons-python: (Simple Icons)
+```
+
+**Icon features**:
+
+- **10,000+ icons**: Material Design, FontAwesome, Octicons, Simple Icons
+- **Thousands of emojis**: Twemoji integration
+- **Custom colors**: `:icon-name:{ .css-class }`
+- **Animations**: CSS keyframes support
+- **Sidebar integration**: Icons in navigation
+- **Template usage**: Jinja `include` function
+
+**Icon sets**:
+
+- **Material Design**: `material/icon-name`
+- **FontAwesome**: `fontawesome/brands/icon-name`
+- **Octicons**: `octicons/icon-name-16`
+- **Simple Icons**: `simple-icons/icon-name`
+
+## Documentation Structure
+
+The documentation follows a role-based structure organized around user needs:
+
+- **Getting Started**: Onboarding guides for different user types
+- **For Users**: Command and feature guides for end users
+- **For Admins**: Server administration and configuration
+- **For Self-Hosters**: Installation, configuration, and operations
+- **For Developers**: Tutorials, guides, concepts, and best practices
+- **Reference**: Technical specifications, API docs, and troubleshooting
+- **Community**: Support, roadmap, and contribution information
+
+See `docs/mkdocs.yml` for the complete navigation structure.
+
+## Content Organization and Structure
+
+### Directory Structure
+
+- **Source directory**: `./content` (all markdown source files)
+- **Build directory**: `../data/build/docs` (MkDocs output)
+- **Navigation root**: `content/index.md` (home page)
+
+### Diátaxis Organization
+
+Content follows a user-centric structure with Diátaxis principles:
+
+#### Core Sections
+
+- **`getting-started/`**: Onboarding guides for different user types
+- **`user/`**: Practical guides for using Tux features effectively
+- **`admin/`**: Server administration and configuration guides
+- **`developer/`**: Development resources, architecture, and contribution guides
+- **`reference/`**: Technical specifications, commands, API, and CLI reference
+- **`community/`**: Community resources, changelog, and contribution info
+
+#### Special Directories
+
+- **`assets/`**: Static files (images, stylesheets)
+- **`overrides/`**: MkDocs theme customizations
+
+### Automation Integration
+
+- **Auto-generated content**: `reference/configuration.md`, `reference/api/`, `reference/cli/`
+- **Custom plugins**: Tux plugin available for enhanced documentation
+- **Available tools**: Git plugins, minification, API navigation for future use
+
+### File Naming Conventions
+
+- **Files**: `kebab-case.md` (e.g., `moderation-commands.md`, `bot-lifecycle.md`)
+- **Directories**: `kebab-case/` (e.g., `getting-started/`, `developer/`)
+- **Index files**: `index.md` in every directory (provides section overview)
+- **Assets**: Organized by type (`images/`, `stylesheets/`)
+
+### Content Hierarchy
+
+Each major section follows this pattern:
+
+```text
+section-name/
+├── index.md              # Section overview and navigation
+├── subtopic-1/
+│   ├── index.md         # Subtopic overview
+│   ├── specific-page.md # Detailed content
+│   └── another-page.md
+├── subtopic-2/
+│   ├── index.md         # Subtopic overview
+│   ├── nested-page.md   # Detailed content
+│   └── another-nested.md
+├── standalone-page.md   # Direct content (no subfolder needed)
+└── another-standalone.md
+```
+
+### Hierarchy Examples
+
+**With subdirectories** (admin, selfhost, developer):
+
+- `admin/setup/` → Multi-step setup process with detailed guides
+- `admin/configuration/` → Bot settings, permissions, features, advanced config
+- `selfhost/install/` → Requirements, Docker, bare metal installation
+- `selfhost/ops/` → Monitoring, backups, updates, performance, security
+- `developer/tutorials/` → Step-by-step development guides
+- `developer/concepts/` → Complex architectural topics with subsections
+- `developer/best-practices/` → Code review, testing, CI/CD guidelines
+- `reference/changelog/archive/` → Versioned changelog history
+
+**With nested subdirectories** (user, developer):
+
+- `user/commands/` → Moderation, utility, info, levels, fun, snippets, tools
+- `user/features/` → XP system, starboard, bookmarks, temp VC, status roles
+- `developer/concepts/` → Bot lifecycle, cog system, command system, UI components
+- `reference/troubleshooting/` → User, admin, selfhost, developer issues
+
+**With standalone pages** (reference, community):
+
+- `reference/configuration.md` → Auto-generated config reference
+- `reference/cli.md` → CLI command reference
+- `community/faq.md` → Frequently asked questions
+- `community/support.md` → Support and contact information
+
+### Adding New Content
+
+1. **Choose location**: Determine target audience and topic
+2. **Create structure**: Add `index.md` for new sections/subsections
+3. **Update navigation**: Modify `mkdocs.yml` nav section if needed
+4. **Add assets**: Place images in `assets/images/`, styles in `assets/stylesheets/`
+
+### Asset Organization
+
+- **Images**: `content/assets/images/` (logos, screenshots, diagrams)
+- **Stylesheets**: `content/assets/stylesheets/` (custom CSS for docs)
+  - `extra.css` - Additional customizations
+
+### Navigation Structure
+
+Navigation in `mkdocs.yml` mirrors the directory structure:
+
+- Top-level sections appear in main nav
+- Subsections create dropdowns/hierarchical nav
+- Index files provide section landing pages
+- Consistent ordering by user journey (getting started → user features → admin → developer → reference → community)
+
+## Dependency Management
+
+### Adding New Documentation Packages
+
+To add new packages to the docs group in `pyproject.toml`:
+
+1. **Edit pyproject.toml**: Add the package to the `[dependency-groups]` section:
+
+   ```toml
+   docs = [
+       # existing packages...
+       "new-package>=1.0.0",
+   ]
+   ```
+
+2. **Install/Update dependencies**: Use uv to sync the new dependencies:
+
+   ```bash
+   uv sync --group docs
+   # Or sync all groups
+   uv sync
+   ```
+
+3. **Test the package**: Verify it works with your docs:
+
+   ```bash
+   uv run mkdocs serve
+   ```
+
+4. **Update lockfile**: Commit the updated `uv.lock` file
+
+### Common Documentation Package Sources
+
+- **MkDocs plugins**: Search on PyPI for `mkdocs-*`
+- **Python docstring tools**: `griffe-*` packages for advanced API docs
+- **Markdown extensions**: `pymdownx-*` for enhanced markdown features
+- **Theme extensions**: Check mkdocs-material documentation
+
+## Development Workflow
+
+- **Build**: `uv run mkdocs build` (used by Cloudflare Workers)
+- **Serve**: `mkdocs serve` on `127.0.0.1:8080`
+- **CSS watching**: Automatic reload for stylesheet changes
+- **Overrides**: Custom templates in `overrides/` directory
+
+## Deployment Configuration
+
+### Cloudflare Workers (Primary Deployment)
+
+Documentation is deployed using Cloudflare Workers with the following configuration:
+
+- **Config file**: `docs/wrangler.toml`
+- **Build command**: `uv run mkdocs build` (executed by Workers Builds)
+- **Production URL**: `https://tux.atl.dev` (custom domain)
+- **Preview URLs**: Auto-generated `*.workers.dev` URLs for branches/PRs
+- **Static assets**: Served from `../data/build/docs` directory
+- **Observability**: Enabled for monitoring and logs
+
+### MkDocs Configuration
+
+- **Main config**: `docs/mkdocs.yml` (comprehensive theme and plugin setup)
+- **Theme**: `material` (Material Design theme)
+- **Extensions**: Full list in mkdocs.yml (admonitions, code highlighting, math, etc.)
+- **Plugins**: mkdocstrings for API docs, search, and more
+- **Navigation**: Structured by audience (user/admin/developer)
+- **Assets**: Custom stylesheets and images in `content/assets/`
+
+### Deployment Process
+
+1. **Local development**: `mkdocs serve` for real-time preview
+2. **Build**: `uv run mkdocs build` generates static site
+3. **Workers Builds**: Automatically builds on git push via wrangler.toml
+4. **Production**: Deploys to `tux.atl.dev` when pushed to main branch
+5. **Previews**: Branch/PR deployments get temporary URLs for review
+
+## Conventional Commits
+
+This project uses conventional commits for all changes. When working on documentation:
+
+### Commit Format
+
+```text
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer]
+```
+
+### Documentation Commit Types
+
+- **`docs`**: Documentation changes (adding/updating docs, README, etc.)
+
+```bash
+# Documentation updates
+git commit -m "docs: update installation guide for new requirements"
+```
+
+### Commit Rules
+
+- **Type**: Lowercase, from approved list (build, chore, ci, docs, feat, fix, perf, refactor, revert, style, test)
+- **Scope**: Optional, use for docs changes (e.g., `docs(api)`, `docs(user-guide)`)
+- **Subject**: Max 120 chars, no period at end, start with lowercase (never use sentence case, title case, or uppercase)
+- **Body**: Optional detailed explanation (no line length limit, but include blank line before body if present)
+- **Footer**: Optional for breaking changes (`BREAKING CHANGE:`) or issue references (blank line before footer if present)
+- **Header**: Complete `<type>[scope]: <subject>` must be ≤120 characters
+
+## Documentation Workflow Summary
+
+### For LLM Agents Working with Tux Documentation
+
+**1. Understand Context First**
+
+- Read this entire guide before starting any documentation work
+- Familiarize yourself with Tux's architecture, features, and user base
+- Understand Diátaxis principles and when to apply each documentation type
+
+**2. Plan Your Documentation**
+
+- Identify the user goal (learn/solve/understand/reference)
+- Choose the appropriate Diátaxis type and location in the docs structure
+- Follow the decision guides for content type, admonitions, and structure
+
+**3. Apply Tux-Specific Patterns**
+
+- Always show both slash and prefix command syntax
+- Reference permission levels and configuration options
+- Document database impact and error scenarios
+- Use Tux's branded elements and terminology
+
+**4. Use MkDocs-Material Features Effectively**
+
+- Choose appropriate admonitions for different types of information
+- Use tabs for alternatives, expandable sections for optional details
+- Include practical code examples with proper syntax highlighting
+- Leverage icons, diagrams, and interactive elements
+
+**5. Follow Quality Standards**
+
+- Write in active voice, second person, present simple tense
+- Keep content scannable with clear headings and structure
+- Include working examples and avoid outdated information
+- Test documentation by following your own instructions
+
+**6. Maintain Consistency**
+
+- Follow the established patterns in existing documentation
+- Use consistent terminology and formatting
+- Update related files (navigation, cross-references) when making changes
+- Commit with conventional commit style
+
+### Key Resources
+
+- **Existing Documentation**: Study `docs/content/` for patterns and style
+- **MkDocs Config**: Review `docs/mkdocs.yml` for navigation structure
+- **Tux Codebase**: Reference actual implementation for accuracy
+- **Community**: Join Discord for user questions and feedback
+
+Remember: Good documentation serves users first. Always ask "How will this help someone using Tux?" before writing.
