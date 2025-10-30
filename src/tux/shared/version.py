@@ -13,6 +13,7 @@ import os
 import subprocess
 import sys
 from contextlib import suppress
+from datetime import UTC, datetime
 from pathlib import Path
 
 try:
@@ -151,7 +152,7 @@ class VersionManager:
 
         with suppress(subprocess.TimeoutExpired, FileNotFoundError, OSError):
             result = subprocess.run(
-                ["git", "describe", "--tags", "--always", "--dirty"],
+                ["git", "describe", "--tags", "--always"],
                 capture_output=True,
                 text=True,
                 cwd=self.root_path,
@@ -163,11 +164,8 @@ class VersionManager:
                 return None
 
             version = result.stdout.strip()
-            # Remove 'v' prefix and clean up
-            version = version.removeprefix("v")
-
-            # Remove -dirty suffix for semver compatibility
-            return version.removesuffix("-dirty")
+            # Remove 'v' prefix
+            return version.removeprefix("v")
 
         return None
 
@@ -323,6 +321,111 @@ class VersionManager:
             "is_semantic": str(self.is_semantic_version(version)),
         }
 
+    def bump_version(self, version: str, bump_type: str) -> str:
+        """Bump a semantic version.
+
+        Parameters
+        ----------
+        version : str
+            The version to bump.
+        bump_type : str
+            Type of bump: 'major', 'minor', 'patch'.
+
+        Returns
+        -------
+        str
+            The bumped version string.
+
+        Raises
+        ------
+        ValueError
+            If version is not semantic or bump_type is invalid.
+        """
+        if not semver:
+            msg = "semver library required for version bumping"
+            raise ValueError(msg)
+
+        if not self.is_semantic_version(version):
+            msg = f"Version '{version}' is not a valid semantic version"
+            raise ValueError(msg)
+
+        # Validate bump_type before parsing
+        if bump_type not in ("major", "minor", "patch"):
+            msg = f"Invalid bump_type '{bump_type}'. Use: major, minor, patch"
+            raise ValueError(msg)
+
+        try:
+            parsed = semver.Version.parse(version)
+
+            if bump_type == "major":
+                new_version = parsed.bump_major()
+            elif bump_type == "minor":
+                new_version = parsed.bump_minor()
+            elif bump_type == "patch":
+                new_version = parsed.bump_patch()
+
+            return str(new_version)
+        except (ValueError, TypeError) as e:
+            msg = f"Failed to bump version '{version}': {e}"
+            raise ValueError(msg) from e
+
+    def satisfies_constraint(self, version: str, constraint: str) -> bool:
+        """Check if a version satisfies a semver constraint.
+
+        Parameters
+        ----------
+        version : str
+            Version to check.
+        constraint : str
+            Semver constraint (e.g., ">=1.0.0", "^1.2.0").
+
+        Returns
+        -------
+        bool
+            True if version satisfies the constraint.
+
+        Raises
+        ------
+        ValueError
+            If constraint syntax is invalid.
+        """
+        if not semver:
+            msg = "semver library required for constraint checking"
+            raise ValueError(msg)
+
+        try:
+            return semver.Version.parse(version).match(constraint)
+        except (ValueError, TypeError) as e:
+            msg = f"Invalid constraint '{constraint}': {e}"
+            raise ValueError(msg) from e
+
+    def generate_build_metadata(self, git_sha: str | None = None, build_date: str | None = None) -> str:
+        """Generate build metadata string from git SHA and build date.
+
+        Parameters
+        ----------
+        git_sha : str, optional
+            Git SHA (short form). If None, attempts to detect from git.
+        build_date : str, optional
+            Build date in YYYYMMDD format. If None, uses current date.
+
+        Returns
+        -------
+        str
+            Build metadata string (e.g., "sha.abcdef.20231029").
+        """
+        if git_sha is None:
+            git_sha = self._get_git_sha()
+
+        if build_date is None:
+            build_date = datetime.now(UTC).strftime("%Y%m%d")
+
+        # Shorten SHA if needed
+        if len(git_sha) > 7:
+            git_sha = git_sha[:7]
+
+        return f"sha.{git_sha}.{build_date}"
+
     def _get_git_sha(self) -> str:
         """Get the current git SHA.
 
@@ -425,3 +528,57 @@ def get_build_info() -> dict[str, str]:
         Build information dictionary.
     """
     return _version_manager.get_build_info()
+
+
+def bump_version(version: str, bump_type: str) -> str:
+    """Bump a semantic version.
+
+    Parameters
+    ----------
+    version : str
+        The version to bump.
+    bump_type : str
+        Type of bump: 'major', 'minor', 'patch'.
+
+    Returns
+    -------
+    str
+        The bumped version string.
+    """
+    return _version_manager.bump_version(version, bump_type)
+
+
+def satisfies_constraint(version: str, constraint: str) -> bool:
+    """Check if a version satisfies a semver constraint.
+
+    Parameters
+    ----------
+    version : str
+        Version to check.
+    constraint : str
+        Semver constraint (e.g., ">=1.0.0", "^1.2.0").
+
+    Returns
+    -------
+    bool
+        True if version satisfies the constraint.
+    """
+    return _version_manager.satisfies_constraint(version, constraint)
+
+
+def generate_build_metadata(git_sha: str | None = None, build_date: str | None = None) -> str:
+    """Generate build metadata string from git SHA and build date.
+
+    Parameters
+    ----------
+    git_sha : str, optional
+        Git SHA (short form). If None, attempts to detect from git.
+    build_date : str, optional
+        Build date in YYYYMMDD format. If None, uses current date.
+
+    Returns
+    -------
+    str
+        Build metadata string (e.g., "sha.abcdef.20231029").
+    """
+    return _version_manager.generate_build_metadata(git_sha, build_date)

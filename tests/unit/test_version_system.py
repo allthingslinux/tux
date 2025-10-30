@@ -131,7 +131,7 @@ class TestVersionManager:
 
             with patch("subprocess.run") as mock_run:
                 mock_run.return_value.returncode = 0
-                mock_run.return_value.stdout = "v4.0.0-10-gabc1234-dirty"
+                mock_run.return_value.stdout = "v4.0.0-10-gabc1234"
 
                 version = manager._from_git()
                 assert version == "4.0.0-10-gabc1234"
@@ -443,6 +443,37 @@ class TestModuleLevelFunctions:
         assert "git_sha" in info
         assert "python_version" in info
         assert "is_semantic" in info
+
+    def test_bump_version_function(self) -> None:
+        """Test the bump_version convenience function."""
+        from tux.shared.version import bump_version
+
+        assert bump_version("1.0.0", "patch") == "1.0.1"
+        assert bump_version("1.0.0", "minor") == "1.1.0"
+        assert bump_version("1.0.0", "major") == "2.0.0"
+        # Note: prerelease bumping typically requires manual management of identifiers
+
+    def test_satisfies_constraint_function(self) -> None:
+        """Test the satisfies_constraint convenience function."""
+        from tux.shared.version import satisfies_constraint
+
+        # Test basic comparison operators supported by semver.match
+        assert satisfies_constraint("1.2.3", ">=1.0.0") is True
+        assert satisfies_constraint("1.2.3", "<2.0.0") is True
+        assert satisfies_constraint("2.0.0", ">=1.0.0") is True
+        assert satisfies_constraint("0.9.0", ">=1.0.0") is False
+
+    def test_generate_build_metadata_function(self) -> None:
+        """Test the generate_build_metadata convenience function."""
+        from tux.shared.version import generate_build_metadata
+
+        metadata = generate_build_metadata("abc123", "20231029")
+        assert metadata == "sha.abc123.20231029"
+
+        # Test with auto-detection (will use actual git SHA and current date)
+        metadata = generate_build_metadata()
+        assert "sha." in metadata
+        assert len(metadata.split(".")) == 3
 
 
 class TestModuleVersion:
