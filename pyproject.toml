@@ -21,7 +21,7 @@ dependencies = [
     "httpx>=0.28.0",
     "jishaku>=2.5.2",
     "loguru>=0.7.2",
-    "pillow>=11.3.0",
+    "pillow>=12.0.0",
     "psutil>=7.1.0",
     "pynacl>=1.5.0",
     "python-dotenv>=1.0.1",
@@ -80,9 +80,9 @@ dev = [
     "ruff>=0.12.4",
     "yamllint>=1.37.1",
     "yamlfix>=1.18.0",
-    "pydantic-settings-export>=1.0.3",
     "pydoclint>=0.7.3",
     "docstr-coverage>=2.3.2",
+    "pydantic-settings-export[regions]==1.0.3",
 ]
 test = [
     "pytest>=8.4.2",
@@ -90,7 +90,6 @@ test = [
     "pytest-mock>=3.15.1",
     "pytest-cov>=7.0.0",
     "pytest-sugar>=1.1.1",
-    # Temporarily disabled pytest-xdist to prevent py-pglite concurrency issues
     # "pytest-xdist",
     "pytest-randomly>=4.0.1",
     "pytest-timeout>=2.4.0",
@@ -116,9 +115,22 @@ docs = [
     "griffe-inherited-docstrings>=1.1.1",
     "mkdocs-api-autonav>=0.4.0",
     "mkdocs-minify-plugin>=0.8.0",
-    "mkdocs-typer2>=0.1.6",
     "mkdocs-typer>=0.0.3",
-    "mkdocs-shadcn>=0.9.7",
+    "mkdocs-material>=9.6.22",
+    "mkdocs-mermaid2-plugin>=1.2.3",
+    "mkdocs-unused-files>=0.2.0",
+    "mkdocs-coverage>=2.0.0",
+    "mkdocs-pagetree-plugin>=0.0.17",
+    "mkdocs-extract-listings-plugin>=0.2.1",
+    "mkdocs-spellcheck[all]>=1.1.2",
+    "mkdocs-breadcrumbs-plugin>=0.1.14",
+    "mkdocs-ezlinks-plugin>=0.1.14",
+    "griffe-pydantic>=1.1.8",
+    "griffe-warnings-deprecated>=1.1.0",
+    "griffe-modernized-annotations>=1.0.8",
+    "mkdocs-section-index>=0.3.10",
+    "mkdocs-backlinks>=0.9.1",
+    "mkdocs-literate-nav>=0.6.1",
 ]
 types = [
     "types-pytz>=2025.2.0.20250326",
@@ -362,7 +374,6 @@ addopts = [
     # Verbose logging
     "-v",
     "--color=yes",
-    "--durations=10",
     "--capture=no",
     "--log-cli-level=DEBUG",
     "--log-cli-format=%(asctime)s [%(levelname)8s] %(name)s: %(message)s",
@@ -406,7 +417,6 @@ asyncio_default_test_loop_scope = "function"
 
 # Python path for imports
 pythonpath = ["src"]
-
 
 # Directories to skip during test discovery
 norecursedirs = [
@@ -453,8 +463,12 @@ paths = [".env.example"]
 enabled = true
 
 [[tool.pydantic_settings_export.generators.markdown]]
-paths = ["docs/content/reference/configuration.md"]
+paths = ["docs/content/reference/env.md"]
 enabled = true
+table_only = false
+file_prefix = "# ENV Reference"
+to_upper_case = true
+region = "config"
 
 # Custom generators for TOML, YAML, and JSON (stored in config/ directory)
 [[tool.pydantic_settings_export.generators."tux.shared.config.generators:TomlGenerator"]]
