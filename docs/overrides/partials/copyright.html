@@ -1,0 +1,49 @@
+<div class="md-copyright">
+  {% if config.extra.footer_links %}
+  <div class="md-footer-links">
+    {% for link in config.extra.footer_links %}
+    {% if link.text and link.href %}
+    {% set is_external = link.href.startswith(('http://', 'https://')) %}
+    <a href="{% if is_external %}{{ link.href }}{% else %}{{ link.href | url }}{% endif %}" {% if is_external %}
+      target="_blank" rel="noopener" {% endif %}>{{ link.text }}</a>
+    {% if not loop.last %}•{% endif %}
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if config.copyright %}
+  <div class="md-copyright__highlight">
+    {{ config.copyright }}
+  </div>
+  {% endif %}
+
+  {% if not config.extra.generator == false %}
+  Made with
+  <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+    Material for MkDocs
+  </a>
+  {% endif %}
+</div>
+
+<style>
+  .md-footer-links {
+    margin: 0.5rem 0;
+    font-size: 14px;
+  }
+
+  .md-footer-links a {
+    color: var(--md-default-fg-color--light);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .md-footer-links a:hover {
+    color: var(--md-accent-fg-color);
+    text-decoration: underline;
+  }
+
+  .md-footer-links a+a {
+    margin-left: 0.25rem;
+  }
+</style>
