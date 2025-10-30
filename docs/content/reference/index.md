@@ -1,4 +1,6 @@
-# API Reference
+---
+title: Reference
+---
 
 Welcome to the Tux API Reference! This section provides comprehensive auto-generated documentation for the entire codebase.
 
@@ -7,7 +9,7 @@ Welcome to the Tux API Reference! This section provides comprehensive auto-gener
 ### 📖 Documentation Types
 
 - **[CLI Reference](cli.md)** - Command-line interface documentation
-- **[Configuration Reference](configuration.md)** - Configuration schema and options
+- **[Configuration Reference](env.md)** - Configuration schema and options
 - **[Source Code](https://github.com/allthingslinux/tux)** - View source code on GitHub
 
 ## API Documentation
@@ -52,7 +54,7 @@ Includes documentation for:
 
 Complete configuration schema with all available options:
 
-**[Configuration Reference →](configuration.md)**
+**[Configuration Reference →](env.md)**
 
 Auto-generated from the pydantic models, includes:
 

@@ -1,0 +1,5 @@
+---
+title: Sitemap
+---
+
+{{ pagetree(all) }}

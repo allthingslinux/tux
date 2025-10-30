@@ -43,21 +43,10 @@ You'll learn:
 - Testing and CI/CD
 - Contributing guidelines
 
-## Quick Start by Role
-
-| I Am...                    | I Want To...                      | Start Here                           |
-|----------------------------|-----------------------------------|--------------------------------------|
-| Server Admin               | Add Tux to my server              | [User Guide](for-users.md)           |
-| Server Moderator           | Learn moderation commands         | [Moderation Commands](../user-guide/commands/moderation.md) |
-| Self-Hoster                | Deploy with Docker                | [Docker Deployment](../admin-guide/deployment/docker-compose.md) |
-| System Administrator       | Set up on VPS                     | [VPS Deployment](../admin-guide/deployment/systemd-vps.md) |
-| Developer                  | Set up dev environment            | [Development Setup](../developer-guide/getting-started/development-setup.md) |
-| Contributor                | Make first PR                     | [First Contribution](../developer-guide/getting-started/first-contribution.md) |
-
 ## Need Help?
 
 - **[Discord Support](https://discord.gg/gpmSjcjQxg)** - Join our community for help
 - **[GitHub Issues](https://github.com/allthingslinux/tux/issues)** - Report bugs or request features
-- **[FAQ](../community/faq.md)** - Common questions and answers
+- **[FAQ](../reference/faq.md)** - Common questions and answers
 
 Choose your path above to continue!

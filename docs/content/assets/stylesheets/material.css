@@ -1,0 +1,314 @@
+/* Tokyo Night Theme for Material MkDocs */
+
+/* Font Stack Configuration */
+:root {
+  /* Main font stack - Inter with fallbacks */
+  --md-text-font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", "Arial", sans-serif;
+
+  /* Monospace font stack - JetBrains Mono with fallbacks */
+  --md-code-font: "JetBrains Mono", "SF Mono", "Monaco", "Inconsolata", "Fira Code", "Droid Sans Mono", "Courier New", monospace;
+}
+
+/* Font rendering optimization */
+* {
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: auto;
+  text-rendering: optimizeSpeed;
+  font-feature-settings: "kern" 1;
+  font-kerning: auto;
+}
+
+/* Code font specific settings */
+code, pre, .codehilite {
+  font-feature-settings: "liga" 1, "calt" 1, "zero" 1;
+  font-variant-ligatures: common-ligatures contextual;
+  text-rendering: optimizeSpeed;
+}
+
+/* Fix navigation font rendering */
+.md-nav__item {
+  font-weight: 400;
+  letter-spacing: 0;
+  transform: translateZ(0);
+}
+
+.md-ellipsis {
+  font-weight: 400;
+  letter-spacing: 0;
+  transform: translateZ(0);
+}
+
+/* Tokyo Night Dark Theme */
+[data-md-color-scheme="tokyo-night"] {
+  color-scheme: dark;
+
+  /* Primary colors from Tokyo Night - using brighter blue */
+  --md-primary-fg-color: #7aa2f7;
+  --md-primary-fg-color--light: #89b4fa;
+  --md-primary-fg-color--dark: #6c7dd2;
+  --md-primary-bg-color: #16161e;
+  --md-primary-bg-color--light: rgba(22, 22, 30, 0.7);
+
+  /* Accent colors - using teal/cyan */
+  --md-accent-fg-color: #7dcfff;
+  --md-accent-fg-color--transparent: rgba(125, 207, 255, 0.1);
+  --md-accent-bg-color: #1a1b26;
+  --md-accent-bg-color--light: rgba(26, 27, 38, 0.7);
+
+  /* Default colors */
+  --md-default-fg-color: #a9b1d6;
+  --md-default-fg-color--light: #787c99;
+  --md-default-fg-color--lighter: #565f89;
+  --md-default-fg-color--lightest: #414868;
+  --md-default-bg-color: #1a1b26;
+  --md-default-bg-color--light: rgba(26, 27, 38, 0.54);
+  --md-default-bg-color--lighter: rgba(26, 27, 38, 0.26);
+  --md-default-bg-color--lightest: rgba(26, 27, 38, 0.07);
+  --md-default-bg-color--trans: rgba(26, 27, 38, 0);
+
+  /* Code colors */
+  --md-code-fg-color: #a9b1d6;
+  --md-code-bg-color: #16161e;
+
+  /* Code highlighting */
+  --md-code-hl-color: #7aa2f7;
+  --md-code-hl-color--light: rgba(122, 162, 247, 0.1);
+
+  /* Syntax highlighting colors */
+  --md-code-hl-number-color: #ff9e64;
+  --md-code-hl-special-color: #f7768e;
+  --md-code-hl-function-color: #bb9af7;
+  --md-code-hl-constant-color: #9d7cd8;
+  --md-code-hl-keyword-color: #7aa2f7;
+  --md-code-hl-string-color: #9ece6a;
+  --md-code-hl-name-color: var(--md-code-fg-color);
+  --md-code-hl-operator-color: #89ddff;
+  --md-code-hl-punctuation-color: var(--md-default-fg-color--light);
+  --md-code-hl-comment-color: #565f89;
+  --md-code-hl-generic-color: var(--md-default-fg-color--light);
+  --md-code-hl-variable-color: #e0af68;
+
+  /* Additional PyMdown Extensions colors */
+  --md-code-link-bg-color: rgba(122, 162, 247, 0.1);
+  --md-code-link-accent-bg-color: rgba(122, 162, 247, 0.2);
+  --md-code-alternate-bg-color: rgba(26, 27, 38, 0.05);
+  --md-code-hl-namespace-color: var(--md-code-fg-color);
+  --md-code-hl-entity-color: var(--md-code-hl-keyword-color);
+  --md-code-hl-tag-color: var(--md-code-hl-keyword-color);
+  --md-code-hl-builtin-color: var(--md-code-hl-constant-color);
+  --md-code-hl-class-color: var(--md-code-hl-function-color);
+  --md-steps-bg-color: var(--md-code-bg-color);
+  --md-steps-fg-color: var(--md-code-fg-color);
+  --md-steps-border-color: rgba(122, 162, 247, 0.3);
+  --md-typeset-del-color: rgba(247, 118, 142, 0.3);
+  --md-typeset-ins-color: rgba(158, 206, 106, 0.3);
+
+  /* SuperFences - Code block titles */
+  --md-code-title-fg-color: #e0af68;
+
+  /* Typography */
+  --md-typeset-color: var(--md-default-fg-color);
+  --md-typeset-a-color: var(--md-primary-fg-color);
+
+  /* Keyboard shortcuts */
+  --md-typeset-kbd-color: rgba(169, 177, 214, 0.12);
+  --md-typeset-kbd-accent-color: rgba(169, 177, 214, 0.2);
+  --md-typeset-kbd-border-color: #16161e;
+
+  /* Mark/highlight */
+  --md-typeset-mark-color: rgba(224, 175, 104, 0.3);
+
+  /* Tables */
+  --md-typeset-table-color: rgba(169, 177, 214, 0.12);
+  --md-typeset-table-color--light: rgba(169, 177, 214, 0.035);
+
+  /* Admonitions */
+  --md-admonition-fg-color: var(--md-default-fg-color);
+  --md-admonition-bg-color: var(--md-default-bg-color);
+
+  /* Footer */
+  --md-footer-bg-color: rgba(16, 16, 20, 0.87);
+  --md-footer-bg-color--dark: #101014;
+
+  /* Shadows */
+  --md-shadow-z1: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.05), 0 0 0.05rem rgba(0, 0, 0, 0.1);
+  --md-shadow-z2: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.25), 0 0 0.05rem rgba(0, 0, 0, 0.25);
+  --md-shadow-z3: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.4), 0 0 0.05rem rgba(0, 0, 0, 0.35);
+}
+
+/* SuperFences - Code block filename titles */
+.filename {
+  color: var(--md-code-title-fg-color);
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+/* InlineHilite - Inline code styling */
+.md-typeset {
+  /* Allow code to look like code everywhere despite Material's current preference */
+  *:not(pre) > code {
+    margin: 0;
+    padding: 0 0.25em;
+    color: var(--md-code-fg-color);
+    background-color: var(--md-code-inline-bg-color);
+    border-radius: 0.125rem;
+    box-shadow: none;
+  }
+
+  /* Code that is also a link */
+  a > code {
+    color: inherit !important;
+    background-color: var(--md-code-link-bg-color) !important;
+    transition: color 125ms, background-color 125ms;
+
+    /* If we are linking highlighted, inline code, force it to just look like a code link */
+    * {
+      color: var(--md-typeset-a-color) !important;
+    }
+
+    &:hover {
+      background-color: var(--md-code-link-accent-bg-color) !important;
+
+      * {
+        color: var(--md-accent-fg-color) !important;
+      }
+    }
+  }
+
+  /* Don't always like code breaking in table cells */
+  td code {
+    word-break: normal;
+  }
+}
+
+/* Header override for darkest Tokyo Night color */
+[data-md-color-scheme="tokyo-night"] .md-header {
+  background-color: #16161e;
+  color: #a9b1d6;
+}
+
+/* Header tabs override */
+[data-md-color-scheme="tokyo-night"] .md-tabs {
+  background-color: #16161e;
+  color: #a9b1d6;
+}
+
+/* Header text and links */
+[data-md-color-scheme="tokyo-night"] .md-header__title,
+[data-md-color-scheme="tokyo-night"] .md-header__topic,
+[data-md-color-scheme="tokyo-night"] .md-tabs__link {
+  color: #a9b1d6;
+}
+
+/* Search form text */
+[data-md-color-scheme="tokyo-night"] .md-search__input {
+  color: #a9b1d6;
+  background-color: rgba(26, 27, 38, 0.8);
+}
+
+[data-md-color-scheme="tokyo-night"] .md-search__input::placeholder {
+  color: #787c99;
+}
+
+/* Search icon */
+[data-md-color-scheme="tokyo-night"] .md-search__icon {
+  color: #a9b1d6;
+}
+
+/* Tokyo Night Light Theme */
+[data-md-color-scheme="tokyo-night-light"] {
+  color-scheme: light;
+
+  /* Primary colors from Tokyo Night Light - using purple instead of blue */
+  --md-primary-fg-color: #5a3e8e;
+  --md-primary-fg-color--light: #7847bd;
+  --md-primary-fg-color--dark: #4a2c7a;
+  --md-primary-bg-color: #e6e7ed;
+  --md-primary-bg-color--light: rgba(230, 231, 237, 0.7);
+
+  /* Accent colors - using teal/cyan */
+  --md-accent-fg-color: #006c86;
+  --md-accent-fg-color--transparent: rgba(0, 108, 134, 0.1);
+  --md-accent-bg-color: #e6e7ed;
+  --md-accent-bg-color--light: rgba(230, 231, 237, 0.7);
+
+  /* Default colors */
+  --md-default-fg-color: #343b58;
+  --md-default-fg-color--light: #565a6e;
+  --md-default-fg-color--lighter: #8990b3;
+  --md-default-fg-color--lightest: rgba(52, 59, 88, 0.07);
+  --md-default-bg-color: #e6e7ed;
+  --md-default-bg-color--light: rgba(230, 231, 237, 0.7);
+  --md-default-bg-color--lighter: rgba(230, 231, 237, 0.3);
+  --md-default-bg-color--lightest: rgba(230, 231, 237, 0.12);
+  --md-default-bg-color--trans: rgba(230, 231, 237, 0);
+
+  /* Code colors */
+  --md-code-fg-color: #343b58;
+  --md-code-bg-color: #e6e7ed;
+
+  /* Code highlighting */
+  --md-code-hl-color: #2959aa;
+  --md-code-hl-color--light: rgba(41, 89, 170, 0.1);
+
+  /* Syntax highlighting colors */
+  --md-code-hl-number-color: #b15c00;
+  --md-code-hl-special-color: #c64343;
+  --md-code-hl-function-color: #5a3e8e;
+  --md-code-hl-constant-color: #7847bd;
+  --md-code-hl-keyword-color: #2959aa;
+  --md-code-hl-string-color: #485e30;
+  --md-code-hl-name-color: var(--md-code-fg-color);
+  --md-code-hl-operator-color: #006c86;
+  --md-code-hl-punctuation-color: var(--md-default-fg-color--light);
+  --md-code-hl-comment-color: #8990b3;
+  --md-code-hl-generic-color: var(--md-default-fg-color--light);
+  --md-code-hl-variable-color: #8f5e15;
+
+  /* Additional PyMdown Extensions colors */
+  --md-code-link-bg-color: rgba(41, 89, 170, 0.1);
+  --md-code-link-accent-bg-color: rgba(41, 89, 170, 0.2);
+  --md-code-alternate-bg-color: rgba(230, 231, 237, 0.05);
+  --md-code-hl-namespace-color: var(--md-code-fg-color);
+  --md-code-hl-entity-color: var(--md-code-hl-keyword-color);
+  --md-code-hl-tag-color: var(--md-code-hl-keyword-color);
+  --md-code-hl-builtin-color: var(--md-code-hl-constant-color);
+  --md-code-hl-class-color: var(--md-code-hl-function-color);
+  --md-steps-bg-color: var(--md-code-bg-color);
+  --md-steps-fg-color: var(--md-code-fg-color);
+  --md-steps-border-color: rgba(41, 89, 170, 0.3);
+  --md-typeset-del-color: rgba(198, 67, 67, 0.3);
+  --md-typeset-ins-color: rgba(56, 95, 13, 0.3);
+
+  /* SuperFences - Code block titles */
+  --md-code-title-fg-color: #8f5e15;
+
+  /* Typography */
+  --md-typeset-color: var(--md-default-fg-color);
+  --md-typeset-a-color: var(--md-primary-fg-color);
+
+  /* Keyboard shortcuts */
+  --md-typeset-kbd-color: rgba(52, 59, 88, 0.12);
+  --md-typeset-kbd-accent-color: rgba(52, 59, 88, 0.2);
+  --md-typeset-kbd-border-color: #e6e7ed;
+
+  /* Mark/highlight */
+  --md-typeset-mark-color: rgba(143, 94, 21, 0.3);
+
+  /* Tables */
+  --md-typeset-table-color: rgba(52, 59, 88, 0.12);
+  --md-typeset-table-color--light: rgba(52, 59, 88, 0.035);
+
+  /* Admonitions */
+  --md-admonition-fg-color: var(--md-default-fg-color);
+  --md-admonition-bg-color: var(--md-default-bg-color);
+
+  /* Footer */
+  --md-footer-bg-color: rgba(52, 59, 88, 0.87);
+  --md-footer-bg-color--dark: rgba(52, 59, 88, 0.32);
+
+  /* Shadows */
+  --md-shadow-z1: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.05), 0 0 0.05rem rgba(0, 0, 0, 0.1);
+  --md-shadow-z2: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.1), 0 0 0.05rem rgba(0, 0, 0, 0.25);
+  --md-shadow-z3: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.2), 0 0 0.05rem rgba(0, 0, 0, 0.35);
+}
