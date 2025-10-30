@@ -1,20 +1,57 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 ---
-site_name: Tux
-site_url: https://tux.atl.dev
-dev_addr: 127.0.0.1:8080
+validation:
+  nav:
+    omitted_files: info
+    not_found: warn
+    absolute_links: info
+  links:
+    not_found: warn
+    anchors: info
+    absolute_links: info
+    unrecognized_links: info
 
-# https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#repository
-repo_url: https://github.com/allthingslinux/tux
+site_name: "Tux"
+site_url: "https://tux.atl.dev"
+site_description: "The all-in-one open source Discord bot for the All Things Linux community"
+site_author: "All Things Linux"
 
-# https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#repository-name
-repo_name: allthingslinux/tux
+dev_addr: "127.0.0.1:8000"
 
-# https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#code-actions
-edit_uri: edit/main/docs/
-docs_dir: ./content
-site_dir: ../data/build/docs
+repo_url: "https://github.com/allthingslinux/tux"
+repo_name: "allthingslinux/tux"
+edit_uri: "edit/main/docs/"
+
+docs_dir: "./content"
+site_dir: "./site"
+
+extra_css:
+  - ./assets/stylesheets/extra.css
+  - ./assets/stylesheets/material.css
+  - ./assets/stylesheets/mkdocstrings.css
+  - ./assets/stylesheets/pymdownx.css
+
+extra_javascript:
+  - ./assets/javascript/extra.js
+
+watch:
+  - ../docs
+  - ../src/tux
+  - content/assets/stylesheets
+  - content/assets/javascript
+  - content/assets/images
+  - overrides
+  - mkdocs.yml
+  - includes
+
+copyright: "Copyright &copy; 2025 All Things Linux"
+
 extra:
-  # https://squidfunk.github.io/mkdocs-material/setup/setting-up-the-footer/#social-links
+  # Custom copyright partial: overrides/partials/copyright.html
+  footer_links:
+    - text: "Sitemap"
+      href: "reference/sitemap.md"
+
   social:
     - icon: fontawesome/solid/globe
       link: https://allthingslinux.org
@@ -22,500 +59,716 @@ extra:
       link: https://github.com/allthingslinux/tux
     - icon: fontawesome/brands/discord
       link: https://discord.gg/gpmSjcjQxg
-#
-### THEME
-#
-# Watch CSS files for changes during development
-watch:
-  - content
-  - content/assets/
-  - content/assets/stylesheets
-  - overrides
-  - content/assets/stylesheets/extra.css
-extra_css: [assets/stylesheets/extra.css]
+
+  generator: false
+
 theme:
-  # https://squidfunk.github.io/mkdocs-material/setup/changing-the-language/
   language: en
 
-  # https://squidfunk.github.io/mkdocs-material/customization/#extending-the-theme
-  name: shadcn
-  show_title: true  # show the title in the top bar
-  show_stargazers: true  # show the stargazers in the top bar
-  pygments_style:  # default styles
-    light: shadcn-light
-    dark: dracula
-  icon: heroicons:rocket-launch  # use the shadcn svg if not defined
-  topbar_sections: true  # NEW!
-  katex_options:  # optional
-    macros:  # example of macros
-      \RR: \mathbb{R}
-      \dx: \mathrm{d}x
-  show_datetime: false
+  name: material
 
-  # custom_dir: overrides
+  custom_dir: overrides
 
-  # https://squidfunk.github.io/mkdocs-material/setup/changing-the-logo-and-icons/#logo
-  logo: assets/images/logo.png
+  logo: ./assets/images/logo.png
+  favicon: ./assets/images/logo.png
 
-  # https://squidfunk.github.io/mkdocs-material/setup/changing-the-logo-and-icons/#favicon
-  favicon: assets/images/logo.png
+  icon:
+    repo: fontawesome/brands/github
 
-  # https://squidfunk.github.io/mkdocs-material/setup/changing-the-logo-and-icons/#site-icons
-  # Material-specific icon config (incompatible with shadcn)
-  # icon:
-  #  # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#repository-icon
-  #   repo: fontawesome/brands/github
-
-  # https://squidfunk.github.io/mkdocs-material/setup/changing-the-colors/
   palette:
-    scheme: custom
-    primary: custom
-    accent: purple
+    - scheme: tokyo-night
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: tokyo-night-light
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
 
-  # https://squidfunk.github.io/mkdocs-material/setup/changing-the-fonts/
   font:
     text: Inter
     code: JetBrains Mono
+
   features:
-    ### Navigation
-    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#instant-loading
-    - navigation.instant
-    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#progress-indicator
-    - navigation.instant.progress
-    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#anchor-tracking
-    - navigation.tracking
-    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#section-index-pages-without
-    - navigation.indexes
-    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#back-to-top-button
-    - navigation.top
-    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#navigation-tabs
-    - navigation.tabs
-    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#sticky-navigation-tabs
-    - navigation.tabs.sticky
-    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#navigation-sections
-    - navigation.sections
-    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#navigation-pruning
-    - navigation.prune
-
-    ### Table of Contents
-    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#anchor-following
-    - toc.follow
-
-    ### Search
-    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-site-search/#search-suggestions
-    - search.suggest
-    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-site-search/#search-highlighting
-    - search.highlight
-
-    ### Code Actions
-    # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#code-actions
     - content.action.edit
+    - content.action.view
+    - content.code.annotate
+    - content.tooltips
     - content.code.copy
-#
-### PLUGINS
-#
+    - content.code.select
+    - header.autohide
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.instant.prefetch
+    - navigation.tracking
+    - navigation.indexes
+    - navigation.top
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.prune
+    - navigation.expand
+    - navigation.path
+    - navigation.footer
+    - toc.follow
+    # - toc.integrate
+    - search.suggest
+    - search.highlight
+    - search.share
+
+# PYTHON MARKDOWN EXTENSIONS -----------------------------------------------
+# Enhanced Markdown processing with Python Markdown Extensions
+markdown_extensions:
+  # CORE PYTHON MARKDOWN EXTENSIONS ---------------------------------
+  # Abbreviations: Add tooltips to text with <abbr> HTML tags (plain text only)
+  - abbr
+  # Attribute Lists: Add HTML attributes/CSS classes to almost any Markdown element
+  # Essential for annotations, grids, buttons, tooltips, icons with colors/animations, image alignment
+  - attr_list
+  # Admonition: Call-out blocks (notes, warnings, tips) with customizable titles
+  # Made collapsible with pymdownx.details extension
+  - admonition
+  # Definition Lists: Description lists (<dl>, <dt>, <dd>) via Markdown syntax
+  - def_list
+  # Footnotes: Inline footnote references rendered below document content
+  - footnotes
+  # Markdown in HTML: Parse Markdown inside HTML block elements with markdown="1" attribute
+  # Useful for annotations, grids, and image captions
+  - md_in_html
+  # Tables: GitHub Flavored Markdown table syntax support
+  - tables
+  # Table of Contents: Auto-generates TOC from document headings
+  - toc:
+      permalink: true  # Add ¶ anchor links to headings on hover
+
+  # PYMDOWNX EXTENSIONS (Python Markdown Extensions) ---------------
+  # Snippets: Embed content from external files
+  - pymdownx.snippets:
+      # base_path: ['.']          # Base paths for snippet includes
+      # check_paths: true         # Validate file paths exist
+      # auto_append:              # Auto-include files in all docs
+        # - docs/includes/abbreviations.md
+
+  # Highlight: Advanced syntax highlighting for code blocks
+  - pymdownx.highlight:
+      use_pygments: true         # Use Pygments for build-time highlighting
+      pygments_lang_class: true  # Add language CSS classes (required for annotations)
+      auto_title: true           # Auto-add language titles to code blocks
+      linenums: true             # Enable line numbers on all code blocks
+      linenums_style: pymdownx-inline  # Inline line numbers (not table)
+      line_spans: __span         # Wrap lines in spans for highlighting
+      anchor_linenums: false     # Don't make line numbers clickable
+
+  # InlineHilite: Syntax highlighting for inline code blocks
+  - pymdownx.inlinehilite
+
+  # SuperFences: Enhanced code fences with custom support
+  - pymdownx.superfences:
+      custom_fences:
+        # Mermaid diagram support - preserves content for browser rendering
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:mermaid2.fence_mermaid_custom
+
+  # Details: Makes admonitions collapsible
+  - pymdownx.details
+
+  # SmartSymbols: Auto-convert (c), (r), fractions, etc. to symbols
+  - pymdownx.smartsymbols
+
+  # MagicLink: Auto-link GitHub issues, commits, users
+  - pymdownx.magiclink:
+      repo_url_shortener: true   # Shorten GitHub URLs
+      repo_url_shorthand: true   # Recognize repo/name#123 syntax
+      provider: github           # GitHub as provider
+      user: allthingslinux       # Repository owner
+      repo: tux                  # Repository name
+      normalize_issue_symbols: true  # Normalize issue/PR symbols
+
+  # Emoji: Convert :emoji: syntax to SVG icons
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji  # Twemoji set
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg  # SVG output
+
+  # Keys: Render keyboard shortcuts like ++ctrl+alt+del++
+  - pymdownx.keys
+
+  # Tabbed: Content tabs for grouping related content
+  - pymdownx.tabbed:
+      alternate_style: true      # Better mobile behavior
+      slugify: !!python/object/apply:pymdownx.slugs.slugify  # Unicode-friendly slugs
+        kwds:
+          case: lower
+
+  # EscapeAll: Enhanced character escaping
+  - pymdownx.escapeall:
+      hardbreak: true            # Respect hard line breaks
+      nbsp: true                 # Preserve non-breaking spaces
+
+  # TEXT FORMATTING EXTENSIONS -------------------------------------
+  # Caret: Superscript with ^^text^^ syntax
+  - pymdownx.caret
+  # Mark: Highlight text with ==text== syntax
+  - pymdownx.mark
+  # Tilde: Strikethrough with ~~text~~ syntax
+  - pymdownx.tilde
+
+  # MKDOCS-TYPER: CLI documentation generator
+  - mkdocs-typer:
+
 plugins:
-  # https://squidfunk.github.io/mkdocs-material/setup/setting-up-site-search/#built-in-search-plugin
-  # https://squidfunk.github.io/mkdocs-material/plugins/search/
   - search:
       enabled: true
+      separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
 
-  # https://mkdocstrings.github.io/autorefs/
-  # - autorefs:
-      # https://mkdocstrings.github.io/autorefs/#non-unique-headings
-      # resolve_closest: true
+  - literate-nav:
+      nav_file: SUMMARY.md
+      tab_length: 2
+      implicit_index: false
 
-  #  # Custom Tux Plugin
-  # - tux:
-  #     modules_path: src/tux/modules
-  #     enable_commands: true
+  - minify:
+      enabled: true
+      minify_html: true
+      minify_js: true
+      minify_css: true
+      htmlmin_opts:
+        remove_comments: true
+      cache_safe: true
+      js_files:
+        - "content/assets/javascript/*.js"
+      css_files:
+        - "content/assets/stylesheets/*.css"
 
-  # https://squidfunk.github.io/mkdocs-material/plugins/social/
-  # - social:
+  # - backlinks_section:
   #     enabled: true
-  #     cards_layout_options:
-  #       background_color: '#11111B'
-  #       color: '#ffffff'
+  #     hide_if_empty: true
+  #     add_to_toc: false
 
-  # - minify:
-  #     minify_html: false
-  #     minify_js: false
-  #     minify_css: false
-  #     htmlmin_opts:
-  #       remove_comments: true
-  #     cache_safe: true
-  #     css_files:
-        # All organized CSS modules
-        # - assets/stylesheets/design-tokens.css
-        # - assets/stylesheets/base.css
-        # - assets/stylesheets/code-blocks.css
-        # - assets/stylesheets/components.css
-        # - assets/stylesheets/pymdownx.css
-        # - assets/stylesheets/navigation.css
-        # - assets/stylesheets/mkdocstrings.css
-        # - assets/stylesheets/responsive.css
+  - ezlinks:
+      enabled: true
 
-  #  # https://pypi.org/project/mkdocs-typer2/
-  # - mkdocs-typer2:
-  #     pretty: true
+  - pagetree:
+      enabled: true
 
-  # https://mkdocstrings.github.io/
+  - mermaid2:
+      enabled: true
+      arguments:
+        securitylevel: loose
+
+  - meta:
+      enabled: true
+
+  - mkdocs-breadcrumbs-plugin:
+      enabled: true
+      delimiter: " / "
+      log_level: "WARNING"
+      exclude_paths:
+        - "docs/assets/**"
+        - "docs/"
+      additional_index_folders: []
+      generate_home_index: false
+      use_page_titles: true
+      home_text: "home"
+
+  - mkdocs-backlinks:
+      # Plugin for adding backlinks to pages (digital garden style)
+      enabled: true
+      # ignored_pages: ['Home', 'Tags']  # Optional: exclude pages from backlinks
+
+  - autorefs:
+      enabled: true
+      resolve_closest: true
+      link_titles: auto
+      record_backlinks: true
+
+  - social:
+      enabled: true
+      cards_layout_options:
+        background_color: '#11111B'
+        color: '#ffffff'
+        logo: ./assets/images/logo.png
+
+  - coverage:
+      enabled: true
+      page_path: reference/coverage
+      html_report_dir: htmlcov
+
+  - extract_listings:
+      enabled: true
+      search_page_path: reference/snippet-search.md
+      search_page_create_if_missing: true
+      search_page_section_name: Snippet Search
+      default_search_mode: substr-i
+      default_css: false
+
+  - spellcheck:
+      enabled: false
+      backends:
+        - symspellpy
+        - codespell:
+            dictionaries: [clear, rare, informal, usage, code, names, en-GB_to_en-US]
+      known_words: ./assets/known_words.txt
+      ignore_code: true
+      min_length: 3
+      max_capital: 2
+      allow_unicode: false
+      skip_files:
+        - reference/coverage.md
+        - reference/snippet-search.md
+        - reference/tux/**
+      strict_only: false
+
+  - section-index:
+      enabled: true
+
   - mkdocstrings:
-      # https://mkdocstrings.github.io/python/usage/#installation
+      # Enable mkdocstrings plugin for auto-generated API documentation
+      enabled: true
+      # Use Python handler as default for autodoc syntax (::: path.to.object)
       default_handler: python
-
-      ### Handlers
-
-      # https://mkdocstrings.github.io/python/usage/#configuration
+      # Enable object inventory for cross-references between docs and external projects
+      enable_inventory: true
       handlers:
-        # https://mkdocstrings.github.io/python/
         python:
-          # https://mkdocstrings.github.io/usage/#cross-references-to-other-projects-inventories
-          # https://mkdocstrings.github.io/python/usage/#inventories
+          # Where to find your sources, see "Finding modules" in mkdocstrings docs
+          paths: [src]
+
+          # Pre-load modules for better cross-references to inherited members
+          # Useful when classes inherit from external packages (discord.py, pydantic, etc.)
+          preload_modules: []
+
+          # Load object inventories to enable cross-references to external projects
+          # This allows linking to stdlib docs, dependencies, and other documentation
           inventories:
-            # Defaults to latest Python version
+            # Core Python standard library
             - url: https://docs.python.org/3/objects.inv
+            # Discord.py - primary Discord API library
             - url: https://discordpy.readthedocs.io/en/stable/objects.inv
-          # https://mkdocstrings.github.io/usage/?h=enable_inventory#cross-references-to-other-projects-inventories
-          enable_inventory: true
-          # https://mkdocstrings.github.io/python/usage/#load_external_modules
+            # Pydantic - data validation and parsing
+            - url: http://docs.pydantic.dev/latest/objects.inv
+            # Typing extensions - backports of typing features
+            - url: https://typing-extensions.readthedocs.io/en/latest/objects.inv
+            # Rich - terminal formatting and display
+            - url: https://rich.readthedocs.io/en/stable/objects.inv
+            # Loguru - structured logging
+            - url: https://loguru.readthedocs.io/en/stable/objects.inv
+            # Pillow - image processing
+            - url: https://pillow.readthedocs.io/en/stable/objects.inv
+            # psutil - system and process utilities
+            - url: https://psutil.readthedocs.io/en/latest/objects.inv
+            # pytz - timezone handling
+            - url: https://pythonhosted.org/pytz/objects.inv
+            # SQLAlchemy - database ORM
+            - url: https://docs.sqlalchemy.org/en/20/objects.inv
+            # Alembic - database migration tool
+            - url: https://alembic.sqlalchemy.org/en/latest/objects.inv
+            # psycopg3 - PostgreSQL adapter
+            - url: https://www.psycopg.org/psycopg3/docs/objects.inv
+            # python-semver - semantic versioning
+            - url: https://python-semver.readthedocs.io/en/latest/objects.inv
+            # rapidfuzz - fuzzy string matching (Levenshtein)
+            - url: https://rapidfuzz.github.io/Levenshtein/objects.inv
+            # watchdog - file system monitoring
+            - url: https://pythonhosted.org/watchdog/objects.inv
+            # NumPy - numerical computing
+            - url: https://numpy.org/doc/stable/objects.inv
+            # python-dotenv - environment variable loading
+            - url: https://saurabh-kumar.com/python-dotenv/objects.inv
+            # docker-py - Docker API client
+            - url: https://docker-py.readthedocs.io/en/stable/objects.inv
+            # aiohttp - async HTTP client/server
+            - url: https://docs.aiohttp.org/en/stable/objects.inv
+            # pytest - testing framework
+            - url: https://docs.pytest.org/en/stable/objects.inv
+            # pytest-asyncio - async testing support
+            - url: https://pytest-asyncio.readthedocs.io/en/stable/objects.inv
+            # pytest-mock - mocking utilities
+            - url: https://pytest-mock.readthedocs.io/en/latest/objects.inv
+            # pytest-alembic - database migration testing
+            - url: https://pytest-alembic.readthedocs.io/en/latest/objects.inv
+
+          # Allow loading modules from external packages for cross-references
           load_external_modules: true
-          # https://mkdocstrings.github.io/usage/theming/#templates
-          # https://mkdocstrings.github.io/python/usage/customization/#templates
+
+          # Use custom Jinja2 templates for rendering API docs
           custom_templates: overrides/python/material
 
-          ### Options
+          # Python handler options - see https://mkdocstrings.github.io/python/usage/configuration/general/
           options:
-            ### Extensions
-            # https://mkdocstrings.github.io/python/usage/configuration/general/#extensions
+            # Griffe extensions for enhanced parsing - see https://mkdocstrings.github.io/griffe/extensions/
             extensions:
+              # Standard dataclasses support
+              - dataclasses
+              # Generic type parameter handling
               - griffe_generics
+              # Enhanced docstring extraction from type annotations
+              - griffe_typingdoc
+              # Inherit docstrings from parent classes
               - griffe_inherited_docstrings
+              # Pydantic model support with JSON schema generation
+              - griffe_pydantic:
+                  schema: true
+              # Handle deprecated warnings in docstrings
+              - griffe_warnings_deprecated
+              # Modernize type annotations (PEP 585, 604, etc.)
+              - griffe_modernized_annotations
 
-            ### General
+            # CROSS-REFERENCES & NAVIGATION -------------------------------------------
+            # Show backlinks to other documentation sections within each symbol
+            # Creates breadcrumb trails showing where symbols are used
+            backlinks: tree
 
-            # https://mkdocstrings.github.io/python/usage/configuration/general/#allow_inspection
-            allow_inspection: true
-            # https://mkdocstrings.github.io/python/usage/configuration/general/#find_stubs_package
-            find_stubs_package: true
-            # https://mkdocstrings.github.io/python/usage/configuration/general/#force_inspection
-            force_inspection: false
-            # https://mkdocstrings.github.io/python/usage/configuration/general/#show_bases
+            # Show base classes for inheritance hierarchy (alternative to diagrams)
             show_bases: true
-            # https://mkdocstrings.github.io/python/usage/configuration/general/#show_source
-            show_source: true
 
-            ### Headings
+            # GENERAL PARSING OPTIONS ------------------------------------------------
+            # Allow inspecting modules when source code isn't available
+            # Useful for compiled extensions but may include internal methods
+            allow_inspection: true
 
-            # https://mkdocstrings.github.io/python/usage/configuration/headings/#heading_level
+            # Look for .pyi stub files alongside regular modules
+            # Useful when documentation is provided separately from implementation
+            find_stubs_package: true
+
+            # Force inspection even when source code is available
+            # Use only when inspection yields better results than static analysis
+            force_inspection: false
+
+            # Show source code for each documented object
+            show_source: false
+
+            # HEADING & NAVIGATION DISPLAY ------------------------------------------
+            # Initial heading level for documentation (1=H1, 2=H2, etc.)
+            # For auto-generated API pages, makes the module heading be the page H1
+            # Each nested object increases heading level by 1 (HTML limits to H6)
             heading_level: 1
-            # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_root_heading
+
+            # Always show heading for the root symbol rendered with `::: path.to.object`
+            # Useful for multi-object pages; disable for single-object-per-page layouts
             show_root_heading: true
-            # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_root_toc_entry
-            show_root_toc_entry: true
-            # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_root_full_path
-            show_root_full_path: true
-            # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_root_members_full_path
-            show_root_members_full_path: false
-            # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_object_full_path
-            show_object_full_path: false
-            # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_category_heading
-            show_category_heading: true
-            # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_symbol_type_heading
-            show_symbol_type_heading: true
-            # https://mkdocstrings.github.io/python/usage/configuration/headings/#show_symbol_type_toc
-            show_symbol_type_toc: true
 
-            ### Members
+            # Control Python path display in headings (package.module.Class vs just Class)
+            show_root_full_path: false          # Show full dotted path for root symbol
+            show_root_members_full_path: false # Show just names for direct members
+            show_object_full_path: false       # Show just names for all nested objects
 
-            # https://mkdocstrings.github.io/python/usage/configuration/members/#members_order
-            members_order: source
-            # https://mkdocstrings.github.io/python/usage/configuration/members/#filters
+            # Include symbol type indicators (🔧 📦 📋 etc.) in headings and TOC
+            # See https://mkdocstrings.github.io/python/usage/customization/#symbol-types
+            show_symbol_type_heading: true  # Show type icons/emojis in headings
+            show_symbol_type_toc: true      # Show type icons/emojis in table of contents
+
+            # Navigation and organization settings
+            show_root_toc_entry: true       # Include root symbol in TOC even if heading hidden
+            show_category_heading: true     # Show category headings when group_by_category=true
+                                              # (Attributes, Methods, Classes, etc.)
+
+            # MEMBER FILTERING & ORGANIZATION -------------------------------------
+            # Filters for which members to include/exclude (empty = include all public)
+            # Uses regex patterns: "!^_[^_]" excludes private/protected, keeps special methods
+            # Can use "public" to include only __all__ items and non-underscore names
+            # Negative filters (!) exclude matches, positive filters include matches
             filters: []
-            # https://mkdocstrings.github.io/python/usage/configuration/members/#group_by_category
-            group_by_category: true
-            # https://mkdocstrings.github.io/python/usage/configuration/members/#show_submodules
-            show_submodules: false
-            # https://mkdocstrings.github.io/python/usage/configuration/members/#summary
+
+            # Group members by category (Attributes, Classes, Functions, Modules)
+            # Creates organized sections with headings for each member type
+            group_by_category: false
+
+            # Order members within categories (source/alphabetical/__all__)
+            # "source" = order as they appear in code, "alphabetical" = A-Z sorting
+            # "__all__" = order defined in module's __all__ attribute (Insiders only)
+            members_order: source
+
+            # Show auto-generated summary tables at the start of each symbol's docs
+            # Can be boolean or dict to control summaries per member type:
+            # summary: {attributes: true, functions: false, classes: true, modules: true}
             summary: true
-            # https://mkdocstrings.github.io/python/usage/configuration/members/#show_labels
-            show_labels: true
 
-            ### Docstrings
+            # Display options for member listings
+            show_labels: true         # Show type labels like "method", "attribute", "class"
+            show_submodules: false    # Don't show submodules recursively (prevents heading bloat)
 
-            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#docstring_style
+            # Include inherited members from parent classes
+            # Can be boolean (true=all inherited) or list of specific inherited members
+            # Use preload_modules to include inherited members from external packages
+            inherited_members: true
+
+            # DOCSTRING PARSING & DISPLAY -----------------------------------------
+            # Docstring format style (google, numpy, sphinx, or null for plain text)
+            # Numpy style: Uses sections with dashes (Parameters ----------)
+            # Google style: Uses indented sections (Parameters:)
+            # Sphinx style: Uses :param:, :returns: directives
             docstring_style: numpy
-            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#docstring_options
+
+            # Parser options for the chosen docstring style
             docstring_options:
+              # Don't discard first line of __init__ docstrings when merging into class
               ignore_init_summary: false
+              # Remove doctest flags like +NORMALIZE_WHITESPACE from examples
               trim_doctest_flags: true
+              # Allow multiple items in Returns section (numpy/google styles)
               returns_multiple_items: true
-            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#docstring_section_style
-            docstring_section_style: table
-            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#merge_init_into_class
+
+            # How to render docstring sections: "table", "list", or "spacy"
+            # "table" = traditional columns, "list" = RTD-style lists, "spacy" = wide tables
+            # Lists work better for long content, tables for short descriptions
+            docstring_section_style: list
+
+            # Merge __init__ method docstrings and parameters into parent class
+            # Shows class signature like Class(param=default) and combines docstrings
             merge_init_into_class: true
-            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_if_no_docstring
+
+            # Show documentation even for objects without docstrings or children
+            # Useful for showing API structure even without documentation
             show_if_no_docstring: false
-            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_docstring_attributes
-            show_docstring_attributes: true
-            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_docstring_functions
-            show_docstring_functions: true
-            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_docstring_classes
-            show_docstring_classes: true
-            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_docstring_modules
-            show_docstring_modules: true
-            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_docstring_description
-            show_docstring_description: true
-            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_docstring_examples
-            show_docstring_examples: true
-            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_docstring_other_parameters
-            show_docstring_other_parameters: true
-            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_docstring_parameters
-            show_docstring_parameters: true
-            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_docstring_raises
-            show_docstring_raises: true
-            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_docstring_receives
-            show_docstring_receives: true
-            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_docstring_returns
-            show_docstring_returns: true
-            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_docstring_warns
-            show_docstring_warns: true
-            # https://mkdocstrings.github.io/python/usage/configuration/docstrings/#show_docstring_yields
-            show_docstring_yields: true
 
-            ### Signatures
+            # CONTROL WHICH DOCSTRING SECTIONS TO DISPLAY -------------------
+            # All sections enabled for comprehensive API documentation
+            show_docstring_attributes: true        # "Attributes:" section
+            show_docstring_functions: true         # "Functions:" section
+            show_docstring_classes: true           # "Classes:" section
+            show_docstring_modules: true           # "Modules:" section
+            show_docstring_description: true       # Main description text & admonitions
+            show_docstring_examples: true          # "Examples:" section with code
+            show_docstring_other_parameters: true  # "**Other Parameters:**" section
+            show_docstring_parameters: true        # "**Parameters:**" section
+            show_docstring_raises: true            # "**Raises:**" section
+            show_docstring_receives: true          # "**Receives:**" section (generators)
+            show_docstring_returns: true           # "**Returns:**" section
+            show_docstring_warns: true             # "**Warns:**" section
+            show_docstring_yields: true            # "**Yields:**" section (generators)
 
-            # https://mkdocstrings.github.io/python/usage/configuration/signatures/#annotations_path
+            # CROSS-REFERENCES -------------------------------------------------------
+            # Enable cross-references in function/method signatures (Insiders only)
+            # Turns type hints into clickable links to documentation
+            signature_crossrefs: true
+
+            # SIGNATURE FORMATTING --------------------------------------------------
+            # How to display type annotation paths: "brief", "source", or "full"
+            # "brief" (recommended): Shows only last component (Sequence[Path] vs typing.Sequence[pathlib.Path])
+            # Still provides cross-references and full paths in tooltips
             annotations_path: brief
-            # https://mkdocstrings.github.io/python/usage/configuration/signatures/#line_length
-            line_length: 80
-            # https://mkdocstrings.github.io/python/usage/configuration/signatures/#show_signature
+
+            # Maximum line length when formatting signatures (Black/Ruff compatible)
+            # Used when separate_signature=true for code block formatting
+            line_length: 88
+
+            # SIGNATURE DISPLAY OPTIONS -------------------------------------------
+            # Show method/function signatures (true) or just names (false)
             show_signature: true
-            # https://mkdocstrings.github.io/python/usage/configuration/signatures/#show_signature_annotations
+
+            # Include type annotations in signature display
+            # Shows type hints like (param: str, other: int) -> bool
+            # Very useful for API documentation clarity
             show_signature_annotations: true
-            # https://mkdocstrings.github.io/python/usage/configuration/signatures/#separate_signature
-            separate_signature: false
-            # https://mkdocstrings.github.io/python/usage/configuration/signatures/#show_overloads
+
+            # Include type parameters in generic signatures (Class[T], func[T]())
+            # Best used with separate_signature=true for readability
+            show_signature_type_parameters: true
+
+            # Show initial values for class attributes
+            show_attribute_values: true
+
+            # Show @overload decorated signatures along with implementation
             show_overloads: true
-            # https://mkdocstrings.github.io/python/usage/configuration/signatures/#unwrap_annotated
-            unwrap_annotated: false
-  # - api-autonav:
-  #     modules: [../src/tux]
-  #     nav_section_title: Tux Reference
-  #     api_root_uri: reference
-  #     exclude_private: false
-  #     on_implicit_namespace_package: raise
-# https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#revisioning
-# - git-revision-date-localized:
-#     enable_creation_date: false
-# https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#document-contributors
-# - git-committers:
-#     repository: allthingslinux/tux
-#     branch: main
+
+            # Hide implementation signature when overloads_only=true
+            overloads_only: false
+
+            # Put signature in separate code block below heading instead of inline
+            # Allows for better formatting and longer signatures with Black/Ruff
+            separate_signature: true
+
+            # ADVANCED SIGNATURE OPTIONS -----------------------------------------
+            # Unwrap Annotated[T, metadata] to show just T
+            unwrap_annotated: true
+
+            # Skip registering symbols in local inventory for external libraries
+            # Prevents duplicate cross-references when documenting third-party code
+            skip_local_inventory: true
+
+  - api-autonav:
+      enabled: true
+      modules: ["../src/tux"]
+      nav_section_title: "API Reference"
+      api_root_uri: "reference/src"
+      nav_item_prefix: "<code class='doc-symbol doc-symbol-nav doc-symbol-module'></code> "
+      exclude_private: false
+      on_implicit_namespace_package: "warn"
+      show_full_namespace: false
+
+# Navigation is now handled by mkdocs-literate-nav plugin using SUMMARY.md
+# nav:
+#   - Home: index.md
 #
-### MARKDOWN EXTENSIONS
+#   - Search & FAQ:
+#     - FAQ: community/faq.md
+#     - Search: reference/search.md
+#     - Snippet Search: reference/snippet-search.md
+#     - Glossary: reference/glossary.md
+#     - Sitemap: sitemap.md
 #
-markdown_extensions:
-  admonition:
-  codehilite:
-  fenced_code:
-  footnotes:
-  extra:
-  pymdownx.blocks.details:
-  pymdownx.tabbed:
-  pymdownx.blocks.tab:
-    combine_header_slug: true
-    separator: ___
-  pymdownx.progressbar:
-  pymdownx.snippets:
-  pymdownx.arithmatex:
-    generic: true
-  shadcn.extensions.echarts.alpha:
-  shadcn.extensions.codexec:
-  shadcn.extensions.iconify:
-  pymdownx.blocks.caption:
-# markdown_extensions:
-  # - abbr
-  # - admonition
-  # - attr_list
-  # - def_list
-  # - footnotes
-  # - md_in_html
-  # - toc:
-      # permalink: true
-  # https://mkdocstrings.github.io/usage/theming/#syntax-highlighting
-  # - pymdownx.highlight:
-      # use_pygments: true
-      # pygments_lang_class: true
-      # auto_title: true
-      # linenums: true
-      # linenums_style: pymdownx-inline
-      # line_spans: __span
-      # anchor_linenums: true
-  # - mkdocs-typer:
-  # - pymdownx.superfences:
-      # custom_fences:
-      #   - name: mermaid
-      #     class: mermaid
-      #     format: !!python/name:pymdownx.superfences.fence_code_format
-  # - pymdownx.inlinehilite
-  # - pymdownx.snippets
-  # - pymdownx.details
-  # - tables
-  # - pymdownx.emoji:
-      # emoji_index: !!python/name:material.extensions.emoji.twemoji
-      # emoji_generator: !!python/name:material.extensions.emoji.to_svg
-  # - pymdownx.tabbed:
-      # alternate_style: true
+#   # 🚀 ONBOARDING: Single path per role
+#   - Getting Started:
+#     - Overview: getting-started/index.md
+#     - For Users: getting-started/for-users.md
+#     - For Admins: getting-started/for-admins.md
+#     - For Self-Hosters: getting-started/for-self-hosters.md
+#     - For Developers: getting-started/for-developers.md
 #
-### NAVIGATION
+#   # 👤 USERS: Complete with indices and cross-references
+#   - For Users:
+#     - Introduction: user/index.md
+#     - Commands:
+#       - Commands Overview: user/commands/index.md
+#       - Moderation: user/commands/moderation.md
+#       - Utility: user/commands/utility.md
+#       - Info: user/commands/info.md
+#       - Levels: user/commands/levels.md
+#       - Fun: user/commands/fun.md
+#       - Snippets: user/commands/snippets.md
+#       - Tools: user/commands/tools.md
+#     - Features:
+#       - Features Overview: user/features/index.md
+#       - XP System: user/features/xp-system.md
+#       - Starboard: user/features/starboard.md
+#       - Bookmarks: user/features/bookmarks.md
+#       - Temp VC: user/features/temp-vc.md
+#       - Status Roles: user/features/status-roles.md
+#       - GIF Limiter: user/features/gif-limiter.md
+#     - Quick Reference: reference/commands/index.md
 #
-nav:
-  - Home: index.md
-  - Getting Started:
-      - getting-started/index.md
-      - For Users: getting-started/for-users.md
-      - For Self-Hosters: getting-started/for-self-hosters.md
-      - For Developers: getting-started/for-developers.md
-  - User Guide:
-      - user-guide/index.md
-      - Inviting Tux: user-guide/inviting-tux.md
-      - Permissions: user-guide/permissions.md
-      - Commands:
-          - Moderation: user-guide/commands/moderation.md
-          - Utility: user-guide/commands/utility.md
-          - Info: user-guide/commands/info.md
-          - Snippets: user-guide/commands/snippets.md
-          - Levels: user-guide/commands/levels.md
-          - Fun: user-guide/commands/fun.md
-          - Tools: user-guide/commands/tools.md
-          - Code Execution: user-guide/commands/code-execution.md
-          - Config: user-guide/commands/config.md
-          - Admin/Dev: user-guide/commands/admin.md
-      - Features:
-          - XP System: user-guide/features/xp-system.md
-          - Starboard: user-guide/features/starboard.md
-          - Bookmarks: user-guide/features/bookmarks.md
-          - Temp VC: user-guide/features/temp-vc.md
-          - Status Roles: user-guide/features/status-roles.md
-          - GIF Limiter: user-guide/features/gif-limiter.md
-  - Admin Guide:
-      - admin-guide/index.md
-      - Deployment:  # TODO: merge all of these into a single deployment guide
-          - admin-guide/deployment/index.md
-          - Docker Compose: admin-guide/deployment/docker-compose.md
-          - VPS with Systemd: admin-guide/deployment/systemd-vps.md
-          - Cloud Platforms: admin-guide/deployment/cloud-platforms.md
-      - Setup:
-          - Discord Bot Token: admin-guide/setup/discord-bot-token.md
-          - Database: admin-guide/setup/database.md
-          - Environment Variables: admin-guide/setup/environment-variables.md
-          - Config Files: admin-guide/setup/config-files.md
-          - First Run: admin-guide/setup/first-run.md
-      - Configuration:
-          - admin-guide/configuration/index.md
-          - Bot Settings: admin-guide/configuration/bot-settings.md
-          - Guild Setup: admin-guide/configuration/guild-setup.md
-          - Permissions: admin-guide/configuration/permissions.md
-          - Features: admin-guide/configuration/features.md
-          - Advanced: admin-guide/configuration/advanced.md
-      - Database:
-          - PostgreSQL Setup: admin-guide/database/postgres-setup.md
-          - Migrations: admin-guide/database/migrations.md
-          - Backups: admin-guide/database/backups.md
-          - Adminer: admin-guide/database/adminer.md
-      - Operations:
-          - Logging: admin-guide/operations/logging.md
-          - Monitoring: admin-guide/operations/monitoring.md
-          - Updating: admin-guide/operations/updating.md
-          - Troubleshooting: admin-guide/operations/troubleshooting.md
-          - Performance: admin-guide/operations/performance.md
-      - Security:
-          - Best Practices: admin-guide/security/best-practices.md
-          - Token Security: admin-guide/security/token-security.md
-          - Firewall: admin-guide/security/firewall.md
-  - Developer Guide:
-      - developer-guide/index.md
-      - Getting Started:
-          - Development Setup: developer-guide/getting-started/development-setup.md
-          - Project Structure: developer-guide/getting-started/project-structure.md
-          - First Contribution: developer-guide/getting-started/first-contribution.md
-          - Code Standards: developer-guide/getting-started/code-standards.md
-      - Architecture:
-          - Overview: developer-guide/architecture/overview.md
-          - Bot Lifecycle: developer-guide/architecture/bot-lifecycle.md
-          - Cog System: developer-guide/architecture/cog-system.md
-          - Command System: developer-guide/architecture/command-system.md
-          - Permission System: developer-guide/architecture/permission-system.md
-          - Configuration System: developer-guide/architecture/configuration-system.md
-          - Database Architecture: developer-guide/architecture/database-architecture.md
-          - Service Layer: developer-guide/architecture/service-layer.md
-      - Core Systems:
-          - Hot Reload: developer-guide/core-systems/hot-reload.md
-          - Error Handling: developer-guide/core-systems/error-handling.md
-          - Sentry Integration: developer-guide/core-systems/sentry-integration.md
-          - Task Monitor: developer-guide/core-systems/task-monitor.md
-          - Logging: developer-guide/core-systems/logging.md
-          - Prefix Manager: developer-guide/core-systems/prefix-manager.md
-          - Emoji Manager: developer-guide/core-systems/emoji-manager.md
-          - Plugin System: developer-guide/core-systems/plugin-system.md
-      - Patterns:
-          - Database Patterns: developer-guide/patterns/database-patterns.md
-          - Error Patterns: developer-guide/patterns/error-patterns.md
-          - Async Patterns: developer-guide/patterns/async-patterns.md
-          - Caching: developer-guide/patterns/caching.md
-          - Service Wrappers: developer-guide/patterns/service-wrappers.md
-      - Guides:
-          - Creating a Cog: developer-guide/guides/creating-a-cog.md
-          - Creating Commands: developer-guide/guides/creating-commands.md
-          - Database Operations: developer-guide/guides/database-operations.md
-          - UI Components: developer-guide/guides/ui-components.md
-          - External APIs: developer-guide/guides/external-apis.md
-          - Adding Features: developer-guide/guides/adding-features.md
-          - Config Options: developer-guide/guides/config-options.md
-      - Modules:
-          - developer-guide/modules/index.md
-          - Moderation System: developer-guide/modules/moderation-system.md
-          - Levels System: developer-guide/modules/levels-system.md
-          - Snippets System: developer-guide/modules/snippets-system.md
-          - Code Execution: developer-guide/modules/code-execution.md
-          - Config Wizard: developer-guide/modules/config-wizard.md
-      - Database:
-          - Models: developer-guide/database/models.md
-          - Controllers: developer-guide/database/controllers.md
-          - Base Controllers: developer-guide/database/base-controllers.md
-          - Migrations: developer-guide/database/migrations.md
-          - Testing: developer-guide/database/testing.md
-      - Testing:
-          - Overview: developer-guide/testing/overview.md
-          - Unit Tests: developer-guide/testing/unit-tests.md
-          - Integration Tests: developer-guide/testing/integration-tests.md
-          - E2E Tests: developer-guide/testing/e2e-tests.md
-          - Fixtures: developer-guide/testing/fixtures.md
-          - CI Pipeline: developer-guide/testing/ci-pipeline.md
-      - CLI Tools:
-          - developer-guide/cli-tools/index.md
-          - Overview: developer-guide/cli-tools/overview.md
-          - Extending CLI: developer-guide/cli-tools/extending-cli.md
-      - UI System:
-          - Embeds: developer-guide/ui/embeds.md
-          - Views: developer-guide/ui/views.md
-          - Modals: developer-guide/ui/modals.md
-          - Buttons: developer-guide/ui/buttons.md
-          - Onboarding Wizard: developer-guide/ui/onboarding-wizard.md
-      - Contributing:
-          - Git Workflow: developer-guide/contributing/git-workflow.md
-          - Code Review: developer-guide/contributing/code-review.md
-          - Documentation: developer-guide/contributing/documentation.md
-          - Versioning: developer-guide/contributing/versioning.md
-          - Design Decisions: developer-guide/contributing/design-decisions.md
-  - Reference:
-      - reference/index.md
-      - CLI Reference: reference/cli.md
-      - Configuration: reference/configuration.md
-  - Community:
-      - community/index.md
-      - Changelog: community/changelog.md
-      - FAQ: community/faq.md
-      - Support: community/support.md
-      - Contributing: community/contributing.md
+#   # ⚙️ ADMINS: Consolidated structure
+#   - For Admins:
+#     - Introduction: admin/index.md
+#     - Setup:
+#       - Inviting Tux: admin/setup/inviting-bot.md
+#       - Initial Config: admin/setup/config-files.md
+#     - Configuration:
+#       - Bot Settings: admin/configuration/bot-settings.md
+#       - Permissions: admin/configuration/permissions.md
+#       - Features: admin/configuration/features.md
+#       - Advanced: admin/configuration/advanced.md
+#     - Management:
+#       - Admin Commands: admin/configuration/admin.md
+#       - Config Commands: admin/configuration/config.md
+#       - Moderation: admin/moderation/index.md
+#       - Permissions: admin/permissions/index.md
+#
+#   # 🖥️ SELFHOSTERS: Properly nested operations
+#   - For Self-Hosters:
+#     - Introduction: selfhost/index.md
+#     - Installation:
+#       - Requirements: selfhost/install/requirements.md
+#       - Docker: selfhost/install/docker.md
+#       - Bare Metal: selfhost/install/bare-metal.md
+#       - First Run: selfhost/install/first-run.md
+#     - Configuration:
+#       - Bot Token: selfhost/config/bot-token.md
+#       - Environment: selfhost/config/environment.md
+#       - Database: selfhost/config/database.md
+#     - Operations:
+#       - Operations Overview: selfhost/ops/index.md
+#       - Monitoring: selfhost/ops/monitoring.md
+#       - Backups: selfhost/ops/backups.md
+#       - Updates: selfhost/ops/updates.md
+#       - Performance: selfhost/ops/performance.md
+#       - Security: selfhost/ops/security.md
+#       - Logging: selfhost/ops/logging.md
+#       - Adminer: selfhost/ops/adminer.md
+#       - Migrations: selfhost/ops/migrations.md
+#
+#   # 🛠️ DEVELOPERS: Complete with clear content boundaries
+#   - For Developers:
+#     - Introduction: developer/index.md
+#     - Getting Started:
+#       - Development Setup: developer/tutorials/development-setup.md
+#       - Project Structure: developer/tutorials/project-structure.md
+#       - First Contribution: developer/tutorials/first-contribution.md
+#       - Contributing: developer/contributing.md
+#     - Tutorials:
+#       - Tutorials Overview: developer/tutorials/index.md
+#       - Creating Your First Cog: developer/tutorials/creating-first-cog.md
+#       - Creating Your First Command: developer/tutorials/creating-first-command.md
+#       - Database Integration: developer/tutorials/database-integration.md
+#       - Testing Setup: developer/tutorials/testing-setup.md
+#       - UI Components Walkthrough: developer/tutorials/ui-components-walkthrough.md
+#     - Guides:
+#       - Guides Overview: developer/guides/index.md
+#       - Creating Commands: developer/guides/creating-commands.md
+#       - Database Operations: developer/guides/database-operations.md
+#       - UI Components: developer/guides/ui-components.md
+#       - External APIs: developer/guides/external-apis.md
+#       - Adding Features: developer/guides/adding-features.md
+#       - Config Options: developer/guides/config-options.md
+#       - Extending CLI: developer/guides/extending-cli.md
+#     - Core Concepts:
+#       - Bot Lifecycle: developer/concepts/bot-lifecycle.md
+#       - Cog System: developer/concepts/cog-system.md
+#       - Command System: developer/concepts/command-system.md
+#       - Permission System: developer/concepts/permission-system.md
+#       - Configuration System: developer/concepts/configuration-system.md
+#       - Service Layer: developer/concepts/service-layer.md
+#       - Hot Reload: developer/concepts/hot-reload.md
+#       - Error Handling: developer/concepts/error-handling.md
+#       - Logging: developer/concepts/logging.md
+#     - Data & Database:
+#       - Database Architecture: developer/concepts/database-architecture.md
+#       - Models: developer/concepts/models.md
+#       - Controllers: developer/concepts/controllers.md
+#       - Migrations: developer/concepts/migrations.md
+#       - Database Patterns: developer/concepts/database-patterns.md
+#     - UI Components:
+#       - Buttons: developer/concepts/buttons.md
+#       - Embeds: developer/concepts/embeds.md
+#       - Modals: developer/concepts/modals.md
+#       - Views: developer/concepts/views.md
+#     - Advanced Patterns:
+#       - Async Patterns: developer/concepts/async-patterns.md
+#       - Caching: developer/concepts/caching.md
+#       - Service Wrappers: developer/concepts/service-wrappers.md
+#       - Error Patterns: developer/concepts/error-patterns.md
+#     - Tools & Integrations:
+#       - Sentry Integration: developer/concepts/sentry-integration.md
+#       - Task Monitor: developer/concepts/task-monitor.md
+#       - Plugin System: developer/concepts/plugin-system.md
+#     - Best Practices:
+#       - Code Review: developer/best-practices/code-review.md
+#       - Documentation: developer/best-practices/documentation.md
+#       - Git Workflow: developer/best-practices/git-workflow.md
+#       - Versioning: developer/best-practices/versioning.md
+#       - CI Pipeline: developer/best-practices/ci-pipeline.md
+#     - Testing:
+#       - Unit Tests: developer/best-practices/unit-tests.md
+#       - Integration Tests: developer/best-practices/integration-tests.md
+#       - E2E Tests: developer/best-practices/e2e-tests.md
+#       - Fixtures: developer/best-practices/fixtures.md
+#     - Coverage Report: developer/coverage.md
+#
+#   # 🤝 COMMUNITY: Streamlined with actionable feedback
+#   - Community:
+#     - Overview: community/index.md
+#     - Support: community/support.md
+#     - Roadmap: community/roadmap.md
+#     - Feedback: community/feedback.md
+#
+#   # 📚 REFERENCE: Enhanced with versioning and clear API structure
+#   - Reference:
+#     - Overview: reference/index.md
+#     - Configuration Schema: reference/configuration.md
+#     - Commands Reference: reference/commands/index.md
+#     - CLI Reference: reference/cli.md
+#     - API Reference: reference/tux
+#     - Changelog:
+#       - Changelog Overview: reference/changelog/index.md
+#       - Latest: reference/changelog/latest.md
+#       - Search Changelog: reference/changelog/search.md
+#       - Archive:
+#         - Archive Overview: reference/changelog/archive/index.md
+#         - v1.0: reference/changelog/archive/v1.0.md
+#         - v0.9: reference/changelog/archive/v0.9.md
+#     - Troubleshooting:
+#       - User Issues: reference/troubleshooting/user.md
+#       - Admin Issues: reference/troubleshooting/admin.md
+#       - Self-Host Issues: reference/troubleshooting/selfhost.md
+#       - Developer Issues: reference/troubleshooting/developer.md
+#     - License Information: reference/license.md
