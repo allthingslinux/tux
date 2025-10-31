@@ -99,7 +99,7 @@ class CaseController(BaseController[Case]):
         case_status : bool
             Whether the case is active (default True)
         **kwargs : Any
-            Additional case fields (e.g., case_expires_at, case_metadata, audit_log_message_id)
+            Additional case fields (e.g., case_expires_at, case_metadata, mod_log_message_id)
 
         Returns
         -------
@@ -193,16 +193,23 @@ class CaseController(BaseController[Case]):
         """
         return await self.update_by_id(case_id, **kwargs)
 
-    async def update_audit_log_message_id(self, case_id: int, message_id: int) -> Case | None:
+    async def update_mod_log_message_id(self, case_id: int, message_id: int) -> Case | None:
         """
-        Update the audit log message ID for a case.
+        Update the mod log message ID for a case.
+
+        Parameters
+        ----------
+        case_id : int
+            The case ID to update.
+        message_id : int
+            The Discord message ID from the mod log.
 
         Returns
         -------
         Case | None
             The updated case, or None if not found.
         """
-        return await self.update_by_id(case_id, audit_log_message_id=message_id)
+        return await self.update_by_id(case_id, mod_log_message_id=message_id)
 
     async def close_case(self, case_id: int) -> Case | None:
         """

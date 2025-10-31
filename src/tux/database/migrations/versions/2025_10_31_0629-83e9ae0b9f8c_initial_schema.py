@@ -1,7 +1,7 @@
 """
-Revision ID: 92c0652ac3f4
+Revision ID: 83e9ae0b9f8c
 Revises:
-Create Date: 2025-10-22 06:36:18.211912+00:00
+Create Date: 2025-10-31 06:29:25.369830+00:00
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision: str = "92c0652ac3f4"
+revision: str = "83e9ae0b9f8c"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -100,13 +100,13 @@ def upgrade() -> None:
         sa.Column("case_number", sa.Integer(), nullable=True),
         sa.Column("case_expires_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("case_metadata", sa.JSON(), nullable=True),
-        sa.Column("audit_log_message_id", sa.BigInteger(), nullable=True),
+        sa.Column("mod_log_message_id", sa.BigInteger(), nullable=True),
         sa.Column("guild_id", sa.BigInteger(), nullable=False),
-        sa.CheckConstraint("audit_log_message_id IS NULL OR audit_log_message_id > 0", name="check_audit_msg_id_valid"),
         sa.CheckConstraint("case_moderator_id > 0", name="check_case_moderator_id_valid"),
         sa.CheckConstraint("case_number IS NULL OR case_number >= 1", name="check_case_number_positive"),
         sa.CheckConstraint("case_user_id > 0", name="check_case_user_id_valid"),
         sa.CheckConstraint("guild_id > 0", name="check_case_guild_id_valid"),
+        sa.CheckConstraint("mod_log_message_id IS NULL OR mod_log_message_id > 0", name="check_mod_msg_id_valid"),
         sa.ForeignKeyConstraint(["guild_id"], ["guild.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("guild_id", "case_number", name="uq_case_guild_case_number"),

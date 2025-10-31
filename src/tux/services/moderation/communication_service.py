@@ -220,6 +220,146 @@ class CommunicationService:
         else:
             return message
 
+    async def send_audit_log_embed(  # noqa: PLR0911
+        self,
+        ctx: commands.Context[Tux],
+        embed: discord.Embed,
+    ) -> discord.Message | None:
+        """
+        Send an embed to the audit log channel.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            Command context.
+        embed : discord.Embed
+            The embed to send to audit log.
+
+        Returns
+        -------
+        discord.Message | None
+            The sent audit log message if successful, None otherwise.
+        """
+        if not ctx.guild:
+            logger.warning("Cannot send audit log embed: no guild context")
+            return None
+
+        audit_log_id: int | None = None
+        audit_channel: discord.TextChannel | None = None
+
+        try:
+            # Get audit log channel ID from guild config
+            audit_log_id = await self.bot.db.guild_config.get_audit_log_id(ctx.guild.id)
+            if not audit_log_id:
+                logger.debug(f"No audit log channel configured for guild {ctx.guild.id}")
+                return None
+
+            # Get the audit log channel
+            channel = ctx.guild.get_channel(audit_log_id)
+            if not channel:
+                logger.warning(f"Audit log channel {audit_log_id} not found in guild {ctx.guild.id}")
+                return None
+
+            # Check if we can send messages to the channel
+            if not isinstance(channel, discord.TextChannel):
+                logger.warning(f"Audit log channel {audit_log_id} is not a text channel")
+                return None
+
+            audit_channel = channel
+        except Exception as e:
+            # Handle any unexpected errors during setup
+            logger.error(f"Unexpected error during audit log setup: {e}")
+            return None
+        else:
+            # Send the embed to audit log - only reached if no early returns occurred above
+            try:
+                audit_message = await audit_channel.send(embed=embed)
+            except discord.Forbidden:
+                logger.warning(
+                    f"Missing permissions to send to audit log channel {audit_log_id or 'unknown'} in guild {ctx.guild.id}",
+                )
+                return None
+            except discord.HTTPException as e:
+                logger.error(f"Failed to send audit log embed to channel {audit_log_id or 'unknown'}: {e}")
+                return None
+            except Exception as e:
+                logger.error(f"Unexpected error sending audit log embed: {e}")
+                return None
+            else:
+                # Successfully sent the message
+                logger.info(f"Audit log embed sent to #{audit_channel.name} ({audit_channel.id}) in {ctx.guild.name}")
+                return audit_message
+
+    async def send_mod_log_embed(  # noqa: PLR0911
+        self,
+        ctx: commands.Context[Tux],
+        embed: discord.Embed,
+    ) -> discord.Message | None:
+        """
+        Send an embed to the mod log channel.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            Command context.
+        embed : discord.Embed
+            The embed to send to mod log.
+
+        Returns
+        -------
+        discord.Message | None
+            The sent mod log message if successful, None otherwise.
+        """
+        if not ctx.guild:
+            logger.warning("Cannot send mod log embed: no guild context")
+            return None
+
+        mod_log_id: int | None = None
+        mod_channel: discord.TextChannel | None = None
+
+        try:
+            # Get mod log channel ID from guild config
+            mod_log_id = await self.bot.db.guild_config.get_mod_log_id(ctx.guild.id)
+            if not mod_log_id:
+                logger.debug(f"No mod log channel configured for guild {ctx.guild.id}")
+                return None
+
+            # Get the mod log channel
+            channel = ctx.guild.get_channel(mod_log_id)
+            if not channel:
+                logger.warning(f"Mod log channel {mod_log_id} not found in guild {ctx.guild.id}")
+                return None
+
+            # Check if we can send messages to the channel
+            if not isinstance(channel, discord.TextChannel):
+                logger.warning(f"Mod log channel {mod_log_id} is not a text channel")
+                return None
+
+            mod_channel = channel
+        except Exception as e:
+            # Handle any unexpected errors during setup
+            logger.error(f"Unexpected error during mod log setup: {e}")
+            return None
+        else:
+            # Send the embed to mod log - only reached if no early returns occurred above
+            try:
+                mod_message = await mod_channel.send(embed=embed)
+            except discord.Forbidden:
+                logger.warning(
+                    f"Missing permissions to send to mod log channel {mod_log_id or 'unknown'} in guild {ctx.guild.id}",
+                )
+                return None
+            except discord.HTTPException as e:
+                logger.error(f"Failed to send mod log embed to channel {mod_log_id or 'unknown'}: {e}")
+                return None
+            except Exception as e:
+                logger.error(f"Unexpected error sending mod log embed: {e}")
+                return None
+            else:
+                # Successfully sent the message
+                logger.info(f"Mod log embed sent to #{mod_channel.name} ({mod_channel.id}) in {ctx.guild.name}")
+                return mod_message
+
     def _create_dm_embed(
         self,
         action: str,

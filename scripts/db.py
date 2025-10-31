@@ -63,6 +63,7 @@ class DatabaseCLI(BaseCLI):
             # ============================================================================
             Command("tables", self.tables, "List all database tables"),
             Command("health", self.health, "Check database connection health"),
+            Command("schema", self.schema, "Validate database schema matches models"),
             Command("queries", self.queries, "Check for long-running queries"),
             # ============================================================================
             # ADMIN COMMANDS
@@ -480,6 +481,51 @@ class DatabaseCLI(BaseCLI):
                 self.rich.print_error(f"Failed to check database health: {e}")
 
         asyncio.run(_health_check())
+
+    def schema(self) -> None:
+        """Validate that database schema matches model definitions.
+
+        Performs a comprehensive check to ensure all tables and columns
+        defined in the models exist in the database and are accessible.
+        Useful for catching schema mismatches after code changes.
+        """
+        self.rich.print_section("🔍 Schema Validation", "blue")
+        self.rich.rich_print("[bold blue]Validating database schema against models...[/bold blue]")
+
+        def _exit_with_error() -> None:
+            """Exit with error status."""
+            raise typer.Exit(1) from None
+
+        async def _schema_check():
+            """Validate the database schema against model definitions."""
+            try:
+                service = DatabaseService(echo=False)
+                await service.connect(CONFIG.database_url)
+
+                schema_result = await service.validate_schema()
+
+                if schema_result["status"] == "valid":
+                    self.rich.rich_print("[green]✅ Database schema validation passed![/green]")
+                    self.rich.rich_print("[green]All tables and columns match model definitions.[/green]")
+                else:
+                    error_msg = schema_result.get("error", "Unknown schema validation error")
+                    self.rich.rich_print("[red]❌ Database schema validation failed![/red]")
+                    self.rich.rich_print(f"[red]Error: {error_msg}[/red]")
+                    self.rich.rich_print("")
+                    self.rich.rich_print("[yellow]💡 Suggested fixes:[/yellow]")
+                    self.rich.rich_print("  • Run 'uv run db reset' to reset and reapply migrations")
+                    self.rich.rich_print("  • Run 'uv run db nuke --force' for complete database reset")
+                    self.rich.rich_print("  • Check that your models match the latest migration files")
+                    _exit_with_error()
+
+                await service.disconnect()
+                self.rich.print_success("Schema validation completed")
+
+            except Exception as e:
+                self.rich.print_error(f"Failed to validate database schema: {e}")
+                raise typer.Exit(1) from None
+
+        asyncio.run(_schema_check())
 
     def queries(self) -> None:
         """Check for long-running database queries.

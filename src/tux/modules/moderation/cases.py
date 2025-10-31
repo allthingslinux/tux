@@ -371,8 +371,98 @@ class Cases(ModerationCogBase):
             await ctx.reply("Failed to update case.", mention_author=False)
             return
 
+        # Update the mod log embed if it exists
+        await self._update_mod_log_embed(ctx, updated_case)
+
         user = await self._resolve_user(case.case_user_id)
         await self._send_case_embed(ctx, updated_case, "updated", updated_case.case_reason, user)
+
+    async def _update_mod_log_embed(
+        self,
+        ctx: commands.Context[Tux],
+        case: Case,
+    ) -> None:
+        """
+        Update the mod log embed for a modified case.
+
+        Parameters
+        ----------
+        ctx : commands.Context[Tux]
+            The context in which the command is being invoked.
+        case : Case
+            The updated case to reflect in the mod log.
+        """
+        assert ctx.guild
+
+        # Check if this case has a mod log message ID
+        if not case.mod_log_message_id:
+            logger.debug(f"Case #{case.case_number} has no mod log message ID, skipping update")
+            return
+
+        mod_message: discord.Message | None = None
+
+        try:
+            # Get mod log channel ID from guild config
+            mod_log_id = await self.bot.db.guild_config.get_mod_log_id(ctx.guild.id)
+            if not mod_log_id:
+                logger.debug(f"No mod log channel configured for guild {ctx.guild.id}")
+                return
+
+            # Get the mod log channel
+            mod_channel = ctx.guild.get_channel(mod_log_id)
+            if not mod_channel or not isinstance(mod_channel, discord.TextChannel):
+                logger.warning(f"Mod log channel {mod_log_id} not found or not a text channel")
+                return
+
+            # Try to fetch the mod log message
+            try:
+                mod_message = await mod_channel.fetch_message(case.mod_log_message_id)
+            except discord.NotFound:
+                logger.warning(f"Mod log message {case.mod_log_message_id} not found in channel {mod_channel.id}")
+                return
+            except discord.Forbidden:
+                logger.warning(f"Missing permissions to fetch message {case.mod_log_message_id} in mod log channel")
+                return
+
+            # Create updated embed for mod log
+            user = await self._resolve_user(case.case_user_id)
+            moderator = await self._resolve_moderator(case.case_moderator_id)
+
+            embed = EmbedCreator.create_embed(
+                embed_type=EmbedType.ACTIVE_CASE,
+                description="Case Updated",  # Indicate this is an updated case
+                custom_author_text=f"Case #{case.case_number} ({case.case_type.value if case.case_type else 'Unknown'})",
+            )
+
+            # Add case-specific fields for mod log
+            fields = [
+                ("Moderator", f"{moderator.name}\n`{moderator.id}`", True),
+                ("Target", f"{user.name}\n`{user.id}`", True),
+                ("Reason", f"> {case.case_reason}", False),
+            ]
+
+            if case.case_expires_at:
+                fields.append(("Expires", f"<t:{int(case.case_expires_at.timestamp())}:R>", True))
+
+            for name, value, inline in fields:
+                embed.add_field(name=name, value=value, inline=inline)
+
+            # Set embed timestamp to case creation time
+            if case.created_at:
+                embed.timestamp = case.created_at
+
+            # Add footer indicating this was updated
+            embed.set_footer(
+                text=f"Last updated by {ctx.author} • {discord.utils.utcnow().strftime('%Y-%m-%d %H:%M UTC')}",
+            )
+
+            # Edit the mod log message with updated embed
+            await mod_message.edit(embed=embed)
+            logger.info(f"Updated mod log message {case.mod_log_message_id} for case #{case.case_number}")
+
+        except Exception as e:
+            logger.error(f"Failed to update mod log embed for case #{case.case_number}: {e}")
+            # Don't raise - mod log update failure shouldn't break case modification
 
     async def _resolve_user(self, user_id: int) -> discord.User | MockUser:
         """

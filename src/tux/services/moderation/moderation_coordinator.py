@@ -57,7 +57,7 @@ class ModerationCoordinator:
         self._communication = communication_service
         self._execution = execution_service
 
-    async def execute_moderation_action(  # noqa: PLR0915
+    async def execute_moderation_action(  # noqa: PLR0912, PLR0915
         self,
         ctx: commands.Context[Tux],
         case_type: DBCaseType,
@@ -69,7 +69,7 @@ class ModerationCoordinator:
         duration: int | None = None,
         expires_at: datetime | None = None,
         **extra_case_data: Any,
-    ) -> Case | None:
+    ) -> Case | None:  # sourcery skip: low-code-quality
         """
         Execute a complete moderation action.
 
@@ -79,7 +79,9 @@ class ModerationCoordinator:
         3. Execute Discord actions with retry logic
         4. Create database case
         5. Send DM if required (after action for non-removal actions)
-        6. Send response embed
+        6. Send response embed to the moderator
+        7. Send response embed to the log channel
+        8. Update the case audit log message ID
 
         Parameters
         ----------
@@ -197,9 +199,23 @@ class ModerationCoordinator:
                 logger.warning(f"Failed to send post-action DM to user {user.id}: {e}")
                 dm_sent = False
 
-        # Send response embed
+        # Send response embed to moderator
         logger.debug(f"Sending response embed, case={'None' if case is None else case.id}, dm_sent={dm_sent}")
         await self._send_response_embed(ctx, case, user, dm_sent)
+
+        # Send response embed to audit log channel and update case
+        if case is not None:
+            logger.debug(f"Sending response embed to mod log for case #{case.case_number}")
+            mod_log_message = await self._send_mod_log_embed(ctx, case, user, dm_sent)
+            if mod_log_message:
+                try:
+                    if case.id is not None:
+                        await self._case_service.update_mod_log_message_id(case.id, mod_log_message.id)
+                        logger.info(f"Updated case #{case.case_number} with mod log message ID {mod_log_message.id}")
+                    else:
+                        logger.error(f"Cannot update mod log message ID: case.id is None for case #{case.case_number}")
+                except Exception as e:
+                    logger.error(f"Failed to update mod log message ID for case #{case.case_number}: {e}")
 
         logger.info(f"Completed moderation action {case_type.value} on user {user.id}")
         return case
@@ -349,6 +365,43 @@ class ModerationCoordinator:
 
         await self._communication.send_embed(ctx, embed)
         logger.debug("Response embed sent successfully")
+
+    async def _send_mod_log_embed(
+        self,
+        ctx: commands.Context[Tux],
+        case: Case,
+        user: discord.Member | discord.User,
+        dm_sent: bool,
+    ) -> discord.Message | None:
+        """Send the response embed to the mod log channel."""
+        logger.debug(f"Preparing audit log embed for case #{case.case_number}")
+
+        # Create a copy of the embed for audit log with different footer
+        embed = EmbedCreator.create_embed(
+            embed_type=EmbedType.ACTIVE_CASE,
+            description="✅ DM sent" if dm_sent else "❌ DM not sent",
+            custom_author_text=f"Case #{case.case_number} ({case.case_type.value if case.case_type else 'Unknown'})",
+        )
+
+        # Add case-specific fields for audit log
+        fields = [
+            ("Moderator", f"{ctx.author.name}\n`{ctx.author.id}`", True),
+            ("Target", f"{user.name}\n`{user.id}`", True),
+            ("Reason", f"> {case.case_reason}", False),
+        ]
+
+        if case.case_expires_at:
+            fields.append(("Expires", f"<t:{int(case.case_expires_at.timestamp())}:R>", True))
+
+        for name, value, inline in fields:
+            embed.add_field(name=name, value=value, inline=inline)
+
+        # Set embed timestamp to case creation time
+        if case.created_at:
+            embed.timestamp = case.created_at
+
+        # Send to mod log channel
+        return await self._communication.send_mod_log_embed(ctx, embed)
 
     def _get_default_dm_action(self, case_type: DBCaseType) -> str:
         """Get the default DM action description for a case type.

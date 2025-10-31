@@ -136,6 +136,7 @@ class DatabaseSetupService(BaseSetupService):
         self._log_step("Database connected successfully", "success")
         await self._create_tables()
         await self._upgrade_head_if_needed()
+        await self._validate_schema()
 
     async def _create_tables(self) -> None:
         """Create database tables if they don't exist."""
@@ -150,3 +151,27 @@ class DatabaseSetupService(BaseSetupService):
 
         except Exception as table_error:
             self._log_step(f"Could not create tables: {table_error}", "warning")
+
+    async def _validate_schema(self) -> None:
+        """Validate that the database schema matches model definitions."""
+
+        def _raise_schema_error(error_msg: str) -> None:
+            """Raise a RuntimeError for schema validation failures."""
+            msg = f"Schema validation failed: {error_msg}"
+            raise RuntimeError(msg)
+
+        try:
+            self._log_step("Validating database schema...")
+
+            schema_result = await self.db_service.validate_schema()
+
+            if schema_result["status"] == "valid":
+                self._log_step("Database schema validation passed", "success")
+            else:
+                error_msg = schema_result.get("error", "Unknown schema validation error")
+                self._log_step(f"Database schema validation failed: {error_msg}", "error")
+                _raise_schema_error(error_msg)
+
+        except Exception as schema_error:
+            self._log_step(f"Schema validation error: {schema_error}", "error")
+            raise

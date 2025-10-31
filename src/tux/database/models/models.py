@@ -587,8 +587,8 @@ class Case(BaseModel, table=True):
         When temporary action expires.
     case_metadata : dict, optional
         Additional case-specific metadata.
-    audit_log_message_id : int, optional
-        Discord message ID in audit log.
+    mod_log_message_id : int, optional
+        Discord message ID in mod log.
     guild_id : int
         Discord guild ID where the case occurred.
     """
@@ -650,10 +650,10 @@ class Case(BaseModel, table=True):
         description="Additional case-specific metadata and context",
     )
 
-    audit_log_message_id: int | None = Field(
+    mod_log_message_id: int | None = Field(
         default=None,
         sa_type=BigInteger,
-        description="Discord message ID in audit log channel (allows editing case embeds)",
+        description="Discord message ID in mod log channel (allows editing case embeds)",
     )
 
     guild_id: int = Field(
@@ -670,7 +670,7 @@ class Case(BaseModel, table=True):
         CheckConstraint("case_user_id > 0", name="check_case_user_id_valid"),
         CheckConstraint("case_moderator_id > 0", name="check_case_moderator_id_valid"),
         CheckConstraint("case_number IS NULL OR case_number >= 1", name="check_case_number_positive"),
-        CheckConstraint("audit_log_message_id IS NULL OR audit_log_message_id > 0", name="check_audit_msg_id_valid"),
+        CheckConstraint("mod_log_message_id IS NULL OR mod_log_message_id > 0", name="check_mod_msg_id_valid"),
         Index("idx_case_guild", "guild_id"),
         Index("idx_case_guild_user", "guild_id", "case_user_id"),
         Index("idx_case_guild_moderator", "guild_id", "case_moderator_id"),

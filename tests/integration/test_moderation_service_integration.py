@@ -39,7 +39,7 @@ class TestModerationCoordinatorIntegration:
         db = MagicMock()
         db.case = MagicMock()
         db.case.insert_case = AsyncMock()
-        db.case.update_audit_log_message_id = AsyncMock()
+        db.case.update_mod_log_message_id = AsyncMock()
         return db
 
     @pytest.fixture
@@ -404,7 +404,7 @@ class TestModerationCoordinatorIntegration:
                     silent=True,
                     dm_action="temp banned",
                     actions=[(mock_action, type(None))],
-                    duration=None,  # type: ignore[arg-type]
+                    duration=None,
                     expires_at=expires_at,
                 )
 
@@ -435,3 +435,557 @@ class TestModerationCoordinatorIntegration:
         # Cleanup is likely handled by individual services
         # This test may need to be moved to service-specific tests
         pass
+
+    @pytest.mark.integration
+    async def test_complete_workflow_with_audit_logging_success(
+        self,
+        moderation_coordinator: ModerationCoordinator,
+        mock_ctx,
+        mock_member,
+        mock_bot,
+    ) -> None:
+        """Test complete workflow with successful audit logging."""
+        # Setup bot with database mock
+        mock_bot.db = MagicMock()
+        mock_bot.db.guild_config = MagicMock()
+        mock_bot.db.guild_config.get_audit_log_id = AsyncMock(return_value=123456789)
+
+        mock_ctx.guild.get_channel = MagicMock()
+        audit_channel = MagicMock(spec=discord.TextChannel)
+        audit_channel.name = "audit-log"
+        audit_channel.id = 123456789
+        audit_channel.send = AsyncMock(return_value=MagicMock())
+        mock_ctx.guild.get_channel.return_value = audit_channel
+
+        mock_ctx.guild.get_member.return_value = MagicMock()
+
+        # Mock successful DM
+        with patch.object(moderation_coordinator._communication, 'send_dm', new_callable=AsyncMock) as mock_send_dm:
+            mock_send_dm.return_value = True
+
+            # Mock successful ban action
+            mock_ban_action = AsyncMock(return_value=None)
+
+            # Mock case creation
+            mock_case = MagicMock()
+            mock_case.id = 48
+            mock_case.case_number = 100
+            mock_case.case_type = MagicMock()
+            mock_case.case_type.value = "BAN"
+            mock_case.case_reason = "Audit log test"
+            mock_case.created_at = MagicMock()
+            mock_case.created_at.timestamp.return_value = 1640995200.0  # 2022-01-01
+            moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
+
+            # Mock audit log message ID update
+            moderation_coordinator._case_service.update_mod_log_message_id = AsyncMock()
+
+            with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_send_response:
+                with patch('tux.services.moderation.moderation_coordinator.EmbedCreator') as mock_embed_creator:
+                    mock_embed = MagicMock()
+                    mock_embed_creator.create_embed.return_value = mock_embed
+
+                    await moderation_coordinator.execute_moderation_action(
+                        ctx=mock_ctx,
+                        case_type=DBCaseType.BAN,
+                        user=mock_member,
+                        reason="Audit log integration test",
+                        silent=False,
+                        dm_action="banned",
+                        actions=[(mock_ban_action, type(None))],
+                    )
+
+                    # Verify the complete workflow executed
+                    mock_send_dm.assert_called_once()
+                    mock_ban_action.assert_called_once()
+                    moderation_coordinator._case_service.create_case.assert_called_once()
+                    mock_send_response.assert_called_once()
+
+                    # Verify audit log was sent
+                    audit_channel.send.assert_called_once()
+                    moderation_coordinator._case_service.update_mod_log_message_id.assert_called_once_with(
+                        48, audit_channel.send.return_value.id,
+                    )
+
+    @pytest.mark.integration
+    async def test_audit_log_channel_not_configured(
+        self,
+        moderation_coordinator: ModerationCoordinator,
+        mock_ctx,
+        mock_member,
+        mock_bot,
+    ) -> None:
+        """Test workflow when audit log channel is not configured."""
+        # Setup bot with database mock
+        mock_bot.db = MagicMock()
+        mock_bot.db.guild_config = MagicMock()
+        mock_bot.db.guild_config.get_audit_log_id = AsyncMock(return_value=None)  # No audit log configured
+
+        mock_ctx.guild.get_member.return_value = MagicMock()
+
+        # Mock successful DM and action
+        with patch.object(moderation_coordinator._communication, 'send_dm', new_callable=AsyncMock) as mock_send_dm:
+            mock_send_dm.return_value = True
+            mock_ban_action = AsyncMock(return_value=None)
+            mock_case = MagicMock()
+            mock_case.id = 49
+            moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
+
+            with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_send_response:
+                await moderation_coordinator.execute_moderation_action(
+                    ctx=mock_ctx,
+                    case_type=DBCaseType.BAN,
+                    user=mock_member,
+                    reason="No audit log configured test",
+                    actions=[(mock_ban_action, type(None))],
+                )
+
+                # Workflow should succeed but audit log should not be attempted
+                mock_send_dm.assert_called_once()
+                mock_ban_action.assert_called_once()
+                moderation_coordinator._case_service.create_case.assert_called_once()
+                mock_send_response.assert_called_once()
+
+    @pytest.mark.integration
+    async def test_audit_log_channel_not_found(
+        self,
+        moderation_coordinator: ModerationCoordinator,
+        mock_ctx,
+        mock_member,
+        mock_bot,
+    ) -> None:
+        """Test workflow when audit log channel exists in config but not in guild."""
+        # Setup bot with database mock
+        mock_bot.db = MagicMock()
+        mock_bot.db.guild_config = MagicMock()
+        mock_bot.db.guild_config.get_audit_log_id = AsyncMock(return_value=123456789)
+
+        # Channel not found in guild
+        mock_ctx.guild.get_channel.return_value = None
+
+        mock_ctx.guild.get_member.return_value = MagicMock()
+
+        # Mock successful workflow
+        with patch.object(moderation_coordinator._communication, 'send_dm', new_callable=AsyncMock) as mock_send_dm:
+            mock_send_dm.return_value = True
+            mock_ban_action = AsyncMock(return_value=None)
+            mock_case = MagicMock()
+            mock_case.id = 50
+            moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
+
+            with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_send_response:
+                await moderation_coordinator.execute_moderation_action(
+                    ctx=mock_ctx,
+                    case_type=DBCaseType.BAN,
+                    user=mock_member,
+                    reason="Audit log channel not found test",
+                    actions=[(mock_ban_action, type(None))],
+                )
+
+                # Workflow should succeed but audit log should fail gracefully
+                mock_send_dm.assert_called_once()
+                mock_ban_action.assert_called_once()
+                moderation_coordinator._case_service.create_case.assert_called_once()
+                mock_send_response.assert_called_once()
+
+    @pytest.mark.integration
+    async def test_audit_log_channel_wrong_type(
+        self,
+        moderation_coordinator: ModerationCoordinator,
+        mock_ctx,
+        mock_member,
+        mock_bot,
+    ) -> None:
+        """Test workflow when audit log channel is not a text channel."""
+        # Setup bot with database mock
+        mock_bot.db = MagicMock()
+        mock_bot.db.guild_config = MagicMock()
+        mock_bot.db.guild_config.get_audit_log_id = AsyncMock(return_value=123456789)
+
+        # Channel exists but is not a text channel (e.g., voice channel)
+        mock_ctx.guild.get_channel = MagicMock()
+        voice_channel = MagicMock(spec=discord.VoiceChannel)  # Not a TextChannel
+        mock_ctx.guild.get_channel.return_value = voice_channel
+
+        mock_ctx.guild.get_member.return_value = MagicMock()
+
+        # Mock successful workflow
+        with patch.object(moderation_coordinator._communication, 'send_dm', new_callable=AsyncMock) as mock_send_dm:
+            mock_send_dm.return_value = True
+            mock_ban_action = AsyncMock(return_value=None)
+            mock_case = MagicMock()
+            mock_case.id = 51
+            moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
+
+            with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_send_response:
+                await moderation_coordinator.execute_moderation_action(
+                    ctx=mock_ctx,
+                    case_type=DBCaseType.BAN,
+                    user=mock_member,
+                    reason="Wrong channel type test",
+                    actions=[(mock_ban_action, type(None))],
+                )
+
+                # Workflow should succeed but audit log should fail gracefully
+                mock_send_dm.assert_called_once()
+                mock_ban_action.assert_called_once()
+                moderation_coordinator._case_service.create_case.assert_called_once()
+                mock_send_response.assert_called_once()
+
+    @pytest.mark.integration
+    async def test_audit_log_send_failure_permissions(
+        self,
+        moderation_coordinator: ModerationCoordinator,
+        mock_ctx,
+        mock_member,
+        mock_bot,
+    ) -> None:
+        """Test workflow when audit log send fails due to permissions."""
+        # Setup bot with database mock
+        mock_bot.db = MagicMock()
+        mock_bot.db.guild_config = MagicMock()
+        mock_bot.db.guild_config.get_audit_log_id = AsyncMock(return_value=123456789)
+
+        mock_ctx.guild.get_channel = MagicMock()
+        audit_channel = MagicMock(spec=discord.TextChannel)
+        audit_channel.name = "audit-log"
+        audit_channel.id = 123456789
+        # Simulate Forbidden error when sending
+        audit_channel.send = AsyncMock(side_effect=discord.Forbidden(MagicMock(), "Missing permissions"))
+        mock_ctx.guild.get_channel.return_value = audit_channel
+
+        mock_ctx.guild.get_member.return_value = MagicMock()
+
+        # Mock successful workflow
+        with patch.object(moderation_coordinator._communication, 'send_dm', new_callable=AsyncMock) as mock_send_dm:
+            mock_send_dm.return_value = True
+            mock_ban_action = AsyncMock(return_value=None)
+            mock_case = MagicMock()
+            mock_case.id = 52
+            moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
+
+            with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_send_response:
+                await moderation_coordinator.execute_moderation_action(
+                    ctx=mock_ctx,
+                    case_type=DBCaseType.BAN,
+                    user=mock_member,
+                    reason="Audit log permissions failure test",
+                    actions=[(mock_ban_action, type(None))],
+                )
+
+                # Workflow should succeed but audit log should fail gracefully
+                mock_send_dm.assert_called_once()
+                mock_ban_action.assert_called_once()
+                moderation_coordinator._case_service.create_case.assert_called_once()
+                mock_send_response.assert_called_once()
+
+                # Audit log send was attempted but failed
+                audit_channel.send.assert_called_once()
+
+    @pytest.mark.integration
+    async def test_audit_log_case_update_failure(
+        self,
+        moderation_coordinator: ModerationCoordinator,
+        mock_ctx,
+        mock_member,
+        mock_bot,
+    ) -> None:
+        """Test workflow when audit log succeeds but case update fails."""
+        # Setup bot with database mock
+        mock_bot.db = MagicMock()
+        mock_bot.db.guild_config = MagicMock()
+        mock_bot.db.guild_config.get_audit_log_id = AsyncMock(return_value=123456789)
+
+        mock_ctx.guild.get_channel = MagicMock()
+        audit_channel = MagicMock(spec=discord.TextChannel)
+        audit_channel.name = "audit-log"
+        audit_channel.id = 123456789
+        audit_message = MagicMock()
+        audit_message.id = 987654321
+        audit_channel.send = AsyncMock(return_value=audit_message)
+        mock_ctx.guild.get_channel.return_value = audit_channel
+
+        mock_ctx.guild.get_member.return_value = MagicMock()
+
+        # Mock successful workflow
+        with patch.object(moderation_coordinator._communication, 'send_dm', new_callable=AsyncMock) as mock_send_dm:
+            mock_send_dm.return_value = True
+            mock_ban_action = AsyncMock(return_value=None)
+            mock_case = MagicMock()
+            mock_case.id = 53
+            moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
+
+            # Mock case update failure
+            moderation_coordinator._case_service.update_mod_log_message_id = AsyncMock(
+                side_effect=Exception("Database update failed"),
+            )
+
+            with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_send_response:
+                with patch('tux.services.moderation.moderation_coordinator.EmbedCreator') as mock_embed_creator:
+                    mock_embed = MagicMock()
+                    mock_embed_creator.create_embed.return_value = mock_embed
+
+                    await moderation_coordinator.execute_moderation_action(
+                        ctx=mock_ctx,
+                        case_type=DBCaseType.BAN,
+                        user=mock_member,
+                        reason="Case update failure test",
+                        actions=[(mock_ban_action, type(None))],
+                    )
+
+                    # Workflow should succeed, audit log should be sent, but case update should fail gracefully
+                    mock_send_dm.assert_called_once()
+                    mock_ban_action.assert_called_once()
+                    moderation_coordinator._case_service.create_case.assert_called_once()
+                    mock_send_response.assert_called_once()
+                    audit_channel.send.assert_called_once()
+                    moderation_coordinator._case_service.update_mod_log_message_id.assert_called_once()
+
+    @pytest.mark.integration
+    async def test_case_creation_failure_skips_audit_log(
+        self,
+        moderation_coordinator: ModerationCoordinator,
+        mock_ctx,
+        mock_member,
+        mock_bot,
+    ) -> None:
+        """Test that audit logging is skipped when case creation fails."""
+        # Setup bot with database mock
+        mock_bot.db = MagicMock()
+        mock_bot.db.guild_config = MagicMock()
+        mock_bot.db.guild_config.get_audit_log_id = AsyncMock(return_value=123456789)
+
+        mock_ctx.guild.get_channel = MagicMock()
+        audit_channel = MagicMock(spec=discord.TextChannel)
+        audit_channel.send = AsyncMock(return_value=MagicMock())
+        mock_ctx.guild.get_channel.return_value = audit_channel
+
+        mock_ctx.guild.get_member.return_value = MagicMock()
+
+        # Mock successful DM and action
+        with patch.object(moderation_coordinator._communication, 'send_dm', new_callable=AsyncMock) as mock_send_dm:
+            mock_send_dm.return_value = True
+            mock_ban_action = AsyncMock(return_value=None)
+
+            # Mock case creation failure
+            moderation_coordinator._case_service.create_case = AsyncMock(side_effect=Exception("Database error"))
+
+            with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_send_response:
+                await moderation_coordinator.execute_moderation_action(
+                    ctx=mock_ctx,
+                    case_type=DBCaseType.BAN,
+                    user=mock_member,
+                    reason="Case creation failure test",
+                    actions=[(mock_ban_action, type(None))],
+                )
+
+                # Workflow should complete but audit logging should be skipped
+                mock_send_dm.assert_called_once()
+                mock_ban_action.assert_called_once()
+                moderation_coordinator._case_service.create_case.assert_called_once()
+                mock_send_response.assert_called_once()
+
+                # Audit log should not be attempted when case creation fails
+                audit_channel.send.assert_not_called()
+
+
+class TestCaseModificationAuditLogging:
+    """Test audit log updates when cases are modified."""
+
+    @pytest.fixture
+    def mock_bot_with_db(self):
+        """Create a mock bot with database mock."""
+        bot = MagicMock(spec=Tux)
+        bot.emoji_manager = MagicMock()
+        bot.emoji_manager.get = lambda x: f":{x}:"
+        bot.db = MagicMock()
+        bot.db.guild_config = MagicMock()
+        bot.db.case = MagicMock()
+        return bot
+
+    @pytest.fixture
+    def mock_ctx_with_guild(self):
+        """Create a mock context with guild."""
+        ctx = MagicMock(spec=commands.Context)
+        ctx.guild = MagicMock(spec=discord.Guild)
+        ctx.guild.id = 123456789
+        ctx.author = MagicMock(spec=discord.Member)
+        ctx.author.id = 987654321
+        ctx.author.name = "Moderator"
+        ctx.command = MagicMock()
+        ctx.command.qualified_name = "cases modify"
+        ctx.send = AsyncMock()
+        ctx.reply = AsyncMock()
+        return ctx
+
+    @pytest.mark.integration
+    async def test_case_modify_updates_audit_log(
+        self,
+        mock_bot_with_db,
+        mock_ctx_with_guild,
+    ) -> None:
+        """Test that modifying a case updates the audit log embed."""
+        from tux.modules.moderation.cases import Cases
+        from tux.database.models import Case, CaseType
+        from tux.core.flags import CaseModifyFlags
+
+        # Create Cases cog instance
+        cases_cog = Cases(mock_bot_with_db)
+
+        # Setup mock case with audit log message ID
+        mock_case = MagicMock(spec=Case)
+        mock_case.id = 123
+        mock_case.case_number = 456
+        mock_case.case_type = CaseType.BAN
+        mock_case.case_reason = "Original reason"
+        mock_case.case_status = True
+        mock_case.case_user_id = 555666777
+        mock_case.case_moderator_id = 987654321
+        mock_case.mod_log_message_id = 999888777
+        mock_case.created_at = None
+        mock_case.case_expires_at = None
+
+        # Setup mock updated case
+        mock_updated_case = MagicMock(spec=Case)
+        mock_updated_case.id = 123
+        mock_updated_case.case_number = 456
+        mock_updated_case.case_type = CaseType.BAN
+        mock_updated_case.case_reason = "Updated reason"
+        mock_updated_case.case_status = False  # Changed to inactive
+        mock_updated_case.case_user_id = 555666777
+        mock_updated_case.case_moderator_id = 987654321
+        mock_updated_case.mod_log_message_id = 999888777
+
+        # Setup database mocks
+        mock_bot_with_db.db.guild_config.get_mod_log_id = AsyncMock(return_value=111222333)
+        mock_bot_with_db.db.case.update_case_by_number = AsyncMock(return_value=mock_updated_case)
+        mock_bot_with_db.db.case.get_case_by_number = AsyncMock(return_value=mock_case)
+
+        # Setup guild channel mock
+        mod_channel = MagicMock(spec=discord.TextChannel)
+        mod_channel.id = 111222333
+        mod_channel.name = "mod-log"
+        mod_message = MagicMock(spec=discord.Message)
+        mod_channel.fetch_message = AsyncMock(return_value=mod_message)
+        mod_message.edit = AsyncMock()
+
+        mock_ctx_with_guild.guild.get_channel = MagicMock(return_value=mod_channel)
+
+        # Setup user resolution mocks
+        mock_user = MagicMock(spec=discord.User)
+        mock_user.id = 555666777
+        mock_user.name = "TargetUser"
+
+        mock_moderator = MagicMock(spec=discord.User)
+        mock_moderator.id = 987654321
+        mock_moderator.name = "Moderator"
+
+        with patch.object(cases_cog, '_resolve_user', new_callable=AsyncMock) as mock_resolve_user, \
+             patch.object(cases_cog, '_resolve_moderator', new_callable=AsyncMock) as mock_resolve_moderator, \
+             patch.object(cases_cog, '_send_case_embed', new_callable=AsyncMock) as mock_send_case_embed, \
+             patch('tux.modules.moderation.cases.EmbedCreator') as mock_embed_creator, \
+             patch('tux.core.decorators.get_permission_system') as mock_get_permission_system:
+
+            mock_resolve_user.return_value = mock_user
+            mock_resolve_moderator.return_value = mock_moderator
+
+            mock_embed = MagicMock()
+            mock_embed_creator.create_embed.return_value = mock_embed
+
+            # Mock permission system
+            mock_permission_system = MagicMock()
+            mock_permission_system.get_command_permission = AsyncMock(return_value=MagicMock(required_rank=0))
+            mock_permission_system.get_user_permission_rank = AsyncMock(return_value=7)  # High rank to pass checks
+            mock_get_permission_system.return_value = mock_permission_system
+
+            # Create modify flags manually (since flag parsing happens in command context)
+            flags = MagicMock(spec=CaseModifyFlags)
+            flags.reason = "Updated reason"
+            flags.status = False
+
+            # Call the _update_case method directly (bypassing command decorators)
+            await cases_cog._update_case(mock_ctx_with_guild, mock_case, flags)
+
+            # Verify database update was called
+            mock_bot_with_db.db.case.update_case_by_number.assert_called_once_with(
+                123456789, 456, case_reason="Updated reason", case_status=False,
+            )
+
+            # Verify mod log message was fetched and edited
+            mod_channel.fetch_message.assert_called_once_with(999888777)
+            mod_message.edit.assert_called_once()
+
+            # Verify case embed was sent to user
+            mock_send_case_embed.assert_called_once()
+
+    @pytest.mark.integration
+    async def test_case_modify_no_mod_log_message_id(
+        self,
+        mock_bot_with_db,
+        mock_ctx_with_guild,
+    ) -> None:
+        """Test that modifying a case without mod log message ID doesn't attempt update."""
+        from tux.modules.moderation.cases import Cases
+        from tux.database.models import Case, CaseType
+        from tux.core.flags import CaseModifyFlags
+
+        # Create Cases cog instance
+        cases_cog = Cases(mock_bot_with_db)
+
+        # Setup mock case WITHOUT audit log message ID
+        mock_case = MagicMock(spec=Case)
+        mock_case.id = 123
+        mock_case.case_number = 456
+        mock_case.case_type = CaseType.BAN
+        mock_case.case_reason = "Original reason"
+        mock_case.case_status = True
+        mock_case.case_user_id = 555666777
+        mock_case.case_moderator_id = 987654321
+        mock_case.mod_log_message_id = None  # No mod log message ID
+
+        # Setup mock updated case
+        mock_updated_case = MagicMock(spec=Case)
+        mock_updated_case.id = 123
+        mock_updated_case.case_number = 456
+        mock_updated_case.case_type = CaseType.BAN
+        mock_updated_case.case_reason = "Updated reason"
+        mock_updated_case.case_status = True
+        mock_updated_case.case_user_id = 555666777
+        mock_updated_case.case_moderator_id = 987654321
+        mock_updated_case.mod_log_message_id = None
+
+        # Setup database mocks
+        mock_bot_with_db.db.case.update_case_by_number = AsyncMock(return_value=mock_updated_case)
+        mock_bot_with_db.db.case.get_case_by_number = AsyncMock(return_value=mock_case)
+
+        # Setup user resolution mocks
+        mock_user = MagicMock(spec=discord.User)
+        mock_user.id = 555666777
+        mock_user.name = "TargetUser"
+
+        with patch.object(cases_cog, '_resolve_user', new_callable=AsyncMock) as mock_resolve_user, \
+             patch.object(cases_cog, '_send_case_embed', new_callable=AsyncMock) as mock_send_case_embed, \
+             patch('tux.core.decorators.get_permission_system') as mock_get_permission_system:
+
+            mock_resolve_user.return_value = mock_user
+
+            # Mock permission system
+            mock_permission_system = MagicMock()
+            mock_permission_system.get_command_permission = AsyncMock(return_value=MagicMock(required_rank=0))
+            mock_permission_system.get_user_permission_rank = AsyncMock(return_value=7)  # High rank to pass checks
+            mock_get_permission_system.return_value = mock_permission_system
+
+            # Create modify flags manually (since flag parsing happens in command context)
+            flags = MagicMock(spec=CaseModifyFlags)
+            flags.reason = "Updated reason"
+            flags.status = None  # Not changing status in this test
+
+            # Call the _update_case method directly (bypassing command decorators)
+            await cases_cog._update_case(mock_ctx_with_guild, mock_case, flags)
+
+            # Verify database update was called
+            mock_bot_with_db.db.case.update_case_by_number.assert_called_once()
+
+            # Verify audit log methods were NOT called
+            # (No audit log message ID, so no attempts should be made)
+            mock_send_case_embed.assert_called_once()

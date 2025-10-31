@@ -20,7 +20,7 @@ from typing import Any, TypeVar
 import sentry_sdk
 import sqlalchemy.exc
 from loguru import logger
-from sqlalchemy import text
+from sqlalchemy import inspect, text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from tux.shared.config import CONFIG
@@ -308,3 +308,63 @@ class DatabaseService:
 
         except Exception as e:
             return {"status": "unhealthy", "error": str(e)}
+
+    async def validate_schema(self) -> dict[str, Any]:
+        """
+        Validate that the database schema matches the current model definitions.
+
+        Uses SQLAlchemy's metadata reflection to compare the actual database schema
+        with the defined model metadata. Much more efficient and accurate than
+        manual queries.
+
+        Returns
+        -------
+        dict[str, Any]
+            Schema validation result with status and optional error message.
+            Status can be: "valid", "invalid", or "error".
+
+        Examples
+        --------
+        >>> result = await db.validate_schema()
+        >>> print(result)
+        {'status': 'valid', 'mode': 'async'}
+        """
+        if not self.is_connected():
+            return {"status": "error", "error": "Database engine not connected"}
+
+        try:
+            # Get database inspector to reflect current schema
+            async with self.engine.begin() as conn:
+                inspector = await conn.run_sync(lambda sync_conn: inspect(sync_conn))
+
+                # Check if required tables exist
+                existing_tables = await conn.run_sync(lambda sync_conn: inspector.get_table_names())
+                required_tables = {"guild", "guild_config", "cases"}
+
+                missing_tables = required_tables - set(existing_tables)
+                if missing_tables:
+                    return {
+                        "status": "invalid",
+                        "error": f"Missing tables: {', '.join(missing_tables)}. Run 'uv run db reset' to fix.",
+                    }
+
+                # Check if critical columns exist
+                for table_name in required_tables:
+                    columns = await conn.run_sync(lambda sync_conn, table=table_name: inspector.get_columns(table))
+                    column_names = {col["name"] for col in columns}
+
+                    # Check for critical columns that have caused issues before
+                    if table_name == "cases" and "mod_log_message_id" not in column_names:
+                        return {
+                            "status": "invalid",
+                            "error": "Missing 'mod_log_message_id' column in 'cases' table. Run 'uv run db reset' to fix.",
+                        }
+
+                return {"status": "valid", "mode": "async"}
+
+        except Exception as e:
+            error_msg = f"{type(e).__name__}: {e}"
+            logger.error(f"❌ Database schema validation failed: {error_msg}")
+            logger.error("💡 This usually means the database schema doesn't match the model definitions")
+            logger.error("💡 Try running: uv run db reset")
+            return {"status": "invalid", "error": error_msg}

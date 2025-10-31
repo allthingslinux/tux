@@ -602,24 +602,37 @@ class TestCriticalIssuesIntegration:
         This test verifies that the coordinator doesn't have its own owner protection.
         """
         mock_member = MockMember()
-        mock_member.id = mock_ctx.guild.owner_id  # Target is guild owner
+        mock_member.id = 999999999  # Target is guild owner
 
         mock_ctx.guild.get_member.return_value = MockBotMember()
 
         with patch.object(moderation_coordinator._case_service, 'create_case', new_callable=AsyncMock) as mock_create_case:
             with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_response:
+                with patch.object(moderation_coordinator, '_send_mod_log_embed', new_callable=AsyncMock) as mock_mod_log:
+                    with patch.object(moderation_coordinator._case_service, 'update_mod_log_message_id', new_callable=AsyncMock) as mock_update_mod:
 
-                await moderation_coordinator.execute_moderation_action(
-                    ctx=mock_ctx,
-                    case_type=DBCaseType.BAN,
-                    user=mock_member,  # type: ignore[arg-type]
-                    reason="Owner protection test",
-                    actions=[],
-                )
+                        # Mock successful case creation
+                        mock_case = MagicMock()
+                        mock_case.id = 123
+                        mock_case.case_number = 456
+                        mock_create_case.return_value = mock_case
 
-                # ✅ Coordinator should proceed with action (protection is at command level)
-                mock_create_case.assert_called_once()
-                mock_response.assert_called_once()
+                        # Mock successful response and audit log
+                        mock_response.return_value = None
+                        mock_mod_log.return_value = None  # No mod log for this test
+                        mock_update_mod.return_value = None
+
+                        await moderation_coordinator.execute_moderation_action(
+                            ctx=mock_ctx,
+                            case_type=DBCaseType.BAN,
+                            user=mock_member,  # type: ignore[arg-type]
+                            reason="Owner protection test",
+                            actions=[],
+                        )
+
+                        # ✅ Coordinator should proceed with action (protection is at command level)
+                        mock_create_case.assert_called_once()
+                        mock_response.assert_called_once()
 
     @pytest.mark.integration
     async def test_self_moderation_prevention(
