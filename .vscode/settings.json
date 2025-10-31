@@ -94,5 +94,5 @@
     "tag:yaml.org,2002:python/object/apply:pymdownx.slugs.slugify",
     "tag:yaml.org,2002:python/object/apply:pymdownx.slugs.slugify mapping"
   ],
-  "markdown.validate.enabled": false
+  "markdown.validate.enabled": true
 }

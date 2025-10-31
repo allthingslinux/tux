@@ -1,0 +1,144 @@
+---
+description: Documentation organization, navigation structure, and content hierarchy guidelines
+alwaysApply: false
+---
+# Documentation Structure & Organization
+
+The documentation follows a role-based structure organized around user needs:
+
+- **Home**: Main landing page with overview
+- **FAQ**: Frequently asked questions with search and snippet search
+- **Getting Started**: Onboarding guides for different user types (users, admins, self-hosters, developers)
+- **User Guide**: Complete user experience with commands and features
+- **Admin Guide**: Server administration and configuration
+- **Self-Hoster Guide**: Installation, configuration, and management
+- **Developer Guide**: Complete development resources and best practices
+- **Reference**: Technical specifications, API docs, CLI, environment variables
+- **Changelog**: Version history and release notes
+
+Navigation is handled by the `mkdocs-literate-nav` plugin using `SUMMARY.md` with wildcard patterns.
+
+## Content Organization and Structure
+
+### Directory Structure
+
+- **Source directory**: `content/` (all markdown source files)
+- **Build directory**: `site/` (MkDocs output, served by development server)
+- **Navigation file**: `content/SUMMARY.md` (literate navigation with wildcards)
+- **Home page**: `content/index.md` (main landing page)
+- **Includes**: `includes/` directory for shared content (abbreviations)
+- **Overrides**: `overrides/` directory for theme customizations
+
+### Literate Navigation Organization
+
+Content follows a user-centric structure with Diátaxis principles and is organized using SUMMARY.md:
+
+#### Core Sections
+
+- **`getting-started/`**: Onboarding guides for different user types
+- **`user/`**: Complete user guide with commands and features
+- **`admin/`**: Server administration, setup, configuration, and management
+- **`selfhost/`**: Self-hosting with installation, configuration, and management
+- **`developer/`**: Development resources, tutorials, guides, concepts, and best practices
+- **`reference/`**: Technical specifications, API docs, CLI, environment variables, troubleshooting
+- **`community/`**: Community resources, changelog, FAQ, support, and feedback
+
+#### Special Directories
+
+- **`assets/`**: Static files organized by type (images, stylesheets, javascript)
+- **`overrides/`**: MkDocs theme customizations (main.html, partials)
+- **`plugins/`**: Custom MkDocs plugins (tux plugin)
+
+### Automation Integration
+
+- **Auto-generated API docs**: `reference/src/` (mkdocstrings + api-autonav)
+- **Coverage reports**: `reference/coverage.md` (integrated test coverage)
+- **Snippet extraction**: `reference/snippet-search.md` (code snippet search)
+- **Social cards**: Auto-generated for all pages with custom backgrounds
+- **Spell checking**: Multi-backend spellcheck with custom word lists
+- **Custom plugins**: Tux plugin available for enhanced documentation features
+
+### File Naming Conventions
+
+- **Files**: `kebab-case.md` (e.g., `moderation-commands.md`, `bot-lifecycle.md`)
+- **Directories**: `kebab-case/` (e.g., `getting-started/`, `developer/`)
+- **Index files**: `index.md` in every directory (provides section overview)
+- **Assets**: Organized by type in subdirectories (`images/`, `stylesheets/`, `javascript/`)
+
+### Content Hierarchy
+
+Each major section follows this pattern with literate navigation wildcards:
+
+```text
+section-name/
+├── index.md              # Section overview and navigation
+├── subtopic-1/
+│   ├── index.md         # Subtopic overview
+│   ├── specific-page.md # Detailed content
+│   └── another-page.md
+├── subtopic-2/
+│   ├── index.md         # Subtopic overview
+│   ├── nested-page.md   # Detailed content
+│   └── another-nested.md
+├── standalone-page.md   # Direct content (no subfolder needed)
+└── another-standalone.md
+```
+
+### Hierarchy Examples
+
+**With subdirectories** (admin, selfhost, developer):
+
+- `admin/setup/` → Inviting bot, initial config files
+- `admin/configuration/` → Bot settings, permissions, features, advanced config
+- `selfhost/install/` → Requirements, Docker, system setup, first run
+- `selfhost/config/` → Bot token, environment variables, database setup
+- `selfhost/manage/` → Monitoring, backups, updates, performance, security, logging, migrations
+- `developer/tutorials/` → Step-by-step development guides (wildcard: `developer/tutorials/*.md`)
+- `developer/concepts/` → Complex architectural topics with nested subdirectories (wildcard: `developer/concepts/*.md`)
+- `developer/best-practices/` → Code review, documentation, git workflow, CI/CD, testing
+- `reference/troubleshooting/` → User, admin, selfhost, developer specific issues
+
+**With nested subdirectories** (developer concepts):
+
+- `developer/concepts/core/` → Bot lifecycle, cog system, command system, permission system, configuration system, service layer, hot reload, error handling, logging
+- `developer/concepts/database/` → Database architecture, models, controllers, migrations, service layer, testing
+- `developer/concepts/ui/` → Buttons, embeds, modals, views
+- `developer/concepts/handlers/` → Hot reload system
+- `developer/concepts/services/` → Service layer architecture
+- `developer/concepts/wrappers/` → Service wrappers and utilities
+- `developer/concepts/tasks/` → Task monitor integration
+
+**With standalone pages** (reference, community):
+
+- `reference/cli.md` → CLI command reference
+- `reference/env.md` → Environment variables reference
+- `reference/coverage.md` → Test coverage report
+- `reference/versioning.md` → Versioning and release information
+- `community/faq.md` → Frequently asked questions
+- `community/support.md` → Support and contact information
+- `community/feedback.md` → Community feedback and contribution
+
+### Adding New Content
+
+1. **Choose location**: Determine target audience and topic based on Diátaxis principles
+2. **Create structure**: Add `index.md` for new sections/subsections with implicit indexes
+3. **Update navigation**: Modify `content/SUMMARY.md` to include new pages using wildcards where appropriate
+4. **Add assets**: Place images in `content/assets/images/`, styles in `content/assets/stylesheets/`
+
+### Asset Organization
+
+- **Images**: `content/assets/images/` (logos, screenshots, diagrams with index pages)
+- **Stylesheets**: `content/assets/stylesheets/` (custom CSS with extra.css, material.css, mkdocstrings.css, pymdownx.css)
+- **JavaScript**: `content/assets/javascript/` (custom JS with extra.js)
+- **Known Words**: `content/assets/known_words.txt` (spellcheck dictionary)
+
+### Navigation Structure
+
+Navigation is handled by the `mkdocs-literate-nav` plugin using `content/SUMMARY.md`:
+
+- **Wildcard patterns**: `developer/tutorials/*.md` automatically includes all tutorial files
+- **Implicit indexes**: Automatic index page generation for directories without explicit index.md
+- **Hierarchical structure**: Top-level sections with nested subsections
+- **User journey ordering**: Getting started → User → Admin → Self-host → Developer → Reference → Community
+- **Breadcrumb navigation**: Automatic breadcrumb trails with customizable delimiters
+- **Backlinks**: Digital garden-style linking between related pages

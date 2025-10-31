@@ -1,0 +1,224 @@
+---
+description: MkDocs-Material syntax reference, advanced formatting features, and interactive elements
+alwaysApply: false
+---
+# MkDocs-Material Syntax
+
+**Keyboard shortcuts**:
+
+- `++f++`, `++s++`, `++slash++`: Open search
+- `++p++`, `++comma++`: Previous page
+- `++n++`, `++period++`: Next page
+- `++esc++`: Close search
+
+### Search Features
+
+**Search highlighting**: Highlight search terms on result pages
+**Search suggestions**: Auto-complete search queries
+**Search sharing**: Share search queries via URL
+**Instant search**: Fast client-side search with offline support
+
+## Advanced Features
+
+### Annotations
+
+Add interactive tooltips with arbitrary Markdown content:
+
+```markdown
+Lorem ipsum dolor sit amet, (1) consectetur adipiscing elit.
+{ .annotate }
+
+1.  :man_raising_hand: I'm an annotation! I can contain `code`, __formatted
+    text__, images, ... basically anything that can be expressed in Markdown.
+```
+
+**Annotation features**:
+
+- **Nested annotations**: Annotations inside annotations
+- **Admonition annotations**: Add annotations to admonition titles/bodies
+- **Tab annotations**: Annotations work inside content tabs
+- **Custom icons**: Change annotation marker icon globally
+- **HTML wrapper**: Use `<div class="annotate" markdown>` for unsupported elements
+
+### Social Cards
+
+Automatically generate beautiful social media previews:
+
+```yaml
+plugins:
+  - social
+```
+
+**Social card features**:
+
+- **Auto-generation**: Custom preview images for each page
+- **Custom layouts**: YAML + Jinja template system
+- **Typography**: Dynamic text with Google Fonts integration
+- **Icons**: Full Material Design icon support
+- **Backgrounds**: Colors, images, and tinted overlays
+- **Meta tags**: Complete Open Graph and Twitter Card support
+
+### Header Features
+
+**Announcement bar**: Display project news and important info
+**Auto-hide**: Header disappears on scroll for more content space
+**Dismissible announcements**: Users can mark announcements as read
+
+### Footer Features
+
+**Navigation**: Previous/next page links in footer
+**Social links**: Connect to external platforms
+**Copyright**: Automatic copyright notices
+
+### Instant Navigation
+
+**Single Page App behavior**: No full page reloads
+**Search persistence**: Search index survives navigation
+**Progress indicators**: Loading feedback for slow connections
+**Prefetching**: Preload pages on hover
+**Anchor tracking**: URL updates with active section
+
+### Content Organization
+
+**Navigation tabs**: Top-level sections as horizontal tabs
+**Navigation sections**: Grouped sidebar navigation
+**Navigation expansion**: Auto-expand all subsections
+**Navigation pruning**: Reduce site size by 33%+ for large docs
+**Section indexes**: Direct page attachment to sections
+**Breadcrumbs**: Navigation path above page titles
+
+### Performance Features
+
+**Code copy buttons**: One-click code copying
+**Code selection**: Interactive line range selection
+**Linked tabs**: Sync tabs with same labels across site
+**Anchor links**: Direct links to content tabs
+**Slugified anchors**: Human-readable URLs
+
+## Reference Features
+
+### Admonitions (Call-out blocks)
+
+Enhanced call-out blocks with multiple types and features:
+
+```markdown
+!!! note "Custom Title"
+    Content with custom title
+
+!!! note ""
+    Content without title
+
+??? note "Collapsible"
+    Expandable content
+
+???+ note "Expanded by Default"
+    Starts open
+```
+
+**Admonition types**: `note`, `abstract`, `info`, `tip`, `success`, `question`, `warning`, `failure`, `danger`, `bug`, `example`, `quote`
+
+**Advanced features**:
+
+- **Custom titles**: Quoted strings after type
+- **No title**: Empty string `""` removes title
+- **Collapsible**: Use `???` instead of `!!!`
+- **Expanded by default**: Add `+` after `???`
+- **Nested admonitions**: Indent inner admonitions
+- **Inline blocks**: `inline` and `inline end` modifiers
+- **Custom icons**: Change icons per type globally
+- **Custom types**: Add new admonition types with CSS
+
+### Buttons
+
+Create styled buttons from links:
+
+```markdown
+[Subscribe to newsletter](#){ .md-button }
+[Primary Button](#){ .md-button .md-button--primary }
+[Send :fontawesome-solid-paper-plane:](#){ .md-button }
+```
+
+**Button types**:
+
+- **Secondary**: `.md-button` (outlined)
+- **Primary**: `.md-button .md-button--primary` (filled)
+- **With icons**: Combine with icon shortcodes
+
+### Diagrams
+
+Native Mermaid.js integration with automatic theming:
+
+````markdown
+``` mermaid
+graph LR
+  A[Start] --> B{Error?}
+  B -->|Yes| C[Debug]
+  B -->|No| E[Success]
+```
+````
+
+**Supported diagram types**:
+
+- **Flowcharts**: Process workflows
+- **Sequence diagrams**: Object interactions
+- **State diagrams**: System behavior
+- **Class diagrams**: Object-oriented structure
+- **Entity-relationship**: Database relationships
+
+**Features**:
+
+- **Auto-theming**: Uses site colors and fonts
+- **Dark mode**: Automatic theme switching
+- **Instant loading**: Works with SPA navigation
+- **Custom layouts**: ELK layouts and more
+
+### Formatting
+
+Advanced text formatting and change tracking:
+
+```markdown
+==highlighted text==
+^^inserted text^^
+~~deleted text~~
+H~2~O (subscript)
+A^T^A (superscript)
+++ctrl+alt+del++ (keyboard keys)
+```
+
+**Critic Markup** (change tracking):
+
+```markdown
+{--deleted text--}
+{++added text++}
+{~~old~>new~~}
+{==highlighted==}
+{>>comment<<}
+```
+
+### Icons & Emojis
+
+Massive icon and emoji support:
+
+```markdown
+:smile: (emoji)
+:material-heart: (Material Design)
+:fontawesome-brands-github: (FontAwesome)
+:octicons-heart-16: (Octicons)
+:simple-icons-python: (Simple Icons)
+```
+
+**Icon features**:
+
+- **10,000+ icons**: Material Design, FontAwesome, Octicons, Simple Icons
+- **Thousands of emojis**: Twemoji integration
+- **Custom colors**: `:icon-name:{ .css-class }`
+- **Animations**: CSS keyframes support
+- **Sidebar integration**: Icons in navigation
+- **Template usage**: Jinja `include` function
+
+**Icon sets**:
+
+- **Material Design**: `material/icon-name`
+- **FontAwesome**: `fontawesome/brands/icon-name`
+- **Octicons**: `octicons/icon-name-16`
+- **Simple Icons**: `simple-icons/icon-name`

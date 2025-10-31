@@ -1,0 +1,211 @@
+---
+globs: docs/**
+alwaysApply: false
+description: Master guide for AI agents working with Tux documentation rules and workflows
+---
+
+# Tux Documentation Rules Master Guide
+
+This master guide provides AI agents with comprehensive rules and best practices for working with Tux's documentation system. These rules ensure consistent, high-quality documentation that follows modern standards and serves real user needs.
+
+## 🎯 **Purpose & Philosophy**
+
+**Good documentation serves users first.** Every documentation decision should answer: "How will this help someone using Tux?" Focus on practical value over technical completeness.
+
+### Core Principles
+
+- **User-Centric**: Address real user needs, not just system capabilities
+- **Practical**: Include working examples and real-world configurations
+- **Maintainable**: Keep documentation current with code changes
+- **Accessible**: Use clear language, avoid jargon, provide context
+- **Comprehensive**: Cover all likely user questions and edge cases
+
+## 📚 **Rule File Structure**
+
+This documentation rules system is organized into focused, modular guides:
+
+| File | Purpose | When to Use |
+|------|---------|-------------|
+| **[`principals.mdc`](principals.mdc)** | Documentation frameworks and methodologies | Planning documentation structure, choosing content types |
+| **[`style.mdc`](style.mdc)** | Writing standards and formatting | Writing new content, ensuring consistency |
+| **[`syntax.mdc`](syntax.mdc)** | MkDocs-Material features and syntax | Using advanced formatting, interactive elements |
+| **[`structure.mdc`](structure.mdc)** | Organization and navigation | Adding new pages, understanding hierarchy |
+| **[`mkdocs.mdc`](mkdocs.mdc)** | Technical setup and deployment | Configuring plugins, deploying changes |
+| **[`patterns.mdc`](patterns.mdc)** | Practical examples and decision guides | Documenting specific features, troubleshooting |
+
+## 🚀 **Quick Start Workflow**
+
+### For New Documentation Tasks
+
+1. **Understand Context** → Read this master guide and relevant rule files
+2. **Choose Content Type** → Use [`principals.mdc`](principals.mdc) Diátaxis framework
+3. **Plan Structure** → Reference [`structure.mdc`](structure.mdc) for organization
+4. **Apply Writing Standards** → Follow [`style.mdc`](style.mdc) guidelines
+5. **Use Appropriate Syntax** → Leverage [`syntax.mdc`](syntax.mdc) features
+6. **Follow Patterns** → Use [`patterns.mdc`](patterns.mdc) examples
+7. **Configure Technical Setup** → Reference [`mkdocs.mdc`](mkdocs.mdc) for deployment
+
+### For Documentation Maintenance
+
+1. **Update Content** → Apply writing standards from [`style.mdc`](style.mdc)
+2. **Use New Features** → Check [`syntax.mdc`](syntax.mdc) for available enhancements
+3. **Maintain Structure** → Follow organization rules in [`structure.mdc`](structure.mdc)
+4. **Deploy Changes** → Use workflows from [`mkdocs.mdc`](mkdocs.mdc)
+
+## 📋 **Essential Decision Guides**
+
+### What Type of Documentation Should I Create?
+
+**Use [`principals.mdc`](principals.mdc) Diátaxis Framework:**
+
+- **Tutorial**: Step-by-step learning (getting-started/)
+- **How-to Guide**: Solve specific problems (user/, admin/)
+- **Reference**: Technical specifications (reference/)
+- **Explanation**: Understanding concepts (developer/concepts/)
+
+### Where Should This Content Go?
+
+**Check [`structure.mdc`](structure.mdc) Directory Structure:**
+
+- User guides → `user/` directory
+- Admin features → `admin/` directory
+- Self-hosting → `selfhost/` directory
+- Development → `developer/` directory
+- Technical specs → `reference/` directory
+- General info → `community/` directory
+
+### How Should I Format This Content?
+
+**Reference [`syntax.mdc`](syntax.mdc) Features:**
+
+- Code blocks with syntax highlighting
+- Interactive tabs for alternatives
+- Admonitions for important information
+- Diagrams with Mermaid.js
+- Annotations and tooltips
+
+### What Patterns Should I Follow?
+
+**Use [`patterns.mdc`](patterns.mdc) Examples:**
+
+- Command documentation templates
+- Configuration examples
+- API endpoint documentation
+- Troubleshooting sections
+- Error message guidelines
+
+## ⚙️ **Technical Setup & Automation**
+
+### Current Documentation Features
+
+**From [`mkdocs.mdc`](mkdocs.mdc):**
+
+- **16+ Active Plugins**: Social cards, spellcheck, coverage reports, backlinks
+- **Literate Navigation**: SUMMARY.md with wildcard patterns
+- **Enhanced Syntax**: Mermaid diagrams, advanced highlighting, annotations
+- **Quality Assurance**: Multi-backend spellcheck, link validation
+- **Modern UI**: Tokyo Night theme, custom fonts and branding
+
+### Development Workflow
+
+**Reference [`mkdocs.mdc`](mkdocs.mdc) for:**
+
+- Local development with `mkdocs serve`
+- Building with `uv run mkdocs build`
+- Deployment via Cloudflare Workers
+- Conventional commit standards
+
+## 🔍 **Common Documentation Scenarios**
+
+### Documenting a New Command
+
+1. **Choose Location**: `user/commands/` based on [`structure.mdc`](structure.mdc)
+2. **Follow Pattern**: Use command template from [`patterns.mdc`](patterns.mdc)
+3. **Apply Style**: Active voice, second person from [`style.mdc`](style.mdc)
+4. **Add Syntax**: Code blocks, admonitions from [`syntax.mdc`](syntax.mdc)
+5. **Update Navigation**: Add to SUMMARY.md per [`structure.mdc`](structure.mdc)
+
+### Adding Configuration Documentation
+
+1. **Determine Type**: Reference documentation per [`principals.mdc`](principals.mdc)
+2. **Find Location**: `reference/` or relevant config section
+3. **Use Patterns**: Environment variables, Docker examples from [`patterns.mdc`](patterns.mdc)
+4. **Apply Formatting**: Tabs for alternatives from [`syntax.mdc`](syntax.mdc)
+5. **Add Warnings**: Security notes, database impact per [`patterns.mdc`](patterns.mdc)
+
+### Creating Developer Guides
+
+1. **Choose Framework**: How-to guide or explanation from [`principals.mdc`](principals.mdc)
+2. **Select Structure**: `developer/guides/` or `developer/concepts/`
+3. **Apply Standards**: Technical writing guidelines from [`style.mdc`](style.mdc)
+4. **Use Features**: Code annotations, diagrams from [`syntax.mdc`](syntax.mdc)
+5. **Add Navigation**: Wildcard patterns in SUMMARY.md
+
+## ✅ **Quality Assurance Checklist**
+
+### Before Creating New Content
+
+- [ ] **Purpose**: Does this serve real user needs? (Check [`principals.mdc`](principals.mdc))
+- [ ] **Location**: Is this in the right place? (Check [`structure.mdc`](structure.mdc))
+- [ ] **Type**: Is this the right documentation type? (Check [`principals.mdc`](principals.mdc))
+- [ ] **Audience**: Who is this for? (User/Admin/Developer/Self-hoster)
+
+### During Content Creation
+
+- [ ] **Style**: Following writing standards? (Check [`style.mdc`](style.mdc))
+- [ ] **Syntax**: Using appropriate features? (Check [`syntax.mdc`](syntax.mdc))
+- [ ] **Patterns**: Following established patterns? (Check [`patterns.mdc`](patterns.mdc))
+- [ ] **Examples**: Including working code/configuration?
+- [ ] **Accessibility**: Clear language, proper headings, alt text?
+
+### Before Deployment
+
+- [ ] **Navigation**: Updated SUMMARY.md? (Check [`structure.mdc`](structure.mdc))
+- [ ] **Links**: All cross-references working?
+- [ ] **Validation**: Passes MkDocs build? (Check [`mkdocs.mdc`](mkdocs.mdc))
+- [ ] **Spellcheck**: Passes automated spellcheck?
+- [ ] **Mobile**: Content works on mobile devices?
+
+## 🔧 **Advanced Features & Automation**
+
+### Available Automation
+
+- **Spellcheck**: Multi-backend with custom dictionaries
+- **Social Cards**: Auto-generated previews for all pages
+- **Coverage Reports**: Test coverage visualization
+- **Snippet Search**: Code example search functionality
+- **Backlinks**: Digital garden-style content relationships
+- **API Auto-generation**: Automatic API documentation
+
+### When to Use Advanced Features
+
+- **Spellcheck**: Always enabled, add new terms to `assets/known_words.txt`
+- **Social Cards**: Automatic, customize via page meta or global config
+- **Coverage Reports**: For technical documentation sections
+- **Snippet Search**: For code examples that need cross-referencing
+- **Backlinks**: For complex, interconnected content
+- **API Docs**: For all Python modules (auto-generated)
+
+## 🎯 **Key Resources**
+
+- **Existing Documentation**: Study `docs/content/` for patterns and style
+- **Navigation Structure**: Review `docs/content/SUMMARY.md` for literate navigation
+- **MkDocs Config**: Review `docs/mkdocs.yml` for plugin and theme configuration
+- **Tux Codebase**: Reference actual implementation for accuracy
+- **Assets**: Check `docs/content/assets/` for images, styles, and customizations
+- **Community**: Join Discord for user questions and feedback
+
+## 🚨 **Important Reminders**
+
+- **Never start docs server unless explicitly told**
+- **Always test documentation by following your own instructions**
+- **Keep documentation current - outdated docs are worse than missing docs**
+- **Use conventional commits for all documentation changes**
+- **Include practical examples, not just theory**
+- **Write for users, not for other developers**
+- **Focus on problems users actually encounter**
+- **Maintain consistency across all documentation**
+
+---
+
+**Remember**: Documentation is a conversation with users. Make it helpful, clear, and focused on their success with Tux.

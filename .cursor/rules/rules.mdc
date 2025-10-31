@@ -1,0 +1,8 @@
+---
+alwaysApply: true
+---
+
+# General Rules
+
+- Never build documentation unless explicitly requested by the user.
+- Never run the documentation server unless explicitly requested by the user.

@@ -1,0 +1,57 @@
+---
+description: Writing standards, formatting guidelines, and style principles for Tux documentation
+alwaysApply: false
+---
+# Documentation Writing Style & Formatting
+
+This section covers the core writing principles, style guidelines, and formatting standards for Tux documentation.
+
+## Principles
+
+- Avoid fluff, avoid passive voice, prefer imperative verbs.
+
+### Writing Style
+
+- **Simple & Direct**: Use short sentences and paragraphs, contractions (it's, don't, you're)
+- **Active Voice**: Always write in active voice, never passive
+- **Second Person**: Address users as "you" consistently
+- **Present Simple Tense**: Write in present simple, avoid present continuous
+- **Imperative Verbs**: Use action words (use, help, show) over formal alternatives (utilize, assist, demonstrate)
+
+### Structure & Organization
+
+- **Article Goals**: Start with clear introduction stating the article's purpose
+- **Prerequisites**: List requirements before technical content with "Before you begin"
+- **Next Steps**: End with suggested next steps and related resources
+- **Heading Flow**: Immediate copy after headings, introduce section content
+- **Index Pages**: Use `index.md` files for section overviews and navigation
+
+### Formatting Standards
+
+- **Titles & Headings**: Use sentence case (not title case)
+- **Inline Links**: `[Link text](https://example.com)` with descriptive text
+- **UI Elements**: Format as they appear: **Submit**, **User settings**
+- **Bold Keywords**: Use `**bold**` for emphasis, `_italics_` sparingly
+- **Lists**: Complete sentences, dashes for unordered, bold keywords with colons
+
+### Code Documentation
+
+- **Inline Code**: Single backticks for `variables`, `file.md`, `config-options`
+- **Code Blocks**: Triple backticks with language specifier
+- **Placeholders**: `<PLACEHOLDER_NAME>` format, explain each placeholder
+- **Code Introduction**: Brief description ending with colon before code blocks
+- **Configuration**: Follow code blocks with setup/config explanations
+
+### Technical Content
+
+- **API Endpoints**: Specify HTTP methods, use backticks for paths and parameters
+- **Path Parameters**: Use `{parameter}` format in URLs
+- **CLI Commands**: Introduce purpose, distinguish command from output
+- **Command Output**: Use appropriate language specifiers (`text`, `json`, etc.)
+
+### Images & Accessibility
+
+- **Alt Text**: Descriptive without "Image of..." prefixes for screen readers
+- **Semantic Structure**: Proper heading hierarchy (H1→H2→H3) for navigation
+- **Inclusive Language**: Gender-neutral, geographically neutral terms
+- **Link Descriptions**: Use meaningful link text, avoid "click here" or "see this page"

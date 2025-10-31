@@ -1,0 +1,475 @@
+---
+description: Practical examples, documentation templates, and decision guides for common scenarios
+alwaysApply: false
+---
+# Documentation Patterns & Quick Reference
+
+This section provides practical patterns and decision guides for documenting Tux effectively.
+
+## Quick Reference Guide
+
+### Common Documentation Patterns for Tux
+
+#### Documenting Commands
+
+**For slash commands and prefix commands:**
+
+```markdown
+### /ban Command
+
+Ban a user from the server.
+
+**Usage:**
+```bash
+/ban user:@username reason:Violation of rules
+$ban @username Violation of rules
+```
+
+**Parameters:**
+
+- `user`: The user to ban (required)
+- `reason`: Reason for the ban (optional)
+
+**Permissions:** Moderator or higher
+
+!!! warning "Database Impact"
+    This command permanently affects server membership and is logged to the moderation database.
+
+```
+
+#### Documenting Features
+
+**For complex features like XP system:**
+```markdown
+### XP (Experience) System
+
+Tux tracks user activity and awards experience points for engagement.
+
+#### How it Works
+
+Users earn XP through:
+- Sending messages (1-5 XP per message)
+- Using commands (2 XP per command)
+- Voice channel activity (1 XP per minute)
+
+#### Level Progression
+
+| Level | XP Required | Rewards |
+|-------|-------------|---------|
+| 1 | 0 | Access to basic commands |
+| 5 | 500 | Custom role color |
+| 10 | 2,500 | Priority support |
+
+!!! tip "Configuration"
+    Admins can adjust XP rates via environment variables or config files (see XP_CONFIG settings)
+```
+
+#### Documenting Configuration
+
+**For config options:**
+
+```markdown
+### Database Configuration
+
+Configure PostgreSQL connection settings.
+
+**Environment Variables:**
+```bash
+# Required for local PostgreSQL
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=tuxdb
+POSTGRES_USER=tuxuser
+POSTGRES_PASSWORD=your_secure_password
+
+# Or use a complete connection string
+DATABASE_URL=postgresql://tuxuser:password@localhost:5432/tuxdb
+```
+
+**Docker Environment (.env file):**
+
+```bash
+# For Docker Compose setup
+POSTGRES_PASSWORD=your_secure_password
+DATABASE_URL=postgresql://tuxuser:your_secure_password@tux-postgres:5432/tuxdb
+```
+
+!!! note "Security"
+    Never commit database credentials to version control. Use environment variables or .env files.
+
+!!! info "PostgreSQL Configuration"
+    For advanced PostgreSQL tuning, see `docker/postgres/postgresql.conf` in the Docker setup.
+
+```
+
+#### Documenting API Endpoints
+
+**For REST APIs:**
+```markdown
+### GET /api/v1/users/{user_id}
+
+Retrieve user information and statistics.
+
+**Path Parameters:**
+- `user_id` (integer): Discord user ID
+
+**Response:**
+```json
+{
+  "id": 123456789,
+  "username": "example_user",
+  "xp": 1500,
+  "level": 8,
+  "joined_at": "2023-01-15T10:30:00Z"
+}
+```
+
+**Error Responses:**
+
+- `404`: User not found
+- `403`: Insufficient permissions
+
+```
+
+#### Documenting Architecture
+
+**For system components:**
+```markdown
+### Cog System Architecture
+
+Tux uses Discord.py's cog system for modular command organization.
+
+```
+
+src/tux/modules/
+├── moderation/     # Ban, kick, timeout commands
+├── utility/        # Info, ping, reminder commands
+├── fun/           # Games and entertainment
+└── levels/        # XP and leveling system
+
+```
+
+**Key Benefits:**
+- **Hot Reloading**: Changes reload without restart
+- **Permission Isolation**: Each cog manages its own permissions
+- **Dependency Injection**: Services injected via constructor
+
+!!! info "Development"
+    See `developer/concepts/cog-system.md` for implementation details.
+```
+
+#### Troubleshooting Sections
+
+**For common issues:**
+
+```markdown
+### Bot Not Responding
+
+**Symptoms:**
+- Commands not working
+- Bot shows offline
+- Error messages in logs
+
+**Solutions:**
+
+1. **Check Database Connection**
+   ```bash
+   uv run db health
+   ```
+
+2. **Verify Permissions**
+   - Bot needs message/content intent permissions
+   - Check role hierarchy for moderation commands
+
+3. **Restart Services**
+
+   ```bash
+   uv run docker restart
+   uv run tux start
+   ```
+
+!!! bug "Common Issues"
+    - Database connection timeouts
+    - Missing Discord intents
+    - Rate limiting from Discord API
+
+```
+
+### When to Use Different Features
+
+| Scenario | Recommended Syntax | Example |
+|----------|-------------------|---------|
+| Important notices | `!!! warning` | Security alerts, breaking changes |
+| Step-by-step guides | Numbered lists | Installation instructions |
+| Alternative options | `=== "Tab Name"` | Different config formats |
+| Code with copy button | \`\`\`language | Configuration examples |
+| Optional details | `??? note` | Advanced configuration |
+| Keyboard shortcuts | `++key++` | `++ctrl+shift+r++` |
+| File paths | `backticks` | `config/bot/config.toml` |
+| UI elements | **Bold** | **Submit**, **Save Changes** |
+| Technical terms | _Italics_ | _Dependency injection_ |
+
+## LLM Agent Decision Guide
+
+### Content Type Selection
+
+**ASK YOURSELF: What is the user's goal?**
+
+- **❓ User wants to LEARN something new** → Tutorial (step-by-step learning)
+- **🔧 User wants to SOLVE a specific problem** → How-to guide (practical steps)
+- **📖 User needs to UNDERSTAND system behavior** → Explanation (concepts, why things work)
+- **🔍 User needs TECHNICAL details** → Reference (specs, API, commands)
+
+**Examples:**
+- "How do I set up Tux?" → Tutorial (`getting-started/`)
+- "How do I ban someone?" → How-to guide (`user/commands/moderation.md`)
+- "Why does Tux use cogs?" → Explanation (`developer/concepts/cog-system.md`)
+- "What parameters does /ban accept?" → Reference (`reference/commands.md`)
+
+### When to Use Admonitions
+
+**USE `!!! note`** for:
+- General information users should know
+- Tips that improve user experience
+- Background context
+- Related information
+
+**USE `!!! tip`** for:
+- Best practices and recommendations
+- Time-saving shortcuts
+- Pro tips for advanced users
+
+**USE `!!! warning`** for:
+- Security implications
+- Data loss risks
+- Breaking changes
+- Important limitations
+
+**USE `!!! danger`** for:
+- Critical security issues
+- Data corruption risks
+- System stability threats
+
+**USE `!!! info`** for:
+- Technical details
+- System requirements
+- Version information
+
+### When to Use Tabs vs. Sections
+
+**USE TABS** for:
+- Alternative implementations (Python vs JavaScript setup)
+- Different configuration formats (TOML vs YAML vs ENV)
+- Platform-specific instructions (Docker vs bare metal)
+- Multiple code examples in same context
+- API request/response examples
+
+**USE SECTIONS** for:
+- Sequential steps in a process
+- Different aspects of same feature
+- Hierarchical information
+- Long-form content
+- Complex workflows
+
+### When to Use Code Blocks
+
+**ALWAYS USE** code blocks for:
+- Command-line examples
+- Configuration files
+- API responses
+- Multi-line code
+
+**NEVER USE** code blocks for:
+- Single function names (use `backticks`)
+- File paths (use `backticks`)
+- Short variable names (use `backticks`)
+
+### When to Create New Pages vs. Sections
+
+**CREATE NEW PAGE** when:
+- Topic deserves its own navigation entry
+- Content is > 2000 words
+- Topic is referenced from multiple places
+- User needs to bookmark/link directly
+
+**USE SECTION** when:
+- Content fits within parent topic's context
+- < 1000 words
+- Part of a larger workflow
+- Internal navigation only
+
+### When to Use Expandable Content
+
+**USE `??? note`** for:
+- Advanced configuration options
+- Troubleshooting details
+- Implementation specifics
+- Optional features
+- Detailed technical explanations
+
+**DON'T USE** for:
+- Essential setup steps
+- Required configuration
+- Primary user workflows
+
+### When to Use New Documentation Features
+
+**USE SPELLCHECK** for:
+- All documentation content (automatically enabled)
+- Custom word lists in `assets/known_words.txt`
+- Technical terms, brand names, proper nouns
+
+**USE SOCIAL CARDS** for:
+- All pages automatically generate beautiful previews
+- Custom backgrounds and branding
+- Open Graph and Twitter Card support
+
+**USE COVERAGE REPORTS** for:
+- Test coverage visualization in documentation
+- Code quality metrics display
+- CI/CD pipeline integration
+
+**USE SNIPPET EXTRACTION** for:
+- Code examples that need searching
+- Reusable code patterns
+- Cross-referenced examples
+
+**USE BACKLINKS** for:
+- Related content discovery
+- Digital garden-style navigation
+- Content relationship mapping
+
+### Error Message Guidelines
+
+**WHEN DOCUMENTING ERRORS:**
+1. Start with user-visible symptom
+2. Explain what causes the error
+3. Provide step-by-step solution
+4. Include prevention tips
+
+**TEMPLATE:**
+```markdown
+### Error: "Database connection failed"
+
+**Symptoms:**
+- Bot shows offline
+- Commands return timeout errors
+- Logs show connection refused
+
+**Causes:**
+- PostgreSQL service not running
+- Incorrect DATABASE_URL
+- Network connectivity issues
+
+**Solutions:**
+
+1. **Check database status**
+   ```bash
+   uv run db health
+   ```
+
+2. **Verify connection string**
+
+   ```bash
+   # Check environment variable
+   echo $DATABASE_URL
+   ```
+
+3. **Restart database service**
+
+   ```bash
+   uv run docker up
+   ```
+
+```
+
+### Navigation Priority
+
+**PAGE ORDER MATTERS:**
+1. **Most common tasks first** (install, basic config, common commands)
+2. **Progressive disclosure** (simple → advanced)
+3. **User journey flow** (setup → usage → troubleshooting → advanced)
+
+**LINKING STRATEGY:**
+- Link forward to next steps
+- Link backward to prerequisites
+- Link sideways to related topics
+- Use "See also" for tangential information
+
+### When to Update Existing vs. Create New
+
+**UPDATE EXISTING** when:
+- Adding information to established topic
+- Clarifying existing content
+- Fixing errors or outdated info
+- Adding examples to existing guides
+
+**CREATE NEW** when:
+- New feature or major functionality
+- Different user audience (user vs admin vs developer)
+- Different documentation type (tutorial vs reference)
+- Significant content that changes user workflows
+
+## Documentation Workflow Summary
+
+### For LLM Agents Working with Tux Documentation
+
+**1. Understand Context First**
+
+- Read this entire guide before starting any documentation work
+- Familiarize yourself with Tux's architecture, features, and user base
+- Understand Diátaxis principles and when to apply each documentation type
+
+**2. Plan Your Documentation**
+
+- Identify the user goal (learn/solve/understand/reference)
+- Choose the appropriate Diátaxis type and location in the docs structure
+- Follow the decision guides for content type, admonitions, and structure
+
+**3. Apply Tux-Specific Patterns**
+
+- Always show both slash and prefix command syntax
+- Reference permission levels and configuration options
+- Document database impact and error scenarios
+- Use Tux's branded elements and terminology
+
+**4. Use MkDocs-Material Features Effectively**
+
+- Choose appropriate admonitions for different types of information
+- Use tabs for alternatives, expandable sections for optional details
+- Include practical code examples with proper syntax highlighting
+- Leverage icons, diagrams, and interactive elements
+
+**5. Follow Quality Standards**
+
+- Write in active voice, second person, present simple tense
+- Keep content scannable with clear headings and structure
+- Include working examples and avoid outdated information
+- Test documentation by following your own instructions
+
+**6. Maintain Consistency**
+
+- Follow the established patterns in existing documentation
+- Use consistent terminology and formatting
+- Update related files (navigation, cross-references) when making changes
+- Commit with conventional commit style
+
+### Key Resources
+
+- **Existing Documentation**: Study `docs/content/` for patterns and style
+- **Navigation Structure**: Review `docs/content/SUMMARY.md` for literate navigation
+- **MkDocs Config**: Review `docs/mkdocs.yml` for plugin and theme configuration
+- **Tux Codebase**: Reference actual implementation for accuracy
+- **Assets**: Check `docs/content/assets/` for images, styles, and customizations
+- **Community**: Join Discord for user questions and feedback
+
+### Current Documentation Features
+
+- **16+ Active Plugins**: Search, social cards, spellcheck, coverage, backlinks, etc.
+- **Literate Navigation**: SUMMARY.md with wildcard patterns and implicit indexes
+- **Enhanced Syntax**: Mermaid diagrams, advanced code highlighting, annotations
+- **Automation**: Auto-generated API docs, coverage reports, social previews
+- **Quality Assurance**: Multi-backend spellcheck, link validation, minification
+- **Modern UI**: Tokyo Night theme, Inter/JetBrains fonts, custom branding
+
+Remember: Good documentation serves users first. Always ask "How will this help someone using Tux?" before writing.

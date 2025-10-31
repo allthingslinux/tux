@@ -1,0 +1,273 @@
+---
+description: MkDocs-Material setup, plugins, extensions, theme configuration, and deployment workflows
+alwaysApply: false
+---
+# MkDocs-Material Documentation Rules
+
+REMINDER: Do not start the docs website/server unless explicitly told to do so.
+
+## Tux Project Context
+
+**Tux** is an all-in-one open source Discord bot built for the All Things Linux community, featuring a comprehensive suite of moderation, utility, and entertainment commands. This documentation guide is specifically tailored for documenting Tux's features, architecture, and usage patterns.
+
+### Project Architecture
+
+Tux follows a modern, modular Python architecture:
+
+- **Core System**: Bot lifecycle, cog loading, permission system, command handling
+- **Database Layer**: SQLModel-based ORM with PostgreSQL, comprehensive data models
+- **Modular Commands**: Organized into categories (moderation, utility, fun, info, etc.)
+- **Plugin System**: Extensible architecture for community features
+- **Service Layer**: Specialized services (moderation, Sentry, hot reload, HTTP client)
+- **UI Components**: Branded embeds, buttons, modals, and interactive views
+
+### Key Documentation Areas
+
+**For Users:**
+
+- Command usage and syntax
+- Feature explanations (XP system, starboard, temp VC, etc.)
+- Configuration options
+- Troubleshooting common issues
+
+**For Admins:**
+
+- Server setup and configuration
+- Permission management
+- Moderation workflows
+- Performance monitoring
+
+**For Self-Hosters:**
+
+- Installation procedures
+- Docker deployment
+- Database configuration
+- Security hardening
+
+**For Developers:**
+
+- Architecture deep-dives
+- API documentation (auto-generated)
+- Contribution guidelines
+- Plugin development
+- Testing strategies
+
+### Documentation Philosophy
+
+- **User-First**: Address real user needs and pain points
+- **Practical**: Include working code examples and configurations
+- **Comprehensive**: Cover all features and edge cases
+- **Maintainable**: Keep documentation current with code changes
+- **Accessible**: Use clear language, avoid jargon, provide context
+
+### Tux-Specific Patterns
+
+When documenting Tux:
+
+1. **Command Examples**: Always show both slash commands (`/command`) and prefix commands (`$command`)
+2. **Permission Levels**: Reference the role-based permission system (admin, moderator, user)
+3. **Configuration**: Link to relevant config options and environment variables
+4. **Error Handling**: Document common error scenarios and solutions
+5. **Database Impact**: Note when commands affect persistent data
+6. **Branded Elements**: Reference Tux's custom emojis, colors, and UI patterns
+
+## Active Extensions
+
+### Core Python Markdown Extensions
+
+- **abbr**: Add tooltips to text with `<abbr>` HTML tags (plain text only)
+- **attr_list**: Custom HTML attributes/CSS classes (`{: .class-name }`)
+- **admonition**: Call-out blocks (notes, warnings, tips) with customizable titles, made collapsible with pymdownx.details
+- **def_list**: Description lists (`<dl>`, `<dt>`, `<dd>`) via Markdown syntax
+- **footnotes**: Reference-style footnotes rendered below document content
+- **md_in_html**: Parse Markdown inside HTML block elements with `markdown="1"` attribute
+- **tables**: GitHub Flavored Markdown table syntax support
+- **toc**: Auto-generates TOC from document headings with permalinks (`¶` anchor links on hover)
+
+### PyMdown Extensions
+
+- **pymdownx.snippets**: Embed content from external files with base_path and auto_append options
+- **pymdownx.highlight**: Advanced syntax highlighting with Pygments, auto_title, linenums, and line_spans
+- **pymdownx.inlinehilite**: Syntax highlighting for inline code blocks
+- **pymdownx.superfences**: Enhanced code fences with custom Mermaid diagram support
+- **pymdownx.details**: Makes admonitions collapsible
+- **pymdownx.smartsymbols**: Auto-convert symbols like `(c)`, `(r)`, fractions
+- **pymdownx.magiclink**: Auto-link GitHub issues, commits, users with repo_url_shortener and user/repo config
+- **pymdownx.emoji**: Convert `:emoji:` syntax to Twemoji SVG icons
+- **pymdownx.keys**: Render keyboard shortcuts like `++ctrl+alt+del++`
+- **pymdownx.tabbed**: Content tabs with alternate_style for better mobile behavior
+- **pymdownx.escapeall**: Enhanced character escaping with hardbreak and nbsp options
+- **pymdownx.caret**: Superscript with `^^text^^` syntax
+- **pymdownx.mark**: Highlight text with `==text==` syntax
+- **pymdownx.tilde**: Strikethrough with `~~text~~` syntax
+
+### CLI Documentation
+
+- **mkdocs-typer**: CLI documentation generator for Typer applications
+
+## Active Plugins
+
+- **search**: Built-in search with custom separator regex for better tokenization
+- **literature-nav**: Navigation handled by SUMMARY.md with wildcard support and implicit indexes
+- **minify**: HTML/CSS/JS minification with custom file patterns and cache safety
+- **ezlinks**: Easy linking between documentation pages
+- **pagetree**: Page tree navigation structure
+- **mermaid2**: Native Mermaid.js diagram support with security settings
+- **meta**: Page metadata handling
+- **mkdocs-breadcrumbs-plugin**: Breadcrumb navigation with customizable delimiter
+- **mkdocs-backlinks**: Digital garden-style backlinks between pages
+- **autorefs**: Automatic cross-references between documentation sections
+- **social**: Automatic social media card generation with custom backgrounds
+- **coverage**: Test coverage reports integrated into documentation
+- **extract_listings**: Code snippet extraction and search functionality
+- **spellcheck**: Multi-backend spell checking (symspellpy + codespell) with custom word lists
+- **section-index**: Automatic section index page generation
+- **mkdocstrings**: Comprehensive Python API documentation with extensive configuration
+- **api-autonav**: Automatic API reference navigation generation
+
+## Available Plugins (Installed but Not Active)
+
+- **mkdocs-git-revision-date-localized-plugin**: Adds revision dates to pages
+- **mkdocs-git-committers-plugin-2**: Shows contributors for each page
+- **mkdocs-typer2**: Alternative Typer CLI documentation plugin
+- **tux**: Custom Tux plugin for enhanced documentation features
+
+## Theme Configuration
+
+- **Name**: `material`
+- **Custom Directory**: `overrides` for theme customizations with main.html and partial overrides
+- **Logo**: Custom logo in `assets/images/logo.png`
+- **Favicon**: Custom favicon matching logo
+- **Features**:
+  - Content actions (edit, view)
+  - Code annotations and copy buttons
+  - Content tooltips
+  - Header autohide for more content space
+  - Navigation instant loading, progress, prefetch, tracking
+  - Navigation indexes, top, tabs with sticky behavior, sections, prune, expand, path, footer
+  - Table of contents following
+  - Search suggest, highlight, share
+- **Palette**: Custom tokyo-night theme with light/dark mode switching
+- **Fonts**: Inter (text), JetBrains Mono (code)
+- **Icons**: Material Design icons with FontAwesome support
+- **Copyright**: Custom copyright with 2025 date
+
+## Navigation Features
+
+- **Literate Navigation**: Navigation handled by mkdocs-literate-nav plugin using SUMMARY.md
+- **Wildcard Support**: `developer/tutorials/*.md` and `developer/concepts/*.md` patterns
+- **Implicit Indexes**: Automatic index page generation for directories
+- **Breadcrumb Navigation**: Customizable breadcrumb trails with delimiter
+- **Backlinks**: Digital garden-style backlinks between related pages
+- **Auto-references**: Automatic cross-references between documentation sections
+- **Section Indexes**: Automatic section index page generation
+- **API Auto-navigation**: Automatic API reference navigation generation
+
+## Dependency Management
+
+### Adding New Documentation Packages
+
+To add new packages to the docs group in `pyproject.toml`:
+
+1. **Edit pyproject.toml**: Add the package to the `[dependency-groups]` section:
+
+   ```toml
+   docs = [
+       # existing packages...
+       "new-package>=1.0.0",
+   ]
+   ```
+
+2. **Install/Update dependencies**: Use uv to sync the new dependencies:
+
+   ```bash
+   uv sync --group docs
+   # Or sync all groups
+   uv sync
+   ```
+
+3. **Test the package**: Verify it works with your docs:
+
+   ```bash
+   uv run mkdocs serve
+   ```
+
+4. **Update lockfile**: Commit the updated `uv.lock` file
+
+### Common Documentation Package Sources
+
+- **MkDocs plugins**: Search on PyPI for `mkdocs-*`
+- **Python docstring tools**: `griffe-*` packages for advanced API docs
+- **Markdown extensions**: `pymdownx-*` for enhanced markdown features
+- **Theme extensions**: Check mkdocs-material documentation
+
+## Development Workflow
+
+- **Build**: `uv run mkdocs build` (used by Cloudflare Workers)
+- **Serve**: `mkdocs serve` on `127.0.0.1:8080`
+- **CSS watching**: Automatic reload for stylesheet changes
+- **Overrides**: Custom templates in `overrides/` directory
+
+## Deployment Configuration
+
+### Cloudflare Workers (Primary Deployment)
+
+Documentation is deployed using Cloudflare Workers with the following configuration:
+
+- **Config file**: `docs/wrangler.toml`
+- **Build command**: `uv run mkdocs build` (executed by Workers Builds)
+- **Production URL**: `https://tux.atl.dev` (custom domain)
+- **Preview URLs**: Auto-generated `*.workers.dev` URLs for branches/PRs
+- **Static assets**: Served from `../data/build/docs` directory
+- **Observability**: Enabled for monitoring and logs
+
+### MkDocs Configuration
+
+- **Main config**: `docs/mkdocs.yml` (comprehensive theme and plugin setup)
+- **Theme**: `material` (Material Design theme with tokyo-night palette)
+- **Extensions**: Extensive Python Markdown and PyMdown extensions for rich formatting
+- **Plugins**: 16+ active plugins including mkdocstrings, social cards, spellcheck, coverage
+- **Navigation**: Handled by literate-nav plugin using SUMMARY.md with wildcard patterns
+- **Assets**: Custom stylesheets, JavaScript, and images in `content/assets/`
+- **Validation**: Nav and links validation with configurable warning levels
+- **Includes**: Abbreviations file and custom overrides
+
+### Deployment Process
+
+1. **Local development**: `mkdocs serve` for real-time preview
+2. **Build**: `uv run mkdocs build` generates static site
+3. **Workers Builds**: Automatically builds on git push via wrangler.toml
+4. **Production**: Deploys to `tux.atl.dev` when pushed to main branch
+5. **Previews**: Branch/PR deployments get temporary URLs for review
+
+## Conventional Commits
+
+This project uses conventional commits for all changes. When working on documentation:
+
+### Commit Format
+
+```text
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer]
+```
+
+### Documentation Commit Types
+
+- **`docs`**: Documentation changes (adding/updating docs, README, etc.)
+
+```bash
+# Documentation updates
+git commit -m "docs: update installation guide for new requirements"
+```
+
+### Commit Rules
+
+- **Type**: Lowercase, from approved list (build, chore, ci, docs, feat, fix, perf, refactor, revert, style, test)
+- **Scope**: Optional, use for docs changes (e.g., `docs(api)`, `docs(user-guide)`)
+- **Subject**: Max 120 chars, no period at end, start with lowercase (never use sentence case, title case, or uppercase)
+- **Body**: Optional detailed explanation (no line length limit, but include blank line before body if present)
+- **Footer**: Optional for breaking changes (`BREAKING CHANGE:`) or issue references (blank line before footer if present)
+- **Header**: Complete `<type>[scope]: <subject>` must be ≤120 characters
