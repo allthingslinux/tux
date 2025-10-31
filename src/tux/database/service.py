@@ -21,7 +21,9 @@ import sentry_sdk
 import sqlalchemy.exc
 from loguru import logger
 from sqlalchemy import inspect, text
+from sqlalchemy.engine.interfaces import ReflectedColumn
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlmodel import SQLModel
 
 from tux.shared.config import CONFIG
 
@@ -334,31 +336,48 @@ class DatabaseService:
 
         try:
             # Get database inspector to reflect current schema
-            async with self.engine.begin() as conn:
+            # Type checker doesn't know engine is not None after is_connected() check
+            assert self._engine is not None, "Engine should not be None after connection check"
+            async with self._engine.begin() as conn:
                 inspector = await conn.run_sync(lambda sync_conn: inspect(sync_conn))
 
                 # Check if required tables exist
                 existing_tables = await conn.run_sync(lambda sync_conn: inspector.get_table_names())
-                required_tables = {"guild", "guild_config", "cases"}
+                # Get table names from SQLModel metadata (models with table=True)
+                required_tables = set(SQLModel.metadata.tables.keys())
 
-                missing_tables = required_tables - set(existing_tables)
-                if missing_tables:
+                if missing_tables := required_tables - set(existing_tables):
                     return {
                         "status": "invalid",
                         "error": f"Missing tables: {', '.join(missing_tables)}. Run 'uv run db reset' to fix.",
                     }
 
-                # Check if critical columns exist
-                for table_name in required_tables:
-                    columns = await conn.run_sync(lambda sync_conn, table=table_name: inspector.get_columns(table))
-                    column_names = {col["name"] for col in columns}
+                # Helper function to get columns for a table
+                def get_table_columns(sync_conn: Any, table_name: str) -> list[ReflectedColumn]:
+                    return inspector.get_columns(table_name)
 
-                    # Check for critical columns that have caused issues before
-                    if table_name == "cases" and "mod_log_message_id" not in column_names:
-                        return {
-                            "status": "invalid",
-                            "error": "Missing 'mod_log_message_id' column in 'cases' table. Run 'uv run db reset' to fix.",
-                        }
+                # Check that all model columns exist in database (1-to-1 validation)
+                missing_columns: list[str] = []
+                for table_name in required_tables:
+                    # Get columns from database
+                    columns = await conn.run_sync(get_table_columns, table_name)
+                    db_column_names = {col["name"] for col in columns}
+
+                    # Get columns from model metadata
+                    if table_name in SQLModel.metadata.tables:
+                        table_metadata = SQLModel.metadata.tables[table_name]
+                        model_column_names = {col.name for col in table_metadata.columns}
+
+                        # Find missing columns
+                        missing_for_table = model_column_names - db_column_names
+                        if missing_for_table:
+                            missing_columns.extend([f"{table_name}.{col}" for col in missing_for_table])
+
+                if missing_columns:
+                    return {
+                        "status": "invalid",
+                        "error": f"Missing columns: {', '.join(missing_columns)}. Run 'uv run db reset' to fix.",
+                    }
 
                 return {"status": "valid", "mode": "async"}
 
