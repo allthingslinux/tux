@@ -6,7 +6,6 @@ title: Summary
   * [Search](reference/search.md)
   * [Snippet Search](reference/snippet-search.md)
   * [Glossary](reference/glossary.md)
-  * [Sitemap](reference/sitemap.md)
 * [Getting Started](getting-started/index.md)
   * [For Users](getting-started/for-users.md)
   * [For Admins](getting-started/for-admins.md)
@@ -18,10 +17,15 @@ title: Summary
   * [Installation](selfhost/install/index.md)
     * [Requirements](selfhost/install/requirements.md)
     * [Docker](selfhost/install/docker.md)
-    * [Bare Metal](selfhost/install/bare-metal.md)
+    * [System](selfhost/install/system.md)
     * [First Run](selfhost/install/first-run.md)
   * [Configuration](selfhost/config/index.md)
+    * [Bot Token](selfhost/config/bot-token.md)
+    * [Environment](selfhost/config/environment.md)
+    * [Database](selfhost/config/database.md)
   * [Management](selfhost/manage/index.md)
+    * [Database](selfhost/manage/database.md)
+    * [Operations](selfhost/manage/operations.md)
 * [Developer Guide](developer/index.md)
   * [Contributing](developer/contributing.md)
   * [Tutorials](developer/tutorials/index.md)
@@ -29,11 +33,32 @@ title: Summary
   * [Guides](developer/guides/index.md)
     * developer/guides/*.md
   * [Concepts](developer/concepts/index.md)
-    * developer/concepts/*.md
+    * [Core](developer/concepts/core/index.md)
+      * developer/concepts/core/*.md
+    * [Database](developer/concepts/database/index.md)
+      * [Architecture](developer/concepts/database/architecture.md)
+      * [Service](developer/concepts/database/service.md)
+      * [Models](developer/concepts/database/models.md)
+      * [Controllers](developer/concepts/database/controllers.md)
+      * [Migrations](developer/concepts/database/migrations.md)
+      * [Testing](developer/concepts/database/testing.md)
+      * [Utilities](developer/concepts/database/utilities.md)
+    * [UI](developer/concepts/ui/index.md)
+      * developer/concepts/ui/*.md
+    * [Shared](developer/concepts/shared/index.md)
+      * developer/concepts/shared/*.md
+    * [Handlers](developer/concepts/handlers/index.md)
+      * developer/concepts/handlers/*.md
+    * [Services](developer/concepts/services/index.md)
+      * developer/concepts/services/*.md
+    * [Wrappers](developer/concepts/wrappers/index.md)
+      * developer/concepts/wrappers/*.md
+    * [Tasks](developer/concepts/tasks/index.md)
+      * developer/concepts/tasks/*.md
   * [Best Practices](developer/best-practices/index.md)
     * developer/best-practices/*.md
 * [Reference](reference/index.md)
-  * [API Reference](reference/src/)
+  * [API Reference](reference/src/tux/)
   * [CLI Reference](reference/cli.md)
   * [ENV Reference](reference/env.md)
   * [Versioning](reference/versioning.md)

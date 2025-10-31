@@ -49,5 +49,5 @@ Choose one of the following:
 After verifying requirements:
 
 - [Docker Installation](docker.md) - Recommended for production
-- [Bare Metal Installation](bare-metal.md) - For development or custom setups
-- [First Run Setup](first-run.md) - Initial configuration
+- [System Installation](system.md) - For non-Docker setups
+- [First Run Setup](first-run.md) - First run
