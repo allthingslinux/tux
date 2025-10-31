@@ -38,5 +38,42 @@
 
 
 .md-grid {
-  max-width: 1440px;
+  max-width: 1600px;
+}
+
+/* Slightly increase overall font size for better readability */
+.md-typeset {
+  font-size: 0.875rem !important;
+}
+
+
+.md-sidebar {
+  width: 14rem !important;
+}
+
+.md-sidebar--primary {
+  width: 12rem !important;
+}
+
+/* Expand Table of Contents sidebar for better readability */
+.md-nav--secondary {
+  width: 12rem !important;
+}
+
+/* Prevent horizontal scrolling in sidebars */
+.md-sidebar__scrollwrap {
+  overflow-x: hidden !important;
+}
+
+.md-nav--primary .md-nav__list,
+.md-nav--secondary .md-nav__list {
+  max-width: 100% !important;
+  word-wrap: break-word !important;
+}
+
+/* Responsive adjustments for smaller screens */
+@media screen and (max-width: 76.25em) {
+  .md-nav--secondary {
+    width: 10rem !important;
+  }
 }

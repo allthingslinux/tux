@@ -181,8 +181,22 @@ code.doc-symbol-module::after {
   display: inline;
 }
 
-.md-typeset h5 .doc-object-name {
-  text-transform: none;
+/* Override Material theme's small h5/h6 sizing for mkdocstrings */
+.md-typeset h5.doc.doc-heading,
+.md-typeset h6.doc.doc-heading {
+  font-size: 0.9rem !important;  /* 14.4px - more appropriate size */
+  font-weight: 600 !important;
+  text-transform: none !important;
+  color: var(--md-default-fg-color) !important;
+  margin: 1em 0 0.5em 0 !important;
+  letter-spacing: normal !important;
+}
+
+.md-typeset h5 .doc-object-name,
+.md-typeset h6 .doc-object-name {
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  text-transform: none !important;
 }
 
 .doc .md-typeset__table,
