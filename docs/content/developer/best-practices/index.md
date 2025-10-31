@@ -1,5 +1,6 @@
 ---
 title: Best Practices
+description: Best practices for Tux development, including architecture, design, testing, code review, debugging, documentation, and CI/CD.
 ---
 
 # Best Practices

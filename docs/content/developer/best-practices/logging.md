@@ -1,8 +1,7 @@
 ---
 title: Logging Best Practices
+description: Logging best practices for Tux development using loguru, including structured logging, third-party library interception, and debugging patterns.
 ---
-
-Logging best practices for Tux development using loguru, including structured logging, third-party library interception, and debugging patterns.
 
 ## Loguru Configuration
 

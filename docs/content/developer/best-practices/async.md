@@ -1,8 +1,7 @@
 ---
 title: Async Best Practices
+description: Async programming best practices for Tux development, including concurrency patterns, Discord.py async considerations, and performance optimization.
 ---
-
-Async programming best practices for Tux development, including concurrency patterns, Discord.py async considerations, and performance optimization.
 
 ## Why Async Matters for Discord Bots
 

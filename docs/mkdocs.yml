@@ -194,6 +194,9 @@ markdown_extensions:
   - pymdownx.mark
   # Tilde: Strikethrough with ~~text~~ syntax
   - pymdownx.tilde
+  # Tasklist: Convert task lists to checkboxes
+  - pymdownx.tasklist:
+      custom_checkbox: true
 
   # MKDOCS-TYPER: CLI documentation generator
   - mkdocs-typer:
@@ -232,7 +235,7 @@ plugins:
       exclude_paths: [docs/assets/**, docs/]
       additional_index_folders: []
       generate_home_index: false
-      use_page_titles: true
+      use_page_titles: false
       home_text: home
 
   # - mkdocs-backlinks:

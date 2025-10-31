@@ -56,7 +56,17 @@ title: Summary
     * [Tasks](developer/concepts/tasks/index.md)
       * developer/concepts/tasks/*.md
   * [Best Practices](developer/best-practices/index.md)
-    * developer/best-practices/*.md
+    * [Git](developer/best-practices/git.md)
+    * [CI/CD](developer/best-practices/ci-cd.md)
+    * [Async Patterns](developer/best-practices/async.md)
+    * [Error Handling](developer/best-practices/error-handling.md)
+    * [Logging](developer/best-practices/logging.md)
+    * [Caching](developer/best-practices/caching.md)
+    * [Code Review](developer/best-practices/code-review.md)
+    * [Debugging](developer/best-practices/debugging.md)
+    * [Documentation](developer/best-practices/docs.md)
+    * [Testing](developer/best-practices/testing/index.md)
+      * developer/best-practices/testing/*.md
 * [Reference](reference/index.md)
   * [API Reference](reference/src/tux/)
   * [CLI Reference](reference/cli.md)

@@ -1,8 +1,7 @@
 ---
 title: CI/CD Best Practices
+description: CI/CD best practices for Tux development, including pipeline architecture, change detection strategy, and quality assurance.
 ---
-
-Comprehensive CI/CD best practices for Tux development, covering continuous integration, automated testing, security scanning, containerization, and deployment strategies.
 
 ## Overview
 

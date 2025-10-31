@@ -1,8 +1,7 @@
 ---
 title: Error Handling Best Practices
+description: Error handling best practices for Tux development, including exception patterns, graceful degradation, and debugging techniques.
 ---
-
-Error handling best practices for Tux development, including exception patterns, graceful degradation, and debugging techniques.
 
 ## Tux Exception Hierarchy
 
