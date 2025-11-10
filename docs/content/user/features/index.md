@@ -9,3 +9,6 @@ Tux offers a wide range of features to enhance your Discord server. This section
 - [Bookmarks](bookmarks.md)
 - [GIF Limiter](gif-limiter.md)
 - [Starboard](starboard.md)
+- [Status Roles](status-roles.md)
+- [Temp VC](temp-vc.md)
+- [Leveling](leveling.md)
