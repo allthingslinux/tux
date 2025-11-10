@@ -4,7 +4,7 @@ Dynamic permission system for guild-specific permission hierarchies.
 This module provides a database-driven permission system allowing guilds to customize
 their permission ranks and role assignments. Key features:
 
-- Dynamic permission ranks (0-100 hierarchy)
+- Dynamic permission ranks (0-10 hierarchy)
 - Role-based access control
 - Command-specific permission overrides
 - Performance caching
@@ -64,7 +64,7 @@ class PermissionSystem:
 
     Notes
     -----
-    Permission ranks use numeric values (0-100) where higher numbers indicate
+    Permission ranks use numeric values (0-10) where higher numbers indicate
     greater permissions. This is separate from XP-based levels.
     """
 
@@ -85,14 +85,38 @@ class PermissionSystem:
         # Default permission rank hierarchy (0-7)
         # Guilds can customize these ranks or add their own
         self._default_ranks: dict[int, RankDefinition] = {
-            0: {"name": "Member", "description": "Basic server member"},
-            1: {"name": "Trusted", "description": "Trusted server member"},
-            2: {"name": "Junior Moderator", "description": "Can warn, timeout, jail"},
-            3: {"name": "Moderator", "description": "Can kick, ban"},
-            4: {"name": "Senior Moderator", "description": "Can unban, manage others"},
-            5: {"name": "Administrator", "description": "Server administration"},
-            6: {"name": "Head Administrator", "description": "Full server control"},
-            7: {"name": "Server Owner", "description": "Complete access"},
+            0: {
+                "name": "Member",
+                "description": "Regular community member with standard access to server features and commands",
+            },
+            1: {
+                "name": "Trusted",
+                "description": "Trusted community member who has proven themselves reliable and helpful",
+            },
+            2: {
+                "name": "Junior Moderator",
+                "description": "Entry-level moderation role for those learning and gaining experience",
+            },
+            3: {
+                "name": "Moderator",
+                "description": "Experienced moderator responsible for maintaining order and community standards",
+            },
+            4: {
+                "name": "Senior Moderator",
+                "description": "Senior moderator with additional oversight responsibilities and leadership duties",
+            },
+            5: {
+                "name": "Administrator",
+                "description": "Server administrator with broad management capabilities and configuration access",
+            },
+            6: {
+                "name": "Head Administrator",
+                "description": "Head administrator with comprehensive server oversight and decision-making authority",
+            },
+            7: {
+                "name": "Server Owner",
+                "description": "Server owner with ultimate authority and complete control over all aspects",
+            },
         }
 
     # ---------- Guild Initialization ----------
@@ -148,7 +172,7 @@ class PermissionSystem:
         Returns
         -------
         int
-            The highest permission rank (0-100) the user has, or 0 if none.
+            The highest permission rank (0-10) the user has, or 0 if none.
 
         Notes
         -----
@@ -190,7 +214,7 @@ class PermissionSystem:
         guild_id : int
             The Discord guild ID.
         rank : int
-            The permission rank to assign (0-100).
+            The permission rank to assign (0-10).
         role_id : int
             The Discord role ID to assign the rank to.
 
@@ -266,7 +290,7 @@ class PermissionSystem:
         guild_id : int
             The Discord guild ID.
         rank : int
-            The permission rank number (0-100).
+            The permission rank number (0-10).
         name : str
             Display name for the rank (e.g., "Super Moderator").
         description : str | None, optional
@@ -280,11 +304,11 @@ class PermissionSystem:
         Raises
         ------
         ValueError
-            If rank is not between 0 and 100.
+            If rank is not between 0 and 10.
         """
         # Validate rank range
-        if rank < 0 or rank > 100:
-            error_msg = "Permission rank must be between 0 and 100"
+        if rank < 0 or rank > 10:
+            error_msg = "Permission rank must be between 0 and 10"
             raise ValueError(error_msg)
 
         # Create custom rank
@@ -319,7 +343,7 @@ class PermissionSystem:
         command_name : str
             The command name (without prefix).
         required_rank : int
-            The minimum permission rank required (0-100).
+            The minimum permission rank required (0-10).
 
         Returns
         -------
@@ -329,11 +353,11 @@ class PermissionSystem:
         Raises
         ------
         ValueError
-            If required_rank is not between 0 and 100.
+            If required_rank is not between 0 and 10.
         """
         # Validate rank range
-        if required_rank < 0 or required_rank > 100:
-            error_msg = f"Required rank must be between 0 and 100, got {required_rank}"
+        if required_rank < 0 or required_rank > 10:
+            error_msg = f"Required rank must be between 0 and 10, got {required_rank}"
             raise ValueError(error_msg)
 
         # Set command permission in database
