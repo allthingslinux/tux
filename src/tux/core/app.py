@@ -112,12 +112,17 @@ class TuxApp:
         self._in_setup = False
         self._bot_connected = False
 
-    def run(self) -> None:
+    def run(self) -> int:
         """
         Run the Tux bot application.
 
         This is the synchronous entrypoint typically invoked by the CLI.
         Creates a new event loop, runs the bot, and handles shutdown gracefully.
+
+        Returns
+        -------
+        int
+            Exit code: 0 for success, 130 for user-requested shutdown, 1 for errors.
 
         Raises
         ------
@@ -137,7 +142,7 @@ class TuxApp:
 
             try:
                 # Block until the bot disconnects or shutdown is requested
-                loop.run_until_complete(self.start())
+                return loop.run_until_complete(self.start())
             finally:
                 # Always close the loop to free resources, even if start() raises
                 loop.close()
@@ -145,14 +150,15 @@ class TuxApp:
         except KeyboardInterrupt:
             # Ctrl+C pressed - this is a normal shutdown path
             logger.info("Application interrupted by user")
+            return 130
         except RuntimeError as e:
             # Special handling for expected "Event loop stopped" errors during shutdown
             # These occur when signals force-stop the loop and are not actual errors
             if "Event loop stopped" in str(e):
                 logger.debug("Event loop stopped during shutdown")
-            else:
-                logger.error(f"Application error: {e}")
-                raise
+                return 130  # Likely user-initiated shutdown
+            logger.error(f"Application error: {e}")
+            raise
         except Exception as e:
             logger.error(f"Application error: {e}")
             capture_exception_safe(e)
@@ -273,7 +279,7 @@ class TuxApp:
             # If asyncio signal handlers aren't supported, keep traditional ones
             logger.debug("Keeping traditional signal handlers (asyncio not supported)")
 
-    async def start(self) -> None:
+    async def start(self) -> int:
         """
         Start the Tux bot with full lifecycle management.
 
@@ -283,6 +289,11 @@ class TuxApp:
         - Configuration validation and owner ID resolution
         - Bot instance creation and Discord connection
         - Background task monitoring for shutdown events
+
+        Returns
+        -------
+        int
+            Exit code: 0 for success, 130 for user-requested shutdown, 1 for errors.
 
         Notes
         -----
@@ -310,6 +321,8 @@ class TuxApp:
         self.bot = self._create_bot_instance(owner_ids)
 
         startup_completed = False
+        exit_code = 0  # Default exit code
+        shutdown_code = 0  # Will be set by shutdown()
         try:
             # Login to Discord first (required before cogs can use wait_until_ready)
             logger.info("🔐 Logging in to Discord...")
@@ -340,17 +353,26 @@ class TuxApp:
                 logger.info("Bot shutdown complete")
             else:
                 logger.info("Bot startup was cancelled")
+            exit_code = 130 if self._user_requested_shutdown else 0
         except KeyboardInterrupt:
             # Ctrl+C or signal handler raised KeyboardInterrupt
             logger.info("Shutdown requested (KeyboardInterrupt)")
+            exit_code = 130
         except Exception as e:
             # Unexpected error during startup - log and report to Sentry
             logger.critical(f"❌ Bot failed to start: {type(e).__name__}")
             logger.info("💡 Check your configuration and ensure all services are properly set up")
             capture_exception_safe(e)
+            exit_code = 1
+        else:
+            # Normal completion (shouldn't happen, but handle gracefully)
+            exit_code = 0
         finally:
             # Always perform cleanup, regardless of how we exited
-            await self.shutdown()
+            shutdown_code = await self.shutdown()
+
+        # Use shutdown code if available, otherwise use exception-based code
+        return shutdown_code if shutdown_code != 0 else exit_code
 
     def _resolve_owner_ids(self) -> set[int]:
         """
@@ -498,12 +520,17 @@ class TuxApp:
 
         logger.info("Shutdown requested via monitor")
 
-    async def shutdown(self) -> None:
+    async def shutdown(self) -> int:
         """
         Gracefully shut down the bot and flush telemetry.
 
         This method ensures proper cleanup of all bot resources, including
         closing the Discord connection and flushing any pending Sentry events.
+
+        Returns
+        -------
+        int
+            Exit code: 130 if user requested shutdown, 0 otherwise.
 
         Notes
         -----
@@ -522,6 +549,6 @@ class TuxApp:
         logger.info(f"Shutdown complete (user_requested={self._user_requested_shutdown})")
         if self._user_requested_shutdown:
             logger.info("Exiting with code 130 (user requested shutdown)")
-            sys.exit(130)
-        else:
-            logger.info("Shutdown completed normally")
+            return 130
+        logger.info("Shutdown completed normally")
+        return 0

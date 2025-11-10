@@ -33,7 +33,7 @@ def run() -> int:
     try:
         logger.info("🚀 Starting Tux...")
         app = TuxApp()
-        app.run()
+        return app.run()
 
     except (TuxDatabaseError, TuxError, SystemExit, KeyboardInterrupt, Exception) as e:
         # Handle all errors in one place
