@@ -221,7 +221,7 @@ Modular plugin architecture for extending functionality without modifying core c
 
 ## License
 
-Tux is free and open source software licensed under the [GNU General Public License v3.0](LICENSE), created by [@kzndotsh](https://github.com/kzndotsh), created for the and maintained by the [All Things Linux](https://allthingslinux.org) community.
+Tux is free and open source software licensed under the [GNU General Public License v3.0](LICENSE), founded by [@kzndotsh](https://github.com/kzndotsh), created for and maintained by the [All Things Linux](https://allthingslinux.org) community.
 
 ## Metrics
 
