@@ -1,0 +1,467 @@
+---
+alwaysApply: true
+description: Database controller patterns, composition, and usage guidelines
+---
+
+# Database Controller Rules
+
+Tux's controller layer provides a clean, composable interface for database operations. Controllers encapsulate business logic, optimize queries, and provide consistent APIs for database interactions.
+
+## Architecture
+
+### BaseController Composition Structure
+
+BaseController uses **composition** to provide specialized database operations:
+
+#### Core Controllers (Eagerly Loaded)
+
+- **CrudController**: Basic Create, Read, Update, Delete operations
+- **QueryController**: Advanced querying with filtering and relationships
+
+#### Specialized Controllers (Lazy Loaded)
+
+- **PaginationController**: Paginated results with metadata
+- **BulkOperationsController**: Batch operations for efficiency
+- **TransactionController**: Transaction management
+- **UpsertController**: Get-or-create and upsert patterns
+- **PerformanceController**: Query optimization and analysis
+
+### Lazy Initialization Strategy
+
+Specialized controllers load **on-demand** to:
+
+- Reduce memory usage
+- Improve startup speed
+- Maintain flexibility for adding new controller types
+
+### DatabaseCoordinator Organization
+
+DatabaseCoordinator provides **centralized controller access** through facade pattern:
+
+- Uniform property-based access
+- Lazy loading of model-specific controllers
+- Single entry point for all database operations
+
+## Usage Patterns
+
+### DatabaseCoordinator Usage
+
+**Access model-specific controllers through centralized coordinator:**
+
+```python
+from tux.database.controllers import DatabaseCoordinator
+
+coordinator = DatabaseCoordinator(db_service)
+
+# Lazy-loaded controllers
+guild = await coordinator.guild.get_by_id(guild_id)
+config = await coordinator.guild_config.get_by_id(config_id)
+cases = await coordinator.case.find_all(filters={"guild_id": guild_id})
+```
+
+**Benefits:**
+
+- Single entry point for all controllers
+- Consistent API across models
+- Lazy loading reduces overhead
+- Easy to mock in tests
+
+### BaseController Usage
+
+**Create controllers for custom models:**
+
+```python
+from tux.database.controllers.base import BaseController
+from tux.database.models import MyModel
+
+controller = BaseController(MyModel, db_service)
+
+# Core CRUD operations
+user = await controller.create(name="Alice", email="alice@example.com")
+user = await controller.get_by_id(user_id)
+user = await controller.update_by_id(user_id, name="Bob")
+deleted = await controller.delete_by_id(user_id)
+
+# Query operations
+users = await controller.find_all(filters={"active": True})
+count = await controller.count(filters={"active": True})
+user = await controller.find_one(filters={"email": "alice@example.com"})
+```
+
+### Custom Controller Methods
+
+**Create domain-specific controllers:**
+
+```python
+from tux.database.controllers.base import BaseController
+
+class UserController(BaseController[User]):
+    def __init__(self, db: DatabaseService):
+        super().__init__(User, db)
+
+    async def get_active_users(self) -> list[User]:
+        """Get all active users with business logic."""
+        return await self.find_all(filters={"active": True, "verified": True})
+
+    async def promote_user(self, user_id: int) -> User | None:
+        """Promote user with transaction safety."""
+        async def operation(session):
+            user = await session.get(User, user_id)
+            if user:
+                user.role = "admin"
+                await session.commit()
+                await session.refresh(user)
+            return user
+
+        return await self.with_transaction(operation)
+```
+
+### Pagination Patterns
+
+**Use pagination for large result sets:**
+
+```python
+# Simple pagination
+result = await controller.paginate(page=1, per_page=20)
+
+# With filters and ordering
+result = await controller.paginate(
+    page=1,
+    per_page=20,
+    filters={"active": True},
+    order_by=User.created_at.desc()
+)
+
+# Access pagination metadata
+users = result.items
+total = result.total
+pages = result.pages
+has_next = result.has_next
+has_prev = result.has_prev
+```
+
+### Bulk Operations
+
+**Efficient batch processing:**
+
+```python
+# Bulk create
+users = await controller.bulk_create([
+    {"name": "Alice", "email": "alice@example.com"},
+    {"name": "Bob", "email": "bob@example.com"},
+])
+
+# Bulk update
+updated_count = await controller.bulk_update([
+    (user_id_1, {"active": False}),
+    (user_id_2, {"active": False}),
+])
+
+# Bulk delete
+deleted_count = await controller.bulk_delete([user_id_1, user_id_2])
+
+# Update where
+updated = await controller.update_where(
+    filters={"role": "guest"},
+    values={"active": False}
+)
+```
+
+### Upsert Operations
+
+**Get-or-create patterns:**
+
+```python
+# Upsert by field
+user, created = await controller.upsert_by_field(
+    field_name="email",
+    field_value="alice@example.com",
+    defaults={"name": "Alice", "active": True}
+)
+
+# Upsert by ID
+user, created = await controller.upsert_by_id(
+    record_id=user_id,
+    defaults={"name": "Alice"}
+)
+
+# Get or create
+user, created = await controller.get_or_create(
+    email="alice@example.com",
+    defaults={"name": "Alice"}
+)
+```
+
+### Transaction Management
+
+**Explicit transaction control:**
+
+```python
+# With session context
+async def operation(session):
+    user = await session.get(User, user_id)
+    user.balance += 100
+    await session.commit()
+    return user
+
+result = await controller.with_session(operation)
+
+# With transaction context
+result = await controller.with_transaction(operation)
+```
+
+### Advanced Querying
+
+**Complex queries with relationships:**
+
+```python
+# Find with relationship loading
+users = await controller.find_all_with_options(
+    filters={"active": True},
+    load_relationships=["profile", "settings"]
+)
+
+# JSON column queries
+results = await controller.find_with_json_query(
+    json_column="metadata",
+    json_path="$.preferences.theme",
+    value="dark"
+)
+
+# Array contains
+results = await controller.find_with_array_contains(
+    array_column="tags",
+    value="admin"
+)
+
+# Full-text search
+results = await controller.find_with_full_text_search(
+    search_columns=["name", "email"],
+    search_term="alice"
+)
+```
+
+## Best Practices
+
+### Always Use Controllers, Not Direct Session Access
+
+**Why:**
+
+- ✅ Type safety through full type checking
+- ✅ Business logic enforced at controller level
+- ✅ Consistent APIs across the application
+- ✅ Easy testability and mocking
+- ✅ Isolated changes for maintainability
+
+**Anti-pattern:**
+
+```python
+# BAD: Direct session access
+async with db.session() as session:
+    user = await session.get(User, user_id)
+    # Business logic mixed with data access
+```
+
+**Good pattern:**
+
+```python
+# GOOD: Controller usage
+controller = BaseController(User, db_service)
+user = await controller.get_by_id(user_id)
+# Business logic in service layer
+```
+
+### Create Model-Specific Controllers for Domain Logic
+
+**Encapsulate business rules:**
+
+```python
+class GuildController(BaseController[Guild]):
+    async def get_or_create_guild(self, guild_id: int) -> Guild:
+        """Get existing guild or create with defaults."""
+        return await self.get_or_create(
+            id=guild_id,
+            defaults={"name": "Unknown Guild"}
+        )
+
+    async def get_active_members(self, guild_id: int) -> list[Member]:
+        """Get active members with business logic."""
+        guild = await self.get_by_id(guild_id)
+        if not guild:
+            return []
+        # Complex business logic here
+        return await self.find_all(filters={"guild_id": guild_id, "active": True})
+```
+
+### Use Lazy-Loaded Controllers for Complex Operations
+
+**Benefits:**
+
+- Performance optimization through on-demand loading
+- Memory efficiency for simple operations
+- Faster startup through reduced initialization
+- Scalability support for many operation types
+
+**When to use:**
+
+- Pagination for large datasets
+- Bulk operations for efficiency
+- Upsert for synchronization
+- Transactions for consistency
+
+### Leverage Specialized Controllers for Optimized Queries
+
+**Pagination:**
+
+```python
+# For UI display with metadata
+result = await controller.paginate(page=1, per_page=20)
+```
+
+**Bulk operations:**
+
+```python
+# For batch processing
+await controller.bulk_create(items)
+```
+
+**Upsert:**
+
+```python
+# For data synchronization
+user, created = await controller.upsert_by_field("email", email)
+```
+
+**Transactions:**
+
+```python
+# For multi-step operations
+await controller.with_transaction(complex_operation)
+```
+
+### Handle Errors at Appropriate Levels
+
+**Controller-level validation:**
+
+```python
+async def create_user(self, **kwargs):
+    # Validate business rules
+    if await self.exists({"email": kwargs["email"]}):
+        raise ValueError("Email already exists")
+
+    # Create with validation
+    return await self.create(**kwargs)
+```
+
+### Design Controllers for Testability
+
+**Use dependency injection:**
+
+```python
+class UserService:
+    def __init__(self, controller: BaseController[User]):
+        self.controller = controller
+
+    async def get_user(self, user_id: int):
+        return await self.controller.get_by_id(user_id)
+
+# Easy to mock in tests
+mock_controller = Mock(spec=BaseController)
+service = UserService(mock_controller)
+```
+
+### Use Appropriate Loading Strategies
+
+**Selective relationship loading:**
+
+```python
+# Load specific relationships
+users = await controller.find_all_with_options(
+    load_relationships=["profile"]  # Only load profile, not all relationships
+)
+
+# Avoid over-fetching
+# BAD: Loading all relationships when not needed
+users = await controller.find_all_with_options(
+    load_relationships=None  # Loads ALL relationships
+)
+```
+
+### Document Controller Methods Clearly
+
+**Comprehensive docstrings:**
+
+```python
+async def get_active_users(self, limit: int | None = None) -> list[User]:
+    """
+    Get all active users with optional limit.
+
+    Parameters
+    ----------
+    limit : int | None, optional
+        Maximum number of users to return. If None, returns all.
+
+    Returns
+    -------
+    list[User]
+        List of active users.
+
+    Raises
+    ------
+    ValueError
+        If limit is negative.
+    """
+    if limit is not None and limit < 0:
+        raise ValueError("Limit must be non-negative")
+
+    return await self.find_all(
+        filters={"active": True},
+        limit=limit
+    )
+```
+
+## Anti-Patterns
+
+### ❌ Bypassing Controllers
+
+```python
+# BAD: Direct session access
+async with db.session() as session:
+    user = await session.get(User, user_id)
+```
+
+### ❌ Mixing Business Logic with Data Access
+
+```python
+# BAD: Business logic in controller
+async def create_user(self, **kwargs):
+    # Validation logic mixed with data access
+    if len(kwargs["name"]) < 3:
+        raise ValueError("Name too short")
+    return await self.create(**kwargs)
+```
+
+### ❌ Over-Fetching Relationships
+
+```python
+# BAD: Loading all relationships
+users = await controller.find_all_with_options(
+    load_relationships=None  # Loads everything
+)
+```
+
+### ❌ Ignoring Pagination for Large Datasets
+
+```python
+# BAD: Loading all records
+users = await controller.find_all()  # Could be thousands
+
+# GOOD: Use pagination
+result = await controller.paginate(page=1, per_page=20)
+```
+
+## Related Rules
+
+- [`overview.mdc`](overview.mdc) - Architecture overview
+- [`service.mdc`](service.mdc) - Underlying database service
+- [`models.mdc`](models.mdc) - Models used by controllers
