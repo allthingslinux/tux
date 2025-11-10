@@ -1,7 +1,7 @@
 """
-Revision ID: 831b675381d2
+Revision ID: d0a3d1ba79a4
 Revises:
-Create Date: 2025-11-10 09:23:35.930580+00:00
+Create Date: 2025-11-10 20:49:17.747071+00:00
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision: str = "831b675381d2"
+revision: str = "d0a3d1ba79a4"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
