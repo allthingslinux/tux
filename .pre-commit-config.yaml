@@ -16,7 +16,7 @@ repos:
       - id: validate-pyproject
         additional_dependencies: ['validate-pyproject-schema-store[all]']
   - repo: https://github.com/lyz-code/yamlfix
-    rev: 1.18.0
+    rev: 1.19.0
     hooks:
       - id: yamlfix
         exclude: \.(commitlintrc|pre-commit-hooks)\.yaml$|docker-compose.*\.yml$
@@ -35,7 +35,7 @@ repos:
     hooks:
       - id: markdownlint
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.21.0
+    rev: v3.21.1
     hooks:
       - id: pyupgrade
         args: [--py313-plus]
@@ -45,21 +45,21 @@ repos:
     hooks:
       - id: add-trailing-comma
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.2
+    rev: v0.14.4
     hooks:
       - id: ruff-check
         args: [--fix]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.2
+    rev: v0.14.4
     hooks:
       - id: ruff-format
   - repo: https://github.com/jsh9/pydoclint
-    rev: 0.7.6
+    rev: 0.8.1
     hooks:
       - id: pydoclint
         args: [--config=pyproject.toml]
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.28.0
+    rev: v8.29.0
     hooks:
       - id: gitleaks
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
@@ -73,10 +73,9 @@ repos:
   - repo: https://github.com/jag-k/pydantic-settings-export
     rev: v1.0.3
     hooks:
-     - id: pydantic-settings-export
-       files: 'src/tux/shared/config/settings.py'
-       additional_dependencies:
-         - pydantic-settings-export
+      - id: pydantic-settings-export
+        files: src/tux/shared/config/settings.py
+        additional_dependencies: [pydantic-settings-export]
 exclude: ^(\.archive/|.*typings/|node_modules/|\.venv/|\.kiro/|src/tux/database/migrations/versions/).*$
 ci:
   autofix_commit_msg: 'style: auto fixes from pre-commit hooks'
