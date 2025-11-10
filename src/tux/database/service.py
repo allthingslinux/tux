@@ -113,6 +113,25 @@ class DatabaseService:
         """
         return self._engine is not None
 
+    async def test_connection(self) -> None:
+        """Test database connectivity with a simple query.
+
+        Raises
+        ------
+        Exception
+            If the database connection fails or the test query fails.
+        """
+        if not self._engine:
+            msg = "Database engine not initialized"
+            raise RuntimeError(msg)
+
+        try:
+            async with self._engine.begin() as conn:
+                await conn.execute(text("SELECT 1"))
+        except Exception as e:
+            logger.error(f"❌ Database connectivity test failed: {e}")
+            raise
+
     @property
     def engine(self) -> AsyncEngine | None:
         """Get the database engine.
