@@ -1,6 +1,5 @@
 ---
 title: Bookmarks
-description: Save important Discord messages for later reference by reacting with a bookmark emoji.
 ---
 
 # Bookmarks

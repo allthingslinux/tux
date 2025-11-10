@@ -119,7 +119,6 @@ markdown_extensions:
   # Table of Contents: Auto-generates TOC from document headings
   - toc:
       permalink: true  # Add ¶ anchor links to headings on hover
-
   # PYMDOWNX EXTENSIONS (Python Markdown Extensions) ---------------
   # Snippets: Embed content from external files
   - pymdownx.snippets:
@@ -127,7 +126,6 @@ markdown_extensions:
       # check_paths: true  # Validate file paths exist
       # auto_append:  # Auto-include files in all docs
         # - docs/includes/abbreviations.md
-
   # Highlight: Advanced syntax highlighting for code blocks
   - pymdownx.highlight:
       use_pygments: true  # Use Pygments for build-time highlighting
@@ -137,10 +135,8 @@ markdown_extensions:
       linenums_style: pymdownx-inline  # Inline line numbers (not table)
       line_spans: __span  # Wrap lines in spans for highlighting
       anchor_linenums: false  # Don't make line numbers clickable
-
   # InlineHilite: Syntax highlighting for inline code blocks
   - pymdownx.inlinehilite
-
   # SuperFences: Enhanced code fences with custom support
   - pymdownx.superfences:
       custom_fences:
@@ -148,13 +144,10 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:mermaid2.fence_mermaid_custom
-
   # Details: Makes admonitions collapsible
   - pymdownx.details
-
   # SmartSymbols: Auto-convert (c), (r), fractions, etc. to symbols
   - pymdownx.smartsymbols
-
   # MagicLink: Auto-link GitHub issues, commits, users
   - pymdownx.magiclink:
       repo_url_shortener: true  # Shorten GitHub URLs
@@ -163,30 +156,22 @@ markdown_extensions:
       user: allthingslinux  # Repository owner
       repo: tux  # Repository name
       normalize_issue_symbols: true  # Normalize issue/PR symbols
-
   # Emoji: Convert :emoji: syntax to SVG icons
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
-                                                                    # Twemoji set
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
-                                                                       # SVG output
-
   # Keys: Render keyboard shortcuts like ++ctrl+alt+del++
   - pymdownx.keys
-
   # Tabbed: Content tabs for grouping related content
   - pymdownx.tabbed:
       alternate_style: true  # Better mobile behavior
       slugify: !!python/object/apply:pymdownx.slugs.slugify
-                                                             # Unicode-friendly slugs
         kwds:
           case: lower
-
   # EscapeAll: Enhanced character escaping
   - pymdownx.escapeall:
       hardbreak: true  # Respect hard line breaks
       nbsp: true  # Preserve non-breaking spaces
-
   # TEXT FORMATTING EXTENSIONS -------------------------------------
   # Caret: Superscript with ^^text^^ syntax
   - pymdownx.caret
@@ -197,7 +182,6 @@ markdown_extensions:
   # Tasklist: Convert task lists to checkboxes
   - pymdownx.tasklist:
       custom_checkbox: true
-
   # MKDOCS-TYPER: CLI documentation generator
   - mkdocs-typer:
 plugins:
@@ -237,7 +221,6 @@ plugins:
       generate_home_index: false
       use_page_titles: false
       home_text: home
-
   # - mkdocs-backlinks:
       # Plugin for adding backlinks to pages (digital garden style)
       # enabled: false
@@ -300,7 +283,6 @@ plugins:
         python:
           # Where to find your sources, see "Finding modules" in mkdocstrings docs
           paths: [../src/tux]
-
           # Pre-load modules for better cross-references to inherited members
           # Useful when classes inherit from external packages (discord.py, pydantic, etc.)
           preload_modules:
@@ -310,7 +292,6 @@ plugins:
             - sqlalchemy
             - sqlalchemy.orm
             - pydantic
-
           # Load object inventories to enable cross-references to external projects
           # This allows linking to stdlib docs, dependencies, and other documentation
           inventories:
@@ -360,13 +341,10 @@ plugins:
             - url: https://pytest-mock.readthedocs.io/en/latest/objects.inv
             # pytest-alembic - database migration testing
             - url: https://pytest-alembic.readthedocs.io/en/latest/objects.inv
-
           # Allow loading modules from external packages for cross-references
           load_external_modules: true
-
           # Use custom Jinja2 templates for rendering API docs
           custom_templates: overrides/python/material
-
           # Python handler options - see https://mkdocstrings.github.io/python/usage/configuration/general/
           options:
             # Griffe extensions for enhanced parsing - see https://mkdocstrings.github.io/griffe/extensions/
@@ -386,93 +364,73 @@ plugins:
               - griffe_warnings_deprecated
               # Modernize type annotations (PEP 585, 604, etc.)
               - griffe_modernized_annotations
-
             # CROSS-REFERENCES & NAVIGATION -------------------------------------------
             # Show backlinks to other documentation sections within each symbol
             # Creates breadcrumb trails showing where symbols are used
             backlinks: tree
-
             # Show base classes for inheritance hierarchy (alternative to diagrams)
             show_bases: true
-
             # GENERAL PARSING OPTIONS ------------------------------------------------
             # Allow inspecting modules when source code isn't available
             # Useful for compiled extensions but may include internal methods
             allow_inspection: true
-
             # Look for .pyi stub files alongside regular modules
             # Useful when documentation is provided separately from implementation
             find_stubs_package: true
-
             # Force inspection even when source code is available
             # Use only when inspection yields better results than static analysis
             force_inspection: false
-
             # Show source code for each documented object
             show_source: false
-
             # HEADING & NAVIGATION DISPLAY ------------------------------------------
             # Initial heading level for documentation (1=H1, 2=H2, etc.)
             # For auto-generated API pages, makes the module heading be the page H1
             # Each nested object increases heading level by 1 (HTML limits to H6)
             heading_level: 1
-
             # Always show heading for the root symbol rendered with `::: path.to.object`
             # Useful for multi-object pages; disable for single-object-per-page layouts
             show_root_heading: true
-
             # Control Python path display in headings (package.module.Class vs just Class)
             show_root_full_path: false  # Show full dotted path for root symbol
             show_root_members_full_path: false  # Show just names for direct members
             show_object_full_path: false  # Show just names for all nested objects
-
             # Include symbol type indicators (🔧 📦 📋 etc.) in headings and TOC
             # See https://mkdocstrings.github.io/python/usage/customization/#symbol-types
             show_symbol_type_heading: true  # Show type icons/emojis in headings
             show_symbol_type_toc: true  # Show type icons/emojis in table of contents
-
             # Navigation and organization settings
             show_root_toc_entry: true  # Include root symbol in TOC even if heading hidden
             show_category_heading: true  # Show category headings when group_by_category=true
-                                              # (Attributes, Methods, Classes, etc.)
-
             # MEMBER FILTERING & ORGANIZATION -------------------------------------
             # Filters for which members to include/exclude (empty = include all public)
             # Uses regex patterns: "!^_[^_]" excludes private/protected, keeps special methods
             # Can use "public" to include only __all__ items and non-underscore names
             # Negative filters (!) exclude matches, positive filters include matches
             filters: []
-
             # Group members by category (Attributes, Classes, Functions, Modules)
             # Creates organized sections with headings for each member type
             group_by_category: true
-
             # Order members within categories (source/alphabetical/__all__)
             # "source" = order as they appear in code, "alphabetical" = A-Z sorting
             # "__all__" = order defined in module's __all__ attribute (Insiders only)
             members_order: source
-
             # Show auto-generated summary tables at the start of each symbol's docs
             # Can be boolean or dict to control summaries per member type:
             # summary: {attributes: true, functions: false, classes: true, modules: true}
             summary: true
-
             # Display options for member listings
             show_labels: true         # Show type labels like "method", "attribute", "class"
             show_submodules: false  # Don't show submodules recursively (prevents heading bloat)
-
             # Include inherited members from parent classes
             # Can be boolean (true=all inherited) or list of specific inherited members
             # Use preload_modules to include inherited members from external packages
             inherited_members: true
-
             # DOCSTRING PARSING & DISPLAY -----------------------------------------
             # Docstring format style (google, numpy, sphinx, or null for plain text)
             # Numpy style: Uses sections with dashes (Parameters ----------)
             # Google style: Uses indented sections (Parameters:)
             # Sphinx style: Uses :param:, :returns: directives
             docstring_style: numpy
-
             # Parser options for the chosen docstring style
             docstring_options:
               # Don't discard first line of __init__ docstrings when merging into class
@@ -481,20 +439,16 @@ plugins:
               trim_doctest_flags: true
               # Allow multiple items in Returns section (numpy/google styles)
               returns_multiple_items: true
-
             # How to render docstring sections: "table", "list", or "spacy"
             # "table" = traditional columns, "list" = RTD-style lists, "spacy" = wide tables
             # Lists work better for long content, tables for short descriptions
             docstring_section_style: list
-
             # Merge __init__ method docstrings and parameters into parent class
             # Shows class signature like Class(param=default) and combines docstrings
             merge_init_into_class: true
-
             # Show documentation even for objects without docstrings or children
             # Useful for showing API structure even without documentation
             show_if_no_docstring: false
-
             # CONTROL WHICH DOCSTRING SECTIONS TO DISPLAY -------------------
             # All sections enabled for comprehensive API documentation
             show_docstring_attributes: true  # "Attributes:" section
@@ -510,61 +464,49 @@ plugins:
             show_docstring_returns: true  # "**Returns:**" section
             show_docstring_warns: true  # "**Warns:**" section
             show_docstring_yields: true  # "**Yields:**" section (generators)
-
             # CROSS-REFERENCES -------------------------------------------------------
             # Enable cross-references in function/method signatures (Insiders only)
             # Turns type hints into clickable links to documentation
             signature_crossrefs: true
-
             # SIGNATURE FORMATTING --------------------------------------------------
             # How to display type annotation paths: "brief", "source", or "full"
             # "brief" (recommended): Shows only last component (Sequence[Path] vs typing.Sequence[pathlib.Path])
             # Still provides cross-references and full paths in tooltips
             annotations_path: brief
-
             # Maximum line length when formatting signatures (Black/Ruff compatible)
             # Used when separate_signature=true for code block formatting
             line_length: 88
-
             # SIGNATURE DISPLAY OPTIONS -------------------------------------------
             # Show method/function signatures (true) or just names (false)
             show_signature: true
-
             # Include type annotations in signature display
             # Shows type hints like (param: str, other: int) -> bool
             # Very useful for API documentation clarity
             show_signature_annotations: true
-
             # Include type parameters in generic signatures (Class[T], func[T]())
             # Best used with separate_signature=true for readability
             show_signature_type_parameters: true
-
             # Show initial values for class attributes
             show_attribute_values: true
-
             # Show @overload decorated signatures along with implementation
             show_overloads: true
-
             # Hide implementation signature when overloads_only=true
             overloads_only: false
-
             # Put signature in separate code block below heading instead of inline
             # Allows for better formatting and longer signatures with Black/Ruff
             separate_signature: true
-
             # ADVANCED SIGNATURE OPTIONS -----------------------------------------
             # Unwrap Annotated[T, metadata] to show just T
             unwrap_annotated: true
-
             # Skip registering symbols in local inventory for external libraries
             # Prevents duplicate cross-references when documenting third-party code
             skip_local_inventory: true
-  - api-autonav:
-      enabled: true
-      modules: [../src/tux]
-      nav_section_title: API Reference
-      api_root_uri: reference/src
-      nav_item_prefix: "<code class='doc-symbol doc-symbol-nav doc-symbol-module'></code> "
-      exclude_private: false
-      on_implicit_namespace_package: warn
-      show_full_namespace: false
+  # - api-autonav:
+  #     enabled: true
+  #     modules: [../src/tux]
+  #     nav_section_title: API Reference
+  #     api_root_uri: reference/src
+  #     nav_item_prefix: "<code class='doc-symbol doc-symbol-nav doc-symbol-module'></code> "
+  #     exclude_private: false
+  #     on_implicit_namespace_package: warn
+  #     show_full_namespace: false
