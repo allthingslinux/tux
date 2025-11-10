@@ -174,8 +174,12 @@ class EmojiManager:
                 logger.error(f"Failed to fetch application emojis during init: {e}")
                 self._initialized = False
                 return False
+            except discord.DiscordException:
+                logger.exception("Unexpected Discord error during emoji cache initialization.")
+                self._initialized = False
+                return False
             except Exception:
-                logger.exception("Unexpected error during emoji cache initialization.")
+                logger.exception("Unexpected non-Discord error during emoji cache initialization.")
                 self._initialized = False
                 return False
 
