@@ -1,5 +1,7 @@
 ---
 title: CLI
+hide:
+  - toc
 ---
 
 # CLI Reference
