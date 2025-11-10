@@ -11,190 +11,157 @@ The all-in-one open source Discord bot for the All Things Linux community.
 
 From advanced moderation to engaging XP systems, Tux brings everything you need to manage and grow your server.
 
-## Quick Links
+## Getting Started
 
-<div class="grid cards" markdown>
+Choose your path to get started with Tux:
 
-- :rocket:{ .lg .middle } __Get Started__
+<div class="grid cards" style="grid-template-columns: repeat(2, 1fr);" markdown>
 
-    ---
-
-    Jump right into using Tux with our comprehensive user guide.
-
-    [:octicons-arrow-right-24: Get Started](getting-started/for-users.md)
-
-- :star:{ .lg .middle } __Star on GitHub__
+- :material-linux:{ .lg .middle } __Using Tux__
 
     ---
 
-    Show your support and help others discover Tux.
+    Perfect for server admins and users. Master commands, explore features, and configure your server.
 
-    [:octicons-arrow-right-24: Star on GitHub](https://github.com/allthingslinux/tux)
+    [View User Guide](user/index.md){ .md-button .md-button--primary }
 
-- :fontawesome-solid-comments:{ .lg .middle } __Join Community__
+- :material-crown:{ .lg .middle } __Admin Guide__
 
     ---
 
-    Connect with other users and get help from the community.
+    Advanced server administration and moderation. Configure permissions, manage cases, and customize your server.
 
-    [:octicons-arrow-right-24: Join Discord](https://discord.gg/gpmSjcjQxg)
+    [View Admin Guide](admin/index.md){ .md-button .md-button--primary }
+
+- :fontawesome-brands-docker:{ .lg .middle } __Self-Hosting__
+
+    ---
+
+    Deploy your own Tux instance with full control. Docker or systemd deployment with all dependencies included.
+
+    [View Self-Hosting Guide](selfhost/index.md){ .md-button .md-button--primary }
+
+- :fontawesome-solid-code:{ .lg .middle } __Developing__
+
+    ---
+
+    Contribute code, build plugins, and extend functionality. Python 3.13+, SQLModel, and modern tooling.
+
+    [View Developer Guide](developer/index.md){ .md-button .md-button--primary }
 
 </div>
 
 ---
 
-## Getting Started
+## Key Features
 
-### Find the guide that matches your use case
+<div class="grid cards" markdown>
 
-=== "👥 For Users"
-    __Master Tux commands and become a power user__
+- :material-shield-half-full:{ .lg .middle } __Advanced Moderation__
 
-    Master Tux commands, explore features, and become a power user in your Discord server.
+    ---
 
-    **Highlights:**
+    Case management, jail system, warnings, and audit logs.
 
-    - 50+ moderation commands
-    - XP & leveling system
-    - Custom role management
-    - Server analytics
+- :material-chart-line:{ .lg .middle } __XP & Leveling__
 
-    [View User Guide →](user/index.md)
+    ---
 
-=== "🚀 For Self-Hosters"
-    __Deploy your own Tux instance__
+    Gamified engagement with leaderboards and role rewards.
 
-    Deploy your own Tux instance with Docker, configure settings, and manage your bot.
+- :material-star:{ .lg .middle } __Starboard__
 
-    **Highlights:**
+    ---
 
-    - Docker Compose setup
-    - Configuration wizard
-    - Database management
-    - Monitoring & logging
+    Automatically highlight popular messages.
 
-    [View Self-Hosting Guide →](selfhost/index.md)
+- :material-bookmark:{ .lg .middle } __Bookmarks__
 
-=== "💻 For Developers"
-    __Contribute and extend functionality__
+    ---
 
-    Contribute to Tux, build plugins, and extend functionality with our developer tools.
+    Save important messages for later reference.
 
-    **Highlights:**
+- :material-cog:{ .lg .middle } __Highly Configurable__
 
-    - Plugin architecture
-    - API documentation
-    - Development setup
-    - Testing framework
+    ---
 
-    [View Developer Guide →](developer/index.md)
+    TOML/YAML/JSON support with interactive wizard.
 
-## Why Choose Tux?
+- :fontawesome-solid-plug-circle-check:{ .lg .middle } __Plugin System__
 
-### Built specifically for Linux communities with modern tools and best practices
+    ---
 
-!!! note "🛡️ Advanced Moderation"
-    Comprehensive tools including ban, kick, timeout, jail system, and case management.
+    Extensible architecture for custom features.
 
-    **Features:** Case Management • Jail System • Audit Logs
-
-!!! tip "⚡ High Performance"
-    Built with async Python, optimized for large servers with hot-reload for development.
-
-    **Features:** Async/Await • Hot Reload • Optimized
-
-!!! example "🎮 XP & Leveling"
-    Engaging XP system with ranks, leaderboards, and customizable role rewards.
-
-    **Features:** Leaderboards • Role Rewards • Customizable
-
-!!! abstract "🔧 Highly Configurable"
-    Flexible configuration with env/TOML/YAML/JSON support and interactive setup wizard.
-
-    **Features:** TOML/YAML/JSON • Wizard • Live Reload
-
-!!! info "📊 Rich Analytics"
-    Detailed logging with Sentry integration, InfluxDB metrics, and detailed insights.
-
-    **Features:** Sentry • InfluxDB • Loguru
-
-!!! warning "🔌 Plugin System"
-    Extensible architecture allowing custom plugins for server-specific features and integrations.
-
-    **Features:** Custom Plugins • API • Extensible
+</div>
 
 ---
 
-## Core Features
+## Why Tux?
 
-| Moderation Tools | Engagement Features |
-|------------------|-------------------|
-| __Case Management__ - Track all moderation actions | __XP System__ - Activity-based leveling |
-| __Jail System__ - Temporary restriction system | __Leaderboards__ - Server rankings |
-| __Auto-moderation__ - Automated content filtering | __Role Rewards__ - Automatic role assignment |
-| __Audit Logs__ - Complete action history | __Starboard__ - Highlight best content |
-| __Warning System__ - Progressive discipline | __Custom Commands__ - Server-specific commands |
+### Built for Linux Communities
 
-| Configuration | Analytics & Monitoring |
-|---------------|----------------------|
-| __Multi-format Support__ - TOML, YAML, JSON | __Sentry Integration__ - Error tracking |
-| __Setup Wizard__ - Interactive configuration | __InfluxDB Metrics__ - Performance monitoring |
-| __Hot Reload__ - Update without restart | __Detailed Logging__ - Loguru-powered logs |
-| __Environment Variables__ - Docker-friendly | __Command Statistics__ - Usage analytics |
-| __Per-guild Settings__ - Customize per server | __Database Insights__ - Query performance |
+Tux combines powerful moderation tools with engaging features, all built with modern Python and best practices.
 
-## Built with Modern Technologies
+| Feature | Description |
+|---------|-------------|
+| __🛡️ Moderation__ | Comprehensive tools with case tracking, jail system, and audit logs |
+| __⚡ Performance__ | Async architecture optimized for large servers with hot-reload |
+| __🎮 Engagement__ | XP system, starboard, bookmarks, and customizable role rewards |
+| __🔧 Configuration__ | Flexible setup with TOML/YAML/JSON and interactive wizard |
+| __📊 Analytics__ | Sentry integration, InfluxDB metrics, and detailed logging |
+| __🔌 Extensible__ | Plugin system for custom features and integrations |
 
-### Leveraging the latest tools and frameworks for reliability and performance
+---
+
+## Built With
 
 <div class="grid cards" markdown>
 
 - :fontawesome-brands-python: __Python 3.13+__
 - :fontawesome-brands-discord: __discord.py__
-- :material-database: __SQLModel__
-- :material-code-braces: __SQLAlchemy__
 - :material-database: __PostgreSQL__
-- :material-sync: __Alembic__
-- :fontawesome-brands-docker: __Docker Compose__
-- :material-package-variant: __UV Package Manager__
-- :material-console: __Typer CLI__
-- :material-code-tags: __Ruff + Basedpyright__
+- :material-code-braces: __SQLModel__
+- :fontawesome-brands-docker: __Docker__
+- :material-package-variant: __UV__
 
 </div>
 
-## What's Next?
+---
 
-!!! info "For Users"
-    __New to Tux?__ Start with our [User Guide](user/index.md) to learn all the commands and features available.
+## Community
 
-!!! warning "For Self-Hosters"
-    __Want to deploy your own instance?__ Check out our [Deployment Guide](selfhost/index.md) for step-by-step instructions.
+<div class="grid cards" markdown>
 
-!!! example "For Developers"
-    __Ready to contribute?__ Read our [Developer Guide](developer/index.md) to set up your development environment.
+- :fontawesome-solid-comments:{ .lg .middle } __Discord__
 
-## Join the Community
+    ---
 
-### Connect with other Linux enthusiasts and Tux users
-
-!!! note ":speech_balloon: Discord Server"
-    Join our active Discord community to get help, suggest features, and meet other users.
+    Join our community for support and discussions.
 
     [:octicons-arrow-right-24: Join Discord](https://discord.gg/gpmSjcjQxg)
 
-!!! tip ":octicons-mark-github-16: GitHub Repository"
-    Star, fork, and contribute on GitHub. Report issues, submit PRs, and view the roadmap.
+- :octicons-mark-github-16:{ .lg .middle } __GitHub__
 
-    [:octicons-arrow-right-24: View on GitHub](https://github.com/allthingslinux/tux)
+    ---
 
-!!! abstract ":handshake: Contributing Guide"
-    Learn how to contribute with code, documentation, bug reports, and feature requests.
+    Star, fork, and contribute on GitHub.
+
+    [:octicons-arrow-right-24: View Repository](https://github.com/allthingslinux/tux)
+
+- :material-heart:{ .lg .middle } __Contribute__
+
+    ---
+
+    Learn how to contribute to Tux.
 
     [:octicons-arrow-right-24: Contributing Guide](community/contributing/)
 
+</div>
+
 ---
 
-## Activity & Metrics
+## Project Activity
 
 [![Repository Metrics](https://repobeats.axiom.co/api/embed/b988ba04401b7c68edf9def00f5132cd2a7f3735.svg)](https://github.com/allthingslinux/tux/pulse)
 
@@ -202,9 +169,9 @@ From advanced moderation to engaging XP systems, Tux brings everything you need 
 
 Special thanks to everyone who helps make Tux better!
 
----
-
 [![Contributors](https://contrib.rocks/image?repo=allthingslinux/tux)](https://github.com/allthingslinux/tux/graphs/contributors)
+
+---
 
 *Made with ❤️ by the [All Things Linux](https://allthingslinux.org) community*
 

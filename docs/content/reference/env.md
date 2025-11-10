@@ -11,6 +11,7 @@ hide:
 Main Tux configuration using Pydantic Settings with multi-format support.
 
 Configuration is loaded from multiple sources in priority order:
+
 1. Environment variables (highest priority)
 2. .env file
 3. config.toml file
