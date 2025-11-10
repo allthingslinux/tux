@@ -26,12 +26,9 @@ Before installing Tux, ensure your system meets these requirements.
 - **Git**: For cloning the repository
 - **Docker**: For containerized deployment (optional)
 
-### Database Options
+### Database
 
-Choose one of the following:
-
-- **PostgreSQL**: 13+ (recommended)
-- **SQLite**: Built-in (development only)
+- **PostgreSQL**: 13+ (required)
 
 ## Network Requirements
 
@@ -49,5 +46,5 @@ Choose one of the following:
 After verifying requirements:
 
 - [Docker Installation](docker.md) - Recommended for production
-- [System Installation](system.md) - For non-Docker setups
+- [System Installation](systemd.md) - For non-Docker setups
 - [First Run Setup](first-run.md) - First run

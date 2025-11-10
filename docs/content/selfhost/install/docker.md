@@ -102,4 +102,4 @@ After successful installation:
 
 - [First Run Setup](first-run.md) - Initial bot configuration
 - [Environment Configuration](../config/environment.md) - Advanced settings
-- [Monitoring Setup](../ops/monitoring.md) - Production monitoring
+- [Monitoring Setup](../manage/operations.md) - Production monitoring

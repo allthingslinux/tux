@@ -338,7 +338,7 @@ After successful first run:
 
 1. **[Configure Features](../configuration/features.md)** - Enable/disable features
 2. **[Set Up Backups](../database/backups.md)** - Protect your data
-3. **[Configure Monitoring](../operations/monitoring.md)** - Watch for issues
+3. **[Configure Monitoring](../manage/operations.md)** - Watch for issues
 4. **[Review Security](../security/best-practices.md)** - Harden your deployment
 
 ## Running in Background
