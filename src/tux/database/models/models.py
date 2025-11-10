@@ -361,7 +361,7 @@ class PermissionRank(BaseModel, table=True):
     )
     rank: int = Field(
         sa_type=Integer,
-        description="Numeric permission level (0-100, higher = more permissions)",
+        description="Numeric permission level (0-10, higher = more permissions)",
     )
     name: str = Field(
         max_length=100,
@@ -394,7 +394,7 @@ class PermissionRank(BaseModel, table=True):
     )
 
     __table_args__ = (
-        CheckConstraint("rank >= 0 AND rank <= 100", name="check_rank_range"),
+        CheckConstraint("rank >= 0 AND rank <= 10", name="check_rank_range"),
         CheckConstraint("guild_id > 0", name="check_permission_rank_guild_id_valid"),
         CheckConstraint("length(name) > 0", name="check_rank_name_not_empty"),
         UniqueConstraint("guild_id", "rank", name="unique_permission_rank"),
@@ -495,7 +495,7 @@ class PermissionCommand(BaseModel, table=True):
     command_name : str
         Name of the command.
     required_rank : int
-        Minimum permission rank required (0-100).
+        Minimum permission rank required (0-10).
     description : str, optional
         Optional description of the command.
     """
@@ -521,7 +521,7 @@ class PermissionCommand(BaseModel, table=True):
     )
     required_rank: int = Field(
         sa_type=Integer,
-        description="Minimum permission rank required to use this command (0-100)",
+        description="Minimum permission rank required to use this command (0-10)",
     )
     description: str | None = Field(
         default=None,
@@ -539,7 +539,7 @@ class PermissionCommand(BaseModel, table=True):
     )
 
     __table_args__ = (
-        CheckConstraint("required_rank >= 0 AND required_rank <= 100", name="check_required_rank_range"),
+        CheckConstraint("required_rank >= 0 AND required_rank <= 10", name="check_required_rank_range"),
         CheckConstraint("guild_id > 0", name="check_permission_command_guild_id_valid"),
         CheckConstraint("length(command_name) > 0", name="check_command_name_not_empty"),
         UniqueConstraint("guild_id", "command_name", name="unique_permission_command"),
