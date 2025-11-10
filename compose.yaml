@@ -50,9 +50,9 @@ services:
       - ./assets:/app/assets:ro
       # Migration mount - always mounted, controlled by USE_LOCAL_MIGRATIONS env var
       - ./src/tux/database/migrations:/app/tux/database/migrations:ro
-      - tux_cache:/app/.cache
-      - tux_temp:/app/temp
-      - tux_user_home:/home/nonroot
+      - ./data/cache:/app/.cache
+      - ./data/temp:/app/temp
+      - ./data/user-home:/home/nonroot
     env_file: [.env]
     environment:
       TUX_VERSION: ${VERSION:-dev}
@@ -167,17 +167,8 @@ services:
       - source: adminer-index.php
         target: /var/www/html/index.php
 volumes:
-  # Persistent data volumes
-  tux_cache:
-    driver: local
-  tux_temp:
-    driver: local
-  tux_user_home:
-    driver: local
   tux_postgres_data:
     driver: local
 configs:
   adminer-index.php:
     file: ./docker/adminer/index.php
-  # adminer-theme.css:
-  #   file: ./docker/adminer/adminer-theme.css
