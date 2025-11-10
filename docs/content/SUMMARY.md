@@ -12,6 +12,10 @@ title: Summary
   * [For Self-Hosters](getting-started/for-self-hosters.md)
   * [For Developers](getting-started/for-developers.md)
 * [User Guide](user/index.md)
+  * [Features](user/features/index.md)
+    * user/features/*.md
+  * [Commands](user/commands/index.md)
+    * user/commands/*.md
 * [Admin Guide](admin/index.md)
 * [Self-Hoster Guide](selfhost/index.md)
   * [Installation](selfhost/install/index.md)
