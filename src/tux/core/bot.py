@@ -120,9 +120,9 @@ class Tux(commands.Bot):
 
         # Schedule setup task creation on the next event loop iteration
         # This ensures the event loop is fully ready before we create async tasks
-        asyncio.get_event_loop().call_soon(self._create_setup_task)
+        asyncio.get_event_loop().call_soon(self.create_setup_task)
 
-    def _create_setup_task(self) -> None:
+    def create_setup_task(self) -> None:
         """
         Create the async setup task in the proper event loop context.
 
