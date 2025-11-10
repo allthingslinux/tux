@@ -9,10 +9,8 @@ and permission management.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
 
 from sqlalchemy import (
-    ARRAY,
     JSON,
     BigInteger,
     CheckConstraint,
@@ -21,7 +19,6 @@ from sqlalchemy import (
     Float,
     Index,
     Integer,
-    String,
     UniqueConstraint,
 )
 from sqlalchemy import Enum as PgEnum
@@ -39,7 +36,7 @@ from .enums import CaseType, OnboardingStage
 class Guild(BaseModel, table=True):
     """Discord guild/server model with metadata and relationships.
 
-    Represents a Discord guild (server) with associated metadata, feature flags,
+    Represents a Discord guild (server) with associated metadata
     and relationships to other entities like snippets, cases, reminders, etc.
 
     Attributes
@@ -50,12 +47,6 @@ class Guild(BaseModel, table=True):
         When the bot joined this guild.
     case_count : int
         Running count of moderation cases for this guild.
-    guild_metadata : dict, optional
-        Flexible metadata storage using PostgreSQL JSONB.
-    tags : list[str]
-        Guild tags using PostgreSQL arrays.
-    feature_flags : dict[str, bool]
-        Feature toggles stored as JSON.
     """
 
     id: int = Field(
@@ -75,21 +66,6 @@ class Guild(BaseModel, table=True):
         ge=0,
         sa_type=Integer,
         description="Running count of moderation cases for sequential numbering",
-    )
-    guild_metadata: dict[str, Any] | None = Field(
-        default=None,
-        sa_column=Column(JSON),
-        description="Flexible metadata storage using PostgreSQL JSONB",
-    )
-    tags: list[str] = Field(
-        default_factory=list,
-        sa_column=Column(ARRAY(String)),
-        description="Guild tags using PostgreSQL arrays",
-    )
-    feature_flags: dict[str, bool] = Field(
-        default_factory=dict,
-        sa_column=Column(JSON),
-        description="Feature toggles stored as JSON",
     )
 
     # Relationships with cascade delete - using sa_relationship to bypass SQLModel parsing issues
