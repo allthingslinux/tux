@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD041 -->
 
-> [!WARNING]
-**This bot is still a work in progress and issues are expected. If you self-host our bot please join our support server [on Discord](https://discord.gg/gpmSjcjQxg) for announcements and support.**
+> [!NOTE]
+**Tux v0.1.0 is our first major release! If you encounter any issues or need support, please join our community server [on Discord](https://discord.gg/gpmSjcjQxg) for help and announcements.**
 
 <div align="center">
     <p align="center">
@@ -54,9 +54,12 @@ It is designed to provide a variety of features to the server, including moderat
 - [Bot Features](#bot-features)
 - [Installation and Development](#installation-and-development)
   - [Prerequisites](#prerequisites)
-  - [Setup \& Workflow](#setup--workflow)
-  - [Quick Commands](#quick-commands)
+  - [Setup & Workflow](#setup--workflow)
+- [Documentation & Support](#documentation--support)
+- [Quick Commands](#quick-commands)
 - [License](#license)
+- [Metrics](#metrics)
+- [Contributors](#contributors)
 
 ## Tech Stack
 
@@ -75,6 +78,8 @@ It is designed to provide a variety of features to the server, including moderat
 | **HTTP Client** | Modern async requests with `httpx` |
 | **Configuration** | Dynamic environment management with `pydantic-settings` & `python-dotenv` |
 
+<sub>[back to top ↑](#table-of-contents)</sub>
+
 ## Bot Features
 
 - Asynchronous codebase
@@ -88,6 +93,8 @@ It is designed to provide a variety of features to the server, including moderat
 - Configuration system (config files, environment variables + `.env` file)
 - Dynamic role-based (access level) permission system
 - Plugin system (see [plugins](src/tux/plugins/README.md))
+
+<sub>[back to top ↑](#table-of-contents)</sub>
 
 ## Installation and Development
 
@@ -134,45 +141,60 @@ It is designed to provide a variety of features to the server, including moderat
    uv run tux start --debug
    ```
 
-### Quick Commands
+<sub>[back to top ↑](#table-of-contents)</sub>
 
-```bash
-# Development
-uv run tux start                 # Start bot in development mode
-uv run tux start --debug         # Start bot with debug mode
-uv run dev lint                  # Check code quality with Ruff
-uv run dev format                # Format code with Ruff
-uv run dev type-check            # Check types with basedpyright
-uv run dev lint-docstring        # Lint docstrings with pydoclint
-uv run dev pre-commit            # Run pre-commit checks
-uv run dev all                   # Run all development checks
+## Documentation & Support
 
-# Testing
-uv run tests run                 # Run tests with coverage
-uv run tests quick               # Run tests without coverage (faster)
-uv run tests html                # Run tests and generate HTML report
-uv run tests coverage            # Generate coverage reports
+- [Documentation](https://tux.atl.dev)
+- [Roadmap](https://github.com/allthingslinux/tux/issues/525)
+- [Dependencies](https://github.com/allthingslinux/tux/issues/157)
+- [Support](https://discord.gg/gpmSjcjQxg)
 
-# Database
-uv run db migrate-dev            # Create and apply migrations for development
-uv run db migrate-push           # Push pending migrations to database
-uv run db migrate-generate "message"  # Generate a new migration
-uv run db health                 # Check database health
+<sub>[back to top ↑](#table-of-contents)</sub>
 
-# Docker
-uv run docker up                 # Start Docker services
-uv run docker down               # Stop Docker services
-uv run docker build              # Build Docker images
-uv run docker logs               # Show Docker service logs
-uv run docker ps                 # List running containers
-uv run docker shell              # Open shell in container
-```
+## Quick Commands
 
-**For detailed setup instructions, see [SETUP.md](SETUP.md)**
+| Category | Command | Description |
+|----------|---------|-------------|
+| **Bot** | `uv run tux start` | Start the Tux Discord bot |
+| | `uv run tux version` | Show Tux version information |
+| **Development** | `uv run dev lint` | Run linting with Ruff |
+| | `uv run dev lint-fix` | Run linting with Ruff and apply fixes |
+| | `uv run dev format` | Format code with Ruff |
+| | `uv run dev type-check` | Check types with basedpyright |
+| | `uv run dev lint-docstring` | Lint docstrings with pydoclint |
+| | `uv run dev docstring-coverage` | Check docstring coverage |
+| | `uv run dev pre-commit` | Run pre-commit checks |
+| | `uv run dev all` | Run all development checks |
+| **Testing** | `uv run tests all` | Run all tests with coverage and enhanced output |
+| | `uv run tests quick` | Run tests without coverage (faster) |
+| | `uv run tests plain` | Run tests with plain output |
+| | `uv run tests parallel` | Run tests in parallel |
+| | `uv run tests html` | Run tests and generate HTML report |
+| | `uv run tests coverage` | Generate comprehensive coverage reports |
+| | `uv run tests benchmark` | Run benchmark tests |
+| **Database** | `uv run db init` | Initialize database with proper migrations |
+| | `uv run db dev` | Development workflow: generate migration and apply it |
+| | `uv run db push` | Apply all pending migrations to database |
+| | `uv run db status` | Show current migration status |
+| | `uv run db new "message"` | Generate new migration from model changes |
+| | `uv run db health` | Check database connection health |
+| | `uv run db schema` | Validate database schema matches models |
+| | `uv run db queries` | Check for long-running queries |
+| **Docker** | `uv run docker up` | Start Docker services with smart orchestration |
+| | `uv run docker down` | Stop Docker services |
+| | `uv run docker build` | Build Docker images |
+| | `uv run docker logs` | Show Docker service logs |
+| | `uv run docker ps` | List running Docker containers |
+| | `uv run docker shell` | Open shell in container |
+| | `uv run docker health` | Check container health status |
+| | `uv run docker config` | Validate Docker Compose configuration |
+| **Documentation** | `uv run docs serve` | Start local documentation server |
+| | `uv run docs build` | Build documentation site |
+| | `uv run docs deploy` | Deploy documentation to GitHub Pages |
+| **Configuration** | `uv run config generate` | Generate example configuration files |
 
-**For developer information, see [DEVELOPER.md](DEVELOPER.md)**
-
-**For configuration documentation, see [CONFIG.md](CONFIG.md)**
+<sub>[back to top ↑](#table-of-contents)</sub>
 
 ## License
 
@@ -190,4 +212,4 @@ Tux is free and open source software licensed under the [GNU General Public Lice
 
 ---
 
-[(Back to top ↑)](#table-of-contents)
+<sub>[back to top ↑](#table-of-contents)</sub>
