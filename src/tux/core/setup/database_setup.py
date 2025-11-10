@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
 import io
 from pathlib import Path
 
-import sqlalchemy.exc
 from alembic import command
 from alembic.config import Config
 from loguru import logger
+from sqlalchemy import create_engine, text
 from sqlmodel import SQLModel
 
 from tux.core.setup.base import BaseSetupService
@@ -76,45 +77,83 @@ class DatabaseSetupService(BaseSetupService):
         Run Alembic upgrade to head on startup.
 
         This call is idempotent and safe to run on startup.
+        If database is unavailable, migrations are skipped with a warning.
+        Runs migration synchronously with a short timeout.
 
-        Raises
-        ------
-        ConnectionError
-            If database connection fails during migrations.
-        RuntimeError
-            If migration execution fails.
+        Note
+        ----
+        Unlike other setup steps, this method does not raise exceptions on failure.
+        If migrations cannot run (e.g., database unavailable), it logs a warning
+        and continues, allowing the bot to start without blocking on migrations.
         """
-        cfg = self._build_alembic_config()
-        logger.info("🔄 Checking database migrations...")
-
         try:
-            # Check current revision first (stdout already suppressed via Config)
-            current_rev = command.current(cfg)
-            logger.debug(f"Current database revision: {current_rev}")
+            cfg = self._build_alembic_config()
+            logger.info("🔄 Checking database migrations...")
 
-            # Check if we need to upgrade
-            head_rev = command.heads(cfg)
-            logger.debug(f"Head revision: {head_rev}")
+            # First check if we can connect to the database quickly
+            # If not, skip migrations entirely to avoid blocking startup
+            loop = asyncio.get_event_loop()
 
-            # Only run upgrade if we're not already at head
-            if current_rev != head_rev:
-                logger.info("🔄 Running database migrations...")
-                command.upgrade(cfg, "head")
-                logger.info("✅ Database migrations completed")
-            else:
-                logger.info("✅ Database is already up to date")
+            def _check_db_available():
+                try:
+                    # Convert async URL to sync for this check
+                    db_url = CONFIG.database_url
+                    if db_url.startswith("postgresql+psycopg_async://"):
+                        db_url = db_url.replace("postgresql+psycopg_async://", "postgresql+psycopg://", 1)
 
-        except sqlalchemy.exc.OperationalError as e:
-            logger.error("❌ Database migration failed: Cannot connect to database")
-            logger.info("💡 Ensure PostgreSQL is running: make docker-up")
-            msg = "Database connection failed during migrations"
-            raise ConnectionError(msg) from e
+                    engine = create_engine(db_url, connect_args={"connect_timeout": 2})
+                    with engine.connect() as conn:
+                        conn.execute(text("SELECT 1"))
+                except Exception:
+                    return False
+                else:
+                    return True
 
+            # Quick database availability check
+            db_available = await loop.run_in_executor(None, _check_db_available)
+
+            if not db_available:
+                logger.warning("⚠️ Database not available - skipping migrations during startup")
+                logger.info("💡 Run migrations manually when database is available")
+                return
+
+            # Database is available, run migrations with a reasonable timeout
+            def _run_migration_sync():
+                try:
+                    # Check current revision first (stdout already suppressed via Config)
+                    current_rev = command.current(cfg)
+                    logger.debug(f"Current database revision: {current_rev}")
+
+                    # Check if we need to upgrade
+                    head_rev = command.heads(cfg)
+                    logger.debug(f"Head revision: {head_rev}")
+
+                    # Only run upgrade if we're not already at head
+                    if current_rev != head_rev:
+                        logger.info("🔄 Running database migrations...")
+                        # Run the upgrade
+                        command.upgrade(cfg, "head")
+                        logger.info("✅ Database migrations completed")
+                    else:
+                        logger.info("✅ Database is already up to date")
+                except Exception as e:
+                    logger.warning(f"⚠️ Could not run migrations: {e}")
+                    logger.info("💡 Database may be unavailable - migrations skipped for now")
+                    logger.info("💡 Run migrations manually when database is available")
+
+            # Run migrations with a timeout
+            await asyncio.wait_for(
+                loop.run_in_executor(None, _run_migration_sync),
+                timeout=30.0,  # 30 second timeout for actual migrations
+            )
+
+        except TimeoutError:
+            logger.warning("⚠️ Migration check timed out - skipping migrations")
+            logger.info("💡 Run migrations manually when database is available")
         except Exception as e:
-            logger.error(f"❌ Database migration failed: {type(e).__name__}")
-            logger.info("💡 Check database connection settings")
-            migration_error_msg = f"Migration execution failed: {e}"
-            raise RuntimeError(migration_error_msg) from e
+            logger.warning(f"⚠️ Migration check failed: {e}")
+            logger.info("💡 Database may be unavailable - migrations skipped for now")
+            logger.info("💡 Run migrations manually when database is available")
 
     async def setup(self) -> None:
         """
@@ -132,6 +171,14 @@ class DatabaseSetupService(BaseSetupService):
         if not self.db_service.is_connected():
             msg = "Database connection test failed"
             raise TuxDatabaseConnectionError(msg)
+
+        # Test actual database connectivity with a simple query
+        try:
+            await self.db_service.test_connection()
+        except Exception as e:
+            error_msg = f"Database connection test failed: {e}"
+            self._log_step(error_msg, "error")
+            raise TuxDatabaseConnectionError(error_msg) from e
 
         self._log_step("Database connected successfully", "success")
         await self._create_tables()
