@@ -234,7 +234,12 @@ def extract_permission_denied_details(error: Exception) -> dict[str, Any]:
 
     # Check if this is an unconfigured command error (both ranks are 0)
     if required_rank == 0 and user_rank == 0:
-        message = f"**`{command_name}`** has not been configured yet.\n\nAn administrator must use `/config command assign {command_name} <rank>` to set permission requirements."
+        message = (
+            f"**`{command_name}`** has not been configured yet.\n\n"
+            f"An administrator must assign a permission rank to enable this command.\n\n"
+            f'**Option 1 (Recommended):** Use `/config overview` → Click **"🤖 Command Permissions"** → Select rank for `{command_name}`\n'
+            f"**Option 2:** Use `/config commands assign {command_name} <rank>`"
+        )
     else:
         message = f"You need permission rank **{required_rank}** to use **`{command_name}`**.\n\nYour current rank: **{user_rank}**"
 
