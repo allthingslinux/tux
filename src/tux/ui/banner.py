@@ -9,7 +9,14 @@ from rich.style import Style
 from rich.table import Table
 from rich.text import Text
 
-from tux.ui.ascii import TUX
+BANNER_ASCII_ART = r"""    .--.
+   |o_o |
+   |:_/ |
+  //   \ \
+ (|     | )
+/'\_   _/`\
+\___)=(___/
+"""
 
 
 class BannerColors(NamedTuple):
@@ -59,7 +66,7 @@ class BannerBuilder:
         ascii_art = Text()
         style = Style(color=self.config.colors.primary, bold=True)
 
-        for line in TUX.splitlines():
+        for line in BANNER_ASCII_ART.splitlines():
             ascii_art.append(line, style=style)
             ascii_art.append("\n")
 
