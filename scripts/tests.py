@@ -164,7 +164,10 @@ class TestCLI(BaseCLI):
         self.rich.print_section("🔄 Parallel Tests", "blue")
         self._run_test_command(["uv", "run", "pytest", "-n", "auto"], "Parallel test run")
 
-    def html_report(self) -> None:
+    def html_report(
+        self,
+        open_browser: Annotated[bool, Option("--open", help="Automatically open browser with HTML report")] = False,
+    ) -> None:
         """Run tests and generate HTML report."""
         self.rich.print_section("🌐 HTML Report", "blue")
         cmd = [
@@ -175,7 +178,7 @@ class TestCLI(BaseCLI):
             "--html=reports/test_report.html",
             "--self-contained-html",
         ]
-        if self._run_test_command(cmd, "HTML report generation"):
+        if self._run_test_command(cmd, "HTML report generation") and open_browser:
             self._open_coverage_browser("html")
 
     def coverage_report(
@@ -186,7 +189,7 @@ class TestCLI(BaseCLI):
         fail_under: Annotated[str | None, Option(help="Fail if coverage percentage is below this value")] = None,
         open_browser: Annotated[
             bool,
-            Option(help="Automatically open browser for HTML coverage reports"),
+            Option("--open", help="Automatically open browser for HTML coverage reports"),
         ] = False,
     ) -> None:
         """Generate comprehensive coverage reports."""

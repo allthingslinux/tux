@@ -9,6 +9,9 @@ import subprocess
 import sys
 from collections.abc import Callable
 from pathlib import Path
+from typing import Annotated
+
+from typer import Option  # type: ignore[attr-defined]
 
 # Add current directory to path for scripts imports
 scripts_path = Path(__file__).parent
@@ -194,11 +197,14 @@ class DevCLI(BaseCLI):
             self.rich.print_error("Pre-commit checks did not pass - see issues above")
             sys.exit(1)
 
-    def run_all_checks(self) -> None:
+    def run_all_checks(
+        self,
+        fix: Annotated[bool, Option("--fix", help="Automatically fix issues where possible")] = False,
+    ) -> None:
         """Run all development checks including linting, type checking, and documentation."""
         self.rich.print_section("🚀 Running All Development Checks", "blue")
         checks: list[tuple[str, Callable[[], None]]] = [
-            ("Linting", self.lint),
+            ("Linting", self.lint_fix if fix else self.lint),
             ("Code Formatting", self.format_code),
             ("Type Checking", self.type_check),
             ("Docstring Linting", self.lint_docstring),

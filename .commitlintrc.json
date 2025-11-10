@@ -89,9 +89,8 @@
       "never"
     ],
     "header-case": [
-      2,
-      "always",
-      "lower-case"
+      0,
+      "never"
     ],
     "header-full-stop": [
       2,

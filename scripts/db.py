@@ -618,6 +618,7 @@ class DatabaseCLI(BaseCLI):
             bool,
             Option("--fresh", help="Also delete all migration files for complete fresh start"),
         ] = False,
+        yes: Annotated[bool, Option("--yes", "-y", help="Automatically answer 'yes' to all prompts")] = False,
     ) -> None:
         """Nuclear reset: completely destroy the database.
 
@@ -647,10 +648,10 @@ class DatabaseCLI(BaseCLI):
             self.rich.rich_print("  3. Delete ALL migration files")
         self.rich.rich_print("")
 
-        # Require explicit confirmation unless --force is used
-        if not force:
+        # Require explicit confirmation unless --force or --yes is used
+        if not (force or yes):
             if not sys.stdin.isatty():
-                self.rich.print_error("Cannot run nuke in non-interactive mode without --force flag")
+                self.rich.print_error("Cannot run nuke in non-interactive mode without --force or --yes flag")
                 return
 
             response = input("Type 'NUKE' to confirm (case sensitive): ")
@@ -721,6 +722,7 @@ class DatabaseCLI(BaseCLI):
                 help="Revision to downgrade to (e.g., '-1' for one step back, 'base' for initial state, or specific revision ID)",
             ),
         ],
+        force: Annotated[bool, Option("--force", "-f", help="Skip confirmation prompt")] = False,
     ) -> None:
         """Rollback to a previous migration revision.
 
@@ -741,8 +743,8 @@ class DatabaseCLI(BaseCLI):
         self.rich.rich_print("[yellow]This may cause data loss - backup your database first![/yellow]")
         self.rich.rich_print("")
 
-        # Require confirmation for dangerous operations
-        if revision != "-1":  # Allow quick rollback without confirmation
+        # Require confirmation for dangerous operations (unless --force is used)
+        if not force and revision != "-1":  # Allow quick rollback without confirmation
             response = input(f"Type 'yes' to downgrade to {revision}: ")
             if response.lower() != "yes":
                 self.rich.print_info("Downgrade cancelled")

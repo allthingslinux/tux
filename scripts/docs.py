@@ -9,11 +9,11 @@ import os
 import shutil
 import subprocess
 import sys
+import webbrowser
 from pathlib import Path
 from typing import Annotated
 
-import yaml
-from typer import Argument, Option  # type: ignore[attr-defined]
+from typer import Option  # type: ignore[attr-defined]
 
 # Add src to path
 src_path = Path(__file__).parent.parent / "src"
@@ -50,16 +50,11 @@ class DocsCLI(BaseCLI):
             # Core MkDocs commands
             Command("serve", self.serve, "Serve documentation locally with live reload"),
             Command("build", self.build, "Build documentation site for production"),
-            Command("deploy", self.deploy, "Deploy documentation to GitHub Pages"),
-            Command("gh-deploy", self.gh_deploy, "Deploy to GitHub Pages (alias for deploy)"),
-            Command("new", self.new_project, "Create a new MkDocs project"),
-            Command("get-deps", self.get_deps, "Show required PyPI packages from plugins"),
             # Documentation management
             Command("clean", self.clean, "Clean documentation build artifacts"),
             Command("validate", self.validate, "Validate documentation structure and links"),
             Command("check", self.check, "Check documentation for issues"),
             # Development tools
-            Command("new-page", self.new_page, "Create a new documentation page"),
             Command("watch", self.watch, "Watch for changes and rebuild automatically"),
             Command("lint", self.lint, "Lint documentation files"),
             # Information
@@ -145,6 +140,7 @@ class DocsCLI(BaseCLI):
         clean: Annotated[bool, Option("--clean", help="Build without effects of mkdocs serve")] = False,
         strict: Annotated[bool, Option("--strict", help="Enable strict mode")] = False,
         watch_theme: Annotated[bool, Option("--watch-theme", help="Watch theme files for changes")] = False,
+        open_browser: Annotated[bool, Option("--open", help="Automatically open browser")] = False,
     ) -> None:
         """Serve documentation locally with live reload."""
         self.rich.print_section("📚 Serving Documentation", "blue")
@@ -168,6 +164,10 @@ class DocsCLI(BaseCLI):
         cmd.extend(["-f", mkdocs_path])
 
         try:
+            if open_browser:
+                self.rich.print_info(f"🌐 Opening browser at http://{host}:{port}")
+                webbrowser.open(f"http://{host}:{port}")
+
             self._run_command(cmd)
             self.rich.print_success(f"Documentation server started at http://{host}:{port}")
         except subprocess.CalledProcessError:
@@ -178,7 +178,10 @@ class DocsCLI(BaseCLI):
         clean: Annotated[bool, Option("--clean", help="Remove old files from site_dir before building")] = True,
         strict: Annotated[bool, Option("--strict", help="Enable strict mode")] = False,
         theme: Annotated[str, Option("--theme", "-t", help="Theme to use (mkdocs or readthedocs)")] = "",
-        site_dir: Annotated[str, Option("--site-dir", "-d", help="Directory to output the build result")] = "",
+        site_dir: Annotated[
+            str,
+            Option("--site-dir", "--output", "-d", help="Directory to output the build result"),
+        ] = "",
         use_directory_urls: Annotated[
             bool,
             Option("--use-directory-urls", help="Use directory URLs when building pages"),
@@ -209,71 +212,6 @@ class DocsCLI(BaseCLI):
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to build documentation")
 
-    def deploy(
-        self,
-        message: Annotated[str, Option("--message", "-m", help="Commit message")] = "Deploy documentation",
-        remote: Annotated[str, Option("--remote", help="Remote repository")] = "origin",
-        branch: Annotated[str, Option("--branch", help="Branch to deploy to")] = "gh-pages",
-        force: Annotated[bool, Option("--force", help="Force the push to the repository")] = False,
-        no_history: Annotated[
-            bool,
-            Option("--no-history", help="Replace the whole Git history with one new commit"),
-        ] = False,
-        ignore_version: Annotated[
-            bool,
-            Option(
-                "--ignore-version",
-                help="Ignore check that build is not being deployed with an older version of MkDocs",
-            ),
-        ] = False,
-        clean: Annotated[bool, Option("--clean", help="Remove old files from site_dir before building")] = True,
-        strict: Annotated[bool, Option("--strict", help="Enable strict mode")] = False,
-    ) -> None:
-        """Deploy documentation to GitHub Pages."""
-        self.rich.print_section("🚀 Deploying Documentation", "blue")
-
-        if not (mkdocs_path := self._find_mkdocs_config()):
-            return
-
-        cmd = [
-            "uv",
-            "run",
-            "mkdocs",
-            "gh-deploy",
-            "-f",
-            mkdocs_path,
-            "-m",
-            message,
-            "--remote",
-            remote,
-            "--branch",
-            branch,
-        ]
-
-        if force:
-            cmd.append("--force")
-        if no_history:
-            cmd.append("--no-history")
-        if ignore_version:
-            cmd.append("--ignore-version")
-        if clean:
-            cmd.append("--clean")
-        if strict:
-            cmd.append("--strict")
-
-        try:
-            self._run_command(cmd)
-            self.rich.print_success("Documentation deployed successfully")
-        except subprocess.CalledProcessError:
-            self.rich.print_error("Failed to deploy documentation")
-
-    def gh_deploy(
-        self,
-        message: Annotated[str, Option("--message", "-m", help="Commit message")] = "Deploy documentation",
-    ) -> None:
-        """Deploy to GitHub Pages (alias for deploy)."""
-        self.deploy(message=message)
-
     def clean(self) -> None:
         """Clean documentation build artifacts."""
         self.rich.print_section("🧹 Cleaning Documentation", "blue")
@@ -302,124 +240,18 @@ class DocsCLI(BaseCLI):
             self.rich.print_error("Documentation validation failed")
 
     def check(self) -> None:
-        """Check documentation for issues."""
+        """Check documentation for issues using MkDocs build validation."""
         self.rich.print_section("🔍 Checking Documentation", "blue")
 
         if not (mkdocs_path := self._find_mkdocs_config()):
             return
 
-        # Check for common issues
-        issues: list[str] = []
-
-        # Check if mkdocs.yml exists and is valid
+        # Use MkDocs build with --strict to validate configuration and content
         try:
-            with Path(mkdocs_path).open() as f:
-                yaml.safe_load(f)
-            self.rich.print_success("mkdocs.yml is valid")
-        except Exception as e:
-            issues.append(f"Invalid mkdocs.yml: {e}")
-
-        # Check if docs directory exists
-        docs_dir = Path("docs/content")
-        if not docs_dir.exists():
-            issues.append("docs/content directory not found")
-
-        # Check for index.md
-        index_file = docs_dir / "index.md"
-        if not index_file.exists():
-            issues.append("index.md not found in docs/content")
-
-        if issues:
-            self.rich.print_error("Documentation issues found:")
-            for issue in issues:
-                self.rich.print_error(f"  • {issue}")
-        else:
-            self.rich.print_success("No documentation issues found")
-
-    def new_project(
-        self,
-        project_dir: Annotated[str, Argument(help="Project directory name")],
-    ) -> None:
-        """Create a new MkDocs project."""
-        self.rich.print_section("🆕 Creating New MkDocs Project", "blue")
-
-        cmd = ["uv", "run", "mkdocs", "new", project_dir]
-
-        try:
-            self._run_command(cmd)
-            self.rich.print_success(f"New MkDocs project created in '{project_dir}'")
-            self.rich.print_info(f"To get started, run: cd {project_dir} && uv run mkdocs serve")
+            self._run_command(["uv", "run", "mkdocs", "build", "--strict", "-f", mkdocs_path])
+            self.rich.print_success("✅ Documentation validation passed")
         except subprocess.CalledProcessError:
-            self.rich.print_error("Failed to create new MkDocs project")
-
-    def get_deps(self) -> None:
-        """Show required PyPI packages inferred from plugins in mkdocs.yml."""
-        self.rich.print_section("📦 MkDocs Dependencies", "blue")
-
-        if not (mkdocs_path := self._find_mkdocs_config()):
-            return
-
-        cmd = ["uv", "run", "mkdocs", "get-deps", "-f", mkdocs_path]
-
-        try:
-            self._run_command(cmd)
-            self.rich.print_success("Dependencies retrieved successfully")
-        except subprocess.CalledProcessError:
-            self.rich.print_error("Failed to get dependencies")
-
-    def new_page(
-        self,
-        title: Annotated[str, Argument(help="Page title")],
-        path: Annotated[str, Option("--path", "-p", help="Page path (e.g., dev/new-feature)")] = "",
-    ) -> None:
-        """Create a new documentation page."""
-        self.rich.print_section("📄 Creating New Page", "blue")
-
-        docs_dir = Path("docs/content")
-        if not docs_dir.exists():
-            self.rich.print_error("docs/content directory not found")
-            return
-
-        # Generate path from title if not provided
-        if not path:
-            path = title.lower().replace(" ", "-").replace("_", "-")
-
-        # Ensure path ends with .md
-        if not path.endswith(".md"):
-            path += ".md"
-
-        page_path = docs_dir / path
-
-        # Create directory if needed
-        page_path.parent.mkdir(parents=True, exist_ok=True)
-
-        # Create the page content
-        content = f"""# {title}
-
-<!-- Add your content here -->
-
-## Overview
-
-<!-- Describe what this page covers -->
-
-## Details
-
-<!-- Add detailed information -->
-
-## Examples
-
-<!-- Add code examples or usage instructions -->
-
-## Related
-
-<!-- Link to related pages -->
-"""
-
-        try:
-            page_path.write_text(content)
-            self.rich.print_success(f"Created new page: {page_path}")
-        except Exception as e:
-            self.rich.print_error(f"Failed to create page: {e}")
+            self.rich.print_error("❌ Documentation validation failed")
 
     def watch(self) -> None:
         """Watch for changes and rebuild automatically."""
