@@ -86,6 +86,8 @@ class TuxCLI(BaseCLI):
             exit_code = run()
             if exit_code == 0:
                 self.rich.print_success("✅ Bot started successfully")
+            elif exit_code == 130:
+                self.rich.print_info("🛑 Bot shutdown requested by user (Ctrl+C)")
             else:
                 self.rich.print_error(f"❌ Bot exited with code {exit_code}")
                 sys.exit(exit_code)
@@ -108,7 +110,7 @@ class TuxCLI(BaseCLI):
             sys.exit(e.code)
         except KeyboardInterrupt:
             self.rich.print_info("🛑 Bot shutdown requested by user (Ctrl+C)")
-            sys.exit(0)
+            sys.exit(130)
         except Exception as e:
             self.rich.print_error(f"❌ Failed to start bot: {e}")
             sys.exit(1)
