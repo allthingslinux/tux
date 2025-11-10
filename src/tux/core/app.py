@@ -8,6 +8,7 @@ and structured startup/shutdown flows with Sentry integration.
 
 import asyncio
 import contextlib
+import os
 import signal
 import sys
 from types import FrameType
@@ -83,11 +84,17 @@ class TuxApp:
         Background task for the Discord connection.
     _shutdown_event : asyncio.Event | None
         Event flag for coordinating graceful shutdown.
+    _in_setup : bool
+        Flag indicating if we're currently in the setup phase.
+    _bot_connected : bool
+        Flag indicating if the bot has successfully connected to Discord.
     """
 
     bot: Tux | None
     _connect_task: asyncio.Task[None] | None
     _shutdown_event: asyncio.Event | None
+    _in_setup: bool
+    _bot_connected: bool
 
     def __init__(self) -> None:
         """
@@ -101,6 +108,9 @@ class TuxApp:
         self.bot = None
         self._connect_task = None
         self._shutdown_event = None
+        self._user_requested_shutdown = False
+        self._in_setup = False
+        self._bot_connected = False
 
     def run(self) -> None:
         """
@@ -150,104 +160,118 @@ class TuxApp:
 
     def _handle_signal_shutdown(self, loop: asyncio.AbstractEventLoop, signum: int) -> None:
         """
-        Handle shutdown signal by canceling tasks and stopping the event loop.
+        Handle shutdown signal with different behavior based on bot state.
+
+        During startup (before Discord connection), SIGINT uses immediate exit
+        since synchronous operations can't be interrupted gracefully. After
+        connection, uses graceful shutdown with task cancellation.
 
         Parameters
         ----------
         loop : asyncio.AbstractEventLoop
-            The event loop to stop.
+            The event loop to stop (when using graceful shutdown).
         signum : int
             The signal number received (SIGTERM or SIGINT).
         """
-        # Report signal to Sentry for monitoring/debugging
-        SentryManager.report_signal(signum, None)
-        signal_name = "SIGTERM" if signum == signal.SIGTERM else "SIGINT"
-        logger.info(f"{signal_name} received, forcing shutdown...")
+        # Use immediate exit for SIGINT during startup (before Discord connection)
+        # to allow interrupting synchronous operations like migrations
+        if signum == signal.SIGINT and not self._bot_connected:
+            logger.info("SIGINT received during startup - using immediate exit")
+            os._exit(1)
 
+        # After connection, use graceful shutdown
         # Signal the shutdown monitor task to stop waiting
+        logger.info("SIGINT received after connection - using graceful shutdown")
+        self._user_requested_shutdown = True
         if self._shutdown_event is not None:
             self._shutdown_event.set()
 
         # Cancel all running async tasks to force immediate shutdown
         # This includes the bot connection task, cog tasks, etc.
+        # Note: We exclude the current task to avoid cancelling ourselves
+        current_task = asyncio.current_task(loop)
         for task in asyncio.all_tasks(loop):
-            if not task.done():
+            if not task.done() and task is not current_task:
                 task.cancel()
 
-        # Attempt to close the Discord connection gracefully
-        # Create a task but don't await it (signal handlers can't be async)
-        if self.bot and not self.bot.is_closed():
-            close_task = asyncio.create_task(self.bot.close())
-            _ = close_task  # Store reference to prevent garbage collection
-
         # Stop the event loop (will cause run_until_complete to return)
+        # The actual bot shutdown will happen in the finally block of start()
         loop.call_soon_threadsafe(loop.stop)
 
     def setup_signals(self, loop: asyncio.AbstractEventLoop) -> None:
         """
         Register signal handlers for graceful shutdown.
 
+        During bot setup (which includes synchronous operations like database migrations),
+        we use traditional signal handlers that can interrupt synchronous code. After setup
+        completes, we switch to asyncio signal handlers for better integration.
+
         Parameters
         ----------
         loop : asyncio.AbstractEventLoop
             The active event loop on which to register handlers.
+        """
 
-        Notes
-        -----
-        Uses ``loop.add_signal_handler`` where available, falling back to the
-        ``signal`` module on platforms that do not support it (e.g., Windows).
+        # During setup, use traditional signal handlers that work with synchronous code
+        def _signal_handler(signum: int, frame: FrameType | None) -> None:
+            """
+            Handle signals during setup - SIGINT causes immediate exit.
 
-        On Windows, signal handling is limited and may not work as expected
-        for all signal types.
+            Parameters
+            ----------
+            signum : int
+                The signal number received.
+            frame : FrameType, optional
+                The current stack frame when the signal was received.
+            """
+            # For SIGINT, exit immediately
+            if signum == signal.SIGINT:
+                os._exit(1)
+            # For other signals, raise exception
+            raise KeyboardInterrupt
+
+        # Register traditional signal handlers for setup phase
+        # Remove any existing asyncio handlers first
+        with contextlib.suppress(ValueError, NotImplementedError):
+            loop.remove_signal_handler(signal.SIGTERM)
+        with contextlib.suppress(ValueError, NotImplementedError):
+            loop.remove_signal_handler(signal.SIGINT)
+
+        # Set traditional signal handlers
+        signal.signal(signal.SIGTERM, _signal_handler)
+        signal.signal(signal.SIGINT, _signal_handler)
+
+    def _switch_to_asyncio_signals(self, loop: asyncio.AbstractEventLoop) -> None:
+        """
+        Switch from traditional signal handlers to asyncio signal handlers.
+
+        This is called after bot setup completes, when we can rely on asyncio
+        signal handlers for better integration with async operations.
+
+        Parameters
+        ----------
+        loop : asyncio.AbstractEventLoop
+            The event loop to use for signal handlers.
         """
 
         # Define signal handlers as closures to capture loop context
         def _sigterm() -> None:
-            """Handle SIGTERM signal by initiating graceful shutdown."""
+            """Handle SIGTERM signal by initiating shutdown (graceful after connection)."""
             self._handle_signal_shutdown(loop, signal.SIGTERM)
 
         def _sigint() -> None:
-            """Handle SIGINT signal by initiating graceful shutdown."""
+            """Handle SIGINT signal by initiating shutdown (immediate exit during startup)."""
             self._handle_signal_shutdown(loop, signal.SIGINT)
 
         try:
-            # Preferred method: Register handlers directly on the event loop
-            # This is more reliable and integrates better with asyncio
+            # Switch to asyncio signal handlers for better integration
             loop.add_signal_handler(signal.SIGTERM, _sigterm)
             loop.add_signal_handler(signal.SIGINT, _sigint)
+            logger.debug("Switched to asyncio signal handlers")
 
         except NotImplementedError:
-            # Fallback for Windows: Use traditional signal module
-            # This doesn't integrate as well with asyncio but is the only option
-            def _signal_handler(signum: int, frame: FrameType | None) -> None:
-                """
-                Handle signals on Windows by reporting to Sentry and raising KeyboardInterrupt.
-
-                Parameters
-                ----------
-                signum : int
-                    The signal number received.
-                frame : FrameType, optional
-                    The current stack frame when the signal was received.
-
-                Raises
-                ------
-                KeyboardInterrupt
-                    Always raised to trigger shutdown.
-                """
-                SentryManager.report_signal(signum, frame)
-                logger.info(f"Signal {signum} received, shutting down...")
-                # Raise KeyboardInterrupt to break out of run_until_complete
-                raise KeyboardInterrupt
-
-            signal.signal(signal.SIGTERM, _signal_handler)
-            signal.signal(signal.SIGINT, _signal_handler)
-
-        # Warn users on Windows about signal handling limitations
-        if sys.platform.startswith("win"):
-            logger.warning(
-                "Signal handling is limited on Windows. Some signals may not be handled as expected.",
-            )
+            # If asyncio signal handlers aren't supported, keep traditional ones
+            logger.debug("Keeping traditional signal handlers (asyncio not supported)")
 
     async def start(self) -> None:
         """
@@ -269,6 +293,9 @@ class TuxApp:
         # Initialize error tracking and monitoring before anything else
         SentryManager.setup()
 
+        # Mark that we're entering setup phase (before setting up signals)
+        self._in_setup = True
+
         # Register signal handlers for graceful shutdown (SIGTERM, SIGINT)
         loop = asyncio.get_running_loop()
         self.setup_signals(loop)
@@ -284,14 +311,28 @@ class TuxApp:
 
         startup_completed = False
         try:
-            # Wait for bot internal setup (database, caches, etc.) before connecting
+            # Login to Discord first (required before cogs can use wait_until_ready)
+            logger.info("🔐 Logging in to Discord...")
+            await self.bot.login(CONFIG.BOT_TOKEN)
+
+            # Mark that bot is now connected (can handle graceful shutdown)
+            self._bot_connected = True
+            logger.debug("Bot connected, graceful shutdown now available")
+
+            # Wait for bot internal setup (database, caches, etc.) after login
             await self._await_bot_setup()
+
+            # Mark that setup is complete
+            self._in_setup = False
+
+            # After setup completes, switch to asyncio signal handlers for better performance
+            self._switch_to_asyncio_signals(loop)
 
             # Mark startup as complete after setup succeeds
             startup_completed = True
 
-            # Connect to Discord and wait for disconnect or shutdown signal
-            await self._login_and_connect()
+            # Establish WebSocket connection to Discord gateway
+            await self._connect_to_gateway()
 
         except asyncio.CancelledError:
             # Task was cancelled (likely by signal handler)
@@ -359,7 +400,7 @@ class TuxApp:
             case_insensitive=True,
             intents=discord.Intents.all(),
             owner_ids=owner_ids,
-            allowed_mentions=discord.AllowedMentions(everyone=False),
+            allowed_mentions=discord.AllowedMentions(everyone=False, roles=False),
             help_command=TuxHelp(),
             activity=None,
             status=discord.Status.online,
@@ -376,36 +417,40 @@ class TuxApp:
         """
         logger.info("⏳️ Waiting for bot setup to complete...")
 
-        # The bot creates a setup_task in __init__ that handles async initialization
-        # This includes database connections, loading cogs, initializing caches, etc.
-        if self.bot and self.bot.setup_task:
-            try:
-                await self.bot.setup_task
-                logger.info("✅ Bot setup completed successfully")
-            except Exception as setup_error:
-                # Setup failure is critical - can't proceed without database, cogs, etc.
-                logger.error(f"❌ Bot setup failed: {setup_error}")
-                capture_exception_safe(setup_error)
-                raise
+        # Ensure setup task is created and completed before connecting to Discord
+        if self.bot:
+            # If setup task doesn't exist yet, create it
+            if self.bot.setup_task is None:
+                logger.debug("Setup task not created yet, creating it now")
+                self.bot.create_setup_task()
 
-    async def _login_and_connect(self) -> None:
+            # Wait for setup to complete
+            if self.bot.setup_task:
+                try:
+                    await self.bot.setup_task
+                    logger.info("✅ Bot setup completed successfully")
+                except Exception as setup_error:
+                    # Setup failure is critical - can't proceed without database, cogs, etc.
+                    logger.error(f"❌ Bot setup failed: {setup_error}")
+                    capture_exception_safe(setup_error)
+                    # Force immediate exit for critical setup failures
+                    sys.exit(1)
+
+    async def _connect_to_gateway(self) -> None:
         """
-        Login to Discord and establish connection with reconnection support.
+        Establish WebSocket connection to Discord gateway with reconnection support.
 
         This method creates background tasks for the Discord connection and
         shutdown monitoring, waiting for either to complete.
 
         Notes
         -----
-        Uses separate login() and connect() calls to avoid blocking and
-        enable proper task coordination for graceful shutdown.
+        The bot must already be logged in before calling this method.
+        Uses connect() call with auto-reconnect and proper task coordination
+        for graceful shutdown.
         """
         if not self.bot:
             return
-
-        # Authenticate with Discord API (validates token, retrieves bot user info)
-        logger.info("🔐 Logging in to Discord...")
-        await self.bot.login(CONFIG.BOT_TOKEN)
 
         # Establish WebSocket connection to Discord gateway
         logger.info("🌐 Connecting to Discord...")
@@ -474,4 +519,9 @@ class TuxApp:
         # This ensures error reports aren't lost during shutdown
         await SentryManager.flush_async()
 
-        logger.info("Shutdown complete")
+        logger.info(f"Shutdown complete (user_requested={self._user_requested_shutdown})")
+        if self._user_requested_shutdown:
+            logger.info("Exiting with code 130 (user requested shutdown)")
+            sys.exit(130)
+        else:
+            logger.info("Shutdown completed normally")
