@@ -20,7 +20,15 @@ __all__ = [
     "ARCH_WIKI_API_URL",
     "ARCH_WIKI_BASE_URL",
     "BANS_LIMIT",
-    "COG_PRIORITIES",
+    "CONFIG_COLOR_BLURPLE",
+    "CONFIG_COLOR_GREEN",
+    "CONFIG_COLOR_RED",
+    "CONFIG_COLOR_YELLOW",
+    "CONFIG_COMMANDS_PER_PAGE",
+    "CONFIG_DASHBOARD_TIMEOUT",
+    "CONFIG_LOGS_PER_PAGE",
+    "CONFIG_RANKS_PER_PAGE",
+    "CONFIG_ROLES_PER_PAGE",
     "CONTEXT_MENU_NAME_LENGTH",
     "DB_COMMAND_NAME_LENGTH",
     "DB_DESCRIPTION_LENGTH",
@@ -186,6 +194,21 @@ MILLISECONDS_PER_SECOND: Final[int] = 1000
 ROLES_PER_PAGE: Final[int] = 32
 EMOTES_PER_PAGE: Final[int] = 128
 BANS_LIMIT: Final[int] = 2000
+
+# Config Dashboard pagination
+CONFIG_RANKS_PER_PAGE: Final[int] = 5
+CONFIG_ROLES_PER_PAGE: Final[int] = 5
+CONFIG_COMMANDS_PER_PAGE: Final[int] = 5
+CONFIG_LOGS_PER_PAGE: Final[int] = 5
+
+# Config Dashboard colors (Discord brand colors)
+CONFIG_COLOR_BLURPLE: Final[int] = 0x5865F2  # Discord blurple (primary)
+CONFIG_COLOR_GREEN: Final[int] = 0x57F287  # Discord green (success)
+CONFIG_COLOR_YELLOW: Final[int] = 0xFEE75C  # Discord yellow (warning)
+CONFIG_COLOR_RED: Final[int] = 0xED4245  # Discord red (error/danger)
+
+# Config Dashboard timeouts
+CONFIG_DASHBOARD_TIMEOUT: Final[int] = 300  # 5 minutes
 
 # Database field lengths
 DB_DESCRIPTION_LENGTH: Final[int] = 500
