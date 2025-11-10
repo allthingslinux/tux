@@ -52,6 +52,8 @@ It is designed to provide a variety of features to the server, including moderat
 - [Table of Contents](#table-of-contents)
 - [Tech Stack](#tech-stack)
 - [Bot Features](#bot-features)
+- [Plugin System](#plugin-system)
+- [Database Features](#database-features)
 - [Installation and Development](#installation-and-development)
   - [Prerequisites](#prerequisites)
   - [Setup & Workflow](#setup--workflow)
@@ -82,17 +84,90 @@ It is designed to provide a variety of features to the server, including moderat
 
 ## Bot Features
 
-- Asynchronous codebase
-- Hybrid command system with both slash commands and traditional commands
-- Automatic cog loading system
-- Hot-reloading for local development changes
-- Branded embeds and messages
-- Robust error handling
-- Activity rotation
-- Custom help command
-- Configuration system (config files, environment variables + `.env` file)
-- Dynamic role-based (access level) permission system
-- Plugin system (see [plugins](src/tux/plugins/README.md))
+### Core Architecture
+
+- **Asynchronous Design**: Fully async codebase for high-performance Discord operations
+- **Hybrid Commands**: Support for both modern slash commands and traditional prefix commands
+- **Automatic Cog Loading**: Intelligent module discovery and loading system with eligibility checks
+- **Hot Reload**: File watching system for automatic cog reloading during development
+
+### Advanced Features
+
+- **Dynamic Permission System**: Database-driven permissions with configurable ranks (0-10)
+- **Comprehensive Error Handling**: Centralized error handling with Sentry integration
+- **Activity Rotation**: Dynamic status messages with bot statistics placeholders
+- **Custom Help System**: Paginated help embeds with command navigation and subcommand display
+- **Configuration Management**: Interactive setup wizard for guild onboarding and permission ranks
+
+### User Experience
+
+- **Branded Embeds**: Consistent visual design across all bot responses
+- **Rich Information Commands**: Support for Discord entities (members, channels, roles, emojis)
+- **Server Statistics**: Member count displays with human/bot breakdowns
+- **Interactive Components**: Buttons, modals, and views for enhanced user interaction
+
+### Extensibility
+
+- **Modular Plugin System**: Hot-reloadable extensions without core modifications
+- **Multi-format Configuration**: Support for TOML, YAML, JSON, and environment variables
+- **Event-Driven Architecture**: Comprehensive event handling for Discord gateway events
+
+<sub>[back to top ↑](#table-of-contents)</sub>
+
+## Plugin System
+
+Tux features a modular plugin architecture that allows extending functionality without modifying core code:
+
+### Architecture
+
+- **Hot-Reloadable**: Plugins can be loaded/unloaded during development without restarting
+- **Isolated Error Handling**: Plugin failures don't affect core bot functionality
+- **Database Integration**: Plugins can access the bot's database through controllers
+- **Configuration Management**: Plugin-specific settings through the main config system
+- **Event System**: Plugins can hook into Discord events and bot lifecycle events
+
+### Plugin Development
+
+Plugins are located in `src/tux/plugins/` and follow a simple structure:
+
+- Automatic discovery and loading
+- Access to all bot services and utilities
+- Type-safe database operations
+- Rich embed and component support
+
+<sub>[back to top ↑](#table-of-contents)</sub>
+
+## Database Features
+
+### Type-Safe Operations
+
+Tux uses **SQLModel** for type-safe database operations with full Pydantic integration:
+
+- **Type Safety**: Compile-time type checking for all database operations
+- **Async Operations**: Full async/await support for high-performance queries
+- **Automatic Serialization**: Convert database models to/from JSON automatically
+- **Relationship Management**: Type-safe foreign key relationships and joins
+
+### Advanced Architecture
+
+- **Controller Pattern**: Clean separation between business logic and data access
+- **Migration System**: Alembic-powered schema management with version control
+- **Connection Pooling**: Optimized PostgreSQL connection management with asyncpg
+- **Transaction Safety**: Automatic transaction handling with rollback on errors
+
+### Specialized Controllers
+
+- **BaseController**: CRUD operations with type safety and relationship loading
+- **Bulk Operations**: Efficient batch inserts, updates, and deletes
+- **Pagination**: Cursor-based pagination with metadata
+- **Upsert Operations**: Get-or-create patterns for data synchronization
+- **Query Optimization**: Advanced filtering, sorting, and indexing
+
+### Supported Databases
+
+- **Primary**: PostgreSQL 17+ with asyncpg driver
+- **Testing**: In-memory SQLite via py-pglite for fast test execution
+- **Backup**: psycopg driver support for compatibility
 
 <sub>[back to top ↑](#table-of-contents)</sub>
 
@@ -136,19 +211,48 @@ It is designed to provide a variety of features to the server, including moderat
    ```bash
    # Start the bot (or use docker per the docs)
    uv run tux start
-
-   # Start with debug mode
-   uv run tux start --debug
    ```
 
 <sub>[back to top ↑](#table-of-contents)</sub>
 
 ## Documentation & Support
 
-- [Documentation](https://tux.atl.dev)
-- [Roadmap](https://github.com/allthingslinux/tux/issues/525)
-- [Dependencies](https://github.com/allthingslinux/tux/issues/157)
-- [Support](https://discord.gg/gpmSjcjQxg)
+Tux provides comprehensive documentation for all user types and use cases:
+
+### Documentation
+
+- **[Full Documentation Site](https://tux.atl.dev)** - Complete online documentation
+- **[Getting Started Guide](https://tux.atl.dev/getting-started/)** - Setup instructions for all user types
+- **[API Reference](https://tux.atl.dev/reference/)** - Complete codebase documentation
+- **[CLI Reference](https://tux.atl.dev/reference/cli)** - Command-line interface documentation
+
+### User Guides
+
+- **[For Users](https://tux.atl.dev/getting-started/for-users/)** - Bot commands and features
+- **[For Administrators](https://tux.atl.dev/getting-started/for-admins/)** - Server setup and management
+- **[For Developers](https://tux.atl.dev/getting-started/for-developers/)** - Development environment setup
+- **[For Self-Hosters](https://tux.atl.dev/getting-started/for-self-hosters/)** - Deployment and hosting
+
+### Developer Resources
+
+- **[Architecture Overview](https://tux.atl.dev/developer/concepts/)** - System design and components
+- **[Contributing Guide](https://tux.atl.dev/developer/contributing/)** - Development workflow and standards
+- **[Plugin Development](https://tux.atl.dev/developer/guides/)** - Creating custom extensions
+- **[Database Operations](https://tux.atl.dev/developer/guides/database-operations/)** - Database integration guide
+
+### Self-Hosting
+
+- **[Docker Installation](https://tux.atl.dev/selfhost/install/docker/)** - Container deployment
+- **[Configuration Guide](https://tux.atl.dev/selfhost/config/)** - Multi-format config setup
+- **[Database Setup](https://tux.atl.dev/selfhost/config/database/)** - PostgreSQL configuration
+- **[Operations Guide](https://tux.atl.dev/selfhost/manage/)** - Maintenance and monitoring
+
+### Support & Community
+
+- **[Discord Community](https://discord.gg/gpmSjcjQxg)** - Live support and discussions
+- **[GitHub Issues](https://github.com/allthingslinux/tux/issues)** - Bug reports and feature requests
+- **[Roadmap](https://github.com/allthingslinux/tux/issues/525)** - Planned features and milestones
+- **[Dependencies](https://github.com/allthingslinux/tux/issues/157)** - Third-party integrations
 
 <sub>[back to top ↑](#table-of-contents)</sub>
 
@@ -191,7 +295,6 @@ It is designed to provide a variety of features to the server, including moderat
 | | `uv run docker config` | Validate Docker Compose configuration |
 | **Documentation** | `uv run docs serve` | Start local documentation server |
 | | `uv run docs build` | Build documentation site |
-| | `uv run docs deploy` | Deploy documentation to GitHub Pages |
 | **Configuration** | `uv run config generate` | Generate example configuration files |
 
 <sub>[back to top ↑](#table-of-contents)</sub>
@@ -200,8 +303,6 @@ It is designed to provide a variety of features to the server, including moderat
 
 Tux is free and open source software licensed under the [GNU General Public License v3.0](LICENSE), created by [@kzndotsh](https://github.com/kzndotsh), created for the and maintained by the [All Things Linux](https://allthingslinux.org) community.
 
-[(Back to top)](#table-of-contents)
-
 ## Metrics
 
 ![Metrics](https://repobeats.axiom.co/api/embed/b988ba04401b7c68edf9def00f5132cd2a7f3735.svg)
@@ -209,7 +310,5 @@ Tux is free and open source software licensed under the [GNU General Public Lice
 ## Contributors
 
 ![Contributors](https://contrib.rocks/image?repo=allthingslinux/tux)
-
----
 
 <sub>[back to top ↑](#table-of-contents)</sub>
