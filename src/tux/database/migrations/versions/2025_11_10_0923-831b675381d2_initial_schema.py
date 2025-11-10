@@ -1,7 +1,7 @@
 """
-Revision ID: 83e9ae0b9f8c
+Revision ID: 831b675381d2
 Revises:
-Create Date: 2025-10-31 06:29:25.369830+00:00
+Create Date: 2025-11-10 09:23:35.930580+00:00
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision: str = "83e9ae0b9f8c"
+revision: str = "831b675381d2"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -201,7 +201,7 @@ def upgrade() -> None:
         sa.Column("description", sqlmodel.sql.sqltypes.AutoString(length=500), nullable=True),
         sa.CheckConstraint("guild_id > 0", name="check_permission_command_guild_id_valid"),
         sa.CheckConstraint("length(command_name) > 0", name="check_command_name_not_empty"),
-        sa.CheckConstraint("required_rank >= 0 AND required_rank <= 100", name="check_required_rank_range"),
+        sa.CheckConstraint("required_rank >= 0 AND required_rank <= 10", name="check_required_rank_range"),
         sa.ForeignKeyConstraint(["guild_id"], ["guild.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("guild_id", "command_name", name="unique_permission_command"),
@@ -221,7 +221,7 @@ def upgrade() -> None:
         sa.Column("description", sqlmodel.sql.sqltypes.AutoString(length=500), nullable=True),
         sa.CheckConstraint("guild_id > 0", name="check_permission_rank_guild_id_valid"),
         sa.CheckConstraint("length(name) > 0", name="check_rank_name_not_empty"),
-        sa.CheckConstraint("rank >= 0 AND rank <= 100", name="check_rank_range"),
+        sa.CheckConstraint("rank >= 0 AND rank <= 10", name="check_rank_range"),
         sa.ForeignKeyConstraint(["guild_id"], ["guild.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("guild_id", "name", name="unique_permission_rank_name"),
