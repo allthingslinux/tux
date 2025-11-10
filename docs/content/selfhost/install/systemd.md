@@ -1,4 +1,8 @@
-# Bare Metal Installation
+---
+title: Installation via Systemd
+---
+
+# Installation via Systemd
 
 Install Tux directly on your system without Docker. This guide covers both quick start for development and production deployment with systemd.
 

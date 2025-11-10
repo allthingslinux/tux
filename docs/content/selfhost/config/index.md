@@ -1,5 +1,11 @@
-# Index of selfhost/config
+---
+title: Configuration
+---
 
-- [bot-token](/selfhost/config/bot-token/)
-- [database](/selfhost/config/database/)
-- [environment](/selfhost/config/environment/)
+# Configuration
+
+Configure your Tux instance with the following guides.
+
+- [Bot Token](bot-token.md)
+- [Database](database.md)
+- [Environment](environment.md)

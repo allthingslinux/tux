@@ -1,3 +1,7 @@
+---
+title: Bot Token Setup
+---
+
 # Bot Token Setup
 
 Quick guide to get your Discord bot token configured for Tux.

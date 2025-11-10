@@ -1,17 +1,19 @@
-# Requirements
+---
+title: System Requirements
+---
+
+# System Requirements
 
 Before installing Tux, ensure your system meets these requirements.
 
-## System Requirements
-
-### Minimum Requirements
+## Minimum Requirements
 
 - **OS**: Linux (Ubuntu 20.04+, Debian 11+, CentOS 8+)
 - **RAM**: 512MB
 - **Storage**: 1GB free space
 - **CPU**: 1 core
 
-### Recommended Requirements
+## Recommended Requirements
 
 - **OS**: Linux (Ubuntu 22.04+, Debian 12+)
 - **RAM**: 2GB+

@@ -1,4 +1,8 @@
-# First Run
+---
+title: First Run Instructions
+---
+
+# First Run Instructions
 
 Start Tux for the first time and verify everything works.
 
@@ -336,10 +340,9 @@ Should show your configured settings.
 
 After successful first run:
 
-1. **[Configure Features](../configuration/features.md)** - Enable/disable features
-2. **[Set Up Backups](../database/backups.md)** - Protect your data
+1. **[Configure Features](../config/index.md)** - Enable/disable features
+2. **[Set Up Backups](../manage/database.md)** - Protect your data
 3. **[Configure Monitoring](../manage/operations.md)** - Watch for issues
-4. **[Review Security](../security/best-practices.md)** - Harden your deployment
 
 ## Running in Background
 
@@ -398,9 +401,8 @@ Logs output to stdout/stderr and optionally to files in `logs/`.
 
 ### Common Issues
 
-- **[Troubleshooting Guide](../operations/troubleshooting.md)** - Common problems
-- **[Database Issues](database.md#troubleshooting)** - Database-specific
-- **[Security Issues](../security/best-practices.md)** - Security concerns
+- **[Troubleshooting Guide](../../reference/troubleshooting/selfhost.md)** - Common problems
+- **[Database Issues](../manage/database.md#troubleshooting)** - Database-specific
 
 ### Community Support
 
@@ -409,4 +411,4 @@ Logs output to stdout/stderr and optionally to files in `logs/`.
 
 ---
 
-**Congratulations!** Tux is now running. Head to [Configuration](../configuration/index.md) to customize your instance.
+**Congratulations!** Tux is now running. Head to [Configuration](../../admin/configuration/index.md) to customize your instance.

@@ -17,7 +17,7 @@ title: Summary
   * [Installation](selfhost/install/index.md)
     * [Requirements](selfhost/install/requirements.md)
     * [Docker](selfhost/install/docker.md)
-    * [System Installation](selfhost/install/systemd.md)
+    * [Systemd](selfhost/install/systemd.md)
     * [First Run](selfhost/install/first-run.md)
   * [Configuration](selfhost/config/index.md)
     * [Bot Token](selfhost/config/bot-token.md)
