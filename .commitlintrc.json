@@ -26,6 +26,35 @@
       2,
       "never"
     ],
+    "type-min-length": [
+      2,
+      "always",
+      1
+    ],
+    "type-max-length": [
+      2,
+      "always",
+      15
+    ],
+    "scope-case": [
+      2,
+      "always",
+      "lower-case"
+    ],
+    "scope-empty": [
+      0,
+      "never"
+    ],
+    "scope-min-length": [
+      2,
+      "always",
+      1
+    ],
+    "scope-max-length": [
+      2,
+      "always",
+      20
+    ],
     "subject-case": [
       2,
       "never",
@@ -45,26 +74,93 @@
       "never",
       "."
     ],
+    "subject-min-length": [
+      2,
+      "always",
+      1
+    ],
     "subject-max-length": [
       2,
       "always",
       120
     ],
-    "body-leading-blank": [
+    "subject-exclamation-mark": [
       2,
-      "always"
+      "never"
     ],
-    "body-max-line-length": [
-      0
-    ],
-    "footer-leading-blank": [
+    "header-case": [
       2,
-      "always"
+      "always",
+      "lower-case"
+    ],
+    "header-full-stop": [
+      2,
+      "never",
+      "."
+    ],
+    "header-min-length": [
+      2,
+      "always",
+      10
     ],
     "header-max-length": [
       2,
       "always",
       120
+    ],
+    "header-trim": [
+      2,
+      "always"
+    ],
+    "body-leading-blank": [
+      2,
+      "always"
+    ],
+    "body-case": [
+      0,
+      "always",
+      "lower-case"
+    ],
+    "body-empty": [
+      0,
+      "never"
+    ],
+    "body-full-stop": [
+      0,
+      "never",
+      "."
+    ],
+    "body-min-length": [
+      0,
+      "always",
+      0
+    ],
+    "body-max-line-length": [
+      0,
+      "always",
+      120
+    ],
+    "footer-leading-blank": [
+      2,
+      "always"
+    ],
+    "footer-empty": [
+      0,
+      "never"
+    ],
+    "footer-min-length": [
+      2,
+      "always",
+      0
+    ],
+    "footer-max-line-length": [
+      2,
+      "always",
+      120
+    ],
+    "references-empty": [
+      0,
+      "never"
     ]
   },
   "defaultIgnores": true,
