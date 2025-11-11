@@ -9,6 +9,16 @@ This section contains comprehensive best practices for Tux development, covering
 
 ## **Architecture & Design**
 
+### [Namespace Packages & `__all__`](namespace.md)
+
+Best practices for Python package organization and API design:
+
+- Understanding namespace packages vs regular packages
+- Proper `__all__` declarations for clean APIs
+- When to use namespace packages for extensibility
+- Examples from the Tux codebase
+- Common pitfalls and migration strategies
+
 ### [Async Patterns](async.md)
 
 Best practices for asynchronous programming in Tux, including:
