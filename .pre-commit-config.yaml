@@ -34,12 +34,6 @@ repos:
     rev: v0.45.0
     hooks:
       - id: markdownlint
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.21.1
-    hooks:
-      - id: pyupgrade
-        args: [--py313-plus]
-        exclude: ^(src/tux/database/models/.*\.py)$
   - repo: https://github.com/asottile/add-trailing-comma
     rev: v4.0.0
     hooks:
