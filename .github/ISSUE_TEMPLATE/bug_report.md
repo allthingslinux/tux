@@ -1,11 +1,12 @@
 ---
 name: Bug Report
 about: Create a report to help us improve
-title: "[BUG] - "
 labels: "type: bug"
 assignees: ''
 
 ---
+
+# Bug Report
 
 ## Describe the Bug
 
