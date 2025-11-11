@@ -50,7 +50,12 @@ class BaseSetupService(ABC):
                 self.logger.info(f"{self.name.title()} setup interrupted by user signal")
                 raise
             except Exception as e:
-                self.logger.exception(f"❌ {self.name.title()} setup failed")
+                # Only log if error wasn't already logged by the service
+                # Database errors are already logged by database service
+                if self.name != "database":
+                    # Use error() instead of exception() to avoid duplicate tracebacks
+                    # Sentry already captures full exception details
+                    self.logger.error(f"❌ {self.name.title()} setup failed: {e}")  # noqa: TRY400
                 span.set_tag(f"{self.name}.setup", "failed")
                 span.set_data("error", str(e))
                 capture_exception_safe(e)

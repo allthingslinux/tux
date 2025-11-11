@@ -89,20 +89,20 @@ class TuxCLI(BaseCLI):
             elif exit_code == 130:
                 self.rich.print_info("🛑 Bot shutdown requested by user (Ctrl+C)")
             else:
-                self.rich.print_error(f"❌ Bot exited with code {exit_code}")
+                self.rich.print_error(f"Bot exited with code {exit_code}")
                 sys.exit(exit_code)
 
         except RuntimeError as e:
             # Handle setup failures (database, container, etc.)
             if "setup failed" in str(e).lower():
                 # Error already logged in setup method, just exit
-                self.rich.print_error("❌ Bot setup failed")
+                self.rich.print_error("Bot setup failed")
                 sys.exit(1)
             elif "Event loop stopped before Future completed" in str(e):
                 self.rich.print_info("🛑 Bot shutdown completed")
                 sys.exit(0)
             else:
-                self.rich.print_error(f"❌ Runtime error: {e}")
+                self.rich.print_error(f"Runtime error: {e}")
                 sys.exit(1)
         except SystemExit as e:
             # Bot failed during startup, exit with the proper code
@@ -112,7 +112,7 @@ class TuxCLI(BaseCLI):
             self.rich.print_info("🛑 Bot shutdown requested by user (Ctrl+C)")
             sys.exit(130)
         except Exception as e:
-            self.rich.print_error(f"❌ Failed to start bot: {e}")
+            self.rich.print_error(f"Failed to start bot: {e}")
             sys.exit(1)
 
     def show_version(self) -> None:

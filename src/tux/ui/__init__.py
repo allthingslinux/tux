@@ -10,10 +10,26 @@ This module contains all user interface components including:
 
 from tux.ui.buttons import GithubButton, XkcdButtons
 from tux.ui.embeds import EmbedCreator, EmbedType
+from tux.ui.modals import ReportModal
+from tux.ui.views import (
+    BaseConfirmationView,
+    ConfirmationDanger,
+    ConfirmationNormal,
+    TldrPaginatorView,
+)
 
 __all__ = [
+    # Embeds
     "EmbedCreator",
     "EmbedType",
+    # Buttons
     "GithubButton",
     "XkcdButtons",
+    # Views
+    "BaseConfirmationView",
+    "ConfirmationDanger",
+    "ConfirmationNormal",
+    "TldrPaginatorView",
+    # Modals
+    "ReportModal",
 ]

@@ -202,3 +202,6 @@ class TaskMonitor:
                 for result in results:
                     if isinstance(result, Exception) and not isinstance(result, asyncio.CancelledError):
                         logger.error(f"Exception during task cancellation for {task_type}: {result!r}")
+
+
+__all__ = ["TaskMonitor"]

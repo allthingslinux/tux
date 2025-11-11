@@ -27,21 +27,28 @@ from .models import (
 )
 
 __all__ = [
-    "AFK",
+    # Base classes and mixins
     "BaseModel",
-    "Case",
+    "SoftDeleteMixin",
+    "UUIDMixin",
+    # Enums
     "CaseType",
+    "PermissionType",
+    # Core models
     "Guild",
     "GuildConfig",
+    # User features
+    "AFK",
     "Levels",
-    "PermissionAssignment",
-    "PermissionCommand",
-    "PermissionRank",
-    "PermissionType",
     "Reminder",
     "Snippet",
-    "SoftDeleteMixin",
+    # Moderation system
+    "Case",
+    # Permission system
+    "PermissionRank",
+    "PermissionAssignment",
+    "PermissionCommand",
+    # Starboard system
     "Starboard",
     "StarboardMessage",
-    "UUIDMixin",
 ]

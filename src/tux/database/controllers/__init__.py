@@ -9,20 +9,26 @@ coordinated access to database functionality.
 from __future__ import annotations
 
 __all__ = [
-    "AfkController",
+    # Core infrastructure
     "BaseController",
-    "CaseController",
     "DatabaseCoordinator",
-    "GuildConfigController",
+    # Guild management
     "GuildController",
+    "GuildConfigController",
+    # Moderation system
+    "CaseController",
+    # User features
+    "AfkController",
     "LevelsController",
-    "PermissionAssignmentController",
-    "PermissionCommandController",
-    "PermissionRankController",
-    "ReminderController",
     "SnippetController",
+    "ReminderController",
+    # Starboard system
     "StarboardController",
     "StarboardMessageController",
+    # Permission system
+    "PermissionRankController",
+    "PermissionAssignmentController",
+    "PermissionCommandController",
 ]
 
 from tux.database.controllers.afk import AfkController

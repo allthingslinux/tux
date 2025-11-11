@@ -374,3 +374,6 @@ class PrefixManager:
             "cached_prefixes": len(self._prefix_cache),
             "cache_loaded": int(self._cache_loaded),
         }
+
+
+__all__ = ["PrefixManager"]

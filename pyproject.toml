@@ -202,6 +202,7 @@ ignore = [
     "PLR0913",  # too-many-arguments
     "PLR2004",  # magic-value-comparison
     "E402",     # module-import-not-at-top-of-file
+    "RUF022",    # unsorted-dunder-all
 ]
 select = [
     "I",     # isort

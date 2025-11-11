@@ -163,13 +163,20 @@ class Tux(commands.Bot):
                 orchestrator = BotSetupOrchestrator(self)
                 await orchestrator.setup(span)
 
-        except (TuxDatabaseConnectionError, ConnectionError) as e:
+        except TuxDatabaseConnectionError as e:
             # Database connection failure is critical - provide helpful error message
-            logger.error("❌ Database connection failed")
+            # Error details already logged by database service, just provide hint
+            logger.info("💡 To start the database, run: uv run docker up")
+            capture_database_error(e, operation="connection")
+            # Re-raise the original exception to preserve error type
+            raise
+        except ConnectionError as e:
+            # Wrap generic connection errors in TuxDatabaseConnectionError
+            # Error details already logged by database service, just provide hint
             logger.info("💡 To start the database, run: uv run docker up")
             capture_database_error(e, operation="connection")
             msg = "Database setup failed"
-            raise RuntimeError(msg) from e
+            raise TuxDatabaseConnectionError(msg) from e
 
     @property
     def db(self) -> DatabaseCoordinator:
@@ -215,17 +222,22 @@ class Tux(commands.Bot):
             # Check if setup raised an exception
             if getattr(self.setup_task, "_exception", None) is not None:
                 self.setup_complete = False
-            else:
-                # Setup completed successfully
-                self.setup_complete = True
-                logger.info("✅ Bot setup completed successfully")
+                # Don't schedule post-ready startup if setup failed
+                return
 
-                # Tag success in Sentry for monitoring
-                if self.sentry_manager.is_initialized:
-                    self.sentry_manager.set_tag("bot.setup_complete", True)
+            # Setup completed successfully
+            self.setup_complete = True
+            logger.info("✅ Bot setup completed successfully")
+
+            # Tag success in Sentry for monitoring
+            if self.sentry_manager.is_initialized:
+                self.sentry_manager.set_tag("bot.setup_complete", True)
 
         # Schedule post-ready startup (banner, stats, instrumentation)
-        if self._startup_task is None or self._startup_task.done():
+        # Only schedule if setup succeeded or is still running
+        if (self.setup_complete or (self.setup_task and not self.setup_task.done())) and (
+            self._startup_task is None or self._startup_task.done()
+        ):
             self._startup_task = self.loop.create_task(self._post_ready_startup())
 
     async def _post_ready_startup(self) -> None:
@@ -415,6 +427,13 @@ class Tux(commands.Bot):
         the task to fully terminate.
         """
         with start_span("bot.handle_setup_task", "Handling setup task during shutdown"):
+            # Cancel startup task if it exists
+            if self._startup_task and not self._startup_task.done():
+                self._startup_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await self._startup_task
+
+            # Cancel setup task if still running
             if self.setup_task and not self.setup_task.done():
                 # Cancel the setup task to stop it from continuing
                 self.setup_task.cancel()

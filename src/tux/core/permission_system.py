@@ -562,3 +562,13 @@ def init_permission_system(bot: Tux, db: DatabaseCoordinator) -> PermissionSyste
     current_module = sys.modules[__name__]
     current_module._permission_system = PermissionSystem(bot, db)  # type: ignore[attr-defined]
     return current_module._permission_system
+
+
+__all__ = [
+    # Classes
+    "RankDefinition",
+    "PermissionSystem",
+    # Functions
+    "get_permission_system",
+    "init_permission_system",
+]

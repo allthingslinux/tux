@@ -176,8 +176,8 @@ class DatabaseSetupService(BaseSetupService):
         try:
             await self.db_service.test_connection()
         except Exception as e:
+            # Error already logged by database service, just raise with context
             error_msg = f"Database connection test failed: {e}"
-            self._log_step(error_msg, "error")
             raise TuxDatabaseConnectionError(error_msg) from e
 
         self._log_step("Database connected successfully", "success")

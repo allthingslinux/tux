@@ -62,33 +62,39 @@ from .utils import (
 )
 
 __all__ = [
+    # Core classes
+    "SentryManager",
+    # Dummy implementations for testing
     "DummySpan",
     "DummyTransaction",
-    "SentryManager",
+    # Context and tagging functions
     "add_breadcrumb",
-    "capture_api_error",
-    "capture_cog_error",
-    "capture_database_error",
-    "capture_exception_safe",
-    "capture_span_exception",
-    "capture_tux_exception",
-    "enhanced_span",
-    "finish_transaction_on_error",
-    "get_current_span",
-    "instrument_bot_commands",
-    "safe_set_name",
     "set_command_context",
     "set_context",
     "set_setup_phase_tag",
     "set_span_attributes",
     "set_tag",
     "set_user_context",
+    # Span and transaction management
+    "enhanced_span",
+    "finish_transaction_on_error",
+    "get_current_span",
     "span",
     "start_span",
     "start_transaction",
+    "transaction",
+    # Error capture functions
+    "capture_api_error",
+    "capture_cog_error",
+    "capture_database_error",
+    "capture_exception_safe",
+    "capture_span_exception",
+    "capture_tux_exception",
+    # Instrumentation and tracking
+    "instrument_bot_commands",
+    "safe_set_name",
     "track_command_end",
     "track_command_start",
-    "transaction",
 ]
 
 

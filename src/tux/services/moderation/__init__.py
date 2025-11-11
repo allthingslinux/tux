@@ -7,9 +7,11 @@ from .factory import ModerationServiceFactory
 from .moderation_coordinator import ModerationCoordinator
 
 __all__ = [
+    # Core services
     "CaseService",
     "CommunicationService",
     "ExecutionService",
+    # Coordination and factory
     "ModerationCoordinator",
     "ModerationServiceFactory",
 ]

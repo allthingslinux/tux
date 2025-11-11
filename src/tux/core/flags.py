@@ -655,3 +655,30 @@ class TldrFlags(TuxFlagConverter, case_insensitive=True, delimiter=" ", prefix="
         aliases=["both"],
         default=False,
     )
+
+
+__all__ = [
+    # Base converter
+    "TuxFlagConverter",
+    # Moderation flags
+    "BanFlags",
+    "TempBanFlags",
+    "UnbanFlags",
+    "KickFlags",
+    "WarnFlags",
+    "TimeoutFlags",
+    "UntimeoutFlags",
+    "JailFlags",
+    "UnjailFlags",
+    # Case management flags
+    "CasesViewFlags",
+    "CaseModifyFlags",
+    # Snippet flags
+    "SnippetBanFlags",
+    "SnippetUnbanFlags",
+    # Poll flags
+    "PollBanFlags",
+    "PollUnbanFlags",
+    # Utility flags
+    "TldrFlags",
+]

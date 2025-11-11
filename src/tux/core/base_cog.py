@@ -18,7 +18,7 @@ from loguru import logger
 
 from tux.database.controllers import DatabaseCoordinator
 from tux.shared.config import CONFIG
-from tux.shared.functions import generate_usage as _generate_usage_shared
+from tux.shared.functions import generate_usage
 
 if TYPE_CHECKING:
     from tux.core.bot import Tux
@@ -157,7 +157,7 @@ class BaseCog(commands.Cog):
 
         # Delegate to shared usage generator for consistent formatting
         try:
-            return _generate_usage_shared(command, flag_converter)
+            return generate_usage(command, flag_converter)
         except Exception:
             # Final fallback: just return the command name
             return command.qualified_name
@@ -231,64 +231,6 @@ class BaseCog(commands.Cog):
             return default
         else:
             return value
-
-    def get_bot_latency(self) -> float:
-        """
-        Get the bot's WebSocket latency to Discord.
-
-        Returns
-        -------
-        float
-            The bot's latency in seconds.
-
-        Notes
-        -----
-        This is the latency of the WebSocket connection, measured as the
-        time between sending a HEARTBEAT and receiving a HEARTBEAT_ACK.
-        """
-        return self.bot.latency
-
-    def get_bot_user(self, user_id: int) -> Any:
-        """
-        Get a Discord user by ID from the bot's cache.
-
-        Parameters
-        ----------
-        user_id : int
-            The Discord user ID to look up.
-
-        Returns
-        -------
-        discord.User | None
-            The user object if found in cache, None otherwise.
-
-        Notes
-        -----
-        Only returns users that are cached by the bot. May not include all
-        Discord users. Use ``bot.fetch_user()`` for API queries.
-        """
-        return self.bot.get_user(user_id)
-
-    def get_bot_emoji(self, emoji_id: int) -> Any:
-        """
-        Get a custom emoji by ID from the bot's cache.
-
-        Parameters
-        ----------
-        emoji_id : int
-            The Discord emoji ID to look up.
-
-        Returns
-        -------
-        discord.Emoji | None
-            The emoji object if found in cache, None otherwise.
-
-        Notes
-        -----
-        Only returns emojis from guilds the bot is in. Does not include
-        standard Unicode emojis.
-        """
-        return self.bot.get_emoji(emoji_id)
 
     def __repr__(self) -> str:
         """

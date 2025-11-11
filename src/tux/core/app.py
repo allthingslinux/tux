@@ -12,17 +12,20 @@ import os
 import signal
 import sys
 from types import FrameType
+from typing import TYPE_CHECKING
 
 import discord
 from loguru import logger
 
-from tux.core.bot import Tux
 from tux.help import TuxHelp
 from tux.services.sentry import SentryManager, capture_exception_safe
 from tux.shared.config import CONFIG
 
+if TYPE_CHECKING:
+    from tux.core.bot import Tux
 
-async def get_prefix(bot: Tux, message: discord.Message) -> list[str]:
+
+async def get_prefix(bot: "Tux", message: discord.Message) -> list[str]:
     """
     Resolve the command prefix for a guild using the prefix manager.
 
@@ -90,7 +93,7 @@ class TuxApp:
         Flag indicating if the bot has successfully connected to Discord.
     """
 
-    bot: Tux | None
+    bot: "Tux | None"
     _connect_task: asyncio.Task[None] | None
     _shutdown_event: asyncio.Event | None
     _in_setup: bool
@@ -402,7 +405,7 @@ class TuxApp:
 
         return owner_ids
 
-    def _create_bot_instance(self, owner_ids: set[int]) -> Tux:
+    def _create_bot_instance(self, owner_ids: set[int]) -> "Tux":
         """
         Create and configure the Tux bot instance.
 
@@ -416,6 +419,9 @@ class TuxApp:
         Tux
             Configured bot instance ready for connection.
         """
+        # Import here to avoid circular import
+        from tux.core.bot import Tux  # noqa: PLC0415
+
         return Tux(
             command_prefix=get_prefix,
             strip_after_prefix=True,
@@ -448,15 +454,8 @@ class TuxApp:
 
             # Wait for setup to complete
             if self.bot.setup_task:
-                try:
-                    await self.bot.setup_task
-                    logger.info("✅ Bot setup completed successfully")
-                except Exception as setup_error:
-                    # Setup failure is critical - can't proceed without database, cogs, etc.
-                    logger.error(f"❌ Bot setup failed: {setup_error}")
-                    capture_exception_safe(setup_error)
-                    # Force immediate exit for critical setup failures
-                    sys.exit(1)
+                await self.bot.setup_task
+                logger.info("✅ Bot setup completed successfully")
 
     async def _connect_to_gateway(self) -> None:
         """
