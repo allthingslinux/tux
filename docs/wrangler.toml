@@ -50,4 +50,4 @@ enabled = true
 # Workers Builds will run this command automatically on push
 [build]
 command = "uv run mkdocs build"
-cwd = "."
+cwd = "docs"
