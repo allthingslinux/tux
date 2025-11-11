@@ -55,6 +55,7 @@ title: Summary
     * [Tasks](developer/concepts/tasks/index.md)
       * developer/concepts/tasks/*.md
   * [Best Practices](developer/best-practices/index.md)
+    * [Namespace](developer/best-practices/namespace.md)
     * [Git](developer/best-practices/git.md)
     * [CI/CD](developer/best-practices/ci-cd.md)
     * [Async Patterns](developer/best-practices/async.md)
@@ -67,9 +68,9 @@ title: Summary
     * [Testing](developer/best-practices/testing/index.md)
       * developer/best-practices/testing/*.md
 * [Reference](reference/index.md)
+  * [Versioning](reference/versioning.md)
   * [API Reference](reference/src/tux/)
   * [CLI Reference](reference/cli.md)
   * [ENV Reference](reference/env.md)
-  * [Versioning](reference/versioning.md)
   * [Coverage Report](reference/coverage.md)
 * [Changelog](changelog.md)
