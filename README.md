@@ -144,6 +144,12 @@ Modular plugin architecture for extending functionality without modifying core c
    uv sync
    ```
 
+   For developers, you can install the pre-commit hooks with:
+
+   ```bash
+   uv run pre-commit install
+   ```
+
 3. **Configure your environment:**
 
    ```bash
