@@ -6,17 +6,11 @@
     "schedule": [
         "before 4am on Monday"
     ],
-    "ignoreDeps": [
-        "basedpyright" // see pyproject.toml
-    ],
     "dependencyDashboard": true,
-    "lockFileMaintenance": {
-        "enabled": true,
-        "automerge": true,
-        "schedule": [
-            "before 4am on Monday"
-        ]
-    },
+    "enabledManagers": [
+        "github-actions",
+        "pep621"
+    ],
     "packageRules": [
         {
             // Group all patch updates together
@@ -44,12 +38,117 @@
             "automerge": false
         },
         {
-            // Dev tools auto-merge
+            // Dev tools auto-merge (expanded list)
             "matchPackageNames": [
                 "pre-commit",
                 "ruff",
-                "poetry",
-                "pytest"
+                "basedpyright",
+                "yamllint",
+                "yamlfix",
+                "pydoclint",
+                "docstr-coverage",
+                "pydantic-settings-export"
+            ],
+            "automerge": true
+        },
+        {
+            // Test tools auto-merge
+            "matchPackageNames": [
+                "pytest",
+                "pytest-asyncio",
+                "pytest-mock",
+                "pytest-cov",
+                "pytest-sugar",
+                "pytest-randomly",
+                "pytest-timeout",
+                "pytest-html",
+                "pytest-benchmark",
+                "pytest-alembic",
+                "pytest-loguru",
+                "pytest-parallel",
+                "pytest-httpx",
+                "py-pglite"
+            ],
+            "automerge": true
+        },
+        {
+            // Documentation tools auto-merge
+            "matchPackageNames": [
+                "mkdocs",
+                "mkdocs-material",
+                "mkdocstrings",
+                "mkdocstrings-python",
+                "pymdown-extensions",
+                "griffe",
+                "griffe-typingdoc",
+                "griffe-generics",
+                "griffe-inherited-method-crossrefs",
+                "griffe-inherited-docstrings",
+                "mkdocs-api-autonav",
+                "mkdocs-minify-plugin",
+                "mkdocs-typer",
+                "mkdocs-mermaid2-plugin",
+                "mkdocs-unused-files",
+                "mkdocs-coverage",
+                "mkdocs-pagetree-plugin",
+                "mkdocs-extract-listings-plugin",
+                "mkdocs-spellcheck",
+                "mkdocs-breadcrumbs-plugin",
+                "mkdocs-ezlinks-plugin",
+                "griffe-pydantic",
+                "griffe-warnings-deprecated",
+                "griffe-modernized-annotations",
+                "mkdocs-section-index",
+                "mkdocs-backlinks",
+                "mkdocs-literate-nav",
+                "mkdocs-git-revision-date-localized-plugin",
+                "mkdocs-git-committers-plugin-2"
+            ],
+            "automerge": true
+        },
+        {
+            // Type stubs auto-merge
+            "matchPackageNames": [
+                "types-pytz",
+                "types-click",
+                "types-psutil",
+                "types-dateparser",
+                "types-pillow",
+                "types-pyyaml",
+                "types-aiofiles",
+                "types-influxdb-client",
+                "types-jinja2",
+                "types-mock",
+                "annotated-types",
+                "asyncpg-stubs"
+            ],
+            "automerge": true
+        },
+        {
+            // Critical dependencies - require review for major updates
+            "matchPackageNames": [
+                "discord-py",
+                "sqlmodel",
+                "sqlalchemy",
+                "pydantic",
+                "alembic",
+                "asyncpg",
+                "psycopg"
+            ],
+            "matchUpdateTypes": [
+                "major"
+            ],
+            "automerge": false,
+            "groupName": "critical major updates"
+        },
+        {
+            // Pinned basedpyright - allow minor/patch updates
+            "matchPackageNames": [
+                "basedpyright"
+            ],
+            "matchUpdateTypes": [
+                "minor",
+                "patch"
             ],
             "automerge": true
         },
@@ -60,6 +159,29 @@
             ],
             "groupName": "GitHub Actions",
             "automerge": true
+        },
+        {
+            // Lock file maintenance for uv.lock
+            "matchManagers": [
+                "pep621"
+            ],
+            "matchDepTypes": [
+                "lockFileMaintenance"
+            ],
+            "automerge": true,
+            "schedule": [
+                "before 4am on Monday"
+            ]
         }
-    ]
+    ],
+    "lockFileMaintenance": {
+        "enabled": true,
+        "automerge": true,
+        "schedule": [
+            "before 4am on Monday"
+        ]
+    },
+    "constraints": {
+        "python": ">=3.13.2,<3.14"
+    }
 }
