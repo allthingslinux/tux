@@ -64,32 +64,70 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Generate Changelog
-        id: changelog
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Configure Git
         run: |
-          # Get the previous tag
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          if [ -z "$PREVIOUS_TAG" ]; then
-            echo "changelog=Initial release" >> "$GITHUB_OUTPUT"
-          else
-            # Generate changelog from commit messages since last tag
-            CHANGELOG=$(git log "${PREVIOUS_TAG}..HEAD" --pretty=format:"- %s (%h)" --no-merges)
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Determine Version and Branch
+        id: setup
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          # Strip 'v' prefix if present (semver format doesn't include it)
+          VERSION_NO_V="${VERSION#v}"
+          echo "version_no_v=$VERSION_NO_V" >> "$GITHUB_OUTPUT"
 
-            # Use multiline output format for GitHub Actions
-            {
-              echo "changelog<<EOF"
-              echo "## Changes since $PREVIOUS_TAG"
-              echo ""
-              echo "$CHANGELOG"
-              echo "EOF"
-            } >> "$GITHUB_OUTPUT"
+          # Determine target branch for committing changelog
+          # Try to find the default branch, fallback to common branch names
+          DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "")
+          if [ -z "$DEFAULT_BRANCH" ]; then
+            # Try common branch names
+            if git show-ref --verify --quiet refs/remotes/origin/main; then
+              DEFAULT_BRANCH="main"
+            elif git show-ref --verify --quiet refs/remotes/origin/master; then
+              DEFAULT_BRANCH="master"
+            else
+              # Fallback: use the first branch we find
+              DEFAULT_BRANCH=$(git branch -r | grep -v HEAD | head -n1 | sed 's/origin\///' | xargs)
+            fi
           fi
+          echo "branch=$DEFAULT_BRANCH" >> "$GITHUB_OUTPUT"
+          echo "Version (no v): $VERSION_NO_V"
+          echo "Target branch: $DEFAULT_BRANCH"
+
+          # Checkout the branch (not the tag) so we can commit changelog updates
+          git checkout "$DEFAULT_BRANCH" || git checkout -b "$DEFAULT_BRANCH"
+          git pull origin "$DEFAULT_BRANCH" || true
+      - name: Bump Changelog Version
+        id: bump
+        uses: release-flow/keep-a-changelog-action@v3
+        with:
+          command: bump
+          version: ${{ steps.setup.outputs.version_no_v }}
+          changelog: CHANGELOG.md
+          tag-prefix: v
+          keep-unreleased-section: true
+      - name: Commit Updated Changelog
+        run: |
+          if [ -n "$(git status --porcelain CHANGELOG.md)" ]; then
+            git add CHANGELOG.md
+            git commit -m "chore: bump changelog to ${{ needs.validate.outputs.version }}"
+            git push origin "${{ steps.setup.outputs.branch }}"
+          else
+            echo "No changes to CHANGELOG.md"
+          fi
+      - name: Query Release Notes
+        id: query
+        uses: release-flow/keep-a-changelog-action@v3
+        with:
+          command: query
+          version: ${{ steps.setup.outputs.version_no_v }}
+          changelog: CHANGELOG.md
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.validate.outputs.version }}
           name: Release ${{ needs.validate.outputs.version }}
-          body: ${{ steps.changelog.outputs.changelog }}
+          body: ${{ steps.query.outputs.release-notes }}
           prerelease: ${{ needs.validate.outputs.is_prerelease == 'true' }}
-          generate_release_notes: true
           make_latest: ${{ needs.validate.outputs.is_prerelease == 'false' }}
