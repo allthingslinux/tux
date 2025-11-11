@@ -54,11 +54,7 @@ Before deploying with systemd, ensure you have:
 Create a dedicated user for running Tux (recommended for security):
 
 ```bash
-# Create system user with home directory at /opt/tux
-sudo useradd -r -s /bin/bash -d /opt/tux -m tux
-
-# Or create system user without home directory (if preferred)
-# sudo useradd -r -s /usr/bin/nologin -d /opt/tux tux
+sudo useradd -r tux
 ```
 
 #### 2. Clone Repository to /opt/tux
@@ -87,60 +83,23 @@ sudo -u tux bash -c "cd /opt/tux && uv sync"
 # Generate configuration files
 sudo -u tux bash -c "cd /opt/tux && uv run config generate"
 
-# Protect .env file if it exists
-if [ -f /opt/tux/.env ]; then
-    sudo chmod 600 /opt/tux/.env
-    sudo chown tux:tux /opt/tux/.env
-fi
+# Create and protect .env file
+sudo -u tux cp /opt/tux/.env.example /opt/tux/.env
+sudo chmod 600 /opt/tux/.env
+sudo chown tux:tux /opt/tux/.env
 ```
 
 #### 4. Configure Environment
 
-Tux automatically reads environment variables from `.env` file in the working directory. Create or edit the `.env` file:
+Edit the `.env` file and setup necessary environment variables:
 
 ```bash
 # Create or edit .env file
 sudo -u tux nano /opt/tux/.env
 ```
 
-Add your configuration:
-
-```env
-# Discord Bot Token (required)
-BOT_TOKEN=your_bot_token_here
-
-# Database Configuration (required)
-# Option 1: Use individual PostgreSQL variables
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_DB=tux
-POSTGRES_USER=tux_user
-POSTGRES_PASSWORD=your_secure_password_here
-
-# Option 2: Or use DATABASE_URL override
-# DATABASE_URL=postgresql://tux_user:password@localhost:5432/tux
-
-# Optional: Logging
-LOG_LEVEL=INFO
-DEBUG=false
-
-# Optional: Bot Configuration
-USER_IDS__BOT_OWNER_ID=123456789012345678
-BOT_INFO__PREFIX=$
-
-# Optional: External Services
-EXTERNAL_SERVICES__SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id
-```
-
-Set secure permissions:
-
-```bash
-sudo chmod 600 /opt/tux/.env
-sudo chown tux:tux /opt/tux/.env
-```
-
 !!! note "Alternative: Systemd Environment File"
-    You can also use a separate systemd environment file at `/etc/tux/environment` if you prefer to separate system-level configuration from application configuration. If using this approach, add `EnvironmentFile=/etc/tux/environment` to the systemd service file.
+You can also use a separate systemd environment file at `/etc/tux/environment` if you prefer to separate system-level configuration from application configuration. If using this approach, add `EnvironmentFile=/etc/tux/environment` to the systemd service file.
 
 #### 5. Configure Database
 
@@ -234,67 +193,6 @@ sudo systemctl start tux
 sudo systemctl status tux
 ```
 
-## Service Management
-
-### Basic Commands
-
-```bash
-# Start service
-sudo systemctl start tux
-
-# Stop service
-sudo systemctl stop tux
-
-# Restart service
-sudo systemctl restart tux
-
-# Reload service (sends HUP signal)
-sudo systemctl reload tux
-
-# Enable on boot
-sudo systemctl enable tux
-
-# Disable on boot
-sudo systemctl disable tux
-
-# Check status
-sudo systemctl status tux
-
-# View logs
-sudo journalctl -u tux -f
-
-# View recent logs
-sudo journalctl -u tux -n 100
-
-# View logs since boot
-sudo journalctl -u tux -b
-
-# View logs for specific time period
-sudo journalctl -u tux --since "1 hour ago"
-sudo journalctl -u tux --since "2024-01-01 00:00:00" --until "2024-01-02 00:00:00"
-```
-
-### Advanced Logging
-
-```bash
-# Follow logs in real-time
-sudo journalctl -u tux -f
-
-# Filter by log level
-sudo journalctl -u tux -p err
-sudo journalctl -u tux -p warning
-
-# Search logs
-sudo journalctl -u tux | grep ERROR
-sudo journalctl -u tux | grep "database"
-
-# Export logs
-sudo journalctl -u tux --since "1 day ago" > tux-logs.txt
-
-# View logs with timestamps
-sudo journalctl -u tux --since "1 hour ago" --no-pager
-```
-
 ## Configuration Updates
 
 ### Updating Environment Variables
@@ -334,41 +232,6 @@ sudo systemctl start tux
 sudo systemctl status tux
 ```
 
-## Monitoring
-
-### Health Checks
-
-```bash
-# Check service status
-sudo systemctl is-active tux
-sudo systemctl is-enabled tux
-
-# Check if bot is responding
-# In Discord, use /ping command
-
-# Check database connection
-sudo -u tux uv run db health
-
-# Check resource usage
-systemctl status tux | grep -A 5 "Memory\|CPU"
-```
-
-### Resource Monitoring
-
-```bash
-# Monitor resource usage
-sudo systemctl status tux
-
-# View detailed resource usage
-systemd-cgtop
-
-# Check memory usage
-ps aux | grep tux
-
-# Monitor disk usage
-df -h /opt/tux
-```
-
 ## Troubleshooting
 
 ### Service Won't Start
@@ -394,7 +257,7 @@ sudo systemctl status tux
    ```bash
    # Verify uv is installed
    which uv
-   
+
    # Check Python version
    python3 --version
    ```
@@ -404,7 +267,7 @@ sudo systemctl status tux
    ```bash
    # Test database connection
    sudo -u tux uv run db health
-   
+
    # Check PostgreSQL is running
    sudo systemctl status postgresql
    ```
@@ -523,7 +386,7 @@ ExecStart=/usr/local/bin/uv run tux start
 ```
 
 !!! note "Finding uv Path"
-    Use `which uv` to find the correct path to the `uv` executable on your system.
+Use `which uv` to find the correct path to the `uv` executable on your system.
 
 ### Debug Mode
 
