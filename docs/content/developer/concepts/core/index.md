@@ -1,14 +1,21 @@
-# Index of developer/concepts/core
+---
+title: Core Concepts
+---
 
-- [async-patterns](/developer/concepts/core/async-patterns/)
-- [bot-lifecycle](/developer/concepts/core/bot-lifecycle/)
-- [caching](/developer/concepts/core/caching/)
-- [cog-system](/developer/concepts/core/cog-system/)
-- [command-system](/developer/concepts/core/command-system/)
-- [configuration-system](/developer/concepts/core/configuration-system/)
-- [error-handling](/developer/concepts/core/error-handling/)
-- [error-patterns](/developer/concepts/core/error-patterns/)
-- [logging](/developer/concepts/core/logging/)
-- [permission-system](/developer/concepts/core/permission-system/)
-- [plugin-system](/developer/concepts/core/plugin-system/)
-- [sentry-integration](/developer/concepts/core/sentry-integration/)
+# Core Concepts
+
+This section contains concepts that are used in the core of Tux.
+
+## Navigation
+
+- [Main Entrypoint](main.md)
+- [Application Layer](app.md)
+- [Bot Core](bot.md)
+- [Lifecycle Orchestration](lifecycle.md)
+- [Cog Loader](cog-loader.md)
+- [Base Cog](base-cog.md)
+- [Modules](modules.md)
+- [Plugins](plugins.md)
+- [Permission System](permission-system.md)
+- [Logging](logging.md)
+- [Sentry](sentry.md)

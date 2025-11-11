@@ -5,673 +5,294 @@ description: Complete bot lifecycle orchestration from startup through shutdown,
 
 # Lifecycle Orchestration
 
-The bot orchestration system (`src/tux/core/setup/`) provides comprehensive lifecycle management for Tux, coordinating the complex startup and shutdown sequences that integrate database connections, permission systems, cog loading, caching, and monitoring.
+The lifecycle orchestration system (`src/tux/core/setup/`) manages Tux's complete startup and shutdown sequences, coordinating database connections, permission systems, cog loading, caching, and monitoring.
 
-This system ensures reliable initialization with proper error handling and graceful degradation.
+## Overview
 
-## Architecture Overview
+The orchestration system ensures reliable initialization with proper error handling and graceful degradation. It follows a layered architecture:
 
-The orchestration system follows a layered architecture with clear separation of concerns:
+- **Application Layer** - Signal handling, configuration validation, Discord connection
+- **Bot Core Layer** - Discord.py integration, service coordination, lifecycle hooks
+- **Setup Orchestration** - Coordinates all setup services with error handling
+- **Setup Services** - Specialized services for database, permissions, cogs, and caching
 
-```text
-TuxApp (app.py)
-├── Application Lifecycle (startup/shutdown/signal handling)
-└── Discord Connection Management
+## Startup Sequence
 
-Tux (bot.py)
-├── Discord.py Integration
-├── Service Coordination (DB, Sentry, Tasks, Emoji)
-└── Lifecycle Hooks (setup_hook, on_disconnect, shutdown)
+The bot startup follows a carefully orchestrated sequence with multiple phases:
 
-BotSetupOrchestrator (orchestrator.py)
-├── Setup Phase Coordination
-├── Error Handling & Recovery
-└── Progress Tracking via Sentry
+### Application Layer Startup
 
-Setup Services (setup/*.py)
-├── DatabaseSetupService - Connection & Migrations
-├── PermissionSetupService - Authorization System
-├── CogSetupService - Extension Loading
-└── PrefixManager - Command Prefix Caching
-```
+The `TuxApp` class handles initial startup:
 
-## Application Layer (TuxApp)
+1. **Sentry Setup** - Error tracking initialized first to capture any failures
+2. **Signal Handler Registration** - SIGTERM/SIGINT handlers for graceful shutdown
+3. **Configuration Validation** - Bot token and critical settings verified
+4. **Owner ID Resolution** - Bot owner and optional sysadmin IDs determined
+5. **Bot Instance Creation** - Tux bot instance created with proper configuration
+6. **Internal Setup Wait** - Waits for database, cogs, and caches to initialize
+7. **Discord Connection** - Establishes WebSocket connection to Discord gateway
 
-### Startup Sequence
+### Bot Core Setup
 
-The `TuxApp` class orchestrates the complete bot lifecycle:
+The `Tux` bot class performs async setup:
 
-```python
-class TuxApp:
-    """Application wrapper managing bot lifecycle."""
+**Initialization:**
 
-    async def start(self) -> None:
-        """Complete startup with error handling."""
-        # 1. Sentry initialization
-        SentryManager.setup()
+- Services created (database, Sentry, tasks, emoji)
+- Setup task scheduled for async execution
+- State flags initialized to track lifecycle
 
-        # 2. Signal handler registration
-        self.setup_signals(loop)
+**Setup Orchestration:**
 
-        # 3. Configuration validation
-        self._validate_config()
+The setup orchestrator coordinates specialized services:
 
-        # 4. Owner permission resolution
-        owner_ids = self._resolve_owner_ids()
+1. **Database Setup** - Connection, migrations, schema validation
+2. **Permission Setup** - Authorization system initialization
+3. **Prefix Manager Setup** - Command prefix caching (non-critical)
+4. **Cog Setup** - Extension loading via CogLoader
+5. **Monitoring Startup** - Background task monitoring begins
 
-        # 5. Bot instance creation
-        bot = self._create_bot_instance(owner_ids)
+### Setup Service Details
 
-        # 6. Internal setup wait
-        await self._await_bot_setup()
+**Database Setup:**
 
-        # 7. Discord connection
-        await self._login_and_connect()
-```
+- Establishes connection pool
+- Creates tables from SQLModel metadata
+- Runs Alembic migrations to latest version
+- Validates schema matches model definitions
 
-**Startup Phases:**
+**Permission Setup:**
 
-1. **Sentry Setup** - Error tracking ready before any failures
-2. **Signal Handling** - Graceful shutdown preparation
-3. **Configuration** - Critical validation before expensive operations
-4. **Bot Creation** - Discord.py bot instance with all configurations
-5. **Setup Wait** - Ensure internal bot setup completes
-6. **Connection** - Discord gateway/WebSocket connection
+- Initializes permission system with database integration
+- Sets up command authorization hooks
+- Configures role-based access control
+- Establishes owner override system
 
-### Signal Handling & Shutdown
+**Cog Setup:**
 
-```python
-def setup_signals(self, loop: asyncio.AbstractEventLoop) -> None:
-    """Register SIGTERM/SIGINT handlers for graceful shutdown."""
+- Loads Jishaku development tools (optional)
+- Loads all bot cogs via CogLoader with priority ordering
+- Loads hot reload system for development (optional)
 
-def _handle_signal_shutdown(self, signum: int) -> None:
-    """Process shutdown signals with Sentry reporting."""
-    SentryManager.report_signal(signum, None)
-    # Cancel all tasks
-    # Trigger shutdown sequence
-```
+**Prefix Manager Setup:**
 
-**Shutdown Sequence:**
+- Initializes prefix caching system
+- Loads all guild prefixes into memory
+- Sets up graceful fallback to default prefix
+- Configures cache updates on prefix changes
 
-1. **Signal Processing** - Capture and report shutdown signals
-2. **Task Cancellation** - Stop all running background tasks
-3. **Bot Shutdown** - Close Discord connections and cleanup
-4. **Resource Cleanup** - Database, HTTP client, Sentry flush
+### Post-Ready Startup
 
-## Bot Core Layer (Tux)
+After Discord connection, post-ready tasks execute:
 
-### Initialization Architecture
+1. **Wait for Setup** - Ensures internal setup completes
+2. **Record Timestamp** - Marks when bot became operational
+3. **Display Banner** - Shows formatted startup information
+4. **Enable Sentry Instrumentation** - Starts command performance tracking
+5. **Record Statistics** - Captures initial bot metrics
 
-The `Tux` bot class uses lazy initialization to prevent blocking:
-
-```python
-def __init__(self, *args: Any, **kwargs: Any) -> None:
-    """Initialize with lazy async setup."""
-    super().__init__(*args, **kwargs)
-
-    # Core services
-    self.task_monitor = TaskMonitor(self)
-    self.db_service = DatabaseService()
-    self.sentry_manager = SentryManager()
-    self.emoji_manager = EmojiManager(self)
-
-    # Schedule setup task (non-blocking)
-    asyncio.get_event_loop().call_soon(self._create_setup_task)
-```
-
-**Key Design Patterns:**
-
-- **Lazy Setup** - Async initialization scheduled via `call_soon`
-- **Service Injection** - All components initialized but not connected
-- **Error Isolation** - Component failures don't crash entire bot
-- **State Tracking** - Multiple flags prevent duplicate operations
-
-### Setup Orchestration
-
-```python
-def _create_setup_task(self) -> None:
-    """Create setup task in proper event loop context."""
-    if self.setup_task is None:
-        self.setup_task = asyncio.create_task(self.setup(), name="bot_setup")
-
-async def setup(self) -> None:
-    """Comprehensive bot setup with error handling."""
-    with start_span("bot.setup", "Bot setup process") as span:
-        # Lazy import to avoid circular dependencies
-        from tux.core.setup.orchestrator import BotSetupOrchestrator
-
-        orchestrator = BotSetupOrchestrator(self)
-        await orchestrator.setup(span)
-```
-
-### Lifecycle Hooks
-
-```python
-async def setup_hook(self) -> None:
-    """Discord.py hook called before connection."""
-    # Initialize emoji manager
-    await self.emoji_manager.init()
-
-    # Check setup task completion
-    if self.setup_task.done():
-        if self.setup_task.exception():
-            self.setup_complete = False
-        else:
-            self.setup_complete = True
-
-    # Schedule post-ready tasks
-    self._startup_task = self.loop.create_task(self._post_ready_startup())
-
-async def _post_ready_startup(self) -> None:
-    """Execute tasks after Discord connection."""
-    await self.wait_until_ready()  # Wait for READY event
-    await self._wait_for_setup()   # Wait for internal setup
-
-    # Record operational start time
-    self.start_time = discord.utils.utcnow().timestamp()
-
-    # Display startup banner
-    await self._log_startup_banner()
-
-    # Enable Sentry instrumentation
-    instrument_bot_commands(self)
-
-    # Record bot statistics
-    self._record_bot_stats()
-```
-
-## Setup Orchestration Layer
-
-### BotSetupOrchestrator
-
-The orchestrator coordinates all setup services with standardized error handling:
-
-```python
-class BotSetupOrchestrator:
-    """Orchestrates setup using specialized services."""
-
-    def __init__(self, bot: Tux) -> None:
-        """Initialize with lazy imports to avoid circular dependencies."""
-        from .database_setup import DatabaseSetupService
-        from .permission_setup import PermissionSetupService
-        from .cog_setup import CogSetupService
-
-        self.database_setup = DatabaseSetupService(bot.db_service)
-        self.permission_setup = PermissionSetupService(bot, bot.db_service)
-        self.cog_setup = CogSetupService(bot)
-
-    async def setup(self, span: DummySpan) -> None:
-        """Execute all setup steps with error handling."""
-        # Database setup (critical - throws on failure)
-        if not await self.database_setup.safe_setup():
-            raise TuxDatabaseConnectionError("Database setup failed")
-
-        # Permission system setup
-        if not await self.permission_setup.safe_setup():
-            raise RuntimeError("Permission system setup failed")
-
-        # Prefix manager setup (with graceful fallback)
-        await self._setup_prefix_manager(span)
-
-        # Cog setup
-        if not await self.cog_setup.safe_setup():
-            raise RuntimeError("Cog setup failed")
-
-        # Start monitoring
-        self.bot.task_monitor.start()
-```
-
-**Setup Sequence:**
-
-1. **Database** - Connection, migrations, schema validation (critical)
-2. **Permissions** - Authorization system initialization (critical)
-3. **Prefix Manager** - Command prefix caching (non-critical with fallback)
-4. **Cogs** - Extension loading via CogLoader (critical)
-5. **Monitoring** - Background task monitoring startup
-
-### Base Setup Service Pattern
-
-All setup services inherit from `BaseSetupService` for consistent behavior:
-
-```python
-class BaseSetupService(ABC):
-    """Base class with standardized error handling."""
-
-    async def safe_setup(self) -> bool:
-        """Execute setup with tracing and error handling."""
-        with start_span(f"bot.setup_{self.name}") as span:
-            try:
-                await self.setup()
-                self.logger.info(f"✅ {self.name.title()} setup completed")
-                span.set_tag(f"{self.name}.setup", "success")
-                return True
-            except Exception as e:
-                self.logger.exception(f"❌ {self.name.title()} setup failed")
-                span.set_tag(f"{self.name}.setup", "failed")
-                capture_exception_safe(e)
-                return False
-
-class BotSetupService(BaseSetupService):
-    """Base for services needing bot access."""
-    def __init__(self, bot: Tux, name: str):
-        super().__init__(name)
-        self.bot = bot
-```
-
-**Standardized Features:**
-
-- **Tracing** - All setup steps tracked with Sentry spans
-- **Logging** - Consistent log format with emojis and status
-- **Error Handling** - Exceptions captured but don't crash orchestrator
-- **Status Reporting** - Success/failure tags for monitoring
-
-## Setup Services
-
-### Database Setup Service
-
-Handles complete database initialization:
-
-```python
-class DatabaseSetupService(BaseSetupService):
-    """Complete database setup and validation."""
-
-    async def setup(self) -> None:
-        """Set up database connection and schema."""
-        # 1. Connect to database
-        await self.db_service.connect(CONFIG.database_url)
-
-        # 2. Create tables if needed
-        await self._create_tables()
-
-        # 3. Run migrations
-        await self._upgrade_head_if_needed()
-
-        # 4. Validate schema
-        await self._validate_schema()
-```
-
-**Database Setup Steps:**
-
-1. **Connection** - Establish database connection pool
-2. **Tables** - Create tables from SQLModel metadata
-3. **Migrations** - Run Alembic migrations to latest
-4. **Validation** - Ensure schema matches model definitions
-
-### Permission Setup Service
-
-Initializes the authorization system:
-
-```python
-class PermissionSetupService(BotSetupService):
-    """Permission system initialization."""
-
-    async def setup(self) -> None:
-        """Initialize command authorization."""
-        db_coordinator = DatabaseCoordinator(self.db_service)
-        init_permission_system(self.bot, db_coordinator)
-```
-
-**Permission Components:**
-
-- **Database Integration** - Permission storage and retrieval
-- **Command Authorization** - Before-invoke hooks for all commands
-- **Role-Based Access** - Guild role permission mapping
-- **Owner Overrides** - Bot owner always has full access
-
-### Cog Setup Service
-
-Manages extension loading:
-
-```python
-class CogSetupService(BotSetupService):
-    """Cog loading and plugin setup."""
-
-    async def setup(self) -> None:
-        """Load all cogs and plugins."""
-        await self._load_jishaku()      # Development tools
-        await self._load_cogs()         # Bot commands/extensions
-        await self._load_hot_reload()   # Development hot reload
-```
-
-**Cog Loading Process:**
-
-1. **Jishaku** - Development/debugging extension (optional)
-2. **Core Cogs** - All bot commands via CogLoader priority system
-3. **Hot Reload** - Development code reloading (optional)
-
-### Prefix Manager Setup
-
-Handles command prefix caching:
-
-```python
-async def _setup_prefix_manager(self, span: DummySpan) -> None:
-    """Set up prefix manager with graceful fallback."""
-    try:
-        self.bot.prefix_manager = PrefixManager(self.bot)
-        await self.bot.prefix_manager.load_all_prefixes()
-        logger.info("✅ Prefix manager initialized")
-    except Exception as e:
-        logger.warning("⚠️  Bot will use default prefix for all guilds")
-        self.bot.prefix_manager = None
-```
-
-**Prefix Management:**
-
-- **Cache-First** - In-memory cache for sub-millisecond lookups
-- **Lazy Loading** - Load prefixes on first access per guild
-- **Graceful Fallback** - Use default prefix if cache fails
-- **Event Updates** - Cache updated on prefix changes
-
-## Error Handling & Recovery
+## Error Handling
 
 ### Critical vs Non-Critical Failures
 
 The orchestration system distinguishes between critical and non-critical failures:
 
-```python
-# Critical failures - bot cannot start
-if not await self.database_setup.safe_setup():
-    raise TuxDatabaseConnectionError("Database setup failed")
+**Critical Failures (Bot Cannot Start):**
 
-if not await self.permission_setup.safe_setup():
-    raise RuntimeError("Permission system setup failed")
+- Database connection failures
+- Permission system initialization failures
+- Cog loading failures
 
-if not await self.cog_setup.safe_setup():
-    raise RuntimeError("Cog setup failed")
+These failures prevent the bot from starting and provide clear error messages with recovery instructions.
 
-# Non-critical failures - graceful degradation
-await self._setup_prefix_manager(span)  # Continues even if it fails
-```
+**Non-Critical Failures (Graceful Degradation):**
 
-**Critical Components:** Database, Permissions, Cogs
-**Non-Critical Components:** Prefix Manager, Emoji Manager, Hot Reload
+- Prefix manager initialization failures (falls back to default prefix)
+- Emoji manager failures (continues without custom emoji)
+- Hot reload failures (continues without hot reload)
 
-### Error Recovery Strategies
+These failures are logged but don't prevent startup. The bot continues with reduced functionality.
+
+### Error Recovery
 
 **Database Failures:**
 
-```bash
-❌ "Database connection failed"
-💡 To start the database, run: uv run docker up
-```
+- Clear error messages with recovery commands
+- Sentry reporting for monitoring
+- Guidance on starting database services
 
-**Permission Failures:**
+**Configuration Errors:**
 
-```python
-# Authorization system unavailable - commands may not work
-logger.error("Permission system setup failed")
-```
+- Cogs requiring missing configuration are skipped gracefully
+- Warnings logged with configuration guidance
+- Bot continues loading other cogs
 
-**Cog Loading Failures:**
+**Import Errors:**
 
-```python
-# Bot partially functional - some commands unavailable
-logger.error("Cog setup failed")
-```
+- Syntax errors detected before loading
+- Import failures cause cog group to fail
+- Detailed error messages help debugging
 
-## Performance Optimization
+## Shutdown Sequence
 
-### Lazy Initialization
+The shutdown sequence ensures proper resource cleanup:
 
-The system uses multiple levels of lazy initialization:
+### Shutdown Phases
 
-```python
-# Level 1: Event loop ready
-asyncio.get_event_loop().call_soon(self._create_setup_task)
+1. **Signal Processing** - Shutdown signals captured and reported to Sentry
+2. **Task Cancellation** - All background tasks cancelled and awaited
+3. **Bot Shutdown** - Discord connections closed, bot resources cleaned up
+4. **Resource Cleanup** - Database connections, HTTP clients closed
+5. **Sentry Flush** - Pending error reports sent before exit
 
-# Level 2: After bot creation
-self.setup_task = asyncio.create_task(self.setup())
+### Connection Cleanup Order
 
-# Level 3: After Discord connection
-self._startup_task = self.loop.create_task(self._post_ready_startup())
-```
+Connections are closed in dependency order:
 
-**Performance Benefits:**
+1. Discord gateway/WebSocket connection
+2. Database connection pool
+3. HTTP client session and connection pool
 
-- **Fast Startup** - Bot becomes responsive quickly
-- **Concurrent Setup** - Multiple services initialize in parallel
-- **Resource Efficiency** - Only initialize when needed
-- **Error Isolation** - Component failures don't block others
+This ensures dependencies are closed before the resources they depend on.
 
-### Connection Pooling
-
-All external connections use pooling for efficiency:
-
-```python
-# Database connection pool
-await self.db_service.connect(CONFIG.database_url)
-
-# HTTP client with connection pooling
-await http_client.close()  # Graceful pool shutdown
-```
-
-### Caching Strategy
-
-Critical data is cached for performance:
-
-```python
-# Prefix caching
-self.bot.prefix_manager = PrefixManager(self.bot)
-await self.bot.prefix_manager.load_all_prefixes()
-
-# Emoji caching
-await self.emoji_manager.init()
-```
-
-## Monitoring & Observability
+## Monitoring & Telemetry
 
 ### Sentry Integration
 
-All orchestration steps are traced and monitored:
+All setup phases are tracked with Sentry spans:
 
-```python
-# Setup phase tagging
-set_setup_phase_tag(span, "database", "finished")
-set_setup_phase_tag(span, "permissions", "finished")
-set_setup_phase_tag(span, "cogs", "finished")
+- Setup phase tags (database, permissions, cogs)
+- Load time metrics for performance analysis
+- Error context for debugging failures
+- Success/failure status for monitoring
 
-# Error reporting
-capture_exception_safe(e)
-capture_database_error(e, operation="connection")
-```
+### Performance Metrics
 
-### Task Monitoring
+The orchestration system tracks:
 
-Background tasks are tracked and cleaned up:
+- Individual service setup times
+- Total startup duration
+- Slow component detection
+- Cache initialization times
 
-```python
-# Start monitoring after setup
-self.bot.task_monitor.start()
+These metrics help identify performance bottlenecks and optimize startup time.
 
-# Cleanup during shutdown
-await self.task_monitor.cleanup_tasks()
-```
+## Understanding the Lifecycle
 
-### Bot Statistics
+### When Things Happen
 
-Operational metrics are collected:
+**Before Discord Connection:**
 
-```python
-def _record_bot_stats(self) -> None:
-    """Record bot statistics for monitoring."""
-    self.sentry_manager.set_context("bot_stats", {
-        "guild_count": len(self.guilds),
-        "user_count": len(self.users),
-        "channel_count": sum(len(g.channels) for g in self.guilds),
-        "uptime": discord.utils.utcnow().timestamp() - self.start_time,
-    })
-```
+- Sentry initialization
+- Signal handler registration
+- Configuration validation
+- Bot instance creation
+- Database setup
+- Permission system setup
+- Cog loading
 
-## Development Workflow
+**After Discord Connection:**
 
-### Local Development
+- Emoji manager initialization
+- Startup banner display
+- Sentry command instrumentation
+- Bot statistics recording
 
-```bash
-# Start with full orchestration
-uv run tux start
+**During Shutdown:**
 
-# Debug mode with verbose logging
-uv run tux start --debug
+- Background task cancellation
+- Discord connection closure
+- Database connection closure
+- Sentry event flushing
 
-# Check orchestration status
-uv run tux status
-```
+### Why This Order Matters
 
-### Testing Orchestration
+**Sentry First:**
 
-```python
-import asyncio
-from tux.core.app import TuxApp
+Error tracking must be ready before any operations that might fail. This ensures all startup errors are captured.
 
-async def test_orchestration():
-    """Test complete startup and shutdown."""
-    app = TuxApp()
+**Database Before Cogs:**
 
-    try:
-        await app.start()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        await app.shutdown()
-```
+Cogs often need database access, so the database must be ready before cogs load. This prevents import-time database access issues.
 
-### Debugging Setup Issues
+**Handlers Before Modules:**
 
-**Common Problems:**
+Event handlers need to be ready before commands that might trigger events. Priority-based loading ensures this.
 
-```bash
-# Database connection issues
-uv run tux db health
+**Cogs Before Plugins:**
 
-# Permission system failures
-# Check database tables exist
-uv run tux db status
-
-# Cog loading failures
-python -c "import tux.modules.moderation.ban"
-python -m py_compile src/tux/modules/moderation/ban.py
-
-# Configuration validation
-uv run tux config validate
-```
-
-**Debug Logging:**
-
-```bash
-# Enable setup tracing
-LOG_LEVEL=DEBUG uv run tux start 2>&1 | grep -E "(setup|Setup|orchestrator)"
-
-# Check setup task progress
-tail -f logs/tux.log | grep -E "(🔧|✅|❌|⚠️)"
-```
+Built-in modules load before custom plugins, ensuring core functionality is available when plugins need it.
 
 ## Best Practices
 
-### Orchestration Design
+### Handle Setup Errors Gracefully
 
-1. **Separation of Concerns** - Each service handles one responsibility
-2. **Error Containment** - Failures isolated to prevent cascade effects
-3. **Graceful Degradation** - Bot functional even with partial failures
-4. **Performance First** - Lazy loading and caching for speed
-5. **Observability** - Complete tracing and monitoring coverage
+If your cog requires setup that might fail, use try/except blocks and provide fallback behavior. Don't let setup failures crash the bot.
 
-### Setup Service Patterns
+### Use Appropriate Priorities
 
-1. **Standardized Interface** - All services inherit from BaseSetupService
-2. **Consistent Logging** - Uniform log format across all services
-3. **Error Handling** - Exceptions captured but don't crash orchestrator
-4. **Tracing Integration** - All operations tracked with Sentry spans
+Place cogs in the correct priority folders. Handlers go in `services/handlers/`, modules go in `modules/`, and plugins go in `plugins/`.
 
-### Resource Management
+### Clean Up Resources
 
-1. **Connection Pooling** - Efficient reuse of database/HTTP connections
-2. **Task Cleanup** - All background tasks properly cancelled on shutdown
-3. **Memory Management** - Cache invalidation and cleanup
-4. **Signal Handling** - Graceful shutdown on system signals
+If you create resources during setup, clean them up during shutdown. The bot handles its own resources, but you're responsible for custom ones.
 
-### Development Practices
+### Monitor Performance
 
-1. **Lazy Imports** - Avoid circular dependencies in orchestrator
-2. **Configuration Validation** - Critical settings checked early
-3. **Health Checks** - Regular validation of critical components
-4. **Documentation** - All setup steps and error conditions documented
+Use Sentry telemetry to monitor setup times. Slow setup phases indicate optimization opportunities.
 
 ## Troubleshooting
 
 ### Startup Failures
 
-**Database Issues:**
+**Database Connection Failed:**
+
+Check database configuration and connectivity:
 
 ```bash
-# Check Docker containers
-uv run docker ps | grep postgres
-
-# Test connection
 uv run tux db health
+env | grep -E "(POSTGRES|DATABASE)"
+```
 
-# Check migrations
+**Permission System Failed:**
+
+Check database is accessible and migrations are up to date:
+
+```bash
 uv run tux db status
+uv run tux db migrate-dev
 ```
 
-**Permission System:**
+**Cog Loading Failed:**
+
+Check for import errors or syntax issues:
 
 ```bash
-# Verify database tables
-uv run tux db status
-
-# Check permission initialization logs
-tail -f logs/tux.log | grep -i permission
+python -c "import tux.modules.moderation.ban"
+LOG_LEVEL=DEBUG uv run tux start
 ```
 
-**Cog Loading:**
+### Slow Startup
 
-```bash
-# Test individual cog imports
-python -c "from tux.modules.moderation import ban"
+If startup is slow:
 
-# Check CogLoader priority system
-grep -r "COG_PRIORITIES" src/tux/shared/constants.py
-```
+1. Check Sentry telemetry for slow phases
+2. Review cog load times
+3. Check database connection pool size
+4. Verify migrations aren't taking too long
 
-### Runtime Issues
+### Shutdown Issues
 
-**Memory Leaks:**
+If shutdown hangs:
 
-```bash
-# Monitor task count
-uv run tux status
-
-# Check for hanging connections
-ps aux | grep -E "(python|tux)" | head -5
-```
-
-**Performance Issues:**
-
-```bash
-# Check cache hit rates
-uv run tux status
-
-# Monitor database connections
-uv run tux db status
-```
-
-**Connection Issues:**
-
-```bash
-# Test Discord connectivity
-uv run tux ping
-
-# Check WebSocket status
-uv run tux ws-status
-```
+1. Check for background tasks not cancelling
+2. Verify database connections are closing
+3. Check for hanging HTTP requests
+4. Review Sentry telemetry for shutdown errors
 
 ## Resources
 
-- **Application Layer**: `src/tux/core/app.py`
-- **Bot Core**: `src/tux/core/bot.py`
-- **Orchestrator**: `src/tux/core/setup/orchestrator.py`
-- **Setup Services**: `src/tux/core/setup/`
-- **Prefix Manager**: `src/tux/core/prefix_manager.py`
-- **Database Service**: `src/tux/database/service.py`
-- **Cog Loader**: `src/tux/core/cog_loader.py`
-- **Task Monitor**: `src/tux/core/task_monitor.py`
+- **Source Code**: `src/tux/core/setup/`
+- **Application Layer**: See `app.md` for startup details
+- **Bot Core**: See `bot.md` for bot lifecycle
+- **Cog Loader**: See `cog-loader.md` for extension loading
