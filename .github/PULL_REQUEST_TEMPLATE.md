@@ -1,6 +1,12 @@
+# Pull Request
+
 ## Description
 
-Please include a summary of the changes and the related issue. Please also include relevant motivation and context. List any dependencies that are required for this change. If this change fixes any issues please put "Fixes #XX" in the description. Please also ensure to add the appropriate labels to the PR.
+Please include a summary of the changes and the related issue. Please also include relevant motivation and context.
+
+List any dependencies that are required for this change.
+
+If this change fixes any issues please put "Fixes #XX" in the description. Please also ensure to add the appropriate labels to the PR.
 
 ## Guidelines
 
