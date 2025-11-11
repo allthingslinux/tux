@@ -99,5 +99,5 @@ async def confirm_test(self, ctx):
 After completing this tutorial:
 
 - Learn about [Database Integration](database-integration.md)
-- Explore the [UI Components Guide](../guides/ui-components.md) for advanced patterns
+- Explore the [UI Components Guide](../guides/components-v2.md) for advanced patterns
 - Check out [Testing Setup](testing-setup.md) to test your components

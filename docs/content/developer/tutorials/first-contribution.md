@@ -1,5 +1,9 @@
+---
+title: First Contribution
+description: How to make your first contribution to the Tux codebase
+---
+
 # First Contribution
 
-See: [Contributing Guide](../contributing/git-workflow.md)
-
-*Full guide in progress.*
+!!! note "Coming Soon"
+    This guide will cover how to make your first contribution to the Tux codebase.
