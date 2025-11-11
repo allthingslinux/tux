@@ -3,850 +3,253 @@ title: Error Handling Best Practices
 description: Error handling best practices for Tux development, including exception patterns, graceful degradation, and debugging techniques.
 ---
 
-## Tux Exception Hierarchy
+# Error Handling Best Practices
 
-All Tux-specific exceptions inherit from `TuxError` base class for consistent error handling:
+Error handling is crucial for building reliable Discord bots. Users expect your bot to handle failures gracefully, provide helpful feedback, and continue operating even when things go wrong. Good error handling separates professional bots from fragile ones.
 
-```text
-TuxError
-├── TuxConfigurationError
-├── TuxRuntimeError
-├── TuxDatabaseError
-│   ├── TuxDatabaseConnectionError
-│   ├── TuxDatabaseMigrationError
-│   └── TuxDatabaseQueryError
-├── TuxPermissionError
-│   ├── TuxPermissionLevelError
-│   └── TuxAppCommandPermissionLevelError
-├── TuxAPIError
-│   ├── TuxAPIConnectionError
-│   ├── TuxAPIRequestError
-│   ├── TuxAPIResourceNotFoundError
-│   └── TuxAPIPermissionError
-├── TuxCodeExecutionError
-│   ├── TuxMissingCodeError
-│   ├── TuxInvalidCodeFormatError
-│   ├── TuxUnsupportedLanguageError
-│   └── TuxCompilationError
-└── TuxServiceError
-    ├── TuxCogLoadError
-    └── TuxHotReloadError
-        ├── TuxDependencyResolutionError
-        ├── TuxFileWatchError
-        ├── TuxModuleReloadError
-        └── TuxConfigurationError
-```
+## Understanding Tux's Exception System
 
-### Using Specific Exceptions
+Tux uses a hierarchical exception system built on `TuxError`. This hierarchy lets you catch errors at the right level of specificity. Database errors inherit from `TuxDatabaseError`, API errors from `TuxAPIError`, and permission errors from `TuxPermissionError`.
 
-```python
-# ✅ Good: Use specific exception types
-from tux.shared.exceptions import TuxDatabaseConnectionError
-raise TuxDatabaseConnectionError("Cannot connect to PostgreSQL")
+Use specific exception types instead of generic ones. When you raise `TuxDatabaseConnectionError`, callers can handle database connection issues specifically. They can retry, fall back to cached data, or show appropriate error messages. Generic exceptions force callers to guess what went wrong.
 
-# ❌ Bad: Generic exceptions
-raise Exception("Database connection failed")
+The exception hierarchy includes:
 
-# ✅ Good: Catch specific exception types and chain them
-try:
-    await database_operation()
-except ConnectionError as e:
-    raise TuxDatabaseConnectionError("Database connection failed") from e
-except TuxDatabaseError:
-    # Handle database errors
-    pass
-```
+- **Database errors** - Connection failures, query errors, migration issues
+- **API errors** - HTTP failures, rate limits, resource not found
+- **Permission errors** - Insufficient permissions, invalid access levels
+- **Configuration errors** - Invalid settings, missing required values
+- **Service errors** - Cog loading failures, hot reload issues
 
-## Error Categories & Handling Strategies
+When you catch exceptions, chain them properly with `raise ... from e`. This preserves the original error context, making debugging easier. The error chain shows what happened at each level, from the original cause to the final error.
+
+## Error Categories and Strategies
 
 ### User Errors
 
-**Examples:** Invalid input, missing permissions, rate limits, command not found
-**Handling:** Global error handler with user-friendly messages
+User errors happen when users provide invalid input or lack permissions. These errors should be handled globally and shown to users with friendly messages. Don't log these as errors—they're expected user behavior.
 
-```python
-# Let global handler catch these - they become user-friendly messages
-raise commands.BadArgument("Invalid user ID format")
-raise commands.MissingPermissions(["manage_messages"])
-raise TuxPermissionLevelError("moderator")
-```
+Examples include invalid command arguments, missing permissions, rate limits, and command not found. The global error handler catches these and converts them to user-friendly messages automatically.
+
+Raise specific exceptions for user errors. Use `commands.BadArgument` for invalid input, `commands.MissingPermissions` for permission issues, and `TuxPermissionLevelError` for custom permission checks. The global handler knows how to format these for users.
 
 ### Infrastructure Errors
 
-**Examples:** Network failures, database timeouts, file I/O errors, external API issues
-**Handling:** Local handling with graceful degradation and fallbacks
+Infrastructure errors occur when external systems fail—databases timeout, APIs go down, networks disconnect. These errors need local handling with graceful degradation. Your bot should continue operating even when some services are unavailable.
 
-```python
-try:
-    result = await external_api_call()
-except (httpx.TimeoutException, httpx.ConnectError):
-    # Graceful fallback to cached data
-    logger.warning("API unavailable, using cached data")
-    result = get_cached_result()
-except Exception as e:
-    logger.error(f"API call failed: {e}")
-    result = None
-```
+Handle infrastructure errors locally with fallbacks. If an external API fails, use cached data. If the database is temporarily unavailable, queue operations for later. If file operations fail, log the error and continue with reduced functionality.
+
+Log infrastructure errors appropriately. Use warning level for transient failures that you handle gracefully. Use error level for failures that require attention but don't stop the bot. Use critical level only for failures that prevent core functionality.
 
 ### System Errors
 
-**Examples:** Configuration errors, startup failures, critical bugs, missing dependencies
-**Handling:** Log and fail fast, or disable functionality gracefully
+System errors indicate serious problems—invalid configuration, missing dependencies, critical bugs. These errors should fail fast with clear error messages. Don't try to continue operating with broken configuration or missing dependencies.
 
-```python
-try:
-    self.config = load_config()
-except Exception as e:
-    logger.critical(f"Invalid configuration: {e}")
-    raise SystemExit(1) from e
-```
+For configuration errors, validate early and fail immediately. Don't let the bot start with invalid configuration—it will cause confusing errors later. Provide clear error messages explaining what's wrong and how to fix it.
+
+For critical bugs, log the error with full context and shut down gracefully. Don't try to recover from programming errors—they indicate bugs that need fixing, not runtime conditions to handle.
 
 ## Core Principles
 
 ### Fail Gracefully, Log Aggressively
 
-```python
-# ✅ Good: Graceful degradation with detailed logging
-async def get_user_profile(user_id: int) -> dict | None:
-    """Fetch user profile with graceful error handling."""
-    try:
-        profile = await self.api_client.get_user(user_id)
-        logger.debug("Successfully fetched user profile", user_id=user_id)
-        return profile
-    except TuxAPIConnectionError:
-        logger.warning("API unavailable, cannot fetch user profile", user_id=user_id)
-        return None  # Graceful degradation
-    except Exception as e:
-        logger.error("Unexpected error fetching user profile", user_id=user_id, exc_info=True)
-        return None
-```
+When operations fail, handle them gracefully but log everything. Users shouldn't see technical errors, but you need detailed logs for debugging. Return `None` or empty results instead of crashing, but log the failure with full context.
+
+Include context in your logs. Log user IDs, command names, operation types, and relevant parameters. This context helps you understand what was happening when errors occurred. Without context, error logs are useless for debugging.
+
+Use appropriate log levels. Debug for detailed execution flow. Info for normal operations and recoverable issues. Warning for problems that don't prevent functionality. Error for failures that need attention. Critical only for failures that stop core functionality.
 
 ### Be Specific, Not Generic
 
-```python
-# ❌ Bad: Overly broad exception handling
-try:
-    await risky_operation()
-except Exception as e:
-    logger.error("Something went wrong")
+Catch specific exceptions, not generic ones. When you catch `TuxDatabaseConnectionError`, you know it's a connection issue and can retry or use cached data. When you catch `Exception`, you don't know what went wrong and can't handle it appropriately.
 
-# ✅ Good: Specific exception handling
-try:
-    await risky_operation()
-except TuxDatabaseConnectionError:
-    logger.warning("Database temporarily unavailable, retrying...")
-    await asyncio.sleep(1)
-    return await risky_operation()
-except TuxPermissionError as e:
-    logger.warning("Permission denied", user_id=user_id, required_perm=e.permission)
-    raise  # Re-raise for global handler
-except Exception as e:
-    logger.error("Unexpected error in risky_operation", exc_info=True)
-    raise
-```
+Handle exceptions at the right level. Catch specific exceptions where you can handle them meaningfully. Let exceptions propagate to the global handler when you can't handle them locally. Don't catch exceptions just to log them—let them propagate to handlers that can actually deal with them.
+
+Chain exceptions properly. When you catch an exception and raise a new one, use `raise ... from e` to preserve the chain. This shows the full error path from original cause to final error, making debugging much easier.
 
 ## Error Handling Patterns
 
 ### Database Operations
 
-```python
-from tux.database.service import DatabaseService
+Database operations can fail for many reasons—connection issues, query errors, constraint violations. Handle each type of failure appropriately. Connection errors might be transient and worth retrying. Query errors indicate problems with the query itself and shouldn't be retried.
 
-async def create_user_with_retry(self, user_data: dict) -> User | None:
-    """Create user with database error handling and retry logic."""
+Implement retry logic for transient failures. Use exponential backoff to avoid overwhelming the database during outages. Limit retry attempts to prevent infinite loops. After retries are exhausted, fail gracefully with appropriate error messages.
 
-    for attempt in range(3):
-        try:
-            async with self.db.session() as session:
-                user = User(**user_data)
-                session.add(user)
-                await session.commit()
-                await session.refresh(user)
+For query errors, don't retry—the query itself is wrong. Log the error with the query details and raise an appropriate exception. Let callers handle the failure or let it propagate to the global handler.
 
-                logger.info("User created successfully", user_id=user.id)
-                return user
-
-        except TuxDatabaseConnectionError as e:
-            if attempt == 2:  # Last attempt
-                logger.error("Failed to create user after 3 attempts",
-                           user_data=user_data, error=str(e))
-                raise
-
-            logger.warning(f"Database connection failed, retrying (attempt {attempt + 1})",
-                         error=str(e))
-            await asyncio.sleep(2 ** attempt)  # Exponential backoff
-
-        except TuxDatabaseQueryError as e:
-            logger.error("Database query failed", user_data=user_data, error=str(e))
-            raise  # Don't retry query errors
-
-    return None
-```
+Use database transactions for multi-step operations. If any step fails, roll back the entire transaction. This keeps your database consistent and prevents partial updates that cause data corruption.
 
 ### External API Calls
 
-```python
-from tux.services.http_client import http_client
+External APIs can fail in many ways—timeouts, rate limits, server errors, network issues. Handle each failure mode appropriately. Timeouts might be worth retrying. Rate limits need backoff. Server errors might be transient.
 
-async def fetch_github_user(self, username: str) -> dict | None:
-    """Fetch GitHub user with comprehensive error handling."""
+Check HTTP status codes to determine appropriate handling. 404 means the resource doesn't exist—handle it gracefully. 403 might mean rate limiting—back off and retry. 500 means server error—might be transient, worth retrying.
 
-    try:
-        response = await http_client.get(
-            f"https://api.github.com/users/{username}",
-            timeout=10.0
-        )
+Use timeouts for all API calls. Don't let API calls hang indefinitely. Set reasonable timeouts based on expected response times. If an API call times out, log it and handle it appropriately—retry, use cached data, or fail gracefully.
 
-        data = response.json()
-        logger.debug("GitHub user fetched", username=username, user_id=data.get("id"))
-        return data
-
-    except httpx.HTTPStatusError as e:
-        if e.response.status_code == 404:
-            logger.info("GitHub user not found", username=username)
-            return None
-        elif e.response.status_code == 403:
-            logger.warning("GitHub API rate limited", username=username,
-                         reset_time=e.response.headers.get("X-RateLimit-Reset"))
-            return None
-        else:
-            logger.error("GitHub API error",
-                       username=username, status=e.response.status_code)
-            raise TuxAPIRequestError("github", e.response.status_code, e.response.reason_phrase)
-
-    except httpx.TimeoutException:
-        logger.warning("GitHub API timeout", username=username)
-        raise TuxAPIConnectionError("github", TimeoutError("Request timed out"))
-
-    except httpx.RequestError as e:
-        logger.error("GitHub API connection error", username=username, error=str(e))
-        raise TuxAPIConnectionError("github", e)
-```
+Convert HTTP exceptions to Tux exceptions. Wrap `httpx` exceptions in `TuxAPIError` subclasses to provide consistent error handling throughout your code. This lets callers handle API errors without knowing about the HTTP library.
 
 ### File Operations
 
-```python
-import aiofiles
-from pathlib import Path
+File operations can fail due to permissions, disk space, or I/O errors. Handle these failures gracefully. Permission errors should be logged and raised as `TuxPermissionError`. I/O errors might be transient and worth retrying.
 
-async def save_user_avatar(self, user_id: int, avatar_data: bytes) -> bool:
-    """Save user avatar with proper error handling."""
+Use atomic file operations when possible. Write to temporary files first, then rename them atomically. This prevents partial writes from corrupting files. If the write fails, the original file remains intact.
 
-    avatar_path = Path(f"avatars/{user_id}.png")
-
-    try:
-        # Ensure directory exists
-        avatar_path.parent.mkdir(parents=True, exist_ok=True)
-
-        # Write file atomically
-        temp_path = avatar_path.with_suffix('.tmp')
-        async with aiofiles.open(temp_path, 'wb') as f:
-            await f.write(avatar_data)
-
-        # Atomic rename
-        temp_path.replace(avatar_path)
-
-        logger.info("User avatar saved", user_id=user_id, size=len(avatar_data))
-        return True
-
-    except PermissionError as e:
-        logger.error("Permission denied saving avatar", user_id=user_id, path=str(avatar_path))
-        raise TuxPermissionError("file_write") from e
-
-    except OSError as e:
-        logger.error("Failed to save avatar file", user_id=user_id, path=str(avatar_path), error=str(e))
-        # Clean up temp file if it exists
-        temp_path.unlink(missing_ok=True)
-        return False
-```
+Clean up temporary files in finally blocks. Even if operations fail, ensure temporary files are deleted. Use context managers to ensure cleanup happens automatically, even when exceptions occur.
 
 ## Command Error Handling
 
 ### Global Error Handler Integration
 
-Commands automatically use the global error handler (`src/tux/services/handlers/error/cog.py`). Focus on business logic exceptions - the handler provides:
+Tux's global error handler automatically catches command errors and converts them to user-friendly messages. Focus on raising appropriate exceptions in your commands—the handler takes care of formatting and sending responses.
 
-- **Automatic error categorization** using `ERROR_CONFIG_MAP`
-- **User-friendly messages** based on error type
-- **Sentry integration** with proper context
-- **Command suggestions** for unknown commands
-- **Structured logging** with appropriate levels
+The global handler categorizes errors automatically. It knows how to format Discord API errors, permission errors, validation errors, and Tux exceptions. It provides user-friendly messages, logs errors appropriately, and reports to Sentry with context.
 
-The handler covers hundreds of error types including Discord API errors, permission errors, validation errors, and custom Tux exceptions.
+Don't try to handle user-facing errors in commands. Raise appropriate exceptions and let the global handler format them. This keeps your command code focused on business logic and ensures consistent error handling across all commands.
 
-```python
-@commands.hybrid_command(name="ban")
-async def ban_user(self, ctx: commands.Context[Tux], user: discord.User, reason: str):
-    """Ban a user from the server."""
-
-    # Validate input (will raise exceptions caught by global handler)
-    if len(reason) < 3:
-        raise TuxValidationError("Reason must be at least 3 characters long")
-
-    if user == ctx.author:
-        raise TuxPermissionError("You cannot ban yourself")
-
-    # Check permissions (framework handles this, but be explicit)
-    if not ctx.guild.me.guild_permissions.ban_members:
-        raise TuxPermissionError("Bot lacks ban permissions")
-
-    try:
-        # Attempt ban
-        await ctx.guild.ban(user, reason=reason, delete_message_days=0)
-
-        # Log success
-        logger.info("User banned successfully",
-                  moderator=ctx.author.id,
-                  target=user.id,
-                  reason=reason)
-
-        embed = EmbedCreator.create_embed(
-            embed_type=EmbedCreator.SUCCESS,
-            title="User Banned",
-            description=f"Successfully banned {user.mention}",
-            user_name=ctx.author.name,
-        )
-        await ctx.send(embed=embed)
-
-    except discord.Forbidden:
-        raise TuxPermissionError("Insufficient permissions to ban this user") from discord.Forbidden
-    except discord.HTTPException as e:
-        logger.error("Discord API error during ban", target=user.id, error=str(e))
-        raise TuxAPIError(f"Failed to ban user: {e}") from e
-```
+For infrastructure errors in commands, handle them locally and provide fallback behavior. If a database query fails, return a cached result or show a message explaining the issue. Don't let infrastructure failures become user-facing errors unless necessary.
 
 ### Custom Validation Errors
 
-```python
-class TuxValidationError(TuxError):
-    """Raised when user input validation fails."""
+Create custom validation errors for complex validation logic. When validation fails, raise a `TuxValidationError` with details about what failed and why. The global handler formats these for users automatically.
 
-    def __init__(self, field: str, value: str, reason: str):
-        self.field = field
-        self.value = value
-        self.reason = reason
-        super().__init__(f"Invalid {field}: {reason}")
+Include field names and values in validation errors. This helps users understand what they entered incorrectly. Explain why validation failed—"must be at least 3 characters" is more helpful than "invalid input".
 
-# Usage in commands
-@commands.hybrid_command(name="set_prefix")
-async def set_prefix(self, ctx: commands.Context[Tux], prefix: str):
-    """Set server command prefix."""
-
-    if len(prefix) > 5:
-        raise TuxValidationError("prefix", prefix, "must be 5 characters or less")
-
-    if any(char in prefix for char in ['@', '#', '<', '>']):
-        raise TuxValidationError("prefix", prefix, "cannot contain Discord formatting characters")
-
-    # Set prefix logic...
-```
+Validate early and fail fast. Check input validity before doing expensive operations. Don't waste resources processing invalid input. Return clear error messages explaining what's wrong and how to fix it.
 
 ## Async Error Handling
 
 ### Task Exception Handling
 
-```python
-async def process_users_batch(self, user_ids: list[int]):
-    """Process multiple users concurrently with proper error handling."""
+When running multiple operations concurrently, handle exceptions in each task independently. Use `asyncio.gather()` with `return_exceptions=True` to collect exceptions as results instead of stopping at the first failure.
 
-    async def process_single_user(user_id: int):
-        try:
-            return await self.process_user(user_id)
-        except Exception as e:
-            logger.error("Failed to process user", user_id=user_id, error=str(e))
-            return None  # Return None for failed users
+Process results after gathering completes. Check each result to see if it's an exception or a value. Handle exceptions appropriately—log them, retry operations, or collect them for batch processing. Successful operations shouldn't be affected by failures in other operations.
 
-    # Process concurrently
-    tasks = [process_single_user(uid) for uid in user_ids]
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-
-    # Handle results
-    successful = []
-    failed = []
-
-    for user_id, result in zip(user_ids, results):
-        if isinstance(result, Exception):
-            logger.warning("User processing failed", user_id=user_id, error=str(result))
-            failed.append(user_id)
-        elif result is None:
-            failed.append(user_id)
-        else:
-            successful.append(result)
-
-    logger.info("Batch processing complete",
-               total=len(user_ids),
-               successful=len(successful),
-               failed=len(failed))
-
-    return successful, failed
-```
+For batch operations, track successes and failures separately. Log summary information about how many operations succeeded and failed. This helps you understand the overall health of batch operations and identify patterns in failures.
 
 ### Timeout Handling
 
-```python
-async def call_with_timeout(self, coro, timeout: float = 30.0):
-    """Execute coroutine with timeout and proper error handling."""
+Always use timeouts for long-running operations. Don't let operations hang indefinitely. Set reasonable timeouts based on expected operation duration. If operations consistently timeout, investigate why they're slow.
 
-    try:
-        return await asyncio.wait_for(coro, timeout=timeout)
+When timeouts occur, cancel the operation and handle the cancellation gracefully. Log timeout information to help identify slow operations. Consider whether timeouts indicate problems that need fixing or just slow external services.
 
-    except asyncio.TimeoutError:
-        logger.warning("Operation timed out", timeout=timeout)
-        raise TuxTimeoutError(f"Operation exceeded {timeout}s timeout")
-
-    except Exception as e:
-        logger.error("Operation failed", error=str(e))
-        raise
-```
+Use `asyncio.wait_for()` for timeout handling. This automatically cancels operations that exceed their timeout. Handle `TimeoutError` appropriately—retry, use fallbacks, or fail gracefully with clear error messages.
 
 ## Context Managers for Error Handling
 
 ### Database Transactions
 
-```python
-from contextlib import asynccontextmanager
+Use context managers for database transactions. They ensure transactions are committed on success and rolled back on failure. This keeps your database consistent and prevents partial updates.
 
-@asynccontextmanager
-async def database_transaction(self):
-    """Context manager for database transactions with error handling."""
-    session = None
-    try:
-        async with self.db.session() as session:
-            yield session
-            await session.commit()
-            logger.debug("Transaction committed successfully")
+Create transaction context managers that handle commit and rollback automatically. If any operation in a transaction fails, roll back the entire transaction. Don't commit partial transactions—they cause data inconsistency.
 
-    except Exception as e:
-        if session:
-            await session.rollback()
-            logger.warning("Transaction rolled back due to error", error=str(e))
-        raise
-
-# Usage
-async def transfer_credits(self, from_user: int, to_user: int, amount: int):
-    async with self.database_transaction() as session:
-        # Deduct from sender
-        await session.execute(
-            "UPDATE users SET credits = credits - :amount WHERE id = :user_id",
-            {"amount": amount, "user_id": from_user}
-        )
-
-        # Add to receiver
-        await session.execute(
-            "UPDATE users SET credits = credits + :amount WHERE id = :user_id",
-            {"amount": amount, "user_id": to_user}
-        )
-```
+Log transaction outcomes appropriately. Log successful commits at debug level. Log rollbacks at warning level with error details. This helps you understand transaction patterns and identify problematic operations.
 
 ### Resource Cleanup
 
-```python
-@asynccontextmanager
-async def temp_file_context(self, suffix: str = ""):
-    """Context manager for temporary files with cleanup."""
-    import tempfile
-    import aiofiles
+Use context managers for all resources that need cleanup—files, network connections, temporary data. Context managers ensure cleanup happens even when exceptions occur. Don't rely on manual cleanup in finally blocks—use context managers instead.
 
-    temp_file = None
-    try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as f:
-            temp_file = Path(f.name)
+Create context managers for complex resources. If you need to create temporary files, use a context manager that creates them and cleans them up automatically. If you need to acquire and release locks, use a context manager.
 
-        yield temp_file
-
-    except Exception as e:
-        logger.error("Error in temp file operation", temp_file=str(temp_file), error=str(e))
-        raise
-
-    finally:
-        # Always cleanup
-        if temp_file and temp_file.exists():
-            try:
-                temp_file.unlink()
-                logger.debug("Cleaned up temp file", path=str(temp_file))
-            except Exception as e:
-                logger.warning("Failed to cleanup temp file", path=str(temp_file), error=str(e))
-```
+Always clean up resources, even on errors. Don't let temporary files accumulate or connections leak. Context managers handle this automatically, ensuring cleanup happens regardless of how operations complete.
 
 ## Testing Error Conditions
 
 ### Exception Testing
 
-```python
-import pytest
-from unittest.mock import patch, AsyncMock
+Test that your code raises appropriate exceptions. Use `pytest.raises()` to verify exceptions are raised for invalid inputs or error conditions. Test that exception messages are helpful and include relevant context.
 
-class TestUserService:
-    async def test_create_user_database_error(self):
-        """Test user creation handles database errors properly."""
-        service = UserService()
+Test error handling paths. Don't just test happy paths—test what happens when things go wrong. Verify that errors are handled gracefully, resources are cleaned up, and appropriate exceptions are raised.
 
-        with patch.object(service.db, 'session') as mock_session:
-            mock_session.return_value.__aenter__.side_effect = TuxDatabaseConnectionError()
-
-            with pytest.raises(TuxDatabaseConnectionError):
-                await service.create_user({"name": "test"})
-
-    async def test_get_user_not_found(self):
-        """Test user lookup returns None for non-existent users."""
-        service = UserService()
-
-        with patch.object(service.db, 'get_user', return_value=None):
-            result = await service.get_user(999)
-
-            assert result is None
-            # Check that appropriate warning was logged
-            # (would use caplog fixture in actual test)
-
-    async def test_api_timeout_retry(self):
-        """Test API calls retry on timeout."""
-        service = UserService()
-
-        with patch.object(service.session, 'get') as mock_get:
-            # First call times out, second succeeds
-            mock_get.side_effect = [
-                asyncio.TimeoutError(),
-                AsyncMock(status=200, json=AsyncMock(return_value={"user": "data"}))
-            ]
-
-            result = await service.fetch_user_data(123)
-
-            assert result == {"user": "data"}
-            assert mock_get.call_count == 2
-```
+Mock external dependencies to simulate failures. Test how your code handles database failures, API timeouts, and network errors. Verify that fallbacks work correctly and errors are logged appropriately.
 
 ### Integration Testing
 
-```python
-import httpx
-from unittest.mock import MagicMock, patch
+Test error scenarios in integration tests. Verify that errors propagate correctly through your system. Test that global error handlers format errors appropriately and that infrastructure errors are handled gracefully.
 
-async def test_full_user_workflow_with_errors(self, db_session):
-    """Test complete user workflow including error scenarios."""
-
-    # Setup - create user successfully
-    user = await create_test_user(db_session, "test@example.com")
-
-    # Test successful operations
-    profile = await get_user_profile(user.id)
-    assert profile is not None
-
-    # Test error scenarios
-    with patch('tux.services.http_client.http_client.get') as mock_get:
-        mock_response = MagicMock()
-        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError("404", request=MagicMock(), response=MagicMock())
-        mock_get.return_value = mock_response
-
-        profile = await get_user_profile(user.id)
-        assert profile is None  # Should degrade gracefully
-
-    # Verify error was logged (would check with caplog in real test)
-```
+Test graceful degradation. Verify that your bot continues operating when some services fail. Test that cached data is used when APIs are unavailable and that operations queue correctly when databases are down.
 
 ## Performance Considerations
 
 ### Avoid Expensive Operations in Error Paths
 
-```python
-# ❌ Bad: Expensive computation in error handling
-try:
-    result = await process_data(large_dataset)
-except Exception as e:
-    # Don't do this - expensive operation in error path
-    logger.error("Processing failed", dataset_summary=analyze_dataset(large_dataset))
-    raise
+Don't do expensive computations in error handling code. Error paths should be fast—they're already handling failures, so don't make them slow too. Pre-compute expensive values before operations, or use lazy evaluation.
 
-# ✅ Good: Pre-compute or use lazy evaluation
-def get_dataset_summary(dataset):
-    return {
-        "size": len(dataset),
-        "type": type(dataset).__name__,
-        "sample": dataset[:5] if len(dataset) > 5 else dataset
-    }
+If you need expensive data for error logging, compute it before the operation starts. That way, if the operation fails, you already have the data for logging. Don't compute it only when errors occur—that makes error handling slow.
 
-try:
-    dataset_summary = get_dataset_summary(large_dataset)
-    result = await process_data(large_dataset)
-    logger.info("Processing complete", dataset_summary=dataset_summary)
-except Exception as e:
-    logger.error("Processing failed", dataset_summary=dataset_summary, exc_info=True)
-    raise
-```
+Use lightweight error information. Include IDs, names, and simple values in error logs. Don't serialize large objects or compute complex summaries in error handlers. Keep error handling fast so it doesn't slow down your bot.
 
 ### Exception Creation Cost
 
-```python
-# ✅ Good: Create exceptions only when needed
-def validate_user_data(self, data: dict) -> list[str]:
-    """Validate user data and return list of errors."""
-    errors = []
+Create exceptions only when needed. Don't create exceptions during validation—collect validation errors and create a single exception at the end. This avoids the overhead of exception creation for common validation failures.
 
-    if not data.get("email"):
-        errors.append("Email is required")
-    if not data.get("name"):
-        errors.append("Name is required")
-
-    return errors
-
-def create_user(self, data: dict):
-    errors = self.validate_user_data(data)
-    if errors:
-        # Create exception only when validation fails
-        raise TuxValidationError(f"Validation failed: {', '.join(errors)}")
-
-    # Create user...
-```
+Use exception chaining efficiently. Don't create multiple exception objects unnecessarily. Chain exceptions properly to preserve context without creating redundant exception objects.
 
 ## Anti-Patterns
 
-### ❌ Silent Failures
+### Silent Failures
 
-```python
-# Bad: Swallows all errors
-try:
-    await risky_operation()
-except Exception:
-    pass  # Silent failure - very bad
+Never silently swallow exceptions. At minimum, log exceptions with context. Silent failures make debugging impossible—you don't know what went wrong or where. Always log exceptions, even if you handle them gracefully.
 
-# Good: At minimum log the error
-try:
-    await risky_operation()
-except Exception as e:
-    logger.error("Operation failed", error=str(e), exc_info=True)
-    # Continue or raise as appropriate
-```
+If you must handle exceptions silently, log them at debug level. This preserves information for debugging while not cluttering error logs. But prefer explicit error handling—silent failures are usually bugs waiting to happen.
 
-### ❌ Re-raising with Generic Exceptions
+### Re-raising with Generic Exceptions
 
-```python
-# Bad: Loses original exception context
-try:
-    await database_operation()
-except Exception:
-    raise TuxDatabaseError("Operation failed")  # Loses original error
+Don't lose exception context when re-raising. Always use `raise ... from e` to chain exceptions. Generic re-raising loses the original error context, making debugging much harder.
 
-# Good: Chain exceptions properly
-try:
-    await database_operation()
-except Exception as e:
-    raise TuxDatabaseError("Operation failed") from e  # Preserves context
-```
+Preserve exception chains throughout your code. When you catch an exception and raise a new one, chain them properly. This shows the full error path from original cause to final error.
 
-### ❌ Overly Broad Exception Handling
+### Overly Broad Exception Handling
 
-```python
-# Bad: Catches too much
-async def send_moderation_dm(self, user: discord.User, reason: str):
-    try:
-        await user.send(f"You have been moderated for: {reason}")
-    except Exception:  # Catches KeyboardInterrupt, SystemExit, etc.
-        return False
+Don't catch `Exception` unless you're at the top level of error handling. Catching `Exception` catches everything, including `KeyboardInterrupt` and `SystemExit`, which should propagate. Catch specific exceptions where you can handle them meaningfully.
 
-# Good: Be specific
-async def send_moderation_dm(self, user: discord.User, reason: str):
-    try:
-        await user.send(f"You have been moderated for: {reason}")
-    except (discord.Forbidden, discord.HTTPException) as e:  # Specific exceptions
-        logger.error("Failed to send moderation DM", user_id=user.id, error=str(e))
-        return False
-```
-
-## Code Review Checklist
-
-### Error Handling Review
-
-- [ ] Are all external operations (HTTP, database, file I/O) wrapped in try/except?
-- [ ] Are exceptions specific rather than broad `Exception` catches?
-- [ ] Do error messages provide helpful information to users?
-- [ ] Is appropriate logging included for debugging (user ID, operation context)?
-- [ ] Are errors properly chained to preserve context (`raise ... from e`)?
-- [ ] Does the code degrade gracefully on errors?
-- [ ] Are critical errors properly escalated to global handler?
-- [ ] Are Tux-specific exceptions used instead of generic ones?
-
-### User Experience Review
-
-- [ ] Do users receive meaningful feedback on errors?
-- [ ] Are internal errors and stack traces hidden from users?
-- [ ] Is the bot still functional after recoverable errors?
-- [ ] Are error messages actionable when possible?
-- [ ] Do error messages maintain consistent tone and formatting?
+Handle exceptions at the right level. Catch specific exceptions where you can handle them. Let exceptions propagate to handlers that can actually deal with them. Don't catch exceptions just to log them—let them propagate to appropriate handlers.
 
 ## Error Monitoring
 
 ### Sentry Integration
 
-Tux provides specialized Sentry utilities for different error types:
+Tux provides specialized Sentry utilities for different error types. Use `capture_database_error()` for database failures, `capture_api_error()` for API failures, and `capture_cog_error()` for cog errors. These utilities automatically add relevant context.
 
-```python
-from tux.services.sentry import (
-    capture_exception_safe,
-    capture_tux_exception,
-    capture_database_error,
-    capture_api_error,
-    capture_cog_error
-)
+Use specialized capture functions instead of generic `capture_exception()`. They add domain-specific context automatically, making errors easier to debug. Database errors include query details, API errors include endpoint information, and cog errors include command context.
 
-async def critical_operation(self, ctx):
-    """Critical operation with Sentry monitoring."""
-    try:
-        await self.perform_critical_task()
-    except TuxDatabaseError as e:
-        # Specialized database error capture
-        capture_database_error(e, query="SELECT * FROM users", operation="user_sync")
-
-    except TuxAPIError as e:
-        # Specialized API error capture
-        capture_api_error(e, endpoint="/api/users", status_code=500)
-
-    except Exception as e:
-        # Generic error capture with context
-        capture_exception_safe(e, extra_context={
-            "operation": "critical_task",
-            "command": ctx.command.name if ctx.command else None,
-            "guild_id": ctx.guild.id if ctx.guild else None
-        })
-
-        # Handle gracefully
-        await self.enter_degraded_mode()
-```
-
-### Error Metrics & Monitoring
-
-#### Key Metrics to Track
-
-- **Error rate by command/module:** Identify problematic areas
-- **Response time degradation:** Performance impact of errors
-- **User-facing error frequency:** Impact on user experience
-- **Critical system error alerts:** Immediate notification for severe issues
-
-#### Dashboards & Alerts
-
-- **Real-time error tracking** via Sentry with user context
-- **Command success/failure rates** to identify reliability issues
-- **Infrastructure health monitoring** for database/API availability
-- **User experience impact metrics** to prioritize fixes
-
-**Example Error Metrics:**
-
-```python
-class ErrorMetrics:
-    """Track error patterns for monitoring and alerting."""
-
-    def __init__(self):
-        self.errors_by_type = {}
-        self.errors_by_command = {}
-        self.critical_errors = 0
-
-    def record_error(self, error: Exception, command_name: str = None):
-        """Record error for metrics and potential alerting."""
-        error_type = type(error).__name__
-
-        # Count by error type
-        self.errors_by_type[error_type] = self.errors_by_type.get(error_type, 0) + 1
-
-        # Count by command
-        if command_name:
-            self.errors_by_command[command_name] = self.errors_by_command.get(command_name, 0) + 1
-
-        # Alert on critical errors
-        if isinstance(error, (TuxDatabaseConnectionError, TuxConfigurationError)):
-            self.critical_errors += 1
-            if self.critical_errors > 5:  # Threshold for alerting
-                logger.critical(f"High critical error rate: {self.critical_errors} errors")
-                # Send alert to monitoring system
-```
-
-## Migration & Best Practices
-
-### When to Use Global vs Local Error Handling
-
-- **Global Handler (recommended for user errors):**
-  - Command validation errors
-  - Permission checks
-  - Input validation failures
-  - Rate limiting
-  - Command not found
-
-- **Local Handler (recommended for infrastructure):**
-  - HTTP API calls
-  - Database operations
-  - File I/O operations
-  - External service calls
-  - Background task failures
-
-### Migrating Existing Code
-
-**Before:**
-
-```python
-# Old code with poor error handling
-async def old_function(self, user_id):
-    data = await self.api.get_user(user_id)  # No error handling
-    return data
-```
-
-**After:**
-
-```python
-# New code with proper error handling
-async def new_function(self, user_id: int) -> dict | None:
-    try:
-        response = await http_client.get(f"https://api.example.com/users/{user_id}")
-        return response.json()
-    except httpx.HTTPStatusError as e:
-        if e.response.status_code == 404:
-            logger.info(f"User {user_id} not found")
-            return None
-        raise TuxAPIRequestError("user_api", e.response.status_code, e.response.reason_phrase) from e
-    except httpx.RequestError as e:
-        logger.error(f"Failed to fetch user {user_id}", error=str(e))
-        raise TuxAPIConnectionError("user_api", e) from e
-```
-
-**Sentry Context Functions:**
-
-```python
-from tux.services.sentry import set_command_context, set_user_context, set_tag
-
-# Set command context (automatically done by error handler)
-set_command_context(ctx)
-
-# Set user context
-set_user_context(ctx.author)
-
-# Add custom tags
-set_tag("operation", "user_import")
-set_tag("batch_size", 1000)
-```
+Set context before operations, not after. If you set context after an error occurs, you'll miss valuable debugging information. Set user context, command context, and custom tags before doing work, so they're available when errors occur.
 
 ### Error Metrics
 
-```python
-class ErrorMetrics:
-    """Track error patterns for monitoring."""
+Track error patterns to identify problematic areas. Monitor error rates by command, by module, and by error type. This helps you identify which parts of your bot are most error-prone and prioritize fixes.
 
-    def __init__(self):
-        self.errors_by_type = {}
-        self.errors_by_endpoint = {}
+Set up alerts for critical errors. When database connections fail or configuration errors occur, you need to know immediately. Don't wait for users to report problems—monitor error rates and alert on anomalies.
 
-    def record_error(self, error: Exception, endpoint: str = None):
-        """Record error for metrics."""
-        error_type = type(error).__name__
+Monitor user-facing error frequency. If users see many errors, investigate why. User-facing errors indicate problems that need immediate attention. Track these separately from internal errors that don't affect users.
 
-        self.errors_by_type[error_type] = self.errors_by_type.get(error_type, 0) + 1
+## Best Practices Summary
 
-        if endpoint:
-            self.errors_by_endpoint[endpoint] = self.errors_by_endpoint.get(endpoint, 0) + 1
+### Code Structure
 
-# Usage in error handler
-metrics = ErrorMetrics()
+Handle errors at the right level. Catch specific exceptions where you can handle them meaningfully. Let exceptions propagate to global handlers when you can't handle them locally. Don't catch exceptions just to log them.
 
-async def handle_command_error(self, ctx, error):
-    metrics.record_error(error, ctx.command.name if ctx.command else None)
-    # Continue with normal error handling...
-```
+Use Tux-specific exceptions instead of generic ones. They provide better error categorization and let handlers format errors appropriately. Generic exceptions force handlers to guess what went wrong.
+
+Chain exceptions properly with `raise ... from e`. This preserves error context and makes debugging easier. Don't lose exception chains when re-raising.
+
+### User Experience
+
+Provide helpful error messages. Users should understand what went wrong and how to fix it. Don't show technical errors to users—convert them to friendly messages.
+
+Handle errors gracefully. Don't crash on recoverable errors. Use fallbacks, cached data, or reduced functionality to keep your bot operating even when some services fail.
+
+Log errors aggressively with context. Include user IDs, command names, operation types, and relevant parameters. This context is essential for debugging production issues.
+
+### Performance
+
+Avoid expensive operations in error paths. Error handling should be fast—don't make failures slow. Pre-compute expensive values or use lazy evaluation.
+
+Create exceptions only when needed. Don't create exceptions during validation—collect errors and create a single exception at the end. This avoids overhead for common validation failures.
 
 ## Resources
 
-- [Python Exception Handling](https://docs.python.org/3/tutorial/errors.html)
+- **Python Exception Handling**: Python's official documentation on exception handling
+- **Tux Exception Hierarchy**: See `src/tux/shared/exceptions.py` for all Tux-specific exceptions
+- **Global Error Handler**: See `src/tux/services/handlers/error/cog.py` for error handling implementation
+- **Sentry Integration**: See `sentry.md` for error tracking and monitoring details

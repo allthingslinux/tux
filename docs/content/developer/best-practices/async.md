@@ -3,864 +3,252 @@ title: Async Best Practices
 description: Async programming best practices for Tux development, including concurrency patterns, Discord.py async considerations, and performance optimization.
 ---
 
-## Why Async Matters for Discord Bots
+# Async Best Practices
 
-Discord bots operate in a highly concurrent environment where thousands of users can interact simultaneously. Traditional synchronous programming would create blocking operations that make the bot unresponsive.
+Discord bots operate in a highly concurrent environment where thousands of users can interact simultaneously. Understanding async programming is essential for building responsive, scalable bots that handle multiple operations efficiently.
 
-### Key Benefits
+## Why Async Matters
 
-- **Non-blocking I/O**: Handle multiple users simultaneously without freezing
-- **Scalability**: Support hundreds of concurrent operations
-- **Resource Efficiency**: Better CPU and memory utilization
-- **Discord API Compliance**: Discord.py requires async for API interactions
+Traditional synchronous programming creates blocking operations that freeze your bot when waiting for I/O. When one user's command waits for a database query, every other user must wait too. Async programming solves this by allowing your bot to handle multiple operations concurrently without blocking.
 
-### Tux Architecture
+### The Discord Bot Challenge
 
-Tux uses asyncio throughout its architecture:
+Discord bots face unique concurrency challenges. A single bot might need to:
 
-- **Database**: Async SQLAlchemy with connection pooling
-- **HTTP Client**: Shared httpx.AsyncClient for API calls
-- **Discord Interactions**: All bot commands and events are async
-- **Background Tasks**: Async task scheduling and monitoring
+- Process hundreds of messages per second across multiple servers
+- Handle simultaneous command invocations from different users
+- Manage background tasks like periodic updates or cleanup operations
+- Coordinate database queries, API calls, and Discord interactions
 
-## Core Async Concepts
+Without async programming, your bot becomes a bottleneck. One slow database query blocks all other operations, making your bot feel unresponsive and unreliable.
+
+### How Async Helps
+
+Async programming lets your bot start multiple operations and switch between them as they wait for I/O. When one database query is waiting for a response, your bot can process another user's command. This non-blocking approach means your bot stays responsive even under heavy load.
+
+Tux uses asyncio throughout its architecture. Database operations use async SQLAlchemy with connection pooling. HTTP requests use a shared async client. All Discord interactions are async. Background tasks run concurrently without blocking command processing.
+
+## Understanding Async Fundamentals
 
 ### Coroutines and Awaitables
 
-```python
-# ✅ Good: Proper async function definition
-async def fetch_user_data(user_id: int) -> dict | None:
-    """Fetch user data asynchronously."""
-    response = await http_client.get(f"/users/{user_id}")
-    return response.json()
+Async functions are coroutines—special functions that can pause and resume execution. When you call an async function, it returns a coroutine object that doesn't execute until you await it. This pause-and-resume mechanism is what makes concurrency possible.
 
-# ❌ Bad: Mixing sync and async
-def sync_function(user_id: int) -> dict | None:  # Blocking!
-    response = requests.get(f"/users/{user_id}")  # This blocks!
-    return response.json()
+Always mark functions that perform I/O as `async`. This includes database queries, HTTP requests, Discord API calls, and file operations. Functions that only do computation don't need to be async, but if they call async functions, they must be async too.
 
-# ❌ Bad: Not awaiting async calls
-async def broken_function(user_id: int) -> dict | None:
-    response = http_client.get(f"/users/{user_id}")  # Forgot await!
-    return response.json()  # This returns a coroutine, not data
-```
+When you await an async function, you're telling Python to pause execution here and let other coroutines run. If the awaited operation is waiting for I/O, Python switches to another coroutine. When the I/O completes, execution resumes where it left off.
 
-### Event Loop Management
+### The Event Loop
 
-```python
-# ✅ Good: Let the framework manage the event loop
-# In Tux, discord.py manages the event loop automatically
+The event loop manages all async operations. It tracks which coroutines are waiting for what, switches between them efficiently, and resumes them when their operations complete. In Tux, discord.py manages the event loop automatically—you don't need to create or manage it yourself.
 
-# ❌ Bad: Creating your own event loop
-import asyncio
-
-async def bad_example():
-    # Don't do this in a Discord bot!
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    # ... bot code ...
-```
+Don't create your own event loop in Discord bot code. Let discord.py handle it. Creating multiple event loops causes conflicts and breaks the framework's assumptions about how async operations work.
 
 ## Discord.py Async Patterns
 
 ### Command Handlers
 
-```python
-@commands.hybrid_command(name="userinfo")
-async def user_info(self, ctx: commands.Context[Tux], user: discord.User = None):
-    """Get information about a user."""
-    user = user or ctx.author
+Discord.py commands are async by default. Your command handlers receive contexts and can await Discord API calls, database queries, and other async operations. This design makes concurrent command processing natural.
 
-    # ✅ Good: Gather multiple async operations concurrently
-    embed, avatar_data = await asyncio.gather(
-        self.create_user_embed(user),
-        self.fetch_user_avatar(user),
-    )
+When multiple users invoke commands simultaneously, each command runs as a separate coroutine. They execute concurrently, sharing the event loop's time. One command waiting for a database query doesn't block others from executing.
 
-    # ✅ Good: Single await for simple operations
-    member_info = await self.get_member_info(ctx.guild, user)
-    embed.add_field(**member_info)
+Use `asyncio.gather()` when you have multiple independent async operations. Instead of awaiting them sequentially, gather them together and await the collection. This runs them concurrently, reducing total execution time.
 
-    await ctx.send(embed=embed)
-
-@commands.hybrid_command(name="mass_ban")
-async def mass_ban(self, ctx: commands.Context[Tux], users: str):
-    """Ban multiple users by ID."""
-    user_ids = [int(uid.strip()) for uid in users.split(",")]
-
-    # ✅ Good: Process in batches to avoid rate limits
-    batch_size = 5
-    for i in range(0, len(user_ids), batch_size):
-        batch = user_ids[i:i + batch_size]
-
-        # Ban users in parallel within each batch
-        tasks = [ctx.guild.ban(discord.Object(uid)) for uid in batch]
-        await asyncio.gather(*tasks, return_exceptions=True)
-
-        # Rate limit protection
-        await asyncio.sleep(1)
-```
+For operations that might fail independently, use `return_exceptions=True` with gather. This collects exceptions as results instead of stopping at the first failure, letting you handle partial successes gracefully.
 
 ### Event Listeners
 
-```python
-@commands.Cog.listener()
-async def on_message(self, message: discord.Message):
-    """Process incoming messages."""
+Event listeners handle Discord events like messages, member joins, and reactions. These events can arrive rapidly, so your listeners should process them efficiently without blocking.
 
-    # ✅ Good: Early returns for performance
-    if message.author.bot:
-        return
+Use early returns to skip unnecessary processing. If a message is from a bot, return immediately. If a user doesn't have permissions, return before doing expensive checks. These small optimizations add up when processing hundreds of events per second.
 
-    # ✅ Good: Concurrent processing when possible
-    user_check, content_check = await asyncio.gather(
-        self.check_user_permissions(message.author),
-        self.analyze_message_content(message.content),
-    )
+When processing events requires multiple async operations, gather them together. Checking user permissions and analyzing message content can happen concurrently. Only await them together when you need both results.
 
-    if not user_check or not content_check:
-        return
+### Rate Limiting Considerations
 
-    # Process the message
-    await self.handle_message(message)
+Discord's API has rate limits. When performing bulk operations like banning multiple users, process them in batches with delays between batches. Within each batch, use gather to process users concurrently, but respect rate limits by spacing batches appropriately.
 
-@commands.Cog.listener()
-async def on_member_join(self, member: discord.Member):
-    """Handle new member joins."""
-
-    # ✅ Good: Parallel initialization tasks
-    welcome_msg, role_assignment, logging = await asyncio.gather(
-        self.send_welcome_message(member),
-        self.assign_default_roles(member),
-        self.log_member_join(member),
-        return_exceptions=True,  # Handle partial failures
-    )
-
-    # Check for exceptions in results
-    if isinstance(welcome_msg, Exception):
-        logger.error(f"Welcome message failed: {welcome_msg}")
-    if isinstance(role_assignment, Exception):
-        logger.error(f"Role assignment failed: {role_assignment}")
-    # Logging failure is less critical, just log it
-    if isinstance(logging, Exception):
-        logger.warning(f"Join logging failed: {logging}")
-```
+The `discord.ext.tasks` extension provides built-in rate limiting and retry logic for background tasks. Use it instead of raw asyncio tasks when you need periodic operations or scheduled tasks.
 
 ## Task Management
 
 ### Discord.py Tasks Extension
 
-Tux uses `discord.ext.tasks` for background tasks, which provides automatic reconnection logic, exception handling, and scheduling - solving common issues like cancellation, network failures, and sleep limits.
+Tux uses `discord.ext.tasks` for background tasks. This extension provides automatic reconnection logic, exception handling, and scheduling that solves common issues with raw asyncio tasks.
 
-```python
-from discord.ext import tasks, commands
+Tasks created with `@tasks.loop()` automatically handle reconnection on network failures. They include retry logic for transient errors. They support clean cancellation during shutdown. They provide before and after hooks for setup and cleanup.
 
-class BackgroundService(commands.Cog):
-    """Background service using discord.ext.tasks."""
+Use task loops for periodic operations like health checks, data cleanup, or status updates. Configure them with intervals (seconds, minutes, hours) or specific times. Add exception types to the retry list for automatic recovery from specific errors.
 
-    def __init__(self):
-        # Start task automatically
-        self.health_monitor.start()
+Register tasks in your cog's `__init__` and cancel them in `cog_unload()`. This ensures proper cleanup when cogs reload or the bot shuts down. The task extension handles the complexity of cancellation and reconnection automatically.
 
-    def cog_unload(self):
-        # Clean shutdown
-        self.health_monitor.cancel()
+### Background Tasks
 
-    @tasks.loop(minutes=5.0)
-    async def health_monitor(self):
-        """Monitor system health every 5 minutes."""
-        try:
-            health_data = await self.check_system_health()
-            await self.report_health(health_data)
-        except Exception as e:
-            logger.error(f"Health check failed: {e}")
-            # Task automatically retries on failure
+For one-off background operations or custom task management, use raw asyncio tasks. Create tasks with `asyncio.create_task()` and track them in a set. Add done callbacks to remove completed tasks automatically.
 
-    @health_monitor.before_loop
-    async def before_health_monitor(self):
-        """Wait for bot to be ready before starting."""
-        await self.bot.wait_until_ready()
-        logger.info("Health monitoring started")
+When shutting down, cancel all tasks and await their cancellation. Use `asyncio.gather()` with `return_exceptions=True` to wait for all tasks to finish cancellation without stopping on errors.
 
-    @health_monitor.after_loop
-    async def after_health_monitor(self):
-        """Cleanup after task stops."""
-        if self.health_monitor.is_being_cancelled():
-            logger.info("Health monitoring cancelled")
-        else:
-            logger.info("Health monitoring completed")
-```
-
-**Key Features:**
-
-- **Automatic reconnection** on network failures
-- **Exception handling** with retry logic
-- **Clean cancellation** support
-- **Scheduling** (seconds, minutes, hours, or specific times)
-- **Before/after hooks** for setup and cleanup
-
-**Common Patterns:**
-
-```python
-# Database cleanup task
-@tasks.loop(hours=1.0)
-async def cleanup_old_data(self):
-    """Clean up old data hourly."""
-    try:
-        deleted_count = await self.db.cleanup_old_records()
-        logger.info(f"Cleaned up {deleted_count} old records")
-    except TuxDatabaseError as e:
-        logger.error(f"Database cleanup failed: {e}")
-        # Task will retry automatically
-
-# Handle specific exceptions during reconnection
-@tasks.loop(minutes=10.0)
-async def sync_external_data(self):
-    """Sync data with external service."""
-    async with self.db.session() as session:
-        # Sync logic here
-        pass
-
-# Add database connection errors to retry logic
-sync_external_data.add_exception_type(TuxDatabaseConnectionError)
-
-# Scheduled tasks at specific times
-import datetime
-
-@tasks.loop(time=datetime.time(hour=9, minute=0, tzinfo=datetime.timezone.utc))
-async def daily_report(self):
-    """Generate daily report at 9 AM UTC."""
-    report = await self.generate_daily_report()
-    await self.send_report_to_channel(report)
-
-# Multiple times per day
-times = [
-    datetime.time(hour=9, tzinfo=datetime.timezone.utc),
-    datetime.time(hour=14, tzinfo=datetime.timezone.utc),
-    datetime.time(hour=19, tzinfo=datetime.timezone.utc)
-]
-
-@tasks.loop(time=times)
-async def status_updates(self):
-    """Send status updates 3 times daily."""
-    status = await self.get_system_status()
-    await self.update_status_channel(status)
-```
-
-### Background Tasks (Raw Asyncio)
-
-```python
-class BackgroundService:
-    """Service for managing background tasks."""
-
-    def __init__(self):
-        self._tasks: set[asyncio.Task] = set()
-        self._running = True
-
-    async def start_background_monitoring(self):
-        """Start background monitoring task."""
-        task = asyncio.create_task(self._monitor_system())
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.discard)
-
-    async def _monitor_system(self):
-        """Monitor system health in background."""
-        while self._running:
-            try:
-                health_data = await self.check_system_health()
-                await self.report_health(health_data)
-            except Exception as e:
-                logger.error(f"Health monitoring failed: {e}")
-
-            await asyncio.sleep(300)  # Check every 5 minutes
-
-    async def stop_all_tasks(self):
-        """Gracefully stop all background tasks."""
-        self._running = False
-
-        if self._tasks:
-            # Cancel all running tasks
-            for task in self._tasks:
-                task.cancel()
-
-            # Wait for tasks to complete cancellation
-            await asyncio.gather(*self._tasks, return_exceptions=True)
-
-        logger.info("All background tasks stopped")
-```
-
-### Task Groups (Python 3.11+)
-
-```python
-async def process_user_batch(self, user_ids: list[int]):
-    """Process multiple users with proper task management."""
-
-    async def process_single_user(user_id: int):
-        try:
-            return await self.process_user(user_id)
-        except Exception as e:
-            logger.error(f"Failed to process user {user_id}: {e}")
-            return None
-
-    # ✅ Good: Use TaskGroup for structured concurrency (Python 3.11+)
-    async with asyncio.TaskGroup() as tg:
-        for user_id in user_ids:
-            tg.create_task(process_single_user(user_id))
-
-    # All tasks complete here, exceptions propagated automatically
-    logger.info(f"Processed {len(user_ids)} users")
-```
+For structured concurrency with Python 3.11+, use `asyncio.TaskGroup`. This provides automatic exception propagation and ensures all tasks complete before continuing. Task groups make it clear which tasks belong together and handle failures as a unit.
 
 ### Task Cancellation
 
-```python
-async def cancellable_operation(self, timeout: float = 30.0):
-    """Operation that can be cancelled gracefully."""
+Design your async functions to handle cancellation gracefully. When a task is cancelled, it raises `CancelledError`. Catch this exception in long-running operations to perform cleanup before the task terminates.
 
-    try:
-        # Create task that can be cancelled
-        task = asyncio.create_task(self.long_running_operation())
-
-        # Wait with timeout
-        result = await asyncio.wait_for(task, timeout=timeout)
-        return result
-
-    except asyncio.TimeoutError:
-        logger.warning("Operation timed out, cancelling...")
-        task.cancel()
-
-        try:
-            # Wait for clean cancellation
-            await task
-        except asyncio.CancelledError:
-            logger.info("Operation cancelled successfully")
-
-        raise TuxTimeoutError("Operation was cancelled due to timeout")
-
-    except asyncio.CancelledError:
-        logger.info("Operation was cancelled externally")
-        # Perform cleanup
-        await self.cleanup_resources()
-        raise
-```
+Use timeouts with `asyncio.wait_for()` for operations that might hang. If an operation exceeds its timeout, cancel it and handle the timeout appropriately. Don't let operations run indefinitely—always have a timeout or cancellation mechanism.
 
 ## Concurrency Patterns
 
 ### Semaphores for Resource Limiting
 
-```python
-class RateLimitedAPI:
-    """API client with concurrency limiting."""
+Semaphores limit how many operations can run concurrently. Use them when you need to throttle API calls, limit database connections, or control resource usage.
 
-    def __init__(self, max_concurrent: int = 5):
-        self._semaphore = asyncio.Semaphore(max_concurrent)
+Create a semaphore with your desired concurrency limit. Acquire it before operations that need limiting, and release it when done. The `async with` statement handles acquisition and release automatically.
 
-    async def api_call(self, endpoint: str, **params):
-        """Make API call with concurrency control."""
-
-        async with self._semaphore:
-            # Only max_concurrent calls can execute this section simultaneously
-            response = await http_client.get(endpoint, params=params)
-            return response.json()
-
-# Usage in Tux
-class GitHubService:
-    """GitHub API service with rate limiting."""
-
-    def __init__(self):
-        # GitHub allows 5000 requests/hour, but limit concurrency
-        self._api = RateLimitedAPI(max_concurrent=10)
-
-    async def get_user_repos(self, username: str) -> list[dict]:
-        """Get user's repositories."""
-        return await self._api.api_call(f"/users/{username}/repos")
-```
+For API clients with rate limits, use semaphores to prevent exceeding limits while still allowing concurrency. Limit concurrent requests to stay within rate limits while processing multiple operations efficiently.
 
 ### Queues for Producer-Consumer Patterns
 
-```python
-class MessageProcessor:
-    """Process Discord messages asynchronously."""
+Queues decouple producers (event handlers) from consumers (processors). When events arrive faster than you can process them, queues buffer the work and let processors catch up.
 
-    def __init__(self):
-        self._queue: asyncio.Queue[discord.Message] = asyncio.Queue(maxsize=100)
-        self._processing_task: asyncio.Task | None = None
+Create an async queue with an appropriate size limit. Producers add items to the queue without waiting. Consumers process items from the queue asynchronously. If the queue fills up, producers can drop items or wait, depending on your requirements.
 
-    async def start_processing(self):
-        """Start the message processing loop."""
-        self._processing_task = asyncio.create_task(self._process_messages())
+Use queues for message processing, image analysis, or any operation where arrival rate might exceed processing rate. The queue smooths out bursts and prevents overwhelming your processing logic.
 
-    async def stop_processing(self):
-        """Stop the message processing."""
-        if self._processing_task:
-            self._processing_task.cancel()
-            try:
-                await self._processing_task
-            except asyncio.CancelledError:
-                pass
+### Locks for Shared State
 
-    async def queue_message(self, message: discord.Message):
-        """Add message to processing queue."""
-        try:
-            self._queue.put_nowait(message)
-        except asyncio.QueueFull:
-            logger.warning("Message processing queue is full, dropping message")
+When multiple coroutines access shared state, use locks to prevent race conditions. Async locks work like threading locks but don't block the event loop—they yield control instead.
 
-    async def _process_messages(self):
-        """Process messages from the queue."""
-        while True:
-            try:
-                # Wait for next message
-                message = await self._queue.get()
+Acquire locks before modifying shared state. Keep critical sections small to minimize contention. Use locks only when necessary—many operations don't need them if you design your code to avoid shared mutable state.
 
-                # Process message (don't await to avoid blocking queue)
-                asyncio.create_task(self._handle_message(message))
+For simple counters or flags, consider using atomic operations or designing your code to avoid shared state entirely. Locks add complexity and potential for deadlocks, so use them judiciously.
 
-                self._queue.task_done()
+## Common Pitfalls
 
-            except asyncio.CancelledError:
-                break
-            except Exception as e:
-                logger.error(f"Message processing error: {e}")
+### Blocking Operations
 
-    async def _handle_message(self, message: discord.Message):
-        """Handle individual message processing."""
-        # Message-specific processing logic
-        await self.analyze_content(message)
-        await self.check_for_spam(message)
-        await self.update_statistics(message)
-```
+The most common mistake is using blocking I/O in async code. Synchronous file operations, HTTP requests, or database queries block the entire event loop, defeating the purpose of async programming.
 
-## Common Async Pitfalls
+Use async alternatives for all I/O operations. For files, use `aiofiles`. For HTTP, use `httpx.AsyncClient` (which Tux provides as `http_client`). For databases, use async SQLAlchemy. If you must use blocking code, run it in a thread pool with `loop.run_in_executor()`.
 
-### Blocking Operations in Async Code
+### Forgetting to Await
 
-```python
-# ❌ Bad: Blocking I/O in async function
-async def bad_file_operation(self, filename: str):
-    # This blocks the event loop!
-    with open(filename, 'r') as f:
-        data = f.read()  # Synchronous I/O
-    return data
+Another common mistake is calling async functions without awaiting them. This returns a coroutine object instead of the actual result, leading to confusing errors later.
 
-# ✅ Good: Use async file operations
-async def good_file_operation(self, filename: str):
-    import aiofiles
-
-    async with aiofiles.open(filename, 'r') as f:
-        data = await f.read()  # Non-blocking I/O
-    return data
-
-# ✅ Good: Run blocking operations in thread pool
-async def thread_blocking_operation(self, filename: str):
-    import asyncio
-
-    # Run blocking operation in thread pool
-    loop = asyncio.get_running_loop()
-    data = await loop.run_in_executor(None, self._blocking_read, filename)
-    return data
-
-def _blocking_read(self, filename: str) -> str:
-    """Blocking file read (runs in thread pool)."""
-    with open(filename, 'r') as f:
-        return f.read()
-```
+Always await async function calls. If you need to start a task without waiting for it, use `asyncio.create_task()` explicitly. This makes your intent clear and properly manages the task lifecycle.
 
 ### Incorrect Exception Handling
 
-```python
-# ❌ Bad: Catching exceptions too broadly
-async def bad_error_handling(self):
-    try:
-        await risky_operation()
-    except Exception:  # Catches KeyboardInterrupt, SystemExit!
-        logger.error("Something went wrong")
+Catching exceptions too broadly hides important errors. Don't catch `Exception` unless you're at the top level of error handling. Catch specific exception types and handle them appropriately.
 
-# ❌ Bad: Forgetting to await
-async def bad_await_handling(self):
-    try:
-        result = risky_operation()  # Forgot await!
-        return result
-    except Exception as e:
-        logger.error(f"Error: {e}")
+When catching exceptions in async code, remember that `CancelledError` is special. Don't catch it unless you're handling cancellation specifically. Let it propagate so tasks can be cancelled properly.
 
-# ✅ Good: Specific exception handling
-async def good_error_handling(self):
-    try:
-        result = await risky_operation()
-        return result
-    except ValueError as e:
-        logger.warning(f"Invalid input: {e}")
-        raise
-    except ConnectionError as e:
-        logger.error(f"Network error: {e}")
-        # Retry logic...
-        return await self.retry_operation()
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}", exc_info=True)
-        raise
-```
+Chain exceptions with `raise ... from e` to preserve error context. This helps debugging by showing the full error chain from original cause to final error.
 
 ### Race Conditions
 
-```python
-class SharedCounter:
-    """Thread-safe counter with async considerations."""
+Race conditions occur when multiple coroutines modify shared state without coordination. Use locks to protect critical sections, or better yet, design your code to avoid shared mutable state.
 
-    def __init__(self):
-        self._value = 0
-        self._lock = asyncio.Lock()
-
-    # ❌ Bad: Race condition
-    async def increment_bad(self):
-        current = self._value
-        await asyncio.sleep(0.01)  # Context switch can happen here
-        self._value = current + 1
-
-    # ✅ Good: Protected with lock
-    async def increment_good(self):
-        async with self._lock:
-            current = self._value
-            await asyncio.sleep(0.01)  # Safe inside lock
-            self._value = current + 1
-            return self._value
-
-    # ✅ Good: Atomic operations
-    async def increment_atomic(self):
-        async with self._lock:
-            self._value += 1
-            return self._value
-```
+When reading a value, modifying it, and writing it back, use a lock to make the operation atomic. Without a lock, another coroutine might modify the value between your read and write, causing lost updates or inconsistent state.
 
 ## Performance Optimization
 
 ### Concurrent Operations
 
-```python
-# ❌ Bad: Sequential API calls
-async def slow_user_processing(self, user_ids: list[int]):
-    results = []
-    for user_id in user_ids:
-        user_data = await self.fetch_user(user_id)
-        results.append(user_data)
-    return results
+The biggest performance win comes from running independent operations concurrently. Instead of awaiting operations sequentially, gather them together and await the collection.
 
-# ✅ Good: Concurrent API calls
-async def fast_user_processing(self, user_ids: list[int]):
-    # Fetch all users concurrently
-    tasks = [self.fetch_user(user_id) for user_id in user_ids]
-    results = await asyncio.gather(*tasks, return_exceptions=True)
+When fetching data for multiple users, create tasks for each fetch and gather them together. This runs all fetches concurrently instead of waiting for each one sequentially. The total time becomes the slowest operation, not the sum of all operations.
 
-    # Handle partial failures
-    successful_results = []
-    for i, result in enumerate(results):
-        if isinstance(result, Exception):
-            logger.error(f"Failed to fetch user {user_ids[i]}: {result}")
-        else:
-            successful_results.append(result)
-
-    return successful_results
-```
+Use `return_exceptions=True` with gather to handle partial failures gracefully. This lets successful operations complete even if some fail, giving you partial results instead of complete failure.
 
 ### Connection Pooling
 
-```python
-# ✅ Good: Reuse connections (Tux does this automatically with http_client)
-class APIClient:
-    """Client that reuses connections."""
+Reuse connections instead of creating new ones for each operation. Tux provides a shared `http_client` that pools connections automatically. Use it for all HTTP requests instead of creating new clients.
 
-    def __init__(self):
-        # Single client instance for all requests
-        self.client = http_client  # Tux's shared client
-
-    async def get_user(self, user_id: int) -> dict:
-        # Reuses connection from pool
-        response = await self.client.get(f"/users/{user_id}")
-        return response.json()
-
-    async def get_multiple_users(self, user_ids: list[int]) -> list[dict]:
-        # All requests share connection pool
-        tasks = [self.get_user(uid) for uid in user_ids]
-        return await asyncio.gather(*tasks)
-```
+Database connections are pooled automatically by SQLAlchemy. The connection pool manages connections efficiently, reusing them across operations. Don't create new database engines—use the shared service.
 
 ### Memory Management
 
-```python
-# ✅ Good: Process large datasets in chunks
-async def process_large_dataset(self, dataset: list[dict], chunk_size: int = 100):
-    """Process large dataset without loading everything into memory."""
+Process large datasets in chunks to avoid loading everything into memory. Instead of fetching all records at once, fetch them in batches and process each batch before fetching the next.
 
-    results = []
-    for i in range(0, len(dataset), chunk_size):
-        chunk = dataset[i:i + chunk_size]
+Use async generators for streaming large results. Yield items as you process them instead of collecting everything in a list. This keeps memory usage constant regardless of dataset size.
 
-        # Process chunk concurrently
-        chunk_results = await asyncio.gather(*[
-            self.process_item(item) for item in chunk
-        ], return_exceptions=True)
-
-        results.extend(chunk_results)
-
-        # Allow other tasks to run
-        await asyncio.sleep(0)
-
-    return results
-
-# ✅ Good: Use async generators for streaming
-async def stream_large_results(self, query: str):
-    """Stream results to avoid loading everything into memory."""
-
-    async with self.db.session() as session:
-        # Use async iterator for streaming
-        async for row in await session.stream_scalars(
-            text(query), execution_options={"stream_results": True}
-        ):
-            yield row
-            # Allow other coroutines to run
-            await asyncio.sleep(0)
-```
+Add `await asyncio.sleep(0)` periodically in long-running loops to yield control to other coroutines. This prevents one operation from monopolizing the event loop and keeps your bot responsive.
 
 ## Testing Async Code
 
 ### Async Test Functions
 
-```python
-import pytest
-import pytest_asyncio
+Mark async test functions with `@pytest.mark.asyncio`. This tells pytest to run them in an async context. Without this marker, pytest won't await your async functions, leading to coroutine objects instead of results.
 
-class TestUserService:
-    @pytest.mark.asyncio
-    async def test_create_user_success(self):
-        """Test successful user creation."""
-        service = UserService()
+Test concurrent operations by gathering multiple operations and asserting on the results. This verifies that operations actually run concurrently and produce correct results.
 
-        user_data = {"name": "test", "email": "test@example.com"}
-        user = await service.create_user(user_data)
-
-        assert user.name == "test"
-        assert user.email == "test@example.com"
-
-    @pytest.mark.asyncio
-    async def test_concurrent_user_operations(self):
-        """Test concurrent user operations."""
-        service = UserService()
-
-        # Create multiple users concurrently
-        user_data = [
-            {"name": f"user{i}", "email": f"user{i}@example.com"}
-            for i in range(10)
-        ]
-
-        tasks = [service.create_user(data) for data in user_data]
-        users = await asyncio.gather(*tasks)
-
-        assert len(users) == 10
-        assert all(user.id is not None for user in users)
-
-    @pytest.mark.asyncio
-    async def test_timeout_handling(self):
-        """Test timeout handling in async operations."""
-        service = UserService()
-
-        with patch.object(service.http_client, 'get') as mock_get:
-            # Simulate slow response
-            mock_get.return_value = asyncio.create_task(asyncio.sleep(10))
-
-            with pytest.raises(asyncio.TimeoutError):
-                await asyncio.wait_for(
-                    service.fetch_user_data(123),
-                    timeout=1.0
-                )
-```
+Use timeouts in tests to catch operations that hang. Set reasonable timeouts and let tests fail if operations exceed them. This catches deadlocks and infinite loops early.
 
 ### Mocking Async Functions
 
-```python
-from unittest.mock import AsyncMock, patch
+Use `AsyncMock` from `unittest.mock` for mocking async functions. Regular mocks don't work correctly with async code—they return coroutine objects instead of awaited results.
 
-class TestAPIClient:
-    @pytest.mark.asyncio
-    async def test_api_call_with_mock(self):
-        """Test API call with mocked async response."""
+When patching async functions, ensure the mock returns an awaitable. Use `AsyncMock` or make your mock return a coroutine that resolves to the desired value.
 
-        client = APIClient()
-
-        with patch.object(client, 'http_client') as mock_client:
-            # Create mock response
-            mock_response = AsyncMock()
-            mock_response.json.return_value = {"user": "test"}
-            mock_client.get.return_value = mock_response
-
-            result = await client.get_user(123)
-
-            assert result == {"user": "test"}
-            mock_client.get.assert_called_once_with("/users/123")
-
-    @pytest.mark.asyncio
-    async def test_concurrent_api_calls(self):
-        """Test multiple concurrent API calls."""
-
-        client = APIClient()
-
-        with patch.object(client, 'http_client') as mock_client:
-            mock_response = AsyncMock()
-            mock_response.json.return_value = {"user": "test"}
-            mock_client.get.return_value = mock_response
-
-            # Make multiple concurrent calls
-            tasks = [client.get_user(i) for i in range(5)]
-            results = await asyncio.gather(*tasks)
-
-            assert len(results) == 5
-            assert all(r == {"user": "test"} for r in results)
-            assert mock_client.get.call_count == 5
-```
+Test cancellation scenarios by cancelling tasks and verifying cleanup happens correctly. This ensures your code handles cancellation gracefully and doesn't leak resources.
 
 ## Debugging Async Issues
 
-### Async Debugging Tools
+### Understanding Task State
 
-```python
-import asyncio
-import logging
+When debugging async issues, check task states. Use `asyncio.all_tasks()` to see all running tasks. Check if tasks are done, cancelled, or still running. This helps identify tasks that aren't completing or are being cancelled unexpectedly.
 
-# Enable debug mode for asyncio
-logging.getLogger('asyncio').setLevel(logging.DEBUG)
-
-# Or set environment variable
-# PYTHONPATH=. PYTHONDONTWRITEBYTECODE=1 python -X dev -c "import asyncio; asyncio.run(main())"
-
-async def debug_async_flow():
-    """Debug async execution flow."""
-
-    # Log current task
-    current_task = asyncio.current_task()
-    logger.debug(f"Running in task: {current_task}")
-
-    # Log all running tasks
-    all_tasks = asyncio.all_tasks()
-    logger.debug(f"Total running tasks: {len(all_tasks)}")
-    for task in all_tasks:
-        logger.debug(f"Task: {task}, Done: {task.done()}")
-
-    # Add timing information
-    start_time = asyncio.get_running_loop().time()
-    result = await some_operation()
-    end_time = asyncio.get_running_loop().time()
-
-    logger.debug(f"Operation took {end_time - start_time:.3f}s")
-    return result
-```
+Log task information in your code to understand execution flow. Include task names and states in debug logs to trace how tasks progress through your code.
 
 ### Detecting Blocking Code
 
-```python
-import asyncio
-import time
+Set `slow_callback_duration` on the event loop to detect blocking operations. If a callback takes longer than this duration, Python logs a warning. This helps identify code that's blocking the event loop.
 
-async def detect_blocking_code():
-    """Detect blocking code in async functions."""
-
-    # This will show warnings if code blocks for >100ms
-    asyncio.get_running_loop().slow_callback_duration = 0.1
-
-    start_time = time.perf_counter()
-
-    # Your potentially blocking code here
-    await some_operation()
-
-    end_time = time.perf_counter()
-    duration = end_time - start_time
-
-    if duration > 1.0:  # Adjust threshold as needed
-        logger.warning(f"Slow operation detected: {duration:.2f}s")
-
-    return result
-```
+Monitor operation durations and log warnings for slow operations. This helps identify performance bottlenecks and operations that might benefit from optimization or parallelization.
 
 ### Task Monitoring
 
-```python
-class AsyncMonitor:
-    """Monitor async task execution."""
+Track long-running tasks to identify potential issues. Tasks that run for extended periods might indicate blocking operations or infinite loops. Monitor task lifetimes and alert on tasks that exceed expected durations.
 
-    def __init__(self):
-        self._active_tasks: dict[str, asyncio.Task] = {}
+Use Tux's task monitor to track background tasks. Register your tasks with the monitor to ensure they're cleaned up properly during shutdown and to track their execution.
 
-    def start_monitoring(self):
-        """Start monitoring async tasks."""
-        asyncio.create_task(self._monitor_loop())
-
-    async def _monitor_loop(self):
-        """Monitor running tasks and log issues."""
-
-        while True:
-            try:
-                all_tasks = asyncio.all_tasks()
-                long_running = []
-
-                for task in all_tasks:
-                    if hasattr(task, 'get_coro'):
-                        coro = task.get_coro()
-                        if hasattr(coro, 'cr_frame') and coro.cr_frame:
-                            # Task has been running for a while
-                            task_age = asyncio.get_running_loop().time() - task.get_loop().time()
-                            if task_age > 30:  # Running for more than 30 seconds
-                                long_running.append((task, task_age))
-
-                if long_running:
-                    logger.warning(f"Found {len(long_running)} long-running tasks")
-                    for task, age in long_running:
-                        logger.warning(f"Task {task} has been running for {age:.1f}s")
-
-            except Exception as e:
-                logger.error(f"Task monitoring error: {e}")
-
-            await asyncio.sleep(60)  # Check every minute
-```
-
-## Best Practices Checklist
+## Best Practices Summary
 
 ### Code Structure
 
-- [ ] All I/O operations use async/await
-- [ ] No synchronous HTTP requests or file operations
-- [ ] Functions that perform I/O are marked `async`
-- [ ] Async generators used for streaming data
-- [ ] Background tasks use `discord.ext.tasks` instead of raw asyncio
+Mark all I/O operations as async. Use async file operations, async HTTP clients, and async database queries. Don't mix sync and async I/O—stick to async throughout.
+
+Use async generators for streaming data. This keeps memory usage constant and allows processing data as it arrives instead of waiting for everything to load.
+
+Prefer `discord.ext.tasks` for background tasks over raw asyncio tasks. The extension provides better error handling, reconnection logic, and integration with Discord.py's lifecycle.
 
 ### Concurrency
 
-- [ ] Multiple independent operations run concurrently with `asyncio.gather()`
-- [ ] Resource access protected with appropriate locks
-- [ ] Semaphores used to limit concurrent resource usage
-- [ ] Task groups used for structured concurrency (Python 3.11+)
+Run independent operations concurrently with `asyncio.gather()`. Don't await operations sequentially when they can run in parallel.
+
+Protect shared state with locks when necessary, but prefer designs that avoid shared mutable state. Use semaphores to limit resource usage and prevent overwhelming external services.
+
+Use task groups for structured concurrency when you need to ensure all tasks complete together. This makes task relationships explicit and handles failures as a unit.
 
 ### Error Handling
 
-- [ ] Exceptions properly chained with `raise ... from e`
-- [ ] Timeouts implemented for long-running operations
-- [ ] Cancellation handled gracefully in all async functions
-- [ ] Resource cleanup happens in `finally` blocks or context managers
+Chain exceptions with `raise ... from e` to preserve error context. This helps debugging by showing the full error chain.
+
+Implement timeouts for long-running operations. Don't let operations run indefinitely—always have a cancellation mechanism.
+
+Handle cancellation gracefully in all async functions. Catch `CancelledError` when you need to perform cleanup, but let it propagate otherwise.
 
 ### Performance
 
-- [ ] Connection pooling used for database and HTTP clients
-- [ ] Large datasets processed in chunks to avoid memory issues
-- [ ] Unnecessary async operations avoided in hot paths
-- [ ] Background tasks properly managed and cleaned up
+Reuse connections through pooling. Use Tux's shared `http_client` and database service instead of creating new connections.
 
-### Testing
+Process large datasets in chunks to avoid memory issues. Use async generators for streaming when possible.
 
-- [ ] All async functions tested with `@pytest.mark.asyncio`
-- [ ] Concurrent operations tested for race conditions
-- [ ] Timeouts and cancellation scenarios covered
-- [ ] Mocking properly handles async functions
+Add `await asyncio.sleep(0)` in long-running loops to yield control. This keeps your bot responsive and prevents one operation from monopolizing the event loop.
 
 ## Resources
 
-- [AsyncIO Documentation](https://docs.python.org/3/library/asyncio.html)
-- [Discord.py Async Guide](https://discordpy.readthedocs.io/en/stable/faq.html#what-is-a-coroutine)
-- [discord.ext.tasks Documentation](https://discordpy.readthedocs.io/en/stable/ext/tasks/) - Background task helpers
-- [FastAPI Async Guide](https://fastapi.tiangolo.com/async/) (similar patterns)
+- **AsyncIO Documentation**: Python's official asyncio documentation covers all the fundamentals
+- **Discord.py Async Guide**: Discord.py's FAQ explains how async works in the framework
+- **discord.ext.tasks Documentation**: The tasks extension provides background task helpers with automatic reconnection
+- **FastAPI Async Guide**: FastAPI's async patterns are similar to Discord bots and provide good examples

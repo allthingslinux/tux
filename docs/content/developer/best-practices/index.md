@@ -1,9 +1,9 @@
 ---
-title: Best Practices
+title: Developer Best Practices
 description: Best practices for Tux development, including architecture, design, testing, code review, debugging, documentation, and CI/CD.
 ---
 
-# Best Practices
+# Developer Best Practices
 
 This section contains comprehensive best practices for Tux development, covering all aspects of building, maintaining, and contributing to the Tux Discord bot.
 
