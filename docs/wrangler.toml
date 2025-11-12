@@ -17,8 +17,9 @@ preview_urls = true
 
 # Static Assets Configuration
 # Optimized for static documentation (MkDocs output)
+# MkDocs builds to ./site (docs/site relative to repo root)
 [assets]
-directory = "../data/build/docs"
+directory = "./site"
 not_found_handling = "404-page"          # Serve 404.html for missing pages
 html_handling = "auto-trailing-slash"    # Auto-handle trailing slashes (recommended for docs)
 
@@ -38,6 +39,11 @@ routes = [
 # 3. Branch aliases (optional): Use `wrangler versions upload --preview-alias v0.1.0`
 #    Creates: v0-1-0-tux-docs-preview.<subdomain>.workers.dev (persistent URL)
 # 4. PRs automatically get preview URLs in GitHub PR comments
+#
+# IMPORTANT: Configure Workers Builds deploy commands with environment flags:
+# - Production (main branch): npx wrangler deploy --env production
+# - Non-production branches: npx wrangler versions upload --env preview
+# This prevents the "multiple environments" warning and ensures correct deployment.
 [env.preview]
 name = "tux-docs-preview"
 # No custom domain - uses auto-generated *.workers.dev URLs
@@ -46,8 +52,7 @@ name = "tux-docs-preview"
 [observability]
 enabled = true
 
-# Build configuration (for Workers Builds CI/CD integration)
-# Workers Builds will run this command automatically on push
-[build]
-command = "uv run mkdocs build"
-cwd = "docs"
+# Note: Build configuration is handled by Workers Builds CI/CD
+# Configure build command in Cloudflare Dashboard: Workers Builds → Build configuration
+# Build command: uv run mkdocs build
+# Root directory: docs
