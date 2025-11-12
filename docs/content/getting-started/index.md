@@ -1,8 +1,12 @@
-# Getting Started with Tux
+---
+title: Getting Started
+---
+
+# Getting Started
 
 Welcome to Tux! This guide will help you get started based on what you want to do.
 
-## Choose Your Path
+## Navigation
 
 ### 👥 I Want to Use Tux
 
@@ -17,7 +21,7 @@ You'll learn:
 - Permission ranks and how they work
 - Features like XP system, starboard, and snippets
 
-### 🚀 I Want to Run My Own Tux
+### ⚙️ I Want to Run My Own Tux
 
 You want to self-host Tux for your community.
 
@@ -30,7 +34,7 @@ You'll learn:
 - Configuration options
 - Operations and maintenance
 
-### 💻 I Want to Contribute to Tux
+### 💡 I Want to Contribute to Tux
 
 You're a developer who wants to contribute code or build features.
 
