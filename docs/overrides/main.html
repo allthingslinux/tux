@@ -1,10 +1,5 @@
-{% extends "base.html" %}
-
-{% block content %}
-{{ super() }}
-
-{# Display backlinks if they exist #}
-{% if backlinks %}
+{% extends "base.html" %} {% block content %} {{ super() }} {# Display backlinks
+if they exist #} {% if backlinks %}
 <div class="backlinks">
   {% if backlinks|length > 5 %}
   <details class="backlinks-accordion">
@@ -14,7 +9,7 @@
     <ul>
       {% for backlink in backlinks %}
       <li>
-        <a href="{{ backlink.url }}">{{ backlink.title }}</a>
+        <a href="/{{ backlink.url }}">{{ backlink.title }}</a>
         {% if backlink.excerpt %}
         <blockquote>{{ backlink.excerpt }}</blockquote>
         {% endif %}
@@ -27,7 +22,7 @@
   <ul>
     {% for backlink in backlinks %}
     <li>
-      <a href="{{ backlink.url }}">{{ backlink.title }}</a>
+      <a href="/{{ backlink.url }}">{{ backlink.title }}</a>
       {% if backlink.excerpt %}
       <blockquote>{{ backlink.excerpt }}</blockquote>
       {% endif %}
@@ -90,5 +85,4 @@
     display: none !important;
   }
 </style>
-{% endif %}
-{% endblock %}
+{% endif %} {% endblock %}
