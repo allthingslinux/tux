@@ -51,7 +51,7 @@ Before setting up temporary voice channels:
 
 ### Configuration
 
-Temporary Voice Channels are configured through your server's configuration file. See the [configuration documentation](../../admin/configuration/features.md) for details.
+Temporary Voice Channels are configured through your server's configuration file. See the [configuration documentation](../../admin/config/features.md) for details.
 
 ### Configuration Options
 

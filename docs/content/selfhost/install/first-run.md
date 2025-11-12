@@ -411,4 +411,4 @@ Logs output to stdout/stderr and optionally to files in `logs/`.
 
 ---
 
-**Congratulations!** Tux is now running. Head to [Configuration](../../admin/configuration/index.md) to customize your instance.
+**Congratulations!** Tux is now running. Head to [Configuration](../../admin/config/index.md) to customize your instance.

@@ -164,7 +164,7 @@ Toggles XP blacklist for a user. Blacklisted users cannot gain XP.
 
 ## Configuration
 
-The XP system is configured through your server's configuration file. See the [configuration documentation](../../admin/configuration/features.md) for details.
+The XP system is configured through your server's configuration file. See the [configuration documentation](../../admin/config/features.md) for details.
 
 ### Configuration Options
 

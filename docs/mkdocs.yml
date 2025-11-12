@@ -124,11 +124,11 @@ markdown_extensions:
       permalink: true  # Add ¶ anchor links to headings on hover
   # PYMDOWNX EXTENSIONS (Python Markdown Extensions) ---------------
   # Snippets: Embed content from external files
-  - pymdownx.snippets:
-      # base_path: ['.']  # Base paths for snippet includes
-      # check_paths: true  # Validate file paths exist
-      # auto_append:  # Auto-include files in all docs
-        # - docs/includes/abbreviations.md
+  # - pymdownx.snippets:
+  #     base_path: ['.']  # Base paths for snippet includes
+  #     check_paths: true  # Validate file paths exist
+  #     auto_append:  # Auto-include files in all docs
+  #       - docs/includes/abbreviations.md
   # Highlight: Advanced syntax highlighting for code blocks
   - pymdownx.highlight:
       use_pygments: true  # Use Pygments for build-time highlighting
@@ -185,6 +185,7 @@ markdown_extensions:
   # Tasklist: Convert task lists to checkboxes
   - pymdownx.tasklist:
       custom_checkbox: true
+  - pymdownx.betterem
   # MKDOCS-TYPER: CLI documentation generator
   - mkdocs-typer:
 plugins:
@@ -192,6 +193,7 @@ plugins:
       enabled: true
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - literate-nav:
+      enabled: true
       nav_file: SUMMARY.md
       tab_length: 2
       implicit_index: true
@@ -215,15 +217,8 @@ plugins:
         securitylevel: loose
   - meta:
       enabled: true
-  - mkdocs-breadcrumbs-plugin:
-      enabled: false
-      delimiter: ' / '
-      log_level: WARNING
-      exclude_paths: [docs/assets/**, docs/]
-      additional_index_folders: []
-      generate_home_index: false
-      use_page_titles: false
-      home_text: home
+  - tags:
+      enabled: true
   - mkdocs-backlinks:
       enabled: true
       ignored_pages: [Home, SUMMARY]
@@ -272,7 +267,7 @@ plugins:
         - reference/tux/**
       strict_only: false
   - section-index:
-      enabled: false
+      enabled: true
   - mkdocstrings:
       # Enable mkdocstrings plugin for auto-generated API documentation
       enabled: true
