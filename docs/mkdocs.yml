@@ -12,7 +12,7 @@ validation:
 site_name: Tux
 site_url: https://tux.atl.dev/
 site_description: The all-in-one open source Discord bot for the All Things Linux
-  community
+  community.
 site_author: All Things Linux
 dev_addr: 127.0.0.1:8000
 repo_url: https://github.com/allthingslinux/tux

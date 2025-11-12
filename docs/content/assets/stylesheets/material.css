@@ -13,9 +13,10 @@
 * {
   -webkit-font-smoothing: subpixel-antialiased;
   -moz-osx-font-smoothing: auto;
-  text-rendering: optimizeSpeed;
+  text-rendering: optimizeLegibility;
   font-feature-settings: "kern" 1;
   font-kerning: auto;
+  font-optical-sizing: auto;
 }
 
 /* Code font specific settings */
@@ -23,6 +24,7 @@ code, pre, .codehilite {
   font-feature-settings: "liga" 1, "calt" 1, "zero" 1;
   font-variant-ligatures: common-ligatures contextual;
   text-rendering: optimizeSpeed;
+  font-optical-sizing: auto;
 }
 
 /* Fix navigation font rendering */
