@@ -11,6 +11,7 @@ title: Summary
 * [Admin Guide](./admin/index.md)
   * [Setup](./admin/setup/index.md)
   * [Configuration](./admin/config/index.md)
+    * [Logs](./admin/config/logs.md)
     * [Roles](./admin/config/roles.md)
     * [Ranks](./admin/config/ranks.md)
     * [Commands](./admin/config/commands.md)
