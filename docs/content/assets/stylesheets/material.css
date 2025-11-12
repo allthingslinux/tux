@@ -183,6 +183,40 @@ code, pre, .codehilite {
   }
 }
 
+/* Extract-listings plugin: Ensure syntax highlighting works for dynamically inserted code */
+.listing {
+  /* Ensure code blocks inside listings get proper styling */
+  pre {
+    background-color: var(--md-code-bg-color);
+    color: var(--md-code-fg-color);
+    border-radius: 0.1rem;
+    overflow: auto;
+  }
+
+  code {
+    background-color: var(--md-code-bg-color);
+    color: var(--md-code-fg-color);
+  }
+
+  /* Apply Material theme's syntax highlighting colors to Pygments classes */
+  /* Pygments classes are directly on span elements inside code */
+  code .k { color: var(--md-code-hl-keyword-color); } /* Keywords: async, def, if, return */
+  code .s { color: var(--md-code-hl-string-color); } /* Strings */
+  code .s1, code .s2 { color: var(--md-code-hl-string-color); } /* Single/double quoted strings */
+  code .sd { color: var(--md-code-hl-string-color); } /* Docstrings */
+  code .m { color: var(--md-code-hl-number-color); } /* Numbers */
+  code .nf { color: var(--md-code-hl-function-color); } /* Function names */
+  code .nc { color: var(--md-code-hl-constant-color); } /* Classes */
+  code .nd { color: var(--md-code-hl-constant-color); } /* Decorators */
+  code .c { color: var(--md-code-hl-comment-color); } /* Comments */
+  code .c1 { color: var(--md-code-hl-comment-color); } /* Single-line comments */
+  code .o { color: var(--md-code-hl-operator-color); } /* Operators: ., =, : */
+  code .p { color: var(--md-code-hl-punctuation-color); } /* Punctuation: (), [] */
+  code .n { color: var(--md-code-hl-name-color); } /* Names */
+  code .bp { color: var(--md-code-hl-name-color); } /* Built-in pseudo: self */
+  code .w { color: var(--md-code-fg-color); } /* Whitespace */
+}
+
 /* Header override for darkest Tokyo Night color */
 [data-md-color-scheme="tokyo-night"] .md-header {
   background-color: #16161e;

@@ -40,7 +40,9 @@ extra:
   # Custom copyright partial: overrides/partials/copyright.html
   footer_links:
     - text: Sitemap
-      href: reference/sitemap.md
+      href: reference/sitemap
+    - text: Listings
+      href: reference/listings
   social:
     - icon: fontawesome/solid/globe
       link: https://allthingslinux.org
@@ -98,6 +100,7 @@ theme:
 # PYTHON MARKDOWN EXTENSIONS -----------------------------------------------
 # Enhanced Markdown processing with Python Markdown Extensions
 markdown_extensions:
+  - sane_lists
   # CORE PYTHON MARKDOWN EXTENSIONS ---------------------------------
   # Abbreviations: Add tooltips to text with <abbr> HTML tags (plain text only)
   - abbr
@@ -191,7 +194,7 @@ plugins:
   - literate-nav:
       nav_file: SUMMARY.md
       tab_length: 2
-      implicit_index: false
+      implicit_index: true
   - minify:
       enabled: true
       minify_html: true
@@ -213,7 +216,7 @@ plugins:
   - meta:
       enabled: true
   - mkdocs-breadcrumbs-plugin:
-      enabled: true
+      enabled: false
       delimiter: ' / '
       log_level: WARNING
       exclude_paths: [docs/assets/**, docs/]
@@ -221,10 +224,9 @@ plugins:
       generate_home_index: false
       use_page_titles: false
       home_text: home
-  # - mkdocs-backlinks:
-      # Plugin for adding backlinks to pages (digital garden style)
-      # enabled: false
-      # ignored_pages: ['Home', 'Tags']  # Optional: exclude pages from backlinks
+  - mkdocs-backlinks:
+      enabled: true
+      ignored_pages: [Home, SUMMARY]
   - autorefs:
       enabled: true
       resolve_closest: true
@@ -241,11 +243,11 @@ plugins:
       html_report_dir: htmlcov
   - extract_listings:
       enabled: true
-      search_page_path: reference/snippet-search.md
+      search_page_path: reference/listings.md
       search_page_create_if_missing: true
-      search_page_section_name: Snippet Search
+      search_page_section_name: Search
       default_search_mode: substr-i
-      default_css: false
+      default_css: true
   - spellcheck:
       enabled: false
       backends:

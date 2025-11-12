@@ -84,6 +84,11 @@
     font-size: 0.9rem;
     color: var(--md-default-fg-color--light);
   }
+
+  /* Hide SUMMARY.md backlinks - matches hrefs containing /SUMMARY/ */
+  .backlinks li:has(a[href*="/SUMMARY/"]) {
+    display: none !important;
+  }
 </style>
 {% endif %}
 {% endblock %}
