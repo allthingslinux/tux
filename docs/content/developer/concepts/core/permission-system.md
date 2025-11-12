@@ -41,7 +41,7 @@ Discord roles are mapped to permission ranks. When a user has multiple roles, th
 
 ### Command Permissions
 
-Each command can require a specific permission rank. Commands without a configured permission requirement are denied by default for security. Guilds configure command permissions using `/config commands assign` commands.
+Each command can require a specific permission rank. Commands without a configured permission requirement are denied by default for security. Guilds configure command permissions using the unified configuration dashboard (`/config overview` → Command Permissions).
 
 ### Permission Checking
 
@@ -105,10 +105,10 @@ Guilds configure permissions through the unified configuration dashboard. The da
 
 **Dashboard Commands:**
 
-- `/config` - Opens the main configuration dashboard
+- `/config` or `/config overview` - Opens the main configuration dashboard
 - `/config ranks` - Opens dashboard in ranks mode to manage permission ranks
 - `/config roles` (or `/config role`) - Opens dashboard in roles mode to assign roles to ranks
-- `/config commands` - Opens dashboard in commands mode to set command permissions
+- `/config commands` - Opens dashboard in commands mode to set command permissions (or use `/config overview` → Command Permissions)
 
 All configuration is stored in the database and persists across bot restarts. Configuration is per-guild, so each server can have different permission setups.
 
@@ -142,7 +142,7 @@ If commands are always denied even for admins, check:
 
 1. Permission ranks are initialized for the guild (use `/config ranks` dashboard)
 2. Roles are assigned to permission ranks (use `/config roles` dashboard)
-3. Commands have permission requirements configured (use `/config commands` dashboard)
+3. Commands have permission requirements configured (use `/config overview` → Command Permissions)
 4. Users have roles that are assigned to ranks
 5. Users' highest rank meets the command's required rank
 
@@ -159,7 +159,7 @@ If permission checks aren't working:
 If users can't access commands they should have:
 
 1. Check their role assignments in the permission system (use `/config roles` dashboard)
-2. Verify the command's required rank isn't too high (use `/config commands` dashboard)
+2. Verify the command's required rank isn't too high (use `/config overview` → Command Permissions)
 3. Confirm they have roles assigned to ranks (users get the highest rank from all their roles)
 4. Check if they're bot owner/sysadmin (these bypass all checks)
 5. Note: Commands work in DMs without permission checks, so DM access isn't the issue
