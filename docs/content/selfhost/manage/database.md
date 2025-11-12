@@ -254,6 +254,6 @@ docker compose stop tux-adminer
 
 ## Related
 
-- **[Database Setup](../setup/database.md)**
-- **[Database CLI Reference](../../reference/cli.md#database-management)**
-- **[Developer Migration Guide](../../developer-guide/database/migrations.md)**
+- **[Database Setup](../install/database.md)**
+- **[Database CLI Reference](../../reference/cli.md)**
+- **[Developer Migration Guide](../../developer/concepts/database/migrations.md)**

@@ -1,8 +1,8 @@
 ---
-title: Namespace
+title: Namespace Best Practices
 ---
 
-# Namespace
+# Namespace Best Practices
 
 This guide explains namespace packages and the `__all__` declaration in Python, with specific examples from the Tux codebase and best practices for maintaining clean APIs.
 
