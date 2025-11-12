@@ -19,6 +19,7 @@ title: Summary
   * [Installation](./selfhost/install/index.md)
     * [Requirements](./selfhost/install/requirements.md)
     * [Docker](./selfhost/install/docker.md)
+    * [Database](./selfhost/install/database.md)
     * [Systemd](./selfhost/install/systemd.md)
     * [First Run](./selfhost/install/first-run.md)
   * [Configuration](./selfhost/config/index.md)
