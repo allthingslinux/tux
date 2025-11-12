@@ -1,8 +1,8 @@
 ---
-title: Configuration
+title: Self-Host Configuration
 ---
 
-# Configuration
+# Self-Host Configuration
 
 Configure your Tux instance with the following guides.
 
