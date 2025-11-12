@@ -15,6 +15,10 @@ compatibility_date = "2025-09-24"
 # Branch deployments can use aliases: <branch>-tux-docs.<subdomain>.workers.dev
 preview_urls = true
 
+# Enable workers.dev subdomain (required for preview URLs)
+# This allows preview URLs to be accessible at *.workers.dev domains
+workers_dev = true
+
 # Static Assets Configuration
 # Optimized for static documentation (MkDocs output)
 # MkDocs builds to ./site (docs/site relative to repo root)

@@ -10,7 +10,7 @@ validation:
     absolute_links: ignore
     unrecognized_links: info
 site_name: Tux
-site_url: https://tux.atl.dev
+site_url: https://tux.atl.dev/
 site_description: The all-in-one open source Discord bot for the All Things Linux
   community
 site_author: All Things Linux
@@ -234,7 +234,7 @@ plugins:
       cards_layout_options:
         background_color: '#181825'
         color: '#ffffff'
-        logo: assets/images/logo.png
+        font_family: Inter
   - coverage:
       enabled: true
       page_path: reference/coverage
