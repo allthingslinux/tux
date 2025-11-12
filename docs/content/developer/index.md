@@ -1,5 +1,9 @@
 ---
-title: Developer Index
+title: Developer Guide
 ---
 
-# Developer Index
+# Developer Guide
+
+This section contains documentation for developers working with Tux.
+
+## Navigation

@@ -6,5 +6,4 @@ title: User Guide
 
 The User Guide covers everything you need to know to use Tux on your Discord server.
 
-- [Features](features/index.md)
-- [Commands](commands/index.md)
+## Navigation

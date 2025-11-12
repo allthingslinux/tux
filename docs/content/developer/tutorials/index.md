@@ -1,7 +1,9 @@
 ---
-title: Tutorials
+title: Developer Tutorials
 ---
 
-# Tutorials
+# Developer Tutorials
 
-This section contains tutorials for developers to get started with Tux.
+This section contains guides for common development tasks in Tux.
+
+## Navigation

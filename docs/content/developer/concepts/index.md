@@ -1,7 +1,9 @@
 ---
-title: Concepts
+title: Developer Concepts
 ---
 
-# Concepts
+# Developer Concepts
 
 This section contains concepts that are used in the codebase.
+
+## Navigation

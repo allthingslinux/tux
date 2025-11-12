@@ -6,7 +6,7 @@ title: Admin Guide
 
 The Admin Guide covers everything you need to know to use Tux on your Discord server.
 
-## Sections
+## Navigation
 
 ### Setup
 
