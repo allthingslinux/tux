@@ -5,12 +5,18 @@ This module provides a modal dialog for users to submit anonymous reports
 to the server moderation team with proper logging and thread creation.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import discord
 from loguru import logger
 
-from tux.core.bot import Tux
 from tux.database.utils import get_db_controller_from
 from tux.ui.embeds import EmbedCreator
+
+if TYPE_CHECKING:
+    from tux.core.bot import Tux
 
 
 class ReportModal(discord.ui.Modal):

@@ -4,11 +4,17 @@ TLDR Paginator View.
 A Discord UI view for paginating through long TLDR command documentation pages.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import discord
 from discord.ui import Button, View
 
-from tux.core.bot import Tux
 from tux.ui.embeds import EmbedCreator
+
+if TYPE_CHECKING:
+    from tux.core.bot import Tux
 
 
 class TldrPaginatorView(View):

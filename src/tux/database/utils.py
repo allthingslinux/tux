@@ -8,16 +8,18 @@ commands.Context, discord.Interaction, or Tux bot instances.
 
 from __future__ import annotations
 
-from typing import TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 import discord
 from discord.ext import commands
 from loguru import logger
 
-from tux.core.bot import Tux
 from tux.database.controllers import DatabaseCoordinator
 from tux.database.controllers.base import BaseController
 from tux.database.service import DatabaseService
+
+if TYPE_CHECKING:
+    from tux.core.bot import Tux
 
 ModelT = TypeVar("ModelT")
 
@@ -38,7 +40,11 @@ def _resolve_bot(source: commands.Context[Tux] | discord.Interaction | Tux) -> T
     if isinstance(source, commands.Context):
         return source.bot
     if isinstance(source, discord.Interaction):
-        return source.client if isinstance(source.client, Tux) else None
+        # Check for Tux-specific attributes instead of isinstance to avoid circular import
+        client = source.client
+        if hasattr(client, "db_service") or hasattr(client, "db"):
+            return client
+        return None
     return source
 
 
