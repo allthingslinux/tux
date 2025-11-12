@@ -15,13 +15,13 @@ From advanced moderation to engaging XP systems, Tux brings everything you need 
 
 Choose your path to get started with Tux:
 
-<div class="grid cards" style="grid-template-columns: repeat(2, 1fr);" markdown>
+<div class="grid cards grards" markdown>
 
 - :material-linux:{ .lg .middle } __Using Tux__
 
     ---
 
-    Perfect for server admins and users. Master commands, explore features, and configure your server.
+    Get started with using Tux in your server. View information on commands and learn about all the features Tux offers.
 
     [View User Guide](user/index.md){ .md-button .md-button--primary }
 
@@ -45,7 +45,7 @@ Choose your path to get started with Tux:
 
     ---
 
-    Contribute code, build plugins, and extend functionality. Python 3.13+, SQLModel, and modern tooling.
+    Contribute to the Tux codebase or build custom plugins. Comprehensive developer documentation and API references.
 
     [View Developer Guide](developer/index.md){ .md-button .md-button--primary }
 

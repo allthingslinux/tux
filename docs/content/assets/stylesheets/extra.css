@@ -77,3 +77,14 @@
     width: 10rem !important;
   }
 }
+
+/* grid cards */
+.grards {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media screen and (max-width: 76.25em) {
+  .grards {
+    grid-template-columns: repeat(1, 1fr) !important;
+  }
+}
