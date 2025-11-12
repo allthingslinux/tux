@@ -25,10 +25,7 @@ uv run config generate
 cp .env.example .env
 nano .env
 
-# Run migrations
-uv run db push
-
-# Start bot
+# Start bot (migrations run automatically on startup)
 uv run tux start
 ```
 
@@ -43,9 +40,24 @@ Before deploying with systemd, ensure you have:
 - **Linux system** with systemd (most modern distributions)
 - **Python 3.13+** installed
 - **[uv](https://docs.astral.sh/uv/)** package manager installed
-- **PostgreSQL 13+** database running
+- **PostgreSQL 17+** database running
 - **Discord bot token** from [Discord Developer Portal](https://discord.com/developers/applications)
 - **Root or sudo access** for systemd service creation
+
+### Install uv
+
+Tux uses `uv` as its package manager. Install it using the standalone installer:
+
+```bash
+# Install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Verify installation
+uv --version
+```
+
+!!! tip "Alternative Installation Methods"
+    If you prefer, you can install uv via `pipx` (`pipx install uv`) or download binaries directly from [GitHub Releases](https://github.com/astral-sh/uv/releases).
 
 ### Installation Steps
 
@@ -63,7 +75,7 @@ Clone the Tux repository directly to the installation directory:
 
 ```bash
 # Clone repository as tux user
-sudo -u tux git clone https://github.com/allthingslinux/tux.git /opt/tux
+sudo -u tux git clone https://github.com/allthingslinux/tux.git /opt
 
 # Set ownership (ensure tux user owns everything)
 sudo chown -R tux:tux /opt/tux
@@ -101,21 +113,12 @@ sudo -u tux nano /opt/tux/.env
 !!! note "Alternative: Systemd Environment File"
 You can also use a separate systemd environment file at `/etc/tux/environment` if you prefer to separate system-level configuration from application configuration. If using this approach, add `EnvironmentFile=/etc/tux/environment` to the systemd service file.
 
-#### 5. Configure Database
+#### 5. Set Up Database
 
-Ensure PostgreSQL is configured and accessible:
+For PostgreSQL installation and database setup instructions, see [Database Installation](database.md).
 
-```bash
-# Create database user (if not exists)
-sudo -u postgres createuser -P tux_user
-
-# Create database
-sudo -u postgres createdb -O tux_user tux
-
-# Run migrations
-cd /opt/tux
-sudo -u tux uv run db push
-```
+!!! tip "Migrations Run Automatically"
+    Database migrations run automatically when Tux starts. No manual migration step needed.
 
 #### 6. Find uv Installation Path
 
@@ -222,11 +225,8 @@ sudo -u tux git pull origin main
 # Update dependencies
 sudo -u tux uv sync
 
-# Run database migrations
-sudo -u tux uv run db push
-
-# Start service
-sudo systemctl start tux
+# Restart service (migrations run automatically on startup)
+sudo systemctl restart tux
 
 # Verify status
 sudo systemctl status tux
@@ -443,11 +443,8 @@ sudo -u tux git pull origin main
 echo "Updating dependencies..."
 sudo -u tux uv sync
 
-echo "Running migrations..."
-sudo -u tux uv run db push
-
-echo "Starting Tux..."
-sudo systemctl start tux
+echo "Restarting Tux (migrations run automatically)..."
+sudo systemctl restart tux
 
 echo "Update complete!"
 ```
