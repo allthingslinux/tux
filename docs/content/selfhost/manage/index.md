@@ -4,7 +4,9 @@ title: Self-Host Management
 
 # Self-Host Management
 
-## Sections
+This section contains documentation for managing your Tux instance.
 
-- **[Database](database.md)** - Manage your Tux database including backups, migrations, and administration tools.
-- **[Operations](operations.md)** - Monitor, maintain, and optimize your running instance.
+## Navigation
+
+- [Database](database.md)
+- [Operations](operations.md)
