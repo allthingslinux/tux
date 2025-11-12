@@ -72,6 +72,9 @@ title: Summary
     * [Documentation](./developer/best-practices/docs.md)
     * [Testing](./developer/best-practices/testing/index.md)
       * developer/best-practices/testing/*.md
+* [Community](./community/index.md)
+  * [Support](./community/support.md)
+  * [Feedback](./community/feedback.md)
 * [Reference](./reference/index.md)
   * [Versioning](./reference/versioning.md)
   * [API Reference](./reference/src/tux)
