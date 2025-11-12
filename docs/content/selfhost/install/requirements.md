@@ -8,34 +8,28 @@ Before installing Tux, ensure your system meets these requirements.
 
 ## Minimum Requirements
 
-- **OS**: Linux (Ubuntu 20.04+, Debian 11+, CentOS 8+)
+- **OS**: Any
 - **RAM**: 512MB
-- **Storage**: 1GB free space
-- **CPU**: 1 core
+- **Storage**: 2GB free space
 
 ## Recommended Requirements
 
-- **OS**: Linux (Ubuntu 22.04+, Debian 12+)
+- **OS**: Linux
 - **RAM**: 2GB+
 - **Storage**: 5GB+ free space
-- **CPU**: 2+ cores
 
 ## Software Dependencies
 
 ### Required
 
-- **Python**: 3.11 or higher
+- **Python**: 3.13+
+- **uv**: Project management tool
 - **Git**: For cloning the repository
 - **Docker**: For containerized deployment (optional)
 
 ### Database
 
-- **PostgreSQL**: 13+ (required)
-
-## Network Requirements
-
-- **Outbound HTTPS**: For Discord API communication
-- **Port Access**: Configure firewall for your chosen deployment method
+- **PostgreSQL**: 17+ (required)
 
 ## Discord Bot Requirements
 
@@ -47,6 +41,7 @@ Before installing Tux, ensure your system meets these requirements.
 
 After verifying requirements:
 
+- [Database Installation](database.md) - Setting up PostgreSQL
 - [Docker Installation](docker.md) - Recommended for production
 - [System Installation](systemd.md) - For non-Docker setups
 - [First Run Setup](first-run.md) - First run
