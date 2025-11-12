@@ -10,18 +10,74 @@ Deploy Tux using Docker Compose for easy setup and management. Docker Compose ha
 
 Before deploying with Docker, ensure you have:
 
-- **Docker** 20.10+ installed
+- **Docker Engine** 20.10+ installed
 - **Docker Compose** 2.0+ installed (or `docker compose` plugin)
 - **Git** installed
 - **Discord bot token** from [Discord Developer Portal](https://discord.com/developers/applications)
+
+### Install Docker Engine
+
+**Ubuntu:**
+
+1. **Set up Docker's package repository:**
+
+```bash
+# Add Docker's official GPG key
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add Docker repository
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+```
+
+2. **Install Docker Engine:**
+
+```bash
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+3. **Verify installation:**
+
+```bash
+sudo docker run hello-world
+```
+
+4. **Add your user to docker group (optional, to run without sudo):**
+
+```bash
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+### Install uv
+
+Tux uses `uv` as its package manager. Install it using the standalone installer:
+
+```bash
+# Install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Verify installation
+uv --version
+```
+
+!!! tip "Alternative Installation Methods"
+    If you prefer, you can install uv via `pipx` (`pipx install uv`) or download binaries directly from [GitHub Releases](https://github.com/astral-sh/uv/releases).
 
 ## Quick Start
 
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/allthingslinux/tux.git
-cd tux
+git clone https://github.com/allthingslinux/tux.git /opt
+cd /opt/tux
 ```
 
 ### 2. Configure Environment
