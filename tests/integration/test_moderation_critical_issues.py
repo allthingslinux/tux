@@ -16,6 +16,8 @@ Test Coverage:
 """
 
 import asyncio
+from datetime import datetime, timezone
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -615,6 +617,7 @@ class TestCriticalIssuesIntegration:
                         mock_case = MagicMock()
                         mock_case.id = 123
                         mock_case.case_number = 456
+                        mock_case.created_at = datetime.now(timezone.utc)
                         mock_create_case.return_value = mock_case
 
                         # Mock successful response and audit log

@@ -111,7 +111,8 @@ class TestErrorHandlingEndToEnd:
 
         # Check for key phrases in the message
         assert "not been configured yet" in description
-        assert "/config command assign" in description
+        assert "/config overview" in description
+        assert "Command Permissions" in description
         assert "dev clear_tree" in description
 
     @pytest.mark.asyncio

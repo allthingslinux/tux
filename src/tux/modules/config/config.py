@@ -141,25 +141,6 @@ class Config(commands.Cog):
         """View all command permission requirements."""
         await self.commands.list_permissions(ctx)
 
-    @commands_group.command(name="assign")
-    @commands.guild_only()
-    @commands.has_permissions(administrator=True)
-    async def commands_assign(
-        self,
-        ctx: commands.Context[Tux],
-        command_name: str,
-        rank: int,
-    ) -> None:
-        """Set permission rank requirement for command."""
-        await self.commands.assign_permission(ctx, command_name, rank)
-
-    @commands_group.command(name="unassign")
-    @commands.guild_only()
-    @commands.has_permissions(administrator=True)
-    async def commands_unassign(self, ctx: commands.Context[Tux], command_name: str) -> None:
-        """Remove permission requirement from command."""
-        await self.commands.remove_permission(ctx, command_name)
-
     @config.command(name="logs")
     @commands.guild_only()
     @commands.has_permissions(administrator=True)

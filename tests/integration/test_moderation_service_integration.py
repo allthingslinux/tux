@@ -16,6 +16,8 @@ Test Coverage:
 """
 
 import asyncio
+from datetime import datetime, timezone
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -117,6 +119,7 @@ class TestModerationCoordinatorIntegration:
             # Mock case creation
             mock_case = MagicMock()
             mock_case.id = 42
+            mock_case.created_at = datetime.now(timezone.utc)
             moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
             # Mock response handling
@@ -155,6 +158,7 @@ class TestModerationCoordinatorIntegration:
             mock_ban_action = AsyncMock(return_value=None)
             mock_case = MagicMock()
             mock_case.id = 43
+            mock_case.created_at = datetime.now(timezone.utc)
             moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
             with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_send_response:
@@ -208,6 +212,7 @@ class TestModerationCoordinatorIntegration:
             mock_warn_action = AsyncMock(return_value=None)
             mock_case = MagicMock()
             mock_case.id = 44
+            mock_case.created_at = datetime.now(timezone.utc)
             moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
             with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_send_response:
@@ -244,6 +249,7 @@ class TestModerationCoordinatorIntegration:
             mock_ban_action = AsyncMock(return_value=None)
             mock_case = MagicMock()
             mock_case.id = 45
+            mock_case.created_at = datetime.now(timezone.utc)
             moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
             with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_send_response:
@@ -343,6 +349,7 @@ class TestModerationCoordinatorIntegration:
 
         mock_case = MagicMock()
         mock_case.id = 46
+        mock_case.created_at = datetime.now(timezone.utc)
         moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
         with patch.object(moderation_coordinator._communication, 'create_embed') as mock_embed:
@@ -388,6 +395,7 @@ class TestModerationCoordinatorIntegration:
         mock_action = AsyncMock(return_value=None)
         mock_case = MagicMock()
         mock_case.id = 47
+        mock_case.created_at = datetime.now(timezone.utc)
         moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
         with patch.object(moderation_coordinator._communication, 'create_embed') as mock_embed:
@@ -473,8 +481,8 @@ class TestModerationCoordinatorIntegration:
             mock_case.case_type = MagicMock()
             mock_case.case_type.value = "BAN"
             mock_case.case_reason = "Audit log test"
-            mock_case.created_at = MagicMock()
-            mock_case.created_at.timestamp.return_value = 1640995200.0  # 2022-01-01
+            # Use a real datetime object (datetime objects have timestamp() method)
+            mock_case.created_at = datetime.fromtimestamp(1640995200.0, tz=timezone.utc)  # 2022-01-01
             moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
             # Mock audit log message ID update
@@ -529,6 +537,7 @@ class TestModerationCoordinatorIntegration:
             mock_ban_action = AsyncMock(return_value=None)
             mock_case = MagicMock()
             mock_case.id = 49
+            mock_case.created_at = datetime.now(timezone.utc)
             moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
             with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_send_response:
@@ -571,6 +580,7 @@ class TestModerationCoordinatorIntegration:
             mock_ban_action = AsyncMock(return_value=None)
             mock_case = MagicMock()
             mock_case.id = 50
+            mock_case.created_at = datetime.now(timezone.utc)
             moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
             with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_send_response:
@@ -615,6 +625,7 @@ class TestModerationCoordinatorIntegration:
             mock_ban_action = AsyncMock(return_value=None)
             mock_case = MagicMock()
             mock_case.id = 51
+            mock_case.created_at = datetime.now(timezone.utc)
             moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
             with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_send_response:
@@ -662,6 +673,7 @@ class TestModerationCoordinatorIntegration:
             mock_ban_action = AsyncMock(return_value=None)
             mock_case = MagicMock()
             mock_case.id = 52
+            mock_case.created_at = datetime.now(timezone.utc)
             moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
             with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_send_response:
@@ -713,6 +725,7 @@ class TestModerationCoordinatorIntegration:
             mock_ban_action = AsyncMock(return_value=None)
             mock_case = MagicMock()
             mock_case.id = 53
+            mock_case.created_at = datetime.now(timezone.utc)
             moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
             # Mock case update failure

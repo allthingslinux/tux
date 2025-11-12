@@ -6,8 +6,6 @@ from typing import TYPE_CHECKING
 
 from discord.ext import commands
 
-from tux.database.models.models import PermissionCommand
-
 from .base import BaseConfigManager
 
 if TYPE_CHECKING:
@@ -42,7 +40,7 @@ class CommandManager(BaseConfigManager):
         if not permissions:
             embed = self.create_info_embed(
                 "📌 No Command Permissions",
-                "No commands have custom permission requirements.\n\nUse `/config commands assign <command> <rank>` to set requirements.",
+                'No commands have custom permission requirements.\n\nUse `/config overview` → Click **"🤖 Command Permissions"** to set requirements.',
             )
             await ctx.send(embed=embed)
             return
@@ -67,84 +65,5 @@ class CommandManager(BaseConfigManager):
                 inline=False,
             )
 
-        embed.set_footer(text="Use /config commands assign | unassign to manage permissions")
+        embed.set_footer(text="Use /config overview → Command Permissions to manage permissions")
         await ctx.send(embed=embed)
-
-    async def assign_permission(
-        self,
-        ctx: commands.Context[Tux],
-        command_name: str,
-        rank: int,
-    ) -> None:
-        """Set permission rank requirement for command."""
-        assert ctx.guild
-
-        await ctx.defer()
-
-        try:
-            # Check if rank exists
-            rank_obj = await self.bot.db.permission_ranks.get_permission_rank(ctx.guild.id, rank)
-            if not rank_obj:
-                embed = self.create_error_embed(
-                    "❌ Rank Not Found",
-                    f"Permission rank {rank} does not exist.\n\nUse `/config ranks list` to see available ranks.",
-                )
-                await ctx.send(embed=embed)
-                return
-
-            # Check if command permission already exists
-            existing = await self.bot.db.command_permissions.get_command_permission(ctx.guild.id, command_name)
-            if existing:
-                embed = self.create_warning_embed(
-                    "⚠️ Command Already Restricted",
-                    f"Command `{command_name}` already requires rank **{existing.required_rank}**.\n\nUse `/config commands unassign {command_name}` to remove the restriction first.",
-                )
-                await ctx.send(embed=embed)
-                return
-
-            # Create command permission
-            await self.bot.db.command_permissions.set_command_permission(
-                guild_id=ctx.guild.id,
-                command_name=command_name,
-                required_rank=rank,
-            )
-
-            embed = self.create_success_embed(
-                "✅ Command Permission Set",
-                f"Command `{command_name}` now requires rank **{rank}** (**{rank_obj.name}**).",
-            )
-            await ctx.send(embed=embed)
-
-        except Exception as e:
-            await self.handle_error(ctx, e, "set command permission")
-
-    async def remove_permission(self, ctx: commands.Context[Tux], command_name: str) -> None:
-        """Remove permission requirement from command."""
-        assert ctx.guild
-
-        await ctx.defer()
-
-        try:
-            # Check if command permission exists
-            existing = await self.bot.db.command_permissions.get_command_permission(ctx.guild.id, command_name)
-            if not existing:
-                embed = self.create_error_embed(
-                    "❌ No Permission Found",
-                    f"Command `{command_name}` has no custom permission requirements.",
-                )
-                await ctx.send(embed=embed)
-                return
-
-            # Remove command permission
-            await self.bot.db.command_permissions.delete_where(
-                filters=(PermissionCommand.guild_id == ctx.guild.id) & (PermissionCommand.command_name == command_name),
-            )
-
-            embed = self.create_success_embed(
-                "✅ Command Permission Removed",
-                f"Command `{command_name}` no longer has custom permission requirements.",
-            )
-            await ctx.send(embed=embed)
-
-        except Exception as e:
-            await self.handle_error(ctx, e, "remove command permission")
