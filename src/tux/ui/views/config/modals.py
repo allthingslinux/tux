@@ -98,7 +98,7 @@ class EditRankModal(discord.ui.Modal):
             # Invalidate cache and rebuild to show updated rank
             self.dashboard.invalidate_cache()
             self.dashboard.current_mode = "ranks"
-            await self.dashboard._build_ranks_mode()
+            await self.dashboard.build_ranks_mode()
             if interaction.message:
                 await interaction.followup.edit_message(
                     message_id=interaction.message.id,
@@ -205,7 +205,7 @@ class CreateRankModal(discord.ui.Modal):
             # Invalidate cache and rebuild to show new rank
             self.dashboard.invalidate_cache()
             self.dashboard.current_mode = "ranks"
-            await self.dashboard._build_ranks_mode()
+            await self.dashboard.build_ranks_mode()
             if interaction.message:
                 await interaction.followup.edit_message(
                     message_id=interaction.message.id,
