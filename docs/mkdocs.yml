@@ -53,8 +53,8 @@ theme:
   language: en
   name: material
   custom_dir: overrides
-  logo: ./assets/images/logo.png
-  favicon: ./assets/images/logo.png
+  logo: assets/images/logo.png
+  favicon: assets/images/logo.png
   icon:
     repo: fontawesome/brands/github
   palette:
@@ -234,7 +234,7 @@ plugins:
       cards_layout_options:
         background_color: '#181825'
         color: '#ffffff'
-        logo: ./assets/images/logo.png
+        logo: assets/images/logo.png
   - coverage:
       enabled: true
       page_path: reference/coverage

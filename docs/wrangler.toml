@@ -35,9 +35,9 @@ routes = [
 # Preview environment (all non-production branches)
 # How it works:
 # 1. Workers Builds creates a new version for each push to non-production branches
-# 2. Each version gets: <version-id>-tux-docs-preview.<subdomain>.workers.dev
+# 2. Each version gets: <version-id>-tux-docs.<subdomain>.workers.dev
 # 3. Branch aliases (optional): Use `wrangler versions upload --preview-alias v0.1.0`
-#    Creates: v0-1-0-tux-docs-preview.<subdomain>.workers.dev (persistent URL)
+#    Creates: v0-1-0-tux-docs.<subdomain>.workers.dev (persistent URL)
 # 4. PRs automatically get preview URLs in GitHub PR comments
 #
 # IMPORTANT: Configure Workers Builds deploy commands with environment flags:
@@ -45,12 +45,18 @@ routes = [
 # - Non-production branches: npx wrangler versions upload --env preview
 # This prevents the "multiple environments" warning and ensures correct deployment.
 [env.preview]
-name = "tux-docs-preview"
+# Inherits top-level name "tux-docs" - previews use same worker as production
 # No custom domain - uses auto-generated *.workers.dev URLs
 
 # Observability - provides logs and metrics
 [observability]
 enabled = true
+
+# Smart Placement - automatically routes requests to optimal location
+# Analyzes your Worker and routes requests to the best location for performance
+# May take up to 15 minutes to analyze after first deployment
+[placement]
+mode = "smart"
 
 # Note: Build configuration is handled by Workers Builds CI/CD
 # Configure build command in Cloudflare Dashboard: Workers Builds → Build configuration
