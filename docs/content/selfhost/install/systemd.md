@@ -12,8 +12,8 @@ For quick testing or development, you can run Tux directly:
 
 ```bash
 # Clone repository
-git clone https://github.com/allthingslinux/tux.git
-cd tux
+git clone https://github.com/allthingslinux/tux.git /opt
+cd /opt/tux
 
 # Install dependencies
 uv sync
