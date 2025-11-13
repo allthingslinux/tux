@@ -20,44 +20,107 @@ function getMdFileUrl() {
   return null;
 }
 
-// Copy page as Markdown functionality
-document.addEventListener('DOMContentLoaded', function() {
-  setTimeout(() => {
-    const viewBtn = document.querySelector('a[title*="View source"]');
-    if (viewBtn) {
-      const copyBtn = viewBtn.cloneNode(true);
-      copyBtn.title = 'Copy page as Markdown';
-      copyBtn.id = 'copy-md-btn';
+// Copy page as Markdown functionality - DISABLED due to layout shift issues
+// TODO: Re-enable when layout shift can be prevented
 
-      const icon = copyBtn.querySelector('svg');
-      if (icon) {
-        icon.innerHTML = '<path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z" />';
-      }
+/*
+// Function to add copy button
+function addCopyButton() {
+  // Remove existing copy button if it exists (for navigation updates)
+  const existingBtn = document.getElementById('copy-md-btn');
+  if (existingBtn) {
+    existingBtn.remove();
+  }
 
-      copyBtn.addEventListener('click', async function(e) {
-        e.preventDefault();
+  const viewBtn = document.querySelector('a[title*="View source"]');
+  if (viewBtn && !document.getElementById('copy-md-btn')) {
+    const copyBtn = viewBtn.cloneNode(true);
+    copyBtn.title = 'Copy page as Markdown';
+    copyBtn.id = 'copy-md-btn';
+    copyBtn.setAttribute('aria-label', 'Copy page as Markdown');
 
-        try {
-          const rawUrl = getMdFileUrl();
-          if (!rawUrl) throw new Error('Could not determine raw URL');
-
-          const response = await fetch(rawUrl);
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-          const markdown = await response.text();
-          await navigator.clipboard.writeText(markdown);
-
-          showToast('Page copied as Markdown!');
-        } catch (error) {
-          console.error('Copy failed:', error);
-          showToast('Failed to copy page', true);
-        }
-      });
-
-      viewBtn.parentNode.insertBefore(copyBtn, viewBtn.nextSibling);
+    const icon = copyBtn.querySelector('svg');
+    if (icon) {
+      icon.innerHTML = '<path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z" />';
     }
-  }, 500);
+
+    copyBtn.addEventListener('click', async function(e) {
+      e.preventDefault();
+
+      try {
+        const rawUrl = getMdFileUrl();
+        if (!rawUrl) throw new Error('Could not determine raw URL');
+
+        const response = await fetch(rawUrl);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const markdown = await response.text();
+        await navigator.clipboard.writeText(markdown);
+
+        showToast('Page copied as Markdown!');
+      } catch (error) {
+        console.error('Copy failed:', error);
+        showToast('Failed to copy page', true);
+      }
+    });
+
+    // Insert button immediately to prevent layout shift
+    viewBtn.parentNode.insertBefore(copyBtn, viewBtn.nextSibling);
+  }
+}
+
+// Copy page as Markdown functionality
+// Handle both initial load and Material's instant navigation
+document.addEventListener('DOMContentLoaded', function() {
+  // Add button on initial load
+  requestAnimationFrame(() => {
+    addCopyButton();
+  });
 });
+
+// Hook into Material's instant navigation events
+// Material for MkDocs fires 'navigation' event on page changes
+document.addEventListener('navigation', function() {
+  // Small delay to ensure DOM is updated after navigation
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      addCopyButton();
+    }, 100);
+  });
+});
+
+// Also listen for app ready event (Material's app object)
+if (typeof app !== 'undefined' && app.ready) {
+  app.ready().then(() => {
+    addCopyButton();
+  });
+}
+
+// Fallback: Use MutationObserver to watch for content changes
+// This catches navigation even if events don't fire
+const observer = new MutationObserver(function(mutations) {
+  // Check if action buttons area changed
+  const hasActionButtons = document.querySelector('a[title*="View source"]');
+  const hasCopyButton = document.getElementById('copy-md-btn');
+
+  if (hasActionButtons && !hasCopyButton) {
+    requestAnimationFrame(() => {
+      addCopyButton();
+    });
+  }
+});
+
+// Start observing when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+  const contentInner = document.querySelector('.md-content__inner');
+  if (contentInner) {
+    observer.observe(contentInner, {
+      childList: true,
+      subtree: true
+    });
+  }
+});
+*/
 
 function showToast(message, isError = false) {
   const toast = document.createElement('div');
