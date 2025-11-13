@@ -3,6 +3,8 @@ title: Git Best Practices
 description: Git best practices for Tux development, including branching strategy, commit conventions, and workflow automation.
 ---
 
+# Git Best Practices
+
 ## Contributing Workflows
 
 Tux is an open source project that supports contributions from both organization members and external contributors. The workflow differs slightly based on your access level.

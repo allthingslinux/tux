@@ -3,6 +3,8 @@ title: Documentation Best Practices
 description: Documentation best practices for Tux development, including writing standards, structure guidelines, and quality assurance processes.
 ---
 
+# Documentation Best Practices
+
 ## Core Principles
 
 ### User-Centric Approach

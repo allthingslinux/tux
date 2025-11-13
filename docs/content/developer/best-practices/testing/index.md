@@ -2,9 +2,11 @@
 title: Testing
 ---
 
+# Testing
+
 This section covers Tux's testing strategies and practices across different testing levels.
 
-## Testing Types
+## Navigation
 
 - [Unit Testing](unit.md) - Individual component testing
 - [Integration Testing](integration.md) - Component interaction testing

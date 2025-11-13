@@ -3,6 +3,8 @@ title: CI/CD Best Practices
 description: CI/CD best practices for Tux development, including pipeline architecture, change detection strategy, and quality assurance.
 ---
 
+# CI/CD Best Practices
+
 ## Overview
 
 Tux uses GitHub Actions for a comprehensive CI/CD pipeline that ensures code quality, security, and reliable deployments. The pipeline includes:

@@ -3,6 +3,8 @@ title: Debugging Best Practices
 description: Debugging best practices for Tux development, including logging, interactive debugging, testing, and common debugging scenarios.
 ---
 
+# Debugging Best Practices
+
 ## Development Setup
 
 ### Debug Mode
