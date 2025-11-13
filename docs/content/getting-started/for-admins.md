@@ -1,8 +1,8 @@
 ---
 title: Getting Started for Admins
-description: Getting started for admins of Tux, including installation, configuration, and usage.
 ---
 
 # Getting Started for Admins
 
-Coming soon.
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
