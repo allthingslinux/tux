@@ -76,8 +76,6 @@ theme:
     - content.action.view
     - content.code.annotate
     - content.tooltips
-    - content.code.copy
-    - content.code.select
     - header.autohide
     - navigation.instant
     - navigation.instant.progress
@@ -268,6 +266,10 @@ plugins:
       strict_only: false
   - section-index:
       enabled: true
+  - mkdocs_sbom:
+      enabled: true
+      requirements_path: ..
+      groups: [dev, test, docs, types]
   - mkdocstrings:
       # Enable mkdocstrings plugin for auto-generated API documentation
       enabled: true

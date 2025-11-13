@@ -127,6 +127,7 @@ docs = [
     "mkdocs-section-index>=0.3.10",
     "mkdocs-backlinks>=0.9.1",
     "mkdocs-literate-nav>=0.6.1",
+    "licensecheck>=2025.1.0",
 ]
 types = [
     "types-pytz>=2025.2.0.20250326",
@@ -445,9 +446,10 @@ junit_logging = "no"
 script_location = "src/tux/database/migrations"
 version_locations = ["src/tux/database/migrations/versions"]
 
-# MkDocs plugin entry point
+# MkDocs plugin entry points
 [project.entry-points."mkdocs.plugins"]
 tux = "docs.plugins.mkdocs_tux_plugin:TuxPlugin"
+mkdocs_sbom = "docs.plugins.mkdocs_sbom:SbomPlugin"
 
 # pydantic-settings-export configuration
 [tool.pydantic_settings_export]
