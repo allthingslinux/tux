@@ -17,12 +17,13 @@
 # ==============================================================================
 name: Docs
 on:
-  push:
-    branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
-    paths: [docs/**, docs/mkdocs.yml, .github/workflows/docs.yml]
-  pull_request:
-    branches: [main, 'v[0-9]+.[0-9]+*']
-    paths: [docs/**, docs/mkdocs.yml, .github/workflows/docs.yml]
+  # Temporarily disabled - uncomment to re-enable
+  # push:
+  #   branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
+  #   paths: [docs/**, docs/mkdocs.yml, .github/workflows/docs.yml]
+  # pull_request:
+  #   branches: [main, 'v[0-9]+.[0-9]+*']
+  #   paths: [docs/**, docs/mkdocs.yml, .github/workflows/docs.yml]
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
