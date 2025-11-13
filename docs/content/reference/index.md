@@ -2,9 +2,11 @@
 title: Reference
 ---
 
+# Reference
+
 Welcome to the Tux API Reference! This section provides comprehensive auto-generated documentation for the entire codebase.
 
-## Quick Navigation
+## Navigation
 
 ### 📖 Documentation Types
 
@@ -20,8 +22,6 @@ The API reference is automatically generated from the codebase using mkdocstring
 - **Docstrings** with detailed explanations
 - **Source code links** to view implementations
 - **Cross-references** between related components
-
-### Navigation
 
 Use the navigation menu to browse by module:
 
@@ -113,7 +113,7 @@ All code should include:
 - **Exception documentation** (Raises section)
 - **Usage examples** (Examples section, where applicable)
 
-**[Documentation Guide →](../developer-guide/contributing/documentation.md)**
+**[Documentation Guide →](../developer/best-practices/docs.md)**
 
 ## External References
 
@@ -150,10 +150,6 @@ All code should include:
 
 ### Getting Support
 
-- **[Developer Guide](../developer-guide/index.md)** - Development documentation
+- **[Developer Guide](../developer/index.md)** - Development documentation
 - **[Discord Server](https://discord.gg/gpmSjcjQxg)** - Ask in #development
 - **[GitHub Discussions](https://github.com/allthingslinux/tux/discussions)** - Technical discussions
-
----
-
-**Note**: This reference is auto-generated from the source code. For conceptual documentation and guides, see the **[Developer Guide](../developer-guide/index.md)**.

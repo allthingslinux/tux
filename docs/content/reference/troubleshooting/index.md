@@ -1,6 +1,14 @@
-# Index of reference/troubleshooting
+---
+title: Troubleshooting
+---
 
-- [admin](/reference/troubleshooting/admin/)
-- [developer](/reference/troubleshooting/developer/)
-- [selfhost](/reference/troubleshooting/selfhost/)
-- [user](/reference/troubleshooting/user/)
+# Troubleshooting
+
+Common issues and their solutions.
+
+## Navigation
+
+- [User](user.md)
+- [Admin](admin.md)
+- [Self-Host](selfhost.md)
+- [Developer](developer.md)

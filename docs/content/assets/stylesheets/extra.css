@@ -109,3 +109,26 @@
     grid-template-columns: repeat(1, 1fr) !important;
   }
 }
+
+/* Custom WIP (Work In Progress) admonition */
+:root {
+  /* Material Design hourglass icon for work in progress */
+  --md-admonition-icon--wip: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 2v6h.01L6 8.01 10 12l-4 4 .01.01H6V22h12v-5.99h-.01L18 16l-4-4 4-3.99-.01-.01H18V2H6zm10 14.5V20H8v-3.5l4-4 4 4zm-4-5l-4-4V4h8v3.5l-4 4z"/></svg>');
+}
+
+.md-typeset .admonition.wip,
+.md-typeset details.wip {
+  border-color: rgb(255, 152, 0); /* Orange color for work in progress */
+}
+
+.md-typeset .wip > .admonition-title,
+.md-typeset .wip > summary {
+  background-color: rgba(255, 152, 0, 0.1);
+}
+
+.md-typeset .wip > .admonition-title::before,
+.md-typeset .wip > summary::before {
+  background-color: rgb(255, 152, 0);
+  -webkit-mask-image: var(--md-admonition-icon--wip);
+  mask-image: var(--md-admonition-icon--wip);
+}
