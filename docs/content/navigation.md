@@ -92,4 +92,4 @@ title: Navigation
 * [Changelog](./changelog.md)
 * [Listings](./reference/listings.md)
 * [Tags](./reference/tags.md)
-* [Sitemap](./reference/sitemap.md)
+* [Sitemap](./sitemap.md)

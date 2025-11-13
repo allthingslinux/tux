@@ -9,21 +9,4 @@ title: Self-Hoster Guide
 
 This section contains documentation for self-hosting Tux.
 
-## [Installation](install/index.md)
-
-- [Requirements](install/requirements.md)
-- [Database](install/database.md)
-- [Docker](install/docker.md)
-- [Systemd](install/systemd.md)
-- [First Run](install/first-run.md)
-
-## [Configuration](config/index.md)
-
-- [Bot Token](config/bot-token.md)
-- [Database](config/database.md)
-- [Environment](config/environment.md)
-
-## [Management](manage/index.md)
-
-- [Database](manage/database.md)
-- [Operations](manage/operations.md)
+<!-- AUTO_INDEX_START -->

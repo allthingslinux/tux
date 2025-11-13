@@ -5,4 +5,6 @@ hide:
   - navigation
 ---
 
+# Sitemap
+
 {{ pagetree(all) }}

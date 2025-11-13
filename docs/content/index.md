@@ -122,10 +122,24 @@ Tux combines powerful moderation tools with engaging features, all built with mo
 
 - :fontawesome-brands-python: __Python 3.13+__
 - :fontawesome-brands-discord: __discord.py__
-- :material-database: __PostgreSQL__
-- :material-code-braces: __SQLModel__
+- :fontawesome-solid-database: __PostgreSQL__
+- :fontawesome-solid-code: __SQLModel__
+- :fontawesome-solid-arrows-rotate: __Alembic__
+- :fontawesome-solid-shield-halved: __Pydantic__
 - :fontawesome-brands-docker: __Docker__
-- :material-package-variant: __UV__
+- :fontawesome-solid-box: __uv__
+- :fontawesome-solid-bug: __Sentry__
+- :fontawesome-solid-database: __Redis__
+- :fontawesome-solid-file-lines: __Loguru__
+- :fontawesome-solid-terminal: __Typer__
+- :fontawesome-solid-flask: __Pytest__
+- :fontawesome-solid-code: __Ruff__
+- :fontawesome-solid-check: __Basedpyright__
+- :fontawesome-solid-book: __MkDocs__
+- :fontawesome-solid-cloud: __Workers__
+- :fontawesome-solid-code-commit: __pre-commit__
+- :fontawesome-solid-globe: __httpx__
+- :fontawesome-solid-file-code: __codecov__
 
 </div>
 

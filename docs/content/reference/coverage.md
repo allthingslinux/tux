@@ -1,7 +1,7 @@
 ---
-title: Coverage Report
+title: Coverage
 hide:
   - toc
 ---
 
-# Coverage Report
+# Coverage

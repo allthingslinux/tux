@@ -9,5 +9,4 @@ title: Self-Host Management
 
 This section contains documentation for managing your Tux instance.
 
-- [Database](database.md)
-- [Operations](operations.md)
+<!-- AUTO_INDEX_START -->

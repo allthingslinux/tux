@@ -51,6 +51,5 @@ Dependencies are managed using `uv` and locked in `uv.lock`. To update dependenc
 ## Related Documentation
 
 - **[Renovate](./renovate.md)** - Automated dependency updates and Renovate configuration
-- **[License](./license.md)** - Tux's license information
 - **[Configuration Reference](./env.md)** - Configuration options
 - **[CLI Reference](./cli.md)** - Command-line tools
