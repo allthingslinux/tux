@@ -27,17 +27,14 @@ class IndexGeneratorConfig(config_options.Config):  # type: ignore[misc]
     ----------
     enabled : bool
         Whether to enable index page generation. Default is True.
-    target_pages : list[str]
-        List of page paths (relative to docs_dir) that should have auto-generated content.
-        Default is empty list (no pages processed by default).
     preserve_above_marker : str
         Marker comment that indicates content above should be preserved.
+        Pages containing this marker will have auto-generated content added.
         Content below this marker will be replaced with auto-generated content.
         Default is "<!-- AUTO_INDEX_START -->".
     """
 
     enabled = config_options.Type(bool, default=True)
-    target_pages = config_options.ListOfItems(config_options.Type(str), default=[])
     preserve_above_marker = config_options.Type(str, default="<!-- AUTO_INDEX_START -->")
 
 
@@ -290,8 +287,11 @@ class IndexGeneratorPlugin(BasePlugin[IndexGeneratorConfig]):
         self.nav = nav
         return nav
 
-    def on_page_markdown(self, markdown: str, /, *, page: Page, config: MkDocsConfig, files: Files) -> str | None:  # noqa: PLR0911
+    def on_page_markdown(self, markdown: str, /, *, page: Page, config: MkDocsConfig, files: Files) -> str | None:
         """Process markdown content to generate index page content.
+
+        Automatically detects pages containing the marker comment and generates
+        index content for them based on the navigation structure.
 
         Parameters
         ----------
@@ -312,9 +312,9 @@ class IndexGeneratorPlugin(BasePlugin[IndexGeneratorConfig]):
         if not self.config["enabled"]:
             return None
 
-        # Check if this is a target page
-        page_path = page.file.src_path.replace("\\", "/")
-        if page_path not in self.config["target_pages"]:
+        # Check if the page contains the marker comment
+        marker: str = str(self.config["preserve_above_marker"])  # type: ignore[arg-type]
+        if marker not in markdown:
             return None
 
         # Use stored navigation structure
@@ -336,12 +336,6 @@ class IndexGeneratorPlugin(BasePlugin[IndexGeneratorConfig]):
         if not generated_content:
             return None
 
-        # Check if there's a marker to preserve content above
-        marker: str = str(self.config["preserve_above_marker"])  # type: ignore[arg-type]
-        if marker in markdown:
-            # Preserve content above marker, replace below
-            parts = markdown.split(marker, 1)
-            return f"{parts[0]}{marker}\n\n{generated_content}"
-
-        # Append generated content after existing content
-        return f"{markdown}\n\n{generated_content}"
+        # Preserve content above marker, replace below
+        parts = markdown.split(marker, 1)
+        return f"{parts[0]}{marker}\n\n{generated_content}"
