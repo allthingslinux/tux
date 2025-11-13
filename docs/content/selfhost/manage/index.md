@@ -4,9 +4,10 @@ title: Self-Host Management
 
 # Self-Host Management
 
-This section contains documentation for managing your Tux instance.
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
 
-## Navigation
+This section contains documentation for managing your Tux instance.
 
 - [Database](database.md)
 - [Operations](operations.md)

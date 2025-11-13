@@ -450,6 +450,7 @@ version_locations = ["src/tux/database/migrations/versions"]
 [project.entry-points."mkdocs.plugins"]
 tux = "docs.plugins.mkdocs_tux_plugin:TuxPlugin"
 mkdocs_sbom = "docs.plugins.mkdocs_sbom:SbomPlugin"
+mkdocs_auto_index = "docs.plugins.mkdocs_auto_index:IndexGeneratorPlugin"
 
 # pydantic-settings-export configuration
 [tool.pydantic_settings_export]

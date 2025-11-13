@@ -5,7 +5,9 @@ hide:
   - toc
 ---
 
-# Tux
+# Home
+
+## Tux
 
 The all-in-one open source Discord bot for the All Things Linux community.
 

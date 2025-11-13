@@ -192,7 +192,7 @@ plugins:
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - literate-nav:
       enabled: true
-      nav_file: SUMMARY.md
+      nav_file: navigation.md
       tab_length: 2
       implicit_index: true
   - minify:
@@ -266,6 +266,10 @@ plugins:
       strict_only: false
   - section-index:
       enabled: true
+  - mkdocs_auto_index:
+      enabled: true
+      target_pages: [developer/index.md]
+      preserve_above_marker: <!-- AUTO_INDEX_START -->
   - mkdocs_sbom:
       enabled: true
       requirements_path: ..

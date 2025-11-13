@@ -1,3 +1,7 @@
+---
+title: Community
+---
+
 # Community
 
 If you need help or just want to connect with other Tux users and developers, we have a large and active community ready to assist you.

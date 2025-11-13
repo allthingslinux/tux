@@ -1,9 +1,9 @@
 ---
-title: Temporary Voice Channels
+title: Temp VC
 description: Automatically create and manage temporary voice channels for users when they join a designated template channel.
 ---
 
-# Temporary Voice Channels
+# Temp VC
 
 The Temporary Voice Channels feature automatically creates private voice channels for users when they join a designated template channel. These channels are automatically deleted when they become empty, providing an on-demand voice channel system.
 

@@ -4,9 +4,10 @@ title: Self-Host Configuration
 
 # Self-Host Configuration
 
-Configure your Tux instance with the following guides.
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
 
-## Navigation
+Configure your Tux instance with the following guides.
 
 - [Bot Token](bot-token.md)
 - [Database](database.md)

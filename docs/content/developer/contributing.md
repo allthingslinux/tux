@@ -114,7 +114,7 @@ uv run dev format
 uv run dev typecheck
 ```
 
-### Testing
+### Running Tests
 
 ```bash
 # Run tests
@@ -130,7 +130,7 @@ uv run tests coverage
 
 Use conventional commits format:
 
-```
+```text
 feat: add new moderation command
 fix: resolve permission check issue
 docs: update deployment guide

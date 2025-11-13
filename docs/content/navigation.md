@@ -1,5 +1,5 @@
 ---
-title: Summary
+title: Navigation
 ---
 * [Home](./index.md)
 * [FAQ](./reference/faq.md)
@@ -10,6 +10,7 @@ title: Summary
     * user/commands/*.md
 * [Admin Guide](./admin/index.md)
   * [Setup](./admin/setup/index.md)
+    * [Invite](./admin/setup/invite.md)
   * [Configuration](./admin/config/index.md)
     * [Logs](./admin/config/logs.md)
     * [Roles](./admin/config/roles.md)

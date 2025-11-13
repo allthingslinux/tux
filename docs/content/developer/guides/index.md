@@ -6,4 +6,4 @@ title: Developer Guides
 
 This section contains guides for common development tasks in Tux.
 
-## Navigation
+<!-- AUTO_INDEX_START -->

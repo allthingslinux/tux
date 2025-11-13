@@ -6,4 +6,4 @@ title: Developer Concepts
 
 This section contains concepts that are used in the codebase.
 
-## Navigation
+<!-- AUTO_INDEX_START -->
