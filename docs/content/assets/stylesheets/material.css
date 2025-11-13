@@ -13,10 +13,17 @@
 * {
   -webkit-font-smoothing: subpixel-antialiased;
   -moz-osx-font-smoothing: auto;
-  text-rendering: optimizeLegibility;
+  text-rendering: auto;
   font-feature-settings: "kern" 1;
-  font-kerning: auto;
-  font-optical-sizing: auto;
+  font-kerning: normal;
+  font-optical-sizing: none;
+}
+
+/* Use optimizeLegibility only for headings where it's beneficial */
+h1, h2, h3, h4, h5, h6,
+.md-typeset h1, .md-typeset h2, .md-typeset h3,
+.md-typeset h4, .md-typeset h5, .md-typeset h6 {
+  text-rendering: optimizeLegibility;
 }
 
 /* Code font specific settings */

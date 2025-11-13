@@ -1,5 +1,13 @@
 /* Custom styles for Tux documentation */
 
+/* Ensure action buttons don't affect content flow */
+/* Material theme positions buttons absolutely, so they shouldn't affect layout */
+.md-content__button {
+  /* Buttons are already positioned absolutely by Material theme */
+  /* Just ensure they don't cause layout recalculation */
+  flex-shrink: 0;
+}
+
 /* Toast notifications */
 .md-toast {
   position: fixed;
@@ -28,17 +36,20 @@
   transform: translateY(0);
 }
 
-/* .md-typeset__table {
+.md-typeset__table {
   width: 100%;
 }
 .md-typeset__table table:not([class]) {
   display: table;
   width: 100%;
-} */
+}
 
 
 .md-grid {
   max-width: 1600px;
+  /* Prevent layout shifts from width recalculation */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Slightly increase overall font size for better readability */
@@ -81,6 +92,16 @@
 /* grid cards */
 .grards {
   grid-template-columns: repeat(2, 1fr);
+  /* Prevent layout shifts from font loading */
+  contain: layout style;
+  min-height: 0;
+}
+
+/* Stabilize grid items to prevent width recalculation */
+.grards > * {
+  min-width: 0;
+  /* Prevent text content from affecting grid sizing */
+  overflow-wrap: break-word;
 }
 
 @media screen and (max-width: 76.25em) {
