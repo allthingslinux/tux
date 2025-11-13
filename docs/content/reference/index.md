@@ -64,6 +64,32 @@ Auto-generated from the pydantic models, includes:
 - Type information
 - Descriptions
 
+## Software Bill of Materials
+
+Complete list of dependencies and their licenses:
+
+**[SBOM →](sbom.md)**
+
+Includes:
+
+- All project dependencies
+- License information for each package
+- Version information
+- Author information
+
+## Dependency Management
+
+Automated dependency updates and configuration:
+
+**[Renovate →](renovate.md)**
+
+Includes:
+
+- Renovate configuration and rules
+- Dependency update automation
+- Security patch management
+- Update scheduling and grouping
+
 ## For Developers
 
 ### Using the API Reference

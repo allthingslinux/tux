@@ -155,7 +155,7 @@ Tux combines powerful moderation tools with engaging features, all built with mo
 
     Learn how to contribute to Tux.
 
-    [:octicons-arrow-right-24: Contributing Guide](community/contributing/)
+    [:octicons-arrow-right-24: Contributing Guide](developer/contributing.md)
 
 </div>
 
@@ -175,4 +175,4 @@ Special thanks to everyone who helps make Tux better!
 
 *Made with ❤️ by the [All Things Linux](https://allthingslinux.org) community*
 
-[Documentation](index.md) · [GitHub](https://github.com/allthingslinux/tux) · [Discord](https://discord.gg/gpmSjcjQxg) · [Community](https://allthingslinux.org)
+[Documentation](https://tux.atl.dev/) · [GitHub](https://github.com/allthingslinux/tux) · [Discord](https://discord.gg/gpmSjcjQxg) · [Community](https://allthingslinux.org)
