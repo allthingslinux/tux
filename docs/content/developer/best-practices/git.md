@@ -90,10 +90,7 @@ git checkout -b feature/add-user-authentication
 
 ### Branch Naming Convention
 
-- **Features**: `feature/description` (e.g., `feature/add-user-authentication`)
-- **Bug fixes**: `fix/issue-description` (e.g., `fix/database-connection-leak`)
-- **Hotfixes**: `hotfix/critical-issue` (e.g., `hotfix/security-vulnerability`)
-- **Documentation**: `docs/update-api-docs` (e.g., `docs/update-cli-reference`)
+See the our [branch naming](./branch-naming.md) conventions
 
 ## Commit Conventions
 
