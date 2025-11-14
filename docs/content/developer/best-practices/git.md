@@ -90,7 +90,7 @@ git checkout -b feature/add-user-authentication
 
 ### Branch Naming Convention
 
-See the our [branch naming](./branch-naming.md) conventions
+See our [branch naming](./branch-naming.md) conventions
 
 ## Commit Conventions
 
