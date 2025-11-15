@@ -54,7 +54,7 @@
 
 /* Slightly increase overall font size for better readability */
 .md-typeset {
-  font-size: 0.875rem !important;
+  font-size: 0.80rem !important;
 }
 
 
@@ -89,9 +89,9 @@
   }
 }
 
-/* grid cards */
+/* grid cards - force 4 columns */
 .grards {
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(4, 1fr) !important;
   /* Prevent layout shifts from font loading */
   contain: layout style;
   min-height: 0;
@@ -104,9 +104,44 @@
   overflow-wrap: break-word;
 }
 
-@media screen and (max-width: 76.25em) {
+/* Force buttons to bottom of cards - keep grid layout intact */
+.grid.cards,
+.grards {
+  align-items: stretch !important;
+}
+
+/* Make each card item (li) a flex container to push button to bottom */
+.grid.cards > ul > li,
+.grards > ul > li {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 100%;
+}
+
+/* Make the paragraph containing the button push to bottom */
+.grid.cards > ul > li > p:last-child,
+.grards > ul > li > p:last-child {
+  margin-top: auto !important;
+  margin-bottom: 0 !important;
+}
+
+/* Ensure buttons stay at bottom */
+.grid.cards .md-button,
+.grards .md-button {
+  flex-shrink: 0 !important;
+}
+
+/* Only go to single column on very small screens (mobile) */
+@media screen and (max-width: 48em) {
   .grards {
     grid-template-columns: repeat(1, 1fr) !important;
+  }
+}
+
+/* Keep 4 columns on medium screens */
+@media screen and (min-width: 48em) and (max-width: 76.25em) {
+  .grards {
+    grid-template-columns: repeat(4, 1fr) !important;
   }
 }
 

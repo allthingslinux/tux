@@ -268,7 +268,6 @@ plugins:
       enabled: true
   - mkdocs_auto_index:
       enabled: true
-      target_pages: [developer/index.md]
       preserve_above_marker: <!-- AUTO_INDEX_START -->
   - mkdocs_sbom:
       enabled: true
