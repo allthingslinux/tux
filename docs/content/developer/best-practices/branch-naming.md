@@ -1,7 +1,9 @@
 # Branch Naming Conventions
 
-This document defines the official branch naming rules for this repository and explains why they exist. Consistent naming across branches improves readability, traceability, and automation in CI/CD pipelines. By following these rules, every developer can instantly recognize the purpose and context of a branch without digging into commits or issues.
-
+This document defines the official branch naming rules for this repository and explains why they exist.
+Consistent naming across branches improves readability, traceability, and automation in CI/CD pipelines.
+By following these rules, every developer can instantly recognize the purpose and context of a branch
+without digging into commits or issues.
 
 ## Why It Matters
 
@@ -11,12 +13,11 @@ Clear branch names:
 - Simplify issue tracking.
 - Reduce merge confusion and human error.
 
-
 ## Format
 
 Each branch name must follow this simple structure:
 
-```
+```text
 <type>/[<issue-id>-]<short-description>
 ```
 
@@ -24,7 +25,7 @@ Each branch name must follow this simple structure:
 
 ### Examples
 
-```
+```text
 feat/1022-add-message-command
 fix/245-handle-bot-crash
 hotfix/312-fix-discord-api-error
@@ -36,7 +37,6 @@ release/v0.1.0
 refactor/optimize-command-handler
 deps/upgrade-discord-py-to-3.14
 ```
-
 
 ## Types
 
@@ -55,7 +55,6 @@ Allowed `<type>` values:
 | **release**  | Preparing or tagging a release                 |
 | **test**     | Adding or modifying tests                      |
 
-
 ## Components
 
 ### `<issue-id>`
@@ -70,10 +69,9 @@ Allowed `<type>` values:
 - Short and specific (\~50 characters max)
 - Describe the change or purpose, not the implementation
 
+## Complete Examples
 
-## Examples
-
-```
+```text
 feat/1022-add-message-command
 fix/245-handle-bot-crash
 hotfix/312-fix-discord-api-error
@@ -86,8 +84,6 @@ refactor/optimize-command-handler
 deps/upgrade-discord-py-to-3.14
 ```
 
-
 ## Best Practices
 
 - Keep branch names clear and descriptive — they should convey purpose at a glance, even before looking at commits.
-

@@ -7,56 +7,36 @@ description: Git best practices for Tux development, including branching strateg
 
 ## Contributing Workflows
 
-Tux is an open source project that supports contributions from both organization members and external contributors. The workflow differs slightly based on your access level.
+Tux supports contributions from organization members and external contributors.
 
 ### Organization Members
 
-If you're a member of the All Things Linux GitHub organization, you can work directly with the main repository.
+Work directly with the main repository:
 
 ```bash
-# Clone the main repository
 git clone https://github.com/allthingslinux/tux.git
 cd tux
-
-# Create feature branch directly in main repo
-git checkout main
-git pull origin main
+git checkout main && git pull origin main
 git checkout -b feature/your-feature-name
-
 # ... make changes and commits ...
-
-# Push branch to main repository
 git push origin feature/your-feature-name
-
-# Create pull request through GitHub interface
+# Create PR via GitHub interface
 ```
 
 ### External Contributors
 
-If you're contributing from outside the organization, you'll need to work with a fork of the repository.
+Work with a fork:
 
 ```bash
-# Fork the repository on GitHub (click "Fork" button)
-
-# Clone your fork
+# Fork repository on GitHub, then:
 git clone https://github.com/YOUR_USERNAME/tux.git
 cd tux
-
-# Add upstream remote
 git remote add upstream https://github.com/allthingslinux/tux.git
-
-# Create feature branch
-git checkout main
-git pull upstream main
+git checkout main && git pull upstream main
 git checkout -b feature/your-feature-name
-
 # ... make changes and commits ...
-
-# Push to your fork
 git push origin feature/your-feature-name
-
-# Create pull request from your fork to upstream main
-# Go to https://github.com/allthingslinux/tux/pulls and click "New Pull Request"
+# Create PR from fork to upstream main
 ```
 
 ## Branching Strategy
@@ -90,20 +70,16 @@ git checkout -b feature/add-user-authentication
 
 ### Branch Naming Convention
 
-See our [branch naming](./branch-naming.md) conventions
+See our [branch naming](./branch-naming.md) conventions.
 
 ## Commit Conventions
 
-Tux uses [Conventional Commits](https://conventionalcommits.org/) for consistent, machine-readable commit messages.
+Tux uses [Conventional Commits](https://conventionalcommits.org/) for consistent commit messages.
 
 ### Format
 
 ```text
 <type>[scope]: <description>
-
-[optional body]
-
-[optional footer]
 ```
 
 ### Types
@@ -124,97 +100,60 @@ Tux uses [Conventional Commits](https://conventionalcommits.org/) for consistent
 
 ### Rules
 
-- **Lowercase type**: Always use lowercase (e.g., `feat`, not `Feat`)
-- **Max 120 characters**: Keep subject line under 120 characters
-- **No period at end**: Don't end subject with period
-- **Start with lowercase**: Subject starts with lowercase letter
-- **Use imperative mood**: Write as command (e.g., "add", not "added")
+- Lowercase type, max 120 chars, no trailing period
+- Start with lowercase, use imperative mood
 
 ### Examples
 
 ```bash
 feat: add user authentication system
 fix: resolve memory leak in message handler
-docs: update API documentation for new endpoints
 refactor(database): optimize query performance
-perf: improve caching strategy for user sessions
 test: add integration tests for Discord commands
 ```
 
 ## Development Workflow
 
-### 1. Setup
+### Setup
 
 ```bash
-# Clone repository
 git clone https://github.com/allthingslinux/tux.git
 cd tux
-
-# Install dependencies
 uv sync
-
-# Configure environment
 cp .env.example .env
 cp config/config.toml.example config/config.toml
 ```
 
-### 2. Development
+### Development
 
 ```bash
-# Create feature branch from main
-git checkout main
-
-# Organization members
-git pull origin main
-
-# External contributors
-git pull upstream main
-
+git checkout main && git pull origin main  # or upstream for forks
 git checkout -b feature/your-feature-name
-
-# Make changes in small, frequent commits
 # ... edit code ...
-
-# Run development checks frequently
-uv run dev all
-
-# Run tests after each logical change
-uv run test quick
-
-# Push branch early and often
+uv run dev all      # Run quality checks
+uv run test quick   # Run tests
 git push origin feature/your-feature-name
 ```
 
 **Key Principles:**
 
-- Keep branches short-lived (1-3 days maximum)
-- Merge to main at least daily
-- Use feature flags for incomplete work
-- Ensure main stays deployable at all times
+- Short-lived branches (1-3 days max)
+- Merge to main daily
+- Keep main always deployable
 
-### 3. Database Changes
+### Database Changes
 
 ```bash
-# Modify models
-# ... edit database models ...
-
-# Generate migration
-uv run db new "add user preferences table"
-
-# Apply migration
+# Modify models, then:
+uv run db new "description"
 uv run db dev
 ```
 
-### 4. Commit
+### Commit
 
 ```bash
-# Run pre-commit checks
-uv run dev pre-commit
-
-# Run full test suite
-uv run test all
-
-# Commit with conventional format
+uv run dev pre-commit  # Quality checks
+uv run test all        # Full test suite
 git commit -m "feat: add user preferences system"
 ```
 
@@ -231,7 +170,44 @@ Tux uses comprehensive pre-commit hooks to maintain code quality. All hooks run 
 - **Linting**: Ruff catches code issues
 - **Docstring validation**: pydoclint ensures proper documentation
 - **Secret scanning**: gitleaks prevents credential leaks
-- **Commit message validation**: commitlint enforces conventional commits
+- **Commit message validation**: commitlint enforces conventional commits using `.commitlintrc.json` configuration
+
+### Commitlint Configuration
+
+The `.commitlintrc.json` file defines strict rules for conventional commit messages:
+
+**Type Rules:**
+
+- Must use allowed types: `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`, `style`, `test`
+- Types must be lowercase, 1-15 characters
+- Type cannot be empty
+
+**Scope Rules (Optional):**
+
+- Must be lowercase, 1-20 characters
+- Used for grouping related changes (e.g., `feat(auth)`, `fix(database)`)
+
+**Subject Rules:**
+
+- Cannot be empty, max 120 characters
+- No trailing period, no exclamation marks
+- Cannot start with sentence case, start case, pascal case, or upper case
+- Must start with lowercase and use imperative mood
+
+**Header Rules:**
+
+- Minimum 10 characters, maximum 120 characters
+- Must be trimmed (no leading/trailing whitespace)
+
+**Body Rules (Optional):**
+
+- Must have leading blank line if present
+- Maximum line length 120 characters
+
+**Footer Rules (Optional):**
+
+- Must have leading blank line if present
+- Maximum line length 120 characters
 
 ### Running Checks
 
@@ -249,185 +225,133 @@ uv run dev type-check    # Type validation
 
 ### Creating a PR
 
-1. **Push your branch**: Push feature branch to remote
-2. **Create PR**: Use GitHub interface or CLI
-3. **Title format**: `[module/area] Brief description`
-4. **Description**: Include context, changes, and testing notes
+1. Push branch to remote
+2. Create PR with title format: `[module/area] Brief description`
+3. Include context, changes, and testing notes
 
-### PR Requirements
+### Requirements
 
-- [ ] All tests pass (`uv run test all`)
-- [ ] Code quality checks pass (`uv run dev all`)
-- [ ] Database migrations tested (`uv run db dev`)
-- [ ] Documentation updated if needed
-- [ ] Type hints complete and accurate
-- [ ] Docstrings added for public APIs
+- All tests pass (`uv run test all`)
+- Code quality checks pass (`uv run dev all`)
+- Database migrations tested (`uv run db dev`)
+- Documentation updated if needed
+- Type hints and docstrings complete
 
-### PR Title Examples
+### Title Examples
 
 ```text
 [auth] Add OAuth2 login system
 [database] Optimize user query performance
 [ui] Improve embed styling for mobile
-[docs] Update CLI command reference
 ```
 
 ## Code Review Guidelines
 
 ### Reviewer Checklist
 
-#### Code Quality
+**Code Quality:**
 
-- [ ] Code follows Python standards (PEP 8)
-- [ ] Type hints are complete and accurate
-- [ ] Functions are small and focused (single responsibility)
-- [ ] Variables and functions have descriptive names
-- [ ] No unused imports or variables
+- Follows Python standards and type hints
+- Functions focused with descriptive names
+- No unused imports/variables
 
-#### Architecture
+**Architecture:**
 
-- [ ] Changes follow existing patterns
-- [ ] Database operations use proper transactions
-- [ ] Error handling is appropriate
-- [ ] Security considerations addressed
+- Follows existing patterns
+- Proper database transactions and error handling
+- Security considerations addressed
 
-#### Testing
+**Testing:**
 
-- [ ] Unit tests added for new functionality
-- [ ] Integration tests added for complex features
-- [ ] Edge cases covered
-- [ ] Existing tests still pass
+- Unit/integration tests for new features
+- Edge cases covered, existing tests pass
 
-#### Documentation
+**Documentation:**
 
-- [ ] Public APIs have docstrings
-- [ ] Complex logic is commented
-- [ ] Documentation updated if needed
+- Docstrings for public APIs
+- Complex logic commented
 
 ### Review Process
 
-1. **Automated checks**: CI must pass all quality gates
-2. **Initial review**: Focus on architecture and approach
-3. **Detailed review**: Examine code line-by-line
-4. **Testing review**: Verify test coverage and scenarios
-5. **Approval**: Minimum one maintainer approval required
+1. Automated CI checks must pass
+2. Review architecture and approach first
+3. Detailed line-by-line code review
+4. Verify test coverage
+5. Minimum one maintainer approval
 
 ## Git Hygiene
 
 ### Commit History
 
+Write meaningful messages following conventional commits:
+
 ```bash
-# Write meaningful commit messages
 git commit -m "feat: implement user role system
 
 - Add role-based permissions
 - Create role assignment commands
 - Update permission checks in modules"
-
-# Avoid generic messages
-❌ git commit -m "fix bug"
-❌ git commit -m "update"
-✅ git commit -m "fix: resolve null pointer in user lookup"
 ```
+
+❌ Avoid: "fix bug", "update"
+✅ Use: "fix: resolve null pointer in user lookup"
 
 ### Rebasing
 
-```bash
-# Keep branch up to date with main
-git checkout feature/your-branch
+Keep branches current with main:
 
-# For organization members
-git fetch origin
+```bash
+git fetch origin  # or upstream for forks
 git rebase origin/main
-
-# For external contributors
-git fetch upstream
-git rebase upstream/main
-
-# Resolve conflicts if they occur
-# ... fix conflicts ...
-git add <resolved-files>
+# Resolve conflicts, then:
 git rebase --continue
-
-# Force push after rebase (since history changed)
-git push origin feature/your-branch --force-with-lease
+git push origin feature/branch --force-with-lease
 ```
 
-**When to Rebase:**
+Rebase before PRs, avoid on shared branches.
 
-- Before creating a pull request
-- When main has moved significantly ahead
-- To keep your branch current with latest changes
-
-**Avoid rebasing public branches that others are working on.**
-
-### Stashing
+### Quick Commands
 
 ```bash
-# Save work in progress
-git stash push -m "wip: user auth"
-
-# Apply saved work
-git stash pop
-```
-
-### Undoing Changes
-
-```bash
-# Undo uncommitted changes
-git checkout -- file.py
-
-# Undo last commit (keeping changes)
-git reset --soft HEAD~1
-
-# Undo last commit (discarding changes)
-git reset --hard HEAD~1
+git stash push -m "wip: description"  # Save work
+git stash pop                         # Restore work
+git checkout -- file.py               # Undo uncommitted changes
+git reset --soft HEAD~1               # Undo last commit (keep changes)
 ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-#### Pre-commit hooks fail
+**Pre-commit hooks fail:**
 
 ```bash
-# Run hooks manually to see issues
-uv run dev lint
-uv run dev type-check
-
-# Fix formatting issues
-uv run dev format
+uv run dev lint        # Check issues
+uv run dev type-check  # Type validation
+uv run dev format      # Fix formatting
 ```
 
-#### Merge conflicts
+**Merge conflicts:**
 
 ```bash
-# Abort merge and start fresh
-git merge --abort
-
-# Use mergetool
-git mergetool
-
-# After resolving, complete merge
-git commit
+git merge --abort      # Start over
+git mergetool          # Use merge tool
+git commit             # Complete after resolving
 ```
 
-#### Lost commits
+**Lost commits:**
 
 ```bash
-# Find lost commits
-git reflog
-
-# Restore from reflog
-git checkout <commit-hash>
+git reflog             # Find lost commits
+git checkout <hash>    # Restore commit
 ```
 
 ### Getting Help
 
 - Check existing PRs for patterns
-- Review commit history for examples
-- Ask in our [Discord server](https://discord.gg/gpmSjcjQxg)
-- Check documentation for specific workflows
+- Review commit history examples
+- Ask in [Discord](https://discord.gg/gpmSjcjQxg)
+- Review documentation workflows
 
 ## Resources
 
