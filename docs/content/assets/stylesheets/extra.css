@@ -89,9 +89,9 @@
   }
 }
 
-/* grid cards - force 4 columns */
+/* grid cards - auto-fit with min-width for flexible columns */
 .grards {
-  grid-template-columns: repeat(4, 1fr) !important;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
   /* Prevent layout shifts from font loading */
   contain: layout style;
   min-height: 0;
@@ -118,6 +118,18 @@
   min-height: 100%;
 }
 
+/* Add spacing below description paragraphs (after hr, before button) */
+.grid.cards > ul > li > hr ~ p:not(:last-child),
+.grards > ul > li > hr ~ p:not(:last-child) {
+  margin-bottom: 1rem !important;
+}
+
+/* Reduce spacing on title paragraph (before hr) */
+.grid.cards > ul > li > p:first-child,
+.grards > ul > li > p:first-child {
+  margin-bottom: 0.5rem !important;
+}
+
 /* Make the paragraph containing the button push to bottom */
 .grid.cards > ul > li > p:last-child,
 .grards > ul > li > p:last-child {
@@ -131,17 +143,10 @@
   flex-shrink: 0 !important;
 }
 
-/* Only go to single column on very small screens (mobile) */
+/* On very small screens, force single column */
 @media screen and (max-width: 48em) {
   .grards {
     grid-template-columns: repeat(1, 1fr) !important;
-  }
-}
-
-/* Keep 4 columns on medium screens */
-@media screen and (min-width: 48em) and (max-width: 76.25em) {
-  .grards {
-    grid-template-columns: repeat(4, 1fr) !important;
   }
 }
 
