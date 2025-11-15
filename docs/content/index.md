@@ -33,7 +33,7 @@ Choose your path to get started with Tux:
 
     Advanced server administration and moderation. Configure permissions, manage cases, and customize your server.
 
-    [View Admin Guide](admin/index.md){ .md-button .md-button--primary }
+    [View Guide](admin/index.md){ .md-button .md-button--primary }
 
 - :fontawesome-brands-docker:{ .lg .middle } __Self-Hosting__
 
@@ -41,7 +41,7 @@ Choose your path to get started with Tux:
 
     Deploy your own Tux instance with full control. Docker or systemd deployment with all dependencies included.
 
-    [View Self-Hosting Guide](selfhost/index.md){ .md-button .md-button--primary }
+    [View Guide](selfhost/index.md){ .md-button .md-button--primary }
 
 - :fontawesome-solid-code:{ .lg .middle } __Developing__
 
@@ -49,7 +49,7 @@ Choose your path to get started with Tux:
 
     Contribute to the Tux codebase or build custom plugins. Comprehensive developer documentation and API references.
 
-    [View Developer Guide](developer/index.md){ .md-button .md-button--primary }
+    [View Guide](developer/index.md){ .md-button .md-button--primary }
 
 </div>
 
