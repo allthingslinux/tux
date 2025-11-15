@@ -27,14 +27,12 @@ extra_css:
   - ./assets/stylesheets/pymdownx.css
 extra_javascript: [./assets/javascript/extra.js]
 watch:
-  - ../docs
-  - ../src/tux
-  - content/assets/stylesheets
-  - content/assets/javascript
-  - content/assets/images
-  - overrides
-  - mkdocs.yml
-  - includes
+  # MkDocs automatically watches docs_dir (content/) and mkdocs.yml
+  # Only need to watch additional files that affect the build:
+  - content/assets/stylesheets  # Custom CSS changes
+  - content/assets/javascript  # Custom JS changes
+  - overrides  # Theme template overrides
+  - includes  # Include files
 copyright: Copyright &copy; 2025 All Things Linux
 extra:
   # Custom copyright partial: overrides/partials/copyright.html
