@@ -142,13 +142,18 @@ class DocsCLI(BaseCLI):
         watch_theme: Annotated[bool, Option("--watch-theme", help="Watch theme files for changes")] = False,
         open_browser: Annotated[bool, Option("--open", help="Automatically open browser")] = False,
     ) -> None:
-        """Serve documentation locally with live reload."""
+        """Serve documentation locally with live reload.
+
+        Note: Uses click==8.2.1 to fix file watching issue with click>=8.3.0
+        (https://github.com/mkdocs/mkdocs/issues/4032)
+        """
         self.rich.print_section("📚 Serving Documentation", "blue")
 
         if not (mkdocs_path := self._find_mkdocs_config()):
             return
 
-        cmd = ["uv", "run", "mkdocs", "serve", f"--dev-addr={host}:{port}"]
+        # Pin click to 8.2.1 to fix file watching (click>=8.3.0 breaks MkDocs file watching)
+        cmd = ["uv", "run", "--with", "click==8.2.1", "mkdocs", "serve", f"--dev-addr={host}:{port}"]
 
         if dirty:
             cmd.append("--dirty")
