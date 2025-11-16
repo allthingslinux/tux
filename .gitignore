@@ -108,10 +108,6 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
-# Spyder
-.spyderproject
-.spyproject
-
 # Rope
 .ropeproject
 
@@ -143,6 +139,31 @@ tux/logs/
 # PyCharm
 .idea/
 
+# Vim
+*.swp
+*.swo
+*~
+.vim/
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+# Eclipse
+.project
+.pydevproject
+.settings/
+# Spyder
+.spyderproject
+.spyproject
+
 # Prisma
 .binaries/
 prisma/database.db
@@ -163,8 +184,21 @@ github-private-key.pem
 
 
 
+# OS-specific
 # MacOS
 .DS_Store
+.AppleDouble
+.LSOverride
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+# Linux
+*~
+.directory
+.Trash-*
 
 build/
 docs-build/
