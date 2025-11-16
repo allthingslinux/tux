@@ -2,11 +2,21 @@
 
 ## Description
 
-Please include a summary of the changes and the related issue. Please also include relevant motivation and context.
+Provide a clear summary of your changes and reference any related issues. Include the motivation behind these changes and list any new dependencies if applicable.
 
-List any dependencies that are required for this change.
+If your PR is related to an issue, please include the issue number below:
 
-If this change fixes any issues please put "Fixes #XX" in the description. Please also ensure to add the appropriate labels to the PR.
+**Related Issue:** Closes # <!-- issue number -->
+
+**Type of Change:**
+
+- [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] New feature (non-breaking change which adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ] Documentation update
+- [ ] Performance improvement
+- [ ] Code refactoring
+- [ ] Test improvements
 
 ## Guidelines
 
