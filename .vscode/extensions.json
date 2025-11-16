@@ -9,10 +9,24 @@
     "kevinrose.vsc-python-indent",
     "mikestead.dotenv",
     "njpwerner.autodocstring",
+    "magicstack.MagicPython",
     "usernamehw.errorlens",
     "sourcery.sourcery",
     "redhat.vscode-yaml",
     "ryanluker.vscode-coverage-gutters",
-    "ms-azuretools.vscode-containers"
+    "ms-azuretools.vscode-containers",
+    "tamasfe.even-better-toml",
+    "DavidAnson.vscode-markdownlint",
+    "ms-python.debugpy"
+  ],
+  "unwantedRecommendations": [
+    "ms-python.pylint",
+    "ms-python.autopep8",
+    "ms-python.black-formatter",
+    "ms-python.isort",
+    "ms-python.pylint",
+    "ms-python.flake8",
+    "ms-python.mypy-type-checker",
+    "ms-python.vscode-pylance"
   ]
 }
