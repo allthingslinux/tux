@@ -4,7 +4,7 @@ set -e
 echo "🚀 Setting up Tux development environment..."
 
 # Install uv if not already installed
-if ! command -v uv &> /dev/null; then
+if ! command -v uv > /dev/null 2>&1; then
     echo "📦 Installing uv..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
     export PATH="$HOME/.cargo/bin:$PATH"
@@ -14,7 +14,7 @@ if ! command -v uv &> /dev/null; then
 fi
 
 # Verify uv installation
-if command -v uv &> /dev/null; then
+if command -v uv > /dev/null 2>&1; then
     echo "✅ uv installed: $(uv --version)"
 else
     echo "❌ Failed to install uv"
