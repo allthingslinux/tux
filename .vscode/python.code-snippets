@@ -1,0 +1,47 @@
+{
+    "Cog": {
+        "prefix": [
+            "cog",
+        ],
+        "scope": "python",
+        "body": [
+            "\"\"\"${1:Module description}.",
+            "",
+            "${2:Longer description if needed.}",
+            "\"\"\"",
+            "",
+            "from discord.ext import commands",
+            "",
+            "from tux.core.base_cog import BaseCog",
+            "from tux.core.bot import Tux",
+            "",
+            "",
+            "class ${3:CogName}(BaseCog):",
+            "    \"\"\"${4:Cog description}.\"\"\"",
+            "",
+            "    def __init__(self, bot: Tux) -> None:",
+            "        \"\"\"Initialize the ${3:CogName} cog.",
+            "",
+            "        Parameters",
+            "        ----------",
+            "        bot : Tux",
+            "            The bot instance to attach this cog to.",
+            "        \"\"\"",
+            "        super().__init__(bot)",
+            "",
+            "    ${0:# Add commands here}",
+            "",
+            "",
+            "async def setup(bot: Tux) -> None:",
+            "    \"\"\"Set up the ${3:CogName} cog.",
+            "",
+            "    Parameters",
+            "    ----------",
+            "    bot : Tux",
+            "        The bot instance to add the cog to.",
+            "    \"\"\"",
+            "    await bot.add_cog(${3:CogName}(bot))"
+        ],
+        "description": "Discord.py cog using BaseCog"
+    }
+}
