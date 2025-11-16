@@ -165,7 +165,6 @@ exclude = [
     "**/tests/**",
     ".kiro/**",
     ".audit/**",
-    "src/tux/database/migrations/versions/**",
     "**/migrations/**",
 ]
 arg-type-hints-in-docstring = true
@@ -179,16 +178,41 @@ check-style-mismatch = true
 
 [tool.ruff]
 exclude = [
-    ".venv",
-    "examples",
     ".archive",
-    "typings/**",
+    ".audit/**",
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".kiro/**",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "examples",
+    "node_modules",
+    "site-packages",
+    "src/tux/database/migrations/versions/**",
     "tests",
     "tests/**",
     "**/tests/**",
-    ".kiro/**",
-    ".audit/**",
-    "src/tux/database/migrations/versions/**",
+    "typings/**",
+    "venv",
 ]
 indent-width = 4
 line-length = 120
@@ -198,12 +222,12 @@ target-version = "py313"
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 fixable = ["ALL"]
 ignore = [
-    "E501",     # line-too-long
-    "N814",     # camelcase-imported-as-constant
-    "PLR0913",  # too-many-arguments
-    "PLR2004",  # magic-value-comparison
-    "E402",     # module-import-not-at-top-of-file
-    "RUF022",    # unsorted-dunder-all
+    "E501",    # line-too-long
+    "N814",    # camelcase-imported-as-constant
+    "PLR0913", # too-many-arguments
+    "PLR2004", # magic-value-comparison
+    "E402",    # module-import-not-at-top-of-file
+    "RUF022",  # unsorted-dunder-all
 ]
 select = [
     "I",     # isort
@@ -231,9 +255,9 @@ select = [
     "RSE",   # flake8-raise
     "ICN",   # flake8-import-conventions
     # "DOC",  # pydoclint (not implemented yet, see https://github.com/astral-sh/ruff/issues/12434 for progress)
-    "D",     # pydocstyle
+    "D", # pydocstyle
     #"ERA",  # eradicate
-    "RUF",   # ruff
+    "RUF", # ruff
 ]
 unfixable = []
 
@@ -431,8 +455,9 @@ norecursedirs = [
 console_output_style = "progress"
 
 # Test result logging
+# Note: log_cli_level is set in addopts as --log-cli-level=DEBUG
+# These settings are for file logging (log_file_*)
 log_cli = true
-log_cli_level = "INFO"
 log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 
