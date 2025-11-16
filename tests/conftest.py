@@ -18,13 +18,12 @@ def pytest_configure(config):
     import sys
     from pathlib import Path
 
-    # Add src to path
+    # Add src to path (redundant with pyproject.toml pythonpath, but kept for explicit clarity)
     src_path = Path(__file__).parent.parent / "src"
     sys.path.insert(0, str(src_path))
 
     from tux.core.logging import configure_testing_logging
     configure_testing_logging()
 
-    config.addinivalue_line("markers", "integration: mark test as integration test")
-    config.addinivalue_line("markers", "unit: mark test as unit test")
-    config.addinivalue_line("markers", "slow: mark test as slow running")
+    # Markers are defined in pyproject.toml [tool.pytest.ini_options.markers]
+    # No need to duplicate here - pytest will read them from pyproject.toml
