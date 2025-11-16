@@ -12,6 +12,7 @@
     }
   },
   "python.languageServer": "None",
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python3",
   "python.terminal.activateEnvInCurrentTerminal": true,
   "python.terminal.executeInFileDir": false,
   "python.testing.autoTestDiscoverOnSaveEnabled": false,
@@ -117,9 +118,16 @@
   "terminal.integrated.env.linux": {
     "PYTHONPATH": "${workspaceFolder}/src"
   },
+  "terminal.integrated.env.osx": {
+    "PYTHONPATH": "${workspaceFolder}/src"
+  },
+  "terminal.integrated.env.windows": {
+    "PYTHONPATH": "${workspaceFolder}/src"
+  },
   "python.testing.pytestArgs": [
     "tests"
   ],
+  "python.testing.cwd": "${workspaceFolder}",
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
   "files.watcherExclude": {
