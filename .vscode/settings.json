@@ -14,11 +14,11 @@
   "python.languageServer": "None",
   "python.terminal.activateEnvInCurrentTerminal": true,
   "python.terminal.executeInFileDir": false,
-  "python.testing.pytestEnabled": true,
   "python.testing.autoTestDiscoverOnSaveEnabled": false,
   "coverage-gutters.coverageFileNames": [
     "coverage.xml",
     "coverage.lcov",
+    "coverage.json",
     "cov.xml",
     "gcov.out",
     "jacoco.xml",
@@ -94,5 +94,52 @@
     "tag:yaml.org,2002:python/object/apply:pymdownx.slugs.slugify",
     "tag:yaml.org,2002:python/object/apply:pymdownx.slugs.slugify mapping"
   ],
-  "markdown.validate.enabled": true
+  "markdown.validate.enabled": true,
+  "editor.rulers": [
+    120
+  ],
+  "editor.wordWrap": "off",
+  "editor.tabSize": 4,
+  "editor.detectIndentation": false,
+  "editor.trimAutoWhitespace": true,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  "editor.suggestSelection": "first",
+  "editor.acceptSuggestionOnCommitCharacter": false,
+  "editor.snippetSuggestions": "top",
+  "files.associations": {
+    "*.mdc": "markdown",
+    "*.mako": "mako",
+    "*.yml": "yaml",
+    "*.yaml": "yaml"
+  },
+  "terminal.integrated.cwd": "${workspaceFolder}",
+  "terminal.integrated.env.linux": {
+    "PYTHONPATH": "${workspaceFolder}/src"
+  },
+  "python.testing.pytestArgs": [
+    "tests"
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/.ruff_cache/**": true,
+    "**/__pycache__/**": true,
+    "**/.pytest_cache/**": true,
+    "**/htmlcov/**": true,
+    "**/.coverage": true,
+    "**/uv.lock": true,
+    "**/site/**": true
+  },
+  "search.useIgnoreFiles": true,
+  "search.useGlobalIgnoreFiles": true,
+  "search.followSymlinks": false,
+  "[toml]": {
+    "editor.defaultFormatter": "tamasfe.even-better-toml",
+    "editor.tabSize": 4,
+    "files.trimTrailingWhitespace": true
+  }
 }
