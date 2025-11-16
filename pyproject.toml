@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "tux"
 version = "0.1.0"
@@ -64,10 +68,6 @@ tests = "scripts.tests:main"
 docker = "scripts.docker_cli:main"
 docs = "scripts.docs:main"
 config = "scripts.config:main"
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
