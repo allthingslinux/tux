@@ -48,7 +48,7 @@ df -h
 
 #### Bot Metrics
 
-```
+```text
 /ping                               # API latency, uptime, resources
 ```
 
@@ -396,7 +396,7 @@ sudo systemctl start tux
 
 ### Update Monitoring
 
-#### Health Checks
+#### Health Checking
 
 ```bash
 # Check bot status
@@ -478,8 +478,6 @@ Security considerations for your Tux installation.
 ## Related
 
 - **[Database Management](database.md)**
-- **[Logging](logging.md)**
-- **[Performance](performance.md)**
 
 ---
 

@@ -401,7 +401,7 @@ Logs output to stdout/stderr and optionally to files in `logs/`.
 
 ### Common Issues
 
-- **[Troubleshooting Guide](../../reference/troubleshooting/selfhost.md)** - Common problems
+- **[Troubleshooting Guide](../../support/troubleshooting/selfhost.md)** - Common problems
 - **[Database Issues](../manage/database.md#troubleshooting)** - Database-specific
 
 ### Community Support

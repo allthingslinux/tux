@@ -20,6 +20,36 @@ function getMdFileUrl() {
   return null;
 }
 
+// Mermaid Theme Toggle Handler
+// Automatically reloads the page when switching between light/dark themes
+// This ensures Mermaid diagrams update to match the new color scheme
+
+// document.addEventListener('DOMContentLoaded', function () {
+//   // Get the palette toggle elements
+//   const paletteToggle1 = document.getElementById('__palette_1'); // Dark mode toggle
+//   const paletteToggle2 = document.getElementById('__palette_2'); // Light mode toggle
+
+//   // Add event listeners to reload page on theme change
+//   if (paletteToggle1) {
+//     paletteToggle1.addEventListener('change', function () {
+//       // Small delay to ensure theme change is processed
+//       setTimeout(() => {
+//         location.reload();
+//       }, 100);
+//     });
+//   }
+
+//   if (paletteToggle2) {
+//     paletteToggle2.addEventListener('change', function () {
+//       // Small delay to ensure theme change is processed
+//       setTimeout(() => {
+//         location.reload();
+//       }, 100);
+//     });
+//   }
+// });
+
+
 // Copy page as Markdown functionality - DISABLED due to layout shift issues
 // TODO: Re-enable when layout shift can be prevented
 
@@ -122,16 +152,16 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 */
 
-function showToast(message, isError = false) {
-  const toast = document.createElement('div');
-  toast.className = `md-toast ${isError ? 'md-toast--error' : 'md-toast--success'}`;
-  toast.textContent = message;
+// function showToast(message, isError = false) {
+//   const toast = document.createElement('div');
+//   toast.className = `md-toast ${isError ? 'md-toast--error' : 'md-toast--success'}`;
+//   toast.textContent = message;
 
-  document.body.appendChild(toast);
+//   document.body.appendChild(toast);
 
-  setTimeout(() => toast.classList.add('md-toast--show'), 100);
-  setTimeout(() => {
-    toast.classList.remove('md-toast--show');
-    setTimeout(() => document.body.removeChild(toast), 300);
-  }, 2000);
-}
+//   setTimeout(() => toast.classList.add('md-toast--show'), 100);
+//   setTimeout(() => {
+//     toast.classList.remove('md-toast--show');
+//     setTimeout(() => document.body.removeChild(toast), 300);
+//   }, 2000);
+// }

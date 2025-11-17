@@ -56,7 +56,7 @@ You can configure certain channels to be excluded from GIF limiting entirely. GI
 
 ## Configuration
 
-The GIF Limiter is configured through your server's configuration file. See the [configuration documentation](../../admin/config/features.md) for details.
+The GIF Limiter is configured through your server's configuration file.
 
 ### Configuration Options
 
@@ -135,4 +135,4 @@ Different channels can have different limits. For example:
 
 ## For Administrators
 
-See the [admin configuration guide](../../admin/config/features.md) for detailed setup instructions and advanced configuration options.
+See the admin configuration documentation for detailed setup instructions and advanced configuration options.

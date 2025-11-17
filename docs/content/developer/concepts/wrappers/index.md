@@ -1,3 +1,9 @@
-# Index of developer/concepts/wrappers
+---
+title: Wrappers
+---
 
-- [service-wrappers](/developer/concepts/wrappers/service-wrappers/)
+# Wrappers
+
+This section contains concepts related to service wrappers.
+
+<!-- AUTO_INDEX_START -->

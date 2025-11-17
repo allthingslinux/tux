@@ -109,4 +109,4 @@ Clear test documentation explaining the purpose and validation being performed.
 - [Database Controllers](controllers.md) - Controller testing patterns and fixtures
 - [Database Service](service.md) - Service layer testing approaches
 - [Database Architecture](architecture.md) - Overall testing strategy in architecture
-- [Testing Best Practices](../../best-practices/testing/) - General testing guidelines
+- [Testing Best Practices](../../best-practices/testing/index.md) - General testing guidelines

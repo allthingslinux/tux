@@ -287,5 +287,4 @@ After completing this tutorial:
 
 - Learn about [UI Components Walkthrough](ui-components-walkthrough.md)
 - Explore [Testing Setup](testing-setup.md)
-- Check out the [Database Operations Guide](../guides/database-operations.md) for advanced patterns
 - Review [Database Architecture](../concepts/database/index.md) for deeper understanding

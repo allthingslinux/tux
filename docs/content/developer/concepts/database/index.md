@@ -29,5 +29,4 @@ This architecture supports complex Discord bot operations including moderation, 
 ### Related Guides
 
 - [Database Integration Tutorial](../../tutorials/database-integration.md) - Getting started with database operations
-- [Database Operations Guide](../../guides/database-operations.md) - Common patterns and best practices
 - [Database CLI Reference](../../../reference/cli.md) - Command-line database management

@@ -1,6 +1,9 @@
-# Index of developer/concepts/ui
+---
+title: UI Concepts
+---
 
-- [buttons](/developer/concepts/ui/buttons/)
-- [embeds](/developer/concepts/ui/embeds/)
-- [modals](/developer/concepts/ui/modals/)
-- [views](/developer/concepts/ui/views/)
+# UI Concepts
+
+This section contains concepts related to UI components.
+
+<!-- AUTO_INDEX_START -->

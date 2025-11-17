@@ -1,3 +1,9 @@
-# Index of developer/concepts/tasks
+---
+title: Tasks
+---
 
-- [task-monitor](/developer/concepts/tasks/task-monitor/)
+# Tasks
+
+This section contains concepts related to tasks.
+
+<!-- AUTO_INDEX_START -->

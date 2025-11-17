@@ -1,3 +1,9 @@
-# Index of developer/concepts/handlers
+---
+title: Handlers
+---
 
-- [hot-reload](/developer/concepts/handlers/hot-reload/)
+# Handlers
+
+This section contains concepts related to handlers.
+
+<!-- AUTO_INDEX_START -->

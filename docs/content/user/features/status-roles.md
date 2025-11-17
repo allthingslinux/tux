@@ -41,7 +41,7 @@ Status Roles monitors Discord custom status messages and matches them against co
 
 ## Configuration
 
-Status Roles is configured through your server's configuration file. See the [configuration documentation](../../admin/config/features.md) for details.
+Status Roles is configured through your server's configuration file.
 
 ### Configuration Format
 
