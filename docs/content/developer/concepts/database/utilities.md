@@ -2,6 +2,11 @@
 title: Database Utilities
 ---
 
+# Database Utilities
+
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 ## Overview
 
 Tux provides utility functions that simplify database access across the application. These utilities handle context resolution and service discovery, providing consistent patterns for accessing database services and controllers from Discord contexts.

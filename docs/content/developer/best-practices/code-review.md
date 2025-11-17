@@ -5,6 +5,9 @@ description: Code review best practices for Tux development, including effective
 
 # Code Review Best Practices
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 ## Why Code Reviews Matter
 
 Code reviews are essential for maintaining code quality, catching bugs early, sharing knowledge, and ensuring consistency across the Tux codebase.

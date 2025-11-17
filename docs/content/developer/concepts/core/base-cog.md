@@ -5,6 +5,9 @@ description: Enhanced base cog class providing database access, configuration he
 
 # Base Cog
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 The `BaseCog` class is the foundation for all Tux cogs. It extends discord.py's `commands.Cog` with Tux-specific features that make building commands easier and more consistent.
 
 ## Overview

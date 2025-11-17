@@ -5,6 +5,9 @@ description: Error tracking, performance monitoring, and telemetry integration w
 
 # Sentry Integration
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 Tux integrates with Sentry for comprehensive error tracking, performance monitoring, and production observability. The Sentry integration provides automatic exception capture, command performance tracking, distributed tracing, and rich contextual data for debugging production issues.
 
 ## Overview

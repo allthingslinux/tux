@@ -5,4 +5,5 @@ description: How to create your first command for Tux, including creating a new 
 
 # Creating Your First Command
 
-Coming soon.
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.

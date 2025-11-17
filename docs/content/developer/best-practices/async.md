@@ -5,6 +5,9 @@ description: Async programming best practices for Tux development, including con
 
 # Async Best Practices
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 Discord bots operate in a highly concurrent environment where thousands of users can interact simultaneously. Understanding async programming is essential for building responsive, scalable bots that handle multiple operations efficiently.
 
 ## Why Async Matters

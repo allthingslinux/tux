@@ -1,7 +1,7 @@
 ---
-title: Tags Index
+title: Tags
 ---
 
-# Tags Index
+# Tags
 
 <!-- material/tags -->

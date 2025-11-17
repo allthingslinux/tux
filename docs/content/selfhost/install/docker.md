@@ -4,6 +4,9 @@ title: Installation via Docker
 
 # Installation via Docker
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 Deploy Tux using Docker Compose for easy setup and management. Docker Compose handles PostgreSQL, Tux, and optional Adminer (database management UI).
 
 ## Prerequisites

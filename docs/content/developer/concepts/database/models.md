@@ -2,6 +2,11 @@
 title: Database Models
 ---
 
+# Database Models
+
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 ## Overview
 
 Tux uses SQLModel for type-safe database models that combine SQLAlchemy and Pydantic. All models inherit from a custom BaseModel class providing automatic timestamp management, serialization utilities, and PostgreSQL-specific features.

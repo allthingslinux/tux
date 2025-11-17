@@ -5,6 +5,9 @@ description: Automatically prevents GIF spam in Discord channels by rate limitin
 
 # GIF Limiter
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 The GIF Limiter feature automatically prevents GIF spam in Discord channels by rate limiting GIF messages. This helps maintain conversation quality and prevents channels from being flooded with animated images.
 
 ## How It Works

@@ -5,6 +5,9 @@ description: Custom plugin system for self-hosters to extend Tux with their own 
 
 # Plugin System
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 The plugin system lets you extend Tux with custom commands and features. Place your custom modules in the `plugins` directory, and they're automatically discovered and loaded when the bot starts.
 
 ## Overview

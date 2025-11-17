@@ -5,6 +5,9 @@ description: Automatically highlight popular messages by reposting them to a ded
 
 # Starboard
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 The Starboard feature automatically highlights popular messages in your server by reposting them to a dedicated starboard channel when they receive enough reactions. This helps showcase high-quality content and celebrate community favorites.
 
 ## How It Works

@@ -4,6 +4,9 @@ title: System Requirements
 
 # System Requirements
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 Before installing Tux, ensure your system meets these requirements.
 
 ## Minimum Requirements

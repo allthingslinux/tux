@@ -6,11 +6,10 @@ title: Navigation
 * [User Guide](./user/index.md)
   * [Features](./user/features/index.md)
     * user/features/*.md
-  * [Commands](./user/commands/index.md)
-    * user/commands/*.md
+  * [Modules and Commands](./user/modules/index.md)
+    * user/modules/*.md
 * [Admin Guide](./admin/index.md)
   * [Setup](./admin/setup/index.md)
-    * [Invite](./admin/setup/invite.md)
   * [Configuration](./admin/config/index.md)
     * [Logs](./admin/config/logs.md)
     * [Roles](./admin/config/roles.md)

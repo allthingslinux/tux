@@ -5,5 +5,5 @@ description: How to add new CLI commands and tools using Typer.
 
 # Extending CLI
 
-!!! note "Coming Soon"
-    This guide will cover how to add new CLI commands and tools to the Tux bot using Typer.
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.

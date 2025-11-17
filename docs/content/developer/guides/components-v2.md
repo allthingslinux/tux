@@ -5,6 +5,9 @@ description: Complete guide to using Discord.py Components V2 in Tux, including 
 
 # Components V2 Guide
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 Discord.py 2.6+ introduced Components V2, a modern component system that provides enhanced layout capabilities and better organization. This guide covers how to use Components V2 in Tux.
 
 ## Overview

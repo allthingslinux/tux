@@ -5,6 +5,9 @@ description: Automatically assign roles to users based on their Discord custom s
 
 # Status Roles
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 The Status Roles feature automatically assigns roles to users based on their Discord custom status messages. When a user's status matches a configured pattern, they receive the corresponding role. When their status changes and no longer matches, the role is automatically removed.
 
 ## How It Works

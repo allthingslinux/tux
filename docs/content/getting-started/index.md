@@ -4,6 +4,9 @@ title: Getting Started
 
 # Getting Started
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 Welcome to Tux! This guide will help you get started based on what you want to do.
 
 ## Navigation

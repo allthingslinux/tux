@@ -5,5 +5,5 @@ description: How to make your first contribution to the Tux codebase
 
 # First Contribution
 
-!!! note "Coming Soon"
-    This guide will cover how to make your first contribution to the Tux codebase.
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.

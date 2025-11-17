@@ -5,6 +5,9 @@ description: Built-in feature modules providing core bot functionality including
 
 # Modules
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 Modules are Tux's built-in feature packages that provide core bot functionality. Each module is a self-contained package with specific commands and features.
 
 ## Overview

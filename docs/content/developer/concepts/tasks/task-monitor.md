@@ -1,7 +1,8 @@
+---
+title: Task Monitor
+---
+
 # Task Monitor
 
-Background task monitoring.
-
-See: `src/tux/core/task_monitor.py`
-
-*Full task monitor documentation in progress.*
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.

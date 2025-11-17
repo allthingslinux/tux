@@ -5,6 +5,9 @@ description: Centralized logging configuration using loguru with environment-bas
 
 # Logging System
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 Tux uses loguru for all logging, providing a single global logger configured once at startup. The logging system routes all application and third-party library logs through loguru with consistent formatting, making debugging easier.
 
 ## Overview

@@ -4,6 +4,9 @@ title: Support
 
 # Support
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 If you need any assistance with Tux or want to report bugs/leave feedback, we have many support channels available to help you.
 
 __If this is a security issue, please use the method according to our [Security Policy](https://github.com/allthingslinux/tux/security/policy).__

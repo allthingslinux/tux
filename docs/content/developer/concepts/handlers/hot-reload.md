@@ -1,7 +1,8 @@
+---
+title: Hot Reload
+---
+
 # Hot Reload
 
-Development hot-reload system.
-
-See: `src/tux/services/hot_reload/`
-
-*Full hot-reload documentation in progress.*
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.

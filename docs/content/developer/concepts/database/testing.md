@@ -2,6 +2,11 @@
 title: Database Testing
 ---
 
+# Database Testing
+
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 ## Overview
 
 Tux uses py-pglite for comprehensive database testing, providing an in-memory PostgreSQL instance that supports the full PostgreSQL feature set. This approach enables fast, isolated, and reliable database tests without external dependencies.

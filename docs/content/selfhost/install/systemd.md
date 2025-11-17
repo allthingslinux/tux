@@ -4,6 +4,9 @@ title: Installation via Systemd
 
 # Installation via Systemd
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 Install Tux directly on your system without Docker. This guide covers both quick start for development and production deployment with systemd.
 
 ## Quick Start (Development)

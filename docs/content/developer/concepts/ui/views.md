@@ -1,7 +1,8 @@
+---
+title: Views
+---
+
 # Views
 
-Creating views.
-
-See: `src/tux/ui/views/`
-
-*Full documentation in progress.*
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.

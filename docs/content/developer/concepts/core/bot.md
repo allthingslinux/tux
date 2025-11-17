@@ -5,6 +5,9 @@ description: Tux Discord bot core implementation with lifecycle management, data
 
 # Bot Core
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 The `Tux` class (`src/tux/core/bot.py`) is the main bot class that extends discord.py's `commands.Bot`. It orchestrates all major components including database access, cog loading, telemetry, background tasks, and lifecycle management.
 
 ## Overview

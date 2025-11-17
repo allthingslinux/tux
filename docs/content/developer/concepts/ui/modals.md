@@ -1,7 +1,8 @@
+---
+title: Modals
+---
+
 # Modals
 
-Creating modals.
-
-See: `src/tux/ui/modals/`
-
-*Full documentation in progress.*
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.

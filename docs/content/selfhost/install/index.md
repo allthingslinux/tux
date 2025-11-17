@@ -9,8 +9,4 @@ title: Installation
 
 This section covers the different ways to install and run Tux.
 
-- [Requirements](requirements.md)
-- [Database](database.md)
-- [Docker](docker.md)
-- [Systemd](systemd.md)
-- [First Run](first-run.md)
+<!-- AUTO_INDEX_START -->

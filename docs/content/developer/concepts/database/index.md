@@ -2,6 +2,11 @@
 title: Database Concepts
 ---
 
+# Database Concepts
+
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 ## Overview
 
 Tux uses a robust, async-first PostgreSQL database layer built with SQLModel and SQLAlchemy. The database architecture follows a clean three-layer pattern that separates concerns and enables maintainable, type-safe database operations.
@@ -14,19 +19,4 @@ The three layers work together to provide:
 
 This architecture supports complex Discord bot operations including moderation, user leveling, custom commands, and configuration management, all while maintaining excellent performance and developer experience.
 
-## Navigation
-
-### Core Concepts
-
-- [Database Architecture](architecture.md) - Three-layer architecture and design principles
-- [Database Service](service.md) - Connection management and session handling
-- [Database Models](models.md) - SQLModel definitions, relationships, and mixins
-- [Database Controllers](controllers.md) - Controller patterns and specialized operations
-- [Database Migrations](migrations.md) - Schema evolution with Alembic
-- [Database Testing](testing.md) - Testing strategies and fixtures
-- [Database Utilities](utilities.md) - Context access and helper functions
-
-### Related Guides
-
-- [Database Integration Tutorial](../../tutorials/database-integration.md) - Getting started with database operations
-- [Database CLI Reference](../../../reference/cli.md) - Command-line database management
+<!-- AUTO_INDEX_START -->

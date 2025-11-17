@@ -2,6 +2,11 @@
 title: Database Migrations
 ---
 
+# Database Migrations
+
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 ## Overview
 
 Tux uses Alembic for database schema migrations, providing version control for PostgreSQL schema changes. Migrations enable safe, incremental database evolution while maintaining data integrity across environments.
@@ -112,5 +117,4 @@ Check for long-running queries and consider batch processing, strategic indexing
 
 - [Database Models](models.md) - Model definitions that drive migrations
 - [Database Service](service.md) - Database service used by migrations
-- [Self-Hosting Migrations](../../../selfhost/manage/migrations.md) - Production migration management
 - [Database CLI Reference](../../../reference/cli.md) - Complete CLI command reference

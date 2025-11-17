@@ -1,4 +1,11 @@
+---
+title: Versioning
+---
+
 # Versioning
+
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
 
 This document outlines Tux's [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) implementation, version detection system, and release process.
 

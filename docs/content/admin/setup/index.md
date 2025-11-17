@@ -9,4 +9,4 @@ title: Admin Setup
 
 This section contains documentation for setting up Tux on your Discord server.
 
-<!-- AUTO_INDEX_START -->
+## Invite Tux to Your Server

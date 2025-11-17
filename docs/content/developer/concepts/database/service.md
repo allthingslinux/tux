@@ -2,6 +2,11 @@
 title: Database Service
 ---
 
+# Database Service
+
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 ## Overview
 
 The DatabaseService is the foundation layer for PostgreSQL database operations, providing robust connection management, session handling, health monitoring, and error recovery with automatic retry logic and exponential backoff.

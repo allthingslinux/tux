@@ -5,6 +5,9 @@ description: Tux Discord bot main entry point with error handling, logging confi
 
 # Main Entry Point
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 The main entry point (`src/tux/main.py`) serves as Tux's primary application entry point, handling error management, logging configuration, and providing the synchronous interface to the asynchronous bot application.
 
 ## Overview

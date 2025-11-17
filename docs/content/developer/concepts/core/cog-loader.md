@@ -5,6 +5,9 @@ description: Dynamic cog loading system with priority-based ordering, telemetry,
 
 # Cog Loader
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 The Cog Loader (`src/tux/core/cog_loader.py`) handles discovery, validation, and loading of Discord bot cogs with priority-based ordering, comprehensive error handling, and performance monitoring.
 
 ## Overview

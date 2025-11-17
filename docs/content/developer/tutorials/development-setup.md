@@ -1,5 +1,8 @@
+---
+title: Development Setup
+---
+
 # Development Setup
 
-See: [Getting Started for Developers](../../getting-started/for-developers.md)
-
-*Full guide in progress.*
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.

@@ -4,6 +4,9 @@ title: Bookmarks
 
 # Bookmarks
 
+!!! wip "Work in progress"
+    This section is a work in progress. Please help us by contributing to the documentation.
+
 The Bookmarks feature allows you to save important Discord messages for later reference. Simply react to any message with the bookmark emoji, and Tux will send a copy of that message directly to your DMs, complete with all attachments, images, and context.
 
 ## How It Works
