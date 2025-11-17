@@ -52,13 +52,13 @@ Choose the right type based on what users need to accomplish.
 
 ```text
 docs/content/
-├── getting-started/     # Onboarding for different user types
+├── getting-started/    # Onboarding for different user types
 ├── user/               # Complete user experience
 ├── admin/              # Server administration
 ├── selfhost/           # Self-hosting guides
 ├── developer/          # Development resources
 ├── reference/          # Technical specifications
-└── community/          # Support, changelog, FAQ
+└── support/            # Support, changelog, FAQ
 ```
 
 ### File Naming & Navigation
