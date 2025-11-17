@@ -6,6 +6,6 @@ Currently only the latest stable release will be supported with security updates
 
 ## Reporting a Vulnerability
 
-If you find a Vulnerability please report it to `tux@allthingslinux.com` and someone will get back ASAP.
+If you find a Vulnerability please report it to `tux@allthingslinux.org` and someone will get back ASAP.
 
 **Please note that Outlook does not like our email server so emails will not work with it.**
