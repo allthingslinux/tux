@@ -58,3 +58,28 @@ enum CaseType {
   POLLBAN
   POLLUNBAN
 }
+
+model Ticket {
+  ticket_id        Int      @id @default(autoincrement())
+  guild_id         BigInt
+  channel_id       BigInt   @unique
+  author_id        BigInt
+  claimed_by       BigInt?
+  title            String
+  status           TicketStatus @default(OPEN)
+  created_at       DateTime @default(now())
+  closed_at        DateTime?
+
+  guild            Guild    @relation(fields: [guild_id], references: [guild_id], onDelete: Cascade)
+
+  @@index([guild_id])
+  @@index([author_id])
+  @@index([claimed_by])
+  @@index([status])
+}
+
+enum TicketStatus {
+  OPEN
+  CLAIMED
+  CLOSED
+}

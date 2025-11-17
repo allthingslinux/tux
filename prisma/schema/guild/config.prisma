@@ -6,6 +6,7 @@ model GuildConfig {
   private_log_id       BigInt?
   report_log_id        BigInt?
   dev_log_id           BigInt?
+  ticket_log_id        BigInt?
   jail_channel_id      BigInt?
   general_channel_id   BigInt?
   starboard_channel_id BigInt?
