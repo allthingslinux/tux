@@ -52,6 +52,16 @@
   box-sizing: border-box;
 }
 
+/* To stretch the main content area fully */
+.md-main__inner.md-grid {
+  max-width: 1800px;
+}
+
+/* Or, to stretch all grid elements (including header and footer if they use .md-grid) */
+/* .md-grid {
+    max-width: initial;
+} */
+
 /* Slightly increase overall font size for better readability */
 .md-typeset {
   font-size: 0.80rem !important;
@@ -86,6 +96,20 @@
 @media screen and (max-width: 76.25em) {
   .md-nav--secondary {
     width: 10rem !important;
+  }
+
+  /* Match mobile navigation header background to desktop header (dark theme) */
+  [data-md-color-scheme="tokyo-night"] .md-nav--primary .md-nav__title {
+    background-color: #16161e !important;
+    color: #a9b1d6 !important;
+    font-weight: 700;
+  }
+
+  /* Match mobile navigation header background to desktop header (light theme) */
+  [data-md-color-scheme="tokyo-night-light"] .md-nav--primary .md-nav__title {
+    background-color: #e6e7ed !important;
+    color: #343b58 !important;
+    font-weight: 700;
   }
 }
 
