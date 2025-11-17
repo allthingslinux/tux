@@ -1685,30 +1685,30 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "jishaku"
-version = "2.6.0"
+version = "2.6.3"
 description = "A discord.py extension including useful tools for bot development and debugging."
 optional = false
 python-versions = ">=3.8.0"
 groups = ["main"]
 files = [
-    {file = "jishaku-2.6.0-py3-none-any.whl", hash = "sha256:a39366e5b2bd51c0d21ef8783c3e00c927c59792a2b0f5467c156b1f69eb912b"},
-    {file = "jishaku-2.6.0.tar.gz", hash = "sha256:b9b4d053b8cbdb6a8fd7a8d549d0928c2e5294044cbb145cbb26df36f97ce289"},
+    {file = "jishaku-2.6.3-py3-none-any.whl", hash = "sha256:96ea7c4564b6bc3910b829be71889b837b0384b263a922512afd1ee0036f7c74"},
+    {file = "jishaku-2.6.3.tar.gz", hash = "sha256:5b1b91981b6809f68645a16ebc56492c868d4ff1e72566e54fe4bbf43f00a603"},
 ]
 
 [package.dependencies]
 braceexpand = ">=0.1.7"
 click = ">=8.1.7"
 "discord.py" = ">=2.4.0"
-import-expression = ">=2.0.0,<3.0.0"
+import_expression = ">=2.0.0,<3.0.0"
 tabulate = ">=0.9.0"
 typing-extensions = ">=4.3,<5"
 
 [package.extras]
-docs = ["Sphinx (>=4.4.0)", "sphinxcontrib-trio (>=1.1.2)"]
+docs = ["Sphinx (>=4.4.0)", "sphinxcontrib_trio (>=1.1.2)"]
 procinfo = ["psutil (>=5.9.5)"]
 profiling = ["line-profiler (>=4.1.1)"]
 publish = ["Jinja2 (>=3.1.2)"]
-test = ["coverage (>=7.3.2)", "flake8 (>=6.1.0)", "isort (>=5.12.0)", "pylint (>=3.0.1)", "pytest (>=7.4.2)", "pytest-asyncio (>=0.21.0)", "pytest-cov (>=4.1.0)", "pytest-mock (>=3.11.1)"]
+test = ["coverage (>=7.5.4)", "pytest (>=8.3.5)", "pytest-asyncio (>=0.24.0)", "pytest-cov (>=5.0.0)", "pytest-mock (>=3.14.1)", "ruff (>=0.12.11)"]
 voice = ["discord.py[voice] (>=2.3.2)", "yt-dlp (>=2023.10.13)"]
 
 [[package]]
