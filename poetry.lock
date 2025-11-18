@@ -19,14 +19,14 @@ redis = ["redis (>=4.2.0)"]
 
 [[package]]
 name = "aioconsole"
-version = "0.8.1"
+version = "0.8.2"
 description = "Asynchronous console and interfaces for asyncio"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "aioconsole-0.8.1-py3-none-any.whl", hash = "sha256:e1023685cde35dde909fbf00631ffb2ed1c67fe0b7058ebb0892afbde5f213e5"},
-    {file = "aioconsole-0.8.1.tar.gz", hash = "sha256:0535ce743ba468fb21a1ba43c9563032c779534d4ecd923a46dbd350ad91d234"},
+    {file = "aioconsole-0.8.2-py3-none-any.whl", hash = "sha256:00f3fabd6de5df2fad635e1e6a13ebe5bb2456b83b31e881ae41bc5862fd6a68"},
+    {file = "aioconsole-0.8.2.tar.gz", hash = "sha256:25cb5530f58f7ab431e9af84fbb5417178287b6c3300d5b1185e3b129a227cef"},
 ]
 
 [package.extras]
