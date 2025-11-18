@@ -4,9 +4,8 @@ title: Self-Hoster Guide
 
 # Self-Hoster Guide
 
-!!! wip "Work in progress"
-    This section is a work in progress. Please help us by contributing to the documentation.
-
-This section contains documentation for self-hosting Tux.
+Get started by reading the [Installation Guide](./install/index.md) to set up Tux on your own server.
+After installation, refer to the [Configuration Guide](./config/index.md) to customize Tux to your needs.
+For ongoing maintenance and operations, the [Management Guide](./manage/index.md) provides essential information.
 
 <!-- AUTO_INDEX_START -->

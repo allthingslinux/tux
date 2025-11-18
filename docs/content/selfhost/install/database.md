@@ -64,7 +64,7 @@ docker compose up -d tux
 
 ## Manual PostgreSQL Setup
 
-!!! info "Docker Users Skip This"
+!!! warning "Docker Users Skip This"
     **If you're using Docker Compose, skip this section entirely.** Docker automatically creates the user and database based on your environment variables (`POSTGRES_USER`, `POSTGRES_DB`, `POSTGRES_PASSWORD`). You only need this section if you're running PostgreSQL manually outside of Docker.
 
 If you prefer to run PostgreSQL manually (not in Docker), follow these steps.

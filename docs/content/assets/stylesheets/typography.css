@@ -497,7 +497,7 @@ article p {
   font-size: 1em !important; /* Inherit from .md-typeset base (0.667rem = 16px) */
   line-height: 1.6 !important;
   margin-top: 0 !important;
-  margin-bottom: 1rem !important;
+  margin-bottom: 0 !important;
 }
 
 /* Override Material's .md-typeset base font-size */

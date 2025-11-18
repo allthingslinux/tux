@@ -1,93 +1,52 @@
 ---
-title: Installation via Systemd
+title: Systemd
 ---
 
-# Installation via Systemd
+# Systemd Installation
 
 !!! wip "Work in progress"
     This section is a work in progress. Please help us by contributing to the documentation.
 
-Install Tux directly on your system without Docker. This guide covers both quick start for development and production deployment with systemd.
+This guide provides information on installing and managing Tux using systemd on a Linux system.
 
-## Quick Start (Development)
-
-For quick testing or development, you can run Tux directly:
-
-```bash
-# Clone repository
-git clone https://github.com/allthingslinux/tux.git /opt
-cd /opt/tux
-
-# Install dependencies
-uv sync
-
-# Generate configuration files
-uv run config generate
-
-# Copy and edit .env
-cp .env.example .env
-nano .env
-
-# Start bot (migrations run automatically on startup)
-uv run tux start
-```
-
-For production deployment, continue with the systemd setup below.
-
-## Production Deployment with Systemd
-
-### Prerequisites
+## Prerequisites
 
 Before deploying with systemd, ensure you have:
 
 - **Linux system** with systemd (most modern distributions)
 - **Python 3.13+** installed
-- **[uv](https://docs.astral.sh/uv/)** package manager installed
 - **PostgreSQL 17+** database running
-- **Discord bot token** from [Discord Developer Portal](https://discord.com/developers/applications)
+- **Discord bot token** from the [Discord Developer Portal](https://discord.com/developers/applications)
 - **Root or sudo access** for systemd service creation
 
-### Install uv
+## Installation Steps
 
-Tux uses `uv` as its package manager. Install it using the standalone installer:
-
-```bash
-# Install uv
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Verify installation
-uv --version
-```
-
-!!! tip "Alternative Installation Methods"
-    If you prefer, you can install uv via `pipx` (`pipx install uv`) or download binaries directly from [GitHub Releases](https://github.com/astral-sh/uv/releases).
-
-### Installation Steps
-
-#### 1. Create System User
+### 1. Create System User and Install uv
 
 Create a dedicated user for running Tux (recommended for security):
 
 ```bash
-sudo useradd -r tux
+sudo useradd -m -d /home/tux -s /bin/bash tux
 ```
 
-#### 2. Clone Repository to /opt/tux
+Once you are done, install `uv` using the instructions from the [uv Installation Guide](https://docs.astral.sh/uv/getting-started/installation/). Make sure to run the installation as the `tux` user or install it system-wide.
+
+### 2. Clone Repository
+
+!!! info "Installation Directory"
+    We will be using the `/opt/tux` directory in this guide however you can use other directories and adjust the steps.
 
 Clone the Tux repository directly to the installation directory:
 
 ```bash
 # Clone repository as tux user
-sudo -u tux git clone https://github.com/allthingslinux/tux.git /opt
+sudo git clone https://github.com/allthingslinux/tux.git /opt
 
-# Set ownership (ensure tux user owns everything)
+# Set ownership
 sudo chown -R tux:tux /opt/tux
-
-# Set appropriate permissions
-sudo chmod 755 /opt/tux
 ```
 
-#### 3. Install Dependencies
+### 3. Install Dependencies
 
 Install Tux dependencies using uv:
 
@@ -98,57 +57,30 @@ sudo -u tux bash -c "cd /opt/tux && uv sync"
 # Generate configuration files
 sudo -u tux bash -c "cd /opt/tux && uv run config generate"
 
-# Create and protect .env file
+# Create .env file
 sudo -u tux cp /opt/tux/.env.example /opt/tux/.env
-sudo chmod 600 /opt/tux/.env
-sudo chown tux:tux /opt/tux/.env
+
+# Optional: Adjust file permissions so only tux user can read/write .env
+# sudo chmod 600 /opt/tux/.env
 ```
 
-#### 4. Configure Environment
+### 4. Configure Environment
 
 Edit the `.env` file and setup necessary environment variables:
 
 ```bash
-# Create or edit .env file
+# Edit .env file
 sudo -u tux nano /opt/tux/.env
 ```
 
 !!! note "Alternative: Systemd Environment File"
-You can also use a separate systemd environment file at `/etc/tux/environment` if you prefer to separate system-level configuration from application configuration. If using this approach, add `EnvironmentFile=/etc/tux/environment` to the systemd service file.
+    You can also use a separate systemd environment file at `/etc/tux/environment` if you prefer to separate system-level configuration from application configuration. If using this approach, add `EnvironmentFile=/etc/tux/environment` to the systemd service file.
 
-#### 5. Set Up Database
+### 5. Set Up Database
 
-For PostgreSQL installation and database setup instructions, see [Database Installation](database.md).
+For PostgreSQL installation and database setup instructions, see [Database Installation](database.md). If you don't want to manage the database yourself, consider using a managed PostgreSQL service such as [Supabase](https://supabase.com/).
 
-!!! tip "Migrations Run Automatically"
-    Database migrations run automatically when Tux starts. No manual migration step needed.
-
-#### 6. Find uv Installation Path
-
-Before creating the service file, find where `uv` is installed:
-
-```bash
-# Find uv executable
-which uv
-
-# Common locations:
-# - /usr/local/bin/uv (standalone installer)
-# - /usr/bin/uv (package manager)
-# - ~/.cargo/bin/uv (cargo installation)
-# - ~/.local/bin/uv (pip --user)
-```
-
-If `uv` is not in a system path, you can either:
-
-1. **Create a symlink** (recommended):
-
-   ```bash
-   sudo ln -s $(which uv) /usr/local/bin/uv
-   ```
-
-2. **Use full path** in the service file (replace `/usr/local/bin/uv` with your path)
-
-#### 7. Create Systemd Service File
+### 6. Create Systemd Service File
 
 Create the systemd service unit:
 
@@ -156,7 +88,7 @@ Create the systemd service unit:
 sudo nano /etc/systemd/system/tux.service
 ```
 
-Use this configuration (adjust the `uv` path if needed):
+Use this configuration (remove `postgresql.service` from `After` if not using local database):
 
 ```ini
 [Unit]
@@ -170,7 +102,7 @@ Type=simple
 User=tux
 Group=tux
 WorkingDirectory=/opt/tux
-ExecStart=/usr/local/bin/uv run tux start
+ExecStart=uv run tux start
 Restart=always
 RestartSec=10
 
@@ -183,25 +115,23 @@ SyslogIdentifier=tux
 WantedBy=multi-user.target
 ```
 
-#### 8. Enable and Start Service
+### 7. Enable and Start Service
 
 ```bash
 # Reload systemd to recognize new service
 sudo systemctl daemon-reload
 
-# Enable service to start on boot
-sudo systemctl enable tux
+# Enable service to start on boot and start immediately
+sudo systemctl enable tux --now
 
-# Start the service
-sudo systemctl start tux
-
-# Check status
+# Check status after 15 seconds
+sleep 15
 sudo systemctl status tux
 ```
 
-## Configuration Updates
+## Managing the Service
 
-### Updating Environment Variables
+### Update Environment Variables
 
 ```bash
 # Edit .env file
@@ -212,14 +142,14 @@ sudo systemctl daemon-reload
 sudo systemctl restart tux
 ```
 
-### Updating Tux Code
+### Update Tux Installation
+
+!!! warning "Backups"
+    We heavily recommend backing up your installation and database before performing updates.
 
 ```bash
 # Stop service
 sudo systemctl stop tux
-
-# Backup current installation
-sudo cp -r /opt/tux /opt/tux.backup.$(date +%Y%m%d)
 
 # Update code
 cd /opt/tux
@@ -232,55 +162,11 @@ sudo -u tux uv sync
 sudo systemctl restart tux
 
 # Verify status
+sleep 15
 sudo systemctl status tux
 ```
 
 ## Troubleshooting
-
-### Service Won't Start
-
-**Check service status:**
-
-```bash
-sudo systemctl status tux
-```
-
-**Common issues:**
-
-1. **Permission errors:**
-
-   ```bash
-   # Check file ownership
-   ls -la /opt/tux
-   sudo chown -R tux:tux /opt/tux
-   ```
-
-2. **Missing dependencies:**
-
-   ```bash
-   # Verify uv is installed
-   which uv
-
-   # Check Python version
-   python3 --version
-   ```
-
-3. **Database connection issues:**
-
-   ```bash
-   # Test database connection
-   sudo -u tux uv run db health
-
-   # Check PostgreSQL is running
-   sudo systemctl status postgresql
-   ```
-
-4. **Invalid bot token:**
-
-   ```bash
-   # Check .env file
-   sudo cat /opt/tux/.env | grep BOT_TOKEN
-   ```
 
 ### Service Crashes Repeatedly
 

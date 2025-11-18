@@ -207,16 +207,6 @@ Tux uses PostgreSQL. You can configure it using individual variables or a connec
     POSTGRES_PASSWORD=your_secure_password
     LOG_LEVEL=INFO
 
-## Systemd Configuration
-
-For systemd deployments, see the **[Systemd Deployment Guide](../install/systemd.md)** for complete setup instructions including:
-
-- Environment file configuration (`/etc/tux/environment`)
-- Systemd service unit file
-- Service management
-- Logging setup
-- Security hardening
-
 ## Validation
 
 ### Check Configuration
