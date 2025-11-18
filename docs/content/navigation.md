@@ -18,7 +18,6 @@ title: Navigation
     * [Jail](./admin/config/jail.md)
 * [Self-Hoster Guide](./selfhost/index.md)
   * [Installation](./selfhost/install/index.md)
-    * [Requirements](./selfhost/install/requirements.md)
     * [Database](./selfhost/install/database.md)
     * [Docker](./selfhost/install/docker.md)
     * [Systemd](./selfhost/install/systemd.md)
