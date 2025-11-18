@@ -62,9 +62,31 @@
     max-width: initial;
 } */
 
-/* Slightly increase overall font size for better readability */
-.md-typeset {
-  font-size: 0.80rem !important;
+/* Let Material handle .md-typeset font-size - it uses px2rem(16px) = 0.8rem */
+/* With Material's 150% html, this renders as 19.2px, which is fine */
+/* We only override specific typography elements (h1, h2, etc.) in typography.css */
+
+/* Make navigation links more readable */
+/* Adjusted for Material's 150% html font-size */
+.md-nav {
+  font-size: 0.667rem !important; /* 16px with Material's 150% base (0.667rem * 24px = 16px) */
+}
+
+.md-nav__link {
+  font-size: 0.667rem !important; /* 16px with Material's 150% base */
+  font-weight: 500 !important;
+}
+
+
+/* Fix tab navigation font sizes - Material sets them too small */
+/* Adjusted for Material's 150% html font-size */
+.md-tabs {
+  font-size: 0.667rem !important; /* 16px with Material's 150% base */
+}
+
+.md-tabs__link {
+  font-size: 0.667rem !important; /* 16px with Material's 150% base */
+  font-weight: 500 !important;
 }
 
 
@@ -106,9 +128,9 @@
   }
 
   /* Match mobile navigation header background to desktop header (light theme) */
-  [data-md-color-scheme="tokyo-night-light"] .md-nav--primary .md-nav__title {
-    background-color: #e6e7ed !important;
-    color: #343b58 !important;
+  [data-md-color-scheme="catppuccin-latte"] .md-nav--primary .md-nav__title {
+    background-color: #eff1f5 !important;
+    color: #4c4f69 !important;
     font-weight: 700;
   }
 }
@@ -134,24 +156,166 @@
   align-items: stretch !important;
 }
 
+/* Custom cards grid - replacement for Material grid cards */
+.custom-cards-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+  gap: 1.5rem !important;
+  margin: 2rem auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Key Features section - 3 columns */
+.custom-cards-grid.key-features-grid {
+  grid-template-columns: repeat(3, 1fr) !important;
+}
+
+.custom-card {
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 1rem !important;
+  border-radius: 0.5rem !important;
+  background-color: var(--md-default-bg-color--light) !important;
+  border: 1px solid var(--md-border-color) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+  text-align: center !important;
+  height: auto !important;
+  gap: 0.5rem !important;
+}
+
+.custom-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  border-color: var(--md-primary-fg-color) !important;
+}
+
+.custom-card-icon {
+  margin: 0 auto !important;
+  font-size: 2rem !important;
+  color: var(--md-primary-fg-color) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  text-align: center !important;
+}
+
+.custom-card-icon .md-icon,
+.custom-card-icon .twemoji,
+.custom-card-icon i,
+.custom-card-icon svg {
+  font-size: 2rem !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  color: var(--md-primary-fg-color) !important;
+}
+
+.custom-card-icon svg {
+  width: 2rem !important;
+  height: 2rem !important;
+  fill: currentColor !important;
+}
+
+.custom-card-title {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: var(--md-default-fg-color) !important;
+  line-height: 1.3 !important;
+}
+
+.custom-card-divider,
+.custom-card hr,
+.custom-card .custom-card-divider {
+  border: none !important;
+  border-top: 1px solid var(--md-border-color) !important;
+  margin: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.custom-card-description {
+  margin: 0 !important;
+  color: var(--md-default-fg-color--light) !important;
+  line-height: 1.4 !important;
+  text-align: center !important;
+  font-size: 0.875rem !important;
+}
+
+.custom-card-button {
+  margin-top: auto !important;
+  align-self: center !important;
+  width: auto !important;
+}
+
+/* Dark mode styling for custom cards */
+[data-md-color-scheme="tokyo-night"] .custom-card {
+  background-color: rgba(26, 27, 38, 0.54) !important;
+  border: 1px solid #787c99 !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .custom-card:hover {
+  background-color: rgba(26, 27, 38, 0.7) !important;
+  border-color: #7aa2f7 !important;
+  box-shadow: 0 4px 12px rgba(122, 162, 247, 0.2) !important;
+}
+
+/* Responsive: 2 columns on medium screens, 1 on small */
+@media screen and (max-width: 76.25em) {
+  .custom-cards-grid:not(.key-features-grid) {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .custom-cards-grid.key-features-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media screen and (max-width: 48em) {
+  .custom-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 /* Make each card item (li) a flex container to push button to bottom */
 .grid.cards > ul > li,
 .grards > ul > li {
   display: flex !important;
   flex-direction: column !important;
   min-height: 100%;
+  text-align: left !important; /* Ensure card content is left-aligned */
 }
 
 /* Add spacing below description paragraphs (after hr, before button) */
 .grid.cards > ul > li > hr ~ p:not(:last-child),
 .grards > ul > li > hr ~ p:not(:last-child) {
   margin-bottom: 1rem !important;
+  text-align: left !important; /* Left-align description text */
 }
 
 /* Reduce spacing on title paragraph (before hr) */
 .grid.cards > ul > li > p:first-child,
 .grards > ul > li > p:first-child {
   margin-bottom: 0.5rem !important;
+  text-align: center !important; /* Center the icon and title */
+}
+
+/* Center icons in card titles */
+.grid.cards > ul > li > p:first-child .md-icon,
+.grards > ul > li > p:first-child .md-icon,
+.grid.cards > ul > li > p:first-child i,
+.grards > ul > li > p:first-child i {
+  display: block !important;
+  margin: 0 auto 0.5rem auto !important;
 }
 
 /* Make the paragraph containing the button push to bottom */
@@ -159,12 +323,387 @@
 .grards > ul > li > p:last-child {
   margin-top: auto !important;
   margin-bottom: 0 !important;
+  text-align: center !important; /* Center the button */
 }
 
 /* Ensure buttons stay at bottom */
 .grid.cards .md-button,
 .grards .md-button {
   flex-shrink: 0 !important;
+}
+
+/* Home page content centering - Landing page layout */
+.home-page-content {
+  margin: 0 auto;
+  padding: 3rem 2rem;
+  max-width: 1400px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Ensure all direct children are centered and full width */
+.home-page-content > * {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* But paragraphs should have max-width for readability */
+.home-page-content > p {
+  max-width: 800px !important;
+}
+
+.home-page-content > p:first-of-type {
+  max-width: 800px !important;
+}
+
+/* Override Material's content width constraints for home page */
+.md-content__inner:has(.home-page-content),
+.md-typeset:has(.home-page-content),
+.home-page-content .md-typeset {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* Home page typography */
+.home-page-content h1 {
+  font-size: 3.5rem !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  margin: 0 0 1.5rem 0 !important;
+  padding: 0 !important;
+  text-align: center !important;
+  letter-spacing: -0.02em !important;
+}
+
+.home-page-content h2 {
+  font-size: 2.25rem !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+  margin: 4rem 0 1.5rem 0 !important;
+  padding: 0 !important;
+  text-align: center !important;
+  letter-spacing: -0.01em !important;
+}
+
+.home-page-content h3 {
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  margin: 2rem 0 1rem 0 !important;
+  padding: 0 !important;
+  text-align: center !important;
+}
+
+/* Main intro paragraph */
+.home-page-content > p:first-of-type {
+  font-size: 1.25rem !important;
+  line-height: 1.7 !important;
+  margin: 0 auto 3rem auto !important;
+  max-width: 800px !important;
+  text-align: center !important;
+  color: var(--md-default-fg-color--light) !important;
+}
+
+/* Regular paragraphs */
+.home-page-content > p {
+  font-size: 1.125rem !important;
+  line-height: 1.7 !important;
+  margin: 0 auto 2rem auto !important;
+  max-width: 800px !important;
+  text-align: center !important;
+  color: var(--md-default-fg-color--light) !important;
+}
+
+/* Paragraphs within sections */
+.home-page-content section > p,
+.home-page-content div > p:not(:has(a)):not(:first-of-type) {
+  font-size: 1rem !important;
+  line-height: 1.6 !important;
+  margin: 0 auto 1.5rem auto !important;
+  max-width: 700px !important;
+  text-align: center !important;
+}
+
+/* Horizontal rules */
+.home-page-content hr {
+  margin: 3rem auto !important;
+  max-width: 600px !important;
+  border-color: var(--md-border-color) !important;
+}
+
+/* Images and media - centered */
+.home-page-content img {
+  display: block !important;
+  margin: 1.5rem auto !important;
+  max-width: 100% !important;
+}
+
+/* Links in paragraphs */
+.home-page-content p a {
+  color: var(--md-primary-fg-color) !important;
+  text-decoration: underline !important;
+}
+
+.home-page-content p a:hover {
+  color: var(--md-accent-fg-color) !important;
+}
+
+/* Footer links at bottom */
+.home-page-content > p:last-child {
+  margin-top: 3rem !important;
+  font-size: 0.95rem !important;
+  color: var(--md-default-fg-color--light) !important;
+}
+
+.home-page-content > p:last-child a {
+  margin: 0 0.5rem !important;
+}
+
+/* Italic text (Made with ❤️) */
+.home-page-content > p:nth-last-child(2) {
+  font-size: 1rem !important;
+  font-style: italic !important;
+  margin: 2rem auto !important;
+}
+
+/* Responsive typography for home page */
+@media screen and (max-width: 76.25em) {
+  .home-page-content h1 {
+    font-size: 2.5rem !important;
+  }
+
+  .home-page-content h2 {
+    font-size: 1.875rem !important;
+  }
+
+  .home-page-content > p:first-of-type {
+    font-size: 1.125rem !important;
+  }
+}
+
+@media screen and (max-width: 48em) {
+  .home-page-content {
+    padding: 2rem 1rem !important;
+  }
+
+  .home-page-content h1 {
+    font-size: 2rem !important;
+  }
+
+  .home-page-content h2 {
+    font-size: 1.5rem !important;
+  }
+
+  .home-page-content h3 {
+    font-size: 1.25rem !important;
+  }
+
+  .home-page-content > p:first-of-type {
+    font-size: 1rem !important;
+  }
+}
+
+/* Ensure why-tux-grid breaks out of any width constraints */
+.home-page-content .why-tux-grid,
+.home-page-content .why-tux-grid > ul {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* Why Tux feature grid */
+.why-tux-grid {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 2.5rem auto !important;
+}
+
+.why-tux-grid > ul {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 1.5rem !important;
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  justify-items: stretch !important;
+}
+
+/* Responsive: 2 columns on medium screens, 1 on small */
+@media screen and (max-width: 76.25em) {
+  .why-tux-grid,
+  .why-tux-grid > ul {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media screen and (max-width: 48em) {
+  .why-tux-grid,
+  .why-tux-grid > ul {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.why-tux-grid > ul > li {
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 1.5rem !important;
+  border-radius: 0.5rem !important;
+  background-color: var(--md-default-bg-color--light) !important;
+  border: 1px solid var(--md-border-color) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+  min-height: 100% !important;
+  height: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.why-tux-grid > ul > li:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.why-tux-grid > ul > li > p:first-child {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  margin: 0 0 0.75rem 0 !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  width: 100% !important;
+}
+
+.why-tux-grid > ul > li > p:first-child strong {
+  font-size: 1.125rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+}
+
+.why-tux-grid > ul > li > p:first-child i,
+.why-tux-grid > ul > li > p:first-child [class*="material-"],
+.why-tux-grid > ul > li > p:first-child [class*="fa-"],
+.why-tux-grid > ul > li > p:first-child svg,
+.why-tux-grid > ul > li > p:first-child .md-icon,
+.why-tux-grid > ul > li > p:first-child .twemoji {
+  font-size: 2rem !important;
+  color: var(--md-primary-fg-color) !important;
+  flex-shrink: 0 !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  min-width: 2rem !important;
+  min-height: 2rem !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
+
+.why-tux-grid > ul > li > p:first-child svg {
+  width: 2rem !important;
+  height: 2rem !important;
+  min-width: 2rem !important;
+  min-height: 2rem !important;
+  display: block !important;
+}
+
+.why-tux-grid > ul > li > p:not(:first-child) {
+  margin: 0 !important;
+  color: var(--md-default-fg-color--light) !important;
+  line-height: 1.6 !important;
+  flex: 1 !important;
+  width: 100% !important;
+}
+
+/* Dark mode styling for why-tux cards */
+[data-md-color-scheme="tokyo-night"] .why-tux-grid > ul > li {
+  background-color: rgba(26, 27, 38, 0.54) !important;
+  border: 1px solid #787c99 !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .why-tux-grid > ul > li:hover {
+  background-color: rgba(26, 27, 38, 0.7) !important;
+  border-color: #7aa2f7 !important;
+  box-shadow: 0 4px 12px rgba(122, 162, 247, 0.2) !important;
+}
+
+/* Tech stack grid - custom implementation */
+.tech-stack-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
+  gap: 1rem !important;
+  margin: 2rem auto !important;
+  list-style: none !important;
+  padding: 0 !important;
+  justify-items: center !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.tech-stack-grid ul {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
+  gap: 1rem !important;
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+  justify-items: center !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.tech-stack-grid ul > li {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  padding: 1rem 1.25rem !important;
+  border-radius: 0.25rem !important;
+  background-color: var(--md-default-bg-color--light) !important;
+  border: 1px solid var(--md-border-color) !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 3.5rem !important;
+  height: 100% !important;
+}
+
+/* Dark mode border color - more visible */
+[data-md-color-scheme="tokyo-night"] .tech-stack-grid ul > li {
+  border: 1px solid #787c99 !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .tech-stack-grid ul > li:hover {
+  border-color: #7aa2f7 !important;
+}
+
+.tech-stack-grid ul > li:hover {
+  background-color: var(--md-default-bg-color--lighter) !important;
+  border-color: var(--md-primary-fg-color) !important;
+}
+
+.tech-stack-grid ul > li > p {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  margin: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 1.5rem !important;
+}
+
+.tech-stack-grid ul > li > p > :first-child {
+  flex-shrink: 0 !important;
+  font-size: 1.5rem !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.tech-stack-grid ul > li > p > strong {
+  display: flex !important;
+  align-items: center !important;
+  line-height: 1.2 !important;
 }
 
 /* On very small screens, force single column */

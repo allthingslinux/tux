@@ -1,49 +1,4 @@
-/* Tokyo Night Theme for Material MkDocs */
-
-/* Font Stack Configuration */
-:root {
-  /* Main font stack - Inter with fallbacks */
-  --md-text-font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", "Arial", sans-serif;
-
-  /* Monospace font stack - JetBrains Mono with fallbacks */
-  --md-code-font: "JetBrains Mono", "SF Mono", "Monaco", "Inconsolata", "Fira Code", "Droid Sans Mono", "Courier New", monospace;
-}
-
-/* Font rendering optimization */
-* {
-  -webkit-font-smoothing: subpixel-antialiased;
-  -moz-osx-font-smoothing: auto;
-  text-rendering: auto;
-  font-feature-settings: "kern" 1;
-  font-kerning: normal;
-  font-optical-sizing: none;
-}
-
-/* Use optimizeLegibility only for headings where it's beneficial */
-h1, h2, h3, h4, h5, h6,
-.md-typeset h1, .md-typeset h2, .md-typeset h3,
-.md-typeset h4, .md-typeset h5, .md-typeset h6 {
-  text-rendering: optimizeLegibility;
-}
-
-/* Code font specific settings */
-code, pre, .codehilite {
-  font-feature-settings: "liga" 1, "calt" 1, "zero" 1;
-  font-variant-ligatures: common-ligatures contextual;
-  text-rendering: optimizeSpeed;
-  font-optical-sizing: auto;
-}
-
-/* Fix navigation font rendering */
-.md-nav__item {
-  font-weight: 400;
-  letter-spacing: 0;
-}
-
-.md-ellipsis {
-  font-weight: 400;
-  letter-spacing: 0;
-}
+/* Tokyo Night (Dark) & Catppuccin Latte (Light) Themes for Material MkDocs */
 
 /* Tokyo Night Dark Theme */
 [data-md-color-scheme="tokyo-night"] {
@@ -256,100 +211,370 @@ code, pre, .codehilite {
   color: #a9b1d6;
 }
 
-/* Tokyo Night Light Theme */
-[data-md-color-scheme="tokyo-night-light"] {
+/* Navigation - active state for dark mode - remove border */
+[data-md-color-scheme="tokyo-night"] .md-nav__link--active {
+  border-left: none;
+  padding-left: 0;
+  font-weight: 600;
+}
+
+/* Navigation - sidebar hover for dark mode - only when hovering the link itself */
+[data-md-color-scheme="tokyo-night"] .md-nav__link:hover {
+  background-color: #24283b !important;
+  background-image: none !important;
+  background: #24283b !important;
+  color: #c0caf5 !important;
+  border-radius: 0.2rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  /* Override Material's default link hover/selection colors */
+  --md-accent-fg-color: #c0caf5 !important;
+  --md-typeset-a-color: #c0caf5 !important;
+  text-decoration: none !important;
+}
+
+/* Force all child elements to use the same color on hover - including nested items */
+[data-md-color-scheme="tokyo-night"] .md-nav__link:hover,
+[data-md-color-scheme="tokyo-night"] .md-nav__link:hover *,
+[data-md-color-scheme="tokyo-night"] .md-nav__link:hover::before,
+[data-md-color-scheme="tokyo-night"] .md-nav__link:hover::after,
+[data-md-color-scheme="tokyo-night"] .md-nav__item--nested .md-nav__link:hover,
+[data-md-color-scheme="tokyo-night"] .md-nav__item--nested .md-nav__link:hover * {
+  color: #c0caf5 !important;
+  fill: #c0caf5 !important;
+  stroke: #c0caf5 !important;
+  opacity: 1 !important;
+}
+
+/* Catppuccin Latte Theme */
+[data-md-color-scheme="catppuccin-latte"] {
   color-scheme: light;
 
-  /* Primary colors from Tokyo Night Light - using purple instead of blue */
-  --md-primary-fg-color: #5a3e8e;
-  --md-primary-fg-color--light: #7847bd;
-  --md-primary-fg-color--dark: #4a2c7a;
-  --md-primary-bg-color: #e6e7ed;
-  --md-primary-bg-color--light: rgba(230, 231, 237, 0.7);
+  /* Primary colors - Catppuccin Latte Blue */
+  --md-primary-fg-color: #1e66f5;
+  --md-primary-fg-color--light: #7287fd;
+  --md-primary-fg-color--dark: #209fb5;
+  --md-primary-bg-color: #eff1f5;
+  --md-primary-bg-color--light: rgba(239, 241, 245, 0.7);
 
-  /* Accent colors - using teal/cyan */
-  --md-accent-fg-color: #006c86;
-  --md-accent-fg-color--transparent: rgba(0, 108, 134, 0.1);
-  --md-accent-bg-color: #e6e7ed;
-  --md-accent-bg-color--light: rgba(230, 231, 237, 0.7);
+  /* Accent colors - Catppuccin Latte Sky */
+  --md-accent-fg-color: #04a5e5;
+  --md-accent-fg-color--transparent: rgba(4, 165, 229, 0.15);
+  --md-accent-bg-color: #eff1f5;
+  --md-accent-bg-color--light: rgba(239, 241, 245, 0.7);
 
-  /* Default colors */
-  --md-default-fg-color: #343b58;
-  --md-default-fg-color--light: #565a6e;
-  --md-default-fg-color--lighter: #8990b3;
-  --md-default-fg-color--lightest: rgba(52, 59, 88, 0.07);
-  --md-default-bg-color: #e6e7ed;
-  --md-default-bg-color--light: rgba(230, 231, 237, 0.7);
-  --md-default-bg-color--lighter: rgba(230, 231, 237, 0.3);
-  --md-default-bg-color--lightest: rgba(230, 231, 237, 0.12);
-  --md-default-bg-color--trans: rgba(230, 231, 237, 0);
+  /* Default colors - Catppuccin Latte Base & Text */
+  --md-default-fg-color: #4c4f69;
+  --md-default-fg-color--light: #5c5f77;
+  --md-default-fg-color--lighter: #6c6f85;
+  --md-default-fg-color--lightest: rgba(76, 79, 105, 0.1);
+  --md-default-bg-color: #eff1f5;
+  --md-default-bg-color--light: rgba(239, 241, 245, 0.7);
+  --md-default-bg-color--lighter: rgba(230, 233, 239, 0.4);
+  --md-default-bg-color--lightest: rgba(220, 224, 232, 0.15);
+  --md-default-bg-color--trans: rgba(239, 241, 245, 0);
 
-  /* Code colors */
-  --md-code-fg-color: #343b58;
-  --md-code-bg-color: #e6e7ed;
+  /* Border colors - Catppuccin Latte Surface colors */
+  --md-border-color: #ccd0da;
+  --md-border-color--light: rgba(204, 208, 218, 0.5);
+  --md-border-color--lighter: rgba(204, 208, 218, 0.3);
 
-  /* Code highlighting */
-  --md-code-hl-color: #2959aa;
-  --md-code-hl-color--light: rgba(41, 89, 170, 0.1);
+  /* Code colors - Catppuccin Latte Mantle */
+  --md-code-fg-color: #4c4f69;
+  --md-code-bg-color: #e6e9ef;
+  --md-code-border-color: #ccd0da;
 
-  /* Syntax highlighting colors */
-  --md-code-hl-number-color: #b15c00;
-  --md-code-hl-special-color: #c64343;
-  --md-code-hl-function-color: #5a3e8e;
-  --md-code-hl-constant-color: #7847bd;
-  --md-code-hl-keyword-color: #2959aa;
-  --md-code-hl-string-color: #485e30;
+  /* Code highlighting - Catppuccin Latte Blue */
+  --md-code-hl-color: #1e66f5;
+  --md-code-hl-color--light: rgba(30, 102, 245, 0.15);
+
+  /* Syntax highlighting colors - Catppuccin Latte palette */
+  --md-code-hl-number-color: #fe640b;
+  --md-code-hl-special-color: #d20f39;
+  --md-code-hl-function-color: #1e66f5;
+  --md-code-hl-constant-color: #8839ef;
+  --md-code-hl-keyword-color: #8839ef;
+  --md-code-hl-string-color: #40a02b;
   --md-code-hl-name-color: var(--md-code-fg-color);
-  --md-code-hl-operator-color: #006c86;
-  --md-code-hl-punctuation-color: var(--md-default-fg-color--light);
-  --md-code-hl-comment-color: #8990b3;
+  --md-code-hl-operator-color: #04a5e5;
+  --md-code-hl-punctuation-color: #7c7f93;
+  --md-code-hl-comment-color: #7c7f93;
   --md-code-hl-generic-color: var(--md-default-fg-color--light);
-  --md-code-hl-variable-color: #8f5e15;
+  --md-code-hl-variable-color: #4c4f69;
 
   /* Additional PyMdown Extensions colors */
-  --md-code-link-bg-color: rgba(41, 89, 170, 0.1);
-  --md-code-link-accent-bg-color: rgba(41, 89, 170, 0.2);
-  --md-code-alternate-bg-color: rgba(230, 231, 237, 0.05);
+  --md-code-link-bg-color: rgba(30, 102, 245, 0.12);
+  --md-code-link-accent-bg-color: rgba(30, 102, 245, 0.25);
+  --md-code-alternate-bg-color: rgba(230, 233, 239, 0.5);
   --md-code-hl-namespace-color: var(--md-code-fg-color);
   --md-code-hl-entity-color: var(--md-code-hl-keyword-color);
   --md-code-hl-tag-color: var(--md-code-hl-keyword-color);
-  --md-code-hl-builtin-color: var(--md-code-hl-constant-color);
-  --md-code-hl-class-color: var(--md-code-hl-function-color);
+  --md-code-hl-builtin-color: #d20f39;
+  --md-code-hl-class-color: #df8e1d;
   --md-steps-bg-color: var(--md-code-bg-color);
   --md-steps-fg-color: var(--md-code-fg-color);
-  --md-steps-border-color: rgba(41, 89, 170, 0.3);
-  --md-typeset-del-color: rgba(198, 67, 67, 0.3);
-  --md-typeset-ins-color: rgba(56, 95, 13, 0.3);
+  --md-steps-border-color: rgba(30, 102, 245, 0.4);
+  --md-typeset-del-color: rgba(210, 15, 57, 0.4);
+  --md-typeset-ins-color: rgba(64, 160, 43, 0.4);
 
-  /* SuperFences - Code block titles */
-  --md-code-title-fg-color: #8f5e15;
+  /* SuperFences - Code block titles - Catppuccin Latte Peach */
+  --md-code-title-fg-color: #fe640b;
 
   /* Typography */
   --md-typeset-color: var(--md-default-fg-color);
   --md-typeset-a-color: var(--md-primary-fg-color);
 
-  /* Keyboard shortcuts */
-  --md-typeset-kbd-color: rgba(52, 59, 88, 0.12);
-  --md-typeset-kbd-accent-color: rgba(52, 59, 88, 0.2);
-  --md-typeset-kbd-border-color: #e6e7ed;
+  /* Keyboard shortcuts - better contrast */
+  --md-typeset-kbd-color: rgba(76, 79, 105, 0.15);
+  --md-typeset-kbd-accent-color: rgba(76, 79, 105, 0.25);
+  --md-typeset-kbd-border-color: #ccd0da;
 
-  /* Mark/highlight */
-  --md-typeset-mark-color: rgba(143, 94, 21, 0.3);
+  /* Mark/highlight - Catppuccin Latte Yellow */
+  --md-typeset-mark-color: rgba(223, 142, 29, 0.4);
 
-  /* Tables */
-  --md-typeset-table-color: rgba(52, 59, 88, 0.12);
-  --md-typeset-table-color--light: rgba(52, 59, 88, 0.035);
+  /* Tables - better borders and contrast */
+  --md-typeset-table-color: rgba(76, 79, 105, 0.15);
+  --md-typeset-table-color--light: rgba(76, 79, 105, 0.05);
+  --md-typeset-table-border-color: #ccd0da;
 
   /* Admonitions */
   --md-admonition-fg-color: var(--md-default-fg-color);
   --md-admonition-bg-color: var(--md-default-bg-color);
+  --md-admonition-border-color: #ccd0da;
 
   /* Footer */
-  --md-footer-bg-color: rgba(52, 59, 88, 0.87);
-  --md-footer-bg-color--dark: rgba(52, 59, 88, 0.32);
+  --md-footer-bg-color: rgba(76, 79, 105, 0.87);
+  --md-footer-bg-color--dark: rgba(76, 79, 105, 0.32);
 
-  /* Shadows */
-  --md-shadow-z1: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.05), 0 0 0.05rem rgba(0, 0, 0, 0.1);
-  --md-shadow-z2: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.1), 0 0 0.05rem rgba(0, 0, 0, 0.25);
-  --md-shadow-z3: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.2), 0 0 0.05rem rgba(0, 0, 0, 0.35);
+  /* Shadows - enhanced for better depth */
+  --md-shadow-z1: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.08), 0 0 0.05rem rgba(0, 0, 0, 0.15);
+  --md-shadow-z2: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.15), 0 0 0.05rem rgba(0, 0, 0, 0.3);
+  --md-shadow-z3: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.25), 0 0 0.05rem rgba(0, 0, 0, 0.4);
+}
+
+/* Enhanced contrast and outlines for Catppuccin Latte */
+[data-md-color-scheme="catppuccin-latte"] .highlight,
+[data-md-color-scheme="catppuccin-latte"] .highlighttable,
+[data-md-color-scheme="catppuccin-latte"] pre {
+  background-color: #e6e9ef !important;
+  border: 1px solid #ccd0da !important;
+  border-radius: 0.2rem;
+  box-shadow: 0 0.1rem 0.3rem rgba(0, 0, 0, 0.08);
+}
+
+/* Inline code - better contrast */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset *:not(pre) > code {
+  background-color: #e6e9ef !important;
+  border: 1px solid #ccd0da !important;
+  box-shadow: 0 0.05rem 0.1rem rgba(0, 0, 0, 0.05);
+}
+
+/* Tables - better borders */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table:not([class]) {
+  border: 1px solid #ccd0da;
+  box-shadow: 0 0.1rem 0.3rem rgba(0, 0, 0, 0.08);
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table:not([class]) th {
+  background-color: #e6e9ef;
+  border-bottom: 2px solid #ccd0da;
+  color: #4c4f69;
+  font-weight: 600;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table:not([class]) td {
+  border-bottom: 1px solid #ccd0da;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset table:not([class]) tr:hover {
+  background-color: rgba(204, 208, 218, 0.2);
+}
+
+/* Admonitions - better borders and contrast */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset details {
+  border-left: 0.3rem solid;
+  border-color: var(--md-admonition-border-color);
+  box-shadow: 0 0.1rem 0.3rem rgba(0, 0, 0, 0.08);
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .admonition-title,
+[data-md-color-scheme="catppuccin-latte"] .md-typeset summary {
+  border-bottom: 1px solid rgba(204, 208, 218, 0.5);
+  font-weight: 600;
+}
+
+/* Buttons - better outlines */
+[data-md-color-scheme="catppuccin-latte"] .md-button {
+  border: 1px solid #ccd0da;
+  box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.1);
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-button--primary {
+  border-color: #1e66f5;
+  box-shadow: 0 0.1rem 0.3rem rgba(30, 102, 245, 0.3);
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-button:hover {
+  box-shadow: 0 0.15rem 0.4rem rgba(0, 0, 0, 0.15);
+}
+
+/* Navigation - better separation */
+[data-md-color-scheme="catppuccin-latte"] .md-nav__item {
+  border-bottom: 1px solid rgba(204, 208, 218, 0.3);
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-nav__link--active {
+  border-left: none;
+  padding-left: 0;
+  font-weight: 600;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-nav__link:hover {
+  background-color: #e6e9ef !important;
+  background-image: none !important;
+  background: #e6e9ef !important;
+  color: #1a1d2e !important;
+  border-radius: 0.2rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  /* Override Material's default link hover/selection colors */
+  --md-accent-fg-color: #1a1d2e !important;
+  --md-typeset-a-color: #1a1d2e !important;
+  text-decoration: none !important;
+}
+
+/* Force all child elements to use the same color on hover - including nested items */
+[data-md-color-scheme="catppuccin-latte"] .md-nav__link:hover,
+[data-md-color-scheme="catppuccin-latte"] .md-nav__link:hover *,
+[data-md-color-scheme="catppuccin-latte"] .md-nav__link:hover::before,
+[data-md-color-scheme="catppuccin-latte"] .md-nav__link:hover::after,
+[data-md-color-scheme="catppuccin-latte"] .md-nav__item--nested .md-nav__link:hover,
+[data-md-color-scheme="catppuccin-latte"] .md-nav__item--nested .md-nav__link:hover * {
+  color: #1a1d2e !important;
+  fill: #1a1d2e !important;
+  stroke: #1a1d2e !important;
+  opacity: 1 !important;
+}
+
+/* Search - better contrast */
+[data-md-color-scheme="catppuccin-latte"] .md-search__input {
+  border: 1px solid #ccd0da;
+  box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.08);
+  color: #4c4f69;
+  background-color: rgba(230, 233, 239, 0.9);
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-search__input::placeholder {
+  color: #7c7f93;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-search__input:focus {
+  border-color: #1e66f5;
+  box-shadow: 0 0.1rem 0.3rem rgba(30, 102, 245, 0.2);
+}
+
+/* Cards and grid items */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .grid.cards > ul > li,
+[data-md-color-scheme="catppuccin-latte"] .grards > ul > li {
+  border: 1px solid #ccd0da;
+  box-shadow: 0 0.1rem 0.3rem rgba(0, 0, 0, 0.08);
+  border-radius: 0.2rem;
+}
+
+/* Keyboard shortcuts - better visibility */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset kbd {
+  border: 1px solid #ccd0da;
+  box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.1);
+}
+
+/* Blockquotes - better styling */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset blockquote {
+  border-left: 0.3rem solid #ccd0da;
+  background-color: rgba(230, 233, 239, 0.5);
+  box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.05);
+}
+
+/* Horizontal rules - clean single line */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset hr {
+  border: none;
+  border-top: 1px solid #ccd0da;
+  height: 0;
+  margin: 1.5em 0;
+  box-shadow: none;
+}
+
+/* Header - better separation */
+[data-md-color-scheme="catppuccin-latte"] .md-header {
+  border-bottom: 1px solid #ccd0da;
+  box-shadow: 0 0.05rem 0.1rem rgba(0, 0, 0, 0.05);
+}
+
+/* Sidebar - better borders */
+[data-md-color-scheme="catppuccin-latte"] .md-sidebar {
+  border-right: 1px solid #ccd0da;
+}
+
+/* Footer - better separation */
+[data-md-color-scheme="catppuccin-latte"] .md-footer {
+  border-top: 1px solid #ccd0da;
+}
+
+/* Tabs - better borders */
+[data-md-color-scheme="catppuccin-latte"] .md-tabs {
+  border-bottom: 1px solid #ccd0da;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-tabs__link {
+  border-bottom: 2px solid transparent;
+}
+
+[data-md-color-scheme="catppuccin-latte"] .md-tabs__link--active {
+  border-bottom-color: #1e66f5;
+  font-weight: 600;
+}
+
+/* Code annotations - better visibility */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset .highlight .hll {
+  background-color: rgba(30, 102, 245, 0.2);
+  border-left: 0.2rem solid #1e66f5;
+}
+
+/* Links - cleaner hover state with background */
+[data-md-color-scheme="catppuccin-latte"] .md-typeset a:hover:not(.md-button):not(.md-nav__link):not(.md-tabs__link) {
+  background-color: rgba(30, 102, 245, 0.15) !important;
+  color: #1a1d2e !important;
+  border-radius: 0.2rem;
+  text-decoration: none !important;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  padding: 0.1em 0.2em;
+  margin: 0 -0.2em;
+}
+
+/* Focus states - better visibility */
+[data-md-color-scheme="catppuccin-latte"] *:focus-visible {
+  outline: 2px solid #1e66f5;
+  outline-offset: 2px;
+}
+
+/* Header override for Catppuccin Latte */
+[data-md-color-scheme="catppuccin-latte"] .md-header {
+  background-color: #eff1f5;
+  color: #4c4f69;
+}
+
+/* Header tabs override */
+[data-md-color-scheme="catppuccin-latte"] .md-tabs {
+  background-color: #eff1f5;
+  color: #4c4f69;
+}
+
+/* Header text and links */
+[data-md-color-scheme="catppuccin-latte"] .md-header__title,
+[data-md-color-scheme="catppuccin-latte"] .md-header__topic,
+[data-md-color-scheme="catppuccin-latte"] .md-tabs__link {
+  color: #4c4f69;
+}
+
+/* Search icon */
+[data-md-color-scheme="catppuccin-latte"] .md-search__icon {
+  color: #4c4f69;
 }

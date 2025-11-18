@@ -1,4 +1,4 @@
-/* Tokyo Night Dark theme symbol colors */
+/* Tokyo Night (Dark) theme symbol colors */
 [data-md-color-scheme="tokyo-night"] {
   --doc-symbol-parameter-fg-color: #f7768e;
   --doc-symbol-type_parameter-fg-color: #f7768e;
@@ -19,25 +19,25 @@
   --doc-symbol-module-bg-color: rgba(158, 206, 106, 0.1);
 }
 
-/* Tokyo Night Light theme symbol colors */
-[data-md-color-scheme="tokyo-night-light"] {
-  --doc-symbol-parameter-fg-color: #8c4351;
-  --doc-symbol-type_parameter-fg-color: #8c4351;
-  --doc-symbol-attribute-fg-color: #8f5e15;
-  --doc-symbol-function-fg-color: #5a3e8e;
-  --doc-symbol-method-fg-color: #5a3e8e;
-  --doc-symbol-class-fg-color: #2959aa;
-  --doc-symbol-type_alias-fg-color: #2959aa;
-  --doc-symbol-module-fg-color: #385f0d;
+/* Catppuccin Latte theme symbol colors */
+[data-md-color-scheme="catppuccin-latte"] {
+  --doc-symbol-parameter-fg-color: #e64553;
+  --doc-symbol-type_parameter-fg-color: #e64553;
+  --doc-symbol-attribute-fg-color: #df8e1d;
+  --doc-symbol-function-fg-color: #1e66f5;
+  --doc-symbol-method-fg-color: #1e66f5;
+  --doc-symbol-class-fg-color: #df8e1d;
+  --doc-symbol-type_alias-fg-color: #df8e1d;
+  --doc-symbol-module-fg-color: #40a02b;
 
-  --doc-symbol-parameter-bg-color: rgba(140, 67, 81, 0.1);
-  --doc-symbol-type_parameter-bg-color: rgba(140, 67, 81, 0.1);
-  --doc-symbol-attribute-bg-color: rgba(143, 94, 21, 0.1);
-  --doc-symbol-function-bg-color: rgba(90, 62, 142, 0.1);
-  --doc-symbol-method-bg-color: rgba(90, 62, 142, 0.1);
-  --doc-symbol-class-bg-color: rgba(41, 89, 170, 0.1);
-  --doc-symbol-type_alias-bg-color: rgba(41, 89, 170, 0.1);
-  --doc-symbol-module-bg-color: rgba(56, 95, 13, 0.1);
+  --doc-symbol-parameter-bg-color: rgba(230, 69, 83, 0.1);
+  --doc-symbol-type_parameter-bg-color: rgba(230, 69, 83, 0.1);
+  --doc-symbol-attribute-bg-color: rgba(223, 142, 29, 0.1);
+  --doc-symbol-function-bg-color: rgba(30, 102, 245, 0.1);
+  --doc-symbol-method-bg-color: rgba(30, 102, 245, 0.1);
+  --doc-symbol-class-bg-color: rgba(223, 142, 29, 0.1);
+  --doc-symbol-type_alias-bg-color: rgba(223, 142, 29, 0.1);
+  --doc-symbol-module-bg-color: rgba(64, 160, 43, 0.1);
 }
 
 /* General mkdocstrings styles */

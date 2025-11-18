@@ -1,0 +1,855 @@
+/* Tux Home Page Styles - Flexbox Layout */
+
+/* Ensure parent containers don't constrain hero */
+.md-content__inner:has(.tux-home-hero),
+.md-typeset:has(.tux-home-hero) {
+  overflow-x: visible !important;
+}
+
+/* Main container */
+.tux-home-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  width: 100%;
+  gap: 3rem;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* Hero section - Above the fold with background image */
+.tux-home-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100vw;
+  min-height: 85vh;
+  padding: 4rem 2rem;
+  margin: calc(-2rem - 3.5rem) calc(-50vw + 50%) 0 calc(-50vw + 50%);
+  position: relative;
+  overflow: hidden;
+  gap: 1.5rem;
+  box-sizing: border-box;
+  left: 0;
+  right: 0;
+}
+
+/* Remove any top margin/padding from parent containers */
+.md-content__inner:has(.tux-home-hero) {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+.tux-home-page:has(.tux-home-hero) {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* Ensure hero starts at the very top */
+.md-main__inner:has(.tux-home-hero) {
+  padding-top: 0 !important;
+}
+
+/* Background image with overlay */
+.tux-home-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('../images/hero-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.85;
+  z-index: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Subtle parallax effect on scroll (optional, can be enhanced with JS) */
+@media (prefers-reduced-motion: no-preference) {
+  .tux-home-hero::before {
+    will-change: transform;
+  }
+}
+
+/* Gradient overlay for better text readability - minimal */
+.tux-home-hero::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(26, 27, 38, 0.08) 0%,
+    transparent 10%,
+    transparent 90%,
+    rgba(26, 27, 38, 0.08) 100%
+  );
+  z-index: 1;
+}
+
+/* Content above overlay */
+.tux-home-hero > * {
+  position: relative;
+  z-index: 2;
+}
+
+.tux-home-title {
+  font-size: clamp(3rem, 6vw, 5rem);
+  font-weight: 700;
+  margin: 0;
+  padding: 0;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #f9c139 !important;
+  -webkit-text-fill-color: #f9c139 !important;
+  text-shadow: 0 1px 8px rgba(249, 193, 57, 0.15);
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.tux-home-intro,
+.tux-home-hero .tux-home-intro,
+.md-content__inner .tux-home-intro,
+.md-typeset .tux-home-intro,
+.md-content .tux-home-intro,
+article .tux-home-intro {
+  font-size: clamp(0.875rem, 1.5vw, 1rem) !important;
+  line-height: 1.8 !important;
+  max-width: 800px;
+  margin: 0;
+  padding: 0;
+  color: var(--md-default-fg-color);
+  font-weight: 400;
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+/* Subtle fade-in animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .tux-home-title,
+  .tux-home-intro {
+    animation: none;
+  }
+}
+
+/* Section container */
+.tux-home-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100% !important;
+  max-width: 100% !important;
+  gap: 1.5rem;
+}
+
+.tux-home-section-title {
+  font-size: clamp(1.728rem, 2.5vw, 2.488rem);
+  font-weight: 500;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.tux-home-section-description {
+  font-size: clamp(1rem, 1.2vw, 1.2rem);
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  max-width: 700px;
+}
+
+.tux-home-subsection-title {
+  font-size: clamp(1.44rem, 2vw, 2.074rem);
+  font-weight: 500;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.tux-home-subsection-description {
+  font-size: clamp(1rem, 1.2vw, 1.2rem);
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  max-width: 900px;
+}
+
+/* Divider */
+.tux-home-divider {
+  border: none;
+  border-top: 1px solid var(--md-border-color);
+  margin: 0;
+  width: 100%;
+  height: 0;
+  padding: 0;
+}
+
+/* Getting Started section - flexbox grid */
+.tux-home-getting-started {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.tux-home-getting-started-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1 1 280px;
+  max-width: 320px;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  background-color: var(--md-default-bg-color--light);
+  border: 1px solid var(--md-border-color);
+  border-width: 1px;
+  border-style: solid;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  text-align: center;
+  gap: 0.75rem;
+  box-sizing: border-box;
+}
+
+.tux-home-getting-started-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: var(--md-primary-fg-color);
+}
+
+.tux-home-getting-started-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  font-size: 2.5rem;
+  color: var(--md-primary-fg-color);
+  line-height: 1;
+}
+
+.tux-home-getting-started-card-icon .twemoji,
+.tux-home-getting-started-card-icon svg {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-block;
+  vertical-align: middle;
+  color: var(--md-primary-fg-color);
+  fill: currentColor;
+}
+
+.tux-home-getting-started-card-title {
+  font-size: clamp(1.2rem, 1.3vw, 1.44rem);
+  font-weight: 600;
+  margin: 0;
+  padding: 0;
+  color: var(--md-default-fg-color);
+  line-height: 1.3;
+}
+
+.tux-home-getting-started-card-divider {
+  border: none;
+  border-top: 1px solid var(--md-border-color);
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 0;
+}
+
+.tux-home-getting-started-card-description {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  color: var(--md-default-fg-color--light);
+  line-height: 1.6;
+  font-size: clamp(0.833rem, 1vw, 1rem);
+  text-align: center;
+}
+
+.tux-home-getting-started-card-button {
+  margin-top: auto;
+  width: auto;
+}
+
+/* Key Features section - CSS Grid (3 columns) - matching Why Tux format */
+.tux-home-key-features {
+  display: flex;
+  flex-direction: column;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0;
+  padding: 0;
+}
+
+.tux-home-key-features-list {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 1.5rem !important;
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  align-items: stretch !important; /* Ensure all cards are same height */
+}
+
+.tux-home-key-features-item {
+  display: flex !important;
+  flex-direction: column;
+  min-width: 0;
+  width: 100%;
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  background-color: var(--md-default-bg-color--light);
+  border: 1px solid var(--md-border-color);
+  border-width: 1px;
+  border-style: solid;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  gap: 0.75rem;
+  box-sizing: border-box;
+  height: 100%; /* Ensure cards fill grid cell height */
+}
+
+.tux-home-key-features-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: var(--md-primary-fg-color);
+}
+
+.tux-home-key-features-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  min-height: 2.5rem; /* Fixed min-height to prevent size variations */
+  flex-shrink: 0; /* Prevent header from shrinking */
+}
+
+.tux-home-key-features-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem; /* Fixed width */
+  height: 2rem; /* Fixed height */
+  min-width: 2rem; /* Prevent shrinking */
+  min-height: 2rem; /* Prevent shrinking */
+  font-size: 2rem;
+  color: var(--md-primary-fg-color);
+  line-height: 1;
+  flex-shrink: 0;
+  margin: 0; /* Remove any margins that could affect alignment */
+  padding: 0; /* Remove any padding */
+}
+
+.tux-home-key-features-item-icon svg,
+.tux-home-key-features-item-icon .md-icon,
+.tux-home-key-features-item-icon i {
+  width: 2rem !important;
+  height: 2rem !important;
+  min-width: 2rem !important;
+  min-height: 2rem !important;
+  display: inline-block;
+  vertical-align: middle;
+  color: var(--md-primary-fg-color);
+  fill: currentColor;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.tux-home-key-features-item-title {
+  font-size: clamp(1.2rem, 1.3vw, 1.44rem);
+  font-weight: 600;
+  margin: 0;
+  padding: 0;
+  color: var(--md-default-fg-color);
+  line-height: 1.3;
+}
+
+.tux-home-key-features-item-description {
+  margin: 0;
+  padding: 0;
+  color: var(--md-default-fg-color--light);
+  line-height: 1.6;
+  font-size: clamp(0.833rem, 1vw, 1rem);
+  flex: 1; /* Allow description to grow and fill available space, keeping cards same height */
+}
+
+/* Why Tux section - CSS Grid (3 columns) */
+.tux-home-why-tux {
+  display: flex;
+  flex-direction: column;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0;
+  padding: 0;
+}
+
+.tux-home-why-tux-list {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 1.5rem !important;
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  align-items: stretch !important; /* Ensure all cards are same height */
+}
+
+.tux-home-why-tux-item {
+  display: flex !important;
+  flex-direction: column;
+  min-width: 0;
+  width: 100%;
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  background-color: var(--md-default-bg-color--light);
+  border: 1px solid var(--md-border-color);
+  border-width: 1px;
+  border-style: solid;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  gap: 0.75rem;
+  box-sizing: border-box;
+  height: 100%; /* Ensure cards fill grid cell height */
+}
+
+.tux-home-why-tux-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: var(--md-primary-fg-color);
+}
+
+.tux-home-why-tux-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  min-height: 2.5rem; /* Fixed min-height to prevent size variations */
+  flex-shrink: 0; /* Prevent header from shrinking */
+}
+
+.tux-home-why-tux-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem; /* Fixed width */
+  height: 2rem; /* Fixed height */
+  min-width: 2rem; /* Prevent shrinking */
+  min-height: 2rem; /* Prevent shrinking */
+  font-size: 2rem;
+  color: var(--md-primary-fg-color);
+  line-height: 1;
+  flex-shrink: 0;
+  margin: 0; /* Remove any margins that could affect alignment */
+  padding: 0; /* Remove any padding */
+}
+
+.tux-home-why-tux-item-icon svg,
+.tux-home-why-tux-item-icon .md-icon,
+.tux-home-why-tux-item-icon i {
+  width: 2rem !important;
+  height: 2rem !important;
+  min-width: 2rem !important;
+  min-height: 2rem !important;
+  display: inline-block;
+  vertical-align: middle;
+  color: var(--md-primary-fg-color);
+  fill: currentColor;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.tux-home-why-tux-item-title {
+  font-size: clamp(1.2rem, 1.3vw, 1.44rem);
+  font-weight: 600;
+  margin: 0;
+  padding: 0;
+  color: var(--md-default-fg-color);
+  line-height: 1.3;
+}
+
+.tux-home-why-tux-item-description {
+  margin: 0;
+  padding: 0;
+  color: var(--md-default-fg-color--light);
+  line-height: 1.6;
+  font-size: clamp(0.833rem, 1vw, 1rem);
+  flex: 1; /* Allow description to grow and fill available space, keeping cards same height */
+}
+
+/* Built With section - simple pills */
+.tux-home-built-with {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.tux-home-built-with ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-evenly;
+  align-items: center;
+  text-align: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 80%;
+}
+
+.tux-home-built-with ul li {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-radius: 1.5rem;
+  background-color: var(--md-default-bg-color--light);
+  border: 1px solid var(--md-border-color);
+  border-width: 1px;
+  border-style: solid;
+  font-size: clamp(0.833rem, 1vw, 1rem);
+  line-height: 1.4;
+  color: var(--md-default-fg-color);
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.tux-home-built-with ul li strong {
+  font-weight: 600;
+  color: var(--md-default-fg-color);
+}
+
+/* Hide icons in Built With section */
+.tux-home-built-with ul li i,
+.tux-home-built-with ul li svg,
+.tux-home-built-with ul li .md-icon,
+.tux-home-built-with ul li .twemoji {
+  display: none !important;
+}
+
+/* Community section - flexbox grid */
+.tux-home-community {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.tux-home-community-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1 1 280px;
+  max-width: 320px;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  background-color: var(--md-default-bg-color--light);
+  border: 1px solid var(--md-border-color);
+  border-width: 1px;
+  border-style: solid;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  text-align: center;
+  gap: 0.75rem;
+  box-sizing: border-box;
+}
+
+.tux-home-community-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: var(--md-primary-fg-color);
+}
+
+.tux-home-community-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  font-size: 2.5rem;
+  color: var(--md-primary-fg-color);
+  line-height: 1;
+}
+
+.tux-home-community-card-icon .twemoji,
+.tux-home-community-card-icon svg {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-block;
+  vertical-align: middle;
+  color: var(--md-primary-fg-color);
+  fill: currentColor;
+}
+
+.tux-home-community-card-title {
+  font-size: clamp(1.2rem, 1.3vw, 1.44rem);
+  font-weight: 600;
+  margin: 0;
+  padding: 0;
+  color: var(--md-default-fg-color);
+  line-height: 1.3;
+}
+
+.tux-home-community-card-divider {
+  border: none;
+  border-top: 1px solid var(--md-border-color);
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 0;
+}
+
+.tux-home-community-card-description {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  color: var(--md-default-fg-color--light);
+  line-height: 1.6;
+  font-size: clamp(0.833rem, 1vw, 1rem);
+  text-align: center;
+}
+
+.tux-home-community-card-button {
+  margin-top: auto;
+  width: auto;
+}
+
+/* Project Activity section */
+.tux-home-project-activity {
+  text-align: center;
+  margin: 0 auto;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.tux-home-project-activity a {
+  display: inline-block;
+  margin: 0 auto;
+}
+
+.tux-home-project-activity img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Contributors section */
+.tux-home-contributors-intro {
+  text-align: center;
+  margin: 0 0 1rem 0;
+  padding: 0;
+  font-size: clamp(1rem, 1.1vw, 1.2rem);
+  line-height: 1.6;
+}
+
+.tux-home-contributors-image {
+  text-align: center;
+  margin: 0 auto;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.tux-home-contributors-image a {
+  display: inline-block;
+  margin: 0 auto;
+}
+
+.tux-home-contributors-image img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Footer */
+.tux-home-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  gap: 0.5rem;
+}
+
+.tux-home-footer-credit {
+  margin: 0;
+  padding: 0;
+  font-size: clamp(0.833rem, 1vw, 1rem);
+  color: var(--md-default-fg-color--light);
+}
+
+.tux-home-footer-links {
+  margin: 0;
+  padding: 0;
+  font-size: clamp(0.833rem, 1vw, 1rem);
+  color: var(--md-default-fg-color--light);
+}
+
+.tux-home-footer-links a {
+  color: var(--md-primary-fg-color);
+  text-decoration: none;
+}
+
+.tux-home-footer-links a:hover {
+  text-decoration: underline;
+}
+
+/* Dark mode overrides - more visible borders */
+[data-md-color-scheme="tokyo-night"] .tux-home-getting-started-card,
+[data-md-color-scheme="tokyo-night"] .tux-home-key-features-item,
+[data-md-color-scheme="tokyo-night"] .tux-home-why-tux-item,
+[data-md-color-scheme="tokyo-night"] .tux-home-community-card,
+[data-md-color-scheme="tokyo-night"] .tux-home-built-with ul li {
+  background-color: rgba(26, 27, 38, 0.54) !important;
+  border: 1px solid #565f89 !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .tux-home-getting-started-card:hover,
+[data-md-color-scheme="tokyo-night"] .tux-home-key-features-item:hover,
+[data-md-color-scheme="tokyo-night"] .tux-home-why-tux-item:hover,
+[data-md-color-scheme="tokyo-night"] .tux-home-community-card:hover {
+  background-color: rgba(26, 27, 38, 0.7) !important;
+  border: 1px solid #7aa2f7 !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  box-shadow: 0 4px 12px rgba(122, 162, 247, 0.2);
+}
+
+[data-md-color-scheme="tokyo-night"] .tux-home-divider {
+  border-top: 1px solid #565f89 !important;
+}
+
+[data-md-color-scheme="tokyo-night"] .tux-home-getting-started-card-divider,
+[data-md-color-scheme="tokyo-night"] .tux-home-community-card-divider {
+  border-top: 1px solid #565f89 !important;
+}
+
+/* Light mode borders - ensure visibility */
+[data-md-color-scheme="catppuccin-latte"] .tux-home-getting-started-card,
+[data-md-color-scheme="catppuccin-latte"] .tux-home-key-features-item,
+[data-md-color-scheme="catppuccin-latte"] .tux-home-why-tux-item,
+[data-md-color-scheme="catppuccin-latte"] .tux-home-community-card,
+[data-md-color-scheme="catppuccin-latte"] .tux-home-built-with ul li {
+  border: 1px solid var(--md-border-color) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+
+/* Hero section responsive adjustments */
+@media screen and (max-width: 76.25em) {
+  .tux-home-hero {
+    min-height: 75vh;
+    padding: 3rem 1.5rem;
+    margin: -1.5rem calc(-50vw + 50%) 0 calc(-50vw + 50%);
+  }
+}
+
+@media screen and (max-width: 48em) {
+  .tux-home-hero {
+    min-height: 65vh;
+    padding: 2.5rem 1rem;
+    margin: -1rem calc(-50vw + 50%) 0 calc(-50vw + 50%);
+    gap: 1.25rem;
+  }
+
+  .tux-home-title {
+    font-size: clamp(2.5rem, 8vw, 3.5rem);
+  }
+
+  .tux-home-intro {
+    font-size: clamp(1rem, 4vw, 1.25rem);
+  }
+}
+
+/* Fallback if background image doesn't exist */
+.tux-home-hero::before {
+  background-color: var(--md-default-bg-color--light);
+}
+
+/* Responsive breakpoints */
+@media screen and (max-width: 76.25em) {
+  .tux-home-page {
+    padding: 1.5rem 1.25rem;
+    gap: 2.5rem;
+  }
+
+  .tux-home-key-features-list {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .tux-home-why-tux-list {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media screen and (max-width: 48em) {
+  .tux-home-page {
+    padding: 1rem;
+    gap: 2rem;
+  }
+
+  .tux-home-getting-started-card,
+  .tux-home-community-card {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
+  .tux-home-key-features-list {
+    grid-template-columns: 1fr !important;
+  }
+
+  .tux-home-why-tux-list {
+    grid-template-columns: 1fr !important;
+  }
+
+  .tux-home-getting-started,
+  .tux-home-key-features,
+  .tux-home-why-tux-list,
+  .tux-home-community {
+    gap: 1rem;
+  }
+}
