@@ -91,8 +91,8 @@ theme:
     # - navigation.tabs.sticky
     - navigation.sections
     # - navigation.prune
-    # - navigation.expand
-    - navigation.path
+    - navigation.expand
+    # - navigation.path
     - navigation.footer
     - toc.follow
     # - toc.integrate
@@ -194,11 +194,21 @@ plugins:
   - search:
       enabled: true
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - git-committers:
+      enabled: true
+      repository: allthingslinux/tux
+      token: !ENV [MKDOCS_GIT_COMMITTERS_APIKEY]
+      branch: v0.1.0
+      docs_path: docs/
+      cache_dir: .cache/plugin/git-committers/
   - literate-nav:
       enabled: true
       nav_file: navigation.md
       tab_length: 2
       implicit_index: false
+  - git-revision-date-localized:
+      enabled: true
+      enable_creation_date: true
   - minify:
       enabled: true
       minify_html: true
@@ -222,8 +232,8 @@ plugins:
   - tags:
       enabled: true
   - mkdocs-backlinks:
-      enabled: true
-      ignored_pages: [Home, SUMMARY]
+      enabled: false
+      ignored_pages: [Home, Navigation]
   - autorefs:
       enabled: true
       resolve_closest: true
@@ -231,9 +241,9 @@ plugins:
   - social:
       enabled: true
       cards_layout_options:
-        # background_color: '#181825'
-        background_color: transparent
-        background_image: docs/content/assets/images/hero-bg.png
+        background_color: '#181825'
+        # background_color: transparent
+        # background_image: docs/content/assets/images/hero-bg.png
         color: '#ffffff'
         font_family: Inter
   - coverage:

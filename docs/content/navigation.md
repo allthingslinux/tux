@@ -86,6 +86,7 @@ title: Navigation
   * [Renovate](./reference/renovate.md)
   * [Listings](./reference/listings.md)
   * [Tags](./reference/tags.md)
+  * [Style Guide](./reference/style.md)
 * [Support](./support/index.md)
   * [Troubleshooting](./support/troubleshooting/index.md)
     * [User](./support/troubleshooting/user.md)
@@ -93,4 +94,3 @@ title: Navigation
     * [Self-Host](./support/troubleshooting/selfhost.md)
     * [Developer](./support/troubleshooting/developer.md)
 * [Changelog](./changelog.md)
-* [Style Guide](./style.md)
