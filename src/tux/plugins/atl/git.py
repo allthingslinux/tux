@@ -90,7 +90,7 @@ class Git(BaseCog):
             embed.add_field(name="Open Issues", value=repo.open_issues_count)
 
         except Exception as e:
-            await ctx.send(f"Error fetching repository: {e}", delete_after=30, ephemeral=True)
+            await ctx.send(f"Error fetching repository: {e}", ephemeral=True)
             logger.error(f"Error fetching repository: {e}")
 
         else:
@@ -133,7 +133,7 @@ class Git(BaseCog):
             embed.add_field(name="Body", value=issue_body, inline=False)
 
         except Exception as e:
-            await ctx.send(f"Error creating issue: {e}", delete_after=30, ephemeral=True)
+            await ctx.send(f"Error creating issue: {e}", ephemeral=True)
             logger.error(f"Error creating issue: {e}")
 
         else:
@@ -175,7 +175,7 @@ class Git(BaseCog):
             embed.add_field(name="Updated At", value=issue.updated_at, inline=False)
 
         except Exception as e:
-            await ctx.send(f"Error fetching issue: {e}", delete_after=30, ephemeral=True)
+            await ctx.send(f"Error fetching issue: {e}", ephemeral=True)
             logger.error(f"Error fetching issue: {e}")
 
         else:

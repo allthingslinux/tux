@@ -183,14 +183,12 @@ class Purge(BaseCog):
                     f"Purged {len(deleted)} messages from {channel.mention}. "
                     f"Note: Discord only allows bulk deletion of messages less than 14 days old.",
                     ephemeral=True,
-                    delete_after=3,
                 )
 
             else:
                 await ctx.send(
                     f"Purged {len(deleted)} messages from {channel.mention}.",
                     ephemeral=True,
-                    delete_after=3,
                 )
 
         except discord.Forbidden:

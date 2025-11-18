@@ -16,7 +16,6 @@ from tux.core.permission_system import get_permission_system
 from tux.database.models import CaseType as DBCaseType
 from tux.database.models import Snippet
 from tux.shared.config import CONFIG
-from tux.shared.constants import DEFAULT_DELETE_AFTER
 from tux.ui.embeds import EmbedCreator, EmbedType
 
 
@@ -231,4 +230,4 @@ class SnippetsBaseCog(BaseCog):
             user_display_avatar=ctx.author.display_avatar.url,
             description=description,
         )
-        await ctx.send(embed=embed, delete_after=DEFAULT_DELETE_AFTER)
+        await ctx.send(embed=embed)

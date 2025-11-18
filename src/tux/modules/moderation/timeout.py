@@ -14,7 +14,6 @@ from tux.core.bot import Tux
 from tux.core.checks import requires_command_permission
 from tux.core.flags import TimeoutFlags
 from tux.database.models import CaseType as DBCaseType
-from tux.shared.constants import DEFAULT_DELETE_AFTER
 from tux.shared.functions import parse_time_string
 
 from . import ModerationCogBase
@@ -69,7 +68,6 @@ class Timeout(ModerationCogBase):
             await ctx.send(
                 "Bots cannot be timed out.",
                 ephemeral=True,
-                delete_after=DEFAULT_DELETE_AFTER,
             )
             return
 
@@ -78,7 +76,6 @@ class Timeout(ModerationCogBase):
             await ctx.send(
                 f"{member} is already timed out.",
                 ephemeral=True,
-                delete_after=DEFAULT_DELETE_AFTER,
             )
             return
 
@@ -93,7 +90,6 @@ class Timeout(ModerationCogBase):
                 await ctx.send(
                     "Timeout duration exceeds Discord's maximum of 28 days. Setting timeout to maximum allowed (28 days).",
                     ephemeral=True,
-                    delete_after=DEFAULT_DELETE_AFTER,
                 )
 
                 duration = max_duration
@@ -104,7 +100,6 @@ class Timeout(ModerationCogBase):
             await ctx.send(
                 f"Invalid duration format: {e}",
                 ephemeral=True,
-                delete_after=DEFAULT_DELETE_AFTER,
             )
             return
 

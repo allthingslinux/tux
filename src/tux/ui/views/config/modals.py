@@ -113,7 +113,6 @@ class EditRankModal(discord.ui.Modal):
                     await interaction.response.send_message(
                         f"❌ Error updating rank: {e}",
                         ephemeral=True,
-                        delete_after=5,
                     )
             except Exception as send_error:
                 logger.error(f"Failed to send error message: {send_error}")
@@ -221,7 +220,6 @@ class CreateRankModal(discord.ui.Modal):
                     await interaction.response.send_message(
                         f"❌ Error creating rank: {e}",
                         ephemeral=True,
-                        delete_after=5,
                     )
             except Exception as send_error:
                 logger.error(f"Failed to send error message: {send_error}")

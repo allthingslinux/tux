@@ -104,7 +104,7 @@ class Poll(ModerationCogBase):
                 description=f"Poll options count needs to be between 2-9, you provided {len(options_list)} options.",
             )
 
-            await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=30)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
         # Create the description for the poll embed

@@ -90,7 +90,6 @@ class ReportModal(discord.ui.Modal):
             await interaction.response.send_message(
                 "Failed to submit your report. Please try again later.",
                 ephemeral=True,
-                delete_after=30,
             )
             return
 
@@ -99,7 +98,6 @@ class ReportModal(discord.ui.Modal):
             await interaction.response.send_message(
                 "The report log channel has not been set up. Please contact an administrator.",
                 ephemeral=True,
-                delete_after=30,
             )
             return
 
@@ -110,7 +108,6 @@ class ReportModal(discord.ui.Modal):
             await interaction.response.send_message(
                 "Failed to submit your report. Please try again later.",
                 ephemeral=True,
-                delete_after=30,
             )
             return
 
@@ -118,7 +115,6 @@ class ReportModal(discord.ui.Modal):
         await interaction.response.send_message(
             "Your report has been submitted.",
             ephemeral=True,
-            delete_after=30,
         )
 
         message = await report_log_channel.send(embed=embed)

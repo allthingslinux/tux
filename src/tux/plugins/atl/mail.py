@@ -79,7 +79,6 @@ class Mail(BaseCog):
             await interaction.response.send_message(
                 "Username must be alphanumeric and contain no spaces.",
                 ephemeral=True,
-                delete_after=30,
             )
             return
 
@@ -101,14 +100,12 @@ class Mail(BaseCog):
                 await interaction.response.send_message(
                     f"An error occurred while requesting {exc.request.url!r}.",
                     ephemeral=True,
-                    delete_after=30,
                 )
                 logger.error(f"HTTP request error: {exc}")
         else:
             await interaction.response.send_message(
                 "This command can only be used in a guild (server).",
                 ephemeral=True,
-                delete_after=30,
             )
 
     @staticmethod
@@ -210,7 +207,6 @@ class Mail(BaseCog):
             await interaction.response.send_message(
                 f"Failed to register the requested username for mail. Status code: {response.status_code}.",
                 ephemeral=True,
-                delete_after=30,
             )
 
     @staticmethod
@@ -280,7 +276,6 @@ If you have any questions or need assistance, please feel free to reach out to t
             await interaction.response.send_message(
                 f"Failed to send a DM to {member.mention}. Please enable DMs from server members.",
                 ephemeral=True,
-                delete_after=30,
             )
 
 

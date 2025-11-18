@@ -15,7 +15,7 @@ from loguru import logger
 from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.services.http_client import http_client
-from tux.shared.constants import DEFAULT_DELETE_AFTER, FILE_EXT_PNG, HTTP_TIMEOUT
+from tux.shared.constants import FILE_EXT_PNG, HTTP_TIMEOUT
 
 
 class Avatar(BaseCog):
@@ -95,7 +95,7 @@ class Avatar(BaseCog):
             message = f"{member.display_name} has no avatar." if member != ctx.author else "You have no avatar."
             logger.debug(f"No avatar available for {member.id}")
 
-            await ctx.send(content=message, ephemeral=True, delete_after=DEFAULT_DELETE_AFTER)
+            await ctx.send(content=message, ephemeral=True)
 
     @staticmethod
     async def create_avatar_file(url: str) -> discord.File:

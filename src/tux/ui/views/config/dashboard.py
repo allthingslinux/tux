@@ -725,7 +725,6 @@ class ConfigDashboard(discord.ui.LayoutView):
                 await interaction.response.send_message(
                     f"❌ Rank {rank_id} does not exist.",
                     ephemeral=True,
-                    delete_after=3,
                 )
                 return
 
@@ -783,7 +782,6 @@ class ConfigDashboard(discord.ui.LayoutView):
             "❌ This assignment method doesn't work with ephemeral messages. "
             "Please use the direct rank assignment buttons (+ Rank X) instead.",
             ephemeral=True,
-            delete_after=5,
         )
 
     async def _handle_remove_role(self, interaction: discord.Interaction) -> None:
@@ -807,7 +805,6 @@ class ConfigDashboard(discord.ui.LayoutView):
             await interaction.response.send_message(
                 f"❌ Rank {rank_id} does not exist.",
                 ephemeral=True,
-                delete_after=3,
             )
             return
 
@@ -823,7 +820,6 @@ class ConfigDashboard(discord.ui.LayoutView):
                 await interaction.response.send_message(
                     f"❌ No roles assigned to Rank {rank_id}",
                     ephemeral=True,
-                    delete_after=3,
                 )
                 return
 
@@ -919,18 +915,17 @@ class ConfigDashboard(discord.ui.LayoutView):
             await interaction.response.send_message(
                 f"❌ Rank {rank_id} does not exist.",
                 ephemeral=True,
-                delete_after=3,
             )
             return
 
         # Find selected roles from message
         if not interaction.message:
-            await interaction.response.send_message("❌ Unable to find role selector", ephemeral=True, delete_after=3)
+            await interaction.response.send_message("❌ Unable to find role selector", ephemeral=True)
             return
 
         selected_roles = self._find_role_select_from_message(interaction.message, f"role_remove_select_{rank_id}")
         if not selected_roles:
-            await interaction.response.send_message("❌ No roles selected", ephemeral=True, delete_after=3)
+            await interaction.response.send_message("❌ No roles selected", ephemeral=True)
             return
 
         # Remove roles from rank
@@ -950,7 +945,6 @@ class ConfigDashboard(discord.ui.LayoutView):
             await interaction.response.send_message(
                 f"✅ Successfully removed {removed_count} role(s) from Rank {rank_id}",
                 ephemeral=True,
-                delete_after=5,
             )
 
             # Invalidate roles cache and rebuild
@@ -969,7 +963,7 @@ class ConfigDashboard(discord.ui.LayoutView):
 
     async def _handle_cancel_assign(self, interaction: discord.Interaction) -> None:
         """Handle canceling role assignment/removal."""
-        await interaction.response.send_message("❌ Operation cancelled", ephemeral=True, delete_after=3)
+        await interaction.response.send_message("❌ Operation cancelled", ephemeral=True)
 
     def _build_command_display(
         self,

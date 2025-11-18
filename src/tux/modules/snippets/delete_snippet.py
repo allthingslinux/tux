@@ -9,7 +9,6 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.bot import Tux
-from tux.shared.constants import DEFAULT_DELETE_AFTER
 
 from . import SnippetsBaseCog
 
@@ -67,10 +66,10 @@ class DeleteSnippet(SnippetsBaseCog):
         if snippet.id is not None:
             await self.db.snippet.delete_snippet_by_id(snippet.id)
         else:
-            await ctx.send("Error: Snippet ID is invalid.", delete_after=DEFAULT_DELETE_AFTER, ephemeral=True)
+            await ctx.send("Error: Snippet ID is invalid.", ephemeral=True)
             return
 
-        await ctx.send("Snippet deleted.", delete_after=DEFAULT_DELETE_AFTER, ephemeral=True)
+        await ctx.send("Snippet deleted.", ephemeral=True)
 
         logger.info(f"{ctx.author} deleted snippet '{name}'. Override: {reason}")
 

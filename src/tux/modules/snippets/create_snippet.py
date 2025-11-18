@@ -11,7 +11,7 @@ from discord.ext import commands
 from loguru import logger
 
 from tux.core.bot import Tux
-from tux.shared.constants import DEFAULT_DELETE_AFTER, SNIPPET_ALLOWED_CHARS_REGEX, SNIPPET_MAX_NAME_LENGTH
+from tux.shared.constants import SNIPPET_ALLOWED_CHARS_REGEX, SNIPPET_MAX_NAME_LENGTH
 
 from . import SnippetsBaseCog
 
@@ -99,7 +99,6 @@ class CreateSnippet(SnippetsBaseCog):
 
                 await ctx.send(
                     f"Snippet `{name}` created as an alias pointing to `{content}`.",
-                    delete_after=DEFAULT_DELETE_AFTER,
                     ephemeral=True,
                 )
 
@@ -114,7 +113,7 @@ class CreateSnippet(SnippetsBaseCog):
                 guild_id=guild_id,
             )
 
-            await ctx.send("Snippet created.", delete_after=DEFAULT_DELETE_AFTER, ephemeral=True)
+            await ctx.send("Snippet created.", ephemeral=True)
             logger.info(f"{ctx.author} created snippet '{name}'.")
 
         except Exception as e:

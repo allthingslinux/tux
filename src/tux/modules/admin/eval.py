@@ -90,7 +90,7 @@ class Eval(BaseCog):
         # Check if the user is in the discord.py owner_ids list in the bot instance
         if self.bot.owner_ids is None:
             logger.warning("Bot owner IDs are not set.")
-            await ctx.send("Bot owner IDs are not set. Better luck next time!", ephemeral=True, delete_after=30)
+            await ctx.send("Bot owner IDs are not set. Better luck next time!", ephemeral=True)
             return
 
         if ctx.author.id not in self.bot.owner_ids:
@@ -100,7 +100,6 @@ class Eval(BaseCog):
                 )
                 await ctx.send(
                     "You are not the bot owner and sysadmins are not allowed to use eval. Please contact your bot owner if you need assistance.",
-                    delete_after=30,
                 )
                 return
 
@@ -109,7 +108,6 @@ class Eval(BaseCog):
             )
             await ctx.send(
                 "You are not the bot owner. Better luck next time! (hint: if you are looking for the regular run command its $run)",
-                delete_after=30,
             )
             return
 
@@ -165,7 +163,7 @@ class Eval(BaseCog):
                 user_display_avatar=ctx.author.display_avatar.url,
                 description=f"```py\n{error}```",
             )
-            await ctx.reply(embed=embed, ephemeral=True, delete_after=30)
+            await ctx.reply(embed=embed, ephemeral=True)
             logger.error(f"An error occurred while running an expression: {error}")
 
 

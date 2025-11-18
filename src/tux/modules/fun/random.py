@@ -180,7 +180,7 @@ class Random(BaseCog):
             The number of sides on the dice, by default 6.
         """
         if sides < 2:
-            await ctx.send(content="The dice must have at least 2 sides.", ephemeral=True, delete_after=30)
+            await ctx.send(content="The dice must have at least 2 sides.", ephemeral=True)
             return
 
         embed = EmbedCreator.create_embed(
@@ -225,7 +225,6 @@ class Random(BaseCog):
             await ctx.send(
                 content="Invalid input for minimum or maximum value. Please provide valid numbers.",
                 ephemeral=True,
-                delete_after=30,
             )
             return
 
@@ -233,7 +232,6 @@ class Random(BaseCog):
             await ctx.send(
                 content="The minimum value must be less than the maximum value.",
                 ephemeral=True,
-                delete_after=30,
             )
             return
 

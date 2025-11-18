@@ -210,7 +210,7 @@ class PaginationHelper:
             return
 
         if not interaction.data:
-            await interaction.response.send_message("❌ Invalid interaction data", ephemeral=True, delete_after=3)
+            await interaction.response.send_message("❌ Invalid interaction data", ephemeral=True)
             return
 
         custom_id = interaction.data.get("custom_id", "")

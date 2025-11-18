@@ -125,7 +125,6 @@ class Bookmarks(BaseCog):
             try:
                 await message.channel.send(
                     f"{user.mention}, I couldn't send you a DM. Please check your privacy settings.",
-                    delete_after=30,
                 )
 
             except (discord.Forbidden, discord.HTTPException) as e2:

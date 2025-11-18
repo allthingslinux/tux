@@ -64,7 +64,7 @@ async def validate_interaction_data(interaction: discord.Interaction) -> bool:
         True if valid, False otherwise
     """
     if not interaction.data:
-        await interaction.response.send_message("❌ Invalid interaction data", ephemeral=True, delete_after=3)
+        await interaction.response.send_message("❌ Invalid interaction data", ephemeral=True)
         return False
     return True
 
@@ -95,7 +95,7 @@ async def handle_callback_error(
         if interaction.response.is_done():
             await interaction.followup.send(error_msg, ephemeral=True)
         else:
-            await interaction.response.send_message(error_msg, ephemeral=True, delete_after=5)
+            await interaction.response.send_message(error_msg, ephemeral=True)
     except Exception as send_error:
         logger.error(f"Failed to send error message: {send_error}")
 
@@ -229,7 +229,7 @@ def create_role_update_callback(dashboard: ConfigDashboard, rank_value: int, ran
             else:
                 message = f"✅ Rank {rank_value} roles unchanged"
 
-            await interaction.response.send_message(message, ephemeral=True, delete_after=3)
+            await interaction.response.send_message(message, ephemeral=True)
 
             # Invalidate cache and rebuild to show updated assignments
             await invalidate_and_rebuild(dashboard, "roles", dashboard.build_roles_mode, interaction)
@@ -278,7 +278,6 @@ def create_command_rank_callback(dashboard: ConfigDashboard, command_name: str) 
                     await interaction.response.send_message(
                         f"❌ Rank {rank_value} does not exist.",
                         ephemeral=True,
-                        delete_after=3,
                     )
                     return
 
@@ -289,7 +288,7 @@ def create_command_rank_callback(dashboard: ConfigDashboard, command_name: str) 
                 )
                 message = f"✅ Command `{command_name}` assigned to Rank {rank_value} ({rank_obj.name})"
 
-            await interaction.response.send_message(message, ephemeral=True, delete_after=3)
+            await interaction.response.send_message(message, ephemeral=True)
 
             # Invalidate cache and rebuild to show updated assignments
             await invalidate_and_rebuild(dashboard, "commands", dashboard.build_commands_mode, interaction)
@@ -321,7 +320,6 @@ def create_channel_callback(dashboard: ConfigDashboard, option_key: str) -> Any:
                 await interaction.response.send_message(
                     "❌ Could not find channel selector",
                     ephemeral=True,
-                    delete_after=3,
                 )
                 return
 
@@ -378,7 +376,6 @@ def create_delete_rank_callback(dashboard: ConfigDashboard, rank_value: int, ran
                 await interaction.response.send_message(
                     f"❌ Rank {rank_value} does not exist.",
                     ephemeral=True,
-                    delete_after=5,
                 )
                 return
 
@@ -400,7 +397,7 @@ def create_cancel_assignment_callback() -> Any:
     """Create callback for canceling role assignment."""
 
     async def cancel_assignment_callback(interaction: discord.Interaction) -> None:
-        await interaction.response.send_message("❌ Role assignment cancelled.", ephemeral=True, delete_after=3)
+        await interaction.response.send_message("❌ Role assignment cancelled.", ephemeral=True)
 
     return cancel_assignment_callback
 
@@ -422,7 +419,7 @@ def create_confirm_assignment_callback(
             return
 
         if not selected_roles:
-            await interaction.response.send_message("❌ No roles selected.", ephemeral=True, delete_after=3)
+            await interaction.response.send_message("❌ No roles selected.", ephemeral=True)
             return
 
         try:
@@ -447,7 +444,6 @@ def create_confirm_assignment_callback(
             await interaction.response.send_message(
                 f"✅ Successfully assigned {assigned_count} role(s) to Rank {rank_id}",
                 ephemeral=True,
-                delete_after=3,
             )
 
             await invalidate_and_rebuild(dashboard, "roles", dashboard.build_roles_mode, interaction)

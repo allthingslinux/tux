@@ -161,12 +161,12 @@ class TestErrorHandler:
         mock_ctx.reply = AsyncMock()
 
         embed = MagicMock(spec=discord.Embed)
-        config = ErrorHandlerConfig(delete_error_messages=True, error_message_delete_after=30)
+        config = ErrorHandlerConfig(delete_error_messages=True)
 
         await error_handler._send_error_response(mock_ctx, embed, config)
 
         mock_ctx.reply.assert_called_once_with(
-            embed=embed, delete_after=30.0, mention_author=False,
+            embed=embed,  mention_author=False,
         )
 
     @pytest.mark.asyncio

@@ -148,7 +148,6 @@ class RemindMe(BaseCog):
             await ctx.reply(
                 "Invalid time format. Please use `[number][unit]` (e.g., 1h30m, 2d, 5min).",
                 ephemeral=True,
-                delete_after=30,
             )
             return
 

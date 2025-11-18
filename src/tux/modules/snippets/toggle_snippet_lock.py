@@ -13,7 +13,6 @@ from loguru import logger
 
 from tux.core.bot import Tux
 from tux.core.checks import requires_command_permission
-from tux.shared.constants import DEFAULT_DELETE_AFTER
 
 from . import SnippetsBaseCog
 
@@ -88,7 +87,6 @@ class ToggleSnippetLock(SnippetsBaseCog):
             lock_status_text = "locked" if status.locked else "unlocked"
             await ctx.send(
                 f"Snippet `{name}` has been {lock_status_text}.",
-                delete_after=DEFAULT_DELETE_AFTER,
                 ephemeral=True,
             )
             logger.info(f"{ctx.author} {lock_status_text} snippet '{name}'.")

@@ -543,7 +543,7 @@ class Dev(BaseCog):
         resolved_cog = self._resolve_cog_path(cog)
         try:
             await self.bot.unload_extension(resolved_cog)
-            await ctx.send(f"✅ Cog `{resolved_cog}` unloaded successfully.", ephemeral=True, delete_after=30)
+            await ctx.send(f"✅ Cog `{resolved_cog}` unloaded successfully.", ephemeral=True)
             logger.info(f"Cog {resolved_cog} unloaded by {ctx.author}")
         except commands.ExtensionNotLoaded:
             await ctx.send(f"❌ Cog `{resolved_cog}` is not loaded.")
@@ -575,7 +575,7 @@ class Dev(BaseCog):
         resolved_cog = self._resolve_cog_path(cog)
         try:
             await self.bot.reload_extension(resolved_cog)
-            await ctx.send(f"✅ Cog `{resolved_cog}` reloaded successfully.", ephemeral=True, delete_after=30)
+            await ctx.send(f"✅ Cog `{resolved_cog}` reloaded successfully.", ephemeral=True)
             logger.info(f"Cog {resolved_cog} reloaded by {ctx.author}")
         except commands.ExtensionNotLoaded:
             await ctx.send(f"❌ Cog `{resolved_cog}` is not loaded.")

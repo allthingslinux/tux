@@ -12,7 +12,6 @@ from typing import Any
 from discord.ext import commands
 from loguru import logger
 
-from tux.shared.constants import DEFAULT_DELETE_AFTER
 from tux.ui.embeds import EmbedCreator
 
 from .components import DirectHelpView
@@ -119,7 +118,7 @@ class TuxHelp(commands.HelpCommand):
             description=error,
         )
 
-        await self.get_destination().send(embed=embed, delete_after=DEFAULT_DELETE_AFTER)
+        await self.get_destination().send(embed=embed)
 
         # Only log errors that are not related to command not found
         if "no command called" not in error.lower():

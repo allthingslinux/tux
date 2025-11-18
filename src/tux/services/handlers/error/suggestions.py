@@ -104,7 +104,7 @@ class CommandSuggester:
         )
 
         try:
-            await ctx.send(embed=embed, delete_after=self.delete_after)
+            await ctx.send(embed=embed)
             logger.info(f"Sent suggestions for '{ctx.invoked_with}': {suggestions}")
         except discord.HTTPException as e:
             logger.error(f"Failed to send suggestions: {e}")
