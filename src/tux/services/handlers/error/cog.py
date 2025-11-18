@@ -155,9 +155,7 @@ class ErrorHandler(commands.Cog):
                     await source.followup.send(embed=embed, ephemeral=True)
                 else:
                     await source.response.send_message(embed=embed, ephemeral=True)
-            # Prefix command - reply with optional deletion
-            elif config.delete_error_messages:
-                await source.reply(embed=embed, mention_author=False)
+            # Prefix command
             else:
                 await source.reply(embed=embed, mention_author=False)
         except discord.HTTPException as e:

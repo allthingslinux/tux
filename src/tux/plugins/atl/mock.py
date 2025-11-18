@@ -153,10 +153,7 @@ class ErrorTestDefinition:
             return None
 
         return {
-            "delete_error_messages": config.delete_error_messages,
-            "error_message_delete_after": config.error_message_delete_after,
             "suggest_similar_commands": config.suggest_similar_commands,
-            "suggestion_delete_after": config.suggestion_delete_after,
         }
 
 

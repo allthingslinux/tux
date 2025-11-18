@@ -22,8 +22,6 @@ from tux.shared.exceptions import (
 
 # Constants
 DEFAULT_ERROR_MESSAGE = "An unexpected error occurred. Please try again later."
-COMMAND_ERROR_DELETE_AFTER = 30
-SUGGESTION_DELETE_AFTER = 15
 
 # Levenshtein suggestion parameters
 SHORT_CMD_LEN_THRESHOLD = 3
@@ -55,20 +53,11 @@ class ErrorHandlerConfig:
     # Whether to send embed response
     send_embed: bool = True
 
-    # Whether to delete error messages (prefix commands only)
-    delete_error_messages: bool = True
-
-    # Delete timeout
-    error_message_delete_after: int = COMMAND_ERROR_DELETE_AFTER
-
     # Whether to suggest similar commands for CommandNotFound
     suggest_similar_commands: bool = True
 
     # Whether to include command usage in error messages
     include_usage: bool = True
-
-    # Suggestion delete timeout
-    suggestion_delete_after: int = SUGGESTION_DELETE_AFTER
 
 
 # Import extractors here to avoid circular imports
@@ -90,57 +79,47 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
     app_commands.AppCommandError: ErrorHandlerConfig(
         message_format="An application command error occurred: {error}",
         log_level="WARNING",
-        delete_error_messages=False,
     ),
     app_commands.CommandInvokeError: ErrorHandlerConfig(
         message_format="An internal error occurred while running the command.",
         log_level="ERROR",
-        delete_error_messages=False,
     ),
     app_commands.TransformerError: ErrorHandlerConfig(
         message_format="Failed to process argument: {error}",
         log_level="INFO",
         send_to_sentry=False,
-        delete_error_messages=False,
     ),
     app_commands.MissingRole: ErrorHandlerConfig(
         message_format="You need the role {roles} to use this command.",
         detail_extractor=extract_missing_role_details,
         send_to_sentry=False,
-        delete_error_messages=False,
     ),
     app_commands.MissingAnyRole: ErrorHandlerConfig(
         message_format="You need one of these roles: {roles}",
         detail_extractor=extract_missing_any_role_details,
         send_to_sentry=False,
-        delete_error_messages=False,
     ),
     app_commands.MissingPermissions: ErrorHandlerConfig(
         message_format="You lack required permissions: {permissions}",
         detail_extractor=extract_permissions_details,
         send_to_sentry=False,
-        delete_error_messages=False,
     ),
     app_commands.CheckFailure: ErrorHandlerConfig(
         message_format="You don't meet the requirements for this command.",
         send_to_sentry=False,
-        delete_error_messages=False,
     ),
     app_commands.CommandOnCooldown: ErrorHandlerConfig(
         message_format="Command on cooldown. Wait {error.retry_after:.1f}s.",
         send_to_sentry=False,
-        delete_error_messages=False,
     ),
     app_commands.BotMissingPermissions: ErrorHandlerConfig(
         message_format="I lack required permissions: {permissions}",
         detail_extractor=extract_permissions_details,
         log_level="WARNING",
-        delete_error_messages=False,
     ),
     app_commands.CommandSignatureMismatch: ErrorHandlerConfig(
         message_format="Command signature mismatch. Please report this.",
         log_level="ERROR",
-        delete_error_messages=False,
     ),
     # === Traditional Commands ===
     commands.CommandError: ErrorHandlerConfig(
@@ -273,13 +252,11 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
     TuxAppCommandPermissionLevelError: ErrorHandlerConfig(
         message_format="You need permission level `{error.permission}`.",
         send_to_sentry=False,
-        delete_error_messages=False,
     ),
     TuxPermissionDeniedError: ErrorHandlerConfig(
         message_format="{message}",
         detail_extractor=extract_permission_denied_details,
         send_to_sentry=False,
-        delete_error_messages=False,
     ),
     TuxMissingCodeError: ErrorHandlerConfig(
         message_format="{error}",

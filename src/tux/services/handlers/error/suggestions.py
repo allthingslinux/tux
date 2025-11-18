@@ -13,22 +13,14 @@ from .config import (
     SHORT_CMD_LEN_THRESHOLD,
     SHORT_CMD_MAX_DISTANCE,
     SHORT_CMD_MAX_SUGGESTIONS,
-    SUGGESTION_DELETE_AFTER,
 )
 
 
 class CommandSuggester:
     """Handles command suggestions for CommandNotFound errors."""
 
-    def __init__(self, delete_after: int = SUGGESTION_DELETE_AFTER) -> None:
-        """Initialize the command suggester.
-
-        Parameters
-        ----------
-        delete_after : int, optional
-            Seconds to wait before deleting suggestion messages.
-        """
-        self.delete_after = delete_after
+    def __init__(self) -> None:
+        """Initialize the command suggester."""
 
     async def suggest_command(self, ctx: commands.Context[Tux]) -> list[str] | None:
         """Find similar command names using Levenshtein distance.

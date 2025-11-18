@@ -33,7 +33,6 @@ __all__ = [
     "DB_COMMAND_NAME_LENGTH",
     "DB_DESCRIPTION_LENGTH",
     "DB_TARGET_TYPE_LENGTH",
-    "DEFAULT_DELETE_AFTER",
     "DEFAULT_REASON",
     "DEPENDENCY_CACHE_SIZE",
     "EIGHT_BALL_QUESTION_LENGTH_LIMIT",
@@ -150,7 +149,6 @@ SNIPPET_ALLOWED_CHARS_REGEX: Final[str] = r"^[a-zA-Z0-9-]+$"
 SNIPPET_PAGINATION_LIMIT: Final[int] = 10
 
 # Message timings
-DEFAULT_DELETE_AFTER: Final[int] = 30
 HTTP_TIMEOUT: Final[int] = 10
 
 # General constants
