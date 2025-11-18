@@ -70,7 +70,7 @@ class DatabaseCLI(BaseCLI):
             # ============================================================================
             Command("reset", self.reset, "Reset database to clean state (safe)"),
             Command("downgrade", self.downgrade, "Rollback to a previous migration revision"),
-            Command("nuke", self.hard_reset, "Nuclear reset: completely destroy database (dangerous)"),
+            Command("nuke", self.nuke, "Nuclear reset: completely destroy database (dangerous)"),
             Command("version", self.version, "Show version information"),
         ]
 
@@ -611,7 +611,7 @@ class DatabaseCLI(BaseCLI):
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to reset database")
 
-    def hard_reset(  # noqa: PLR0915
+    def nuke(  # noqa: PLR0915
         self,
         force: Annotated[bool, Option("--force", "-f", help="Skip confirmation prompt")] = False,
         fresh: Annotated[
