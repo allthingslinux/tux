@@ -77,6 +77,9 @@
   font-weight: 500 !important;
 }
 
+.md-nav__container > .md-nav__link:first-child {
+  font-weight: 700 !important;
+}
 
 /* Fix tab navigation font sizes - Material sets them too small */
 /* Adjusted for Material's 150% html font-size */

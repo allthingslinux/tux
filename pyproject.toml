@@ -128,6 +128,8 @@ docs = [
     "mkdocs-backlinks>=0.9.1",
     "mkdocs-literate-nav>=0.6.1",
     "licensecheck>=2025.1.0",
+    "mkdocs-glightbox>=0.5.2",
+    "mkdocs-redirects>=1.2.2",
 ]
 types = [
     "types-pytz>=2025.2.0.20250326",

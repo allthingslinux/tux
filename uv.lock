@@ -1571,6 +1571,18 @@ wheels = [
 ]
 
 [[package]]
+name = "mkdocs-glightbox"
+version = "0.5.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "selectolax" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8d/26/c793459622da8e31f954c6f5fb51e8f098143fdfc147b1e3c25bf686f4aa/mkdocs_glightbox-0.5.2.tar.gz", hash = "sha256:c7622799347c32310878e01ccf14f70648445561010911c80590cec0353370ac", size = 510586, upload-time = "2025-10-23T14:55:18.909Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4e/ca/03624e017e5ee2d7ce8a08d89f81c1e535eb3c30d7b2dc4a435ea3fbbeae/mkdocs_glightbox-0.5.2-py3-none-any.whl", hash = "sha256:23a431ea802b60b1030c73323db2eed6ba859df1a0822ce575afa43e0ea3f47e", size = 26458, upload-time = "2025-10-23T14:55:17.43Z" },
+]
+
+[[package]]
 name = "mkdocs-literate-nav"
 version = "0.6.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1655,6 +1667,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/04/df/f3362706a562dea1c439c15c854244f9fad0ca97c65d901468781c02b072/mkdocs_pagetree_plugin-0.0.17.tar.gz", hash = "sha256:980fee9d44fc327b847d56f27d6869d97d578f10891248fe4343266a8463601e", size = 13449, upload-time = "2025-03-17T08:50:18.359Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f5/81/7fda21890e998b9756d18e3980ed62711f14d0a928568aae2116f279d64b/mkdocs_pagetree_plugin-0.0.17-py3-none-any.whl", hash = "sha256:861016a33d37e05c9ffe382f06471eb5664833fb4713bf4f51e11e28e825b5bf", size = 13098, upload-time = "2025-03-17T08:50:16.896Z" },
+]
+
+[[package]]
+name = "mkdocs-redirects"
+version = "1.2.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "mkdocs" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f1/a8/6d44a6cf07e969c7420cb36ab287b0669da636a2044de38a7d2208d5a758/mkdocs_redirects-1.2.2.tar.gz", hash = "sha256:3094981b42ffab29313c2c1b8ac3969861109f58b2dd58c45fc81cd44bfa0095", size = 7162, upload-time = "2024-11-07T14:57:21.109Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c4/ec/38443b1f2a3821bbcb24e46cd8ba979154417794d54baf949fefde1c2146/mkdocs_redirects-1.2.2-py3-none-any.whl", hash = "sha256:7dbfa5647b79a3589da4401403d69494bd1f4ad03b9c15136720367e1f340ed5", size = 6142, upload-time = "2024-11-07T14:57:19.143Z" },
 ]
 
 [[package]]
@@ -2789,6 +2813,23 @@ wheels = [
 ]
 
 [[package]]
+name = "selectolax"
+version = "0.4.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/8f/93/19eb4bcefc0e678712211e7c4cb0b8e11ae78ff4b57220c5d73433701203/selectolax-0.4.3.tar.gz", hash = "sha256:55b1bae7cc18ee6a6beedcc99ed8a423488e8500d8ec32aeeaac92110a157df1", size = 4761144, upload-time = "2025-11-16T11:30:21.795Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/af/13/b748e965619d35bc9c6ada97f5ec2382eaf7461fb2a3555d28c054e12396/selectolax-0.4.3-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:8252c0c0a16e019c47f5153c11201913da0c820f2ff78e444945c426f782efa4", size = 2012113, upload-time = "2025-11-16T11:29:24.721Z" },
+    { url = "https://files.pythonhosted.org/packages/15/f8/39f7df36c74c44e7e30c0fdd3d8d5d1a3abfd2bf40ad975a600383ccb514/selectolax-0.4.3-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:4ccaa0248bc282f34eb5e3c1cc11fdfb77dddbec484999eb39e194a679ac934d", size = 2008003, upload-time = "2025-11-16T11:29:26.471Z" },
+    { url = "https://files.pythonhosted.org/packages/7d/d3/cb814f8d6f8adaa9cd3db1af49411217ff28936dfecb1d7bced9b142238e/selectolax-0.4.3-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:6b1d7e42112e085702c8385c21f4b4d9eaebaf3b9971eb9dfab12d46c753918f", size = 2193801, upload-time = "2025-11-16T11:29:27.896Z" },
+    { url = "https://files.pythonhosted.org/packages/d6/e4/f5963cd3962f649bc258623c1ce92ce7806e532cc4552389540e203bcb1d/selectolax-0.4.3-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:ee1bdb39e3e2d52b19b134d4f2f3f4fb57b3bec648165fc0cf66c38fc871b6fa", size = 2232146, upload-time = "2025-11-16T11:29:29.283Z" },
+    { url = "https://files.pythonhosted.org/packages/5d/e5/d67f4489dea408e8a0deceb1ede9186c24819a3e86eb20a17ad122e4e379/selectolax-0.4.3-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:de7708b59434aabf195119a6166fd53cd6dd28dcdcba36183d01b884cd97c24e", size = 2208818, upload-time = "2025-11-16T11:29:30.686Z" },
+    { url = "https://files.pythonhosted.org/packages/c0/5c/728ef5285abbcc6254da9d134e952eccb3710fa58834f8ecc52d8f5769b3/selectolax-0.4.3-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:7237635349d76814c7385b577d22d0a62d7fd500360b5694ad188aef3cc27a55", size = 2239191, upload-time = "2025-11-16T11:29:32.985Z" },
+    { url = "https://files.pythonhosted.org/packages/1d/bc/1e5b367f7396bc3706ea33de4b50b4a82b7ba5e1ae736c5e501f232f464c/selectolax-0.4.3-cp313-cp313-win32.whl", hash = "sha256:6e7d490bc7ec6cbb2f9702086b62457b469a7e0c765a0d9137c12d798c4fce9f", size = 1692200, upload-time = "2025-11-16T11:29:34.33Z" },
+    { url = "https://files.pythonhosted.org/packages/0e/aa/e210304112c137461c6320996afe315780b3938ef82ea8566ef841917a21/selectolax-0.4.3-cp313-cp313-win_amd64.whl", hash = "sha256:2963e13f00d8a1270ebd37a3012a14a4f340753ecad43a7876cef5ee0856b2c1", size = 1791459, upload-time = "2025-11-16T11:29:35.96Z" },
+    { url = "https://files.pythonhosted.org/packages/71/7f/b0cc15576d5ccfad2fe14a00e85e379b9643e429c8903931ba5fac2899cc/selectolax-0.4.3-cp313-cp313-win_arm64.whl", hash = "sha256:6078b3a91b346de159f5767a2dbcbb52eaa5c63745550f66f7b9637a7da301c8", size = 1737340, upload-time = "2025-11-16T11:29:37.801Z" },
+]
+
+[[package]]
 name = "semver"
 version = "3.0.4"
 source = { registry = "https://pypi.org/simple" }
@@ -3104,11 +3145,13 @@ docs = [
     { name = "mkdocs-ezlinks-plugin" },
     { name = "mkdocs-git-committers-plugin-2" },
     { name = "mkdocs-git-revision-date-localized-plugin" },
+    { name = "mkdocs-glightbox" },
     { name = "mkdocs-literate-nav" },
     { name = "mkdocs-material" },
     { name = "mkdocs-mermaid2-plugin" },
     { name = "mkdocs-minify-plugin" },
     { name = "mkdocs-pagetree-plugin" },
+    { name = "mkdocs-redirects" },
     { name = "mkdocs-section-index" },
     { name = "mkdocs-spellcheck", extra = ["all"] },
     { name = "mkdocs-typer" },
@@ -3224,11 +3267,13 @@ docs = [
     { name = "mkdocs-ezlinks-plugin", specifier = ">=0.1.14" },
     { name = "mkdocs-git-committers-plugin-2", specifier = ">=2.5.0" },
     { name = "mkdocs-git-revision-date-localized-plugin", specifier = ">=1.3.0" },
+    { name = "mkdocs-glightbox", specifier = ">=0.5.2" },
     { name = "mkdocs-literate-nav", specifier = ">=0.6.1" },
     { name = "mkdocs-material", specifier = ">=9.6.22" },
     { name = "mkdocs-mermaid2-plugin", specifier = ">=1.2.3" },
     { name = "mkdocs-minify-plugin", specifier = ">=0.8.0" },
     { name = "mkdocs-pagetree-plugin", specifier = ">=0.0.17" },
+    { name = "mkdocs-redirects", specifier = ">=1.2.2" },
     { name = "mkdocs-section-index", specifier = ">=0.3.10" },
     { name = "mkdocs-spellcheck", extras = ["all"], specifier = ">=1.1.2" },
     { name = "mkdocs-typer", specifier = ">=0.0.3" },

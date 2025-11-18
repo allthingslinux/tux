@@ -6,7 +6,7 @@ title: Navigation
 * [User Guide](./user/index.md)
   * [Features](./user/features/index.md)
     * user/features/*.md
-  * [Modules and Commands](./user/modules/index.md)
+  * [Modules](./user/modules/index.md)
     * user/modules/*.md
 * [Admin Guide](./admin/index.md)
   * [Setup](./admin/setup/index.md)

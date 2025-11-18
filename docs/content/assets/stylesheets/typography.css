@@ -582,12 +582,12 @@ code, pre, .codehilite {
 }
 
 /* Navigation font rendering */
-.md-nav__item {
+/* .md-nav__item {
   font-weight: 400;
   letter-spacing: 0;
-}
+} */
 
-.md-ellipsis {
+/* .md-ellipsis {
   font-weight: 400;
   letter-spacing: 0;
-}
+} */

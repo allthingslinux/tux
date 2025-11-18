@@ -9,18 +9,20 @@ validation:
     anchors: info
     absolute_links: ignore
     unrecognized_links: info
+dev_addr: 127.0.0.1:8000
 site_name: Tux
 site_url: https://tux.atl.dev/
 site_description: The all-in-one open source Discord bot for the All Things Linux
   community.
 site_author: All Things Linux
-dev_addr: 127.0.0.1:8000
+copyright: Copyright &copy; 2025 All Things Linux
 repo_url: https://github.com/allthingslinux/tux
 repo_name: allthingslinux/tux
 edit_uri: edit/main/docs/
 docs_dir: ./content
 site_dir: ./site
 extra_css:
+  - https://rsms.me/inter/inter.css
   - ./assets/stylesheets/reset.css
   - ./assets/stylesheets/extra.css
   - ./assets/stylesheets/material.css
@@ -28,7 +30,6 @@ extra_css:
   - ./assets/stylesheets/mkdocstrings.css
   - ./assets/stylesheets/pymdownx.css
   - ./assets/stylesheets/home.css
-  - https://rsms.me/inter/inter.css
 extra_javascript: [./assets/javascript/extra.js]
 watch:
   # MkDocs automatically watches docs_dir (content/) and mkdocs.yml
@@ -37,7 +38,6 @@ watch:
   - content/assets/javascript  # Custom JS changes
   - overrides  # Theme template overrides
   - includes  # Include files
-copyright: Copyright &copy; 2025 All Things Linux
 extra:
   # Custom copyright partial: overrides/partials/copyright.html
   footer_links:
@@ -77,16 +77,17 @@ theme:
     - content.action.view
     - content.code.annotate
     - content.tooltips
-    - header.autohide
-    - navigation.instant
-    - navigation.instant.progress
-    - navigation.instant.prefetch
+    - content.footnote.tooltips
+    # - header.autohide
+    # - navigation.instant
+    # - navigation.instant.progress
+    # - navigation.instant.prefetch
     - navigation.tracking
     - navigation.indexes
     - navigation.top
     - navigation.tabs
     - navigation.tabs.sticky
-    # - navigation.sections
+    - navigation.sections
     # - navigation.prune
     # - navigation.expand
     - navigation.path
@@ -195,7 +196,7 @@ plugins:
       enabled: true
       nav_file: navigation.md
       tab_length: 2
-      implicit_index: true
+      implicit_index: false
   - minify:
       enabled: true
       minify_html: true
@@ -228,7 +229,9 @@ plugins:
   - social:
       enabled: true
       cards_layout_options:
-        background_color: '#181825'
+        # background_color: '#181825'
+        background_color: transparent
+        background_image: docs/content/assets/images/hero-bg.png
         color: '#ffffff'
         font_family: Inter
   - coverage:
