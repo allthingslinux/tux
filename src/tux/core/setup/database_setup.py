@@ -88,7 +88,7 @@ class DatabaseSetupService(BaseSetupService):
         """
         try:
             cfg = self._build_alembic_config()
-            logger.info("🔄 Checking database migrations...")
+            logger.info("Checking database migrations...")
 
             # First check if we can connect to the database quickly
             # If not, skip migrations entirely to avoid blocking startup
@@ -113,8 +113,8 @@ class DatabaseSetupService(BaseSetupService):
             db_available = await loop.run_in_executor(None, _check_db_available)
 
             if not db_available:
-                logger.warning("⚠️ Database not available - skipping migrations during startup")
-                logger.info("💡 Run migrations manually when database is available")
+                logger.warning("Database not available - skipping migrations during startup")
+                logger.info("Run migrations manually when database is available")
                 return
 
             # Database is available, run migrations with a reasonable timeout
@@ -130,16 +130,16 @@ class DatabaseSetupService(BaseSetupService):
 
                     # Only run upgrade if we're not already at head
                     if current_rev != head_rev:
-                        logger.info("🔄 Running database migrations...")
+                        logger.info("Running database migrations...")
                         # Run the upgrade
                         command.upgrade(cfg, "head")
-                        logger.info("✅ Database migrations completed")
+                        logger.info("Database migrations completed")
                     else:
-                        logger.info("✅ Database is already up to date")
+                        logger.info("Database is already up to date")
                 except Exception as e:
-                    logger.warning(f"⚠️ Could not run migrations: {e}")
-                    logger.info("💡 Database may be unavailable - migrations skipped for now")
-                    logger.info("💡 Run migrations manually when database is available")
+                    logger.warning(f"Could not run migrations: {e}")
+                    logger.info("Database may be unavailable - migrations skipped for now")
+                    logger.info("Run migrations manually when database is available")
 
             # Run migrations with a timeout
             await asyncio.wait_for(
@@ -148,12 +148,12 @@ class DatabaseSetupService(BaseSetupService):
             )
 
         except TimeoutError:
-            logger.warning("⚠️ Migration check timed out - skipping migrations")
-            logger.info("💡 Run migrations manually when database is available")
+            logger.warning("Migration check timed out - skipping migrations")
+            logger.info("Run migrations manually when database is available")
         except Exception as e:
-            logger.warning(f"⚠️ Migration check failed: {e}")
-            logger.info("💡 Database may be unavailable - migrations skipped for now")
-            logger.info("💡 Run migrations manually when database is available")
+            logger.warning(f"Migration check failed: {e}")
+            logger.info("Database may be unavailable - migrations skipped for now")
+            logger.info("Run migrations manually when database is available")
 
     async def setup(self) -> None:
         """

@@ -41,9 +41,9 @@ class BaseSetupService(ABC):
         """
         with start_span(f"bot.setup_{self.name}", f"Setting up {self.name}") as span:
             try:
-                self.logger.info(f"🔧 Setting up {self.name}...")
+                self.logger.info(f"Setting up {self.name}...")
                 await self.setup()
-                self.logger.info(f"✅ {self.name.title()} setup completed")
+                self.logger.info(f"{self.name.title()} setup completed")
                 span.set_tag(f"{self.name}.setup", "success")
             except KeyboardInterrupt:
                 # Re-raise KeyboardInterrupt to allow signal handling
@@ -55,7 +55,7 @@ class BaseSetupService(ABC):
                 if self.name != "database":
                     # Use error() instead of exception() to avoid duplicate tracebacks
                     # Sentry already captures full exception details
-                    self.logger.error(f"❌ {self.name.title()} setup failed: {e}")  # noqa: TRY400
+                    self.logger.error(f"{self.name.title()} setup failed: {e}")  # noqa: TRY400
                 span.set_tag(f"{self.name}.setup", "failed")
                 span.set_data("error", str(e))
                 capture_exception_safe(e)
@@ -65,8 +65,7 @@ class BaseSetupService(ABC):
 
     def _log_step(self, step: str, status: str = "info") -> None:
         """Log a setup step with consistent formatting."""
-        emoji = {"info": "🔧", "success": "✅", "warning": "⚠️", "error": "❌"}
-        getattr(self.logger, status)(f"{emoji.get(status, '🔧')} {step}")
+        getattr(self.logger, status)(step)
 
 
 class BotSetupService(BaseSetupService):

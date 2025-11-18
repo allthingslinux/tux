@@ -77,7 +77,7 @@ class Afk(BaseCog):
         )
 
         await add_afk(self.db, shortened_reason, target, ctx.guild.id, False)
-        logger.info(f"💤 AFK status set: {target.name} ({target.id}) in {ctx.guild.name} - Reason: {shortened_reason}")
+        logger.info(f"AFK status set: {target.name} ({target.id}) in {ctx.guild.name} - Reason: {shortened_reason}")
 
         await self._send_afk_response(
             ctx,
@@ -104,7 +104,7 @@ class Afk(BaseCog):
         entry = await self._get_afk_entry(target.id, ctx.guild.id)
         if entry is not None:
             await del_afk(self.db, target, entry.nickname)
-            logger.info(f"✅ Permanent AFK toggled off: {target.name} ({target.id}) in {ctx.guild.name}")
+            logger.info(f"Permanent AFK toggled off: {target.name} ({target.id}) in {ctx.guild.name}")
             await self._send_afk_response(ctx, "Welcome back!")
             return
 
@@ -220,7 +220,7 @@ class Afk(BaseCog):
             expired_entries = await self._get_expired_afk_entries(guild.id)
 
             if expired_entries:
-                logger.info(f"🧹 Processing {len(expired_entries)} expired AFK entries in {guild.name}")
+                logger.info(f"Processing {len(expired_entries)} expired AFK entries in {guild.name}")
 
             for entry in expired_entries:
                 member = guild.get_member(entry.member_id)

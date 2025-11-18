@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-echo "🐧 Tux Docker Entrypoint"
-echo "========================"
+echo "Tux Docker Entrypoint"
+echo "====================="
 
 # Configuration
 MAX_STARTUP_ATTEMPTS=${MAX_STARTUP_ATTEMPTS:-3}
@@ -10,7 +10,6 @@ STARTUP_DELAY=${STARTUP_DELAY:-5}
 
 # Function to check if database is ready (simple socket check)
 wait_for_db() {
-    echo "⏳ Waiting for database to be ready..."
     local attempts=0
     local max_attempts=30
 
@@ -28,61 +27,32 @@ except Exception:
 "; do
         attempts=$((attempts + 1))
         if [ $attempts -ge $max_attempts ]; then
-            echo "❌ Database connection timeout after $max_attempts attempts"
+            echo "Database connection timeout after $max_attempts attempts"
             exit 1
         fi
         echo "Database is unavailable - sleeping (attempt $attempts/$max_attempts)"
         sleep 2
     done
-    echo "✅ Database is ready!"
-}
-
-# Function to handle migrations
-handle_migrations() {
-    echo "🔄 Handling database migrations..."
-
-    # Change to the app directory where alembic.ini is located
-    cd /app
-
-    # Check if we need to force migration
-    if [ "$FORCE_MIGRATE" = "true" ]; then
-        echo "⚠️  WARNING: Force migration can cause data inconsistency!"
-        echo "🔧 Force migrating database to head..."
-        python -m alembic stamp head
-        echo "✅ Database force migrated to head"
-    else
-        # Try normal migration
-        echo "🔄 Running normal migrations..."
-        if ! python -m alembic upgrade head; then
-            echo "⚠️  Migration failed, attempting to fix..."
-            echo "📊 Current migration status:"
-            python -m alembic current
-            echo "🔧 Attempting to stamp database as head..."
-            python -m alembic stamp head
-            echo "✅ Database stamped as head"
-        else
-            echo "✅ Migrations completed successfully"
-        fi
-    fi
+    echo "Database is ready!"
 }
 
 # Function to validate configuration
 validate_config() {
-    echo "🔍 Validating configuration..."
+    echo "Validating configuration..."
 
     # Check for required environment variables
     if [ -z "$BOT_TOKEN" ]; then
-        echo "❌ BOT_TOKEN is not set"
+        echo "BOT_TOKEN is not set"
         return 1
     fi
 
     # Test configuration loading
-    if ! python -c "import tux.shared.config.settings; print('✅ Configuration loaded successfully')"; then
-        echo "❌ Failed to load configuration"
+    if ! python -c "import tux.shared.config.settings; print('Configuration loaded successfully')"; then
+        echo "Failed to load configuration"
         return 1
     fi
 
-    echo "✅ Configuration validation passed"
+    echo "Configuration validation passed"
     return 0
 }
 
@@ -92,31 +62,31 @@ start_bot_with_retry() {
 
     while [ $attempts -lt $MAX_STARTUP_ATTEMPTS ]; do
         attempts=$((attempts + 1))
-        echo "🚀 Starting Tux bot (attempt $attempts/$MAX_STARTUP_ATTEMPTS)..."
+        echo "Starting Tux bot (attempt $attempts/$MAX_STARTUP_ATTEMPTS)..."
 
         # Validate configuration before starting
         if ! validate_config; then
-            echo "❌ Configuration validation failed"
+            echo "Configuration validation failed"
             if [ $attempts -ge $MAX_STARTUP_ATTEMPTS ]; then
-                echo "🛑 Maximum startup attempts reached. Exiting."
+                echo "Maximum startup attempts reached. Exiting."
                 exit 1
             fi
-            echo "⏳ Waiting ${STARTUP_DELAY}s before retry..."
+            echo "Waiting ${STARTUP_DELAY}s before retry..."
             sleep $STARTUP_DELAY
             continue
         fi
 
         # Start the bot
         if exec tux start; then
-            echo "✅ Bot started successfully"
+            echo "Bot started successfully"
             return 0
         else
-            echo "❌ Bot failed to start (exit code: $?)"
+            echo "Bot failed to start (exit code: $?)"
             if [ $attempts -ge $MAX_STARTUP_ATTEMPTS ]; then
-                echo "🛑 Maximum startup attempts reached. Exiting."
+                echo "Maximum startup attempts reached. Exiting."
                 exit 1
             fi
-            echo "⏳ Waiting ${STARTUP_DELAY}s before retry..."
+            echo "Waiting ${STARTUP_DELAY}s before retry..."
             sleep $STARTUP_DELAY
         fi
     done
@@ -125,17 +95,17 @@ start_bot_with_retry() {
 # Signal handlers for graceful shutdown
 cleanup() {
     echo ""
-    echo "🛑 Received shutdown signal"
-    echo "🧹 Performing cleanup..."
+    echo "Received shutdown signal"
+    echo "Performing cleanup..."
 
     # Kill any child processes
     if [ -n "$BOT_PID" ]; then
-        echo "🔄 Stopping bot process (PID: $BOT_PID)..."
+        echo "Stopping bot process (PID: $BOT_PID)..."
         kill -TERM "$BOT_PID" 2>/dev/null || true
         wait "$BOT_PID" 2>/dev/null || true
     fi
 
-    echo "✅ Cleanup complete"
+    echo "Cleanup complete"
     exit 0
 }
 
@@ -143,12 +113,10 @@ cleanup() {
 trap cleanup SIGTERM SIGINT
 
 # Main execution
-echo "⏳ Waiting for database to be ready..."
+echo "Waiting for database to be ready..."
 wait_for_db
 
-echo "🔄 Handling database migrations..."
-handle_migrations
-
 # Start bot with retry logic and validation (always enabled)
-echo "🚀 Starting bot with smart orchestration..."
+# Note: Database migrations are handled automatically by the bot during setup
+echo "Starting bot with smart orchestration..."
 start_bot_with_retry

@@ -328,7 +328,7 @@ class TuxApp:
         shutdown_code = 0  # Will be set by shutdown()
         try:
             # Login to Discord first (required before cogs can use wait_until_ready)
-            logger.info("🔐 Logging in to Discord...")
+            logger.info("Logging in to Discord...")
             await self.bot.login(CONFIG.BOT_TOKEN)
 
             # Mark that bot is now connected (can handle graceful shutdown)
@@ -363,8 +363,8 @@ class TuxApp:
             exit_code = 130
         except Exception as e:
             # Unexpected error during startup - log and report to Sentry
-            logger.critical(f"❌ Bot failed to start: {type(e).__name__}")
-            logger.info("💡 Check your configuration and ensure all services are properly set up")
+            logger.critical(f"Bot failed to start: {type(e).__name__}")
+            logger.info("Check your configuration and ensure all services are properly set up")
             capture_exception_safe(e)
             exit_code = 1
         else:
@@ -397,11 +397,11 @@ class TuxApp:
         # Optionally grant sysadmins eval access (dangerous but useful for debugging)
         if CONFIG.ALLOW_SYSADMINS_EVAL:
             logger.warning(
-                "⚠️ Eval is enabled for sysadmins, this is potentially dangerous; see .env file for more info.",
+                "Eval is enabled for sysadmins, this is potentially dangerous; see .env file for more info.",
             )
             owner_ids.update(CONFIG.USER_IDS.SYSADMINS)
         else:
-            logger.warning("🔒️ Eval is disabled for sysadmins; see .env file for more info.")
+            logger.warning("Eval is disabled for sysadmins; see .env file for more info.")
 
         return owner_ids
 
@@ -443,7 +443,7 @@ class TuxApp:
         This ensures all database connections, caches, and internal services
         are ready before attempting to connect to Discord.
         """
-        logger.info("⏳️ Waiting for bot setup to complete...")
+        logger.info("Waiting for bot setup to complete...")
 
         # Ensure setup task is created and completed before connecting to Discord
         if self.bot:
@@ -455,7 +455,7 @@ class TuxApp:
             # Wait for setup to complete
             if self.bot.setup_task:
                 await self.bot.setup_task
-                logger.info("✅ Bot setup completed successfully")
+                logger.info("Bot setup completed successfully")
 
     async def _connect_to_gateway(self) -> None:
         """
@@ -474,7 +474,7 @@ class TuxApp:
             return
 
         # Establish WebSocket connection to Discord gateway
-        logger.info("🌐 Connecting to Discord...")
+        logger.info("Connecting to Discord...")
         self._connect_task = asyncio.create_task(
             self.bot.connect(reconnect=True),  # Auto-reconnect on disconnections
             name="bot_connect",

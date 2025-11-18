@@ -30,7 +30,7 @@ class EventHandler(BaseCog):
         if self._guilds_registered:
             return
 
-        logger.info("🔄 Registering all guilds in database...")
+        logger.info("Registering all guilds in database...")
         registered_count = 0
 
         for guild in self.bot.guilds:
@@ -41,7 +41,7 @@ class EventHandler(BaseCog):
                 # Guild might already exist, that's fine
                 logger.trace(f"Guild {guild.id} ({guild.name}) already registered or error: {e}")
 
-        logger.info(f"✅ Registered {registered_count} guilds in database")
+        logger.info(f"Registered {registered_count} guilds in database")
         self._guilds_registered = True
 
     @commands.Cog.listener()
@@ -95,7 +95,7 @@ class EventHandler(BaseCog):
                 send_messages=False,
                 reason="Auto-deny jail role on new channel",
             )
-            logger.info(f"✅ Blocked jail role from new channel: {channel.name} in {channel.guild.name}")
+            logger.info(f"Blocked jail role from new channel: {channel.name} in {channel.guild.name}")
         except discord.Forbidden:
             logger.warning(f"Missing permissions to set jail role permissions in {channel.name}")
         except Exception as e:

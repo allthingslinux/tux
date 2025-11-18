@@ -47,7 +47,7 @@ class BulkOperationsController[ModelT]:
             for instance in instances:
                 await session.refresh(instance)
 
-            logger.info(f"✅ Bulk created {len(instances)} {self.model.__name__} records")
+            logger.info(f"Bulk created {len(instances)} {self.model.__name__} records")
             return instances
 
     async def bulk_update(self, updates: list[tuple[Any, dict[str, Any]]]) -> int:
@@ -70,7 +70,7 @@ class BulkOperationsController[ModelT]:
                 updated_count += 1  # Assume each update affects 1 row if successful
 
             await session.commit()
-            logger.info(f"✅ Bulk updated {updated_count} {self.model.__name__} records")
+            logger.info(f"Bulk updated {updated_count} {self.model.__name__} records")
             return updated_count
 
     async def bulk_delete(self, record_ids: list[Any]) -> int:
@@ -88,7 +88,7 @@ class BulkOperationsController[ModelT]:
             await session.execute(stmt)
             await session.commit()
             # In SQLAlchemy 2.0+, rowcount is not available. Use len(record_ids) as approximation
-            logger.info(f"✅ Bulk deleted {len(record_ids)} {self.model.__name__} records")
+            logger.info(f"Bulk deleted {len(record_ids)} {self.model.__name__} records")
             return len(record_ids)
 
     async def update_where(self, filters: Any, values: dict[str, Any]) -> int:

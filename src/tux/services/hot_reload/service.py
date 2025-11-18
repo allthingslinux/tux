@@ -140,7 +140,7 @@ class HotReload(commands.Cog):
 
     async def _reload_extension_async(self, extension: str) -> None:
         """Asynchronously reload an extension."""
-        logger.info(f"🔄 Hot reload: Starting reload of {extension}")
+        logger.info(f"Hot reload: Starting reload of {extension}")
         async with self._reload_lock:
             await self._reload_extension_with_monitoring(extension)
 
@@ -159,14 +159,14 @@ class HotReload(commands.Cog):
 
             if success:
                 self._reload_stats["successful_reloads"] += 1
-                logger.info(f"✅ Successfully reloaded {extension}")
+                logger.info(f"Successfully reloaded {extension}")
             else:
                 self._reload_stats["failed_reloads"] += 1
-                logger.error(f"❌ Failed to reload {extension}")
+                logger.error(f"Failed to reload {extension}")
 
         except Exception as e:
             self._reload_stats["failed_reloads"] += 1
-            logger.error(f"❌ Error reloading {extension}: {e}")
+            logger.error(f"Error reloading {extension}: {e}")
             capture_exception_safe(e)
 
         finally:

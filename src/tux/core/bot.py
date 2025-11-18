@@ -166,14 +166,14 @@ class Tux(commands.Bot):
         except TuxDatabaseConnectionError as e:
             # Database connection failure is critical - provide helpful error message
             # Error details already logged by database service, just provide hint
-            logger.info("💡 To start the database, run: uv run docker up")
+            logger.info("To start the database, run: uv run docker up")
             capture_database_error(e, operation="connection")
             # Re-raise the original exception to preserve error type
             raise
         except ConnectionError as e:
             # Wrap generic connection errors in TuxDatabaseConnectionError
             # Error details already logged by database service, just provide hint
-            logger.info("💡 To start the database, run: uv run docker up")
+            logger.info("To start the database, run: uv run docker up")
             capture_database_error(e, operation="connection")
             msg = "Database setup failed"
             raise TuxDatabaseConnectionError(msg) from e
@@ -227,7 +227,7 @@ class Tux(commands.Bot):
 
             # Setup completed successfully
             self.setup_complete = True
-            logger.info("✅ Bot setup completed successfully")
+            logger.info("Bot setup completed successfully")
 
             # Tag success in Sentry for monitoring
             if self.sentry_manager.is_initialized:
@@ -278,9 +278,9 @@ class Tux(commands.Bot):
             try:
                 instrument_bot_commands(self)
                 self._commands_instrumented = True
-                logger.info("✅ Sentry command instrumentation enabled")
+                logger.info("Sentry command instrumentation enabled")
             except Exception as e:
-                logger.error(f"⚠️ Failed to instrument commands for Sentry: {e}")
+                logger.error(f"Failed to instrument commands for Sentry: {e}")
                 capture_exception_safe(e)
 
         # Record initial bot statistics to Sentry context
@@ -341,7 +341,7 @@ class Tux(commands.Bot):
         Logs a warning and reports to Sentry for monitoring. Disconnects are
         normal and discord.py will automatically attempt to reconnect.
         """
-        logger.warning("⚠️ Bot disconnected from Discord")
+        logger.warning("Bot disconnected from Discord")
 
         # Report disconnect to Sentry for monitoring patterns
         if self.sentry_manager.is_initialized:
@@ -370,7 +370,7 @@ class Tux(commands.Bot):
 
                 except Exception as e:
                     # Setup failure is critical - cannot continue in degraded state
-                    logger.error(f"❌ Setup failed during on_ready: {type(e).__name__}: {e}")
+                    logger.error(f"Setup failed during on_ready: {type(e).__name__}: {e}")
                     capture_exception_safe(e)
                     # Trigger shutdown to prevent running with incomplete setup
                     await self.shutdown()
@@ -398,7 +398,7 @@ class Tux(commands.Bot):
 
             self.is_shutting_down = True
             transaction.set_tag("shutdown_initiated", True)
-            logger.info("🔄 Shutting down bot...")
+            logger.info("Shutting down bot...")
 
             # Phase 1: Handle setup task if still running
             await self._handle_setup_task()
@@ -412,7 +412,7 @@ class Tux(commands.Bot):
             await self._close_connections()
             transaction.set_tag("connections_closed", True)
 
-            logger.info("✅ Bot shutdown complete")
+            logger.info("Bot shutdown complete")
 
     async def _handle_setup_task(self) -> None:
         """
@@ -477,7 +477,7 @@ class Tux(commands.Bot):
                 span.set_tag("discord_closed", True)
 
             except Exception as e:
-                logger.error(f"⚠️ Error during Discord shutdown: {e}")
+                logger.error(f"Error during Discord shutdown: {e}")
                 span.set_tag("discord_closed", False)
                 span.set_data("discord_error", str(e))
                 capture_exception_safe(e)
@@ -490,7 +490,7 @@ class Tux(commands.Bot):
                 span.set_tag("db_closed", True)
 
             except Exception as e:
-                logger.error(f"⚠️ Error during database disconnection: {e}")
+                logger.error(f"Error during database disconnection: {e}")
                 span.set_tag("db_closed", False)
                 span.set_data("db_error", str(e))
                 capture_exception_safe(e)
@@ -503,7 +503,7 @@ class Tux(commands.Bot):
                 span.set_tag("http_closed", True)
 
             except Exception as e:
-                logger.error(f"⚠️ Error during HTTP client shutdown: {e}")
+                logger.error(f"Error during HTTP client shutdown: {e}")
                 span.set_tag("http_closed", False)
                 span.set_data("http_error", str(e))
                 capture_exception_safe(e)

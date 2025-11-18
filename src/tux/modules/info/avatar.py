@@ -90,7 +90,7 @@ class Avatar(BaseCog):
 
         if files:
             await ctx.send(files=files)
-            logger.info(f"🖼️ Avatar sent for {member.name} ({member.id}) - {len(files)} file(s)")
+            logger.info(f"Avatar sent for {member.name} ({member.id}) - {len(files)} file(s)")
         else:
             message = f"{member.display_name} has no avatar." if member != ctx.author else "You have no avatar."
             logger.debug(f"No avatar available for {member.id}")

@@ -78,13 +78,13 @@ class BotSetupOrchestrator:
     async def _setup_prefix_manager(self, span: DummySpan | Any) -> None:
         """Set up the prefix manager."""
         with start_span("bot.setup_prefix_manager", "Setting up prefix manager"):
-            logger.info("🔧 Initializing prefix manager...")
+            logger.info("Initializing prefix manager...")
             try:
                 self.bot.prefix_manager = PrefixManager(self.bot)
                 await self.bot.prefix_manager.load_all_prefixes()
-                logger.info("✅ Prefix manager initialized")
+                logger.info("Prefix manager initialized")
             except Exception as e:
-                logger.error(f"❌ Failed to initialize prefix manager: {e}")
-                logger.warning("⚠️  Bot will use default prefix for all guilds")
+                logger.error(f"Failed to initialize prefix manager: {e}")
+                logger.warning("Bot will use default prefix for all guilds")
                 self.bot.prefix_manager = None
         set_setup_phase_tag(span, "prefix_manager", "finished")

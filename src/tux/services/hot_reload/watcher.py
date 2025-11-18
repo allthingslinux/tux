@@ -77,25 +77,25 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
 
     def on_modified(self, event: watchdog.events.FileSystemEvent) -> None:
         """Handle file modification events."""
-        logger.info(f"🔥 WATCHDOG EVENT: {event.event_type} for {event.src_path} (is_directory: {event.is_directory})")
+        logger.info(f"WATCHDOG EVENT: {event.event_type} for {event.src_path} (is_directory: {event.is_directory})")
         if event.is_directory:
             return
 
         file_path = Path(str(event.src_path))
-        logger.info(f"🔥 Processing file: {file_path}")
+        logger.info(f"Processing file: {file_path}")
 
         if not self.should_process_file(file_path):
-            logger.info(f"🔥 File {file_path} filtered out by should_process_file")
+            logger.info(f"File {file_path} filtered out by should_process_file")
             return
 
-        logger.info(f"🔥 File {file_path} passed filtering")
+        logger.info(f"File {file_path} passed filtering")
 
         # Check if file actually changed (avoid duplicate events)
         if not self.hash_tracker.has_changed(file_path):
-            logger.info(f"🔥 File {file_path} has not changed")
+            logger.info(f"File {file_path} has not changed")
             return
 
-        logger.info(f"🔥 File {file_path} has changed, proceeding")
+        logger.info(f"File {file_path} has changed, proceeding")
 
         # Validate syntax if enabled
         if self.config.enable_syntax_checking and not validate_python_syntax(file_path):
@@ -104,8 +104,8 @@ class CogWatcher(watchdog.events.FileSystemEventHandler):
 
         # Get extension name
         if extension := get_extension_from_path(file_path, self.base_dir):
-            logger.info(f"🔥 Determined extension: {extension}")
-            logger.info(f"🔥 Calling reload callback for {extension}")
+            logger.info(f"Determined extension: {extension}")
+            logger.info(f"Calling reload callback for {extension}")
 
             # If we have an event loop reference, use run_coroutine_threadsafe
             if self.event_loop and self.event_loop.is_running():
@@ -209,10 +209,10 @@ class FileWatcher:
                 self.watchers.append(watcher)
 
                 self.observer.schedule(watcher, str(abs_watch_dir), recursive=True)
-                logger.info(f"✅ Watching directory: {abs_watch_dir}")
+                logger.info(f"Watching directory: {abs_watch_dir}")
 
             self.observer.start()
-            logger.info("✅ File watcher started successfully")
+            logger.info("File watcher started successfully")
 
         except Exception as e:
             logger.error(f"Failed to start file watcher: {e}")

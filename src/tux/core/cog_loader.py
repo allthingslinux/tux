@@ -203,8 +203,8 @@ class CogLoader(commands.Cog):
         """
         module_name = str(path)
         set_span_attributes({"cog.status": "skipped", "cog.skip_reason": "configuration"})
-        logger.warning(f"⚠️ Skipping cog {module_name} due to missing configuration: {error}")
-        logger.info("💡 To enable this cog, configure the required settings in your .env file")
+        logger.warning(f"Skipping cog {module_name} due to missing configuration: {error}")
+        logger.info("To enable this cog, configure the required settings in your .env file")
 
     # ---------- Module Path Resolution ----------
 
@@ -334,7 +334,7 @@ class CogLoader(commands.Cog):
                 },
             )
 
-            logger.debug(f"✅ Loaded {module} in {load_time * 1000:.1f}ms")
+            logger.debug(f"Loaded {module} in {load_time * 1000:.1f}ms")
 
         except TuxConfigurationError as config_error:
             # Direct configuration error: Skip cog gracefully

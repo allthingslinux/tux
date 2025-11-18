@@ -290,7 +290,7 @@ class BaseCog(commands.Cog):
                 ),
                 "UnknownModule",
             )
-            logger.warning(f"⚠️  {config_name} is not configured. {cog_module} will be unloaded.")
+            logger.warning(f"{config_name} is not configured. {cog_module} will be unloaded.")
 
             # Schedule async unload in background to avoid blocking initialization
             self._unload_task = asyncio.create_task(self._unload_self(cog_module))
@@ -313,6 +313,6 @@ class BaseCog(commands.Cog):
         """
         try:
             await self.bot.unload_extension(extension_name)
-            logger.info(f"✅ {self.__class__.__name__} unloaded due to missing configuration")
+            logger.info(f"{self.__class__.__name__} unloaded due to missing configuration")
         except Exception as e:
-            logger.error(f"❌ Failed to unload {self.__class__.__name__}: {e}")
+            logger.error(f"Failed to unload {self.__class__.__name__}: {e}")

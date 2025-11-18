@@ -243,12 +243,12 @@ class DockerCLI(BaseCLI):
         except Exception:
             if docker_host := self._get_docker_host():
                 self.rich.print_error(f"Docker daemon not accessible at {docker_host}")
-                self.rich.print_info("💡 Try:")
+                self.rich.print_info("Try:")
                 self.rich.print_info("   - Start Docker: systemctl --user start docker")
                 self.rich.print_info("   - Or use system Docker: sudo systemctl start docker")
             else:
                 self.rich.print_error("Docker daemon not running or accessible")
-                self.rich.print_info("💡 Try:")
+                self.rich.print_info("Try:")
                 self.rich.print_info("   - Start Docker: systemctl --user start docker")
                 self.rich.print_info("   - Or use system Docker: sudo systemctl start docker")
                 self.rich.print_info("   - Or set DOCKER_HOST: export DOCKER_HOST=unix://$XDG_RUNTIME_DIR/docker.sock")
@@ -403,7 +403,7 @@ class DockerCLI(BaseCLI):
         target: Annotated[str | None, Option("--target", help="Build target stage")] = None,
     ) -> None:
         """Build Docker images."""
-        self.rich.print_section("🐳 Building Docker Images", "blue")
+        self.rich.print_section("Building Docker Images", "blue")
 
         cmd = [*self._get_compose_base_cmd(), "build"]
         if no_cache:
@@ -435,7 +435,7 @@ class DockerCLI(BaseCLI):
         services: Annotated[list[str] | None, Argument(help="Services to start")] = None,
     ) -> None:  # sourcery skip: extract-duplicate-method, low-code-quality
         """Start Docker services with smart orchestration."""
-        self.rich.print_section("🚀 Starting Docker Services", "blue")
+        self.rich.print_section("Starting Docker Services", "blue")
 
         # Check if Docker is available
         if not self._check_docker():
@@ -449,12 +449,12 @@ class DockerCLI(BaseCLI):
                 "MAX_STARTUP_ATTEMPTS": "5",
                 "STARTUP_DELAY": "10",
             }
-            self.rich.print_info("🏭 Production mode enabled:")
+            self.rich.print_info("Production mode enabled:")
             self.rich.print_info("   - Enhanced retry logic (5 attempts, 10s delay)")
             self.rich.print_info("   - Production-optimized settings")
         else:
             env["DEBUG"] = "true"
-            self.rich.print_info("🚀 Development mode enabled:")
+            self.rich.print_info("Development mode enabled:")
             self.rich.print_info("   - Debug mode")
             self.rich.print_info("   - Development-friendly logging")
 
@@ -519,7 +519,7 @@ class DockerCLI(BaseCLI):
     ) -> None:
         """Start services with monitoring and auto-cleanup."""
         # Start services first
-        self.rich.print_info("⏳ Starting services...")
+        self.rich.print_info("Starting services...")
         cmd = [*self._get_compose_base_cmd(), "up", "-d"]
         if build:
             cmd.append("--build")
@@ -529,11 +529,11 @@ class DockerCLI(BaseCLI):
         try:
             self._run_command(cmd)
         except subprocess.CalledProcessError:
-            self.rich.print_error("❌ Failed to start services")
+            self.rich.print_error("Failed to start services")
             return
 
         # Monitor loop
-        self.rich.print_info("👀 Starting monitor loop...")
+        self.rich.print_info("Starting monitor loop...")
         restart_attempts = 0
         bot_container = "tux"
 
@@ -543,30 +543,30 @@ class DockerCLI(BaseCLI):
                 if not self._check_container_health(bot_container):
                     restart_attempts += 1
                     self.rich.print_warning(
-                        f"⚠️  Bot failure detected (attempt {restart_attempts}/{max_restart_attempts})",
+                        f"Bot failure detected (attempt {restart_attempts}/{max_restart_attempts})",
                     )
 
                     # Check for configuration errors
                     if self._has_configuration_error(bot_container):
-                        self.rich.print_error("❌ Bot has configuration issues (likely missing/invalid token)")
-                        self.rich.print_info("📋 Recent logs:")
+                        self.rich.print_error("Bot has configuration issues (likely missing/invalid token)")
+                        self.rich.print_info("Recent logs:")
                         self._show_container_logs(bot_container, tail=20)
                         self.rich.print_error(
-                            "🛑 Shutting down all services - configuration issues won't be fixed by restarting",
+                            "Shutting down all services - configuration issues won't be fixed by restarting",
                         )
                         break
 
                     if restart_attempts >= max_restart_attempts:
-                        self.rich.print_error("❌ Maximum restart attempts reached. Shutting down all services.")
+                        self.rich.print_error("Maximum restart attempts reached. Shutting down all services.")
                         break
 
-                    self.rich.print_info(f"🔄 Restarting services in {restart_delay} seconds...")
+                    self.rich.print_info(f"Restarting services in {restart_delay} seconds...")
                     time.sleep(restart_delay)
 
                     try:
                         self._run_command(cmd)
                     except subprocess.CalledProcessError:
-                        self.rich.print_error("❌ Failed to restart services")
+                        self.rich.print_error("Failed to restart services")
                         break
                 else:
                     # Reset restart counter on successful health check
@@ -575,11 +575,11 @@ class DockerCLI(BaseCLI):
                 time.sleep(10)  # Check every 10 seconds
 
         except KeyboardInterrupt:
-            self.rich.print_info("🛑 Monitor stopped by user (Ctrl+C)")
+            self.rich.print_info("Monitor stopped by user (Ctrl+C)")
         finally:
-            self.rich.print_info("🧹 Cleaning up all services...")
+            self.rich.print_info("Cleaning up all services...")
             self._run_command([*self._get_compose_base_cmd(), "down"])
-            self.rich.print_success("✅ Cleanup complete")
+            self.rich.print_success("Cleanup complete")
 
     def down(
         self,
@@ -588,7 +588,7 @@ class DockerCLI(BaseCLI):
         services: Annotated[list[str] | None, Argument(help="Services to stop")] = None,
     ) -> None:
         """Stop Docker services."""
-        self.rich.print_section("🛑 Stopping Docker Services", "blue")
+        self.rich.print_section("Stopping Docker Services", "blue")
 
         cmd = [*self._get_compose_base_cmd(), "down"]
 
@@ -612,7 +612,7 @@ class DockerCLI(BaseCLI):
         services: Annotated[list[str] | None, Argument(help="Services to show logs for")] = None,
     ) -> None:
         """Show Docker service logs."""
-        self.rich.print_section("📋 Docker Service Logs", "blue")
+        self.rich.print_section("Docker Service Logs", "blue")
 
         cmd = [*self._get_compose_base_cmd(), "logs"]
 
@@ -631,7 +631,7 @@ class DockerCLI(BaseCLI):
 
     def ps(self) -> None:
         """List running Docker containers."""
-        self.rich.print_section("📊 Docker Containers", "blue")
+        self.rich.print_section("Docker Containers", "blue")
         if self._run_command([*self._get_compose_base_cmd(), "ps"]):
             self.rich.print_success("Container list displayed successfully")
 
@@ -641,7 +641,7 @@ class DockerCLI(BaseCLI):
         command: Annotated[list[str] | None, Argument(help="Command to execute")] = None,
     ) -> None:
         """Execute command in container."""
-        self.rich.print_section("🔧 Executing Command in Container", "blue")
+        self.rich.print_section("Executing Command in Container", "blue")
 
         cmd = [*self._get_compose_base_cmd(), "exec", service]
         if command:
@@ -659,7 +659,7 @@ class DockerCLI(BaseCLI):
         service: Annotated[str | None, Argument(help="Service name")] = None,
     ) -> None:
         """Open shell in container."""
-        self.rich.print_section("🐚 Opening Shell in Container", "blue")
+        self.rich.print_section("Opening Shell in Container", "blue")
 
         service_name = service or "tux"
         cmd = [*self._get_compose_base_cmd(), "exec", service_name, "bash"]
@@ -674,7 +674,7 @@ class DockerCLI(BaseCLI):
         service: Annotated[str | None, Argument(help="Service name")] = None,
     ) -> None:
         """Restart Docker services."""
-        self.rich.print_section("🔄 Restarting Docker Services", "blue")
+        self.rich.print_section("Restarting Docker Services", "blue")
 
         service_name = service or "tux"
         cmd = [*self._get_compose_base_cmd(), "restart", service_name]
@@ -686,19 +686,19 @@ class DockerCLI(BaseCLI):
 
     def health(self) -> None:
         """Check container health status."""
-        self.rich.print_section("🏥 Container Health Status", "blue")
+        self.rich.print_section("Container Health Status", "blue")
         if self._run_command([*self._get_compose_base_cmd(), "ps"]):
             self.rich.print_success("Health check completed successfully")
 
     def config(self) -> None:
         """Validate Docker Compose configuration."""
-        self.rich.print_section("⚙️ Docker Compose Configuration", "blue")
+        self.rich.print_section("Docker Compose Configuration", "blue")
         if self._run_command([*self._get_compose_base_cmd(), "config"]):
             self.rich.print_success("Configuration validation completed successfully")
 
     def pull(self) -> None:
         """Pull latest Docker images."""
-        self.rich.print_section("⬇️ Pulling Docker Images", "blue")
+        self.rich.print_section("Pulling Docker Images", "blue")
         if self._run_command([*self._get_compose_base_cmd(), "pull"]):
             self.rich.print_success("Docker images pulled successfully")
 
@@ -798,14 +798,14 @@ class DockerCLI(BaseCLI):
         dry_run: Annotated[bool, Option("--dry-run", help="Show what would be cleaned without doing it")] = False,
     ) -> None:
         """Clean up Docker resources."""
-        self.rich.print_section("🧹 Docker Cleanup", "blue")
+        self.rich.print_section("Docker Cleanup", "blue")
 
         if not self._check_docker():
             self.rich.print_error("Docker is not running or accessible")
             return
 
         if dry_run:
-            self.rich.print_info("🔍 DRY RUN MODE - No resources will actually be removed")
+            self.rich.print_info("DRY RUN MODE - No resources will actually be removed")
 
         self.rich.print_info("Scanning for Tux-related Docker resources...")
 
@@ -848,7 +848,7 @@ class DockerCLI(BaseCLI):
             return
 
         if not force:
-            self.rich.print_warning("⚠️  This will remove Tux-related Docker resources")
+            self.rich.print_warning("This will remove Tux-related Docker resources")
             self.rich.print_info("Use --force to skip confirmation")
             return
 

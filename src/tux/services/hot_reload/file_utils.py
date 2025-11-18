@@ -62,7 +62,7 @@ def get_extension_from_path(file_path: Path, base_dir: Path) -> str | None:
     with suppress(ImportError, AttributeError):
         module = importlib.import_module(module_name)
         if hasattr(module, "setup") and callable(module.setup):
-            logger.debug(f"✅ Found cog with setup: {module_name}")
+            logger.debug(f"Found cog with setup: {module_name}")
             return module_name
 
     # Check parent directory for cog (for supporting files in subdirs)
@@ -73,17 +73,17 @@ def get_extension_from_path(file_path: Path, base_dir: Path) -> str | None:
         with suppress(ImportError, AttributeError):
             parent_module = importlib.import_module(parent_module_name)
             if hasattr(parent_module, "setup") and callable(parent_module.setup):
-                logger.debug(f"✅ Found parent cog: {parent_module_name}")
+                logger.debug(f"Found parent cog: {parent_module_name}")
                 return parent_module_name
 
         # Try cog.py in parent directory
         with suppress(ImportError, AttributeError):
             cog_module = importlib.import_module(f"{parent_module_name}.cog")
             if hasattr(cog_module, "setup") and callable(cog_module.setup):
-                logger.debug(f"✅ Found cog.py: {parent_module_name}.cog")
+                logger.debug(f"Found cog.py: {parent_module_name}.cog")
                 return f"{parent_module_name}.cog"
 
-    logger.debug(f"❌ Not a loadable extension: {module_name}")
+    logger.debug(f"Not a loadable extension: {module_name}")
     return None
 
 

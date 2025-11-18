@@ -143,7 +143,7 @@ class EncodeDecode(BaseCog):
                 )
                 return
 
-            logger.debug(f"✅ Encoding successful: {encoding}, output length: {len(data)}")
+            logger.debug(f"Encoding successful: {encoding}, output length: {len(data)}")
             await self.send_message(ctx, data.decode(encoding="utf-8"))
         except Exception as e:
             logger.error(f"Encoding error ({encoding}): {type(e).__name__}: {e}")
@@ -199,7 +199,7 @@ class EncodeDecode(BaseCog):
                 )
                 return
 
-            logger.debug(f"✅ Decoding successful: {encoding}, output length: {len(data)}")
+            logger.debug(f"Decoding successful: {encoding}, output length: {len(data)}")
             await self.send_message(ctx, data.decode(encoding="utf-8"))
         except binascii.Error as e:
             logger.warning(f"Decoding error for {encoding} from {ctx.author.id}: {e}")

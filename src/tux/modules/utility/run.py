@@ -511,7 +511,7 @@ class Run(BaseCog):
             view = self._create_close_button_view()
 
             await ctx.send(embed=result_embed, view=view)
-            logger.info(f"✅ Code execution successful: {language} for {ctx.author.name} ({ctx.author.id})")
+            logger.info(f"Code execution successful: {language} for {ctx.author.name} ({ctx.author.id})")
 
         finally:
             # Remove loading reaction

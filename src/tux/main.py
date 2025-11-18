@@ -31,19 +31,19 @@ def run() -> int:
     Logging is configured by the CLI script (scripts/base.py) before this is called.
     """
     try:
-        logger.info("🚀 Starting Tux...")
+        logger.info("Starting Tux...")
         app = TuxApp()
         return app.run()
 
     except (TuxDatabaseError, TuxError, SystemExit, KeyboardInterrupt, Exception) as e:
         # Handle all errors in one place
         if isinstance(e, TuxDatabaseError):
-            logger.error("❌ Database connection failed")
-            logger.info("💡 To start the database, run: make docker-up")
+            logger.error("Database connection failed")
+            logger.info("To start the database, run: make docker-up")
         elif isinstance(e, TuxError):
-            logger.error(f"❌ Bot startup failed: {e}")
+            logger.error(f"Bot startup failed: {e}")
         elif isinstance(e, RuntimeError):
-            logger.critical(f"❌ Application failed to start: {e}")
+            logger.critical(f"Application failed to start: {e}")
         elif isinstance(e, SystemExit):
             return int(e.code) if e.code is not None else 1
         elif isinstance(e, KeyboardInterrupt):

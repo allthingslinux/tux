@@ -72,7 +72,7 @@ class CommunicationService:
         try:
             embed = self._create_dm_embed(dm_action, reason, cast(discord.User, user))
             await user.send(embed=embed)
-            logger.info(f"✉️ Moderation DM sent to {user} ({user.id}) - Action: {dm_action}")
+            logger.info(f"Moderation DM sent to {user} ({user.id}) - Action: {dm_action}")
         except discord.Forbidden:
             logger.warning(f"Failed to DM {user} ({user.id}) - DMs disabled or bot blocked")
             return False

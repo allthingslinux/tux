@@ -88,11 +88,11 @@ class DatabaseService:
                 expire_on_commit=False,
             )
 
-            logger.info("✅ Successfully connected to database")
+            logger.info("Successfully connected to database")
 
         except Exception as e:
-            logger.error(f"❌ Failed to connect to database: {type(e).__name__}")
-            logger.info("💡 Check your database connection settings and ensure PostgreSQL is running")
+            logger.error(f"Failed to connect to database: {type(e).__name__}")
+            logger.info("Check your database connection settings and ensure PostgreSQL is running")
             raise
 
     async def disconnect(self) -> None:
@@ -101,7 +101,7 @@ class DatabaseService:
             await self._engine.dispose()
         self._engine = None
         self._session_factory = None
-        logger.info("✅ Disconnected from database")
+        logger.info("Disconnected from database")
 
     def is_connected(self) -> bool:
         """Check if database is currently connected.
@@ -129,7 +129,7 @@ class DatabaseService:
             async with self._engine.begin() as conn:
                 await conn.execute(text("SELECT 1"))
         except Exception as e:
-            logger.error(f"❌ Database connectivity test failed: {e}")
+            logger.error(f"Database connectivity test failed: {e}")
             raise
 
     @property
@@ -284,16 +284,16 @@ class DatabaseService:
 
             except (sqlalchemy.exc.DisconnectionError, TimeoutError, sqlalchemy.exc.OperationalError) as e:
                 if attempt == max_retries - 1:
-                    logger.error(f"❌ Database operation failed after {max_retries} attempts: {type(e).__name__}")
-                    logger.info("💡 Check your database connection and consider restarting PostgreSQL")
+                    logger.error(f"Database operation failed after {max_retries} attempts: {type(e).__name__}")
+                    logger.info("Check your database connection and consider restarting PostgreSQL")
                     raise
 
                 wait_time = backoff_factor * (2**attempt)
-                logger.warning(f"⚠️  Database operation failed (attempt {attempt + 1}), retrying in {wait_time}s")
+                logger.warning(f"Database operation failed (attempt {attempt + 1}), retrying in {wait_time}s")
                 await asyncio.sleep(wait_time)
             except Exception as e:
-                logger.error(f"❌ {span_desc}: {type(e).__name__}")
-                logger.info("💡 Check your database configuration and network connection")
+                logger.error(f"{span_desc}: {type(e).__name__}")
+                logger.info("Check your database configuration and network connection")
                 raise
 
         # This should never be reached
@@ -402,7 +402,7 @@ class DatabaseService:
 
         except Exception as e:
             error_msg = f"{type(e).__name__}: {e}"
-            logger.error(f"❌ Database schema validation failed: {error_msg}")
-            logger.error("💡 This usually means the database schema doesn't match the model definitions")
-            logger.error("💡 Try running: uv run db reset")
+            logger.error(f"Database schema validation failed: {error_msg}")
+            logger.error("This usually means the database schema doesn't match the model definitions")
+            logger.error("Try running: uv run db reset")
             return {"status": "invalid", "error": error_msg}

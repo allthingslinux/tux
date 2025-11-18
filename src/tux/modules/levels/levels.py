@@ -186,7 +186,7 @@ class Levels(BaseCog):
         old_xp: float = await self.db.levels.get_xp(member.id, ctx.guild.id)
         await self.db.levels.reset_xp(member.id, ctx.guild.id)
 
-        logger.info(f"🔄 XP reset for {member.name} ({member.id}) by {ctx.author.name}: {round(old_xp)} -> 0")
+        logger.info(f"XP reset for {member.name} ({member.id}) by {ctx.author.name}: {round(old_xp)} -> 0")
 
         embed: discord.Embed = EmbedCreator.create_embed(
             embed_type=EmbedType.INFO,
