@@ -10,6 +10,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-tuxuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeThisToAStrongPassword123!}
       POSTGRES_INITDB_ARGS: --encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    ports: ['127.0.0.1:${POSTGRES_PORT:-5432}:5432']
     volumes:
       - tux_postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
