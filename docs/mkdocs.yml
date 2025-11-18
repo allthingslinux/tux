@@ -21,10 +21,14 @@ edit_uri: edit/main/docs/
 docs_dir: ./content
 site_dir: ./site
 extra_css:
+  - ./assets/stylesheets/reset.css
   - ./assets/stylesheets/extra.css
   - ./assets/stylesheets/material.css
+  - ./assets/stylesheets/typography.css
   - ./assets/stylesheets/mkdocstrings.css
   - ./assets/stylesheets/pymdownx.css
+  - ./assets/stylesheets/home.css
+  - https://rsms.me/inter/inter.css
 extra_javascript: [./assets/javascript/extra.js]
 watch:
   # MkDocs automatically watches docs_dir (content/) and mkdocs.yml
@@ -60,14 +64,13 @@ theme:
   palette:
     - scheme: tokyo-night
       toggle:
-        icon: material/brightness-4
+        icon: fontawesome/solid/sun
         name: Switch to light mode
-    - scheme: tokyo-night-light
+    - scheme: catppuccin-latte
       toggle:
-        icon: material/brightness-7
+        icon: fontawesome/solid/moon
         name: Switch to dark mode
   font:
-    text: Inter
     code: JetBrains Mono
   features:
     - content.action.edit

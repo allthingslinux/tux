@@ -93,3 +93,4 @@ title: Navigation
     * [Self-Host](./support/troubleshooting/selfhost.md)
     * [Developer](./support/troubleshooting/developer.md)
 * [Changelog](./changelog.md)
+* [Style Guide](./style.md)
