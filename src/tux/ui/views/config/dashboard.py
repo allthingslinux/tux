@@ -346,6 +346,17 @@ class ConfigDashboard(discord.ui.LayoutView):
                     "**No permission ranks found.**\n\nUse the button below to create your first rank, or use `/config ranks init` to create default ranks.",
                 )
                 container.add_item(no_ranks)
+
+                # Add "Create Rank" button
+                create_rank_btn = discord.ui.Button[discord.ui.LayoutView](
+                    label="+ Create Rank",
+                    style=discord.ButtonStyle.success,
+                    custom_id="btn_create_rank",
+                )
+                create_rank_btn.callback = self._handle_create_rank
+                create_row = discord.ui.ActionRow[discord.ui.LayoutView]()
+                create_row.add_item(create_rank_btn)
+                container.add_item(create_row)
             else:
                 # Calculate pagination info
                 sorted_ranks = sorted(ranks, key=lambda x: x.rank)

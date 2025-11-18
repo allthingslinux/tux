@@ -163,6 +163,7 @@ class CreateRankModal(discord.ui.Modal):
                 return
 
             # Validate rank range
+            # TODO: allow creating 0-10 if you removed some default ranks
             if rank_value < 8 or rank_value > 10:
                 await interaction.response.send_message(
                     "❌ Rank number must be between 8 and 10.\n\nRanks 0-7 are reserved for default ranks.",
