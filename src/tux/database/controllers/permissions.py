@@ -7,8 +7,9 @@ servers to customize their permission levels and role assignments.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import TYPE_CHECKING
+
+from loguru import logger
 
 from tux.database.controllers.base import BaseController
 from tux.database.models.models import (
@@ -50,12 +51,20 @@ class PermissionRankController(BaseController[PermissionRank]):
         PermissionRank
             The newly created permission rank.
         """
-        return await self.create(
-            guild_id=guild_id,
-            rank=rank,
-            name=name,
-            description=description,
-        )
+        logger.debug(f"Creating permission rank: guild_id={guild_id}, rank={rank}, name={name}")
+        try:
+            result = await self.create(
+                guild_id=guild_id,
+                rank=rank,
+                name=name,
+                description=description,
+            )
+        except Exception:
+            logger.exception(f"Error creating permission rank {rank} for guild {guild_id}")
+            raise
+        else:
+            logger.debug(f"Successfully created permission rank {rank} for guild {guild_id}")
+            return result
 
     async def get_permission_ranks_by_guild(self, guild_id: int) -> list[PermissionRank]:
         """
@@ -112,7 +121,7 @@ class PermissionRankController(BaseController[PermissionRank]):
             update_data["name"] = name
         if description is not None:
             update_data["description"] = description
-        update_data["updated_at"] = datetime.now(UTC)
+        # Note: updated_at is automatically managed by the database via TimestampMixin
 
         return await self.update_by_id(record.id, **update_data)
 

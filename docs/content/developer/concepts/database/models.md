@@ -19,7 +19,7 @@ All Tux models inherit from BaseModel for consistent behavior across the applica
 
 ### BaseModel Features
 
-- **Automatic Timestamps**: created_at and updated_at managed by database
+- **Automatic Timestamps**: created_at and updated_at via TimestampMixin
 - **Serialization**: Built-in JSON conversion with proper datetime handling
 - **Utility Methods**: to_dict() for API responses and logging
 - **Flexibility**: Support for advanced SQLAlchemy features
@@ -28,10 +28,31 @@ All Tux models inherit from BaseModel for consistent behavior across the applica
 
 Tux provides reusable mixins for common model patterns:
 
+- **TimestampMixin**: Automatic created_at/updated_at with database defaults
 - **UUIDMixin**: For records needing UUID primary keys (API keys, tokens)
 - **SoftDeleteMixin**: For data that should be recoverable (users, important records)
 
 Mixins maintain type safety while providing reusable functionality across models.
+
+#### TimestampMixin
+
+All models automatically get timestamp fields through TimestampMixin:
+
+```python
+class MyModel(SQLModel, TimestampMixin, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    name: str
+    # created_at and updated_at are automatically added
+```
+
+**Features:**
+
+- `created_at`: Automatically set by database on INSERT, never changes
+- `updated_at`: Automatically set by database on INSERT, updated on every UPDATE
+- Pure database-managed timestamps for consistency and performance
+- UTC timezone-aware datetime objects
+- Fields always available in model `__dict__` for compatibility
+- No application-level defaults (handled entirely by database)
 
 ## Model Definition Patterns
 

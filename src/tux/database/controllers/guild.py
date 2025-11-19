@@ -182,7 +182,7 @@ class GuildController(BaseController[Guild]):
         Guild
             The newly created guild.
         """
-        return await self.create(guild_id=guild_id, **kwargs)
+        return await self.create(id=guild_id, **kwargs)
 
     async def delete_guild_by_id(self, guild_id: int) -> bool:
         """

@@ -14,11 +14,38 @@ from typing import Any, cast
 from uuid import UUID, uuid4
 
 from pydantic import field_serializer
-from sqlalchemy import DateTime, func
+from sqlalchemy import DateTime, text
 from sqlmodel import Field, SQLModel  # type: ignore[import]
 
 
-class BaseModel(SQLModel):
+class TimestampMixin:
+    """Mixin providing automatic created_at and updated_at timestamp fields.
+
+    This mixin adds database-managed timestamp fields that automatically
+    set created_at on insert and update updated_at on every update.
+
+    Usage:
+        class MyModel(SQLModel, TimestampMixin, table=True):
+            id: int | None = Field(default=None, primary_key=True)
+            name: str
+    """
+
+    created_at: datetime | None = Field(
+        sa_type=DateTime(timezone=True),
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
+        nullable=True,
+        description="Timestamp when the record was created",
+    )
+
+    updated_at: datetime | None = Field(
+        sa_type=DateTime(timezone=True),
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP"), "onupdate": text("CURRENT_TIMESTAMP")},
+        nullable=True,
+        description="Timestamp when the record was last updated",
+    )
+
+
+class BaseModel(SQLModel, TimestampMixin):
     """Base SQLModel class with automatic timestamp management.
 
     This class provides automatic created_at and updated_at timestamp fields
@@ -36,20 +63,6 @@ class BaseModel(SQLModel):
     # Allow SQLModel annotations without Mapped[] for SQLAlchemy 2.0 compatibility
     __allow_unmapped__ = True
 
-    created_at: datetime | None = Field(
-        default=None,
-        sa_type=DateTime(timezone=True),
-        sa_column_kwargs={"server_default": func.now()},
-        nullable=True,
-    )
-
-    updated_at: datetime | None = Field(
-        default=None,
-        sa_type=DateTime(timezone=True),
-        sa_column_kwargs={"onupdate": func.now()},
-        nullable=True,
-    )
-
     @field_serializer("created_at", "updated_at")
     def serialize_datetimes(self, value: datetime | None) -> str | None:
         """Serialize datetime objects to ISO format strings.
@@ -65,6 +78,21 @@ class BaseModel(SQLModel):
             ISO format string representation of the datetime, or None if value is None.
         """
         return value.isoformat() if value else None
+
+    def model_post_init(self, __context: Any) -> None:
+        """Ensure timestamp fields are always present in __dict__ for compatibility.
+
+        Even though timestamps are database-managed, some SQLAlchemy operations
+        expect these fields to be accessible in the model's __dict__. This ensures
+        compatibility without interfering with database defaults.
+        """
+        super().model_post_init(__context)
+        # Ensure timestamp fields are always in __dict__ for SQLAlchemy compatibility
+        # Only add them if they're not already present (don't override database values)
+        if "created_at" not in self.__dict__:
+            self.__dict__["created_at"] = None
+        if "updated_at" not in self.__dict__:
+            self.__dict__["updated_at"] = None
 
     def to_dict(self, include_relationships: bool = False, relationships: list[str] | None = None) -> dict[str, Any]:
         """

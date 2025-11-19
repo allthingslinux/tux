@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from discord.ext import commands
 
-from tux.core.permission_system import get_permission_system
+from tux.core.permission_system import DEFAULT_RANKS, get_permission_system
 
 from .base import BaseConfigManager
 
@@ -95,19 +95,18 @@ class RankManager(BaseConfigManager):
             permission_system = get_permission_system()
             await permission_system.initialize_guild(ctx.guild.id)
 
+            # Generate rank list from the default ranks
+            rank_lines = [
+                f"• **Rank {rank_num}**: {rank_data['name']}" for rank_num, rank_data in sorted(DEFAULT_RANKS.items())
+            ]
+
             embed = self.create_success_embed(
                 "✅ Permission Ranks Initialized",
                 (
                     "Default permission ranks (0-7) have been created:\n\n"
-                    "• **Rank 0**: Everyone (default)\n"
-                    "• **Rank 1**: Trusted\n"
-                    "• **Rank 2**: Junior Moderator\n"
-                    "• **Rank 3**: Moderator\n"
-                    "• **Rank 4**: Senior Moderator\n"
-                    "• **Rank 5**: Administrator\n"
-                    "• **Rank 6**: Head Administrator\n"
-                    "• **Rank 7**: Server Owner\n\n"
-                    "Use `/config role assign` to assign Discord roles to these ranks."
+                    + "\n".join(rank_lines)
+                    + "\n\n"
+                    + "Use `/config role assign` to assign Discord roles to these ranks."
                 ),
             )
             await ctx.send(embed=embed)

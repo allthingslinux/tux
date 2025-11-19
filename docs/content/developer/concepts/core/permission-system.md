@@ -25,18 +25,18 @@ The permission system provides flexible, guild-specific access control:
 
 ### Permission Ranks
 
-Permission ranks form a hierarchy from 0 (lowest) to 10 (highest). Each rank has a name and description. Default ranks (0-7) can be created using `/config ranks init`:
+Permission ranks form a hierarchy from 0 (lowest) to 10 (highest). Each rank has a name and description. Default ranks (0-7) can be created using `/config ranks init` or the configuration dashboard:
 
-- **Rank 0: Member** - Regular community member with standard access
-- **Rank 1: Trusted** - Trusted community member
-- **Rank 2: Junior Moderator** - Entry-level moderation role
-- **Rank 3: Moderator** - Standard moderation permissions
-- **Rank 4: Senior Moderator** - Experienced moderators
-- **Rank 5: Administrator** - Administrative permissions
-- **Rank 6: Head Administrator** - High-level administrators with comprehensive oversight
-- **Rank 7: Server Owner** - Server owner (highest default rank)
+- **Rank 0: Member** - Regular community member with standard access to server features and commands
+- **Rank 1: Trusted** - Trusted community member who has proven themselves reliable and helpful
+- **Rank 2: Junior Moderator** - Entry-level moderation role for those learning and gaining experience
+- **Rank 3: Moderator** - Experienced moderator responsible for maintaining order and community standards
+- **Rank 4: Senior Moderator** - Senior moderator with additional oversight responsibilities and leadership duties
+- **Rank 5: Administrator** - Server administrator with broad management capabilities and configuration access
+- **Rank 6: Head Administrator** - Head administrator with comprehensive server oversight and decision-making authority
+- **Rank 7: Server Owner** - Server owner with ultimate authority and complete control over all aspects
 
-Guilds can customize these ranks or add their own. Higher ranks automatically have access to everything lower ranks can do.
+Guilds can create additional custom ranks (8-10) for specialized roles. Higher ranks automatically have access to everything lower ranks can do.
 
 ### Role Assignments
 
@@ -117,7 +117,20 @@ All configuration is stored in the database and persists across bot restarts. Co
 
 ## Initialization
 
-Permission ranks must be initialized before use. Open the configuration dashboard with `/config ranks` and use the dashboard interface to initialize default permission ranks (0-7) for your guild. This is a one-time setup—if ranks already exist, the dashboard will show existing ranks.
+Permission ranks must be initialized before use. You can initialize default permission ranks (0-7) for your guild using either method:
+
+Option 1: Configuration Dashboard (Recommended)
+
+- Open the configuration dashboard with `/config ranks`
+- Click the "🚀 Init Default Ranks" button
+- This provides a visual interface and immediate feedback
+
+Option 2: Slash Command
+
+- Use `/config ranks init` to create default ranks
+- Works in any text channel where the bot has permissions
+
+This is a one-time setup—if ranks already exist, both methods will show a warning and preserve existing ranks.
 
 ## Best Practices
 
@@ -143,7 +156,7 @@ When developing commands, test with different permission ranks to ensure access 
 
 If commands are always denied even for admins, check:
 
-1. Permission ranks are initialized for the guild (use `/config ranks` dashboard)
+1. Permission ranks are initialized for the guild (use `/config ranks` dashboard → "🚀 Init Default Ranks" button)
 2. Roles are assigned to permission ranks (use `/config roles` dashboard)
 3. Commands have permission requirements configured (use `/config overview` → Command Permissions)
 4. Users have roles that are assigned to ranks

@@ -26,28 +26,52 @@ class EventHandler(BaseCog):
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
-        """Register all guilds the bot is in on startup."""
-        if self._guilds_registered:
-            return
+        """Register all guilds the bot is in on startup and reconnections."""
+        # Wait for bot setup to complete before registering guilds
+        # This ensures database and other services are ready
+        if self.bot.setup_task and not self.bot.setup_task.done():
+            logger.info("Waiting for bot setup to complete before registering guilds...")
+            try:
+                await self.bot.setup_task
+                logger.info("Bot setup completed, now registering guilds...")
+            except Exception as e:
+                logger.error(f"Bot setup failed, cannot register guilds: {e}")
+                return
+        else:
+            logger.info("Bot setup already completed, registering guilds...")
 
+        # Always register guilds on ready - Discord.py can reconnect and guilds may change
         logger.info("Registering all guilds in database...")
         registered_count = 0
+        skipped_count = 0
 
         for guild in self.bot.guilds:
             try:
-                await self.db.guild.insert_guild_by_id(guild.id)
-                registered_count += 1
+                logger.debug(f"Attempting to register guild {guild.id} ({guild.name})")
+                result, created = await self.db.guild.get_or_create(id=guild.id)
+                if created:
+                    registered_count += 1
+                    logger.info(f"Successfully registered guild {guild.id} ({guild.name}) - id {result.id}")
+                else:
+                    skipped_count += 1
+                    logger.debug(f"Guild {guild.id} ({guild.name}) already exists - skipped")
             except Exception as e:
-                # Guild might already exist, that's fine
-                logger.trace(f"Guild {guild.id} ({guild.name}) already registered or error: {e}")
+                # This shouldn't happen with get_or_create, but log if it does
+                skipped_count += 1
+                logger.error(f"Unexpected error registering guild {guild.id} ({guild.name}): {e}")
+                logger.debug(f"Guild registration error details: {e}", exc_info=True)
 
-        logger.info(f"Registered {registered_count} guilds in database")
+        logger.info(f"Registered {registered_count} guilds, skipped {skipped_count} existing guilds in database")
         self._guilds_registered = True
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild) -> None:
         """On guild join event handler."""
-        await self.db.guild.insert_guild_by_id(guild.id)
+        _, created = await self.db.guild.get_or_create(id=guild.id)
+        if created:
+            logger.info(f"New guild joined: {guild.id} ({guild.name})")
+        else:
+            logger.warning(f"Guild join event fired for existing guild: {guild.id} ({guild.name})")
 
         # Initialize basic guild data (permissions only)
         await self.bot.db.guild_config.update_onboarding_stage(guild.id, "not_started")

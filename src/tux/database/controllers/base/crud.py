@@ -2,6 +2,7 @@
 
 from typing import Any, TypeVar
 
+from loguru import logger
 from sqlmodel import SQLModel, select
 
 from tux.database.service import DatabaseService
@@ -40,7 +41,17 @@ class CrudController[ModelT]:
             instance = self.model(**kwargs)
             session.add(instance)
             await session.commit()
-            await session.refresh(instance)
+            # Only refresh if the commit was successful and we need to populate auto-generated fields
+            try:
+                await session.refresh(instance)
+                logger.debug(
+                    f"Refresh succeeded for {self.model.__name__} with id {getattr(instance, 'id', 'unknown')}",
+                )
+            except Exception as e:
+                # If refresh fails (e.g., due to database-managed timestamp fields),
+                # just continue - the instance is still valid for our purposes
+                logger.warning(f"Refresh failed for {self.model.__name__}: {e}")
+                logger.debug(f"Refresh error details: {e}", exc_info=True)
             # Expunge the instance so it can be used in other sessions
             session.expunge(instance)
             return instance

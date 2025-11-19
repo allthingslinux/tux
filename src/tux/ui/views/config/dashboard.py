@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any
 import discord
 from loguru import logger
 
+from tux.core.permission_system import DEFAULT_RANKS, get_permission_system
 from tux.database.models.models import PermissionAssignment
 from tux.shared.constants import (
     CONFIG_COLOR_BLURPLE,
@@ -43,6 +44,7 @@ from .command_discovery import get_moderation_commands
 from .helpers import add_back_button_to_container, create_error_container
 from .modals import CreateRankModal
 from .pagination import PaginationHelper
+from .ranks import initialize_default_ranks
 
 if TYPE_CHECKING:
     from tux.core.bot import Tux
@@ -347,14 +349,25 @@ class ConfigDashboard(discord.ui.LayoutView):
                 )
                 container.add_item(no_ranks)
 
-                # Add "Create Rank" button
+                # Add action buttons
+                init_ranks_btn = discord.ui.Button[discord.ui.LayoutView](
+                    label="Init Default Ranks",
+                    emoji="🔢",
+                    style=discord.ButtonStyle.primary,
+                    custom_id="btn_init_default_ranks",
+                )
+                init_ranks_btn.callback = self._handle_init_default_ranks
+
                 create_rank_btn = discord.ui.Button[discord.ui.LayoutView](
-                    label="+ Create Rank",
+                    label="Create Rank",
+                    emoji="➕",  # noqa: RUF001
                     style=discord.ButtonStyle.success,
                     custom_id="btn_create_rank",
                 )
                 create_rank_btn.callback = self._handle_create_rank
+
                 create_row = discord.ui.ActionRow[discord.ui.LayoutView]()
+                create_row.add_item(init_ranks_btn)
                 create_row.add_item(create_rank_btn)
                 container.add_item(create_row)
             else:
@@ -431,9 +444,19 @@ class ConfigDashboard(discord.ui.LayoutView):
                     container.add_item(nav_container)
 
                 # Add pagination info footer
-                container.add_item(
-                    self._build_pagination_info_footer("ranks", start_idx, end_idx, total_ranks, "ranks"),
-                )
+                # For ranks, show actual rank values instead of 1-based position indices
+                if page_ranks:
+                    first_rank = page_ranks[0].rank
+                    last_rank = page_ranks[-1].rank
+                    container.add_item(
+                        discord.ui.TextDisplay[discord.ui.LayoutView](
+                            f"*Showing ranks {first_rank}-{last_rank} of {total_ranks}*",
+                        ),
+                    )
+                else:
+                    container.add_item(
+                        self._build_pagination_info_footer("ranks", start_idx, end_idx, total_ranks, "ranks"),
+                    )
 
             # Back button
             add_back_button_to_container(container, self)
@@ -1442,9 +1465,125 @@ class ConfigDashboard(discord.ui.LayoutView):
         if not await validate_author(interaction, self.author, "❌ You are not authorized to create ranks."):
             return
 
-        # Send modal for creating a rank
-        modal = CreateRankModal(self.bot, self.guild, self)
+        # Determine available ranks for creation
+        existing_ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(self.guild.id)
+        existing_rank_values = {rank.rank for rank in existing_ranks}
+
+        # Allow creating ranks 0-7 if they're missing, or ranks 8-10
+        default_ranks = set(range(8))  # 0-7
+        custom_ranks = set(range(8, 11))  # 8-10
+        missing_default_ranks = default_ranks - existing_rank_values
+        available_ranks = sorted(missing_default_ranks | custom_ranks)
+
+        # Send modal for creating a rank with available options
+        modal = CreateRankModal(self.bot, self.guild, self, available_ranks)
         await interaction.response.send_modal(modal)
+
+    async def _handle_init_default_ranks(self, interaction: discord.Interaction) -> None:  # noqa: PLR0915
+        """Handle init default ranks button click - creates default ranks 0-7."""
+        if not await validate_author(interaction, self.author, "❌ You are not authorized to initialize ranks."):
+            return
+
+        try:
+            logger.info(f"Starting default rank initialization for guild {self.guild.id}")
+
+            # Ensure guild is registered in database first
+            logger.debug(f"Ensuring guild {self.guild.id} is registered in database")
+            guild_record = await self.bot.db.guild.get_by_id(self.guild.id)
+            if not guild_record:
+                logger.info(f"Guild {self.guild.id} not found in database, registering it")
+                try:
+                    await self.bot.db.guild.insert_guild_by_id(self.guild.id)
+                    logger.info(f"Successfully registered guild {self.guild.id}")
+                except Exception as reg_error:
+                    logger.error(f"Failed to register guild {self.guild.id}: {reg_error}")
+                    await interaction.response.send_message(
+                        "❌ **Guild Registration Failed**\n\n"
+                        "Unable to register this guild in the database. Please try again later or contact support.",
+                        ephemeral=True,
+                    )
+                    return
+
+            # Check if ranks already exist
+            logger.debug(f"Checking existing ranks for guild {self.guild.id}")
+            existing_ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(self.guild.id)
+            logger.debug(f"Found {len(existing_ranks)} existing ranks for guild {self.guild.id}")
+
+            if existing_ranks:
+                logger.info(f"Guild {self.guild.id} already has ranks, skipping initialization")
+                await interaction.response.send_message(
+                    "⚠️ Permission ranks already exist!\n\n"
+                    f"This guild already has {len(existing_ranks)} permission ranks configured.\n\n"
+                    "Existing ranks will be preserved. Use the **+ Create Rank** button to add more ranks.",
+                    ephemeral=True,
+                )
+                return
+
+            # Initialize default ranks using permission system
+            logger.info(f"Initializing default ranks for guild {self.guild.id}")
+            try:
+                permission_system = get_permission_system()
+                logger.debug("Got permission system instance, calling initialize_guild")
+                await permission_system.initialize_guild(self.guild.id)
+                logger.info(f"Successfully initialized ranks via permission system for guild {self.guild.id}")
+            except Exception as ps_error:
+                # If permission system fails, log the specific error
+                logger.error(
+                    f"Permission system initialization failed for guild {self.guild.id}: {ps_error}",
+                    exc_info=True,
+                )
+                logger.error(f"Permission system error repr: {ps_error!r}")
+                # Try direct database approach as fallback
+                logger.info(f"Falling back to direct database rank creation for guild {self.guild.id}")
+                await initialize_default_ranks(self.bot.db, self.guild.id)
+                logger.info(f"Successfully initialized ranks via direct database for guild {self.guild.id}")
+
+            # Generate success message from the default ranks
+            rank_lines: list[str] = []
+            rank_lines.extend(
+                f"• **Rank {rank_num}**: {rank_data['name']}" for rank_num, rank_data in sorted(DEFAULT_RANKS.items())
+            )
+            await interaction.response.send_message(
+                "✅ **Default permission ranks initialized!**\n\n"
+                "Created ranks 0-7:\n" + "\n".join(rank_lines) + "\n\n"
+                "Use the role assignment screen to assign Discord roles to these ranks.",
+                ephemeral=True,
+            )
+
+            # Invalidate cache and rebuild to show the new ranks
+            self.invalidate_cache()
+            self.current_mode = "ranks"
+            await self.build_ranks_mode()
+            if interaction.message:
+                await interaction.followup.edit_message(
+                    message_id=interaction.message.id,
+                    view=self,
+                )
+
+        except Exception as e:
+            # Log detailed error information
+            logger.error(
+                f"CRITICAL: Error initializing default ranks for guild {self.guild.id}: {type(e).__name__}: {e}",
+                exc_info=True,
+            )
+            logger.error(f"Exception repr: {e!r}")
+
+            # Create safe error message
+            error_parts = [f"❌ Failed to initialize ranks: {type(e).__name__}"]
+            error_str = str(e).strip()
+            if error_str and error_str != str(type(e).__name__) and len(error_str) < 100:
+                error_parts.append(f"({error_str})")
+
+            error_msg = " ".join(error_parts)
+
+            try:
+                if interaction.response.is_done():
+                    await interaction.followup.send(error_msg, ephemeral=True)
+                else:
+                    await interaction.response.send_message(error_msg, ephemeral=True)
+            except Exception as send_error:
+                logger.error(f"Failed to send error message: {send_error}")
+                logger.error(f"Send error details: {send_error!r}")
 
     async def handle_back_to_overview(self, interaction: discord.Interaction) -> None:
         """Handle back to overview navigation."""

@@ -39,6 +39,44 @@ if TYPE_CHECKING:
     from tux.core.bot import Tux
 
 
+# Default permission ranks hierarchy (0-7)
+# This is the authoritative source for default rank definitions
+DEFAULT_RANKS: dict[int, dict[str, str]] = {
+    0: {
+        "name": "Member",
+        "description": "Regular community member with standard access to server features and commands",
+    },
+    1: {
+        "name": "Trusted",
+        "description": "Trusted community member who has proven themselves reliable and helpful",
+    },
+    2: {
+        "name": "Junior Moderator",
+        "description": "Entry-level moderation role for those learning and gaining experience",
+    },
+    3: {
+        "name": "Moderator",
+        "description": "Experienced moderator responsible for maintaining order and community standards",
+    },
+    4: {
+        "name": "Senior Moderator",
+        "description": "Senior moderator with additional oversight responsibilities and leadership duties",
+    },
+    5: {
+        "name": "Administrator",
+        "description": "Server administrator with broad management capabilities and configuration access",
+    },
+    6: {
+        "name": "Head Administrator",
+        "description": "Head administrator with comprehensive server oversight and decision-making authority",
+    },
+    7: {
+        "name": "Server Owner",
+        "description": "Server owner with ultimate authority and complete control over all aspects",
+    },
+}
+
+
 class RankDefinition(TypedDict):
     """Type definition for permission rank configuration."""
 
@@ -82,43 +120,6 @@ class PermissionSystem:
         self.bot = bot
         self.db = db
 
-        # Default permission rank hierarchy (0-7)
-        # Guilds can customize these ranks or add their own
-        self._default_ranks: dict[int, RankDefinition] = {
-            0: {
-                "name": "Member",
-                "description": "Regular community member with standard access to server features and commands",
-            },
-            1: {
-                "name": "Trusted",
-                "description": "Trusted community member who has proven themselves reliable and helpful",
-            },
-            2: {
-                "name": "Junior Moderator",
-                "description": "Entry-level moderation role for those learning and gaining experience",
-            },
-            3: {
-                "name": "Moderator",
-                "description": "Experienced moderator responsible for maintaining order and community standards",
-            },
-            4: {
-                "name": "Senior Moderator",
-                "description": "Senior moderator with additional oversight responsibilities and leadership duties",
-            },
-            5: {
-                "name": "Administrator",
-                "description": "Server administrator with broad management capabilities and configuration access",
-            },
-            6: {
-                "name": "Head Administrator",
-                "description": "Head administrator with comprehensive server oversight and decision-making authority",
-            },
-            7: {
-                "name": "Server Owner",
-                "description": "Server owner with ultimate authority and complete control over all aspects",
-            },
-        }
-
     # ---------- Guild Initialization ----------
 
     async def initialize_guild(self, guild_id: int) -> None:
@@ -138,20 +139,37 @@ class PermissionSystem:
         This is typically called automatically when a guild is first added to
         the bot. The default ranks can be customized via commands or config files.
         """
+        logger.info(f"PermissionSystem.initialize_guild called for guild {guild_id}")
+
         # Check if already initialized (idempotent check)
-        existing_ranks = await self.db.permission_ranks.get_permission_ranks_by_guild(guild_id)
-        if existing_ranks:
-            logger.info(f"Guild {guild_id} already has permission ranks initialized")
-            return
+        logger.debug(f"Checking existing ranks for guild {guild_id}")
+        try:
+            existing_ranks = await self.db.permission_ranks.get_permission_ranks_by_guild(guild_id)
+            if existing_ranks:
+                logger.info(f"Guild {guild_id} already has {len(existing_ranks)} permission ranks initialized")
+                return
+        except Exception as e:
+            logger.error(f"Error checking existing ranks for guild {guild_id}: {e}", exc_info=True)
+            raise
 
         # Create default permission ranks (0-7)
-        for rank, data in self._default_ranks.items():
-            await self.db.permission_ranks.create_permission_rank(
-                guild_id=guild_id,
-                rank=rank,
-                name=data["name"],
-                description=data["description"],
-            )
+        logger.info(f"Creating {len(DEFAULT_RANKS)} default ranks for guild {guild_id}")
+        for rank, data in DEFAULT_RANKS.items():
+            logger.debug(f"Creating rank {rank}: {data}")
+            try:
+                await self.db.permission_ranks.create_permission_rank(
+                    guild_id=guild_id,
+                    rank=rank,
+                    name=data["name"],
+                    description=data["description"],
+                )
+                logger.debug(f"Successfully created rank {rank} for guild {guild_id}")
+            except Exception as e:
+                logger.error(f"Error creating rank {rank} for guild {guild_id}: {e}", exc_info=True)
+                logger.error(f"Rank data that failed: {data}")
+                raise
+
+        logger.info(f"Successfully initialized all default ranks for guild {guild_id}")
 
         logger.info(f"Initialized default permission ranks for guild {guild_id}")
 

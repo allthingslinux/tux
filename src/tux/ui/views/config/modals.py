@@ -121,19 +121,44 @@ class EditRankModal(discord.ui.Modal):
 class CreateRankModal(discord.ui.Modal):
     """Modal for creating a new permission rank."""
 
-    def __init__(self, bot: Tux, guild: discord.Guild, dashboard: Any) -> None:
+    def __init__(
+        self,
+        bot: Tux,
+        guild: discord.Guild,
+        dashboard: Any,
+        available_ranks: list[int] | None = None,
+    ) -> None:
         super().__init__(title="Create Permission Rank")
         self.bot = bot
         self.guild = guild
         self.dashboard = dashboard
 
-    rank_number: discord.ui.TextInput[discord.ui.Modal] = discord.ui.TextInput(
-        label="Rank Number",
-        placeholder="Enter rank number (8-10)",
-        required=True,
-        max_length=3,
-        min_length=1,
-    )
+        # Create select with only available ranks
+        if available_ranks is None:
+            available_ranks = list(range(11))  # Fallback to all ranks
+
+        options = [
+            discord.SelectOption(
+                label=f"Rank {rank_num}",
+                description="Default Rank" if rank_num < 8 else "Custom Rank",
+                value=str(rank_num),
+            )
+            for rank_num in available_ranks
+        ]
+
+        # basedpyright strict mode flags incomplete discord.py type annotations for Components V2
+        self.rank_number = discord.ui.Label(  # type: ignore[reportUnknownVariableType]
+            text="Rank Number",
+            description="Select the rank number to create",
+            component=discord.ui.Select(  # type: ignore[reportUnknownArgumentType]
+                custom_id="rank_number",
+                placeholder="Select available rank number",
+                min_values=1,
+                max_values=1,
+                options=options,
+            ),
+        )
+        self.add_item(self.rank_number)  # type: ignore[reportUnknownArgumentType]
 
     rank_name: discord.ui.TextInput[discord.ui.Modal] = discord.ui.TextInput(
         label="Rank Name",
@@ -154,27 +179,30 @@ class CreateRankModal(discord.ui.Modal):
     async def on_submit(self, interaction: discord.Interaction) -> None:
         """Handle modal submission."""
         try:
-            # Parse rank number
+            # Tell the type checker what our components are...
+            # basedpyright strict mode needs help with discord.py Components V2 types
+            assert isinstance(self.rank_number.component, discord.ui.Select)  # type: ignore[reportUnknownMemberType]
+
+            # Get rank number from select
             try:
-                rank_value = int(self.rank_number.value)
-            except ValueError:
-                await interaction.response.send_message("❌ Rank number must be a valid integer.", ephemeral=True)
+                rank_value = int(self.rank_number.component.values[0])  # type: ignore[reportUnknownMemberType]
+            except (ValueError, IndexError):
+                await interaction.response.send_message("❌ Invalid rank selection.", ephemeral=True)
                 return
 
-            # Validate rank range
-            # TODO: allow creating 0-10 if you removed some default ranks
-            if rank_value < 8 or rank_value > 10:
-                await interaction.response.send_message(
-                    "❌ Rank number must be between 8 and 10.\n\nRanks 0-7 are reserved for default ranks.",
-                    ephemeral=True,
-                )
-                return
+            # Double-check availability (in case of race conditions or UI inconsistencies)
+            existing_ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(self.guild.id)
+            existing_rank_values = {rank.rank for rank in existing_ranks}
 
-            # Check if rank already exists
-            existing = await self.bot.db.permission_ranks.get_permission_rank(self.guild.id, rank_value)
-            if existing:
+            # Allow creating ranks 0-7 if they're missing, or ranks 8-10
+            default_ranks = set(range(8))  # 0-7
+            custom_ranks = set(range(8, 11))  # 8-10
+            missing_default_ranks = default_ranks - existing_rank_values
+            available_ranks = missing_default_ranks | custom_ranks
+
+            if rank_value not in available_ranks:
                 await interaction.response.send_message(
-                    f"❌ Rank {rank_value} already exists: **{existing.name}**",
+                    f"❌ Rank {rank_value} is no longer available to create.",
                     ephemeral=True,
                 )
                 return
