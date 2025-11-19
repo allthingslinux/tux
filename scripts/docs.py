@@ -106,6 +106,9 @@ class DocsCLI(BaseCLI):
     def _run_command(self, command: list[str]) -> None:
         """Run a command and return success status.
 
+        Overrides base implementation to print command info before execution.
+        Environment variables are handled by the base class.
+
         Raises
         ------
         FileNotFoundError
@@ -115,7 +118,8 @@ class DocsCLI(BaseCLI):
         """
         try:
             self.rich.print_info(f"Running: {' '.join(command)}")
-            subprocess.run(command, check=True)
+            # Call parent implementation which handles env vars
+            super()._run_command(command)
         except subprocess.CalledProcessError as e:
             self.rich.print_error(f"Command failed with exit code {e.returncode}")
             raise
@@ -173,10 +177,14 @@ class DocsCLI(BaseCLI):
                 self.rich.print_info(f"🌐 Opening browser at http://{host}:{port}")
                 webbrowser.open(f"http://{host}:{port}")
 
-            self._run_command(cmd)
-            self.rich.print_success(f"Documentation server started at http://{host}:{port}")
+            # Run server command without capturing output (for real-time streaming)
+            # This allows mkdocs serve to run interactively and stream output
+            self.rich.print_info(f"Starting documentation server at http://{host}:{port}")
+            subprocess.run(cmd, check=True, env=os.environ.copy())
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to start documentation server")
+        except KeyboardInterrupt:
+            self.rich.print_info("\nDocumentation server stopped")
 
     def build(
         self,

@@ -10,14 +10,14 @@ hide:
 
 Main Tux configuration using Pydantic Settings with multi-format support.
 
-!!! tip "Configuration Priority"
-    Configuration is loaded in this priority order (highest to lowest):
-    1. Environment variables
-    2. `.env` file
-    3. `config.toml` file
-    4. `config.yaml` file
-    5. `config.json` file
-    6. Default values
+Configuration is loaded from multiple sources in priority order:
+
+1. Environment variables (highest priority)
+2. .env file
+3. config.toml file
+4. config.yaml file
+5. config.json file
+6. Default values (lowest priority)
 
 | Name                   | Type      | Default                             | Description                                                           | Example                             |
 |------------------------|-----------|-------------------------------------|-----------------------------------------------------------------------|-------------------------------------|

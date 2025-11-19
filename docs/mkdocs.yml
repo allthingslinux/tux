@@ -194,13 +194,12 @@ plugins:
   - search:
       enabled: true
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
-  # TODO: Fix git-committers plugin
   - git-committers:
-      enabled: false
+      enabled: true
       repository: allthingslinux/tux
       token: !ENV [MKDOCS_GIT_COMMITTERS_APIKEY]
       branch: v0.1.0
-      docs_path: docs/
+      docs_path: docs/content/
       cache_dir: .cache/plugin/git-committers/
   - literate-nav:
       enabled: true

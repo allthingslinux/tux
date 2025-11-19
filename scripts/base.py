@@ -4,15 +4,21 @@ Base CLI Infrastructure.
 Provides the base CLI class that all CLI applications should inherit from.
 """
 
+import os
 import subprocess
 from collections.abc import Callable
 
+from dotenv import load_dotenv  # type: ignore[import-untyped]
 from rich.console import Console
 from typer import Typer
 
 from scripts.registry import CommandRegistry
 from scripts.rich_utils import RichCLI
 from tux.core.logging import configure_logging
+
+# Load .env file to make environment variables available to subprocesses
+# This ensures env vars are available when running commands via uv run, etc.
+load_dotenv()
 
 
 class BaseCLI:
@@ -149,6 +155,9 @@ class BaseCLI:
         """Run a shell command and handle output.
 
         Executes a shell command using subprocess and handles stdout/stderr output.
+        Explicitly passes environment variables to ensure they're available to
+        subprocesses, especially when using uv run or other tools that may not
+        inherit all environment variables.
 
         Parameters
         ----------
@@ -161,7 +170,9 @@ class BaseCLI:
             If the command returns a non-zero exit code.
         """
         try:
-            result = subprocess.run(command, check=True, capture_output=True, text=True)
+            # Explicitly pass environment variables to ensure they're available
+            # This is especially important for uv run which may not inherit all env vars
+            result = subprocess.run(command, check=True, capture_output=True, text=True, env=os.environ.copy())
             if result.stdout:
                 self.console.print(result.stdout)
         except subprocess.CalledProcessError as e:

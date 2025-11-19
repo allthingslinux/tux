@@ -8,7 +8,7 @@ commands.Context, discord.Interaction, or Tux bot instances.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, TypeVar, cast
 
 import discord
 from discord.ext import commands
@@ -43,7 +43,8 @@ def _resolve_bot(source: commands.Context[Tux] | discord.Interaction | Tux) -> T
         # Check for Tux-specific attributes instead of isinstance to avoid circular import
         client = source.client
         if hasattr(client, "db_service") or hasattr(client, "db"):
-            return client
+            # Type cast is safe here because we've verified Tux-specific attributes
+            return cast("Tux", client)
         return None
     return source
 

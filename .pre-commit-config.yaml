@@ -70,12 +70,6 @@ repos:
         additional_dependencies:
           - '@commitlint/cli'
           - '@commitlint/config-conventional'
-  - repo: https://github.com/jag-k/pydantic-settings-export
-    rev: v1.0.3
-    hooks:
-      - id: pydantic-settings-export
-        files: src/tux/shared/config/settings.py
-        additional_dependencies: [pydantic-settings-export]
 exclude: ^(\.archive/|.*typings/|node_modules/|\.venv/|\.kiro/|src/tux/database/migrations/versions/).*$
 ci:
   autofix_commit_msg: 'style: auto fixes from pre-commit hooks'

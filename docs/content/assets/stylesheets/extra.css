@@ -738,3 +738,67 @@
   -webkit-mask-image: var(--md-admonition-icon--wip);
   mask-image: var(--md-admonition-icon--wip);
 }
+
+/* Contributors section - git-committers plugin */
+.md-contributors {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-contributors__header {
+  margin-bottom: 0.75rem;
+}
+
+.md-contributors__label {
+  color: var(--md-default-fg-color--light);
+  font-size: 0.85em;
+  font-weight: 500;
+}
+
+.md-contributors__list {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.md-contributors__item {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+  vertical-align: top;
+}
+
+.md-contributors__link {
+  display: inline-block;
+  text-decoration: none;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.md-contributors__link:hover {
+  transform: scale(1.1);
+  opacity: 0.9;
+}
+
+.md-contributors__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: block;
+  border: 2px solid var(--md-default-fg-color--lightest);
+  transition: border-color 0.2s ease;
+}
+
+.md-contributors__link:hover .md-contributors__avatar {
+  border-color: var(--md-accent-fg-color);
+}
+
+/* RTL support */
+body[dir="rtl"] .md-contributors__label {
+  margin-right: 0;
+  margin-left: 0.5rem;
+}

@@ -1,5 +1,4 @@
-{% extends "base.html" %} {% block content %} {{ super() }} {# Display backlinks
-if they exist #} {% if backlinks %}
+{% extends "base.html" %} {% block content %} {{ super() }} {# Display backlinks if they exist #} {% if backlinks %}
 <div class="backlinks">
   {% if backlinks|length > 5 %}
   <details class="backlinks-accordion">
@@ -85,4 +84,5 @@ if they exist #} {% if backlinks %}
     display: none !important;
   }
 </style>
-{% endif %} {% endblock %}
+{% endif %}
+{% endblock %}
