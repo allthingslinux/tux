@@ -111,6 +111,7 @@ class RemindMe(BaseCog):
 
     @commands.hybrid_command(
         name="remindme",
+        aliases=["remind", "rm"],
         description="Set a reminder for yourself",
     )
     async def remindme(
