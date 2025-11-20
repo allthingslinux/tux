@@ -181,7 +181,7 @@ class TestPermissionExtractors:
         assert "not been configured yet" in result["message"]
         assert "dev clear_tree" in result["message"]
         assert "/config overview" in result["message"]
-        assert "Command Permissions" in result["message"]
+        assert "configure command permissions" in result["message"]
 
     def test_extract_permission_denied_details_insufficient_rank(self) -> None:
         """Test extracting permission denied for insufficient rank."""

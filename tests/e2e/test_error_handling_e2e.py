@@ -94,6 +94,17 @@ class TestErrorHandlingEndToEnd:
         mock_ctx.command.has_error_handler.return_value = False
         mock_ctx.cog = None
 
+        # Mock bot and guild for prefix manager access
+        mock_bot = MagicMock()
+        mock_prefix_manager = MagicMock()
+        mock_prefix_manager._prefix_cache = {123456789: "$"}  # Mock prefix cache
+        mock_bot.prefix_manager = mock_prefix_manager
+
+        mock_guild = MagicMock()
+        mock_guild.id = 123456789
+        mock_ctx.bot = mock_bot
+        mock_ctx.guild = mock_guild
+
         # Simulate unconfigured command (both ranks are 0)
         error = TuxPermissionDeniedError(
             required_rank=0,
@@ -112,7 +123,7 @@ class TestErrorHandlingEndToEnd:
         # Check for key phrases in the message
         assert "not been configured yet" in description
         assert "/config overview" in description
-        assert "Command Permissions" in description
+        assert "configure command permissions" in description
         assert "dev clear_tree" in description
 
     @pytest.mark.asyncio
