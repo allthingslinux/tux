@@ -10,6 +10,7 @@ import asyncio
 from typing import Any
 
 import discord
+import httpx
 from discord import app_commands
 from discord.ext import commands
 from loguru import logger
@@ -170,21 +171,121 @@ class ErrorTestRegistry:
         self.tests: dict[str, ErrorTestDefinition] = {}
         self._build_test_registry()
 
-    def _build_test_registry(self) -> None:
+    def _build_test_registry(self) -> None:  # noqa: PLR0912, PLR0915
         """Build test cases dynamically from ERROR_CONFIG_MAP."""
         # Build all tests from ERROR_CONFIG_MAP - this keeps us perfectly in sync
         for error_type in ERROR_CONFIG_MAP:
+            name = error_type.__name__
+
+            # Determine category based on exception hierarchy and functionality
             if error_type.__module__.startswith("discord.app_commands"):
+                category = "Application Commands"
                 self._add_app_command_test(error_type)
             elif error_type.__module__.startswith("discord.ext.commands"):
+                # Sub-categorize traditional command errors
+                if name in [
+                    "CheckFailure",
+                    "CheckAnyFailure",
+                    "PrivateMessageOnly",
+                    "NoPrivateMessage",
+                    "NotOwner",
+                    "NSFWChannelRequired",
+                ]:
+                    category = "Check Failures"
+                elif name in [
+                    "FlagError",
+                    "BadFlagArgument",
+                    "MissingRequiredFlag",
+                    "MissingFlagArgument",
+                    "TooManyFlags",
+                ]:
+                    category = "Flag Errors"
+                elif name.startswith("Extension") or name in [
+                    "NoEntryPointError",
+                    "CommandRegistrationError",
+                    "HybridCommandError",
+                ]:
+                    category = "Extension Management"
+                elif "NotFound" in name and name.endswith("NotFound"):
+                    category = "Entity Not Found"
+                else:
+                    category = "Traditional Commands"
                 self._add_traditional_command_test(error_type)
             elif error_type.__module__ == "discord" or error_type.__module__.startswith("discord."):
+                # Sub-categorize Discord API errors
+                if name in [
+                    "ConnectionClosed",
+                    "GatewayNotFound",
+                    "InvalidData",
+                    "LoginFailure",
+                    "PrivilegedIntentsRequired",
+                    "InteractionResponded",
+                    "MissingApplicationID",
+                ]:
+                    category = "Client Connection"
+                else:
+                    category = "Discord API"
                 self._add_discord_api_test(error_type)
-            elif error_type.__module__ == "builtins":
-                self._add_builtin_test(error_type)
-            else:
-                # Custom errors from tux modules
+            elif error_type.__module__.startswith("httpx"):
+                category = "HTTPX Errors"
+                self._add_httpx_test(error_type)
+            elif name.startswith("Tux"):
+                category = "Custom Errors"
                 self._add_custom_test(error_type)
+            else:
+                category = "Base Exceptions"
+                self._add_builtin_test(error_type)
+
+        # Ensure ALL exceptions from ERROR_CONFIG_MAP have a test case
+        # This handles any exceptions that might not have been caught by the module-based logic above
+        configured_exceptions = set(ERROR_CONFIG_MAP.keys())
+        tested_exceptions = {test_def.error_class for test_def in self.tests.values()}
+
+        missing_exceptions = configured_exceptions - tested_exceptions
+        for error_type in missing_exceptions:
+            name = error_type.__name__
+            module = error_type.__module__
+
+            # Determine category for missing exceptions
+            if module.startswith("discord.app_commands"):
+                category = "Application Commands"
+            elif module.startswith("discord.ext.commands"):
+                if name in [
+                    "CheckFailure",
+                    "CheckAnyFailure",
+                    "PrivateMessageOnly",
+                    "NoPrivateMessage",
+                    "NotOwner",
+                    "NSFWChannelRequired",
+                ]:
+                    category = "Check Failures"
+                elif "NotFound" in name and name.endswith("NotFound"):
+                    category = "Entity Not Found"
+                else:
+                    category = "Traditional Commands"
+            elif module.startswith("discord"):
+                category = "Discord API"
+            elif module.startswith("httpx"):
+                category = "HTTPX Errors"
+            elif name.startswith("Tux"):
+                category = "Custom Errors"
+            else:
+                category = "Base Exceptions"
+
+            # Create a basic test case for any missing exception
+            try:
+                # Use module-qualified name to avoid conflicts
+                key = f"{module}.{name}"
+                self.tests[key] = ErrorTestDefinition(
+                    error_type,
+                    (),  # No args
+                    {},  # No kwargs
+                    f"Mock {name.lower().replace('error', ' error')}",
+                    category,
+                )
+            except Exception:
+                # If we can't create a test, skip it
+                continue
 
     def _add_test(
         self,
@@ -195,7 +296,13 @@ class ErrorTestRegistry:
         category: str = "General",
     ) -> None:
         """Add a test case to the registry."""
-        self.tests[name] = ErrorTestDefinition(error_class, args, {}, description, category)
+        # Handle duplicate exception names by using module-qualified names as keys
+        key = name
+        if name in self.tests:
+            # If this name already exists, use module-qualified name
+            key = f"{error_class.__module__}.{name}"
+
+        self.tests[key] = ErrorTestDefinition(error_class, args, {}, description, category)
 
     def _add_app_command_test(self, error_type: type[Exception]) -> None:
         """Add app command specific test cases."""
@@ -225,7 +332,7 @@ class ErrorTestRegistry:
 
         if error_type in specific_mappings:
             description, args = specific_mappings[error_type]
-            self.tests[name] = ErrorTestDefinition(error_type, args, {}, description, "App Commands")
+            self.tests[name] = ErrorTestDefinition(error_type, args, {}, description, "Application Commands")
         elif error_type == app_commands.MissingRole:
             self.tests[f"{name}_str"] = ErrorTestDefinition(
                 error_type,
@@ -248,7 +355,7 @@ class ErrorTestRegistry:
                 realistic_args,
                 {},
                 f"App command {name.lower().replace('error', ' error')}",
-                "App Commands",
+                "Application Commands",
             )
 
     def _get_realistic_app_command_args(self, error_name: str) -> tuple[Any, ...]:
@@ -282,6 +389,28 @@ class ErrorTestRegistry:
     def _add_traditional_command_test(self, error_type: type[Exception]) -> None:
         """Add traditional command specific test cases."""
         name = error_type.__name__
+
+        # Determine category based on exception name
+        category = "Traditional Commands"
+        if name in [
+            "CheckFailure",
+            "CheckAnyFailure",
+            "PrivateMessageOnly",
+            "NoPrivateMessage",
+            "NotOwner",
+            "NSFWChannelRequired",
+        ]:
+            category = "Check Failures"
+        elif name in ["FlagError", "BadFlagArgument", "MissingRequiredFlag", "MissingFlagArgument", "TooManyFlags"]:
+            category = "Flag Errors"
+        elif name.startswith("Extension") or name in [
+            "NoEntryPointError",
+            "CommandRegistrationError",
+            "HybridCommandError",
+        ]:
+            category = "Extension Management"
+        elif "NotFound" in name and name.endswith("NotFound"):
+            category = "Entity Not Found"
 
         # Specific mappings for traditional command errors
         specific_mappings = {
@@ -323,21 +452,42 @@ class ErrorTestRegistry:
 
         if error_type in specific_mappings:
             description, args = specific_mappings[error_type]
-            self.tests[name] = ErrorTestDefinition(error_type, args, {}, description, "Traditional Commands")
+            # Determine specific category for traditional command errors
+            category = "Traditional Commands"
+            if name in [
+                "CheckFailure",
+                "CheckAnyFailure",
+                "PrivateMessageOnly",
+                "NoPrivateMessage",
+                "NotOwner",
+                "NSFWChannelRequired",
+            ]:
+                category = "Check Failures"
+            elif name in ["FlagError", "BadFlagArgument", "MissingRequiredFlag", "MissingFlagArgument", "TooManyFlags"]:
+                category = "Flag Errors"
+            elif name.startswith("Extension") or name in [
+                "NoEntryPointError",
+                "CommandRegistrationError",
+                "HybridCommandError",
+            ]:
+                category = "Extension Management"
+            elif "NotFound" in name and name.endswith("NotFound"):
+                category = "Entity Not Found"
+            self.tests[name] = ErrorTestDefinition(error_type, args, {}, description, category)
         elif error_type == commands.MissingRole:
             self.tests[f"{name}_str"] = ErrorTestDefinition(
                 error_type,
                 ("RequiredRole",),
                 {},
                 "Traditional command missing role (by name)",
-                "Traditional Commands",
+                "Check Failures",
             )
             self.tests[f"{name}_int"] = ErrorTestDefinition(
                 error_type,
                 (987654321012345678,),
                 {},
                 "Traditional command missing role (by ID)",
-                "Traditional Commands",
+                "Check Failures",
             )
         elif hasattr(error_type, "__name__") and not error_type.__name__.startswith("Extension"):
             realistic_args = self._get_realistic_traditional_command_args(name)
@@ -346,7 +496,7 @@ class ErrorTestRegistry:
                 realistic_args,
                 {},
                 f"Traditional command {name.lower().replace('error', ' error')}",
-                "Traditional Commands",
+                category,
             )
 
     def _get_realistic_traditional_command_args(self, error_name: str) -> tuple[Any, ...]:
@@ -445,15 +595,39 @@ class ErrorTestRegistry:
 
         if error_type in specific_mappings:
             description, args, kwargs = specific_mappings[error_type]
-            self.tests[name] = ErrorTestDefinition(error_type, args, kwargs, description, "Discord API")
+            # Determine specific category for Discord API errors
+            category = "Discord API"
+            if name in [
+                "ConnectionClosed",
+                "GatewayNotFound",
+                "InvalidData",
+                "LoginFailure",
+                "PrivilegedIntentsRequired",
+                "InteractionResponded",
+                "MissingApplicationID",
+            ]:
+                category = "Client Connection"
+            self.tests[name] = ErrorTestDefinition(error_type, args, kwargs, description, category)
         elif hasattr(error_type, "__name__"):
             realistic_args = self._get_realistic_discord_args(name)
+            # Determine specific category for Discord API errors
+            category = "Discord API"
+            if name in [
+                "ConnectionClosed",
+                "GatewayNotFound",
+                "InvalidData",
+                "LoginFailure",
+                "PrivilegedIntentsRequired",
+                "InteractionResponded",
+                "MissingApplicationID",
+            ]:
+                category = "Client Connection"
             self.tests[name] = ErrorTestDefinition(
                 error_type,
                 realistic_args,
                 {},
                 f"Discord API {name.lower().replace('error', ' error')}",
-                "Discord API",
+                category,
             )
 
     def _get_realistic_discord_args(self, error_name: str) -> tuple[Any, ...]:
@@ -489,6 +663,36 @@ class ErrorTestRegistry:
             (f"discord_{error_name_lower}_example",),
         )
 
+    def _add_httpx_test(self, error_type: type[Exception]) -> None:
+        """Add HTTPX error test cases."""
+        name = error_type.__name__
+
+        # Specific mappings for HTTPX errors
+        specific_mappings = {
+            httpx.HTTPError: ("HTTP request error", ("Mock HTTP error",)),
+            httpx.HTTPStatusError: ("HTTP status error", ("Mock HTTP status error",)),
+            httpx.TimeoutException: ("HTTP timeout", ("Mock timeout",)),
+            httpx.ConnectError: ("HTTP connection error", ("Mock connection error",)),
+            httpx.ReadTimeout: ("HTTP read timeout", ("Mock read timeout",)),
+            httpx.WriteTimeout: ("HTTP write timeout", ("Mock write timeout",)),
+            httpx.PoolTimeout: ("HTTP pool timeout", ("Mock pool timeout",)),
+            httpx.RequestError: ("HTTP request error", ("Mock request error",)),
+        }
+
+        if error_type in specific_mappings:
+            description, args = specific_mappings[error_type]
+            self.tests[name] = ErrorTestDefinition(error_type, args, {}, description, "HTTPX Errors")
+        elif hasattr(error_type, "__name__"):
+            # Generic HTTPX error
+            realistic_args = self._get_realistic_httpx_args(name)
+            self.tests[name] = ErrorTestDefinition(
+                error_type,
+                realistic_args,
+                {},
+                f"HTTPX {name.lower().replace('error', ' error')}",
+                "HTTPX Errors",
+            )
+
     def _add_builtin_test(self, error_type: type[Exception]) -> None:
         """Add Python built-in error test cases for unhandled error testing."""
         name = error_type.__name__
@@ -500,6 +704,18 @@ class ErrorTestRegistry:
             f"Python built-in {name.lower().replace('error', ' error')} (should be unhandled)",
             "Unhandled",
         )
+
+    def _get_realistic_httpx_args(self, error_name: str) -> tuple[Any, ...]:
+        """
+        Get realistic arguments for HTTPX errors.
+
+        Returns
+        -------
+        tuple[Any, ...]
+            Arguments appropriate for the HTTPX error type.
+        """
+        # Most HTTPX errors need minimal args, they inherit from Exception
+        return (f"Mock HTTPX {error_name.lower().replace('error', ' error')}",)
 
     def _get_realistic_builtin_args(self, error_name: str) -> tuple[Any, ...]:
         """
@@ -653,11 +869,17 @@ class Mock(BaseCog):
             log_icon = {"ERROR": "🔴", "WARNING": "🟡", "INFO": "🔵", "DEBUG": "⚪"}.get(log_level, "🔵")
             embed_type = "📁 Custom" if config["has_detail_extractor"] else "📁 Standard"
             category_icon = {
-                "App Commands": "🔵",
+                "Application Commands": "🔵",
                 "Traditional Commands": "🔵",
-                "Discord API": "🔵",
-                "Custom": "🗒️",
-                "Unhandled": "🔵",
+                "Check Failures": "🔒",
+                "Flag Errors": "🏴",
+                "Extension Management": "📦",
+                "Entity Not Found": "🔍",
+                "Client Connection": "🔌",
+                "Discord API": "🤖",
+                "Custom Errors": "🗒️",
+                "HTTPX Errors": "🌐",
+                "Base Exceptions": "⚠️",
             }.get(test_def.category, "🔵")
 
             status_line = f"**Sentry:** {sentry_status} • **Log Level:** {log_icon} {log_level} • **Embed Type:** {embed_type} • **Category:** {category_icon} {test_def.category}"
@@ -846,12 +1068,18 @@ class Mock(BaseCog):
     )
     @app_commands.choices(
         category=[
-            app_commands.Choice(name="📁 App Commands", value="App Commands"),
-            app_commands.Choice(name="📁 Traditional Commands", value="Traditional Commands"),
-            app_commands.Choice(name="📁 Discord API", value="Discord API"),
-            app_commands.Choice(name="📁 Custom Errors", value="Custom"),
-            app_commands.Choice(name="⚠️ Unhandled Errors", value="Unhandled"),
-            app_commands.Choice(name="📁 All Categories", value="All"),
+            app_commands.Choice(name="All Categories", value="All"),
+            app_commands.Choice(name="Application Commands", value="Application Commands"),
+            app_commands.Choice(name="Traditional Commands", value="Traditional Commands"),
+            app_commands.Choice(name="Check Failures", value="Check Failures"),
+            app_commands.Choice(name="Flag Errors", value="Flag Errors"),
+            app_commands.Choice(name="Extension Management", value="Extension Management"),
+            app_commands.Choice(name="Entity Not Found", value="Entity Not Found"),
+            app_commands.Choice(name="Client Connection", value="Client Connection"),
+            app_commands.Choice(name="Discord API", value="Discord API"),
+            app_commands.Choice(name="Custom Errors", value="Custom Errors"),
+            app_commands.Choice(name="HTTPX Errors", value="HTTPX Errors"),
+            app_commands.Choice(name="Base Exceptions", value="Base Exceptions"),
         ],
     )
     @app_commands.autocomplete(error_name=error_name_autocomplete)

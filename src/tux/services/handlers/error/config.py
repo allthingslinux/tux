@@ -72,12 +72,44 @@ from .extractors import (
     extract_permissions_details,
 )
 
-# Comprehensive error configuration mapping
+# Comprehensive error configuration mapping organized by inheritance hierarchy
+#
+# Organization follows Discord.py's exception hierarchy for proper fallback behavior:
+# - Base exceptions at the top (DiscordException, CommandError, etc.)
+# - More specific exceptions override parent behavior when needed
+# - Error handler walks MRO (__mro__) to find most specific configuration
+#
+# This ensures proper inheritance-based fallbacks while allowing specific overrides.
 ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
-    # === Application Commands ===
+    # === Base Exception Classes ===
+    discord.DiscordException: ErrorHandlerConfig(
+        message_format="A Discord error occurred: {error}",
+        log_level="WARNING",
+    ),
     app_commands.AppCommandError: ErrorHandlerConfig(
         message_format="An application command error occurred: {error}",
         log_level="WARNING",
+    ),
+    commands.CommandError: ErrorHandlerConfig(
+        message_format="A command error occurred: {error}",
+        log_level="WARNING",
+    ),
+    commands.UserInputError: ErrorHandlerConfig(
+        message_format="Invalid input provided.",
+        send_to_sentry=False,
+    ),
+    commands.CheckFailure: ErrorHandlerConfig(
+        message_format="You don't meet the requirements for this command.",
+        send_to_sentry=False,
+    ),
+    commands.ExtensionError: ErrorHandlerConfig(
+        message_format="Extension error: {error}",
+        log_level="WARNING",
+    ),
+    # === Application Command Hierarchy ===
+    app_commands.CheckFailure: ErrorHandlerConfig(
+        message_format="You don't meet the requirements for this command.",
+        send_to_sentry=False,
     ),
     app_commands.CommandInvokeError: ErrorHandlerConfig(
         message_format="An internal error occurred while running the command.",
@@ -87,6 +119,16 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         message_format="Failed to process argument: {error}",
         log_level="INFO",
         send_to_sentry=False,
+    ),
+    app_commands.MissingPermissions: ErrorHandlerConfig(
+        message_format="You lack required permissions: {permissions}",
+        detail_extractor=extract_permissions_details,
+        send_to_sentry=False,
+    ),
+    app_commands.BotMissingPermissions: ErrorHandlerConfig(
+        message_format="I lack required permissions: {permissions}",
+        detail_extractor=extract_permissions_details,
+        log_level="WARNING",
     ),
     app_commands.MissingRole: ErrorHandlerConfig(
         message_format="You need the role {roles} to use this command.",
@@ -98,33 +140,40 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         detail_extractor=extract_missing_any_role_details,
         send_to_sentry=False,
     ),
-    app_commands.MissingPermissions: ErrorHandlerConfig(
-        message_format="You lack required permissions: {permissions}",
-        detail_extractor=extract_permissions_details,
-        send_to_sentry=False,
-    ),
-    app_commands.CheckFailure: ErrorHandlerConfig(
-        message_format="You don't meet the requirements for this command.",
-        send_to_sentry=False,
-    ),
     app_commands.CommandOnCooldown: ErrorHandlerConfig(
         message_format="Command on cooldown. Wait {error.retry_after:.1f}s.",
         send_to_sentry=False,
     ),
-    app_commands.BotMissingPermissions: ErrorHandlerConfig(
-        message_format="I lack required permissions: {permissions}",
-        detail_extractor=extract_permissions_details,
-        log_level="WARNING",
+    app_commands.NoPrivateMessage: ErrorHandlerConfig(
+        message_format="This command cannot be used in direct messages.",
+        send_to_sentry=False,
     ),
     app_commands.CommandSignatureMismatch: ErrorHandlerConfig(
         message_format="Command signature mismatch. Please report this.",
         log_level="ERROR",
     ),
-    # === Traditional Commands ===
-    commands.CommandError: ErrorHandlerConfig(
-        message_format="A command error occurred: {error}",
+    app_commands.CommandNotFound: ErrorHandlerConfig(
+        message_format="Application command not found.",
+        log_level="INFO",
+        send_to_sentry=False,
+    ),
+    app_commands.CommandAlreadyRegistered: ErrorHandlerConfig(
+        message_format="Command already registered.",
         log_level="WARNING",
     ),
+    app_commands.CommandLimitReached: ErrorHandlerConfig(
+        message_format="Command limit reached.",
+        log_level="WARNING",
+    ),
+    app_commands.CommandSyncFailure: ErrorHandlerConfig(
+        message_format="Failed to sync commands with Discord.",
+        log_level="ERROR",
+    ),
+    app_commands.TranslationError: ErrorHandlerConfig(
+        message_format="Translation error occurred.",
+        log_level="WARNING",
+    ),
+    # === Traditional Command Hierarchy ===
     commands.CommandInvokeError: ErrorHandlerConfig(
         message_format="An internal error occurred while running the command.",
         log_level="ERROR",
@@ -133,14 +182,74 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         message_format="Failed to convert argument: {error.original}",
         send_to_sentry=False,
     ),
-    commands.MissingRole: ErrorHandlerConfig(
-        message_format="You need the role {roles} to use this command.",
-        detail_extractor=extract_missing_role_details,
+    commands.BadArgument: ErrorHandlerConfig(
+        message_format="Invalid argument: {error}",
         send_to_sentry=False,
     ),
-    commands.MissingAnyRole: ErrorHandlerConfig(
-        message_format="You need one of these roles: {roles}",
-        detail_extractor=extract_missing_any_role_details,
+    commands.MissingRequiredArgument: ErrorHandlerConfig(
+        message_format="{error}",
+        send_to_sentry=False,
+    ),
+    commands.MissingRequiredAttachment: ErrorHandlerConfig(
+        message_format="{error}",
+        send_to_sentry=False,
+    ),
+    commands.TooManyArguments: ErrorHandlerConfig(
+        message_format="Too many arguments provided.",
+        send_to_sentry=False,
+    ),
+    commands.BadUnionArgument: ErrorHandlerConfig(
+        message_format="Invalid argument type: `{argument}`\nExpected: {expected_types}{usage}",
+        detail_extractor=extract_bad_union_argument_details,
+        send_to_sentry=False,
+    ),
+    commands.BadLiteralArgument: ErrorHandlerConfig(
+        message_format="{error}",
+        send_to_sentry=False,
+    ),
+    commands.BadBoolArgument: ErrorHandlerConfig(
+        message_format="{error}",
+        send_to_sentry=False,
+    ),
+    commands.RangeError: ErrorHandlerConfig(
+        message_format="{error}",
+        send_to_sentry=False,
+    ),
+    commands.ArgumentParsingError: ErrorHandlerConfig(
+        message_format="Failed to parse command arguments: {error}",
+        send_to_sentry=False,
+    ),
+    commands.UnexpectedQuoteError: ErrorHandlerConfig(
+        message_format="{error}",
+        send_to_sentry=False,
+    ),
+    commands.InvalidEndOfQuotedStringError: ErrorHandlerConfig(
+        message_format="{error}",
+        send_to_sentry=False,
+    ),
+    commands.ExpectedClosingQuoteError: ErrorHandlerConfig(
+        message_format="{error}",
+        send_to_sentry=False,
+    ),
+    # === Check Failures ===
+    commands.CheckAnyFailure: ErrorHandlerConfig(
+        message_format="{error}",
+        send_to_sentry=False,
+    ),
+    commands.PrivateMessageOnly: ErrorHandlerConfig(
+        message_format="This command can only be used in private messages.",
+        send_to_sentry=False,
+    ),
+    commands.NoPrivateMessage: ErrorHandlerConfig(
+        message_format="This command cannot be used in private messages.",
+        send_to_sentry=False,
+    ),
+    commands.NotOwner: ErrorHandlerConfig(
+        message_format="This command is owner-only.",
+        send_to_sentry=False,
+    ),
+    commands.NSFWChannelRequired: ErrorHandlerConfig(
+        message_format="{error}",
         send_to_sentry=False,
     ),
     commands.MissingPermissions: ErrorHandlerConfig(
@@ -148,6 +257,46 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         detail_extractor=extract_permissions_details,
         send_to_sentry=False,
     ),
+    commands.BotMissingPermissions: ErrorHandlerConfig(
+        message_format="I lack required permissions: {permissions}",
+        detail_extractor=extract_permissions_details,
+        log_level="WARNING",
+    ),
+    commands.MissingRole: ErrorHandlerConfig(
+        message_format="You need the role {roles} to use this command.",
+        detail_extractor=extract_missing_role_details,
+        send_to_sentry=False,
+    ),
+    commands.BotMissingRole: ErrorHandlerConfig(
+        message_format="Bot requires the role {roles} to run this command.",
+        detail_extractor=extract_missing_role_details,
+        send_to_sentry=False,
+    ),
+    commands.CommandNotFound: ErrorHandlerConfig(
+        message_format="Command not found.",
+        send_to_sentry=False,
+    ),
+    commands.CommandOnCooldown: ErrorHandlerConfig(
+        message_format="Command on cooldown. Wait {error.retry_after:.1f}s.",
+        send_to_sentry=False,
+    ),
+    commands.MaxConcurrencyReached: ErrorHandlerConfig(
+        message_format="{error}",
+        send_to_sentry=False,
+    ),
+    commands.DisabledCommand: ErrorHandlerConfig(
+        message_format="This command is currently disabled.",
+        send_to_sentry=False,
+    ),
+    commands.MissingFlagArgument: ErrorHandlerConfig(
+        message_format="{error}",
+        send_to_sentry=False,
+    ),
+    commands.TooManyFlags: ErrorHandlerConfig(
+        message_format="{error}",
+        send_to_sentry=False,
+    ),
+    # === Flag Errors ===
     commands.FlagError: ErrorHandlerConfig(
         message_format="Flag error: {error}",
         send_to_sentry=False,
@@ -160,40 +309,6 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
     commands.MissingRequiredFlag: ErrorHandlerConfig(
         message_format="Missing required flag: `{flag_name}`{usage}",
         detail_extractor=extract_missing_flag_details,
-        send_to_sentry=False,
-    ),
-    commands.CheckFailure: ErrorHandlerConfig(
-        message_format="You don't meet the requirements for this command.",
-        send_to_sentry=False,
-    ),
-    commands.CommandOnCooldown: ErrorHandlerConfig(
-        message_format="Command on cooldown. Wait {error.retry_after:.1f}s.",
-        send_to_sentry=False,
-    ),
-    commands.MissingRequiredArgument: ErrorHandlerConfig(
-        message_format="{error}",
-        send_to_sentry=False,
-    ),
-    commands.BadUnionArgument: ErrorHandlerConfig(
-        message_format="Invalid argument type: `{argument}`\nExpected: {expected_types}{usage}",
-        detail_extractor=extract_bad_union_argument_details,
-        send_to_sentry=False,
-    ),
-    commands.TooManyArguments: ErrorHandlerConfig(
-        message_format="Too many arguments.",
-        send_to_sentry=False,
-    ),
-    commands.NotOwner: ErrorHandlerConfig(
-        message_format="This command is owner-only.",
-        send_to_sentry=False,
-    ),
-    commands.BotMissingPermissions: ErrorHandlerConfig(
-        message_format="I lack required permissions: {permissions}",
-        detail_extractor=extract_permissions_details,
-        log_level="WARNING",
-    ),
-    commands.BadArgument: ErrorHandlerConfig(
-        message_format="Invalid argument: {error}",
         send_to_sentry=False,
     ),
     # === Extension Management Errors ===
@@ -216,6 +331,14 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
     commands.ExtensionFailed: ErrorHandlerConfig(
         message_format="Extension `{error.name}` failed to load: {error.original}",
         log_level="ERROR",
+    ),
+    commands.CommandRegistrationError: ErrorHandlerConfig(
+        message_format="{error}",
+        log_level="WARNING",
+    ),
+    commands.HybridCommandError: ErrorHandlerConfig(
+        message_format="Hybrid command error: {error}",
+        log_level="WARNING",
     ),
     # === Entity Not Found Errors ===
     commands.MemberNotFound: ErrorHandlerConfig(
@@ -240,6 +363,112 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
     ),
     commands.GuildNotFound: ErrorHandlerConfig(
         message_format="Server not found: {error.argument}",
+        send_to_sentry=False,
+    ),
+    commands.MessageNotFound: ErrorHandlerConfig(
+        message_format="Message not found: {error.argument}",
+        send_to_sentry=False,
+    ),
+    commands.ChannelNotReadable: ErrorHandlerConfig(
+        message_format="Cannot read messages in {error.argument.mention}.",
+        send_to_sentry=False,
+    ),
+    commands.ThreadNotFound: ErrorHandlerConfig(
+        message_format="Thread not found: {error.argument}",
+        send_to_sentry=False,
+    ),
+    commands.ObjectNotFound: ErrorHandlerConfig(
+        message_format="{error.argument!r} does not follow a valid ID or mention format.",
+        send_to_sentry=False,
+    ),
+    commands.BadColourArgument: ErrorHandlerConfig(
+        message_format="Invalid color: {error.argument}",
+        send_to_sentry=False,
+    ),
+    commands.BadInviteArgument: ErrorHandlerConfig(
+        message_format="Invalid invite: {error.argument}",
+        send_to_sentry=False,
+    ),
+    commands.PartialEmojiConversionFailure: ErrorHandlerConfig(
+        message_format="Invalid emoji format: {error.argument}",
+        send_to_sentry=False,
+    ),
+    commands.GuildStickerNotFound: ErrorHandlerConfig(
+        message_format="Sticker not found: {error.argument}",
+        send_to_sentry=False,
+    ),
+    commands.ScheduledEventNotFound: ErrorHandlerConfig(
+        message_format="Scheduled event not found: {error.argument}",
+        send_to_sentry=False,
+    ),
+    commands.SoundboardSoundNotFound: ErrorHandlerConfig(
+        message_format="Soundboard sound not found: {error.argument}",
+        send_to_sentry=False,
+    ),
+    # === Client Connection Errors ===
+    discord.ConnectionClosed: ErrorHandlerConfig(
+        message_format="{error}",
+        log_level="WARNING",
+    ),
+    discord.GatewayNotFound: ErrorHandlerConfig(
+        message_format="{error}",
+        log_level="ERROR",
+    ),
+    discord.InvalidData: ErrorHandlerConfig(
+        message_format="Invalid data received from Discord.",
+        log_level="WARNING",
+    ),
+    discord.LoginFailure: ErrorHandlerConfig(
+        message_format="Failed to authenticate with Discord.",
+        log_level="ERROR",
+    ),
+    discord.PrivilegedIntentsRequired: ErrorHandlerConfig(
+        message_format="{error}",
+        log_level="ERROR",
+    ),
+    discord.InteractionResponded: ErrorHandlerConfig(
+        message_format="{error}",
+        log_level="WARNING",
+    ),
+    discord.MissingApplicationID: ErrorHandlerConfig(
+        message_format="{error}",
+        log_level="ERROR",
+    ),
+    # === Additional Check Failures ===
+    commands.CheckAnyFailure: ErrorHandlerConfig(
+        message_format="{error}",
+        send_to_sentry=False,
+    ),
+    commands.PrivateMessageOnly: ErrorHandlerConfig(
+        message_format="This command can only be used in private messages.",
+        send_to_sentry=False,
+    ),
+    commands.NoPrivateMessage: ErrorHandlerConfig(
+        message_format="This command cannot be used in private messages.",
+        send_to_sentry=False,
+    ),
+    commands.MissingRole: ErrorHandlerConfig(
+        message_format="You need the role {roles} to use this command.",
+        detail_extractor=extract_missing_role_details,
+        send_to_sentry=False,
+    ),
+    commands.BotMissingRole: ErrorHandlerConfig(
+        message_format="Bot requires the role {roles} to run this command.",
+        detail_extractor=extract_missing_role_details,
+        send_to_sentry=False,
+    ),
+    commands.MissingAnyRole: ErrorHandlerConfig(
+        message_format="You need one of these roles: {roles}",
+        detail_extractor=extract_missing_any_role_details,
+        send_to_sentry=False,
+    ),
+    commands.BotMissingAnyRole: ErrorHandlerConfig(
+        message_format="Bot requires one of these roles: {roles}",
+        detail_extractor=extract_missing_any_role_details,
+        send_to_sentry=False,
+    ),
+    commands.NSFWChannelRequired: ErrorHandlerConfig(
+        message_format="{error}",
         send_to_sentry=False,
     ),
     # === Custom Errors ===
@@ -321,14 +550,19 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         log_level="WARNING",
         send_to_sentry=True,
     ),
-    # === Discord API Errors ===
+    # === Discord API Hierarchy ===
+    # DiscordException is defined at the top of the file as the base exception
+    discord.ClientException: ErrorHandlerConfig(
+        message_format="Discord client error: {error}",
+        log_level="WARNING",
+    ),
     discord.HTTPException: ErrorHandlerConfig(
         message_format="Discord API error: {error.status} {error.text}",
         log_level="WARNING",
     ),
-    discord.RateLimited: ErrorHandlerConfig(
-        message_format="Rate limited. Try again in {error.retry_after:.1f}s.",
-        log_level="WARNING",
+    discord.DiscordServerError: ErrorHandlerConfig(
+        message_format="Discord server error: {error.status} {error.text}",
+        log_level="ERROR",
     ),
     discord.Forbidden: ErrorHandlerConfig(
         message_format="Permission denied: {error.text}",
@@ -339,8 +573,36 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         log_level="INFO",
         send_to_sentry=False,
     ),
+    discord.RateLimited: ErrorHandlerConfig(
+        message_format="Rate limited. Try again in {error.retry_after:.1f}s.",
+        log_level="WARNING",
+    ),
+    discord.ConnectionClosed: ErrorHandlerConfig(
+        message_format="Discord connection closed: {error.reason}",
+        log_level="WARNING",
+    ),
+    discord.GatewayNotFound: ErrorHandlerConfig(
+        message_format="Discord gateway not found.",
+        log_level="ERROR",
+    ),
+    discord.InvalidData: ErrorHandlerConfig(
+        message_format="Invalid data received from Discord: {error}",
+        log_level="WARNING",
+    ),
+    discord.LoginFailure: ErrorHandlerConfig(
+        message_format="Failed to login to Discord.",
+        log_level="ERROR",
+    ),
+    discord.PrivilegedIntentsRequired: ErrorHandlerConfig(
+        message_format="Missing required privileged intents for this feature.",
+        log_level="ERROR",
+    ),
     discord.InteractionResponded: ErrorHandlerConfig(
         message_format="Interaction already responded to.",
         log_level="WARNING",
+    ),
+    discord.MissingApplicationID: ErrorHandlerConfig(
+        message_format="Missing Discord application ID.",
+        log_level="ERROR",
     ),
 }
