@@ -96,7 +96,7 @@ class AfkController(BaseController[AFK]):
             True if removed successfully, False otherwise.
         """
         existing = await self.get_afk_by_member(member_id, guild_id)
-        return await self.delete_by_id(existing.member_id) if existing else False
+        return await self.delete_by_id((existing.member_id, existing.guild_id)) if existing else False
 
     async def get_all_afk_members(self, guild_id: int) -> list[AFK]:
         """
