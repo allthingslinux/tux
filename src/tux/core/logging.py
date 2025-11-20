@@ -94,7 +94,7 @@ THIRD_PARTY_LOG_LEVELS = {
     "redis": logging.WARNING,
     "docker": logging.WARNING,
     # Database - Fine-grained control per subsystem
-    "sqlalchemy.engine": logging.DEBUG,  # SQL queries and parameters (not result sets)
+    "sqlalchemy.engine": logging.WARNING,  # SQL queries and parameters (not result sets)
     "sqlalchemy.pool": logging.DEBUG,  # Connection pool events (not checkin/checkout spam)
     "sqlalchemy.orm": logging.WARNING,  # ORM internals (very noisy)
     "sqlalchemy.dialects": logging.WARNING,  # Dialect-specific details
