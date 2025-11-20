@@ -1,0 +1,158 @@
+---
+name: Documentation
+on:
+  push:
+    branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
+    paths:
+      - docs/**
+      - src/**
+      - tests/**
+      - pyproject.toml
+      - uv.lock
+      - .github/workflows/docs.yml
+  pull_request:
+    branches: [main, 'v[0-9]+.[0-9]+.[0-9]+*']
+    paths:
+      - docs/**
+      - src/**
+      - tests/**
+      - pyproject.toml
+      - uv.lock
+      - .github/workflows/docs.yml
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+env:
+  PYTHON_VERSION: 3.13.8
+jobs:
+  changes:
+    name: File Detection
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      docs: ${{ steps.set_outputs.outputs.docs }}
+      code: ${{ steps.set_outputs.outputs.code }}
+      any: ${{ steps.set_outputs.outputs.any }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check Docs
+        uses: tj-actions/changed-files@v46
+        id: docs_changes
+        with:
+          files: |
+            docs/**
+            .github/workflows/docs.yml
+      - name: Check Code
+        uses: tj-actions/changed-files@v46
+        id: code_changes
+        with:
+          files: |
+            src/**
+            tests/**
+            pyproject.toml
+            uv.lock
+      - name: Set Outputs
+        id: set_outputs
+        run: |
+          echo "docs=${{ steps.docs_changes.outputs.any_changed }}" >> "$GITHUB_OUTPUT"
+          echo "code=${{ steps.code_changes.outputs.any_changed }}" >> "$GITHUB_OUTPUT"
+
+          # Check if any relevant files changed
+          if [[ "${{ steps.docs_changes.outputs.any_changed }}" == "true" ]] || \
+             [[ "${{ steps.code_changes.outputs.any_changed }}" == "true" ]]; then
+            echo "any=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "any=false" >> "$GITHUB_OUTPUT"
+          fi
+  build:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.any == 'true' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Python
+        uses: ./.github/actions/setup-python
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+      - name: Install Dependencies
+        run: |
+          echo "Installing documentation dependencies..."
+          uv sync --group docs --no-dev
+      - name: Download Coverage from Tests Workflow
+        uses: dawidd6/action-download-artifact@v11
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: tests.yml
+          name: coverage-html
+          path: htmlcov
+          if_no_artifact_found: ignore
+          search_artifacts: true
+      - name: Prepare Coverage for MkDocs
+        run: |
+          echo "Preparing coverage reports for mkdocs-coverage plugin..."
+          if [ -d "htmlcov" ] && [ "$(ls -A htmlcov)" ]; then
+            cp -r htmlcov docs/
+            echo "Copied htmlcov from tests workflow to docs/htmlcov for mkdocs-coverage plugin"
+          else
+            echo "No coverage data found from tests workflow"
+            echo "Documentation will be built without coverage reports"
+            echo "To include coverage: ensure tests.yml workflow runs first"
+          fi
+      - name: Build MkDocs Documentation
+        working-directory: docs
+        run: |
+          echo "Building MkDocs documentation..."
+          uv run mkdocs build
+          echo "Documentation build completed successfully"
+      - name: Upload Documentation Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: docs/site
+          retention-days: 7
+  deploy:
+    name: Deploy to Cloudflare Workers
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref,
+      'refs/heads/v'))
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download Documentation Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: documentation
+          path: docs/site
+      - name: Deploy to Production
+        if: github.ref == 'refs/heads/main'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: docs
+          command: deploy --env production
+      - name: Upload Preview Version
+        if: github.ref != 'refs/heads/main'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: docs
+          command: versions upload --env preview

@@ -114,3 +114,10 @@ jobs:
           fail_ci_if_error: false
           verbose: true
           use_oidc: true
+      - name: Upload Coverage HTML Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: htmlcov
+          retention-days: 7
+          if-no-files-found: warn
