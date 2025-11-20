@@ -156,12 +156,12 @@ class TestErrorHandler:
 
     @pytest.mark.asyncio
     async def test_send_error_response_context_with_deletion(self, error_handler) -> None:
-        """Test _send_error_response with context and message deletion."""
+        """Test _send_error_response with context."""
         mock_ctx = MagicMock()
         mock_ctx.reply = AsyncMock()
 
         embed = MagicMock(spec=discord.Embed)
-        config = ErrorHandlerConfig(delete_error_messages=True)
+        config = ErrorHandlerConfig()
 
         await error_handler._send_error_response(mock_ctx, embed, config)
 

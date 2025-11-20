@@ -253,7 +253,14 @@ class TestCriticalIssuesIntegration:
 
         with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_response:
             with patch.object(moderation_coordinator._case_service, 'create_case', new_callable=AsyncMock) as mock_create_case:
-                mock_create_case.return_value = MagicMock(case_id=123)
+                mock_case = MagicMock()
+                mock_case.id = 123
+                mock_case.case_number = 456
+                mock_case.created_at = datetime.fromtimestamp(1640995200.0, tz=timezone.utc)  # 2022-01-01
+                mock_case.case_type = MagicMock()
+                mock_case.case_type.value = "BAN"
+                mock_case.case_reason = "Test case"
+                mock_create_case.return_value = mock_case
 
                 await moderation_coordinator.execute_moderation_action(
                     ctx=mock_ctx,
@@ -576,7 +583,14 @@ class TestCriticalIssuesIntegration:
 
         with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_response:
             with patch.object(moderation_coordinator._case_service, 'create_case', new_callable=AsyncMock) as mock_create_case:
-                mock_create_case.return_value = MagicMock(case_id=123)
+                mock_case = MagicMock()
+                mock_case.id = 123
+                mock_case.case_number = 456
+                mock_case.created_at = datetime.fromtimestamp(1640995200.0, tz=timezone.utc)  # 2022-01-01
+                mock_case.case_type = MagicMock()
+                mock_case.case_type.value = "BAN"
+                mock_case.case_reason = "Test case"
+                mock_create_case.return_value = mock_case
 
                 await moderation_coordinator.execute_moderation_action(
                     ctx=mock_ctx,
@@ -658,7 +672,14 @@ class TestCriticalIssuesIntegration:
 
         with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_response:
             with patch.object(moderation_coordinator._case_service, 'create_case', new_callable=AsyncMock) as mock_create_case:
-                mock_create_case.return_value = MagicMock(case_id=123)
+                mock_case = MagicMock()
+                mock_case.id = 123
+                mock_case.case_number = 456
+                mock_case.created_at = datetime.fromtimestamp(1640995200.0, tz=timezone.utc)  # 2022-01-01
+                mock_case.case_type = MagicMock()
+                mock_case.case_type.value = "BAN"
+                mock_case.case_reason = "Test case"
+                mock_create_case.return_value = mock_case
 
                 await moderation_coordinator.execute_moderation_action(
                     ctx=mock_ctx,

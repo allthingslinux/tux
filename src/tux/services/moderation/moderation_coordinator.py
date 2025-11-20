@@ -203,7 +203,7 @@ class ModerationCoordinator:
         logger.debug(f"Sending response embed, case={'None' if case is None else case.id}, dm_sent={dm_sent}")
         await self._send_response_embed(ctx, case, user, dm_sent)
 
-        # Send response embed to audit log channel and update case
+        # Send response embed to mod log channel and update case
         if case is not None:
             logger.debug(f"Sending response embed to mod log for case #{case.case_number}")
             mod_log_message = await self._send_mod_log_embed(ctx, case, user, dm_sent)
@@ -374,16 +374,16 @@ class ModerationCoordinator:
         dm_sent: bool,
     ) -> discord.Message | None:
         """Send the response embed to the mod log channel."""
-        logger.debug(f"Preparing audit log embed for case #{case.case_number}")
+        logger.debug(f"Preparing mod log embed for case #{case.case_number}")
 
-        # Create a copy of the embed for audit log with different footer
+        # Create a copy of the embed for mod log with different footer
         embed = EmbedCreator.create_embed(
             embed_type=EmbedType.ACTIVE_CASE,
             description="✅ DM sent" if dm_sent else "❌ DM not sent",
             custom_author_text=f"Case #{case.case_number} ({case.case_type.value if case.case_type else 'Unknown'})",
         )
 
-        # Add case-specific fields for audit log
+        # Add case-specific fields for mod log
         fields = [
             ("Moderator", f"{ctx.author.name}\n`{ctx.author.id}`", True),
             ("Target", f"{user.name}\n`{user.id}`", True),

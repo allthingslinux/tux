@@ -617,7 +617,7 @@ class TestTimestampFunctionality:
 
         # Check that the field annotations are accessible
         # Since SQLModel uses Mapped types, we check the model fields
-        from sqlmodel import get_type_hints
+        # get_type_hints is already imported from typing at module level
         hints = get_type_hints(BaseModel)
         assert 'created_at' in hints
         assert 'updated_at' in hints

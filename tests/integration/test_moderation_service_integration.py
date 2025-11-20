@@ -445,25 +445,25 @@ class TestModerationCoordinatorIntegration:
         pass
 
     @pytest.mark.integration
-    async def test_complete_workflow_with_audit_logging_success(
+    async def test_complete_workflow_with_mod_logging_success(
         self,
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         mock_member,
         mock_bot,
     ) -> None:
-        """Test complete workflow with successful audit logging."""
+        """Test complete workflow with successful mod logging."""
         # Setup bot with database mock
         mock_bot.db = MagicMock()
         mock_bot.db.guild_config = MagicMock()
-        mock_bot.db.guild_config.get_audit_log_id = AsyncMock(return_value=123456789)
+        mock_bot.db.guild_config.get_mod_log_id = AsyncMock(return_value=123456789)
 
         mock_ctx.guild.get_channel = MagicMock()
-        audit_channel = MagicMock(spec=discord.TextChannel)
-        audit_channel.name = "audit-log"
-        audit_channel.id = 123456789
-        audit_channel.send = AsyncMock(return_value=MagicMock())
-        mock_ctx.guild.get_channel.return_value = audit_channel
+        mod_channel = MagicMock(spec=discord.TextChannel)
+        mod_channel.name = "mod-log"
+        mod_channel.id = 123456789
+        mod_channel.send = AsyncMock(return_value=MagicMock())
+        mock_ctx.guild.get_channel.return_value = mod_channel
 
         mock_ctx.guild.get_member.return_value = MagicMock()
 
@@ -485,7 +485,7 @@ class TestModerationCoordinatorIntegration:
             mock_case.created_at = datetime.fromtimestamp(1640995200.0, tz=timezone.utc)  # 2022-01-01
             moderation_coordinator._case_service.create_case = AsyncMock(return_value=mock_case)
 
-            # Mock audit log message ID update
+            # Mock mod log message ID update
             moderation_coordinator._case_service.update_mod_log_message_id = AsyncMock()
 
             with patch.object(moderation_coordinator, '_send_response_embed', new_callable=AsyncMock) as mock_send_response:
@@ -509,25 +509,25 @@ class TestModerationCoordinatorIntegration:
                     moderation_coordinator._case_service.create_case.assert_called_once()
                     mock_send_response.assert_called_once()
 
-                    # Verify audit log was sent
-                    audit_channel.send.assert_called_once()
+                    # Verify mod log was sent
+                    mod_channel.send.assert_called_once()
                     moderation_coordinator._case_service.update_mod_log_message_id.assert_called_once_with(
-                        48, audit_channel.send.return_value.id,
+                        48, mod_channel.send.return_value.id,
                     )
 
     @pytest.mark.integration
-    async def test_audit_log_channel_not_configured(
+    async def test_mod_log_channel_not_configured(
         self,
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         mock_member,
         mock_bot,
     ) -> None:
-        """Test workflow when audit log channel is not configured."""
+        """Test workflow when mod log channel is not configured."""
         # Setup bot with database mock
         mock_bot.db = MagicMock()
         mock_bot.db.guild_config = MagicMock()
-        mock_bot.db.guild_config.get_audit_log_id = AsyncMock(return_value=None)  # No audit log configured
+        mock_bot.db.guild_config.get_mod_log_id = AsyncMock(return_value=None)  # No mod log configured
 
         mock_ctx.guild.get_member.return_value = MagicMock()
 
@@ -545,29 +545,29 @@ class TestModerationCoordinatorIntegration:
                     ctx=mock_ctx,
                     case_type=DBCaseType.BAN,
                     user=mock_member,
-                    reason="No audit log configured test",
+                    reason="No mod log configured test",
                     actions=[(mock_ban_action, type(None))],
                 )
 
-                # Workflow should succeed but audit log should not be attempted
+                # Workflow should succeed but mod log should not be attempted
                 mock_send_dm.assert_called_once()
                 mock_ban_action.assert_called_once()
                 moderation_coordinator._case_service.create_case.assert_called_once()
                 mock_send_response.assert_called_once()
 
     @pytest.mark.integration
-    async def test_audit_log_channel_not_found(
+    async def test_mod_log_channel_not_found(
         self,
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         mock_member,
         mock_bot,
     ) -> None:
-        """Test workflow when audit log channel exists in config but not in guild."""
+        """Test workflow when mod log channel exists in config but not in guild."""
         # Setup bot with database mock
         mock_bot.db = MagicMock()
         mock_bot.db.guild_config = MagicMock()
-        mock_bot.db.guild_config.get_audit_log_id = AsyncMock(return_value=123456789)
+        mock_bot.db.guild_config.get_mod_log_id = AsyncMock(return_value=123456789)
 
         # Channel not found in guild
         mock_ctx.guild.get_channel.return_value = None
@@ -592,25 +592,25 @@ class TestModerationCoordinatorIntegration:
                     actions=[(mock_ban_action, type(None))],
                 )
 
-                # Workflow should succeed but audit log should fail gracefully
+                # Workflow should succeed but mod log should fail gracefully
                 mock_send_dm.assert_called_once()
                 mock_ban_action.assert_called_once()
                 moderation_coordinator._case_service.create_case.assert_called_once()
                 mock_send_response.assert_called_once()
 
     @pytest.mark.integration
-    async def test_audit_log_channel_wrong_type(
+    async def test_mod_log_channel_wrong_type(
         self,
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         mock_member,
         mock_bot,
     ) -> None:
-        """Test workflow when audit log channel is not a text channel."""
+        """Test workflow when mod log channel is not a text channel."""
         # Setup bot with database mock
         mock_bot.db = MagicMock()
         mock_bot.db.guild_config = MagicMock()
-        mock_bot.db.guild_config.get_audit_log_id = AsyncMock(return_value=123456789)
+        mock_bot.db.guild_config.get_mod_log_id = AsyncMock(return_value=123456789)
 
         # Channel exists but is not a text channel (e.g., voice channel)
         mock_ctx.guild.get_channel = MagicMock()
@@ -637,33 +637,33 @@ class TestModerationCoordinatorIntegration:
                     actions=[(mock_ban_action, type(None))],
                 )
 
-                # Workflow should succeed but audit log should fail gracefully
+                # Workflow should succeed but mod log should fail gracefully
                 mock_send_dm.assert_called_once()
                 mock_ban_action.assert_called_once()
                 moderation_coordinator._case_service.create_case.assert_called_once()
                 mock_send_response.assert_called_once()
 
     @pytest.mark.integration
-    async def test_audit_log_send_failure_permissions(
+    async def test_mod_log_send_failure_permissions(
         self,
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         mock_member,
         mock_bot,
     ) -> None:
-        """Test workflow when audit log send fails due to permissions."""
+        """Test workflow when mod log send fails due to permissions."""
         # Setup bot with database mock
         mock_bot.db = MagicMock()
         mock_bot.db.guild_config = MagicMock()
-        mock_bot.db.guild_config.get_audit_log_id = AsyncMock(return_value=123456789)
+        mock_bot.db.guild_config.get_mod_log_id = AsyncMock(return_value=123456789)
 
         mock_ctx.guild.get_channel = MagicMock()
-        audit_channel = MagicMock(spec=discord.TextChannel)
-        audit_channel.name = "audit-log"
-        audit_channel.id = 123456789
+        mod_channel = MagicMock(spec=discord.TextChannel)
+        mod_channel.name = "mod-log"
+        mod_channel.id = 123456789
         # Simulate Forbidden error when sending
-        audit_channel.send = AsyncMock(side_effect=discord.Forbidden(MagicMock(), "Missing permissions"))
-        mock_ctx.guild.get_channel.return_value = audit_channel
+        mod_channel.send = AsyncMock(side_effect=discord.Forbidden(MagicMock(), "Missing permissions"))
+        mock_ctx.guild.get_channel.return_value = mod_channel
 
         mock_ctx.guild.get_member.return_value = MagicMock()
 
@@ -685,37 +685,37 @@ class TestModerationCoordinatorIntegration:
                     actions=[(mock_ban_action, type(None))],
                 )
 
-                # Workflow should succeed but audit log should fail gracefully
+                # Workflow should succeed but mod log should fail gracefully
                 mock_send_dm.assert_called_once()
                 mock_ban_action.assert_called_once()
                 moderation_coordinator._case_service.create_case.assert_called_once()
                 mock_send_response.assert_called_once()
 
-                # Audit log send was attempted but failed
-                audit_channel.send.assert_called_once()
+                # Mod log send was attempted but failed
+                mod_channel.send.assert_called_once()
 
     @pytest.mark.integration
-    async def test_audit_log_case_update_failure(
+    async def test_mod_log_case_update_failure(
         self,
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         mock_member,
         mock_bot,
     ) -> None:
-        """Test workflow when audit log succeeds but case update fails."""
+        """Test workflow when mod log succeeds but case update fails."""
         # Setup bot with database mock
         mock_bot.db = MagicMock()
         mock_bot.db.guild_config = MagicMock()
-        mock_bot.db.guild_config.get_audit_log_id = AsyncMock(return_value=123456789)
+        mock_bot.db.guild_config.get_mod_log_id = AsyncMock(return_value=123456789)
 
         mock_ctx.guild.get_channel = MagicMock()
-        audit_channel = MagicMock(spec=discord.TextChannel)
-        audit_channel.name = "audit-log"
-        audit_channel.id = 123456789
-        audit_message = MagicMock()
-        audit_message.id = 987654321
-        audit_channel.send = AsyncMock(return_value=audit_message)
-        mock_ctx.guild.get_channel.return_value = audit_channel
+        mod_channel = MagicMock(spec=discord.TextChannel)
+        mod_channel.name = "mod-log"
+        mod_channel.id = 123456789
+        mod_message = MagicMock()
+        mod_message.id = 987654321
+        mod_channel.send = AsyncMock(return_value=mod_message)
+        mock_ctx.guild.get_channel.return_value = mod_channel
 
         mock_ctx.guild.get_member.return_value = MagicMock()
 
@@ -746,32 +746,32 @@ class TestModerationCoordinatorIntegration:
                         actions=[(mock_ban_action, type(None))],
                     )
 
-                    # Workflow should succeed, audit log should be sent, but case update should fail gracefully
+                    # Workflow should succeed, mod log should be sent, but case update should fail gracefully
                     mock_send_dm.assert_called_once()
                     mock_ban_action.assert_called_once()
                     moderation_coordinator._case_service.create_case.assert_called_once()
                     mock_send_response.assert_called_once()
-                    audit_channel.send.assert_called_once()
+                    mod_channel.send.assert_called_once()
                     moderation_coordinator._case_service.update_mod_log_message_id.assert_called_once()
 
     @pytest.mark.integration
-    async def test_case_creation_failure_skips_audit_log(
+    async def test_case_creation_failure_skips_mod_log(
         self,
         moderation_coordinator: ModerationCoordinator,
         mock_ctx,
         mock_member,
         mock_bot,
     ) -> None:
-        """Test that audit logging is skipped when case creation fails."""
+        """Test that mod logging is skipped when case creation fails."""
         # Setup bot with database mock
         mock_bot.db = MagicMock()
         mock_bot.db.guild_config = MagicMock()
-        mock_bot.db.guild_config.get_audit_log_id = AsyncMock(return_value=123456789)
+        mock_bot.db.guild_config.get_mod_log_id = AsyncMock(return_value=123456789)
 
         mock_ctx.guild.get_channel = MagicMock()
-        audit_channel = MagicMock(spec=discord.TextChannel)
-        audit_channel.send = AsyncMock(return_value=MagicMock())
-        mock_ctx.guild.get_channel.return_value = audit_channel
+        mod_channel = MagicMock(spec=discord.TextChannel)
+        mod_channel.send = AsyncMock(return_value=MagicMock())
+        mock_ctx.guild.get_channel.return_value = mod_channel
 
         mock_ctx.guild.get_member.return_value = MagicMock()
 
@@ -792,18 +792,18 @@ class TestModerationCoordinatorIntegration:
                     actions=[(mock_ban_action, type(None))],
                 )
 
-                # Workflow should complete but audit logging should be skipped
+                # Workflow should complete but mod logging should be skipped
                 mock_send_dm.assert_called_once()
                 mock_ban_action.assert_called_once()
                 moderation_coordinator._case_service.create_case.assert_called_once()
                 mock_send_response.assert_called_once()
 
-                # Audit log should not be attempted when case creation fails
-                audit_channel.send.assert_not_called()
+                # Mod log should not be attempted when case creation fails
+                mod_channel.send.assert_not_called()
 
 
 class TestCaseModificationAuditLogging:
-    """Test audit log updates when cases are modified."""
+    """Test mod log updates when cases are modified."""
 
     @pytest.fixture
     def mock_bot_with_db(self):
@@ -832,12 +832,12 @@ class TestCaseModificationAuditLogging:
         return ctx
 
     @pytest.mark.integration
-    async def test_case_modify_updates_audit_log(
+    async def test_case_modify_updates_mod_log(
         self,
         mock_bot_with_db,
         mock_ctx_with_guild,
     ) -> None:
-        """Test that modifying a case updates the audit log embed."""
+        """Test that modifying a case updates the mod log embed."""
         from tux.modules.moderation.cases import Cases
         from tux.database.models import Case, CaseType
         from tux.core.flags import CaseModifyFlags
@@ -845,7 +845,7 @@ class TestCaseModificationAuditLogging:
         # Create Cases cog instance
         cases_cog = Cases(mock_bot_with_db)
 
-        # Setup mock case with audit log message ID
+        # Setup mock case with mod log message ID
         mock_case = MagicMock(spec=Case)
         mock_case.id = 123
         mock_case.case_number = 456
@@ -945,7 +945,7 @@ class TestCaseModificationAuditLogging:
         # Create Cases cog instance
         cases_cog = Cases(mock_bot_with_db)
 
-        # Setup mock case WITHOUT audit log message ID
+        # Setup mock case WITHOUT mod log message ID
         mock_case = MagicMock(spec=Case)
         mock_case.id = 123
         mock_case.case_number = 456
@@ -999,6 +999,6 @@ class TestCaseModificationAuditLogging:
             # Verify database update was called
             mock_bot_with_db.db.case.update_case_by_number.assert_called_once()
 
-            # Verify audit log methods were NOT called
-            # (No audit log message ID, so no attempts should be made)
+            # Verify mod log methods were NOT called
+            # (No mod log message ID, so no attempts should be made)
             mock_send_case_embed.assert_called_once()

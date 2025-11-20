@@ -369,7 +369,13 @@ def test_dotenv_missing_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
     class DotenvSettings(BaseSettings):
         """Settings for .env testing."""
 
-        model_config = SettingsConfigDict(env_file=".env", case_sensitive=False, extra="ignore")
+        model_config = SettingsConfigDict(
+            env_file=".env",
+            env_ignore_empty=True,
+            env_prefix="DOTENV_TEST_",  # Use a prefix that won't match DEBUG
+            case_sensitive=False,
+            extra="ignore",
+        )
 
         debug: bool = Field(default=False)
         name: str = Field(default="default_test")

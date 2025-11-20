@@ -23,3 +23,11 @@
 
 - [ ] **Clean Up Internal Code** - Organize internal utilities and separate them from public APIs
 - [ ] **Command-Line Tools** - Make CLI commands more reliable and programmable
+
+Fix log channel ui not updating when channel is selected
+
+FIx /config ranks create command not working
+
+Setup sentry sdk for metrics
+
+Set permission errors to not be sent to sentry

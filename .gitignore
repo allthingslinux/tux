@@ -45,6 +45,7 @@ htmlcov/
 .coverage.*
 .coverage-*
 .cache
+junit.xml
 nosetests.xml
 coverage.xml
 coverage.json
