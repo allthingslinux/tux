@@ -28,7 +28,6 @@ from tux.ui.embeds import EmbedCreator
 # Constants
 ANSI_PATTERN = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 BACKTICKS_PATTERN = re.compile(r"```")
-LOADING_REACTION = "<a:BreakdancePengu:1378346831250985061>"
 
 # Compiler mappings
 GODBOLT_COMPILERS = {
@@ -493,30 +492,21 @@ class Run(BaseCog):
 
         logger.info(f"🔨 Code execution request: {language} via {service} from {ctx.author.name} ({ctx.author.id})")
 
-        # Add loading reaction
-        await ctx.message.add_reaction(LOADING_REACTION)
+        # Execute the code
+        logger.debug(f"Executing {language} code (length: {len(source_code)} chars) via {service}")
+        output = await self.services[service].run(language, source_code)
 
-        try:
-            # Execute the code
-            logger.debug(f"Executing {language} code (length: {len(source_code)} chars) via {service}")
-            output = await self.services[service].run(language, source_code)
+        if output is None:
+            logger.warning(f"Code execution failed (no output) for {language} from {ctx.author.id}")
+            raise TuxCompilationError
 
-            if output is None:
-                logger.warning(f"Code execution failed (no output) for {language} from {ctx.author.id}")
-                raise TuxCompilationError
+        # Create and send result embed
+        cleaned_output = _remove_ansi(output)
+        result_embed = await self._create_result_embed(ctx, cleaned_output, language, service)
+        view = self._create_close_button_view()
 
-            # Create and send result embed
-            cleaned_output = _remove_ansi(output)
-            result_embed = await self._create_result_embed(ctx, cleaned_output, language, service)
-            view = self._create_close_button_view()
-
-            await ctx.send(embed=result_embed, view=view)
-            logger.info(f"Code execution successful: {language} for {ctx.author.name} ({ctx.author.id})")
-
-        finally:
-            # Remove loading reaction
-            with suppress(discord.HTTPException):
-                await ctx.message.clear_reaction(LOADING_REACTION)
+        await ctx.send(embed=result_embed, view=view)
+        logger.info(f"Code execution successful: {language} for {ctx.author.name} ({ctx.author.id})")
 
     @commands.command(name="languages", aliases=["langs", "lang"])
     async def languages(self, ctx: commands.Context[Tux]) -> None:
