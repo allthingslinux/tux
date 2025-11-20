@@ -20,9 +20,8 @@ echo "🔧 Setting up test environment..."
 export BOT_TOKEN=test_token_for_cloudflare
 export DEBUG=True
 
-# Install test dependencies
-echo "📦 Installing test dependencies..."
-uv sync --group test --no-dev
+# Install dependencies
+uv sync
 
 # Run tests with coverage
 echo "🧪 Running tests with coverage..."
