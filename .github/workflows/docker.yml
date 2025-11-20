@@ -32,6 +32,8 @@ jobs:
   changes:
     name: File Detection
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       docker: ${{ steps.docker_changes.outputs.any_changed }}
     steps:

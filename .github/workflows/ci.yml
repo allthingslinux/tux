@@ -19,6 +19,8 @@ jobs:
   changes:
     name: File Detection
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       python: ${{ steps.python_changes.outputs.any_changed }}
       markdown: ${{ steps.markdown_changes.outputs.any_changed }}
