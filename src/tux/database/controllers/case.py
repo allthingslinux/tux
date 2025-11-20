@@ -445,7 +445,7 @@ class CaseController(BaseController[Case]):
             ),
         )
 
-        logger.info(f"Found {len(expired_cases)} unprocessed expired tempbans in guild {guild_id}")
+        logger.debug(f"Found {len(expired_cases)} unprocessed expired tempbans in guild {guild_id}")
         for case in expired_cases:
             logger.debug(
                 f"Unprocessed expired tempban: case_id={case.id}, user={case.case_user_id}, "
