@@ -73,7 +73,9 @@ class ErrorFormatter:
         # Extract error-specific details
         if config.detail_extractor:
             with suppress(Exception):
-                details = config.detail_extractor(error, **kwargs)
+                # Remove 'error' from kwargs to avoid conflicts with positional parameter
+                extractor_kwargs = {k: v for k, v in kwargs.items() if k != "error"}
+                details = config.detail_extractor(error, **extractor_kwargs)
                 kwargs |= details
 
         # Format message with fallback

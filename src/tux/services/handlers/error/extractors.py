@@ -3,6 +3,8 @@
 import contextlib
 from typing import Any
 
+from tux.services.handlers.error.config import DEFAULT_ERROR_MESSAGE
+
 
 def unwrap_error(error: Any) -> Exception:
     """
@@ -44,8 +46,8 @@ def fallback_format_message(message_format: str, error: Exception) -> str:
         if "{error" in message_format:
             return message_format.format(error=error)
 
-    # Return the error message directly
-    return str(error)
+    # Return the default error message when formatting fails
+    return DEFAULT_ERROR_MESSAGE
 
 
 def format_list(items: list[str]) -> str:
