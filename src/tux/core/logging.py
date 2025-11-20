@@ -309,14 +309,13 @@ def _format_record(record: Any) -> str:
 
         # Escape special characters to prevent format string interpretation
         location = _escape_format_chars(location)
-        message = _escape_format_chars(_truncate_message(record["message"]))
 
         # Build formatted output
         return (
             f"<green>{record['time']:HH:mm:ss.SSS}</green> | "
             f"<level>{record['level'].name: <8}</level> | "
             f"<cyan>{location}</cyan>:<cyan>{record['line']}</cyan> | "
-            f"<level>{message}</level>\n"
+            f"<level>{record['message']}</level>\n"
         )
     except Exception:
         # Fallback if formatting fails
@@ -373,36 +372,6 @@ def _escape_format_chars(text: str | Any) -> str:
     text = text.replace("{", "{{").replace("}", "}}")
     # Escape angle brackets (color tags): <locals> -> \<locals\>
     return text.replace("<", r"\<").replace(">", r"\>")
-
-
-def _truncate_message(message: str | Any) -> str:
-    """
-    Truncate and normalize log messages for cleaner output.
-
-    - Replaces newlines with spaces (makes SQL queries single-line)
-    - Collapses multiple spaces into single spaces
-    - Truncates very long messages to prevent parser errors
-
-    Parameters
-    ----------
-    message : str | Any
-        The log message.
-
-    Returns
-    -------
-    str
-        Normalized and truncated message.
-    """
-    message = str(message)
-
-    # Normalize whitespace: replace newlines and collapse multiple spaces
-    message = " ".join(message.split())
-
-    # Truncate if too long
-    if len(message) > MAX_MESSAGE_LENGTH:
-        return message[:MAX_MESSAGE_LENGTH] + "... (truncated)"
-
-    return message
 
 
 # =============================================================================
