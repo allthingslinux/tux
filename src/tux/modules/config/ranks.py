@@ -31,43 +31,6 @@ class RankManager(BaseConfigManager):
         """
         await self.configure_dashboard(ctx, "ranks")
 
-    async def list_ranks(self, ctx: commands.Context[Tux]) -> None:
-        """List all permission ranks in this guild."""
-        assert ctx.guild
-
-        await ctx.defer()
-
-        ranks = await self.bot.db.permission_ranks.get_permission_ranks_by_guild(ctx.guild.id)
-
-        if not ranks:
-            embed = self.create_error_embed(
-                "❌ No Permission Ranks",
-                "No permission ranks found.\n\nUse `/config ranks init` to create default ranks.",
-            )
-            await ctx.send(embed=embed)
-            return
-
-        embed = self.create_info_embed(
-            f"🎯 Permission Ranks - {ctx.guild.name}",
-            f"Total: {len(ranks)} ranks configured",
-        )
-
-        status_icon = "✅"
-
-        for rank in sorted(ranks, key=lambda x: x.rank):
-            level_title = f"{status_icon} Rank {rank.rank}: {rank.name}"
-
-            desc_parts = [rank.description or "*No description*"]
-
-            embed.add_field(
-                name=level_title,
-                value=" | ".join(desc_parts),
-                inline=False,
-            )
-
-        embed.set_footer(text="Use /config ranks init | create | delete to manage ranks")
-        await ctx.send(embed=embed)
-
     async def initialize_ranks(self, ctx: commands.Context[Tux]) -> None:
         """Initialize default permission ranks (0-7)."""
         assert ctx.guild
@@ -83,9 +46,7 @@ class RankManager(BaseConfigManager):
                     (
                         f"This guild already has {len(existing_ranks)} permission ranks configured.\n\n"
                         "**Existing ranks will be preserved.**\n\n"
-                        "If you need to modify ranks, use:\n"
-                        "• `/config ranks create` - Add new ranks\n"
-                        "• `/config ranks delete` - Remove ranks"
+                        "Use the dashboard to modify existing ranks."
                     ),
                 )
                 await ctx.send(embed=embed)
@@ -113,74 +74,3 @@ class RankManager(BaseConfigManager):
 
         except Exception as e:
             await self.handle_error(ctx, e, "initialize ranks")
-
-    async def create_rank(
-        self,
-        ctx: commands.Context[Tux],
-        rank: int,
-        name: str,
-        description: str | None = None,
-    ) -> None:
-        """Create a custom permission rank."""
-        assert ctx.guild
-
-        await ctx.defer()
-
-        if not 0 <= rank <= 10:
-            embed = self.create_error_embed("❌ Invalid Rank", "Rank must be between 0 and 10.")
-            await ctx.send(embed=embed)
-            return
-
-        try:
-            # Check if rank already exists
-            existing = await self.bot.db.permission_ranks.get_permission_rank(ctx.guild.id, rank)
-            if existing:
-                embed = self.create_error_embed(
-                    "❌ Rank Already Exists",
-                    f"Rank {rank} already exists: **{existing.name}**",
-                )
-                await ctx.send(embed=embed)
-                return
-
-            # Create the rank
-            await self.bot.db.permission_ranks.create_permission_rank(
-                guild_id=ctx.guild.id,
-                rank=rank,
-                name=name,
-                description=description or "",
-            )
-
-            embed = self.create_success_embed(
-                "✅ Permission Rank Created",
-                f"Created rank **{rank}**: **{name}**\n\nUse `/config role assign {rank} @Role` to assign roles to this rank.",
-            )
-            await ctx.send(embed=embed)
-
-        except Exception as e:
-            await self.handle_error(ctx, e, "create rank")
-
-    async def delete_rank(self, ctx: commands.Context[Tux], rank: int) -> None:
-        """Delete a permission rank."""
-        assert ctx.guild
-
-        await ctx.defer()
-
-        try:
-            # Check if rank exists
-            existing = await self.bot.db.permission_ranks.get_permission_rank(ctx.guild.id, rank)
-            if not existing:
-                embed = self.create_error_embed("❌ Rank Not Found", f"Rank {rank} does not exist.")
-                await ctx.send(embed=embed)
-                return
-
-            # Delete the rank
-            await self.bot.db.permission_ranks.delete_permission_rank(ctx.guild.id, rank)
-
-            embed = self.create_success_embed(
-                "✅ Permission Rank Deleted",
-                f"Deleted rank **{rank}**: **{existing.name}**",
-            )
-            await ctx.send(embed=embed)
-
-        except Exception as e:
-            await self.handle_error(ctx, e, "delete rank")

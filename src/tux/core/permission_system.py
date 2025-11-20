@@ -119,6 +119,7 @@ class PermissionSystem:
         """
         self.bot = bot
         self.db = db
+        self._default_ranks = DEFAULT_RANKS
 
     # ---------- Guild Initialization ----------
 
@@ -126,8 +127,9 @@ class PermissionSystem:
         """
         Initialize default permission ranks for a guild.
 
-        Creates the standard 8-rank hierarchy (0-7) that guilds can customize.
-        If ranks already exist, this method does nothing (idempotent).
+        Creates the standard 8-rank hierarchy (0-7) for guilds that don't have them yet.
+        This method is idempotent - it only creates ranks that are completely missing
+        and never overwrites user customizations.
 
         Parameters
         ----------
@@ -136,40 +138,54 @@ class PermissionSystem:
 
         Notes
         -----
-        This is typically called automatically when a guild is first added to
-        the bot. The default ranks can be customized via commands or config files.
+        This is typically called when a guild needs permission ranks initialized.
+        The method respects user customizations:
+        - Creates missing default ranks (preserves user changes to existing ranks)
+        - Never updates existing ranks to avoid overwriting custom names/descriptions
+        - Allows guilds to fully customize their permission hierarchy after initial setup
         """
         logger.info(f"PermissionSystem.initialize_guild called for guild {guild_id}")
 
-        # Check if already initialized (idempotent check)
+        # Get existing ranks for this guild
         logger.debug(f"Checking existing ranks for guild {guild_id}")
         try:
             existing_ranks = await self.db.permission_ranks.get_permission_ranks_by_guild(guild_id)
-            if existing_ranks:
-                logger.info(f"Guild {guild_id} already has {len(existing_ranks)} permission ranks initialized")
-                return
+            existing_rank_numbers = {r.rank for r in existing_ranks}
+            logger.debug(f"Found {len(existing_ranks)} existing ranks for guild {guild_id}")
         except Exception as e:
             logger.error(f"Error checking existing ranks for guild {guild_id}: {e}", exc_info=True)
             raise
 
-        # Create default permission ranks (0-7)
-        logger.info(f"Creating {len(DEFAULT_RANKS)} default ranks for guild {guild_id}")
-        for rank, data in DEFAULT_RANKS.items():
-            logger.debug(f"Creating rank {rank}: {data}")
+        # Only create ranks that don't exist at all
+        # This preserves user customizations of existing ranks
+        ranks_to_create: list[tuple[int, dict[str, str]]] = []
+        for rank, default_data in DEFAULT_RANKS.items():
+            if rank not in existing_rank_numbers:
+                ranks_to_create.append((rank, default_data))
+                logger.debug(f"Will create missing rank {rank}: {default_data['name']}")
+
+        if not ranks_to_create:
+            logger.info(f"All default ranks already exist for guild {guild_id} (customizations preserved)")
+            return
+
+        # Create missing ranks only
+        logger.info(f"Creating {len(ranks_to_create)} missing default ranks for guild {guild_id}")
+        for rank, default_data in ranks_to_create:
             try:
+                logger.debug(f"Creating rank {rank}: {default_data}")
                 await self.db.permission_ranks.create_permission_rank(
                     guild_id=guild_id,
                     rank=rank,
-                    name=data["name"],
-                    description=data["description"],
+                    name=default_data["name"],
+                    description=default_data["description"],
                 )
                 logger.debug(f"Successfully created rank {rank} for guild {guild_id}")
             except Exception as e:
                 logger.error(f"Error creating rank {rank} for guild {guild_id}: {e}", exc_info=True)
-                logger.error(f"Rank data that failed: {data}")
+                logger.error(f"Rank data: {default_data}")
                 raise
 
-        logger.info(f"Successfully initialized all default ranks for guild {guild_id}")
+        logger.info(f"Successfully initialized missing default ranks for guild {guild_id}")
 
         logger.info(f"Initialized default permission ranks for guild {guild_id}")
 

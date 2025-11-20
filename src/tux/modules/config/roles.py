@@ -32,48 +32,6 @@ class RoleManager(BaseConfigManager):
         """
         await self.configure_dashboard(ctx, "roles")
 
-    async def list_assignments(self, ctx: commands.Context[Tux]) -> None:
-        """View all role-to-rank assignments."""
-        assert ctx.guild
-
-        await ctx.defer()
-
-        assignments = await self.bot.db.permission_assignments.get_assignments_by_guild(ctx.guild.id)
-
-        if not assignments:
-            embed = self.create_error_embed(
-                "❌ No Role Assignments",
-                "No roles have been assigned to permission ranks.\n\nUse `/config role assign <rank> @Role` to assign roles.",
-            )
-            await ctx.send(embed=embed)
-            return
-
-        embed = self.create_info_embed(
-            f"👥 Role Assignments - {ctx.guild.name}",
-            f"Total: {len(assignments)} role assignments",
-        )
-
-        # Group by rank
-        by_rank: dict[int, list[str]] = {}
-        for assignment in assignments:
-            rank = assignment.permission_rank_id
-            role = ctx.guild.get_role(assignment.role_id)
-            role_name = role.mention if role else f"Unknown Role ({assignment.role_id})"
-            if rank not in by_rank:
-                by_rank[rank] = []
-            by_rank[rank].append(role_name)
-
-        for rank in sorted(by_rank.keys()):
-            role_list = by_rank[rank]
-            embed.add_field(
-                name=f"Rank {rank}",
-                value="\n".join(role_list),
-                inline=True,
-            )
-
-        embed.set_footer(text="Use /config role assign | unassign to manage assignments")
-        await ctx.send(embed=embed)
-
     async def assign_role(self, ctx: commands.Context[Tux], rank: int, role: discord.Role) -> None:
         """Assign permission rank to Discord role."""
         assert ctx.guild
