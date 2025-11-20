@@ -316,6 +316,9 @@ class HelpRenderer:
             "services": "🔌",
             "guild": "🏰",
             "tools": "🛠",
+            "extra": "❓",
+            "config": "⚙️",
+            "features": "✨",
         }
 
         options: list[discord.SelectOption] = []
