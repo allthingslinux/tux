@@ -7,7 +7,6 @@ the complexity of mixin inheritance.
 
 import contextlib
 from datetime import datetime
-from typing import cast
 
 import discord
 from discord.ext import commands
@@ -70,7 +69,7 @@ class CommunicationService:
             return False
 
         try:
-            embed = self._create_dm_embed(dm_action, reason, cast(discord.User, user))
+            embed = self._create_dm_embed(dm_action, reason, ctx.author)
             await user.send(embed=embed)
             logger.info(f"Moderation DM sent to {user} ({user.id}) - Action: {dm_action}")
         except discord.Forbidden:
