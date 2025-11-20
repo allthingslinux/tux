@@ -60,16 +60,20 @@ class ErrorFormatter:
         message_format = config.message_format
         kwargs: dict[str, Any] = {"error": error}
 
-        # Add context for prefix commands
+        # Add context for commands (both traditional and slash)
         if isinstance(source, commands.Context):
             kwargs["ctx"] = source
+            kwargs["source"] = source  # Also add as generic source
             if source.command and "{usage}" in message_format:
                 kwargs["usage"] = self._get_command_usage(source)
+        else:  # Must be discord.Interaction
+            kwargs["interaction"] = source
+            kwargs["source"] = source  # Add as generic source
 
         # Extract error-specific details
         if config.detail_extractor:
             with suppress(Exception):
-                details = config.detail_extractor(error)
+                details = config.detail_extractor(error, **kwargs)
                 kwargs |= details
 
         # Format message with fallback

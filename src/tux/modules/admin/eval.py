@@ -106,8 +106,9 @@ class Eval(BaseCog):
             logger.warning(
                 f"{ctx.author} tried to run eval but is not the bot owner or sysadmin. (User ID: {ctx.author.id})",
             )
+            prefix = await self.bot.prefix_manager.get_prefix(ctx.guild.id) if ctx.guild else "$"
             await ctx.send(
-                "You are not the bot owner. Better luck next time! (hint: if you are looking for the regular run command its $run)",
+                f"You are not the bot owner. Better luck next time! (hint: if you are looking for the regular run command its {prefix}run)",
             )
             return
 

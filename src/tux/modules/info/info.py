@@ -185,8 +185,9 @@ class Info(BaseCog):
                 continue
 
         # If no converter worked, show error
+        prefix = await self.bot.prefix_manager.get_prefix(ctx.guild.id) if ctx.guild else "$"
         await ctx.send(
-            f"❌ I couldn't find information about '{entity}'. Use `$info` without arguments to see available options.",
+            f"❌ I couldn't find information about '{entity}'. Use `{prefix}info` without arguments to see available options.",
         )
 
     # @info.command(

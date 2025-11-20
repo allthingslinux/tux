@@ -31,7 +31,7 @@ DEFAULT_MAX_SUGGESTIONS = 3
 DEFAULT_MAX_DISTANCE_THRESHOLD = 3
 
 # Type alias for error detail extractors
-ErrorDetailExtractor = Callable[[Exception], dict[str, Any]]
+ErrorDetailExtractor = Callable[..., dict[str, Any]]
 
 
 @dataclass
@@ -66,7 +66,6 @@ from .extractors import (
     extract_bad_union_argument_details,
     extract_httpx_status_details,
     extract_missing_any_role_details,
-    extract_missing_argument_details,
     extract_missing_flag_details,
     extract_missing_role_details,
     extract_permission_denied_details,
@@ -154,12 +153,12 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         send_to_sentry=False,
     ),
     commands.BadFlagArgument: ErrorHandlerConfig(
-        message_format="Invalid flag `{flag_name}`: {original_cause}",
+        message_format="Invalid flag `{flag_name}`: {original_cause}{usage}",
         detail_extractor=extract_bad_flag_argument_details,
         send_to_sentry=False,
     ),
     commands.MissingRequiredFlag: ErrorHandlerConfig(
-        message_format="Missing required flag: `{flag_name}`",
+        message_format="Missing required flag: `{flag_name}`{usage}",
         detail_extractor=extract_missing_flag_details,
         send_to_sentry=False,
     ),
@@ -172,12 +171,11 @@ ERROR_CONFIG_MAP: dict[type[Exception], ErrorHandlerConfig] = {
         send_to_sentry=False,
     ),
     commands.MissingRequiredArgument: ErrorHandlerConfig(
-        message_format="Missing argument: `{param_name}`",
-        detail_extractor=extract_missing_argument_details,
+        message_format="{error}",
         send_to_sentry=False,
     ),
     commands.BadUnionArgument: ErrorHandlerConfig(
-        message_format="Invalid argument type: `{argument}`\nExpected: {expected_types}",
+        message_format="Invalid argument type: `{argument}`\nExpected: {expected_types}{usage}",
         detail_extractor=extract_bad_union_argument_details,
         send_to_sentry=False,
     ),

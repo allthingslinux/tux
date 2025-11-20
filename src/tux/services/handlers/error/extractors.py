@@ -44,8 +44,8 @@ def fallback_format_message(message_format: str, error: Exception) -> str:
         if "{error" in message_format:
             return message_format.format(error=error)
 
-    # Return generic message
-    return f"An unexpected error occurred. ({error!s})"
+    # Return the error message directly
+    return str(error)
 
 
 def format_list(items: list[str]) -> str:
@@ -60,7 +60,7 @@ def format_list(items: list[str]) -> str:
     return ", ".join(f"`{item}`" for item in items)
 
 
-def extract_missing_role_details(error: Exception) -> dict[str, Any]:
+def extract_missing_role_details(error: Exception, **kwargs: Any) -> dict[str, Any]:
     """
     Extract missing role details.
 
@@ -75,7 +75,7 @@ def extract_missing_role_details(error: Exception) -> dict[str, Any]:
     return {"roles": f"`{role_id}`" if role_id else "unknown role"}
 
 
-def extract_missing_any_role_details(error: Exception) -> dict[str, Any]:
+def extract_missing_any_role_details(error: Exception, **kwargs: Any) -> dict[str, Any]:
     """
     Extract missing roles list.
 
@@ -96,7 +96,7 @@ def extract_missing_any_role_details(error: Exception) -> dict[str, Any]:
     return {"roles": ", ".join(formatted_roles) if formatted_roles else "unknown roles"}
 
 
-def extract_permissions_details(error: Exception) -> dict[str, Any]:
+def extract_permissions_details(error: Exception, **kwargs: Any) -> dict[str, Any]:
     """
     Extract missing permissions.
 
@@ -109,34 +109,106 @@ def extract_permissions_details(error: Exception) -> dict[str, Any]:
     return {"permissions": format_list(perms)}
 
 
-def extract_bad_flag_argument_details(error: Exception) -> dict[str, Any]:
+def extract_bad_flag_argument_details(error: Exception, **kwargs: Any) -> dict[str, Any]:
     """
     Extract flag argument details.
 
+    Parameters
+    ----------
+    error : Exception
+        The bad flag argument error.
+    **kwargs : Any
+        Additional context, may include 'source' for command information.
+
     Returns
     -------
     dict[str, Any]
-        Dictionary containing flag details and original cause.
+        Dictionary containing flag details, original cause, and usage information.
     """
     flag_name = getattr(getattr(error, "flag", None), "name", "unknown_flag")
     original_cause = getattr(error, "original", error)
-    return {"flag_name": flag_name, "original_cause": original_cause}
+
+    result = {"flag_name": flag_name, "original_cause": original_cause}
+
+    # Try to get command usage if available
+    usage_str = ""
+    source = kwargs.get("source")
+    if source:
+        with contextlib.suppress(Exception):
+            # For traditional commands
+            if (
+                hasattr(source, "command")
+                and source.command
+                and hasattr(source.command, "usage")
+                and source.command.usage
+            ):
+                usage_str = f"\nUsage: `{source.command.usage}`"
+            elif (
+                hasattr(source, "command")
+                and source.command
+                and hasattr(source.command, "signature")
+                and source.command.signature
+            ):
+                usage_str = f"\nUsage: `{source.command.qualified_name} {source.command.signature}`"
+
+            # For slash commands
+            elif hasattr(source, "command") and source.command and hasattr(source.command, "qualified_name"):
+                usage_str = f"\nUsage: `/{source.command.qualified_name}`"
+
+    result["usage"] = usage_str
+    return result
 
 
-def extract_missing_flag_details(error: Exception) -> dict[str, Any]:
+def extract_missing_flag_details(error: Exception, **kwargs: Any) -> dict[str, Any]:
     """
     Extract missing flag details.
+
+    Parameters
+    ----------
+    error : Exception
+        The missing flag error.
+    **kwargs : Any
+        Additional context, may include 'source' for command information.
 
     Returns
     -------
     dict[str, Any]
-        Dictionary containing flag name.
+        Dictionary containing flag name and usage information.
     """
     flag_name = getattr(getattr(error, "flag", None), "name", "unknown_flag")
-    return {"flag_name": flag_name}
+
+    result = {"flag_name": flag_name}
+
+    # Try to get command usage if available
+    usage_str = ""
+    source = kwargs.get("source")
+    if source:
+        with contextlib.suppress(Exception):
+            # For traditional commands
+            if (
+                hasattr(source, "command")
+                and source.command
+                and hasattr(source.command, "usage")
+                and source.command.usage
+            ):
+                usage_str = f"\nUsage: `{source.command.usage}`"
+            elif (
+                hasattr(source, "command")
+                and source.command
+                and hasattr(source.command, "signature")
+                and source.command.signature
+            ):
+                usage_str = f"\nUsage: `{source.command.qualified_name} {source.command.signature}`"
+
+            # For slash commands
+            elif hasattr(source, "command") and source.command and hasattr(source.command, "qualified_name"):
+                usage_str = f"\nUsage: `/{source.command.qualified_name}`"
+
+    result["usage"] = usage_str
+    return result
 
 
-def extract_httpx_status_details(error: Exception) -> dict[str, Any]:
+def extract_httpx_status_details(error: Exception, **kwargs: Any) -> dict[str, Any]:
     """
     Extract HTTPX status error details.
 
@@ -166,27 +238,70 @@ def extract_httpx_status_details(error: Exception) -> dict[str, Any]:
         return {}
 
 
-def extract_missing_argument_details(error: Exception) -> dict[str, Any]:
+def extract_missing_argument_details(error: Exception, **kwargs: Any) -> dict[str, Any]:
     """
     Extract missing argument details.
 
+    Parameters
+    ----------
+    error : Exception
+        The missing argument error.
+    **kwargs : Any
+        Additional context, may include 'source' for command information.
+
     Returns
     -------
     dict[str, Any]
-        Dictionary containing parameter name.
+        Dictionary containing parameter name and usage information.
     """
     param_name = getattr(getattr(error, "param", None), "name", "unknown_argument")
-    return {"param_name": param_name}
+
+    result = {"param_name": param_name}
+
+    # Try to get command usage if available
+    usage_str = ""
+    source = kwargs.get("source")
+    if source:
+        with contextlib.suppress(Exception):
+            # For traditional commands
+            if (
+                hasattr(source, "command")
+                and source.command
+                and hasattr(source.command, "usage")
+                and source.command.usage
+            ):
+                usage_str = f"\nUsage: `{source.command.usage}`"
+            elif (
+                hasattr(source, "command")
+                and source.command
+                and hasattr(source.command, "signature")
+                and source.command.signature
+            ):
+                usage_str = f"\nUsage: `{source.command.qualified_name} {source.command.signature}`"
+
+            # For slash commands
+            elif hasattr(source, "command") and source.command and hasattr(source.command, "qualified_name"):
+                usage_str = f"\nUsage: `/{source.command.qualified_name}`"
+
+    result["usage"] = usage_str
+    return result
 
 
-def extract_bad_union_argument_details(error: Exception) -> dict[str, Any]:
+def extract_bad_union_argument_details(error: Exception, **kwargs: Any) -> dict[str, Any]:
     """
     Extract bad union argument details.
 
+    Parameters
+    ----------
+    error : Exception
+        The bad union argument error.
+    **kwargs : Any
+        Additional context, may include 'source' for command information.
+
     Returns
     -------
     dict[str, Any]
-        Dictionary containing argument and expected types.
+        Dictionary containing argument, expected types, and usage information.
     """
     # Try to extract the actual argument value
     argument_raw = getattr(error, "argument", getattr(error, "param", "unknown"))
@@ -216,12 +331,48 @@ def extract_bad_union_argument_details(error: Exception) -> dict[str, Any]:
             expected_types.append("unknown")
 
     expected_types_str = " or ".join(expected_types) if expected_types else "unknown type"
-    return {"argument": argument, "expected_types": expected_types_str}
+
+    result = {"argument": argument, "expected_types": expected_types_str}
+
+    # Try to get command usage if available
+    usage_str = ""
+    source = kwargs.get("source")
+    if source:
+        with contextlib.suppress(Exception):
+            # For traditional commands
+            if (
+                hasattr(source, "command")
+                and source.command
+                and hasattr(source.command, "usage")
+                and source.command.usage
+            ):
+                usage_str = f"\nUsage: `{source.command.usage}`"
+            elif (
+                hasattr(source, "command")
+                and source.command
+                and hasattr(source.command, "signature")
+                and source.command.signature
+            ):
+                usage_str = f"\nUsage: `{source.command.qualified_name} {source.command.signature}`"
+
+            # For slash commands
+            elif hasattr(source, "command") and source.command and hasattr(source.command, "qualified_name"):
+                usage_str = f"\nUsage: `/{source.command.qualified_name}`"
+
+    result["usage"] = usage_str
+    return result
 
 
-def extract_permission_denied_details(error: Exception) -> dict[str, Any]:
+def extract_permission_denied_details(error: Exception, **kwargs: Any) -> dict[str, Any]:
     """
     Extract permission denied error details.
+
+    Parameters
+    ----------
+    error : Exception
+        The permission denied error.
+    **kwargs : Any
+        Additional context, may include 'ctx' for command context.
 
     Returns
     -------
@@ -234,10 +385,20 @@ def extract_permission_denied_details(error: Exception) -> dict[str, Any]:
 
     # Check if this is an unconfigured command error (both ranks are 0)
     if required_rank == 0 and user_rank == 0:
+        # Try to get prefix from context (check cache synchronously)
+        prefix = "$"  # Default fallback
+        ctx = kwargs.get("ctx")
+        if ctx and hasattr(ctx, "bot") and hasattr(ctx.bot, "prefix_manager") and ctx.guild:
+            with contextlib.suppress(Exception):
+                # Access the cache directly (synchronous)
+                prefix_manager = ctx.bot.prefix_manager
+                if ctx.guild.id in prefix_manager._prefix_cache:
+                    prefix = prefix_manager._prefix_cache[ctx.guild.id]
+
         message = (
             f"**`{command_name}`** has not been configured yet.\n\n"
             f"An administrator must assign a permission rank to enable this command.\n\n"
-            f'Use `/config overview` → Click **"🤖 Command Permissions"** → Select rank for `{command_name}`'
+            f"Use `/config overview` or `{prefix}config overview` to configure command permissions."
         )
     else:
         message = f"You need permission rank **{required_rank}** to use **`{command_name}`**.\n\nYour current rank: **{user_rank}**"

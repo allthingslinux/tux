@@ -33,7 +33,7 @@ class TuxHelp(commands.HelpCommand):
             command_attrs={
                 "help": "Lists all commands and sub-commands.",
                 "aliases": ["h", "commands"],
-                "usage": "$help <command> or <sub-command>",
+                "usage": "help <command> or <sub-command>",
             },
         )
 

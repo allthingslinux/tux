@@ -18,6 +18,7 @@ from tux.core.base_cog import BaseCog
 from tux.core.bot import Tux
 from tux.core.checks import requires_command_permission
 from tux.services.handlers.error.formatter import ERROR_CONFIG_MAP
+from tux.shared.config import CONFIG
 from tux.ui.embeds import EmbedCreator
 
 
@@ -153,6 +154,10 @@ class ErrorTestDefinition:
             return None
 
         return {
+            "message_format": config.message_format,
+            "send_to_sentry": config.send_to_sentry,
+            "log_level": config.log_level,
+            "has_detail_extractor": config.detail_extractor is not None,
             "suggest_similar_commands": config.suggest_similar_commands,
         }
 
@@ -368,9 +373,10 @@ class ErrorTestRegistry:
                     return args
 
         # Other mappings
+        default_prefix = CONFIG.get_prefix()
         other_mappings = {
-            ("command", "not"): ("$nonexistent_command",),
-            ("command",): ("$mock error",),
+            ("command", "not"): (f"{default_prefix}nonexistent_command",),
+            ("command",): (f"{default_prefix}mock error",),
             ("check",): ("Permission check failed",),
             ("conversion",): ("invalid_argument",),
         }
@@ -389,48 +395,57 @@ class ErrorTestRegistry:
         name = error_type.__name__
 
         # Specific mappings for Discord API errors
-        specific_mappings = {
+        # Format: (description, args, kwargs)
+        specific_mappings: dict[type[Exception], tuple[str, tuple[Any, ...], dict[str, Any]]] = {
             discord.HTTPException: (
                 "Discord API HTTP error response",
-                (MockObject(status=500, reason="Mock Internal Server Error"), "Mock HTTP Error"),
+                (MockObject(status=500, reason="Internal Server Error"), "Mock HTTP Error"),
+                {},
             ),
-            discord.RateLimited: ("Discord API rate limit hit", (15.5,)),
+            discord.RateLimited: ("Discord API rate limit hit", (15.5,), {}),
             discord.Forbidden: (
                 "Discord API forbidden action",
-                (),
+                (MockObject(status=403, reason="Forbidden"), "Mock forbidden error"),
+                {},
             ),
             discord.NotFound: (
                 "Discord API resource not found",
-                (),
+                (MockObject(status=404, reason="Not Found"), "Mock not found error"),
+                {},
             ),
             discord.DiscordServerError: (
                 "Discord server error",
-                (),
+                (MockObject(status=500, reason="Internal Server Error"), "Mock server error"),
+                {},
             ),
-            discord.ConnectionClosed: ("Discord connection closed", (None, 4004)),
+            discord.ConnectionClosed: ("Discord connection closed", (MockObject(),), {"shard_id": None, "code": 4004}),
             discord.GatewayNotFound: (
                 "Discord gateway not found",
                 (),
+                {},
             ),
-            discord.InvalidData: ("Discord API invalid data", ("Invalid JSON response",)),
+            discord.InvalidData: ("Discord API invalid data", ("Invalid JSON response",), {}),
             discord.LoginFailure: (
                 "Bot authentication failed",
                 (),
+                {},
             ),
-            discord.PrivilegedIntentsRequired: ("Missing privileged intents", (None,)),
+            discord.PrivilegedIntentsRequired: ("Missing privileged intents", (None,), {}),
             discord.InteractionResponded: (
                 "Interaction already responded",
-                (),
+                (MockObject(),),
+                {},
             ),
             discord.MissingApplicationID: (
                 "Missing application ID",
                 (),
+                {},
             ),
         }
 
         if error_type in specific_mappings:
-            description, args = specific_mappings[error_type]
-            self.tests[name] = ErrorTestDefinition(error_type, args, {}, description, "Discord API")
+            description, args, kwargs = specific_mappings[error_type]
+            self.tests[name] = ErrorTestDefinition(error_type, args, kwargs, description, "Discord API")
         elif hasattr(error_type, "__name__"):
             realistic_args = self._get_realistic_discord_args(name)
             self.tests[name] = ErrorTestDefinition(
@@ -636,14 +651,14 @@ class Mock(BaseCog):
             sentry_status = "✅ Enabled" if config["send_to_sentry"] else "❌ Disabled"
             log_level = config["log_level"]
             log_icon = {"ERROR": "🔴", "WARNING": "🟡", "INFO": "🔵", "DEBUG": "⚪"}.get(log_level, "🔵")
-            embed_type = "🎯 Custom" if config["has_detail_extractor"] else "📝 Standard"
+            embed_type = "📁 Custom" if config["has_detail_extractor"] else "📁 Standard"
             category_icon = {
-                "App Commands": "↗️",
-                "Traditional Commands": "💲",
-                "Discord API": "☁️",
+                "App Commands": "🔵",
+                "Traditional Commands": "🔵",
+                "Discord API": "🔵",
                 "Custom": "🗒️",
-                "Unhandled": "🔎",
-            }.get(test_def.category, "📁")
+                "Unhandled": "🔵",
+            }.get(test_def.category, "🔵")
 
             status_line = f"**Sentry:** {sentry_status} • **Log Level:** {log_icon} {log_level} • **Embed Type:** {embed_type} • **Category:** {category_icon} {test_def.category}"
 
@@ -653,8 +668,8 @@ class Mock(BaseCog):
                 inline=False,
             )
         else:
-            category_icon = "🚫"
-            status_line = f"**Sentry:** ❌ Disabled • **Log Level:** 🔴 ERROR • **Embed Type:** 📝 Standard • **Category:** {category_icon} {test_def.category}"
+            category_icon = "🔵"
+            status_line = f"**Sentry:** ❌ Disabled • **Log Level:** 📁 ERROR • **Embed Type:** 📁 Standard • **Category:** {category_icon} {test_def.category}"
 
             embed.add_field(
                 name="⚠️ Unhandled Error",
@@ -696,13 +711,13 @@ class Mock(BaseCog):
         if config:
             severity = config["log_level"]
             if severity == "ERROR":
-                next_msg = "🚨 **High Severity** - This error will be raised in **1 second**:\n• Error response sent to channel\n• Console logging\n• Sentry event tracked"
+                next_msg = "📁 **High Severity** - This error will be raised in **1 second**:\n• Error response sent to channel\n• Console logging\n• Sentry event tracked"
             elif config["send_to_sentry"]:
-                next_msg = "🚀 **Monitored Error** - Raising in **1 second**:\n• User-friendly response\n• Console logging\n• Sentry tracking enabled"
+                next_msg = "📁 **Monitored Error** - Raising in **1 second**:\n• User-friendly response\n• Console logging\n• Sentry tracking enabled"
             else:
-                next_msg = "🔍 **Standard Error** - Raising in **1 second**:\n• User response in channel\n• Console logging only"
+                next_msg = "📁 **Standard Error** - Raising in **1 second**:\n• User response in channel\n• Console logging only"
         else:
-            next_msg = "⚠️ **Unhandled Path** - Raising in **1 second**:\n• No user response (unexpected error)\n• Full stack trace logged\n• May trigger fallback handling"
+            next_msg = "📁 **Unhandled Path** - Raising in **1 second**:\n• No user response (unexpected error)\n• Full stack trace logged\n• May trigger fallback handling"
 
         embed.add_field(
             name="🚀 What Happens Next",
@@ -736,9 +751,14 @@ class Mock(BaseCog):
                 inline=False,
             )
 
+        # Get the active prefix for this guild
+        prefix = (
+            await self.bot.prefix_manager.get_prefix(ctx.guild.id) if ctx.guild and self.bot.prefix_manager else "$"
+        )
+
         embed.add_field(
-            name="💡 Usage",
-            value="Use `/mock error <error_name>` or `$mock error <error_name>` with autocomplete to test specific errors.",
+            name="📁 Usage",
+            value=f"Use `/mock error <error_name>` or `{prefix}mock error <error_name>` with autocomplete to test specific errors.",
             inline=False,
         )
 
@@ -780,7 +800,6 @@ class Mock(BaseCog):
                 "RuntimeError",
                 "App_MissingRole_str",
                 "Cmd_MissingPermissions",
-                "HTTPException",
                 "Forbidden",
                 "App_CommandOnCooldown",
                 "Cmd_CommandOnCooldown",
@@ -827,12 +846,12 @@ class Mock(BaseCog):
     )
     @app_commands.choices(
         category=[
-            app_commands.Choice(name="↗️ App Commands", value="App Commands"),
-            app_commands.Choice(name="💲 Traditional Commands", value="Traditional Commands"),
-            app_commands.Choice(name="☁️ Discord API", value="Discord API"),
-            app_commands.Choice(name="🗒️ Custom Errors", value="Custom"),
-            app_commands.Choice(name="🔎 Unhandled Errors", value="Unhandled"),
-            app_commands.Choice(name="🏴 All Categories", value="All"),
+            app_commands.Choice(name="📁 App Commands", value="App Commands"),
+            app_commands.Choice(name="📁 Traditional Commands", value="Traditional Commands"),
+            app_commands.Choice(name="📁 Discord API", value="Discord API"),
+            app_commands.Choice(name="📁 Custom Errors", value="Custom"),
+            app_commands.Choice(name="⚠️ Unhandled Errors", value="Unhandled"),
+            app_commands.Choice(name="📁 All Categories", value="All"),
         ],
     )
     @app_commands.autocomplete(error_name=error_name_autocomplete)
@@ -903,7 +922,7 @@ class Mock(BaseCog):
             embed = EmbedCreator.create_embed(
                 embed_type=EmbedCreator.ERROR,
                 bot=self.bot,
-                title="❌ Invalid Category",
+                title="• Invalid Category",
                 description=f"Category `{category}` not found.",
                 user_name=ctx.author.display_name,
                 user_display_avatar=ctx.author.display_avatar.url,
@@ -915,7 +934,7 @@ class Mock(BaseCog):
         embed = EmbedCreator.create_embed(
             embed_type=EmbedCreator.INFO,
             bot=self.bot,
-            title=f"🧪 {category} Error Tests",
+            title=f"📁 {category} Error Tests",
             description=f"Available error tests in the **{category}** category ({len(tests)} total):",
             user_name=ctx.author.display_name,
             user_display_avatar=ctx.author.display_avatar.url,
@@ -934,7 +953,7 @@ class Mock(BaseCog):
             embed.add_field(name=field_name, value=test_list, inline=False)
 
         embed.add_field(
-            name="💡 Usage",
+            name="📁 Usage",
             value=f"Use `/mock error category:{category} error_name:<test_name>` to test a specific error.",
             inline=False,
         )
@@ -949,29 +968,30 @@ class Mock(BaseCog):
         embed = EmbedCreator.create_embed(
             embed_type=EmbedCreator.ERROR,
             bot=self.bot,
-            title="❌ Error Not Found in Category",
+            title="• Error Not Found in Category",
             description=f"Error `{error_name}` not found in category `{category}`.",
             user_name=ctx.author.display_name,
             user_display_avatar=ctx.author.display_avatar.url,
         )
 
+        test_list = "None"
         if category_tests:
             # Show some available tests in this category
             test_list = ", ".join(f"`{test}`" for test in sorted(category_tests)[:5])
             if len(category_tests) > 5:
                 test_list = f"{test_list} ... and {len(category_tests) - 5} more"
 
-            embed.add_field(
-                name=f"📁 Available in {category}",
-                value=test_list,
-                inline=False,
-            )
+        embed.add_field(
+            name=f"📁 Available in {category}",
+            value=test_list,
+            inline=False,
+        )
 
         # Check if the error exists in other categories
         for cat_name, cat_tests in categories.items():
             if error_name in cat_tests and cat_name != category:
                 embed.add_field(
-                    name="💡 Found in Different Category",
+                    name="📁 Found in Different Category",
                     value=f"`{error_name}` is available in the **{cat_name}** category.",
                     inline=False,
                 )
@@ -985,7 +1005,7 @@ class Mock(BaseCog):
         embed = EmbedCreator.create_embed(
             embed_type=EmbedCreator.ERROR,
             bot=self.bot,
-            title="❌ Error Test Not Found",
+            title="• Error Test Not Found",
             description=f"Error type `{error_name}` not found in category `{category}` or any other category.",
             user_name=ctx.author.display_name,
             user_display_avatar=ctx.author.display_avatar.url,
@@ -998,9 +1018,14 @@ class Mock(BaseCog):
                 test_list = f"{test_list} ... ({len(tests)} total)"
             embed.add_field(name=f"📁 {cat_name}", value=test_list, inline=False)
 
+        # Get the active prefix for this guild
+        prefix = (
+            await self.bot.prefix_manager.get_prefix(ctx.guild.id) if ctx.guild and self.bot.prefix_manager else "$"
+        )
+
         embed.add_field(
-            name="💡 Tip",
-            value="Use the category dropdown first, then specify the error name, or run `$mock` to see all available tests.",
+            name="📁 Tip",
+            value=f"Use the category dropdown first, then specify the error name, or run `{prefix}mock` to see all available tests.",
             inline=False,
         )
 
