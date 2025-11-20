@@ -110,7 +110,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           files: coverage.xml
-          name: tux-coverage
+          name: tux
           fail_ci_if_error: false
           verbose: true
           use_oidc: true
