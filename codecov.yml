@@ -1,10 +1,11 @@
 ---
 # ==============================================================================
-# TUX DISCORD BOT - MODERN CODECOV CONFIGURATION
+# TUX DISCORD BOT - UNIFIED CODECOV CONFIGURATION
 # ==============================================================================
 #
-# This configuration follows current Codecov best practices and aligns with
-# your current test organization (unit vs integration tests).
+# This configuration is optimized for unified test coverage where all tests
+# (unit, integration, e2e) run together and generate a single comprehensive
+# coverage report.
 #
 # DOCUMENTATION: https://docs.codecov.com/docs/codecov-yaml
 # ==============================================================================
@@ -31,17 +32,32 @@ coverage:
         threshold: 1%
         informational: false  # Enforce coverage requirements
 
-      # Critical components with higher standards
+      # Component-specific coverage requirements (more lenient for complex areas)
       database:
         target: 85%
         threshold: 2%
         informational: false
-        paths: [src/tux/database/]
+        flags: [database]
       core:
         target: 80%
         threshold: 2%
         informational: false
-        paths: [src/tux/core/, src/tux/main.py, src/tux/help.py]
+        flags: [core]
+      ui:
+        target: 70%
+        threshold: 3%
+        informational: true  # UI components can be more lenient
+        flags: [ui]
+      modules:
+        target: 75%
+        threshold: 3%
+        informational: true  # Command modules vary in complexity
+        flags: [modules]
+      services:
+        target: 75%
+        threshold: 3%
+        informational: true  # Services may have external dependencies
+        flags: [services]
     patch:
       # New code coverage requirements
       default:
@@ -50,18 +66,26 @@ coverage:
         informational: false
         only_pulls: true
 # ==============================================================================
-# TEST FLAG DEFINITIONS
+# COMPONENT FLAG DEFINITIONS
 # ==============================================================================
-# These align with your pytest markers and test organization
+# Component-based flags for tracking coverage by architectural areas.
+# These automatically categorize coverage based on file paths, providing
+# better insights than test-type categorization.
 flags:
-  unit:
-    paths: [src/tux/]
+  database:
+    paths: [src/tux/database/]
     carryforward: true
-  integration:
-    paths: [src/tux/]
+  core:
+    paths: [src/tux/core/]
     carryforward: true
-  e2e:
-    paths: [src/tux/]
+  ui:
+    paths: [src/tux/ui/]
+    carryforward: true
+  modules:
+    paths: [src/tux/modules/]
+    carryforward: true
+  services:
+    paths: [src/tux/services/]
     carryforward: true
 # ==============================================================================
 # FILE IGNORING

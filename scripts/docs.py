@@ -369,7 +369,7 @@ class DocsCLI(BaseCLI):
         port: Annotated[int, Option("--port", "-p", help="Port to serve on")] = 8787,
         remote: Annotated[bool, Option("--remote", help="Run on remote cloudflare infrastructure")] = False,
     ) -> None:  # sourcery skip: class-extract-method
-        """Start local Wrangler development server with static assets.
+        """Start local Wrangler development server.
 
         This runs the docs using Cloudflare Workers locally, useful for testing
         the production environment before deployment.
@@ -416,6 +416,7 @@ class DocsCLI(BaseCLI):
         """Deploy documentation to Cloudflare Workers.
 
         Builds the docs and deploys to Cloudflare using the wrangler.toml configuration.
+        Cloudflare Workers will automatically run tests and include coverage reports.
         Use --env to deploy to preview or production environments.
         """
         self.rich.print_section("🚀 Deploying to Cloudflare Workers", "blue")

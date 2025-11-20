@@ -116,6 +116,7 @@ docs = [
     "mkdocs-mermaid2-plugin>=1.2.3",
     "mkdocs-unused-files>=0.2.0",
     "mkdocs-coverage>=2.0.0",
+    "coverage>=7.6.1",
     "mkdocs-pagetree-plugin>=0.0.17",
     "mkdocs-extract-listings-plugin>=0.2.1",
     "mkdocs-spellcheck[all]>=1.1.2",

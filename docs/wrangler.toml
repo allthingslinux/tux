@@ -64,5 +64,11 @@ mode = "smart"
 
 # Note: Build configuration is handled by Workers Builds CI/CD
 # Configure build command in Cloudflare Dashboard: Workers Builds → Build configuration
-# Build command: uv run mkdocs build
+# Build command: build.sh
 # Root directory: docs
+#
+# This custom build script:
+# 1. Runs tests to generate fresh coverage reports
+# 2. Builds MkDocs documentation with coverage included
+#
+# No external dependencies - everything runs in Cloudflare's build environment

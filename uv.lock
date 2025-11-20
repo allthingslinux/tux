@@ -3127,6 +3127,7 @@ dev = [
     { name = "yamllint" },
 ]
 docs = [
+    { name = "coverage" },
     { name = "griffe" },
     { name = "griffe-generics" },
     { name = "griffe-inherited-docstrings" },
@@ -3249,6 +3250,7 @@ dev = [
     { name = "yamllint", specifier = ">=1.37.1" },
 ]
 docs = [
+    { name = "coverage", specifier = ">=7.6.1" },
     { name = "griffe", specifier = ">=1.5.6" },
     { name = "griffe-generics", specifier = ">=1.0.13" },
     { name = "griffe-inherited-docstrings", specifier = ">=1.1.1" },
