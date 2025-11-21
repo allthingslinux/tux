@@ -1,5 +1,6 @@
 ---
 title: ENV Reference
+icon: material/folder-cog
 hide:
   - toc
 ---

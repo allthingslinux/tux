@@ -1,5 +1,6 @@
 ---
 title: CLI Reference
+icon: octicons/terminal-24
 hide:
   - toc
 ---

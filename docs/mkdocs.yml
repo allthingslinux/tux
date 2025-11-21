@@ -90,7 +90,7 @@ theme:
     - navigation.tabs
     # - navigation.tabs.sticky
     - navigation.sections
-    # - navigation.prune
+    - navigation.prune
     - navigation.expand
     # - navigation.path
     - navigation.footer
@@ -194,6 +194,8 @@ plugins:
   - search:
       enabled: true
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - optimize:
+      enabled: true
   - git-committers:
       enabled: true
       repository: allthingslinux/tux
@@ -238,6 +240,7 @@ plugins:
       enabled: true
       resolve_closest: true
       link_titles: auto
+      record_backlinks: true
   - social:
       enabled: true
       cards_layout_options:
@@ -518,12 +521,12 @@ plugins:
             # Skip registering symbols in local inventory for external libraries
             # Prevents duplicate cross-references when documenting third-party code
             skip_local_inventory: true
-  # - api-autonav:
-  #     enabled: true
-  #     modules: [../src/tux]
-  #     nav_section_title: API Reference
-  #     api_root_uri: reference/src
-  #     nav_item_prefix: "<code class='doc-symbol doc-symbol-nav doc-symbol-module'></code> "
-  #     exclude_private: false
-  #     on_implicit_namespace_package: warn
-  #     show_full_namespace: false
+  - api-autonav:
+      enabled: false
+      modules: [../src/tux]
+      nav_section_title: API Reference
+      api_root_uri: reference/src
+      nav_item_prefix: "<code class='doc-symbol doc-symbol-nav doc-symbol-module'></code> "
+      exclude_private: false
+      on_implicit_namespace_package: warn
+      show_full_namespace: false

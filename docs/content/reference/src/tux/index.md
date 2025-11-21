@@ -1,1 +1,4 @@
-# Index of reference/src/tux
+---
+title: API Reference
+icon: material/code-tags
+---

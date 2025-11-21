@@ -220,10 +220,15 @@ class DocsCLI(BaseCLI):
             cmd.append("--no-directory-urls")
 
         try:
-            self._run_command(cmd)
+            # Run build command without capturing output (for real-time streaming)
+            # This allows mkdocs build to stream output to the terminal
+            self.rich.print_info("Building documentation...")
+            subprocess.run(cmd, check=True, env=os.environ.copy())
             self.rich.print_success("Documentation built successfully")
         except subprocess.CalledProcessError:
             self.rich.print_error("Failed to build documentation")
+        except KeyboardInterrupt:
+            self.rich.print_info("\nBuild interrupted")
 
     def clean(self) -> None:
         """Clean documentation build artifacts."""

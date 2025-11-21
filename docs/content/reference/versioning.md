@@ -1,5 +1,6 @@
 ---
 title: Versioning
+icon: octicons/number-16
 ---
 
 # Versioning

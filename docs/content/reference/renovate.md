@@ -1,5 +1,6 @@
 ---
 title: Renovate Configuration
+icon: octicons/package-dependencies-16
 ---
 
 # Renovate Configuration

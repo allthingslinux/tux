@@ -110,7 +110,7 @@ article > h1,
   font-size: 2.389rem !important; /* 47.78px with 125% html (2.389rem * 20px = 47.78px) */
   font-weight: 600 !important;
   line-height: 1.2 !important;
-  margin-top: 0 !important;
+  margin-top: 1rem !important;
   margin-bottom: 1rem !important;
 }
 
@@ -496,7 +496,7 @@ p,
 article p {
   font-size: 1em !important; /* Inherit from .md-typeset base (0.667rem = 16px) */
   line-height: 1.6 !important;
-  margin-top: 0 !important;
+  margin-top: 1em !important;
   margin-bottom: 1em !important; /* Add spacing between paragraphs (1em = 16px) */
 }
 

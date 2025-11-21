@@ -1,5 +1,6 @@
 ---
-icon: material/palette-swatch
+title: Style Guide
+icon: octicons/typography-16
 ---
 
 # Style Guide
