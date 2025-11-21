@@ -178,7 +178,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           level: ${{ env.REVIEWDOG_LEVEL }}
           filter_mode: ${{ env.REVIEWDOG_FILTER_MODE }}
-          shfmt_flags: -ln bash -i 2 -ci -bn -sr -kp -w -s -p
+          shfmt_flags: -ln bash -i 2 -ci -bn -sr -kp -w -s
   workflows:
     name: Workflows
     runs-on: ubuntu-latest
