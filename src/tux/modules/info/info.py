@@ -121,15 +121,7 @@ class Info(BaseCog):
         ctx: commands.Context[Tux],
         entity: str | None = None,
     ) -> None:
-        """
-        Information commands. Use without arguments for help, or provide an object to get information about.
-
-        Examples
-        --------
-        >info @user
-        >info 123456789
-        >info #channel
-        >info 987654321  # Server ID
+        """Get information about a Discord object by ID or mention.
 
         Parameters
         ----------
@@ -142,22 +134,13 @@ class Info(BaseCog):
             await ctx.send_help("info")
             return
 
-        # Special handling for potential guild IDs (check first to avoid @everyone role conflict)
-        if entity.isdigit() and 15 <= len(entity) <= 20:  # Guild IDs are typically 17-19 digits
-            with contextlib.suppress(ValueError):
-                guild_id = int(entity)
-                # Check if bot is in this guild
-                guild = self.bot.get_guild(guild_id)
-                if guild is not None:
-                    await self._show_guild_info(ctx, guild)
-                    return  # Exit here, don't try other converters
-                # Valid guild ID format but bot not in guild
-                await ctx.send(
-                    f"❌ I'm not in a server with ID `{entity}`. I can only show information for servers I'm a member of.",
-                )
-                return  # Exit here, don't try other converters
         # Try different converters to determine the object type
-        converters = [
+        # Note: We try member/user/channel/role/etc FIRST before guild IDs
+        # because member/user IDs are the same length as guild IDs (17-19 digits),
+        # and users are more likely to query members/users than other guilds
+        # Note: InviteConverter is skipped for very short strings that can't be valid invite codes
+        # Discord invite codes are typically 7-8 characters, minimum 6 characters
+        converters: list[commands.Converter[Any]] = [
             commands.MemberConverter(),
             commands.UserConverter(),
             commands.MessageConverter(),
@@ -165,10 +148,19 @@ class Info(BaseCog):
             commands.RoleConverter(),
             commands.EmojiConverter(),
             commands.GuildStickerConverter(),
-            commands.InviteConverter(),
-            commands.ThreadConverter(),
-            commands.ScheduledEventConverter(),
         ]
+
+        # Only add InviteConverter if the entity looks like it could be an invite code
+        # Discord invite codes are minimum 6 characters (vanity URLs can be longer)
+        if len(entity) >= 6 or "discord.gg/" in entity.lower() or "discord.com/invite/" in entity.lower():
+            converters.append(commands.InviteConverter())
+
+        converters.extend(
+            [
+                commands.ThreadConverter(),
+                commands.ScheduledEventConverter(),
+            ],
+        )
 
         for converter in converters:
             try:
@@ -184,8 +176,30 @@ class Info(BaseCog):
             except commands.BadArgument:
                 continue
 
+        # Special handling for potential guild IDs (check last to avoid conflicts with member/user IDs)
+        # Only check if it looks like a guild ID AND none of the other converters worked
+        if entity.isdigit() and 15 <= len(entity) <= 20:  # Guild IDs are typically 17-19 digits
+            with contextlib.suppress(ValueError):
+                guild_id = int(entity)
+                # Check if bot is in this guild
+                guild = self.bot.get_guild(guild_id)
+                if guild is not None:
+                    await self._show_guild_info(ctx, guild)
+                    return  # Exit here, don't try other converters
+                # Valid guild ID format but bot not in guild
+                await ctx.send(
+                    f"❌ I'm not in a server with ID `{entity}`. I can only show information for servers I'm a member of.",
+                )
+                return  # Exit here, don't try other converters
+
         # If no converter worked, show error
-        prefix = await self.bot.prefix_manager.get_prefix(ctx.guild.id) if ctx.guild else "$"
+        # Since this is @commands.guild_only(), ctx.guild should never be None at runtime
+        # But we need to satisfy the type checker
+        guild = ctx.guild
+        if guild and hasattr(self.bot, "prefix_manager") and self.bot.prefix_manager:
+            prefix = await self.bot.prefix_manager.get_prefix(guild.id)
+        else:
+            prefix = "$"
         await ctx.send(
             f"❌ I couldn't find information about '{entity}'. Use `{prefix}info` without arguments to see available options.",
         )
