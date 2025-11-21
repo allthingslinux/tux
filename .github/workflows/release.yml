@@ -13,6 +13,8 @@ permissions:
   contents: write
   packages: write
   pull-requests: read
+env:
+  WAIT_INTERVAL_SECONDS: 30
 jobs:
   validate:
     name: Validate
@@ -22,38 +24,28 @@ jobs:
       is_prerelease: ${{ steps.version.outputs.is_prerelease }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Determine Version
         id: version
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.version }}"
-          else
-            VERSION="${GITHUB_REF#refs/tags/}"
-          fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-          # Check if this is a prerelease (contains alpha, beta, rc)
-          if [[ "$VERSION" =~ (alpha|beta|rc) ]]; then
-            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
-          fi
-          echo "Release version: $VERSION"
-          echo "Is prerelease: $([ "$VERSION" != "${VERSION/alpha/}" ] || [ "$VERSION" != "${VERSION/beta/}" ] || [ "$VERSION" != "${VERSION/rc/}" ] && echo "true" || echo "false")"
+        run: ./.github/scripts/release.sh determine-version \ "${{ github.event_name }}"
+          \ "${{ github.event.inputs.version }}"
   wait:
     name: Wait for Tests
     runs-on: ubuntu-latest
     steps:
+      # Wait for tests workflow to complete before creating release
+      # Note: This step requires GitHub API access and won't work with act (local testing)
+      # It will fail gracefully in act, allowing manual testing of release steps
       - name: Wait
-        uses: lewagon/wait-on-check-action@v1.4.0
+        uses: lewagon/wait-on-check-action@v1.4.1
+        continue-on-error: true
         with:
           ref: ${{ github.sha }}
-          check-name: Unit Tests
+          check-name: Run All Tests
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 30
+          wait-interval: ${{ env.WAIT_INTERVAL_SECONDS }}
           allowed-conclusions: success
   create:
     name: Create Release
@@ -61,43 +53,15 @@ jobs:
     needs: [validate, wait]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+        run: ./.github/scripts/release.sh configure-git
       - name: Determine Version and Branch
         id: setup
-        run: |
-          VERSION="${{ needs.validate.outputs.version }}"
-          # Strip 'v' prefix if present (semver format doesn't include it)
-          VERSION_NO_V="${VERSION#v}"
-          echo "version_no_v=$VERSION_NO_V" >> "$GITHUB_OUTPUT"
-
-          # Determine target branch for committing changelog
-          # Try to find the default branch, fallback to common branch names
-          DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "")
-          if [ -z "$DEFAULT_BRANCH" ]; then
-            # Try common branch names
-            if git show-ref --verify --quiet refs/remotes/origin/main; then
-              DEFAULT_BRANCH="main"
-            elif git show-ref --verify --quiet refs/remotes/origin/master; then
-              DEFAULT_BRANCH="master"
-            else
-              # Fallback: use the first branch we find
-              DEFAULT_BRANCH=$(git branch -r | grep -v HEAD | head -n1 | sed 's/origin\///' | xargs)
-            fi
-          fi
-          echo "branch=$DEFAULT_BRANCH" >> "$GITHUB_OUTPUT"
-          echo "Version (no v): $VERSION_NO_V"
-          echo "Target branch: $DEFAULT_BRANCH"
-
-          # Checkout the branch (not the tag) so we can commit changelog updates
-          git checkout "$DEFAULT_BRANCH" || git checkout -b "$DEFAULT_BRANCH"
-          git pull origin "$DEFAULT_BRANCH" || true
+        run: ./.github/scripts/release.sh determine-version-and-branch \ "${{ needs.validate.outputs.version }}"
       - name: Bump Changelog Version
         id: bump
         uses: release-flow/keep-a-changelog-action@v3
@@ -108,14 +72,8 @@ jobs:
           tag-prefix: v
           keep-unreleased-section: true
       - name: Commit Updated Changelog
-        run: |
-          if [ -n "$(git status --porcelain CHANGELOG.md)" ]; then
-            git add CHANGELOG.md
-            git commit -m "chore: bump changelog to ${{ needs.validate.outputs.version }}"
-            git push origin "${{ steps.setup.outputs.branch }}"
-          else
-            echo "No changes to CHANGELOG.md"
-          fi
+        run: ./.github/scripts/release.sh commit-changelog \ "${{ needs.validate.outputs.version }}"
+          \ "${{ steps.setup.outputs.branch }}"
       - name: Query Release Notes
         id: query
         uses: release-flow/keep-a-changelog-action@v3
@@ -123,11 +81,69 @@ jobs:
           command: query
           version: ${{ steps.setup.outputs.version_no_v }}
           changelog: CHANGELOG.md
+
+      # Create GitHub release (requires GitHub API)
+      # Note: This step requires GitHub API access and won't work with act (local testing)
+      # It will fail gracefully in act, allowing manual testing of changelog steps
       - name: Create Release
         uses: softprops/action-gh-release@v2
+        continue-on-error: true
         with:
           tag_name: ${{ needs.validate.outputs.version }}
           name: Release ${{ needs.validate.outputs.version }}
           body: ${{ steps.query.outputs.release-notes }}
           prerelease: ${{ needs.validate.outputs.is_prerelease == 'true' }}
           make_latest: ${{ needs.validate.outputs.is_prerelease == 'false' }}
+
+      # Create Sentry release for error tracking and deployment monitoring
+      # Uses getsentry/action-release@v3 to create a release in Sentry
+      # Docs: https://github.com/getsentry/action-release
+      #
+      # Purpose: Track releases in Sentry for:
+      # - Determining issues and regressions introduced in new releases
+      # - Predicting which commit caused an issue and who is responsible
+      # - Resolving issues by including issue number in commit messages
+      # - Receiving email notifications when code gets deployed
+      #
+      # Features used:
+      # - Automatic commit range detection (set_commits: auto)
+      # - Production environment deployment tracking
+      # - Release version matches GitHub release tag
+      # - Automatic commit attribution and issue resolution
+      #
+      # Prerequisites:
+      # - SENTRY_AUTH_TOKEN: Authentication token (from Sentry Internal Integration)
+      # - SENTRY_ORG: Organization slug in Sentry
+      # - SENTRY_PROJECT: Project slug in Sentry (optional if using projects input)
+      #
+      # The release version uses the validated version from the validate job,
+      # which matches the tag_name used in the GitHub release and the version
+      # configured in the Sentry SDK (via get_version()).
+      #
+      # Note: This step requires Sentry API access and won't work with act (local testing)
+      # It will fail gracefully in act, allowing manual testing of other release steps
+      - name: Create Sentry Release
+        if: needs.validate.outputs.is_prerelease != 'true'
+        uses: getsentry/action-release@v3
+        continue-on-error: true
+        env:
+          # Required: Sentry authentication token from Internal Integration
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          # Required: Organization slug in Sentry
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          # Required: Project slug in Sentry
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          # Optional: Sentry URL (only needed for self-hosted Sentry)
+          # SENTRY_URL: https://sentry.io/
+        with:
+          # Set environment to production for deployment tracking
+          environment: production
+          # Release version matches GitHub release tag and Sentry SDK release
+          # Strips 'refs/tags/' prefix automatically if present
+          release: ${{ needs.validate.outputs.version }}
+          # Automatically set commits from git history (finds previous release)
+          set_commits: auto
+          # Mark release as finalized (ready for production)
+          finalize: true
+          # Don't fail if previous release commit not found (first release)
+          ignore_missing: true

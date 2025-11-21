@@ -44,4 +44,4 @@ runs:
         if [ -n "${{ inputs.additional-vars }}" ]; then
           echo "${{ inputs.additional-vars }}" >> .env
         fi
-        echo "✅ Test environment file created with pydantic settings format"
+        echo "Test environment file created with pydantic settings format"

@@ -7,9 +7,9 @@ inputs:
     required: false
     default: 3.13.8
   uv-version:
-    description: Uv version to install (e.g. 0.8.8)
+    description: Uv version to install (empty = latest or from pyproject.toml)
     required: false
-    default: 0.8.8
+    default: ''
   enable-cache:
     description: Enable uv cache persistence
     required: false
@@ -17,7 +17,10 @@ inputs:
 runs:
   using: composite
   steps:
-    # PYTHON ENVIRONMENT SETUP (use GitHub's cached Python)
+    # PYTHON ENVIRONMENT SETUP
+    # Use actions/setup-python for faster setup on GitHub-hosted runners
+    # GitHub caches Python versions alongside the runner, making this faster than uv python install
+    # Docs: https://github.com/actions/setup-python
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -25,14 +28,37 @@ runs:
 
     # UV INSTALLATION
     # Installs uv and optionally enables cache persistence
+    # Uses astral-sh/setup-uv@v7 (latest version with improved caching and features)
+    # Docs: https://github.com/astral-sh/setup-uv
+    #
+    # Why we use both actions/setup-python and setup-uv:
+    # - actions/setup-python: Faster on GitHub-hosted runners (uses GitHub's cached Python)
+    # - setup-uv: Installs uv and manages uv's cache (dependency cache, not Python cache)
+    #
+    # The python-version input sets UV_PYTHON environment variable, ensuring uv uses the
+    # Python version installed by actions/setup-python. This provides consistency between
+    # the Python version and uv's Python version detection.
+    #
+    # Features used:
+    # - enable-cache: Persists uv's dependency cache in GitHub Actions Cache
+    # - python-version: Sets UV_PYTHON to ensure uv uses the correct Python version
+    # - version: Empty defaults to latest or version from pyproject.toml/uv.toml
     - name: Install uv
-      uses: astral-sh/setup-uv@v6
+      uses: astral-sh/setup-uv@v7
       with:
+        # Version: Empty means use latest or version from pyproject.toml/uv.toml
+        # If pyproject.toml has [tool.uv] with required-version, that will be used
         version: ${{ inputs.uv-version }}
+        # Set UV_PYTHON to match the Python version installed by actions/setup-python
+        # This ensures uv uses the correct Python version for dependency resolution
+        python-version: ${{ inputs.python-version }}
+        # Enable uv's dependency cache persistence in GitHub Actions Cache
+        # This speeds up consecutive workflow runs by caching downloaded dependencies
         enable-cache: ${{ inputs.enable-cache }}
 
     # DEPENDENCY INSTALLATION
-    # Install project with locked dependencies
+    # Install project with locked dependencies using uv sync
+    # --frozen ensures exact versions from uv.lock are used (no updates)
     - name: Install dependencies
       shell: bash
       run: uv sync --frozen

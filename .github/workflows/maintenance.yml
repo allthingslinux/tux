@@ -1,16 +1,4 @@
 ---
-# ==============================================================================
-# MAINTENANCE WORKFLOW
-# ==============================================================================
-# Automated repository maintenance tasks including:
-# - TODO tracking and issue creation
-# - Docker registry cleanup
-# - Repository health checks
-#
-# Schedules:
-# - Weekly: Sundays at 2 AM UTC (light maintenance)
-# - Monthly: 1st of month at 3 AM UTC (comprehensive checks)
-# ==============================================================================
 name: Maintenance
 on:
   push:
@@ -43,10 +31,19 @@ concurrency:
   cancel-in-progress: false
 env:
   ADMIN_PAT: ${{ secrets.ADMIN_PAT }}
+  PACKAGE_NAME: tux
+  REGISTRY_SIZE_WARNING_GB: 5
+  BUILD_CACHE_CLEANUP_DAYS: 30
+  DEFAULT_KEEP_VERSIONS: 15
+  LARGE_FILE_THRESHOLD_MB: 50
+  BRANCH_LIMIT: 10
+  ACTIVITY_LIMIT: 10
+  ACTIVITY_SINCE: 1 week ago
 jobs:
   todos:
     name: TODOs
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' &&
       github.event.inputs.manual_commit_ref)
     permissions:
@@ -54,7 +51,7 @@ jobs:
       issues: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Convert
@@ -75,6 +72,7 @@ jobs:
   cleanup:
     name: Cleanup
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch'
       && github.event.inputs.cleanup_images == 'true')
     permissions:
@@ -82,27 +80,11 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Registry Size Check
         id: registry_size
-        run: |
-          echo "Checking registry size..."
-          # Get package info to check size
-          PACKAGE_INFO=$(gh api user/packages/container/tux 2>/dev/null || echo '{"size_in_bytes": 0}')
-          SIZE_BYTES=$(echo "$PACKAGE_INFO" | jq -r '.size_in_bytes // 0')
-          SIZE_GB=$(echo "scale=2; $SIZE_BYTES / 1024 / 1024 / 1024" | bc -l 2>/dev/null || echo "0")
-          {
-            echo "size_gb=$SIZE_GB"
-            echo "size_warning=$([ "$(echo "$SIZE_GB > 5" | bc -l)" = "1" ] && echo "true" || echo "false")"
-          } >> "$GITHUB_OUTPUT"
-          echo "Registry size: ${SIZE_GB}GB"
-
-          # Alert if size is too large
-          if (( $(echo "$SIZE_GB > 5" | bc -l) )); then
-            echo "⚠️ Registry size exceeds 5GB: ${SIZE_GB}GB"
-          else
-            echo "✅ Registry size is acceptable: ${SIZE_GB}GB"
-          fi
+        run: ./.github/scripts/maintenance.sh registry-size-check \ "${{ env.PACKAGE_NAME }}"
+          \ "${{ env.REGISTRY_SIZE_WARNING_GB }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Clean Old Images
@@ -110,33 +92,21 @@ jobs:
         with:
           package-name: tux
           package-type: container
-          min-versions-to-keep: ${{ github.event.inputs.keep_amount || '15' }}
+          min-versions-to-keep: ${{ github.event.inputs.keep_amount || env.DEFAULT_KEEP_VERSIONS }}
           delete-only-untagged-versions: ${{ github.event.inputs.remove_untagged || 'true' }}
       - name: Clean Build Cache Images
-        run: |
-          echo "Cleaning up build cache images..."
-          # Delete build cache images older than 30 days
-          gh api user/packages/container/tux/versions | \
-            jq -r '.[] | select(.name | contains("buildcache")) | select(.created_at < "'"$(date -d '30 days ago' -Iseconds)"'") | .id' | \
-            xargs -I {} gh api -X DELETE user/packages/container/tux/versions/{} || echo "No build cache images to clean"
+        run: ./.github/scripts/maintenance.sh clean-build-cache-images \ "${{ env.PACKAGE_NAME }}"
+          \ "${{ env.BUILD_CACHE_CLEANUP_DAYS }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Registry Cleanup Summary
-        run: |
-          {
-            echo "## 🧹 Registry Cleanup Summary"
-            echo "- **Registry Size**: ${{ steps.registry_size.outputs.size_gb }}GB"
-            echo "- **Cleanup Policy**: Keep 15 versions, remove untagged"
-            echo "- **Build Cache**: Cleaned images older than 30 days"
-            if [ "${{ steps.registry_size.outputs.size_warning }}" = "true" ]; then
-              echo "- **⚠️ Warning**: Registry size exceeds 5GB"
-            else
-              echo "- **✅ Status**: Registry size is acceptable"
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: ./.github/scripts/maintenance.sh registry-cleanup-summary \ "${{ steps.registry_size.outputs.size_gb }}"
+          \ "${{ steps.registry_size.outputs.size_warning }}" \ "${{ env.DEFAULT_KEEP_VERSIONS }}"
+          \ "${{ env.BUILD_CACHE_CLEANUP_DAYS }}"
   health:
     name: Health Check
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     if: github.event_name == 'schedule'
     permissions:
       contents: read
@@ -144,104 +114,24 @@ jobs:
       packages: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Repository Health Summary
-        run: |
-          {
-            echo "## 📊 Repository Health Check"
-            echo "**Date**: $(date)"
-            echo ""
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: ./.github/scripts/maintenance.sh health-repository-summary
       - name: Check Large Files
-        run: |
-          {
-            echo "### 📁 Large Files Check"
-            echo "Checking for files larger than 50MB..."
-          } >> "$GITHUB_STEP_SUMMARY"
-          LARGE_FILES=$(find . -type f -size +50M -not -path "./.git/*" 2>/dev/null || echo "")
-          if [ -n "$LARGE_FILES" ]; then
-            {
-              echo "⚠️ **Large files found:**"
-              echo '```'
-              echo "$LARGE_FILES"
-              echo '```'
-            } >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "✅ **No large files found**" >> "$GITHUB_STEP_SUMMARY"
-          fi
-          echo "" >> "$GITHUB_STEP_SUMMARY"
+        run: ./.github/scripts/maintenance.sh check-large-files "${{ env.LARGE_FILE_THRESHOLD_MB }}"
       - name: Check Dependencies
-        run: |
-          {
-            echo "### 📦 Dependencies Check"
-            echo "Checking for outdated dependencies..."
-          } >> "$GITHUB_STEP_SUMMARY"
-          if command -v uv >/dev/null 2>&1; then
-            OUTDATED=$(uv outdated 2>/dev/null || echo "No outdated dependencies found")
-            {
-              echo '```'
-              echo "$OUTDATED"
-              echo '```'
-            } >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "⚠️ **uv not available for dependency check**" >> "$GITHUB_STEP_SUMMARY"
-          fi
-          echo "" >> "$GITHUB_STEP_SUMMARY"
+        run: ./.github/scripts/maintenance.sh check-dependencies
       - name: Check Repository Size
-        run: |
-          {
-            echo "### 💾 Repository Size Analysis"
-            REPO_SIZE=$(du -sh . 2>/dev/null | cut -f1 || echo "Unknown")
-            echo "**Repository Size**: $REPO_SIZE"
-
-            # Check .git size
-            GIT_SIZE=$(du -sh .git 2>/dev/null | cut -f1 || echo "Unknown")
-            echo "**Git History Size**: $GIT_SIZE"
-            echo ""
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: ./.github/scripts/maintenance.sh check-repository-size
       - name: Check Stale Branches
-        run: |
-          {
-            echo "### 🌿 Branch Analysis"
-            echo "**Recent branches:**"
-            echo '```'
-            git branch -r --sort=-committerdate | head -10 2>/dev/null || echo "Could not check branches"
-            echo '```'
-            echo ""
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: ./.github/scripts/maintenance.sh check-stale-branches "${{ env.BRANCH_LIMIT }}"
       - name: Check Registry Health
-        run: |
-          {
-            echo "### 🐳 Container Registry Health"
-            if command -v gh >/dev/null 2>&1; then
-              # Get package info
-              PACKAGE_INFO=$(gh api user/packages/container/tux 2>/dev/null || echo '{"size_in_bytes": 0, "version_count": 0}')
-              SIZE_BYTES=$(echo "$PACKAGE_INFO" | jq -r '.size_in_bytes // 0')
-              VERSION_COUNT=$(echo "$PACKAGE_INFO" | jq -r '.version_count // 0')
-              SIZE_GB=$(echo "scale=2; $SIZE_BYTES / 1024 / 1024 / 1024" | bc -l 2>/dev/null || echo "0")
-              echo "**Registry Size**: ${SIZE_GB}GB"
-              echo "**Version Count**: $VERSION_COUNT"
-              if (( $(echo "$SIZE_GB > 5" | bc -l) )); then
-                echo "⚠️ **Warning**: Registry size exceeds 5GB"
-              else
-                echo "✅ **Status**: Registry size is acceptable"
-              fi
-            else
-              echo "⚠️ **GitHub CLI not available for registry check**"
-            fi
-            echo ""
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: ./.github/scripts/maintenance.sh check-registry-health \ "${{ env.PACKAGE_NAME }}"
+          \ "${{ env.REGISTRY_SIZE_WARNING_GB }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Check Recent Activity
-        run: |-
-          {
-            echo "### 📈 Recent Activity"
-            echo "**Recent commits:**"
-            echo '```'
-            git log --oneline --since="1 week ago" | head -10 2>/dev/null || echo "Could not check recent commits"
-            echo '```'
-            echo ""
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: ./.github/scripts/maintenance.sh check-recent-activity "${{ env.ACTIVITY_SINCE }}"
+          "${{ env.ACTIVITY_LIMIT }}"

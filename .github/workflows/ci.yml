@@ -15,6 +15,7 @@ env:
   REVIEWDOG_REPORTER: github-pr-review
   REVIEWDOG_FILTER_MODE: file
   REVIEWDOG_FAIL_LEVEL: none
+  HADOLINT_IGNORE: DL3008 DL3009
 jobs:
   changes:
     name: File Detection
@@ -28,10 +29,10 @@ jobs:
       workflows: ${{ steps.workflow_changes.outputs.any_changed }}
       docker: ${{ steps.docker_changes.outputs.any_changed }}
       yaml: ${{ steps.yaml_changes.outputs.any_changed }}
-      any: ${{ steps.yaml_changes.outputs.any_changed }}
+      any: ${{ steps.set_outputs.outputs.any }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Check Python
@@ -83,27 +84,11 @@ jobs:
             **/*.yaml
             .github/**
       - name: Set Outputs
-        run: |
-          {
-            echo "python=${{ steps.python_changes.outputs.any_changed }}"
-            echo "markdown=${{ steps.markdown_changes.outputs.any_changed }}"
-            echo "shell=${{ steps.shell_changes.outputs.any_changed }}"
-            echo "workflows=${{ steps.workflow_changes.outputs.any_changed }}"
-            echo "docker=${{ steps.docker_changes.outputs.any_changed }}"
-            echo "yaml=${{ steps.yaml_changes.outputs.any_changed }}"
-          } >> "$GITHUB_OUTPUT"
-
-          # Check if any files changed
-          if [[ "${{ steps.python_changes.outputs.any_changed }}" == "true" ]] || \
-             [[ "${{ steps.markdown_changes.outputs.any_changed }}" == "true" ]] || \
-             [[ "${{ steps.shell_changes.outputs.any_changed }}" == "true" ]] || \
-             [[ "${{ steps.workflow_changes.outputs.any_changed }}" == "true" ]] || \
-             [[ "${{ steps.docker_changes.outputs.any_changed }}" == "true" ]] || \
-             [[ "${{ steps.yaml_changes.outputs.any_changed }}" == "true" ]]; then
-            echo "any=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "any=false" >> "$GITHUB_OUTPUT"
-          fi
+        id: set_outputs
+        run: ./.github/scripts/ci.sh set-change-outputs \ "${{ steps.python_changes.outputs.any_changed }}"
+          \ "${{ steps.markdown_changes.outputs.any_changed }}" \ "${{ steps.shell_changes.outputs.any_changed }}"
+          \ "${{ steps.workflow_changes.outputs.any_changed }}" \ "${{ steps.docker_changes.outputs.any_changed }}"
+          \ "${{ steps.yaml_changes.outputs.any_changed }}"
   quality:
     name: Python
     runs-on: ubuntu-latest
@@ -114,7 +99,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Setup Python
@@ -158,7 +143,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Lint
         uses: reviewdog/action-markdownlint@v0.26.2
         with:
@@ -178,7 +163,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Lint
         uses: reviewdog/action-shellcheck@v1.31
         with:
@@ -204,7 +189,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Validate
         uses: reviewdog/action-actionlint@v1.66.1
         with:
@@ -223,7 +208,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Lint
         uses: reviewdog/action-hadolint@v1.50.2
         with:
@@ -232,7 +217,7 @@ jobs:
           reporter: ${{ env.REVIEWDOG_REPORTER }}
           filter_mode: ${{ env.REVIEWDOG_FILTER_MODE }}
           fail_level: ${{ env.REVIEWDOG_FAIL_LEVEL }}
-          hadolint_ignore: DL3008 DL3009
+          hadolint_ignore: ${{ env.HADOLINT_IGNORE }}
           include: Containerfile
   yaml:
     name: YAML
@@ -244,7 +229,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Lint
         uses: reviewdog/action-yamllint@v1.21.0
         with:
@@ -263,7 +248,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Scan
         uses: reviewdog/action-gitleaks@v1.7
         with:

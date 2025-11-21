@@ -1,15 +1,4 @@
 ---
-# ==============================================================================
-# DOCKER BUILD AND PUBLISH WORKFLOW
-# ==============================================================================
-# Handles Docker image building, scanning, and publishing to GHCR.
-#
-# Triggers:
-# - Tags: Builds and publishes release images
-# - Pull Requests: Validates Docker builds
-# - Manual: workflow_dispatch for testing
-# - Monthly: 15th at 2 AM UTC (test build to catch base image issues)
-# ==============================================================================
 name: Docker
 on:
   push:
@@ -28,6 +17,17 @@ env:
   DOCKER_BUILD_SUMMARY: true
   DOCKER_BUILD_CHECKS_ANNOTATIONS: true
   PYTHON_VERSION: 3.13.8
+  SHA_PREFIX_LENGTH: 7
+  VALIDATE_TIMEOUT_MINUTES: 10
+  BUILD_TIMEOUT_MINUTES: 15
+  DOCKER_IMAGE_TITLE: Tux
+  DOCKER_IMAGE_DESCRIPTION: Tux - The all in one discord bot for the All Things Linux
+    Community
+  DOCKER_IMAGE_SOURCE: https://github.com/allthingslinux/tux
+  DOCKER_IMAGE_LICENSE: GPL-3.0
+  DOCKER_IMAGE_AUTHORS: All Things Linux
+  DOCKER_IMAGE_VENDOR: All Things Linux
+  DOCKER_IMAGE_DOCS: https://github.com/allthingslinux/tux/blob/main/README.md
 jobs:
   changes:
     name: File Detection
@@ -38,7 +38,7 @@ jobs:
       docker: ${{ steps.docker_changes.outputs.any_changed }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Check Docker
@@ -61,57 +61,115 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+
+      # Set up Docker Buildx for advanced build features
+      # Uses docker/setup-buildx-action@v3 to create and boot a builder
+      # Docs: https://github.com/docker/setup-buildx-action
+      #
+      # Default behavior (no explicit config needed):
+      # - Creates builder with docker-container driver (enables BuildKit features)
+      # - Supports GitHub Actions cache (type=gha) for faster builds
+      # - Caches buildx binary to GitHub Actions cache backend
+      # - Automatically cleans up builder and temp files at end of job
+      # - Switches to this builder instance for subsequent build steps
+      #
+      # Why we use Buildx:
+      # - Required for docker/build-push-action@v6 advanced features
+      # - Enables GitHub Actions cache (cache-from/cache-to type=gha)
+      # - Supports build-time features (secrets, remote cache, etc.)
+      # - Future-proof for multi-platform builds if needed
+      #
+      # Optional enhancements (not currently needed):
+      # - Multi-platform: Add docker/setup-qemu-action@v3 for ARM support
+      # - Version pinning: Add version: v0.x.x to pin Buildx version
+      # - Custom builder name: Add name: my-builder for persistent builders
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
+
+      # Extract Docker image metadata for PR validation builds
+      # Uses docker/metadata-action@v5 to generate tags and labels
+      # Docs: https://github.com/docker/metadata-action
+      #
+      # Purpose: Generate consistent metadata (tags/labels) for PR validation builds
+      # - PR builds use simple tags (pr-123) for identification
+      # - Full OCI labels for image metadata and traceability
+      # - Labels follow Open Containers Initiative (OCI) specification
+      #
+      # Tag strategy for PR builds:
+      # - type=ref,event=pr: Auto-generates pr-<number> tag from PR event
+      #
+      # Label strategy:
+      # - Custom OCI labels using environment variables
+      # - Overrides default generated labels with our custom values
+      # - Includes: title, description, source, license, authors, vendor, revision, docs
+      #
+      # Note: Image name is local-only (tux) since PR builds don't push to registry
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
+          # Local image name (no registry prefix needed for validation builds)
           images: tux
           tags: |
-            type=raw,value=pr-${{ github.event.number }}
+            type=ref,event=pr
           labels: |
-            org.opencontainers.image.title=Tux
-            org.opencontainers.image.description=Tux - The all in one discord bot for the All Things Linux Community
-            org.opencontainers.image.source=https://github.com/allthingslinux/tux
-            org.opencontainers.image.licenses=GPL-3.0
-            org.opencontainers.image.authors=All Things Linux
-            org.opencontainers.image.vendor=All Things Linux
+            org.opencontainers.image.title=${{ env.DOCKER_IMAGE_TITLE }}
+            org.opencontainers.image.description=${{ env.DOCKER_IMAGE_DESCRIPTION }}
+            org.opencontainers.image.source=${{ env.DOCKER_IMAGE_SOURCE }}
+            org.opencontainers.image.licenses=${{ env.DOCKER_IMAGE_LICENSE }}
+            org.opencontainers.image.authors=${{ env.DOCKER_IMAGE_AUTHORS }}
+            org.opencontainers.image.vendor=${{ env.DOCKER_IMAGE_VENDOR }}
             org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.documentation=https://github.com/allthingslinux/tux/blob/main/README.md
+            org.opencontainers.image.documentation=${{ env.DOCKER_IMAGE_DOCS }}
       - name: Generate PR Version
         id: pr_version
-        run: |
-          # Generate git describe format for PR builds to match VERSIONING.md expectations
-          PR_VERSION="pr-${{ github.event.number }}-$(echo "${{ github.sha }}" | cut -c1-7)"
-          echo "version=$PR_VERSION" >> "$GITHUB_OUTPUT"
-          echo "Generated PR version: $PR_VERSION"
+        run: ./.github/scripts/docker.sh generate-pr-version \ "${{ github.event.number }}"
+          \ "${{ github.sha }}" \ "${{ env.SHA_PREFIX_LENGTH }}"
+
+      # Build Docker image for validation (does not push to registry)
+      # Uses docker/build-push-action@v6 with Buildx for advanced features
+      # Docs: https://github.com/docker/build-push-action
+      # Features used:
+      # - GitHub Actions cache (type=gha) for faster builds
+      # - Load into Docker daemon (load: true) for image scanning
+      # - Build metadata (tags/labels) for image identification
+      # - Build-time variables for versioning and traceability
       - name: Build
         uses: docker/build-push-action@v6
         timeout-minutes: 10
         with:
+          # Build context directory (current directory)
           context: .
+          # Path to Containerfile (Dockerfile)
           file: Containerfile
+          # Target stage to build (production stage in Containerfile)
           target: production
+          # Don't push to registry (validation builds only)
           push: false
+          # Load image into Docker daemon for scanning with Trivy
           load: true
+          # Use GitHub Actions cache for faster builds
+          # Cache strategy: read from previous builds, write with max mode for future builds
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          # Image tags for identification (from metadata extraction step)
           tags: ${{ steps.meta.outputs.tags }}
+          # OCI labels for image metadata (title, description, source, etc.)
           labels: ${{ steps.meta.outputs.labels }}
+          # Build-time variables passed to Containerfile
           build-args: |
             VERSION=${{ steps.pr_version.outputs.version }}
             GIT_SHA=${{ github.sha }}
             BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
       - name: Complete
         run: |
-          echo "✅ Docker build validation completed successfully"
-          echo "🔍 Build cache updated for faster future builds"
+          echo "Docker build validation completed successfully"
+          echo "Build cache updated for faster future builds"
       - name: Scan Containerfile
         uses: reviewdog/action-trivy@v1
         with:
-          github_token: ${{ github.token }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           trivy_command: config
           trivy_target: ./Containerfile
           trivy_version: v0.63.0
@@ -124,7 +182,7 @@ jobs:
         if: always()
         uses: reviewdog/action-trivy@v1
         with:
-          github_token: ${{ github.token }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           trivy_command: image
           trivy_target: ${{ steps.meta.outputs.tags }}
           trivy_version: v0.63.0
@@ -143,7 +201,29 @@ jobs:
       packages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+
+      # Set up Docker Buildx for advanced build features
+      # Uses docker/setup-buildx-action@v3 to create and boot a builder
+      # Docs: https://github.com/docker/setup-buildx-action
+      #
+      # Default behavior (no explicit config needed):
+      # - Creates builder with docker-container driver (enables BuildKit features)
+      # - Supports GitHub Actions cache (type=gha) for faster builds
+      # - Caches buildx binary to GitHub Actions cache backend
+      # - Automatically cleans up builder and temp files at end of job
+      # - Switches to this builder instance for subsequent build steps
+      #
+      # Why we use Buildx:
+      # - Required for docker/build-push-action@v6 advanced features
+      # - Enables GitHub Actions cache (cache-from/cache-to type=gha)
+      # - Supports build-time features (secrets, remote cache, etc.)
+      # - Future-proof for multi-platform builds if needed
+      #
+      # Optional enhancements (not currently needed):
+      # - Multi-platform: Add docker/setup-qemu-action@v3 for ARM support
+      # - Version pinning: Add version: v0.x.x to pin Buildx version
+      # - Custom builder name: Add name: my-builder for persistent builders
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to Registry
@@ -152,45 +232,91 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Extract Docker image metadata for production release builds
+      # Uses docker/metadata-action@v5 to generate tags and labels
+      # Docs: https://github.com/docker/metadata-action
+      #
+      # Purpose: Generate consistent metadata (tags/labels) for production images
+      # - Semantic versioning tags from Git tags (v1.2.3 → 1.2.3, 1.2, latest)
+      # - Full OCI labels for image metadata and traceability
+      # - Labels follow Open Containers Initiative (OCI) specification
+      #
+      # Tag strategy for release builds:
+      # - type=semver,pattern={{version}}: Full version tag (e.g., 1.2.3)
+      # - type=semver,pattern={{major}}.{{minor}}: Minor version tag (e.g., 1.2)
+      # - type=raw,value=latest,enable={{is_default_branch}}: Latest tag only for default branch
+      #
+      # Semver tag behavior:
+      # - Git tag v1.2.3 generates: 1.2.3 (full version), 1.2 (minor), latest (if default branch)
+      # - Pre-release tags (alpha, beta, rc) only generate full version tag (not minor/major)
+      # - Tags are automatically sanitized to comply with Docker tag specifications
+      #
+      # Label strategy:
+      # - Custom OCI labels using environment variables
+      # - Overrides default generated labels with our custom values
+      # - Includes: title, description, source, license, authors, vendor, revision, docs
+      # - Auto-generated by metadata-action: created (build timestamp), version (from semver)
+      #
+      # Best practices:
+      # - Full registry path (ghcr.io/owner/repo) for production images
+      # - Multiple tags for flexibility (full version, minor version, latest)
+      # - Comprehensive OCI labels for traceability and compliance
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
+          # Full registry path for production images (ghcr.io/owner/repo)
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable={{is_default_branch}}
           labels: |
-            org.opencontainers.image.title=Tux
-            org.opencontainers.image.description=Tux - The all in one discord bot for the All Things Linux Community
-            org.opencontainers.image.source=https://github.com/allthingslinux/tux
-            org.opencontainers.image.licenses=GPL-3.0
-            org.opencontainers.image.authors=All Things Linux
-            org.opencontainers.image.vendor=All Things Linux
-            org.opencontainers.image.documentation=https://github.com/allthingslinux/tux/blob/main/README.md
+            org.opencontainers.image.title=${{ env.DOCKER_IMAGE_TITLE }}
+            org.opencontainers.image.description=${{ env.DOCKER_IMAGE_DESCRIPTION }}
+            org.opencontainers.image.source=${{ env.DOCKER_IMAGE_SOURCE }}
+            org.opencontainers.image.licenses=${{ env.DOCKER_IMAGE_LICENSE }}
+            org.opencontainers.image.authors=${{ env.DOCKER_IMAGE_AUTHORS }}
+            org.opencontainers.image.vendor=${{ env.DOCKER_IMAGE_VENDOR }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.documentation=${{ env.DOCKER_IMAGE_DOCS }}
       - name: Generate Release Version
         id: release_version
-        run: |
-          # Generate git describe format for release builds to match VERSIONING.md expectations
-          # This ensures the VERSION file contains the exact format expected by __init__.py
-          TAG_VERSION="${GITHUB_REF#refs/tags/}"
-          CLEAN_VERSION="${TAG_VERSION#v}"  # Remove 'v' prefix if present
-          RELEASE_VERSION="$CLEAN_VERSION"
-          echo "version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
-          echo "Generated release version: $RELEASE_VERSION"
+        run: ./.github/scripts/docker.sh generate-release-version \ "${{ github.ref }}"
+          \ "${{ env.SHA_PREFIX_LENGTH }}"
+
+      # Build and push Docker image to GitHub Container Registry (GHCR)
+      # Uses docker/build-push-action@v6 with Buildx for advanced features
+      # Docs: https://github.com/docker/build-push-action
+      # Features used:
+      # - GitHub Actions cache (type=gha) for faster builds
+      # - Push to registry (push: true) for production images
+      # - Build metadata (tags/labels) for image identification
+      # - Build-time variables for versioning and traceability
+      # - Multi-tag support (semver versions + latest tag)
       - name: Build & Push
         uses: docker/build-push-action@v6
         timeout-minutes: 15
         with:
+          # Build context directory (current directory)
           context: .
+          # Path to Containerfile (Dockerfile)
           file: Containerfile
+          # Target stage to build (production stage in Containerfile)
           target: production
+          # Push image to GitHub Container Registry (ghcr.io)
           push: true
+          # Use GitHub Actions cache for faster builds
+          # Cache strategy: read from previous builds, write with max mode for future builds
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          # Image tags for identification (semver versions + latest from metadata extraction)
+          # Multiple tags created: v1.2.3, 1.2, 1, latest (for default branch)
           tags: ${{ steps.meta.outputs.tags }}
+          # OCI labels for image metadata (title, description, source, license, etc.)
           labels: ${{ steps.meta.outputs.labels }}
+          # Build-time variables passed to Containerfile
           build-args: |
             VERSION=${{ steps.release_version.outputs.version }}
             GIT_SHA=${{ github.sha }}
@@ -199,7 +325,7 @@ jobs:
         if: always()
         uses: reviewdog/action-trivy@v1
         with:
-          github_token: ${{ github.token }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           trivy_command: image
           trivy_target: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           trivy_version: v0.63.0
