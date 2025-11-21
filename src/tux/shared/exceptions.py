@@ -291,8 +291,16 @@ class TuxUnsupportedLanguageError(TuxCodeExecutionError):
         self.supported_languages = supported_languages
         available_langs = ", ".join(supported_languages)
 
+        # Sanitize language input to prevent formatting issues in error messages
+        # Extract first word (language name) and truncate to prevent malicious/long inputs
+        language_str = language.strip()
+        # Get first word only (language names are typically single words)
+        first_word = language_str.split()[0] if language_str.split() else language_str
+        # Truncate to max 30 characters to prevent extremely long inputs
+        sanitized_language = first_word[:30] if len(first_word) > 30 else first_word
+
         super().__init__(
-            f"No compiler found for `{language}`. The following languages are supported:\n```{available_langs}```",
+            f"No compiler found for `{sanitized_language}`. The following languages are supported:\n```{available_langs}```",
         )
 
 
