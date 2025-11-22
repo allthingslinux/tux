@@ -130,3 +130,24 @@ async def permission_command_controller(db_service: DatabaseService) -> Permissi
     """PermissionCommandController with fresh database per test."""
     logger.info("🔧 Creating PermissionCommandController")
     return PermissionCommandController(db_service)
+
+
+@pytest.fixture(scope="function")
+async def permission_system(db_service: DatabaseService):
+    """PermissionSystem with fresh database per test."""
+    logger.info("🔧 Creating PermissionSystem")
+    from unittest.mock import MagicMock
+    from tux.core.permission_system import PermissionSystem
+    from tux.database.controllers import DatabaseCoordinator
+
+    # Create a mock bot
+    mock_bot = MagicMock()
+    mock_bot.owner_ids = set()
+
+    # Create database coordinator
+    db_coordinator = DatabaseCoordinator(db_service)
+
+    # Create PermissionSystem
+    perm_system = PermissionSystem(mock_bot, db_coordinator)
+    yield perm_system
+    logger.info("🧹 PermissionSystem cleanup complete")

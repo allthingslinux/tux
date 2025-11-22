@@ -76,6 +76,11 @@ DEFAULT_RANKS: dict[int, dict[str, str]] = {
     },
 }
 
+# Commands that can NEVER be assigned to permission ranks (owner/sysadmin only)
+# These commands are restricted at the bot level and must not be configurable
+# via the permission system, config files, or UI.
+RESTRICTED_COMMANDS: frozenset[str] = frozenset({"eval", "e", "jsk", "jishaku"})
+
 
 class RankDefinition(TypedDict):
     """Type definition for permission rank configuration."""
@@ -387,8 +392,17 @@ class PermissionSystem:
         Raises
         ------
         ValueError
-            If required_rank is not between 0 and 10.
+            If required_rank is not between 0 and 10, or if command_name is restricted.
         """
+        # Block restricted commands from being assigned to ranks
+        if command_name.lower() in RESTRICTED_COMMANDS:
+            error_msg = (
+                f"Cannot assign permission rank to '{command_name}'. "
+                f"This command is restricted to bot owners and sysadmins only."
+            )
+            logger.warning(f"Attempted to assign rank to restricted command '{command_name}' in guild {guild_id}")
+            raise ValueError(error_msg)
+
         # Validate rank range
         if required_rank < 0 or required_rank > 10:
             error_msg = f"Required rank must be between 0 and 10, got {required_rank}"
@@ -532,9 +546,18 @@ class PermissionSystem:
         # Load command permission overrides
         if "command_permissions" in config:
             for cmd_perm in config["command_permissions"]:
+                command_name = cmd_perm["command"]
+                # Skip restricted commands (they cannot be assigned to ranks)
+                if command_name.lower() in RESTRICTED_COMMANDS:
+                    logger.warning(
+                        f"Skipping restricted command '{command_name}' in config for guild {guild_id}. "
+                        "Restricted commands can only be used by bot owners and sysadmins.",
+                    )
+                    continue
+
                 await self.set_command_permission(
                     guild_id=guild_id,
-                    command_name=cmd_perm["command"],
+                    command_name=command_name,
                     required_rank=cmd_perm["rank"],
                 )
 
@@ -599,6 +622,9 @@ def init_permission_system(bot: Tux, db: DatabaseCoordinator) -> PermissionSyste
 
 
 __all__ = [
+    # Constants
+    "DEFAULT_RANKS",
+    "RESTRICTED_COMMANDS",
     # Classes
     "RankDefinition",
     "PermissionSystem",

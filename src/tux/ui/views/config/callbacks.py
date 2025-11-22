@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any
 import discord
 from loguru import logger
 
+from tux.core.permission_system import RESTRICTED_COMMANDS
 from tux.database.models.models import PermissionAssignment, PermissionCommand
 
 from .modals import EditRankModal
@@ -253,6 +254,15 @@ def create_command_rank_callback(dashboard: ConfigDashboard, command_name: str) 
             return
 
         if not await validate_interaction_data(interaction):
+            return
+
+        # Block restricted commands from being assigned to ranks
+        if command_name.lower() in RESTRICTED_COMMANDS:
+            await interaction.response.send_message(
+                f"❌ Cannot assign permission rank to `{command_name}`. "
+                "This command is restricted to bot owners and sysadmins only.",
+                ephemeral=True,
+            )
             return
 
         try:

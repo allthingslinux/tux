@@ -46,7 +46,7 @@ class TuxHelp(commands.HelpCommand):
         tuple[HelpData, HelpRenderer, HelpNavigation]
             Tuple of (data, renderer, navigation) components.
         """
-        data = HelpData(self.context.bot)
+        data = HelpData(self.context.bot, self.context)
         prefix = await data.get_prefix(self.context)
         renderer = HelpRenderer(prefix)
         navigation = HelpNavigation(self.context, data, renderer)
@@ -88,15 +88,18 @@ class TuxHelp(commands.HelpCommand):
 
     async def send_group_help(self, group: commands.Group[Any, Any, Any]) -> None:
         """Send help for a command group."""
-        _, renderer, navigation = await self._setup_components()
+        data, renderer, navigation = await self._setup_components()
 
         navigation.current_command_obj = group
         navigation.current_command = group.name
 
+        # Filter subcommands based on permissions
+        filtered_subcommands = [cmd for cmd in group.commands if await data.can_run_command(cmd)]
+
         # For large command groups or JSK, use pagination
-        if group.name in {"jsk", "jishaku"} or len(group.commands) > 15:
-            # Paginate subcommands
-            subcommands = sorted(group.commands, key=lambda x: x.name)
+        if group.name in {"jsk", "jishaku"} or len(filtered_subcommands) > 15:
+            # Paginate filtered subcommands
+            subcommands = sorted(filtered_subcommands, key=lambda x: x.name)
             pages = paginate_items(subcommands, 8)
 
             # Create direct help view with navigation

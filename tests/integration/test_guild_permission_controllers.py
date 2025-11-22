@@ -16,6 +16,7 @@ from tux.database.controllers import (
     PermissionCommandController,
     PermissionRankController,
 )
+from tux.core.permission_system import PermissionSystem
 
 
 # Test constants
@@ -428,6 +429,51 @@ class TestPermissionCommandController:
 
     # Note: There's no delete_command_permission method in the controller
     # Command permissions are deleted directly - no soft delete functionality
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_set_command_permission_blocks_restricted_commands(
+        self,
+        guild_controller: GuildController,
+        permission_system: PermissionSystem,
+    ) -> None:
+        """Test that restricted commands (eval, jsk) cannot be assigned to permission ranks."""
+        # Setup
+        await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
+
+        # Try to set permission for each restricted command via PermissionSystem
+        # (which enforces the restriction)
+        from tux.core.permission_system import RESTRICTED_COMMANDS
+
+        for cmd_name in RESTRICTED_COMMANDS:
+            with pytest.raises(ValueError, match="restricted"):
+                await permission_system.set_command_permission(
+                    guild_id=TEST_GUILD_ID,
+                    command_name=cmd_name,
+                    required_rank=3,
+                )
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_set_command_permission_blocks_restricted_case_insensitive(
+        self,
+        guild_controller: GuildController,
+        permission_system: PermissionSystem,
+    ) -> None:
+        """Test that restricted command checks are case-insensitive."""
+        # Setup
+        await guild_controller.create_guild(guild_id=TEST_GUILD_ID)
+
+        # Try uppercase and mixed case restricted commands via PermissionSystem
+        test_cases = ["EVAL", "Eval", "JSK", "Jsk", "Jishaku", "JISHAKU"]
+
+        for cmd_name in test_cases:
+            with pytest.raises(ValueError, match="restricted"):
+                await permission_system.set_command_permission(
+                    guild_id=TEST_GUILD_ID,
+                    command_name=cmd_name,
+                    required_rank=3,
+                )
 
 
 if __name__ == "__main__":

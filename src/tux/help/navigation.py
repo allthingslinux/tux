@@ -232,7 +232,9 @@ class HelpNavigation:
             and isinstance(self.current_command_obj, commands.Group)
             and len(self.current_command_obj.commands) > 0
         ):
-            sorted_cmds = sorted(self.current_command_obj.commands, key=lambda x: x.name)
+            # Filter subcommands based on user permissions
+            filtered_cmds = [cmd for cmd in self.current_command_obj.commands if await self.data.can_run_command(cmd)]
+            sorted_cmds = sorted(filtered_cmds, key=lambda x: x.name)
 
             # For large command groups like JSK, use pagination buttons and add a select menu for the current page
             if self.current_command_obj.name in {"jsk", "jishaku"} or len(sorted_cmds) > 15:
