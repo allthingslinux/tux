@@ -1281,14 +1281,14 @@ smmap = ">=3.0.1,<6"
 
 [[package]]
 name = "githubkit"
-version = "0.13.1"
+version = "0.13.7"
 description = "GitHub SDK for Python"
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["main"]
 files = [
-    {file = "githubkit-0.13.1-py3-none-any.whl", hash = "sha256:c73130e666486ee4af66cf143267bf0b8e446577de3c28090d45b83e8f0a3d02"},
-    {file = "githubkit-0.13.1.tar.gz", hash = "sha256:b033f2742e37e461849f8de1475d0e81931ea798c73d12211007fd148c621123"},
+    {file = "githubkit-0.13.7-py3-none-any.whl", hash = "sha256:6c35d1f7eed7010fa93144c0fb77f09c340cda8a8a2fd80fb5c3d3fad991c62a"},
+    {file = "githubkit-0.13.7.tar.gz", hash = "sha256:1c6c467bc37c076b0d47fe1d5668638754addc676fcbfc00d8cffd18594c2a0e"},
 ]
 
 [package.dependencies]
