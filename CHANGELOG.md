@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD024 -->
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -8,54 +10,206 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+* Git blame ignore configuration for formatting commits
+* Comprehensive error handling system with test registry and configuration
+* Documentation workflow for automated builds and deployment
+* Enhanced CI workflow scripts and updated action versions
+* Security policy improvements with main policy link
+* Communication service improvements with DM embed user reference updates
+* Regex pattern standardization and new pattern additions
+* Exception handling improvements with language input sanitization
+* Info command handling and documentation improvements
+* Dependency updates for Pillow and MkDocs Material
+* CI workflow improvements with shfmt flag updates
+* **Database System Migration**: Complete migration from Prisma to SQLModel (SQLAlchemy + Pydantic)
+  * SQLModel ORM implementation with async PostgreSQL support
+  * Database controllers with BaseController pattern
+  * DatabaseCoordinator facade for centralized access
+  * Alembic migration system with PostgreSQL enum support
+  * Connection pooling with retry logic and health checks
+* **CLI Framework Migration**: Migrated from Click to Typer for improved type safety and developer experience
+* **Type Checker Migration**: Switched from pyright to basedpyright for enhanced type checking
+* **Source Layout Migration**: Reorganized from flat layout (tux/) to src layout (src/tux/) following Python packaging best practices
+* **Configuration System**: Modular configuration management with multi-format support (TOML, YAML, JSON), priority-based loading, and pydantic-settings validation
+* **Plugin System**: Modular plugin architecture for extending functionality without modifying core code
+* **Task Monitoring**: Background task monitoring and management system
+* **Activity Rotation**: Dynamic bot activity rotation with placeholder substitution
+* **Cloudflare Workers Integration**: Documentation deployment via Cloudflare Workers with Wrangler CLI
+* **Database Testing**: py-pglite integration for in-memory PostgreSQL testing
+* **Plugins**: Deepfry (image manipulation), Flag Remover (flag emoji removal), Support Notifier (support channel notifications), Harmful Commands (detection and warning for potentially harmful shell commands), Fact (fun facts system)
+
+### Changed
+
+* **Package Manager Migration**: Migrated from Poetry to uv for faster dependency resolution
+* **Project Structure**: Reorganized from flat layout (tux/) to src layout (src/tux/) with clear separation: `core/`, `database/`, `services/`, `modules/`, `plugins/`, `ui/`, `shared/`, `help/`
+* **Documentation Structure**: Reorganized documentation from `developer-guide/` and `admin-guide/` to `developer/concepts/` with subdirectories (`core/`, `handlers/`, `tasks/`, `ui/`, `wrappers/`, `database/`) and `admin/` structure
+* **Help System**: Refactored help command with separated components, improved pagination, and interactive navigation
+* **Bot Lifecycle**: Streamlined initialization process with dedicated setup services
+* **Database Controllers**: Improved session management with instance expunging and lazy loading
+* **Command Suggestions**: Enhanced accuracy with qualified name prioritization and alias support
+* **Logging Configuration**: Simplified to console-only logging, removed file logging configuration
+* Code formatting to 88 character line length
+* Pre-commit hooks and package version updates
+* Documentation workflow components renamed for clarity
+* Communication DM embed user reference updates
+* Regex variable naming standardization with new patterns
+* CI workflow scripts enhanced with updated action versions
+* Info command handling and documentation improvements
+
+### Fixed
+
+* Error message truncation issues
+* AFK member ID deletion logic
+* Moderation logging references
+* Help command emoji additions for new categories
+* SQLAlchemy verbose logging
+* Communication DM embed user reference updates
+* CI workflow shfmt flag issues
+* Exception handling for language input sanitization
+* Security policy link additions
+* Command usage references to include dynamic prefix
+* Hardcoded loading emoji removal
+* Expired tempban checker log level adjustments
+
+### Removed
+
+* **Poetry**: Removed Poetry package manager in favor of uv
+* **Prisma**: Removed Prisma client in favor of SQLModel for better Python integration
+* **Click CLI**: Removed Click framework in favor of Typer
+* **pyright**: Removed pyright in favor of basedpyright
+* **Legacy Permission System**: ConditionChecker and hardcoded permission levels replaced with database-driven system
+* **File Logging**: Removed file logging configuration and related methods in favor of console-only logging
+* **Note Database Table**: Removed unused Note model and table
+* **Legacy Config Management**: Removed old config management.py and wizard.py files
+* **Deprecated Migration Commands**: Removed migrate_deploy and migrate_format commands from DatabaseCLI
+* **Legacy Database Methods**: Removed deprecated methods from BaseController
+* **Legacy CLI Scripts**: Removed old CLI architecture in favor of Click-based scripts
+* **Adminer Theme**: Removed custom CSS theme for Adminer
+* **ASCII Art Module**: Removed separate ASCII art module, integrated into banner system
+* **Various Documentation Files**: Reorganized and removed outdated documentation files during documentation restructuring
+
+## [0.1.0-rc.4] - 2025-06-15
+
+### Added
+
+* Comprehensive test suite additions
+* Multi-platform Docker builds
+* Enhanced error handling for code execution
+* Sentry integration with global Discord library version tagging
+* Specific API error classes for better error handling
+* Codecov integration for coverage tracking
+
+### Changed
+
+* CI/Docker workflow improvements
+* Dockerfile reorganization and optimization for better security and performance
+* Enhanced dev and docker CLI with new commands and options
+
+### Fixed
+
+* Codecov integration fixes and upload improvements
+* CI workflow fixes for database tests and coverage reporting
+* ShellCheck warnings in CI workflows
+* Pre-commit hooks configuration updates
+
+## [0.1.0-rc.3] - 2025-05-13
+
+### Added
+
+* Wolfram Alpha integration for math/science queries
+* TuxApp orchestration system for lifecycle management
+
+### Changed
+
+* Enhanced moderation cases command with aliases
+
+### Fixed
+
+* Poll reaction handling fixes (remove user reaction if it doesn't meet poll criteria)
+* InfluxDB logger improvements (update logger for starboard to use correct fields)
+* AFK command responses made ephemeral
+* TLDR output formatting improvements
+
+## [0.1.0-rc.2] - 2025-04-29
+
+### Added
+
+* Comprehensive documentation improvements
+* CLI documentation enhancements
+* Docker development guide
+* Dynamic version fetching using importlib.metadata
+* API reference generation
+* Developer guides (core concepts, handlers, tasks, UI, wrappers, database patterns)
+* User documentation (feature guides and command references)
+* Admin documentation (configuration and management guides)
+* Self-hosting guides (installation and deployment instructions)
+
+### Changed
+
+* Status roles enhancements and logging (improved initialization, better logging)
+* Documentation structure updates and navigation improvements
+* Contributing guide enhancements
+
+### Fixed
+
+* Dockerfile cleanup and optimization
+* Documentation formatting and indentation fixes
+
+## [0.1.0-rc.1] - 2025-04-19
+
+### Added
+
+* Status roles feature (initial commit March 23, merged April 19)
+* Dynamic versioning system
+* Extensions/plugin system foundation
+* Docker workflow improvements
+
+### Changed
+
+* Final integration of features developed before rc.1
+
+### Fixed
+
+* Docker workflow fixes
+* Status roles logging improvements
+* Version serialization formatting fixes
+
+## [0.0.0] - 2023-11-28
+
+### Added
+
 #### Core Infrastructure
 
 * **Bot Framework**: Complete Discord bot built on discord.py with hybrid command support (slash and prefix commands)
-* **Application Lifecycle**: TuxApp orchestration system for managing bot lifecycle, initialization, and graceful shutdown
 * **Hot Reload System**: File watching with watchdog for automatic cog reloading during development with dependency tracking
-* **Plugin System**: Modular plugin architecture for extending functionality without modifying core code
 * **Error Handling**: Comprehensive error handling system with error extractors, formatters, command suggestions, and Sentry integration
+* **Sentry Integration**: Comprehensive error tracking with cog, context management, handlers, tracing, and utilities
 * **Environment Management**: Centralized environment configuration utilities
-* **Task Monitoring**: Background task monitoring and management system
 * **Prefix Management**: Dynamic prefix management with database-backed configuration
 * **Custom Context**: Enhanced command context with additional utilities
 * **Type Converters**: Custom type converters for Discord entities
 * **Command Flags**: Flag-based command argument system
-* **Setup Services**: Modular setup services for bot, cogs, database, and permissions with orchestrator
 
-#### Database System
+#### Database System (Prisma-based)
 
-* **SQLModel Integration**: Type-safe database ORM using SQLModel (SQLAlchemy + Pydantic) with async PostgreSQL support
-* **Database Controllers**: Controller pattern with BaseController and specialized controllers for CRUD operations, pagination, bulk operations, and transactions
-* **DatabaseCoordinator**: Centralized facade for accessing all model-specific controllers
-* **Migration System**: Alembic-powered schema management with PostgreSQL-specific enum support
-* **Connection Pooling**: Async connection pooling with retry logic and health checks
-* **Database Models**: Guild, GuildConfig, Case, AFK, Reminder, Snippet, Levels, Starboard, StarboardMessage, PermissionRank, PermissionCommand
+* **Prisma Integration**: Database ORM using Prisma with PostgreSQL support
+* **Database Controllers**: Controller pattern with BaseController for centralized database management
+* **Database Models**: Guild, GuildConfig, Case, AFK, Reminder, Snippet, Levels, Starboard, StarboardMessage
+* **Database Client**: Singleton DatabaseClient for centralized database operations
 
-#### Permission System
+#### Permission System (Legacy)
 
-* **Dynamic Permissions**: Database-driven permission management with configurable ranks (0-100)
-* **Permission Decorators**: Flexible permission checking decorators for commands
-* **Role-Based Permissions**: Role-to-rank assignment system
-
-#### Configuration System
-
-* **Multi-Format Config**: Support for TOML, YAML, and JSON configuration files with pydantic-settings validation
-* **Config Generators**: Automatic config file generation for TOML, YAML, and JSON formats
-* **Config Loaders**: Priority-based configuration loading system with environment variable support
-* **Config Commands**: Interactive configuration system with Components V2 UI for guild settings, permission ranks, and log channels
-* **Config Dashboard**: Interactive dashboard with pagination and command discovery
-* **Environment Variables**: Comprehensive .env support with python-dotenv integration
-* **Config Generation**: CLI command to generate example configuration files
+* **Hardcoded Permissions**: Permission system with hardcoded permission levels
+* **ConditionChecker**: Legacy permission checking system
+* **Role-Based Permissions**: Basic role-based permission checks
 
 #### Moderation System
 
-* **Moderation Services**: Service layer architecture with case service, communication service, execution service, factory pattern, and moderation coordinator
 * **Case Management**: Comprehensive case system with viewing, searching, and modification capabilities
 * **Ban/Kick**: Ban and kick commands with reason support
 * **Warn**: Warning system with case tracking
 * **Timeout**: Temporary timeout/mute functionality
-* **Tempban**: Temporary ban with expiration handling
+* **Tempban**: Temporary ban with expiration handling (September 4, 2024)
 * **Jail/Unjail**: Jail system with dedicated channel support
 * **Purge**: Bulk message deletion with Discord API limits handling
 * **Slowmode**: Channel slowmode management
@@ -75,40 +229,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Encode/Decode**: Text encoding and decoding utilities
 * **Timezones**: Timezone conversion utilities
 * **Wiki**: Wikipedia search integration
+* **Emoji Management**: Centralized emoji management system for application emojis
 
 #### Information Commands
 
 * **Info**: Comprehensive information commands for Discord entities (members, channels, roles, emojis, guilds)
 * **Avatar**: User avatar display
 * **Member Count**: Server statistics (total members, humans, bots)
+* **Help System**: Enhanced help command with interactive UI components, navigation, and category organization
 
 #### Level System
 
 * **XP and Levels**: User leveling system with XP tracking
 * **Level Commands**: Administrative commands for managing levels and XP
 * **Level Display**: User level information display
+* **Blacklist Functionality**: Ability to blacklist users from gaining XP
 
 #### Feature Modules
 
 * **Starboard**: Message starboard system with configurable thresholds
-* **Status Roles**: Automatic role assignment based on user status
-* **Bookmarks**: Message bookmarking system
-* **Temp VC**: Temporary voice channel creation
-* **GIF Limiter**: Rate limiting for GIF messages with per-user and per-channel limits
-* **InfluxDB Logger**: Metrics logging to InfluxDB
-* **Activity Rotation**: Dynamic bot activity rotation with placeholder substitution
+* **Status Roles**: Automatic role assignment based on user status (March 23, 2025)
+* **Bookmarks**: Message bookmarking system (April 9, 2024)
+* **Temp VC**: Temporary voice channel creation (April 9, 2024)
+* **GIF Limiter**: Rate limiting for GIF messages with per-user and per-channel limits (September 22, 2024)
+* **InfluxDB Logger**: Metrics logging to InfluxDB (March 14, 2025)
 * **Event Handler**: Discord event handling system
 
 #### Tools
 
 * **Code Execution**: Run code in multiple languages with Wandbox and Godbolt integration
-* **TLDR**: Quick command documentation lookup
-* **Wolfram Alpha**: Math and science query integration
+* **TLDR** (April 2024): Quick command documentation lookup
+* **XKCD** (June 2024): XKCD comic integration
 
 #### Fun Commands
 
 * **Random**: Random number and choice generation
-* **XKCD**: XKCD comic integration
+* **Cowsay**: ASCII art generation with customizable options
 
 #### Admin Commands
 
@@ -117,20 +273,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Plugins
 
-* **Fact**: Fun facts system
-* **Deepfry**: Image manipulation
 * **Role Count**: Role counting with emoji support
 * **TTY Roles**: Terminal/editor role management
-* **Harmful Commands**: Detection and warning for potentially harmful shell commands
-* **Support Notifier**: Support channel notification system
 * **Git**: GitHub integration commands
 * **Mail**: Mail system
-* **Flag Remover**: Flag emoji removal utility
 * **Mock**: Text mocking utility
 
-#### CLI Tools
+#### CLI Tools (Click-based)
 
-* **Typer CLI**: Comprehensive command-line interface built with Typer
+* **Click CLI**: Command-line interface built with Click (April 6, 2025)
 * **Semantic Versioning**: Dynamic version management utilities with build metadata generation
 * **Bot Commands**: `tux start`, `tux version`
 * **Development Commands**: `dev lint`, `dev format`, `dev type-check`, `dev lint-docstring`, `dev docstring-coverage`, `dev pre-commit`, `dev all`
@@ -142,30 +293,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Documentation
 
-* **MkDocs Material**: Comprehensive documentation site with API reference generation
-* **API Reference**: Complete codebase documentation
-* **Components V2 Documentation**: Comprehensive rules documentation for Discord.py Components V2
-* **Cloudflare Workers Integration**: Documentation deployment via Cloudflare Workers with Wrangler CLI
+* **MkDocs Material**: Initial documentation site setup with Material theme (July 31, 2024)
 
 #### Testing
 
 * **Test Framework**: Comprehensive pytest setup with async support and coverage reporting
 * **Test Markers**: Unit, integration, slow, database, and async test markers
-* **Coverage Reporting**: Multiple coverage formats with Codecov integration
+* **Coverage Reporting**: Multiple coverage formats
 
 #### CI/CD
 
 * **GitHub Actions**: CI/CD workflows for testing, linting, type checking, and Docker builds
 * **Pre-commit Hooks**: Automated code quality checks
 * **Docker Builds**: Multi-platform Docker builds
-* **Codecov Integration**: Coverage tracking
 
 #### Monitoring & Logging
 
-* **Sentry Integration**: Comprehensive Sentry integration with cog, context management, handlers, tracing, and utilities
 * **Structured Logging**: Loguru-based structured logging with console output
-* **Performance Monitoring**: Sentry transaction tracking for database operations and command execution
-* **Error Context**: Enhanced error reporting with stack traces, user context, and performance metrics
 
 #### UI Components
 
@@ -174,13 +318,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * **Banner System**: Banner creation and formatting utilities
 * **Modals**: Modal form system including report modals
 * **Views**: Interactive view system with confirmation dialogs and TLDR views
-* **Config UI**: Interactive configuration UI with dashboard, pagination, command discovery, and callbacks
 
 #### HTTP & API Integration
 
 * **HTTP Client**: Custom async HTTP client wrapper with retry logic and error handling
 * **API Wrappers**: Wrappers for GitHub, Godbolt, TLDR, Wandbox, and XKCD APIs
-* **Emoji Manager**: Centralized emoji management system for application emojis
 
 #### Utilities
 
@@ -192,37 +334,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Docker & Deployment
 
 * **Docker Compose**: Development environment with PostgreSQL and Adminer
-* **Compose Watch**: Hot reload support for development with automatic rebuilds on file changes
 * **Adminer Integration**: Database administration interface with auto-login functionality
-* **Multi-stage Builds**: Optimized Containerfile (renamed from Dockerfile)
 * **Non-root User**: Security improvements with non-root containers
 * **Health Checks**: Container health monitoring
 
 ### Changed
 
-* **Project Structure**: Major reorganization of source code and documentation structure
-  * **Source Code**: Reorganized `src/tux/` with clear separation: `core/`, `database/`, `services/`, `modules/`, `plugins/`, `ui/`, `shared/`, `help/`
-  * **Services Directory**: Created dedicated `services/` directory with subdirectories for `moderation/`, `hot_reload/`, `sentry/`, `handlers/`, `wrappers/`
-  * **Modules Reorganization**: Renamed `modules/services/` to `modules/features/` for clarity
-  * **Plugins Organization**: Moved plugins into `plugins/atl/` subdirectory for better organization
-  * **Database Structure**: Restructured database controllers into `database/controllers/` with `base/` subdirectory for specialized controllers
-  * **Documentation Structure**: Reorganized documentation from `developer-guide/` and `admin-guide/` to `developer/concepts/` with subdirectories (`core/`, `handlers/`, `tasks/`, `ui/`, `wrappers/`, `database/`) and `admin/` structure
-* **Database System**: Migrated from Prisma to SQLModel (SQLAlchemy + Pydantic) for better Python integration and type safety
-* **Permission System**: Replaced legacy ConditionChecker and hardcoded permission levels with database-driven dynamic permission system
-* **Configuration System**: Refactored from monolithic onboarding wizard to modular configuration management system with Components V2 UI
-* **Help System**: Refactored help command with separated components, improved pagination, and interactive navigation
-* **Package Manager**: Migrated from Poetry to uv for faster dependency resolution and improved performance
-* **CLI Tools**: Migrated from Click to Typer for improved command-line interface with better type safety
-* **Plugin System**: Refactored extensions to modular plugin architecture with hot-reload support
-* **Docker Configuration**: Renamed Dockerfile to Containerfile for better compatibility with Podman and other container tools
-* **Bot Lifecycle**: Streamlined initialization process with dedicated setup services and orchestrator
-* **Database Controllers**: Improved session management with instance expunging and lazy loading of specialized controllers
 * **Case Creation**: Enhanced with thread-safe case numbering using locking mechanism to prevent race conditions
-* **Command Suggestions**: Enhanced accuracy with qualified name prioritization and alias support
-* **Logging Configuration**: Simplified to console-only logging, removed file logging configuration
-* **Type Checking**: Switched from pyright to basedpyright for stricter type checking
-* **Permission Ranks**: Updated permission rank system from legacy levels to 0-100 hierarchy, then refined to 0-10 range
-* **Database Service**: Unified AsyncDatabaseService and DatabaseService into single DatabaseService for consistency
 
 ### Fixed
 
@@ -240,26 +358,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Removed
 
-* **Legacy Permission System**: ConditionChecker and hardcoded permission levels replaced with database-driven system
-* **File Logging**: Removed file logging configuration and related methods in favor of console-only logging
-* **Prisma**: Removed Prisma client in favor of SQLModel for better Python integration
-* **Supabase Client**: Removed Supabase client in favor of direct PostgreSQL connection
-* **Onboarding Wizard**: Removed interactive setup wizard in favor of modular configuration system
-* **Note Database Table**: Removed unused Note model and table
-* **ASCII Art Module**: Removed separate ASCII art module, integrated into banner system
-* **Ghost Ping Detection**: Removed ghost ping notification feature
-* **Legacy Config Management**: Removed old config management.py and wizard.py files
-* **Requirements.txt**: Removed in favor of pyproject.toml for dependency management
-* **Deprecated Migration Commands**: Removed migrate_deploy and migrate_format commands from DatabaseCLI
-* **Legacy Database Methods**: Removed deprecated methods from BaseController
-* **Legacy CLI Scripts**: Removed old CLI architecture in favor of Typer-based scripts
-* **Poetry**: Removed Poetry package manager in favor of uv
-* **Adminer Theme**: Removed custom CSS theme for Adminer (replaced with auto-login functionality)
-* **Various Documentation Files**: Reorganized and removed outdated documentation files during documentation restructuring
+* **File Logging**: Removed file logging configuration and related methods in favor of console-only logging (October 6, 2025)
+* **Supabase Client**: Removed Supabase client in favor of direct PostgreSQL connection (March 28, 2024)
+* **ASCII Art Module**: Removed separate ASCII art module, integrated into banner system (August 2025)
+* **Ghost Ping Detection**: Removed ghost ping notification feature (April 9, 2024)
+* **Requirements.txt**: Removed in favor of pyproject.toml for dependency management (March 26, 2024)
+* **Adminer Theme**: Removed custom CSS theme for Adminer (November 10, 2025)
+* **Various Documentation Files**: Reorganized and removed outdated documentation files during documentation restructuring (September-November 2025)
 
 ### Security
 
 * **Sentry Integration**: Enhanced error reporting and monitoring
 * **Non-root Containers**: Docker containers run as non-root user
-* **Dependency Scanning**: Automated security scanning
-* **Input Validation**: Comprehensive input validation with Pydantic models
