@@ -15,6 +15,7 @@ from typer import Typer
 src_path = Path(__file__).parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
+from scripts.config import ConfigCLI
 from scripts.db import DatabaseCLI
 from scripts.dev import DevCLI
 from scripts.docker_cli import DockerCLI
@@ -34,12 +35,13 @@ def create_unified_cli() -> Typer:
     # Create the main app
     cli = Typer(
         name="uv run",
-        help="Tux - All Things Linux Discord Bot",
+        help="Tux",
         rich_markup_mode="rich",
         no_args_is_help=True,
     )
 
     # Create sub-apps for each CLI module
+    config_cli = ConfigCLI()
     db_cli = DatabaseCLI()
     dev_cli = DevCLI()
     docker_cli = DockerCLI()
@@ -48,8 +50,21 @@ def create_unified_cli() -> Typer:
     tux_cli = TuxCLI()
 
     # Add each CLI as a subcommand group
-    cli.add_typer(db_cli.app, name="db", help="Database operations and management")
-    cli.add_typer(dev_cli.app, name="dev", help="Development tools and workflows")
+    cli.add_typer(
+        config_cli.app,
+        name="config",
+        help="Configuration management and generation",
+    )
+    cli.add_typer(
+        db_cli.app,
+        name="db",
+        help="Database operations and management",
+    )
+    cli.add_typer(
+        dev_cli.app,
+        name="dev",
+        help="Development tools and workflows",
+    )
     cli.add_typer(
         docker_cli.app,
         name="docker",
@@ -60,8 +75,16 @@ def create_unified_cli() -> Typer:
         name="docs",
         help="Documentation operations and management",
     )
-    cli.add_typer(test_cli.app, name="test", help="Testing operations and management")
-    cli.add_typer(tux_cli.app, name="tux", help="Tux bot operations and management")
+    cli.add_typer(
+        test_cli.app,
+        name="test",
+        help="Testing operations and management",
+    )
+    cli.add_typer(
+        tux_cli.app,
+        name="tux",
+        help="Tux bot operations and management",
+    )
 
     return cli
 

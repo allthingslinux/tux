@@ -8,7 +8,7 @@ import os
 import subprocess
 from collections.abc import Callable
 
-from dotenv import load_dotenv  # type: ignore[import-untyped]
+from dotenv import load_dotenv
 from rich.console import Console
 from typer import Typer
 

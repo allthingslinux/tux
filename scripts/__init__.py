@@ -6,6 +6,7 @@ with proper separation of concerns and extensibility.
 """
 
 from scripts.base import BaseCLI
+from scripts.config import ConfigCLI
 from scripts.db import DatabaseCLI
 from scripts.dev import DevCLI
 from scripts.docker_cli import DockerCLI
@@ -20,6 +21,7 @@ __all__ = [
     "Command",
     "CommandGroup",
     "CommandRegistry",
+    "ConfigCLI",
     "DatabaseCLI",
     "DevCLI",
     "DockerCLI",
