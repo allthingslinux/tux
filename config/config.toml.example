@@ -1,114 +1,337 @@
+# Config
+# Main Tux configuration using Pydantic Settings with multi-format support.
+# Configuration is loaded from multiple sources in priority order: 1. Environment
+# variables (highest priority) 2. .env file 3. config.toml file 4. config.yaml
+# file 5. config.json file 6. Default values (lowest priority)
+
+# DEBUG: boolean
 # Enable debug mode
-# debug = false
+# Default: false
+# Examples: false, true
+# DEBUG = false
+
+# LOG_LEVEL: string
 # Logging level (TRACE, DEBUG, INFO, SUCCESS, WARNING, ERROR, CRITICAL)
-# log_level = "INFO"
+# Default: "INFO"
+# Examples: "INFO", "DEBUG", "WARNING", "ERROR"
+# LOG_LEVEL = "INFO"
+
+# BOT_TOKEN: string
 # Discord bot token
-# bot_token = ""
+# Default: ""
+# Examples: "MTIzNDU2Nzg5MDEyMzQ1Njc4OQ.AbCdEf.GhIjKlMnOpQrStUvWxYz1234567890"
+# BOT_TOKEN = ""
+
+# POSTGRES_HOST: string
 # PostgreSQL host
-# postgres_host = "localhost"
+# Default: "localhost"
+# Examples: "localhost", "tux-postgres", "db.example.com"
+# POSTGRES_HOST = "localhost"
+
+# POSTGRES_PORT: integer
 # PostgreSQL port
-# postgres_port = 5432
+# Default: 5432
+# Examples: 5432, 5433
+# POSTGRES_PORT = 5432
+
+# POSTGRES_DB: string
 # PostgreSQL database name
-# postgres_db = "tuxdb"
+# Default: "tuxdb"
+# Examples: "tuxdb", "tux_production"
+# POSTGRES_DB = "tuxdb"
+
+# POSTGRES_USER: string
 # PostgreSQL username
-# postgres_user = "tuxuser"
+# Default: "tuxuser"
+# Examples: "tuxuser", "tux_admin"
+# POSTGRES_USER = "tuxuser"
+
+# POSTGRES_PASSWORD: string
 # PostgreSQL password
-# postgres_password = "ChangeThisToAStrongPassword123!"
+# Default: "ChangeThisToAStrongPassword123!"
+# Examples: "ChangeThisToAStrongPassword123!", "SecurePassword456!"
+# POSTGRES_PASSWORD = "ChangeThisToAStrongPassword123!"
+
+# DATABASE_URL: string
 # Custom database URL override
-# database_url = ""
+# Default: ""
+# Examples: "postgresql://user:password@localhost:5432/tuxdb"
+# DATABASE_URL = ""
+
+# ALLOW_SYSADMINS_EVAL: boolean
 # Allow sysadmins to use eval
-# allow_sysadmins_eval = false
+# Default: false
+# Examples: false, true
+# ALLOW_SYSADMINS_EVAL = false
 
-[bot_info]
+# BotInfo
+# Bot information configuration.
+
+[BOT_INFO]
+# BOT_NAME: string
 # Name of the bot
-# bot_name = "Tux"
+# Default: "Tux"
+# Examples: "Tux", "MyBot"
+# BOT_NAME = "Tux"
+
+# ACTIVITIES: string
 # Bot activities
-# activities = []
+# Default: "[]"
+# Examples: "[{\"type\": 0, \"name\": \"with Linux\"}]", "[{\"type\": 2, \"name\": \"to commands\", \"url\": \"https://twitch.tv/example\"}]"
+# ACTIVITIES = "[]"
+
+# HIDE_BOT_OWNER: boolean
 # Hide bot owner info
-# hide_bot_owner = false
+# Default: false
+# Examples: false, true
+# HIDE_BOT_OWNER = false
+
+# PREFIX: string
 # Command prefix
-# prefix = "$"
+# Default: "$"
+# Examples: "$", "!", "tux.", "?"
+# PREFIX = "$"
 
-[user_ids]
+
+# UserIds
+# User ID configuration.
+
+[USER_IDS]
+# BOT_OWNER_ID: integer
 # Bot owner user ID
-# bot_owner_id = 0
+# Default: 0
+# Examples: 123456789012345678
+# BOT_OWNER_ID = 0
+
+# SYSADMINS: array
 # System admin user IDs
-# sysadmins = []
+# Default: []
+# Examples: [123456789012345678,987654321098765432]
+# SYSADMINS = []
 
-[status_roles]
+
+# StatusRoles
+# Status roles configuration.
+
+[STATUS_ROLES]
+# MAPPINGS: array
 # Status to role mappings
-# mappings = []
+# Default: []
+# Examples: [{"status":".gg/linux","role_id":123456789012345678}]
+# MAPPINGS = []
 
-[temp_vc]
+
+# TempVC
+# Temporary voice channel configuration.
+
+[TEMPVC]
+# TEMPVC_CHANNEL_ID: string | NoneType
 # Temporary VC channel ID
-# tempvc_channel_id = "null"
+# Default: null
+# Examples: "123456789012345678"
+# TEMPVC_CHANNEL_ID =
+
+# TEMPVC_CATEGORY_ID: string | NoneType
 # Temporary VC category ID
-# tempvc_category_id = "null"
+# Default: null
+# Examples: "123456789012345678"
+# TEMPVC_CATEGORY_ID =
 
-[gif_limiter]
+
+# GifLimiter
+# GIF limiter configuration.
+
+[GIF_LIMITER]
+# RECENT_GIF_AGE: integer
 # Recent GIF age limit
-# recent_gif_age = 60
+# Default: 60
+# Examples: 60, 120, 300
+# RECENT_GIF_AGE = 60
+
+# GIF_LIMITS_USER: object
+# User GIF limits
+# Default: {}
+# Examples: {'123456789012345678': 5}
+# [GIF_LIMITS_USER]
+
+# GIF_LIMITS_CHANNEL: object
+# Channel GIF limits
+# Default: {}
+# Examples: {'123456789012345678': 10}
+# [GIF_LIMITS_CHANNEL]
+
+# GIF_LIMIT_EXCLUDE: array
 # Excluded channels
-# gif_limit_exclude = []
+# Default: []
+# Examples: [123456789012345678]
+# GIF_LIMIT_EXCLUDE = []
 
-[gif_limiter.gif_limits_user]
 
-[gif_limiter.gif_limits_channel]
+# XP
+# XP system configuration.
 
-[xp]
+[XP_CONFIG]
+# XP_BLACKLIST_CHANNELS: array
 # XP blacklist channels
-# xp_blacklist_channels = []
+# Default: []
+# Examples: [123456789012345678]
+# XP_BLACKLIST_CHANNELS = []
+
+# XP_ROLES: array
 # XP roles
-# xp_roles = []
+# Default: []
+# Examples: [{"role_id":123456789012345678,"xp_required":1000}]
+# XP_ROLES = []
+
+# XP_MULTIPLIERS: array
 # XP multipliers
-# xp_multipliers = []
+# Default: []
+# Examples: [{"role_id":123456789012345678,"multiplier":1.5}]
+# XP_MULTIPLIERS = []
+
+# XP_COOLDOWN: integer
 # XP cooldown in seconds
-# xp_cooldown = 1
+# Default: 1
+# Examples: 1, 5, 10
+# XP_COOLDOWN = 1
+
+# LEVELS_EXPONENT: integer
 # Levels exponent
-# levels_exponent = 2
+# Default: 2
+# Examples: 2, 3, 1.5
+# LEVELS_EXPONENT = 2
+
+# SHOW_XP_PROGRESS: boolean
 # Show XP progress
-# show_xp_progress = true
+# Default: true
+# Examples: true, false
+# SHOW_XP_PROGRESS = true
+
+# ENABLE_XP_CAP: boolean
 # Enable XP cap
-# enable_xp_cap = false
+# Default: false
+# Examples: false, true
+# ENABLE_XP_CAP = false
 
-[snippets]
+
+# Snippets
+# Snippets configuration.
+
+[SNIPPETS]
+# LIMIT_TO_ROLE_IDS: boolean
 # Limit snippets to specific roles
-# limit_to_role_ids = false
+# Default: false
+# Examples: false, true
+# LIMIT_TO_ROLE_IDS = false
+
+# ACCESS_ROLE_IDS: array
 # Snippet access role IDs
-# access_role_ids = []
+# Default: []
+# Examples: [123456789012345678,987654321098765432]
+# ACCESS_ROLE_IDS = []
 
-[irc]
+
+# IRC
+# IRC bridge configuration.
+
+[IRC_CONFIG]
+# BRIDGE_WEBHOOK_IDS: array
 # IRC bridge webhook IDs
-# bridge_webhook_ids = []
+# Default: []
+# Examples: [123456789012345678]
+# BRIDGE_WEBHOOK_IDS = []
 
-[external_services]
+
+# ExternalServices
+# External services configuration.
+
+[EXTERNAL_SERVICES]
+# SENTRY_DSN: string
 # Sentry DSN
-# sentry_dsn = ""
+# Default: ""
+# Examples: "https://key@o123456.ingest.sentry.io/123456"
+# SENTRY_DSN = ""
+
+# GITHUB_APP_ID: string
 # GitHub app ID
-# github_app_id = ""
+# Default: ""
+# Examples: "123456"
+# GITHUB_APP_ID = ""
+
+# GITHUB_INSTALLATION_ID: string
 # GitHub installation ID
-# github_installation_id = ""
+# Default: ""
+# Examples: "12345678"
+# GITHUB_INSTALLATION_ID = ""
+
+# GITHUB_PRIVATE_KEY: string
 # GitHub private key
-# github_private_key = ""
+# Default: ""
+# Examples: "-----BEGIN RSA PRIVATE KEY-----\n..."
+# GITHUB_PRIVATE_KEY = ""
+
+# GITHUB_CLIENT_ID: string
 # GitHub client ID
-# github_client_id = ""
+# Default: ""
+# Examples: "Iv1.1234567890abcdef"
+# GITHUB_CLIENT_ID = ""
+
+# GITHUB_CLIENT_SECRET: string
 # GitHub client secret
-# github_client_secret = ""
+# Default: ""
+# Examples: "1234567890abcdef1234567890abcdef12345678"
+# GITHUB_CLIENT_SECRET = ""
+
+# GITHUB_REPO_URL: string
 # GitHub repository URL
-# github_repo_url = ""
+# Default: ""
+# Examples: "https://github.com/owner/repo"
+# GITHUB_REPO_URL = ""
+
+# GITHUB_REPO_OWNER: string
 # GitHub repository owner
-# github_repo_owner = ""
+# Default: ""
+# Examples: "owner"
+# GITHUB_REPO_OWNER = ""
+
+# GITHUB_REPO: string
 # GitHub repository name
-# github_repo = ""
+# Default: ""
+# Examples: "repo"
+# GITHUB_REPO = ""
+
+# MAILCOW_API_KEY: string
 # Mailcow API key
-# mailcow_api_key = ""
+# Default: ""
+# Examples: "abc123def456ghi789"
+# MAILCOW_API_KEY = ""
+
+# MAILCOW_API_URL: string
 # Mailcow API URL
-# mailcow_api_url = ""
+# Default: ""
+# Examples: "https://mail.example.com/api/v1"
+# MAILCOW_API_URL = ""
+
+# WOLFRAM_APP_ID: string
 # Wolfram Alpha app ID
-# wolfram_app_id = ""
+# Default: ""
+# Examples: "ABC123-DEF456GHI789"
+# WOLFRAM_APP_ID = ""
+
+# INFLUXDB_TOKEN: string
 # InfluxDB token
-# influxdb_token = ""
+# Default: ""
+# Examples: "abc123def456ghi789jkl012mno345pqr678stu901vwx234yz"
+# INFLUXDB_TOKEN = ""
+
+# INFLUXDB_URL: string
 # InfluxDB URL
-# influxdb_url = ""
+# Default: ""
+# Examples: "https://us-east-1-1.aws.cloud2.influxdata.com"
+# INFLUXDB_URL = ""
+
+# INFLUXDB_ORG: string
 # InfluxDB organization
-# influxdb_org = ""
+# Default: ""
+# Examples: "my-org"
+# INFLUXDB_ORG = ""
