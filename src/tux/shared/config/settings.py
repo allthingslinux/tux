@@ -16,6 +16,7 @@ import base64
 import os
 import warnings
 from pathlib import Path
+from typing import Annotated
 
 from pydantic import Field, computed_field
 from pydantic_settings import (
@@ -108,48 +109,111 @@ class Config(BaseSettings):
     )
 
     # Core configuration
-    DEBUG: bool = Field(default=False, description="Enable debug mode")
-    LOG_LEVEL: str = Field(
-        default="INFO",
-        description="Logging level (TRACE, DEBUG, INFO, SUCCESS, WARNING, ERROR, CRITICAL)",
-    )
+    DEBUG: Annotated[
+        bool,
+        Field(
+            default=False,
+            description="Enable debug mode",
+            examples=[False, True],
+        ),
+    ]
+    LOG_LEVEL: Annotated[
+        str,
+        Field(
+            default="INFO",
+            description="Logging level (TRACE, DEBUG, INFO, SUCCESS, WARNING, ERROR, CRITICAL)",
+            examples=["INFO", "DEBUG", "WARNING", "ERROR"],
+        ),
+    ]
 
     # Bot tokens
-    BOT_TOKEN: str = Field(default="", description="Discord bot token")
+    BOT_TOKEN: Annotated[
+        str,
+        Field(
+            default="",
+            description="Discord bot token",
+            examples=[
+                "MTIzNDU2Nzg5MDEyMzQ1Njc4OQ.AbCdEf.GhIjKlMnOpQrStUvWxYz1234567890",
+            ],
+        ),
+    ]
 
     # Database configuration (standard PostgreSQL env vars)
-    POSTGRES_HOST: str = Field(default="localhost", description="PostgreSQL host")
-    POSTGRES_PORT: int = Field(default=5432, description="PostgreSQL port")
-    POSTGRES_DB: str = Field(default="tuxdb", description="PostgreSQL database name")
-    POSTGRES_USER: str = Field(default="tuxuser", description="PostgreSQL username")
-    POSTGRES_PASSWORD: str = Field(
-        default="ChangeThisToAStrongPassword123!",
-        description="PostgreSQL password",
-    )
+    POSTGRES_HOST: Annotated[
+        str,
+        Field(
+            default="localhost",
+            description="PostgreSQL host",
+            examples=["localhost", "tux-postgres", "db.example.com"],
+        ),
+    ]
+    POSTGRES_PORT: Annotated[
+        int,
+        Field(
+            default=5432,
+            description="PostgreSQL port",
+            examples=[5432, 5433],
+        ),
+    ]
+    POSTGRES_DB: Annotated[
+        str,
+        Field(
+            default="tuxdb",
+            description="PostgreSQL database name",
+            examples=["tuxdb", "tux_production"],
+        ),
+    ]
+    POSTGRES_USER: Annotated[
+        str,
+        Field(
+            default="tuxuser",
+            description="PostgreSQL username",
+            examples=["tuxuser", "tux_admin"],
+        ),
+    ]
+    POSTGRES_PASSWORD: Annotated[
+        str,
+        Field(
+            default="ChangeThisToAStrongPassword123!",
+            description="PostgreSQL password",
+            examples=["ChangeThisToAStrongPassword123!", "SecurePassword456!"],
+        ),
+    ]
 
     # Optional: Custom database URL override
-    DATABASE_URL: str = Field(default="", description="Custom database URL override")
+    DATABASE_URL: Annotated[
+        str,
+        Field(
+            default="",
+            description="Custom database URL override",
+            examples=["postgresql://user:password@localhost:5432/tuxdb"],
+        ),
+    ]
 
     # Bot info
-    BOT_INFO: BotInfo = Field(default_factory=BotInfo)
+    BOT_INFO: BotInfo = Field(default_factory=BotInfo)  # type: ignore[arg-type]
 
     # User permissions
-    USER_IDS: UserIds = Field(default_factory=UserIds)
-    ALLOW_SYSADMINS_EVAL: bool = Field(
-        default=False,
-        description="Allow sysadmins to use eval",
-    )
+    USER_IDS: UserIds = Field(default_factory=UserIds)  # type: ignore[arg-type]
+    ALLOW_SYSADMINS_EVAL: Annotated[
+        bool,
+        Field(
+            default=False,
+            description="Allow sysadmins to use eval",
+            examples=[False, True],
+        ),
+    ]
 
     # Features
-    STATUS_ROLES: StatusRoles = Field(default_factory=StatusRoles)
-    TEMPVC: TempVC = Field(default_factory=TempVC)
-    GIF_LIMITER: GifLimiter = Field(default_factory=GifLimiter)
-    XP_CONFIG: XP = Field(default_factory=XP)
-    SNIPPETS: Snippets = Field(default_factory=Snippets)
-    IRC_CONFIG: IRC = Field(default_factory=IRC)
+    STATUS_ROLES: StatusRoles = Field(default_factory=StatusRoles)  # type: ignore[arg-type]
+    TEMPVC: TempVC = Field(default_factory=TempVC)  # type: ignore[arg-type]
+    GIF_LIMITER: GifLimiter = Field(default_factory=GifLimiter)  # type: ignore[arg-type]
+    XP_CONFIG: XP = Field(default_factory=XP)  # type: ignore[arg-type]
+    SNIPPETS: Snippets = Field(default_factory=Snippets)  # type: ignore[arg-type]
+    IRC_CONFIG: IRC = Field(default_factory=IRC)  # type: ignore[arg-type]
 
     # External services
-    EXTERNAL_SERVICES: ExternalServices = Field(default_factory=ExternalServices)
+    EXTERNAL_SERVICES: ExternalServices = Field(default_factory=ExternalServices)  # type: ignore[arg-type]
 
     @classmethod
     def settings_customise_sources(
@@ -307,4 +371,4 @@ class Config(BaseSettings):
 
 
 # Global configuration instance
-CONFIG = Config()
+CONFIG = Config()  # type: ignore[call-arg]
