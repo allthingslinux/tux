@@ -133,7 +133,7 @@ class Config(BaseSettings):
             default="",
             description="Discord bot token",
             examples=[
-                "MTIzNDU2Nzg5MDEyMzQ1Njc4OQ.AbCdEf.GhIjKlMnOpQrStUvWxYz1234567890",
+                "FakeDiscordBotTokenBecauseGitHubSecurityIsAnnoying",
             ],
         ),
     ]

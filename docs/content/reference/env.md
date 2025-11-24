@@ -20,18 +20,18 @@ Configuration is loaded from multiple sources in priority order:
 5. config.json file
 6. Default values (lowest priority)
 
-| Name                   | Type      | Default                             | Description                                                           | Example                                                              |
-|------------------------|-----------|-------------------------------------|-----------------------------------------------------------------------|----------------------------------------------------------------------|
-| `DEBUG`                | `boolean` | `false`                             | Enable debug mode                                                     | `false`, `true`                                                      |
-| `LOG_LEVEL`            | `string`  | `"INFO"`                            | Logging level (TRACE, DEBUG, INFO, SUCCESS, WARNING, ERROR, CRITICAL) | `"INFO"`, `"DEBUG"`, `"WARNING"`, `"ERROR"`                          |
-| `BOT_TOKEN`            | `string`  | `""`                                | Discord bot token                                                     | `"MTIzNDU2Nzg5MDEyMzQ1Njc4OQ.AbCdEf.GhIjKlMnOpQrStUvWxYz1234567890"` |
-| `POSTGRES_HOST`        | `string`  | `"localhost"`                       | PostgreSQL host                                                       | `"localhost"`, `"tux-postgres"`, `"db.example.com"`                  |
-| `POSTGRES_PORT`        | `integer` | `5432`                              | PostgreSQL port                                                       | `5432`, `5433`                                                       |
-| `POSTGRES_DB`          | `string`  | `"tuxdb"`                           | PostgreSQL database name                                              | `"tuxdb"`, `"tux_production"`                                        |
-| `POSTGRES_USER`        | `string`  | `"tuxuser"`                         | PostgreSQL username                                                   | `"tuxuser"`, `"tux_admin"`                                           |
-| `POSTGRES_PASSWORD`    | `string`  | `"ChangeThisToAStrongPassword123!"` | PostgreSQL password                                                   | `"ChangeThisToAStrongPassword123!"`, `"SecurePassword456!"`          |
-| `DATABASE_URL`         | `string`  | `""`                                | Custom database URL override                                          | `"postgresql://user:password@localhost:5432/tuxdb"`                  |
-| `ALLOW_SYSADMINS_EVAL` | `boolean` | `false`                             | Allow sysadmins to use eval                                           | `false`, `true`                                                      |
+| Name                   | Type      | Default                             | Description                                                           | Example                                                     |
+|------------------------|-----------|-------------------------------------|-----------------------------------------------------------------------|-------------------------------------------------------------|
+| `DEBUG`                | `boolean` | `false`                             | Enable debug mode                                                     | `false`, `true`                                             |
+| `LOG_LEVEL`            | `string`  | `"INFO"`                            | Logging level (TRACE, DEBUG, INFO, SUCCESS, WARNING, ERROR, CRITICAL) | `"INFO"`, `"DEBUG"`, `"WARNING"`, `"ERROR"`                 |
+| `BOT_TOKEN`            | `string`  | `""`                                | Discord bot token                                                     | `"FakeDiscordBotTokenBecauseGitHubSecurityIsAnnoying"`      |
+| `POSTGRES_HOST`        | `string`  | `"localhost"`                       | PostgreSQL host                                                       | `"localhost"`, `"tux-postgres"`, `"db.example.com"`         |
+| `POSTGRES_PORT`        | `integer` | `5432`                              | PostgreSQL port                                                       | `5432`, `5433`                                              |
+| `POSTGRES_DB`          | `string`  | `"tuxdb"`                           | PostgreSQL database name                                              | `"tuxdb"`, `"tux_production"`                               |
+| `POSTGRES_USER`        | `string`  | `"tuxuser"`                         | PostgreSQL username                                                   | `"tuxuser"`, `"tux_admin"`                                  |
+| `POSTGRES_PASSWORD`    | `string`  | `"ChangeThisToAStrongPassword123!"` | PostgreSQL password                                                   | `"ChangeThisToAStrongPassword123!"`, `"SecurePassword456!"` |
+| `DATABASE_URL`         | `string`  | `""`                                | Custom database URL override                                          | `"postgresql://user:password@localhost:5432/tuxdb"`         |
+| `ALLOW_SYSADMINS_EVAL` | `boolean` | `false`                             | Allow sysadmins to use eval                                           | `false`, `true`                                             |
 
 ### BotInfo
 

@@ -19,7 +19,7 @@
 # BOT_TOKEN: string
 # Discord bot token
 # Default: ""
-# Examples: "MTIzNDU2Nzg5MDEyMzQ1Njc4OQ.AbCdEf.GhIjKlMnOpQrStUvWxYz1234567890"
+# Examples: "FakeDiscordBotTokenBecauseGitHubSecurityIsAnnoying"
 # BOT_TOKEN = ""
 
 # POSTGRES_HOST: string
